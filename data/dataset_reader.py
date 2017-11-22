@@ -11,10 +11,10 @@ class DatasetReader(Registrable):
     def read(self, file_path: str) -> List[Dict]:
         """
         Reads a file from a path and returns data as list. The list should consist of training
-        instances as dicts, each of which has `data` and `target` keys.
+        instances as dicts, each of which has `context` and `response` keys.
         Example:
-             [ {'data': 'good morning!', 'target': 'hello what can i help you with today'},
-             {'data': 'i'd like to book a table with italian food', 'target': 'i'm on it'}]
+             [ {'context': 'good morning!', 'response': 'hello what can i help you with today'},
+             {'context': 'i'd like to book a table with italian food', 'response': 'i'm on it'}]
         """
         raise NotImplementedError
 
