@@ -99,3 +99,15 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+#IDEA
+.idea/
+
+#GIT
+.git/
+
+#TEST
+test/
+
+#DATA
+data/
