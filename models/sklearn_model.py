@@ -2,6 +2,7 @@
 Inherit from this model to implement a `scikit-learn <http://scikit-learn.org/stable/>`_ model.
 """
 import pickle
+from overrides import overrides
 
 from models.model import Model
 
@@ -28,6 +29,7 @@ class SklearnModel(Model):
         with open('any_dir') as f:
             pickle.dump(self._estimator, f)
 
+    @overrides
     def _load(self):
         """
         Load model from file.
