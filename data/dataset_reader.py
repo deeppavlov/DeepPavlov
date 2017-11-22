@@ -1,9 +1,7 @@
 from typing import List, Dict, Type
 
-from common.registrable import Registrable
 
-
-class DatasetReader(Registrable):
+class DatasetReader:
     """
     A ``DatasetReader`` reads data from some location and constructs a :class:`Dataset`.
     """
