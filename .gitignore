@@ -108,6 +108,3 @@ ENV/
 
 #TEST
 test/
-
-#DATA
-data/
