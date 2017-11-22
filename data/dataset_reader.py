@@ -3,7 +3,7 @@ from typing import List, Dict, Type
 
 class DatasetReader:
     """
-    A ``DatasetReader`` reads data from some location and constructs a :class:`Dataset`.
+    A ``DatasetReader`` reads data from some location and constructs a dataset.
     """
 
     def read(self, file_path: str) -> List[Dict]:
