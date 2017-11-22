@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Type
 
 from common.registrable import Registrable
 
@@ -19,11 +19,20 @@ class DatasetReader(Registrable):
         raise NotImplementedError
 
     @classmethod
-    def from_params(cls, params: Dict) -> 'DatasetReader':
+    def from_params(cls, params: Dict) -> Type:
         """
         Static method that constructs the dataset reader described by ``params`` in a config file.
+        ``params`` arg is what comes from the json config.
+
+        Example:
+            signature_params = ['param1', 'param2']
+            param_dict = {}
+            for sp in signature_params:
+                try:
+                    param_dict[sp] = params[sp]
+                except KeyError:
+                    pass
+
+            return TestReader(**param_dict)
         """
-        # choice = params.pop_choice('type', cls.list_available())
-        # TODO check if available in registry
-        name = params['name']
-        return cls.by_name(name).from_params(params)
+        raise NotImplementedError
