@@ -22,13 +22,7 @@ class Model:
         """
         raise NotImplementedError
 
-    def save(self):
-        """
-        Save model to file.
-        """
-        raise NotImplementedError
-
-    def load(self):
+    def _load(self):
         """
         Load model from file.
         """
