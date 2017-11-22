@@ -12,7 +12,7 @@ class Model:
         :param models: any nested models
         """
         self.config_path = config_path
-        self.models = models
+        self._models = models
 
     def predict(self, data):
         """
