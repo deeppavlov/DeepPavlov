@@ -17,9 +17,10 @@ class SklearnModel(Model):
         """
         Predict data.
         :param data: any type of input data
-        :return: any type of predicted values
+        :return: predicted values
         """
-        raise NotImplementedError
+        X = self._gen_features(data)
+        return self._estimator.predict(X)
 
     def _save(self):
         """
@@ -44,6 +45,7 @@ class SklearnModel(Model):
         vector. The function should return an input feature vector.
         :param dataset: a dataset used for training
         """
+        # TODO should return target vector only for train.
         raise NotImplementedError
 
     def train(self, dataset):
