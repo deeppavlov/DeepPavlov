@@ -9,7 +9,7 @@ class Model:
     def __init__(self, models: List = None, params: Dict = None):
         """
         :param models: any nested models
-        :param params: hypermarameters/parameters of the model
+        :param params: hyperparameters/parameters of the model
         """
         self._models = models
         self._params = params
@@ -19,13 +19,6 @@ class Model:
         Predict data.
         :param data: any type of input data
         :return: any type of predicted values
-        """
-        raise NotImplementedError
-
-    # TODO looks like this only exists in trainable models.
-    def _load(self):
-        """
-        Load model from file.
         """
         raise NotImplementedError
 
