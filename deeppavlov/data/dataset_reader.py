@@ -1,4 +1,4 @@
-from typing import List, Dict, Type
+from typing import Dict, Type
 
 
 class DatasetReader:
@@ -6,13 +6,9 @@ class DatasetReader:
     A ``DatasetReader`` reads data from some location and constructs a dataset.
     """
 
-    def read(self, file_path: str) -> List[Dict]:
+    def read(self, file_path: str):
         """
-        Reads a file from a path and returns data as list. The list should consist of training
-        instances as dicts, each of which has `context` and `response` keys.
-        Example:
-             [ {'context': 'good morning!', 'response': 'hello what can i help you with today'},
-             {'context': 'i'd like to book a table with italian food', 'response': 'i'm on it'}]
+        Reads a file from a path and returns data as list.
         """
         raise NotImplementedError
 
