@@ -2,19 +2,19 @@
 from one of the particluar classes, :class:`TensorflowModel`, :class:`SklearnModel`,
 :class:`NonTrainableModel` """
 
-from typing import List
+from typing import List, Dict, Type
 
 
 class Model:
-    def __init__(self, config_path: str, models: List = None):
+    def __init__(self, models: List = None, params: Dict = None):
         """
-        :param config_path: encoded JSON path to traverse the origin of the model
         :param models: any nested models
+        :param params: hypermarameters/parameters of the model
         """
-        self.config_path = config_path
         self._models = models
+        self._params = params
 
-    def predict(self, data):
+    def infer(self, data):
         """
         Predict data.
         :param data: any type of input data
@@ -26,5 +26,24 @@ class Model:
     def _load(self):
         """
         Load model from file.
+        """
+        raise NotImplementedError
+
+    @classmethod
+    def from_params(cls, params: Dict) -> Type:
+        """
+          Static method that constructs the dataset reader described by ``params`` in a config file.
+          ``params`` arg is what comes from the json config.
+
+          Example:
+              signature_params = ['param1', 'param2']
+              param_dict = {}
+              for sp in signature_params:
+                  try:
+                      param_dict[sp] = params[sp]
+                  except KeyError:
+                      pass
+
+              return TestModel(**param_dict)
         """
         raise NotImplementedError
