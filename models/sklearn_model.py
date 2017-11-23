@@ -3,19 +3,25 @@ Inherit from this model to implement a `scikit-learn <http://scikit-learn.org/st
 """
 import pickle
 from overrides import overrides
+from typing import Type
 
 from models.model import Model
 
 
+# TODO Could inherit this from sklearn.BaseEstimator.
+# TODO Could register sklearn estimator names, so developer won't need to explicitly call for estimator in code.
+# Now developers can't write just "svc" in config, they have to write their own model inherited from this class
+# and explicitly pass sklearn.svm.SVC class as `estimator` param to the constructor. Registering sklearn names
+# would solve this issue. However, developer will have to look in the docs for registered names.
 class SklearnModel(Model):
-    def __init__(self, config_path, models, estimator):
+    def __init__(self, models, params, estimator: Type):
         # TODO where the estimator parameters should initialize?
         self._estimator = estimator
-        super(SklearnModel).__init__(config_path, models)
+        super(SklearnModel).__init__(models, params)
 
-    def predict(self, data):
+    def infer(self, data):
         """
-        Predict data.
+        Load model and predict data.
         :param data: any type of input data
         :return: predicted values
         """
