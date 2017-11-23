@@ -22,6 +22,7 @@ class Model:
         """
         raise NotImplementedError
 
+    # TODO looks like this only exists in trainable models.
     def _load(self):
         """
         Load model from file.
