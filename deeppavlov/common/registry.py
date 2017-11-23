@@ -13,7 +13,7 @@ your training/inference script.
 
 from typing import Type, List
 
-from common.errors import ConfigError
+from deeppavlov.common.errors import ConfigError
 
 _REGISTRY = {}
 

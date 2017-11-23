@@ -2,10 +2,11 @@
 Inherit from this model to implement a `scikit-learn <http://scikit-learn.org/stable/>`_ model.
 """
 import pickle
-from overrides import overrides
 from typing import Type
 
-from models.model import Model
+from overrides import overrides
+
+from deeppavlov.models.model import Model
 
 
 # TODO Could inherit this from sklearn.BaseEstimator.
