@@ -4,7 +4,7 @@ from inspect import getfullargspec
 from deeppavlov.common.registry import _REGISTRY
 
 
-def from_params(cls: Type, params: Dict) -> Type:
+def from_params(cls: Type, params: Dict, **kwargs) -> Type:
     signature_params = getfullargspec(cls.__init__).args[1:]
     config_params = {}
     for sp in signature_params:
@@ -26,5 +26,4 @@ def from_params(cls: Type, params: Dict) -> Type:
                 # Occurs when v['name] throws KeyError. Only those parameters that are registered
                 # classes have 'name' keyword in their json config.
                 pass
-
-    return cls(**config_params)
+    return cls(**dict(config_params, **kwargs))
