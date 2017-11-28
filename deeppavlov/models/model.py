@@ -1,17 +1,20 @@
 """This is a base abstract class for other abstract model classes. Your model should be inherited
 from one of the particluar classes, :class:`TensorflowModel`, :class:`SklearnModel`,
 :class:`NonTrainableModel` """
-from inspect import getfullargspec
-from typing import List, Dict, Type
-from deeppavlov.common.registry import _REGISTRY
+
+from deeppavlov.common.attributes import abstract_attribute
 
 
 class Model:
 
-    def infer(self, data):
+    vocab = None
+
+    def infer(self, data, *inputs):
         """
         Predict data.
         :param data: any type of input data
         :return: any type of predicted values
         """
+        # TODO add 'Abstract Method' to all NotImplementedError errors
+        # TODO check if @abstractmethod decorator is available here.
         raise NotImplementedError
