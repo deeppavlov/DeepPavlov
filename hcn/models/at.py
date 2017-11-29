@@ -1,9 +1,8 @@
 import numpy as np
-
+from pathlib import Path
 from deeppavlov.common.registry import register_model
+from deeppavlov.common import paths
 from deeppavlov.models.model import Model
-
-from hcn.paths import REPONSES
 
 '''
     Action Templates
@@ -39,7 +38,8 @@ class ActionTracker:
         # maintain an instance of EntityTracker
         self.et = ent_tracker
         # get a list of action templates
-        self.action_templates = self.get_action_templates()
+        self.action_templates = self.get_action_templates(
+            Path(paths.USR_PATH).joinpath('responses.txt'))
         self.action_size = len(self.action_templates)
         # action mask
         self.am = np.zeros([self.action_size], dtype=np.float32)
@@ -75,11 +75,10 @@ class ActionTracker:
 
         return construct_mask(ctxt_f)
 
-    def get_action_templates(self, responses_path=REPONSES):
-        with open(responses_path) as f:
-            resp = f.read().split('\n')
+    def get_action_templates(self, responses_path: Path):
+        responses = responses_path.read_text().split('\n')
         responses = list(set([self.et.extract_entities(response, update=False)
-                              for response in resp]))
+                              for response in responses]))
 
         # extract restaurant entities
         return sorted(set([self._extract(response) for response in responses]))
