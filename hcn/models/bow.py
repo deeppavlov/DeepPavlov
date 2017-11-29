@@ -1,5 +1,3 @@
-from typing import Dict
-
 import numpy as np
 
 from deeppavlov.common.registry import register_model
