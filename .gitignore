@@ -108,3 +108,6 @@ ENV/
 
 #TEST
 test/
+
+#My usr dir
+USR_DIR/
