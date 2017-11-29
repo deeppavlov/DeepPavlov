@@ -1,7 +1,4 @@
-from typing import Dict, List
-from inspect import getfullargspec
-
-from deeppavlov.common.registry import _REGISTRY
+from typing import List
 
 
 class DatasetReader:
