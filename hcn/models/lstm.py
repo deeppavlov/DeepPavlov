@@ -1,8 +1,12 @@
+from pathlib import Path
 import numpy as np
 import tensorflow as tf
+
+from tensorflow.python.training.saver import Saver
 from tensorflow.contrib.training import HParams
 from tensorflow.contrib.layers import xavier_initializer as xav
 
+from deeppavlov.common import paths
 from deeppavlov.common.registry import register_model
 from deeppavlov.models.tensorflow_model import TensorflowModel
 
@@ -14,12 +18,14 @@ config = tf.ConfigProto(
 @register_model('lstm')
 class LSTM:
     def __init__(self, input_size, output_size, num_hidden_units=128,
-                 optimizer=tf.train.AdadeltaOptimizer(
-                     0.1)):
+                 optimizer=tf.train.AdadeltaOptimizer(0.1), saver=Saver,
+                 model_dir_path='ckpt/', model_fpath='hcn.ckpt'):
         self.input_size = input_size
         self.output_size = output_size
         self._optimizer = optimizer
+        self._saver = saver
         self._hps = HParams(num_hidden_units=num_hidden_units)
+        self._model_path = Path(paths.USR_PATH).joinpath(model_dir_path, model_fpath)
 
         self._run_sess()
 
@@ -117,4 +123,17 @@ class LSTM:
         # return argmax
         return prediction
 
+    # save session to checkpoint
+    def save(self):
+        self._saver().save(sess=self.sess, save_path=self._model_path.as_posix(), global_step=0)
+        print('\n:: Model saved to {} \n'.format(self._model_path.as_posix()))
+
+    # load session from checkpoint
+    def load(self):
+        ckpt = tf.train.get_checkpoint_state(self._model_path.parent)
+        if ckpt and ckpt.model_checkpoint_path:
+            print('\n:: restoring checkpoint from', ckpt.model_checkpoint_path, '\n')
+            self._saver().restore(self.sess, ckpt.model_checkpoint_path)
+        else:
+            print('\n:: <ERR> checkpoint not found! \n')
 
