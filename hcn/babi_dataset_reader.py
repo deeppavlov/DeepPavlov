@@ -1,9 +1,10 @@
 import logging
 from overrides import overrides
-from os import path
+from pathlib import Path
 from itertools import chain
 
 from deeppavlov.common.registry import register_model
+from deeppavlov.common import paths
 from deeppavlov.data.dataset_reader import DatasetReader
 
 logger = logging.getLogger(__name__)
@@ -25,9 +26,8 @@ class BabiDatasetReader(DatasetReader):
         # get responses
         responses = self._get_responses(file_path, dialogs)
 
-        # with open('/media/olga/Data/projects/iPavlov/Pilot/hcn/USR_DIR/responses.txt', 'w') as f:
-        #     for r in responses:
-        #         f.write('{}\n'.format(r))
+        responses_path = Path(paths.USR_PATH).joinpath('responses.txt')
+        responses_path.write_text('\n'.join(responses))
 
         trainset = [{'context': u, 'response': r} for u, r in zip(utterances, responses)]
 
