@@ -1,5 +1,6 @@
 import sys
 import numpy as np
+from overrides import overrides
 
 from deeppavlov.common.registry import register_model
 from deeppavlov.models.model import Model
@@ -14,8 +15,8 @@ from hcn.models.bow import BoW_encoder
 
 @register_model("hcn_go")
 class HybridCodeNetwork(Model):
-    def __init__(self, vocab_path, bow_encoder=BoW_encoder(), embedder=UtteranceEmbed(),
-                 entity_tracker=EntityTracker()):
+    def __init__(self, vocab_path, bow_encoder=BoW_encoder, embedder=UtteranceEmbed,
+                 entity_tracker=EntityTracker):
 
         self.bow_encoder = bow_encoder
         self.embedder = embedder
@@ -26,7 +27,8 @@ class HybridCodeNetwork(Model):
         input_size = self.embedder.dim + len(self.vocab) + self.entity_tracker.num_features
         self.net = LSTM(input_size=input_size, output_size=self.action_tracker.action_size)
 
-    def train(self, data, num_epochs, num_tr_dialogs):
+    def train(self, data, num_epochs, num_tr_dialogs, acc_threshold=0.9):
+
         # TODO `data` should be batch
 
         print('\n:: training started\n')
@@ -39,7 +41,7 @@ class HybridCodeNetwork(Model):
             i = 0
             for dialog in tr_data:
 
-                self._reset()
+                self.reset()
 
                 dialog_loss = 0.
                 for pair in dialog:
@@ -60,15 +62,15 @@ class HybridCodeNetwork(Model):
             accuracy = self.evaluate(eval_data)
             print(':: {}.dev accuracy {}\n'.format(j + 1, accuracy))
 
-            if accuracy > 0.99:
+            if accuracy > acc_threshold:
                 print('Accuracy is {}, training stopped.'.format(accuracy))
+                self.net.save()
                 break
-
-                # TODO save the model
+        self.net.save()
 
     def evaluate(self, eval_data):
 
-        self._reset()
+        self.reset()
 
         num_eval_dialogs = len(eval_data)
         dialog_accuracy = 0.
@@ -76,7 +78,7 @@ class HybridCodeNetwork(Model):
             # create entity tracker
             # et = EntityTracker()
 
-            self._reset()
+            self.reset()
 
             # iterate through dialog
             correct_examples = 0
@@ -108,10 +110,14 @@ class HybridCodeNetwork(Model):
     def _encode_response(self, response):
         return self.action_tracker.get_template_id(response)
 
-    def infer(self):
-        pass
+    @overrides
+    def infer(self, context, *inputs):
+        features = self._encode_context(context)
+        action_mask = self.action_tracker.action_mask()
+        pred = self.net.forward(features, action_mask)
+        return pred
 
-    def _reset(self):
+    def reset(self):
         self.entity_tracker.reset()
         self.action_tracker.reset(self.entity_tracker)
         self.net.reset_state()
