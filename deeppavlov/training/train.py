@@ -1,21 +1,9 @@
-import json
-from os import path, mkdir
+from pathlib import Path
 
+from deeppavlov.common import paths
+from deeppavlov.common.file import read_json
 from deeppavlov.common.registry import _REGISTRY
 from deeppavlov.common.params import from_params
-
-
-# def make_usr_dir(config_path):
-#     dir_path = path.dirname(path.abspath(config_path))
-#     dir_name = 'USR_DIR'
-#     rUSR_DIR = path.join(dir_path, dir_name)
-#     if not path.exists(USR_DIR):
-#         mkdir(USR_DIR)
-
-
-def read_config(config_path):
-    with open(config_path) as f:
-        return json.load(f)
 
 
 # TODO
@@ -23,10 +11,16 @@ def train_model(data, model):
     pass
 
 
-def train_model_from_config(config_path, ser_dir):
+def train_model_from_config(config_path: str, usr_dir_name='USR_DIR'):
+    # make a serialization user dir
+    root_ = Path(config_path).resolve().parent
+    usr_dir_path = root_.joinpath(usr_dir_name)
+    if not usr_dir_path.exists():
+        usr_dir_path.mkdir()
 
+    paths.USR_PATH = usr_dir_path
 
-    config = read_config(config_path)
+    config = read_json(config_path)
 
     dataset_config = config['dataset_reader']
     dataset_name = dataset_config['name']
@@ -35,7 +29,7 @@ def train_model_from_config(config_path, ser_dir):
     data_reader = from_params(_REGISTRY[dataset_name], dataset_config)
     data = data_reader.read(data_path)
 
-    vocab_path = path.join(ser_dir, 'vocab.txt')
+    vocab_path = usr_dir_path.joinpath('vocab.txt')
     data_reader.save_vocab(data, vocab_path)
 
     model_config = config['model']
@@ -46,7 +40,7 @@ def train_model_from_config(config_path, ser_dir):
     num_tr_data = config['num_train_instances']
 
     ####### Train
-    # TODO do batching in the train script
+    # TODO do batching in the train script. Now there are dialogs that somehow are batches.
     model.train(data, num_epochs, num_tr_data)
 
-    # The result should be a saved trained model.
+    # The result is a saved to user_dir trained model.
