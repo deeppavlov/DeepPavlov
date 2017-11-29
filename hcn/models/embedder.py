@@ -1,28 +1,24 @@
 from gensim.models import word2vec
 import numpy as np
+from pathlib import Path
 
+from deeppavlov.common import paths
 from deeppavlov.common.registry import register_model
 from deeppavlov.models.model import Model
-
-from typing import Dict
-from inspect import getfullargspec
-
-from hcn.paths import TEXT8_MODEL
 
 
 @register_model('w2v')
 class UtteranceEmbed(Model):
-    def __init__(self,
-                 fname=TEXT8_MODEL,
-                 dim=300):
+    def __init__(self, corpus_path, model_dir_path='emb', model_fpath='text8.model', dim=300):
+        self._corpus_path = corpus_path
+        self._model_path = Path(paths.USR_PATH).joinpath(model_dir_path, model_fpath).as_posix()
         self.dim = dim
         try:
-            # load saved model
-            self.model = word2vec.Word2Vec.load(fname)
+            self.model = word2vec.Word2Vec.load(self._model_path)
         except:
             print(':: creating new word2vec model')
-            self.create_model()
-            self.model = word2vec.Word2Vec.load(fname)
+            self._create_model()
+            self.model = word2vec.Word2Vec.load(self._model_path)
 
     def _encode(self, utterance):
         embs = [self.model[word] for word in utterance.split(' ') if word and word in self.model]
@@ -32,12 +28,13 @@ class UtteranceEmbed(Model):
         else:
             return np.zeros([self.dim], np.float32)
 
-    # def create_model(self, fname='text8'):
-    #     sentences = word2vec.Text8Corpus('path')
-    #     model = word2vec.Word2Vec(sentences, size=self.dim)
-    #     model.save('path')
-    #     print(':: model saved to path')
+    def _create_model(self):
+        sentences = word2vec.Text8Corpus(self._corpus_path)
+        model = word2vec.Word2Vec(sentences, size=self.dim)
+
+        Path.mkdir(paths.USR_PATH.joinpath(self._model_dir_path))
+        model.save(self._model_path)
+        print(':: model saved to path')
 
     def infer(self, utterance):
         return self._encode(utterance)
-
