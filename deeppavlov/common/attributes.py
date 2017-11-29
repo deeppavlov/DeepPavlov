@@ -12,6 +12,5 @@ class abstract_attribute(object):
                         '(abstract from class {}'.format(this_obj,
                                                          name,
                                                          cls.__name__))
-                    # we did not find a match, should be rare, but prepare for it
             raise NotImplementedError('{} does not set the abstract attribute <unknown>'
                                       .format(t.__name__))
