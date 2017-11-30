@@ -115,9 +115,33 @@ class HybridCodeNetwork(Model):
         features = self._encode_context(context)
         action_mask = self.action_tracker.action_mask()
         pred = self.net.forward(features, action_mask)
-        return pred
+        return self.action_tracker.action_templates[pred]
 
     def reset(self):
         self.entity_tracker.reset()
         self.action_tracker.reset(self.entity_tracker)
         self.net.reset_state()
+
+    def interact(self):
+        self.reset()
+
+        # get input from user
+        utt = input(':: ')
+
+        # check if user wants to begin new session
+        if utt == 'clear' or utt == 'reset' or utt == 'restart':
+            self.reset()
+            print('')
+
+        # check for exit command
+        elif utt == 'exit' or utt == 'stop' or utt == 'quit' or utt == 'q':
+            return
+
+        else:
+            # ENTER press : silence
+            if not utt:
+                utt = '<SILENCE>'
+
+            # forward
+            pred = self.infer(utt)
+            print('>>', pred)
