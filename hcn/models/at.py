@@ -2,7 +2,6 @@ import numpy as np
 from pathlib import Path
 from deeppavlov.common.registry import register_model
 from deeppavlov.common import paths
-from deeppavlov.models.model import Model
 
 '''
     Action Templates
@@ -77,7 +76,7 @@ class ActionTracker:
 
     def get_action_templates(self, responses_path: Path):
         responses = responses_path.read_text().split('\n')
-        responses = list(set([self.et.extract_entities(response, update=False)
+        responses = list(set([self.et._extract_entities(response, update=False)
                               for response in responses]))
 
         # extract restaurant entities
@@ -86,7 +85,7 @@ class ActionTracker:
     def get_template_id(self, response):
 
         return self.action_templates.index(
-            self._extract(self.et.extract_entities(response, update=False))
+            self._extract(self.et._extract_entities(response, update=False))
         )
 
     @staticmethod

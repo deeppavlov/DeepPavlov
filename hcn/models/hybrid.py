@@ -1,11 +1,11 @@
 import sys
 import numpy as np
-from overrides import overrides
 from typing import Type
 
 from deeppavlov.common.registry import register_model
-from deeppavlov.models.model import Model
 from deeppavlov.data.utils import load_vocab
+from deeppavlov.models.inferable import Inferable
+from deeppavlov.models.trainable import Trainable
 
 from hcn.models.lstm import LSTM
 from hcn.models.et import EntityTracker
@@ -15,7 +15,7 @@ from hcn.models.bow import BoW_encoder
 
 
 @register_model("hcn_go")
-class HybridCodeNetwork(Model):
+class HybridCodeNetwork(Inferable, Trainable):
     def __init__(self, vocab_path, bow_encoder: Type = BoW_encoder, embedder: Type = UtteranceEmbed,
                  entity_tracker: Type =EntityTracker):
 
@@ -28,7 +28,7 @@ class HybridCodeNetwork(Model):
         input_size = self.embedder.dim + len(self.vocab) + self.entity_tracker.num_features
         self.net = LSTM(input_size=input_size, output_size=self.action_tracker.action_size)
 
-    def train(self, data, num_epochs, num_tr_dialogs, acc_threshold=0.9):
+    def train(self, data, num_epochs, num_tr_dialogs, acc_threshold=0.99):
 
         # TODO `data` should be batch
 
@@ -47,7 +47,7 @@ class HybridCodeNetwork(Model):
                 dialog_loss = 0.
                 for pair in dialog:
                     # Loss for a single context-response pair
-                    loss += self.net.train_step(self._encode_context(pair['context']),
+                    loss += self.net.train(self._encode_context(pair['context']),
                                                 self._encode_response(pair['response']),
                                                 self.action_tracker.action_mask())
                 # A whole dialog(batch) loss
@@ -89,7 +89,7 @@ class HybridCodeNetwork(Model):
                 action_mask = self.action_tracker.action_mask()
                 # forward propagation
                 #  train step
-                prediction = self.net.forward(features, action_mask)
+                prediction = self.net.infer(features, action_mask)
                 correct_examples += int(prediction == self._encode_response(pair['response']))
             # get dialog accuracy
             dialog_accuracy += correct_examples / len(dialog)
@@ -103,7 +103,7 @@ class HybridCodeNetwork(Model):
         """
         bow = self.bow_encoder.infer(context, self.vocab)
         emb = self.embedder.infer(context)
-        self.entity_tracker.extract_entities(context)
+        self.entity_tracker.infer(context)
         entities = self.entity_tracker.context_features()
         features = np.concatenate((entities, emb, bow), axis=0)
         return features
@@ -111,11 +111,10 @@ class HybridCodeNetwork(Model):
     def _encode_response(self, response):
         return self.action_tracker.get_template_id(response)
 
-    @overrides
-    def infer(self, context, *inputs):
+    def infer(self, context):
         features = self._encode_context(context)
         action_mask = self.action_tracker.action_mask()
-        pred = self.net.forward(features, action_mask)
+        pred = self.net.infer(features, action_mask)
         return self.action_tracker.action_templates[pred]
 
     def reset(self):

@@ -4,11 +4,12 @@ from pathlib import Path
 
 from deeppavlov.common import paths
 from deeppavlov.common.registry import register_model
-from deeppavlov.models.model import Model
+from deeppavlov.models.trainable import Trainable
+from deeppavlov.models.inferable import Inferable
 
 
 @register_model('w2v')
-class UtteranceEmbed(Model):
+class UtteranceEmbed(Trainable, Inferable):
     def __init__(self, corpus_path, model_dir_path='emb', model_fpath='text8.model', dim=300,
                  train_now=False):
         self._corpus_path = corpus_path
@@ -17,7 +18,7 @@ class UtteranceEmbed(Model):
         self._train_now = train_now
 
         if self._train_now:
-            self._create_model()
+            self.train()
             self.model = word2vec.Word2Vec.load(self._model_path)
 
         else:
@@ -25,7 +26,7 @@ class UtteranceEmbed(Model):
                 self.model = word2vec.Word2Vec.load(self._model_path)
             except:
                 print("There is no pretrained model, training a new one anyway.")
-                self._create_model()
+                self.train()
                 self.model = word2vec.Word2Vec.load(self._model_path)
 
     def _encode(self, utterance):
@@ -36,7 +37,7 @@ class UtteranceEmbed(Model):
         else:
             return np.zeros([self.dim], np.float32)
 
-    def _create_model(self):
+    def train(self):
         sentences = word2vec.Text8Corpus(self._corpus_path)
 
         print(':: creating new word2vec model')

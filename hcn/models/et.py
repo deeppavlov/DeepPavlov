@@ -1,12 +1,12 @@
 from deeppavlov.common.registry import register_model
-from deeppavlov.models.model import Model
+from deeppavlov.models.inferable import Inferable
 
 from enum import Enum
 import numpy as np
 
 
 @register_model('hcn_et')
-class EntityTracker:
+class EntityTracker(Inferable):
     ENTITIES = {
         '<cuisine>': None,
         '<location>': None,
@@ -43,7 +43,7 @@ class EntityTracker:
         else:
             return ent
 
-    def extract_entities(self, utterance, update=True):
+    def _extract_entities(self, utterance, update=True):
         tokenized = []
         for word in utterance.split(' '):
             entity = self.ent_type(word)
@@ -67,3 +67,6 @@ class EntityTracker:
         if hasattr(self, 'ctxt_features'):
             self.__delattr__('ctxt_features')
         self.entities = self.ENTITIES
+
+    def infer(self, utterance):
+        return self._extract_entities(utterance)
