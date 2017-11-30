@@ -12,6 +12,7 @@
       "name": "bow"
     },
     "embedder": {
+      "train_now": false,
       "name": "w2v",
       "corpus_path": "/home/olga/Documents/text8"
     },
