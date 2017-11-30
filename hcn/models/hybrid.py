@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 from overrides import overrides
+from typing import Type
 
 from deeppavlov.common.registry import register_model
 from deeppavlov.models.model import Model
@@ -15,8 +16,8 @@ from hcn.models.bow import BoW_encoder
 
 @register_model("hcn_go")
 class HybridCodeNetwork(Model):
-    def __init__(self, vocab_path, bow_encoder=BoW_encoder, embedder=UtteranceEmbed,
-                 entity_tracker=EntityTracker):
+    def __init__(self, vocab_path, bow_encoder: Type = BoW_encoder, embedder: Type = UtteranceEmbed,
+                 entity_tracker: Type =EntityTracker):
 
         self.bow_encoder = bow_encoder
         self.embedder = embedder
