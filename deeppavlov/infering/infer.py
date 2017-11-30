@@ -1,4 +1,4 @@
-from pathlib  import Path
+from pathlib import Path
 
 from deeppavlov.common import paths
 from deeppavlov.common.file import read_json
@@ -6,33 +6,7 @@ from deeppavlov.common.params import from_params
 from deeppavlov.common.registry import _REGISTRY
 
 
-def interact(model):
-    model.reset()
-
-    while True:
-        # get input from user
-        utt = input(':: ')
-
-        # check if user wants to begin new session
-        if utt == 'clear' or utt == 'reset' or utt == 'restart':
-            model.reset()
-            print('')
-
-        # check for exit command
-        elif utt == 'exit' or utt == 'stop' or utt == 'quit' or utt == 'q':
-            break
-
-        else:
-            # ENTER press : silence
-            if not utt:
-                utt = '<SILENCE>'
-
-            # forward
-            pred = model.infer(utt)
-            print('>>', model.action_tracker.action_templates[pred])
-
-
-def infer(config_path, usr_dir_name='USR_DIR'):
+def get_model_from_config(config_path, usr_dir_name='USR_DIR'):
     config = read_json(config_path)
 
     # make a serialization user dir
@@ -46,4 +20,13 @@ def infer(config_path, usr_dir_name='USR_DIR'):
     model_config = config['model']
     model_name = model_config['name']
     model = from_params(_REGISTRY[model_name], model_config, vocab_path=vocab_path)
-    return interact(model)
+    return model
+
+
+def interact(config_path):
+    model = get_model_from_config(config_path)
+    model.reset()
+    while True:
+        model.interact()
+
+
