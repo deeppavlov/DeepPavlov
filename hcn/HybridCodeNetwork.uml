@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Diagram>
+  <ID>Python</ID>
+  <OriginalElement>hcn.models.hybrid.HybridCodeNetwork</OriginalElement>
+  <nodes>
+    <node x="592.0" y="2132.0">hcn.models.embedder.UtteranceEmbed</node>
+    <node x="1295.8575602629658" y="2589.2315558802043">deeppavlov.models.tensorflow_model.TensorflowModel</node>
+    <node x="608.0" y="1296.0">hcn.models.at.ActionTracker</node>
+    <node x="0.0" y="1296.0">hcn.models.et.EntityTracker</node>
+    <node x="0.0" y="0.0">hcn.models.lstm.LSTM</node>
+    <node x="2177.91015339664" y="1215.401022644266">hcn.models.hybrid.HybridCodeNetwork</node>
+    <node x="2787.0" y="2232.5">hcn.models.bow.BoW_encoder</node>
+    <node x="1743.5" y="1991.5">deeppavlov.models.model.Model</node>
+    <node x="0.0" y="2152.0">deeppavlov.models.sklearn_model.SklearnModel</node>
+  </nodes>
+  <notes />
+  <edges>
+    <edge source="hcn.models.embedder.UtteranceEmbed" target="deeppavlov.models.model.Model">
+      <point x="0.0" y="-185.5" />
+      <point x="1096.5" y="2112.0" />
+      <point x="1866.2" y="2112.0" />
+      <point x="-81.79999999999998" y="25.0" />
+    </edge>
+    <edge source="hcn.models.bow.BoW_encoder" target="deeppavlov.models.model.Model">
+      <point x="0.0" y="-85.0" />
+      <point x="2994.0" y="2102.0" />
+      <point x="2111.6" y="2102.0" />
+      <point x="163.60000000000008" y="25.0" />
+    </edge>
+    <edge source="deeppavlov.models.tensorflow_model.TensorflowModel" target="deeppavlov.models.model.Model">
+      <point x="0.0" y="-185.5" />
+      <point x="2.8421709430404007E-14" y="25.0" />
+    </edge>
+    <edge source="hcn.models.hybrid.HybridCodeNetwork" target="deeppavlov.models.model.Model">
+      <point x="0.0" y="-25.0" />
+      <point x="2531.0" y="2112.0" />
+      <point x="2029.8000000000002" y="2112.0" />
+      <point x="81.80000000000007" y="25.0" />
+    </edge>
+    <edge source="deeppavlov.models.sklearn_model.SklearnModel" target="deeppavlov.models.model.Model">
+      <point x="0.0" y="-165.5" />
+      <point x="286.0" y="2102.0" />
+      <point x="1784.4" y="2102.0" />
+      <point x="-163.6" y="25.0" />
+    </edge>
+  </edges>
+  <settings layout="Hierarchic Group" zoom="0.9453069865913902" x="1598.9896988906494" y="1586.9999999999998" />
+  <SelectedNodes />
+  <Categories>
+    <Category>Fields</Category>
+    <Category>Inner Classes</Category>
+    <Category>Methods</Category>
+  </Categories>
+</Diagram>
+
