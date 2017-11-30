@@ -8,7 +8,7 @@ from tensorflow.contrib.layers import xavier_initializer as xav
 
 from deeppavlov.common import paths
 from deeppavlov.common.registry import register_model
-from deeppavlov.models.tensorflow_model import TensorflowModel
+from deeppavlov.models.tf_model import TFModel
 
 config = tf.ConfigProto(
     device_count={'GPU': 0}
@@ -16,7 +16,7 @@ config = tf.ConfigProto(
 
 
 @register_model('lstm')
-class LSTM:
+class LSTM(TFModel):
     def __init__(self, input_size, output_size, num_hidden_units=128,
                  optimizer=tf.train.AdadeltaOptimizer(0.1), saver=Saver,
                  model_dir_path='ckpt/', model_fpath='hcn.ckpt'):
@@ -39,10 +39,6 @@ class LSTM:
     def _set_state(self, state_c, state_h):
         self._init_state_c = state_c
         self._init_state_h = state_h
-
-    def reset_state(self):
-        init_state = np.zeros([1, self._hps.num_hidden_units], dtype=np.float32)
-        self._set_state(init_state, init_state)
 
     def _run_sess(self):
         self._build_graph()
@@ -96,7 +92,7 @@ class LSTM:
         tf.reset_default_graph()
         self._add_placeholders()
 
-    def train_step(self, features, action, action_mask):
+    def _train_step(self, features, action, action_mask):
         _, loss_value, state_c, state_h = self.sess.run(
             [self._train_op, self.loss, self.state.c, self.state.h],
             feed_dict={
@@ -109,7 +105,7 @@ class LSTM:
         self._set_state(state_c, state_h)
         return loss_value
 
-    def forward(self, features, action_mask):
+    def _forward(self, features, action_mask):
         probas, prediction, state_c, state_h = self.sess.run(
             [self.probs, self.prediction, self.state.c, self.state.h],
             feed_dict={
@@ -123,17 +119,6 @@ class LSTM:
         # return argmax
         return prediction
 
-    # save session to checkpoint
-    def save(self):
-        self._saver().save(sess=self.sess, save_path=self._model_path.as_posix(), global_step=0)
-        print('\n:: Model saved to {} \n'.format(self._model_path.as_posix()))
-
-    # load session from checkpoint
-    def load(self):
-        ckpt = tf.train.get_checkpoint_state(self._model_path.parent)
-        if ckpt and ckpt.model_checkpoint_path:
-            print('\n:: restoring checkpoint from', ckpt.model_checkpoint_path, '\n')
-            self._saver().restore(self.sess, ckpt.model_checkpoint_path)
-        else:
-            print('\n:: <ERR> checkpoint not found! \n')
-
+    def reset_state(self):
+        init_state = np.zeros([1, self._hps.num_hidden_units], dtype=np.float32)
+        self._set_state(init_state, init_state)
