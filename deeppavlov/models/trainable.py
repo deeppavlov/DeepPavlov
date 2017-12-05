@@ -15,10 +15,10 @@ class Trainable(metaclass=ABCMeta):
     train_now = False
 
     @abstractmethod
-    def train(self, features, *args):
+    def train(self, data, *args, **kwargs):
         """
         Train a model.
-        :param features: any type of input data passed for training
+        :param data: any type of input data passed for training
         :param args: all needed params for training
         As a result of training, the model should be saved to user dir defined at
         deeppavlov.common.paths.USR_PATH. Remember that a particular path is assigned in runtime.

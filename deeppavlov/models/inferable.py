@@ -15,12 +15,12 @@ class Inferable(metaclass=ABCMeta):
     """
 
     @abstractmethod
-    def infer(self, instance, *args):
+    def infer(self, instance, *args, **kwargs):
         """
         Infer a model. Any model can infer other model and ask it to do something (predict, encode,
         etc. via this method)
         :param instance: pass data instance to an inferring model
-        :param inputs: all needed params for inferring
+        :param args: all needed params for inferring
         :return a result of inferring
         """
         pass
