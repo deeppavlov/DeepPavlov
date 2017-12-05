@@ -1,20 +1,21 @@
+from enum import Enum
+import numpy as np
+import copy
+
 from deeppavlov.common.registry import register_model
 from deeppavlov.models.inferable import Inferable
 
-from enum import Enum
-import numpy as np
+ENTITIES = {
+    '<cuisine>': None,
+    '<location>': None,
+    '<party_size>': None,
+    '<rest_type>': None,
+}
 
 
 @register_model('hcn_et')
 class EntityTracker(Inferable):
-    ENTITIES = {
-        '<cuisine>': None,
-        '<location>': None,
-        '<party_size>': None,
-        '<rest_type>': None,
-    }
-
-    def __init__(self, entities=ENTITIES):
+    def __init__(self, entities=copy.deepcopy(ENTITIES)):
         self.entities = entities
         self.num_features = 4  # tracking 4 entities
         self.rating = None
@@ -66,7 +67,7 @@ class EntityTracker(Inferable):
     def reset(self):
         if hasattr(self, 'ctxt_features'):
             self.__delattr__('ctxt_features')
-        self.entities = self.ENTITIES
+        self.entities = copy.deepcopy(ENTITIES)
 
     def infer(self, utterance):
         return self._extract_entities(utterance)
