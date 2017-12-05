@@ -105,5 +105,7 @@ class ActionTracker:
 
     def reset(self, ent_tracker):
         self.et = ent_tracker
+        self.am = np.zeros([self.action_size], dtype=np.float32)
+
 
 
