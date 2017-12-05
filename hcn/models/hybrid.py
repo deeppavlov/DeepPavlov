@@ -17,7 +17,7 @@ from hcn.models.bow import BoW_encoder
 @register_model("hcn_go")
 class HybridCodeNetwork(Inferable, Trainable):
     def __init__(self, vocab_path, bow_encoder: Type = BoW_encoder, embedder: Type = UtteranceEmbed,
-                 entity_tracker: Type =EntityTracker):
+                 entity_tracker: Type = EntityTracker):
 
         self.bow_encoder = bow_encoder
         self.embedder = embedder
@@ -36,7 +36,7 @@ class HybridCodeNetwork(Inferable, Trainable):
 
         tr_data = data[:num_tr_dialogs]
         eval_data = data[num_tr_dialogs:250]
-        num_tr_instances = sum(len(dialog) for dialog in tr_data)
+        # num_tr_instances = sum(len(dialog) for dialog in tr_data)
         for j in range(num_epochs):
             loss = 0.
             i = 0
@@ -47,18 +47,18 @@ class HybridCodeNetwork(Inferable, Trainable):
                 dialog_loss = 0.
                 for pair in dialog:
                     # Loss for a single context-response pair
-                    loss += self.net.train(self._encode_context(pair['context']),
-                                                self._encode_response(pair['response']),
-                                                self.action_tracker.action_mask())
+                    dialog_loss += self.net.train(self._encode_context(pair['context']),
+                                                  self._encode_response(pair['response']),
+                                                  self.action_tracker.action_mask())
                 # A whole dialog(batch) loss
                 dialog_loss /= len(dialog)
 
                 # Epoch loss
                 loss += dialog_loss
-                i = i + 1
+                i += 1
                 sys.stdout.write('\r{}.[{}/{}]'.format(j + 1, i, len(tr_data)))
 
-            print('\n\n:: {}.tr loss {}'.format(j + 1, loss / num_tr_instances))
+            print('\n\n:: {}.tr loss {}'.format(j + 1, loss / len(tr_data)))
 
             accuracy = self.evaluate(eval_data)
             print(':: {}.dev accuracy {}\n'.format(j + 1, accuracy))
@@ -70,14 +70,10 @@ class HybridCodeNetwork(Inferable, Trainable):
         self.net.save()
 
     def evaluate(self, eval_data):
-
-        self.reset()
-
         num_eval_dialogs = len(eval_data)
         dialog_accuracy = 0.
+
         for dialog in eval_data:
-            # create entity tracker
-            # et = EntityTracker()
 
             self.reset()
 
@@ -101,6 +97,7 @@ class HybridCodeNetwork(Inferable, Trainable):
         Gen feature for train step.
         :return: training input vector
         """
+        context = context.lower()
         bow = self.bow_encoder.infer(context, self.vocab)
         emb = self.embedder.infer(context)
         self.entity_tracker.infer(context)
@@ -123,25 +120,24 @@ class HybridCodeNetwork(Inferable, Trainable):
         self.net.reset_state()
 
     def interact(self):
-        self.reset()
 
         # get input from user
-        utt = input(':: ')
+        context = input(':: ')
 
         # check if user wants to begin new session
-        if utt == 'clear' or utt == 'reset' or utt == 'restart':
+        if context == 'clear' or context == 'reset' or context == 'restart':
             self.reset()
             print('')
 
         # check for exit command
-        elif utt == 'exit' or utt == 'stop' or utt == 'quit' or utt == 'q':
+        elif context == 'exit' or context == 'stop' or context == 'quit' or context == 'q':
             return
 
         else:
             # ENTER press : silence
-            if not utt:
-                utt = '<SILENCE>'
+            if not context:
+                context = '<SILENCE>'
 
             # forward
-            pred = self.infer(utt)
+            pred = self.infer(context)
             print('>>', pred)
