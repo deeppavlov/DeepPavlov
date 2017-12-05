@@ -13,13 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
+import json
 import logging
 import itertools
 from overrides import overrides
-from pathlib import Path
 
 from deeppavlov.common.registry import register_model
-from deeppavlov.common import paths
 from deeppavlov.data.dataset_reader import DatasetReader
 
 logger = logging.getLogger(__name__)
@@ -34,11 +34,12 @@ class DSTC2DatasetReader(DatasetReader):
         utterances, responses, dialog_indices =\
                 self._read_turns(file_path, with_indices=True)
 
-        responses_path = Path(paths.USR_PATH).joinpath('responses.txt')
-        responses_path.write_text('\n'.join(responses))
-
-        data = [ {'context': u, 'response': r}\
-                 for u, r in zip(utterances, responses) ]
+        data = [{'context': {'text': u['text'],
+                             'intents': u['dialog_acts'],
+                             'db_result': u.get('db_result', None)},
+                 'response': {'text': r['text'],
+                              'act': r['dialog_acts'][0]['act']}}\
+                for u, r in zip(utterances, responses)]
 
         return [ data[idx['start']:idx['end']] for idx in dialog_indices ]
 
@@ -52,11 +53,11 @@ class DSTC2DatasetReader(DatasetReader):
         responses = []
         dialog_indices = []
         n = 0
-        num_dial_utter, num_dial_respo = 0, 0
+        num_dial_utter, num_dial_resp = 0, 0
         for ln in open(file_path, 'rt'):
             if not ln.strip():
-                assert len(num_dial_utter) == len(num_resp_utter),\
-                        "Datafile in the wrong format."
+                if num_dial_utter != num_dial_resp:
+                    raise RuntimeException("Datafile in the wrong format.")
                 n += num_dial_utter
                 dialog_indices.append({
                     'start': n - num_dial_utter,
@@ -81,7 +82,7 @@ class DSTC2DatasetReader(DatasetReader):
     def save_vocab(dialogs, fpath):
         with open(fpath, 'wt') as f:
             words = sorted(set(itertools.chain.from_iterable(
-                turn['context'].lower().split()\
+                turn['context']['text'].lower().split()\
                 for dialog in dialogs for turn in dialog
             )))
             f.write(' '.join(words))
