@@ -30,4 +30,4 @@ class TyposKartaslov(DatasetReader):
             reader = csv.reader(csvfile, delimiter=';')
             next(reader)
             res = [(mistake, correct) for correct, mistake, weight in reader]
-        return res
+        return {'train': res}
