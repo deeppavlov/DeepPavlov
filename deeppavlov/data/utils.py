@@ -25,3 +25,16 @@ def download(dest, source):
 def load_vocab(vocab_path):
     with open(vocab_path) as f:
         return f.read().split()
+
+
+_MARK_DONE = '.done'
+
+
+def mark_done(path):
+    fname = os.path.join(path, _MARK_DONE)
+    with open(fname, 'a'):
+        os.utime(fname, None)
+
+
+def is_done(path):
+    return os.path.isfile(os.path.join(path, _MARK_DONE))
