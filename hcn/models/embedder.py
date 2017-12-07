@@ -10,10 +10,10 @@ from deeppavlov.models.inferable import Inferable
 
 @register_model('w2v')
 class UtteranceEmbed(Trainable, Inferable):
-    def __init__(self, corpus_path, model_dir_path='emb', model_fpath='text8.model', dim=300,
+    def __init__(self, corpus_path, model_dir_path='emb', model_fname='text8.model', dim=300,
                  train_now=False):
         self._corpus_path = corpus_path
-        self._model_path = Path(paths.USR_PATH).joinpath(model_dir_path, model_fpath).as_posix()
+        self._model_path = Path(paths.USR_PATH).joinpath(model_dir_path, model_fname)
         self.dim = dim
         self._train_now = train_now
 
@@ -23,11 +23,11 @@ class UtteranceEmbed(Trainable, Inferable):
 
         else:
             try:
-                self.model = word2vec.Word2Vec.load(self._model_path)
+                self.model = word2vec.Word2Vec.load(str(self._model_path))
             except:
                 print("There is no pretrained model, training a new one anyway.")
                 self.train()
-                self.model = word2vec.Word2Vec.load(self._model_path)
+                self.model = word2vec.Word2Vec.load(str(self._model_path))
 
     def _encode(self, utterance):
         embs = [self.model[word] for word in utterance.split(' ') if word and word in self.model]
@@ -43,8 +43,10 @@ class UtteranceEmbed(Trainable, Inferable):
         print(':: creating new word2vec model')
         model = word2vec.Word2Vec(sentences, size=self.dim)
 
-        Path.mkdir(paths.USR_PATH.joinpath(self._model_dir_path))
-        model.save(self._model_path)
+        if not self._model_path.parent.exists():
+            Path.mkdir(self._model_path.parent)
+
+        model.save(str(self._model_path))
         print(':: model saved to path')
 
     def infer(self, utterance):
