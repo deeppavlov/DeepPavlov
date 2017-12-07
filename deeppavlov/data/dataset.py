@@ -1,12 +1,12 @@
 import random
-from typing import List, Dict, Generator
+from typing import List, Dict, Generator, Tuple
 
 
 class Dataset:
     def split(self, *args, **kwargs):
         pass
 
-    def __init__(self, data: Dict[str, List], *args, **kwargs) -> None:
+    def __init__(self, data: Dict[str, List[Tuple]], *args, **kwargs) -> None:
         r""" Dataset takes a dict with fields 'train', 'test', 'valid'. A list of samples (pairs x, y) is stored
         in each field.
 
@@ -50,4 +50,6 @@ class Dataset:
             samples_gen: a generator, that iterates through the all samples in the 'train' part of dataset
 
         """
-        return self.batch_generator(batch_size=len(self.data[data_type]), data_type=data_type)
+        data = self.data[data_type]
+        for x, y in data:
+            yield (x, y)
