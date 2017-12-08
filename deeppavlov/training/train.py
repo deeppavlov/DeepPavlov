@@ -8,7 +8,6 @@ from deeppavlov.agent.agent import Agent
 from deeppavlov.models.trainable import Trainable
 
 
-# TODO do a separate training for agent and separate - for models.
 # TODO pass paths to local model configs to agent config.
 
 def set_usr_dir(config_path: str, usr_dir_name='USR_DIR'):
@@ -60,3 +59,38 @@ def train_agent_models(config_path: str):
             pass
             # raise NotImplementedError("This model is not an instance of TFModel class."
             #                           "Only TFModel instances can train for now.")
+
+
+def train_model_from_config(config_path: str, usr_dir_name='USR_DIR'):
+    # make a serialization user dir
+    root_ = Path(config_path).resolve().parent
+    usr_dir_path = root_.joinpath(usr_dir_name)
+    if not usr_dir_path.exists():
+        usr_dir_path.mkdir()
+
+    paths.USR_PATH = usr_dir_path
+
+    config = read_json(config_path)
+
+    dataset_config = config['dataset_reader']
+    dataset_name = dataset_config['name']
+    data_path = config['data_path']
+
+    data_reader = from_params(_REGISTRY[dataset_name], dataset_config)
+    data = data_reader.read(data_path)
+
+    vocab_path = usr_dir_path.joinpath('vocab.txt')
+    data_reader.save_vocab(data, vocab_path)
+
+    model_config = config['model']
+    model_name = model_config['name']
+    model = from_params(_REGISTRY[model_name], model_config, vocab_path=vocab_path)
+
+    num_epochs = config['num_epochs']
+    num_tr_data = config['num_train_instances']
+
+    ####### Train
+    # TODO do batching in the train script.
+    model.train(data, num_epochs, num_tr_data)
+
+    # The result is a saved to user_dir trained model.
