@@ -109,6 +109,11 @@ class HybridCodeNetwork(Inferable, Trainable):
         return self.action_tracker.get_template_id(response)
 
     def infer(self, context):
+        if context == 'clear' or context == 'reset' or context == 'restart':
+            self.reset()
+            return ''
+        if not context:
+            context = '<SILENCE>'
         features = self._encode_context(context)
         action_mask = self.action_tracker.action_mask()
         pred = self.net.infer(features, action_mask)
@@ -118,26 +123,3 @@ class HybridCodeNetwork(Inferable, Trainable):
         self.entity_tracker.reset()
         self.action_tracker.reset(self.entity_tracker)
         self.net.reset_state()
-
-    def interact(self):
-
-        # get input from user
-        context = input(':: ')
-
-        # check if user wants to begin new session
-        if context == 'clear' or context == 'reset' or context == 'restart':
-            self.reset()
-            print('')
-
-        # check for exit command
-        elif context == 'exit' or context == 'stop' or context == 'quit' or context == 'q':
-            return
-
-        else:
-            # ENTER press : silence
-            if not context:
-                context = '<SILENCE>'
-
-            # forward
-            pred = self.infer(context)
-            print('>>', pred)
