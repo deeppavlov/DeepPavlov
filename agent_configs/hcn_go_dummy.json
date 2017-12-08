@@ -1,0 +1,41 @@
+{
+  "skills": [
+    {
+      "model": {
+        "name": "dummy"
+      }
+    },
+    {
+      "dataset_reader": {
+        "name": "babi"
+      },
+      "model": {
+        "name": "hcn_go",
+        "net": {
+          "name": "lstm",
+          "num_hidden_units": 128
+        },
+        "bow_encoder": {
+          "name": "bow"
+        },
+        "embedder": {
+          "train_now": false,
+          "name": "w2v",
+          "corpus_path": "/home/olga/Documents/text8"
+        },
+        "entity_tracker": {
+          "name": "hcn_et"
+        },
+        "action_tracker": {
+          "name": "hcn_at"
+        }
+      },
+      "data_path": "../../../DialogStateTracking/data/dialog-bAbI-tasks/dialog-babi-task5-full-dialogs-trn.txt",
+      "num_train_instances": 200,
+      "num_epochs": 20
+    }
+  ],
+  "commutator": {
+    "name": "random"
+  }
+}
