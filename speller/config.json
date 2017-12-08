@@ -1,0 +1,11 @@
+{
+  "model": {
+    "name": "spelling_error_model",
+    "models_path": "../build",
+    "dictionary": {
+      "name": "static_dictionary",
+      "data_dir": "../data",
+      "raw_dictionary_path": "/home/yoptar/reps/speller/downloads/russian_words/compreno_wordforms.txt"
+    }
+  }
+}

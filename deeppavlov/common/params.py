@@ -7,7 +7,7 @@ from deeppavlov.common.registry import _REGISTRY
 def from_params(cls: Type, params: Dict, **kwargs) -> Type:
     signature_params = getfullargspec(cls.__init__).args[1:]
     config_params = {}
-    for sp in signature_params:
+    for sp in params:
         try:
             config_params[sp] = params[sp]
         except KeyError:
