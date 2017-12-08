@@ -12,8 +12,7 @@ class Dataset:
 
         Args:
             data: list of (x, y) pairs. Each pair is a sample from the dataset. x as well as y can be a tuple
-                of different input features.
-            seed (int): random seed for data shuffling. Defaults to None
+                of different input features.seed (int): random seed for data shuffling. Defaults to None
         """
 
         rs = random.getstate()
@@ -36,7 +35,7 @@ class Dataset:
         r"""This function returns a generator, which serves for generation of raw (no preprocessing such as tokenization)
          batches
 
-        Args:
+         Args:
             batch_size (int): number of samples in batch
             data_type (str): can be either 'train', 'test', or 'valid'
 
@@ -67,4 +66,3 @@ class Dataset:
         """
         data = self.data[data_type]
         return iter(data)
-
