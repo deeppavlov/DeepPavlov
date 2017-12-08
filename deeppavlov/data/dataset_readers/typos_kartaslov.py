@@ -1,10 +1,12 @@
 import csv
 import os
 
+from deeppavlov.common.registry import register_model
 from deeppavlov.data.utils import is_done, download, mark_done
 from .dataset_reader import DatasetReader
 
 
+@register_model('typos_kartaslov_reader')
 class TyposKartaslov(DatasetReader):
     @staticmethod
     def build(data_path: str):
