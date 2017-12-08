@@ -4,10 +4,12 @@ from fuzzywuzzy import process
 import json
 from deeppavlov.common.registry import register_model
 from .utils.nlputils import tokenize
+from deeppavlov.models.inferable import Inferable
+from overrides import overrides
 
 
 @register_model('dstc_slotfilling')
-class DstcSlotFillingNetwork:
+class DstcSlotFillingNetwork(Inferable):
     def __init__(self,
                  dict_filepath='model/dict.txt',
                  model_filepath='model/ner_model.ckpt',
@@ -21,6 +23,10 @@ class DstcSlotFillingNetwork:
         self._ner_network = NerNetwork(self._corpus, pretrained_model_filepath=model_filepath, **network_params)
         with open(slot_vals_filepath) as f:
             self._slot_vals = json.load(f)
+
+    @overrides
+    def infer(self, instance, *args, **kwargs):
+        return self.predict_slots(instance)
 
     def interact(self):
         s = input('Type in the message you want to tag: ')
