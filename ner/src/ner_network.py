@@ -1,25 +1,38 @@
+"""
+Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 import os
 from collections import defaultdict
+
 import numpy as np
 import tensorflow as tf
 from .layers import character_embedding_network
 from .layers import embedding_layer
-from .layers import stacked_convolutions
 from .layers import highway_convolutional_network
+from .layers import stacked_convolutions
 from .layers import stacked_rnn
 from tensorflow.contrib.layers import xavier_initializer
-from deeppavlov.models.tf_model import TFModel
-
-from .corpus import Corpus
-from .evaluation import precision_recall_f1
 
 
 SEED = 42
 MODEL_PATH = 'model/'
-MODEL_FILE_NAME = 'ner_model.ckpt'
+MODEL_FILE_NAME = 'ner_model'
 
 
-class NER(TFModel):
+class NerNetwork:
     def __init__(self,
                  corpus,
                  n_filters=(128, 256),
@@ -32,21 +45,16 @@ class NER(TFModel):
                  dense_dropout=False,
                  use_batch_norm=False,
                  logging=False,
+                 entity_of_interest=None,
                  use_crf=False,
                  net_type='cnn',
                  char_filter_width=5,
-                 verbouse=True,
-                 use_capitalization=False,
-                 use_geo_gazetteers=False,
-                 concat_embeddings=False):
+                 verbouse=False):
         tf.reset_default_graph()
-
         n_tags = len(corpus.tag_dict)
         n_tokens = len(corpus.token_dict)
         n_chars = len(corpus.char_dict)
-        embeddings_onethego = not concat_embeddings and \
-                              corpus.embeddings is not None and \
-                              not isinstance(corpus.embeddings, dict)
+        embeddings_onethego = corpus.embeddings is not None and not isinstance(corpus.embeddings, dict)
 
         # Create placeholders
         # noinspection PyPackageRequirements
@@ -54,13 +62,8 @@ class NER(TFModel):
             x_word = tf.placeholder(dtype=tf.float32, shape=[None, None, corpus.embeddings.vector_size], name='x_word')
         else:
             x_word = tf.placeholder(dtype=tf.int32, shape=[None, None], name='x_word')
-        if concat_embeddings:
-            x_emb = tf.placeholder(dtype=tf.float32, shape=[None, None, corpus.embeddings.vector_size], name='x_word')
         x_char = tf.placeholder(dtype=tf.int32, shape=[None, None, None], name='x_char')
         y_true = tf.placeholder(dtype=tf.int32, shape=[None, None], name='y_tag')
-        mask = tf.placeholder(dtype=tf.float32, shape=[None, None], name='mask')
-        x_capi = tf.placeholder(dtype=tf.float32, shape=[None, None], name='x_capi')
-        x_geo = tf.placeholder(dtype=tf.float32, shape=[None, None, len(corpus._geo_gazetteers)], name='x_geo')
 
         # Auxiliary placeholders
         learning_rate_ph = tf.placeholder(dtype=tf.float32, shape=[], name='learning_rate')
@@ -82,16 +85,6 @@ class NER(TFModel):
                     emb = w_emb
         else:
             emb = x_word
-
-        if concat_embeddings:
-            emb = tf.concat([emb, x_emb], axis=2)
-
-        if use_capitalization:
-            cap = tf.expand_dims(x_capi, 2)
-            emb = tf.concat([emb, cap], axis=2)
-
-        if use_geo_gazetteers:
-            emb = tf.concat([emb, x_geo], axis=2)
 
         # Dropout for embeddings
         if embeddings_dropout:
@@ -116,18 +109,18 @@ class NER(TFModel):
                                                       training_ph=training_ph)
         else:
             raise KeyError('There is no such type of network: {}'.format(net_type))
-
         # Classifier
-        if use_geo_gazetteers:
-            units = tf.concat([units, x_geo], axis=-1)
         with tf.variable_scope('Classifier'):
             logits = tf.layers.dense(units, n_tags, kernel_initializer=xavier_initializer())
+
+        # Loss with masking
+        mask = tf.cast(tf.not_equal(x_word, corpus.token_dict.tok2idx('<PAD>')), tf.float32)
 
         if use_crf:
             sequence_lengths = tf.reduce_sum(mask, axis=1)
             log_likelihood, trainsition_params = tf.contrib.crf.crf_log_likelihood(logits,
-                                                                                   y_true,
-                                                                                   sequence_lengths)
+                                                                                y_true,
+                                                                                sequence_lengths)
             loss_tensor = -log_likelihood
             predictions = None
         else:
@@ -136,8 +129,8 @@ class NER(TFModel):
             loss_tensor = loss_tensor * mask
             predictions = tf.argmax(logits, axis=-1)
 
-        loss = tf.reduce_mean(loss_tensor)
 
+        loss = tf.reduce_mean(loss_tensor)
         # Initialize session
         sess = tf.Session()
         if verbouse:
@@ -147,43 +140,29 @@ class NER(TFModel):
 
         self._use_crf = use_crf
         self.summary = tf.summary.merge_all()
-
         self._learning_rate_decay_ph = learning_rate_decay_ph
         self._x_w = x_word
         self._x_c = x_char
         self._y_true = y_true
         self._y_pred = predictions
-        if concat_embeddings:
-            self._x_emb = x_emb
         if use_crf:
             self._logits = logits
             self._trainsition_params = trainsition_params
             self._sequence_lengths = sequence_lengths
-        self._learning_rate_ph = learning_rate_ph
-        self._dropout = dropout_ph
-
         self._loss = loss
         self._sess = sess
         self.corpus = corpus
-
+        self._learning_rate_ph = learning_rate_ph
+        self._dropout = dropout_ph
         self._loss_tensor = loss_tensor
         self._use_dropout = True if embeddings_dropout or dense_dropout else None
-
         self._training_ph = training_ph
         self._logging = logging
-
-        # Get training op
         self._train_op = self.get_train_op(loss, learning_rate_ph, lr_decay_rate=learning_rate_decay_ph)
         self._embeddings_onethego = embeddings_onethego
+        self._entity_of_interest = entity_of_interest
         self.verbouse = verbouse
         sess.run(tf.global_variables_initializer())
-        self._mask = mask
-        if use_capitalization:
-            self._x_capi = x_capi
-        self._use_capitalization = use_capitalization
-        self._use_geo_gazetteers = use_geo_gazetteers
-        self._concat_embeddings = concat_embeddings
-        self._x_geo = x_geo
         if pretrained_model_filepath is not None:
             self.load(pretrained_model_filepath)
 
@@ -203,8 +182,7 @@ class NER(TFModel):
         feed_dict = {self._x_w: x_word, self._x_c: x_char, self._y_true: y_tag}
         self._sess.run(self._train_op, feed_dict=feed_dict)
 
-    @staticmethod
-    def print_number_of_parameters():
+    def print_number_of_parameters(self):
         print('Number of parameters: ')
         vars = tf.trainable_variables()
         blocks = defaultdict(int)
@@ -220,13 +198,16 @@ class NER(TFModel):
 
     def fit(self, batch_gen=None, batch_size=32, learning_rate=1e-3, epochs=1, dropout_rate=0.5, learning_rate_decay=1):
         for epoch in range(epochs):
+            count = 0
             if self.verbouse:
                 print('Epoch {}'.format(epoch))
             if batch_gen is None:
                 batch_generator = self.corpus.batch_generator(batch_size, dataset_type='train')
-            for x, y in batch_generator:
-                feed_dict = self._fill_feed_dict(x,
-                                                 y,
+            for (x_word, x_char), y_tag in batch_generator:
+
+                feed_dict = self._fill_feed_dict(x_word,
+                                                 x_char,
+                                                 y_tag,
                                                  learning_rate,
                                                  dropout_rate=dropout_rate,
                                                  training=True,
@@ -236,6 +217,7 @@ class NER(TFModel):
                     self.train_writer.add_summary(summary)
 
                 self._sess.run(self._train_op, feed_dict=feed_dict)
+                count += len(x_word)
             if self.verbouse:
                 self.eval_conll('valid', print_results=True)
             self.save()
@@ -248,8 +230,8 @@ class NER(TFModel):
             results = self.eval_conll(dataset_type='test', short_report=True)
         return results
 
-    def predict(self, x):
-        feed_dict = self._fill_feed_dict(x, training=False)
+    def predict(self, x_word, x_char):
+        feed_dict = self._fill_feed_dict(x_word, x_char, training=False)
         if self._use_crf:
             y_pred = []
             logits, trans_params, sequence_lengths = self._sess.run([self._logits,
@@ -258,7 +240,7 @@ class NER(TFModel):
                                                                      ],
                                                                     feed_dict=feed_dict)
 
-            # iterate over the sentences because no batching in viterbi_decode
+            # iterate over the sentences because no batching in vitervi_decode
             for logit, sequence_length in zip(logits, sequence_lengths):
                 logit = logit[:int(sequence_length)]  # keep only the valid steps
                 viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(logit, trans_params)
@@ -267,64 +249,37 @@ class NER(TFModel):
             y_pred = self._sess.run(self._y_pred, feed_dict=feed_dict)
         return self.corpus.tag_dict.batch_idxs2batch_toks(y_pred, filter_paddings=True)
 
-    def eval_conll(self, dataset_type='test', print_results=True, short_report=True):
-        y_true_list = list()
-        y_pred_list = list()
-        print('Eval on {}:'.format(dataset_type))
-        for x, y_gt in self.corpus.batch_generator(batch_size=32, dataset_type=dataset_type):
-            y_pred = self.predict(x)
-            y_gt = self.corpus.tag_dict.batch_idxs2batch_toks(y_gt, filter_paddings=True)
-            for tags_pred, tags_gt in zip(y_pred, y_gt):
-                for tag_predicted, tag_ground_truth in zip(tags_pred, tags_gt):
-                    y_true_list.append(tag_ground_truth)
-                    y_pred_list.append(tag_predicted)
-                y_true_list.append('O')
-                y_pred_list.append('O')
-        return precision_recall_f1(y_true_list,
-                                   y_pred_list,
-                                   print_results,
-                                   short_report)
-
     def _fill_feed_dict(self,
-                        x,
+                        x_w,
+                        x_c,
                         y_t=None,
                         learning_rate=None,
                         training=False,
                         dropout_rate=1,
                         learning_rate_decay=1):
-
         feed_dict = dict()
-        if self._embeddings_onethego:
-            feed_dict[self._x_w] = x['emb']
-        else:
-            feed_dict[self._x_w] = x['token']
-        feed_dict[self._x_c] = x['char']
-        feed_dict[self._mask] = x['mask']
+        feed_dict[self._x_w] = x_w
+        feed_dict[self._x_c] = x_c
         feed_dict[self._training_ph] = training
         if y_t is not None:
             feed_dict[self._y_true] = y_t
-
-        # Optional arguments
-        if self._use_capitalization:
-            feed_dict[self._x_capi] = x['capitalization']
-
-        if self._use_geo_gazetteers:
-            feed_dict[self._x_geo] = x['geo']
-
-        if self._concat_embeddings:
-            feed_dict[self._x_emb] = x['emb']
-
-        # Learning rate
         if learning_rate is not None:
             feed_dict[self._learning_rate_ph] = learning_rate
             feed_dict[self._learning_rate_decay_ph] = learning_rate_decay
-
-        # Dropout
         if self._use_dropout is not None and training:
             feed_dict[self._dropout] = dropout_rate
         else:
             feed_dict[self._dropout] = 1.0
         return feed_dict
+
+    def eval_loss(self, data_type='test', batch_size=32):
+        num_tokens = 0
+        loss = 0
+        for (x_w, x_c), y_t in self.corpus.batch_generator(batch_size=batch_size, dataset_type=data_type):
+            feed_dict = self._fill_feed_dict(x_w, x_c, y_t, training=False)
+            loss += np.sum(self._sess.run(self._loss_tensor, feed_dict=feed_dict))
+            num_tokens += np.sum(self.corpus.token_dict.is_pad(x_w))
+        return loss / num_tokens
 
     @staticmethod
     def get_trainable_variables(trainable_scope_names=None):
@@ -359,10 +314,6 @@ class NER(TFModel):
         # For batch norm it is necessary to update running averages
         extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(extra_update_ops):
-            optimizer = tf.train.AdamOptimizer(learning_rate)
-            gards_and_vars = optimizer.compute_gradients(loss, tf.trainable_variables())
-            grads_and_vars = [(tf.clip_by_norm(grad), var) for grad, var in grads_and_vars]
-            optimizer.apply_gradients(grads_and_vars)
             train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss, global_step=global_step, var_list=variables)
         return train_op
 
@@ -375,30 +326,5 @@ class NER(TFModel):
             predictions_batch_no_pad.append(predicted_tags[: len(tokens_batch[n])])
         return predictions_batch_no_pad
 
-
-if __name__ == '__main__':
-    corp = Corpus(dicts_filepath='dict.txt')
-
-    parameters = {'n_conv_layers': 2,
-                  'n_filters': 100,
-                  'filter_width': 5,
-                  'token_embeddings_dim': 100,
-                  'char_embeddings_dim': 25,
-                  'use_batch_norm': False,
-                  'use_crf': True}
-
-    # Creating a convolutional NER model
-    ner = NER(corp, **parameters)
-
-    # Training the model
-    ner.fit(epochs=10,
-            batch_size=8,
-            learning_rate=1e-2,
-            dropout_rate=0.5)
-
-    # Creating new predict_for_token_batch model and restoring pre-trained weights
-    path = '/'.join(os.path.realpath(__file__).split('/')[:-1])
-    model_path = os.path.join(path, MODEL_PATH, MODEL_FILE_NAME)
-    ner_ = NER(corp, pretrained_model_filepath=model_path, **parameters)
-    # Evaluate loaded model
-    print('Success')
+    def shutdown(self):
+        self._sess.close()

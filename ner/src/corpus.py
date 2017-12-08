@@ -1,10 +1,26 @@
+"""
+Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 from collections import Counter
 from collections import defaultdict
 import random
 import numpy as np
-from utils.nlputils import get_list_of_us_geo_objects
 
-DATA_PATH = '/tmp/ner'
+
+DATA_PATH = '/tmp/nerpa'
 DOC_START_STRING = '-DOCSTART-'
 SEED = 42
 SPECIAL_TOKENS = ['<PAD>', '<UNK>']
@@ -30,14 +46,14 @@ class Vocabulary:
             # in SPECIAL_TOKENS
             default_ind = special_tokens.index('<UNK>')
             self._t2i = defaultdict(lambda: default_ind)
-        self._i2t = list()
+        self._i2t = dict()
         self.frequencies = Counter()
 
         self.counter = 0
         for token in special_tokens:
             self._t2i[token] = self.counter
             self.frequencies[token] += 0
-            self._i2t.append(token)
+            self._i2t[self.counter] = token
             self.counter += 1
         if tokens is not None:
             self.update_dict(tokens)
@@ -46,7 +62,7 @@ class Vocabulary:
         for token in tokens:
             if token not in self._t2i:
                 self._t2i[token] = self.counter
-                self._i2t.append(token)
+                self._i2t[self.counter] = token
                 self.counter += 1
             self.frequencies[token] += 1
 
@@ -102,7 +118,7 @@ class Corpus:
         elif dicts_filepath is not None:
             self.dataset = None
             self.load_corpus_dicts(dicts_filepath)
-        self._geo_gazetteers = get_list_of_us_geo_objects()
+
         if embeddings_file_path is not None:
             self.embeddings = self.load_embeddings(embeddings_file_path)
         else:
@@ -175,7 +191,8 @@ class Corpus:
                         batch_size,
                         dataset_type='train',
                         shuffle=True,
-                        allow_smaller_last_batch=True):
+                        allow_smaller_last_batch=True,
+                        return_char=True):
         tokens_tags_pairs = self.dataset[dataset_type]
         n_samples = len(tokens_tags_pairs)
         if shuffle:
@@ -190,68 +207,51 @@ class Corpus:
             batch_end = min((k + 1) * batch_size, n_samples)
             x_batch = [tokens_tags_pairs[ind][0] for ind in order[batch_start: batch_end]]
             y_batch = [tokens_tags_pairs[ind][1] for ind in order[batch_start: batch_end]]
-            x, y = self.tokens_batch_to_numpy_batch(x_batch, y_batch)
-            yield x, y
+            (x_token, x_char), y = self.tokens_batch_to_numpy_batch(x_batch, y_batch, return_char)
+            if return_char:
+                yield (x_token, x_char), y
+            else:
+                yield x_token, y
 
-    def tokens_batch_to_numpy_batch(self, batch_x, batch_y=None):
-        x = dict()
+    def tokens_batch_to_numpy_batch(self, batch_x, batch_y=None, return_char=True):
         # Determine dimensions
         batch_size = len(batch_x)
         max_utt_len = max([len(utt) for utt in batch_x])
         max_token_len = max([len(token) for utt in batch_x for token in utt])
-
-        # Check whether bin file is used (if so then embeddings will be prepared on the go using gensim)
         prepare_embeddings_onthego = self.embeddings is not None and not isinstance(self.embeddings, dict)
         # Prepare numpy arrays
         if prepare_embeddings_onthego:  # If the embeddings is a fastText model
-            x['emb'] = np.zeros([batch_size, max_utt_len, self.embeddings.vector_size], dtype=np.float32)
-
-        x['token'] = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_dict['<PAD>']
-        x['char'] = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * self.char_dict['<PAD>']
-
-        # Capitalization
-        x['capitalization'] = np.zeros([batch_size, max_utt_len], dtype=np.float32)
-        for n, utt in enumerate(batch_x):
-            x['capitalization'][n, :len(utt)] = [tok[0].isupper() for tok in utt]
-
-        # Geo gazetteers features
-        x['geo'] = np.zeros([batch_size, max_utt_len, len(self._geo_gazetteers)], dtype=np.float32)
-        # for n, utt in enumerate(batch_x):
-        #     for q, gazetteer in enumerate(self._geo_gazetteers):
-        #         for gazetteer_val in gazetteer:
-        #             items = gazetteer_val.split()
-        #             n_i = len(items)
-        #             for k in range(len(utt) - len(items) + 1):
-        #                 if utt[k: k + n_i] == items:
-        #                     x['geo'][n, k: k + n_i, q] = 1.0
-
-        # Prepare x batch
-        for n, utterance in enumerate(batch_x):
-            if prepare_embeddings_onthego:
-                try:
-                    x['emb'][n, :len(utterance), :] = [self.embeddings[token] for token in utterance]
-                except KeyError:
-                    pass
-            x['token'][n, :len(utterance)] = self.token_dict.toks2idxs(utterance)
-            for k, token in enumerate(utterance):
-                x['char'][n, k, :len(token)] = self.char_dict.toks2idxs(token)
-
-        # Mask for paddings
-        x['mask'] = np.zeros([batch_size, max_utt_len], dtype=np.float32)
-        for n in range(batch_size):
-            x['mask'][n, :len(batch_x[n])] = 1
-
-        # Prepare y batch
+            x_token = np.zeros([batch_size, max_utt_len, self.embeddings.vector_size], dtype=np.float32)
+        else:  # If the embeddings is a token - vector dictionary
+            x_token = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_dict['<PAD>']
+        if return_char:
+            x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * self.char_dict['<PAD>']
+        else:
+            x_char = None
         if batch_y is not None:
             y = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.tag_dict['<PAD>']
         else:
             y = None
 
+        # Prepare x batch
+        for n, utterance in enumerate(batch_x):
+            if prepare_embeddings_onthego:
+                try:
+                    x_token[n, :len(utterance), :] = [self.embeddings[token] for token in utterance]
+                except KeyError:
+                    pass
+            else:
+                x_token[n, :len(utterance)] = self.token_dict.toks2idxs(utterance)
+            if return_char:
+                for k, token in enumerate(utterance):
+                    x_char[n, k, :len(token)] = self.char_dict.toks2idxs(token)
+
+        # Prepare y batch
         if batch_y is not None:
             for n, tags in enumerate(batch_y):
                 y[n, :len(tags)] = self.tag_dict.toks2idxs(tags)
 
-        return x, y
+        return (x_token, x_char), y
 
     def save_corpus_dicts(self, filename='dict.txt'):
         # Token dict
@@ -309,13 +309,3 @@ class Corpus:
                 if len(line) > 0:
                     chars.append(line)
             self.char_dict = Vocabulary(chars)
-
-
-if __name__ == '__main__':
-    from data_tools import snips_reader, dataset_slicer
-    xy_list = snips_reader()
-    dataset = dataset_slicer(xy_list)
-    corp = Corpus(dataset)
-    # Check batching
-    batch_size = 2
-    (x, xc), y = corp.batch_generator(batch_size, dataset_type='test').__next__()

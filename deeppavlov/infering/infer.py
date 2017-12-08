@@ -15,11 +15,10 @@ def get_model_from_config(config_path, usr_dir_name='USR_DIR'):
 
     paths.USR_PATH = usr_dir_path
 
-    vocab_path = Path(usr_dir_path).joinpath('vocab.txt')
-
     model_config = config['model']
     model_name = model_config['name']
-    model = from_params(_REGISTRY[model_name], model_config, vocab_path=vocab_path)
+    # NOTE: vocab_path is removed! Does every model need vocab_path as input argument?
+    model = from_params(_REGISTRY[model_name], model_config)
     return model
 
 
