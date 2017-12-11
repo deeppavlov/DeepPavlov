@@ -28,7 +28,7 @@ class ErrorModel(Inferable, Trainable):
         if os.path.isfile(self.file_name):
             self.load(self.file_name)
 
-    def find_candidates(self, word, k=10, prop_threshold=1e-6):
+    def find_candidates(self, word, k=1, prop_threshold=1e-6):
         threshold = log(prop_threshold)
         d = {}
         prefixes_heap = [(0, {''})]
@@ -113,6 +113,7 @@ class ErrorModel(Inferable, Trainable):
     def train(self, data, *args, **kwargs):
         changes = []
         entries = []
+        data = list(data)
         n = len(data)
         window = 4
         for i, (error, correct) in enumerate(data):
@@ -131,7 +132,7 @@ class ErrorModel(Inferable, Trainable):
                 entries += [op[0] for op in ops]
                 changes += [op for op in ops]
             if i % 1500 == 0:
-                print('{} out of {}'.format(i, n))
+                print('{} out of {}'.format(i+1, n))
 
         e_count = Counter(entries)
         c_count = Counter(changes)

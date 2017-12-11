@@ -1,6 +1,6 @@
 from deeppavlov.infering.infer import interact
 
-from models.error_model import ErrorModel
+from speller.models.error_model import ErrorModel
 
 CONFIG_PATH = 'config.json'
 ###### Train all models

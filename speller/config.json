@@ -7,5 +7,12 @@
       "data_dir": "../data",
       "raw_dictionary_path": "/home/yoptar/reps/speller/downloads/russian_words/compreno_wordforms.txt"
     }
+  },
+  "dataset_reader": {
+    "name": "typos_kartaslov_reader",
+    "data_path": "../data"
+  },
+  "dataset": {
+    "name": "typos_dataset"
   }
 }

@@ -27,6 +27,7 @@ class StaticDictionary:
         dict_name = args[0] if args else kwargs.get('name', 'dictionary')
         data_dir = os.path.join(data_dir, dict_name)
         if not is_done(data_dir):
+            print('Trying to build a dictionary in {}'.format(data_dir))
             if os.path.isdir(data_dir):
                 shutil.rmtree(data_dir)
             os.makedirs(data_dir, 0o755)
@@ -55,6 +56,7 @@ class StaticDictionary:
                 pickle.dump(words_trie, f)
 
             mark_done(data_dir)
+            print('built')
 
         with open(os.path.join(data_dir, 'alphabet.pkl'), 'rb') as f:
             self.alphabet = pickle.load(f)
