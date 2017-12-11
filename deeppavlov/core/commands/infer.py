@@ -1,8 +1,8 @@
-from deeppavlov.common.file import read_json
-from deeppavlov.common.params import from_params
-from deeppavlov.common.registry import _REGISTRY
-from deeppavlov.agent.agent import Agent
+from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.registry import _REGISTRY
 
+from deeppavlov.core.agent.agent import Agent
+from deeppavlov.core.common.params import from_params
 from .utils import set_usr_dir, set_vocab_path, build_agent_from_config, USR_DIR
 
 

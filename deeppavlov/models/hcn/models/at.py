@@ -1,7 +1,9 @@
-import numpy as np
 from pathlib import Path
-from deeppavlov.common.registry import register_model
-from deeppavlov.common import paths
+
+import numpy as np
+
+from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common import paths
 
 '''
     Action Templates

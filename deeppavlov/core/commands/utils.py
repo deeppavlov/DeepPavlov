@@ -1,8 +1,9 @@
 from pathlib import Path
 
-from deeppavlov.common import paths
-from deeppavlov.common.file import read_json
-from deeppavlov.agent.agent import Agent
+from deeppavlov.core.common import paths
+
+from deeppavlov.core.agent.agent import Agent
+from deeppavlov.core.common.file import read_json
 
 USR_DIR = 'USR_DIR'
 

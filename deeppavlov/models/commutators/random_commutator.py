@@ -1,8 +1,8 @@
-from typing import List
 from random import choice
 
-from deeppavlov.models.inferable import Inferable
-from deeppavlov.common.registry import register_model
+from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.models.inferable import Inferable
+
 
 @register_model("random")
 class RandomCommutator(Inferable):

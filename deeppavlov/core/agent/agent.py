@@ -1,6 +1,6 @@
 from typing import List, Dict
 
-from deeppavlov.models.inferable import Inferable
+from deeppavlov.core.models.inferable import Inferable
 
 
 # TODO Create this class dynamically?

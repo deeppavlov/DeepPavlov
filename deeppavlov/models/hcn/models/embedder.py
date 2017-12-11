@@ -1,11 +1,12 @@
-from gensim.models import word2vec
-import numpy as np
 from pathlib import Path
 
-from deeppavlov.common import paths
-from deeppavlov.common.registry import register_model
-from deeppavlov.models.trainable import Trainable
-from deeppavlov.models.inferable import Inferable
+import numpy as np
+from gensim.models import word2vec
+
+from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.core.common import paths
+from deeppavlov.core.models.inferable import Inferable
 
 
 @register_model('w2v')

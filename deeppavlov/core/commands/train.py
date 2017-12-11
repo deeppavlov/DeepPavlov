@@ -1,9 +1,9 @@
-from deeppavlov.common.file import read_json
-from deeppavlov.common.registry import _REGISTRY
-from deeppavlov.common.params import from_params
-from deeppavlov.models.trainable import Trainable
-
-from deeppavlov.commands.utils import set_vocab_path, build_agent_from_config, set_usr_dir, USR_DIR
+from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.registry import _REGISTRY
+from deeppavlov.core.commands.utils import set_vocab_path, build_agent_from_config, set_usr_dir, \
+    USR_DIR
+from deeppavlov.core.common.params import from_params
+from deeppavlov.core.models.trainable import Trainable
 
 
 # TODO pass paths to local model configs to agent config.

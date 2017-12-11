@@ -1,17 +1,17 @@
 import sys
-import numpy as np
 from typing import Type
+import numpy as np
 
-from deeppavlov.common.registry import register_model
-from deeppavlov.data.utils import load_vocab
-from deeppavlov.models.inferable import Inferable
-from deeppavlov.models.trainable import Trainable
+from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.data.utils import load_vocab
+from deeppavlov.core.models.inferable import Inferable
 
-from hcn.models.lstm import LSTM
-from hcn.models.et import EntityTracker
-from hcn.models.at import ActionTracker
-from hcn.models.embedder import UtteranceEmbed
-from hcn.models.bow import BoW_encoder
+from deeppavlov.models.hcn.models.at import ActionTracker
+from deeppavlov.models.hcn.models.bow import BoW_encoder
+from deeppavlov.models.hcn.models.embedder import UtteranceEmbed
+from deeppavlov.models.hcn.models.et import EntityTracker
+from deeppavlov.models.hcn.models.lstm import LSTM
 
 
 @register_model("hcn_go")
