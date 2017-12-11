@@ -2,6 +2,7 @@ from typing import List, Dict
 
 from deeppavlov.models.inferable import Inferable
 
+
 # TODO Create this class dynamically?
 class Agent(Inferable):
     def __init__(self, skill_configs: List[Dict], commutator_config: Dict):
@@ -11,4 +12,3 @@ class Agent(Inferable):
 
     def infer(self):
         pass
-
