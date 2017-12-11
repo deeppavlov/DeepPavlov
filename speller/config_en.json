@@ -1,16 +1,17 @@
 {
   "model": {
     "name": "spelling_error_model",
+    "model_name": "error_model_en",
     "models_path": "../build",
     "dictionary": {
       "name": "static_dictionary",
-      "dictionary_name": "compreno_words",
+      "dictionary_name": "wiki_1M",
       "data_dir": "../data",
-      "raw_dictionary_path": "/home/yoptar/reps/speller/downloads/russian_words/compreno_wordforms.txt"
+      "raw_dictionary_path": "/home/yoptar/reps/new-spell-checker/langmodel/data/wikipedia-vocab-1M.txt"
     }
   },
   "dataset_reader": {
-    "name": "typos_kartaslov_reader",
+    "name": "typos_wikipedia_reader",
     "data_path": "../data"
   },
   "dataset": {

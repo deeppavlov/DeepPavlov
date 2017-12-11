@@ -7,11 +7,12 @@ from deeppavlov.data.dataset_readers.dataset_reader import DatasetReader
 from deeppavlov.models.trainable import Trainable
 
 from deeppavlov.data.dataset_readers.typos_kartaslov import TyposKartaslov
+from deeppavlov.data.dataset_readers.typos_wikipedia import TyposWikipedia
 from speller.typos_dataset import TyposDataset
 from speller.models.error_model import ErrorModel
 
 
-def main(config_name='config.json'):
+def main(config_name='config_en.json'):
     with open(config_name) as f:
         config = json.load(f)
     model_config = config['model']

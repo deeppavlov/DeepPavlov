@@ -16,7 +16,7 @@ class StaticDictionary:
         if not raw_path:
             raise RuntimeError('raw_path for StaticDictionary is not set')
         with open(raw_path, newline='') as f:
-            data = f.readlines()
+            data = [line.strip().split('\t')[0] for line in f]
         return data
 
     @staticmethod
@@ -24,7 +24,7 @@ class StaticDictionary:
         return '⟬{}⟭'.format(word.strip().lower().replace('ё', 'е'))
 
     def __init__(self, data_dir, *args, **kwargs):
-        dict_name = args[0] if args else kwargs.get('name', 'dictionary')
+        dict_name = args[0] if args else kwargs.get('dictionary_name', 'dictionary')
         data_dir = os.path.join(data_dir, dict_name)
         if not is_done(data_dir):
             print('Trying to build a dictionary in {}'.format(data_dir))
