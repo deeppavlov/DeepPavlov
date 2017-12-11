@@ -1,5 +1,5 @@
-from deeppavlov.training.train import train_agent_models, train_model_from_config
-from deeppavlov.infering.infer import interact_agent, interact_model
+from deeppavlov.commands.infer import interact_agent, interact_model
+from deeppavlov.commands.train import train_agent_models, train_model_from_config
 
 from hcn.babi_dataset_reader import BabiDatasetReader
 from hcn.models.hybrid import HybridCodeNetwork
