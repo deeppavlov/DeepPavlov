@@ -36,11 +36,13 @@ def interact_agent(config_path):
 
         predictions = []
         for model in models:
-            predictions.append(model.infer(context))
-        pred = commutator.infer(predictions, a.history)
+            predictions.append({model.__class__.__name__: model.infer(context)})
+        idx, name, pred = commutator.infer(predictions, a.history)
         print('>>', pred)
 
-        a.history.append({'context': context, "predictions": predictions, "winner": pred})
+        a.history.append({'context': context, "predictions": predictions,
+                          "winner": {"idx": idx, "model": name, "prediction": pred}})
+        print("Current history: {}".format(a.history))
 
 
 def build_model_from_config(config_path, usr_dir_name=USR_DIR):
