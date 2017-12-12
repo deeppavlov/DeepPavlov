@@ -12,7 +12,7 @@ from speller.typos_dataset import TyposDataset
 from speller.models.error_model import ErrorModel
 
 
-def main(config_name='config.json'):
+def main(config_name='config_en.json'):
     with open(config_name) as f:
         config = json.load(f)
     model_config = config['model']

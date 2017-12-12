@@ -12,6 +12,7 @@ from deeppavlov.common.registry import register_model
 from deeppavlov.models.inferable import Inferable
 from deeppavlov.models.trainable import Trainable
 from speller.models.static_dictionary import StaticDictionary
+from speller.models.wiki_100k_dictionary import Wiki100KDictionary
 
 
 @register_model('spelling_error_model')

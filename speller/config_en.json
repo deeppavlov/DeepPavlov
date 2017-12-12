@@ -5,10 +5,8 @@
     "models_path": "../build",
     "window": 1,
     "dictionary": {
-      "name": "static_dictionary",
-      "dictionary_name": "wiki_1M",
-      "data_dir": "../data",
-      "raw_dictionary_path": "/home/yoptar/reps/new-spell-checker/langmodel/data/wikipedia-vocab-1M.txt"
+      "name": "wikipedia_100K_vocab",
+      "data_dir": "../data"
     }
   },
   "dataset_reader": {

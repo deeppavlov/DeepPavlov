@@ -1,3 +1,4 @@
+lxml==4.1.1
 tqdm==4.19.4
 requests==2.18.4
 gensim==2.3.0

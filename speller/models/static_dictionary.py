@@ -10,6 +10,8 @@ from deeppavlov.data.utils import is_done, mark_done
 
 @register_model('static_dictionary')
 class StaticDictionary:
+    dict_name = None
+
     @staticmethod
     def _get_source(*args, **kwargs):
         raw_path = args[2] if len(args) > 2 else kwargs.get('raw_dictionary_path', None)
@@ -24,8 +26,9 @@ class StaticDictionary:
         return '⟬{}⟭'.format(word.strip().lower().replace('ё', 'е'))
 
     def __init__(self, data_dir, *args, **kwargs):
-        dict_name = args[0] if args else kwargs.get('dictionary_name', 'dictionary')
-        data_dir = os.path.join(data_dir, dict_name)
+        if self.dict_name is None:
+            self.dict_name = args[0] if args else kwargs.get('dictionary_name', 'dictionary')
+        data_dir = os.path.join(data_dir, self.dict_name)
         if not is_done(data_dir):
             print('Trying to build a dictionary in {}'.format(data_dir))
             if os.path.isdir(data_dir):
@@ -57,6 +60,8 @@ class StaticDictionary:
 
             mark_done(data_dir)
             print('built')
+        else:
+            print('Loading a dictionary from {}'.format(data_dir))
 
         with open(os.path.join(data_dir, 'alphabet.pkl'), 'rb') as f:
             self.alphabet = pickle.load(f)
