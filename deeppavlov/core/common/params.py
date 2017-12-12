@@ -3,6 +3,7 @@ from inspect import getfullargspec
 from typing import Dict, Type
 
 from deeppavlov.core.common.registry import _REGISTRY
+from deeppavlov.core.common.errors import ConfigError
 
 
 def from_params(cls: Type, params: Dict, **kwargs) -> Type:
@@ -14,7 +15,7 @@ def from_params(cls: Type, params: Dict, **kwargs) -> Type:
         except KeyError:
             # Occurs when params[sp] throws KeyError. It means that the needed configuration is
             # absent in the json file and a default configuration from class constructor should
-            #  be taken instead.
+            # be taken instead.
             pass
 
     for reg_name, subcl_params in config_params.items():
@@ -24,7 +25,7 @@ def from_params(cls: Type, params: Dict, **kwargs) -> Type:
                 subcl_params.pop('name')
                 config_params[reg_name] = from_params(subcl, subcl_params)
             except KeyError:
-                # Occurs when v['name] throws KeyError. Only those parameters that are registered
-                # classes have 'name' keyword in their json config.
-                pass
+                raise ConfigError(
+                    "Your registered classes should have 'name' keyword in the config.")
     return cls(**dict(config_params, **kwargs))
+
