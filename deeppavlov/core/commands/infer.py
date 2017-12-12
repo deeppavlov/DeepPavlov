@@ -57,6 +57,7 @@ def _get_model(config_path, vocab_path):
     model_config = config['model']
     model_name = model_config['name']
     model = from_params(_REGISTRY[model_name], model_config, vocab_path=vocab_path)
+    model.reset()
     return model
 
 
