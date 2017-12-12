@@ -12,7 +12,7 @@ from deeppavlov.core.common import paths
 
 
 class SklearnModel(Trainable, Inferable):
-    def __init__(self, estimator: Type, params: Dict=None, model_dir_path='sklearn',
+    def __init__(self, estimator: Type, params: Dict = None, model_dir_path='sklearn',
                  model_fpath='estimator.pkl'):
         if params is None:
             self._params = {}
@@ -22,8 +22,6 @@ class SklearnModel(Trainable, Inferable):
         self.model_dir_path = model_dir_path
         self.model_fpath = model_fpath
         self.model_path = Path(paths.USR_PATH).joinpath(model_dir_path, model_fpath)
-
-
 
     def infer(self, features, fit_params=None, prediction_type='label'):
         """
@@ -46,7 +44,7 @@ class SklearnModel(Trainable, Inferable):
                 return self._estimator.predict_proba(features, fit_params)
             else:
                 raise AttributeError(
-                    "Scikit-learn estimator {} doesn't have predict_proba() method.".format(
+                    "S{} estimator doesn't have predict_proba() method.".format(
                         self._estimator.__class__.__name__))
 
         elif prediction_type == 'log_proba':
@@ -55,19 +53,13 @@ class SklearnModel(Trainable, Inferable):
                 return self._estimator.predict_log_proba(features, fit_params)
             else:
                 raise AttributeError(
-                    "Scikit-learn estimator {} doesn't have predict_proba() method.".format(
+                    "{} estimator doesn't have predict_proba() method.".format(
                         self._estimator.__class__.__name__))
 
-    def train(self, data, fit_params=None, *args, **kwargs):
-        features = []
-        target = []
-        for item in data:
-            target.append(item[-1])
-            features.append(item[:-1])
-
+    def train(self, data, target, fit_params=None, *args, **kwargs):
         if fit_params is None:
             fit_params = {}
-        self._estimator.fit(X=features, y=target, **fit_params)
+        self._estimator.fit(data, target, **fit_params)
         self.save()
 
     def save(self):
@@ -88,8 +80,7 @@ class SklearnModel(Trainable, Inferable):
         try:
             return load_pickle(self.model_path)
         except FileNotFoundError as e:
-            raise(e, "There is no model in the specified path: {}".format(self.model_path))
+            raise (e, "There is no model in the specified path: {}".format(self.model_path))
 
     def reset(self):
         pass
-
