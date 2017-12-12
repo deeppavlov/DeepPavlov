@@ -1,62 +1,95 @@
 """
 Inherit from this model to implement a `scikit-learn <http://scikit-learn.org/stable/>`_ model.
 """
-import pickle
-from typing import Type
+from pathlib import Path
 
-from overrides import overrides
+from typing import Type, Dict
 
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.core.common.file import load_pickle, save_pickle
+from deeppavlov.core.common import paths
 
 
-# TODO Could inherit this from sklearn.BaseEstimator.
-# TODO Could register sklearn estimator names, so developer won't need to explicitly call for estimator in code.
-# Now developers can't write just "svc" in config, they have to write their own model inherited from this class
-# and explicitly pass sklearn.svm.SVC class as `estimator` param to the constructor. Registering sklearn names
-# would solve this issue. However, developer will have to look in the docs for registered names.
 class SklearnModel(Trainable, Inferable):
-    def __init__(self, models, params, estimator: Type):
-        # TODO where the estimator parameters should initialize?
-        self._estimator = estimator
-        super(SklearnModel).__init__(models, params)
+    def __init__(self, estimator: Type, params: Dict=None, model_dir_path='sklearn',
+                 model_fpath='estimator.pkl'):
+        if params is None:
+            self._params = {}
+        else:
+            self._params = params
+        self._estimator = estimator().set_params(**self._params)
+        self.model_dir_path = model_dir_path
+        self.model_fpath = model_fpath
+        self.model_path = Path(paths.USR_PATH).joinpath(model_dir_path, model_fpath)
 
-    def infer(self, data):
-        """
-        Load model and predict data.
-        :param data: any type of input data
-        :return: predicted values
-        """
-        X = self._gen_features(data)
-        return self._estimator.predict(X)
 
-    def _save(self):
+
+    def infer(self, features, fit_params=None, prediction_type='label'):
+        """
+        :param prediction_type: Specify type of prediction type. Sklearn estimators can predict labels,
+        probas and log probas. Choose value from ['label', 'proba', 'log_proba'].
+        """
+        if fit_params is None:
+            fit_params = {}
+
+        fit_transform = getattr(self._estimator, 'fit_transform', None)
+        if callable(fit_transform):
+            return self._estimator.fit_transform(features, fit_params)
+
+        if prediction_type == 'label':
+            return self._estimator.predict(features, fit_params)
+
+        elif prediction_type == 'proba':
+            predict_proba = getattr(self._estimator, 'predict_proba', None)
+            if callable(predict_proba):
+                return self._estimator.predict_proba(features, fit_params)
+            else:
+                raise AttributeError(
+                    "Scikit-learn estimator {} doesn't have predict_proba() method.".format(
+                        self._estimator.__class__.__name__))
+
+        elif prediction_type == 'log_proba':
+            log_proba = getattr(self._estimator, 'log_proba', None)
+            if callable(log_proba):
+                return self._estimator.predict_log_proba(features, fit_params)
+            else:
+                raise AttributeError(
+                    "Scikit-learn estimator {} doesn't have predict_proba() method.".format(
+                        self._estimator.__class__.__name__))
+
+    def train(self, data, fit_params=None, *args, **kwargs):
+        features = []
+        target = []
+        for item in data:
+            target.append(item[-1])
+            features.append(item[:-1])
+
+        if fit_params is None:
+            fit_params = {}
+        self._estimator.fit(X=features, y=target, **fit_params)
+        self.save()
+
+    def save(self):
         """
         Save model to file.
         """
-        # TODO create ser_dir, not 'any_dir'.
-        with open('any_dir') as f:
-            pickle.dump(self._estimator, f)
+        if not self.model_path.parent.exists():
+            Path.mkdir(self.model_path.parent)
 
-    @overrides
-    def _load(self):
+        save_pickle(self._estimator, self.model_path.as_posix())
+
+        print(':: model saved to {}'.format(self.model_path))
+
+    def load(self):
         """
         Load model from file.
         """
-        # TODO decide what dir to check for loading.
-        with open('any_dir') as f:
-            pickle.dump(self._estimator, f)
+        try:
+            return load_pickle(self.model_path)
+        except FileNotFoundError as e:
+            raise(e, "There is no model in the specified path: {}".format(self.model_path))
 
-    def _gen_features(self, dataset):
-        """
-        Generate necessary for training features. Use :attr:`models`to generate input feature
-        vector. The function should return an input feature vector.
-        :param dataset: a dataset used for training
-        """
-        # TODO should return target vector only for train.
-        raise NotImplementedError
+    def reset(self):
+        pass
 
-    def train(self, dataset):
-        X = self._gen_features(dataset)
-        self._estimator.fit(X)
-        self._save()
