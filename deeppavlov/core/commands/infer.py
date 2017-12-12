@@ -3,6 +3,7 @@ from deeppavlov.core.common.registry import _REGISTRY
 
 from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.common.params import from_params
+from deeppavlov.core.common.errors import ConfigError
 from .utils import set_usr_dir, set_vocab_path, build_agent_from_config, USR_DIR
 
 
@@ -72,5 +73,9 @@ def interact_model(config_path):
         if context == 'exit' or context == 'stop' or context == 'quit' or context == 'q':
             return
 
-        pred = model.infer(context)
-        print('>>', pred)
+        try:
+            pred = model.infer(context)
+            print('>>', pred)
+        except Exception:
+            raise ConfigError(
+                "Are you sure that you are interacting with a skill? Can this model speak?")
