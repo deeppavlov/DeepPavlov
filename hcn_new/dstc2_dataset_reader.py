@@ -34,11 +34,10 @@ class DSTC2DatasetReader(DatasetReader):
         utterances, responses, dialog_indices =\
                 self._read_turns(file_path, with_indices=True)
 
-        data = [{'context': {'text': u['text'],
-                             'intents': u['dialog_acts'],
-                             'db_result': u.get('db_result', None)},
-                 'response': {'text': r['text'],
-                              'act': r['dialog_acts'][0]['act']}}\
+        data = [{'context': u['text'],
+                 'response': r['text'],
+                 'db_result': u.get('db_result', None),
+                 'act': r['dialog_acts'][0]['act']}\
                 for u, r in zip(utterances, responses)]
 
         return [ data[idx['start']:idx['end']] for idx in dialog_indices ]
@@ -82,7 +81,7 @@ class DSTC2DatasetReader(DatasetReader):
     def save_vocab(dialogs, fpath):
         with open(fpath, 'wt') as f:
             words = sorted(set(itertools.chain.from_iterable(
-                turn['context']['text'].lower().split()\
+                turn['context'].lower().split()\
                 for dialog in dialogs for turn in dialog
             )))
             f.write(' '.join(words))

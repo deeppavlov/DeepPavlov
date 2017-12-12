@@ -23,7 +23,8 @@ class TFModel(Trainable, Inferable):
 
     @property
     def _model_path(self):
-        return Path(paths.USR_PATH).joinpath(_model_dir_path, _model_fpath)
+        return Path(paths.USR_PATH).joinpath(self._model_dir_path,
+                                             self._model_fpath)
 
     @abstractmethod
     def _add_placeholders(self):
@@ -87,9 +88,9 @@ class TFModel(Trainable, Inferable):
         return self._forward(instance, *args)
 
     def save(self):
-        self._saver().save(sess=self.sess,
-                           save_path=self._model_path.as_posix(),
-                           global_step=0)
+        fname = self._saver().save(sess=self.sess,
+                                   save_path=self._model_path.as_posix(),
+                                   global_step=0)
         print('\n:: Model saved to {} \n'.format(fname))
 
     def load(self, fname=None):

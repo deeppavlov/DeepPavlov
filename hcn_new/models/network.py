@@ -15,21 +15,21 @@ limitations under the License.
 """
 
 import numpy as np
-
 import tensorflow as tf
+
 from tensorflow.contrib.layers import xavier_initializer
 
 from deeppavlov.common.registry import register_model
 from deeppavlov.models.tf_model import TFModel
 
 
-@register_model('hcn-rnn')
+@register_model('hcn_rnn')
 class HybridCodeNetworkModel(TFModel):
 
     def __init__(self, **params):
         self.opt = params
-        self._model_dir_path = params['model_dir_path']
-        self._model_fpath = params['model_fpath']
+        self._model_dir_path = self.opt.get('model_dir_path', '')
+        self._model_fpath = self.opt.get('model_fpath', 'hcn_rnn')
 
         # initialize parameters
         self._init_params()
@@ -101,13 +101,13 @@ class HybridCodeNetworkModel(TFModel):
                                              state=(self._state_c,
                                                     self._state_h))
 
-        # reshape LSTM's state tuple (2,128) -> (1,256)
+        # reshape LSTM's state tuple (2,n_hidden) -> (1,n_hidden*2)
         _state_reshaped = tf.concat(axis=1,
                                     values=(self._next_state.c,
                                             self._next_state.h))
 
         # output projection
-        _Wo = tf.get_variable('Wo', [self.n_hidden, self.n_actions],
+        _Wo = tf.get_variable('Wo', [self.n_hidden*2, self.n_actions],
                               initializer=xavier_initializer())
         _bo = tf.get_variable('bo', [self.n_actions],
                               initializer=tf.constant_initializer(0.))

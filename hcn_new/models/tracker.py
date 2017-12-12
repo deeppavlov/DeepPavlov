@@ -17,8 +17,10 @@ limitations under the License.
 import numpy as np
 
 from deeppavlov.models.inferable import Inferable
+from deeppavlov.common.registry import register_model
 
 
+@register_model('default_tracker')
 class DefaultTracker(Inferable):
 
     def __init__(self, slot_names):
@@ -29,9 +31,13 @@ class DefaultTracker(Inferable):
     def state_size(self):
         return len(self.slot_names)
 
+    @property
+    def num_features(self):
+        return self.state_size * 2 + 2
+
     def reset_state(self):
         self.history = []
-        self.curr_feats = np.zeros(self.state_size*2, dtype=np.float32)
+        self.curr_feats = np.zeros(self.num_features, dtype=np.float32)
 
     def update_state(self, slots):
         def _filter(slots):
@@ -42,8 +48,12 @@ class DefaultTracker(Inferable):
         elif type(slots) == dict:
             for slot, value in _filter(slots.items()):
                 self.history.append((slot, value))
-        self.curr_feats = np.hstack((self._binary_features(),
-                                     self._diff_features(prev_state)))
+        bin_feats = self._binary_features()
+        diff_feats = self._diff_features(prev_state)
+        self.curr_feats = np.hstack((bin_feats,
+                                     diff_feats,
+                                     np.sum(bin_feats),
+                                     np.sum(diff_feats)))
         return self
 
     def get_state(self):
