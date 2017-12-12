@@ -20,7 +20,7 @@ class TFModel(Trainable, Inferable):
     _model_dir_path = ''
     _model_fpath = ''
     _model_path = Path(paths.USR_PATH).joinpath(_model_dir_path, _model_fpath)
-    sess = tf.Session()
+    sess = None
 
     @abstractmethod
     def _add_placeholders(self):
