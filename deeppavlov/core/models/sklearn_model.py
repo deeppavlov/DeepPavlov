@@ -6,7 +6,8 @@ from typing import Type
 
 from overrides import overrides
 
-from deeppavlov.models.model import Model
+from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.models.trainable import Trainable
 
 
 # TODO Could inherit this from sklearn.BaseEstimator.
@@ -14,7 +15,7 @@ from deeppavlov.models.model import Model
 # Now developers can't write just "svc" in config, they have to write their own model inherited from this class
 # and explicitly pass sklearn.svm.SVC class as `estimator` param to the constructor. Registering sklearn names
 # would solve this issue. However, developer will have to look in the docs for registered names.
-class SklearnModel(Model):
+class SklearnModel(Trainable, Inferable):
     def __init__(self, models, params, estimator: Type):
         # TODO where the estimator parameters should initialize?
         self._estimator = estimator

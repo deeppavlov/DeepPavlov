@@ -4,9 +4,9 @@ from pathlib import Path
 
 from overrides import overrides
 
-from deeppavlov.common import paths
-from deeppavlov.common.registry import register_model
-from deeppavlov.data.dataset_readers.dataset_reader import DatasetReader
+from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common import paths
+from deeppavlov.core.data.dataset_reader import DatasetReader
 
 logger = logging.getLogger(__name__)
 

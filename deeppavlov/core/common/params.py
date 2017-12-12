@@ -1,7 +1,8 @@
-from typing import Dict, Type
 from inspect import getfullargspec
 
-from deeppavlov.common.registry import _REGISTRY
+from typing import Dict, Type
+
+from deeppavlov.core.common.registry import _REGISTRY
 
 
 def from_params(cls: Type, params: Dict, **kwargs) -> Type:

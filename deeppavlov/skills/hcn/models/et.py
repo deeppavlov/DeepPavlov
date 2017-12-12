@@ -1,9 +1,10 @@
-from enum import Enum
-import numpy as np
 import copy
+from enum import Enum
 
-from deeppavlov.common.registry import register_model
-from deeppavlov.models.inferable import Inferable
+import numpy as np
+
+from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.models.inferable import Inferable
 
 ENTITIES = {
     '<cuisine>': None,

@@ -1,5 +1,6 @@
-from deeppavlov.models.inferable import Inferable
-from deeppavlov.common.registry import register_model
+from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.models.inferable import Inferable
+
 
 @register_model("dummy")
 class DummySkill(Inferable):
