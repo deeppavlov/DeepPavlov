@@ -29,14 +29,14 @@ class HybridCodeNetwork(Inferable, Trainable):
         input_size = self.embedder.dim + len(self.vocab) + self.entity_tracker.num_features
         self.net = LSTM(input_size=input_size, output_size=self.action_tracker.action_size)
 
-    def train(self, data, num_epochs, num_tr_dialogs, acc_threshold=0.99):
+    def train(self, data, num_epochs, num_tr_data, acc_threshold=0.99):
 
         # TODO `data` should be batch
 
         print('\n:: training started\n')
 
-        tr_data = data[:num_tr_dialogs]
-        eval_data = data[num_tr_dialogs:250]
+        tr_data = data[:num_tr_data]
+        eval_data = data[num_tr_data:250]
         # num_tr_instances = sum(len(dialog) for dialog in tr_data)
         for j in range(num_epochs):
             loss = 0.
