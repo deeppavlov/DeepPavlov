@@ -20,6 +20,3 @@ interact_agent(AGENT_CONFIG_PATH)
 MODEL_CONFIG_PATH = 'config.json'
 train_model_from_config(MODEL_CONFIG_PATH)
 interact_model(MODEL_CONFIG_PATH)
-
-
-
