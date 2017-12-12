@@ -16,10 +16,15 @@ from speller.models.static_dictionary import StaticDictionary
 
 @register_model('spelling_error_model')
 class ErrorModel(Inferable, Trainable):
-    def __init__(self, models_path, dictionary: StaticDictionary, model_name='error_model', *args, **kwargs):
+    def __init__(self, models_path, dictionary: StaticDictionary, window=1, model_name='error_model', *args, **kwargs):
         self.file_name = os.path.join(models_path, model_name + '.tsv')
         self.costs = defaultdict(itertools.repeat(float('-inf')).__next__)
         self.dictionary = dictionary
+        self.window = window
+        if self.window == 0:
+            self.find_candidates = self._find_candidates_window_0
+        else:
+            self.find_candidates = self._find_candidates_window_n
         self.costs[('', '')] = log(1)
         self.costs[('⟬', '⟬')] = log(1)
         self.costs[('⟭', '⟭')] = log(1)
@@ -28,7 +33,7 @@ class ErrorModel(Inferable, Trainable):
         if os.path.isfile(self.file_name):
             self.load(self.file_name)
 
-    def find_candidates(self, word, k=1, prop_threshold=1e-6):
+    def _find_candidates_window_0(self, word, k=1, prop_threshold=1e-6):
         threshold = log(prop_threshold)
         d = {}
         prefixes_heap = [(0, {''})]
@@ -51,6 +56,38 @@ class ErrorModel(Inferable, Trainable):
                 if prefix in self.dictionary.words_set:
                     heappushpop(candidates, (res[-1], prefix))
                 potential = max(res)
+                if potential > threshold:
+                    heappush(prefixes_heap, (-potential, self.dictionary.words_trie[prefix]))
+        return [(w.strip('⟬⟭'), exp(score)) for score, w in sorted(candidates, reverse=True)]
+
+    def _find_candidates_window_n(self, word, k=1, prop_threshold=1e-6):
+        threshold = log(prop_threshold)
+        word = '⟬{}⟭'.format(word.lower().replace('ё', 'е'))
+        word_len = len(word) + 1
+        inf = float('-inf')
+        d = defaultdict(list)
+        d[''] = [0.] + [inf] * (word_len - 1)
+        prefixes_heap = [(0, self.dictionary.words_trie[''])]
+        candidates = [(inf, '')] * k
+        while prefixes_heap and -prefixes_heap[0][0] > candidates[0][0]:
+            _, prefixes = heappop(prefixes_heap)
+            for prefix in prefixes:
+                prefix_len = len(prefix)
+                d[prefix] = res = [inf]
+                for i in range(1, word_len):
+                    c_res = [inf]
+                    for li in range(1, min(prefix_len + 1, self.window + 2)):
+                        for ri in range(1, min(i+1, self.window + 2)):
+                            prev = d[prefix[:-li]][i-ri]
+                            if prev > threshold:
+                                edit = (prefix[-li:], word[i-ri:i])
+                                if edit in self.costs:
+                                    c_res.append(prev +
+                                                 self.costs[edit])
+                    res.append(max(c_res))
+                if prefix in self.dictionary.words_set:
+                    heappushpop(candidates, (res[-1], prefix))
+                potential = max([e for i in range(self.window+2) for e in d[prefix[:prefix_len-i]]])
                 if potential > threshold:
                     heappush(prefixes_heap, (-potential, self.dictionary.words_trie[prefix]))
         return [(w.strip('⟬⟭'), exp(score)) for score, w in sorted(candidates, reverse=True)]
