@@ -32,9 +32,9 @@ import fasttext
 import re
 import json
 
-# from deeppavlov.common import paths
-# from deeppavlov.models.trainable import Trainable
-# from deeppavlov.models.inferable import Inferable
+from deeppavlov.common import paths
+from deeppavlov.models.trainable import Trainable
+from deeppavlov.models.inferable import Inferable
 
 from keras.models import Model
 from keras.layers import Dense, Input, concatenate, Activation, Embedding
@@ -53,9 +53,9 @@ class KerasIntentModel(object):
 
     def __init__(self, opt, classes):
         # super.__init__()
-        # self._model_dir_path = ''
-        # self._model_fpath = ''
-        # self._model_path = Path(paths.USR_PATH).joinpath(self._model_dir_path, self._model_fpath)
+        self._model_dir_path = ''
+        self._model_fpath = ''
+        self._model_path = Path(paths.USR_PATH).joinpath(self._model_dir_path, self._model_fpath)
         self.opt = copy.deepcopy(opt)
         self.opt['kernel_sizes_cnn'] = [int(x) for x in opt['kernel_sizes_cnn'].split(' ')]
         self.opt['lear_metrics_list'] = opt['lear_metrics'].split(' ')
@@ -132,6 +132,9 @@ class KerasIntentModel(object):
         print('___Initializing model from saved___'
               '\nModel weights file is %s.h5'
               '\nNetwork parameters are from %s_opt.json' % (fname, fname))
+
+        fname = self.opt.get('model_file', None) if fname is None else fname
+
         if os.path.isfile(fname + '_opt.json'):
             with open(fname + '_opt.json', 'r') as opt_file:
                 # TODO: network params from json, learning params from current config
