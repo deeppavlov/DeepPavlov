@@ -45,14 +45,14 @@ opt = {'kernel_sizes_cnn': "1 2 3",
        'filters_cnn' : 64,
        'embedding_size': 100,
        'lear_metrics': 'accuracy',
-       'confident_threshold': 0.6,
+       'confident_threshold': 0.5,
        'model_from_saved': False,
        'optimizer': 'Adam',
-       'lear_rate': 0.01,
+       'lear_rate': 1.,
        'lear_rate_decay': 0.1,
        'loss': 'binary_crossentropy',
        'fasttext_model': '/home/dilyara/data/data_files/dstc2/dstc2_intent_model/dstc2_fasttext_model_100.bin',
-       'model_file': 'home/dilyara/data/models/intent_models/dstc2/pilot_model',
+       'model_file': 'home/dilyara/data/models/intent_models/dstc2/pilot_dstc2/cnn_model',
        'text_size': 15,
        'coef_reg_cnn': 1e-4,
        'coef_reg_den': 1e-4,
@@ -68,7 +68,7 @@ valid_batch_generator = dataset.batch_generator(batch_size=opt['batch_size'], da
 
 model = KerasIntentModel(opt, intents)
 updates = 0
-for epoch in range(200):
+for epoch in range(20):
     for batch in train_batch_generator:
         updates += 1
         model.train_on_batch(batch)
