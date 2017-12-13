@@ -1,4 +1,4 @@
-from deeppavlov.data.utils import is_done, mark_done, download_untar
+from deeppavlov.core.data.utils import is_done, mark_done, download_untar
 import deeppavlov
 import os
 
