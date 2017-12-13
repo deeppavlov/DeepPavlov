@@ -34,13 +34,6 @@ print(intents, len(intents))
 prep_train = dataset.preprocess(data_type='all')
 print(prep_train[:100])
 
-# opt = dict()
-# opt['fasttext_model'] = os.path.join(path, 'dstc2_intent_model', 'dstc2_fasttext_model_100.bin')
-# opt['embedding_dim'] = 100
-# fasttext_model = EmbeddingsDict(opt, opt['embedding_dim'])
-# print(fasttext_model.fasttext_model['foo'])
-
-
 opt = {'kernel_sizes_cnn': "1 2 3",
        'filters_cnn' : 64,
        'embedding_size': 100,

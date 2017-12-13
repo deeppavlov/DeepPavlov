@@ -19,12 +19,11 @@ from typing import List, Dict, Generator, Tuple, Any
 import numpy as np
 from utils import preprocessing
 
-# from deeppavlov.data.dataset import Dataset
+from deeppavlov.core.common.registry import register_model
+from deeppavlov.data.dataset import Dataset
 
-
-class IntentDataset(object):
-    def split(self, *args, **kwargs):
-        pass
+@register_model('intent_dataset')
+class IntentDataset(Dataset):
 
     def __init__(self, data, seed=None, *args, **kwargs):
         r""" Dataset takes a dict with fields 'train', 'test', 'valid'. A list of samples (pairs x, y)
@@ -43,7 +42,6 @@ class IntentDataset(object):
         self.train = data.get('train', [])
         self.valid = data.get('valid', [])
         self.test = data.get('test', [])
-        self.split(*args, **kwargs)
         self.data = {
             'train': self.train,
             'valid': self.valid,
@@ -51,7 +49,7 @@ class IntentDataset(object):
             'all': self.train + self.test + self.valid
         }
 
-    def batch_generator(self, batch_size=64, data_type='train'):
+    def batch_generator(self, batch_size=64, data_type='train', *args, **kwargs):
         r"""This function returns a generator, which serves for generation of raw
         (no preprocessing such as tokenization) batches
 
@@ -76,7 +74,7 @@ class IntentDataset(object):
         for i in range((data_len - 1) // batch_size + 1):
             yield list(zip(*[data[o] for o in order[i*batch_size:(i+1)*batch_size]]))
 
-    def iter_all(self, data_type='train'):
+    def iter_all(self, data_type='train', *args, **kwargs):
         r"""Iterate through all data. It can be used for building dictionary or
 
         Args:
@@ -90,7 +88,7 @@ class IntentDataset(object):
         for x, y in data:
             yield (x, y)
 
-    def extract_classes(self):
+    def extract_classes(self, *args, **kwargs):
         intents = []
         all_data = self.iter_all(data_type='train')
         for sample in all_data:
@@ -98,7 +96,7 @@ class IntentDataset(object):
         intents = np.unique(intents)
         return np.array(intents)
 
-    def preprocess(self, data_type='train', data=None):
+    def preprocess(self, data_type='train', data=None, *args, **kwargs):
         """Preprocess the data.
 
         Args:

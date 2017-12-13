@@ -16,19 +16,23 @@ limitations under the License.
 
 import os
 import pandas as pd
+from deeppavlov.core.common.registry import register_model
+from deeppavlov.data.dataset_readers.dataset_reader import DatasetReader
 
-
-class IntentDatasetReader(object):
+@register_model('intent_dataset_reader')
+class IntentDatasetReader(DatasetReader):
     """
     IntentDatasetReader reads data from some location and constructs a dict of given datasets.
     """
-    def read(self, train_data_path=None, valid_data_path=None, test_data_path=None, *args, **kwargs):
+    @staticmethod
+    def read(train_data_path=None, valid_data_path=None, test_data_path=None, *args, **kwargs):
         """
         Read a file from a path and returns data as dict with given datasets.
         """
         data_dict = dict()
 
         if train_data_path is not None:
+            print('___Reading train data from %s' % train_data_path)
             if os.path.isfile(train_data_path):
                 train_data = pd.read_csv(train_data_path)
                 samples = []
@@ -38,6 +42,7 @@ class IntentDatasetReader(object):
             else:
                 raise IOError("Error: Train file does not exist")
         if valid_data_path is not None:
+            print('___Reading valid data from %s' % train_data_path)
             if os.path.isfile(valid_data_path):
                 valid_data = pd.read_csv(valid_data_path)
                 samples = []
@@ -47,6 +52,7 @@ class IntentDatasetReader(object):
             else:
                 raise IOError("Error: Valid file does not exist")
         if test_data_path is not None:
+            print('___Reading test data from %s' % train_data_path)
             if os.path.isfile(test_data_path):
                 test_data = pd.read_csv(test_data_path)
                 samples = []
