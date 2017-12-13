@@ -13,4 +13,4 @@ class RussianWordsVocab(StaticDictionary):
         print('Downloading russian vocab from https://github.com/danakt/russian-words/')
         url = 'https://github.com/danakt/russian-words/raw/master/russian.txt'
         page = requests.get(url)
-        return page.content.decode('cp1251').split()
+        return [word.strip() for word in page.content.decode('cp1251').split('\n')]
