@@ -5,6 +5,8 @@ import numpy as np
 from deeppavlov.core.common.registry import register_model
 from deeppavlov.core.common import paths
 
+from deeppavlov.skills.hcn.models.et import EntityTracker
+
 '''
     Action Templates
 
@@ -35,7 +37,7 @@ from deeppavlov.core.common import paths
 
 @register_model('hcn_at')
 class ActionTracker:
-    def __init__(self, ent_tracker):
+    def __init__(self, ent_tracker=EntityTracker):
         # maintain an instance of EntityTracker
         self.et = ent_tracker
         # get a list of action templates
