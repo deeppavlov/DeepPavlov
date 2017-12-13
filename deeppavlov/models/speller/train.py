@@ -1,15 +1,11 @@
 import json
 
-from deeppavlov.common.params import from_params
 import deeppavlov.common.registry as registry
-from deeppavlov.data.dataset import Dataset
-from deeppavlov.data.dataset_readers.dataset_reader import DatasetReader
 from deeppavlov.models.trainable import Trainable
 
-from deeppavlov.data.dataset_readers.typos_kartaslov import TyposKartaslov
-from deeppavlov.data.dataset_readers.typos_wikipedia import TyposWikipedia
-from speller.typos_dataset import TyposDataset
-from speller.models.error_model import ErrorModel
+from deeppavlov.common.params import from_params
+from deeppavlov.data.dataset import Dataset
+from deeppavlov.data.dataset_readers.dataset_reader import DatasetReader
 
 
 def main(config_name='config_en.json'):

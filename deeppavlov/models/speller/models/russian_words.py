@@ -1,7 +1,7 @@
-from deeppavlov.common.registry import register_model
-from speller.models.static_dictionary import StaticDictionary
-from lxml import html
 import requests
+from deeppavlov.common.registry import register_model
+
+from deeppavlov.models.speller.models import StaticDictionary
 
 
 @register_model('russian_words_vocab')

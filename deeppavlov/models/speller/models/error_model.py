@@ -1,19 +1,15 @@
 import csv
-from collections import defaultdict, Counter
-
 import itertools
-
 import os
+from collections import defaultdict, Counter
 from heapq import heappop, heappushpop, heappush
-
 from math import log, exp
 
 from deeppavlov.common.registry import register_model
 from deeppavlov.models.inferable import Inferable
 from deeppavlov.models.trainable import Trainable
-from speller.models.static_dictionary import StaticDictionary
-from speller.models.wiki_100k_dictionary import Wiki100KDictionary
-from speller.models.russian_words import RussianWordsVocab
+
+from deeppavlov.models.speller.models import StaticDictionary
 
 
 @register_model('spelling_error_model')
