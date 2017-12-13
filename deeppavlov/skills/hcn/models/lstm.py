@@ -1,14 +1,14 @@
 from pathlib import Path
+
 import numpy as np
 import tensorflow as tf
-
-from tensorflow.python.training.saver import Saver
-from tensorflow.contrib.training import HParams
 from tensorflow.contrib.layers import xavier_initializer as xav
+from tensorflow.contrib.training import HParams
+from tensorflow.python.training.saver import Saver
 
-from deeppavlov.common import paths
-from deeppavlov.common.registry import register_model
-from deeppavlov.models.tf_model import TFModel
+from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common import paths
+from deeppavlov.core.models.tf_model import TFModel
 
 config = tf.ConfigProto(
     device_count={'GPU': 0}

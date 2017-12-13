@@ -1,17 +1,18 @@
 import sys
-import numpy as np
+
 from typing import Type
+import numpy as np
 
-from deeppavlov.common.registry import register_model
-from deeppavlov.data.utils import load_vocab
-from deeppavlov.models.inferable import Inferable
-from deeppavlov.models.trainable import Trainable
+from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.data.utils import load_vocab
+from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.models.trainable import Trainable
 
-from hcn.models.lstm import LSTM
-from hcn.models.et import EntityTracker
-from hcn.models.at import ActionTracker
-from hcn.models.embedder import UtteranceEmbed
-from hcn.models.bow import BoW_encoder
+from deeppavlov.skills.hcn.models.at import ActionTracker
+from deeppavlov.skills.hcn.models.bow import BoW_encoder
+from deeppavlov.skills.hcn.models.embedder import UtteranceEmbed
+from deeppavlov.skills.hcn.models.et import EntityTracker
+from deeppavlov.skills.hcn.models.lstm import LSTM
 
 
 @register_model("hcn_go")
@@ -28,14 +29,14 @@ class HybridCodeNetwork(Inferable, Trainable):
         input_size = self.embedder.dim + len(self.vocab) + self.entity_tracker.num_features
         self.net = LSTM(input_size=input_size, output_size=self.action_tracker.action_size)
 
-    def train(self, data, num_epochs, num_tr_dialogs, acc_threshold=0.99):
+    def train(self, data, num_epochs, num_tr_data, acc_threshold=0.99):
 
         # TODO `data` should be batch
 
         print('\n:: training started\n')
 
-        tr_data = data[:num_tr_dialogs]
-        eval_data = data[num_tr_dialogs:250]
+        tr_data = data[:num_tr_data]
+        eval_data = data[num_tr_data:250]
         # num_tr_instances = sum(len(dialog) for dialog in tr_data)
         for j in range(num_epochs):
             loss = 0.

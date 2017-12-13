@@ -10,16 +10,16 @@ from pathlib import Path
 import tensorflow as tf
 from tensorflow.python.training.saver import Saver
 
-from deeppavlov.common import paths
-from deeppavlov.models.trainable import Trainable
-from deeppavlov.models.inferable import Inferable
+from deeppavlov.core.common import paths
+from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.core.models.inferable import Inferable
 
 
 class TFModel(Trainable, Inferable):
     _saver = Saver
     _model_dir_path = ''
     _model_fpath = ''
-    sess = tf.Session()
+    sess = None
 
     @property
     def _model_path(self):
