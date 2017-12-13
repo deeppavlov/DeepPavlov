@@ -1,7 +1,6 @@
 {
   "dataset_reader": {
-    "name": "babi",
-    "data_path": "../../../DialogStateTracking/data/dialog-bAbI-tasks/dialog-babi-task5-full-dialogs-trn.txt",
+    "name": "babi"
   },
   "model": {
     "name": "hcn_go",
@@ -24,7 +23,7 @@
       "name": "hcn_at"
     }
   },
-
+  "data_path": "../../../../../DialogStateTracking/data/dialog-bAbI-tasks/dialog-babi-task5-full-dialogs-trn.txt",
   "num_train_instances": 200,
   "num_epochs": 20,
   "config_path": "config.json"

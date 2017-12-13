@@ -1,11 +1,12 @@
 import logging
-from overrides import overrides
-from pathlib import Path
 from itertools import chain
+from pathlib import Path
 
-from deeppavlov.common.registry import register_model
-from deeppavlov.common import paths
-from deeppavlov.data.dataset_reader import DatasetReader
+from overrides import overrides
+
+from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common import paths
+from deeppavlov.core.data.dataset_reader import DatasetReader
 
 logger = logging.getLogger(__name__)
 
