@@ -37,5 +37,6 @@ def from_params(cls: Type, params: Dict, **kwargs) -> Type['T']:
                     "The class {} is not registered. Either register this class,"
                     " or rename the parameter.".format(
                         subcl_params['name']))
-
+    # DEBUG
+    # print(type(cls(**dict(config_params, **kwargs))))
     return cls(**dict(config_params, **kwargs))
