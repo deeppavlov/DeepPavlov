@@ -93,8 +93,11 @@ class IntentDataset(Dataset):
         all_data = self.iter_all(data_type='train')
         for sample in all_data:
             intents.extend(sample[1])
+        all_data = self.iter_all(data_type='valid')
+        for sample in all_data:
+            intents.extend(sample[1])
         intents = np.unique(intents)
-        return np.array(intents)
+        return np.array(sorted(intents))
 
     def preprocess(self, data_type='train', data=None, *args, **kwargs):
         """Preprocess the data.
