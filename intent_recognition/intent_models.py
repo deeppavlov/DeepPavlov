@@ -32,9 +32,9 @@ import fasttext
 import re
 import json
 
-from deeppavlov.common import paths
-from deeppavlov.models.trainable import Trainable
-from deeppavlov.models.inferable import Inferable
+from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.common.registry import register_model
 
 from keras.models import Model
 from keras.layers import Dense, Input, concatenate, Activation, Embedding
@@ -48,14 +48,13 @@ from keras.optimizers import Adam
 
 from utils import EmbeddingsDict
 
-# class KerasIntentModel(Trainable, Inferable):
-class KerasIntentModel(object):
 
-    def __init__(self, opt, classes):
+@register_model('intent_model')
+# class KerasIntentModel(object):
+class KerasIntentModel(Trainable, Inferable):
+    def __init__(self, opt, classes, *args, **kwargs):
         # super.__init__()
-        self._model_dir_path = ''
-        self._model_fpath = ''
-        self._model_path = Path(paths.USR_PATH).joinpath(self._model_dir_path, self._model_fpath)
+
         self.opt = copy.deepcopy(opt)
         self.opt['kernel_sizes_cnn'] = [int(x) for x in opt['kernel_sizes_cnn'].split(' ')]
         self.opt['lear_metrics_list'] = opt['lear_metrics'].split(' ')
@@ -85,6 +84,7 @@ class KerasIntentModel(object):
                                                       metrics=self.learning_params['lear_metrics_list'])
         else:
             self.model = self.init_model_from_saved(model_function=model_function,
+                                                    fname=self.opt['fname'],
                                                     lr=self.learning_params['lear_rate'],
                                                     decay=self.learning_params['lear_rate_decay'],
                                                     loss=self.learning_params['loss'],
@@ -107,7 +107,7 @@ class KerasIntentModel(object):
                                'units_lstm', 'coef_reg_lstm', 'dropout_rate_lstm']
         list_learning_params = ['dropout_rate', 'lear_rate', 'lear_rate_decay',
                                 'lear_metrics_list', 'loss',
-                                'batch_size', 'epochs'] # TODO: move it to training
+                                'batch_size', 'epochs', 'val_split'] # TODO: move it to training
         for param in list_network_params:
             if param in self.opt.keys():
                 self.network_params[param] = self.opt[param]
@@ -218,6 +218,9 @@ class KerasIntentModel(object):
             for i, add_metrics in enumerate(self.add_metrics):
                 self.add_metrics_values[i] = add_metrics(onehot_labels, preds)
         return True
+
+    def train(self, data):
+        return self.train_on_batch(batch=data)
 
     def infer(self, batch, *args):
         """
