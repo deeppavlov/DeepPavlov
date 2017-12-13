@@ -62,6 +62,6 @@ def train_model_from_config(config_path: str, usr_dir_name=USR_DIR):
 
     ####### Train
     # TODO do batching in the train script.
-    model.train(data, num_epochs, num_tr_data)
+    model.train(data, num_epochs=num_epochs, num_tr_data=num_tr_data)
 
     # The result is a saved to user_dir trained model.
