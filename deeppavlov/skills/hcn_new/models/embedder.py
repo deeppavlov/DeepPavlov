@@ -21,9 +21,9 @@ import numpy as np
 
 from pathlib import Path
 
-from deeppavlov.common import paths
-from deeppavlov.common.registry import register_model
-from deeppavlov.models.inferable import Inferable
+from deeppavlov.core.common import paths
+from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.models.inferable import Inferable
 
 
 @register_model('fasttext')

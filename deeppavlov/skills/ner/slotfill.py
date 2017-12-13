@@ -2,9 +2,11 @@ from .src.corpus import Corpus
 from .src.ner_network import NerNetwork
 from fuzzywuzzy import process
 import json
-from deeppavlov.common.registry import register_model
+
+from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.models.inferable import Inferable
+
 from .utils.nlputils import tokenize
-from deeppavlov.models.inferable import Inferable
 from overrides import overrides
 
 
@@ -26,6 +28,8 @@ class DstcSlotFillingNetwork(Inferable):
 
     @overrides
     def infer(self, instance, *args, **kwargs):
+        if not len(instance.strip()):
+            return {}
         return self.predict_slots(instance)
 
     def interact(self):

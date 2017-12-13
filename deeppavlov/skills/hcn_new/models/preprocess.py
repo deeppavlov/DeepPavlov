@@ -18,10 +18,11 @@ import spacy
 import copy
 import re
 
-from deeppavlov.models.inferable import Inferable
-from deeppavlov.common.registry import register_model
+from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.common.registry import register_model
 
 
+#TODO: move to modules dir
 @register_model('spacy_tokenizer')
 class SpacyTokenizer(Inferable):
 

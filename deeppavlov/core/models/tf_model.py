@@ -8,7 +8,6 @@ from abc import abstractmethod
 from pathlib import Path
 
 import tensorflow as tf
-from tensorflow.python.training.saver import Saver
 
 from deeppavlov.core.common import paths
 from deeppavlov.core.models.trainable import Trainable
@@ -16,7 +15,7 @@ from deeppavlov.core.models.inferable import Inferable
 
 
 class TFModel(Trainable, Inferable):
-    _saver = Saver
+    _saver = tf.train.Saver
     _model_dir_path = ''
     _model_fpath = ''
     sess = None

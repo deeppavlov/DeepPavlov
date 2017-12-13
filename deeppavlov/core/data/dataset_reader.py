@@ -1,4 +1,3 @@
-from abc import abstractmethod
 from typing import List
 
 
@@ -14,7 +13,6 @@ class DatasetReader:
         raise NotImplementedError
 
     @staticmethod
-    @abstractmethod
     def save_vocab(data, ser_dir):
         """
         Extract single words from data and save them to a serialization dir.

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from deeppavlov.training.train import train_agent_models, train_model_from_config
-from deeppavlov.infering.infer import interact_agent, interact_model
+from deeppavlov.core.commands.train import train_agent_models, train_model_from_config
+from deeppavlov.core.commands.infer import interact_agent, interact_model
 
-from dstc2_dataset_reader import DSTC2DatasetReader
+from deeppavlov.skills.ner.slotfill import DstcSlotFillingNetwork
+from deeppavlov.core.data.dataset_readers.dstc2_dataset_reader import DSTC2DatasetReader
+
+from dstc2_dataset import DSTC2Dataset
 from models.hcn import HybridCodeNetworkBot
-from commutators.random_commutator import RandomCommutator
-from dummy_skill.dummy import DummySkill
 
 ###### Train and speak to HCN_go_Dummy agent
 #AGENT_CONFIG_PATH = '../agent_configs/hcn_go_dummy.json'

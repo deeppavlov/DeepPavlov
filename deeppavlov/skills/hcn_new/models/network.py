@@ -19,8 +19,8 @@ import tensorflow as tf
 
 from tensorflow.contrib.layers import xavier_initializer
 
-from deeppavlov.common.registry import register_model
-from deeppavlov.models.tf_model import TFModel
+from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.models.tf_model import TFModel
 
 
 @register_model('hcn_rnn')

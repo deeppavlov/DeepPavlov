@@ -18,13 +18,14 @@ import re
 import numpy as np
 from typing import Type
 
-from deeppavlov.common.registry import register_model
-from deeppavlov.data.utils import load_vocab
-from deeppavlov.models.inferable import Inferable
-from deeppavlov.models.trainable import Trainable
+from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.data.utils import load_vocab
+from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.models.trainable import Trainable
 
 from .network import HybridCodeNetworkModel
 from .embedder import FasttextUtteranceEmbed
+from deeppavlov.skills.ner.slotfill import DstcSlotFillingNetwork
 from .bow import BoW_encoder
 from .templates import Templates, DualTemplate
 from .tracker import DefaultTracker
@@ -38,6 +39,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
 
     def __init__(self, vocab_path, template_path, slot_names,
                  template_type:Type=DualTemplate,
+                 slot_filler:Type=DstcSlotFillingNetwork,
                  bow_encoder:Type=BoW_encoder,
                  embedder:Type=FasttextUtteranceEmbed,
                  tokenizer:Type=SpacyTokenizer,
@@ -46,9 +48,10 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                  use_action_mask=False):
 
         self.episode_done = True
-        self.action_mask = use_action_mask
+        self.use_action_mask = use_action_mask
 # TODO: infer slot names from dataset
         self.slot_names = slot_names
+        self.slot_filler = slot_filler
         self.bow_encoder = bow_encoder
         self.embedder = embedder
         self.tokenizer = tokenizer
@@ -60,41 +63,24 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         print("[using {} templates from `{}`]"\
               .format(len(self.templates), template_path))
 
-        # initialize slot filler
-        self.slot_model = self._load_slot_model('')
-
         # intialize parameters
         self.db_result = None
         self.n_actions = len(self.templates)
-        self.emb_size = self.embedder.dim
         self.prev_action = np.zeros(self.n_actions, dtype=np.float32)
 
         # initialize metrics
         self.metrics = DialogMetrics(self.n_actions)
 
-        opt = {
-            'action_size': self.n_actions,
-            'obs_size': 4 + len(self.vocab) + self.emb_size +\
-            2 * self.tracker.state_size + self.n_actions
-        }
+        #opt = {
+        #    'action_size': self.n_actions,
+        #    'obs_size': 4 + len(self.vocab) + self.embedder.dim +\
+        #    2 * self.tracker.state_size + self.n_actions
+        #}
         #self.network = HybridCodeNetworkModel(opt)
-
-    def _load_slot_model(self, slot_model):
-# TODO: import slot model
-        return None
-
-    def _get_slots(self, text):
-        if self.slot_model is not None:
-            self.slot_model.observe({
-                'text': text,
-                'episode_done': True
-            })
-            return self.slot_model.act()
-        return {}
 
     def _encode_context(self, context, db_result=None):
         # tokenize input
-        tokenized = ' '.join(self.tokenizer.infer(context))
+        tokenized = ' '.join(self.tokenizer.infer(context)).strip()
 
         # Bag of words features
         bow_features = self.bow_encoder.infer(tokenized, self.vocab)
@@ -104,7 +90,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         emb_features = self.embedder.infer(tokenized)
 
         # Text entity features
-        self.tracker.update_state(self._get_slots(tokenized))
+        self.tracker.update_state(self.slot_filler.infer(tokenized))
         ent_features = self.tracker.infer()
 
         # Other features
@@ -134,7 +120,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
 
     def _action_mask(self):
         action_mask = np.ones(self.n_actions, dtype=np.float32)
-        if self.action_mask:
+        if self.use_action_mask:
 # TODO: non-ones action mask
             for a_id in range(self.n_actions):
                 tmpl = str(self.templates.templates[a_id])
@@ -144,44 +130,42 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                         action_mask[a_id] = 0
         return action_mask
 
-    def train(self, data, num_epochs, num_tr_dialogs, acc_threshold=0.99):
+    def train(self, data, num_epochs, acc_threshold=0.99):
         print('\n:: training started\n')
-
-        tr_data = data[:num_tr_dialogs]
-        eval_data = data[num_tr_dialogs:]
 
         for j in range(num_epochs):
 
+            tr_data = data.iter_all('train')
+            eval_data = data.iter_all('valid')
+
             self.reset_metrics()
 
-            for dialog in tr_data:
+            for context, response, other in tr_data:
+                if other.get('episode_done'):
+                    self.reset()
+                    self.metrics.n_dialogs += 1
 
-                self.reset()
-                self.metrics.n_dialogs += 1
+                self.db_result = self.db_result or other.get('db_result')
+                action_id = self._encode_response(response, other['act'])
 
-                for turn in dialog:
-                    self.db_result = self.db_result or turn.get('db_result')
-                    action_id = self._encode_response(turn['response'],
-                                                      turn['act'])
+                loss, pred_id = self.network.train(
+                    self._encode_context(context,
+                                            other.get('db_result')),
+                    action_id,
+                    self._action_mask()
+                )
 
-                    loss, pred_id = self.network.train(
-                        self._encode_context(turn['context'],
-                                             turn.get('db_result')),
-                        action_id,
-                        self._action_mask()
-                    )
+                self.prev_action *= 0.
+                self.prev_action[pred_id] = 1.
 
-                    self.prev_action *= 0.
-                    self.prev_action[pred_id] = 1.
+                pred = self._decode_response(pred_id).lower()
+                true = self.tokenizer.infer(response.lower().split())
 
-                    pred = self._decode_response(pred_id).lower()
-                    true = self.tokenizer.infer(turn['response'].lower().split())
-
-                    # update metrics
-                    self.metrics.n_examples += 1
-                    self.metrics.train_loss += loss
-                    self.metrics.conf_matrix[pred_id, action_id] += 1
-                    self.metrics.n_corr_examples += int(pred == true)
+                # update metrics
+                self.metrics.n_examples += 1
+                self.metrics.train_loss += loss
+                self.metrics.conf_matrix[pred_id, action_id] += 1
+                self.metrics.n_corr_examples += int(pred == true)
 #TODO: update dialog metrics
             print('\n\n:: {}.train {}'.format(j + 1, self.metrics.report()))
 
@@ -206,30 +190,30 @@ class HybridCodeNetworkBot(Inferable, Trainable):
     def evaluate(self, eval_data):
         metrics = DialogMetrics(self.n_actions)
 
-        for dialog in eval_data:
+        for context, response, other in eval_data:
 
-            self.reset()
-            metrics.n_dialogs += 1
+            if other.get('episode_done'):
+                self.reset()
+                metrics.n_dialogs += 1
 
-            for turn in dialog:
-                self.db_result = self.db_result or turn.get('db_result')
+            self.db_result = self.db_result or other.get('db_result')
 
-                probs, pred_id = self.network.infer(
-                    self._encode_context(turn['context']),
-                    self._action_mask()
-                )
+            probs, pred_id = self.network.infer(
+                self._encode_context(context),
+                self._action_mask()
+            )
 
-                self.prev_action *= 0.
-                self.prev_action[pred_id] = 1.
+            self.prev_action *= 0.
+            self.prev_action[pred_id] = 1.
 
-                pred = self._decode_response(pred_id).lower()
-                true = self.tokenizer.infer(turn['response'].lower().split())
+            pred = self._decode_response(pred_id).lower()
+            true = self.tokenizer.infer(response.lower().split())
 
-                # update metrics
-                metrics.n_examples += 1
-                y = self._encode_response(turn['response'], turn['act'])
-                metrics.conf_matrix[pred_id, y] += 1
-                metrics.n_corr_examples += int(pred == true)
+            # update metrics
+            metrics.n_examples += 1
+            y = self._encode_response(response, other['act'])
+            metrics.conf_matrix[pred_id, y] += 1
+            metrics.n_corr_examples += int(pred == true)
         return metrics
 
     def reset(self):

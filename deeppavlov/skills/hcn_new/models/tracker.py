@@ -16,8 +16,8 @@ limitations under the License.
 
 import numpy as np
 
-from deeppavlov.models.inferable import Inferable
-from deeppavlov.common.registry import register_model
+from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.common.registry import register_model
 
 
 @register_model('default_tracker')
