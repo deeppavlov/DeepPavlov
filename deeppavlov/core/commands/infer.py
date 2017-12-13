@@ -24,7 +24,7 @@ def build_agent_models_from_config(config_path: str, a: Agent, usr_dir_name=USR_
 def interact_agent(config_path):
     a = build_agent_from_config(config_path)
     commutator_name = a.commutator_config['name']
-    commutator = from_params(_REGISTRY[commutator_name], commutator_name)
+    commutator = from_params(_REGISTRY[commutator_name], a.commutator_config)
 
     models = build_agent_models_from_config(config_path, a)
     while True:
