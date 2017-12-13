@@ -18,6 +18,7 @@ import random
 from typing import List, Dict, Generator, Tuple, Any
 import numpy as np
 from utils import preprocessing
+from sklearn.model_selection import train_test_split
 
 from deeppavlov.core.common.registry import register_model
 from deeppavlov.data.dataset import Dataset
@@ -93,21 +94,14 @@ class IntentDataset(Dataset):
         all_data = self.iter_all(data_type='train')
         for sample in all_data:
             intents.extend(sample[1])
-        all_data = self.iter_all(data_type='valid')
-        for sample in all_data:
-            intents.extend(sample[1])
+        if 'valid' in self.data.keys():
+            all_data = self.iter_all(data_type='valid')
+            for sample in all_data:
+                intents.extend(sample[1])
         intents = np.unique(intents)
         return np.array(sorted(intents))
 
     def preprocess(self, data_type='train', data=None, *args, **kwargs):
-        """Preprocess the data.
-
-        Args:
-            f: list of text samples
-
-        Returns:
-            preprocessed list of text samples
-        """
         if data is not None:
             prep_data = preprocessing(data)
             return prep_data
@@ -118,3 +112,25 @@ class IntentDataset(Dataset):
                 texts.append(sample[0])
             prep_data = preprocessing(texts)
             return prep_data
+
+    def split_data(self, field_to_split, new_fields, proportions):
+        data_to_div = self.data[field_to_split].copy()
+        data_size = len(self.data[field_to_split])
+        for i in range(len(new_fields) - 1):
+            self.data[new_fields[i]], data_to_div = train_test_split(data_to_div,
+                                                                     test_size=len(data_to_div) -
+                                                                               int(data_size * proportions[i]))
+        self.data[new_fields[-1]] = data_to_div
+        return True
+
+    def merge_data(self, fields_to_merge, new_field):
+        data = self.data.copy()
+        data[new_field] = []
+        for name in fields_to_merge:
+            data[new_field] += self.data[name]
+        self.data = data
+        return True
+
+
+
+

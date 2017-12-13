@@ -26,30 +26,42 @@ def log_metrics(names, values, updates=None, mode='train'):
 
     for id in range(len(names)):
         print("%s: %f\t" % (names[id], values[id]), end="")
-    print(" ")
+    print(" ")#, end='\r')
 
 def main(config_name='config.json'):
     with open(config_name) as f:
         config = json.load(f)
 
+    # Reading datasets from files
     reader_config = config['dataset_reader']
     reader = _REGISTRY[reader_config['name']]
     data = reader.read(train_data_path=reader_config.get('train_data_path'),
                        valid_data_path=reader_config.get('valid_data_path'),
                        test_data_path=reader_config.get('test_data_path'))
 
+
+    # Building dict of datasets
     dataset_config = config['dataset']
     dataset = from_params(_REGISTRY[dataset_config['name']],
                                    dataset_config, data=data)
 
+
+    # Merging train and valid dataset for further split on train/valid
+    dataset.merge_data(fields_to_merge=['train', 'valid'], new_field='train')
+    dataset.split_data(field_to_split='train', new_fields=['train', 'valid'], proportions=[0.9, 0.1])
+
+    # Extracting unique classes
     intents = dataset.extract_classes()
     print("Considered intents:", intents)
+
+    # Initializing model
     model_config = config['model']
     model = from_params(_REGISTRY[model_config['name']],
                                    model_config, opt=model_config, classes=intents)
 
     print("Network parameters: ", model.network_params)
     print("Learning parameters:", model.learning_params)
+    print("Considered:", model.metrics_names)
 
     if 'valid' in data.keys():
         print('___Validation set is given___')
@@ -64,7 +76,6 @@ def main(config_name='config.json'):
     val_increase = 0
     epochs_done = 0
 
-    print("Considered:", model.metrics_names)
     print('\n____Training____\n\n')
 
     while epochs_done < model.learning_params['epochs']:
@@ -75,11 +86,12 @@ def main(config_name='config.json'):
             updates += 1
 
             # log on training batch
-            if model.learning_params['verbose'] and step % 500 == 0:
+            if model.learning_params['verbose'] and step % 50 == 0:
                 batch_preds = model.infer(batch[0])
                 # TODO: как сделать вывод в одну строчку во время данной эпохи?
                 log_metrics(names=model.metrics_names,
                             values=model.metrics_values, updates=updates, mode='train')
+                print(" ", end='\r')
 
         epochs_done += 1
         if epochs_done % model.learning_params['val_every_n_epochs'] == 0:
@@ -117,17 +129,12 @@ def main(config_name='config.json'):
                         break
                 val_loss = valid_values[0]
 
-
         print('epochs_done: %d' % epochs_done)
 
 
 
 
 
-
-    batch_gen = dataset.batch_generator(batch_size=64, data_type='train')
-    for batch in batch_gen:
-        model.train_on_batch(batch)
 
     model.save(fname='/home/dilyara/data/models/intent_models/dstc2/pilot_dstc2/intent_cnn_0')
 

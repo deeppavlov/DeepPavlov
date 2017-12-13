@@ -25,7 +25,8 @@ def from_params(cls: Type, params: Dict, **kwargs) -> Type:
                 subcl_params.pop('name')
                 config_params[reg_name] = from_params(subcl, subcl_params)
             except KeyError:
-                raise ConfigError(
-                    "Your registered classes should have 'name' keyword in the config.")
+                # raise ConfigError(
+                #     "Your registered classes should have 'name' keyword in the config.")
+                pass
     return cls(**dict(config_params, **kwargs))
 
