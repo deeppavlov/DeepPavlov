@@ -47,7 +47,9 @@ from keras.layers import Bidirectional, LSTM
 from keras.optimizers import Adam
 
 from utils import EmbeddingsDict
-
+import metrics as metrics_file
+import keras.metrics as keras_metrics_file
+import keras.losses as keras_loss_file
 
 @register_model('intent_model')
 # class KerasIntentModel(object):
@@ -107,7 +109,8 @@ class KerasIntentModel(Trainable, Inferable):
                                'units_lstm', 'coef_reg_lstm', 'dropout_rate_lstm']
         list_learning_params = ['dropout_rate', 'lear_rate', 'lear_rate_decay',
                                 'lear_metrics_list', 'loss',
-                                'batch_size', 'epochs', 'val_split'] # TODO: move it to training
+                                'batch_size', 'epochs', 'val_split', 'verbose',
+                                'val_every_n_epochs', 'val_patience'] # TODO: move it to training
         for param in list_network_params:
             if param in self.opt.keys():
                 self.network_params[param] = self.opt[param]
@@ -116,13 +119,33 @@ class KerasIntentModel(Trainable, Inferable):
                 self.learning_params[param] = self.opt[param]
         return True
 
+    def define_metrics(self, metrics):
+        new_metrics = []
+        for i in range(len(metrics)):
+            try:
+                new_metrics.append(getattr(metrics_file, metrics[i]))
+            except AttributeError:
+                if metrics[i] == 'accuracy':
+                    if self.n_classes > 1:
+                        new_metrics.append(getattr(keras_metrics_file, 'categorical_accuracy'))
+                    else:
+                        new_metrics.append(getattr(keras_metrics_file, 'binary_accuracy'))
+                else:
+                    new_metrics.append(getattr(keras_metrics_file, metrics[i]))
+        return new_metrics
+
+    def define_loss(self, loss):
+        new_loss = getattr(keras_loss_file, loss)
+        return new_loss
+
     def init_model_from_scratch(self, model_function, lr, decay,
                                 loss, metrics=None):
         model = model_function
         optimizer_ = Adam(lr=lr, decay=decay)
+        new_metrics = self.define_metrics(metrics)
         model.compile(optimizer=optimizer_,
                       loss=loss,
-                      metrics=metrics)
+                      metrics=new_metrics)
         print('___Initializing model from scratch___')
         return model
 
@@ -146,9 +169,10 @@ class KerasIntentModel(Trainable, Inferable):
         model = model_function
         model.load_weights(fname + '.h5')
         optimizer_ = Adam(lr=lr, decay=decay)
+        new_metrics = self.define_metrics(metrics)
         model.compile(optimizer=optimizer_,
                       loss=loss,
-                      metrics=metrics,
+                      metrics=new_metrics,
                       loss_weights=loss_weights,
                       sample_weight_mode=sample_weight_mode,
                       weighted_metrics=weighted_metrics,
@@ -182,7 +206,11 @@ class KerasIntentModel(Trainable, Inferable):
         for sample in labels:
             curr = np.zeros(self.n_classes)
             for intent in sample:
-                curr += eye[np.where(self.classes == intent)[0]].reshape(-1)
+                if intent not in self.classes:
+                    print('Warning: unknown intent %s detected' % intent)
+                    curr += eye[np.where(self.classes == 'unknown')[0]].reshape(-1)
+                else:
+                    curr += eye[np.where(self.classes == intent)[0]].reshape(-1)
             y.append(curr)
         y = np.asarray(y)
         return y
@@ -226,7 +254,7 @@ class KerasIntentModel(Trainable, Inferable):
         """
         Return prediction.
         """
-
+        self.embedding_dict.add_items(batch)
         features = self.texts2vec(batch)
         preds = self.model.predict_on_batch(features)
         return preds
