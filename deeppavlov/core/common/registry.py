@@ -36,7 +36,7 @@ def short_name(cls: Type) -> str:
     return cls.__name__.split('.')[-1]
 
 
-def model(name: str) -> str:
+def model(name: str) -> type:
     if name not in _REGISTRY:
         raise ConfigError("Model {} is not registered.".format(name))
     return _REGISTRY[name]
