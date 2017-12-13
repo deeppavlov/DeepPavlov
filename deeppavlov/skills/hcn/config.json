@@ -4,10 +4,6 @@
   },
   "model": {
     "name": "hcn_go",
-    "net": {
-      "name": "lstm",
-      "num_hidden_units": 128
-    },
     "bow_encoder": {
       "name": "bow"
     },
@@ -18,9 +14,6 @@
     },
     "entity_tracker": {
       "name": "hcn_et"
-    },
-    "action_tracker": {
-      "name": "hcn_at"
     }
   },
   "data_path": "../../../../../DialogStateTracking/data/dialog-bAbI-tasks/dialog-babi-task5-full-dialogs-trn.txt",
