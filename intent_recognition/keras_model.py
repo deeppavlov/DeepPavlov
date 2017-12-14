@@ -23,6 +23,7 @@ set_session(tf.Session(config=config))
 
 import os
 import json
+import copy
 
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
@@ -33,7 +34,7 @@ from keras.layers import Dense, Input
 import keras.metrics
 import keras.optimizers
 
-@register_model('keras_model')
+
 class KerasModel(Trainable, Inferable):
     def __init__(self, opt, *args, **kwargs):
         """
@@ -43,7 +44,7 @@ class KerasModel(Trainable, Inferable):
             *args:
             **kwargs:
         """
-
+        self.opt = copy.deepcopy(opt)
         if self.opt['model_from_saved'] == True:
             self.model = self.init_model_from_saved(model_name=self.opt['model_name'],
                                                     fname=self.opt['model_file'],
@@ -79,19 +80,19 @@ class KerasModel(Trainable, Inferable):
 
         model_func = getattr(self, model_name, None)
         if callable(model_func):
-            model = self.model_func(params=self.opt)
+            model = model_func(params=self.opt)
         else:
             raise AttributeError("Model %s is not defined" % model_name)
 
         optimizer_func = getattr(keras.optimizers, optimizer_name, None)
         if callable(optimizer_func):
-            optimizer_ = keras.optimizers.optimizer_func(lr=lr, decay=decay)
+            optimizer_ = optimizer_func(lr=lr, decay=decay)
         else:
             raise AttributeError("Optimizer %s is not callable" % optimizer_name)
 
         loss_func = getattr(keras.losses, loss_name, None)
         if callable(loss_func):
-            loss = keras.losses.loss_func
+            loss = loss_func
         else:
             raise AttributeError("Loss %s is not defined" % loss_name)
 
@@ -100,7 +101,7 @@ class KerasModel(Trainable, Inferable):
         for i in range(len(metrics_names)):
             metrics_func = getattr(keras.metrics, metrics_names[i], None)
             if callable(metrics_func):
-                metrics_funcs.append(keras.metrics.metrics_func)
+                metrics_funcs.append(metrics_func)
             else:
                 raise AttributeError("Metric %s is not defined" % metrics_names[i])
 

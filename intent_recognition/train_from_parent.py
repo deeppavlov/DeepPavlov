@@ -57,17 +57,15 @@ def main(config_name='config.json'):
     model = from_params(_REGISTRY[model_config['name']],
                         model_config, opt=model_config, classes=intents)
 
-    print("Network parameters: ", model.network_params)
-    print("Learning parameters:", model.learning_params)
     print("Considered:", model.metrics_names)
 
     if 'valid' in data.keys():
         print('___Validation set is given___')
-    elif 'val_split' in model.learning_params.keys():
+    elif 'val_split' in model.opt.keys():
         print('___Validation split is given___')
     else:
         print('___Validation set and validation split are not given.____\n____Validation split = 0.1____')
-        model.learning_params['val_split'] = 0.1
+        model.opt['val_split'] = 0.1
 
     updates = 0
     val_loss = 1e100
@@ -76,24 +74,24 @@ def main(config_name='config.json'):
 
     print('\n____Training____\n\n')
 
-    while epochs_done < model.learning_params['epochs']:
-        batch_gen = dataset.batch_generator(batch_size=model.learning_params['batch_size'],
+    while epochs_done < model.opt['epochs']:
+        batch_gen = dataset.batch_generator(batch_size=model.opt['batch_size'],
                                             data_type='train')
         for step, batch in enumerate(batch_gen):
             model.train_on_batch(batch)
             updates += 1
 
             # log on training batch
-            if model.learning_params['verbose'] and step % 50 == 0:
+            if model.opt['verbose'] and step % 50 == 0:
                 batch_preds = model.infer(batch[0])
                 # TODO: как сделать вывод в одну строчку во время данной эпохи?
                 log_metrics(names=model.metrics_names,
                             values=model.metrics_values, updates=updates, mode='train')
 
         epochs_done += 1
-        if epochs_done % model.learning_params['val_every_n_epochs'] == 0:
+        if epochs_done % model.opt['val_every_n_epochs'] == 0:
             if 'valid' in data.keys():
-                valid_batch_gen = dataset.batch_generator(batch_size=model.learning_params['batch_size'],
+                valid_batch_gen = dataset.batch_generator(batch_size=model.opt['batch_size'],
                                                           data_type='valid')
                 valid_preds = []
                 valid_true = []
@@ -120,8 +118,8 @@ def main(config_name='config.json'):
                 if valid_values[0] > val_loss:
                     val_increase += 1
                     print("__Validation impatience %d out of %d" % (
-                        val_increase, model.learning_params['val_patience']))
-                    if val_increase == model.learning_params['val_patience']:
+                        val_increase, model.opt['val_patience']))
+                    if val_increase == model.opt['val_patience']:
                         print("___Stop training: validation is out of patience___")
                         break
                 val_loss = valid_values[0]
@@ -130,7 +128,7 @@ def main(config_name='config.json'):
 
     model.save(fname=model.opt['model_file'])
 
-    test_batch_gen = dataset.batch_generator(batch_size=model.learning_params['batch_size'],
+    test_batch_gen = dataset.batch_generator(batch_size=model.opt['batch_size'],
                                               data_type='test')
     test_preds = []
     test_true = []
@@ -138,7 +136,7 @@ def main(config_name='config.json'):
         test_preds.extend(model.infer(test_batch[0]))
         test_true.extend(model.labels2onehot(test_batch[1]))
         if model_config['show_examples'] and test_id == 0:
-            for j in range(model.learning_params['batch_size']):
+            for j in range(model.opt['batch_size']):
                 print(test_batch[0][j],
                       test_batch[1][j],
                       model.proba2labels([test_preds[j]]))
