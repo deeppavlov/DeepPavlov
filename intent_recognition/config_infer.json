@@ -7,7 +7,7 @@
     "embedding_size": 100,
     "lear_metrics": "binary_accuracy fmeasure",
     "confident_threshold": 0.5,
-    "train_from_saved": false,
+    "train_from_saved": true,
     "optimizer": "Adam",
     "lear_rate": 1.0,
     "lear_rate_decay": 0.1,

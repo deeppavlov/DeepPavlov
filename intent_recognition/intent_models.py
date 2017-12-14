@@ -56,10 +56,7 @@ import keras.losses as keras_loss_file
 class KerasIntentModel(Trainable, Inferable):
     def __init__(self, opt, classes, *args, **kwargs):
         # super.__init__()
-
         self.opt = copy.deepcopy(opt)
-        self.opt['kernel_sizes_cnn'] = [int(x) for x in opt['kernel_sizes_cnn'].split(' ')]
-        self.opt['lear_metrics_list'] = opt['lear_metrics'].split(' ')
         self.classes = classes
         self.n_classes = self.classes.shape[0]
         self.confident_threshold = self.opt['confident_threshold']
@@ -71,26 +68,29 @@ class KerasIntentModel(Trainable, Inferable):
 
         self.network_params = dict()
         self.learning_params = dict()
-        self.get_params()
 
-        if self.opt['model_name'] == 'cnn_model':
-            model_function = self.cnn_model()
-        elif self.opt['model_name'] == 'bilstm_model':
-            model_function = self.bilstm_model()
-
-        if self.opt['model_from_saved'] == False:
-            self.model = self.init_model_from_scratch(model_function=model_function,
-                                                      lr=self.learning_params['lear_rate'],
-                                                      decay=self.learning_params['lear_rate_decay'],
-                                                      loss=self.learning_params['loss'],
-                                                      metrics=self.learning_params['lear_metrics_list'])
-        else:
-            self.model = self.init_model_from_saved(model_function=model_function,
-                                                    fname=self.opt['fname'],
+        if self.opt['train_from_saved'] == True:
+            self.get_params(self.opt)
+            self.network_params['kernel_sizes_cnn'] = [int(x) for x in
+                                                       self.network_params['kernel_sizes_cnn'].split(' ')]
+            self.learning_params['lear_metrics'] = self.learning_params['lear_metrics'].split(' ')
+            self.model = self.init_model_from_saved(model_name=self.opt['model_name'],
+                                                    fname=self.opt['model_file'],
                                                     lr=self.learning_params['lear_rate'],
                                                     decay=self.learning_params['lear_rate_decay'],
                                                     loss=self.learning_params['loss'],
-                                                    metrics=self.learning_params['lear_metrics_list'])
+                                                    metrics=self.learning_params['lear_metrics'])
+        else:
+            self.get_params(self.opt)
+            self.network_params['kernel_sizes_cnn'] = [int(x) for x in
+                                                       self.network_params['kernel_sizes_cnn'].split(' ')]
+            self.learning_params['lear_metrics'] = self.learning_params['lear_metrics'].split(' ')
+
+            self.model = self.init_model_from_scratch(model_name=self.opt['model_name'],
+                                                      lr=self.learning_params['lear_rate'],
+                                                      decay=self.learning_params['lear_rate_decay'],
+                                                      loss=self.learning_params['loss'],
+                                                      metrics=self.learning_params['lear_metrics'])
 
         self.metrics_names = self.model.metrics_names
         self.metrics_values = len(self.metrics_names) * [0.]
@@ -103,20 +103,24 @@ class KerasIntentModel(Trainable, Inferable):
         else:
             raise IOError("Error: FastText model file path is not given")
 
-    def get_params(self):
-        list_network_params = ['text_size', 'embedding_size', 'n_classes', 'coef_reg_den', 'dense_size',
+    def get_params(self, opt):
+        list_network_params = ['text_size', 'embedding_size', 'coef_reg_den', 'dense_size',
                                'kernel_sizes_cnn', 'filters_cnn', 'coef_reg_cnn',
-                               'units_lstm', 'coef_reg_lstm', 'dropout_rate_lstm']
-        list_learning_params = ['dropout_rate', 'lear_rate', 'lear_rate_decay',
-                                'lear_metrics_list', 'loss',
+                               'units_lstm', 'coef_reg_lstm', 'dropout_rate_lstm', 'dropout_rate']
+        list_learning_params = ['lear_rate', 'lear_rate_decay',
+                                'lear_metrics', 'loss',
                                 'batch_size', 'epochs', 'val_split', 'verbose',
-                                'val_every_n_epochs', 'val_patience', 'show_examples'] # TODO: move it to training
+                                'val_every_n_epochs', 'val_patience', 'show_examples']
         for param in list_network_params:
-            if param in self.opt.keys():
-                self.network_params[param] = self.opt[param]
+            if param in opt.keys():
+                self.network_params[param] = opt[param]
+            else:
+                self.network_params[param] = None
         for param in list_learning_params:
-            if param in self.opt.keys():
-                self.learning_params[param] = self.opt[param]
+            if param in opt.keys():
+                self.learning_params[param] = opt[param]
+            else:
+                self.learning_params[param] = None
         return True
 
     def define_metrics(self, metrics):
@@ -138,9 +142,12 @@ class KerasIntentModel(Trainable, Inferable):
         new_loss = getattr(keras_loss_file, loss)
         return new_loss
 
-    def init_model_from_scratch(self, model_function, lr, decay,
+    def init_model_from_scratch(self, model_name, lr, decay,
                                 loss, metrics=None):
-        model = model_function
+        if model_name == 'cnn_model':
+            model = self.cnn_model(params=self.network_params)
+        elif model_name == 'bilstm_model':
+            model = self.bilstm_model(params=self.network_params)
         optimizer_ = Adam(lr=lr, decay=decay)
         new_metrics = self.define_metrics(metrics)
         model.compile(optimizer=optimizer_,
@@ -149,7 +156,7 @@ class KerasIntentModel(Trainable, Inferable):
         print('___Initializing model from scratch___')
         return model
 
-    def init_model_from_saved(self, model_function, fname, lr, decay,
+    def init_model_from_saved(self, model_name, fname, lr, decay,
                               loss, metrics=None, loss_weights=None,
                               sample_weight_mode=None, weighted_metrics=None, target_tensors=None):
         print('___Initializing model from saved___'
@@ -163,10 +170,14 @@ class KerasIntentModel(Trainable, Inferable):
                 # TODO: network params from json, learning params from current config
                 old_opt = json.load(opt_file)
                 for param in self.network_params.keys():
-                    self.network_params[param] = old_opt[param]
+                    if param in old_opt.keys():
+                        self.network_params[param] = old_opt[param]
         else:
             raise IOError("Error: config file %s_opt.json of saved model does not exist" % fname)
-        model = model_function
+        if model_name == 'cnn_model':
+            model = self.cnn_model(params=self.network_params)
+        elif model_name == 'bilstm_model':
+            model = self.bilstm_model(params=self.network_params)
         model.load_weights(fname + '.h5')
         optimizer_ = Adam(lr=lr, decay=decay)
         new_metrics = self.define_metrics(metrics)
@@ -272,18 +283,18 @@ class KerasIntentModel(Trainable, Inferable):
                 json.dump(self.opt, opt_file)
         return True
 
-    def cnn_model(self):
+    def cnn_model(self, params):
         """
         Build the incompiled model
         :return: model
         """
-        inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
+        inp = Input(shape=(params['text_size'], params['embedding_size']))
 
         outputs = []
-        for i in range(len(self.opt['kernel_sizes_cnn'])):
-            output_i = Conv1D(self.opt['filters_cnn'], kernel_size=self.opt['kernel_sizes_cnn'][i],
+        for i in range(len(params['kernel_sizes_cnn'])):
+            output_i = Conv1D(params['filters_cnn'], kernel_size=params['kernel_sizes_cnn'][i],
                               activation=None,
-                              kernel_regularizer=l2(self.opt['coef_reg_cnn']),
+                              kernel_regularizer=l2(params['coef_reg_cnn']),
                               padding='same')(inp)
             output_i = BatchNormalization()(output_i)
             output_i = Activation('relu')(output_i)
@@ -292,38 +303,38 @@ class KerasIntentModel(Trainable, Inferable):
 
         output = concatenate(outputs, axis=1)
 
-        output = Dropout(rate=self.opt['dropout_rate'])(output)
-        output = Dense(self.opt['dense_size'], activation=None,
-                       kernel_regularizer=l2(self.opt['coef_reg_den']))(output)
+        output = Dropout(rate=params['dropout_rate'])(output)
+        output = Dense(params['dense_size'], activation=None,
+                       kernel_regularizer=l2(params['coef_reg_den']))(output)
         output = BatchNormalization()(output)
         output = Activation('relu')(output)
-        output = Dropout(rate=self.opt['dropout_rate'])(output)
+        output = Dropout(rate=params['dropout_rate'])(output)
         output = Dense(self.n_classes, activation=None,
-                       kernel_regularizer=l2(self.opt['coef_reg_den']))(output)
+                       kernel_regularizer=l2(params['coef_reg_den']))(output)
         output = BatchNormalization()(output)
         act_output = Activation('sigmoid')(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
-    def bilstm_model(self):
+    def bilstm_model(self, params):
         """
         Build the incompiled model
         :return: model
         """
-        inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
+        inp = Input(shape=(params['text_size'], params['embedding_size']))
 
-        output = Bidirectional(LSTM(self.opt['units_lstm'], activation='tanh',
-                                    kernel_regularizer=l2(self.opt['coef_reg_lstm']),
-                                    dropout=self.opt['dropout_rate_lstm']))(inp)
+        output = Bidirectional(LSTM(params['units_lstm'], activation='tanh',
+                                    kernel_regularizer=l2(params['coef_reg_lstm']),
+                                    dropout=params['dropout_rate_lstm']))(inp)
 
-        output = Dropout(rate=self.opt['dropout_rate'])(output)
-        output = Dense(self.opt['dense_size'], activation=None,
-                       kernel_regularizer=l2(self.opt['coef_reg_den']))(output)
+        output = Dropout(rate=params['dropout_rate'])(output)
+        output = Dense(params['dense_size'], activation=None,
+                       kernel_regularizer=l2(params['coef_reg_den']))(output)
         output = BatchNormalization()(output)
         output = Activation('relu')(output)
-        output = Dropout(rate=self.opt['dropout_rate'])(output)
-        output = Dense(self.opt['n_classes'], activation=None,
-                       kernel_regularizer=l2(self.opt['coef_reg_den']))(output)
+        output = Dropout(rate=params['dropout_rate'])(output)
+        output = Dense(params['n_classes'], activation=None,
+                       kernel_regularizer=l2(params['coef_reg_den']))(output)
         output = BatchNormalization()(output)
         act_output = Activation('sigmoid')(output)
         model = Model(inputs=inp, outputs=act_output)
