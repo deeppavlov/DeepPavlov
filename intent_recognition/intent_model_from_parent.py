@@ -47,14 +47,13 @@ from keras.layers import Bidirectional, LSTM
 from keras.optimizers import Adam
 
 from utils import EmbeddingsDict
-import metrics as metrics_file
-import keras.metrics as keras_metrics_file
-import keras.losses as keras_loss_file
+from keras_model import KerasModel
 
-@register_model('intent_model')
-class KerasIntentModel(Trainable, Inferable):
+
+@register_model('intent_model_from_parent')
+class KerasIntentModelFromParent(KerasModel):
     def __init__(self, opt, classes, *args, **kwargs):
-        # super.__init__()
+        #super().__init__(opt)
         self.opt = copy.deepcopy(opt)
         self.classes = classes
         self.n_classes = self.classes.shape[0]
@@ -65,31 +64,24 @@ class KerasIntentModel(Trainable, Inferable):
         else:
             self.add_metrics = None
 
-        self.network_params = dict()
-        self.learning_params = dict()
-
-        if self.opt['train_from_saved'] == True:
-            self.get_params(self.opt)
-            self.network_params['kernel_sizes_cnn'] = [int(x) for x in
-                                                       self.network_params['kernel_sizes_cnn'].split(' ')]
-            self.learning_params['lear_metrics'] = self.learning_params['lear_metrics'].split(' ')
+        self.opt['kernel_sizes_cnn'] = [int(x) for x in
+                                        self.opt['kernel_sizes_cnn'].split(' ')]
+        print(self.opt)
+        if self.opt['model_from_saved'] == True:
             self.model = self.init_model_from_saved(model_name=self.opt['model_name'],
                                                     fname=self.opt['model_file'],
-                                                    lr=self.learning_params['lear_rate'],
-                                                    decay=self.learning_params['lear_rate_decay'],
-                                                    loss=self.learning_params['loss'],
-                                                    metrics=self.learning_params['lear_metrics'])
+                                                    optimizer_name=self.opt['optimizer'],
+                                                    lr=self.opt['lear_rate'],
+                                                    decay=self.opt['lear_rate_decay'],
+                                                    loss_name=self.opt['loss'],
+                                                    metrics_names=self.opt['lear_metrics'])
         else:
-            self.get_params(self.opt)
-            self.network_params['kernel_sizes_cnn'] = [int(x) for x in
-                                                       self.network_params['kernel_sizes_cnn'].split(' ')]
-            self.learning_params['lear_metrics'] = self.learning_params['lear_metrics'].split(' ')
-
             self.model = self.init_model_from_scratch(model_name=self.opt['model_name'],
-                                                      lr=self.learning_params['lear_rate'],
-                                                      decay=self.learning_params['lear_rate_decay'],
-                                                      loss=self.learning_params['loss'],
-                                                      metrics=self.learning_params['lear_metrics'])
+                                                      optimizer_name=self.opt['optimizer'],
+                                                      lr=self.opt['lear_rate'],
+                                                      decay=self.opt['lear_rate_decay'],
+                                                      loss_name=self.opt['loss'],
+                                                      metrics_names=self.opt['lear_metrics'])
 
         self.metrics_names = self.model.metrics_names
         self.metrics_values = len(self.metrics_names) * [0.]
@@ -102,106 +94,19 @@ class KerasIntentModel(Trainable, Inferable):
         else:
             raise IOError("Error: FastText model file path is not given")
 
-    def get_params(self, opt):
-        list_network_params = ['text_size', 'embedding_size', 'coef_reg_den', 'dense_size',
-                               'kernel_sizes_cnn', 'filters_cnn', 'coef_reg_cnn',
-                               'units_lstm', 'coef_reg_lstm', 'dropout_rate_lstm', 'dropout_rate']
-        list_learning_params = ['lear_rate', 'lear_rate_decay',
-                                'lear_metrics', 'loss',
-                                'batch_size', 'epochs', 'val_split', 'verbose',
-                                'val_every_n_epochs', 'val_patience', 'show_examples']
-        for param in list_network_params:
-            if param in opt.keys():
-                self.network_params[param] = opt[param]
-            else:
-                self.network_params[param] = None
-        for param in list_learning_params:
-            if param in opt.keys():
-                self.learning_params[param] = opt[param]
-            else:
-                self.learning_params[param] = None
-        return True
-
-    def define_metrics(self, metrics):
-        new_metrics = []
-        for i in range(len(metrics)):
-            try:
-                new_metrics.append(getattr(metrics_file, metrics[i]))
-            except AttributeError:
-                if metrics[i] == 'accuracy':
-                    if self.n_classes > 1:
-                        new_metrics.append(getattr(keras_metrics_file, 'categorical_accuracy'))
-                    else:
-                        new_metrics.append(getattr(keras_metrics_file, 'binary_accuracy'))
-                else:
-                    new_metrics.append(getattr(keras_metrics_file, metrics[i]))
-        return new_metrics
-
-    def define_loss(self, loss):
-        new_loss = getattr(keras_loss_file, loss)
-        return new_loss
-
-    def init_model_from_scratch(self, model_name, lr, decay,
-                                loss, metrics=None):
-        if model_name == 'cnn_model':
-            model = self.cnn_model(params=self.network_params)
-        elif model_name == 'bilstm_model':
-            model = self.bilstm_model(params=self.network_params)
-        optimizer_ = Adam(lr=lr, decay=decay)
-        new_metrics = self.define_metrics(metrics)
-        model.compile(optimizer=optimizer_,
-                      loss=loss,
-                      metrics=new_metrics)
-        print('___Initializing model from scratch___')
-        return model
-
-    def init_model_from_saved(self, model_name, fname, lr, decay,
-                              loss, metrics=None, loss_weights=None,
-                              sample_weight_mode=None, weighted_metrics=None, target_tensors=None):
-        print('___Initializing model from saved___'
-              '\nModel weights file is %s.h5'
-              '\nNetwork parameters are from %s_opt.json' % (fname, fname))
-
-        fname = self.opt.get('model_file', None) if fname is None else fname
-
-        if os.path.isfile(fname + '_opt.json'):
-            with open(fname + '_opt.json', 'r') as opt_file:
-                # TODO: network params from json, learning params from current config
-                old_opt = json.load(opt_file)
-                for param in self.network_params.keys():
-                    if param in old_opt.keys():
-                        self.network_params[param] = old_opt[param]
-        else:
-            raise IOError("Error: config file %s_opt.json of saved model does not exist" % fname)
-        if model_name == 'cnn_model':
-            model = self.cnn_model(params=self.network_params)
-        elif model_name == 'bilstm_model':
-            model = self.bilstm_model(params=self.network_params)
-        model.load_weights(fname + '.h5')
-        optimizer_ = Adam(lr=lr, decay=decay)
-        new_metrics = self.define_metrics(metrics)
-        model.compile(optimizer=optimizer_,
-                      loss=loss,
-                      metrics=new_metrics,
-                      loss_weights=loss_weights,
-                      sample_weight_mode=sample_weight_mode,
-                      weighted_metrics=weighted_metrics,
-                      target_tensors=target_tensors)
-        return model
-
     def texts2vec(self, sentences):
         embeddings_batch = []
         for sen in sentences:
             embeddings = []
             tokens = sen.split(' ')
             tokens = [el for el in tokens if el != '']
-            if len(tokens) > self.network_params['text_size']:
-                tokens = tokens[:self.network_params['text_size']]
+            if len(tokens) > self.opt['text_size']:
+                tokens = tokens[:self.opt['text_size']]
             for tok in tokens:
                 embeddings.append(self.embedding_dict.tok2emb.get(tok))
-            if len(tokens) < self.network_params['text_size']:
-                pads = [np.zeros(self.network_params['embedding_size'])
-                        for _ in range(self.network_params['text_size'] - len(tokens))]
+            if len(tokens) < self.opt['text_size']:
+                pads = [np.zeros(self.opt['embedding_size'])
+                        for _ in range(self.opt['text_size'] - len(tokens))]
                 embeddings = pads + embeddings
 
             embeddings = np.asarray(embeddings)
@@ -269,26 +174,13 @@ class KerasIntentModel(Trainable, Inferable):
         preds = self.model.predict_on_batch(features)
         return preds
 
-    def save(self, fname):
-        # TODO: model_file is in opt??
-        fname = self.opt.get('model_file', None) if fname is None else fname
-
-        if fname:
-            print("[ saving model: " + fname + " ]")
-            self.model.save_weights(fname + '.h5')
-            self.embedding_dict.save_items(fname)
-
-            with open(fname + '_opt.json', 'w') as opt_file:
-                json.dump(self.opt, opt_file)
-        return True
-
     def cnn_model(self, params):
         """
         Build the incompiled model
         :return: model
         """
         inp = Input(shape=(params['text_size'], params['embedding_size']))
-
+        print(params)
         outputs = []
         for i in range(len(params['kernel_sizes_cnn'])):
             output_i = Conv1D(params['filters_cnn'], kernel_size=params['kernel_sizes_cnn'][i],
