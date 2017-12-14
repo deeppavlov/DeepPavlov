@@ -10,6 +10,9 @@ from intent_recognition.utils import EmbeddingsDict
 from intent_recognition.intent_models import KerasIntentModel
 from intent_recognition.intent_model_from_parent import KerasIntentModelFromParent
 
+from deeppavlov.skills.hcn_new.models.preprocess import SpacyTokenizer
+
+
 import os, sys
 import json
 import numpy as np
