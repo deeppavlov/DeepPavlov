@@ -110,7 +110,7 @@ class KerasIntentModel(Trainable, Inferable):
         list_learning_params = ['dropout_rate', 'lear_rate', 'lear_rate_decay',
                                 'lear_metrics_list', 'loss',
                                 'batch_size', 'epochs', 'val_split', 'verbose',
-                                'val_every_n_epochs', 'val_patience'] # TODO: move it to training
+                                'val_every_n_epochs', 'val_patience', 'show_examples'] # TODO: move it to training
         for param in list_network_params:
             if param in self.opt.keys():
                 self.network_params[param] = self.opt[param]
