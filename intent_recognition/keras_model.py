@@ -60,9 +60,6 @@ class KerasModel(Trainable, Inferable):
                                                       loss_name=self.opt['loss'],
                                                       metrics_names=self.opt['lear_metrics'])
 
-        self.metrics_names = self.model.metrics_names
-        self.metrics_values = len(self.metrics_names) * [0.]
-
     def init_model_from_scratch(self, model_name, optimizer_name,
                                 lr, decay, loss_name, metrics_names=None, loss_weights=None,
                                 sample_weight_mode=None, weighted_metrics=None, target_tensors=None):
@@ -196,8 +193,8 @@ class KerasModel(Trainable, Inferable):
         Returns: metrics values on a given batch
 
         """
-        self.metrics_values = self.model.train_on_batch(batch[0], batch[1])
-        return self.metrics_values
+
+        return self.model.train_on_batch(batch[0], batch[1])
 
     def train(self, data):
         """
