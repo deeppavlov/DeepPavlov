@@ -18,6 +18,7 @@ import numpy as np
 from sklearn.metrics import log_loss, accuracy_score
 from metrics import fmeasure
 
+
 def log_metrics(names, values, updates=None, mode='train'):
     sys.stdout.write("\r")  # back to previous line
     print("%s -->\t" % mode, end="")
@@ -26,7 +27,8 @@ def log_metrics(names, values, updates=None, mode='train'):
 
     for id in range(len(names)):
         print("%s: %f\t" % (names[id], values[id]), end="")
-    print(" ")#, end='\r')
+    print(" ")  # , end='\r')
+
 
 def main(config_name='config.json'):
     with open(config_name) as f:
@@ -39,12 +41,10 @@ def main(config_name='config.json'):
                        valid_data_path=reader_config.get('valid_data_path'),
                        test_data_path=reader_config.get('test_data_path'))
 
-
     # Building dict of datasets
     dataset_config = config['dataset']
     dataset = from_params(_REGISTRY[dataset_config['name']],
-                                   dataset_config, data=data)
-
+                          dataset_config, data=data)
 
     # Merging train and valid dataset for further split on train/valid
     dataset.merge_data(fields_to_merge=['train', 'valid'], new_field='train')
@@ -57,7 +57,7 @@ def main(config_name='config.json'):
     # Initializing model
     model_config = config['model']
     model = from_params(_REGISTRY[model_config['name']],
-                                   model_config, opt=model_config, classes=intents)
+                        model_config, opt=model_config, classes=intents)
 
     print("Network parameters: ", model.network_params)
     print("Learning parameters:", model.learning_params)
@@ -91,7 +91,6 @@ def main(config_name='config.json'):
                 # TODO: как сделать вывод в одну строчку во время данной эпохи?
                 log_metrics(names=model.metrics_names,
                             values=model.metrics_values, updates=updates, mode='train')
-                print(" ", end='\r')
 
         epochs_done += 1
         if epochs_done % model.learning_params['val_every_n_epochs'] == 0:
@@ -103,11 +102,11 @@ def main(config_name='config.json'):
                 for valid_id, valid_batch in enumerate(valid_batch_gen):
                     valid_preds.extend(model.infer(valid_batch[0]))
                     valid_true.extend(model.labels2onehot(valid_batch[1]))
-                    if model_config['show_examples'] and valid_id == 0:
-                        for j in range(model.learning_params['batch_size']):
-                            print(valid_batch[0][j],
-                                  valid_batch[1][j],
-                                  model.proba2labels([valid_preds[j]]))
+                    # if model_config['show_examples'] and valid_id == 0:
+                    #     for j in range(model.learning_params['batch_size']):
+                    #         print(valid_batch[0][j],
+                    #               valid_batch[1][j],
+                    #               model.proba2labels([valid_preds[j]]))
 
                 valid_true = np.asarray(valid_true, dtype='float64')
                 valid_preds = np.asarray(valid_preds, dtype='float64')
@@ -131,12 +130,34 @@ def main(config_name='config.json'):
 
         print('epochs_done: %d' % epochs_done)
 
-
-
-
-
-
     model.save(fname='/home/dilyara/data/models/intent_models/dstc2/pilot_dstc2/intent_cnn_0')
+
+    test_batch_gen = dataset.batch_generator(batch_size=model.learning_params['batch_size'],
+                                              data_type='test')
+    test_preds = []
+    test_true = []
+    for test_id, test_batch in enumerate(test_batch_gen):
+        test_preds.extend(model.infer(test_batch[0]))
+        test_true.extend(model.labels2onehot(test_batch[1]))
+        if model_config['show_examples'] and test_id == 0:
+            for j in range(model.learning_params['batch_size']):
+                print(test_batch[0][j],
+                      test_batch[1][j],
+                      model.proba2labels([test_preds[j]]))
+
+    test_true = np.asarray(test_true, dtype='float64')
+    test_preds = np.asarray(test_preds, dtype='float64')
+
+    test_values = []
+    test_values.append(log_loss(test_true, test_preds))
+    test_values.append(accuracy_score(test_true, model.proba2onehot(test_preds)))
+    test_values.append(fmeasure(test_true, model.proba2onehot(test_preds)))
+
+    log_metrics(names=model.metrics_names,
+                values=test_values,
+                mode='test')
+
+
 
 
 if __name__ == '__main__':
