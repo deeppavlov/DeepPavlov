@@ -11,12 +11,3 @@ class DatasetReader:
         Read a file from a path and returns data as list with training instances.
         """
         raise NotImplementedError
-
-    @staticmethod
-    def save_vocab(data, ser_dir):
-        """
-        Extract single words from data and save them to a serialization dir.
-        :param data: dataset
-        :param ser_dir specified by user serialization dir
-        """
-        pass

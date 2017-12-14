@@ -8,22 +8,22 @@ from abc import abstractmethod
 from pathlib import Path
 
 import tensorflow as tf
-from tensorflow.python.training.saver import Saver
 
-from deeppavlov.common import paths
-from deeppavlov.models.trainable import Trainable
-from deeppavlov.models.inferable import Inferable
+from deeppavlov.core.common import paths
+from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.core.models.inferable import Inferable
 
 
 class TFModel(Trainable, Inferable):
-    _saver = Saver
+    _saver = tf.train.Saver
     _model_dir_path = ''
     _model_fpath = ''
-    sess = tf.Session()
+    sess = None
 
     @property
     def _model_path(self):
-        return Path(paths.USR_PATH).joinpath(_model_dir_path, _model_fpath)
+        return Path(paths.USR_PATH).joinpath(self._model_dir_path,
+                                             self._model_fpath)
 
     @abstractmethod
     def _add_placeholders(self):
@@ -87,9 +87,9 @@ class TFModel(Trainable, Inferable):
         return self._forward(instance, *args)
 
     def save(self):
-        self._saver().save(sess=self.sess,
-                           save_path=self._model_path.as_posix(),
-                           global_step=0)
+        fname = self._saver().save(sess=self.sess,
+                                   save_path=self._model_path.as_posix(),
+                                   global_step=0)
         print('\n:: Model saved to {} \n'.format(fname))
 
     def load(self, fname=None):
