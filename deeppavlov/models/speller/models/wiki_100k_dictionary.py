@@ -1,11 +1,11 @@
 import requests
-from deeppavlov.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from lxml import html
 
-from deeppavlov.models.speller.models import StaticDictionary
+from deeppavlov.models.speller.models.static_dictionary import StaticDictionary
 
 
-@register_model('wikipedia_100K_vocab')
+@register('wikipedia_100K_vocab')
 class Wiki100KDictionary(StaticDictionary):
     dict_name = 'wikipedia_100K_vocab'
 

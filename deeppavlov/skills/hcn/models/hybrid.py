@@ -3,7 +3,7 @@ import sys
 from typing import Type
 import numpy as np
 
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import load_vocab
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
@@ -15,7 +15,7 @@ from deeppavlov.skills.hcn.models.et import EntityTracker
 from deeppavlov.skills.hcn.models.lstm import LSTM
 
 
-@register_model("hcn_go")
+@register("hcn_go")
 class HybridCodeNetwork(Inferable, Trainable):
     def __init__(self, vocab_path, bow_encoder: Type = BoW_encoder, embedder: Type = UtteranceEmbed,
                  entity_tracker: Type = EntityTracker):

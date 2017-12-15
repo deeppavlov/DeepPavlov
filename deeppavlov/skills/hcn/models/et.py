@@ -3,7 +3,7 @@ from enum import Enum
 
 import numpy as np
 
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 
 ENTITIES = {
@@ -14,7 +14,7 @@ ENTITIES = {
 }
 
 
-@register_model('hcn_et')
+@register('hcn_et')
 class EntityTracker(Inferable):
     def __init__(self, entities=copy.deepcopy(ENTITIES)):
         self.entities = entities

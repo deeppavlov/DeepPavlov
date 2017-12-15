@@ -1,10 +1,10 @@
 import random
 
-from deeppavlov.common.registry import register_model
-from deeppavlov.data.dataset import Dataset
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.dataset import Dataset
 
 
-@register_model('typos_dataset')
+@register('typos_dataset')
 class TyposDataset(Dataset):
     def split(self, *args, **kwargs):
         """Split all data into train and test

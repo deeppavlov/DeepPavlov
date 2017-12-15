@@ -5,16 +5,17 @@ from collections import defaultdict, Counter
 from heapq import heappop, heappushpop, heappush
 from math import log, exp
 
-from deeppavlov.common.registry import register_model
-from deeppavlov.models.inferable import Inferable
-from deeppavlov.models.trainable import Trainable
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.core.common import paths
 
-from deeppavlov.models.speller.models import StaticDictionary
+from deeppavlov.models.speller.models.static_dictionary import StaticDictionary
 
 
-@register_model('spelling_error_model')
+@register('spelling_error_model')
 class ErrorModel(Inferable, Trainable):
-    def __init__(self, models_path, dictionary: StaticDictionary, window=1, model_name='error_model', *args, **kwargs):
+    def __init__(self, dictionary: StaticDictionary, models_path=paths.USR_PATH, window=1, model_name='error_model', *args, **kwargs):
         self.file_name = os.path.join(models_path, model_name + '.tsv')
         self.costs = defaultdict(itertools.repeat(float('-inf')).__next__)
         self.dictionary = dictionary
@@ -102,29 +103,6 @@ class ErrorModel(Inferable, Trainable):
 
     def reset(self):
         pass
-
-    def interact(self):
-
-        # get input from user
-        context = input(':: ')
-
-        # check if user wants to begin new session
-        if context == 'clear' or context == 'reset' or context == 'restart':
-            self.reset()
-            print('')
-
-        # check for exit command
-        elif context == 'exit' or context == 'stop' or context == 'quit' or context == 'q':
-            return
-
-        else:
-            # ENTER press : silence
-            if not context:
-                context = '<SILENCE>'
-
-            # forward
-            pred = self.infer(context)
-            print('>>', pred)
 
     @staticmethod
     def _distance_edits(seq1, seq2):

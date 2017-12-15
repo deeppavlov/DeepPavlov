@@ -1,14 +1,14 @@
 import os
 import shutil
-
-import pickle
 from collections import defaultdict
 
-from deeppavlov.common.registry import register_model
-from deeppavlov.data.utils import is_done, mark_done
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.utils import is_done, mark_done
+from deeppavlov.core.common import paths
+from deeppavlov.core.common.file import load_pickle, save_pickle
 
 
-@register_model('static_dictionary')
+@register('static_dictionary')
 class StaticDictionary:
     dict_name = None
 
@@ -25,10 +25,18 @@ class StaticDictionary:
     def _normalize(word):
         return '⟬{}⟭'.format(word.strip().lower().replace('ё', 'е'))
 
-    def __init__(self, data_dir, *args, **kwargs):
+    def __init__(self, data_dir=None, *args, **kwargs):
+        if data_dir is None:
+            data_dir = paths.USR_PATH
         if self.dict_name is None:
             self.dict_name = args[0] if args else kwargs.get('dictionary_name', 'dictionary')
+
         data_dir = os.path.join(data_dir, self.dict_name)
+
+        alphabet_path = os.path.join(data_dir, 'alphabet.pkl')
+        words_path = os.path.join(data_dir, 'words.pkl')
+        words_trie_path = os.path.join(data_dir, 'words_trie.pkl')
+
         if not is_done(data_dir):
             print('Trying to build a dictionary in {}'.format(data_dir))
             if os.path.isdir(data_dir):
@@ -42,11 +50,8 @@ class StaticDictionary:
             alphabet.remove('⟬')
             alphabet.remove('⟭')
 
-            with open(os.path.join(data_dir, 'alphabet.pkl'), 'wb') as f:
-                pickle.dump(alphabet, f)
-
-            with open(os.path.join(data_dir, 'words.pkl'), 'wb') as f:
-                pickle.dump(words, f)
+            save_pickle(alphabet, alphabet_path)
+            save_pickle(words, words_path)
 
             words_trie = defaultdict(set)
             for word in words:
@@ -55,17 +60,13 @@ class StaticDictionary:
                 words_trie[word] = set()
             words_trie = {k: sorted(v) for k, v in words_trie.items()}
 
-            with open(os.path.join(data_dir, 'words_trie.pkl'), 'wb') as f:
-                pickle.dump(words_trie, f)
+            save_pickle(words_trie, words_trie_path)
 
             mark_done(data_dir)
             print('built')
         else:
             print('Loading a dictionary from {}'.format(data_dir))
 
-        with open(os.path.join(data_dir, 'alphabet.pkl'), 'rb') as f:
-            self.alphabet = pickle.load(f)
-        with open(os.path.join(data_dir, 'words.pkl'), 'rb') as f:
-            self.words_set = pickle.load(f)
-        with open(os.path.join(data_dir, 'words_trie.pkl'), 'rb') as f:
-            self.words_trie = pickle.load(f)
+        self.alphabet = load_pickle(alphabet_path)
+        self.words_set = load_pickle(words_path)
+        self.words_trie = load_pickle(words_trie_path)

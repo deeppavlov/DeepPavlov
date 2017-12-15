@@ -4,14 +4,14 @@ from pathlib import Path
 
 from overrides import overrides
 
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.common import paths
 from deeppavlov.core.data.dataset_reader import DatasetReader
 
 logger = logging.getLogger(__name__)
 
 
-@register_model('babi')
+@register('babi')
 class BabiDatasetReader(DatasetReader):
     def __init__(self):
         pass

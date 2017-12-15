@@ -2,7 +2,7 @@ from pathlib import Path
 
 import numpy as np
 
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.common import paths
 
 from deeppavlov.skills.hcn.models.et import EntityTracker
@@ -35,7 +35,7 @@ from deeppavlov.skills.hcn.models.et import EntityTracker
 '''
 
 
-@register_model('hcn_at')
+@register('hcn_at')
 class ActionTracker:
     def __init__(self, ent_tracker=EntityTracker):
         # maintain an instance of EntityTracker

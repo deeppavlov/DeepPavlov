@@ -1,12 +1,12 @@
 import csv
 import os
 
-from deeppavlov.common.registry import register_model
-from deeppavlov.data.utils import is_done, download, mark_done
-from .dataset_reader import DatasetReader
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.utils import is_done, download, mark_done
+from deeppavlov.core.data.dataset_reader import DatasetReader
 
 
-@register_model('typos_wikipedia_reader')
+@register('typos_wikipedia_reader')
 class TyposWikipedia(DatasetReader):
     @staticmethod
     def build(data_path: str):

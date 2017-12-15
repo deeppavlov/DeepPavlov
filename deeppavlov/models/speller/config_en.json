@@ -2,16 +2,13 @@
   "model": {
     "name": "spelling_error_model",
     "model_name": "error_model_en",
-    "models_path": "../build",
     "window": 1,
     "dictionary": {
-      "name": "wikipedia_100K_vocab",
-      "data_dir": "../data"
+      "name": "wikipedia_100K_vocab"
     }
   },
   "dataset_reader": {
-    "name": "typos_wikipedia_reader",
-    "data_path": "../data"
+    "name": "typos_wikipedia_reader"
   },
   "dataset": {
     "name": "typos_dataset"

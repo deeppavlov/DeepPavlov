@@ -1,8 +1,8 @@
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 
 
-@register_model("dummy")
+@register("dummy")
 class DummySkill(Inferable):
     def __init__(self, vocab_path=None):
         pass
