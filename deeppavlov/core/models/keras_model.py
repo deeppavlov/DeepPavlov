@@ -1,18 +1,17 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
@@ -197,7 +196,7 @@ class KerasModel(Trainable, Inferable):
 
         return self.model.train_on_batch(batch[0], batch[1])
 
-    def train(self, data):
+    def train(self, data, *args):
         """
         Method trains the model on a given data as a single batch
         Args:
@@ -213,8 +212,6 @@ class KerasModel(Trainable, Inferable):
         Method predicts on given batch
         Args:
             batch: tuple of (x,y) where x, y - lists of samples and their labels
-            *args:
-
         Returns:
 
         """
@@ -234,7 +231,6 @@ class KerasModel(Trainable, Inferable):
         if fname:
             print("Saving model weights and params: " + fname + " ")
             self.model.save_weights(fname + '.h5')
-            self.embedding_dict.save_items(fname)
             with open(fname + '_opt.json', 'w') as opt_file:
                 json.dump(self.opt, opt_file)
 
