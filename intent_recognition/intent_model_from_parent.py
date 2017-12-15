@@ -68,13 +68,13 @@ class KerasIntentModelFromParent(KerasModel):
                                         self.opt['kernel_sizes_cnn'].split(' ')]
         print(self.opt)
         if self.opt['model_from_saved'] == True:
-            self.model = self.init_model_from_saved(model_name=self.opt['model_name'],
-                                                    fname=self.opt['model_file'],
-                                                    optimizer_name=self.opt['optimizer'],
-                                                    lr=self.opt['lear_rate'],
-                                                    decay=self.opt['lear_rate_decay'],
-                                                    loss_name=self.opt['loss'],
-                                                    metrics_names=self.opt['lear_metrics'])
+            self.model = self.load(model_name=self.opt['model_name'],
+                                   fname=self.opt['model_file'],
+                                   optimizer_name=self.opt['optimizer'],
+                                   lr=self.opt['lear_rate'],
+                                   decay=self.opt['lear_rate_decay'],
+                                   loss_name=self.opt['loss'],
+                                   metrics_names=self.opt['lear_metrics'])
         else:
             self.model = self.init_model_from_scratch(model_name=self.opt['model_name'],
                                                       optimizer_name=self.opt['optimizer'],
