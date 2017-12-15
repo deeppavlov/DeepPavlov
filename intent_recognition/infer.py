@@ -3,6 +3,7 @@ from deeppavlov.core.common.params import from_params
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.data.dataset import Dataset
 from deeppavlov.data.dataset_readers.dataset_reader import DatasetReader
+from deeppavlov.core.models.keras_model import KerasModel
 
 from intent_recognition.intent_dataset import IntentDataset
 from intent_recognition.intent_dataset_reader import IntentDatasetReader

@@ -35,6 +35,7 @@ import json
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.models.keras_model import KerasModel
 
 from keras.models import Model
 from keras.layers import Dense, Input, concatenate, Activation, Embedding
@@ -47,7 +48,7 @@ from keras.layers import Bidirectional, LSTM
 from keras.optimizers import Adam
 
 from utils import EmbeddingsDict
-from keras_model import KerasModel
+
 
 
 @register_model('intent_model_from_parent')
