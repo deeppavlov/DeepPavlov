@@ -18,18 +18,33 @@ import json
 import logging
 import itertools
 from overrides import overrides
+import os
+from deeppavlov.data.utils import is_done, mark_done, download_untar
 
-from deeppavlov.common.registry import register_model
-from deeppavlov.data.dataset_readers.dataset_reader import DatasetReader
+from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.data.dataset_reader import DatasetReader
 
 logger = logging.getLogger(__name__)
 
 
-@register_model('dstc2')
+@register_model('dstc2_reader')
 class DSTC2DatasetReader(DatasetReader):
 
+    @staticmethod
+    def build(data_path: str):
+        data_path = os.path.join(data_path, 'dstc2')
+        if not is_done(data_path):
+
+            url = 'http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz'
+            print('Loading DSTC2 from: {}'.format(url))
+            download_untar(url, data_path)
+            mark_done(data_path)
+            print('DSTC2 dataset is built in {}'.format(data_path))
+        return os.path.join(data_path, 'dstc2-trn.jsonlist')
+
     @overrides
-    def read(self, file_path):
+    def read(self, data_path='data/'):
+        file_path = DSTC2DatasetReader.build(data_path)
         logger.info("Reading instances from lines in file at: {}".format(file_path))
         utterances, responses, dialog_indices =\
                 self._read_turns(file_path, with_indices=True)
@@ -40,8 +55,7 @@ class DSTC2DatasetReader(DatasetReader):
                  'response': {'text': r['text'],
                               'act': r['dialog_acts'][0]['act']}}\
                 for u, r in zip(utterances, responses)]
-
-        return [data[idx['start']:idx['end']] for idx in dialog_indices ]
+        return [data[idx['start']:idx['end']] for idx in dialog_indices]
 
     @staticmethod
     def _read_turns(file_path, with_indices=False):

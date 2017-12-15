@@ -26,6 +26,8 @@ class DstcSlotFillingNetwork(Inferable):
 
     @overrides
     def infer(self, instance, *args, **kwargs):
+        if len(instance.split()):
+            return dict()
         return self.predict_slots(instance)
 
     def interact(self):
