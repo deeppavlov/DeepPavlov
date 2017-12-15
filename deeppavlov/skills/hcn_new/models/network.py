@@ -37,13 +37,15 @@ class HybridCodeNetworkModel(TFModel):
         self._build_graph()
         # initialize session
         self.sess = tf.Session()
-        # reload graph weights if `pretrained_model` present
-        if self.opt.get('pretrained_model') is not None:
+
+        if not self.opt.get('train_now') and self.get_checkpoint_state():
 #TODO: save/load params to json, here check compatability
-#
-            self.load(self.opt['pretrained_model'])
+            print("Loading network from `{}`".format(self._model_path))
+            self.load()
         else:
+            print("Initializing network from scratch")
             self.sess.run(tf.global_variables_initializer())
+
         self.reset_state()
 
     def _run_sess(self):

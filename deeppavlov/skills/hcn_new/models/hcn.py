@@ -191,6 +191,8 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         self.save()
 
     def infer(self, context, db_result=None):
+        if db_result is not None:
+            self.db_result = db_result
         probs, pred_id = self.network.infer(
             self._encode_context(context, db_result),
             self._action_mask()
@@ -212,7 +214,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                 self.db_result = other['db_result']
 
             probs, pred_id = self.network.infer(
-                self._encode_context(context, self.db_result),
+                self._encode_context(context, other.get('db_result')),
                 self._action_mask()
             )
 
@@ -232,7 +234,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
     def reset(self):
         self.tracker.reset_state()
         self.db_result = None
-        self.prev_action *= 0.
+        self.prev_action = np.zeros(self.n_actions, dtype=np.float32)
         self.network.reset_state()
 
     def report(self):

@@ -92,12 +92,16 @@ class TFModel(Trainable, Inferable):
                                    global_step=0)
         print('\n:: Model saved to {} \n'.format(fname))
 
+    def get_checkpoint_state(self, dir_name=None):
+        dir_name = dir_name or self._model_path.parent
+        return tf.train.get_checkpoint_state(dir_name)
+
     def load(self, fname=None):
         """
         Load session from fname or from checkpoint
         """
         if fname is None:
-            ckpt = tf.train.get_checkpoint_state(self._model_path.parent)
+            ckpt = self.get_checkpoint_state()
             if ckpt and ckpt.model_checkpoint_path:
                 fname = ckpt.model_checkpoint_path
         if fname is None:
