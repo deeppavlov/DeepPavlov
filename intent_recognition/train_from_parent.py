@@ -10,15 +10,14 @@ from intent_recognition.intent_dataset_reader import IntentDatasetReader
 from intent_recognition.utils import EmbeddingsDict
 from intent_recognition.intent_models import KerasIntentModel
 from intent_recognition.intent_model_from_parent import KerasIntentModelFromParent
-
-from deeppavlov.skills.hcn_new.models.preprocess import SpacyTokenizer
+from intent_recognition.intent_preprocessing import IntentPreprocessing
 
 
 import os, sys
 import json
 import numpy as np
 from sklearn.metrics import log_loss, accuracy_score
-from metrics import fmeasure
+from intent_recognition.metrics import fmeasure
 
 
 def log_metrics(names, values, updates=None, mode='train'):
@@ -51,6 +50,13 @@ def main(config_name='config.json'):
     # Merging train and valid dataset for further split on train/valid
     dataset.merge_data(fields_to_merge=['train', 'valid'], new_field='train')
     dataset.split_data(field_to_split='train', new_fields=['train', 'valid'], proportions=[0.9, 0.1])
+
+    preproc_config = config['preprocessing']
+    preproc = from_params(_REGISTRY[preproc_config['name']],
+                                    preproc_config)
+    dataset = preproc.preprocess(dataset=dataset, data_type='train')
+    dataset = preproc.preprocess(dataset=dataset, data_type='valid')
+    dataset = preproc.preprocess(dataset=dataset, data_type='test')
 
     # Extracting unique classes
     intents = dataset.extract_classes()

@@ -47,6 +47,7 @@ from keras.regularizers import l2
 from keras.layers import Bidirectional, LSTM
 from keras.optimizers import Adam
 
+import intent_recognition.metrics as metrics_file
 from utils import EmbeddingsDict
 
 
@@ -68,6 +69,7 @@ class KerasIntentModelFromParent(KerasModel):
         self.opt['kernel_sizes_cnn'] = [int(x) for x in
                                         self.opt['kernel_sizes_cnn'].split(' ')]
         print(self.opt)
+
         if self.opt['model_from_saved'] == True:
             self.model = self.load(model_name=self.opt['model_name'],
                                    fname=self.opt['model_file'],
@@ -82,7 +84,8 @@ class KerasIntentModelFromParent(KerasModel):
                                                       lr=self.opt['lear_rate'],
                                                       decay=self.opt['lear_rate_decay'],
                                                       loss_name=self.opt['loss'],
-                                                      metrics_names=self.opt['lear_metrics'])
+                                                      metrics_names=self.opt['lear_metrics'],
+                                                      add_metrics_file=metrics_file)
 
         self.metrics_names = self.model.metrics_names
         self.metrics_values = len(self.metrics_names) * [0.]
