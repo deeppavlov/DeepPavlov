@@ -22,10 +22,10 @@ from models.hcn import HybridCodeNetworkBot
 MODEL_CONFIG_PATH = 'config.json'
 
 # Download pretrained ner model
-config = json.load(open(MODEL_CONFIG_PATH, 'rt'))
-ner_model_path = Path(config['model']['slot_filler']['model_filepath'])
-if not Path(ner_model_path).exists():
-    load_ner_dstc_model(ner_model_path.parent)
+#config = json.load(open(MODEL_CONFIG_PATH, 'rt'))
+#ner_model_path = Path(config['model']['slot_filler']['model_filepath'])
+#if not Path(ner_model_path).exists():
+#    load_ner_dstc_model(ner_model_path.parent)
 
 ##### Train and speak to HCN_go skill separately
 train_model_from_config(MODEL_CONFIG_PATH)

@@ -45,10 +45,12 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                  tokenizer:Type=SpacyTokenizer,
                  tracker:Type=DefaultTracker,
                  network:Type=HybridCodeNetworkModel,
-                 use_action_mask=False):
+                 use_action_mask=False,
+                 debug=False):
 
         self.episode_done = True
         self.use_action_mask = use_action_mask
+        self.debug = debug
 # TODO: infer slot names from dataset
         self.slot_names = slot_names
         self.slot_filler = slot_filler
@@ -81,6 +83,8 @@ class HybridCodeNetworkBot(Inferable, Trainable):
     def _encode_context(self, context, db_result=None):
         # tokenize input
         tokenized = ' '.join(self.tokenizer.infer(context)).strip()
+        if self.debug:
+            print("Text tokens = `{}`".format(tokenized))
 
         # Bag of words features
         bow_features = self.bow_encoder.infer(tokenized, self.vocab)
@@ -92,6 +96,8 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         # Text entity features
         self.tracker.update_state(self.slot_filler.infer(tokenized))
         ent_features = self.tracker.infer()
+        if self.debug:
+            print("Found slots =", self.slot_filler.infer(tokenized))
 
         # Other features
         context_features = np.array([(db_result == {}) * 1.,
@@ -145,12 +151,12 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                     self.reset()
                     self.metrics.n_dialogs += 1
 
-                self.db_result = self.db_result or other.get('db_result')
+                if other.get('db_result') is not None:
+                    self.db_result = other['db_result']
                 action_id = self._encode_response(response, other['act'])
 
                 loss, pred_id = self.network.train(
-                    self._encode_context(context,
-                                            other.get('db_result')),
+                    self._encode_context(context, other.get('db_result')),
                     action_id,
                     self._action_mask()
                 )
@@ -166,6 +172,12 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                 self.metrics.train_loss += loss
                 self.metrics.conf_matrix[pred_id, action_id] += 1
                 self.metrics.n_corr_examples += int(pred == true)
+                if self.debug and ((pred == true) != (pred_id == action_id)):
+                    print("Slot filling problem: ")
+                    print("Pred = {}: {}".format(pred_id, pred))
+                    print("True = {}: {}".format(action_id, true))
+                    print("State =", self.tracker.get_state())
+                    print("db_result =", self.db_result)
 #TODO: update dialog metrics
             print('\n\n:: {}.train {}'.format(j + 1, self.metrics.report()))
 
@@ -196,10 +208,11 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                 self.reset()
                 metrics.n_dialogs += 1
 
-            self.db_result = self.db_result or other.get('db_result')
+            if other.get('db_result') is not None:
+                self.db_result = other['db_result']
 
             probs, pred_id = self.network.infer(
-                self._encode_context(context),
+                self._encode_context(context, self.db_result),
                 self._action_mask()
             )
 
@@ -211,8 +224,8 @@ class HybridCodeNetworkBot(Inferable, Trainable):
 
             # update metrics
             metrics.n_examples += 1
-            y = self._encode_response(response, other['act'])
-            metrics.conf_matrix[pred_id, y] += 1
+            action_id = self._encode_response(response, other['act'])
+            metrics.conf_matrix[pred_id, action_id] += 1
             metrics.n_corr_examples += int(pred == true)
         return metrics
 
@@ -229,8 +242,9 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         self.metrics.reset()
 
     def save(self):
-        """Save the parameters of the agent to a file."""
+        """Save the parameters of the model to a file."""
         self.network.save()
 
-    def __exit__(self, type, value, traceback):
-        self.network.__exit__()
+    def shutdown(self):
+        self.network.shutdown()
+        self.slot_filler.shutdown()

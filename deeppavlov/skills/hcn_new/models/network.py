@@ -52,7 +52,6 @@ class HybridCodeNetworkModel(TFModel):
     def _init_params(self, params=None):
         params = params or self.opt
         self.learning_rate = params['learning_rate']
-        self.n_epoch = params['epoch_num']
         self.n_hidden = params['hidden_dim']
         self.n_actions = params['action_size']
         self.obs_size = params['obs_size']
@@ -157,5 +156,5 @@ class HybridCodeNetworkModel(TFModel):
             )
         return probs, prediction
 
-    def __exit__(self, type, value, traceback):
+    def shutdown(self):
         self.sess.close()
