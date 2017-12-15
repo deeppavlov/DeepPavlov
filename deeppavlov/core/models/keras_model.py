@@ -35,6 +35,9 @@ import keras.optimizers
 
 
 class KerasModel(Trainable, Inferable):
+    """
+    Class builds keras model
+    """
     def __init__(self, opt, *args, **kwargs):
         """
         Method initializes model using parameters from opt
@@ -66,14 +69,18 @@ class KerasModel(Trainable, Inferable):
         """
         Method initializes model from scratch with given params
         Args:
-            model_name:
-            lr:
-            decay:
-            loss:
-            metrics:
+            model_name: name of model function described as a method of this class
+            lr: learning rate
+            decay: learning rate decay
+            loss_name: loss function name (from keras.losses)
+            metrics_names: names of metrics (from keras.metrics) as one string
+            loss_weights: optional parameter as in keras.model.compile
+            sample_weight_mode: optional parameter as in keras.model.compile
+            weighted_metrics: optional parameter as in keras.model.compile
+            target_tensors: optional parameter as in keras.model.compile
 
         Returns:
-
+            compiled model with given network and learning parameters
         """
         print('___Initializing model from scratch___')
 
@@ -132,7 +139,8 @@ class KerasModel(Trainable, Inferable):
             target_tensors:
 
         Returns:
-
+            model with loaded weights and network parameters from files
+            but compiled with given learning parameters
         """
         print('___Initializing model from saved___'
               '\nModel weights file is %s.h5'
@@ -190,10 +198,9 @@ class KerasModel(Trainable, Inferable):
         Args:
             batch: tuple of (x,y) where x, y - lists of samples and their labels
 
-        Returns: metrics values on a given batch
-
+        Returns:
+            metrics values on a given batch
         """
-
         return self.model.train_on_batch(batch[0], batch[1])
 
     def train(self, data, *args):
@@ -202,8 +209,8 @@ class KerasModel(Trainable, Inferable):
         Args:
             data: tuple of (x,y) where x, y - lists of samples and their labels
 
-        Returns: metrics values on a given data
-
+        Returns:
+            metrics values on a given data
         """
         return self.train_on_batch(batch=data)
 
@@ -213,7 +220,7 @@ class KerasModel(Trainable, Inferable):
         Args:
             batch: tuple of (x,y) where x, y - lists of samples and their labels
         Returns:
-
+            predictions on a given batch
         """
         return self.model.predict_on_batch(batch)
 
@@ -225,7 +232,7 @@ class KerasModel(Trainable, Inferable):
             fname: file_path to save model. If not explicitly given seld.opt["model_file"] will be used
 
         Returns:
-
+            nothing
         """
         fname = self.opt.get('model_file', None) if fname is None else fname
         if fname:
@@ -239,15 +246,15 @@ class KerasModel(Trainable, Inferable):
         Example of model function
         Build the un-compiled multilayer perceptron model
         Args:
-            opt:
+            opt: dictionary of parameters
 
         Returns:
-
+            un-compiled Keras model
         """
         inp = Input(shape=opt['inp_shape'])
         output = inp
         for i in range(opt['n_layers']):
             output = Dense(opt['layer_size'], activation='relu')(output)
-        output = Dense(self.n_classes, activation='softmax')(output)
+        output = Dense(1, activation='softmax')(output)
         model = Model(inputs=inp, outputs=output)
         return model
