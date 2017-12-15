@@ -50,7 +50,7 @@ class NerNetwork:
                  net_type='cnn',
                  char_filter_width=5,
                  verbouse=False):
-        tf.reset_default_graph()
+        #tf.reset_default_graph()
         n_tags = len(corpus.tag_dict)
         n_tokens = len(corpus.token_dict)
         n_chars = len(corpus.char_dict)
@@ -162,9 +162,10 @@ class NerNetwork:
         self._embeddings_onethego = embeddings_onethego
         self._entity_of_interest = entity_of_interest
         self.verbouse = verbouse
-        sess.run(tf.global_variables_initializer())
         if pretrained_model_filepath is not None:
             self.load(pretrained_model_filepath)
+        else:
+            sess.run(tf.global_variables_initializer())
 
     def save(self, model_file_path=None):
         if model_file_path is None:
