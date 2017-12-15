@@ -7,17 +7,7 @@ T = TypeVar('T')
 
 
 def from_params(cls: Type, params: Dict, **kwargs) -> Type['T']:
-    config_params = {}
-    for sp in params.keys():
-        try:
-            if sp != 'name':
-                config_params[sp] = params[sp]
-        except KeyError:
-            print("Using default value for parameter `{}`.".format(sp))
-            # Occurs when params[sp] throws KeyError. It means that the needed configuration is
-            # absent in the json file and a default configuration from class constructor should
-            #  be taken instead.
-            pass
+    config_params = {k: v for k, v in params.items() if k != 'name'}
 
     for param_name, subcl_params in config_params.items():
         if isinstance(subcl_params, dict):
@@ -39,4 +29,5 @@ def from_params(cls: Type, params: Dict, **kwargs) -> Type['T']:
                         subcl_params['name']))
     # DEBUG
     # print(type(cls(**dict(config_params, **kwargs))))
+
     return cls(**dict(config_params, **kwargs))
