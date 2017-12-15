@@ -1,7 +1,6 @@
 {
   "model": {
     "name": "intent_model_from_parent",
-    "raw_data_path": "/home/dilyara/data/data_files/dstc2/dstc2_intent_model",
     "kernel_sizes_cnn": "1 2 3",
     "filters_cnn": 64,
     "embedding_size": 100,
@@ -13,12 +12,12 @@
     "lear_rate_decay": 0.1,
     "loss": "binary_crossentropy",
     "fasttext_model": "/home/dilyara/data/data_files/dstc2/dstc2_intent_model/dstc2_fasttext_model_100.bin",
-    "model_file": "/home/dilyara/data/models/intent_models/dstc2/pilot_dstc2/intent_cnn_2",
+    "model_file": "/home/dilyara/data/models/intent_models/dstc2/pilot_dstc2/intent_cnn_3",
     "text_size": 15,
     "coef_reg_cnn": 1e-4,
     "coef_reg_den": 1e-4,
     "dropout_rate": 0.5,
-    "epochs": 1000,
+    "epochs": 10,
     "dense_size": 50,
     "model_name": "cnn_model",
     "batch_size": 64,
@@ -29,9 +28,9 @@
   },
   "dataset_reader": {
     "name": "intent_dataset_reader",
-    "train_data_path": "/home/dilyara/data/data_files/dstc2/dstc2_intent_model/dstc2_train.csv",
-    "valid_data_path": "/home/dilyara/data/data_files/dstc2/dstc2_intent_model/dstc2_valid.csv",
-    "test_data_path": "/home/dilyara/data/data_files/dstc2/dstc2_intent_model/dstc2_test.csv"
+    "train_data_path": "/home/dilyara/data/data_files/dstc2/dstc2-trn.jsonlist",
+    "valid_data_path": "/home/dilyara/data/data_files/dstc2/dstc2-val.jsonlist",
+    "test_data_path": "/home/dilyara/data/data_files/dstc2/dstc2-tst.jsonlist"
   },
   "dataset": {
     "name": "intent_dataset",

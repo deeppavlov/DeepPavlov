@@ -1,7 +1,6 @@
 {
   "model": {
     "name": "intent_model_from_parent",
-    "raw_data_path": "/home/dilyara/data/data_files/dstc2/dstc2_intent_model",
     "kernel_sizes_cnn": "1 2 3",
     "filters_cnn": 64,
     "embedding_size": 100,
@@ -29,9 +28,9 @@
   },
   "dataset_reader": {
     "name": "intent_dataset_reader",
-    "train_data_path": "/home/dilyara/data/data_files/dstc2/dstc2_intent_model/dstc2_train.csv",
-    "valid_data_path": "/home/dilyara/data/data_files/dstc2/dstc2_intent_model/dstc2_valid.csv",
-    "test_data_path": "/home/dilyara/data/data_files/dstc2/dstc2_intent_model/dstc2_test.csv"
+    "train_data_path": "/home/dilyara/data/data_files/dstc2/dstc2-trn.jsonlist",
+    "valid_data_path": "/home/dilyara/data/data_files/dstc2/dstc2-val.jsonlist",
+    "test_data_path": "/home/dilyara/data/data_files/dstc2/dstc2-tst.jsonlist"
   },
   "dataset": {
     "name": "intent_dataset",
