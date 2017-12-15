@@ -5,6 +5,8 @@ from collections import defaultdict, Counter
 from heapq import heappop, heappushpop, heappush
 from math import log, exp
 
+from typing import Type
+
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
@@ -15,7 +17,8 @@ from deeppavlov.models.speller.models.static_dictionary import StaticDictionary
 
 @register('spelling_error_model')
 class ErrorModel(Inferable, Trainable):
-    def __init__(self, dictionary: StaticDictionary, models_path=paths.USR_PATH, window=1, model_name='error_model', *args, **kwargs):
+    def __init__(self, dictionary: Type = StaticDictionary, models_path=paths.USR_PATH, window=1,
+                 model_name='error_model', *args, **kwargs):
         self.file_name = os.path.join(models_path, model_name + '.tsv')
         self.costs = defaultdict(itertools.repeat(float('-inf')).__next__)
         self.dictionary = dictionary
@@ -47,7 +50,8 @@ class ErrorModel(Inferable, Trainable):
                     c = word[i - 1:i]
                     res.append(max(
                         (res[-1] + self.costs[('', c)]) if i else float('-inf'),
-                        d[prefix[:-1]][i] + self.costs[(prefix[-1], '')] if prefix else float('-inf'),
+                        d[prefix[:-1]][i] + self.costs[(prefix[-1], '')] if prefix else float(
+                            '-inf'),
                         (d[prefix[:-1]][i - 1] + (self.costs[(prefix[-1], c)]))
                         if prefix and i else float('-inf')
                     ) if i or prefix else 0)
@@ -76,17 +80,18 @@ class ErrorModel(Inferable, Trainable):
                 for i in range(1, word_len):
                     c_res = [inf]
                     for li in range(1, min(prefix_len + 1, self.window + 2)):
-                        for ri in range(1, min(i+1, self.window + 2)):
-                            prev = d[prefix[:-li]][i-ri]
+                        for ri in range(1, min(i + 1, self.window + 2)):
+                            prev = d[prefix[:-li]][i - ri]
                             if prev > threshold:
-                                edit = (prefix[-li:], word[i-ri:i])
+                                edit = (prefix[-li:], word[i - ri:i])
                                 if edit in self.costs:
                                     c_res.append(prev +
                                                  self.costs[edit])
                     res.append(max(c_res))
                 if prefix in self.dictionary.words_set:
                     heappushpop(candidates, (res[-1], prefix))
-                potential = max([e for i in range(self.window+2) for e in d[prefix[:prefix_len-i]]])
+                potential = max(
+                    [e for i in range(self.window + 2) for e in d[prefix[:prefix_len - i]]])
                 if potential > threshold:
                     heappush(prefixes_heap, (-potential, self.dictionary.words_trie[prefix]))
         return [(w.strip('⟬⟭'), exp(score)) for score, w in sorted(candidates, reverse=True)]
@@ -108,17 +113,19 @@ class ErrorModel(Inferable, Trainable):
     def _distance_edits(seq1, seq2):
         l1, l2 = len(seq1), len(seq2)
         d = [[(i, ()) for i in range(l2 + 1)]]
-        d += [[(i, ())] + [(0, ())]*l2 for i in range(1, l1 + 1)]
+        d += [[(i, ())] + [(0, ())] * l2 for i in range(1, l1 + 1)]
 
         for i in range(1, l1 + 1):
             for j in range(1, l2 + 1):
                 edits = [
-                    (d[i-1][j][0] + 1, d[i-1][j][1] + ((seq1[i-1], ''),)),
-                    (d[i][j-1][0] + 1, d[i][j-1][1] + (('', seq2[j-1]),)),
-                    (d[i-1][j-1][0] + (seq1[i-1] != seq2[j-1]), d[i-1][j-1][1] + ((seq1[i-1], seq2[j-1]),))
+                    (d[i - 1][j][0] + 1, d[i - 1][j][1] + ((seq1[i - 1], ''),)),
+                    (d[i][j - 1][0] + 1, d[i][j - 1][1] + (('', seq2[j - 1]),)),
+                    (d[i - 1][j - 1][0] + (seq1[i - 1] != seq2[j - 1]),
+                     d[i - 1][j - 1][1] + ((seq1[i - 1], seq2[j - 1]),))
                 ]
-                if i > 1 and j > 1 and seq1[i-1] == seq2[j-2] and seq1[i-2] == seq2[j-1]:
-                    edits.append((d[i-2][j-2][0] + (seq1[i-1] != seq2[j-1]), d[i-2][j-2][1] + ((seq1[i-2:i], seq2[j-2:j]),)))
+                if i > 1 and j > 1 and seq1[i - 1] == seq2[j - 2] and seq1[i - 2] == seq2[j - 1]:
+                    edits.append((d[i - 2][j - 2][0] + (seq1[i - 1] != seq2[j - 1]),
+                                  d[i - 2][j - 2][1] + ((seq1[i - 2:i], seq2[j - 2:j]),)))
                 d[i][j] = min(edits, key=lambda x: x[0])
 
         return d[-1][-1]
@@ -145,7 +152,7 @@ class ErrorModel(Inferable, Trainable):
                 entries += [op[0] for op in ops]
                 changes += [op for op in ops]
             if i % 1500 == 0:
-                print('{} out of {}'.format(i+1, n))
+                print('{} out of {}'.format(i + 1, n))
 
         e_count = Counter(entries)
         c_count = Counter(changes)
