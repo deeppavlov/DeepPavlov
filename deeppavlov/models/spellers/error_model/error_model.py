@@ -7,12 +7,11 @@ from math import log, exp
 
 from typing import Type
 
+from deeppavlov.core.common import paths
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.common import paths
-
-from deeppavlov.models.speller.models.static_dictionary import StaticDictionary
+from deeppavlov.vocabs.static_dictionary import StaticDictionary
 
 
 @register('spelling_error_model')

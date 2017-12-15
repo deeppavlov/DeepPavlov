@@ -1,20 +1,18 @@
 import sys
 
-from typing import Type
 import numpy as np
+from typing import Type
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import load_vocab
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
-
+from deeppavlov.models.spellers.error_model.error_model import ErrorModel
 from deeppavlov.skills.hcn.models.at import ActionTracker
 from deeppavlov.skills.hcn.models.bow import BoW_encoder
 from deeppavlov.skills.hcn.models.embedder import UtteranceEmbed
 from deeppavlov.skills.hcn.models.et import EntityTracker
 from deeppavlov.skills.hcn.models.lstm import LSTM
-
-from deeppavlov.models.speller.models.error_model import ErrorModel
 
 
 @register("hcn_go")
@@ -31,7 +29,14 @@ class HybridCodeNetwork(Inferable, Trainable):
         self.speller = speller
         self.vocab = load_vocab(vocab_path)
         input_size = self.embedder.dim + len(self.vocab) + self.entity_tracker.num_features
+
+        # TODO load model(where from?)
+
         self.net = LSTM(input_size=input_size, output_size=self.action_tracker.action_size)
+
+
+        # if not self.train_now:
+
 
     def train(self, data, num_epochs, num_tr_data, acc_threshold=0.99):
 
@@ -103,8 +108,8 @@ class HybridCodeNetwork(Inferable, Trainable):
         :return: training input vector
         """
         context = context.lower()
-        # Uncomment this if you want to use a speller
-        # context = self.speller.infer(context)
+        # Uncomment this if you want to use a spellers
+        # context = self.spellers.infer(context)
         bow = self.bow_encoder.infer(context, self.vocab)
         emb = self.embedder.infer(context)
         self.entity_tracker.infer(context)
