@@ -10,6 +10,7 @@ from intent_recognition.intent_dataset_reader import IntentDatasetReader
 from intent_recognition.utils import EmbeddingsDict
 from intent_recognition.intent_models import KerasIntentModel
 from intent_recognition.intent_model_from_parent import KerasIntentModelFromParent
+from intent_recognition.intent_preprocessing import IntentPreprocessing
 
 import os, sys
 import json
@@ -48,6 +49,11 @@ def main(config_name='config_infer.json'):
     # Merging train and valid dataset for further split on train/valid
     dataset.merge_data(fields_to_merge=['train', 'valid'], new_field='train')
     dataset.split_data(field_to_split='train', new_fields=['train', 'valid'], proportions=[0.9, 0.1])
+
+    preproc = IntentPreprocessing()
+    dataset = preproc.preprocess(dataset=dataset, data_type='train')
+    dataset = preproc.preprocess(dataset=dataset, data_type='valid')
+    dataset = preproc.preprocess(dataset=dataset, data_type='test')
 
     # Extracting unique classes
     intents = dataset.extract_classes()

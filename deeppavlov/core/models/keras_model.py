@@ -64,7 +64,7 @@ class KerasModel(Trainable, Inferable):
                                                       metrics_names=self.opt['lear_metrics'])
 
     def init_model_from_scratch(self, model_name, optimizer_name,
-                                lr, decay, loss_name, metrics_names=None, loss_weights=None,
+                                lr, decay, loss_name, metrics_names=None, add_metrics_file=None, loss_weights=None,
                                 sample_weight_mode=None, weighted_metrics=None, target_tensors=None):
         """
         Method initializes model from scratch with given params
@@ -74,6 +74,7 @@ class KerasModel(Trainable, Inferable):
             decay: learning rate decay
             loss_name: loss function name (from keras.losses)
             metrics_names: names of metrics (from keras.metrics) as one string
+            add_metrics_file: file with additional metrics functions
             loss_weights: optional parameter as in keras.model.compile
             sample_weight_mode: optional parameter as in keras.model.compile
             weighted_metrics: optional parameter as in keras.model.compile
@@ -109,7 +110,11 @@ class KerasModel(Trainable, Inferable):
             if callable(metrics_func):
                 metrics_funcs.append(metrics_func)
             else:
-                raise AttributeError("Metric %s is not defined" % metrics_names[i])
+                metrics_func = getattr(add_metrics_file, metrics_names[i], None)
+                if callable(metrics_func):
+                    metrics_funcs.append(metrics_func)
+                else:
+                    raise AttributeError("Metric %s is not defined" % metrics_names[i])
 
         model.compile(optimizer=optimizer_,
                       loss=loss,
@@ -121,7 +126,7 @@ class KerasModel(Trainable, Inferable):
         return model
 
     def load(self, model_name, fname, optimizer_name,
-                              lr, decay, loss_name, metrics_names=None, loss_weights=None,
+                              lr, decay, loss_name, metrics_names=None, add_metrics_file=None, loss_weights=None,
                               sample_weight_mode=None, weighted_metrics=None, target_tensors=None):
         """
         Method initiliazes model from saved params and weights
@@ -181,8 +186,12 @@ class KerasModel(Trainable, Inferable):
             if callable(metrics_func):
                 metrics_funcs.append(metrics_func)
             else:
-                raise AttributeError("Metric %s is not defined" % metrics_names[i])
-
+                metrics_func = getattr(add_metrics_file, metrics_names[i], None)
+                if callable(metrics_func):
+                    metrics_funcs.append(metrics_func)
+                else:
+                    raise AttributeError("Metric %s is not defined" % metrics_names[i])
+                
         model.compile(optimizer=optimizer_,
                       loss=loss,
                       metrics=metrics_funcs,

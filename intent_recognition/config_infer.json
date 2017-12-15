@@ -4,7 +4,7 @@
     "kernel_sizes_cnn": "1 2 3",
     "filters_cnn": 64,
     "embedding_size": 100,
-    "lear_metrics": "binary_accuracy",
+    "lear_metrics": "binary_accuracy fmeasure",
     "confident_threshold": 0.5,
     "model_from_saved": true,
     "optimizer": "Adam",
@@ -35,5 +35,8 @@
   "dataset": {
     "name": "intent_dataset",
     "seed": 42
+  },
+  "preprocessing": {
+    "name": "intent_preprocessing"
   }
 }
