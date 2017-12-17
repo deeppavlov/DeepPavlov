@@ -2,7 +2,7 @@ import random
 from typing import List, Dict, Generator, Tuple, Any
 
 
-class DataIterator:
+class Dataset:
     def split(self, *args, **kwargs):
         pass
 
