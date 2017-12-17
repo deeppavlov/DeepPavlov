@@ -1,10 +1,10 @@
 import requests
-from deeppavlov.common.registry import register_model
+from deeppavlov.core.common.registry import register
 
-from deeppavlov.models.speller.models import StaticDictionary
+from deeppavlov.models.spellers.error_model.error_model import StaticDictionary
 
 
-@register_model('russian_words_vocab')
+@register('russian_words_vocab')
 class RussianWordsVocab(StaticDictionary):
     dict_name = 'russian_words_vocab'
 

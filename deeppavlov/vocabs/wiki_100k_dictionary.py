@@ -1,8 +1,8 @@
 import requests
-from deeppavlov.core.common.registry import register
 from lxml import html
 
-from deeppavlov.models.speller.models.static_dictionary import StaticDictionary
+from deeppavlov.core.common.registry import register
+from deeppavlov.vocabs.static_dictionary import StaticDictionary
 
 
 @register('wikipedia_100K_vocab')

@@ -2,10 +2,9 @@ from pathlib import Path
 
 import numpy as np
 
-from deeppavlov.core.common.registry import register
 from deeppavlov.core.common import paths
-
-from deeppavlov.skills.hcn.models.et import EntityTracker
+from deeppavlov.core.common.registry import register
+from deeppavlov.models.trackers.hcn_et import EntityTracker
 
 '''
     Action Templates
