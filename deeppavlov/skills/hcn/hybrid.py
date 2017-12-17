@@ -1,4 +1,5 @@
 import sys
+from pathlib import Path
 
 import numpy as np
 from typing import Type
@@ -7,46 +8,40 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import load_vocab
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.models.embedders.w2v_embedder import UtteranceEmbed
+from deeppavlov.models.encoders.bow import BoW_encoder
+from deeppavlov.models.lstms.hcn_lstm import LSTM
 from deeppavlov.models.spellers.error_model.error_model import ErrorModel
-from deeppavlov.skills.hcn.models.at import ActionTracker
-from deeppavlov.skills.hcn.models.bow import BoW_encoder
-from deeppavlov.skills.hcn.models.embedder import UtteranceEmbed
-from deeppavlov.skills.hcn.models.et import EntityTracker
-from deeppavlov.skills.hcn.models.lstm import LSTM
+from deeppavlov.models.trackers.hcn_at import ActionTracker
+from deeppavlov.models.trackers.hcn_et import EntityTracker
+from deeppavlov.core.common import paths
 
 
 @register("hcn_go")
 class HybridCodeNetwork(Inferable, Trainable):
-    def __init__(self, vocab_path, bow_encoder: Type=BoW_encoder, embedder: Type=UtteranceEmbed,
-                 entity_tracker: Type=EntityTracker, speller: Type=ErrorModel):
+    def __init__(self, vocab_path=None, bow_encoder: Type = BoW_encoder, embedder: Type = UtteranceEmbed,
+                 entity_tracker: Type = EntityTracker, speller: Type = ErrorModel):
 
-        # import inspect
-        # args = inspect.getfullargspec(self.__init__)
         self.bow_encoder = bow_encoder
         self.embedder = embedder
         self.entity_tracker = entity_tracker
         self.action_tracker = ActionTracker(self.entity_tracker)
         self.speller = speller
+
+        if vocab_path is None:
+            vocab_path = Path(paths.USR_PATH).joinpath('vocab.txt')
         self.vocab = load_vocab(vocab_path)
         input_size = self.embedder.dim + len(self.vocab) + self.entity_tracker.num_features
-
-        # TODO load model(where from?)
-
         self.net = LSTM(input_size=input_size, output_size=self.action_tracker.action_size)
 
-
-        # if not self.train_now:
-
-
-    def train(self, data, num_epochs, num_tr_data, acc_threshold=0.99):
+    def train(self, dataset, num_epochs=20, acc_threshold=0.99):
 
         # TODO `data` should be batch
 
         print('\n:: training started\n')
 
-        tr_data = data[:num_tr_data]
-        eval_data = data[num_tr_data:250]
-        # num_tr_instances = sum(len(dialog) for dialog in tr_data)
+        tr_data = list(dataset.iter_all())
+        eval_data = list(dataset.iter_all('test'))
         for j in range(num_epochs):
             loss = 0.
             i = 0
