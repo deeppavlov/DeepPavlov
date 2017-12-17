@@ -2,12 +2,12 @@ import random
 from typing import List, Dict, Generator, Tuple, Any
 
 
-class Dataset:
+class DataIterator:
     def split(self, *args, **kwargs):
         pass
 
     def __init__(self, data: Dict[str, List[Tuple[Any, Any]]], seed: int = None, *args, **kwargs) -> None:
-        r""" Dataset takes a dict with fields 'train', 'test', 'valid'. A list of samples (pairs x, y) is stored
+        r""" Dataiterator takes a dict with fields 'train', 'test', 'valid'. A list of samples (pairs x, y) is stored
         in each field.
 
         Args:
