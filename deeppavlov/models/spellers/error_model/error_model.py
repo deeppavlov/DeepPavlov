@@ -129,13 +129,13 @@ class ErrorModel(Inferable, Trainable):
 
         return d[-1][-1]
 
-    def train(self, data, *args, **kwargs):
+    def train(self, dataset, *args, **kwargs):
         changes = []
         entries = []
-        data = list(data)
-        n = len(data)
+        dataset = list(dataset.iter_all())
+        n = len(dataset)
         window = 4
-        for i, (error, correct) in enumerate(data):
+        for i, (error, correct) in enumerate(dataset):
             correct = '⟬{}⟭'.format(correct)
             error = '⟬{}⟭'.format(error)
             d, ops = self._distance_edits(correct, error)
@@ -162,6 +162,8 @@ class ErrorModel(Inferable, Trainable):
             e = e_count[w] + incorrect_prior + correct_prior
             p = c / e
             self.costs[(w, s)] = log(p)
+
+        self.save()
 
     def save(self, file_name=None):
         if not file_name:

@@ -1,11 +1,11 @@
 import random
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.data_iterator import DataIterator
+from deeppavlov.core.data.dataset import Dataset
 
 
-@register('typos_dataiter')
-class TyposDataset(DataIterator):
+@register('typos_dataset')
+class TyposDataset(Dataset):
     def split(self, *args, **kwargs):
         """Split all data into train and test
 
