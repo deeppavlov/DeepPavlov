@@ -12,3 +12,4 @@ from deeppavlov.vocabs.wiki_100k_dictionary import Wiki100KDictionary
 from deeppavlov.dataset_readers.typos_wikipedia import TyposWikipedia
 from deeppavlov.dataset_readers.typos_kartaslov import TyposKartaslov
 from deeppavlov.datasets.typos_dataset import TyposDataset
+from deeppavlov.datasets.hcn_dataset import HCNDataset
