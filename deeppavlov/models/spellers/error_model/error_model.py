@@ -16,8 +16,10 @@ from deeppavlov.vocabs.static_dictionary import StaticDictionary
 
 @register('spelling_error_model')
 class ErrorModel(Inferable, Trainable):
-    def __init__(self, dictionary: Type = StaticDictionary, models_path=paths.USR_PATH, window=1,
+    def __init__(self, dictionary: Type = StaticDictionary, models_path=None, window=1,
                  model_name='error_model', *args, **kwargs):
+        if models_path is None:
+            models_path = paths.USR_PATH
         self.file_name = os.path.join(models_path, model_name + '.tsv')
         self.costs = defaultdict(itertools.repeat(float('-inf')).__next__)
         self.dictionary = dictionary
@@ -168,7 +170,7 @@ class ErrorModel(Inferable, Trainable):
     def save(self, file_name=None):
         if not file_name:
             file_name = self.file_name
-        os.makedirs(os.path.dirname(file_name), 0o755, exist_ok=True)
+        os.makedirs(os.path.dirname(os.path.abspath(file_name)), 0o755, exist_ok=True)
         with open(file_name, 'w', newline='') as tsv_file:
             writer = csv.writer(tsv_file, delimiter='\t')
             for (w, s), log_p in self.costs.items():
