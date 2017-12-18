@@ -1,6 +1,7 @@
 {
   "dataset_reader": {
-    "name": "dstc2_datasetreader"
+    "name": "dstc2_datasetreader",
+    "data_path": "/home/vimary/IPavlov/projects/Pilot/data/dstc2"
   },
   "dataset": {
     "name": "dstc2_dialog_dataset"
@@ -21,10 +22,10 @@
     },
     "slot_filler": {
         "name": "dstc_slotfilling",
-        "dict_filepath": "../ner/model/dict.txt",
-        "model_filepath": "../ner/model/ner_model.ckpt",
-        "params_filepath": "../ner/model/params.json",
-        "slot_vals_filepath": "../ner/model/slot_vals.json"
+        "dict_filepath": "../../models/ner/model/dict.txt",
+        "model_filepath": "../../models/ner/model/ner_model.ckpt",
+        "params_filepath": "../../models/ner/model/params.json",
+        "slot_vals_filepath": "../../models/ner/model/slot_vals.json"
     },
     "bow_encoder": {
       "name": "bow"
@@ -42,7 +43,6 @@
       "slot_names": ["pricerange", "this", "area", "slot", "food", "name"]
     }
   },
-  "data_path": "/home/vimary/IPavlov/projects/Pilot/data/dstc2",
   "num_epochs": 40,
   "config_path": "config.json"
 }

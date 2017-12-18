@@ -23,11 +23,11 @@ from deeppavlov.core.data.utils import load_vocab
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
 
-from deeppavlov.skills.ner.slotfill import DstcSlotFillingNetwork
+from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
 from deeppavlov.models.embedders.fasttext_embedder import FasttextUtteranceEmbed
 from deeppavlov.models.encoders.bow import BoW_encoder
 from deeppavlov.models.trackers.default_tracker import DefaultTracker
-from deeppavlov.models.preprocess.spacy_tokenizer import SpacyTokenizer
+from deeppavlov.preprocessors.spacy_tokenizer import SpacyTokenizer
 
 from network import HybridCodeNetworkModel
 from templates import Templates, DualTemplate
