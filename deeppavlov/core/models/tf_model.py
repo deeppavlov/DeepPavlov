@@ -15,6 +15,26 @@ from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
 
 
+def _graph_wrap(func, graph):
+    def _wrapped(*args, **kwargs):
+        with graph.as_default():
+            return func(*args, **kwargs)
+
+    return _wrapped
+
+
+class TfModelMeta(type):
+    def __call__(cls, *args, **kwargs):
+        obj = cls.__new__(cls)
+        obj.graph = tf.Graph()
+        for meth in dir(obj):
+            attr = getattr(obj, meth)
+            if callable(attr):
+                setattr(obj, meth, _graph_wrap(attr, obj.graph))
+        obj.__init__(*args, **kwargs)
+        return obj
+
+
 class TFModel(Trainable, Inferable):
     _saver = Saver
     _model_dir_path = ''
