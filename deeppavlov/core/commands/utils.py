@@ -1,24 +1,30 @@
-from pathlib import Path
+from pathlib import Path, PurePath
 
 from deeppavlov.core.common import paths
 
 from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.common.file import read_json
 
-USR_DIR = 'USR_DIR'
+
+def set_usr_dir(config_path: str, usr_dir_name='USR_DIR') -> PurePath:
+    """
+    Make a serialization user dir.
+    """
+    config = read_json(config_path)
+    try:
+        usr_dir = Path(config['usr_dir'])
+    except KeyError:
+        parent = Path(config_path).resolve().parent
+        usr_dir = parent.joinpath(usr_dir_name)
+
+    if not usr_dir.exists():
+        usr_dir.mkdir()
+
+    paths.USR_PATH = usr_dir
+    return usr_dir
 
 
-def set_usr_dir(config_path: str, usr_dir_name):
-    # make a serialization user dir
-    root_ = Path(config_path).resolve().parent
-    usr_dir_path = root_.joinpath(usr_dir_name)
-    if not usr_dir_path.exists():
-        usr_dir_path.mkdir()
-    paths.USR_PATH = usr_dir_path
-    return usr_dir_path
-
-
-def set_vocab_path():
+def set_vocab_path() -> PurePath:
     return paths.USR_PATH.joinpath('vocab.txt')
 
 

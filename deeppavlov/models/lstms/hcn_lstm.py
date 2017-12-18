@@ -6,7 +6,7 @@ from tensorflow.contrib.layers import xavier_initializer as xav
 from tensorflow.contrib.training import HParams
 from tensorflow.python.training.saver import Saver
 
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.common import paths
 from deeppavlov.core.models.tf_model import TFModel
 
@@ -15,7 +15,7 @@ config = tf.ConfigProto(
 )
 
 
-@register_model('lstm')
+@register('lstm')
 class LSTM(TFModel):
     def __init__(self, input_size, output_size, num_hidden_units=128,
                  optimizer=tf.train.AdadeltaOptimizer(0.1), saver=Saver,

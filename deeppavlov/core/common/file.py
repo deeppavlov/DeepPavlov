@@ -13,5 +13,5 @@ def save_pickle(data, fpath):
 
 
 def load_pickle(fpath):
-    with open(fpath) as fin:
+    with open(fpath, 'rb') as fin:
         return pickle.load(fin)

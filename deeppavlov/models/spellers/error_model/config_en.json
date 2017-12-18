@@ -1,0 +1,16 @@
+{
+  "model": {
+    "name": "spelling_error_model",
+    "model_name": "error_model_en",
+    "window": 1,
+    "dictionary": {
+      "name": "wikipedia_100K_vocab"
+    }
+  },
+  "dataset_reader": {
+    "name": "typos_wikipedia_reader"
+  },
+  "dataset": {
+    "name": "typos_dataset"
+  }
+}

@@ -1,10 +1,10 @@
 from random import choice
 
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 
 
-@register_model("random")
+@register("random")
 class RandomCommutator(Inferable):
     def __init__(self):
         pass

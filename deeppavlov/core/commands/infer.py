@@ -4,11 +4,13 @@ from deeppavlov.core.common.registry import _REGISTRY
 from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.errors import ConfigError
-from .utils import set_usr_dir, set_vocab_path, build_agent_from_config, USR_DIR
+from .utils import set_usr_dir, set_vocab_path, build_agent_from_config
+
+from deeppavlov.core.common import paths
 
 
-def build_agent_models_from_config(config_path: str, a: Agent, usr_dir_name=USR_DIR):
-    set_usr_dir(config_path, usr_dir_name)
+def build_agent_models_from_config(config_path: str, a: Agent):
+    set_usr_dir(config_path, paths.USR_PATH)
     # TODO get rid of the collision when different models save vocab to the same path
     vocab_path = set_vocab_path()
     models = []
@@ -24,7 +26,7 @@ def build_agent_models_from_config(config_path: str, a: Agent, usr_dir_name=USR_
 def interact_agent(config_path):
     a = build_agent_from_config(config_path)
     commutator_name = a.commutator_config['name']
-    commutator = from_params(_REGISTRY[commutator_name], commutator_name)
+    commutator = from_params(_REGISTRY[commutator_name], a.commutator_config)
 
     models = build_agent_models_from_config(config_path, a)
     while True:
@@ -46,8 +48,8 @@ def interact_agent(config_path):
         print("Current history: {}".format(a.history))
 
 
-def build_model_from_config(config_path, usr_dir_name=USR_DIR):
-    set_usr_dir(config_path, usr_dir_name)
+def build_model_from_config(config_path):
+    set_usr_dir(config_path, paths.USR_PATH)
     vocab_path = set_vocab_path()
     model = _get_model(config_path, vocab_path)
     return model

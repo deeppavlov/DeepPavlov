@@ -1,11 +1,16 @@
 import csv
 import os
 
-from deeppavlov.data.utils import is_done, download, mark_done
-from .dataset_reader import DatasetReader
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.utils import is_done, download, mark_done
+from deeppavlov.core.data.dataset_reader import DatasetReader
 
 
+@register('typos_kartaslov_reader')
 class TyposKartaslov(DatasetReader):
+    def __init__(self):
+        pass
+
     @staticmethod
     def build(data_path: str):
         data_path = os.path.join(data_path, 'kartaslov')
