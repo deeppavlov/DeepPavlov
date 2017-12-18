@@ -77,7 +77,8 @@ class KerasIntentModelFromParent(KerasModel):
                                    lr=self.opt['lear_rate'],
                                    decay=self.opt['lear_rate_decay'],
                                    loss_name=self.opt['loss'],
-                                   metrics_names=self.opt['lear_metrics'])
+                                   metrics_names=self.opt['lear_metrics'],
+                                   add_metrics_file=metrics_file)
         else:
             self.model = self.init_model_from_scratch(model_name=self.opt['model_name'],
                                                       optimizer_name=self.opt['optimizer'],

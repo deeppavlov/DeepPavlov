@@ -191,7 +191,7 @@ class KerasModel(Trainable, Inferable):
                     metrics_funcs.append(metrics_func)
                 else:
                     raise AttributeError("Metric %s is not defined" % metrics_names[i])
-                
+
         model.compile(optimizer=optimizer_,
                       loss=loss,
                       metrics=metrics_funcs,

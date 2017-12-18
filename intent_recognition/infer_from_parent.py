@@ -16,8 +16,8 @@ import os, sys
 import json
 import numpy as np
 from sklearn.metrics import log_loss, accuracy_score
-from metrics import fmeasure
-
+from intent_recognition.metrics import fmeasure
+import intent_recognition.metrics as metrics_file
 
 def log_metrics(names, values, updates=None, mode='train'):
     sys.stdout.write("\r")  # back to previous line
