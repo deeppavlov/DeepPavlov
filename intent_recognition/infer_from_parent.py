@@ -1,23 +1,14 @@
 from deeppavlov.core.common.registry import _REGISTRY
 from deeppavlov.core.common.params import from_params
-from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.data.dataset import Dataset
-from deeppavlov.data.dataset_readers.dataset_reader import DatasetReader
-from deeppavlov.core.models.keras_model import KerasModel
 
-from intent_recognition.intent_dataset import IntentDataset
-from intent_recognition.intent_dataset_reader import IntentDatasetReader
-from intent_recognition.utils import EmbeddingsDict
-from intent_recognition.intent_models import KerasIntentModel
-from intent_recognition.intent_model_from_parent import KerasIntentModelFromParent
 from intent_recognition.intent_preprocessing import IntentPreprocessing
 
-import os, sys
+import sys
 import json
 import numpy as np
 from sklearn.metrics import log_loss, accuracy_score
 from intent_recognition.metrics import fmeasure
-import intent_recognition.metrics as metrics_file
+
 
 def log_metrics(names, values, updates=None, mode='train'):
     sys.stdout.write("\r")  # back to previous line
