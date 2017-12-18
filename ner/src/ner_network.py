@@ -128,7 +128,6 @@ class NerNetwork:
             loss_tensor = loss_tensor * mask_ph
             predictions = tf.argmax(logits, axis=-1)
 
-
         loss = tf.reduce_mean(loss_tensor)
         # Initialize session
         sess = tf.Session()
@@ -185,7 +184,8 @@ class NerNetwork:
         loss, _ = self._sess.run([self._loss, self._train_op], feed_dict=feed_dict)
         return loss
 
-    def print_number_of_parameters(self):
+    @staticmethod
+    def print_number_of_parameters():
         print('Number of parameters: ')
         vars = tf.trainable_variables()
         blocks = defaultdict(int)
@@ -213,8 +213,7 @@ class NerNetwork:
                                                  y_tag,
                                                  learning_rate,
                                                  dropout_rate=dropout_rate,
-                                                 training=True,
-                                                 learning_rate_decay=learning_rate_decay)
+                                                 training=True)
                 if self._logging:
                     summary, _ = self._sess.run([self.summary, self._train_op], feed_dict=feed_dict)
                     self.train_writer.add_summary(summary)
@@ -250,7 +249,7 @@ class NerNetwork:
                 y_pred += [viterbi_seq]
         else:
             y_pred = self._sess.run(self._y_pred, feed_dict=feed_dict)
-        return
+        return y_pred
 
     def _fill_feed_dict(self,
                         x_w,
