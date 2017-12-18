@@ -1,19 +1,7 @@
 from deeppavlov.core.common.registry import _REGISTRY
 from deeppavlov.core.common.params import from_params
-from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.data.dataset import Dataset
-from deeppavlov.data.dataset_readers.dataset_reader import DatasetReader
-from deeppavlov.core.models.keras_model import KerasModel
 
-from intent_recognition.intent_dataset import IntentDataset
-from intent_recognition.intent_dataset_reader import IntentDatasetReader
-from intent_recognition.utils import EmbeddingsDict
-from intent_recognition.intent_models import KerasIntentModel
-
-import metrics as metrics_file
-import keras.metrics as keras_metrics_file
-import keras.backend as K
-import os, sys
+import sys
 import json
 import numpy as np
 from sklearn.metrics import log_loss, accuracy_score

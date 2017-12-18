@@ -15,11 +15,12 @@
 
 import os, json
 import pandas as pd
-from deeppavlov.core.common.registry import register_model
-from deeppavlov.data.dataset_readers.dataset_reader import DatasetReader
+
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.dataset_reader import DatasetReader
 
 
-@register_model('intent_dataset_reader')
+@register('intent_dataset_reader')
 class IntentDatasetReader(DatasetReader):
     """
     IntentDatasetReader reads data from some location and constructs a dict of given datasets.
