@@ -18,23 +18,23 @@ import re
 import numpy as np
 from typing import Type
 
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import load_vocab
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
 
-from .network import HybridCodeNetworkModel
-from .embedder import FasttextUtteranceEmbed
 from deeppavlov.skills.ner.slotfill import DstcSlotFillingNetwork
-from .bow import BoW_encoder
-from .templates import Templates, DualTemplate
-from .tracker import DefaultTracker
-from .preprocess import SpacyTokenizer
+from deeppavlov.models.embedders.fasttext_embedder import FasttextUtteranceEmbed
+from deeppavlov.models.encoders.bow import BoW_encoder
+from deeppavlov.models.trackers.default_tracker import DefaultTracker
+from deeppavlov.models.preprocess.spacy_tokenizer import SpacyTokenizer
 
-from .metrics import DialogMetrics
+from network import HybridCodeNetworkModel
+from templates import Templates, DualTemplate
+from metrics import DialogMetrics
 
 
-@register_model("hcn_new")
+@register("hcn_new")
 class HybridCodeNetworkBot(Inferable, Trainable):
 
     def __init__(self, vocab_path, template_path, slot_names,

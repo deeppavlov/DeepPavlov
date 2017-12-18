@@ -19,11 +19,11 @@ import tensorflow as tf
 
 from tensorflow.contrib.layers import xavier_initializer
 
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import TFModel
 
 
-@register_model('hcn_rnn')
+@register('custom_rnn')
 class HybridCodeNetworkModel(TFModel):
 
     def __init__(self, **params):

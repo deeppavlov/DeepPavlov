@@ -22,11 +22,11 @@ import numpy as np
 from pathlib import Path
 
 from deeppavlov.core.common import paths
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 
 
-@register_model('fasttext')
+@register('fasttext')
 class FasttextUtteranceEmbed(Inferable):
 
     _model_dir_path = ''

@@ -9,10 +9,9 @@ from deeppavlov.core.commands.infer import interact_agent, interact_model
 from deeppavlov.skills.ner.slotfill import DstcSlotFillingNetwork
 from deeppavlov.skills.ner.model_loader import load_ner_dstc_model
 
-from deeppavlov.core.data.dataset_readers.dstc2_dataset_reader import DSTC2DatasetReader
+from tracker import FeaturizedTracker
 
-from dstc2_dataset import DSTC2Dataset
-from models.hcn import HybridCodeNetworkBot
+from hcn import HybridCodeNetworkBot
 
 ###### Train and speak to HCN_go_Dummy agent
 #AGENT_CONFIG_PATH = '../agent_configs/hcn_go_dummy.json'
@@ -28,5 +27,5 @@ MODEL_CONFIG_PATH = 'config.json'
 #    load_ner_dstc_model(ner_model_path.parent)
 
 ##### Train and speak to HCN_go skill separately
-train_model_from_config(MODEL_CONFIG_PATH)
+#train_model_from_config(MODEL_CONFIG_PATH)
 interact_model(MODEL_CONFIG_PATH)

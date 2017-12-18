@@ -1,9 +1,9 @@
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import _REGISTRY
-from deeppavlov.core.commands.utils import set_vocab_path, build_agent_from_config, set_usr_dir, \
-    USR_DIR
+from deeppavlov.core.commands.utils import set_vocab_path, build_agent_from_config, set_usr_dir
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.core.common import paths
 
 
 # TODO pass paths to local model configs to agent config.
@@ -23,7 +23,7 @@ def get_data(datareader_config, dataset_config, data_path, vocab_path):
 
 
 def train_agent_models(config_path: str):
-    set_usr_dir(config_path, USR_DIR)
+    usr_dir = paths.USR_PATH
     a = build_agent_from_config(config_path)
 
     for skill_config in a.skill_configs:
@@ -32,7 +32,9 @@ def train_agent_models(config_path: str):
         model_name = model_config['name']
 
         if issubclass(_REGISTRY[model_name], Trainable):
-            data = get_data(skill_config, skill_config['dataset_reader'], vocab_path)
+            reader_config = skill_config['dataset_reader']
+            reader = from_params(_REGISTRY[reader_config['name']], {})
+            data = reader.read(reader_config.get('data_path', usr_dir))
 
             model = from_params(_REGISTRY[model_name], model_config, vocab_path=vocab_path)
 
@@ -48,11 +50,10 @@ def train_agent_models(config_path: str):
             #                           "Only TFModel instances can train for now.")
 
 
-def train_model_from_config(config_path: str, usr_dir_name=USR_DIR):
-    # make a serialization user dir
-    usr_dir_path = set_usr_dir(config_path, usr_dir_name)
-
+def train_model_from_config(config_path: str):
+    usr_dir = paths.USR_PATH
     config = read_json(config_path)
+
     data_path = config['data_path']
     vocab_path = usr_dir_path.joinpath('vocab.txt')
 
@@ -65,7 +66,5 @@ def train_model_from_config(config_path: str, usr_dir_name=USR_DIR):
     num_epochs = config['num_epochs']
 
     ####### Train
-    # TODO do batching in the train script.
     model.train(data, num_epochs=num_epochs)
-
     # The result is a saved to user_dir trained model.

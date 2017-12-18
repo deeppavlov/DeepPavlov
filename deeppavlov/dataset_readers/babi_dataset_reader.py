@@ -4,14 +4,14 @@ from pathlib import Path
 
 from overrides import overrides
 
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.common import paths
 from deeppavlov.core.data.dataset_reader import DatasetReader
 
 logger = logging.getLogger(__name__)
 
 
-@register_model('babi')
+@register('babi')
 class BabiDatasetReader(DatasetReader):
     def __init__(self):
         pass
@@ -41,7 +41,8 @@ class BabiDatasetReader(DatasetReader):
             whole_dialog = trainset[start:end]
             res.append(whole_dialog)
 
-        return res
+        self.save_vocab(res, paths.USR_PATH.joinpath('vocab.txt'))
+        return {'train': res}
 
     @staticmethod
     def _read_dialogs(file_path, with_indices=False):

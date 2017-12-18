@@ -7,11 +7,11 @@ from .src.corpus import Corpus
 from .src.ner_network import NerNetwork
 from .utils.nlputils import tokenize
 
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 
 
-@register_model('dstc_slotfilling')
+@register('dstc_slotfilling')
 class DstcSlotFillingNetwork(Inferable):
     def __init__(self,
                  dict_filepath='model/dict.txt',

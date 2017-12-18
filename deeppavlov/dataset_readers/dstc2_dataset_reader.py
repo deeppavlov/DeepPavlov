@@ -19,13 +19,13 @@ import logging
 from pathlib import Path
 from overrides import overrides
 
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from .dataset_reader import DatasetReader
 
 logger = logging.getLogger(__name__)
 
 
-@register_model('dstc2_datasetreader')
+@register('dstc2_datasetreader')
 class DSTC2DatasetReader(DatasetReader):
 
     _train_fname = 'dstc2-trn.jsonlist'
@@ -119,3 +119,12 @@ class DSTC2DatasetReader(DatasetReader):
         if with_indices:
             return utterances, responses, dialog_indices
         return utterances, responses
+
+    @staticmethod
+    @override
+    def save_vocab(data, fpath):
+        with open(fpath, 'w') as f:
+            words = sorted(list(set(chain.from_iterable(
+                [turn[0]['text'].split()\
+                 for dt in ['train', 'test', 'valid'] for turn in data[dt]]))))
+            f.write(' '.join(words))

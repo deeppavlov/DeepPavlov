@@ -17,10 +17,10 @@ limitations under the License.
 import numpy as np
 
 from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 
 
-@register_model('default_tracker')
+@register('default_tracker')
 class DefaultTracker(Inferable):
 
     def __init__(self, slot_names):
@@ -33,7 +33,7 @@ class DefaultTracker(Inferable):
 
     @property
     def num_features(self):
-        return self.state_size * 2 + 2
+        return self.state_size
 
     def reset_state(self):
         self.history = []
@@ -42,18 +42,12 @@ class DefaultTracker(Inferable):
     def update_state(self, slots):
         def _filter(slots):
             return filter(lambda s: s[0] in self.slot_names, slots)
-        prev_state = self.get_state()
         if type(slots) == list:
             self.history.extend(_filter(slots))
         elif type(slots) == dict:
             for slot, value in _filter(slots.items()):
                 self.history.append((slot, value))
-        bin_feats = self._binary_features()
-        diff_feats = self._diff_features(prev_state)
-        self.curr_feats = np.hstack((bin_feats,
-                                     diff_feats,
-                                     np.sum(bin_feats),
-                                     np.sum(diff_feats)))
+        self.curr_feats = self._binary_features()
         return self
 
     def get_state(self):
@@ -67,14 +61,6 @@ class DefaultTracker(Inferable):
         lasts = self.get_state()
         for i, slot in enumerate(self.slot_names):
             if slot in lasts:
-                feats[i] = 1.
-        return feats
-
-    def _diff_features(self, state):
-        feats = np.zeros(self.state_size, dtype=np.float32)
-        curr_state = self.get_state()
-        for i, slot in enumerate(self.slot_names):
-            if curr_state.get(slot) != state.get(slot):
                 feats[i] = 1.
         return feats
 

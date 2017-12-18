@@ -1,0 +1,20 @@
+{
+  "model": {
+    "name": "spelling_error_model",
+    "models_path": "../build",
+    "window": 1,
+    "dictionary": {
+      "name": "static_dictionary",
+      "dictionary_name": "compreno_words",
+      "data_dir": "../data",
+      "raw_dictionary_path": "/home/yoptar/reps/speller/downloads/russian_words/compreno_wordforms.txt"
+    }
+  },
+  "dataset_reader": {
+    "name": "typos_kartaslov_reader",
+    "data_path": "../data"
+  },
+  "dataset": {
+    "name": "typos_dataset"
+  }
+}

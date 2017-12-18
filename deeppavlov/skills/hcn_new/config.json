@@ -11,7 +11,7 @@
     "slot_names": ["pricerange", "this", "area", "slot", "food", "name"],
     "template_path": "../../../data/dstc2/dstc2-templates.txt",
     "network": {
-      "name": "hcn_rnn",
+      "name": "custom_rnn",
       "learning_rate": 0.02,
       "hidden_dim": 128,
       "model_fpath": "hcn_rnn",
@@ -38,12 +38,12 @@
         "name": "spacy_tokenizer"
     },
     "tracker": {
-      "name": "default_tracker",
+      "name": "featurized_tracker",
       "slot_names": ["pricerange", "this", "area", "slot", "food", "name"]
     }
   },
   "data_path": "/home/vimary/IPavlov/projects/Pilot/data/dstc2",
-  "num_epochs": 30,
+  "num_epochs": 40,
   "config_path": "config.json"
 }
 

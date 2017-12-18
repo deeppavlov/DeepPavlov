@@ -20,14 +20,14 @@ import itertools
 from overrides import overrides
 from typing import Dict, Tuple, List, Generator, Any
 
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset import Dataset
 
 logger = logging.getLogger(__name__)
 
 
-@register_model('dstc2_dialog_dataset')
-class DSTC2Dataset(Dataset):
+@register('dstc2_dialog_dataset')
+class DSTC2DialogDataset(Dataset):
 
     @overrides
     def __init__(self, data:Dict[str, List[Tuple[Any, Any]]], *args, **kwargs)\

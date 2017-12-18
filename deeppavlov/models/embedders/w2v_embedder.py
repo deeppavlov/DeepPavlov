@@ -3,13 +3,13 @@ from pathlib import Path
 import numpy as np
 from gensim.models import word2vec
 
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.common import paths
 from deeppavlov.core.models.inferable import Inferable
 
 
-@register_model('w2v')
+@register('w2v')
 class UtteranceEmbed(Trainable, Inferable):
     def __init__(self, corpus_path, model_dir_path='emb', model_fname='text8.model', dim=300,
                  train_now=False):

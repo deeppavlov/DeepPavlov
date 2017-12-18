@@ -18,7 +18,7 @@ from deeppavlov.core.common.errors import ConfigError
 _REGISTRY = {}
 
 
-def register_model(name: str = None) -> Type:
+def register(name: str = None) -> Type:
     """Register model. If name is not passed, the model class name is converted to snake-case."""
 
     def decorate(model_cls: Type, reg_name: str = None) -> Type:
@@ -36,7 +36,7 @@ def short_name(cls: Type) -> str:
     return cls.__name__.split('.')[-1]
 
 
-def model(name: str) -> str:
+def model(name: str) -> type:
     if name not in _REGISTRY:
         raise ConfigError("Model {} is not registered.".format(name))
     return _REGISTRY[name]
