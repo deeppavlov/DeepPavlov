@@ -34,7 +34,9 @@ MODEL_FILE_NAME = 'ner_model'
 
 class NerNetwork:
     def __init__(self,
-                 corpus,
+                 word_vocab,
+                 char_vocab,
+                 tag_vocab,
                  n_filters=(128, 256),
                  filter_width=3,
                  token_embeddings_dim=128,
@@ -49,17 +51,16 @@ class NerNetwork:
                  use_crf=False,
                  net_type='cnn',
                  char_filter_width=5,
-                 verbouse=False):
-        tf.reset_default_graph()
-        n_tags = len(corpus.tag_dict)
-        n_tokens = len(corpus.token_dict)
-        n_chars = len(corpus.char_dict)
-        embeddings_onethego = corpus.embeddings is not None and not isinstance(corpus.embeddings, dict)
+                 verbouse=False,
+                 embeddings_onethego=False):
+        n_tags = len(tag_vocab)
+        n_tokens = len(word_vocab)
+        n_chars = len(char_vocab)
 
         # Create placeholders
         # noinspection PyPackageRequirements
         if embeddings_onethego:
-            x_word = tf.placeholder(dtype=tf.float32, shape=[None, None, corpus.embeddings.vector_size], name='x_word')
+            x_word = tf.placeholder(dtype=tf.float32, shape=[None, None, token_embeddings_dim], name='x_word')
         else:
             x_word = tf.placeholder(dtype=tf.int32, shape=[None, None], name='x_word')
         x_char = tf.placeholder(dtype=tf.int32, shape=[None, None, None], name='x_char')
@@ -69,7 +70,7 @@ class NerNetwork:
         learning_rate_ph = tf.placeholder(dtype=tf.float32, shape=[], name='learning_rate')
         dropout_ph = tf.placeholder_with_default(1.0, shape=[])
         training_ph = tf.placeholder_with_default(False, shape=[])
-        learning_rate_decay_ph = tf.placeholder(dtype=tf.float32, shape=[], name='learning_rate_decay')
+        mask_ph = tf.placeholder(dtype=tf.float32, shape=[None, None])
 
         # Embeddings
         if not embeddings_onethego:
@@ -102,11 +103,11 @@ class NerNetwork:
             units = stacked_rnn(emb, n_filters, cell_type='lstm')
 
         elif 'cnn_highway' in net_type.lower():
-                units = highway_convolutional_network(emb,
-                                                      n_filters=n_filters,
-                                                      filter_width=filter_width,
-                                                      use_batch_norm=use_batch_norm,
-                                                      training_ph=training_ph)
+            units = highway_convolutional_network(emb,
+                                                  n_filters=n_filters,
+                                                  filter_width=filter_width,
+                                                  use_batch_norm=use_batch_norm,
+                                                  training_ph=training_ph)
         else:
             raise KeyError('There is no such type of network: {}'.format(net_type))
         # Classifier
@@ -114,19 +115,17 @@ class NerNetwork:
             logits = tf.layers.dense(units, n_tags, kernel_initializer=xavier_initializer())
 
         # Loss with masking
-        mask = tf.cast(tf.not_equal(x_word, corpus.token_dict.tok2idx('<PAD>')), tf.float32)
-
         if use_crf:
-            sequence_lengths = tf.reduce_sum(mask, axis=1)
+            sequence_lengths = tf.reduce_sum(mask_ph, axis=1)
             log_likelihood, trainsition_params = tf.contrib.crf.crf_log_likelihood(logits,
-                                                                                y_true,
-                                                                                sequence_lengths)
+                                                                                   y_true,
+                                                                                   sequence_lengths)
             loss_tensor = -log_likelihood
             predictions = None
         else:
             ground_truth_labels = tf.one_hot(y_true, n_tags)
             loss_tensor = tf.nn.softmax_cross_entropy_with_logits(labels=ground_truth_labels, logits=logits)
-            loss_tensor = loss_tensor * mask
+            loss_tensor = loss_tensor * mask_ph
             predictions = tf.argmax(logits, axis=-1)
 
 
@@ -140,7 +139,6 @@ class NerNetwork:
 
         self._use_crf = use_crf
         self.summary = tf.summary.merge_all()
-        self._learning_rate_decay_ph = learning_rate_decay_ph
         self._x_w = x_word
         self._x_c = x_char
         self._y_true = y_true
@@ -151,14 +149,13 @@ class NerNetwork:
             self._sequence_lengths = sequence_lengths
         self._loss = loss
         self._sess = sess
-        self.corpus = corpus
         self._learning_rate_ph = learning_rate_ph
         self._dropout = dropout_ph
         self._loss_tensor = loss_tensor
         self._use_dropout = True if embeddings_dropout or dense_dropout else None
         self._training_ph = training_ph
         self._logging = logging
-        self._train_op = self.get_train_op(loss, learning_rate_ph, lr_decay_rate=learning_rate_decay_ph)
+        self._train_op = self.get_train_op(loss, learning_rate_ph)
         self._embeddings_onethego = embeddings_onethego
         self._entity_of_interest = entity_of_interest
         self.verbouse = verbouse
@@ -178,9 +175,15 @@ class NerNetwork:
         saver = tf.train.Saver()
         saver.restore(self._sess, model_file_path)
 
-    def train_on_batch(self, x_word, x_char, y_tag):
-        feed_dict = {self._x_w: x_word, self._x_c: x_char, self._y_true: y_tag}
-        self._sess.run(self._train_op, feed_dict=feed_dict)
+    def train(self, x_word, x_char, y_tag, learning_rate=1e-3, dropout_rate=0.5):
+        feed_dict = self._fill_feed_dict(x_word,
+                                         x_char,
+                                         y_tag,
+                                         learning_rate,
+                                         dropout_rate=dropout_rate,
+                                         training=True)
+        loss, _ = self._sess.run([self._loss, self._train_op], feed_dict=feed_dict)
+        return loss
 
     def print_number_of_parameters(self):
         print('Number of parameters: ')
@@ -240,14 +243,14 @@ class NerNetwork:
                                                                      ],
                                                                     feed_dict=feed_dict)
 
-            # iterate over the sentences because no batching in vitervi_decode
+            # iterate over the sentences because no batching in viterbi_decode
             for logit, sequence_length in zip(logits, sequence_lengths):
                 logit = logit[:int(sequence_length)]  # keep only the valid steps
                 viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(logit, trans_params)
                 y_pred += [viterbi_seq]
         else:
             y_pred = self._sess.run(self._y_pred, feed_dict=feed_dict)
-        return self.corpus.tag_dict.batch_idxs2batch_toks(y_pred, filter_paddings=True)
+        return
 
     def _fill_feed_dict(self,
                         x_w,
@@ -255,8 +258,7 @@ class NerNetwork:
                         y_t=None,
                         learning_rate=None,
                         training=False,
-                        dropout_rate=1,
-                        learning_rate_decay=1):
+                        dropout_rate=1):
         feed_dict = dict()
         feed_dict[self._x_w] = x_w
         feed_dict[self._x_c] = x_c
@@ -265,20 +267,19 @@ class NerNetwork:
             feed_dict[self._y_true] = y_t
         if learning_rate is not None:
             feed_dict[self._learning_rate_ph] = learning_rate
-            feed_dict[self._learning_rate_decay_ph] = learning_rate_decay
         if self._use_dropout is not None and training:
             feed_dict[self._dropout] = dropout_rate
         else:
             feed_dict[self._dropout] = 1.0
         return feed_dict
 
-    def eval_loss(self, data_type='test', batch_size=32):
+    def eval_loss(self, data_generator):
         num_tokens = 0
         loss = 0
-        for (x_w, x_c), y_t in self.corpus.batch_generator(batch_size=batch_size, dataset_type=data_type):
+        for (x_w, x_c), y_t in data_generator:
             feed_dict = self._fill_feed_dict(x_w, x_c, y_t, training=False)
             loss += np.sum(self._sess.run(self._loss_tensor, feed_dict=feed_dict))
-            num_tokens += np.sum(self.corpus.token_dict.is_pad(x_w))
+            num_tokens = np.sum(self._sess.run(self._sequence_lengths, feed_dict=feed_dict))
         return loss / num_tokens
 
     @staticmethod
@@ -294,37 +295,14 @@ class NerNetwork:
         else:
             return vars
 
-    def get_train_op(self, loss, learning_rate, learnable_scopes=None, lr_decay_rate=None):
-        global_step = tf.Variable(0, trainable=False)
-        try:
-            n_training_samples = len(self.corpus.dataset['train'])
-        except TypeError:
-            n_training_samples = 1024
-        batch_size = tf.shape(self._x_w)[0]
-        decay_steps = tf.cast(n_training_samples / batch_size, tf.int32)
-        if lr_decay_rate is not None:
-            learning_rate = tf.train.exponential_decay(learning_rate,
-                                                       global_step,
-                                                       decay_steps=decay_steps,
-                                                       decay_rate=lr_decay_rate,
-                                                       staircase=True)
-            self._learning_rate_decayed = learning_rate
+    def get_train_op(self, loss, learning_rate, learnable_scopes=None):
         variables = self.get_trainable_variables(learnable_scopes)
 
         # For batch norm it is necessary to update running averages
         extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(extra_update_ops):
-            train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss, global_step=global_step, var_list=variables)
+            train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss, var_list=variables)
         return train_op
-
-    def predict_for_token_batch(self, tokens_batch):
-        (batch_tok, batch_char), _ = self.corpus.tokens_batch_to_numpy_batch(tokens_batch)
-        # Prediction indices
-        predictions_batch = self.predict(batch_tok, batch_char)
-        predictions_batch_no_pad = list()
-        for n, predicted_tags in enumerate(predictions_batch):
-            predictions_batch_no_pad.append(predicted_tags[: len(tokens_batch[n])])
-        return predictions_batch_no_pad
 
     def shutdown(self):
         self._sess.close()

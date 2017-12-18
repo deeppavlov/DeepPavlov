@@ -28,7 +28,6 @@ class DstcNerDataset(Dataset):
 
     def _preprocess(self, data_part):
         processed_data_part = list()
-        slots = []
         for sample in data_part:
             for utterance in sample:
                 text = utterance['context']['text']
