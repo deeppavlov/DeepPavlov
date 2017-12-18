@@ -5,11 +5,14 @@ from deeppavlov.core.common.params import from_params
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.common import paths
 
+from pathlib import Path
+
 
 # TODO pass paths to local model configs to agent config.
 
-def get_data(datareader_config, dataset_config, data_path, vocab_path):
+def get_data(datareader_config, dataset_config, vocab_path):
     datareader_name = datareader_config['name']
+    data_path = datareader_config.pop('data_path')
 
     data_reader = from_params(_REGISTRY[datareader_name], datareader_config)
     raw_data = data_reader.read(data_path)
@@ -54,10 +57,9 @@ def train_model_from_config(config_path: str):
     usr_dir = paths.USR_PATH
     config = read_json(config_path)
 
-    data_path = config['data_path']
-    vocab_path = usr_dir_path.joinpath('vocab.txt')
+    vocab_path = Path(usr_dir).joinpath('vocab.txt')
 
-    data = get_data(config['dataset_reader'], config['dataset'], data_path, vocab_path)
+    data = get_data(config['dataset_reader'], config['dataset'], vocab_path)
 
     model_config = config['model']
     model_name = model_config['name']

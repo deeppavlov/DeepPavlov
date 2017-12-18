@@ -29,9 +29,9 @@ from deeppavlov.models.encoders.bow import BoW_encoder
 from deeppavlov.models.trackers.default_tracker import DefaultTracker
 from deeppavlov.preprocessors.spacy_tokenizer import SpacyTokenizer
 
-from network import HybridCodeNetworkModel
-from templates import Templates, DualTemplate
-from metrics import DialogMetrics
+from .network import HybridCodeNetworkModel
+from .templates import Templates, DualTemplate
+from .metrics import DialogMetrics
 
 
 @register("hcn_new")

@@ -92,6 +92,7 @@ class DSTC2DialogDataset(Dataset):
 
     @staticmethod
     def save_vocab(turns, fpath):
+        print("Saving data to `{}`".format(fpath))
         with open(fpath, 'wt') as f:
             words = sorted(set(itertools.chain.from_iterable(
                 turn[0].lower().split() for turn in turns

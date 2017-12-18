@@ -8,7 +8,7 @@
   },
   "model": {
     "name": "hcn_new",
-    "debug": true,
+    "debug": false,
     "slot_names": ["pricerange", "this", "area", "slot", "food", "name"],
     "template_path": "../../../data/dstc2/dstc2-templates.txt",
     "network": {
