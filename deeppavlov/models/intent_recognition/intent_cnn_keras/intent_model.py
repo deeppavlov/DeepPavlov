@@ -64,10 +64,6 @@ class KerasIntentModel(KerasModel):
         else:
             self.add_metrics = None
 
-        self.opt['kernel_sizes_cnn'] = [int(x) for x in
-                                        self.opt['kernel_sizes_cnn'].split(' ')]
-        print(self.opt)
-
         if self.opt['model_from_saved'] == True:
             self.model = self.load(model_name=self.opt['model_name'],
                                    fname=self.opt['model_file'],
@@ -78,6 +74,8 @@ class KerasIntentModel(KerasModel):
                                    metrics_names=self.opt['lear_metrics'],
                                    add_metrics_file=metrics_file)
         else:
+            self.opt['kernel_sizes_cnn'] = [int(x) for x in
+                                            self.opt['kernel_sizes_cnn'].split(' ')]
             self.model = self.init_model_from_scratch(model_name=self.opt['model_name'],
                                                       optimizer_name=self.opt['optimizer'],
                                                       lr=self.opt['lear_rate'],
@@ -205,23 +203,6 @@ class KerasIntentModel(KerasModel):
         features = self.texts2vec(batch)
         preds = self.model.predict_on_batch(features)
         return preds
-
-    def infer_on_batch(self, batch):
-        """
-        Return loss and metrics on the given batch of texts
-        Args:
-            batch - list of tuples (preprocessed text, labels)
-
-        Returns:
-            loss and metrics values on the given batch
-        """
-        texts = list(batch[0])
-        labels = list(batch[1])
-        self.embedding_dict.add_items(texts)
-        features = self.texts2vec(texts)
-        onehot_labels = labels2onehot(labels, self.classes)
-        metrics_values = self.model.test_on_batch(features, onehot_labels)
-        return metrics_values
 
     def save(self, fname):
         # TODO: model_file is in opt??

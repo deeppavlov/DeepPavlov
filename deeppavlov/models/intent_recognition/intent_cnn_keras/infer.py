@@ -18,6 +18,8 @@ def main(config_name='config_infer.json'):
     with open(config_name) as f:
         config = json.load(f)
 
+
+
     # Reading datasets from files
     reader_config = config['dataset_reader']
     reader = _REGISTRY[reader_config['name']]
@@ -47,8 +49,11 @@ def main(config_name='config_infer.json'):
 
     # Initializing model
     model_config = config['model']
+    model_config['classes'] = intents
+    print(model_config)
+    print(config)
     model = from_params(_REGISTRY[model_config['name']],
-                        model_config, opt=model_config, classes=intents)
+                        model_config)
 
     print("Considered loss and metrics:", model.metrics_names)
 
@@ -59,7 +64,7 @@ def main(config_name='config_infer.json'):
     for test_id, test_batch in enumerate(test_batch_gen):
         test_preds.extend(model.infer(test_batch[0]))
         test_true.extend(labels2onehot(test_batch[1], model.classes))
-        if model_config['show_examples'] and test_id == 0:
+        if model.opt['show_examples'] and test_id == 0:
             for j in range(model.opt['batch_size']):
                 print(test_batch[0][j],
                       test_batch[1][j],
