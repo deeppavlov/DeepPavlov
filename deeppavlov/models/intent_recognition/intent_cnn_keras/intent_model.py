@@ -151,6 +151,18 @@ class KerasIntentModel(KerasModel):
 
         n_train_samples = len(dataset.data['train'])
 
+        valid_iter_all = dataset.iter_all(data_type='valid')
+        valid_x = []
+        valid_y = []
+        for valid_i, valid_sample in enumerate(valid_iter_all):
+            valid_x.append(valid_sample[0])
+            valid_y.append(valid_sample[1])
+
+        self.embedding_dict.add_items(valid_x)
+        valid_x = self.texts2vec(valid_x)
+        valid_y = labels2onehot(valid_y, classes=self.classes)
+
+
         print('\n____Training over %d samples____\n\n' % n_train_samples)
 
         while epochs_done < self.opt['epochs']:
@@ -169,16 +181,7 @@ class KerasIntentModel(KerasModel):
             epochs_done += 1
             if epochs_done % self.opt['val_every_n_epochs'] == 0:
                 if 'valid' in dataset.data.keys():
-
-                    valid_batch_gen = dataset.embedded_batch_generator(embedding_dict=self.embedding_dict,
-                                                                       text_size=self.opt['text_size'],
-                                                                       embedding_size=self.opt['embedding_size'],
-                                                                       classes=self.classes,
-                                                                       batch_size=self.opt['batch_size'],
-                                                                       data_type='valid')
-                    valid_metrics_values = self.model.evaluate_generator(generator=valid_batch_gen,
-                                                                         steps=(len(dataset.data['valid']) - 1) //
-                                                                               self.opt['batch_size'])
+                    valid_metrics_values = self.model.test_on_batch(x=valid_x, y=valid_y)
 
                     log_metrics(names=self.metrics_names,
                                      values=valid_metrics_values,

@@ -21,7 +21,7 @@
     "dense_size": 100,
     "model_name": "cnn_model",
     "batch_size": 64,
-    "val_every_n_epochs": 1,
+    "val_every_n_epochs": 5,
     "verbose": true,
     "val_patience": 5,
     "show_examples": false

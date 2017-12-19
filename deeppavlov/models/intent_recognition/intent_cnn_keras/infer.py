@@ -52,16 +52,8 @@ def main(config_name='config_infer.json'):
 
     print("Considered loss and metrics:", model.metrics_names)
 
-    if 'valid' in data.keys():
-        print('___Validation set is given___')
-    elif 'val_split' in model.opt.keys():
-        print('___Validation split is given___')
-    else:
-        print('___Validation set and validation split are not given.____\n____Validation split = 0.1____')
-        model.opt['val_split'] = 0.1
-
     test_batch_gen = dataset.batch_generator(batch_size=model.opt['batch_size'],
-                                              data_type='test')
+                                             data_type='test')
     test_preds = []
     test_true = []
     for test_id, test_batch in enumerate(test_batch_gen):

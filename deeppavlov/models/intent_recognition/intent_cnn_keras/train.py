@@ -4,23 +4,14 @@ from deeppavlov.dataset_readers.intent_dataset_reader import IntentDatasetReader
 from deeppavlov.datasets.intent_dataset import IntentDataset
 from deeppavlov.models.intent_recognition.intent_cnn_keras.intent_model import KerasIntentModel
 from deeppavlov.preprocessors.intent_preprocessor import IntentPreprocessor
+from deeppavlov.models.intent_recognition.intent_cnn_keras.utils import labels2onehot, log_metrics, \
+    proba2labels, proba2onehot
 
 import sys
 import json
 import numpy as np
 from sklearn.metrics import log_loss, accuracy_score
 from intent_recognition.metrics import fmeasure
-
-
-def log_metrics(names, values, updates=None, mode='train'):
-    sys.stdout.write("\r")  # back to previous line
-    print("%s -->\t" % mode, end="")
-    if updates is not None:
-        print("updates: %d\t" % updates, end="")
-
-    for id in range(len(names)):
-        print("%s: %f\t" % (names[id], values[id]), end="")
-    print(" ")  # , end='\r')
 
 
 def main(config_name='config.json'):
@@ -68,21 +59,23 @@ def main(config_name='config.json'):
     else:
         print('___Validation set and validation split are not given.____\n____Validation split = 0.1____')
         model.opt['val_split'] = 0.1
-
+        dataset.split_data(field_to_split='train', new_fields=['train', 'valid'],
+                           proportions=[1. - model.opt['val_split'],
+                                        model.opt['val_split']])
 
     model.train(dataset)
 
     model.save(fname=model.opt['model_file'])
 
-    test_batch_gen = dataset.batch_generator(batch_size=model.opt['batch_size'],
-                                              data_type='test')
+    test_batch_gen = dataset.batch_generator(batch_size=model.learning_params['batch_size'],
+                                             data_type='test')
     test_preds = []
     test_true = []
     for test_id, test_batch in enumerate(test_batch_gen):
         test_preds.extend(model.infer(test_batch[0]))
         test_true.extend(model.labels2onehot(test_batch[1]))
         if model_config['show_examples'] and test_id == 0:
-            for j in range(model.opt['batch_size']):
+            for j in range(model.learning_params['batch_size']):
                 print(test_batch[0][j],
                       test_batch[1][j],
                       model.proba2labels([test_preds[j]]))
