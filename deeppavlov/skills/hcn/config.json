@@ -6,9 +6,6 @@
   "dataset":{
     "name": "hcn_dataset"
   },
-  "dataset":{
-    "name": "hcn_dataset"
-  },
   "model": {
     "name": "hcn_go",
     "bow_encoder": {
@@ -33,4 +30,3 @@
   },
   "config_path": "config.json"
 }
-

@@ -27,7 +27,6 @@ class TFModel(Trainable, Inferable):
 
     @abstractmethod
     def _add_placeholders(self):
-        # It seems that there is no need in such abstracti
         """
         Add all needed placeholders for a computational graph.
         """
