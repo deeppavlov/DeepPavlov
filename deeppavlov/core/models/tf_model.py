@@ -9,17 +9,17 @@ from pathlib import Path
 
 import tensorflow as tf
 from tensorflow.python.training.saver import Saver
+from overrides import overrides
 
 from deeppavlov.core.common import paths
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.common.attributes import check_attr_true, run_alt_meth_if_no_path, \
+    check_path_exists
 
 
 class TFModel(Trainable, Inferable):
     _saver = Saver
-    _model_dir_path = ''
-    _model_fpath = ''
-    _model_path = Path(paths.USR_PATH).joinpath(_model_dir_path, _model_fpath)
     sess = None
 
     @abstractmethod
@@ -31,7 +31,7 @@ class TFModel(Trainable, Inferable):
         pass
 
     @abstractmethod
-    def _run_sess(self):
+    def run_sess(self, *args, **kwargs):
         """
         1. Call _build_graph()
         2. Define all comuptations.
@@ -71,29 +71,34 @@ class TFModel(Trainable, Inferable):
         """
         pass
 
-    def train(self, features, *args):
+    @check_attr_true('train_now')
+    def train(self, features, *args, **kwargs):
         """
         Just a wrapper for a private method.
         """
-        return self._train_step(features, *args)
+        return self._train_step(features, *args, **kwargs)
 
     def infer(self, instance, *args):
         """
         Just a wrapper for a private method.
         """
+        if not self.train_now:
+            self.load()
         return self._forward(instance, *args)
 
     def save(self):
-        self._saver().save(sess=self.sess, save_path=self._model_path.as_posix(), global_step=0)
-        print('\n:: Model saved to {} \n'.format(self._model_path.as_posix()))
+        self._saver().save(sess=self.sess, save_path=self.model_path.as_posix(), global_step=0)
+        print('\n:: Model saved to {} \n'.format(self.model_path.as_posix()))
 
+    @check_path_exists()
     def load(self):
         """
         Load session from checkpoint
         """
-        ckpt = tf.train.get_checkpoint_state(self._model_path.parent)
+        ckpt = tf.train.get_checkpoint_state(self.model_path.parent)
         if ckpt and ckpt.model_checkpoint_path:
             print('\n:: restoring checkpoint from', ckpt.model_checkpoint_path, '\n')
             self._saver().restore(self.sess, ckpt.model_checkpoint_path)
+            print('session restored')
         else:
             print('\n:: <ERR> checkpoint not found! \n')
