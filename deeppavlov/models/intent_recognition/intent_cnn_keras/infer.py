@@ -14,17 +14,6 @@ from sklearn.metrics import log_loss, accuracy_score
 from intent_recognition.metrics import fmeasure
 
 
-def log_metrics(names, values, updates=None, mode='train'):
-    sys.stdout.write("\r")  # back to previous line
-    print("%s -->\t" % mode, end="")
-    if updates is not None:
-        print("updates: %d\t" % updates, end="")
-
-    for id in range(len(names)):
-        print("%s: %f\t" % (names[id], values[id]), end="")
-    print(" ")  # , end='\r')
-
-
 def main(config_name='config_infer.json'):
     with open(config_name) as f:
         config = json.load(f)
