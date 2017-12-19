@@ -14,7 +14,7 @@ from sklearn.metrics import log_loss, accuracy_score
 from intent_recognition.metrics import fmeasure
 
 
-def main(config_name='config.json'):
+def main(config_name='config_lstm.json'):
     with open(config_name) as f:
         config = json.load(f)
 

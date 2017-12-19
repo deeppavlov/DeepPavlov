@@ -74,8 +74,6 @@ class KerasIntentModel(KerasModel):
                                    metrics_names=self.opt['lear_metrics'],
                                    add_metrics_file=metrics_file)
         else:
-            self.opt['kernel_sizes_cnn'] = [int(x) for x in
-                                            self.opt['kernel_sizes_cnn'].split(' ')]
             self.model = self.init_model_from_scratch(model_name=self.opt['model_name'],
                                                       optimizer_name=self.opt['optimizer'],
                                                       lr=self.opt['lear_rate'],
@@ -222,6 +220,10 @@ class KerasIntentModel(KerasModel):
         Build the uncompiled model of shallow-and-wide CNN
         :return: model
         """
+        if type(self.opt['kernel_sizes_cnn']) is str:
+            self.opt['kernel_sizes_cnn'] = [int(x) for x in
+                                            self.opt['kernel_sizes_cnn'].split(' ')]
+
         inp = Input(shape=(params['text_size'], params['embedding_size']))
 
         outputs = []
@@ -267,7 +269,7 @@ class KerasIntentModel(KerasModel):
         output = BatchNormalization()(output)
         output = Activation('relu')(output)
         output = Dropout(rate=params['dropout_rate'])(output)
-        output = Dense(params['n_classes'], activation=None,
+        output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
         output = BatchNormalization()(output)
         act_output = Activation('sigmoid')(output)
