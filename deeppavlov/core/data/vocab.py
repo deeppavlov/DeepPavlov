@@ -1,17 +1,22 @@
 from collections import Counter, defaultdict
 import numpy as np
-from deeppavlov.common.registry import register_model
-from deeppavlov.models.inferable import Inferable
+from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.models.inferable import Inferable
+from overrides import overrides
 
 
 @register_model('default_vocab')
 class Vocabulary(Inferable):
-    def __init__(self, tokens=None, default_token='<UNK>', special_tokens=('<UNK>',)):
+    def __init__(self, tokens=None, special_tokens=tuple(), dict_file_path=None):
+        if dict_file_path is not None:
+            if tokens is None:
+                Warning('Tokens provided along with external dictionary file!')
+            tokens = self.load(dict_file_path)
         self._t2i = dict()
         # We set default ind to position of <UNK> in SPECIAL_TOKENS
         # because the tokens will be added to dict in the same order as
-        # in SPECIAL_TOKENS
-        default_ind = special_tokens.index('<UNK>')
+        # in special_tokens
+        default_ind = 0
         self._t2i = defaultdict(lambda: default_ind)
         self._i2t = dict()
         self.frequencies = Counter()
@@ -43,6 +48,7 @@ class Vocabulary(Inferable):
                 toks.append(self._i2t[idx])
         return toks
 
+    @overrides
     def infer(self, samples):
         if not isinstance(samples, str):
             return [self.infer(sample) for sample in samples]
@@ -79,3 +85,12 @@ class Vocabulary(Inferable):
 
     def __contains__(self, item):
         return item in self._t2i
+
+    def load(self, dict_file_path):
+        tokens = list()
+        with open(dict_file_path) as f:
+            for line in f:
+                if len(line) > 0:
+                    tokens.append(line)
+        return tokens
+
