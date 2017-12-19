@@ -158,9 +158,11 @@ class NerNetwork:
         self._embeddings_onethego = embeddings_onethego
         self._entity_of_interest = entity_of_interest
         self.verbouse = verbouse
+        self._mask = mask_ph
         sess.run(tf.global_variables_initializer())
         if pretrained_model_filepath is not None:
             self.load(pretrained_model_filepath)
+
 
     def save(self, model_file_path=None):
         if model_file_path is None:
@@ -174,9 +176,10 @@ class NerNetwork:
         saver = tf.train.Saver()
         saver.restore(self._sess, model_file_path)
 
-    def train(self, x_word, x_char, y_tag, learning_rate=1e-3, dropout_rate=0.5):
+    def train(self, x_word, x_char, mask, y_tag, learning_rate=1e-3, dropout_rate=0.5):
         feed_dict = self._fill_feed_dict(x_word,
                                          x_char,
+                                         mask,
                                          y_tag,
                                          learning_rate,
                                          dropout_rate=dropout_rate,
@@ -254,6 +257,7 @@ class NerNetwork:
     def _fill_feed_dict(self,
                         x_w,
                         x_c,
+                        mask=None,
                         y_t=None,
                         learning_rate=None,
                         training=False,
@@ -262,6 +266,10 @@ class NerNetwork:
         feed_dict[self._x_w] = x_w
         feed_dict[self._x_c] = x_c
         feed_dict[self._training_ph] = training
+        if mask is not None:
+            feed_dict[self._mask] = mask
+        else:
+            feed_dict[self._mask] = np.ones(x_w.shape[:2])
         if y_t is not None:
             feed_dict[self._y_true] = y_t
         if learning_rate is not None:
