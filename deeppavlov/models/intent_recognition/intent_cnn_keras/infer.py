@@ -18,8 +18,6 @@ def main(config_name='config_infer.json'):
     with open(config_name) as f:
         config = json.load(f)
 
-
-
     # Reading datasets from files
     reader_config = config['dataset_reader']
     reader = _REGISTRY[reader_config['name']]
@@ -33,14 +31,14 @@ def main(config_name='config_infer.json'):
                           dataset_config, data=data)
 
     # Merging train and valid dataset for further split on train/valid
-    dataset.merge_data(fields_to_merge=['train', 'valid'], new_field='train')
-    dataset.split_data(field_to_split='train', new_fields=['train', 'valid'], proportions=[0.9, 0.1])
+    # dataset.merge_data(fields_to_merge=['train', 'valid'], new_field='train')
+    # dataset.split_data(field_to_split='train', new_fields=['train', 'valid'], proportions=[0.9, 0.1])
 
     preproc_config = config['preprocessing']
     preproc = from_params(_REGISTRY[preproc_config['name']],
                                     preproc_config)
-    dataset = preproc.preprocess(dataset=dataset, data_type='train')
-    dataset = preproc.preprocess(dataset=dataset, data_type='valid')
+    # dataset = preproc.preprocess(dataset=dataset, data_type='train')
+    # dataset = preproc.preprocess(dataset=dataset, data_type='valid')
     dataset = preproc.preprocess(dataset=dataset, data_type='test')
 
     # Extracting unique classes
@@ -50,8 +48,6 @@ def main(config_name='config_infer.json'):
     # Initializing model
     model_config = config['model']
     model_config['classes'] = intents
-    print(model_config)
-    print(config)
     model = from_params(_REGISTRY[model_config['name']],
                         model_config)
 

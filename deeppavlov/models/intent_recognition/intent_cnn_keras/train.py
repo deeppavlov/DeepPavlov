@@ -47,8 +47,9 @@ def main(config_name='config.json'):
 
     # Initializing model
     model_config = config['model']
+    model_config['classes'] = intents
     model = from_params(_REGISTRY[model_config['name']],
-                        model_config, opt=model_config, classes=intents)
+                        model_config)
 
     print("Considered:", model.metrics_names)
 
