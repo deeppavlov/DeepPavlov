@@ -2,9 +2,9 @@ from deeppavlov.core.common.registry import _REGISTRY
 from deeppavlov.core.common.params import from_params
 from deeppavlov.dataset_readers.intent_dataset_reader import IntentDatasetReader
 from deeppavlov.datasets.intent_dataset import IntentDataset
-from deeppavlov.models.intent_recognition.intent_cnn_keras.intent_model import KerasIntentModel
+from deeppavlov.models.intent_recognition.intent_keras.intent_model import KerasIntentModel
 from deeppavlov.preprocessors.intent_preprocessor import IntentPreprocessor
-from deeppavlov.models.intent_recognition.intent_cnn_keras.utils import labels2onehot, log_metrics, \
+from deeppavlov.models.intent_recognition.intent_keras.utils import labels2onehot, log_metrics, \
     proba2labels, proba2onehot
 
 import sys
