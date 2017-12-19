@@ -67,26 +67,26 @@ def main(config_name='config.json'):
 
     model.save(fname=model.opt['model_file'])
 
-    test_batch_gen = dataset.batch_generator(batch_size=model.learning_params['batch_size'],
+    test_batch_gen = dataset.batch_generator(batch_size=model.opt['batch_size'],
                                              data_type='test')
     test_preds = []
     test_true = []
     for test_id, test_batch in enumerate(test_batch_gen):
         test_preds.extend(model.infer(test_batch[0]))
-        test_true.extend(model.labels2onehot(test_batch[1]))
+        test_true.extend(labels2onehot(test_batch[1], model.classes))
         if model_config['show_examples'] and test_id == 0:
-            for j in range(model.learning_params['batch_size']):
+            for j in range(model.opt['batch_size']):
                 print(test_batch[0][j],
                       test_batch[1][j],
-                      model.proba2labels([test_preds[j]]))
+                      proba2labels([test_preds[j]], model.confident_threshold, model.classes))
 
     test_true = np.asarray(test_true, dtype='float64')
     test_preds = np.asarray(test_preds, dtype='float64')
 
     test_values = []
     test_values.append(log_loss(test_true, test_preds))
-    test_values.append(accuracy_score(test_true, model.proba2onehot(test_preds)))
-    test_values.append(fmeasure(test_true, model.proba2onehot(test_preds)))
+    test_values.append(accuracy_score(test_true, proba2onehot(test_preds, model.confident_threshold, model.classes)))
+    test_values.append(fmeasure(test_true, proba2onehot(test_preds, model.confident_threshold, model.classes)))
 
     log_metrics(names=model.metrics_names,
                 values=test_values,
