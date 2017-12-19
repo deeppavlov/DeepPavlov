@@ -3,7 +3,6 @@ from deeppavlov.core.common.registry import _REGISTRY
 
 from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.common.params import from_params
-from deeppavlov.core.common.errors import ConfigError
 from .utils import set_usr_dir, set_vocab_path, build_agent_from_config
 
 from deeppavlov.core.common import paths
@@ -51,16 +50,13 @@ def interact_agent(config_path):
 def build_model_from_config(config_path):
     set_usr_dir(config_path, paths.USR_PATH)
     vocab_path = set_vocab_path()
-    model = _get_model(config_path, vocab_path)
-    return model
 
-
-def _get_model(config_path, vocab_path):
     config = read_json(config_path)
     model_config = config['model']
     model_name = model_config['name']
     model = from_params(_REGISTRY[model_name], model_config, vocab_path=vocab_path)
     model.reset()
+
     return model
 
 
@@ -78,6 +74,5 @@ def interact_model(config_path):
         try:
             pred = model.infer(context)
             print('>>', pred)
-        except Exception:
-            raise ConfigError(
-                "Are you sure that you are interacting with a skill? Can this model speak?")
+        except Exception as e:
+            raise e
