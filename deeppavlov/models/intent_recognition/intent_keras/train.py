@@ -12,9 +12,12 @@ import json
 import numpy as np
 from sklearn.metrics import log_loss, accuracy_score
 from intent_recognition.metrics import fmeasure
+import keras.backend as K
 
+def main(config_name='config.json'):
 
-def main(config_name='config_lstm.json'):
+    K.clear_session()
+
     with open(config_name) as f:
         config = json.load(f)
 
@@ -75,7 +78,7 @@ def main(config_name='config_lstm.json'):
     for test_id, test_batch in enumerate(test_batch_gen):
         test_preds.extend(model.infer(test_batch[0]))
         test_true.extend(labels2onehot(test_batch[1], model.classes))
-        if model_config['show_examples'] and test_id == 0:
+        if model.opt['show_examples'] and test_id == 0:
             for j in range(model.opt['batch_size']):
                 print(test_batch[0][j],
                       test_batch[1][j],

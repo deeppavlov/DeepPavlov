@@ -33,7 +33,28 @@ import keras.metrics
 import keras.optimizers
 
 
-class KerasModel(Trainable, Inferable):
+def _graph_wrap(func, graph):
+    def _wrapped(*args, **kwargs):
+        with graph.as_default():
+            return func(*args, **kwargs)
+    return _wrapped
+
+
+class TfModelMeta(type, Trainable, Inferable):
+    def __call__(cls, *args, **kwargs):
+        obj = cls.__new__(cls)
+        obj.graph = tf.Graph()
+        for meth in dir(obj):
+            if meth == '__class__':
+                continue
+            attr = getattr(obj, meth)
+            if callable(attr):
+                setattr(obj, meth, _graph_wrap(attr, obj.graph))
+        obj.__init__(*args, **kwargs)
+        return obj
+
+
+class KerasModel(metaclass=TfModelMeta):
     """
     Class builds keras model
     """

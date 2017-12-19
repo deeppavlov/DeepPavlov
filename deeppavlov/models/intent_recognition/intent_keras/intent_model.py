@@ -37,7 +37,7 @@ from deeppavlov.core.models.keras_model import KerasModel
 
 from keras.models import Model
 from keras.layers import Dense, Input, concatenate, Activation, Embedding
-from keras.layers.pooling import GlobalMaxPooling1D
+from keras.layers.pooling import GlobalMaxPooling1D, MaxPooling1D
 from keras.layers.convolutional import Conv1D
 from keras.layers.core import Dropout, Reshape
 from keras.layers.normalization import BatchNormalization
@@ -54,6 +54,7 @@ import keras.losses as keras_loss_file
 class KerasIntentModel(KerasModel):
 
     def __init__(self, opt, classes, *args, **kwargs):
+
         self.opt = copy.deepcopy(opt)
         self.classes = classes
         self.n_classes = self.classes.shape[0]
@@ -63,6 +64,14 @@ class KerasIntentModel(KerasModel):
             self.add_metrics_values = len(self.add_metrics) * [0.]
         else:
             self.add_metrics = None
+
+        if self.opt['fasttext_model'] is not None:
+            if os.path.isfile(self.opt['fasttext_model']):
+                self.embedding_dict = EmbeddingsDict(self.opt, self.opt['embedding_size'])
+            else:
+                raise IOError("Error: FastText model file does not exist")
+        else:
+            raise IOError("Error: FastText model file path is not given")
 
         if self.opt['model_from_saved'] == True:
             self.model = self.load(model_name=self.opt['model_name'],
@@ -84,14 +93,6 @@ class KerasIntentModel(KerasModel):
 
         self.metrics_names = self.model.metrics_names
         self.metrics_values = len(self.metrics_names) * [0.]
-
-        if self.opt['fasttext_model'] is not None:
-            if os.path.isfile(self.opt['fasttext_model']):
-                self.embedding_dict = EmbeddingsDict(self.opt, self.opt['embedding_size'])
-            else:
-                raise IOError("Error: FastText model file does not exist")
-        else:
-            raise IOError("Error: FastText model file path is not given")
 
     def texts2vec(self, sentences):
         embeddings_batch = []
@@ -263,6 +264,46 @@ class KerasIntentModel(KerasModel):
                                     kernel_regularizer=l2(params['coef_reg_lstm']),
                                     dropout=params['dropout_rate_lstm']))(inp)
 
+        output = Dropout(rate=params['dropout_rate'])(output)
+        output = Dense(params['dense_size'], activation=None,
+                       kernel_regularizer=l2(params['coef_reg_den']))(output)
+        output = BatchNormalization()(output)
+        output = Activation('relu')(output)
+        output = Dropout(rate=params['dropout_rate'])(output)
+        output = Dense(self.n_classes, activation=None,
+                       kernel_regularizer=l2(params['coef_reg_den']))(output)
+        output = BatchNormalization()(output)
+        act_output = Activation('sigmoid')(output)
+        model = Model(inputs=inp, outputs=act_output)
+        return model
+
+    def dcnn_model(self, params):
+        """
+        Build the uncompiled model of deep CNN
+        :return: model
+        """
+        if type(self.opt['kernel_sizes_cnn']) is str:
+            self.opt['kernel_sizes_cnn'] = [int(x) for x in
+                                            self.opt['kernel_sizes_cnn'].split(' ')]
+
+        if type(self.opt['filters_cnn']) is str:
+            self.opt['filters_cnn'] = [int(x) for x in
+                                            self.opt['filters_cnn'].split(' ')]
+
+        inp = Input(shape=(params['text_size'], params['embedding_size']))
+
+        output = inp
+
+        for i in range(len(params['kernel_sizes_cnn'])):
+            output = Conv1D(params['filters_cnn'][i], kernel_size=params['kernel_sizes_cnn'][i],
+                              activation=None,
+                              kernel_regularizer=l2(params['coef_reg_cnn']),
+                              padding='same')(output)
+            output = BatchNormalization()(output)
+            output = Activation('relu')(output)
+            output = MaxPooling1D()(output)
+
+        output = GlobalMaxPooling1D()(output)
         output = Dropout(rate=params['dropout_rate'])(output)
         output = Dense(params['dense_size'], activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
