@@ -26,7 +26,6 @@ import copy
 
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.common.registry import register_model
 
 from keras.models import Model
 from keras.layers import Dense, Input
@@ -126,8 +125,8 @@ class KerasModel(Trainable, Inferable):
         return model
 
     def load(self, model_name, fname, optimizer_name,
-                              lr, decay, loss_name, metrics_names=None, add_metrics_file=None, loss_weights=None,
-                              sample_weight_mode=None, weighted_metrics=None, target_tensors=None):
+             lr, decay, loss_name, metrics_names=None, add_metrics_file=None, loss_weights=None,
+             sample_weight_mode=None, weighted_metrics=None, target_tensors=None):
         """
         Method initiliazes model from saved params and weights
         Args:
@@ -208,20 +207,29 @@ class KerasModel(Trainable, Inferable):
             batch: tuple of (x,y) where x, y - lists of samples and their labels
 
         Returns:
-            metrics values on a given batch
+            loss and metrics values on a given batch
         """
         return self.model.train_on_batch(batch[0], batch[1])
 
-    def train(self, data, *args):
+    def train(self, dataset, *args):
         """
         Method trains the model on a given data as a single batch
         Args:
-            data: tuple of (x,y) where x, y - lists of samples and their labels
+            dataset: instance of class Dataset
 
         Returns:
             metrics values on a given data
         """
-        return self.train_on_batch(batch=data)
+        epochs_done = 0
+
+        while epochs_done < self.opt['epochs']:
+            batch_gen = dataset.batch_generator(batch_size=self.opt['batch_size'],
+                                                data_type='train')
+            for step, batch in enumerate(batch_gen):
+                self.train_on_batch(batch)
+            epochs_done += 1
+            print('epochs_done: %d' % epochs_done)
+        return
 
     def infer(self, batch, *args):
         """

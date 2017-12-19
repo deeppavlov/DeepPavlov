@@ -22,7 +22,7 @@ set_session(tf.Session(config=config))
 
 import keras
 import copy
-import os
+import os, sys
 import numpy as np
 import fasttext
 import re
@@ -31,6 +31,9 @@ import json
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.registry import register
+from deeppavlov.models.embedders.fasttext_embedder import EmbeddingsDict
+from deeppavlov.models.intent_recognition.intent_cnn_keras.utils import labels2onehot, log_metrics
+from deeppavlov.core.models.keras_model import KerasModel
 
 from keras.models import Model
 from keras.layers import Dense, Input, concatenate, Activation, Embedding
@@ -42,15 +45,15 @@ from keras.regularizers import l2
 from keras.layers import Bidirectional, LSTM
 from keras.optimizers import Adam
 
-from deeppavlov.models.embedders.fasttext_embedder import EmbeddingsDict
-import metrics as metrics_file
+
+import intent_recognition.metrics as metrics_file
 import keras.metrics as keras_metrics_file
 import keras.losses as keras_loss_file
 
 @register('intent_model')
-class KerasIntentModel(Trainable, Inferable):
+class KerasIntentModel(KerasModel):
+
     def __init__(self, opt, classes, *args, **kwargs):
-        # super.__init__()
         self.opt = copy.deepcopy(opt)
         self.classes = classes
         self.n_classes = self.classes.shape[0]
@@ -61,31 +64,27 @@ class KerasIntentModel(Trainable, Inferable):
         else:
             self.add_metrics = None
 
-        self.network_params = dict()
-        self.learning_params = dict()
+        self.opt['kernel_sizes_cnn'] = [int(x) for x in
+                                        self.opt['kernel_sizes_cnn'].split(' ')]
+        print(self.opt)
 
-        if self.opt['train_from_saved'] == True:
-            self.get_params(self.opt)
-            self.network_params['kernel_sizes_cnn'] = [int(x) for x in
-                                                       self.network_params['kernel_sizes_cnn'].split(' ')]
-            self.learning_params['lear_metrics'] = self.learning_params['lear_metrics'].split(' ')
-            self.model = self.init_model_from_saved(model_name=self.opt['model_name'],
-                                                    fname=self.opt['model_file'],
-                                                    lr=self.learning_params['lear_rate'],
-                                                    decay=self.learning_params['lear_rate_decay'],
-                                                    loss=self.learning_params['loss'],
-                                                    metrics=self.learning_params['lear_metrics'])
+        if self.opt['model_from_saved'] == True:
+            self.model = self.load(model_name=self.opt['model_name'],
+                                   fname=self.opt['model_file'],
+                                   optimizer_name=self.opt['optimizer'],
+                                   lr=self.opt['lear_rate'],
+                                   decay=self.opt['lear_rate_decay'],
+                                   loss_name=self.opt['loss'],
+                                   metrics_names=self.opt['lear_metrics'],
+                                   add_metrics_file=metrics_file)
         else:
-            self.get_params(self.opt)
-            self.network_params['kernel_sizes_cnn'] = [int(x) for x in
-                                                       self.network_params['kernel_sizes_cnn'].split(' ')]
-            self.learning_params['lear_metrics'] = self.learning_params['lear_metrics'].split(' ')
-
             self.model = self.init_model_from_scratch(model_name=self.opt['model_name'],
-                                                      lr=self.learning_params['lear_rate'],
-                                                      decay=self.learning_params['lear_rate_decay'],
-                                                      loss=self.learning_params['loss'],
-                                                      metrics=self.learning_params['lear_metrics'])
+                                                      optimizer_name=self.opt['optimizer'],
+                                                      lr=self.opt['lear_rate'],
+                                                      decay=self.opt['lear_rate_decay'],
+                                                      loss_name=self.opt['loss'],
+                                                      metrics_names=self.opt['lear_metrics'],
+                                                      add_metrics_file=metrics_file)
 
         self.metrics_names = self.model.metrics_names
         self.metrics_values = len(self.metrics_names) * [0.]
@@ -98,106 +97,19 @@ class KerasIntentModel(Trainable, Inferable):
         else:
             raise IOError("Error: FastText model file path is not given")
 
-    def get_params(self, opt):
-        list_network_params = ['text_size', 'embedding_size', 'coef_reg_den', 'dense_size',
-                               'kernel_sizes_cnn', 'filters_cnn', 'coef_reg_cnn',
-                               'units_lstm', 'coef_reg_lstm', 'dropout_rate_lstm', 'dropout_rate']
-        list_learning_params = ['lear_rate', 'lear_rate_decay',
-                                'lear_metrics', 'loss',
-                                'batch_size', 'epochs', 'val_split', 'verbose',
-                                'val_every_n_epochs', 'val_patience', 'show_examples']
-        for param in list_network_params:
-            if param in opt.keys():
-                self.network_params[param] = opt[param]
-            else:
-                self.network_params[param] = None
-        for param in list_learning_params:
-            if param in opt.keys():
-                self.learning_params[param] = opt[param]
-            else:
-                self.learning_params[param] = None
-        return True
-
-    def define_metrics(self, metrics):
-        new_metrics = []
-        for i in range(len(metrics)):
-            try:
-                new_metrics.append(getattr(metrics_file, metrics[i]))
-            except AttributeError:
-                if metrics[i] == 'accuracy':
-                    if self.n_classes > 1:
-                        new_metrics.append(getattr(keras_metrics_file, 'categorical_accuracy'))
-                    else:
-                        new_metrics.append(getattr(keras_metrics_file, 'binary_accuracy'))
-                else:
-                    new_metrics.append(getattr(keras_metrics_file, metrics[i]))
-        return new_metrics
-
-    def define_loss(self, loss):
-        new_loss = getattr(keras_loss_file, loss)
-        return new_loss
-
-    def init_model_from_scratch(self, model_name, lr, decay,
-                                loss, metrics=None):
-        if model_name == 'cnn_model':
-            model = self.cnn_model(params=self.network_params)
-        elif model_name == 'bilstm_model':
-            model = self.bilstm_model(params=self.network_params)
-        optimizer_ = Adam(lr=lr, decay=decay)
-        new_metrics = self.define_metrics(metrics)
-        model.compile(optimizer=optimizer_,
-                      loss=loss,
-                      metrics=new_metrics)
-        print('___Initializing model from scratch___')
-        return model
-
-    def init_model_from_saved(self, model_name, fname, lr, decay,
-                              loss, metrics=None, loss_weights=None,
-                              sample_weight_mode=None, weighted_metrics=None, target_tensors=None):
-        print('___Initializing model from saved___'
-              '\nModel weights file is %s.h5'
-              '\nNetwork parameters are from %s_opt.json' % (fname, fname))
-
-        fname = self.opt.get('model_file', None) if fname is None else fname
-
-        if os.path.isfile(fname + '_opt.json'):
-            with open(fname + '_opt.json', 'r') as opt_file:
-                # TODO: network params from json, learning params from current config
-                old_opt = json.load(opt_file)
-                for param in self.network_params.keys():
-                    if param in old_opt.keys():
-                        self.network_params[param] = old_opt[param]
-        else:
-            raise IOError("Error: config file %s_opt.json of saved model does not exist" % fname)
-        if model_name == 'cnn_model':
-            model = self.cnn_model(params=self.network_params)
-        elif model_name == 'bilstm_model':
-            model = self.bilstm_model(params=self.network_params)
-        model.load_weights(fname + '.h5')
-        optimizer_ = Adam(lr=lr, decay=decay)
-        new_metrics = self.define_metrics(metrics)
-        model.compile(optimizer=optimizer_,
-                      loss=loss,
-                      metrics=new_metrics,
-                      loss_weights=loss_weights,
-                      sample_weight_mode=sample_weight_mode,
-                      weighted_metrics=weighted_metrics,
-                      target_tensors=target_tensors)
-        return model
-
     def texts2vec(self, sentences):
         embeddings_batch = []
         for sen in sentences:
             embeddings = []
             tokens = sen.split(' ')
             tokens = [el for el in tokens if el != '']
-            if len(tokens) > self.network_params['text_size']:
-                tokens = tokens[:self.network_params['text_size']]
+            if len(tokens) > self.opt['text_size']:
+                tokens = tokens[:self.opt['text_size']]
             for tok in tokens:
                 embeddings.append(self.embedding_dict.tok2emb.get(tok))
-            if len(tokens) < self.network_params['text_size']:
-                pads = [np.zeros(self.network_params['embedding_size'])
-                        for _ in range(self.network_params['text_size'] - len(tokens))]
+            if len(tokens) < self.opt['text_size']:
+                pads = [np.zeros(self.opt['embedding_size'])
+                        for _ in range(self.opt['text_size'] - len(tokens))]
                 embeddings = pads + embeddings
 
             embeddings = np.asarray(embeddings)
@@ -206,64 +118,107 @@ class KerasIntentModel(Trainable, Inferable):
         embeddings_batch = np.asarray(embeddings_batch)
         return embeddings_batch
 
-    def labels2onehot(self, labels):
-        eye = np.eye(self.n_classes)
-        y = []
-        for sample in labels:
-            curr = np.zeros(self.n_classes)
-            for intent in sample:
-                if intent not in self.classes:
-                    print('Warning: unknown intent %s detected' % intent)
-                    curr += eye[np.where(self.classes == 'unknown')[0]].reshape(-1)
-                else:
-                    curr += eye[np.where(self.classes == intent)[0]].reshape(-1)
-            y.append(curr)
-        y = np.asarray(y)
-        return y
-
-    def proba2labels(self, proba):
-        y = []
-        for sample in proba:
-            to_add = np.where(sample > self.confident_threshold)[0]
-            if len(to_add) > 0:
-                y.append(self.classes[to_add])
-            else:
-                y.append([self.classes[np.argmax(sample)]])
-        y = np.asarray(y)
-        return y
-
-    def proba2onehot(self, proba):
-        return self.labels2onehot(self.proba2labels(proba))
-
     def train_on_batch(self, batch):
         """
-        Train the model
+        Train the model on the given batch
         Args:
             batch - list of tuples (preprocessed text, labels)
+
+        Returns:
+            loss and metrics values on the given batch
         """
         texts = list(batch[0])
         labels = list(batch[1])
         self.embedding_dict.add_items(texts)
         features = self.texts2vec(texts)
-        onehot_labels = self.labels2onehot(labels)
-        self.metrics_values = self.model.train_on_batch(features, onehot_labels)
-        if self.add_metrics is not None:
-            preds = self.model.predict_on_batch(features)
-            for i, add_metrics in enumerate(self.add_metrics):
-                self.add_metrics_values[i] = add_metrics(onehot_labels, preds)
-        return True
+        onehot_labels = labels2onehot(labels, classes=self.classes)
+        metrics_values = self.model.train_on_batch(features, onehot_labels)
+        return metrics_values
 
-    def train(self, data):
-        return self.train_on_batch(batch=data)
+    def train(self, dataset):
+        """
+        Method trains considered model using batches and validation
+        Args:
+            dataset: instance of class Dataset
+
+        Returns:
+
+        """
+        updates = 0
+        val_loss = 1e100
+        val_increase = 0
+        epochs_done = 0
+
+        n_train_samples = len(dataset.data['train'])
+
+        print('\n____Training over %d samples____\n\n' % n_train_samples)
+
+        while epochs_done < self.opt['epochs']:
+            batch_gen = dataset.batch_generator(batch_size=self.opt['batch_size'],
+                                                data_type='train')
+            for step, batch in enumerate(batch_gen):
+                metrics_values = self.train_on_batch(batch)
+                updates += 1
+
+                if self.opt['verbose'] and step % 50 == 0:
+                    log_metrics(names=self.metrics_names,
+                                     values=metrics_values,
+                                     updates=updates,
+                                     mode='train')
+
+            epochs_done += 1
+            if epochs_done % self.opt['val_every_n_epochs'] == 0:
+                if 'valid' in dataset.data.keys():
+
+                    valid_batch_gen = dataset.embedded_batch_generator(embedding_dict=self.embedding_dict,
+                                                                       text_size=self.opt['text_size'],
+                                                                       embedding_size=self.opt['embedding_size'],
+                                                                       classes=self.classes,
+                                                                       batch_size=self.opt['batch_size'],
+                                                                       data_type='valid')
+                    valid_metrics_values = self.model.evaluate_generator(generator=valid_batch_gen,
+                                                                         steps=(len(dataset.data['valid']) - 1) //
+                                                                               self.opt['batch_size'])
+
+                    log_metrics(names=self.metrics_names,
+                                     values=valid_metrics_values,
+                                     mode='valid')
+                    if valid_metrics_values[0] > val_loss:
+                        val_increase += 1
+                        print("__Validation impatience %d out of %d" % (
+                            val_increase, self.opt['val_patience']))
+                        if val_increase == self.opt['val_patience']:
+                            print("___Stop training: validation is out of patience___")
+                            break
+                    val_loss = valid_metrics_values[0]
+            print('epochs_done: %d' % epochs_done)
+        return
 
     def infer(self, batch, *args):
         """
-        Return prediction.
+        Return predictions on the given batch of texts
         """
         self.embedding_dict.add_items(batch)
         features = self.texts2vec(batch)
         preds = self.model.predict_on_batch(features)
         return preds
+
+    def infer_on_batch(self, batch):
+        """
+        Return loss and metrics on the given batch of texts
+        Args:
+            batch - list of tuples (preprocessed text, labels)
+
+        Returns:
+            loss and metrics values on the given batch
+        """
+        texts = list(batch[0])
+        labels = list(batch[1])
+        self.embedding_dict.add_items(texts)
+        features = self.texts2vec(texts)
+        onehot_labels = labels2onehot(labels, self.classes)
+        metrics_values = self.model.test_on_batch(features, onehot_labels)
+        return metrics_values
 
     def save(self, fname):
         # TODO: model_file is in opt??
@@ -280,7 +235,7 @@ class KerasIntentModel(Trainable, Inferable):
 
     def cnn_model(self, params):
         """
-        Build the incompiled model
+        Build the uncompiled model of shallow-and-wide CNN
         :return: model
         """
         inp = Input(shape=(params['text_size'], params['embedding_size']))
@@ -313,7 +268,7 @@ class KerasIntentModel(Trainable, Inferable):
 
     def bilstm_model(self, params):
         """
-        Build the incompiled model
+        Build the uncompiled model of one-layer BiLSTM
         :return: model
         """
         inp = Input(shape=(params['text_size'], params['embedding_size']))
