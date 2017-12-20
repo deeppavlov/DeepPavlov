@@ -1,0 +1,18 @@
+{
+  "model": {
+    "name": "spelling_error_model",
+    "models_path": "../build",
+    "window": 1,
+    "dictionary": {
+      "name": "russian_words_vocab",
+      "data_dir": "../data"
+    }
+  },
+  "dataset_reader": {
+    "name": "typos_kartaslov_reader",
+    "data_path": "../data"
+  },
+  "dataset": {
+    "name": "typos_dataset"
+  }
+}

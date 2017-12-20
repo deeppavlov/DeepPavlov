@@ -103,11 +103,11 @@ class NerNetwork:
             units = stacked_rnn(emb, n_filters, cell_type='lstm')
 
         elif 'cnn_highway' in net_type.lower():
-            units = highway_convolutional_network(emb,
-                                                  n_filters=n_filters,
-                                                  filter_width=filter_width,
-                                                  use_batch_norm=use_batch_norm,
-                                                  training_ph=training_ph)
+                units = highway_convolutional_network(emb,
+                                                      n_filters=n_filters,
+                                                      filter_width=filter_width,
+                                                      use_batch_norm=use_batch_norm,
+                                                      training_ph=training_ph)
         else:
             raise KeyError('There is no such type of network: {}'.format(net_type))
         # Classifier

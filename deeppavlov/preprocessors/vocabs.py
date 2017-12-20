@@ -1,11 +1,14 @@
 from collections import Counter, defaultdict
 import numpy as np
+from overrides import overrides
+
+from deeppavlov.core.data.vocab import Vocabulary
 from deeppavlov.common.registry import register_model
 from deeppavlov.models.inferable import Inferable
 
 
 @register_model('default_vocab')
-class Vocabulary(Inferable):
+class DefaultVocabulary(Vocabulary):
     def __init__(self, tokens=None, default_token='<UNK>', special_tokens=('<UNK>',)):
         self._t2i = dict()
         # We set default ind to position of <UNK> in SPECIAL_TOKENS
@@ -25,6 +28,7 @@ class Vocabulary(Inferable):
         if tokens is not None:
             self.update_dict(tokens)
 
+    @overrides
     def update_dict(self, tokens):
         for token in tokens:
             if token not in self._t2i:
@@ -43,11 +47,17 @@ class Vocabulary(Inferable):
                 toks.append(self._i2t[idx])
         return toks
 
+    @overrides
     def infer(self, samples):
         if not isinstance(samples, str):
             return [self.infer(sample) for sample in samples]
         else:
             return self.tok2idx(samples)
+
+    @overrides
+    def iter_all(self):
+        for token in self.frequencies:
+            yield token
 
     def tok2idx(self, tok):
         return self._t2i[tok]

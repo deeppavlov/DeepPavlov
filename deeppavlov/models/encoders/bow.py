@@ -1,10 +1,10 @@
 import numpy as np
 
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 
 
-@register_model('bow')
+@register('bow')
 class BoW_encoder(Inferable):
     def __init__(self):
         pass

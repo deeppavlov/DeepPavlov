@@ -1,0 +1,46 @@
+{
+  "dataset_reader": {
+    "name": "dstc2_datasetreader",
+    "data_path": "/home/vimary/IPavlov/projects/Pilot/data/dstc2"
+  },
+  "dataset": {
+    "name": "dstc2_dialog_dataset"
+  },
+  "model": {
+    "name": "hcn_new",
+    "debug": false,
+    "slot_names": ["pricerange", "this", "area", "slot", "food", "name"],
+    "template_path": "../../../data/dstc2/dstc2-templates.txt",
+    "network": {
+      "name": "custom_rnn",
+      "learning_rate": 0.02,
+      "hidden_dim": 128,
+      "model_fpath": "hcn_rnn",
+      "use_action_mask": false,
+      "action_size": 45,
+      "obs_size": 802
+    },
+    "slot_filler": {
+        "name": "dstc_slotfilling",
+        "model_path": "../../models/ner/model/"
+    },
+    "bow_encoder": {
+      "name": "bow"
+    },
+    "embedder": {
+      "name": "fasttext",
+      "model_dir_path": "/home/vimary/IPavlov/projects/hcn-dialogue-manager/data",
+      "model_fpath": "wiki.en.bin"
+    },
+    "tokenizer": {
+        "name": "spacy_tokenizer"
+    },
+    "tracker": {
+      "name": "featurized_tracker",
+      "slot_names": ["pricerange", "this", "area", "slot", "food", "name"]
+    }
+  },
+  "num_epochs": 40,
+  "config_path": "config.json"
+}
+
