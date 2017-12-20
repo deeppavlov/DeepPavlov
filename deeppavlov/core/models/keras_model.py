@@ -15,10 +15,6 @@
 
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
-config.gpu_options.visible_device_list = '0'
-set_session(tf.Session(config=config))
 
 import os
 import json
@@ -26,33 +22,13 @@ import copy
 
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.common.registry import register
 
 from keras.models import Model
 from keras.layers import Dense, Input
 import keras.metrics
 import keras.optimizers
 
-
-def _graph_wrap(func, graph):
-    def _wrapped(*args, **kwargs):
-        with graph.as_default():
-            return func(*args, **kwargs)
-    return _wrapped
-
-
-class TfModelMeta(type, Trainable, Inferable):
-    def __call__(cls, *args, **kwargs):
-        obj = cls.__new__(cls)
-        obj.graph = tf.Graph()
-        for meth in dir(obj):
-            if meth == '__class__':
-                continue
-            attr = getattr(obj, meth)
-            if callable(attr):
-                setattr(obj, meth, _graph_wrap(attr, obj.graph))
-        obj.__init__(*args, **kwargs)
-        return obj
+from deeppavlov.core.models.tf_model import TfModelMeta
 
 
 class KerasModel(metaclass=TfModelMeta):
@@ -68,6 +44,9 @@ class KerasModel(metaclass=TfModelMeta):
             **kwargs:
         """
         self.opt = copy.deepcopy(opt)
+
+#        self._config_session()
+
         if self.opt['model_from_saved'] == True:
             self.model = self.load(model_name=self.opt['model_name'],
                                    fname=self.opt['model_file'],
@@ -83,6 +62,12 @@ class KerasModel(metaclass=TfModelMeta):
                                                       decay=self.opt['lear_rate_decay'],
                                                       loss_name=self.opt['loss'],
                                                       metrics_names=self.opt['lear_metrics'])
+
+#    def _config_session(self):
+#        config = tf.ConfigProto()
+#        config.gpu_options.allow_growth = True
+#        config.gpu_options.visible_device_list = '0'
+#        return tf.Session(config=config)
 
     def init_model_from_scratch(self, model_name, optimizer_name,
                                 lr, decay, loss_name, metrics_names=None, add_metrics_file=None, loss_weights=None,
@@ -186,6 +171,7 @@ class KerasModel(metaclass=TfModelMeta):
         else:
             raise AttributeError("Model %s is not defined" % model_name)
 
+        print("Loading wights from `{}`".format(fname + '.h5'))
         model.load_weights(fname + '.h5')
 
         optimizer_func = getattr(keras.optimizers, optimizer_name, None)
@@ -261,7 +247,8 @@ class KerasModel(metaclass=TfModelMeta):
         Returns:
             predictions on a given batch
         """
-        return self.model.predict_on_batch(batch)
+        with self.sess.as_default():
+            return self.model.predict_on_batch(batch)
 
     def save(self, fname=None):
         """
