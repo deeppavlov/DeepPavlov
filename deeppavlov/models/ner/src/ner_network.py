@@ -177,7 +177,7 @@ class NerNetwork:
 
     def load(self, model_file_path):
         saver = tf.train.Saver()
-        saver.restore(self._sess, model_file_path)
+        saver.restore(self._sess, str(model_file_path))
 
     def train_on_batch(self, x_word, x_char, y_tag):
         feed_dict = {self._x_w: x_word, self._x_c: x_char, self._y_true: y_tag}
