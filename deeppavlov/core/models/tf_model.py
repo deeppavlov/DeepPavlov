@@ -5,26 +5,42 @@ Trainable and Inferable interfaces and make a pull-request to deeppavlov.
 """
 
 from abc import abstractmethod
-from pathlib import Path
 
 import tensorflow as tf
-from tensorflow.python.training.saver import Saver
-from overrides import overrides
 
-from deeppavlov.core.common import paths
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.common.attributes import check_attr_true, run_alt_meth_if_no_path, \
-    check_path_exists
+from deeppavlov.core.common.attributes import check_attr_true, check_path_exists
 
 
-class TFModel(Trainable, Inferable):
-    _saver = Saver
-    sess = None
+def _graph_wrap(func, graph):
+    def _wrapped(*args, **kwargs):
+        with graph.as_default():
+            return func(*args, **kwargs)
+
+    return _wrapped
+
+
+class TfModelMeta(type, Trainable, Inferable):
+    def __call__(cls, *args, **kwargs):
+        obj = cls.__new__(cls)
+        obj.graph = tf.Graph()
+        for meth in dir(obj):
+            if meth == '__class__':
+                continue
+            attr = getattr(obj, meth)
+            if callable(attr):
+                setattr(obj, meth, _graph_wrap(attr, obj.graph))
+        obj.__init__(*args, **kwargs)
+        return obj
+
+
+class TFModel(metaclass=TfModelMeta):
+    _saver = tf.train.Saver
+    _model_dir_path = ''
 
     @abstractmethod
     def _add_placeholders(self):
-        # It seems that there is no need in such abstracti
         """
         Add all needed placeholders for a computational graph.
         """

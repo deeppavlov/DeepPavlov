@@ -1,0 +1,11 @@
+{
+  "model": {
+    "name": "dstc_slotfilling",
+    "dict_filepath": "model/dict.txt",
+    "model_filepath": "model/ner_model.ckpt",
+    "params_filepath": "model/params.json",
+    "slot_vals_filepath": "model/slot_vals.json"
+  },
+  "config_path": "config.json"
+}
+
