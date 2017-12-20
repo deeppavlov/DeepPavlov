@@ -71,6 +71,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         # intialize parameters
         self.db_result = None
         self.n_actions = len(self.templates)
+        self.n_intents = len(self.intent_classifier.infer(['hi']))
         self.prev_action = np.zeros(self.n_actions, dtype=np.float32)
 
         # initialize metrics
@@ -79,7 +80,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         #opt = {
         #    'action_size': self.n_actions,
         #    'obs_size': 4 + len(self.vocab) + self.embedder.dim +\
-        #    2 * self.tracker.state_size + self.n_actions
+        #    2 * self.tracker.state_size + self.n_actions + self.n_intents
         #}
         #self.network = HybridCodeNetworkModel(opt)
 
@@ -96,9 +97,17 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         # Embeddings
         emb_features = self.embedder.infer(tokenized)
 
+        # Intent features
+        intent_features = self.intent_classifier.infer([tokenized]).ravel()
+        if self.debug:
+            from deeppavlov.models.intent_recognition.intent_keras.utils import proba2labels
+            print("Predicted intent = `{}`".format(proba2labels(
+                intent_features[np.newaxis, :], .5, self.intent_classifier.classes
+            )[0]))
+
         # Text entity features
         self.tracker.update_state(self.slot_filler.infer(tokenized))
-        ent_features = self.tracker.infer()
+        state_features = self.tracker.infer()
         if self.debug:
             print("Found slots =", self.slot_filler.infer(tokenized))
 
@@ -107,8 +116,9 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                                      (self.db_result == {}) * 1.],
                                     dtype=np.float32)
 
-        return np.hstack((bow_features, emb_features, ent_features,
-                          context_features, self.prev_action))[np.newaxis, :]
+        return np.hstack((bow_features, emb_features, intent_features,
+                          state_features, context_features,
+                          self.prev_action))[np.newaxis, :]
 
     def _encode_response(self, response, act):
         return self.templates.actions.index(act)
