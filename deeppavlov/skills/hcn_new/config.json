@@ -22,10 +22,7 @@
     },
     "slot_filler": {
         "name": "dstc_slotfilling",
-        "dict_filepath": "../../models/ner/model/dict.txt",
-        "model_filepath": "../../models/ner/model/ner_model.ckpt",
-        "params_filepath": "../../models/ner/model/params.json",
-        "slot_vals_filepath": "../../models/ner/model/slot_vals.json"
+        "model_path": "../../models/ner/model/"
     },
     "bow_encoder": {
       "name": "bow"

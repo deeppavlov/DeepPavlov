@@ -2,6 +2,7 @@ from fuzzywuzzy import process
 from overrides import overrides
 import json
 import tensorflow as tf
+import os
 
 from .src.corpus import Corpus
 from .src.ner_network import NerNetwork
@@ -9,15 +10,25 @@ from .utils.nlputils import tokenize
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
-
+from deeppavlov.core.data.utils import download_untar, mark_done
 
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(Inferable):
-    def __init__(self,
-                 dict_filepath='model/dict.txt',
-                 model_filepath='model/ner_model.ckpt',
-                 params_filepath='model/params.json',
-                 slot_vals_filepath='model/slot_vals.json'):
+    def __init__(self, model_path):
+        # Check existance of the model files. Download model files if needed
+        files_required = ['dict.txt', 'ner_model.ckpt', 'params.json', 'slot_vals.json']
+        for file_name in files_required:
+            if not os.path.exists(os.path.join(model_path, file_name)):
+                url = 'http://lnsigo.mipt.ru/export/ner_dstc_model.tar.gz'
+                print('Loading model from {} to {}'.format(url, model_path))
+                download_untar(url, model_path)
+                mark_done(model_path)
+                break
+
+        dict_filepath = os.path.join(model_path, 'dict.txt')
+        model_filepath = os.path.join(model_path, 'ner_model.ckpt')
+        params_filepath = os.path.join(model_path, 'params.json')
+        slot_vals_filepath = os.path.join(model_path, 'slot_vals.json')
 
         # Build and initialize the model
         with open(params_filepath) as f:
