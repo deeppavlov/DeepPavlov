@@ -163,7 +163,6 @@ class NerNetwork:
         if pretrained_model_filepath is not None:
             self.load(pretrained_model_filepath)
 
-
     def save(self, model_file_path=None):
         if model_file_path is None:
             if not os.path.exists(MODEL_PATH):
@@ -235,8 +234,9 @@ class NerNetwork:
             results = self.eval_conll(dataset_type='test', short_report=True)
         return results
 
-    def predict(self, x_word, x_char):
-        feed_dict = self._fill_feed_dict(x_word, x_char, training=False)
+    def predict(self, x_word, x_char, mask=None):
+
+        feed_dict = self._fill_feed_dict(x_word, x_char, mask, training=False)
         if self._use_crf:
             y_pred = []
             logits, trans_params, sequence_lengths = self._sess.run([self._logits,
