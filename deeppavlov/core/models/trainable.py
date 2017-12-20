@@ -33,8 +33,10 @@ class Trainable(metaclass=ABCMeta):
         """
         pass
 
-    def save(self):
+    @abstractmethod
+    def save(self, *args, **kwargs):
         pass
 
-    def load(self):
+    @abstractmethod
+    def load(self, *args, **kwargs):
         pass
