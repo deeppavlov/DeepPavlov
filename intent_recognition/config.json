@@ -1,6 +1,6 @@
 {
   "model": {
-    "name": "intent_model_from_parent",
+    "name": "intent_model",
     "kernel_sizes_cnn": "1 2 3",
     "filters_cnn": 512,
     "embedding_size": 100,
@@ -24,7 +24,8 @@
     "val_every_n_epochs": 5,
     "verbose": true,
     "val_patience": 5,
-    "show_examples": false
+    "show_examples": false,
+    "train_now": true
   },
   "dataset_reader": {
     "name": "intent_dataset_reader",

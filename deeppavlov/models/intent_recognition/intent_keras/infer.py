@@ -2,28 +2,22 @@ from deeppavlov.core.common.registry import _REGISTRY
 from deeppavlov.core.common.params import from_params
 from deeppavlov.dataset_readers.intent_dataset_reader import IntentDatasetReader
 from deeppavlov.datasets.intent_dataset import IntentDataset
-from deeppavlov.models.intent_recognition.intent_cnn_keras.intent_model import KerasIntentModel
+from deeppavlov.models.intent_recognition.intent_keras.intent_model import KerasIntentModel
 from deeppavlov.preprocessors.intent_preprocessor import IntentPreprocessor
+from deeppavlov.models.intent_recognition.intent_keras.utils import labels2onehot, proba2onehot, \
+    proba2labels, log_metrics
 
 import sys
 import json
 import numpy as np
 from sklearn.metrics import log_loss, accuracy_score
 from intent_recognition.metrics import fmeasure
+import keras.backend as K
 
+def main(config_name='config_infer.json'):
+    
+    K.clear_session()
 
-def log_metrics(names, values, updates=None, mode='train'):
-    sys.stdout.write("\r")  # back to previous line
-    print("%s -->\t" % mode, end="")
-    if updates is not None:
-        print("updates: %d\t" % updates, end="")
-
-    for id in range(len(names)):
-        print("%s: %f\t" % (names[id], values[id]), end="")
-    print(" ")  # , end='\r')
-
-
-def main(config_name='config.json'):
     with open(config_name) as f:
         config = json.load(f)
 
@@ -40,14 +34,14 @@ def main(config_name='config.json'):
                           dataset_config, data=data)
 
     # Merging train and valid dataset for further split on train/valid
-    dataset.merge_data(fields_to_merge=['train', 'valid'], new_field='train')
-    dataset.split_data(field_to_split='train', new_fields=['train', 'valid'], proportions=[0.9, 0.1])
+    # dataset.merge_data(fields_to_merge=['train', 'valid'], new_field='train')
+    # dataset.split_data(field_to_split='train', new_fields=['train', 'valid'], proportions=[0.9, 0.1])
 
     preproc_config = config['preprocessing']
     preproc = from_params(_REGISTRY[preproc_config['name']],
                                     preproc_config)
-    dataset = preproc.preprocess(dataset=dataset, data_type='train')
-    dataset = preproc.preprocess(dataset=dataset, data_type='valid')
+    # dataset = preproc.preprocess(dataset=dataset, data_type='train')
+    # dataset = preproc.preprocess(dataset=dataset, data_type='valid')
     dataset = preproc.preprocess(dataset=dataset, data_type='test')
 
     # Extracting unique classes
@@ -56,44 +50,32 @@ def main(config_name='config.json'):
 
     # Initializing model
     model_config = config['model']
+    model_config['classes'] = intents
     model = from_params(_REGISTRY[model_config['name']],
-                        model_config, opt=model_config, classes=intents)
+                        model_config)
 
-    print("Considered:", model.metrics_names)
-
-    if 'valid' in data.keys():
-        print('___Validation set is given___')
-    elif 'val_split' in model.opt.keys():
-        print('___Validation split is given___')
-    else:
-        print('___Validation set and validation split are not given.____\n____Validation split = 0.1____')
-        model.opt['val_split'] = 0.1
-
-
-    model.train(dataset)
-
-    model.save(fname=model.opt['model_file'])
+    print("Considered loss and metrics:", model.metrics_names)
 
     test_batch_gen = dataset.batch_generator(batch_size=model.opt['batch_size'],
-                                              data_type='test')
+                                             data_type='test')
     test_preds = []
     test_true = []
     for test_id, test_batch in enumerate(test_batch_gen):
         test_preds.extend(model.infer(test_batch[0]))
-        test_true.extend(model.labels2onehot(test_batch[1]))
-        if model_config['show_examples'] and test_id == 0:
+        test_true.extend(labels2onehot(test_batch[1], model.classes))
+        if model.opt['show_examples'] and test_id == 0:
             for j in range(model.opt['batch_size']):
                 print(test_batch[0][j],
                       test_batch[1][j],
-                      model.proba2labels([test_preds[j]]))
+                      proba2labels([test_preds[j]], model.confident_threshold, model.classes))
 
     test_true = np.asarray(test_true, dtype='float64')
     test_preds = np.asarray(test_preds, dtype='float64')
 
     test_values = []
     test_values.append(log_loss(test_true, test_preds))
-    test_values.append(accuracy_score(test_true, model.proba2onehot(test_preds)))
-    test_values.append(fmeasure(test_true, model.proba2onehot(test_preds)))
+    test_values.append(accuracy_score(test_true, proba2onehot(test_preds, model.confident_threshold, model.classes)))
+    test_values.append(fmeasure(test_true, proba2onehot(test_preds, model.confident_threshold, model.classes)))
 
     log_metrics(names=model.metrics_names,
                 values=test_values,

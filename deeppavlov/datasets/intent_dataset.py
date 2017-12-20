@@ -20,61 +20,60 @@ from sklearn.model_selection import train_test_split
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset import Dataset
 from deeppavlov.models.embedders.fasttext_embedder import EmbeddingsDict
-from deeppavlov.models.intent_recognition.intent_cnn_keras.intent_model import KerasIntentModel
-from deeppavlov.models.intent_recognition.intent_cnn_keras.utils import labels2onehot, proba2labels, proba2onehot
+from deeppavlov.models.intent_recognition.intent_keras.intent_model import KerasIntentModel
+from deeppavlov.models.intent_recognition.intent_keras.utils import labels2onehot, proba2labels, proba2onehot
 
 @register('intent_dataset')
 class IntentDataset(Dataset):
+    #
+    # @staticmethod
+    # def texts2vec(sentences, embedding_dict, text_size, embedding_size):
+    #     embeddings_batch = []
+    #     for sen in sentences:
+    #         embeddings = []
+    #         tokens = sen.split(' ')
+    #         tokens = [el for el in tokens if el != '']
+    #         if len(tokens) > text_size:
+    #             tokens = tokens[:text_size]
+    #         for tok in tokens:
+    #             embeddings.append(embedding_dict.tok2emb.get(tok))
+    #         if len(tokens) < text_size:
+    #             pads = [np.zeros(embedding_size)
+    #                     for _ in range(text_size - len(tokens))]
+    #             embeddings = pads + embeddings
+    #         embeddings = np.asarray(embeddings)
+    #         embeddings_batch.append(embeddings)
+    #     embeddings_batch = np.asarray(embeddings_batch)
+    #     return embeddings_batch
 
-    @staticmethod
-    def texts2vec(sentences, embedding_dict, text_size, embedding_size):
-        embeddings_batch = []
-        for sen in sentences:
-            embeddings = []
-            tokens = sen.split(' ')
-            tokens = [el for el in tokens if el != '']
-            if len(tokens) > text_size:
-                tokens = tokens[:text_size]
-            for tok in tokens:
-                embeddings.append(embedding_dict.tok2emb.get(tok))
-            if len(tokens) < text_size:
-                pads = [np.zeros(embedding_size)
-                        for _ in range(text_size - len(tokens))]
-                embeddings = pads + embeddings
-            embeddings = np.asarray(embeddings)
-            embeddings_batch.append(embeddings)
-        embeddings_batch = np.asarray(embeddings_batch)
-        return embeddings_batch
-
-    def embedded_batch_generator(self, embedding_dict, text_size: int, embedding_size: int, classes,
-                                 batch_size: int, data_type: str = 'train') -> Generator:
-        r"""This function returns a generator, which serves for generation of raw (no preprocessing such as tokenization)
-         batches
-
-        Args:
-            batch_size (int): number of samples in batch
-            data_type (str): can be either 'train', 'test', or 'valid'
-
-        Returns:
-            batch_gen (Generator): a generator, that iterates through the part (defined by data_type) of the dataset
-        """
-        data = self.data[data_type]
-        data_len = len(data)
-        order = list(range(data_len))
-
-        rs = random.getstate()
-        random.setstate(self.random_state)
-        random.shuffle(order)
-        self.random_state = random.getstate()
-        random.setstate(rs)
-
-        for i in range((data_len - 1) // batch_size + 1):
-            batch = list(zip(*[data[o] for o in order[i*batch_size:(i+1)*batch_size]]))
-            embedding_dict.add_items(batch[0])
-
-            batch[0] = IntentDataset.texts2vec(batch[0], embedding_dict, text_size, embedding_size)
-            batch[1] = labels2onehot(batch[1], classes=classes)
-            yield batch
+    # def embedded_batch_generator(self, embedding_dict, text_size: int, embedding_size: int, classes,
+    #                              batch_size: int, data_type: str = 'train') -> Generator:
+    #     r"""This function returns a generator, which serves for generation of raw (no preprocessing such as tokenization)
+    #      batches
+    #
+    #     Args:
+    #         batch_size (int): number of samples in batch
+    #         data_type (str): can be either 'train', 'test', or 'valid'
+    #
+    #     Returns:
+    #         batch_gen (Generator): a generator, that iterates through the part (defined by data_type) of the dataset
+    #     """
+    #     data = self.data[data_type]
+    #     data_len = len(data)
+    #     order = list(range(data_len))
+    #
+    #     rs = random.getstate()
+    #     random.setstate(self.random_state)
+    #     random.shuffle(order)
+    #     self.random_state = random.getstate()
+    #     random.setstate(rs)
+    #
+    #     for i in range((data_len - 1) // batch_size + 1):
+    #         batch = list(zip(*[data[o] for o in order[i*batch_size:(i+1)*batch_size]]))
+    #         embedding_dict.add_items(batch[0])
+    #         batch[0] = IntentDataset.texts2vec(batch[0], embedding_dict, text_size, embedding_size)
+    #         batch[1] = labels2onehot(batch[1], classes=classes)
+    #         yield batch
 
     def extract_classes(self, *args, **kwargs):
         intents = []
