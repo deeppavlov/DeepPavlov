@@ -8,36 +8,15 @@ from abc import abstractmethod
 
 import tensorflow as tf
 
-from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.attributes import check_attr_true, check_path_exists
-
-
-def _graph_wrap(func, graph):
-    def _wrapped(*args, **kwargs):
-        with graph.as_default():
-            return func(*args, **kwargs)
-
-    return _wrapped
-
-
-class TfModelMeta(type, Trainable, Inferable):
-    def __call__(cls, *args, **kwargs):
-        obj = cls.__new__(cls)
-        obj.graph = tf.Graph()
-        for meth in dir(obj):
-            if meth == '__class__':
-                continue
-            attr = getattr(obj, meth)
-            if callable(attr):
-                setattr(obj, meth, _graph_wrap(attr, obj.graph))
-        obj.__init__(*args, **kwargs)
-        return obj
+from .tf_backend import TfModelMeta
 
 
 class TFModel(metaclass=TfModelMeta):
     _saver = tf.train.Saver
-    _model_dir_path = ''
+    _model_dir = ''
+    _model_file = ''
+    sess = None
 
     @abstractmethod
     def _add_placeholders(self):
@@ -103,15 +82,19 @@ class TFModel(metaclass=TfModelMeta):
         return self._forward(instance, *args)
 
     def save(self):
-        self._saver().save(sess=self.sess, save_path=self.model_path.as_posix(), global_step=0)
+        print("Saving model to `{}`".format(self._model_path.as_posix()))
+        self._saver().save(sess=self.sess, save_path=self._model_path.as_posix(), global_step=0)
         print('\n:: Model saved to {} \n'.format(self.model_path.as_posix()))
+
+    def get_checkpoint_state(self):
+        return tf.train.get_checkpoint_state(self._model_path.as_posix())
 
     @check_path_exists()
     def load(self):
         """
         Load session from checkpoint
         """
-        ckpt = tf.train.get_checkpoint_state(self.model_path.parent)
+        ckpt = self.get_checkpoint_state()
         if ckpt and ckpt.model_checkpoint_path:
             print('\n:: restoring checkpoint from', ckpt.model_checkpoint_path, '\n')
             self._saver().restore(self.sess, ckpt.model_checkpoint_path)
