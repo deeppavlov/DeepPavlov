@@ -15,8 +15,8 @@ from intent_recognition.metrics import fmeasure
 import keras.backend as K
 
 def main(config_name='config_infer.json'):
-    
-    K.clear_session()
+
+    # K.clear_session()
 
     with open(config_name) as f:
         config = json.load(f)

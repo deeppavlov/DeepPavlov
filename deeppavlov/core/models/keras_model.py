@@ -31,7 +31,7 @@ from keras.models import Model
 from keras.layers import Dense, Input
 import keras.metrics
 import keras.optimizers
-
+import keras.backend as K
 
 def _graph_wrap(func, graph):
     def _wrapped(*args, **kwargs):
@@ -40,7 +40,11 @@ def _graph_wrap(func, graph):
     return _wrapped
 
 
+
 class TfModelMeta(type, Trainable, Inferable):
+    def __init__(self, *args, **kwargs):
+        K.clear_session()
+
     def __call__(cls, *args, **kwargs):
         obj = cls.__new__(cls)
         obj.graph = tf.Graph()
