@@ -1,2 +1,0 @@
-model_checkpoint_path: "ner_model.ckpt"
-all_model_checkpoint_paths: "ner_model.ckpt"
