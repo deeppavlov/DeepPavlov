@@ -68,8 +68,8 @@ class IntentDatasetReader(DatasetReader):
                     # bot reply
                     continue
                 curr_intents = []
-                if replica['dialog-acts']:
-                    for act in replica['dialog-acts']:
+                if replica['dialog_acts']:
+                    for act in replica['dialog_acts']:
                         for slot in act['slots']:
                             if slot[0] == 'slot':
                                 curr_intents.append(act['act'] + '_' + slot[1])

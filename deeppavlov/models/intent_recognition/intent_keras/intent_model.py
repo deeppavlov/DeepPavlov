@@ -57,7 +57,7 @@ class KerasIntentModel(KerasModel):
 
         self.opt = copy.deepcopy(opt)
         self.classes = classes
-        self.n_classes = self.classes.shape[0]
+        self.n_classes = np.array(self.classes).shape[0]
         self.confident_threshold = self.opt['confident_threshold']
         if 'add_metrics' in self.opt.keys():
             self.add_metrics = self.opt['add_metrics'].split(' ')
@@ -66,6 +66,15 @@ class KerasIntentModel(KerasModel):
             self.add_metrics = None
 
         if self.opt['fasttext_model'] is not None:
+            if os.path.isfile(self.opt['fasttext_model']):
+                self.embedding_dict = EmbeddingsDict(self.opt, self.opt['embedding_size'])
+            else:
+                raise IOError("Error: FastText model file does not exist")
+        else:
+            raise IOError("Error: FastText model file path is not given")
+
+        if self.opt['fasttext_model'] is not None:
+            print("Looking for fasttext model in `{}`".format(self.opt['fasttext_model']))
             if os.path.isfile(self.opt['fasttext_model']):
                 self.embedding_dict = EmbeddingsDict(self.opt, self.opt['embedding_size'])
             else:

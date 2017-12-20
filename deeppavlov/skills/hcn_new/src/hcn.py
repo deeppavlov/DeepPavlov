@@ -23,9 +23,10 @@ from deeppavlov.core.data.utils import load_vocab
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
 
-from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
 from deeppavlov.models.embedders.fasttext_embedder import FasttextUtteranceEmbed
 from deeppavlov.models.encoders.bow import BoW_encoder
+from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
+from deeppavlov.models.intent_recognition.intent_keras.intent_model import KerasIntentModel
 from deeppavlov.models.trackers.default_tracker import DefaultTracker
 from deeppavlov.preprocessors.spacy_tokenizer import SpacyTokenizer
 
@@ -40,6 +41,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
     def __init__(self, vocab_path, template_path, slot_names,
                  template_type:Type=DualTemplate,
                  slot_filler:Type=DstcSlotFillingNetwork,
+                 intent_classifier:Type=KerasIntentModel,
                  bow_encoder:Type=BoW_encoder,
                  embedder:Type=FasttextUtteranceEmbed,
                  tokenizer:Type=SpacyTokenizer,
@@ -54,6 +56,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
 # TODO: infer slot names from dataset
         self.slot_names = slot_names
         self.slot_filler = slot_filler
+        self.intent_classifier = intent_classifier
         self.bow_encoder = bow_encoder
         self.embedder = embedder
         self.tokenizer = tokenizer

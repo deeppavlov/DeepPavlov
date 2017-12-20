@@ -59,8 +59,6 @@ class HybridCodeNetworkModel(TFModel):
         self.obs_size = params['obs_size']
 
     def _build_graph(self):
-        tf.reset_default_graph()
-
         self._add_placeholders()
 
         # build body
