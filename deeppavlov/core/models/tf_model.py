@@ -4,43 +4,27 @@ If you use something different, ex. Pytorch, then write similar to this class, i
 Trainable and Inferable interfaces and make a pull-request to deeppavlov.
 """
 
-from abc import abstractmethod
-from pathlib import Path
-
 import tensorflow as tf
 
+from abc import abstractmethod
+from overrides import overrides
+from pathlib import Path
+
 from deeppavlov.core.common import paths
-from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.models.inferable import Inferable
 
-
-def _graph_wrap(func, graph):
-    def _wrapped(*args, **kwargs):
-        with graph.as_default():
-            return func(*args, **kwargs)
-    return _wrapped
-
-
-class TfModelMeta(type, Trainable, Inferable):
-    def __call__(cls, *args, **kwargs):
-        obj = cls.__new__(cls)
-        obj.graph = tf.Graph()
-        for meth in dir(obj):
-            if meth == '__class__':
-                continue
-            attr = getattr(obj, meth)
-            if callable(attr):
-                setattr(obj, meth, _graph_wrap(attr, obj.graph))
-        obj.__init__(*args, **kwargs)
-        return obj
+from .tf_backend import TfModelMeta
 
 
 class TFModel(metaclass=TfModelMeta):
     _saver = tf.train.Saver
     _model_dir_path = ''
     _model_fpath = ''
-    _model_path = Path(paths.USR_PATH).joinpath(_model_dir_path, _model_fpath)
     sess = None
+
+    @property
+    def _model_path(self):
+        return Path(paths.USR_PATH).joinpath(self._model_dir_path,
+                                             self._model_fpath)
 
     @abstractmethod
     def _add_placeholders(self):
@@ -90,12 +74,14 @@ class TFModel(metaclass=TfModelMeta):
         """
         pass
 
+    @overrides
     def train(self, features, *args):
         """
         Just a wrapper for a private method.
         """
         return self._train_step(features, *args)
 
+    @overrides
     def infer(self, instance, *args):
         """
         Just a wrapper for a private method.
@@ -103,14 +89,18 @@ class TFModel(metaclass=TfModelMeta):
         return self._forward(instance, *args)
 
     def save(self):
+        print("Saving model to `{}`".format(self._model_path.as_posix()))
         self._saver().save(sess=self.sess, save_path=self._model_path.as_posix(), global_step=0)
         print('\n:: Model saved to {} \n'.format(self._model_path.as_posix()))
+
+    def get_checkpoint_state(self):
+        return tf.train.get_checkpoint_state(self._model_path.as_posix())
 
     def load(self):
         """
         Load session from checkpoint
         """
-        ckpt = tf.train.get_checkpoint_state(self._model_path.parent)
+        ckpt = self.get_checkpoint_state()
         if ckpt and ckpt.model_checkpoint_path:
             print('\n:: restoring checkpoint from', ckpt.model_checkpoint_path, '\n')
             self._saver().restore(self.sess, ckpt.model_checkpoint_path)

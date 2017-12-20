@@ -14,27 +14,26 @@
 
 
 import tensorflow as tf
-from keras.backend.tensorflow_backend import set_session
 
 import os
 import json
 import copy
-
-from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.models.inferable import Inferable
+from overrides import overrides
 
 from keras.models import Model
 from keras.layers import Dense, Input
 import keras.metrics
 import keras.optimizers
 
-from deeppavlov.core.models.tf_model import TfModelMeta
+from .tf_backend import TfModelMeta
+
 
 
 class KerasModel(metaclass=TfModelMeta):
     """
     Class builds keras model
     """
+
     def __init__(self, opt, *args, **kwargs):
         """
         Method initializes model using parameters from opt
@@ -45,7 +44,8 @@ class KerasModel(metaclass=TfModelMeta):
         """
         self.opt = copy.deepcopy(opt)
 
-#        self._config_session()
+        self.sess = self._config_session()
+        K.set_session(self.sess)
 
         if self.opt['model_from_saved'] == True:
             self.model = self.load(model_name=self.opt['model_name'],
@@ -63,11 +63,11 @@ class KerasModel(metaclass=TfModelMeta):
                                                       loss_name=self.opt['loss'],
                                                       metrics_names=self.opt['lear_metrics'])
 
-#    def _config_session(self):
-#        config = tf.ConfigProto()
-#        config.gpu_options.allow_growth = True
-#        config.gpu_options.visible_device_list = '0'
-#        return tf.Session(config=config)
+    def _config_session(self):
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        config.gpu_options.visible_device_list = '0'
+        return tf.Session(config=config)
 
     def init_model_from_scratch(self, model_name, optimizer_name,
                                 lr, decay, loss_name, metrics_names=None, add_metrics_file=None, loss_weights=None,
@@ -219,6 +219,7 @@ class KerasModel(metaclass=TfModelMeta):
         """
         return self.model.train_on_batch(batch[0], batch[1])
 
+    @overrides
     def train(self, data, *args):
         """
         Method trains the model on a given data as a single batch
@@ -239,6 +240,7 @@ class KerasModel(metaclass=TfModelMeta):
             print('epochs_done: %d' % epochs_done)
         return
 
+    @overrides
     def infer(self, batch, *args):
         """
         Method predicts on given batch
