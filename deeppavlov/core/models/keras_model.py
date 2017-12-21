@@ -25,11 +25,12 @@ from keras.layers import Dense, Input
 import keras.metrics
 import keras.optimizers
 
+from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.core.models.inferable import Inferable
 from .tf_backend import TfModelMeta
 
 
-
-class KerasModel(metaclass=TfModelMeta):
+class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
     """
     Class builds keras model
     """
@@ -70,8 +71,10 @@ class KerasModel(metaclass=TfModelMeta):
         return tf.Session(config=config)
 
     def init_model_from_scratch(self, model_name, optimizer_name,
-                                lr, decay, loss_name, metrics_names=None, add_metrics_file=None, loss_weights=None,
-                                sample_weight_mode=None, weighted_metrics=None, target_tensors=None):
+                                lr, decay, loss_name, metrics_names=None, add_metrics_file=None,
+                                loss_weights=None,
+                                sample_weight_mode=None, weighted_metrics=None,
+                                target_tensors=None):
         """
         Method initializes model from scratch with given params
         Args:
