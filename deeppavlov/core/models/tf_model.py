@@ -8,11 +8,13 @@ from abc import abstractmethod
 
 import tensorflow as tf
 
+from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.attributes import check_attr_true, check_path_exists
 from .tf_backend import TfModelMeta
 
 
-class TFModel(metaclass=TfModelMeta):
+class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
     _saver = tf.train.Saver
     _model_dir = ''
     _model_file = ''
@@ -33,16 +35,6 @@ class TFModel(metaclass=TfModelMeta):
         3. Run tf.sess.
         3. Reset state if needed.
         :return:
-        """
-        pass
-
-    @abstractmethod
-    def _build_graph(self):
-        """
-        Reset the default graph and add placeholders here
-        Ex.:
-            tf.reset_default_graph()
-            self._add_placeholders()
         """
         pass
 
@@ -82,12 +74,12 @@ class TFModel(metaclass=TfModelMeta):
         return self._forward(instance, *args)
 
     def save(self):
-        print("Saving model to `{}`".format(self._model_path.as_posix()))
-        self._saver().save(sess=self.sess, save_path=self._model_path.as_posix(), global_step=0)
-        print('\n:: Model saved to {} \n'.format(self.model_path.as_posix()))
+        print("Saving model to `{}`".format(self.model_path_.as_posix()))
+        self._saver().save(sess=self.sess, save_path=self.model_path_.as_posix(), global_step=0)
+        print('\n:: Model saved to {} \n'.format(self.model_path_.as_posix()))
 
     def get_checkpoint_state(self):
-        return tf.train.get_checkpoint_state(self._model_path.as_posix())
+        return tf.train.get_checkpoint_state(self.model_path_.as_posix())
 
     @check_path_exists()
     def load(self):
