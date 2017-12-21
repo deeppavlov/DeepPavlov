@@ -1,13 +1,10 @@
-from pathlib import Path
-
 import numpy as np
 from gensim.models import word2vec
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.common.attributes import check_path_exists, check_attr_true,\
-    run_alt_meth_if_no_path
+from deeppavlov.core.common.attributes import check_attr_true, run_alt_meth_if_no_path
 
 
 @register('w2v')
@@ -28,25 +25,24 @@ class UtteranceEmbed(Trainable, Inferable):
             return np.zeros([self.dim], np.float32)
 
     @check_attr_true('train_now')
-    def train(self):
+    def train(self, *args, **kwargs):
         sentences = word2vec.Text8Corpus(self._corpus_path)
 
         print(':: creating new word2vec model')
         model = word2vec.Word2Vec(sentences, size=self.dim)
         self.model = model
 
-        if not self.model_path.parent.exists():
-            Path.mkdir(self.model_path.parent)
-
+        self.make_dir()
         self.save()
+        return model
 
-    def infer(self, utterance):
+    def infer(self, utterance, *args, **kwargs):
         return self._encode(utterance)
 
     @run_alt_meth_if_no_path(train, 'train_now')
     def load(self):
-        return word2vec.Word2Vec.load(str(self.model_path))
+        return word2vec.Word2Vec.load(str(self.model_path_))
 
     def save(self):
-        self.model.save(str(self.model_path))
+        self.model.save(str(self.model_path_))
         print(':: model saved to path')
