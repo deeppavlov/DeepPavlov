@@ -1,11 +1,11 @@
 from collections import Counter, defaultdict
 import numpy as np
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from overrides import overrides
 
 
-@register_model('default_vocab')
+@register('default_vocab')
 class Vocabulary(Inferable):
     def __init__(self, tokens=None, special_tokens=tuple(), dict_file_path=None):
         if dict_file_path is not None:

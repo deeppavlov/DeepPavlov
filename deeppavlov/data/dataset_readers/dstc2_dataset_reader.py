@@ -21,13 +21,13 @@ from overrides import overrides
 import os
 from deeppavlov.data.utils import is_done, mark_done, download_untar
 
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 
 logger = logging.getLogger(__name__)
 
 
-@register_model('dstc2_reader')
+@register('dstc2_reader')
 class DSTC2DatasetReader(DatasetReader):
 
     @staticmethod
