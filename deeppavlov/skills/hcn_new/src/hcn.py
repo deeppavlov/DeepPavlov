@@ -36,22 +36,21 @@ from .metrics import DialogMetrics
 
 @register("hcn_new")
 class HybridCodeNetworkBot(Inferable, Trainable):
-
     def __init__(self, vocab_path, template_path, slot_names,
-                 template_type:Type=DualTemplate,
-                 slot_filler:Type=DstcSlotFillingNetwork,
-                 bow_encoder:Type=BoW_encoder,
-                 embedder:Type=FasttextUtteranceEmbed,
-                 tokenizer:Type=SpacyTokenizer,
-                 tracker:Type=DefaultTracker,
-                 network:Type=HybridCodeNetworkModel,
+                 template_type: Type = DualTemplate,
+                 slot_filler: Type = DstcSlotFillingNetwork,
+                 bow_encoder: Type = BoW_encoder,
+                 embedder: Type = FasttextUtteranceEmbed,
+                 tokenizer: Type = SpacyTokenizer,
+                 tracker: Type = DefaultTracker,
+                 network: Type = HybridCodeNetworkModel,
                  use_action_mask=False,
                  debug=False):
 
         self.episode_done = True
         self.use_action_mask = use_action_mask
         self.debug = debug
-# TODO: infer slot names from dataset
+        # TODO: infer slot names from dataset
         self.slot_names = slot_names
         self.slot_filler = slot_filler
         self.bow_encoder = bow_encoder
@@ -62,7 +61,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
 
         self.vocab = load_vocab(vocab_path)
         self.templates = Templates(template_type).load(template_path)
-        print("[using {} templates from `{}`]"\
+        print("[using {} templates from `{}`]" \
               .format(len(self.templates), template_path))
 
         # intialize parameters
@@ -73,12 +72,12 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         # initialize metrics
         self.metrics = DialogMetrics(self.n_actions)
 
-        #opt = {
+        # opt = {
         #    'action_size': self.n_actions,
         #    'obs_size': 4 + len(self.vocab) + self.embedder.dim +\
         #    2 * self.tracker.state_size + self.n_actions
-        #}
-        #self.network = HybridCodeNetworkModel(opt)
+        # }
+        # self.network = HybridCodeNetworkModel(opt)
 
     def _encode_context(self, context, db_result=None):
         # tokenize input
@@ -127,16 +126,16 @@ class HybridCodeNetworkBot(Inferable, Trainable):
     def _action_mask(self):
         action_mask = np.ones(self.n_actions, dtype=np.float32)
         if self.use_action_mask:
-# TODO: non-ones action mask
+            # TODO: non-ones action mask
             for a_id in range(self.n_actions):
                 tmpl = str(self.templates.templates[a_id])
                 for entity in re.findall('#{}', tmpl):
-                    if entity not in self.tracker.get_state()\
-                       and entity not in (self.db_result or {}):
+                    if entity not in self.tracker.get_state() \
+                            and entity not in (self.db_result or {}):
                         action_mask[a_id] = 0
         return action_mask
 
-    def train(self, data, num_epochs, acc_threshold=0.99):
+    def train(self, data, num_epochs=40, acc_threshold=0.99):
         print('\n:: training started\n')
 
         for j in range(num_epochs):
@@ -178,14 +177,14 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                     print("True = {}: {}".format(action_id, true))
                     print("State =", self.tracker.get_state())
                     print("db_result =", self.db_result)
-#TODO: update dialog metrics
+                    # TODO: update dialog metrics
             print('\n\n:: {}.train {}'.format(j + 1, self.metrics.report()))
 
             metrics = self.evaluate(eval_data)
             print(':: {}.valid {}'.format(j + 1, metrics.report()))
 
             if metrics.action_accuracy > acc_threshold:
-                print('Accuracy is {}, stopped training.'\
+                print('Accuracy is {}, stopped training.' \
                       .format(metrics.action_accuracy))
                 break
         self.save()
@@ -250,3 +249,6 @@ class HybridCodeNetworkBot(Inferable, Trainable):
     def shutdown(self):
         self.network.shutdown()
         self.slot_filler.shutdown()
+
+    def load(self):
+        pass

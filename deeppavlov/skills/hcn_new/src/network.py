@@ -40,7 +40,7 @@ class HybridCodeNetworkModel(TFModel):
 
         if not self.opt.get('train_now') and self.get_checkpoint_state():
 #TODO: save/load params to json, here check compatability
-            print("Loading network from `{}`".format(self._model_path))
+            print("Loading network from `{}`".format(self.model_path))
             self.load()
         else:
             print("Initializing network from scratch")

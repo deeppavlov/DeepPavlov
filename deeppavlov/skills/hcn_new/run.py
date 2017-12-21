@@ -16,13 +16,10 @@ from src.tracker import FeaturizedTracker
 
 from src.hcn import HybridCodeNetworkBot
 
-###### Train and speak to HCN_go_Dummy agent
-#AGENT_CONFIG_PATH = '../agent_configs/hcn_go_dummy.json'
-#train_agent_models(AGENT_CONFIG_PATH)
-#interact_agent(AGENT_CONFIG_PATH)
+
 
 MODEL_CONFIG_PATH = 'config.json'
-#set_usr_dir(MODEL_CONFIG_PATH)
+set_usr_dir(MODEL_CONFIG_PATH)
 
 # Download pretrained ner model
 #config = json.load(open(MODEL_CONFIG_PATH, 'rt'))

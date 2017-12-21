@@ -35,7 +35,7 @@ class ErrorModel(Inferable, Trainable):
         self.costs[('⟭', '⟭')] = log(1)
         for c in self.dictionary.alphabet:
             self.costs[(c, c)] = log(1)
-        if os.path.isfile(self.model_path):
+        if os.path.isfile(self.model_path_):
             self.load()
 
     def _find_candidates_window_0(self, word, k=1, prop_threshold=1e-6):
@@ -174,7 +174,7 @@ class ErrorModel(Inferable, Trainable):
         # if not file_name:
         #     file_name = self.file_name
         # os.makedirs(os.path.dirname(os.path.abspath(file_name)), 0o755, exist_ok=True)
-        with open(self.model_path, 'w', newline='') as tsv_file:
+        with open(self.model_path_, 'w', newline='') as tsv_file:
             writer = csv.writer(tsv_file, delimiter='\t')
             for (w, s), log_p in self.costs.items():
                 writer.writerow([w, s, exp(log_p)])
@@ -183,7 +183,7 @@ class ErrorModel(Inferable, Trainable):
     def load(self):
         # # if not file_name:
         #     file_name = self.file_name
-        with open(self.model_path, 'r', newline='') as tsv_file:
+        with open(self.model_path_, 'r', newline='') as tsv_file:
             reader = csv.reader(tsv_file, delimiter='\t')
             for w, s, p in reader:
                 self.costs[(w, s)] = log(float(p))

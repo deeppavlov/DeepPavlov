@@ -75,7 +75,7 @@ class DualTemplate(Template):
 
     def update(self, default="", dontcare=""):
         self.default = self.default or default
-        self.dontcare = seld.dontcare or dontcare
+        self.dontcare = self.dontcare or dontcare
 
     def __contains__(self, t):
         return t.default and (t.default == self.default)\
@@ -107,7 +107,7 @@ class DualTemplate(Template):
         return t
 
 
-class Templates(object):
+class Templates:
 
     def __init__(self, ttype):
         self.ttype = ttype
