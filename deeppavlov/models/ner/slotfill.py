@@ -13,6 +13,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.data.utils import download_untar, mark_done
 
+
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(Inferable):
     def __init__(self, model_path):
