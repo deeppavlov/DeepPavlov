@@ -42,7 +42,8 @@ class LSTM(TFModel):
     def run_sess(self, input_size, output_size):
         self.input_size = input_size
         self.output_size = output_size
-        self._build_graph()
+        # tf.reset_default_graph()
+        self._add_placeholders()
         # input projection
         Wi = tf.get_variable('Wi', [self.input_size, self._hps.num_hidden_units],
                              initializer=xav())
@@ -89,9 +90,6 @@ class LSTM(TFModel):
 
         self.reset_state()
 
-    def _build_graph(self):
-        tf.reset_default_graph()
-        self._add_placeholders()
 
     def _train_step(self, features, action, action_mask):
         _, loss_value, state_c, state_h = self.sess.run(
