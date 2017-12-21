@@ -3,22 +3,20 @@ Here is an abstract class for neural network models based on Tensorflow.
 If you use something different, ex. Pytorch, then write similar to this class, inherit it from
 Trainable and Inferable interfaces and make a pull-request to deeppavlov.
 """
-
 import tensorflow as tf
-
-from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.models.inferable import Inferable
+from six import with_metaclass
+from abc import ABCMeta
 
 
 def _graph_wrap(func, graph):
     def _wrapped(*args, **kwargs):
         with graph.as_default():
             return func(*args, **kwargs)
+
     return _wrapped
 
 
-class TfModelMeta(type, Trainable, Inferable):
-
+class TfModelMeta(with_metaclass(type, ABCMeta)):
     def __call__(cls, *args, **kwargs):
         from .keras_model import KerasModel
         if issubclass(cls, KerasModel):
