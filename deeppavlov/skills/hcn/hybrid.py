@@ -39,14 +39,8 @@ class HybridCodeNetwork(Inferable, Trainable):
 
         input_size = self.embedder.dim + len(self.vocab) + self.entity_tracker.num_features
         output_size = self.action_tracker.action_size
-
         self.net = net
-
-        self.net.run_sess(input_size, output_size)
-
-        if not self.net.train_now:
-            self.net.load()
-            self.net.reset()
+        self.load(input_size, output_size)
 
     @check_attr_true('train_now')
     def train(self, dataset, num_epochs=5, acc_threshold=0.99):
@@ -83,7 +77,7 @@ class HybridCodeNetwork(Inferable, Trainable):
             if accuracy > acc_threshold:
                 print('Accuracy is {}, training stopped.'.format(accuracy))
                 break
-        self.net.save()
+        self.save()
 
     def evaluate(self, eval_data):
         num_eval_dialogs = len(eval_data)
@@ -141,3 +135,13 @@ class HybridCodeNetwork(Inferable, Trainable):
         self.entity_tracker.reset()
         self.action_tracker.reset(self.entity_tracker)
         self.net.reset_state()
+
+    def load(self, input_size, output_size):
+        self.net.run_sess(input_size, output_size)
+
+        if not self.net.train_now:
+            self.net.load()
+            self.net.reset()
+
+    def save(self):
+        self.net.save()
