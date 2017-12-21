@@ -25,6 +25,7 @@ from .layers import highway_convolutional_network
 from .layers import stacked_convolutions
 from .layers import stacked_rnn
 from tensorflow.contrib.layers import xavier_initializer
+from deeppavlov.core.common.registry import register
 
 
 SEED = 42
@@ -32,9 +33,10 @@ MODEL_PATH = 'model/'
 MODEL_FILE_NAME = 'ner_model'
 
 
+@register("ner_tagging_network")
 class NerNetwork:
     def __init__(self,
-                 word_vocab,
+                 token_vocab,
                  char_vocab,
                  tag_vocab,
                  n_filters=(128, 256),
@@ -54,7 +56,7 @@ class NerNetwork:
                  verbouse=False,
                  embeddings_onethego=False):
         n_tags = len(tag_vocab)
-        n_tokens = len(word_vocab)
+        n_tokens = len(token_vocab)
         n_chars = len(char_vocab)
 
         # Create placeholders
@@ -103,11 +105,11 @@ class NerNetwork:
             units = stacked_rnn(emb, n_filters, cell_type='lstm')
 
         elif 'cnn_highway' in net_type.lower():
-                units = highway_convolutional_network(emb,
-                                                      n_filters=n_filters,
-                                                      filter_width=filter_width,
-                                                      use_batch_norm=use_batch_norm,
-                                                      training_ph=training_ph)
+            units = highway_convolutional_network(emb,
+                                                  n_filters=n_filters,
+                                                  filter_width=filter_width,
+                                                  use_batch_norm=use_batch_norm,
+                                                  training_ph=training_ph)
         else:
             raise KeyError('There is no such type of network: {}'.format(net_type))
         # Classifier
@@ -129,6 +131,7 @@ class NerNetwork:
             predictions = tf.argmax(logits, axis=-1)
 
         loss = tf.reduce_mean(loss_tensor)
+
         # Initialize session
         sess = tf.Session()
         if verbouse:
@@ -136,6 +139,9 @@ class NerNetwork:
         if logging:
             self.train_writer = tf.summary.FileWriter('summary', sess.graph)
 
+        self.token_vocab = token_vocab
+        self.tag_vocab = tag_vocab
+        self.char_vocab = char_vocab
         self._use_crf = use_crf
         self.summary = tf.summary.merge_all()
         self._x_w = x_word
@@ -301,6 +307,41 @@ class NerNetwork:
             return vars_to_train
         else:
             return vars
+
+    def predict_for_token_batch(self, tokens_batch):
+        # Determine dimensions
+        batch_size = len(tokens_batch)
+        max_utt_len = max([len(utt) for utt in tokens_batch])
+        max_token_len = max([len(token) for utt in tokens_batch for token in utt])
+        # Prepare numpy arrays
+        x_token = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_vocab['<PAD>']
+        x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * self.char_vocab['<PAD>']
+        mask = np.zeros([batch_size, max_utt_len], dtype=np.int32)
+        # Prepare x batch
+        for n, utterance in enumerate(tokens_batch):
+            mask[n, :len(utterance)] = 1
+            x_token[n, :len(utterance)] = self.token_vocab.toks2idxs(utterance)
+            for k, token in enumerate(utterance):
+                x_char[n, k, :len(token)] = self.char_vocab.toks2idxs(token)
+
+        feed_dict = self._fill_feed_dict(x_token, x_char, mask)
+        if self._use_crf:
+            y_pred = []
+            logits, trans_params, sequence_lengths = self._sess.run([self._logits,
+                                                                     self._trainsition_params,
+                                                                     self._sequence_lengths
+                                                                     ],
+                                                                    feed_dict=feed_dict)
+
+            # iterate over the sentences because no batching in viterbi_decode
+            for logit, sequence_length in zip(logits, sequence_lengths):
+                logit = logit[:int(sequence_length)]  # keep only the valid steps
+                viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(logit, trans_params)
+                y_pred += [viterbi_seq]
+        else:
+            y_pred = self._sess.run(self._y_pred, feed_dict)
+
+        return self.tag_vocab.batch_idxs2batch_toks(y_pred)
 
     def get_train_op(self, loss, learning_rate, learnable_scopes=None):
         variables = self.get_trainable_variables(learnable_scopes)

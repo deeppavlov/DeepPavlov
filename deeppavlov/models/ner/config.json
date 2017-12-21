@@ -1,10 +1,33 @@
 {
   "model": {
     "name": "dstc_slotfilling",
-    "dict_filepath": "model/dict.txt",
-    "model_filepath": "model/ner_model.ckpt",
-    "params_filepath": "model/params.json",
-    "slot_vals_filepath": "model/slot_vals.json"
+    "model_path": "../../models/ner/model/",
+    "ner_network": {
+      "name": "ner_tagging_network",
+//      "pretrained_model_filepath": "../../models/ner/model/ner_network.ckpt",
+      "filter_width": 7,
+      "embeddings_dropout": true,
+      "n_filters": [
+        64,
+        64
+      ],
+      "token_embeddings_dim": 64,
+      "char_embeddings_dim": 32,
+      "use_batch_norm": true,
+      "use_crf": true,
+      "token_vocab": {
+        "name": "default_vocab",
+        "dict_file_path": "../../models/ner/model/token_vocab.dict"
+      },
+      "tag_vocab": {
+        "name": "default_vocab",
+        "dict_file_path": "../../models/ner/model/tag_vocab.dict"
+      },
+      "char_vocab":{
+        "name": "default_vocab",
+        "dict_file_path": "../../models/ner/model/char_vocab.dict"
+      }
+    }
   },
   "config_path": "config.json"
 }
