@@ -81,7 +81,7 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
     def get_checkpoint_state(self):
         return tf.train.get_checkpoint_state(self.model_path_.parent)
 
-    @check_path_exists()
+    @check_path_exists('dir')
     def load(self):
         """
         Load session from checkpoint
