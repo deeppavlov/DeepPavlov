@@ -79,7 +79,7 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
         print('\n:: Model saved to {} \n'.format(self.model_path_.as_posix()))
 
     def get_checkpoint_state(self):
-        return tf.train.get_checkpoint_state(self.model_path_.as_posix())
+        return tf.train.get_checkpoint_state(self.model_path_.parent)
 
     @check_path_exists()
     def load(self):
