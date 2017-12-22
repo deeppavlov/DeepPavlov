@@ -19,17 +19,17 @@ import tensorflow as tf
 
 from tensorflow.contrib.layers import xavier_initializer
 
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import TFModel
 
 
-@register_model('hcn_rnn')
+@register('custom_rnn')
 class HybridCodeNetworkModel(TFModel):
 
     def __init__(self, **params):
         self.opt = params
-        self._model_dir_path = self.opt.get('model_dir_path', '')
-        self._model_fpath = self.opt.get('model_fpath', 'hcn_rnn')
+        self._model_dir = self.opt.get('model_dir', 'hcn_rnn')
+        self._model_file = self.opt.get('model_file', 'hcn_rnn')
 
         # initialize parameters
         self._init_params()
@@ -37,28 +37,28 @@ class HybridCodeNetworkModel(TFModel):
         self._build_graph()
         # initialize session
         self.sess = tf.Session()
-        # reload graph weights if `pretrained_model` present
-        if self.opt.get('pretrained_model') is not None:
+
+        if not self.opt.get('train_now') and self.get_checkpoint_state():
 #TODO: save/load params to json, here check compatability
-#
-            self.load(self.opt['pretrained_model'])
+            print("Loading network from `{}`".format(self.model_path_.parent))
+            self.load()
         else:
+            print("Initializing network from scratch")
             self.sess.run(tf.global_variables_initializer())
+
         self.reset_state()
 
-    def _run_sess(self):
+    def run_sess(self):
         pass
 
     def _init_params(self, params=None):
         params = params or self.opt
         self.learning_rate = params['learning_rate']
-        self.n_epoch = params['epoch_num']
         self.n_hidden = params['hidden_dim']
         self.n_actions = params['action_size']
         self.obs_size = params['obs_size']
 
     def _build_graph(self):
-        tf.reset_default_graph()
 
         self._add_placeholders()
 
@@ -157,5 +157,5 @@ class HybridCodeNetworkModel(TFModel):
             )
         return probs, prediction
 
-    def __exit__(self, type, value, traceback):
+    def shutdown(self):
         self.sess.close()

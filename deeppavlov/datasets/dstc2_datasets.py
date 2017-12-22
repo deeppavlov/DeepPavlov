@@ -20,14 +20,14 @@ import itertools
 from overrides import overrides
 from typing import Dict, Tuple, List, Generator, Any
 
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset import Dataset
 
 logger = logging.getLogger(__name__)
 
 
-@register_model('dstc2_dialog_dataset')
-class DSTC2Dataset(Dataset):
+@register('dstc2_dialog_dataset')
+class DSTC2DialogDataset(Dataset):
 
     @overrides
     def __init__(self, data:Dict[str, List[Tuple[Any, Any]]], *args, **kwargs)\
@@ -90,10 +90,17 @@ class DSTC2Dataset(Dataset):
         dialog_indices.append(dialog)
         return dialog_indices
 
-    @staticmethod
-    def save_vocab(turns, fpath):
-        with open(fpath, 'wt') as f:
-            words = sorted(set(itertools.chain.from_iterable(
-                turn[0].lower().split() for turn in turns
-            )))
-            f.write(' '.join(words))
+    # @staticmethod
+    # def save_vocab(turns, fpath):
+    #     print("Saving data to `{}`".format(fpath))
+    #     with open(fpath, 'wt') as f:
+    #         words = sorted(set(itertools.chain.from_iterable(
+    #             turn[0].lower().split() for turn in turns
+    #         )))
+    #         f.write(' '.join(words))
+
+    @overrides
+    def iter_all(self, data_type: str = 'train') -> Generator:
+        data = self.data[data_type]
+        for instance in data:
+            yield instance

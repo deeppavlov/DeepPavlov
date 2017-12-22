@@ -16,16 +16,19 @@ limitations under the License.
 
 import json
 import logging
+from itertools import chain
 from pathlib import Path
+
 from overrides import overrides
 
-from deeppavlov.core.common.registry import register_model
-from .dataset_reader import DatasetReader
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.dataset_reader import DatasetReader
+from deeppavlov.core.common import paths
 
 logger = logging.getLogger(__name__)
 
 
-@register_model('dstc2_datasetreader')
+@register('dstc2_datasetreader')
 class DSTC2DatasetReader(DatasetReader):
 
     _train_fname = 'dstc2-trn.jsonlist'
@@ -33,18 +36,19 @@ class DSTC2DatasetReader(DatasetReader):
     _test_fname = 'dstc2-tst.jsonlist'
 
     @overrides
-    def read(self, data_dir_path, dialogs=False):
+    def read(self, data_path, dialogs=False):
         def _path(dir_path, fname):
             return Path(dir_path).joinpath(fname).as_posix()
 
         data = {
-            'train': self._read_from_file(_path(data_dir_path,
-                                                self._train_fname), dialogs),
-            'valid': self._read_from_file(_path(data_dir_path,
-                                                self._valid_fname), dialogs),
-            'test': self._read_from_file(_path(data_dir_path,
-                                               self._test_fname), dialogs)
+            'train': self._read_from_file(_path(data_path, self._train_fname),
+                                          dialogs),
+            'valid': self._read_from_file(_path(data_path, self._valid_fname),
+                                          dialogs),
+            'test': self._read_from_file(_path(data_path, self._test_fname),
+                                         dialogs)
         }
+        self.save_vocab(data, paths.USR_PATH.joinpath('vocab.txt'))
         return data
 
     @classmethod
@@ -119,3 +123,12 @@ class DSTC2DatasetReader(DatasetReader):
         if with_indices:
             return utterances, responses, dialog_indices
         return utterances, responses
+
+    @staticmethod
+    @overrides
+    def save_vocab(data, fpath):
+        with open(fpath, 'w') as f:
+            words = sorted(list(set(chain.from_iterable(
+                [turn[0]['text'].split()\
+                 for dt in ['train', 'test', 'valid'] for turn in data[dt]]))))
+            f.write(' '.join(words))

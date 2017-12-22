@@ -5,6 +5,13 @@ import tarfile
 
 
 def download(dest_file_path, source_url):
+    """Download a file from URL
+
+    Args:
+        dest_file_path: path to the file destination file (including file name)
+        source_url: the source URL
+
+    """
     datapath = os.path.dirname(dest_file_path)
     os.makedirs(datapath, mode=0o755, exist_ok=True)
 
@@ -39,6 +46,13 @@ def untar(file_path, extract_folder=None):
 
 
 def download_untar(url, download_path, extract_path=None):
+    """Download and extract tar.gz file. The archive is deleted after extraction.
+
+    Args:
+        url: URL for file downloading
+        download_path: path to the directory where downloaded file will be stored until the end of extraction
+        extract_path: path where contents of tar file will be extracted
+    """
     file_name = url.split('/')[-1]
     if extract_path is None:
         extract_path = download_path

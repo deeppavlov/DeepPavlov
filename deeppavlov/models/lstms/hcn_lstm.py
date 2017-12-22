@@ -15,19 +15,18 @@ config = tf.ConfigProto(
 )
 
 
-@register('lstm')
+@register('hcn_lstm')
 class LSTM(TFModel):
-    def __init__(self, input_size, output_size, num_hidden_units=128,
+    def __init__(self, num_hidden_units=128,
                  optimizer=tf.train.AdadeltaOptimizer(0.1), saver=Saver,
-                 model_dir_path='ckpt/', model_fpath='hcn.ckpt'):
-        self.input_size = input_size
-        self.output_size = output_size
+                 model_dir='ckpt/', model_file='hcn.ckpt'):
         self._optimizer = optimizer
         self._saver = saver
         self._hps = HParams(num_hidden_units=num_hidden_units)
-        self._model_path = Path(paths.USR_PATH).joinpath(model_dir_path, model_fpath)
 
-        self._run_sess()
+        self._model_file = model_file
+        self._model_dir = model_dir
+        # self.sess = self.load()
 
     def _add_placeholders(self):
         self._features = tf.placeholder(tf.float32, [1, self.input_size], name='input_features')
@@ -40,8 +39,11 @@ class LSTM(TFModel):
         self._init_state_c = state_c
         self._init_state_h = state_h
 
-    def _run_sess(self):
-        self._build_graph()
+    def run_sess(self, input_size, output_size):
+        self.input_size = input_size
+        self.output_size = output_size
+        # tf.reset_default_graph()
+        self._add_placeholders()
         # input projection
         Wi = tf.get_variable('Wi', [self.input_size, self._hps.num_hidden_units],
                              initializer=xav())
@@ -88,9 +90,6 @@ class LSTM(TFModel):
 
         self.reset_state()
 
-    def _build_graph(self):
-        tf.reset_default_graph()
-        self._add_placeholders()
 
     def _train_step(self, features, action, action_mask):
         _, loss_value, state_c, state_h = self.sess.run(

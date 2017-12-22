@@ -15,15 +15,13 @@ limitations under the License.
 """
 
 import spacy
-import copy
 import re
 
 from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.common.registry import register_model
+from deeppavlov.core.common.registry import register
 
 
-#TODO: move to modules dir
-@register_model('spacy_tokenizer')
+@register('spacy_tokenizer')
 class SpacyTokenizer(Inferable):
 
     NLP = spacy.load('en')
