@@ -36,6 +36,6 @@
     }
   },
   "config_path": "config.json",
-  "num_epochs": 2
+  "num_epochs": 10
 }
 

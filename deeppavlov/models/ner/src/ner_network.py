@@ -26,6 +26,7 @@ from .layers import stacked_convolutions
 from .layers import stacked_rnn
 from tensorflow.contrib.layers import xavier_initializer
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.tf_model import SimpleTFModel
 
 
 SEED = 42
@@ -34,7 +35,7 @@ MODEL_FILE_NAME = 'ner_model'
 
 
 @register("ner_tagging_network")
-class NerNetwork:
+class NerNetwork(SimpleTFModel):
     def __init__(self,
                  token_vocab,
                  char_vocab,
@@ -181,8 +182,48 @@ class NerNetwork:
         saver = tf.train.Saver()
         saver.restore(self._sess, model_file_path)
 
-    def train(self, data):
+    def tokens_batch_to_numpy_batch(self, batch_x, batch_y=None):
+        # Determine dimensions
+        batch_size = len(batch_x)
+        max_utt_len = max([len(utt) for utt in batch_x])
+        max_token_len = max([len(token) for utt in batch_x for token in utt])
 
+        x_token = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_vocab['<PAD>']
+        x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * self.char_vocab['<PAD>']
+        mask = np.zeros_like(x_token)
+        if batch_y is not None:
+            y = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.tag_vocab['<PAD>']
+        else:
+            y = None
+
+        # Prepare x batch
+        for n, utterance in enumerate(batch_x):
+            mask[n, :len(utterance)] = 1
+            x_token[n, :len(utterance)] = self.token_vocab.toks2idxs(utterance)
+            for k, token in enumerate(utterance):
+                x_char[n, k, :len(token)] = self.char_vocab.toks2idxs(token)
+
+        # Prepare y batch
+        if batch_y is not None:
+            for n, tags in enumerate(batch_y):
+                y[n, :len(tags)] = self.tag_vocab.toks2idxs(tags)
+
+        return (x_token, x_char, mask), y
+
+    def train(self, data, batch_size=8):
+        total_loss = 0
+        total_count = 0
+        for batch_x, batch_y in data.batch_generator(batch_size):
+            (x_toks, x_char, mask), y_tags = self.tokens_batch_to_numpy_batch(batch_x, batch_y)
+            current_loss = self.train_on_bath(x_toks,
+                                              x_char,
+                                              mask,
+                                              y_tags,
+                                              learning_rate=1e-3,
+                                              dropout_rate=0.5)
+            total_loss += current_loss
+            total_count += len(batch_x)
+        print('Loss: {}'.format(total_loss / total_count))
 
     def train_on_bath(self, x_word, x_char, mask, y_tag, learning_rate=1e-3, dropout_rate=0.5):
         feed_dict = self._fill_feed_dict(x_word,
