@@ -15,19 +15,22 @@ limitations under the License.
 """
 
 import re
+
 import numpy as np
 from typing import Type
+from pathlib import Path
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import load_vocab
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
-
 from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
-from deeppavlov.models.embedders.fasttext_embedder import FasttextUtteranceEmbed
+# from deeppavlov.models.embedders.fasttext_embedder import FasttextUtteranceEmbed
+from deeppavlov.models.embedders.w2v_embedder import UtteranceEmbed
 from deeppavlov.models.encoders.bow import BoW_encoder
 from deeppavlov.models.trackers.default_tracker import DefaultTracker
 from deeppavlov.preprocessors.spacy_tokenizer import SpacyTokenizer
+from deeppavlov.core.common import paths
 
 from .network import HybridCodeNetworkModel
 from .templates import Templates, DualTemplate
@@ -36,14 +39,15 @@ from .metrics import DialogMetrics
 
 @register("hcn_new")
 class HybridCodeNetworkBot(Inferable, Trainable):
-    def __init__(self, vocab_path, template_path, slot_names,
+    def __init__(self, template_path, slot_names,
                  template_type: Type = DualTemplate,
                  slot_filler: Type = DstcSlotFillingNetwork,
                  bow_encoder: Type = BoW_encoder,
-                 embedder: Type = FasttextUtteranceEmbed,
+                 embedder: Type = UtteranceEmbed,
                  tokenizer: Type = SpacyTokenizer,
                  tracker: Type = DefaultTracker,
                  network: Type = HybridCodeNetworkModel,
+                 vocab_path=None,
                  use_action_mask=False,
                  debug=False):
 
@@ -59,7 +63,11 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         self.tracker = tracker
         self.network = network
 
+        if vocab_path is None:
+            vocab_path = Path(paths.USR_PATH).joinpath('vocab.txt')
+
         self.vocab = load_vocab(vocab_path)
+
         self.templates = Templates(template_type).load(template_path)
         print("[using {} templates from `{}`]" \
               .format(len(self.templates), template_path))
