@@ -37,6 +37,9 @@ class TfModelMeta(type, Trainable, Inferable):
         return obj
 
 
+class SimpleTFModel(metaclass=TfModelMeta):
+    pass
+
 
 class TFModel(metaclass=TfModelMeta):
     _saver = tf.train.Saver
