@@ -13,7 +13,8 @@
 # limitations under the License.
 
 
-import os, json
+import os
+import json
 import pandas as pd
 
 from deeppavlov.core.common.registry import register
@@ -26,11 +27,15 @@ class IntentDatasetReader(DatasetReader):
     IntentDatasetReader reads data from some location and constructs a dict of given datasets.
     """
     @staticmethod
-    def read(train_data_path=None, valid_data_path=None, test_data_path=None, *args, **kwargs):
+    def read(data_path=None, *args, **kwargs):
         """
         Read a file from a path and returns data as dict with given datasets.
         """
         data_dict = dict()
+        train_data_path = os.path.join(data_path, "dstc2-trn.jsonlist")
+        valid_data_path = os.path.join(data_path, "dstc2-val.jsonlist")
+        test_data_path = os.path.join(data_path, "dstc2-tst.jsonlist")
+
 
         if train_data_path is not None:
             print('___Reading train data from %s' % train_data_path)

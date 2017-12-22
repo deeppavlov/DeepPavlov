@@ -17,7 +17,6 @@ limitations under the License.
 import os
 import copy
 import urllib.request
-import pyfasttext
 import fasttext
 import numpy as np
 
@@ -149,7 +148,7 @@ class FasttextUtteranceEmbed(Inferable):
                 raise RuntimeError('Looks like the `EMBEDDINGS_URL` variable'
                                    ' is set incorrectly', e)
         print("Found fasttext model", self._model_path)
-        self.model = pyfasttext.FastText(self._model_path.as_posix())
+        self.model = fasttext.FastText(self._model_path.as_posix())
         self.dim = dim or self.model.args['dim']
         if self.dim > self.model.args['dim']:
             raise RuntimeError("Embeddings are too short")

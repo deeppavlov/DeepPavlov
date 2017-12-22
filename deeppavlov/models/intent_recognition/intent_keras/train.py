@@ -11,64 +11,17 @@ import sys
 import json
 import numpy as np
 from sklearn.metrics import log_loss, accuracy_score
-from intent_recognition.metrics import fmeasure
+from metrics import fmeasure
+from deeppavlov.core.commands.train import train_model_from_config
 
-
-def main(config_name='config.json'):
+def main(config_name='intent_config.json'):
 
 
     with open(config_name) as f:
         config = json.load(f)
 
-    # Reading datasets from files
-    reader_config = config['dataset_reader']
-    reader = _REGISTRY[reader_config['name']]
-    data = reader.read(train_data_path=reader_config.get('train_data_path'),
-                       valid_data_path=reader_config.get('valid_data_path'),
-                       test_data_path=reader_config.get('test_data_path'))
+    train_model_from_config(config_path=config_name)
 
-    # Building dict of datasets
-    dataset_config = config['dataset']
-    dataset = from_params(_REGISTRY[dataset_config['name']],
-                          dataset_config, data=data)
-
-    # Merging train and valid dataset for further split on train/valid
-    dataset.merge_data(fields_to_merge=['train', 'valid'], new_field='train')
-    dataset.split_data(field_to_split='train', new_fields=['train', 'valid'], proportions=[0.9, 0.1])
-
-    preproc_config = config['preprocessing']
-    preproc = from_params(_REGISTRY[preproc_config['name']],
-                                    preproc_config)
-    dataset = preproc.preprocess(dataset=dataset, data_type='train')
-    dataset = preproc.preprocess(dataset=dataset, data_type='valid')
-    dataset = preproc.preprocess(dataset=dataset, data_type='test')
-
-    # Extracting unique classes
-    intents = dataset.extract_classes()
-    print("Considered intents:", intents)
-
-    # Initializing model
-    model_config = config['model']
-    model_config['classes'] = intents
-    model = from_params(_REGISTRY[model_config['name']],
-                        model_config)
-
-    print("Considered:", model.metrics_names)
-
-    if 'valid' in data.keys():
-        print('___Validation set is given___')
-    elif 'val_split' in model.opt.keys():
-        print('___Validation split is given___')
-    else:
-        print('___Validation set and validation split are not given.____\n____Validation split = 0.1____')
-        model.opt['val_split'] = 0.1
-        dataset.split_data(field_to_split='train', new_fields=['train', 'valid'],
-                           proportions=[1. - model.opt['val_split'],
-                                        model.opt['val_split']])
-
-    model.train(dataset)
-
-    model.save(fname=model.opt['model_file'])
 
     test_batch_gen = dataset.batch_generator(batch_size=model.opt['batch_size'],
                                              data_type='test')

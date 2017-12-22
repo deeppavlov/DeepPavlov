@@ -25,57 +25,41 @@ from deeppavlov.models.intent_recognition.intent_keras.utils import labels2oneho
 
 @register('intent_dataset')
 class IntentDataset(Dataset):
-    #
-    # @staticmethod
-    # def texts2vec(sentences, embedding_dict, text_size, embedding_size):
-    #     embeddings_batch = []
-    #     for sen in sentences:
-    #         embeddings = []
-    #         tokens = sen.split(' ')
-    #         tokens = [el for el in tokens if el != '']
-    #         if len(tokens) > text_size:
-    #             tokens = tokens[:text_size]
-    #         for tok in tokens:
-    #             embeddings.append(embedding_dict.tok2emb.get(tok))
-    #         if len(tokens) < text_size:
-    #             pads = [np.zeros(embedding_size)
-    #                     for _ in range(text_size - len(tokens))]
-    #             embeddings = pads + embeddings
-    #         embeddings = np.asarray(embeddings)
-    #         embeddings_batch.append(embeddings)
-    #     embeddings_batch = np.asarray(embeddings_batch)
-    #     return embeddings_batch
 
-    # def embedded_batch_generator(self, embedding_dict, text_size: int, embedding_size: int, classes,
-    #                              batch_size: int, data_type: str = 'train') -> Generator:
-    #     r"""This function returns a generator, which serves for generation of raw (no preprocessing such as tokenization)
-    #      batches
-    #
-    #     Args:
-    #         batch_size (int): number of samples in batch
-    #         data_type (str): can be either 'train', 'test', or 'valid'
-    #
-    #     Returns:
-    #         batch_gen (Generator): a generator, that iterates through the part (defined by data_type) of the dataset
-    #     """
-    #     data = self.data[data_type]
-    #     data_len = len(data)
-    #     order = list(range(data_len))
-    #
-    #     rs = random.getstate()
-    #     random.setstate(self.random_state)
-    #     random.shuffle(order)
-    #     self.random_state = random.getstate()
-    #     random.setstate(rs)
-    #
-    #     for i in range((data_len - 1) // batch_size + 1):
-    #         batch = list(zip(*[data[o] for o in order[i*batch_size:(i+1)*batch_size]]))
-    #         embedding_dict.add_items(batch[0])
-    #         batch[0] = IntentDataset.texts2vec(batch[0], embedding_dict, text_size, embedding_size)
-    #         batch[1] = labels2onehot(batch[1], classes=classes)
-    #         yield batch
+    def __init__(self, data, seed=None, extract_classes=True, classes_file=None,
+                 fields_to_merge=None, merged_field=None,
+                 field_to_split=None, splitted_fields=None, splitting_proportions=None,
+                 *args, **kwargs):
 
-    def extract_classes(self, *args, **kwargs):
+        super().__init__(data, seed)
+        self.classes = None
+
+        if extract_classes == True:
+            self.classes = self._extract_classes()
+            if classes_file is None:
+                classes_file = "./classes.txt"
+                print("No file name for classes provided. Classes are saved to file %s" % classes_file)
+            f = open(classes_file, 'w')
+            for i in range(len(self.classes)):
+                f.write(self.classes[i] + '\n')
+            f.close()
+        if fields_to_merge is not None:
+            if merged_field is not None:
+                print("Merging fields <<", fields_to_merge, ">> to new field <<", merged_field, ">>")
+                self._merge_data(fields_to_merge=fields_to_merge.split(' '), merged_field=merged_field)
+            else:
+                raise IOError("Given fields to merge BUT not given name of merged field")
+
+        if field_to_split is not None:
+            if splitted_fields is not None:
+                print("Splitting field <<", field_to_split, ">> to new fields <<", splitted_fields, ">>")
+                self._split_data(field_to_split=field_to_split,
+                                 splitted_fields=splitted_fields.split(" "),
+                                 splitting_proportions=[float(s) for s in splitting_proportions.split(" ")])
+            else:
+                raise IOError("Given field to split BUT not given names of splitted fields")
+
+    def _extract_classes(self, *args, **kwargs):
         intents = []
         all_data = self.iter_all(data_type='train')
         for sample in all_data:
@@ -87,20 +71,20 @@ class IntentDataset(Dataset):
         intents = np.unique(intents)
         return np.array(sorted(intents))
 
-    def split_data(self, field_to_split, new_fields, proportions):
+    def _split_data(self, field_to_split, splitted_fields, splitting_proportions):
         data_to_div = self.data[field_to_split].copy()
         data_size = len(self.data[field_to_split])
-        for i in range(len(new_fields) - 1):
-            self.data[new_fields[i]], data_to_div = train_test_split(data_to_div,
+        for i in range(len(splitted_fields) - 1):
+            self.data[splitted_fields[i]], data_to_div = train_test_split(data_to_div,
                                                                      test_size=len(data_to_div) -
-                                                                               int(data_size * proportions[i]))
-        self.data[new_fields[-1]] = data_to_div
+                                                                               int(data_size * splitting_proportions[i]))
+        self.data[splitted_fields[-1]] = data_to_div
         return True
 
-    def merge_data(self, fields_to_merge, new_field):
+    def _merge_data(self, fields_to_merge, merged_field):
         data = self.data.copy()
-        data[new_field] = []
+        data[merged_field] = []
         for name in fields_to_merge:
-            data[new_field] += self.data[name]
+            data[merged_field] += self.data[name]
         self.data = data
         return True

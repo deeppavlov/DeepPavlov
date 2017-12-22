@@ -54,6 +54,10 @@ def main(config_name='config_infer.json'):
     model = from_params(_REGISTRY[model_config['name']],
                         model_config)
 
+
+    print(model.infer(['hi', 'hello', 'good_morning']))
+    exit()
+
     print("Considered loss and metrics:", model.metrics_names)
 
     test_batch_gen = dataset.batch_generator(batch_size=model.opt['batch_size'],
