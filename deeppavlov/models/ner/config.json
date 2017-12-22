@@ -1,10 +1,16 @@
 {
+  "dataset_reader": {
+    "name": "dstc2_datasetreader",
+    "data_path": "/home/mikhail/Projects/Pilot/data/dstc2"
+  },
+  "dataset": {
+    "name": "dstc2_ner_dataset"
+  },
   "model": {
     "name": "dstc_slotfilling",
     "model_path": "../../models/ner/model/",
     "ner_network": {
       "name": "ner_tagging_network",
-//      "pretrained_model_filepath": "../../models/ner/model/ner_network.ckpt",
       "filter_width": 7,
       "embeddings_dropout": true,
       "n_filters": [
@@ -29,6 +35,7 @@
       }
     }
   },
-  "config_path": "config.json"
+  "config_path": "config.json",
+  "num_epochs": 2
 }
 

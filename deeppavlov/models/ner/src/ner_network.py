@@ -181,7 +181,10 @@ class NerNetwork:
         saver = tf.train.Saver()
         saver.restore(self._sess, model_file_path)
 
-    def train(self, x_word, x_char, mask, y_tag, learning_rate=1e-3, dropout_rate=0.5):
+    def train(self, data):
+
+
+    def train_on_bath(self, x_word, x_char, mask, y_tag, learning_rate=1e-3, dropout_rate=0.5):
         feed_dict = self._fill_feed_dict(x_word,
                                          x_char,
                                          mask,

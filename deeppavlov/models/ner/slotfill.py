@@ -11,11 +11,12 @@ from .utils.nlputils import tokenize
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.data.utils import download_untar, mark_done
 
 
 @register('dstc_slotfilling')
-class DstcSlotFillingNetwork(Inferable):
+class DstcSlotFillingNetwork(Inferable, Trainable):
     def __init__(self,
                  ner_network: NerNetwork,
                  model_path,
@@ -38,6 +39,11 @@ class DstcSlotFillingNetwork(Inferable):
             self._ner_network = ner_network
         with open(slot_vals_filepath) as f:
             self._slot_vals = json.load(f)
+
+    @overrides
+    def train(self, data, num_epochs):
+        for epoch in range(num_epochs):
+            self._ner_network.train(data)
 
     @overrides
     def infer(self, instance, *args, **kwargs):
