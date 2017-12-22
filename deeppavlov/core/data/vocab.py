@@ -91,6 +91,6 @@ class Vocabulary(Inferable):
         with open(dict_file_path) as f:
             for line in f:
                 if len(line) > 0:
-                    tokens.append(line)
+                    tokens.append(line.strip())
         return tokens
 
