@@ -15,26 +15,25 @@ limitations under the License.
 """
 
 import re
+from pathlib import Path
 
 import numpy as np
 from typing import Type
-from pathlib import Path
 
+from deeppavlov.core.common import paths
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import load_vocab
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
 # from deeppavlov.models.embedders.fasttext_embedder import FasttextUtteranceEmbed
 from deeppavlov.models.embedders.w2v_embedder import UtteranceEmbed
 from deeppavlov.models.encoders.bow import BoW_encoder
+from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
 from deeppavlov.models.trackers.default_tracker import DefaultTracker
 from deeppavlov.preprocessors.spacy_tokenizer import SpacyTokenizer
-from deeppavlov.core.common import paths
-
-from .network import HybridCodeNetworkModel
-from .templates import Templates, DualTemplate
-from .metrics import DialogMetrics
+from deeppavlov.skills.hcn_new.metrics import DialogMetrics
+from deeppavlov.skills.hcn_new.network import HybridCodeNetworkModel
+from deeppavlov.skills.hcn_new.templates import Templates, DualTemplate
 
 
 @register("hcn_new")
