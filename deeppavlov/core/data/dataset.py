@@ -18,6 +18,7 @@ class Dataset:
 
         rs = random.getstate()
         random.seed(seed)
+        # TODO: consider removing from the init (can forget to override)
         self.random_state = random.getstate()
         random.setstate(rs)
 

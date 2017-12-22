@@ -21,7 +21,7 @@ def get_data(datareader_config, dataset_config, vocab_path):
     dataset_config['data'] = raw_data
     data = from_params(_REGISTRY[dataset_name], dataset_config)
 
-    data.save_vocab(data.iter_all('train'), vocab_path)
+    # data.save_vocab(data.iter_all('train'), vocab_path)
     return data
 
 
