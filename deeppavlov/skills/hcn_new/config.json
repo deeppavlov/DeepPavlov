@@ -7,18 +7,20 @@
     "name": "dstc2_dialog_dataset"
   },
   "model": {
+    "train_now": true,
     "name": "hcn_new",
     "debug": false,
     "slot_names": ["pricerange", "this", "area", "slot", "food", "name"],
     "template_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2/dstc2-templates.txt",
     "network": {
+      "train_now": true,
       "name": "custom_rnn",
       "learning_rate": 0.02,
       "hidden_dim": 128,
       "model_fpath": "hcn_rnn",
       "use_action_mask": false,
       "action_size": 45,
-      "obs_size": 802
+      "obs_size": 994
     },
     "slot_filler": {
         "name": "dstc_slotfilling",
@@ -29,7 +31,7 @@
     },
     "embedder": {
       "name": "w2v",
-      "model_path": "/home/olga/Documents/text8"
+      "corpus_path": "/home/olga/Documents/text8"
     },
     "tokenizer": {
         "name": "spacy_tokenizer"
