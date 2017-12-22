@@ -12,11 +12,10 @@ import json
 import numpy as np
 from sklearn.metrics import log_loss, accuracy_score
 from intent_recognition.metrics import fmeasure
-import keras.backend as K
+
 
 def main(config_name='config.json'):
 
-    # K.clear_session()
 
     with open(config_name) as f:
         config = json.load(f)

@@ -42,10 +42,9 @@ def _graph_wrap(func, graph):
 
 
 class TfModelMeta(type, Trainable, Inferable):
-    def __init__(self, *args, **kwargs):
-        K.clear_session()
 
     def __call__(cls, *args, **kwargs):
+        K.clear_session()
         obj = cls.__new__(cls)
         obj.graph = tf.Graph()
         for meth in dir(obj):
