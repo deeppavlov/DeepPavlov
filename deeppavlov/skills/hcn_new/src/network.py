@@ -48,7 +48,7 @@ class HybridCodeNetworkModel(TFModel):
 
         self.reset_state()
 
-    def _run_sess(self):
+    def run_sess(self):
         pass
 
     def _init_params(self, params=None):
@@ -59,7 +59,6 @@ class HybridCodeNetworkModel(TFModel):
         self.obs_size = params['obs_size']
 
     def _build_graph(self):
-        tf.reset_default_graph()
 
         self._add_placeholders()
 
