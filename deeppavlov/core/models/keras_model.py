@@ -30,13 +30,12 @@ from deeppavlov.core.common.attributes import check_attr_true
 from .tf_backend import TfModelMeta
 
 
-
 class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
     """
     Class builds keras model
     """
 
-    def __init__(self, opt, model_path='build/keras_model', *args, **kwargs):
+    def __init__(self, opt, *args, **kwargs):
         """
         Method initializes model using parameters from opt
         Args:
@@ -45,16 +44,12 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
             **kwargs:
         """
         self.opt = copy.deepcopy(opt)
-        self._model_path = model_path
-        self._model_file = Path(self._model_path).name
-        self._model_dir = Path(self._model_path).absolute().parent
-
         self.sess = self._config_session()
         K.set_session(self.sess)
 
-        if self.opt['model_from_saved'] == True:
+        if self.opt['model_from_saved']:
             self.model = self.load(model_name=self.opt['model_name'],
-                                   fname=self._model_path,
+                                   fname=self.model_path_,
                                    optimizer_name=self.opt['optimizer'],
                                    lr=self.opt['lear_rate'],
                                    decay=self.opt['lear_rate_decay'],
@@ -83,6 +78,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         Method initializes model from scratch with given params
         Args:
             model_name: name of model function described as a method of this class
+            optimizer_name: name of optimizer from keras.optimizers
             lr: learning rate
             decay: learning rate decay
             loss_name: loss function name (from keras.losses)
@@ -144,17 +140,18 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         """
         Method initiliazes model from saved params and weights
         Args:
-            model_name:
-            fname:
-            optimizer_name:
-            lr:
-            decay:
-            loss:
-            metrics:
-            loss_weights:
-            sample_weight_mode:
-            weighted_metrics:
-            target_tensors:
+            model_name: name of model function described as a method of this class
+            fname: path and first part of name of model
+            optimizer_name: name of optimizer from keras.optimizers
+            lr: learning rate
+            decay: learning rate decay
+            loss_name: loss function name (from keras.losses)
+            metrics_names: names of metrics (from keras.metrics) as one string
+            add_metrics_file: file with additional metrics functions
+            loss_weights: optional parameter as in keras.model.compile
+            sample_weight_mode: optional parameter as in keras.model.compile
+            weighted_metrics: optional parameter as in keras.model.compile
+            target_tensors: optional parameter as in keras.model.compile
 
         Returns:
             model with loaded weights and network parameters from files
@@ -164,7 +161,9 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
               '\nModel weights file is %s.h5'
               '\nNetwork parameters are from %s_opt.json' % (fname, fname))
 
-        fname = self.opt.get('model_file', None) if fname is None else fname
+        fname = self.model_path_ if fname is None else fname
+        if type(fname) is not str:
+            fname = fname.as_posix()
 
         if Path(fname + '_opt.json').is_file():
             with open(fname + '_opt.json', 'r') as opt_file:
@@ -246,7 +245,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
             epochs_done += 1
             print('epochs_done: %d' % epochs_done)
 
-        self.save(fname=self._model_path)
+        self.save(fname=self.model_path_)
         return
 
     @overrides
@@ -275,14 +274,17 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         Returns:
             nothing
         """
-        fname = self._model_path if fname is None else fname
+        fname = self.model_path_ if fname is None else fname
+        if type(fname) is not str:
+            fname = fname.as_posix()
+
         if fname:
             print("Saving model weights and params: " + fname + " ")
             self.model.save_weights(fname + '.h5')
             with open(Path(fname + '_opt.json', 'w')) as opt_file:
                 json.dump(self.opt, opt_file)
 
-    def MLP(self, opt):
+    def mlp(self, opt):
         """
         Example of model function
         Build the un-compiled multilayer perceptron model

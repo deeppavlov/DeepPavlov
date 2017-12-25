@@ -16,7 +16,6 @@
 import json
 import pandas as pd
 from pathlib import Path
-
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 
@@ -36,20 +35,17 @@ class IntentDatasetReader(DatasetReader):
         valid_data_path = Path(data_path).joinpath("dstc2-val.jsonlist")
         test_data_path = Path(data_path).joinpath("dstc2-tst.jsonlist")
 
-
         if Path(train_data_path).is_file():
             print('___Reading train data from %s' % train_data_path)
             data_dict['train'] = IntentDatasetReader.read_from_json(train_data_path)
         else:
             raise IOError("Error: Train file does not exist")
 
-
         if Path(valid_data_path).is_file():
             print('___Reading valid data from %s' % train_data_path)
             data_dict['valid'] = IntentDatasetReader.read_from_json(valid_data_path)
         else:
             raise IOError("Error: Valid file does not exist")
-
 
         if Path(test_data_path).is_file():
             print('___Reading test data from %s' % train_data_path)
