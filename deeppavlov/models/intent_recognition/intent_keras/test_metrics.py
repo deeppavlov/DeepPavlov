@@ -11,7 +11,7 @@ import sys
 import json
 import numpy as np
 from sklearn.metrics import log_loss, accuracy_score
-from intent_recognition.metrics import fmeasure
+from deeppavlov.models.intent_recognition.intent_keras.metrics import fmeasure
 import keras.backend as K
 
 def main(config_name='intent_config_infer.json'):
@@ -24,9 +24,7 @@ def main(config_name='intent_config_infer.json'):
     # Reading datasets from files
     reader_config = config['dataset_reader']
     reader = _REGISTRY[reader_config['name']]
-    data = reader.read(train_data_path=reader_config.get('train_data_path'),
-                       valid_data_path=reader_config.get('valid_data_path'),
-                       test_data_path=reader_config.get('test_data_path'))
+    data = reader.read(reader_config['data_path'])
 
     # Building dict of datasets
     dataset_config = config['dataset']
@@ -45,18 +43,12 @@ def main(config_name='intent_config_infer.json'):
     dataset = preproc.preprocess(dataset=dataset, data_type='test')
 
     # Extracting unique classes
-    intents = dataset.extract_classes()
-    print("Considered intents:", intents)
+
 
     # Initializing model
     model_config = config['model']
-    model_config['classes'] = intents
     model = from_params(_REGISTRY[model_config['name']],
                         model_config)
-
-
-    print(model.infer(['hi', 'hello', 'good_morning']))
-    exit()
 
     print("Considered loss and metrics:", model.metrics_names)
 

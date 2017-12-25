@@ -203,14 +203,19 @@ class KerasIntentModel(KerasModel):
         self.save(fname=self.opt['model_file'])
         return
 
-    def infer(self, sentence, *args):
+    def infer(self, data, *args):
         """
-        Return predictions on the given batch of texts
+        Return predictions on the given data (batch of texts or one text)
         """
-        self.embedding_dict.add_items([sentence])
-        features = self.texts2vec([sentence])
-        preds = self.model.predict_on_batch(features)
-        return preds[0]
+        if type(data) is str:
+            self.embedding_dict.add_items([data])
+            features = self.texts2vec([data])
+            preds = self.model.predict_on_batch(features)[0]
+        else:
+            self.embedding_dict.add_items(data)
+            features = self.texts2vec(data)
+            preds = self.model.predict_on_batch(features)
+        return preds
 
     def save(self, fname):
         # TODO: model_file is in opt??

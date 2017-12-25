@@ -246,16 +246,20 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         return
 
     @overrides
-    def infer(self, sentence, *args):
+    def infer(self, data, *args):
         """
         Method predicts on given batch
         Args:
-            sentence: one sample
+            data: one sample or batch of texts
         Returns:
             predictions on a given sample
         """
-        with self.sess.as_default():
-            return self.model.predict_on_batch([sentence])
+        if type(data) is str:
+            with self.sess.as_default():
+                return self.model.predict_on_batch([data])
+        else:
+            with self.sess.as_default():
+                return self.model.predict_on_batch(data)
 
     def save(self, fname=None):
         """
