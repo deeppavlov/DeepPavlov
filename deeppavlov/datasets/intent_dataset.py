@@ -16,12 +16,14 @@ import random
 from typing import List, Dict, Generator, Tuple, Any
 import numpy as np
 from sklearn.model_selection import train_test_split
+from pathlib import Path
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset import Dataset
 from deeppavlov.models.embedders.fasttext_embedder import EmbeddingsDict
 from deeppavlov.models.intent_recognition.intent_keras.intent_model import KerasIntentModel
 from deeppavlov.models.intent_recognition.intent_keras.utils import labels2onehot, proba2labels, proba2onehot
+
 
 @register('intent_dataset')
 class IntentDataset(Dataset):
@@ -39,7 +41,7 @@ class IntentDataset(Dataset):
             if classes_file is None:
                 classes_file = "./classes.txt"
                 print("No file name for classes provided. Classes are saved to file %s" % classes_file)
-            f = open(classes_file, 'w')
+            f = open(Path(classes_file), 'w')
             for i in range(len(self.classes)):
                 f.write(self.classes[i] + '\n')
             f.close()

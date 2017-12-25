@@ -19,6 +19,7 @@ import numpy as np
 import urllib.request
 from gensim.models.fasttext import FastText
 import numpy as np
+from pathlib import Path
 
 class EmbeddingInferableModel(object):
 
@@ -32,11 +33,11 @@ class EmbeddingInferableModel(object):
             raise RuntimeError('No pretrained fasttext model provided')
         self.fasttext_model_file = fname
 
-        if not os.path.isfile(self.fasttext_model_file):
+        if not Path(self.fasttext_model_file).is_file():
             emb_path = embedding_url
             if not emb_path:
                 raise RuntimeError('No pretrained fasttext model provided')
-            fname = os.path.basename(self.fasttext_model_file)
+            fname = Path(self.fasttext_model_file).name
             try:
                 print('Trying to download a pretrained fasttext model from repository')
                 url = urllib.parse.urljoin(emb_path, fname)
@@ -104,7 +105,7 @@ class EmbeddingInferableModel(object):
             Nothing
         """
 
-        if fname is None or not os.path.isfile(fname):
+        if fname is None or not Path(fname).is_file():
             print('There is no %s file provided. Initializing new dictionary.' % fname)
         else:
             print('Loading existing dictionary from %s.' % fname)
