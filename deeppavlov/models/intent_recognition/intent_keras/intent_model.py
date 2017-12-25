@@ -50,6 +50,7 @@ import metrics as metrics_file
 import keras.metrics as keras_metrics_file
 import keras.losses as keras_loss_file
 from deeppavlov.core.common.attributes import check_attr_true
+from keras import backend as K
 
 
 @register('intent_model')
