@@ -46,17 +46,23 @@ from keras.layers import Bidirectional, LSTM
 from keras.optimizers import Adam
 
 
-import intent_recognition.metrics as metrics_file
+import metrics as metrics_file
 import keras.metrics as keras_metrics_file
 import keras.losses as keras_loss_file
+from deeppavlov.core.common.attributes import check_attr_true
+from keras import backend as K
+
 
 @register('intent_model')
 class KerasIntentModel(KerasModel):
 
-    def __init__(self, opt, classes, *args, **kwargs):
+    def __init__(self, opt, *args, **kwargs):
 
         self.opt = copy.deepcopy(opt)
-        self.classes = classes
+
+        with open(self.opt['classes_file'], "r") as f:
+            self.classes = np.array(f.read().split("\n"))
+
         self.n_classes = self.classes.shape[0]
         self.confident_threshold = self.opt['confident_threshold']
         if 'add_metrics' in self.opt.keys():
@@ -132,6 +138,7 @@ class KerasIntentModel(KerasModel):
         metrics_values = self.model.train_on_batch(features, onehot_labels)
         return metrics_values
 
+    @check_attr_true('train_now')
     def train(self, dataset):
         """
         Method trains considered model using batches and validation
@@ -192,15 +199,22 @@ class KerasIntentModel(KerasModel):
                             break
                     val_loss = valid_metrics_values[0]
             print('epochs_done: %d' % epochs_done)
+
+        self.save(fname=self.opt['model_file'])
         return
 
-    def infer(self, batch, *args):
+    def infer(self, data, *args):
         """
-        Return predictions on the given batch of texts
+        Return predictions on the given data (batch of texts or one text)
         """
-        self.embedding_dict.add_items(batch)
-        features = self.texts2vec(batch)
-        preds = self.model.predict_on_batch(features)
+        if type(data) is str:
+            self.embedding_dict.add_items([data])
+            features = self.texts2vec([data])
+            preds = self.model.predict_on_batch(features)[0]
+        else:
+            self.embedding_dict.add_items(data)
+            features = self.texts2vec(data)
+            preds = self.model.predict_on_batch(features)
         return preds
 
     def save(self, fname):
@@ -239,30 +253,6 @@ class KerasIntentModel(KerasModel):
             outputs.append(output_i)
 
         output = concatenate(outputs, axis=1)
-
-        output = Dropout(rate=params['dropout_rate'])(output)
-        output = Dense(params['dense_size'], activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
-        output = BatchNormalization()(output)
-        output = Activation('relu')(output)
-        output = Dropout(rate=params['dropout_rate'])(output)
-        output = Dense(self.n_classes, activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
-        output = BatchNormalization()(output)
-        act_output = Activation('sigmoid')(output)
-        model = Model(inputs=inp, outputs=act_output)
-        return model
-
-    def bilstm_model(self, params):
-        """
-        Build the uncompiled model of one-layer BiLSTM
-        :return: model
-        """
-        inp = Input(shape=(params['text_size'], params['embedding_size']))
-
-        output = Bidirectional(LSTM(params['units_lstm'], activation='tanh',
-                                    kernel_regularizer=l2(params['coef_reg_lstm']),
-                                    dropout=params['dropout_rate_lstm']))(inp)
 
         output = Dropout(rate=params['dropout_rate'])(output)
         output = Dense(params['dense_size'], activation=None,
