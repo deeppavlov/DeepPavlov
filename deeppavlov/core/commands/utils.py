@@ -1,8 +1,6 @@
 from pathlib import Path, PurePath
 
 from deeppavlov.core.common import paths
-
-from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.common.file import read_json
 
 
@@ -27,9 +25,3 @@ def set_usr_dir(config_path: str, usr_dir_name='USR_DIR') -> PurePath:
 def set_vocab_path() -> PurePath:
     return paths.USR_PATH.joinpath('vocab.txt')
 
-
-def build_agent_from_config(config_path: str):
-    config = read_json(config_path)
-    skill_configs = config['skills']
-    commutator_config = config['commutator']
-    return Agent(skill_configs, commutator_config)

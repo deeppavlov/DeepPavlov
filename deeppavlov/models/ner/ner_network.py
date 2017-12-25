@@ -19,13 +19,13 @@ from collections import defaultdict
 
 import numpy as np
 import tensorflow as tf
-from .layers import character_embedding_network
-from .layers import embedding_layer
-from .layers import highway_convolutional_network
-from .layers import stacked_convolutions
-from .layers import stacked_rnn
 from tensorflow.contrib.layers import xavier_initializer
 
+from deeppavlov.models.ner.layers import character_embedding_network
+from deeppavlov.models.ner.layers import embedding_layer
+from deeppavlov.models.ner.layers import highway_convolutional_network
+from deeppavlov.models.ner.layers import stacked_convolutions
+from deeppavlov.models.ner.layers import stacked_rnn
 
 SEED = 42
 MODEL_PATH = 'model/'

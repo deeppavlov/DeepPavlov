@@ -1,17 +1,18 @@
-from fuzzywuzzy import process
-from overrides import overrides
 import json
-import tensorflow as tf
 import os
 import pathlib
 
-from .src.corpus import Corpus
-from .src.ner_network import NerNetwork
-from .utils.nlputils import tokenize
+import tensorflow as tf
+from fuzzywuzzy import process
+from overrides import overrides
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.data.utils import download_untar, mark_done
+from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.models.ner.corpus import Corpus
+from deeppavlov.models.ner.ner_network import NerNetwork
+from deeppavlov.core.data.utils import tokenize_reg
+
 
 
 @register('dstc_slotfilling')
@@ -56,7 +57,7 @@ class DstcSlotFillingNetwork(Inferable):
 
     def predict_slots(self, utterance):
         # For utterance extract named entities and perform normalization for slot filling
-        tokens = tokenize(utterance)
+        tokens = tokenize_reg(utterance)
         with self.graph.as_default():
             tags = self._ner_network.predict_for_token_batch([tokens])[0]
         entities, slots = self._chunk_finder(tokens, tags)

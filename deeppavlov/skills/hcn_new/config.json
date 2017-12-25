@@ -1,28 +1,31 @@
 {
   "dataset_reader": {
     "name": "dstc2_datasetreader",
-    "data_path": "/home/vimary/IPavlov/projects/Pilot/data/dstc2"
+    "data_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2"
   },
   "dataset": {
     "name": "dstc2_dialog_dataset"
   },
   "model": {
+    "train_now": true,
     "name": "hcn_new",
     "debug": true,
     "slot_names": ["pricerange", "this", "area", "slot", "food", "name"],
-    "template_path": "../../../data/dstc2/dstc2-templates.txt",
+    "template_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2/dstc2-templates.txt",
     "network": {
+      "train_now": true,
       "name": "custom_rnn",
       "model_fpath": "custom_rnn2",
       "learning_rate": 0.02,
       "hidden_dim": 128,
-      "use_action_mask": false,
-      "action_size": 45,
       "obs_size": 830
+      "model_file": "hcn_rnn",
+      "use_action_mask": false,
+      "action_size": 45
     },
     "slot_filler": {
         "name": "dstc_slotfilling",
-        "model_path": "../../models/ner/model/"
+        "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/ner"
     },
     "intent_classifier": {
         "name": "intent_model",
@@ -65,9 +68,8 @@
       "name": "bow"
     },
     "embedder": {
-      "name": "fasttext",
-      "model_dir_path": "/home/vimary/IPavlov/projects/hcn-dialogue-manager/data",
-      "model_fpath": "wiki.en.bin"
+      "name": "w2v",
+      "corpus_path": "/home/olga/Documents/text8"
     },
     "tokenizer": {
         "name": "spacy_tokenizer"
@@ -76,8 +78,6 @@
       "name": "featurized_tracker",
       "slot_names": ["pricerange", "this", "area", "slot", "food", "name"]
     }
-  },
-  "num_epochs": 110,
-  "config_path": "config.json"
+  }
 }
 

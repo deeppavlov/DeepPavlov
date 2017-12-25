@@ -5,7 +5,7 @@ etc.)
 
 from abc import abstractmethod
 
-from deeppavlov.models.inferable import Inferable
+from deeppavlov.core.models.inferable import Inferable
 
 
 class Vocabulary(Inferable):

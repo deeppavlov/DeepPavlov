@@ -90,11 +90,17 @@ class DSTC2DialogDataset(Dataset):
         dialog_indices.append(dialog)
         return dialog_indices
 
-    @staticmethod
-    def save_vocab(turns, fpath):
-        print("Saving data to `{}`".format(fpath))
-        with open(fpath, 'wt') as f:
-            words = sorted(set(itertools.chain.from_iterable(
-                turn[0].lower().split() for turn in turns
-            )))
-            f.write(' '.join(words))
+    # @staticmethod
+    # def save_vocab(turns, fpath):
+    #     print("Saving data to `{}`".format(fpath))
+    #     with open(fpath, 'wt') as f:
+    #         words = sorted(set(itertools.chain.from_iterable(
+    #             turn[0].lower().split() for turn in turns
+    #         )))
+    #         f.write(' '.join(words))
+
+    @overrides
+    def iter_all(self, data_type: str = 'train') -> Generator:
+        data = self.data[data_type]
+        for instance in data:
+            yield instance

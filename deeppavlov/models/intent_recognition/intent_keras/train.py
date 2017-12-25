@@ -16,7 +16,7 @@ import keras.backend as K
 
 def main(config_name='config.json'):
 
-    K.clear_session()
+    # K.clear_session()
 
     with open(config_name) as f:
         config = json.load(f)

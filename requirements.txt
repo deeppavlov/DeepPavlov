@@ -7,3 +7,4 @@ overrides==1.9
 numpy==1.13.3
 tensorflow==1.4.0
 typing==3.6.2
+six==1.11.0

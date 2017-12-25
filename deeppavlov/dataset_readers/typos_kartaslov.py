@@ -37,7 +37,3 @@ class TyposKartaslov(DatasetReader):
             next(reader)
             res = [(mistake, correct) for correct, mistake, weight in reader]
         return {'train': res}
-
-    @overrides
-    def save_vocab(self, *args, **kwargs):
-        pass

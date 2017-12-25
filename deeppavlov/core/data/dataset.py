@@ -6,13 +6,14 @@ class Dataset:
     def split(self, *args, **kwargs):
         pass
 
-    def __init__(self, data: Dict[str, List[Tuple[Any, Any]]], seed: int = None, *args, **kwargs) -> None:
+    def __init__(self, data: Dict[str, List[Tuple[Any, Any]]], seed: int = None, *args,
+                 **kwargs) -> None:
         r""" Dataiterator takes a dict with fields 'train', 'test', 'valid'. A list of samples (pairs x, y) is stored
         in each field.
-
         Args:
             data: list of (x, y) pairs. Each pair is a sample from the dataset. x as well as y can be a tuple
-                of different input features.seed (int): random seed for data shuffling. Defaults to None
+                of different input features.
+            seed (int): random seed for data shuffling. Defaults to None
         """
 
         rs = random.getstate()
@@ -34,11 +35,9 @@ class Dataset:
     def batch_generator(self, batch_size: int, data_type: str = 'train') -> Generator:
         r"""This function returns a generator, which serves for generation of raw (no preprocessing such as tokenization)
          batches
-
-         Args:
+        Args:
             batch_size (int): number of samples in batch
             data_type (str): can be either 'train', 'test', or 'valid'
-
         Returns:
             batch_gen (Generator): a generator, that iterates through the part (defined by data_type) of the dataset
         """
@@ -53,16 +52,15 @@ class Dataset:
         random.setstate(rs)
 
         for i in range((data_len - 1) // batch_size + 1):
-            yield list(zip(*[data[o] for o in order[i*batch_size:(i+1)*batch_size]]))
+            yield list(zip(*[data[o] for o in order[i * batch_size:(i + 1) * batch_size]]))
 
     def iter_all(self, data_type: str = 'train') -> Generator:
         r"""Iterate through all data. It can be used for building dictionary or
-
         Args:
             data_type (str): can be either 'train', 'test', or 'valid'
-
         Returns:
             samples_gen: a generator, that iterates through the all samples in the selected data type of the dataset
         """
         data = self.data[data_type]
-        return iter(data)
+        for x, y in data:
+            yield (x, y)

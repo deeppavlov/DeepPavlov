@@ -7,8 +7,11 @@ T = TypeVar('T')
 
 
 def from_params(cls: Type, params: Dict, **kwargs) -> Type['T']:
+
+    # what is passed in json:
     config_params = {k: v for k, v in params.items() if k != 'name'}
 
+    # find the submodels params recursively
     for param_name, subcl_params in config_params.items():
         if isinstance(subcl_params, dict):
             try:
@@ -27,7 +30,14 @@ def from_params(cls: Type, params: Dict, **kwargs) -> Type['T']:
                     "The class {} is not registered. Either register this class,"
                     " or rename the parameter.".format(
                         subcl_params['name']))
-    # DEBUG
-    # print(type(cls(**dict(config_params, **kwargs))))
 
-    return cls(**dict(config_params, **kwargs))
+    final_params = {k: v for k, v in config_params.items()}
+
+    # set superclass parameters:
+    for super_attr, v in config_params.items():
+        if hasattr(cls, super_attr):
+            setattr(cls, super_attr, v)
+            final_params.pop(super_attr)
+
+    # return an instance
+    return cls(**dict(final_params, **kwargs))

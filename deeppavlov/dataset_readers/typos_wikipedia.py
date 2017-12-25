@@ -52,7 +52,3 @@ class TyposWikipedia(DatasetReader):
             next(reader)
             res = [(mistake, correct) for mistake, correct in reader]
         return {'train': res}
-
-    @overrides
-    def save_vocab(self, *args, **kwargs):
-        pass
