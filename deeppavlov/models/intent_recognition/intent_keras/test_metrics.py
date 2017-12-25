@@ -14,6 +14,7 @@ from sklearn.metrics import log_loss, accuracy_score
 from deeppavlov.models.intent_recognition.intent_keras.metrics import fmeasure
 import keras.backend as K
 
+
 def main(config_name='intent_config_infer.json'):
 
     # K.clear_session()

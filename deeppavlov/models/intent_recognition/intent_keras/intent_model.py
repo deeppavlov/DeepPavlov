@@ -22,11 +22,12 @@ set_session(tf.Session(config=config))
 
 import keras
 import copy
-import os, sys
+import sys
 import numpy as np
 import fasttext
 import re
 import json
+from pathlib import Path
 
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
@@ -56,10 +57,14 @@ from keras import backend as K
 @register('intent_model')
 class KerasIntentModel(KerasModel):
 
-    def __init__(self, opt, *args, **kwargs):
+    def __init__(self, opt, model_path='build/keras_intent_model', *args, **kwargs):
 
+        self._model_path = model_path
+        self._model_file = Path(self._model_path).name
+        self._model_dir = Path(self._model_path).absolute().parent
         self.opt = copy.deepcopy(opt)
 
+        print("Model path:",self._model_path)
         with open(self.opt['classes_file'], "r") as f:
             self.classes = np.array(f.read().split("\n"))
 
@@ -72,7 +77,7 @@ class KerasIntentModel(KerasModel):
             self.add_metrics = None
 
         if self.opt['fasttext_model'] is not None:
-            if os.path.isfile(self.opt['fasttext_model']):
+            if Path(self.opt['fasttext_model']).is_file():
                 self.embedding_dict = EmbeddingsDict(self.opt, self.opt['embedding_size'])
             else:
                 raise IOError("Error: FastText model file does not exist")
@@ -81,7 +86,7 @@ class KerasIntentModel(KerasModel):
 
         if self.opt['model_from_saved'] == True:
             self.model = self.load(model_name=self.opt['model_name'],
-                                   fname=self.opt['model_file'],
+                                   fname=self._model_path,
                                    optimizer_name=self.opt['optimizer'],
                                    lr=self.opt['lear_rate'],
                                    decay=self.opt['lear_rate_decay'],
@@ -200,7 +205,7 @@ class KerasIntentModel(KerasModel):
                     val_loss = valid_metrics_values[0]
             print('epochs_done: %d' % epochs_done)
 
-        self.save(fname=self.opt['model_file'])
+        self.save(fname=self._model_path)
         return
 
     def infer(self, data, *args):
@@ -217,9 +222,8 @@ class KerasIntentModel(KerasModel):
             preds = self.model.predict_on_batch(features)
         return preds
 
-    def save(self, fname):
-        # TODO: model_file is in opt??
-        fname = self.opt.get('model_file', None) if fname is None else fname
+    def save(self, fname=None):
+        fname = self._model_path if fname is None else fname
 
         if fname:
             print("[ saving model: " + fname + " ]")

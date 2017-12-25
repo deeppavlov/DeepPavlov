@@ -15,6 +15,7 @@
 from gensim.models.fasttext import FastText
 import numpy as np
 
+
 class EmbeddingTrainableModel(object):
 
     def __init__(self, embedding_dim, *args, **kwargs):
