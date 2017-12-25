@@ -3,12 +3,10 @@
     "name": "intent_model",
     "opt": {
       "classes_file": "./classes.txt",
-      "kernel_sizes_cnn": "3 3 3",
-      "filters_cnn": 512,
       "embedding_size": 100,
       "lear_metrics": "binary_accuracy fmeasure",
       "confident_threshold": 0.5,
-      "model_from_saved": false,
+      "model_from_saved": true,
       "optimizer": "Adam",
       "lear_rate": 0.1,
       "lear_rate_decay": 0.1,
@@ -20,14 +18,13 @@
       "coef_reg_den": 1e-4,
       "dropout_rate": 0.5,
       "epochs": 10,
-      "dense_size": 100,
       "model_name": "cnn_model",
       "batch_size": 64,
       "val_every_n_epochs": 5,
       "verbose": true,
       "val_patience": 5,
       "show_examples": false,
-      "train_now": true
+      "train_now": false
     }
   },
   "dataset_reader": {

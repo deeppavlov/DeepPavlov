@@ -223,11 +223,11 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         return self.model.train_on_batch(batch[0], batch[1])
 
     @overrides
-    def train(self, data, *args):
+    def train(self, dataset, *args):
         """
         Method trains the model on a given data as a single batch
         Args:
-            data: tuple of (x,y) where x, y - lists of samples and their labels
+            dataset: dataset instance
 
         Returns:
             metrics values on a given data
@@ -244,16 +244,16 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         return
 
     @overrides
-    def infer(self, batch, *args):
+    def infer(self, sentence, *args):
         """
         Method predicts on given batch
         Args:
-            batch: tuple of (x,y) where x, y - lists of samples and their labels
+            sentence: one sample
         Returns:
-            predictions on a given batch
+            predictions on a given sample
         """
         with self.sess.as_default():
-            return self.model.predict_on_batch(batch)
+            return self.model.predict_on_batch([sentence])
 
     def save(self, fname=None):
         """
@@ -289,3 +289,6 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         output = Dense(1, activation='softmax')(output)
         model = Model(inputs=inp, outputs=output)
         return model
+
+    def reset(self):
+        pass
