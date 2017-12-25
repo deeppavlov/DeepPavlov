@@ -2,6 +2,7 @@ import os
 import requests
 from tqdm import tqdm
 import tarfile
+import re
 
 
 def download(dest_file_path, source_url):
@@ -79,3 +80,8 @@ def mark_done(path):
 
 def is_done(path):
     return os.path.isfile(os.path.join(path, _MARK_DONE))
+
+
+def tokenize_reg(s):
+    pattern = "[\w]+|[‑–—“”€№…’\"#$%&\'()+,-./:;<>?]"
+    return re.findall(re.compile(pattern), s)
