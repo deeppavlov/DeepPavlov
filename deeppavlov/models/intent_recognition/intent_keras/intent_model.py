@@ -49,6 +49,8 @@ from keras.optimizers import Adam
 import metrics as metrics_file
 import keras.metrics as keras_metrics_file
 import keras.losses as keras_loss_file
+from deeppavlov.core.common.attributes import check_attr_true
+
 
 @register('intent_model')
 class KerasIntentModel(KerasModel):
@@ -135,6 +137,7 @@ class KerasIntentModel(KerasModel):
         metrics_values = self.model.train_on_batch(features, onehot_labels)
         return metrics_values
 
+    @check_attr_true('train_now')
     def train(self, dataset):
         """
         Method trains considered model using batches and validation

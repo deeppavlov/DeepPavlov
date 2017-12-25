@@ -27,6 +27,7 @@ import keras.optimizers
 
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.common.attributes import check_attr_true
 from .tf_backend import TfModelMeta
 
 
@@ -222,7 +223,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         """
         return self.model.train_on_batch(batch[0], batch[1])
 
-    @overrides
+    @check_attr_true('train_now')
     def train(self, dataset, *args):
         """
         Method trains the model on a given data as a single batch
