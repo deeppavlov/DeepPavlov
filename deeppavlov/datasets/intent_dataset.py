@@ -36,7 +36,7 @@ class IntentDataset(Dataset):
         super().__init__(data, seed)
         self.classes = None
 
-        if extract_classes == True:
+        if extract_classes:
             self.classes = self._extract_classes()
             if classes_file is None:
                 classes_file = "./classes.txt"
@@ -78,8 +78,8 @@ class IntentDataset(Dataset):
         data_size = len(self.data[field_to_split])
         for i in range(len(splitted_fields) - 1):
             self.data[splitted_fields[i]], data_to_div = train_test_split(data_to_div,
-                                                                     test_size=len(data_to_div) -
-                                                                               int(data_size * splitting_proportions[i]))
+                                                                          test_size=len(data_to_div) -
+                                                                                    int(data_size * splitting_proportions[i]))
         self.data[splitted_fields[-1]] = data_to_div
         return True
 

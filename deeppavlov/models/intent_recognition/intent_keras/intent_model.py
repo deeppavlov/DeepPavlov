@@ -57,14 +57,10 @@ from keras import backend as K
 @register('intent_model')
 class KerasIntentModel(KerasModel):
 
-    def __init__(self, opt, model_path='build/keras_intent_model', *args, **kwargs):
+    def __init__(self, opt, model_dir='keras_model', model_file='model', *args, **kwargs):
 
-        self._model_path = model_path
-        self._model_file = Path(self._model_path).name
-        self._model_dir = Path(self._model_path).absolute().parent
         self.opt = copy.deepcopy(opt)
 
-        print("Model path:",self._model_path)
         with open(self.opt['classes_file'], "r") as f:
             self.classes = np.array(f.read().split("\n"))
 
@@ -84,9 +80,9 @@ class KerasIntentModel(KerasModel):
         else:
             raise IOError("Error: FastText model file path is not given")
 
-        if self.opt['model_from_saved'] == True:
+        if self.opt['model_from_saved']:
             self.model = self.load(model_name=self.opt['model_name'],
-                                   fname=self._model_path,
+                                   fname=self.model_path_,
                                    optimizer_name=self.opt['optimizer'],
                                    lr=self.opt['lear_rate'],
                                    decay=self.opt['lear_rate_decay'],
@@ -171,7 +167,6 @@ class KerasIntentModel(KerasModel):
         valid_x = self.texts2vec(valid_x)
         valid_y = labels2onehot(valid_y, classes=self.classes)
 
-
         print('\n____Training over %d samples____\n\n' % n_train_samples)
 
         while epochs_done < self.opt['epochs']:
@@ -183,9 +178,9 @@ class KerasIntentModel(KerasModel):
 
                 if self.opt['verbose'] and step % 50 == 0:
                     log_metrics(names=self.metrics_names,
-                                     values=metrics_values,
-                                     updates=updates,
-                                     mode='train')
+                                values=metrics_values,
+                                updates=updates,
+                                mode='train')
 
             epochs_done += 1
             if epochs_done % self.opt['val_every_n_epochs'] == 0:
@@ -193,8 +188,8 @@ class KerasIntentModel(KerasModel):
                     valid_metrics_values = self.model.test_on_batch(x=valid_x, y=valid_y)
 
                     log_metrics(names=self.metrics_names,
-                                     values=valid_metrics_values,
-                                     mode='valid')
+                                values=valid_metrics_values,
+                                mode='valid')
                     if valid_metrics_values[0] > val_loss:
                         val_increase += 1
                         print("__Validation impatience %d out of %d" % (
@@ -205,7 +200,7 @@ class KerasIntentModel(KerasModel):
                     val_loss = valid_metrics_values[0]
             print('epochs_done: %d' % epochs_done)
 
-        self.save(fname=self._model_path)
+        self.save(fname=self.model_path_)
         return
 
     def infer(self, data, *args):
@@ -223,7 +218,9 @@ class KerasIntentModel(KerasModel):
         return preds
 
     def save(self, fname=None):
-        fname = self._model_path if fname is None else fname
+        fname = self.model_path_ if fname is None else fname
+        if type(fname) is not str:
+            fname = fname.as_posix()
 
         if fname:
             print("[ saving model: " + fname + " ]")
