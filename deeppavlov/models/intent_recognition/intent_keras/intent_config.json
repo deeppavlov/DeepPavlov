@@ -1,6 +1,7 @@
 {
   "model": {
     "name": "intent_model",
+    "train_now": true,
     "opt": {
       "classes_file": "./classes.txt",
       "kernel_sizes_cnn": "3 3 3",
@@ -14,20 +15,19 @@
       "lear_rate_decay": 0.1,
       "loss": "binary_crossentropy",
       "fasttext_model": "/home/dilyara/data/data_files/embeddings/dstc2_fasttext_model_100.bin",
-      "model_file": "/home/dilyara/data/models/intent_models/dstc2/pilot_dstc2/intent_cnn_14",
+      "model_file": "/home/dilyara/data/models/intent_models/dstc2/pilot_dstc2/intent_cnn_15",
       "text_size": 15,
       "coef_reg_cnn": 1e-4,
       "coef_reg_den": 1e-4,
       "dropout_rate": 0.5,
-      "epochs": 10,
+      "epochs": 1000,
       "dense_size": 100,
       "model_name": "cnn_model",
       "batch_size": 64,
       "val_every_n_epochs": 5,
       "verbose": true,
       "val_patience": 5,
-      "show_examples": false,
-      "train_now": true
+      "show_examples": false
     }
   },
   "dataset_reader": {
