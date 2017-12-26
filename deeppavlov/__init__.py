@@ -23,6 +23,5 @@ from deeppavlov.dataset_readers.intent_dataset_reader import IntentDatasetReader
 from deeppavlov.datasets.intent_dataset import IntentDataset
 from deeppavlov.models.intent_recognition.intent_keras.intent_model import KerasIntentModel
 from deeppavlov.preprocessors.intent_preprocessor import IntentPreprocessor
-from deeppavlov.models.intent_recognition.intent_keras.utils import labels2onehot, log_metrics, \
-    proba2labels, proba2onehot
+
 
