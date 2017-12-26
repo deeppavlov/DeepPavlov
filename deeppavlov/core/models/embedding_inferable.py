@@ -26,7 +26,15 @@ from deeppavlov.core.models.inferable import Inferable
 class EmbeddingInferableModel(Inferable):
 
     def __init__(self, embedding_fname, embedding_dim, embedding_url=None,  *args, **kwargs):
-        """Initialize the class according to given parameters."""
+        """
+        Method initialize the class according to given parameters.
+        Args:
+            embedding_fname: name of file with embeddings
+            embedding_dim: dimension of embeddings
+            embedding_url: url link to embedding to try to download if file does not exist
+            *args:
+            **kwargs:
+        """
         self.tok2emb = {}
         self.embedding_dim = embedding_dim
         self.model = None
@@ -38,8 +46,8 @@ class EmbeddingInferableModel(Inferable):
         Args:
             sentence_li: list of sentences
 
-        Returns:
-            Nothing
+        Returns: None
+
         """
         for sen in sentence_li:
             tokens = sen.split(' ')
@@ -64,7 +72,7 @@ class EmbeddingInferableModel(Inferable):
         string = ' '.join([str(el) for el in vec])
         return string
 
-    def load(self, embedding_fname, embedding_url, *args, **kwargs):
+    def load(self, embedding_fname, embedding_url=None, *args, **kwargs):
         """
         Method initializes dict of embeddings from file
         Args:
@@ -82,7 +90,7 @@ class EmbeddingInferableModel(Inferable):
             emb_path = embedding_url
             if not emb_path:
                 raise RuntimeError('No pretrained fasttext model provided')
-                embedding_fname = Path(fasttext_model_file).name
+            embedding_fname = Path(fasttext_model_file).name
             try:
                 print('Trying to download a pretrained fasttext model from repository')
                 url = urllib.parse.urljoin(emb_path, embedding_fname)

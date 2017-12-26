@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+from abc import abstractmethod
 import tensorflow as tf
 import json
 import copy
@@ -134,6 +135,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                       target_tensors=target_tensors)
         return model
 
+    @overrides
     def load(self, model_name, fname, optimizer_name,
              lr, decay, loss_name, metrics_names=None, add_metrics_file=None, loss_weights=None,
              sample_weight_mode=None, weighted_metrics=None, target_tensors=None):
@@ -162,23 +164,11 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
               '\nNetwork parameters are from %s_opt.json' % (fname, fname))
 
         fname = self.model_path_ if fname is None else fname
-        if type(fname) is not str:
-            fname = fname.as_posix()
+        fname = str(fname.absolute())
 
         if Path(fname + '_opt.json').is_file():
             with open(fname + '_opt.json', 'r') as opt_file:
                 self.opt = json.load(opt_file)
-
-        # TODO
-        # fname = self.model_path_.name if fname is None else fname
-        # fname = fname + '_opt.json'
-        #
-        # if Path.joinpath(self.model_path_.parent, fname).is_file():
-        #     with open(fname) as opt_file:
-        #         self.opt = json.load(opt_file)
-
-
-
         else:
             raise IOError("Error: config file %s_opt.json of saved model does not exist" % fname)
 
@@ -225,6 +215,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                       target_tensors=target_tensors)
         return model
 
+    @abstractmethod
     def train_on_batch(self, batch):
         """
         Method trains the model on a single batch of data
@@ -236,6 +227,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         """
         pass
 
+    @abstractmethod
     @check_attr_true('train_now')
     def train(self, dataset, *args):
         """
@@ -248,7 +240,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         """
         pass
 
-    @overrides
+    @abstractmethod
     def infer(self, data, *args):
         """
         Method predicts on given batch
@@ -259,6 +251,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         """
         pass
 
+    @overrides
     def save(self, fname=None):
         """
         Method saves the model parameters into <<fname>>_opt.json (or <<model_file>>_opt.json)
@@ -270,8 +263,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
             nothing
         """
         fname = self.model_path_ if fname is None else fname
-        if type(fname) is not str:
-            fname = fname.as_posix()
+        fname = str(fname.absolute())
 
         if fname:
             print("Saving model weights and params: " + fname + " ")
@@ -297,5 +289,6 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         model = Model(inputs=inp, outputs=output)
         return model
 
+    @abstractmethod
     def reset(self):
         pass
