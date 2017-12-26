@@ -104,16 +104,30 @@ class EmbeddingInferableModel(Inferable):
     @overrides
     def infer(self, instance, *args, **kwargs):
         """
-        Method returns embedded sentence
+        Method returns embedded data
         Args:
-            instance: sentence
+            instance: sentence or list of sentences
 
         Returns:
-            Embedded sentence
+            Embedded sentence or list of embedded sentences
         """
-        tokens = instance.split(" ")
-        self.add_items(tokens)
-        embedded_tokens = []
-        for tok in tokens:
-            embedded_tokens.append(self.tok2emb.get(tok))
-        return embedded_tokens
+        if type(instance) is str:
+            tokens = instance.split(" ")
+            self.add_items(tokens)
+            embedded_tokens = []
+            for tok in tokens:
+                embedded_tokens.append(self.tok2emb.get(tok))
+            if len(tokens) == 1:
+                embedded_tokens = embedded_tokens[0]
+            return embedded_tokens
+        else:
+            embedded_instance = []
+            for sample in instance:
+                tokens = sample.split(" ")
+                self.add_items(tokens)
+                embedded_tokens = []
+                for tok in tokens:
+                    embedded_tokens.append(self.tok2emb.get(tok))
+                embedded_instance.append(embedded_tokens)
+            return embedded_instance
+

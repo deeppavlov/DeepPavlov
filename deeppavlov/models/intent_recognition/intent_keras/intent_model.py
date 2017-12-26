@@ -33,7 +33,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.models.embedders.fasttext_embedder import EmbeddingsDict
 from deeppavlov.models.intent_recognition.intent_keras.utils import labels2onehot, log_metrics
 from deeppavlov.core.models.keras_model import KerasModel
-
+from deeppavlov.core.models.fasttext_inferable import EmbeddingInferableModel
 
 @register('intent_model')
 class KerasIntentModel(KerasModel):
@@ -72,7 +72,8 @@ class KerasIntentModel(KerasModel):
 
         if self.opt['fasttext_model'] is not None:
             if Path(self.opt['fasttext_model']).is_file():
-                self.embedding_dict = EmbeddingsDict(self.opt, self.opt['embedding_size'])
+                self.fasttext_model = EmbeddingInferableModel(embedding_fname=self.opt['fasttext_model'],
+                                                              embedding_dim=self.opt['embedding_size'])
             else:
                 raise IOError("Error: FastText model file does not exist")
         else:
@@ -108,7 +109,7 @@ class KerasIntentModel(KerasModel):
             if len(tokens) > self.opt['text_size']:
                 tokens = tokens[:self.opt['text_size']]
             for tok in tokens:
-                embeddings.append(self.embedding_dict.tok2emb.get(tok))
+                embeddings.append(self.fasttext_model.infer(tok))
             if len(tokens) < self.opt['text_size']:
                 pads = [np.zeros(self.opt['embedding_size'])
                         for _ in range(self.opt['text_size'] - len(tokens))]
@@ -131,7 +132,6 @@ class KerasIntentModel(KerasModel):
         """
         texts = list(batch[0])
         labels = list(batch[1])
-        self.embedding_dict.add_items(texts)
         features = self.texts2vec(texts)
         onehot_labels = labels2onehot(labels, classes=self.classes)
         metrics_values = self.model.train_on_batch(features, onehot_labels)
@@ -161,7 +161,6 @@ class KerasIntentModel(KerasModel):
             valid_x.append(valid_sample[0])
             valid_y.append(valid_sample[1])
 
-        self.embedding_dict.add_items(valid_x)
         valid_x = self.texts2vec(valid_x)
         valid_y = labels2onehot(valid_y, classes=self.classes)
 
@@ -211,11 +210,9 @@ class KerasIntentModel(KerasModel):
             Predictions for the given data
         """
         if type(data) is str:
-            self.embedding_dict.add_items([data])
             features = self.texts2vec([data])
             preds = self.model.predict_on_batch(features)[0]
         else:
-            self.embedding_dict.add_items(data)
             features = self.texts2vec(data)
             preds = self.model.predict_on_batch(features)
         return preds

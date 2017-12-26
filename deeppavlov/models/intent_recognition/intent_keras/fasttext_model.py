@@ -1,7 +1,6 @@
-from deeppavlov.core.models.embedding_inferable import EmbeddingInferableModel
-from gensim.models.wrappers.fasttext import FastText
 import numpy as np
 
+from deeppavlov.core.models.fasttext_inferable import EmbeddingInferableModel
 
 fasttext_model = EmbeddingInferableModel(embedding_fname="/home/dilyara/data/data_files/embeddings/reddit_fasttext_model.bin",
                                          embedding_dim=100)
