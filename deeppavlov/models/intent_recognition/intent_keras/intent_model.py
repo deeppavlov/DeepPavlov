@@ -15,6 +15,7 @@
 
 import tensorflow as tf
 from keras.backend.tensorflow_backend import set_session
+
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 config.gpu_options.visible_device_list = '0'
@@ -35,6 +36,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.models.embedders.fasttext_embedder import EmbeddingsDict
 from deeppavlov.models.intent_recognition.intent_keras.utils import labels2onehot, log_metrics
 from deeppavlov.core.models.keras_model import KerasModel
+from deeppavlov.core.common.file import save_json
 
 from keras.models import Model
 from keras.layers import Dense, Input, concatenate, Activation, Embedding
@@ -46,23 +48,32 @@ from keras.regularizers import l2
 from keras.layers import Bidirectional, LSTM
 from keras.optimizers import Adam
 
-
-import metrics as metrics_file
 import keras.metrics as keras_metrics_file
 import keras.losses as keras_loss_file
 from deeppavlov.core.common.attributes import check_attr_true
+import deeppavlov.models.intent_recognition.intent_keras.metrics as metrics_file
+from deeppavlov.core.common import paths
 from keras import backend as K
 
 
 @register('intent_model')
 class KerasIntentModel(KerasModel):
-
     def __init__(self, opt, model_dir='keras_model', model_file='model', *args, **kwargs):
 
         self.opt = copy.deepcopy(opt)
 
-        with open(self.opt['classes_file'], "r") as f:
-            self.classes = np.array(f.read().split("\n"))
+        try:
+            classes_file = self.opt['classes_file']
+        except KeyError:  # if no classes path is passed in json
+            try:
+                classes_file = Path(paths.USR_PATH).joinpath('intents', 'classes.txt')
+            except FileNotFoundError as e:
+                raise (e,
+                       "Something is bad with the path to dataset classes file."
+                       "Provide the file path explicitly in json config.")
+
+        with open(classes_file) as fin:
+            self.classes = np.array(fin.read().split("\n"))
 
         self.n_classes = self.classes.shape[0]
         self.confident_threshold = self.opt['confident_threshold']
@@ -140,13 +151,13 @@ class KerasIntentModel(KerasModel):
         return metrics_values
 
     @check_attr_true('train_now')
-    def train(self, dataset):
+    def train(self, dataset, *args, **kwargs):
         """
         Method trains considered model using batches and validation
         Args:
             dataset: instance of class Dataset
 
-        Returns:
+        Returns: None
 
         """
         updates = 0
@@ -200,8 +211,7 @@ class KerasIntentModel(KerasModel):
                     val_loss = valid_metrics_values[0]
             print('epochs_done: %d' % epochs_done)
 
-        self.save(fname=self.model_path_)
-        return
+        self.save()
 
     def infer(self, data, *args):
         """
@@ -218,17 +228,19 @@ class KerasIntentModel(KerasModel):
         return preds
 
     def save(self, fname=None):
-        fname = self.model_path_ if fname is None else fname
-        if type(fname) is not str:
-            fname = fname.as_posix()
+        fname = self.model_path_.name if fname is None else fname
+        opt_fname = fname + '_opt.json'
+        weights_fname = fname + '.h5'
 
-        if fname:
-            print("[ saving model: " + fname + " ]")
-            self.model.save_weights(fname + '.h5')
-            self.embedding_dict.save_items(fname)
+        opt_path = Path.joinpath(self.model_path_, opt_fname)
+        weights_path = Path.joinpath(self.model_path_, weights_fname)
+        emb_path = Path.joinpath(self.model_path_, fname)
+        print("[ saving model: {} ]".format(str(opt_path)))
+        self.model.save_weights(weights_path)
+        self.embedding_dict.save_items(str(emb_path))
 
-            with open(fname + '_opt.json', 'w') as opt_file:
-                json.dump(self.opt, opt_file)
+        save_json(self.opt, opt_path)
+
         return True
 
     def cnn_model(self, params):
@@ -279,7 +291,7 @@ class KerasIntentModel(KerasModel):
 
         if type(self.opt['filters_cnn']) is str:
             self.opt['filters_cnn'] = [int(x) for x in
-                                            self.opt['filters_cnn'].split(' ')]
+                                       self.opt['filters_cnn'].split(' ')]
 
         inp = Input(shape=(params['text_size'], params['embedding_size']))
 
@@ -287,9 +299,9 @@ class KerasIntentModel(KerasModel):
 
         for i in range(len(params['kernel_sizes_cnn'])):
             output = Conv1D(params['filters_cnn'][i], kernel_size=params['kernel_sizes_cnn'][i],
-                              activation=None,
-                              kernel_regularizer=l2(params['coef_reg_cnn']),
-                              padding='same')(output)
+                            activation=None,
+                            kernel_regularizer=l2(params['coef_reg_cnn']),
+                            padding='same')(output)
             output = BatchNormalization()(output)
             output = Activation('relu')(output)
             output = MaxPooling1D()(output)
