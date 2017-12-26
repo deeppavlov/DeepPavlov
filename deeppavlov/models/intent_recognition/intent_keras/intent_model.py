@@ -163,7 +163,7 @@ class KerasIntentModel(KerasModel):
         valid_x = self.texts2vec(valid_x)
         valid_y = labels2onehot(valid_y, classes=self.classes)
 
-        print('\n____Training over %d samples____\n\n' % n_train_samples)
+        print('\n____Training over {} samples____\n\n'.format(n_train_samples))
 
         while epochs_done < self.opt['epochs']:
             batch_gen = dataset.batch_generator(batch_size=self.opt['batch_size'],
@@ -188,13 +188,13 @@ class KerasIntentModel(KerasModel):
                                 mode='valid')
                     if valid_metrics_values[0] > val_loss:
                         val_increase += 1
-                        print("__Validation impatience %d out of %d" % (
+                        print("__Validation impatience {} out of {}".format(
                             val_increase, self.opt['val_patience']))
                         if val_increase == self.opt['val_patience']:
                             print("___Stop training: validation is out of patience___")
                             break
                     val_loss = valid_metrics_values[0]
-            print('epochs_done: %d' % epochs_done)
+            print('epochs_done: {}'.format(epochs_done))
 
         self.save()
 

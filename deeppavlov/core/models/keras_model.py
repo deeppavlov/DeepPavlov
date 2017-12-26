@@ -95,25 +95,25 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         Returns:
             compiled model with given network and learning parameters
         """
-        print('___Initializing model from scratch___')
+        print('[ Initializing model from scratch ]')
 
         model_func = getattr(self, model_name, None)
         if callable(model_func):
             model = model_func(params=self.opt)
         else:
-            raise AttributeError("Model %s is not defined" % model_name)
+            raise AttributeError("Model {} is not defined".format(model_name))
 
         optimizer_func = getattr(keras.optimizers, optimizer_name, None)
         if callable(optimizer_func):
             optimizer_ = optimizer_func(lr=lr, decay=decay)
         else:
-            raise AttributeError("Optimizer %s is not callable" % optimizer_name)
+            raise AttributeError("Optimizer {} is not callable".format(optimizer_name))
 
         loss_func = getattr(keras.losses, loss_name, None)
         if callable(loss_func):
             loss = loss_func
         else:
-            raise AttributeError("Loss %s is not defined" % loss_name)
+            raise AttributeError("Loss {} is not defined".format(loss_name))
 
         metrics_names = metrics_names.split(' ')
         metrics_funcs = []
@@ -126,7 +126,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                 if callable(metrics_func):
                     metrics_funcs.append(metrics_func)
                 else:
-                    raise AttributeError("Metric %s is not defined" % metrics_names[i])
+                    raise AttributeError("Metric {} is not defined".format(metrics_names[i]))
 
         model.compile(optimizer=optimizer_,
                       loss=loss,
@@ -182,7 +182,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         if callable(model_func):
             model = model_func(params=self.opt)
         else:
-            raise AttributeError("Model %s is not defined" % model_name)
+            raise AttributeError("Model {} is not defined".format(model_name))
 
         print("Loading wights from `{}`".format(fname + '.h5'))
         model.load_weights(weights_path)
@@ -191,13 +191,13 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         if callable(optimizer_func):
             optimizer_ = optimizer_func(lr=lr, decay=decay)
         else:
-            raise AttributeError("Optimizer %s is not callable" % optimizer_name)
+            raise AttributeError("Optimizer {} is not callable".format(optimizer_name))
 
         loss_func = getattr(keras.losses, loss_name, None)
         if callable(loss_func):
             loss = loss_func
         else:
-            raise AttributeError("Loss %s is not defined" % loss_name)
+            raise AttributeError("Loss {} is not defined".format(loss_name))
 
         metrics_names = metrics_names.split(' ')
         metrics_funcs = []
@@ -210,7 +210,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                 if callable(metrics_func):
                     metrics_funcs.append(metrics_func)
                 else:
-                    raise AttributeError("Metric %s is not defined" % metrics_names[i])
+                    raise AttributeError("Metric {} is not defined".format(metrics_names[i]))
 
         model.compile(optimizer=optimizer_,
                       loss=loss,

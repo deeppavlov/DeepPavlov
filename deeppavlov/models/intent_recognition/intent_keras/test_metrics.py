@@ -1,3 +1,9 @@
+import json
+import numpy as np
+
+from sklearn.metrics import log_loss, accuracy_score
+import keras.backend as K
+
 from deeppavlov.core.common.registry import _REGISTRY
 from deeppavlov.core.common.params import from_params
 from deeppavlov.dataset_readers.intent_dataset_reader import IntentDatasetReader
@@ -6,13 +12,7 @@ from deeppavlov.models.intent_recognition.intent_keras.intent_model import Keras
 from deeppavlov.preprocessors.intent_preprocessor import IntentPreprocessor
 from deeppavlov.models.intent_recognition.intent_keras.utils import labels2onehot, proba2onehot, \
     proba2labels, log_metrics
-
-import sys
-import json
-import numpy as np
-from sklearn.metrics import log_loss, accuracy_score
 from deeppavlov.models.intent_recognition.intent_keras.metrics import fmeasure
-import keras.backend as K
 
 
 def main(config_name='intent_config_infer.json'):
@@ -51,7 +51,7 @@ def main(config_name='intent_config_infer.json'):
     model = from_params(_REGISTRY[model_config['name']],
                         model_config)
 
-    print("Considered loss and metrics:", model.metrics_names)
+    print("Considered loss and metrics: {}".format(model.metrics_names))
 
     test_batch_gen = dataset.batch_generator(batch_size=model.opt['batch_size'],
                                              data_type='test')

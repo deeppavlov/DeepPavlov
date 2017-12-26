@@ -39,9 +39,9 @@ class DictEmbedder(Inferable):
         """
 
         if fname is None or not Path(fname).is_file():
-            raise IOError('There is no dictionary of embeddings <<%s>> file provided.' % fname)
+            raise IOError('There is no dictionary of embeddings <<{}>> file provided.'.format(fname))
         else:
-            print('Loading existing dictionary of embeddings from %s.' % fname)
+            print('Loading existing dictionary of embeddings from {}'.format(fname))
             with open(fname, 'r') as f:
                 for line in f:
                     values = line.rsplit(sep=' ', maxsplit=self.embedding_dim)
