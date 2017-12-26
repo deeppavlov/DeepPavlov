@@ -12,10 +12,9 @@ def main(config_name='intent_config.json'):
     with open(config_name) as f:
         config = json.load(f)
 
-    # train_model_from_config(config_path=config_name)
+    train_model_from_config(config_path=config_name)
 
-
-    interact_model('intent_config_infer.json')
+    # interact_model('intent_config_infer.json')
 
 
 if __name__ == '__main__':

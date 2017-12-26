@@ -13,14 +13,6 @@
 # limitations under the License.
 
 
-import tensorflow as tf
-from keras.backend.tensorflow_backend import set_session
-
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
-config.gpu_options.visible_device_list = '0'
-set_session(tf.Session(config=config))
-
 import copy
 import numpy as np
 from pathlib import Path
@@ -32,6 +24,7 @@ from keras.layers.convolutional import Conv1D
 from keras.layers.core import Dropout
 from keras.layers.normalization import BatchNormalization
 from keras.regularizers import l2
+from keras import backend as K
 
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.models.intent_recognition.intent_keras import metrics as metrics_file
@@ -40,8 +33,6 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.models.embedders.fasttext_embedder import EmbeddingsDict
 from deeppavlov.models.intent_recognition.intent_keras.utils import labels2onehot, log_metrics
 from deeppavlov.core.models.keras_model import KerasModel
-from deeppavlov.core.common.file import save_json
-
 
 
 @register('intent_model')
@@ -55,6 +46,8 @@ class KerasIntentModel(KerasModel):
             **kwargs:
         """
         self.opt = copy.deepcopy(opt)
+        self.sess = self._config_session()
+        K.set_session(self.sess)
 
         try:
             classes_file = self.opt['classes_file']
