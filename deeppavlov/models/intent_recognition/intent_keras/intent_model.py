@@ -20,22 +20,13 @@ config.gpu_options.allow_growth = True
 config.gpu_options.visible_device_list = '0'
 set_session(tf.Session(config=config))
 
-import keras
 import copy
-import sys
 import numpy as np
-import fasttext
-import re
 import json
 from pathlib import Path
 
-from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.common.registry import register
-from deeppavlov.models.embedders.fasttext_embedder import EmbeddingsDict
-from deeppavlov.models.intent_recognition.intent_keras.utils import labels2onehot, log_metrics
-from deeppavlov.core.models.keras_model import KerasModel
-
+import fasttext
+import keras
 from keras.models import Model
 from keras.layers import Dense, Input, concatenate, Activation
 from keras.layers.pooling import GlobalMaxPooling1D, MaxPooling1D
@@ -46,12 +37,16 @@ from keras.regularizers import l2
 from keras.layers import Bidirectional, LSTM
 from keras.optimizers import Adam
 
-
 import metrics as metrics_file
 import keras.metrics as keras_metrics_file
 import keras.losses as keras_loss_file
 from deeppavlov.core.common.attributes import check_attr_true
-from keras import backend as K
+from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.common.registry import register
+from deeppavlov.models.embedders.fasttext_embedder import EmbeddingsDict
+from deeppavlov.models.intent_recognition.intent_keras.utils import labels2onehot, log_metrics
+from deeppavlov.core.models.keras_model import KerasModel
 
 
 @register('intent_model')

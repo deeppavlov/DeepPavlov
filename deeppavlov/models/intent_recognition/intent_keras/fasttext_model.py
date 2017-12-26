@@ -1,29 +1,18 @@
-
-from deeppavlov.core.models.embedding_trainable import EmbeddingTrainableModel
-
 from deeppavlov.core.models.embedding_inferable import EmbeddingInferableModel
-from gensim.models.fasttext import FastText
+from gensim.models.wrappers.fasttext import FastText
+import numpy as np
 
 
-fasttext_model = EmbeddingTrainableModel(embedding_dim=10)
-print(fasttext_model.model)
-f = open('/home/dilyara/data/data_files/embeddings/badwords.txt', 'r')
-data = f.readlines()
-fasttext_model.train(data)
+fasttext_model = EmbeddingInferableModel(embedding_fname="/home/dilyara/data/data_files/embeddings/reddit_fasttext_model.bin",
+                                         embedding_dim=100)
 print(fasttext_model.model)
 
-fasttext_model.save(fname="/home/dilyara/data/data_files/embeddings/badwords_emb")
-print(fasttext_model.model)
 print('Done!')
-print(fasttext_model.infer(['fuck']))
 
-
-fasttext_model = EmbeddingInferableModel(fname="/home/dilyara/data/data_files/embeddings/badwords_emb.bin",
-                                         embedding_dim=10,
-                                         emb_dict_name="/home/dilyara/data/data_files/embeddings/badwords_emb.emb")
-print(fasttext_model.model)
-
-
-print(fasttext_model.model)
-print('Done!')
-print(fasttext_model.infer(['.']))
+embed = fasttext_model.infer('man woman boy girl')
+a = embed[0] - embed[1]
+b = embed[2] - embed[3]
+print(a)
+print(b)
+print(np.linalg.norm(a - b) / np.linalg.norm(a))
+print(np.linalg.norm(a - b) / np.linalg.norm(b))

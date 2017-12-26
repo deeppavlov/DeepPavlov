@@ -223,7 +223,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         Returns:
             metrics values on a given batch
         """
-        return self.model.train_on_batch(batch[0], batch[1])
+        pass
 
     @check_attr_true('train_now')
     def train(self, dataset, *args):
@@ -235,18 +235,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         Returns:
             metrics values on a given data
         """
-        epochs_done = 0
-
-        while epochs_done < self.opt['epochs']:
-            batch_gen = dataset.batch_generator(batch_size=self.opt['batch_size'],
-                                                data_type='train')
-            for step, batch in enumerate(batch_gen):
-                self.train_on_batch(batch)
-            epochs_done += 1
-            print('epochs_done: %d' % epochs_done)
-
-        self.save(fname=self.model_path_)
-        return
+        pass
 
     @overrides
     def infer(self, data, *args):
@@ -257,12 +246,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         Returns:
             predictions on a given sample
         """
-        if type(data) is str:
-            with self.sess.as_default():
-                return self.model.predict_on_batch([data])
-        else:
-            with self.sess.as_default():
-                return self.model.predict_on_batch(data)
+        pass
 
     def save(self, fname=None):
         """
