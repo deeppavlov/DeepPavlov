@@ -168,6 +168,17 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         if Path(fname + '_opt.json').is_file():
             with open(fname + '_opt.json', 'r') as opt_file:
                 self.opt = json.load(opt_file)
+
+        # TODO
+        # fname = self.model_path_.name if fname is None else fname
+        # fname = fname + '_opt.json'
+        #
+        # if Path.joinpath(self.model_path_.parent, fname).is_file():
+        #     with open(fname) as opt_file:
+        #         self.opt = json.load(opt_file)
+
+
+
         else:
             raise IOError("Error: config file %s_opt.json of saved model does not exist" % fname)
 
