@@ -37,7 +37,7 @@ from deeppavlov.models.intent_recognition.intent_keras.utils import labels2oneho
 from deeppavlov.core.models.keras_model import KerasModel
 
 from keras.models import Model
-from keras.layers import Dense, Input, concatenate, Activation, Embedding
+from keras.layers import Dense, Input, concatenate, Activation
 from keras.layers.pooling import GlobalMaxPooling1D, MaxPooling1D
 from keras.layers.convolutional import Conv1D
 from keras.layers.core import Dropout, Reshape
