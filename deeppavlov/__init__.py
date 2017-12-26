@@ -23,5 +23,5 @@ from deeppavlov.dataset_readers.intent_dataset_reader import IntentDatasetReader
 from deeppavlov.datasets.intent_dataset import IntentDataset
 from deeppavlov.models.intent_recognition.intent_keras.intent_model import KerasIntentModel
 from deeppavlov.preprocessors.intent_preprocessor import IntentPreprocessor
-
+from deeppavlov.core.models.keras_model import KerasModel
 

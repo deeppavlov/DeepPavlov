@@ -21,45 +21,39 @@ config.gpu_options.allow_growth = True
 config.gpu_options.visible_device_list = '0'
 set_session(tf.Session(config=config))
 
-import keras
 import copy
-import sys
 import numpy as np
-import fasttext
-import re
-import json
 from pathlib import Path
 
-from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.models.inferable import Inferable
+from keras.models import Model
+from keras.layers import Dense, Input, concatenate, Activation
+from keras.layers.pooling import GlobalMaxPooling1D, MaxPooling1D
+from keras.layers.convolutional import Conv1D
+from keras.layers.core import Dropout
+from keras.layers.normalization import BatchNormalization
+from keras.regularizers import l2
+
+from deeppavlov.core.common.attributes import check_attr_true
+from deeppavlov.models.intent_recognition.intent_keras import metrics as metrics_file
+from deeppavlov.core.common import paths
 from deeppavlov.core.common.registry import register
 from deeppavlov.models.embedders.fasttext_embedder import EmbeddingsDict
 from deeppavlov.models.intent_recognition.intent_keras.utils import labels2onehot, log_metrics
 from deeppavlov.core.models.keras_model import KerasModel
 from deeppavlov.core.common.file import save_json
 
-from keras.models import Model
-from keras.layers import Dense, Input, concatenate, Activation, Embedding
-from keras.layers.pooling import GlobalMaxPooling1D, MaxPooling1D
-from keras.layers.convolutional import Conv1D
-from keras.layers.core import Dropout, Reshape
-from keras.layers.normalization import BatchNormalization
-from keras.regularizers import l2
-from keras.layers import Bidirectional, LSTM
-from keras.optimizers import Adam
-
-import keras.metrics as keras_metrics_file
-import keras.losses as keras_loss_file
-from deeppavlov.core.common.attributes import check_attr_true
-import deeppavlov.models.intent_recognition.intent_keras.metrics as metrics_file
-from deeppavlov.core.common import paths
-from keras import backend as K
 
 
 @register('intent_model')
 class KerasIntentModel(KerasModel):
-    def __init__(self, opt, model_dir='keras_model', model_file='model', *args, **kwargs):
-
+    def __init__(self, opt, *args, **kwargs):
+        """
+        Method initializes model using parameters from opt
+        Args:
+            opt: dictionary of parameters
+            *args:
+            **kwargs:
+        """
         self.opt = copy.deepcopy(opt)
 
         try:
@@ -135,7 +129,7 @@ class KerasIntentModel(KerasModel):
 
     def train_on_batch(self, batch):
         """
-        Train the model on the given batch
+        Method trains the model on the given batch
         Args:
             batch - list of tuples (preprocessed text, labels)
 
@@ -153,7 +147,7 @@ class KerasIntentModel(KerasModel):
     @check_attr_true('train_now')
     def train(self, dataset, *args, **kwargs):
         """
-        Method trains considered model using batches and validation
+        Method trains the model using batches and validation
         Args:
             dataset: instance of class Dataset
 
@@ -215,7 +209,13 @@ class KerasIntentModel(KerasModel):
 
     def infer(self, data, *args):
         """
-        Return predictions on the given data (batch of texts or one text)
+        Method returns predictions on the given data
+        Args:
+            data: sentence or list of sentences
+            *args:
+
+        Returns:
+            Predictions for the given data
         """
         if type(data) is str:
             self.embedding_dict.add_items([data])
@@ -227,26 +227,14 @@ class KerasIntentModel(KerasModel):
             preds = self.model.predict_on_batch(features)
         return preds
 
-    def save(self, fname=None):
-        fname = self.model_path_.name if fname is None else fname
-        opt_fname = fname + '_opt.json'
-        weights_fname = fname + '.h5'
-
-        opt_path = Path.joinpath(self.model_path_, opt_fname)
-        weights_path = Path.joinpath(self.model_path_, weights_fname)
-        emb_path = Path.joinpath(self.model_path_, fname)
-        print("[ saving model: {} ]".format(str(opt_path)))
-        self.model.save_weights(weights_path)
-        self.embedding_dict.save_items(str(emb_path))
-
-        save_json(self.opt, opt_path)
-
-        return True
-
     def cnn_model(self, params):
         """
-        Build the uncompiled model of shallow-and-wide CNN
-        :return: model
+        Method builds uncompiled model of shallow-and-wide CNN
+        Args:
+            params: disctionary of parameters for NN
+
+        Returns:
+            Uncompiled model
         """
         if type(self.opt['kernel_sizes_cnn']) is str:
             self.opt['kernel_sizes_cnn'] = [int(x) for x in
@@ -282,8 +270,12 @@ class KerasIntentModel(KerasModel):
 
     def dcnn_model(self, params):
         """
-        Build the uncompiled model of deep CNN
-        :return: model
+        Method builds uncompiled model of deep CNN
+        Args:
+            params: disctionary of parameters for NN
+
+        Returns:
+            Uncompiled model
         """
         if type(self.opt['kernel_sizes_cnn']) is str:
             self.opt['kernel_sizes_cnn'] = [int(x) for x in
@@ -319,3 +311,6 @@ class KerasIntentModel(KerasModel):
         act_output = Activation('sigmoid')(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
+
+    def reset(self):
+        pass

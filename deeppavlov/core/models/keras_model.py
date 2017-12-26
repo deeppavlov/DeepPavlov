@@ -14,21 +14,23 @@
 
 
 from abc import abstractmethod
-import tensorflow as tf
 import json
 import copy
 from overrides import overrides
+from pathlib import Path
+
+import tensorflow as tf
+from .tf_backend import TfModelMeta
 from keras import backend as K
 from keras.models import Model
 from keras.layers import Dense, Input
 import keras.metrics
 import keras.optimizers
-from pathlib import Path
 
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.attributes import check_attr_true
-from .tf_backend import TfModelMeta
+from deeppavlov.core.common.file import save_json
 
 
 class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
@@ -163,11 +165,15 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
               '\nModel weights file is %s.h5'
               '\nNetwork parameters are from %s_opt.json' % (fname, fname))
 
-        fname = self.model_path_ if fname is None else fname
-        fname = str(fname.absolute())
+        fname = self.model_path_.name
+        opt_fname = str(fname) + '_opt.json'
+        weights_fname = str(fname) + '.h5'
 
-        if Path(fname + '_opt.json').is_file():
-            with open(fname + '_opt.json', 'r') as opt_file:
+        opt_path = Path.joinpath(self.model_path_, opt_fname)
+        weights_path = Path.joinpath(self.model_path_, weights_fname)
+
+        if Path(opt_path).is_file():
+            with open(opt_path, 'r') as opt_file:
                 self.opt = json.load(opt_file)
         else:
             raise IOError("Error: config file %s_opt.json of saved model does not exist" % fname)
@@ -179,7 +185,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
             raise AttributeError("Model %s is not defined" % model_name)
 
         print("Loading wights from `{}`".format(fname + '.h5'))
-        model.load_weights(fname + '.h5')
+        model.load_weights(weights_path)
 
         optimizer_func = getattr(keras.optimizers, optimizer_name, None)
         if callable(optimizer_func):
@@ -262,14 +268,18 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         Returns:
             nothing
         """
-        fname = self.model_path_ if fname is None else fname
-        fname = str(fname.absolute())
+        fname = self.model_path_.name if fname is None else fname
+        opt_fname = str(fname) + '_opt.json'
+        weights_fname = str(fname) + '.h5'
 
-        if fname:
-            print("Saving model weights and params: " + fname + " ")
-            self.model.save_weights(fname + '.h5')
-            with open(Path(fname + '_opt.json', 'w')) as opt_file:
-                json.dump(self.opt, opt_file)
+        opt_path = Path.joinpath(self.model_path_, opt_fname)
+        weights_path = Path.joinpath(self.model_path_, weights_fname)
+        print("[ saving model: {} ]".format(str(opt_path)))
+        self.model.save_weights(weights_path)
+
+        save_json(self.opt, opt_path)
+
+        return True
 
     def mlp(self, opt):
         """
