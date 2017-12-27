@@ -11,8 +11,10 @@ from abc import ABCMeta
 def _graph_wrap(func, graph):
     def _wrapped(*args, **kwargs):
         with graph.as_default():
-            return func(*args, **kwargs)
-
+            try:
+                return func(*args, **kwargs)
+            except TypeError:
+                print("wrapped function is {}".format(func))
     return _wrapped
 
 
