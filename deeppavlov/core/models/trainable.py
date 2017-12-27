@@ -17,17 +17,6 @@ class Trainable(Serializable):
     """
     train_now = False
 
-    # _model_dir = ''
-    # _model_file = ''
-    # model_path = ''
-    #
-    # @property
-    # def model_path_(self) -> Path:
-    #     if not self.model_path:
-    #         return Path(paths.USR_PATH).joinpath(self._model_dir, self._model_file)
-    #     else:
-    #         return Path(self.model_path)
-
     @abstractmethod
     def train(self, data, *args, **kwargs):
         """
@@ -47,6 +36,3 @@ class Trainable(Serializable):
     def load(self, *args, **kwargs):
         pass
 
-    def make_dir(self):
-        if not self.model_path_.parent.exists():
-            Path.mkdir(self.model_path_.parent)

@@ -5,7 +5,7 @@ of trainable models. For example, encoders can be inferred, but can't be trained
 All inferring models should inherit from this class.
 """
 
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 
 from .serializable import Serializable
 
