@@ -1,6 +1,6 @@
 from typing import Dict, Type, TypeVar
 
-from deeppavlov.core.common.registry import _REGISTRY
+from deeppavlov.core.common.registry import REGISTRY
 from deeppavlov.core.common.errors import ConfigError
 
 T = TypeVar('T')
@@ -22,7 +22,7 @@ def from_params(cls: Type, params: Dict, **kwargs) -> Type['T']:
                 continue
 
             try:
-                subcl = _REGISTRY[subcl_name]
+                subcl = REGISTRY[subcl_name]
                 subcl_params.pop('name')
                 config_params[param_name] = from_params(subcl, subcl_params)
             except KeyError:

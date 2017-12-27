@@ -1,16 +1,16 @@
 import json
 
 import numpy as np
-from deeppavlov.models.intent_recognition.intent_keras.metrics import fmeasure
+from deeppavlov.models.classifiers.intents.metrics import fmeasure
 from sklearn.metrics import log_loss, accuracy_score
 
 from deeppavlov.core.common.params import from_params
-from deeppavlov.core.common.registry import _REGISTRY
+from deeppavlov.core.common.registry import REGISTRY
 from deeppavlov.models.classifiers.intents.utils import labels2onehot, proba2onehot, \
     proba2labels, log_metrics
 
 
-def main(config_name='intent_config_infer.json'):
+def main(config_name='config_infer.json'):
 
     # K.clear_session()
 
@@ -19,12 +19,12 @@ def main(config_name='intent_config_infer.json'):
 
     # Reading datasets from files
     reader_config = config['dataset_reader']
-    reader = _REGISTRY[reader_config['name']]
+    reader = REGISTRY[reader_config['name']]
     data = reader.read(reader_config['data_path'])
 
     # Building dict of datasets
     dataset_config = config['dataset']
-    dataset = from_params(_REGISTRY[dataset_config['name']],
+    dataset = from_params(REGISTRY[dataset_config['name']],
                           dataset_config, data=data)
 
     # Merging train and valid dataset for further split on train/valid
@@ -32,8 +32,8 @@ def main(config_name='intent_config_infer.json'):
     # dataset.split_data(field_to_split='train', new_fields=['train', 'valid'], proportions=[0.9, 0.1])
 
     preproc_config = config['preprocessing']
-    preproc = from_params(_REGISTRY[preproc_config['name']],
-                                    preproc_config)
+    preproc = from_params(REGISTRY[preproc_config['name']],
+                          preproc_config)
     # dataset = preproc.preprocess(dataset=dataset, data_type='train')
     # dataset = preproc.preprocess(dataset=dataset, data_type='valid')
     dataset = preproc.preprocess(dataset=dataset, data_type='test')
@@ -43,7 +43,7 @@ def main(config_name='intent_config_infer.json'):
 
     # Initializing model
     model_config = config['model']
-    model = from_params(_REGISTRY[model_config['name']],
+    model = from_params(REGISTRY[model_config['name']],
                         model_config)
 
     print("Considered loss and metrics: {}".format(model.metrics_names))
