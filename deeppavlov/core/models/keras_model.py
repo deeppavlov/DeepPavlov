@@ -30,7 +30,7 @@ import keras.optimizers
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.attributes import check_attr_true
-from deeppavlov.core.common.file import save_json
+from deeppavlov.core.common.file import save_json, read_json
 
 
 class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
@@ -169,12 +169,11 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         opt_fname = str(fname) + '_opt.json'
         weights_fname = str(fname) + '.h5'
 
-        opt_path = Path.joinpath(self.model_path_, opt_fname)
-        weights_path = Path.joinpath(self.model_path_, weights_fname)
+        opt_path = self.model_path_.joinpath(opt_fname)
+        weights_path = self.model_path_.joinpath(weights_fname)
 
-        if Path(opt_path).is_file():
-            with open(opt_path, 'r') as opt_file:
-                self.opt = json.load(opt_file)
+        if opt_path.is_file():
+            self.opt = read_json(opt_path)
         else:
             raise IOError("Error: config file %s_opt.json of saved model does not exist" % fname)
 
@@ -272,9 +271,9 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         opt_fname = str(fname) + '_opt.json'
         weights_fname = str(fname) + '.h5'
 
-        opt_path = Path.joinpath(self.model_path_, opt_fname)
-        weights_path = Path.joinpath(self.model_path_, weights_fname)
-        print("[ saving model: {} ]".format(str(opt_path)))
+        opt_path = self.model_path_.joinpath(opt_fname)
+        weights_path = self.model_path_.joinpath(weights_fname)
+        print("[ saving model: {} ]".format(opt_path))
         self.model.save_weights(weights_path)
 
         save_json(self.opt, opt_path)

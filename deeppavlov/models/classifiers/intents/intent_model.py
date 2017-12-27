@@ -81,23 +81,18 @@ class KerasIntentModel(KerasModel):
         else:
             raise IOError("Error: FastText model file path is not given")
 
+        params = {"model_name": self.opt['model_name'],
+                  "optimizer_name": self.opt['optimizer'],
+                  "lr": self.opt['lear_rate'],
+                  "decay": self.opt['lear_rate_decay'],
+                  "loss_name": self.opt['loss'],
+                  "metrics_names": self.opt['lear_metrics'],
+                  "add_metrics_file": metrics_file}
+
         if self.opt['model_from_saved']:
-            self.model = self.load(model_name=self.opt['model_name'],
-                                   fname=self.model_path_,
-                                   optimizer_name=self.opt['optimizer'],
-                                   lr=self.opt['lear_rate'],
-                                   decay=self.opt['lear_rate_decay'],
-                                   loss_name=self.opt['loss'],
-                                   metrics_names=self.opt['lear_metrics'],
-                                   add_metrics_file=metrics_file)
+            self.model = self.load(fname=self.model_path_, **params)
         else:
-            self.model = self.init_model_from_scratch(model_name=self.opt['model_name'],
-                                                      optimizer_name=self.opt['optimizer'],
-                                                      lr=self.opt['lear_rate'],
-                                                      decay=self.opt['lear_rate_decay'],
-                                                      loss_name=self.opt['loss'],
-                                                      metrics_names=self.opt['lear_metrics'],
-                                                      add_metrics_file=metrics_file)
+            self.model = self.init_model_from_scratch(**params)
 
         self.metrics_names = self.model.metrics_names
         self.metrics_values = len(self.metrics_names) * [0.]
