@@ -18,7 +18,6 @@ from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
 from deeppavlov.models.spellers.error_model.error_model import ErrorModel
 from deeppavlov.models.trackers.hcn_at import ActionTracker
 from deeppavlov.models.trackers.hcn_et import EntityTracker
-from deeppavlov.preprocessors.intent_preprocessor import IntentPreprocessor
 from deeppavlov.skills.dummy_skill.dummy import DummySkill
 from deeppavlov.skills.hcn.hybrid import HybridCodeNetwork
 from deeppavlov.skills.hcn_new.hcn import HybridCodeNetworkModel
@@ -27,6 +26,5 @@ from deeppavlov.vocabs.wiki_100k_dictionary import Wiki100KDictionary
 from deeppavlov.dataset_readers.intent_dataset_reader import IntentDatasetReader
 from deeppavlov.datasets.intent_dataset import IntentDataset
 from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel
-from deeppavlov.preprocessors.intent_preprocessor import IntentPreprocessor
 from deeppavlov.core.models.keras_model import KerasModel
 

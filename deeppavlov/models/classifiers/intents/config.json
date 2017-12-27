@@ -35,6 +35,7 @@
     "data_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2"
   },
   "dataset": {
+    "prep_method_name": "simple_prep",
     "dataset_path":"/media/olga/Data/projects/iPavlov/Pilot/data/intent_cnn",
     "name": "intent_dataset",
     "seed": 42,
@@ -42,10 +43,7 @@
     "fields_to_merge": "train valid",
     "merged_field": "train",
     "field_to_split": "train",
-    "splitted_fields": "train valid",
-    "splitting_proportions": "0.9 0.1"
-  },
-  "preprocessing": {
-    "name": "intent_preprocessing"
+    "split_fields": "train valid",
+    "split_proportions": "0.9 0.1"
   }
 }
