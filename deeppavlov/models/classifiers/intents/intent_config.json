@@ -4,6 +4,7 @@
     "train_now": true,
     "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/intent_cnn",
     "opt": {
+      "classes_file": "/media/olga/Data/projects/iPavlov/Pilot/data/intent_cnn/intents/classes.txt",
       "kernel_sizes_cnn": "3 3 3",
       "filters_cnn": 512,
       "embedding_size": 100,
@@ -34,6 +35,7 @@
     "data_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2"
   },
   "dataset": {
+    "dataset_path":"/media/olga/Data/projects/iPavlov/Pilot/data/intent_cnn",
     "name": "intent_dataset",
     "seed": 42,
     "extract_classes": true,

@@ -17,7 +17,6 @@ import copy
 from pathlib import Path
 
 import numpy as np
-from deeppavlov.models.classifiers.intents import metrics as metrics_file
 from keras import backend as K
 from keras.layers import Dense, Input, concatenate, Activation
 from keras.layers.convolutional import Conv1D
@@ -33,6 +32,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.fasttext_inferable import EmbeddingInferableModel
 from deeppavlov.core.models.keras_model import KerasModel
 from deeppavlov.models.classifiers.intents.utils import labels2onehot, log_metrics
+from deeppavlov.models.classifiers.intents import metrics as metrics_file
 
 
 @register('intent_model')
@@ -52,15 +52,16 @@ class KerasIntentModel(KerasModel):
         try:
             classes_file = self.opt['classes_file']
         except KeyError:  # if no classes path is passed in json
-            try:
-                classes_file = Path(paths.USR_PATH).joinpath('intents', 'classes.txt')
-            except FileNotFoundError as e:
-                raise (e,
-                       "Something is bad with the path to dataset classes file."
-                       "Provide the file path explicitly in json config.")
+            classes_file = Path(paths.USR_PATH).joinpath('intents', 'classes.txt')
 
-        with open(classes_file) as fin:
-            self.classes = np.array(fin.read().split("\n"))
+        try:
+            with open(classes_file) as fin:
+                self.classes = np.array(fin.read().split("\n"))
+
+        except FileNotFoundError:
+            print("Something is bad with the path to dataset classes file. "
+                  "Provide the file path explicitly in json config.")
+            raise
 
         self.n_classes = self.classes.shape[0]
         self.confident_threshold = self.opt['confident_threshold']
@@ -72,8 +73,9 @@ class KerasIntentModel(KerasModel):
 
         if self.opt['fasttext_model'] is not None:
             if Path(self.opt['fasttext_model']).is_file():
-                self.fasttext_model = EmbeddingInferableModel(embedding_fname=self.opt['fasttext_model'],
-                                                              embedding_dim=self.opt['embedding_size'])
+                self.fasttext_model = EmbeddingInferableModel(
+                    embedding_fname=self.opt['fasttext_model'],
+                    embedding_dim=self.opt['embedding_size'])
             else:
                 raise IOError("Error: FastText model file does not exist")
         else:
