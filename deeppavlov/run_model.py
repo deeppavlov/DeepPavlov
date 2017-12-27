@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.commands.utils import set_usr_dir
@@ -15,6 +17,8 @@ from deeppavlov.core.commands.utils import set_usr_dir
 # models/classifiers/intents/config.json
 
 MODEL_CONFIG_PATH = 'models/classifiers/intents/config.json'
-set_usr_dir(MODEL_CONFIG_PATH)
+usr_dir = set_usr_dir(MODEL_CONFIG_PATH)
 train_model_from_config(MODEL_CONFIG_PATH)
 interact_model(MODEL_CONFIG_PATH)
+
+Path(usr_dir).rmdir()
