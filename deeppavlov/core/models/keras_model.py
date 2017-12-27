@@ -153,7 +153,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         else:
             raise AttributeError("Model {} is not defined".format(model_name))
 
-        print("Loading wights from `{}`".format(fname + '.h5'))
+        print("Loading weights from `{}`".format(fname + '.h5'))
         model.load_weights(weights_path)
 
         optimizer_func = getattr(keras.optimizers, optimizer_name, None)

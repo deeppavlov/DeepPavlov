@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import numpy as np
-from typing import Dict
 from keras.layers import Dense, Input, concatenate, Activation
 from keras.layers.convolutional import Conv1D
 from keras.layers.core import Dropout
@@ -9,14 +8,15 @@ from keras.layers.normalization import BatchNormalization
 from keras.layers.pooling import GlobalMaxPooling1D, MaxPooling1D
 from keras.models import Model
 from keras.regularizers import l2
+from typing import Dict
 
 from deeppavlov.core.common import paths
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.fasttext_inferable import EmbeddingInferableModel
 from deeppavlov.core.models.keras_model import KerasModel
-from deeppavlov.models.classifiers.intents.utils import labels2onehot, log_metrics
 from deeppavlov.models.classifiers.intents import metrics as metrics_file
+from deeppavlov.models.classifiers.intents.utils import labels2onehot, log_metrics
+from deeppavlov.models.embedders.fasttext_inferable import EmbeddingInferableModel
 
 
 @register('intent_model')
@@ -238,7 +238,7 @@ class KerasIntentModel(KerasModel):
         """
         Method builds uncompiled model of deep CNN
         Args:
-            params: disctionary of parameters for NN
+            params: dictionary of parameters for NN
 
         Returns:
             Uncompiled model
