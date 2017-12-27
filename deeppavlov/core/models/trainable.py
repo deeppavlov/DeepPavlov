@@ -4,27 +4,29 @@ for all models that can be trained (ex. neural networks, scikit-learn estimators
 etc.). All trainable models should inherit from this class.
 """
 
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
 from pathlib import Path
-from deeppavlov.core.common import paths
+
+from .serializable import Serializable
 
 
-class Trainable(metaclass=ABCMeta):
+class Trainable(Serializable):
     """
     :attr:`train_now` expresses a developer intent for whether a model as part of a pipeline
     should be trained in the current experiment run or not.
     """
     train_now = False
-    _model_dir = ''
-    _model_file = ''
-    model_path = ''
 
-    @property
-    def model_path_(self) -> Path:
-        if not self.model_path:
-            return Path(paths.USR_PATH).joinpath(self._model_dir, self._model_file)
-        else:
-            return Path(self.model_path)
+    # _model_dir = ''
+    # _model_file = ''
+    # model_path = ''
+    #
+    # @property
+    # def model_path_(self) -> Path:
+    #     if not self.model_path:
+    #         return Path(paths.USR_PATH).joinpath(self._model_dir, self._model_file)
+    #     else:
+    #         return Path(self.model_path)
 
     @abstractmethod
     def train(self, data, *args, **kwargs):
