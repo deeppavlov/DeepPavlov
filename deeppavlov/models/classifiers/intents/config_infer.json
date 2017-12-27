@@ -1,24 +1,23 @@
 {
   "model": {
     "name": "intent_model",
-    "train_now": false,
-    "model_path": "/home/dilyara/Documents/GitHub/Pilot/deeppavlov/models/intent_recognition/intent_keras/intent_cnn_best",
+    "model_path": "/media/olga/Data/projects/iPavlov/Pilot/deeppavlov/models/classifiers/intents/intent_cnn_best",
     "opt": {
-      "classes_file": "./classes.txt",
+      "classes_file": "/media/olga/Data/projects/iPavlov/Pilot/data/intent_cnn/intents/classes.txt",
       "embedding_size": 100,
       "lear_metrics": "binary_accuracy fmeasure",
       "confident_threshold": 0.5,
-      "model_from_saved": true,
       "optimizer": "Adam",
       "lear_rate": 0.1,
       "lear_rate_decay": 0.1,
       "loss": "binary_crossentropy",
-      "fasttext_model": "/home/dilyara/data/data_files/embeddings/dstc2_fasttext_model_100.bin",
+      "fasttext_model": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2_fasttext_model_100.bin",
       "text_size": 15,
       "coef_reg_cnn": 1e-4,
       "coef_reg_den": 1e-4,
       "dropout_rate": 0.5,
-      "epochs": 10,
+      "epochs": 1,
+      "dense_size": 100,
       "model_name": "cnn_model",
       "batch_size": 64,
       "val_every_n_epochs": 5,
@@ -29,20 +28,18 @@
   },
   "dataset_reader": {
     "name": "intent_dataset_reader",
-    "data_path": "/home/dilyara/data/data_files/dstc2"
+    "data_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2"
   },
   "dataset": {
+    "prep_method_name": "simple_prep",
+    "dataset_path":"/media/olga/Data/projects/iPavlov/Pilot/data/intent_cnn",
     "name": "intent_dataset",
     "seed": 42,
-    "classes_file": "./classes.txt",
     "extract_classes": true,
     "fields_to_merge": "train valid",
     "merged_field": "train",
     "field_to_split": "train",
-    "splitted_fields": "train valid",
-    "splitting_proportions": "0.9 0.1"
-  },
-  "preprocessing": {
-    "name": "intent_preprocessing"
+    "split_fields": "train valid",
+    "split_proportions": "0.9 0.1"
   }
 }
