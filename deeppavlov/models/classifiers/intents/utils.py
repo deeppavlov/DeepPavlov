@@ -1,6 +1,7 @@
 import numpy as np
 import sys
 
+
 def labels2onehot(labels, classes):
     n_classes = len(classes)
     eye = np.eye(n_classes)
@@ -17,6 +18,7 @@ def labels2onehot(labels, classes):
     y = np.asarray(y)
     return y
 
+
 def proba2labels(proba, confident_threshold, classes):
     y = []
     for sample in proba:
@@ -28,8 +30,10 @@ def proba2labels(proba, confident_threshold, classes):
     y = np.asarray(y)
     return y
 
+
 def proba2onehot(proba, confident_threshold, classes):
     return labels2onehot(proba2labels(proba, confident_threshold, classes), classes)
+
 
 def log_metrics(names, values, updates=None, mode='train'):
     sys.stdout.write("\r")  # back to previous line
