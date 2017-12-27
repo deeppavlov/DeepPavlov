@@ -8,6 +8,7 @@ from deeppavlov.datasets.dstc2_datasets import DSTC2DialogDataset
 from deeppavlov.datasets.hcn_dataset import HCNDataset
 from deeppavlov.datasets.intent_dataset import IntentDataset
 from deeppavlov.datasets.typos_dataset import TyposDataset
+from deeppavlov.vocabs.wiki_100k_dictionary import Wiki100KDictionary
 from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel
 from deeppavlov.models.commutators.random_commutator import RandomCommutator
 from deeppavlov.models.embedders.w2v_embedder import UtteranceEmbed
@@ -22,9 +23,4 @@ from deeppavlov.skills.dummy_skill.dummy import DummySkill
 from deeppavlov.skills.hcn.hybrid import HybridCodeNetwork
 from deeppavlov.skills.hcn_new.hcn import HybridCodeNetworkModel
 from deeppavlov.skills.hcn_new.tracker import FeaturizedTracker
-from deeppavlov.vocabs.wiki_100k_dictionary import Wiki100KDictionary
-from deeppavlov.dataset_readers.intent_dataset_reader import IntentDatasetReader
-from deeppavlov.datasets.intent_dataset import IntentDataset
-from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel
-from deeppavlov.core.models.keras_model import KerasModel
 
