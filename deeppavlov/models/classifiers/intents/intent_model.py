@@ -14,25 +14,26 @@
 
 
 import copy
-import numpy as np
 from pathlib import Path
 
-from keras.models import Model
+import numpy as np
+from deeppavlov.models.classifiers.intents import metrics as metrics_file
+from keras import backend as K
 from keras.layers import Dense, Input, concatenate, Activation
-from keras.layers.pooling import GlobalMaxPooling1D, MaxPooling1D
 from keras.layers.convolutional import Conv1D
 from keras.layers.core import Dropout
 from keras.layers.normalization import BatchNormalization
+from keras.layers.pooling import GlobalMaxPooling1D, MaxPooling1D
+from keras.models import Model
 from keras.regularizers import l2
-from keras import backend as K
 
-from deeppavlov.core.common.attributes import check_attr_true
-from deeppavlov.models.intent_recognition.intent_keras import metrics as metrics_file
 from deeppavlov.core.common import paths
+from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.intent_recognition.intent_keras.utils import labels2onehot, log_metrics
-from deeppavlov.core.models.keras_model import KerasModel
 from deeppavlov.core.models.fasttext_inferable import EmbeddingInferableModel
+from deeppavlov.core.models.keras_model import KerasModel
+from deeppavlov.models.classifiers.intents.utils import labels2onehot, log_metrics
+
 
 @register('intent_model')
 class KerasIntentModel(KerasModel):

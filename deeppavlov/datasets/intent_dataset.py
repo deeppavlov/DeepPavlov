@@ -9,8 +9,8 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset import Dataset
 from deeppavlov.core.common import paths
 # from deeppavlov.models.embedders.fasttext_embedder import EmbeddingsDict
-# from deeppavlov.models.intent_recognition.intent_keras.intent_model import KerasIntentModel
-# from deeppavlov.models.intent_recognition.intent_keras.utils import labels2onehot, proba2labels, proba2onehot
+# from deeppavlov.models.intents.intent_keras.intent_model import KerasIntentModel
+# from deeppavlov.models.intents.intent_keras.utils import labels2onehot, proba2labels, proba2onehot
 
 
 @register('intent_dataset')

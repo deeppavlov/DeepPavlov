@@ -1,18 +1,13 @@
 import json
+
 import numpy as np
-
-from sklearn.metrics import log_loss, accuracy_score
-import keras.backend as K
-
-from deeppavlov.core.common.registry import _REGISTRY
-from deeppavlov.core.common.params import from_params
-from deeppavlov.dataset_readers.intent_dataset_reader import IntentDatasetReader
-from deeppavlov.datasets.intent_dataset import IntentDataset
-from deeppavlov.models.intent_recognition.intent_keras.intent_model import KerasIntentModel
-from deeppavlov.preprocessors.intent_preprocessor import IntentPreprocessor
-from deeppavlov.models.intent_recognition.intent_keras.utils import labels2onehot, proba2onehot, \
-    proba2labels, log_metrics
 from deeppavlov.models.intent_recognition.intent_keras.metrics import fmeasure
+from sklearn.metrics import log_loss, accuracy_score
+
+from deeppavlov.core.common.params import from_params
+from deeppavlov.core.common.registry import _REGISTRY
+from deeppavlov.models.classifiers.intents.utils import labels2onehot, proba2onehot, \
+    proba2labels, log_metrics
 
 
 def main(config_name='intent_config_infer.json'):
