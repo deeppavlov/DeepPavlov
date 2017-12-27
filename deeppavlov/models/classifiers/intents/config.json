@@ -10,7 +10,6 @@
       "embedding_size": 100,
       "lear_metrics": "binary_accuracy fmeasure",
       "confident_threshold": 0.5,
-      "model_from_saved": false,
       "optimizer": "Adam",
       "lear_rate": 0.1,
       "lear_rate_decay": 0.1,
