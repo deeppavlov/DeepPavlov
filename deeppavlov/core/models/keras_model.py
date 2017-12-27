@@ -1,36 +1,21 @@
-# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-
 from abc import abstractmethod
-import json
-import copy
-from overrides import overrides
-from pathlib import Path
 
 import tensorflow as tf
+import keras.metrics
+import keras.optimizers
+from typing import Dict
+from overrides import overrides
 from .tf_backend import TfModelMeta
 from keras import backend as K
 from keras.models import Model
 from keras.layers import Dense, Input
-import keras.metrics
-import keras.optimizers
+
 
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.file import save_json, read_json
+from deeppavlov.core.common.attributes import run_alt_meth_if_no_path
 
 
 class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
@@ -38,33 +23,17 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
     Class builds keras model
     """
 
-    def __init__(self, opt, *args, **kwargs):
+    def __init__(self, opt: Dict, *args, **kwargs):
         """
         Method initializes model using parameters from opt
         Args:
-            opt: dictionary of parameters
+            opt: model parameters
             *args:
             **kwargs:
         """
-        self.opt = copy.deepcopy(opt)
+        self.opt = opt
         self.sess = self._config_session()
         K.set_session(self.sess)
-
-        if self.opt['model_from_saved']:
-            self.model = self.load(model_name=self.opt['model_name'],
-                                   fname=self.model_path_,
-                                   optimizer_name=self.opt['optimizer'],
-                                   lr=self.opt['lear_rate'],
-                                   decay=self.opt['lear_rate_decay'],
-                                   loss_name=self.opt['loss'],
-                                   metrics_names=self.opt['lear_metrics'])
-        else:
-            self.model = self.init_model_from_scratch(model_name=self.opt['model_name'],
-                                                      optimizer_name=self.opt['optimizer'],
-                                                      lr=self.opt['lear_rate'],
-                                                      decay=self.opt['lear_rate_decay'],
-                                                      loss_name=self.opt['loss'],
-                                                      metrics_names=self.opt['lear_metrics'])
 
     def _config_session(self):
         config = tf.ConfigProto()
@@ -137,6 +106,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                       target_tensors=target_tensors)
         return model
 
+    @run_alt_meth_if_no_path(init_model_from_scratch, 'train_now')
     @overrides
     def load(self, model_name, fname, optimizer_name,
              lr, decay, loss_name, metrics_names=None, add_metrics_file=None, loss_weights=None,
@@ -242,17 +212,6 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
 
         Returns:
             metrics values on a given data
-        """
-        pass
-
-    @abstractmethod
-    def infer(self, data, *args):
-        """
-        Method predicts on given batch
-        Args:
-            data: one sample or batch of texts
-        Returns:
-            predictions on a given sample
         """
         pass
 

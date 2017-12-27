@@ -1,23 +1,7 @@
-# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-
-import copy
 from pathlib import Path
 
 import numpy as np
-from keras import backend as K
+from typing import Dict
 from keras.layers import Dense, Input, concatenate, Activation
 from keras.layers.convolutional import Conv1D
 from keras.layers.core import Dropout
@@ -37,17 +21,15 @@ from deeppavlov.models.classifiers.intents import metrics as metrics_file
 
 @register('intent_model')
 class KerasIntentModel(KerasModel):
-    def __init__(self, opt, *args, **kwargs):
+    def __init__(self, opt: Dict, *args, **kwargs):
         """
         Method initializes model using parameters from opt
         Args:
-            opt: dictionary of parameters
+            opt: model parameters
             *args:
             **kwargs:
         """
-        self.opt = copy.deepcopy(opt)
-        self.sess = self._config_session()
-        K.set_session(self.sess)
+        super().__init__(opt, *args, **kwargs)
 
         try:
             classes_file = self.opt['classes_file']
@@ -89,10 +71,7 @@ class KerasIntentModel(KerasModel):
                   "metrics_names": self.opt['lear_metrics'],
                   "add_metrics_file": metrics_file}
 
-        if self.opt['model_from_saved']:
-            self.model = self.load(fname=self.model_path_, **params)
-        else:
-            self.model = self.init_model_from_scratch(**params)
+        self.model = self.load(**params, fname=self.model_path_)
 
         self.metrics_names = self.model.metrics_names
         self.metrics_values = len(self.metrics_names) * [0.]
