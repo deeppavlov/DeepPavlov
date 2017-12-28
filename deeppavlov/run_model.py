@@ -12,6 +12,8 @@ from deeppavlov.core.commands.utils import set_usr_dir
 
 # Speller
 # models/spellers/error_model/config_en.json
+# models/spellers/error_model/config_ru.json
+# models/spellers/error_model/config_ru_custom_vocab.json
 
 # Intents classifier
 # models/classifiers/intents/config.json

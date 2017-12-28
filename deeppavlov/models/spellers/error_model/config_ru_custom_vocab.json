@@ -3,17 +3,16 @@
     "name": "spelling_error_model",
     "models_path": "../build",
     "window": 1,
+    "train_now": true,
     "dictionary": {
       "name": "static_dictionary",
       "dictionary_name": "compreno_words",
-      "data_dir": "../data",
       "raw_dictionary_path": "/home/yoptar/reps/speller/downloads/russian_words/compreno_wordforms.txt"
     },
     "lm_file": "/data/data/wiyalen_no_punkt.arpa.binary"
   },
   "dataset_reader": {
-    "name": "typos_kartaslov_reader",
-    "data_path": "../data"
+    "name": "typos_kartaslov_reader"
   },
   "dataset": {
     "name": "typos_dataset"
