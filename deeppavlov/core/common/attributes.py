@@ -49,7 +49,7 @@ def run_alt_meth_if_no_path(alt_f: Callable, attr: str):
 
 
 def check_path_exists(path_type='file'):
-    def _chek_path_exists(f: Callable):
+    def _check_path_exists(f: Callable):
         def wrapped(self, *args):
             if path_type == 'file':
                 if self.model_path_.exists():
@@ -66,4 +66,4 @@ def check_path_exists(path_type='file'):
 
         return wrapped
 
-    return _chek_path_exists
+    return _check_path_exists

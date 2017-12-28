@@ -159,7 +159,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         print('\n:: training started\n')
 
         curr_patience = patience
-        best_model = 
+# TODO: in case patience is off, save model {patience} steps before
         for j in range(num_epochs):
 
             tr_data = data.iter_all('train')
