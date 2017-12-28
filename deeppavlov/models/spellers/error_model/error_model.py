@@ -5,12 +5,13 @@ from collections import defaultdict, Counter
 from heapq import heappop, heappushpop, heappush
 from math import log, exp
 
+import kenlm
+
 from deeppavlov.core.common import paths
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.vocabs.static_dictionary import StaticDictionary
-import kenlm
 
 
 @register('spelling_error_model')
@@ -96,8 +97,9 @@ class ErrorModel(Inferable, Trainable):
                     res.append(max(c_res))
                 if prefix in self.dictionary.words_set:
                     heappushpop(candidates, (res[-1], prefix))
-                potential = max(
-                    [e for i in range(self.window + 2) for e in d[prefix[:prefix_len - i]]])
+                potential = max(res)
+                # potential = max(
+                #     [e for i in range(self.window + 2) for e in d[prefix[:prefix_len - i]]])
                 if potential > threshold:
                     heappush(prefixes_heap, (-potential, self.dictionary.words_trie[prefix]))
         return [(w.strip('⟬⟭'), score) for score, w in sorted(candidates, reverse=True) if score > threshold]
