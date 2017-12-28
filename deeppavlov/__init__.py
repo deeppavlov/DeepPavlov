@@ -9,7 +9,6 @@ from deeppavlov.models.commutators.random_commutator import RandomCommutator
 from deeppavlov.models.embedders.w2v_embedder import UtteranceEmbed
 from deeppavlov.models.encoders.bow import BoW_encoder
 from deeppavlov.models.lstms.hcn_lstm import LSTM
-from deeppavlov.models.ner.model_loader import load_ner_dstc_model
 from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
 from deeppavlov.models.spellers.error_model.error_model import ErrorModel
 from deeppavlov.models.trackers.hcn_at import ActionTracker

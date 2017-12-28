@@ -39,7 +39,7 @@ from keras.layers import Bidirectional, LSTM
 from keras.optimizers import Adam
 
 
-import intent_recognition.metrics as metrics_file
+import deeppavlov.models.intent_recognition.intent_keras.metrics as metrics_file
 import keras.metrics as keras_metrics_file
 import keras.losses as keras_loss_file
 

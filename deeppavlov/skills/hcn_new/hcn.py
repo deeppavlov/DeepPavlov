@@ -44,7 +44,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                  slot_filler: Type = DstcSlotFillingNetwork,
                  intent_classifier:Type = KerasIntentModel,
                  bow_encoder: Type = BoW_encoder,
-                 embedder: Type = UtteranceEmbed,
+                 embedder: Type = FasttextUtteranceEmbed,
                  tokenizer: Type = SpacyTokenizer,
                  tracker: Type = DefaultTracker,
                  network: Type = HybridCodeNetworkModel,
@@ -155,9 +155,11 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                         action_mask[a_id] = 0
         return action_mask
 
-    def train(self, data, num_epochs=40, acc_threshold=0.99):
+    def train(self, data, num_epochs=200, patience=5):
         print('\n:: training started\n')
 
+        curr_patience = patience
+        best_model = 
         for j in range(num_epochs):
 
             tr_data = data.iter_all('train')
@@ -200,13 +202,20 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                     # TODO: update dialog metrics
             print('\n\n:: {}.train {}'.format(j + 1, self.metrics.report()))
 
-            metrics = self.evaluate(eval_data)
-            print(':: {}.valid {}'.format(j + 1, metrics.report()))
+            valid_metrics = self.evaluate(eval_data)
+            print(':: {}.valid {}'.format(j + 1, valid_metrics.report()))
 
-            if metrics.action_accuracy > acc_threshold:
-                print('Accuracy is {}, stopped training.' \
-                      .format(metrics.action_accuracy))
+            if prev_valid_accuracy > valid_metrics.action_accuracy:
+                curr_patience -= 1
+                print(":: Patience decreased by 1, is equal to {}.".format(curr_patience))
+            else:
+                curr_patience = patience
+            if curr_patience < 1:
+                print(":: Patience is over, stopped training.")
                 break
+            prev_valid_accuracy = valid_metrics.action_accuracy
+        else:
+            print(":: Stopping because max number of epochs encountered.")
         self.save()
 
     def infer(self, context, db_result=None):

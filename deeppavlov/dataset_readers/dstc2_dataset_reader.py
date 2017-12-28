@@ -55,6 +55,7 @@ class DSTC2DatasetReader(DatasetReader):
             'test': self._read_from_file(
                 Path(data_path, self._data_fname('tst')), dialogs)
         }
+        from deeppavlov.core.common import paths
         self.save_vocab(data, paths.USR_PATH.joinpath('vocab.txt'))
         return data
 
