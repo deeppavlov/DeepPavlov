@@ -1,34 +1,20 @@
-from pathlib import Path
-
 import numpy as np
 from gensim.models import word2vec
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.common import paths
 from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.common.attributes import check_attr_true, run_alt_meth_if_no_path
 
 
 @register('w2v')
 class UtteranceEmbed(Trainable, Inferable):
-    def __init__(self, corpus_path, model_dir_path='emb', model_fname='text8.model', dim=300,
-                 train_now=False):
+    def __init__(self, corpus_path, model_dir='emb', model_file='text8.model', dim=300):
         self._corpus_path = corpus_path
-        self._model_path = Path(paths.USR_PATH).joinpath(model_dir_path, model_fname)
+        self._model_dir = model_dir
+        self._model_file = model_file
         self.dim = dim
-        self._train_now = train_now
-
-        if self._train_now:
-            self.train()
-            self.model = word2vec.Word2Vec.load(self._model_path)
-
-        else:
-            try:
-                self.model = word2vec.Word2Vec.load(str(self._model_path))
-            except:
-                print("There is no pretrained model, training a new one anyway.")
-                self.train()
-                self.model = word2vec.Word2Vec.load(str(self._model_path))
+        self.model = self.load()
 
     def _encode(self, utterance):
         embs = [self.model[word] for word in utterance.split(' ') if word and word in self.model]
@@ -38,17 +24,25 @@ class UtteranceEmbed(Trainable, Inferable):
         else:
             return np.zeros([self.dim], np.float32)
 
-    def train(self):
+    @check_attr_true('train_now')
+    def train(self, *args, **kwargs):
         sentences = word2vec.Text8Corpus(self._corpus_path)
 
         print(':: creating new word2vec model')
         model = word2vec.Word2Vec(sentences, size=self.dim)
+        self.model = model
 
-        if not self._model_path.parent.exists():
-            Path.mkdir(self._model_path.parent)
+        self.make_dir()
+        self.save()
+        return model
 
-        model.save(str(self._model_path))
-        print(':: model saved to path')
-
-    def infer(self, utterance):
+    def infer(self, utterance, *args, **kwargs):
         return self._encode(utterance)
+
+    @run_alt_meth_if_no_path(train, 'train_now')
+    def load(self):
+        return word2vec.Word2Vec.load(str(self.model_path_))
+
+    def save(self):
+        self.model.save(str(self.model_path_))
+        print(':: model saved to path')

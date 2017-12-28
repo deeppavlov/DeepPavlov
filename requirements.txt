@@ -8,3 +8,6 @@ numpy==1.13.3
 tensorflow==1.4.0
 typing==3.6.2
 kenlm
+six==1.11.0
+h5py==2.7.1
+keras==2.1.2

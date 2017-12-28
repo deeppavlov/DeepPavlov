@@ -11,6 +11,10 @@
     "bow_encoder": {
       "name": "bow"
     },
+    "net":{
+      "train_now": true,
+      "name": "hcn_lstm"
+    },
     "embedder": {
       "train_now": false,
       "name": "w2v",
@@ -27,7 +31,5 @@
         "name": "wikipedia_100K_vocab"
       }
     }
-  },
-  "config_path": "config.json"
+  }
 }
-

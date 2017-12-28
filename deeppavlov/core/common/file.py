@@ -7,6 +7,11 @@ def read_json(fpath):
         return json.load(fin)
 
 
+def save_json(data, fpath):
+    with open(fpath, 'w') as fout:
+        return json.dump(data, fout)
+
+
 def save_pickle(data, fpath):
     with open(fpath, 'wb') as fout:
         pickle.dump(data, fout)

@@ -4,10 +4,13 @@ for all models that can be trained (ex. neural networks, scikit-learn estimators
 etc.). All trainable models should inherit from this class.
 """
 
-from abc import ABCMeta, abstractmethod
+from abc import abstractmethod
+from pathlib import Path
+
+from .serializable import Serializable
 
 
-class Trainable(metaclass=ABCMeta):
+class Trainable(Serializable):
     """
     :attr:`train_now` expresses a developer intent for whether a model as part of a pipeline
     should be trained in the current experiment run or not.
@@ -21,6 +24,15 @@ class Trainable(metaclass=ABCMeta):
         :param data: any type of input data passed for training
         :param args: all needed params for training
         As a result of training, the model should be saved to user dir defined at
-        deeppavlov.common.paths.USR_PATH. Remember that a particular path is assigned in runtime.
+        deeppavlov.common.paths.USR_PATH. A particular path is assigned in runtime.
         """
         pass
+
+    @abstractmethod
+    def save(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def load(self, *args, **kwargs):
+        pass
+
