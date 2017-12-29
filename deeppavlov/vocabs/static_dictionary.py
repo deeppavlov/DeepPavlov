@@ -1,6 +1,6 @@
-import os
 import shutil
 from collections import defaultdict
+from pathlib import Path
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import is_done, mark_done
@@ -28,20 +28,21 @@ class StaticDictionary:
     def __init__(self, data_dir=None, *args, **kwargs):
         if data_dir is None:
             data_dir = paths.USR_PATH
+        data_dir = Path(data_dir)
         if self.dict_name is None:
             self.dict_name = args[0] if args else kwargs.get('dictionary_name', 'dictionary')
 
-        data_dir = os.path.join(data_dir, self.dict_name)
+        data_dir = data_dir / self.dict_name
 
-        alphabet_path = os.path.join(data_dir, 'alphabet.pkl')
-        words_path = os.path.join(data_dir, 'words.pkl')
-        words_trie_path = os.path.join(data_dir, 'words_trie.pkl')
+        alphabet_path = data_dir / 'alphabet.pkl'
+        words_path = data_dir / 'words.pkl'
+        words_trie_path = data_dir / 'words_trie.pkl'
 
         if not is_done(data_dir):
             print('Trying to build a dictionary in {}'.format(data_dir))
-            if os.path.isdir(data_dir):
+            if data_dir.is_dir():
                 shutil.rmtree(data_dir)
-            os.makedirs(data_dir, 0o755)
+            data_dir.mkdir(mode=0o755, parents=True)
 
             words = self._get_source(data_dir, *args, **kwargs)
             words = {self._normalize(word) for word in words}

@@ -1,6 +1,5 @@
 import csv
 import itertools
-import os
 from collections import defaultdict, Counter
 from heapq import heappop, heappushpop, heappush
 from math import log, exp
@@ -12,7 +11,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.vocabs.static_dictionary import StaticDictionary
-from deeppavlov.core.common.attributes import check_attr_true, run_alt_meth_if_no_path, check_path_exists
+from deeppavlov.core.common.attributes import check_attr_true, check_path_exists
 
 
 @register('spelling_error_model')
@@ -35,7 +34,7 @@ class ErrorModel(Inferable, Trainable):
         self.costs[('⟭', '⟭')] = log(1)
         for c in self.dictionary.alphabet:
             self.costs[(c, c)] = log(1)
-        if os.path.isfile(self.model_path_):
+        if self.model_path_.is_file():
             self.load()
 
         if lm_file:
