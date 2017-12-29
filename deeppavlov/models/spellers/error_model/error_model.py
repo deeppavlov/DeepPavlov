@@ -12,7 +12,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.vocabs.static_dictionary import StaticDictionary
-from deeppavlov.core.common.attributes import check_attr_true, run_alt_meth_if_no_path, check_path_exists
+from deeppavlov.core.common.attributes import check_attr_true, check_path_exists
 
 
 @register('spelling_error_model')
