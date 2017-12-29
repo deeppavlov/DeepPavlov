@@ -1,4 +1,6 @@
 from deeppavlov.core.models.keras_model import KerasModel
+from deeppavlov.vocabs.wiki_100k_dictionary import Wiki100KDictionary
+from deeppavlov.vocabs.russian_words import RussianWordsVocab
 from deeppavlov.dataset_readers.babi_dataset_reader import BabiDatasetReader
 from deeppavlov.dataset_readers.dstc2_dataset_reader import DSTC2DatasetReader
 from deeppavlov.dataset_readers.intent_dataset_reader import IntentDatasetReader
@@ -25,4 +27,3 @@ from deeppavlov.skills.dummy_skill.dummy import DummySkill
 from deeppavlov.skills.hcn.hybrid import HybridCodeNetwork
 from deeppavlov.skills.hcn_new.hcn import HybridCodeNetworkModel
 from deeppavlov.skills.hcn_new.tracker import FeaturizedTracker
-
