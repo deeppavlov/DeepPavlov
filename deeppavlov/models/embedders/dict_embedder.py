@@ -2,50 +2,47 @@ import numpy as np
 from pathlib import Path
 from overrides import overrides
 
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 
 
+@register('dict_emb')
 class DictEmbedder(Inferable):
-    def __init__(self, embedding_dim, model_path=None, *args, **kwargs):
-        """
-        Method initializes the class according to given parameters.
-        Args:
-            embedding_dim: embedding dimension
-        """
+    def __init__(self, model_path, dim, *args, **kwargs):
+        self.model_path = model_path
         self.tok2emb = {}
-        self.embedding_dim = embedding_dim
-        self.load(fname=model_path)
+        self.dim = dim
 
-    def load(self, fname):
+        self.load()
+
+    def load(self):
         """
-        Method initializes dictionary of embeddings from file.
-        Returns:
-            Nothing
+        Load dictionary of embeddings from file.
         """
 
-        if fname is None or not Path(fname).is_file():
-            raise IOError('There is no dictionary of embeddings <<{}>> file provided.'.format(fname))
+        if not Path(self.model_path).exists():
+            raise FileNotFoundError(
+                'There is no dictionary of embeddings <<{}>> file provided.'.format(
+                    self.model_path))
         else:
-            print('Loading existing dictionary of embeddings from {}'.format(fname))
-            with open(fname, 'r') as f:
-                for line in f:
-                    values = line.rsplit(sep=' ', maxsplit=self.embedding_dim)
-                    assert(len(values) == self.embedding_dim + 1)
+            print('Loading existing dictionary of embeddings from {}'.format(self.model_path))
+
+            with open(self.model_path_) as fin:
+                for line in fin:
+                    values = line.rsplit(sep=' ', maxsplit=self.dim)
+                    assert (len(values) == self.dim + 1)
                     word = values[0]
                     coefs = np.asarray(values[1:], dtype='float32')
                     self.tok2emb[word] = coefs
 
     @overrides
-    def infer(self, instance, *args, **kwargs):
+    def infer(self, sentence: str, *args, **kwargs) -> list:
         """
         Method returns embedded sentence
         Args:
-            instance: string (e.g. "I want some food")
+            sentence: string (e.g. "I want some food")
 
         Returns:
             embedded sentence
         """
-        embedded_sentence = []
-        for word in instance.split(" "):
-            embedded_sentence.append(self.tok2emb[word])
-        return embedded_sentence
+        return [self.tok2emb[t] for t in sentence.split()]

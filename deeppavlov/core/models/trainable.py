@@ -5,7 +5,6 @@ etc.). All trainable models should inherit from this class.
 """
 
 from abc import abstractmethod
-from pathlib import Path
 
 from .serializable import Serializable
 

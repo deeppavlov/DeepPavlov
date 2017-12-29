@@ -8,7 +8,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import load_vocab
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.models.embedders.w2v_embedder import UtteranceEmbed
+from deeppavlov.models.embedders.w2v_embedder import Word2VecEmbedder
 from deeppavlov.models.encoders.bow import BoW_encoder
 from deeppavlov.models.lstms.hcn_lstm import LSTM
 from deeppavlov.models.spellers.error_model.error_model import ErrorModel
@@ -22,7 +22,7 @@ from deeppavlov.core.common import paths
 class HybridCodeNetwork(Inferable, Trainable):
     def __init__(self, vocab_path=None,
                  bow_encoder: Type = BoW_encoder,
-                 embedder: Type = UtteranceEmbed,
+                 embedder: Type = Word2VecEmbedder,
                  entity_tracker: Type = EntityTracker,
                  speller: Type = ErrorModel,
                  net: Type = LSTM):

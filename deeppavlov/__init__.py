@@ -11,7 +11,9 @@ from deeppavlov.datasets.typos_dataset import TyposDataset
 from deeppavlov.vocabs.wiki_100k_dictionary import Wiki100KDictionary
 from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel
 from deeppavlov.models.commutators.random_commutator import RandomCommutator
-from deeppavlov.models.embedders.w2v_embedder import UtteranceEmbed
+from deeppavlov.models.embedders.w2v_embedder import Word2VecEmbedder
+from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
+from deeppavlov.models.embedders.dict_embedder import DictEmbedder
 from deeppavlov.models.encoders.bow import BoW_encoder
 from deeppavlov.models.lstms.hcn_lstm import LSTM
 from deeppavlov.models.ner.model_loader import load_ner_dstc_model

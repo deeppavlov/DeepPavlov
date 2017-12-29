@@ -10,12 +10,11 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 
 
-@register('fasttext_gensim')
+@register('fasttext')
 class FasttextEmbedder(Inferable):
     def __init__(self, model_path, model_dir='fasttext', model_file='fasttext.bin', dim=100,
                  embedding_url=None, emb_module='fasttext', *args, **kwargs):
         """
-        Method initialize the class according to given parameters.
         Args:
             model_path: path to binary file with embeddings
             dim: dimension of embeddings
@@ -32,7 +31,7 @@ class FasttextEmbedder(Inferable):
 
     def emb2str(self, vec):
         """
-        Method returns string corresponding to the given embedding vectors
+        Return string corresponding to the given embedding vectors
         Args:
             vec: vector of embeddings
 
@@ -43,7 +42,7 @@ class FasttextEmbedder(Inferable):
 
     def load(self, *args, **kwargs):
         """
-        Method initializes dict of embeddings from file
+        Load dict of embeddings from file
         Args:
             fname: file name
         """
@@ -58,7 +57,8 @@ class FasttextEmbedder(Inferable):
 
                     mp = self.model_path_.joinpath(self._model_dir, self._model_file)
                     print("Saving downloaded fasttext model to {}".format(mp))
-                    mp.mkdir()
+                    if not mp.exists():
+                        mp.mkdir()
                     with open(mp, 'wb') as fout:
                         fout.write(model_file)
                 except Exception as e:
@@ -70,7 +70,7 @@ class FasttextEmbedder(Inferable):
         else:
             model_file = str(self.model_path_)
         if self.emb_module == 'fasttext':
-            model = Fasttext(str(self._model_path))
+            model = Fasttext(model_file)
         else:
             model = GensimFasttext.load_fasttext_format(model_file)
         return model
@@ -78,7 +78,7 @@ class FasttextEmbedder(Inferable):
     @overrides
     def infer(self, instance, mean=False, *args, **kwargs):
         """
-        Method returns embedded data
+        Embed data
         Args:
             instance: sentence or list of sentences
             mean: return list of embeddings or numpy.mean()

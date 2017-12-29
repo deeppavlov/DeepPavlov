@@ -8,20 +8,10 @@ from overrides import overrides
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 
-
-@register('fasttext')
 class FasttextEmbedderToDelete(Inferable):
-    def __init__(self, model_dir='fasttext', dim=None, fast=True):
+    def __init__(self, dim=None, fast=True):
         self.tok2emb = {}
         self.fast = fast
-
-        self.tok2emb = {}
-        self.dim = dim
-        self.embedding_url = embedding_url
-        self.model_path = model_path
-        self._model_dir = model_dir
-        self._model_file = model_file
-        self.model = self.load()
 
         self.fasttext_model = None
         if not self._model_path.is_file():

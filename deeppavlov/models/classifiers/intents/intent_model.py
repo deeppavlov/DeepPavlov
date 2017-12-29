@@ -16,7 +16,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.keras_model import KerasModel
 from deeppavlov.models.classifiers.intents import metrics as metrics_file
 from deeppavlov.models.classifiers.intents.utils import labels2onehot, log_metrics
-from deeppavlov.models.embedders.fasttext_inferable import EmbeddingInferableModel
+from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 
 
 @register('intent_model')
@@ -48,16 +48,16 @@ class KerasIntentModel(KerasModel):
         self.n_classes = self.classes.shape[0]
         self.confident_threshold = self.opt['confident_threshold']
         if 'add_metrics' in self.opt.keys():
-            self.add_metrics = self.opt['add_metrics'].split(' ')
+            self.add_metrics = self.opt['add_metrics'].split()
             self.add_metrics_values = len(self.add_metrics) * [0.]
         else:
             self.add_metrics = None
 
         if self.opt['fasttext_model'] is not None:
             if Path(self.opt['fasttext_model']).is_file():
-                self.fasttext_model = EmbeddingInferableModel(
+                self.fasttext_model = FasttextEmbedder(
                     embedding_fname=self.opt['fasttext_model'],
-                    embedding_dim=self.opt['embedding_size'])
+                    dim=self.opt['embedding_size'])
             else:
                 raise IOError("Error: FastText model file does not exist")
         else:
@@ -80,8 +80,7 @@ class KerasIntentModel(KerasModel):
         embeddings_batch = []
         for sen in sentences:
             embeddings = []
-            tokens = sen.split(' ')
-            tokens = [el for el in tokens if el != '']
+            tokens = [el for el in sen.split() if el]
             if len(tokens) > self.opt['text_size']:
                 tokens = tokens[:self.opt['text_size']]
             for tok in tokens:
@@ -203,8 +202,7 @@ class KerasIntentModel(KerasModel):
             Uncompiled model
         """
         if type(self.opt['kernel_sizes_cnn']) is str:
-            self.opt['kernel_sizes_cnn'] = [int(x) for x in
-                                            self.opt['kernel_sizes_cnn'].split(' ')]
+            self.opt['kernel_sizes_cnn'] = list(map(int, self.opt['kernel_sizes_cnn'].split()))
 
         inp = Input(shape=(params['text_size'], params['embedding_size']))
 
@@ -244,12 +242,10 @@ class KerasIntentModel(KerasModel):
             Uncompiled model
         """
         if type(self.opt['kernel_sizes_cnn']) is str:
-            self.opt['kernel_sizes_cnn'] = [int(x) for x in
-                                            self.opt['kernel_sizes_cnn'].split(' ')]
+            self.opt['kernel_sizes_cnn'] = list(map(int, self.opt['kernel_sizes_cnn'].split()))
 
         if type(self.opt['filters_cnn']) is str:
-            self.opt['filters_cnn'] = [int(x) for x in
-                                       self.opt['filters_cnn'].split(' ')]
+            self.opt['filters_cnn'] = list(map(int, self.opt['filters_cnn'].split()))
 
         inp = Input(shape=(params['text_size'], params['embedding_size']))
 
