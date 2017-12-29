@@ -34,7 +34,7 @@ class HybridCodeNetwork(Inferable, Trainable):
         self.speller = speller
 
         if vocab_path is None:
-            vocab_path = Path(paths.USR_PATH).joinpath('vocab.txt')
+            vocab_path = Path(paths.USR_PATH) / 'vocab.txt'
         self.vocab = load_vocab(vocab_path)
 
         input_size = self.embedder.dim + len(self.vocab) + self.entity_tracker.num_features

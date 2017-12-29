@@ -31,9 +31,10 @@ class IntentDatasetReader(DatasetReader):
         Read a file from a path and returns data as dict with given datasets.
         """
         data_dict = dict()
-        train_data_path = Path(data_path).joinpath("dstc2-trn.jsonlist")
-        valid_data_path = Path(data_path).joinpath("dstc2-val.jsonlist")
-        test_data_path = Path(data_path).joinpath("dstc2-tst.jsonlist")
+        data_path = Path(data_path)
+        train_data_path = data_path / "dstc2-trn.jsonlist"
+        valid_data_path = data_path / "dstc2-val.jsonlist"
+        test_data_path = data_path / "dstc2-tst.jsonlist"
 
         if Path(train_data_path).is_file():
             print('___Reading train data from {}'.format(train_data_path))

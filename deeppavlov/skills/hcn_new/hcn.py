@@ -63,7 +63,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         self.network = network
 
         if vocab_path is None:
-            vocab_path = Path(paths.USR_PATH).joinpath('vocab.txt')
+            vocab_path = Path(paths.USR_PATH) / 'vocab.txt'
 
         self.vocab = load_vocab(vocab_path)
 
