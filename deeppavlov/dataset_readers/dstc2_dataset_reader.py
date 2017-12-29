@@ -55,8 +55,6 @@ class DSTC2DatasetReader(DatasetReader):
             'test': self._read_from_file(
                 Path(data_path, self._data_fname('tst')), dialogs)
         }
-        from deeppavlov.core.common import paths
-        self.save_vocab(data, paths.USR_PATH.joinpath('vocab.txt'))
         return data
 
     @classmethod
@@ -131,12 +129,3 @@ class DSTC2DatasetReader(DatasetReader):
         if with_indices:
             return utterances, responses, dialog_indices
         return utterances, responses
-
-    @staticmethod
-    @overrides
-    def save_vocab(data, fpath):
-        with open(fpath, 'w') as f:
-            words = sorted(list(set(chain.from_iterable(
-                [turn[0]['text'].split()\
-                 for dt in ['train', 'test', 'valid'] for turn in data[dt]]))))
-            f.write(' '.join(words))

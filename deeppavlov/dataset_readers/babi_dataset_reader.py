@@ -91,8 +91,8 @@ class BabiDatasetReader(DatasetReader):
         dialogs = dialogs if len(dialogs) else self._read_dialogs(file_path)
         return [row[1] for row in dialogs]
 
+#TODO: move save_vocab to babi_dataset
     @staticmethod
-    @overrides
     def save_vocab(dialogs, fpath):
         with open(fpath, 'w') as f:
             words = sorted(list(set(chain.from_iterable(

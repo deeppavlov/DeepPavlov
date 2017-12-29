@@ -18,3 +18,4 @@ from deeppavlov.skills.hcn.hybrid import HybridCodeNetwork
 from deeppavlov.skills.hcn_new.hcn import HybridCodeNetworkModel
 from deeppavlov.skills.hcn_new.tracker import FeaturizedTracker
 from deeppavlov.vocabs.wiki_100k_dictionary import Wiki100KDictionary
+from deeppavlov.vocabs.default_vocab import DefaultVocabulary

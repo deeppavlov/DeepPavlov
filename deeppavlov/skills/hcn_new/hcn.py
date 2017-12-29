@@ -22,10 +22,10 @@ from typing import Type
 
 from deeppavlov.core.common import paths
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.utils import load_vocab
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
 
+from deeppavlov.vocabs.default_vocab import DefaultVocabulary
 from deeppavlov.models.embedders.fasttext_embedder import FasttextUtteranceEmbed
 from deeppavlov.models.encoders.bow import BoW_encoder
 from deeppavlov.models.intent_recognition.intent_keras.intent_model import KerasIntentModel
@@ -39,7 +39,7 @@ from deeppavlov.skills.hcn_new.templates import Templates, DualTemplate
 
 @register("hcn_new")
 class HybridCodeNetworkBot(Inferable, Trainable):
-    def __init__(self, template_path, slot_names,
+    def __init__(self, template_path,
                  template_type: Type = DualTemplate,
                  slot_filler: Type = DstcSlotFillingNetwork,
                  intent_classifier:Type = KerasIntentModel,
@@ -48,6 +48,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                  tokenizer: Type = SpacyTokenizer,
                  tracker: Type = DefaultTracker,
                  network: Type = HybridCodeNetworkModel,
+                 word_vocab: Type = DefaultVocabulary,
                  vocab_path=None,
                  use_action_mask=False,
                  debug=False):
@@ -55,8 +56,6 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         self.episode_done = True
         self.use_action_mask = use_action_mask
         self.debug = debug
-        # TODO: infer slot names from dataset
-        self.slot_names = slot_names
         self.slot_filler = slot_filler
         self.intent_classifier = intent_classifier
         self.bow_encoder = bow_encoder
@@ -64,11 +63,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         self.tokenizer = tokenizer
         self.tracker = tracker
         self.network = network
-
-        if vocab_path is None:
-            vocab_path = Path(paths.USR_PATH).joinpath('vocab.txt')
-
-        self.vocab = load_vocab(vocab_path)
+        self.word_vocab = word_vocab
 
         self.templates = Templates(template_type).load(template_path)
         print("[using {} templates from `{}`]" \
@@ -85,7 +80,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
 
         # opt = {
         #    'action_size': self.n_actions,
-        #    'obs_size': 4 + len(self.vocab) + self.embedder.dim +\
+        #    'obs_size': 4 + len(self.word_vocab) + self.embedder.dim +\
         #    2 * self.tracker.state_size + self.n_actions + self.n_intents
         #}
         #self.network = HybridCodeNetworkModel(opt)
@@ -97,7 +92,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
             print("Text tokens = `{}`".format(tokenized))
 
         # Bag of words features
-        bow_features = self.bow_encoder.infer(tokenized, self.vocab)
+        bow_features = self.bow_encoder.infer(tokenized, self.word_vocab)
         bow_features = bow_features.astype(np.float32)
 
         # Embeddings
@@ -122,6 +117,13 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                                      (self.db_result == {}) * 1.],
                                     dtype=np.float32)
 
+        if self.debug:
+            print("num bow features =", len(bow_features),
+                  " num emb features =", len(emb_features),
+                  " num intent features =", len(intent_features),
+                  " num state features =", len(state_features),
+                  " num context features =", len(context_features),
+                  " prev_action shape =", len(self.prev_action))
         return np.hstack((bow_features, emb_features, intent_features,
                           state_features, context_features,
                           self.prev_action))[np.newaxis, :]

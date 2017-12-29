@@ -4,23 +4,28 @@
     "data_path": "/home/vimary/ipavlov/Pilot/deeppavlov/data/dstc2"
   },
   "dataset": {
-    "name": "dstc2_dialog_dataset"
+    "name": "dstc2_dialog_dataset",
+	"word_vocab": "/home/vimary/ipavlov/Pilot/deeppavlov/data/dstc2/word_vocab.txt"
   },
   "model": {
     "train_now": true,
     "name": "hcn_new",
-    "debug": false,
-    "slot_names": ["pricerange", "this", "area", "slot", "food", "name"],
+    "debug": 1,
     "template_path": "/home/vimary/ipavlov/Pilot/deeppavlov/data/dstc2/dstc2-templates.txt",
+	"word_vocab": {
+		"name": "default_vocab",
+		"model_dir": "/home/vimary/ipavlov/Pilot/deeppavlov/data/dstc2",
+		"model_file": "word_vocab.txt"
+	},
     "network": {
-      "train_now": true,
-      "name": "custom_rnn",
-      "learning_rate": 0.03,
-      "hidden_dim": 128,
-      "obs_size": 1022,
-	  "model_file": "hcn_rnn",
-      "use_action_mask": false,
-      "action_size": 45
+		"name": "custom_rnn",
+		"model_file": "hcn_rnn10",
+		"train_now": true,
+		"learning_rate": 0.03,
+		"hidden_dim": 128,
+		"obs_size": 831,
+		"use_action_mask": false,
+		"action_size": 45
     },
     "slot_filler": {
         "name": "dstc_slotfilling",

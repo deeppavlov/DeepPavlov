@@ -18,10 +18,12 @@ import logging
 import random
 import itertools
 from overrides import overrides
+from pathlib import Path
 from typing import Dict, Tuple, List, Generator, Any
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset import Dataset
+from deeppavlov.vocabs.default_vocab import DefaultVocabulary
 
 logger = logging.getLogger(__name__)
 
@@ -30,8 +32,8 @@ logger = logging.getLogger(__name__)
 class DSTC2DialogDataset(Dataset):
 
     @overrides
-    def __init__(self, data:Dict[str, List[Tuple[Any, Any]]], *args, **kwargs)\
-            -> None:
+    def __init__(self, data:Dict[str, List[Tuple[Any, Any]]], word_vocab=None,
+                 *args, **kwargs) -> None:
         def _wrap(turn):
             x = turn[0]['text']
             y = turn[1]['text']
@@ -53,6 +55,8 @@ class DSTC2DialogDataset(Dataset):
             'test': self.test,
             'all': self.train + self.test + self.valid
         }
+        if word_vocab is not None:
+            self.save_vocab(self.data['train'], word_vocab)
 
     @overrides
     def batch_generator(self, batch_size:int, data_type:str='train',
@@ -90,14 +94,15 @@ class DSTC2DialogDataset(Dataset):
         dialog_indices.append(dialog)
         return dialog_indices
 
-    # @staticmethod
-    # def save_vocab(turns, fpath):
-    #     print("Saving data to `{}`".format(fpath))
-    #     with open(fpath, 'wt') as f:
-    #         words = sorted(set(itertools.chain.from_iterable(
-    #             turn[0].lower().split() for turn in turns
-    #         )))
-    #         f.write(' '.join(words))
+    @staticmethod
+    def save_vocab(turns, fpath):
+        print("Saving vocabulary data to `{}`".format(fpath))
+        words = itertools.chain.from_iterable(
+            turn[0].lower().split() for turn in turns
+        )
+        v = DefaultVocabulary(model_dir=Path(fpath).parent, model_file=Path(fpath).name)
+        v.train(words)
+        v.save()
 
     @overrides
     def iter_all(self, data_type: str = 'train') -> Generator:
