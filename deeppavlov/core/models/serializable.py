@@ -25,10 +25,9 @@ class Serializable(metaclass=ABCMeta):
     @property
     def model_path_(self) -> Path:
         if not self.model_path:
-            return Path(paths.USR_PATH).joinpath(self._model_dir, self._model_file)
+            return Path(paths.USR_PATH) / self._model_dir / self._model_file
         else:
             return Path(self.model_path)
 
     def make_dir(self):
-        if not self.model_path_.parent.exists():
-            Path.mkdir(self.model_path_.parent)
+        self.model_path_.parent.mkdir(mode=0o755, parents=True, exist_ok=True)
