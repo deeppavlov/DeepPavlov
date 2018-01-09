@@ -9,9 +9,9 @@ def set_usr_dir(config_path: str, usr_dir_name='USR_DIR') -> PurePath:
     Make a serialization user dir.
     """
     config = read_json(config_path)
-    if 'usr_dir' in config:
+    try:
         usr_dir = Path(config['usr_dir'])
-    else:
+    except KeyError:
         usr_dir = Path(config_path).expanduser().absolute().parent / usr_dir_name
 
     usr_dir.mkdir(mode=0o755, exist_ok=True)
