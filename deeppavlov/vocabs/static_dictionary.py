@@ -42,7 +42,7 @@ class StaticDictionary:
             print('Trying to build a dictionary in {}'.format(data_dir))
             if data_dir.is_dir():
                 shutil.rmtree(data_dir)
-            data_dir.mkdir(mode=0o755, parents=True)
+            data_dir.mkdir(parents=True)
 
             words = self._get_source(data_dir, *args, **kwargs)
             words = {self._normalize(word) for word in words}

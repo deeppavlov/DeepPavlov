@@ -15,8 +15,7 @@ class TyposKartaslov(DatasetReader):
     def build(data_path: str):
         data_path = Path(data_path) / 'kartaslov'
 
-        fname = 'orfo_and_typos.L1_5.csv'
-        fname = data_path / fname
+        fname = data_path / 'orfo_and_typos.L1_5.csv'
 
         if not is_done(data_path):
             url = 'https://raw.githubusercontent.com/dkulagin/kartaslov/master/dataset/orfo_and_typos/orfo_and_typos.L1_5.csv'

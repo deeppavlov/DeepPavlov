@@ -26,11 +26,11 @@ class IntentDatasetReader(DatasetReader):
     IntentDatasetReader reads data from some location and constructs a dict of given datasets.
     """
     @staticmethod
-    def read(data_path=None, *args, **kwargs):
+    def read(data_path: str, *args, **kwargs):
         """
         Read a file from a path and returns data as dict with given datasets.
         """
-        data_dict = dict()
+        data_dict = {}
         data_path = Path(data_path)
         train_data_path = data_path / "dstc2-trn.jsonlist"
         valid_data_path = data_path / "dstc2-val.jsonlist"

@@ -16,7 +16,7 @@ def download(dest_file_path, source_url):
     """
 
     dest_file_path = Path(dest_file_path).absolute()
-    dest_file_path.parent.mkdir(mode=0o755, parents=True, exist_ok=True)
+    dest_file_path.parent.mkdir(parents=True, exist_ok=True)
 
     r = requests.get(source_url, stream=True)
     total_length = int(r.headers.get('content-length', 0))
@@ -79,7 +79,7 @@ _MARK_DONE = '.done'
 
 def mark_done(path):
     mark = Path(path) / _MARK_DONE
-    mark.touch(mode=0o755, exist_ok=True)
+    mark.touch(exist_ok=True)
 
 
 def is_done(path):
