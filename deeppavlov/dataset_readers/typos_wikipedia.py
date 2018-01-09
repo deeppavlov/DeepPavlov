@@ -1,6 +1,5 @@
 import csv
-import os
-from overrides import overrides
+from pathlib import Path
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import is_done, download, mark_done
@@ -14,17 +13,16 @@ class TyposWikipedia(DatasetReader):
 
     @staticmethod
     def build(data_path: str):
-        data_path = os.path.join(data_path, 'typos_wiki')
+        data_path = Path(data_path) / 'typos_wiki'
 
-        fname = 'misspelings.tsv'
-        fname = os.path.join(data_path, fname)
+        fname = data_path / 'misspelings.tsv'
 
         if not is_done(data_path):
             url = 'https://en.wikipedia.org/wiki/Wikipedia:Lists_of_common_misspellings/For_machines'
 
             download(fname, url)
 
-            with open(fname) as f:
+            with fname.open() as f:
                 data = []
                 for line in f:
                     if line.strip().endswith('<pre>'):
@@ -34,7 +32,7 @@ class TyposWikipedia(DatasetReader):
                         break
                     data.append(line.strip().split('-&gt;'))
 
-            with open(fname, 'w', newline='') as tsvfile:
+            with fname.open('w', newline='') as tsvfile:
                 writer = csv.writer(tsvfile, delimiter='\t')
                 for line in data:
                     writer.writerow(line)
@@ -47,7 +45,7 @@ class TyposWikipedia(DatasetReader):
     @staticmethod
     def read(data_path: str, *args, **kwargs):
         fname = TyposWikipedia.build(data_path)
-        with open(fname, newline='') as tsvfile:
+        with fname.open(newline='') as tsvfile:
             reader = csv.reader(tsvfile, delimiter='\t')
             next(reader)
             res = [(mistake, correct) for mistake, correct in reader]

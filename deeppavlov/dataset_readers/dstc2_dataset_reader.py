@@ -48,7 +48,7 @@ class DSTC2DatasetReader(DatasetReader):
             'test': self._read_from_file(_path(data_path, self._test_fname),
                                          dialogs)
         }
-        self.save_vocab(data, paths.USR_PATH.joinpath('vocab.txt'))
+        self.save_vocab(data, paths.USR_PATH / 'vocab.txt')
         return data
 
     @classmethod

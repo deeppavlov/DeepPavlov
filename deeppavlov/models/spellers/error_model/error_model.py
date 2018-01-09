@@ -1,6 +1,5 @@
 import csv
 import itertools
-import os
 from collections import defaultdict, Counter
 from heapq import heappop, heappushpop, heappush
 from math import log, exp
@@ -35,7 +34,7 @@ class ErrorModel(Inferable, Trainable):
         self.costs[('⟭', '⟭')] = log(1)
         for c in self.dictionary.alphabet:
             self.costs[(c, c)] = log(1)
-        if os.path.isfile(self.model_path_):
+        if self.model_path_.is_file():
             self.load()
 
         if lm_file:
