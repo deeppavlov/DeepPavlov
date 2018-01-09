@@ -8,7 +8,7 @@ from deeppavlov.core.common.attributes import check_attr_true, run_alt_meth_if_n
 
 
 @register('w2v')
-class UtteranceEmbed(Trainable, Inferable):
+class Word2VecEmbedder(Trainable, Inferable):
     def __init__(self, corpus_path, model_dir='emb', model_file='text8.model', dim=300):
         self._corpus_path = corpus_path
         self._model_dir = model_dir
@@ -16,8 +16,8 @@ class UtteranceEmbed(Trainable, Inferable):
         self.dim = dim
         self.model = self.load()
 
-    def _encode(self, utterance):
-        embs = [self.model[word] for word in utterance.split(' ') if word and word in self.model]
+    def _encode(self, sentence: str):
+        embs = [self.model[w] for w in sentence.split() if w and w in self.model]
         # average of embeddings
         if len(embs):
             return np.mean(embs, axis=0)
@@ -36,8 +36,8 @@ class UtteranceEmbed(Trainable, Inferable):
         self.save()
         return model
 
-    def infer(self, utterance, *args, **kwargs):
-        return self._encode(utterance)
+    def infer(self, sentence: str, *args, **kwargs):
+        return self._encode(sentence)
 
     @run_alt_meth_if_no_path(train, 'train_now')
     def load(self):

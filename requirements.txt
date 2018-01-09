@@ -4,10 +4,9 @@ requests==2.18.4
 gensim==2.3.0
 tensorflow_gpu==1.4.0
 overrides==1.9
-numpy==1.13.3
 tensorflow==1.4.0
 typing==3.6.2
-kenlm
+kenlm==0.0.0
 six==1.11.0
 h5py==2.7.1
 keras==2.1.2
