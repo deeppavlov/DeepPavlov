@@ -27,7 +27,7 @@ class DictEmbedder(Inferable):
         else:
             print('Loading existing dictionary of embeddings from {}'.format(self.model_path))
 
-            with open(self.model_path_) as fin:
+            with open(str(self.model_path_)) as fin:
                 for line in fin:
                     values = line.rsplit(sep=' ', maxsplit=self.dim)
                     assert (len(values) == self.dim + 1)
