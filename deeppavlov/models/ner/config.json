@@ -11,10 +11,9 @@
   "model": {
     "name": "dstc_slotfilling",
     "model_path": "models/ner/model/",
-    "train_now": true,
     "ner_network": {
       "name": "ner_tagging_network",
-      "model_path": "../../models/ner/model/",
+      "model_path": "models/ner/model/",
       "verbouse": true,
       "filter_width": 7,
       "embeddings_dropout": true,

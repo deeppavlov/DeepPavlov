@@ -7,24 +7,31 @@ from deeppavlov.core.data.vocab import Vocabulary
 from deeppavlov.core.common.registry import register
 
 
-@register('default_vocab')
-class DefaultVocabulary(Vocabulary):
-    def __init__(self, tokens=None, default_token='<UNK>', special_tokens=('<UNK>',)):
+@register('simple_vocab')
+class SimpleVocabulary(Vocabulary):
+    def __init__(self, tokens=None, special_tokens=tuple(), dict_file_path=None):
         self._t2i = dict()
         # We set default ind to position of <UNK> in SPECIAL_TOKENS
         # because the tokens will be added to dict in the same order as
         # in SPECIAL_TOKENS
-        default_ind = special_tokens.index('<UNK>')
-        self._t2i = defaultdict(lambda: default_ind)
+        self._t2i = defaultdict(int)
         self._i2t = dict()
         self.frequencies = Counter()
 
         self.counter = 0
         for token in special_tokens:
             self._t2i[token] = self.counter
-            self.frequencies[token] += 0
+            self.frequencies[token] += 1
             self._i2t[self.counter] = token
             self.counter += 1
+        if dict_file_path is not None:
+            with open(dict_file_path) as f:
+                for line in f:
+                    token = line.strip()
+                    self._t2i[token] = self.counter
+                    self.frequencies[token] += 1
+                    self._i2t[self.counter] = token
+                    self.counter += 1
         if tokens is not None:
             self.update_dict(tokens)
 
@@ -54,7 +61,6 @@ class DefaultVocabulary(Vocabulary):
         else:
             return self.tok2idx(samples)
 
-    @overrides
     def iter_all(self):
         for token in self.frequencies:
             yield token

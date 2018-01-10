@@ -17,6 +17,8 @@ limitations under the License.
 import os
 from collections import defaultdict
 from overrides import overrides
+import pathlib
+from glob import glob
 
 import numpy as np
 import tensorflow as tf
@@ -29,9 +31,10 @@ from deeppavlov.models.ner.layers import embedding_layer
 from deeppavlov.models.ner.layers import highway_convolutional_network
 from deeppavlov.models.ner.layers import stacked_convolutions
 from deeppavlov.models.ner.layers import stacked_rnn
+from deeppavlov.models.ner.evaluation import precision_recall_f1
+
 
 SEED = 42
-MODEL_PATH = 'model/'
 MODEL_FILE_NAME = 'ner_model'
 
 
@@ -46,7 +49,6 @@ class NerNetwork(SimpleTFModel):
                  token_embeddings_dim=128,
                  char_embeddings_dim=50,
                  use_char_embeddins=True,
-                 pretrained_model_filepath=None,
                  embeddings_dropout=False,
                  dense_dropout=False,
                  use_batch_norm=False,
@@ -57,6 +59,7 @@ class NerNetwork(SimpleTFModel):
                  char_filter_width=5,
                  verbouse=False,
                  embeddings_onethego=False):
+
         n_tags = len(tag_vocab)
         n_tokens = len(token_vocab)
         n_chars = len(char_vocab)
@@ -168,20 +171,17 @@ class NerNetwork(SimpleTFModel):
         self.verbouse = verbouse
         self._mask = mask_ph
         sess.run(tf.global_variables_initializer())
-        if pretrained_model_filepath is not None:
-            self.load(pretrained_model_filepath)
+        model_file_path = pathlib.Path(self.model_path) / 'dstc_ner_network.ckpt'
+        if len(glob(str(model_file_path.absolute()) + '*')) == 3:
+            self.load(model_file_path)
 
-    def save(self, model_file_path=None):
-        if model_file_path is None:
-            if not os.path.exists(MODEL_PATH):
-                os.mkdir(MODEL_PATH)
-            model_file_path = os.path.join(MODEL_PATH, MODEL_FILE_NAME)
+    def save(self, model_file_path):
         saver = tf.train.Saver()
-        saver.save(self._sess, model_file_path)
+        saver.save(self._sess, str(model_file_path))
 
     def load(self, model_file_path):
         saver = tf.train.Saver()
-        saver.restore(self._sess, model_file_path)
+        saver.restore(self._sess, str(model_file_path))
 
     def tokens_batch_to_numpy_batch(self, batch_x, batch_y=None):
         # Determine dimensions
@@ -211,6 +211,26 @@ class NerNetwork(SimpleTFModel):
 
         return (x_token, x_char, mask), y
 
+    def eval_conll(self, data, print_results=True, short_report=True, data_type=None):
+            y_true_list = list()
+            y_pred_list = list()
+            if data_type is not None:
+                print('Eval on {}:'.format(data_type))
+            for x, y_gt in data:
+                (x_token, x_char, mask), y = self.tokens_batch_to_numpy_batch([x])
+                y_pred = self.predict(x_token, x_char, mask)
+                y_pred = self.tag_vocab.batch_idxs2batch_toks(y_pred)
+                for tags_pred, tags_gt in zip(y_pred, [y_gt]):
+                    for tag_predicted, tag_ground_truth in zip(tags_pred, tags_gt):
+                        y_true_list.append(tag_ground_truth)
+                        y_pred_list.append(tag_predicted)
+                    y_true_list.append('O')
+                    y_pred_list.append('O')
+            return precision_recall_f1(y_true_list,
+                                       y_pred_list,
+                                       print_results,
+                                       short_report)
+
     def train(self, data, batch_size=8):
         total_loss = 0
         total_count = 0
@@ -224,8 +244,6 @@ class NerNetwork(SimpleTFModel):
                                               dropout_rate=0.5)
             total_loss += current_loss
             total_count += len(batch_x)
-
-        print('Loss: {}'.format(total_loss / total_count))
 
     def train_on_bath(self, x_word, x_char, mask, y_tag, learning_rate=1e-3, dropout_rate=0.5):
         feed_dict = self._fill_feed_dict(x_word,

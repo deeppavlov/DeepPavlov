@@ -95,3 +95,7 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
             print('session restored')
         else:
             print('\n:: <ERR> checkpoint not found! \n')
+
+
+class SimpleTFModel(Trainable, Inferable, metaclass=TfModelMeta):
+    pass

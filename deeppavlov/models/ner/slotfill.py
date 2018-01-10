@@ -7,13 +7,11 @@ from overrides import overrides
 import pathlib
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.data.utils import download_untar, mark_done
 from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.models.ner.corpus import Corpus
 from deeppavlov.models.ner.ner_network import NerNetwork
 from deeppavlov.core.data.utils import tokenize_reg
+from deeppavlov.core.data.utils import download
 
 
 
@@ -21,21 +19,11 @@ from deeppavlov.core.data.utils import tokenize_reg
 class DstcSlotFillingNetwork(Inferable, Trainable):
     def __init__(self,
                  ner_network: NerNetwork,
-                 # model_path,
                  **kwargs):
         model_path = pathlib.Path(self.model_path)
-        # Check existance of the model files. Download model files if needed
-        files_required = ['dict.txt', 'ner_model.ckpt.meta', 'params.json', 'slot_vals.json']
-        for file_name in files_required:
-            if not model_path.joinpath(file_name).exists():
-                url = 'http://lnsigo.mipt.ru/export/ner_dstc_model.tar.gz'
-                print('Loading model from {} to {}'.format(url, model_path))
-                download_untar(url, model_path)
-                mark_done(model_path)
-                break
-
         slot_vals_filepath = model_path / 'slot_vals.json'
-
+        if not slot_vals_filepath.is_file():
+            self._download_slot_vals(slot_vals_filepath)
         self.graph = tf.Graph()
         with self.graph.as_default():
             self._ner_network = ner_network
@@ -52,9 +40,14 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
         pass
 
     @overrides
-    def train(self, data, num_epochs=10):
+    def train(self, data, num_epochs=3):
         for epoch in range(num_epochs):
             self._ner_network.train(data)
+            self._ner_network.eval_conll(data.iter_all('valid'), short_report=False)
+        self._ner_network.eval_conll(data.iter_all('train'), short_report=False)
+        self._ner_network.eval_conll(data.iter_all('valid'), short_report=False)
+        self._ner_network.eval_conll(data.iter_all('test'), short_report=False)
+        self._ner_network.save(pathlib.Path(self.model_path) / 'dstc_ner_network.ckpt')
 
     @overrides
     def infer(self, instance, *args, **kwargs):
@@ -94,7 +87,6 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
     @staticmethod
     def _chunk_finder(tokens, tags):
         # For BIO labeled sequence of tags extract all named entities form tokens
-        # Example
         prev_tag = ''
         chunk_tokens = list()
         entities = list()
@@ -133,3 +125,8 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
 
     def reset(self):
         pass
+
+    @staticmethod
+    def _download_slot_vals(slot_vals_json_path):
+        url = 'http://lnsigo.mipt.ru/export/datasets/dstc_slot_vals.json'
+        download(slot_vals_json_path, url)
