@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.commands.utils import set_usr_dir
