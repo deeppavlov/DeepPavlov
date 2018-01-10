@@ -17,6 +17,7 @@ from deeppavlov.core.commands.utils import set_usr_dir
 
 # Intents classifier
 # models/classifiers/intents/config.json
+# models/classifiers/intents/config_infer.json
 
 MODEL_CONFIG_PATH = 'models/classifiers/intents/config.json'
 usr_dir = set_usr_dir(MODEL_CONFIG_PATH)

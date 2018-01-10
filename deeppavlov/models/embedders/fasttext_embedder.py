@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 from overrides import overrides
 from gensim.models.wrappers.fasttext import FastText as GensimFasttext
-import fasttext.FastText as Fasttext
+from fasttext import fasttext as Fasttext
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
@@ -55,11 +55,11 @@ class FasttextEmbedder(Inferable):
                     with open(local_filename, 'rb') as fin:
                         model_file = fin.read()
 
-                    mp = self.model_path_.joinpath(self._model_dir, self._model_file)
+                    mp = self.model_path_ / self._model_dir / self._model_file
                     print("Saving downloaded fasttext model to {}".format(mp))
                     if not mp.exists():
                         mp.mkdir()
-                    with open(mp, 'wb') as fout:
+                    with open(str(mp), 'wb') as fout:
                         fout.write(model_file)
                 except Exception as e:
                     raise RuntimeError(
@@ -70,7 +70,7 @@ class FasttextEmbedder(Inferable):
         else:
             model_file = str(self.model_path_)
         if self.emb_module == 'fasttext':
-            model = Fasttext(model_file)
+            model = Fasttext.load_model(model_file)
         else:
             model = GensimFasttext.load_fasttext_format(model_file)
         return model

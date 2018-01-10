@@ -13,3 +13,4 @@ keras==2.1.2
 pandas==0.21.1
 fuzzywuzzy==0.16.0
 spacy==2.0.5
+fasttext==0.8.3
