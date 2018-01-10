@@ -1,5 +1,7 @@
 import tensorflow as tf
 from abc import ABCMeta
+import functools
+import types
 
 from six import with_metaclass
 
@@ -27,7 +29,9 @@ class TfModelMeta(with_metaclass(type, ABCMeta)):
             if meth == '__class__':
                 continue
             attr = getattr(obj, meth)
-            if callable(attr):
+            # if callable(attr): # leads to an untraceable bug if an attribute
+            # is initilaized via a class call, error doesn't raise
+            if isinstance(attr, (types.FunctionType, types.BuiltinFunctionType, functools.partial)):
                 setattr(obj, meth, _graph_wrap(attr, obj.graph))
         obj.__init__(*args, **kwargs)
         return obj
