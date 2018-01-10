@@ -29,6 +29,13 @@ class FasttextEmbedder(Inferable):
         self.emb_module = emb_module
         self.model = self.load()
 
+    # def __getitem__(self, token):
+    #     if self.fast:
+    #         if token not in self.tok2emb:
+    #             self.tok2emb[token] = self.model[token][:self.dim]
+    #         return self.tok2emb[token]
+    #     return self.model.get_numpy_vector(token)[:self.dim]
+
     def emb2str(self, vec):
         """
         Return string corresponding to the given embedding vectors
@@ -104,7 +111,13 @@ class FasttextEmbedder(Inferable):
             try:
                 emb = self.tok2emb[t]
             except KeyError:
-                emb = np.zeros(self.dim, dtype=np.float32)
+                try:
+                    if self.emb_module == 'fasttext':
+                        emb = self.model[t][:self.dim]
+                    else:
+                        emb = self.model.get_numpy_vector(t)[:self.dim]
+                except KeyError:
+                    emb = np.zeros(self.dim, dtype=np.float32)
                 self.tok2emb[t] = emb
             embedded_tokens.append(emb)
 
