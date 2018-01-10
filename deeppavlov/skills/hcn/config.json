@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "babi",
-    "data_path": "../../../../../DialogStateTracking/data/dialog-bAbI-tasks/dialog-babi-task5-full-dialogs-trn.txt"
+    "data_path": "../data/dialog-bAbI-tasks/dialog-babi-task5-full-dialogs-trn.txt"
   },
   "dataset":{
     "name": "hcn_dataset"
@@ -18,7 +18,7 @@
     "embedder": {
       "train_now": false,
       "name": "w2v",
-      "corpus_path": "/home/olga/Documents/text8"
+      "corpus_path": "../data/text8"
     },
     "entity_tracker": {
       "name": "hcn_et"

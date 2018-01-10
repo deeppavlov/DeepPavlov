@@ -1,9 +1,9 @@
 {
   "model": {
     "name": "intent_model",
-    "model_path": "/media/olga/Data/projects/iPavlov/Pilot/deeppavlov/models/classifiers/intents/intent_cnn_best",
+    "model_path": "../data/intent_cnn",
     "opt": {
-      "classes_file": "/media/olga/Data/projects/iPavlov/Pilot/data/intent_cnn/intents/classes.txt",
+      "classes_file": "../data/intent_cnn/intents/classes.txt",
       "embedding_size": 100,
       "lear_metrics": "binary_accuracy fmeasure",
       "confident_threshold": 0.5,
@@ -11,7 +11,7 @@
       "lear_rate": 0.1,
       "lear_rate_decay": 0.1,
       "loss": "binary_crossentropy",
-      "fasttext_model": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2_fasttext_model_100.bin",
+      "fasttext_model": "../data/dstc2_fasttext_model_100.bin",
       "text_size": 15,
       "coef_reg_cnn": 1e-4,
       "coef_reg_den": 1e-4,
@@ -28,11 +28,11 @@
   },
   "dataset_reader": {
     "name": "intent_dataset_reader",
-    "data_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2"
+    "data_path": "../data/dstc2"
   },
   "dataset": {
     "prep_method_name": "simple_prep",
-    "dataset_path":"/media/olga/Data/projects/iPavlov/Pilot/data/intent_cnn",
+    "dataset_path":"../data/intent_cnn",
     "name": "intent_dataset",
     "seed": 42,
     "extract_classes": true,
