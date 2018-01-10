@@ -29,13 +29,6 @@ class FasttextEmbedder(Inferable):
         self.emb_module = emb_module
         self.model = self.load()
 
-    # def __getitem__(self, token):
-    #     if self.fast:
-    #         if token not in self.tok2emb:
-    #             self.tok2emb[token] = self.model[token][:self.dim]
-    #         return self.tok2emb[token]
-    #     return self.model.get_numpy_vector(token)[:self.dim]
-
     def emb2str(self, vec):
         """
         Return string corresponding to the given embedding vectors
