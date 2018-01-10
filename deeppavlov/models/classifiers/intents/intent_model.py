@@ -75,12 +75,11 @@ class KerasIntentModel(KerasModel):
     def texts2vec(self, sentences):
         embeddings_batch = []
         for sen in sentences:
-            embeddings = []
             tokens = [el for el in sen.split() if el]
             if len(tokens) > self.opt['text_size']:
                 tokens = tokens[:self.opt['text_size']]
-            for tok in tokens:
-                embeddings.append(self.fasttext_model.infer(tok))
+
+            embeddings = self.fasttext_model.infer(' '.join(tokens))
             if len(tokens) < self.opt['text_size']:
                 pads = [np.zeros(self.opt['embedding_size'])
                         for _ in range(self.opt['text_size'] - len(tokens))]
