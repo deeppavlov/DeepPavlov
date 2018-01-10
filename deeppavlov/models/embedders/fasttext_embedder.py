@@ -105,10 +105,7 @@ class FasttextEmbedder(Inferable):
                 emb = self.tok2emb[t]
             except KeyError:
                 try:
-                    if self.emb_module == 'fasttext':
-                        emb = self.model[t][:self.dim]
-                    else:
-                        emb = self.model.get_numpy_vector(t)[:self.dim]
+                    emb = self.model[t][:self.dim]
                 except KeyError:
                     emb = np.zeros(self.dim, dtype=np.float32)
                 self.tok2emb[t] = emb
