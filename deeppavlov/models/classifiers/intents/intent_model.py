@@ -37,7 +37,7 @@ class KerasIntentModel(KerasModel):
             classes_file = Path(paths.USR_PATH).joinpath('intents', 'classes.txt')
 
         try:
-            with open(classes_file) as fin:
+            with open(str(classes_file)) as fin:
                 self.classes = np.array(fin.read().split("\n"))
 
         except FileNotFoundError:
