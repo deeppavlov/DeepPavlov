@@ -1,13 +1,13 @@
 from collections import Counter, defaultdict
+
 import numpy as np
 from overrides import overrides
 
 from deeppavlov.core.data.vocab import Vocabulary
-from deeppavlov.common.registry import register_model
-from deeppavlov.models.inferable import Inferable
+from deeppavlov.core.common.registry import register
 
 
-@register_model('default_vocab')
+@register('default_vocab')
 class DefaultVocabulary(Vocabulary):
     def __init__(self, tokens=None, default_token='<UNK>', special_tokens=('<UNK>',)):
         self._t2i = dict()
@@ -89,3 +89,6 @@ class DefaultVocabulary(Vocabulary):
 
     def __contains__(self, item):
         return item in self._t2i
+
+    def save(self, fname):
+        pass

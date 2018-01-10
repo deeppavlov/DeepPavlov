@@ -16,11 +16,14 @@ limitations under the License.
 
 import json
 import logging
+from itertools import chain
 from pathlib import Path
+
 from overrides import overrides
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
+from deeppavlov.core.common import paths
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +48,7 @@ class DSTC2DatasetReader(DatasetReader):
             'test': self._read_from_file(_path(data_path, self._test_fname),
                                          dialogs)
         }
+        self.save_vocab(data, paths.USR_PATH / 'vocab.txt')
         return data
 
     @classmethod

@@ -1,26 +1,27 @@
 import csv
 import itertools
-import os
 from collections import defaultdict, Counter
 from heapq import heappop, heappushpop, heappush
 from math import log, exp
 
-from typing import Type
+import kenlm
 
 from deeppavlov.core.common import paths
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.vocabs.static_dictionary import StaticDictionary
+from deeppavlov.core.common.attributes import check_attr_true, check_path_exists
 
 
 @register('spelling_error_model')
 class ErrorModel(Inferable, Trainable):
-    def __init__(self, dictionary: Type = StaticDictionary, models_path=None, window=1,
-                 model_name='error_model', *args, **kwargs):
-        if models_path is None:
-            models_path = paths.USR_PATH
-        self.file_name = os.path.join(models_path, model_name + '.tsv')
+    def __init__(self, dictionary: StaticDictionary, model_dir=None, window=1,
+                 model_file='error_model.tsv', lm_file=None, *args, **kwargs):
+        if model_dir is None:
+            model_dir = paths.USR_PATH
+        self._model_file = model_file
+        self._model_dir = model_dir
         self.costs = defaultdict(itertools.repeat(float('-inf')).__next__)
         self.dictionary = dictionary
         self.window = window
@@ -33,8 +34,14 @@ class ErrorModel(Inferable, Trainable):
         self.costs[('⟭', '⟭')] = log(1)
         for c in self.dictionary.alphabet:
             self.costs[(c, c)] = log(1)
-        if os.path.isfile(self.file_name):
-            self.load(self.file_name)
+        if self.model_path_.is_file():
+            self.load()
+
+        if lm_file:
+            self.lm = kenlm.Model(lm_file)
+            self.beam_size = 4
+            self.candidates_count = 4
+            self.infer = self._infer_lm
 
     def _find_candidates_window_0(self, word, k=1, prop_threshold=1e-6):
         threshold = log(prop_threshold)
@@ -62,7 +69,7 @@ class ErrorModel(Inferable, Trainable):
                 potential = max(res)
                 if potential > threshold:
                     heappush(prefixes_heap, (-potential, self.dictionary.words_trie[prefix]))
-        return [(w.strip('⟬⟭'), exp(score)) for score, w in sorted(candidates, reverse=True)]
+        return [(w.strip('⟬⟭'), score) for score, w in sorted(candidates, reverse=True) if score > threshold]
 
     def _find_candidates_window_n(self, word, k=1, prop_threshold=1e-6):
         threshold = log(prop_threshold)
@@ -91,11 +98,12 @@ class ErrorModel(Inferable, Trainable):
                     res.append(max(c_res))
                 if prefix in self.dictionary.words_set:
                     heappushpop(candidates, (res[-1], prefix))
-                potential = max(
-                    [e for i in range(self.window + 2) for e in d[prefix[:prefix_len - i]]])
+                potential = max(res)
+                # potential = max(
+                #     [e for i in range(self.window + 2) for e in d[prefix[:prefix_len - i]]])
                 if potential > threshold:
                     heappush(prefixes_heap, (-potential, self.dictionary.words_trie[prefix]))
-        return [(w.strip('⟬⟭'), exp(score)) for score, w in sorted(candidates, reverse=True)]
+        return [(w.strip('⟬⟭'), score) for score, w in sorted(candidates, reverse=True) if score > threshold]
 
     def infer(self, instance: str, *args, **kwargs):
         corrected = []
@@ -103,9 +111,37 @@ class ErrorModel(Inferable, Trainable):
             if any([c not in self.dictionary.alphabet for c in incorrect]):
                 corrected.append(incorrect)
             else:
-                res, score = self.find_candidates(incorrect, k=1, prop_threshold=1e-6)[0]
-                corrected.append(res if score > 1e-6 else incorrect)
+                res = self.find_candidates(incorrect, k=1, prop_threshold=1e-6)
+                corrected.append(res[0][0] if res else incorrect)
         return ' '.join(corrected)
+
+    def _infer_lm(self, instance: str, *args, **kwargs):
+        candidates = []
+        for incorrect in instance.split():
+            if any([c not in self.dictionary.alphabet for c in incorrect]):
+                candidates.append([(0, incorrect)])
+            else:
+                res = self.find_candidates(incorrect, k=self.candidates_count, prop_threshold=1e-6)
+                if res:
+                    candidates.append([(score, candidate) for candidate, score in res])
+                else:
+                    candidates.append([(0, incorrect)])
+        candidates.append([(0, '</s>')])
+
+        state = kenlm.State()
+        self.lm.BeginSentenceWrite(state)
+        beam = [(0, state, [])]
+        for sublist in candidates:
+            new_beam = []
+            for beam_score, beam_state, beam_words in beam:
+                for score, candidate in sublist:
+                    state = kenlm.State()
+                    c_score = self.lm.BaseScore(beam_state, candidate, state)
+                    new_beam.append((beam_score + score + c_score, state, beam_words + [candidate]))
+            new_beam.sort(reverse=True)
+            beam = new_beam[:self.beam_size]
+        score, state, words = beam[0]
+        return ' '.join(words[:-1])
 
     def reset(self):
         pass
@@ -131,6 +167,7 @@ class ErrorModel(Inferable, Trainable):
 
         return d[-1][-1]
 
+    @check_attr_true('train_now')
     def train(self, dataset, *args, **kwargs):
         changes = []
         entries = []
@@ -167,19 +204,20 @@ class ErrorModel(Inferable, Trainable):
 
         self.save()
 
-    def save(self, file_name=None):
-        if not file_name:
-            file_name = self.file_name
-        os.makedirs(os.path.dirname(os.path.abspath(file_name)), 0o755, exist_ok=True)
-        with open(file_name, 'w', newline='') as tsv_file:
+    def save(self):
+        # if not file_name:
+        #     file_name = self.file_name
+        # os.makedirs(os.path.dirname(os.path.abspath(file_name)), 0o755, exist_ok=True)
+        with open(self.model_path_, 'w', newline='') as tsv_file:
             writer = csv.writer(tsv_file, delimiter='\t')
             for (w, s), log_p in self.costs.items():
                 writer.writerow([w, s, exp(log_p)])
 
-    def load(self, file_name=None):
-        if not file_name:
-            file_name = self.file_name
-        with open(file_name, 'r', newline='') as tsv_file:
+    @check_path_exists()
+    def load(self):
+        # # if not file_name:
+        #     file_name = self.file_name
+        with open(self.model_path_, 'r', newline='') as tsv_file:
             reader = csv.reader(tsv_file, delimiter='\t')
             for w, s, p in reader:
                 self.costs[(w, s)] = log(float(p))

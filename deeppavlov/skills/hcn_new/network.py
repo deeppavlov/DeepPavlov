@@ -28,8 +28,8 @@ class HybridCodeNetworkModel(TFModel):
 
     def __init__(self, **params):
         self.opt = params
-        self._model_dir_path = self.opt.get('model_dir_path', '')
-        self._model_fpath = self.opt.get('model_fpath', 'hcn_rnn')
+        self._model_dir = self.opt.get('model_dir', 'hcn_rnn')
+        self._model_file = self.opt.get('model_file', 'hcn_rnn')
 
         # initialize parameters
         self._init_params()
@@ -40,7 +40,7 @@ class HybridCodeNetworkModel(TFModel):
 
         if not self.opt.get('train_now') and self.get_checkpoint_state():
 #TODO: save/load params to json, here check compatability
-            print("Loading network from `{}`".format(self._model_path))
+            print("Loading network from `{}`".format(self.model_path_.parent))
             self.load()
         else:
             print("Initializing network from scratch")
@@ -48,7 +48,7 @@ class HybridCodeNetworkModel(TFModel):
 
         self.reset_state()
 
-    def _run_sess(self):
+    def run_sess(self):
         pass
 
     def _init_params(self, params=None):
@@ -59,7 +59,6 @@ class HybridCodeNetworkModel(TFModel):
         self.obs_size = params['obs_size']
 
     def _build_graph(self):
-        tf.reset_default_graph()
 
         self._add_placeholders()
 

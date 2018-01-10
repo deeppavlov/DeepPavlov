@@ -1,18 +1,20 @@
+import json
+from pathlib import Path
+
+import tensorflow as tf
 from fuzzywuzzy import process
 from overrides import overrides
-import json
-import tensorflow as tf
-import os
 import pathlib
-
-from deeppavlov.core.data.vocab import Vocabulary
-from .src.ner_network import NerNetwork
-from .utils.nlputils import tokenize
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.data.utils import download_untar, mark_done
+from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.models.ner.corpus import Corpus
+from deeppavlov.models.ner.ner_network import NerNetwork
+from deeppavlov.core.data.utils import tokenize_reg
+
 
 
 @register('dstc_slotfilling')
@@ -25,7 +27,7 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
         # Check existance of the model files. Download model files if needed
         files_required = ['dict.txt', 'ner_model.ckpt.meta', 'params.json', 'slot_vals.json']
         for file_name in files_required:
-            if not os.path.exists(model_path / file_name):
+            if not model_path.joinpath(file_name).exists():
                 url = 'http://lnsigo.mipt.ru/export/ner_dstc_model.tar.gz'
                 print('Loading model from {} to {}'.format(url, model_path))
                 download_untar(url, model_path)
@@ -58,7 +60,7 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
 
     def predict_slots(self, utterance):
         # For utterance extract named entities and perform normalization for slot filling
-        tokens = tokenize(utterance)
+        tokens = tokenize_reg(utterance)
         with self.graph.as_default():
             tags = self._ner_network.predict_for_token_batch([tokens])[0]
         entities, slots = self._chunk_finder(tokens, tags)

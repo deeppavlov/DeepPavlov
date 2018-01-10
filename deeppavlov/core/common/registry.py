@@ -15,7 +15,7 @@ from typing import Type, List
 
 from deeppavlov.core.common.errors import ConfigError
 
-_REGISTRY = {}
+REGISTRY = {}
 
 
 def register(name: str = None) -> Type:
@@ -23,10 +23,10 @@ def register(name: str = None) -> Type:
 
     def decorate(model_cls: Type, reg_name: str = None) -> Type:
         model_name = reg_name or short_name(model_cls)
-        global _REGISTRY
-        if model_name in _REGISTRY:
+        global REGISTRY
+        if model_name in REGISTRY:
             raise ConfigError('{} name is already registered'.format(model_name))
-        _REGISTRY[model_name] = model_cls
+        REGISTRY[model_name] = model_cls
         return model_cls
 
     return lambda model_cls_name: decorate(model_cls_name, name)
@@ -37,10 +37,10 @@ def short_name(cls: Type) -> str:
 
 
 def model(name: str) -> type:
-    if name not in _REGISTRY:
+    if name not in REGISTRY:
         raise ConfigError("Model {} is not registered.".format(name))
-    return _REGISTRY[name]
+    return REGISTRY[name]
 
 
 def list_models() -> List:
-    return list(_REGISTRY)
+    return list(REGISTRY)

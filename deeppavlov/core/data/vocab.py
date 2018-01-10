@@ -5,6 +5,9 @@ from deeppavlov.core.models.inferable import Inferable
 from overrides import overrides
 
 
+from deeppavlov.core.models.inferable import Inferable
+
+
 @register('default_vocab')
 class Vocabulary(Inferable):
     def __init__(self, tokens=None, special_tokens=tuple(), dict_file_path=None):

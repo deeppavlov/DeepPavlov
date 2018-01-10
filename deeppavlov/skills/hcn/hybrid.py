@@ -8,19 +8,24 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import load_vocab
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.models.embedders.w2v_embedder import UtteranceEmbed
+from deeppavlov.models.embedders.w2v_embedder import Word2VecEmbedder
 from deeppavlov.models.encoders.bow import BoW_encoder
 from deeppavlov.models.lstms.hcn_lstm import LSTM
 from deeppavlov.models.spellers.error_model.error_model import ErrorModel
 from deeppavlov.models.trackers.hcn_at import ActionTracker
 from deeppavlov.models.trackers.hcn_et import EntityTracker
+from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common import paths
 
 
 @register("hcn_go")
 class HybridCodeNetwork(Inferable, Trainable):
-    def __init__(self, vocab_path=None, bow_encoder: Type = BoW_encoder, embedder: Type = UtteranceEmbed,
-                 entity_tracker: Type = EntityTracker, speller: Type = ErrorModel):
+    def __init__(self, vocab_path=None,
+                 bow_encoder: Type = BoW_encoder,
+                 embedder: Type = Word2VecEmbedder,
+                 entity_tracker: Type = EntityTracker,
+                 speller: Type = ErrorModel,
+                 net: Type = LSTM):
 
         self.bow_encoder = bow_encoder
         self.embedder = embedder
@@ -29,17 +34,18 @@ class HybridCodeNetwork(Inferable, Trainable):
         self.speller = speller
 
         if vocab_path is None:
-            vocab_path = Path(paths.USR_PATH).joinpath('vocab.txt')
+            vocab_path = Path(paths.USR_PATH) / 'vocab.txt'
         self.vocab = load_vocab(vocab_path)
+
         input_size = self.embedder.dim + len(self.vocab) + self.entity_tracker.num_features
-        self.net = LSTM(input_size=input_size, output_size=self.action_tracker.action_size)
+        output_size = self.action_tracker.action_size
+        self.net = net
+        self.load(input_size, output_size)
 
-    def train(self, dataset, num_epochs=20, acc_threshold=0.99):
-
-        # TODO `data` should be batch
+    @check_attr_true('train_now')
+    def train(self, dataset, num_epochs=5, acc_threshold=0.99):
 
         print('\n:: training started\n')
-
         tr_data = list(dataset.iter_all())
         eval_data = list(dataset.iter_all('test'))
         for j in range(num_epochs):
@@ -70,9 +76,8 @@ class HybridCodeNetwork(Inferable, Trainable):
 
             if accuracy > acc_threshold:
                 print('Accuracy is {}, training stopped.'.format(accuracy))
-                self.net.save()
                 break
-        self.net.save()
+        self.save()
 
     def evaluate(self, eval_data):
         num_eval_dialogs = len(eval_data)
@@ -103,8 +108,8 @@ class HybridCodeNetwork(Inferable, Trainable):
         :return: training input vector
         """
         context = context.lower()
-        # Uncomment this if you want to use a spellers
-        # context = self.spellers.infer(context)
+        # Uncomment this if you want to use spellers
+        # context = self.speller.infer(context)
         bow = self.bow_encoder.infer(context, self.vocab)
         emb = self.embedder.infer(context)
         self.entity_tracker.infer(context)
@@ -130,3 +135,13 @@ class HybridCodeNetwork(Inferable, Trainable):
         self.entity_tracker.reset()
         self.action_tracker.reset(self.entity_tracker)
         self.net.reset_state()
+
+    def load(self, input_size, output_size):
+        self.net.run_sess(input_size, output_size)
+
+        if not self.net.train_now:
+            self.net.load()
+            self.net.reset()
+
+    def save(self):
+        self.net.save()
