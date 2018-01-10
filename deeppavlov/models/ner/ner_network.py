@@ -16,6 +16,7 @@ limitations under the License.
 
 import os
 from collections import defaultdict
+from overrides import overrides
 
 import numpy as np
 import tensorflow as tf
@@ -223,6 +224,7 @@ class NerNetwork(SimpleTFModel):
                                               dropout_rate=0.5)
             total_loss += current_loss
             total_count += len(batch_x)
+
         print('Loss: {}'.format(total_loss / total_count))
 
     def train_on_bath(self, x_word, x_char, mask, y_tag, learning_rate=1e-3, dropout_rate=0.5):
@@ -283,6 +285,10 @@ class NerNetwork(SimpleTFModel):
         else:
             results = self.eval_conll(dataset_type='test', short_report=True)
         return results
+
+    @overrides
+    def infer(self, instance, *args, **kwargs):
+        pass
 
     def predict(self, x_word, x_char, mask=None):
 

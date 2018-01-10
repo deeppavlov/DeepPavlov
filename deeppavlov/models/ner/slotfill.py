@@ -21,9 +21,9 @@ from deeppavlov.core.data.utils import tokenize_reg
 class DstcSlotFillingNetwork(Inferable, Trainable):
     def __init__(self,
                  ner_network: NerNetwork,
-                 model_path,
+                 # model_path,
                  **kwargs):
-        model_path = pathlib.Path(model_path)
+        model_path = pathlib.Path(self.model_path)
         # Check existance of the model files. Download model files if needed
         files_required = ['dict.txt', 'ner_model.ckpt.meta', 'params.json', 'slot_vals.json']
         for file_name in files_required:
@@ -34,7 +34,7 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
                 mark_done(model_path)
                 break
 
-        slot_vals_filepath = os.path.join(model_path, 'slot_vals.json')
+        slot_vals_filepath = model_path / 'slot_vals.json'
 
         self.graph = tf.Graph()
         with self.graph.as_default():
@@ -42,8 +42,17 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
         with open(slot_vals_filepath) as f:
             self._slot_vals = json.load(f)
 
+    # TODO: write load and save
     @overrides
-    def train(self, data, num_epochs):
+    def load(self, *args, **kwargs):
+        pass
+
+    @overrides
+    def save(self, *args, **kwargs):
+        pass
+
+    @overrides
+    def train(self, data, num_epochs=10):
         for epoch in range(num_epochs):
             self._ner_network.train(data)
 

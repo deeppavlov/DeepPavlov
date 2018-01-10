@@ -4,13 +4,18 @@
     "data_path": "/home/mikhail/Projects/Pilot/data/dstc2"
   },
   "dataset": {
-    "name": "dstc2_ner_dataset"
+    "name": "dstc2_ner_dataset",
+    "dataset_path": "/home/mikhail/Projects/Pilot/data/dstc2"
+
   },
   "model": {
     "name": "dstc_slotfilling",
-    "model_path": "../../models/ner/model/",
+    "model_path": "models/ner/model/",
+    "train_now": true,
     "ner_network": {
       "name": "ner_tagging_network",
+      "model_path": "../../models/ner/model/",
+      "verbouse": true,
       "filter_width": 7,
       "embeddings_dropout": true,
       "n_filters": [
@@ -22,20 +27,19 @@
       "use_batch_norm": true,
       "use_crf": true,
       "token_vocab": {
-        "name": "default_vocab",
-        "dict_file_path": "../../models/ner/model/token_vocab.dict"
+        "name": "simple_vocab",
+        "dict_file_path": "/home/mikhail/Projects/Pilot/data/dstc2/token.dict"
       },
       "tag_vocab": {
-        "name": "default_vocab",
-        "dict_file_path": "../../models/ner/model/tag_vocab.dict"
+        "name": "simple_vocab",
+        "dict_file_path": "/home/mikhail/Projects/Pilot/data/dstc2/tag.dict"
       },
       "char_vocab":{
-        "name": "default_vocab",
-        "dict_file_path": "../../models/ner/model/char_vocab.dict"
+        "name": "simple_vocab",
+        "dict_file_path": "/home/mikhail/Projects/Pilot/data/dstc2/char.dict"
       }
     }
   },
-  "config_path": "config.json",
   "num_epochs": 10
 }
 
