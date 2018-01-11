@@ -22,10 +22,8 @@ class Trainable(metaclass=ABCMeta):
     @property
     def model_path_(self) -> Path:
         if not self.model_path:
-            print("model path None")
             return Path(paths.USR_PATH).joinpath(self._model_dir, self._model_file)
         else:
-            print("model path not None")
             return Path(self.model_path)
 
     @abstractmethod

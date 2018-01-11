@@ -50,19 +50,18 @@ def run_alt_meth_if_no_path(alt_f: Callable, attr: str):
 
 def check_path_exists(path_type='file'):
     def _check_path_exists(f: Callable):
-        def wrapped(self, *args):
+        def wrapped(self, *args, **kwargs):
             if path_type == 'file':
                 if self.model_path_.exists():
-                    return f(self, *args)
+                    return f(self, *args, **kwargs)
             elif path_type == 'dir':
                 if self.model_path_.parent.exists():
-                    return f(self, *args)
-            else:
-                raise FileNotFoundError(
-                    "{}.model_path doesn't exist. Check if there is a pretrained model."
-                    "If there is no a pretrained model, you might want to set 'train_now' to true "
-                    "in the model json config and run training first.".format(
-                        self.__class__.__name__))
+                    return f(self, *args, **kwargs)
+            raise FileNotFoundError(
+                "{}.model_path doesn't exist. Check if there is a pretrained model."
+                "If there is no pretrained model, you might want to set 'train_now' to true "
+                "in the model json config and run training first.".format(
+                    self.__class__.__name__))
 
         return wrapped
 
