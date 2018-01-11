@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "dstc2_datasetreader",
-    "data_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2"
+    "data_path": "../data/dstc2"
   },
   "dataset": {
     "name": "dstc2_dialog_dataset"
@@ -11,7 +11,7 @@
     "name": "hcn_new",
     "debug": false,
     "slot_names": ["pricerange", "this", "area", "slot", "food", "name"],
-    "template_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2/dstc2-templates.txt",
+    "template_path": "../data/dstc2/dstc2-templates.txt",
     "network": {
       "train_now": true,
       "name": "custom_rnn",
@@ -24,14 +24,14 @@
     },
     "slot_filler": {
         "name": "dstc_slotfilling",
-        "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/ner"
+        "model_path": "../data/ner"
     },
     "bow_encoder": {
       "name": "bow"
     },
     "embedder": {
       "name": "w2v",
-      "corpus_path": "/home/olga/Documents/text8"
+      "corpus_path": "../data/text8"
     },
     "tokenizer": {
         "name": "spacy_tokenizer"

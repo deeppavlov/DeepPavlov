@@ -1,10 +1,10 @@
-from pathlib import Path, PurePath
+from pathlib import Path, PosixPath
 
 from deeppavlov.core.common import paths
 from deeppavlov.core.common.file import read_json
 
 
-def set_usr_dir(config_path: str, usr_dir_name='USR_DIR') -> PurePath:
+def set_usr_dir(config_path: str, usr_dir_name='USR_DIR') -> PosixPath:
     """
     Make a serialization user dir.
     """
@@ -19,7 +19,4 @@ def set_usr_dir(config_path: str, usr_dir_name='USR_DIR') -> PurePath:
     paths.USR_PATH = usr_dir
     return usr_dir
 
-
-def set_vocab_path() -> PurePath:
-    return paths.USR_PATH / 'vocab.txt'
 

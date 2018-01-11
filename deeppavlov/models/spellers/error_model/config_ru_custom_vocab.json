@@ -7,9 +7,9 @@
     "dictionary": {
       "name": "static_dictionary",
       "dictionary_name": "compreno_words",
-      "raw_dictionary_path": "/home/yoptar/reps/speller/downloads/russian_words/compreno_wordforms.txt"
+      "raw_dictionary_path": "../data/compreno_wordforms.txt"
     },
-    "lm_file": "/data/data/wiyalen_no_punkt.arpa.binary"
+    "lm_file": "../data/wiyalen_no_punkt.arpa.binary"
   },
   "dataset_reader": {
     "name": "typos_kartaslov_reader"

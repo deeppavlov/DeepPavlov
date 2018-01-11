@@ -104,7 +104,10 @@ class FasttextEmbedder(Inferable):
             try:
                 emb = self.tok2emb[t]
             except KeyError:
-                emb = np.zeros(self.dim, dtype=np.float32)
+                try:
+                    emb = self.model[t][:self.dim]
+                except KeyError:
+                    emb = np.zeros(self.dim, dtype=np.float32)
                 self.tok2emb[t] = emb
             embedded_tokens.append(emb)
 
