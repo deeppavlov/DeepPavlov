@@ -1,10 +1,12 @@
 import tensorflow as tf
 from abc import ABCMeta
+from functools import wraps
 
 from six import with_metaclass
 
 
 def _graph_wrap(func, graph):
+    @wraps(func)
     def _wrapped(*args, **kwargs):
         with graph.as_default():
             try:
@@ -31,3 +33,4 @@ class TfModelMeta(with_metaclass(type, ABCMeta)):
                 setattr(obj, meth, _graph_wrap(attr, obj.graph))
         obj.__init__(*args, **kwargs)
         return obj
+
