@@ -12,11 +12,12 @@ from deeppavlov.models.preprocessors.preprocessors import PREPROCESSORS
 
 @register('intent_dataset')
 class IntentDataset(Dataset):
-    def __init__(self, data, dataset_path=None, dataset_dir='intents', dataset_file='classes.txt',
+    def __init__(self, data,
                  seed=None, extract_classes=True, classes_file=None,
                  fields_to_merge=None, merged_field=None,
                  field_to_split=None, split_fields=None, split_proportions=None,
                  prep_method_name: str = None,
+                 dataset_path=None, dataset_dir='intents', dataset_file='classes.txt',
                  *args, **kwargs):
 
         super().__init__(data, seed)

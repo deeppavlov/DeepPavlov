@@ -16,8 +16,10 @@
 import json
 import pandas as pd
 from pathlib import Path
+
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
+from deeppavlov.core.data.utils import download_untar, mark_done
 
 
 @register('intent_dataset_reader')
@@ -25,8 +27,9 @@ class IntentDatasetReader(DatasetReader):
     """
     IntentDatasetReader reads data from some location and constructs a dict of given datasets.
     """
-    @staticmethod
-    def read(data_path: str, *args, **kwargs):
+    url = 'http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz'
+
+    def read(self, data_path: str, *args, **kwargs):
         """
         Read a file from a path and returns data as dict with given datasets.
         """
@@ -35,24 +38,18 @@ class IntentDatasetReader(DatasetReader):
         train_data_path = data_path / "dstc2-trn.jsonlist"
         valid_data_path = data_path / "dstc2-val.jsonlist"
         test_data_path = data_path / "dstc2-tst.jsonlist"
+        print(train_data_path.absolute())
+        if not(Path(train_data_path).is_file() and Path(valid_data_path).is_file() and Path(test_data_path).is_file()):
+            print('Loading train dstc2 from `{}` to `{}`'.format(self.url, data_path))
+            download_untar(self.url, data_path)
+            mark_done(data_path)
 
-        if Path(train_data_path).is_file():
-            print('___Reading train data from {}'.format(train_data_path))
-            data_dict['train'] = IntentDatasetReader.read_from_json(train_data_path)
-        else:
-            raise IOError("Error: Train file does not exist")
-
-        if Path(valid_data_path).is_file():
-            print('___Reading valid data from {}'.format(train_data_path))
-            data_dict['valid'] = IntentDatasetReader.read_from_json(valid_data_path)
-        else:
-            raise IOError("Error: Valid file does not exist")
-
-        if Path(test_data_path).is_file():
-            print('___Reading test data from {}'.format(train_data_path))
-            data_dict['test'] = IntentDatasetReader.read_from_json(test_data_path)
-        else:
-            raise IOError("Error: Test file does not exist")
+        print('___Reading train data from {}'.format(train_data_path))
+        data_dict['train'] = IntentDatasetReader.read_from_json(train_data_path)
+        print('___Reading valid data from {}'.format(train_data_path))
+        data_dict['valid'] = IntentDatasetReader.read_from_json(valid_data_path)
+        print('___Reading test data from {}'.format(train_data_path))
+        data_dict['test'] = IntentDatasetReader.read_from_json(test_data_path)
 
         return data_dict
 

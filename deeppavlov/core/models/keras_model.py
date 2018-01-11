@@ -45,7 +45,8 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                                 lr, decay, loss_name, metrics_names=None, add_metrics_file=None,
                                 loss_weights=None,
                                 sample_weight_mode=None, weighted_metrics=None,
-                                target_tensors=None):
+                                target_tensors=None,
+                                fname=None):
         """
         Method initializes model from scratch with given params
         Args:
