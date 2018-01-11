@@ -44,9 +44,17 @@ def train_model_from_config(config_path: str):
     dataset_name = dataset_config['name']
     dataset = from_params(_REGISTRY[dataset_name], dataset_config, data=data)
 
+    vocabs = {}
+    for vocab_param_name, vocab_config in config['vocabs'].items():
+        vocab_name = vocab_config['name']
+        v = from_params(_REGISTRY[vocab_name], vocab_config) 
+        v.reset()
+        v.train(dataset.iter_all('train'))
+        vocabs[vocab_param_name] = v
+
     model_config = config['model']
     model_name = model_config['name']
-    model = from_params(_REGISTRY[model_name], model_config)
+    model = from_params(_REGISTRY[model_name], model_config, **vocabs)
 
     model.train(dataset)
 

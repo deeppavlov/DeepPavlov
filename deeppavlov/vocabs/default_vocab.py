@@ -1,6 +1,5 @@
 from collections import Counter, defaultdict
 import itertools
-from overrides import overrides
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.trainable import Trainable
@@ -20,7 +19,7 @@ class DefaultVocabulary(Trainable, Inferable):
         self.default_token = default_token
         self.preprocess_fn = self._build_preprocess_fn(inputs, level) 
         
-        self._reset_dict()
+        self.reset()
         if self.model_path_.exists():
             self.load()
 
@@ -29,7 +28,7 @@ class DefaultVocabulary(Trainable, Inferable):
 
         def iter_level(utter):
             if level == 'token':
-                yield utter
+                yield from utter.split(' ')
             elif level == 'char':
                 yield from utter 
             else:
@@ -70,7 +69,7 @@ class DefaultVocabulary(Trainable, Inferable):
     def items(self):
         return self.freqs.most_common()
 
-    def _reset_dict(self):
+    def reset(self):
         def constant_factory(value):
             return itertools.repeat(value).__next__
 
@@ -85,41 +84,37 @@ class DefaultVocabulary(Trainable, Inferable):
             self._i2t[i] = token
             self.freqs[token] += 0
 
-    @overrides
     def train(self, data):
-        self.raw_train(
-            tokens=itertools.chain.from_iterable(map(self.preprocess_fn, data)),
+        self._train(
+            tokens=filter(None, itertools.chain.from_iterable(
+                map(self.preprocess_fn, data))),
             counts=None,
             update=True
         )
+        self.save()
 
-    def raw_train(self, tokens, counts=None, update=True):
+    def _train(self, tokens, counts=None, update=True):
         counts = counts or itertools.repeat(1)
         if not update:
-            self._reset_dict()
+            self.reset()
 
         index = len(self.freqs)
         for token, cnt in zip(tokens, counts):
-            print('received token={}, cnt={}'.format(token, cnt))
             if token not in self._t2i:
                 self._t2i[token] = index
                 self._i2t[index] = token
                 index += 1
             self.freqs[token] += cnt
 
-    @overrides
     def infer(self, samples):
         return [self.__getitem__(s) for s in samples]
 
-    @overrides
     def save(self):
         with open(self.model_path_, 'wt') as f:
             for token, cnt in self.freqs.most_common():
                 f.write('{}\t{:d}\n'.format(token, cnt))
 
-#    @check_path_exists
-# TODO: decorator seems to malfunction
-    @overrides
+    @check_path_exists()
     def load(self):
         print("Loading vocabulary from `{}`".format(self.model_path_.absolute()))
         tokens, counts = [], []
@@ -127,4 +122,4 @@ class DefaultVocabulary(Trainable, Inferable):
             token, cnt = ln.split('\t', 1)
             tokens.append(token)
             counts.append(int(cnt))
-        self.raw_train(tokens=tokens, counts=counts, update=True)
+        self._train(tokens=tokens, counts=counts, update=True)
