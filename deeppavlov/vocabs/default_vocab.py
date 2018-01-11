@@ -11,16 +11,41 @@ from deeppavlov.core.common.attributes import check_path_exists
 @register('default_vocab')
 class DefaultVocabulary(Trainable, Inferable):
 
-    def __init__(self, special_tokens=('<UNK>',), default_token='<UNK>', model_dir='',
-                 model_file='vocab.txt'):
+    def __init__(self, inputs, level='token',
+                 model_dir='', model_file='vocab.txt',
+                 special_tokens=('<UNK>',), default_token='<UNK>'): 
         self._model_dir = model_dir
         self._model_file = model_file
         self.special_tokens = special_tokens
         self.default_token = default_token
+        self.preprocess_fn = self._build_preprocess_fn(inputs, level) 
         
         self._reset_dict()
         if self.model_path_.exists():
             self.load()
+
+    @staticmethod
+    def _build_preprocess_fn(inputs, level):
+
+        def iter_level(utter):
+            if level == 'token':
+                yield utter
+            elif level == 'char':
+                yield from utter 
+            else:
+                raise ValueError("level argument is either equal to `token`"
+                                 " or to `char`")
+
+        def preprocess_fn(data):
+            for f in inputs:
+                if f == 'x':
+                    yield from iter_level(data[0])
+                elif f == 'y':
+                    yield from iter_level(data[1])
+                else:
+                    yield from iter_level(data[2][f])
+
+        return preprocess_fn
 
     def __getitem__(self, key):
         if isinstance(key, int):
@@ -39,6 +64,9 @@ class DefaultVocabulary(Trainable, Inferable):
     def keys(self):
         return (k for k, v in self.freqs.most_common())
 
+    def values(self):
+        return (v for k, v in self.freqs.most_common())
+
     def items(self):
         return self.freqs.most_common()
 
@@ -55,21 +83,29 @@ class DefaultVocabulary(Trainable, Inferable):
         for i, token in enumerate(self.special_tokens):
             self._t2i[token] = i
             self._i2t[i] = token
-            self.freqs[token] = 0
+            self.freqs[token] += 0
 
     @overrides
-    def train(self, tokens, counts=None, update=True):
+    def train(self, data):
+        self.raw_train(
+            tokens=itertools.chain.from_iterable(map(self.preprocess_fn, data)),
+            counts=None,
+            update=True
+        )
+
+    def raw_train(self, tokens, counts=None, update=True):
         counts = counts or itertools.repeat(1)
         if not update:
             self._reset_dict()
 
         index = len(self.freqs)
         for token, cnt in zip(tokens, counts):
+            print('received token={}, cnt={}'.format(token, cnt))
             if token not in self._t2i:
                 self._t2i[token] = index
                 self._i2t[index] = token
                 index += 1
-                self.freqs[token] += cnt
+            self.freqs[token] += cnt
 
     @overrides
     def infer(self, samples):
@@ -91,4 +127,4 @@ class DefaultVocabulary(Trainable, Inferable):
             token, cnt = ln.split('\t', 1)
             tokens.append(token)
             counts.append(int(cnt))
-        self.train(tokens=tokens, counts=counts, update=True)
+        self.raw_train(tokens=tokens, counts=counts, update=True)

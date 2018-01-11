@@ -157,10 +157,11 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                         action_mask[a_id] = 0
         return action_mask
 
-    def train(self, data, num_epochs=200, patience=5):
+    def train(self, data, num_epochs=1, patience=5):
         print('\n:: training started\n')
 
         curr_patience = patience
+        prev_valid_accuracy = 0. 
 # TODO: in case patience is off, save model {patience} steps before
         for j in range(num_epochs):
 

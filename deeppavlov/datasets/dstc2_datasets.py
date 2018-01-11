@@ -55,6 +55,7 @@ class DSTC2DialogDataset(Dataset):
             'test': self.test,
             'all': self.train + self.test + self.valid
         }
+        # TODO: delete save_vocab
         if word_vocab is not None:
             self.save_vocab(self.data['train'], word_vocab)
 

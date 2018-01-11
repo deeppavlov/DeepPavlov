@@ -4,22 +4,23 @@
     "data_path": "/home/vimary/ipavlov/Pilot/deeppavlov/data/dstc2"
   },
   "dataset": {
-    "name": "dstc2_dialog_dataset",
-	"word_vocab": "/home/vimary/ipavlov/Pilot/deeppavlov/data/dstc2/word_vocab.txt"
+    "name": "dstc2_dialog_dataset"
   },
   "model": {
     "train_now": true,
     "name": "hcn_new",
-    "debug": 1,
+    "debug": 0,
     "template_path": "/home/vimary/ipavlov/Pilot/deeppavlov/data/dstc2/dstc2-templates.txt",
 	"word_vocab": {
 		"name": "default_vocab",
+		"inputs": ["x"],
+		"level": "token",
 		"model_dir": "/home/vimary/ipavlov/Pilot/deeppavlov/data/dstc2",
-		"model_file": "word_vocab.txt"
+		"model_file": "word_vocab2.txt"
 	},
     "network": {
 		"name": "custom_rnn",
-		"model_file": "hcn_rnn10",
+		"model_dir": "hcn_rnn100500",
 		"train_now": true,
 		"learning_rate": 0.03,
 		"hidden_dim": 128,
