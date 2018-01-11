@@ -16,6 +16,7 @@ from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.file import save_json, read_json
 from deeppavlov.core.common.attributes import run_alt_meth_if_no_path
+from deeppavlov.core.common.errors import ConfigError
 
 
 class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
@@ -45,7 +46,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                                 lr, decay, loss_name, metrics_names=None, add_metrics_file=None,
                                 loss_weights=None,
                                 sample_weight_mode=None, weighted_metrics=None,
-                                target_tensors=None):
+                                target_tensors=None, *args, **kwargs):
         """
         Method initializes model from scratch with given params
         Args:
@@ -145,7 +146,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         if opt_path.is_file():
             self.opt = read_json(opt_path)
         else:
-            raise IOError("Error: config file %s_opt.json of saved model does not exist" % fname)
+            raise ConfigError("Error: config file %s_opt.json of saved model does not exist" % fname)
 
         model_func = getattr(self, model_name, None)
         if callable(model_func):
