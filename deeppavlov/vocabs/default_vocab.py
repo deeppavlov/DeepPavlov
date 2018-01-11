@@ -48,6 +48,7 @@ class DefaultVocabulary(Trainable, Inferable):
 
     def __getitem__(self, key):
         if isinstance(key, int):
+#TODO: handle np.int != int
             return self._i2t[key]
         elif isinstance(key, str):
             return self._t2i[key]
