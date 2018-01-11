@@ -53,7 +53,7 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
     def infer(self, instance, *args, **kwargs):
         if not len(instance.strip()):
             return dict()
-        return self.predict_slots(instance)
+        return self.predict_slots(instance.lower())
 
     def interact(self):
         s = input('Type in the message you want to tag: ')
