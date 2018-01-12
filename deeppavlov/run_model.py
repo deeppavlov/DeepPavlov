@@ -1,5 +1,3 @@
-import os
-
 from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.commands.utils import set_usr_dir
@@ -28,7 +26,7 @@ try:
     interact_model(MODEL_CONFIG_PATH)
 except Exception:
     raise
-# remove is usr_dir is empty:
+# remove if usr_dir is empty:
 finally:
-    if not os.listdir(str(usr_dir)):
-        os.rmdir(str(usr_dir))
+    if not list(usr_dir.iterdir()):
+        usr_dir.rmdir()
