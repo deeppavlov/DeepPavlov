@@ -24,8 +24,6 @@ try:
     usr_dir = set_usr_dir(MODEL_CONFIG_PATH)
     train_model_from_config(MODEL_CONFIG_PATH)
     interact_model(MODEL_CONFIG_PATH)
-except Exception:
-    raise
 # remove if usr_dir is empty:
 finally:
     if not list(usr_dir.iterdir()):
