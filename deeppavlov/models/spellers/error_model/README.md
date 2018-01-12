@@ -44,7 +44,7 @@ A working config could look like this:
 ```
 
 #### Usage example
-This model expects a sentence string with space-separated tokens in lowercase as it's input and returns the same string with corrected words.
+This model expects a sentence string with space-separated tokens in lowercase as its input and returns the same string with corrected words.
 Here's an example code that will read input data from stdin line by line and output resulting text into stdout:
 
 ```python
@@ -123,7 +123,7 @@ train_model_from_config(MODEL_CONFIG_PATH)
 #### Language model
 
 This model uses [KenLM](http://kheafield.com/code/kenlm/) to process language models, so if you want to build your own,
-we suggest you consult with it's website. We do also provide our own language models for
+we suggest you consult with its website. We do also provide our own language models for
 [english](http://lnsigo.mipt.ru/export/lang_models/en_wiki_no_punkt.arpa.binary.gz) \(5.5GB\) and
 [russian](http://lnsigo.mipt.ru/export/lang_models/ru_wiyalen_no_punkt.arpa.binary.gz) \(5GB\) languages.
 
