@@ -12,17 +12,38 @@ and some guidelines for how to collect appropriate datasets for other languages.
 
 ## Usage
 
-model parameters:  
+#### Config parameters:  
 * `name` always equals to `"spelling_error_model"`
 * `train_now` — without this flag set to `true` train phase of an error model will be skipped
 * `model_file` — name of the file that the model will be saved to and loaded from, defaults to `"error_model.tsv"` 
 * `window` — window size for the error model from `0` to `4`, defaults to `1`
 * `lm_file` — path to the ARPA language model file. If omitted, all of the dictionary words will be handled as equally probable
-* `dictionary`
-    *
-    *
+* `dictionary` — description of a static dictionary model, instance of (or inherited from) `deeppavlov.vocabs.static_dictionary.StaticDictionary`
+    * `name` — `"static_dictionary"` for a custom dictionary or one of two provided:
+        * `"russian_words_vocab"` to automatically download and use a list of russian words from [https://github.com/danakt/russian-words/](https://github.com/danakt/russian-words/)  
+        * `"wikitionary_100K_vocab"` to automatically download a list of most common words from Project Gutenberg from [Wiktionary](https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists#Project_Gutenberg)
+     
+    * `dictionary_name` — name of a directory where a dictionary will be built to and loaded from, defaults to `"dictionary"` for static_dictionary
+    * `raw_dictionary_path` — path to a file with a line-separated list of dictionary words, required for static_dictionary
 
-This model expects a sentence string with spaced-separated tokens in lowercase as it's input and returns the same string with corrected words
+A working config could look like this:
+
+```json
+{
+  "model": {
+    "name": "spelling_error_model",
+    "model_file": "error_model_en.tsv",
+    "window": 1,
+    "dictionary": {
+      "name": "wikitionary_100K_vocab"
+    },
+    "lm_file": "/data/data/enwiki_no_punkt.arpa.binary"
+  }
+}
+```
+
+#### Usage example
+This model expects a sentence string with space-separated tokens in lowercase as it's input and returns the same string with corrected words
 
 ```python
 import json
