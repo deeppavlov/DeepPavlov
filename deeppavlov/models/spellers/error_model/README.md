@@ -3,14 +3,18 @@
 
 # Automatic spelling correction component
 
-Automatic spelling correction component is based on [An Improved Error Model for Noisy Channel Spelling Correction](http://www.aclweb.org/anthology/P00-1037)
-by Eric Brill and Rober C. Moore and uses statistics based error model and an ARPA language model to correct spelling errors.
+Automatic spelling correction component is based on
+[An Improved Error Model for Noisy Channel Spelling Correction](http://www.aclweb.org/anthology/P00-1037)
+by Eric Brill and Rober C. Moore and uses statistics based error model,
+a static dictionary and an ARPA language model to correct spelling errors.  
+We provide everything you need to build a spelling correction module for russian and english languages
+and some guidelines for how to collect appropriate datasets for other languages.
 
 ## Usage
 
 model parameters:  
 * `name` always equals to `"spelling_error_model"`
-* `train_now`
+* `train_now` — without this flag set to `true` train phase of an error model will be skipped
 * `model_file` — name of the file that the model will be saved to and loaded from, defaults to `"error_model.tsv"` 
 * `window` — window size for the error model from `0` to `4`, defaults to `1`
 * `lm_file` — path to the ARPA language model file. If omitted, all of the dictionary words will be handled as equally probable
