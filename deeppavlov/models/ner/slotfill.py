@@ -48,12 +48,11 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
         self._ner_network.save(self._ner_model_path)
 
     @overrides
-    def train(self, data, num_epochs=3):
+    def train(self, data, num_epochs=5):
         for epoch in range(num_epochs):
             self._ner_network.train(data)
             self._ner_network.eval_conll(data.iter_all('valid'), short_report=False, data_type='valid')
         self._ner_network.eval_conll(data.iter_all('train'), short_report=False, data_type='train')
-        self._ner_network.eval_conll(data.iter_all('valid'), short_report=False, data_type='valid')
         self._ner_network.eval_conll(data.iter_all('test'), short_report=False, data_type='test')
         self.save()
 
