@@ -9,7 +9,7 @@ T = TypeVar('T')
 def from_params(cls: Type, params: Dict, vocabs: Dict=dict(), **kwargs) -> Type['T']:
 
     # what is passed in json:
-    config_params = {k: v for k, v in params.items() if k in {'name', 'vocabs'}}
+    config_params = {k: v for k, v in params.items() if k not in {'name', 'vocabs'}}
 
     # find the submodels params recursively
     for param_name, subcls_params in config_params.items():
@@ -25,7 +25,6 @@ def from_params(cls: Type, params: Dict, vocabs: Dict=dict(), **kwargs) -> Type[
                 subcls = REGISTRY[subcls_name]
                 subcls_params.pop('name')
                 config_params[param_name] = from_params(subcls, subcls_params, vocabs)
-                print('{}'.format(param_name))
             except KeyError:
                 raise ConfigError(
                     "The class {} is not registered. Either register this class,"
