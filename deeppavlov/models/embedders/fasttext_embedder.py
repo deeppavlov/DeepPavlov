@@ -112,6 +112,6 @@ class FasttextEmbedder(Inferable):
             embedded_tokens.append(emb)
 
         if mean:
-            return np.mean(embedded_tokens)
+            return np.mean([et for et in embedded_tokens if et.any()])
 
         return embedded_tokens
