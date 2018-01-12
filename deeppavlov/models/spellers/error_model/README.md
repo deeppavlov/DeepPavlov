@@ -5,7 +5,7 @@
 
 Automatic spelling correction component is based on
 [An Improved Error Model for Noisy Channel Spelling Correction](http://www.aclweb.org/anthology/P00-1037)
-by Eric Brill and Rober C. Moore and uses statistics based error model,
+by Eric Brill and Robert C. Moore and uses statistics based error model,
 a static dictionary and an ARPA language model to correct spelling errors.  
 We provide everything you need to build a spelling correction module for russian and english languages
 and some guidelines for how to collect appropriate datasets for other languages.
@@ -75,8 +75,17 @@ cat input.txt | python3 example.py > output.txt
 
 #### Error model
 
-!how to train an error model:  
-!write your own dataset_reader, run train
+For the training phase config file needs to also include these parameters:
+
+* `dataset` — it should always be set like `"dataset": {"name": "typos_dataset"}`
+* `dataset_reader`
+    * `name` — `typos_custom_reader` for a custom dataset or one of two provided:
+        * `typos_kartaslov_reader` to automatically download and process misspellings dataset for russian language from
+         [https://github.com/dkulagin/kartaslov/tree/master/dataset/orfo_and_typos](https://github.com/dkulagin/kartaslov/tree/master/dataset/orfo_and_typos)
+        * `typos_wikipedia_reader` to automatically download and process
+         [a list of common misspellings from english Wikipedia](https://en.wikipedia.org/wiki/Wikipedia:Lists_of_common_misspellings/For_machines)
+    * `data_path` — required for typos_custom_reader as a path to a dataset file,
+     where each line contains a misspelling and a correct spelling of a word separated by a tab symbol
 
 ```python
 from deeppavlov.core.commands.train import train_model_from_config
