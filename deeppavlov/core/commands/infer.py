@@ -1,5 +1,5 @@
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.registry import _REGISTRY
+from deeppavlov.core.common.registry import REGISTRY
 
 from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.common.params import from_params
@@ -9,7 +9,7 @@ def build_model_from_config(config):
     model_config = config['model']
     model_config.update(config['vocabs'])
     model_name = model_config['name']
-    model = from_params(_REGISTRY[model_name], model_config)
+    model = from_params(REGISTRY[model_name], model_config)
     model.reset()
     return model
 
@@ -24,7 +24,7 @@ def build_agent_from_config(config_path: str):
 def interact_agent(config_path):
     a = build_agent_from_config(config_path)
     commutator_name = a.commutator_config['name']
-    commutator = from_params(_REGISTRY[commutator_name], a.commutator_config)
+    commutator = from_params(REGISTRY[commutator_name], a.commutator_config)
 
     models = [build_model_from_config(sk) for sk in a.skill_configs]
     while True:

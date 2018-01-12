@@ -1,6 +1,5 @@
 import json
-import os
-import pathlib
+from pathlib import Path
 
 import tensorflow as tf
 from fuzzywuzzy import process
@@ -18,11 +17,18 @@ from deeppavlov.core.data.utils import tokenize_reg
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(Inferable):
     def __init__(self, model_path):
-        model_path = pathlib.Path(model_path)
-        # Check existance of the model files. Download model files if needed (only one ckpt file checked)
-        files_required = ['dict.txt', 'ner_model.ckpt.meta', 'params.json', 'slot_vals.json']
+        model_path = Path(model_path)
+        # Check existance of the model files. Download model files if needed
+        files_required = ['dict.txt', 'ner_model.ckpt', 'params.json', 'slot_vals.json']
         for file_name in files_required:
             if not os.path.exists(model_path / file_name):
+=======
+        model_path = Path(model_path)
+        # Check existance of the model files. Download model files if needed
+        files_required = ['dict.txt', 'ner_model.ckpt', 'params.json', 'slot_vals.json']
+        for file_name in files_required:
+            if not model_path.joinpath(file_name).exists():
+>>>>>>> origin/dev
                 url = 'http://lnsigo.mipt.ru/export/ner_dstc_model.tar.gz'
                 print('Loading model from {} to {}'.format(url, model_path))
                 download_untar(url, model_path)
@@ -35,13 +41,13 @@ class DstcSlotFillingNetwork(Inferable):
         slot_vals_filepath = model_path / 'slot_vals.json'
 
         # Build and initialize the model
-        with open(params_filepath) as f:
+        with params_filepath.open() as f:
             network_params = json.load(f)
         self._corpus = Corpus(dicts_filepath=dict_filepath)
         self.graph = tf.Graph()
         with self.graph.as_default():
             self._ner_network = NerNetwork(self._corpus, pretrained_model_filepath=model_filepath, **network_params)
-        with open(slot_vals_filepath) as f:
+        with slot_vals_filepath.open() as f:
             self._slot_vals = json.load(f)
 
     @overrides

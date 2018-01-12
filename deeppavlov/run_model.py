@@ -13,8 +13,22 @@ from deeppavlov.core.commands.utils import set_usr_dir
 
 # Speller
 # models/spellers/error_model/config_en.json
+# models/spellers/error_model/config_ru.json
+# models/spellers/error_model/config_ru_custom_vocab.json
 
-MODEL_CONFIG_PATH = 'skills/hcn_new/config.json'
-set_usr_dir(MODEL_CONFIG_PATH)
-train_model_from_config(MODEL_CONFIG_PATH)
-interact_model(MODEL_CONFIG_PATH)
+# Intents classifier
+# models/classifiers/intents/config.json
+# models/classifiers/intents/config_infer.json
+
+usr_dir = None
+
+try:
+    MODEL_CONFIG_PATH = 'models/classifiers/intents/config.json'
+    usr_dir = set_usr_dir(MODEL_CONFIG_PATH)
+    train_model_from_config(MODEL_CONFIG_PATH)
+    interact_model(MODEL_CONFIG_PATH)
+except Exception:
+    raise
+finally:
+    if usr_dir:
+        usr_dir.rmdir()

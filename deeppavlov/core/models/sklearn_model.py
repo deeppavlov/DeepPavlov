@@ -21,7 +21,7 @@ class SklearnModel(Trainable, Inferable):
         self._estimator = estimator().set_params(**self._params)
         self.model_dir_path = model_dir_path
         self.model_fpath = model_fpath
-        self.model_path = Path(paths.USR_PATH).joinpath(model_dir_path, model_fpath)
+        self.model_path = Path(paths.USR_PATH) / model_dir_path / model_fpath
 
     def infer(self, features, fit_params=None, prediction_type='label'):
         """
@@ -67,7 +67,7 @@ class SklearnModel(Trainable, Inferable):
         Save model to file.
         """
         if not self.model_path_.parent.exists():
-            Path.mkdir(self.model_path_.parent)
+            self.model_path_.parent.mkdir(mode=0o755)
 
         save_pickle(self._estimator, self.model_path_.as_posix())
 

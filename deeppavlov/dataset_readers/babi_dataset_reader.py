@@ -27,7 +27,7 @@ class BabiDatasetReader(DatasetReader):
         # get responses
         responses = self._get_responses(file_path, dialogs)
 
-        responses_path = Path(paths.USR_PATH).joinpath('responses.txt')
+        responses_path = Path(paths.USR_PATH) / 'responses.txt'
         responses_path.write_text('\n'.join(responses))
 
         trainset = [{'context': u, 'response': r} for u, r in zip(utterances, responses)]
@@ -41,7 +41,7 @@ class BabiDatasetReader(DatasetReader):
             whole_dialog = trainset[start:end]
             res.append(whole_dialog)
 
-        self.save_vocab(res, paths.USR_PATH.joinpath('vocab.txt'))
+        self.save_vocab(res, paths.USR_PATH / 'vocab.txt')
         return {'train': res}
 
     @staticmethod

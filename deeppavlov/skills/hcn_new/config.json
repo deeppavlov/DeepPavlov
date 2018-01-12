@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "dstc2_datasetreader",
-    "data_path": "/home/vimary/ipavlov/Pilot/deeppavlov/data/dstc2"
+    "data_path": "../data/dstc2"
   },
   "dataset": {
     "name": "dstc2_dialog_dataset"

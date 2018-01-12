@@ -1,6 +1,7 @@
+import numpy as np
+
 from keras import backend as K
 import sklearn.metrics
-import numpy as np
 
 
 def precision_K(y_true, y_pred):

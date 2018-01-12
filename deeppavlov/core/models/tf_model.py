@@ -7,6 +7,7 @@ Trainable and Inferable interfaces and make a pull-request to deeppavlov.
 from abc import abstractmethod
 
 import tensorflow as tf
+from overrides import overrides
 
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
@@ -82,6 +83,7 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
         return tf.train.get_checkpoint_state(self.model_path_.parent)
 
     @check_path_exists('dir')
+    @overrides
     def load(self):
         """
         Load session from checkpoint

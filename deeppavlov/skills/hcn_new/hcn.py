@@ -30,8 +30,8 @@ from deeppavlov.models.embedders.fasttext_embedder import FasttextUtteranceEmbed
 from deeppavlov.models.encoders.bow import BoW_encoder
 from deeppavlov.models.intent_recognition.intent_keras.intent_model import KerasIntentModel
 from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
+from deeppavlov.models.tokenizers.spacy_tokenizer import SpacyTokenizer
 from deeppavlov.models.trackers.default_tracker import DefaultTracker
-from deeppavlov.preprocessors.spacy_tokenizer import SpacyTokenizer
 from deeppavlov.skills.hcn_new.metrics import DialogMetrics
 from deeppavlov.skills.hcn_new.network import HybridCodeNetworkModel
 from deeppavlov.skills.hcn_new.templates import Templates, DualTemplate

@@ -1,4 +1,5 @@
-import os
+from pathlib import Path
+
 import requests
 from tqdm import tqdm
 import tarfile
@@ -13,15 +14,14 @@ def download(dest_file_path, source_url):
         source_url: the source URL
 
     """
-    datapath = os.path.dirname(dest_file_path)
-    os.makedirs(datapath, mode=0o755, exist_ok=True)
 
-    dest_file_path = os.path.abspath(dest_file_path)
+    dest_file_path = Path(dest_file_path).absolute()
+    dest_file_path.parent.mkdir(parents=True, exist_ok=True)
 
     r = requests.get(source_url, stream=True)
     total_length = int(r.headers.get('content-length', 0))
 
-    with open(dest_file_path, 'wb') as f:
+    with dest_file_path.open('wb') as f:
         print('Downloading from {} to {}'.format(source_url, dest_file_path))
 
         pbar = tqdm(total=total_length, unit='B', unit_scale=True)
@@ -39,8 +39,10 @@ def untar(file_path, extract_folder=None):
         extract_folder: folder to which the files will be extracted
 
     """
+    file_path = Path(file_path)
     if extract_folder is None:
-        extract_folder = os.path.dirname(file_path)
+        extract_folder = file_path.parent
+    extract_folder = Path(extract_folder)
     tar = tarfile.open(file_path)
     tar.extractall(extract_folder)
     tar.close()
@@ -55,17 +57,20 @@ def download_untar(url, download_path, extract_path=None):
         extract_path: path where contents of tar file will be extracted
     """
     file_name = url.split('/')[-1]
+    download_path = Path(download_path)
     if extract_path is None:
         extract_path = download_path
-    tar_file_path = os.path.join(download_path, file_name)
+    extract_path = Path(extract_path)
+    tar_file_path = download_path / file_name
     print('Extracting {} archive into {}'.format(tar_file_path, extract_path))
     download(tar_file_path, url)
     untar(tar_file_path, extract_path)
-    os.remove(tar_file_path)
+    tar_file_path.unlink()
 
 
 def load_vocab(vocab_path):
-    with open(vocab_path) as f:
+    vocab_path = Path(vocab_path)
+    with vocab_path.open() as f:
         return f.read().split()
 
 
@@ -73,13 +78,13 @@ _MARK_DONE = '.done'
 
 
 def mark_done(path):
-    fname = os.path.join(path, _MARK_DONE)
-    with open(fname, 'a'):
-        os.utime(fname, None)
+    mark = Path(path) / _MARK_DONE
+    mark.touch(exist_ok=True)
 
 
 def is_done(path):
-    return os.path.isfile(os.path.join(path, _MARK_DONE))
+    mark = Path(path) / _MARK_DONE
+    return mark.is_file()
 
 
 def tokenize_reg(s):

@@ -1,6 +1,7 @@
 import numpy as np
 import sys
 
+
 def labels2onehot(labels, classes):
     n_classes = len(classes)
     eye = np.eye(n_classes)
@@ -9,13 +10,14 @@ def labels2onehot(labels, classes):
         curr = np.zeros(n_classes)
         for intent in sample:
             if intent not in classes:
-                print('Warning: unknown intent %s detected' % intent)
+                print('Warning: unknown intent {} detected'.format(intent))
                 curr += eye[np.where(classes == 'unknown')[0]].reshape(-1)
             else:
                 curr += eye[np.where(classes == intent)[0]].reshape(-1)
         y.append(curr)
     y = np.asarray(y)
     return y
+
 
 def proba2labels(proba, confident_threshold, classes):
     y = []
@@ -28,16 +30,18 @@ def proba2labels(proba, confident_threshold, classes):
     y = np.asarray(y)
     return y
 
+
 def proba2onehot(proba, confident_threshold, classes):
     return labels2onehot(proba2labels(proba, confident_threshold, classes), classes)
 
+
 def log_metrics(names, values, updates=None, mode='train'):
     sys.stdout.write("\r")  # back to previous line
-    print("%s -->\t" % mode, end="")
+    print("{} -->\t".format(mode), end="")
     if updates is not None:
-        print("updates: %d\t" % updates, end="")
+        print("updates: {}\t".format(updates), end="")
 
     for id in range(len(names)):
-        print("%s: %f\t" % (names[id], values[id]), end="")
+        print("{}: {}\t".format(names[id], values[id]), end="")
     print(" ")  # , end='\r')
     return

@@ -18,9 +18,9 @@ class abstract_attribute(object):
 
 def check_attr_true(attr: str):
     def _check_attr_true(f: Callable):
-        def wrapped(self, *args):
+        def wrapped(self, *args, **kwargs):
             if getattr(self, attr):
-                return f(self, *args)
+                return f(self, *args, **kwargs)
             else:
                 print("'{0}' is False, doing nothing."
                       " Set {0} to True in json config "
@@ -33,15 +33,15 @@ def check_attr_true(attr: str):
 
 def run_alt_meth_if_no_path(alt_f: Callable, attr: str):
     def _run_alt_meth(f):
-        def wrapped(self, *args):
+        def wrapped(self, *args, **kwargs):
             if self.model_path_.exists():
-                return f(self, *args)
+                return f(self, *args, **kwargs)
             else:
                 setattr(self, attr, True)
                 # TODO somehow pass the wrapped function name
                 print("'{0}' is set to False, though the path doesn't exist. Can't do {1}. "
                       "Ignoring False, setting '{0}' to True. Proceeding anyway.".format(attr, f))
-                return alt_f(self, *args)
+                return alt_f(self, *args, **kwargs)
 
         return wrapped
 
