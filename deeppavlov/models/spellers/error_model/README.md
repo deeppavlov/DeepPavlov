@@ -35,7 +35,7 @@ with open(CONFIG_PATH) as config_file:
 
 model = build_model_from_config(config)
 for line in sys.stdin:
-    print(model.infer(line))
+    print(model.infer(line), flush=True)
 ```
 
 ## Training
