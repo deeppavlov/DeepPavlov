@@ -2,6 +2,8 @@ import shutil
 from collections import defaultdict
 from pathlib import Path
 
+import sys
+
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import is_done, mark_done
 from deeppavlov.core.common import paths
@@ -39,7 +41,7 @@ class StaticDictionary:
         words_trie_path = data_dir / 'words_trie.pkl'
 
         if not is_done(data_dir):
-            print('Trying to build a dictionary in {}'.format(data_dir))
+            print('Trying to build a dictionary in {}'.format(data_dir), file=sys.stderr)
             if data_dir.is_dir():
                 shutil.rmtree(data_dir)
             data_dir.mkdir(parents=True)
@@ -64,9 +66,9 @@ class StaticDictionary:
             save_pickle(words_trie, words_trie_path)
 
             mark_done(data_dir)
-            print('built')
+            print('built', file=sys.stderr)
         else:
-            print('Loading a dictionary from {}'.format(data_dir))
+            print('Loading a dictionary from {}'.format(data_dir), file=sys.stderr)
 
         self.alphabet = load_pickle(alphabet_path)
         self.words_set = load_pickle(words_path)

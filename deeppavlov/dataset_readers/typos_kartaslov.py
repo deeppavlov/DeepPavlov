@@ -1,6 +1,8 @@
 import csv
 from pathlib import Path
 
+import sys
+
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import is_done, download, mark_done
 from deeppavlov.core.data.dataset_reader import DatasetReader
@@ -24,7 +26,7 @@ class TyposKartaslov(DatasetReader):
 
             mark_done(data_path)
 
-            print('Built')
+            print('Built', file=sys.stderr)
         return fname
 
     @staticmethod
