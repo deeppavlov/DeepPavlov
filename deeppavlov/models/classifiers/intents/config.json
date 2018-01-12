@@ -1,6 +1,6 @@
 {
   "dataset_reader": {
-    "name": "intent_dataset_reader",
+    "name": "dstc2_datasetreader",
     "data_path": "../data/dstc2"
   },
   "dataset": {
@@ -18,7 +18,7 @@
   "model": {
     "name": "intent_model",
     "train_now": true,
-    "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/intent_cnn",
+    "model_path": "../data/intent_cnn",
     "opt": {
       "classes_file": "../data/dstc2/classes.txt",
       "kernel_sizes_cnn": "3 3 3",

@@ -20,7 +20,7 @@ class FasttextEmbedder(Inferable):
             dim: dimension of embeddings
             embedding_url: url link to embedding to try to download if file does not exist
         """
-        print("Initilizing of embedder")
+        print("Initilizing embedder")
         self.tok2emb = {}
         self.dim = dim
         self.embedding_url = embedding_url

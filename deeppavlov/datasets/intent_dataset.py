@@ -23,6 +23,35 @@ class IntentDataset(Dataset):
         super().__init__(data, seed)
         self.classes = None
 
+        # Reconstruct data to the necessary view
+        # (x,y) where x - text, y - list of corresponding intents
+        new_data = dict()
+        new_data['train'] = []
+        new_data['valid'] = []
+        new_data['test'] = []
+
+        for field in ['train', 'valid', 'test']:
+            for turn in self.data[field]:
+                reply = turn[0]
+                curr_intents = []
+                if reply['intents']:
+                    for intent in reply['intents']:
+                        for slot in intent['slots']:
+                            if slot[0] == 'slot':
+                                curr_intents.append(intent['act'] + '_' + slot[1])
+                            else:
+                                curr_intents.append(intent['act'] + '_' + slot[0])
+                        if len(intent['slots']) == 0:
+                            curr_intents.append(intent['act'])
+                else:
+                    if reply['text']:
+                        curr_intents.append('unknown')
+                    else:
+                        continue
+                new_data[field].append((reply['text'], curr_intents))
+
+        self.data = new_data
+
         if extract_classes:
             self.classes = self._extract_classes()
             if classes_file is None:

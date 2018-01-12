@@ -75,7 +75,7 @@ class KerasIntentModel(KerasModel):
 
         # Check if md5 hash sum of current loaded fasttext model
         # is equal to saved
-        if 'fasttext_md5' not in self.opt.keys():
+        if self.opt['fasttext_md5'] is None:
             self.opt['fasttext_md5'] = current_fasttext_md5
         else:
             if self.opt['fasttext_md5'] != current_fasttext_md5:
@@ -198,6 +198,8 @@ class KerasIntentModel(KerasModel):
                         if val_increase == self.opt['val_patience']:
                             print("___Stop training: validation is out of patience___")
                             break
+                    else:
+                        val_increase = 0
                     val_loss = valid_metrics_values[0]
             print('epochs_done: {}'.format(epochs_done))
 
