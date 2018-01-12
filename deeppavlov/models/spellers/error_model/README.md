@@ -8,7 +8,7 @@ Automatic spelling correction component is based on
 by Eric Brill and Robert C. Moore and uses statistics based error model,
 a static dictionary and an ARPA language model to correct spelling errors.  
 We provide everything you need to build a spelling correction module for russian and english languages
-and some guidelines for how to collect appropriate datasets for other languages.
+and some hints on how to collect appropriate datasets for other languages.
 
 ## Usage
 
@@ -87,11 +87,35 @@ For the training phase config file needs to also include these parameters:
     * `data_path` — required for typos_custom_reader as a path to a dataset file,
      where each line contains a misspelling and a correct spelling of a word separated by a tab symbol
 
+A working training config could look something like:
+
+```json
+{
+  "model": {
+    "name": "spelling_error_model",
+    "model_file": "error_model_en.tsv",
+    "window": 1,
+    "train_now": true,
+    "dictionary": {
+      "name": "wikitionary_100K_vocab"
+    }
+  },
+  "dataset_reader": {
+    "name": "typos_wikipedia_reader"
+  },
+  "dataset": {
+    "name": "typos_dataset"
+  }
+}
+```
+
+And a script use this config:
+
 ```python
 from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.utils import set_usr_dir
 
-MODEL_CONFIG_PATH = 'deeppavlov/models/spellers/error_model/config_ru_custom_vocab.json'
+MODEL_CONFIG_PATH = 'deeppavlov/models/spellers/error_model/config_en.json'
 usr_dir = set_usr_dir(MODEL_CONFIG_PATH)
 train_model_from_config(MODEL_CONFIG_PATH)
 ```
