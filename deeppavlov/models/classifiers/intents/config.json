@@ -2,7 +2,7 @@
   "model": {
     "name": "intent_model",
     "train_now": true,
-    "model_path": "../data/intent_cnn",
+    "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/intent_cnn",
     "opt": {
       "classes_file": "../data/intent_cnn/intents/classes.txt",
       "kernel_sizes_cnn": "3 3 3",

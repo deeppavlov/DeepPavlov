@@ -1,11 +1,44 @@
 {
+  "dataset_reader": {
+    "name": "dstc2_datasetreader",
+    "data_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2"
+  },
+  "dataset": {
+    "name": "dstc2_ner_dataset",
+    "dataset_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2"
+
+  },
   "model": {
     "name": "dstc_slotfilling",
-    "dict_filepath": "model/dict.txt",
-    "model_filepath": "model/ner_model.ckpt",
-    "params_filepath": "model/params.json",
-    "slot_vals_filepath": "model/slot_vals.json"
+    "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/clean_ner",
+    "ner_network": {
+      "name": "ner_tagging_network",
+      "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/clean_ner",
+      "verbouse": true,
+      "filter_width": 7,
+      "embeddings_dropout": true,
+      "n_filters": [
+        64,
+        64
+      ],
+      "token_embeddings_dim": 64,
+      "char_embeddings_dim": 32,
+      "use_batch_norm": true,
+      "use_crf": true,
+      "token_vocab": {
+        "name": "simple_vocab",
+        "dict_file_path": "/media/olga/Data/projects/iPavlov/Pilot/data/clean_ner/dicts/token.dict"
+      },
+      "tag_vocab": {
+        "name": "simple_vocab",
+        "dict_file_path": "/media/olga/Data/projects/iPavlov/Pilot/data/clean_ner/dicts/tag.dict"
+      },
+      "char_vocab":{
+        "name": "simple_vocab",
+        "dict_file_path": "/media/olga/Data/projects/iPavlov/Pilot/data/clean_ner/dicts/char.dict"
+      }
+    }
   },
-  "config_path": "config.json"
+  "num_epochs": 2
 }
 

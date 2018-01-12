@@ -17,8 +17,8 @@ from .tf_backend import TfModelMeta
 
 class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
     _saver = tf.train.Saver
-    _model_dir = ''
-    _model_file = ''
+    # _model_dir = ''
+    # _model_file = ''
     sess = None
 
     @abstractmethod
