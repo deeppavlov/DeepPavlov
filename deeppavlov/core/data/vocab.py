@@ -112,7 +112,9 @@ class DefaultVocabulary(Trainable, Inferable):
 
     def save(self):
         with open(self.model_path_, 'wt') as f:
-            for token, cnt in self.freqs.most_common():
+            for n in range(len(self._t2i)):
+                token = self._i2t[n]
+                cnt = self.freqs[token]
                 f.write('{}\t{:d}\n'.format(token, cnt))
 
     @check_path_exists()
