@@ -6,7 +6,8 @@
     "train_now": true,
     "dictionary": {
       "name": "wikitionary_100K_vocab"
-    }
+    },
+    "lm_file": "/data/data/enwiki_no_punkt.arpa.binary"
   },
   "dataset_reader": {
     "name": "typos_wikipedia_reader"

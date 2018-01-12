@@ -33,6 +33,7 @@ A working config could look like this:
   "model": {
     "name": "spelling_error_model",
     "model_file": "error_model_en.tsv",
+    "train_now": true,
     "window": 1,
     "dictionary": {
       "name": "wikitionary_100K_vocab"
@@ -43,7 +44,8 @@ A working config could look like this:
 ```
 
 #### Usage example
-This model expects a sentence string with space-separated tokens in lowercase as it's input and returns the same string with corrected words
+This model expects a sentence string with space-separated tokens in lowercase as it's input and returns the same string with corrected words.
+Here's an example code that will read input data from stdin line by line and output resulting text into stdout:
 
 ```python
 import json
@@ -61,6 +63,12 @@ with open(CONFIG_PATH) as config_file:
 model = build_model_from_config(config)
 for line in sys.stdin:
     print(model.infer(line), flush=True)
+```
+
+if we save it as `example.py` then it could be used like so:
+
+```bash
+cat input.txt | python3 example.py > output.txt
 ```
 
 ## Training
