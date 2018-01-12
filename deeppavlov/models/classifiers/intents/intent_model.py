@@ -200,7 +200,7 @@ class KerasIntentModel(KerasModel):
                             break
                     else:
                         val_increase = 0
-                    val_loss = valid_metrics_values[0]
+                        val_loss = valid_metrics_values[0]
             print('epochs_done: {}'.format(epochs_done))
 
         self.save()
