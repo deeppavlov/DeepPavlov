@@ -1,5 +1,7 @@
 from typing import Type, Callable
 
+import sys
+
 
 class abstract_attribute(object):
     def __get__(self, obj, t: Type):
@@ -24,7 +26,7 @@ def check_attr_true(attr: str):
             else:
                 print("'{0}' is False, doing nothing."
                       " Set {0} to True in json config "
-                      "if you'd like the {1} to proceed.".format(attr, f))
+                      "if you'd like the {1} to proceed.".format(attr, f), file=sys.stderr)
 
         return wrapped
 
@@ -40,7 +42,7 @@ def run_alt_meth_if_no_path(alt_f: Callable, attr: str):
                 setattr(self, attr, True)
                 # TODO somehow pass the wrapped function name
                 print("'{0}' is set to False, though the path doesn't exist. Can't do {1}. "
-                      "Ignoring False, setting '{0}' to True. Proceeding anyway.".format(attr, f))
+                      "Ignoring False, setting '{0}' to True. Proceeding anyway.".format(attr, f), file=sys.stderr)
                 return alt_f(self, *args, **kwargs)
 
         return wrapped
