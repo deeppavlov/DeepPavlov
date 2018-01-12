@@ -18,7 +18,7 @@ import os
 from collections import defaultdict
 from overrides import overrides
 import pathlib
-from glob import glob
+import sys
 
 import numpy as np
 import tensorflow as tf
@@ -171,9 +171,6 @@ class NerNetwork(SimpleTFModel):
         self.verbouse = verbouse
         self._mask = mask_ph
         sess.run(tf.global_variables_initializer())
-        model_file_path = pathlib.Path(self.model_path) / 'dstc_ner_network.ckpt'
-        if len(glob(str(model_file_path.absolute()) + '*')) == 3:
-            self.load(model_file_path)
 
     def save(self, model_file_path):
         saver = tf.train.Saver()

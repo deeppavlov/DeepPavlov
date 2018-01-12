@@ -1,5 +1,5 @@
 import json
-from pathlib import Path
+import glob
 
 import tensorflow as tf
 from fuzzywuzzy import process
@@ -18,40 +18,49 @@ from deeppavlov.core.data.utils import download
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(Inferable, Trainable):
     def __init__(self,
-                 ner_network: NerNetwork,
-                 **kwargs):
-        model_path = pathlib.Path(self.model_path)
-        slot_vals_filepath = model_path / 'slot_vals.json'
+                 ner_network: NerNetwork):
+        # Make it path
+        self.model_path = pathlib.Path(self.model_path)
+
+        # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
+        slot_vals_filepath = self.model_path / 'slot_vals.json'
         if not slot_vals_filepath.is_file():
             self._download_slot_vals(slot_vals_filepath)
-        self.graph = tf.Graph()
-        with self.graph.as_default():
-            self._ner_network = ner_network
+        self._ner_model_path = self.model_path / 'dstc_ner_network.ckpt'
+
+        self._ner_network = ner_network
+        self.load()
         with open(slot_vals_filepath) as f:
             self._slot_vals = json.load(f)
 
-    # TODO: write load and save
     @overrides
-    def load(self, *args, **kwargs):
-        pass
+    def load(self):
+        # Check prescence of the model files
+        path = str(self.model_path.absolute())
+        if tf.train.get_checkpoint_state(path) is not None:
+            print('Loading model from {}'.format(path))
+            self._ner_network.load(self._ner_model_path)
+        # else:
+        #     raise Warning('Error while loading NER model. There must be 3 dstc_ner_network.ckpt files!')
 
     @overrides
-    def save(self, *args, **kwargs):
-        pass
+    def save(self):
+        self._ner_network.save(self._ner_model_path)
 
     @overrides
     def train(self, data, num_epochs=3):
         for epoch in range(num_epochs):
             self._ner_network.train(data)
-            self._ner_network.eval_conll(data.iter_all('valid'), short_report=False)
-        self._ner_network.eval_conll(data.iter_all('train'), short_report=False)
-        self._ner_network.eval_conll(data.iter_all('valid'), short_report=False)
-        self._ner_network.eval_conll(data.iter_all('test'), short_report=False)
-        self._ner_network.save(pathlib.Path(self.model_path) / 'dstc_ner_network.ckpt')
+            self._ner_network.eval_conll(data.iter_all('valid'), short_report=False, data_type='valid')
+        self._ner_network.eval_conll(data.iter_all('train'), short_report=False, data_type='train')
+        self._ner_network.eval_conll(data.iter_all('valid'), short_report=False, data_type='valid')
+        self._ner_network.eval_conll(data.iter_all('test'), short_report=False, data_type='test')
+        self.save()
 
     @overrides
     def infer(self, instance, *args, **kwargs):
-        if not len(instance.strip()):
+        instance = instance.strip()
+        if not len(instance):
             return dict()
         return self.predict_slots(instance.lower())
 
@@ -63,8 +72,7 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
     def predict_slots(self, utterance):
         # For utterance extract named entities and perform normalization for slot filling
         tokens = tokenize_reg(utterance)
-        with self.graph.as_default():
-            tags = self._ner_network.predict_for_token_batch([tokens])[0]
+        tags = self._ner_network.predict_for_token_batch([tokens])[0]
         entities, slots = self._chunk_finder(tokens, tags)
         slot_values = dict()
         for entity, slot in zip(entities, slots):
