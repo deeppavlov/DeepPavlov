@@ -5,7 +5,7 @@
     "window": 1,
     "train_now": true,
     "dictionary": {
-      "name": "wikipedia_100K_vocab"
+      "name": "wikitionary_100K_vocab"
     }
   },
   "dataset_reader": {
