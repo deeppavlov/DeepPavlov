@@ -27,9 +27,6 @@ import sys
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.commands.utils import set_usr_dir
 
-if len(sys.argv < 2):
-    print()
-
 CONFIG_PATH = 'deeppavlov/models/spellers/error_model/config_ru_custom_vocab.json'
 usr_dir = set_usr_dir(CONFIG_PATH)
 
@@ -37,10 +34,8 @@ with open(CONFIG_PATH) as config_file:
     config = json.load(config_file)
 
 model = build_model_from_config(config)
-with open(sys.argv(1), 'w') as out_file:
-    for line in sys.stdin:
-        out_file.write(model.infer(line) + '\n')
-        out_file.flush()
+for line in sys.stdin:
+    print(model.infer(line))
 ```
 
 ## Training
