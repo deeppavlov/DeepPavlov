@@ -26,9 +26,9 @@ from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
 
 from deeppavlov.vocabs.default_vocab import DefaultVocabulary
-from deeppavlov.models.embedders.fasttext_embedder import FasttextUtteranceEmbed
+from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.encoders.bow import BoW_encoder
-from deeppavlov.models.intent_recognition.intent_keras.intent_model import KerasIntentModel
+from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel
 from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
 from deeppavlov.models.tokenizers.spacy_tokenizer import SpacyTokenizer
 from deeppavlov.models.trackers.default_tracker import DefaultTracker
@@ -44,7 +44,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                  slot_filler: Type = DstcSlotFillingNetwork,
                  intent_classifier:Type = KerasIntentModel,
                  bow_encoder: Type = BoW_encoder,
-                 embedder: Type = FasttextUtteranceEmbed,
+                 embedder: Type = FasttextEmbedder,
                  tokenizer: Type = SpacyTokenizer,
                  tracker: Type = DefaultTracker,
                  network: Type = HybridCodeNetworkModel,
@@ -96,12 +96,12 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         bow_features = bow_features.astype(np.float32)
 
         # Embeddings
-        emb_features = self.embedder.infer(tokenized)
+        emb_features = self.embedder.infer(tokenized, mean=True)
 
         # Intent features
         intent_features = self.intent_classifier.infer([tokenized]).ravel()
         if self.debug:
-            from deeppavlov.models.intent_recognition.intent_keras.utils import proba2labels
+            from deeppavlov.models.classifiers.intents.utils import proba2labels
             print("Predicted intent = `{}`".format(proba2labels(
                 intent_features[np.newaxis, :], .5, self.intent_classifier.classes
             )[0]))
@@ -157,7 +157,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                         action_mask[a_id] = 0
         return action_mask
 
-    def train(self, data, num_epochs=1, patience=5):
+    def train(self, data, num_epochs=40, patience=5):
         print('\n:: training started\n')
 
         curr_patience = patience

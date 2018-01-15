@@ -54,8 +54,13 @@ class KerasIntentModel(KerasModel):
             self.add_metrics = None
 
         if self.opt['fasttext_model'] and Path(self.opt['fasttext_model']).is_file():
-            self.fasttext_model = FasttextEmbedder(model_path=self.opt['fasttext_model'],
-                                                   dim=self.opt['embedding_size'])
+#TODO: rm super-dirty fix here
+#TODO: (SUPER-DIRTY FIX!!!)
+            FasttextEmbedder.model_path = ''
+            self.fasttext_model = FasttextEmbedder(model_dir=Path(self.opt['fasttext_model']).parent,
+                                                   model_file=Path(self.opt['fasttext_model']).name,
+                                                   dim=self.opt['embedding_size'],
+                                                   emb_module="fasttext")
         else:
             raise IOError("Error: FastText model file path is not given")
 

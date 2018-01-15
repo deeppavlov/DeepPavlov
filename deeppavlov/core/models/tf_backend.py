@@ -1,18 +1,18 @@
+"""
+Here is an abstract class for neural network models based on Tensorflow.
+If you use something different, ex. Pytorch, then write similar to this class, inherit it from
+Trainable and Inferable interfaces and make a pull-request to deeppavlov.
+"""
 import tensorflow as tf
-from abc import ABCMeta
-import functools
-import types
-
 from six import with_metaclass
+from abc import ABCMeta
 
 
 def _graph_wrap(func, graph):
     def _wrapped(*args, **kwargs):
         with graph.as_default():
-            try:
-                return func(*args, **kwargs)
-            except TypeError:
-                print("wrapped function is {}".format(func))
+            return func(*args, **kwargs)
+
     return _wrapped
 
 
@@ -29,9 +29,7 @@ class TfModelMeta(with_metaclass(type, ABCMeta)):
             if meth == '__class__':
                 continue
             attr = getattr(obj, meth)
-            # if callable(attr): # leads to an untraceable bug if an attribute
-            # is initilaized via a class call, error doesn't raise
-            if isinstance(attr, (types.FunctionType, types.BuiltinFunctionType, functools.partial)):
+            if callable(attr):
                 setattr(obj, meth, _graph_wrap(attr, obj.graph))
         obj.__init__(*args, **kwargs)
         return obj
