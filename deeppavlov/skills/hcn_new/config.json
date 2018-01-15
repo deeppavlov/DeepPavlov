@@ -7,85 +7,115 @@
     "name": "dstc2_dialog_dataset"
   },
   "vocabs": {
-	"word_vocab": {
-		"name": "default_vocab",
-		"inputs": ["x"],
-		"level": "token",
-		"model_dir": "/home/vimary/ipavlov/Pilot/deeppavlov/data/dstc2",
-		"model_file": "word_vocab2.txt"
-	}
+    "word_vocab": {
+      "name": "default_vocab",
+      "inputs": [
+        "x"
+      ],
+      "level": "token",
+      "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/vocab"
+    }
   },
   "model": {
     "train_now": true,
     "name": "hcn_new",
     "debug": 0,
-    "template_path": "/home/vimary/ipavlov/Pilot/deeppavlov/data/dstc2/dstc2-templates.txt",
+    "template_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2/dstc2-templates.txt",
     "network": {
-		"name": "custom_rnn",
-		"model_dir": "hcn_rnn",
-		"train_now": true,
-		"learning_rate": 0.03,
-		"hidden_dim": 128,
-		"obs_size": 832,
-		"use_action_mask": false,
-		"action_size": 45
+      "name": "custom_rnn",
+      "model_dir": "hcn_rnn",
+      "train_now": true,
+      "learning_rate": 0.03,
+      "hidden_dim": 128,
+      "obs_size": 832,
+      "use_action_mask": false,
+      "action_size": 45
     },
     "slot_filler": {
-        "name": "dstc_slotfilling",
-        "model_path": "../data/ner"
+      "name": "dstc_slotfilling",
+      "model_path": "../data/ner"
     },
     "intent_classifier": {
-        "name": "intent_model",
-        "opt": {
-            "kernel_sizes_cnn": "1 2 3",
-            "filters_cnn": 512,
-            "embedding_size": 100,
-            "lear_metrics": "binary_accuracy fmeasure",
-            "confident_threshold": 0.5,
-            "model_from_saved": true,
-            "optimizer": "Adam",
-            "lear_rate": 1.0,
-            "lear_rate_decay": 0.1,
-            "loss": "binary_crossentropy",
-            "fasttext_model": "/home/vimary/ipavlov/Pilot/deeppavlov/models/intent_recognition/intent_keras/dstc2_fasttext_model_100.bin",
-            "model_file": "/home/vimary/ipavlov/Pilot/deeppavlov/models/intent_recognition/intent_keras/intent_cnn_5",
-            "text_size": 15,
-            "coef_reg_cnn": 1e-4,
-            "coef_reg_den": 1e-4,
-            "dropout_rate": 0.5,
-            "epochs": 1,
-            "dense_size": 100,
-            "model_name": "cnn_model",
-            "batch_size": 64,
-            "val_every_n_epochs": 5,
-            "verbose": true,
-            "val_patience": 5,
-            "show_examples": true
-        },
-        "classes": [
-            "ack", "affirm", "bye", "confirm_area", "confirm_food", "confirm_pricerange",
-            "deny_food", "deny_name", "hello", "inform_area", "inform_food", "inform_name",
-            "inform_pricerange", "inform_this", "negate", "repeat", "reqalts", "reqmore",
-            "request_addr", "request_area", "request_food", "request_phone",
-            "request_postcode", "request_pricerange", "request_signature", "restart",
-            "thankyou", "unknown"
-        ]
+      "name": "intent_model",
+      "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/intent_cnn",
+      "opt": {
+        "kernel_sizes_cnn": "1 2 3",
+        "filters_cnn": 512,
+        "embedding_size": 100,
+        "lear_metrics": "binary_accuracy fmeasure",
+        "confident_threshold": 0.5,
+        "model_from_saved": true,
+        "optimizer": "Adam",
+        "lear_rate": 1.0,
+        "lear_rate_decay": 0.1,
+        "loss": "binary_crossentropy",
+        "fasttext_model": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2_fasttext_model_100.bin",
+        "text_size": 15,
+        "coef_reg_cnn": 1e-4,
+        "coef_reg_den": 1e-4,
+        "dropout_rate": 0.5,
+        "epochs": 1,
+        "dense_size": 100,
+        "model_name": "cnn_model",
+        "batch_size": 64,
+        "val_every_n_epochs": 5,
+        "verbose": true,
+        "val_patience": 5,
+        "show_examples": true
+      },
+      "classes": [
+        "ack",
+        "affirm",
+        "bye",
+        "confirm_area",
+        "confirm_food",
+        "confirm_pricerange",
+        "deny_food",
+        "deny_name",
+        "hello",
+        "inform_area",
+        "inform_food",
+        "inform_name",
+        "inform_pricerange",
+        "inform_this",
+        "negate",
+        "repeat",
+        "reqalts",
+        "reqmore",
+        "request_addr",
+        "request_area",
+        "request_food",
+        "request_phone",
+        "request_postcode",
+        "request_pricerange",
+        "request_signature",
+        "restart",
+        "thankyou",
+        "unknown"
+      ]
     },
     "bow_encoder": {
       "name": "bow"
     },
     "embedder": {
       "name": "fasttext",
-	  "emb_module": "pyfasttext",
-	  "dim": 300,
-      "model_path": "/home/vimary/ipavlov/Pilot/deeppavlov/data/embeddings/wiki.en.bin"
+      "emb_module": "pyfasttext",
+      "dim": 300,
+      "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/wiki-news-300d-1M-subword.vec"
     },
     "tokenizer": {
-        "name": "spacy_tokenizer"
+      "name": "spacy_tokenizer"
     },
     "tracker": {
       "name": "featurized_tracker",
-      "slot_names": ["pricerange", "this", "area", "slot", "food", "name"]
+      "slot_names": [
+        "pricerange",
+        "this",
+        "area",
+        "slot",
+        "food",
+        "name"
+      ]
     }
   }
 }
