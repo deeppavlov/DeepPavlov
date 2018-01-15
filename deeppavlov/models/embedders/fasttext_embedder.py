@@ -12,8 +12,8 @@ from deeppavlov.core.models.inferable import Inferable
 
 @register('fasttext')
 class FasttextEmbedder(Inferable):
-    def __init__(self, model_path, model_dir='fasttext', model_file='fasttext.bin', dim=100,
-                 embedding_url=None, emb_module='fasttext', *args, **kwargs):
+    def __init__(self, model_dir='fasttext', model_file='fasttext.bin', dim=100,
+                 embedding_url=None, emb_module='fasttext'):
         """
         Args:
             model_path: path to binary file with embeddings
@@ -23,7 +23,6 @@ class FasttextEmbedder(Inferable):
         self.tok2emb = {}
         self.dim = dim
         self.embedding_url = embedding_url
-        self.model_path = model_path
         self._model_dir = model_dir
         self._model_file = model_file
         self.emb_module = emb_module
@@ -40,14 +39,15 @@ class FasttextEmbedder(Inferable):
         """
         return ' '.join([str(el) for el in vec])
 
-    def load(self, *args, **kwargs):
+    def load(self):
         """
         Load dict of embeddings from file
         Args:
             fname: file name
         """
 
-        if not Path(self.model_path).exists():
+        print("Checking if `{}` exists".format(self.model_path_))
+        if not self.model_path_.exists():
             if self.embedding_url:
                 try:
                     print('Trying to download a pretrained fasttext model from repository')
@@ -71,12 +71,15 @@ class FasttextEmbedder(Inferable):
             model_file = str(self.model_path_)
         if self.emb_module == 'fasttext':
             model = Fasttext.load_model(model_file)
+        elif self.emb_module == 'pyfasttext':
+            from pyfasttext import FastText as PyFastText
+            model = PyFastText(model_file)
         else:
             model = GensimFasttext.load_fasttext_format(model_file)
         return model
 
     @overrides
-    def infer(self, instance, mean=False, *args, **kwargs):
+    def infer(self, instance, mean=False):
         """
         Embed data
         Args:
@@ -89,7 +92,6 @@ class FasttextEmbedder(Inferable):
         res = []
         if type(instance) is str:
             res = self._encode(instance, mean)
-
         elif type(instance) is list:
             for sentence in instance:
                 embedded_tokens = self._encode(sentence, mean)
@@ -109,9 +111,11 @@ class FasttextEmbedder(Inferable):
                 except KeyError:
                     emb = np.zeros(self.dim, dtype=np.float32)
                 self.tok2emb[t] = emb
-            embedded_tokens.append(emb)
+            if np.any(emb):
+                embedded_tokens.append(emb)
 
         if mean:
-            return np.mean(embedded_tokens)
+            return np.mean(embedded_tokens or [np.zeros(self.dim, dtype=np.float32)],
+                           axis=0)
 
         return embedded_tokens
