@@ -1,6 +1,6 @@
 import numpy as np
 import sys
-
+import hashlib
 
 def labels2onehot(labels, classes):
     n_classes = len(classes)
@@ -45,3 +45,11 @@ def log_metrics(names, values, updates=None, mode='train'):
         print("{}: {}\t".format(names[id], values[id]), end="")
     print(" ")  # , end='\r')
     return
+
+def md5_hashsum(file_names):
+    hash_md5 = hashlib.md5()
+    for file_name in file_names:
+        with open(file_name, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash_md5.update(chunk)
+    return hash_md5.hexdigest()

@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from typing import Dict, Type
 import numpy as np
 from keras.layers import Dense, Input, concatenate, Activation
 from keras.layers.convolutional import Conv1D
@@ -8,8 +9,8 @@ from keras.layers.normalization import BatchNormalization
 from keras.layers.pooling import GlobalMaxPooling1D, MaxPooling1D
 from keras.models import Model
 from keras.regularizers import l2
-from typing import Dict
 
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common import paths
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
@@ -17,11 +18,15 @@ from deeppavlov.core.models.keras_model import KerasModel
 from deeppavlov.models.classifiers.intents import metrics as metrics_file
 from deeppavlov.models.classifiers.intents.utils import labels2onehot, log_metrics
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
+from deeppavlov.models.classifiers.intents.utils import md5_hashsum
 
 
 @register('intent_model')
 class KerasIntentModel(KerasModel):
-    def __init__(self, opt: Dict, *args, **kwargs):
+    def __init__(self,
+                 opt: Dict,
+                 embedder: Type = FasttextEmbedder,
+                 *args, **kwargs):
         """
         Method initializes model using parameters from opt
         Args:
@@ -53,11 +58,10 @@ class KerasIntentModel(KerasModel):
         else:
             self.add_metrics = None
 
-        if self.opt['fasttext_model'] and Path(self.opt['fasttext_model']).is_file():
-            self.fasttext_model = FasttextEmbedder(model_path=self.opt['fasttext_model'],
-                                                   dim=self.opt['embedding_size'])
-        else:
-            raise IOError("Error: FastText model file path is not given")
+        self.opt['fasttext_md5'] = None
+        self.fasttext_model = embedder
+        self.opt['embedding_size'] = self.fasttext_model.dim
+        current_fasttext_md5 = md5_hashsum([self.fasttext_model.model_path])
 
         params = {"model_name": self.opt['model_name'],
                   "optimizer_name": self.opt['optimizer'],
@@ -68,6 +72,36 @@ class KerasIntentModel(KerasModel):
                   "add_metrics_file": metrics_file}
 
         self.model = self.load(**params, fname=self.model_path_)
+
+        # Check if md5 hash sum of current loaded fasttext model
+        # is equal to saved
+        if self.opt['fasttext_md5'] is None:
+            self.opt['fasttext_md5'] = current_fasttext_md5
+        else:
+            if self.opt['fasttext_md5'] != current_fasttext_md5:
+                raise ConfigError("Given fasttext model does NOT match fasttext model used previously to train loaded model")
+
+        # List of parameters that could be changed
+        # when the model is initialized from saved and is going to be trained further
+        changeable_params = ["classes_file",
+                             "lear_metrics",
+                             "confident_threshold",
+                             "optimizer",
+                             "lear_rate",
+                             "lear_rate_decay",
+                             "loss",
+                             "coef_reg_cnn",
+                             "coef_reg_den",
+                             "dropout_rate",
+                             "epochs",
+                             "batch_size",
+                             "val_every_n_epochs",
+                             "verbose",
+                             "val_patience",
+                             "show_examples"]
+        # Reinitializing of parameters
+        for param in changeable_params:
+            self.opt[param] = opt[param]
 
         self.metrics_names = self.model.metrics_names
         self.metrics_values = len(self.metrics_names) * [0.]
@@ -164,7 +198,9 @@ class KerasIntentModel(KerasModel):
                         if val_increase == self.opt['val_patience']:
                             print("___Stop training: validation is out of patience___")
                             break
-                    val_loss = valid_metrics_values[0]
+                    else:
+                        val_increase = 0
+                        val_loss = valid_metrics_values[0]
             print('epochs_done: {}'.format(epochs_done))
 
         self.save()

@@ -12,15 +12,45 @@ from deeppavlov.models.preprocessors.preprocessors import PREPROCESSORS
 
 @register('intent_dataset')
 class IntentDataset(Dataset):
-    def __init__(self, data, dataset_path=None, dataset_dir='intents', dataset_file='classes.txt',
+    def __init__(self, data,
                  seed=None, extract_classes=True, classes_file=None,
                  fields_to_merge=None, merged_field=None,
                  field_to_split=None, split_fields=None, split_proportions=None,
                  prep_method_name: str = None,
+                 dataset_path=None, dataset_dir='intents', dataset_file='classes.txt',
                  *args, **kwargs):
 
         super().__init__(data, seed)
         self.classes = None
+
+        # Reconstruct data to the necessary view
+        # (x,y) where x - text, y - list of corresponding intents
+        new_data = dict()
+        new_data['train'] = []
+        new_data['valid'] = []
+        new_data['test'] = []
+
+        for field in ['train', 'valid', 'test']:
+            for turn in self.data[field]:
+                reply = turn[0]
+                curr_intents = []
+                if reply['intents']:
+                    for intent in reply['intents']:
+                        for slot in intent['slots']:
+                            if slot[0] == 'slot':
+                                curr_intents.append(intent['act'] + '_' + slot[1])
+                            else:
+                                curr_intents.append(intent['act'] + '_' + slot[0])
+                        if len(intent['slots']) == 0:
+                            curr_intents.append(intent['act'])
+                else:
+                    if reply['text']:
+                        curr_intents.append('unknown')
+                    else:
+                        continue
+                new_data[field].append((reply['text'], curr_intents))
+
+        self.data = new_data
 
         if extract_classes:
             self.classes = self._extract_classes()

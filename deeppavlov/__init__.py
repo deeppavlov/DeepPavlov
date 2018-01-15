@@ -3,7 +3,6 @@ from deeppavlov.vocabs.wiki_100k_dictionary import Wiki100KDictionary
 from deeppavlov.vocabs.russian_words import RussianWordsVocab
 from deeppavlov.dataset_readers.babi_dataset_reader import BabiDatasetReader
 from deeppavlov.dataset_readers.dstc2_dataset_reader import DSTC2DatasetReader
-from deeppavlov.dataset_readers.intent_dataset_reader import IntentDatasetReader
 from deeppavlov.dataset_readers.typos_kartaslov import TyposKartaslov
 from deeppavlov.dataset_readers.typos_wikipedia import TyposWikipedia
 from deeppavlov.datasets.dstc2_datasets import DSTC2DialogDataset
