@@ -109,7 +109,7 @@ A working training config could look something like:
 }
 ```
 
-And a script use this config:
+And a script to use this config:
 
 ```python
 from deeppavlov.core.commands.train import train_model_from_config
@@ -147,3 +147,5 @@ for the [SpellRuEval competition](http://www.dialog-21.ru/en/evaluation/2016/spe
 * find or learn a proper balance between an error model and a language model scores when ranking candidates
 * implement [Discriminative Reranking for Spelling Correction](http://www.aclweb.org/anthology/Y06-1009)
 by Yang Zhang, Pilian He, Wei Xiang and Mu Li
+* use a better dataset for getting misspellings statistics
+* add handcrafted features to use phonetic information
