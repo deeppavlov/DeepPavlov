@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "dstc2_datasetreader",
-    "data_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2"
+    "data_path": "../data/dstc2"
   },
   "dataset": {
     "name": "dstc2_dialog_dataset"
@@ -18,18 +18,17 @@
   "model": {
     "train_now": true,
     "name": "hcn_new",
-    "debug": false,
-    "slot_names": ["pricerange", "this", "area", "slot", "food", "name"],
-    "template_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2/dstc2-templates.txt",
+    "debug": 0,
+    "template_path": "/home/vimary/ipavlov/Pilot/deeppavlov/data/dstc2/dstc2-templates.txt",
     "network": {
-      "train_now": true,
-      "name": "custom_rnn",
-      "learning_rate": 0.02,
-      "hidden_dim": 128,
-      "model_file": "hcn_rnn",
-      "use_action_mask": false,
-      "action_size": 45,
-      "obs_size": 994
+		"name": "custom_rnn",
+		"model_dir": "hcn_rnn",
+		"train_now": true,
+		"learning_rate": 0.03,
+		"hidden_dim": 128,
+		"obs_size": 832,
+		"use_action_mask": false,
+		"action_size": 45
     },
     "slot_filler": {
         "name": "dstc_slotfilling",
@@ -77,8 +76,9 @@
     },
     "embedder": {
       "name": "fasttext",
-      "model_dir_path": "/home/vimary/ipavlov/Pilot/deeppavlov/data/embeddings",
-	  "model_fpath": "wiki.en.bin"
+	  "emb_module": "pyfasttext",
+	  "dim": 300,
+      "model_path": "/home/vimary/ipavlov/Pilot/deeppavlov/data/embeddings/wiki.en.bin"
     },
     "tokenizer": {
         "name": "spacy_tokenizer"
