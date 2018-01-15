@@ -75,7 +75,9 @@ class KerasIntentModel(KerasModel):
 
         # Check if md5 hash sum of current loaded fasttext model
         # is equal to saved
-        if self.opt['fasttext_md5'] is None:
+        try:
+            self.opt['fasttext_md5']
+        except KeyError:
             self.opt['fasttext_md5'] = current_fasttext_md5
         else:
             if self.opt['fasttext_md5'] != current_fasttext_md5:

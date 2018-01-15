@@ -33,7 +33,7 @@
       "coef_reg_cnn": 1e-4,
       "coef_reg_den": 1e-4,
       "dropout_rate": 0.5,
-      "epochs": 1000,
+      "epochs": 1,
       "dense_size": 100,
       "model_name": "cnn_model",
       "batch_size": 64,
