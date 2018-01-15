@@ -1,52 +1,67 @@
 import json
-from pathlib import Path
+import glob
 
 import tensorflow as tf
 from fuzzywuzzy import process
 from overrides import overrides
+import pathlib
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.utils import download_untar, mark_done
+from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.models.ner.corpus import Corpus
 from deeppavlov.models.ner.ner_network import NerNetwork
 from deeppavlov.core.data.utils import tokenize_reg
+from deeppavlov.core.data.utils import download
+
 
 
 @register('dstc_slotfilling')
-class DstcSlotFillingNetwork(Inferable):
-    def __init__(self, model_path):
-        model_path = Path(model_path)
-        # Check existance of the model files. Download model files if needed
-        files_required = ['dict.txt', 'ner_model.ckpt', 'params.json', 'slot_vals.json']
-        for file_name in files_required:
-            if not model_path.joinpath(file_name).exists():
-                url = 'http://lnsigo.mipt.ru/export/ner_dstc_model.tar.gz'
-                print('Loading model from {} to {}'.format(url, model_path))
-                download_untar(url, model_path)
-                mark_done(model_path)
-                break
+class DstcSlotFillingNetwork(Inferable, Trainable):
+    def __init__(self,
+                 ner_network: NerNetwork):
+        # Make it path
+        self.model_path = pathlib.Path(self.model_path)
 
-        dict_filepath = model_path / 'dict.txt'
-        model_filepath = model_path / 'ner_model.ckpt'
-        params_filepath = model_path / 'params.json'
-        slot_vals_filepath = model_path / 'slot_vals.json'
+        # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
+        slot_vals_filepath = self.model_path / 'slot_vals.json'
+        if not slot_vals_filepath.is_file():
+            self._download_slot_vals(slot_vals_filepath)
+        self._ner_model_path = self.model_path / 'dstc_ner_network.ckpt'
 
-        # Build and initialize the model
-        with params_filepath.open() as f:
-            network_params = json.load(f)
-        self._corpus = Corpus(dicts_filepath=dict_filepath)
-        self.graph = tf.Graph()
-        with self.graph.as_default():
-            self._ner_network = NerNetwork(self._corpus, pretrained_model_filepath=model_filepath, **network_params)
-        with slot_vals_filepath.open() as f:
+        self._ner_network = ner_network
+        self.load()
+        with open(slot_vals_filepath) as f:
             self._slot_vals = json.load(f)
 
     @overrides
+    def load(self):
+        # Check prescence of the model files
+        path = str(self.model_path.absolute())
+        if tf.train.get_checkpoint_state(path) is not None:
+            print('Loading model from {}'.format(path))
+            self._ner_network.load(self._ner_model_path)
+        # else:
+        #     raise Warning('Error while loading NER model. There must be 3 dstc_ner_network.ckpt files!')
+
+    @overrides
+    def save(self):
+        self._ner_network.save(self._ner_model_path)
+
+    @overrides
+    def train(self, data, num_epochs=5):
+        for epoch in range(num_epochs):
+            self._ner_network.train(data)
+            self._ner_network.eval_conll(data.iter_all('valid'), short_report=False, data_type='valid')
+        self._ner_network.eval_conll(data.iter_all('train'), short_report=False, data_type='train')
+        self._ner_network.eval_conll(data.iter_all('test'), short_report=False, data_type='test')
+        self.save()
+
+    @overrides
     def infer(self, instance, *args, **kwargs):
-        if not len(instance.strip()):
-            return {}
-        return self.predict_slots(instance)
+        instance = instance.strip()
+        if not len(instance):
+            return dict()
+        return self.predict_slots(instance.lower())
 
     def interact(self):
         s = input('Type in the message you want to tag: ')
@@ -56,8 +71,7 @@ class DstcSlotFillingNetwork(Inferable):
     def predict_slots(self, utterance):
         # For utterance extract named entities and perform normalization for slot filling
         tokens = tokenize_reg(utterance)
-        with self.graph.as_default():
-            tags = self._ner_network.predict_for_token_batch([tokens])[0]
+        tags = self._ner_network.predict_for_token_batch([tokens])[0]
         entities, slots = self._chunk_finder(tokens, tags)
         slot_values = dict()
         for entity, slot in zip(entities, slots):
@@ -80,13 +94,12 @@ class DstcSlotFillingNetwork(Inferable):
     @staticmethod
     def _chunk_finder(tokens, tags):
         # For BIO labeled sequence of tags extract all named entities form tokens
-        # Example
         prev_tag = ''
         chunk_tokens = list()
         entities = list()
         slots = list()
         for token, tag in zip(tokens, tags):
-            curent_tag = tag.split('-')[-1]
+            curent_tag = tag.split('-')[-1].strip()
             current_prefix = tag.split('-')[0]
             if tag.startswith('B-'):
                 if len(chunk_tokens) > 0:
@@ -108,7 +121,9 @@ class DstcSlotFillingNetwork(Inferable):
                     slots.append(prev_tag)
                     chunk_tokens = list()
             prev_tag = curent_tag
-
+        if len(chunk_tokens) > 0:
+            entities.append(' '.join(chunk_tokens))
+            slots.append(prev_tag)
         return entities, slots
 
     def shutdown(self):
@@ -117,3 +132,8 @@ class DstcSlotFillingNetwork(Inferable):
 
     def reset(self):
         pass
+
+    @staticmethod
+    def _download_slot_vals(slot_vals_json_path):
+        url = 'http://lnsigo.mipt.ru/export/datasets/dstc_slot_vals.json'
+        download(slot_vals_json_path, url)

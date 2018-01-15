@@ -7,6 +7,7 @@ from deeppavlov.dataset_readers.intent_dataset_reader import IntentDatasetReader
 from deeppavlov.dataset_readers.typos_kartaslov import TyposKartaslov
 from deeppavlov.dataset_readers.typos_wikipedia import TyposWikipedia
 from deeppavlov.datasets.dstc2_datasets import DSTC2DialogDataset
+from deeppavlov.datasets.dstc2_datasets import DstcNerDataset
 from deeppavlov.datasets.hcn_dataset import HCNDataset
 from deeppavlov.datasets.intent_dataset import IntentDataset
 from deeppavlov.datasets.typos_dataset import TyposDataset
@@ -18,12 +19,13 @@ from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.embedders.dict_embedder import DictEmbedder
 from deeppavlov.models.encoders.bow import BoW_encoder
 from deeppavlov.models.lstms.hcn_lstm import LSTM
-from deeppavlov.models.ner.model_loader import load_ner_dstc_model
 from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
 from deeppavlov.models.spellers.error_model.error_model import ErrorModel
 from deeppavlov.models.trackers.hcn_at import ActionTracker
 from deeppavlov.models.trackers.hcn_et import EntityTracker
 from deeppavlov.skills.dummy_skill.dummy import DummySkill
+# from deeppavlov.vocabs.simple_vocab import SimpleVocabulary
+from deeppavlov.core.data.vocab import DefaultVocabulary
 from deeppavlov.skills.hcn.hybrid import HybridCodeNetwork
 from deeppavlov.skills.hcn_new.hcn import HybridCodeNetworkModel
 from deeppavlov.skills.hcn_new.tracker import FeaturizedTracker

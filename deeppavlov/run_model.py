@@ -17,11 +17,14 @@ from deeppavlov.core.commands.utils import set_usr_dir
 # models/classifiers/intents/config.json
 # models/classifiers/intents/config_infer.json
 
+# NER
+# models/ner/config.json
+
 usr_dir = None
 
 try:
     MODEL_CONFIG_PATH = 'models/classifiers/intents/config.json'
-    usr_dir = set_usr_dir(MODEL_CONFIG_PATH)
+    set_usr_dir(MODEL_CONFIG_PATH)
     train_model_from_config(MODEL_CONFIG_PATH)
     interact_model(MODEL_CONFIG_PATH)
 # remove if usr_dir is empty:
