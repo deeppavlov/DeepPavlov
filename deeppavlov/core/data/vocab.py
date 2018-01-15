@@ -12,23 +12,25 @@ from deeppavlov.core.common.attributes import check_path_exists
 class DefaultVocabulary(Trainable, Inferable):
     def __init__(self, inputs, level='token',
                  model_dir='', model_file='vocab.txt',
-                 special_tokens=tuple(), default_token=None):
+                 special_tokens=tuple(), default_token=None,
+                 tokenize=False):
         self._model_dir = model_dir
         self._model_file = model_file
         self.special_tokens = special_tokens
         self.default_token = default_token
-        self.preprocess_fn = self._build_preprocess_fn(inputs, level)
+        self.preprocess_fn = self._build_preprocess_fn(inputs, level, tokenize)
 
         self.reset()
         if self.model_path_.exists():
             self.load()
 
     @staticmethod
-    def _build_preprocess_fn(inputs, level):
-
+    def _build_preprocess_fn(inputs, level, tokenize):
         def iter_level(utter):
+            if tokenize:
+                utter = utter.split()
             if level == 'token':
-                yield from utter  #.split(' ')
+                yield from utter
             elif level == 'char':
                 for token in utter:
                     yield from token
