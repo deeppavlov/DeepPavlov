@@ -125,7 +125,20 @@ train_model_from_config(MODEL_CONFIG_PATH)
 This model uses [KenLM](http://kheafield.com/code/kenlm/) to process language models, so if you want to build your own,
 we suggest you consult with its website. We do also provide our own language models for
 [english](http://lnsigo.mipt.ru/export/lang_models/en_wiki_no_punkt.arpa.binary.gz) \(5.5GB\) and
-[russian](http://lnsigo.mipt.ru/export/lang_models/ru_wiyalen_no_punkt.arpa.binary.gz) \(5GB\) languages.
+[russian](http://lnsigo.mipt.ru/export/lang_models/ru_wiyalen_no_punkt.arpa.binary.gz) \(3.1GB\) languages.
+
+## Comparison
+
+We compared this module with [Yandex.Speller](http://api.yandex.ru/speller/) and [GNU Aspell](http://aspell.net/)
+on the [test set](http://www.dialog-21.ru/media/3838/test_sample_testset.txt)
+for the [SpellRuEval competition](http://www.dialog-21.ru/en/evaluation/2016/spelling_correction/) on Automatic Spelling Correction for Russian:
+
+| Correction method                          | Precision | Recall | F-measure | 
+|--------------------------------------------|-----------|--------|-----------|
+| Yandex.Speller                             | 83.09     | 59.86  | 69.59     | 
+| Our model with the provided language model | 51.92     | 53.94  | 52.91     | 
+| Our model with no language model           | 41.42     | 37.21  | 39.20     | 
+| GNU Aspell, always first candidate         | 27.85     | 34.07  | 30.65     |
 
 ## Ways to improve
 
