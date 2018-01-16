@@ -20,7 +20,6 @@ class FasttextEmbedder(Inferable):
             dim: dimension of embeddings
             embedding_url: url link to embedding to try to download if file does not exist
         """
-        print("Initilizing embedder")
         self.tok2emb = {}
         self.dim = dim
         self.embedding_url = embedding_url
@@ -47,17 +46,17 @@ class FasttextEmbedder(Inferable):
             fname: file name
         """
 
-        print("Loading embeddings from `{}`".format(self.model_path_.absolute()))
+        print("[loading embeddings from `{}`]".format(self.model_path_))
         if not Path(self.model_path_).exists():
             if self.embedding_url:
                 try:
-                    print('Trying to download a pretrained fasttext model from repository')
+                    print('[trying to download a pretrained fasttext model from repository]')
                     local_filename, _ = urllib.request.urlretrieve(self.embedding_url)
                     with open(local_filename, 'rb') as fin:
                         model_file = fin.read()
 
                     mp = self.model_path_ / self._model_dir / self._model_file
-                    print("Saving downloaded fasttext model to {}".format(mp))
+                    print("[saving downloaded fasttext model to {}]".format(mp))
                     if not mp.exists():
                         mp.mkdir()
                     with open(str(mp), 'wb') as fout:

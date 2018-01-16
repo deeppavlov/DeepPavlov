@@ -24,11 +24,12 @@
 		"word_vocab"
 	],
     "debug": 0,
-	"num_epochs": 100,
+	"num_epochs": 200,
     "template_path": "../data/dstc2/dstc2-templates.txt",
     "network": {
       "name": "custom_rnn",
       "model_dir": "hcn_rnn",
+	  "model_file": "model",
       "train_now": true,
       "learning_rate": 0.03,
       "hidden_dim": 128,

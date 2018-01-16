@@ -162,7 +162,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         return action_mask
 
     def train(self, data):
-        print('\n:: training started\n')
+        print('\n:: training started')
 
         curr_patience = self.val_patience
         prev_valid_accuracy = 0. 
@@ -214,15 +214,15 @@ class HybridCodeNetworkBot(Inferable, Trainable):
 
             if prev_valid_accuracy > valid_metrics.action_accuracy:
                 curr_patience -= 1
-                print(":: Patience decreased by 1, is equal to {}.".format(curr_patience))
+                print(":: patience decreased by 1, is equal to {}".format(curr_patience))
             else:
                 curr_patience = self.val_patience
             if curr_patience < 1:
-                print(":: Patience is over, stopped training.")
+                print("\n:: patience is over, stopped training\n")
                 break
             prev_valid_accuracy = valid_metrics.action_accuracy
         else:
-            print(":: Stopping because max number of epochs encountered.")
+            print("\n:: stopping because max number of epochs encountered\n")
         self.save()
 
     def infer(self, context, db_result=None):
