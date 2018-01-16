@@ -12,6 +12,7 @@
     "train_now": true,
     "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/ner",
     "ner_network": {
+      "train_now":true,
       "name": "ner_tagging_network",
       "vocabs": [
         "token_vocab",
@@ -33,6 +34,7 @@
   },
   "vocabs": {
     "token_vocab": {
+      "train_now": true,
       "name": "default_vocab",
       "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/ner/token.dict",
       "inputs": [
@@ -41,6 +43,7 @@
       "level": "token"
     },
     "tag_vocab": {
+      "train_now": true,
       "name": "default_vocab",
       "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/ner/tag.dict",
       "inputs": [
@@ -49,6 +52,7 @@
       "level": "token"
     },
     "char_vocab": {
+      "train_now": true,
       "name": "default_vocab",
       "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/ner/char.dict",
       "inputs": [
