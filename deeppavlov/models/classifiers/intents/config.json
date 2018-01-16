@@ -17,8 +17,8 @@
   },
   "model": {
     "name": "intent_model",
-    "train_now": true,
-    "model_path": "../data/intent_cnn",
+    "train_now": false,
+    "model_path": "./models/classifiers/intents/intent_cnn_best",
     "opt": {
       "classes_file": "../data/dstc2/classes.txt",
       "kernel_sizes_cnn": "3 3 3",

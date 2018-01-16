@@ -27,7 +27,7 @@ In the original dataset this user reply has characteristics
 This message contains two intents `(thankyou, bye)`.
 
 
-## Usage
+## Usage of pre-trained model
 
 #### Config parameters:  
 
@@ -59,7 +59,7 @@ This message contains two intents `(thankyou, bye)`.
 #### Usage example
 
 
-## Training
+## Training model
 
 
 ## Comparison
