@@ -34,7 +34,7 @@ This message contains two intents `(thankyou, bye)`.
 |   Parameter         |  Description                                                      | Set of Values                                 | Type    |
 |---------------------|-------------------------------------------------------------------|-----------------------------------------------|---------|
 | model_name          | method of the class that corresponds to the model                 | \[cnn_model, dcnn_model\] or any custom one   | str     |
-| text_size           | length of each sample in words                                    |  (0,\infty)                                   | int     |
+| text_size           | length of each sample in words                                    |  (0,$\infty$)                                 | int     |
 | confident_threshold | boundary value of belonging to a class                            |   \[0., 1.\]                                  | float   |
 | kernel_sizes_cnn    | kernel sizes for shallow-and-wide and deep CNN model              |  i.e "3 3 3"                                  | str     |
 | filters_cnn         | number(-s) of filters for shallow-and-wide (deep) CNN             | (0,\infty) or i.e "128 256"                   | int,str |  
