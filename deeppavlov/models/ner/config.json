@@ -38,9 +38,7 @@
       "inputs": [
         "x"
       ],
-      "level": "token",
-      "model_dir": "data_dstc2",
-      "model_file": "token.dict"
+      "level": "token"
     },
     "tag_vocab": {
       "name": "default_vocab",
@@ -48,9 +46,7 @@
       "inputs": [
         "y"
       ],
-      "level": "token",
-      "model_dir": "data_dstc2",
-      "model_file": "tag.dict"
+      "level": "token"
     },
     "char_vocab": {
       "name": "default_vocab",
@@ -58,9 +54,7 @@
       "inputs": [
         "x"
       ],
-      "level": "char",
-      "model_dir": "data_dstc2",
-      "model_file": "char.dict"
+      "level": "char"
     }
   },
   "num_epochs": 1
