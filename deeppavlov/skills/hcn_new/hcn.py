@@ -51,7 +51,9 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                  word_vocab: Type = DefaultVocabulary,
                  vocab_path=None,
                  use_action_mask=False,
-                 debug=False):
+                 debug=False,
+                 num_epochs=100,
+                 val_patience=5):
 
         self.episode_done = True
         self.use_action_mask = use_action_mask
@@ -64,6 +66,8 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         self.tracker = tracker
         self.network = network
         self.word_vocab = word_vocab
+        self.num_epochs = num_epochs
+        self.val_patience = val_patience
 
         self.templates = Templates(template_type).load(template_path)
         print("[using {} templates from `{}`]" \
@@ -157,13 +161,13 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                         action_mask[a_id] = 0
         return action_mask
 
-    def train(self, data, num_epochs=40, patience=5):
-        print('\n:: training started\n')
+    def train(self, data):
+        print('\n:: training started')
 
-        curr_patience = patience
+        curr_patience = self.val_patience
         prev_valid_accuracy = 0. 
-# TODO: in case patience is off, save model {patience} steps before
-        for j in range(num_epochs):
+# TODO: in case val_patience is off, save model {val_patience} steps before
+        for j in range(self.num_epochs):
 
             tr_data = data.iter_all('train')
             eval_data = data.iter_all('valid')
@@ -210,15 +214,15 @@ class HybridCodeNetworkBot(Inferable, Trainable):
 
             if prev_valid_accuracy > valid_metrics.action_accuracy:
                 curr_patience -= 1
-                print(":: Patience decreased by 1, is equal to {}.".format(curr_patience))
+                print(":: patience decreased by 1, is equal to {}".format(curr_patience))
             else:
-                curr_patience = patience
+                curr_patience = self.val_patience
             if curr_patience < 1:
-                print(":: Patience is over, stopped training.")
+                print("\n:: patience is over, stopped training\n")
                 break
             prev_valid_accuracy = valid_metrics.action_accuracy
         else:
-            print(":: Stopping because max number of epochs encountered.")
+            print("\n:: stopping because max number of epochs encountered\n")
         self.save()
 
     def infer(self, context, db_result=None):

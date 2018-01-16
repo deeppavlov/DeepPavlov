@@ -1,8 +1,6 @@
 import tensorflow as tf
 from abc import ABCMeta
-import functools
 from functools import wraps
-import types
 
 from six import with_metaclass
 
@@ -11,10 +9,7 @@ def _graph_wrap(func, graph):
     @wraps(func)
     def _wrapped(*args, **kwargs):
         with graph.as_default():
-            try:
-                return func(*args, **kwargs)
-            except TypeError:
-                print("wrapped function is {}".format(func))
+            return func(*args, **kwargs)
     return _wrapped
 
 
@@ -38,3 +33,4 @@ class TfModelMeta(with_metaclass(type, ABCMeta)):
                 setattr(obj, meth, _graph_wrap(attr, obj.graph))
         obj.__init__(*args, **kwargs)
         return obj
+

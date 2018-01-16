@@ -13,10 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
-
 from tensorflow.contrib.layers import xavier_initializer
 
 from deeppavlov.core.common.registry import register
@@ -28,7 +28,10 @@ class HybridCodeNetworkModel(TFModel):
 
     def __init__(self, **params):
         self.opt = params
-        self._model_dir = self.opt.get('model_dir', 'hcn_rnn')
+        self._model_dir = self.opt.get('model_dir', '')
+        self._model_file = 'model'
+        if self.model_path:
+            self.model_path = str(Path(self.model_path) / self._model_file)
 
         # initialize parameters
         self._init_params()
@@ -38,11 +41,11 @@ class HybridCodeNetworkModel(TFModel):
         self.sess = tf.Session()
 
         if not self.opt.get('train_now') and self.get_checkpoint_state():
-#TODO: save/load params to json, here check compatability
-            print("Loading network from `{}`".format(self.model_path_.parent))
+        #TODO: save/load params to json, here check compatability
             self.load()
         else:
-            print("Initializing network from scratch")
+            print("\n:: initializing `{}` from scratch\n"\
+                  .format(self.__class__.__name__))
             self.sess.run(tf.global_variables_initializer())
 
         self.reset_state()
