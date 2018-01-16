@@ -41,9 +41,7 @@ MODEL_FILE_NAME = 'ner_model'
 @register("ner_tagging_network")
 class NerNetwork(SimpleTFModel):
     def __init__(self,
-                 token_vocab,
-                 char_vocab,
-                 tag_vocab,
+                 vocabs,
                  n_filters=(128, 256),
                  filter_width=3,
                  token_embeddings_dim=128,
@@ -60,9 +58,9 @@ class NerNetwork(SimpleTFModel):
                  verbouse=False,
                  embeddings_onethego=False):
 
-        n_tags = len(tag_vocab)
-        n_tokens = len(token_vocab)
-        n_chars = len(char_vocab)
+        n_tags = len(vocabs['tag_vocab'])
+        n_tokens = len(vocabs['token_vocab'])
+        n_chars = len(vocabs['char_vocab'])
 
         # Create placeholders
         if embeddings_onethego:
@@ -143,9 +141,9 @@ class NerNetwork(SimpleTFModel):
         if logging:
             self.train_writer = tf.summary.FileWriter('summary', sess.graph)
 
-        self.token_vocab = token_vocab
-        self.tag_vocab = tag_vocab
-        self.char_vocab = char_vocab
+        self.token_vocab = vocabs['token_vocab']
+        self.tag_vocab = vocabs['tag_vocab']
+        self.char_vocab = vocabs['char_vocab']
         self._use_crf = use_crf
         self.summary = tf.summary.merge_all()
         self._x_w = x_word
