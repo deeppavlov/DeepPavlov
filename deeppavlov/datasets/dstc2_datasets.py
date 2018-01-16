@@ -25,7 +25,7 @@ import pathlib
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset import Dataset
-from deeppavlov.data.utils import download
+from deeppavlov.core.data.utils import download
 
 logger = logging.getLogger(__name__)
 

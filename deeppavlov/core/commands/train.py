@@ -39,6 +39,7 @@ def train_model_from_config(config_path: str):
     reader_config = config['dataset_reader']
     # NOTE: Why there are no params for dataset reader?
     reader = from_params(REGISTRY[reader_config['name']], {})
+# NOTE: why are all paths are relative to config parent dir, not to config filepath?
     data = reader.read(reader_config.get('data_path', usr_dir))
 
     dataset_config = config['dataset']
