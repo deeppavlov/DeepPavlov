@@ -20,11 +20,9 @@ from deeppavlov.core.commands.utils import set_usr_dir
 # NER
 # models/ner/config.json
 
-usr_dir = None
-
+MODEL_CONFIG_PATH = 'models/spellers/error_model/config_en.json'
+usr_dir = set_usr_dir(MODEL_CONFIG_PATH)
 try:
-    MODEL_CONFIG_PATH = 'models/spellers/error_model/config_en.json'
-    set_usr_dir(MODEL_CONFIG_PATH)
     train_model_from_config(MODEL_CONFIG_PATH)
     interact_model(MODEL_CONFIG_PATH)
 # remove if usr_dir is empty:
