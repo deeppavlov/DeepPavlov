@@ -3,8 +3,6 @@ from pathlib import Path
 
 import numpy as np
 from overrides import overrides
-from gensim.models.wrappers.fasttext import FastText as GensimFasttext
-import fasttext as Fasttext
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
@@ -71,9 +69,14 @@ class FasttextEmbedder(Inferable):
         else:
             model_file = str(self.model_path_)
         if self.emb_module == 'fasttext':
+            import fasttext as Fasttext
             model = Fasttext.load_model(model_file)
+        elif self.emb_module == 'pyfasttext':
+            from pyfasttext import FastText as Fasttext
+            model = Fasttext(model_file)
         else:
-            model = GensimFasttext.load_fasttext_format(model_file)
+            from gensim.models.wrappers.fasttext import FastText as Fasttext
+            model = Fasttext.load_fasttext_format(model_file)
         return model
 
     @overrides
@@ -113,6 +116,6 @@ class FasttextEmbedder(Inferable):
             embedded_tokens.append(emb)
 
         if mean:
-            return np.mean(embedded_tokens)
+            return np.mean([et for et in embedded_tokens if et.any()])
 
         return embedded_tokens

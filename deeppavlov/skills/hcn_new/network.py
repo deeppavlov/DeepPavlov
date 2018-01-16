@@ -29,7 +29,6 @@ class HybridCodeNetworkModel(TFModel):
     def __init__(self, **params):
         self.opt = params
         self._model_dir = self.opt.get('model_dir', 'hcn_rnn')
-        self._model_file = self.opt.get('model_file', 'hcn_rnn')
 
         # initialize parameters
         self._init_params()

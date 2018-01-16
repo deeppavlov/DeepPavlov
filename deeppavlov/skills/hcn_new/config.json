@@ -6,39 +6,127 @@
   "dataset": {
     "name": "dstc2_dialog_dataset"
   },
+  "vocabs": {
+    "token_vocab": {
+      "train_now": true,
+      "name": "default_vocab",
+      "inputs": [
+        "x"
+      ],
+      "level": "token"
+    },
+    "tag_vocab": {
+      "train_now": true,
+      "name": "default_vocab",
+      "inputs": [
+        "y"
+      ],
+      "level": "token"
+    },
+    "char_vocab": {
+      "train_now": true,
+      "name": "default_vocab",
+      "inputs": [
+        "x"
+      ],
+      "level": "char"
+    }
+  },
   "model": {
     "train_now": true,
     "name": "hcn_new",
-    "debug": false,
-    "slot_names": ["pricerange", "this", "area", "slot", "food", "name"],
-    "template_path": "../data/dstc2/dstc2-templates.txt",
+    "debug": 0,
+    "template_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2/dstc2-templates.txt",
     "network": {
-      "train_now": true,
       "name": "custom_rnn",
-      "learning_rate": 0.02,
+      "model_dir": "hcn_rnn",
+      "train_now": true,
+      "learning_rate": 0.03,
       "hidden_dim": 128,
-      "model_file": "hcn_rnn",
+      "obs_size": 832,
       "use_action_mask": false,
-      "action_size": 45,
-      "obs_size": 994
+      "action_size": 45
     },
     "slot_filler": {
-        "name": "dstc_slotfilling",
+      "name": "dstc_slotfilling",
+      "train_now": true,
+      "ner_network": {
+        "name": "ner_tagging_network",
+        "vocabs": [
+          "token_vocab",
+          "tag_vocab",
+          "char_vocab"
+        ],
+        "verbouse": true,
+        "filter_width": 7,
+        "embeddings_dropout": true,
+        "n_filters": [
+          64,
+          64
+        ],
+        "token_embeddings_dim": 64,
+        "char_embeddings_dim": 32,
+        "use_batch_norm": true,
+        "use_crf": true,
         "model_path": "../data/ner"
+      }
+    },
+    "intent_classifier": {
+      "name": "intent_model",
+      "train_now": true,
+      "model_path": "../data/intent_cnn",
+      "opt": {
+        "classes_file": "../data/dstc2/classes.txt",
+        "kernel_sizes_cnn": "3 3 3",
+        "filters_cnn": 512,
+        "lear_metrics": "binary_accuracy fmeasure",
+        "confident_threshold": 0.5,
+        "optimizer": "Adam",
+        "lear_rate": 0.1,
+        "lear_rate_decay": 0.1,
+        "loss": "binary_crossentropy",
+        "text_size": 15,
+        "coef_reg_cnn": 1e-4,
+        "coef_reg_den": 1e-4,
+        "dropout_rate": 0.5,
+        "epochs": 1,
+        "dense_size": 100,
+        "model_name": "cnn_model",
+        "batch_size": 64,
+        "val_every_n_epochs": 5,
+        "verbose": true,
+        "val_patience": 5,
+        "show_examples": false
+      },
+      "embedder": {
+        "name": "fasttext",
+        "model_path": "../data/dstc2_fasttext_model_100.bin",
+        "emb_module": "fasttext",
+        "dim": 100
+      }
     },
     "bow_encoder": {
       "name": "bow"
     },
     "embedder": {
-      "name": "w2v",
-      "corpus_path": "../data/text8"
+      "name": "fasttext",
+      "emb_module": "pyfasttext",
+      "dim": 300,
+      "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/wiki-news-300d-1M-subword.vec"
     },
     "tokenizer": {
-        "name": "spacy_tokenizer"
+      "name": "spacy_tokenizer"
     },
     "tracker": {
       "name": "featurized_tracker",
-      "slot_names": ["pricerange", "this", "area", "slot", "food", "name"]
+      "slot_names": [
+        "pricerange",
+        "this",
+        "area",
+        "slot",
+        "food",
+        "name"
+      ]
     }
   }
 }

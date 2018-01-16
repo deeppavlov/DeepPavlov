@@ -13,7 +13,7 @@ class BoW_encoder(Inferable):
         bow = np.zeros([len(vocab)], dtype=np.int32)
         for word in utterance.split(' '):
             if word in vocab:
-                idx = vocab.index(word)
+                idx = vocab[word]
                 bow[idx] += 1
         return bow
 

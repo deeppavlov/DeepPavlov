@@ -6,14 +6,19 @@
   "dataset": {
     "name": "dstc2_ner_dataset",
     "dataset_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2"
-
   },
   "model": {
     "name": "dstc_slotfilling",
-    "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/clean_ner",
+    "train_now": true,
+    "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/ner",
     "ner_network": {
+      "train_now":true,
       "name": "ner_tagging_network",
-      "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/clean_ner",
+      "vocabs": [
+        "token_vocab",
+        "tag_vocab",
+        "char_vocab"
+      ],
       "verbouse": true,
       "filter_width": 7,
       "embeddings_dropout": true,
@@ -24,21 +29,38 @@
       "token_embeddings_dim": 64,
       "char_embeddings_dim": 32,
       "use_batch_norm": true,
-      "use_crf": true,
-      "token_vocab": {
-        "name": "simple_vocab",
-        "dict_file_path": "/media/olga/Data/projects/iPavlov/Pilot/data/clean_ner/dicts/token.dict"
-      },
-      "tag_vocab": {
-        "name": "simple_vocab",
-        "dict_file_path": "/media/olga/Data/projects/iPavlov/Pilot/data/clean_ner/dicts/tag.dict"
-      },
-      "char_vocab":{
-        "name": "simple_vocab",
-        "dict_file_path": "/media/olga/Data/projects/iPavlov/Pilot/data/clean_ner/dicts/char.dict"
-      }
+      "use_crf": true
     }
   },
-  "num_epochs": 2
+  "vocabs": {
+    "token_vocab": {
+      "train_now": true,
+      "name": "default_vocab",
+      "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/ner/token.dict",
+      "inputs": [
+        "x"
+      ],
+      "level": "token"
+    },
+    "tag_vocab": {
+      "train_now": true,
+      "name": "default_vocab",
+      "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/ner/tag.dict",
+      "inputs": [
+        "y"
+      ],
+      "level": "token"
+    },
+    "char_vocab": {
+      "train_now": true,
+      "name": "default_vocab",
+      "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/ner/char.dict",
+      "inputs": [
+        "x"
+      ],
+      "level": "char"
+    }
+  },
+  "num_epochs": 1
 }
 

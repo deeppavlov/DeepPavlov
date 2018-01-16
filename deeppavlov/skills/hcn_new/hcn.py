@@ -22,12 +22,13 @@ from typing import Type
 
 from deeppavlov.core.common import paths
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.utils import load_vocab
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
-# from deeppavlov.models.embedders.fasttext_embedder import FasttextUtteranceEmbed
-from deeppavlov.models.embedders.w2v_embedder import Word2VecEmbedder
+
+from deeppavlov.core.data.vocab import DefaultVocabulary
+from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.encoders.bow import BoW_encoder
+from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel
 from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
 from deeppavlov.models.tokenizers.spacy_tokenizer import SpacyTokenizer
 from deeppavlov.models.trackers.default_tracker import DefaultTracker
@@ -38,14 +39,16 @@ from deeppavlov.skills.hcn_new.templates import Templates, DualTemplate
 
 @register("hcn_new")
 class HybridCodeNetworkBot(Inferable, Trainable):
-    def __init__(self, template_path, slot_names,
+    def __init__(self, template_path,
                  template_type: Type = DualTemplate,
                  slot_filler: Type = DstcSlotFillingNetwork,
+                 intent_classifier:Type = KerasIntentModel,
                  bow_encoder: Type = BoW_encoder,
-                 embedder: Type = Word2VecEmbedder,
+                 embedder: Type = FasttextEmbedder,
                  tokenizer: Type = SpacyTokenizer,
                  tracker: Type = DefaultTracker,
                  network: Type = HybridCodeNetworkModel,
+                 word_vocab: Type = DefaultVocabulary,
                  vocab_path=None,
                  use_action_mask=False,
                  debug=False):
@@ -53,19 +56,14 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         self.episode_done = True
         self.use_action_mask = use_action_mask
         self.debug = debug
-        # TODO: infer slot names from dataset
-        self.slot_names = slot_names
         self.slot_filler = slot_filler
+        self.intent_classifier = intent_classifier
         self.bow_encoder = bow_encoder
         self.embedder = embedder
         self.tokenizer = tokenizer
         self.tracker = tracker
         self.network = network
-
-        if vocab_path is None:
-            vocab_path = Path(paths.USR_PATH) / 'vocab.txt'
-
-        self.vocab = load_vocab(vocab_path)
+        self.word_vocab = word_vocab
 
         self.templates = Templates(template_type).load(template_path)
         print("[using {} templates from `{}`]" \
@@ -74,6 +72,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         # intialize parameters
         self.db_result = None
         self.n_actions = len(self.templates)
+        self.n_intents = len(self.intent_classifier.infer(['hi']))
         self.prev_action = np.zeros(self.n_actions, dtype=np.float32)
 
         # initialize metrics
@@ -81,10 +80,10 @@ class HybridCodeNetworkBot(Inferable, Trainable):
 
         # opt = {
         #    'action_size': self.n_actions,
-        #    'obs_size': 4 + len(self.vocab) + self.embedder.dim +\
-        #    2 * self.tracker.state_size + self.n_actions
-        # }
-        # self.network = HybridCodeNetworkModel(opt)
+        #    'obs_size': 4 + len(self.word_vocab) + self.embedder.dim +\
+        #    2 * self.tracker.state_size + self.n_actions + self.n_intents
+        #}
+        #self.network = HybridCodeNetworkModel(opt)
 
     def _encode_context(self, context, db_result=None):
         # tokenize input
@@ -93,15 +92,23 @@ class HybridCodeNetworkBot(Inferable, Trainable):
             print("Text tokens = `{}`".format(tokenized))
 
         # Bag of words features
-        bow_features = self.bow_encoder.infer(tokenized, self.vocab)
+        bow_features = self.bow_encoder.infer(tokenized, self.word_vocab)
         bow_features = bow_features.astype(np.float32)
 
         # Embeddings
-        emb_features = self.embedder.infer(tokenized)
+        emb_features = self.embedder.infer(tokenized, mean=True)
+
+        # Intent features
+        intent_features = self.intent_classifier.infer([tokenized]).ravel()
+        if self.debug:
+            from deeppavlov.models.classifiers.intents.utils import proba2labels
+            print("Predicted intent = `{}`".format(proba2labels(
+                intent_features[np.newaxis, :], .5, self.intent_classifier.classes
+            )[0]))
 
         # Text entity features
         self.tracker.update_state(self.slot_filler.infer(tokenized))
-        ent_features = self.tracker.infer()
+        state_features = self.tracker.infer()
         if self.debug:
             print("Found slots =", self.slot_filler.infer(tokenized))
 
@@ -110,8 +117,16 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                                      (self.db_result == {}) * 1.],
                                     dtype=np.float32)
 
-        return np.hstack((bow_features, emb_features, ent_features,
-                          context_features, self.prev_action))[np.newaxis, :]
+        if self.debug:
+            print("num bow features =", len(bow_features),
+                  " num emb features =", len(emb_features),
+                  " num intent features =", len(intent_features),
+                  " num state features =", len(state_features),
+                  " num context features =", len(context_features),
+                  " prev_action shape =", len(self.prev_action))
+        return np.hstack((bow_features, emb_features, intent_features,
+                          state_features, context_features,
+                          self.prev_action))[np.newaxis, :]
 
     def _encode_response(self, response, act):
         return self.templates.actions.index(act)
@@ -142,9 +157,12 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                         action_mask[a_id] = 0
         return action_mask
 
-    def train(self, data, num_epochs=40, acc_threshold=0.99):
+    def train(self, data, num_epochs=40, patience=5):
         print('\n:: training started\n')
 
+        curr_patience = patience
+        prev_valid_accuracy = 0. 
+# TODO: in case patience is off, save model {patience} steps before
         for j in range(num_epochs):
 
             tr_data = data.iter_all('train')
@@ -187,13 +205,20 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                     # TODO: update dialog metrics
             print('\n\n:: {}.train {}'.format(j + 1, self.metrics.report()))
 
-            metrics = self.evaluate(eval_data)
-            print(':: {}.valid {}'.format(j + 1, metrics.report()))
+            valid_metrics = self.evaluate(eval_data)
+            print(':: {}.valid {}'.format(j + 1, valid_metrics.report()))
 
-            if metrics.action_accuracy > acc_threshold:
-                print('Accuracy is {}, stopped training.' \
-                      .format(metrics.action_accuracy))
+            if prev_valid_accuracy > valid_metrics.action_accuracy:
+                curr_patience -= 1
+                print(":: Patience decreased by 1, is equal to {}.".format(curr_patience))
+            else:
+                curr_patience = patience
+            if curr_patience < 1:
+                print(":: Patience is over, stopped training.")
                 break
+            prev_valid_accuracy = valid_metrics.action_accuracy
+        else:
+            print(":: Stopping because max number of epochs encountered.")
         self.save()
 
     def infer(self, context, db_result=None):
