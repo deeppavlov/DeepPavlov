@@ -6,9 +6,9 @@ from deeppavlov.core.common.errors import ConfigError
 T = TypeVar('T')
 
 
-def from_params(cls: Type, params: Dict, vocabs: Dict = dict(), **kwargs) -> Type['T']:
+def from_params(cls: Type, params: Dict, **kwargs) -> Type['T']:
     # what is passed in json:
-    config_params = {k: v for k, v in params.items() if k not in {'name', 'vocabs'}}
+    config_params = {k: v for k, v in params.items() if k != 'name'}
 
     # find the submodels params recursively
     for param_name, subcls_params in config_params.items():
@@ -21,7 +21,11 @@ def from_params(cls: Type, params: Dict, vocabs: Dict = dict(), **kwargs) -> Typ
                 continue
             try:
                 subcls = REGISTRY[subcls_name]
-                config_params[param_name] = from_params(subcls, subcls_params, vocabs)
+                try:
+                    vocabs = kwargs['vocabs']
+                except KeyError:
+                    vocabs = {}
+                config_params[param_name] = from_params(subcls, subcls_params, vocabs=vocabs)
             except KeyError:
                 raise ConfigError(
                     "The class {} is not registered. Either register this class,"
@@ -36,14 +40,7 @@ def from_params(cls: Type, params: Dict, vocabs: Dict = dict(), **kwargs) -> Typ
             setattr(cls, super_attr, v)
             final_params.pop(super_attr)
 
-    # return an instance
-    if 'vocabs' in params:
-        input_vocabs = {key: vocabs[key] for key in params['vocabs']}
-        model = cls(**dict(final_params, **input_vocabs, **kwargs))
-    else:
-        try:
-            model = cls(**dict(final_params, **kwargs))
-        except Exception:
-            print(cls)
-            raise
+    # return an instance:
+    model = cls(**dict(final_params, **kwargs))
+
     return model
