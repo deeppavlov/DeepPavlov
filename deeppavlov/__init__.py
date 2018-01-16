@@ -16,14 +16,13 @@ from deeppavlov.models.embedders.dict_embedder import DictEmbedder
 from deeppavlov.models.encoders.bow import BoW_encoder
 from deeppavlov.models.lstms.hcn_lstm import LSTM
 from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
+from deeppavlov.models.ner.ner_network import NerNetwork
 from deeppavlov.models.spellers.error_model.error_model import ErrorModel
 from deeppavlov.models.trackers.hcn_at import ActionTracker
 from deeppavlov.models.trackers.hcn_et import EntityTracker
 from deeppavlov.skills.dummy_skill.dummy import DummySkill
-# from deeppavlov.vocabs.simple_vocab import SimpleVocabulary
 from deeppavlov.core.data.vocab import DefaultVocabulary
 from deeppavlov.skills.hcn_new.hcn import HybridCodeNetworkModel
 from deeppavlov.skills.hcn_new.tracker import FeaturizedTracker
 from deeppavlov.vocabs.wiki_100k_dictionary import Wiki100KDictionary
 from deeppavlov.vocabs.russian_words import RussianWordsVocab
-# from deeppavlov.vocabs.default_vocab import DefaultVocabulary
