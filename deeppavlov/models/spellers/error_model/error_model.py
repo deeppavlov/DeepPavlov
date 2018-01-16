@@ -11,7 +11,7 @@ from deeppavlov.core.common import paths
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.vocabs.static_dictionary import StaticDictionary
+from deeppavlov.vocabs.typos import StaticDictionary
 from deeppavlov.core.common.attributes import check_attr_true, check_path_exists
 
 

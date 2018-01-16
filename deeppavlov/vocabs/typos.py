@@ -4,6 +4,9 @@ from pathlib import Path
 
 import sys
 
+import requests
+from lxml import html
+
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import is_done, mark_done
 from deeppavlov.core.common import paths
@@ -73,3 +76,32 @@ class StaticDictionary:
         self.alphabet = load_pickle(alphabet_path)
         self.words_set = load_pickle(words_path)
         self.words_trie = load_pickle(words_trie_path)
+
+
+@register('russian_words_vocab')
+class RussianWordsVocab(StaticDictionary):
+    dict_name = 'russian_words_vocab'
+
+    @staticmethod
+    def _get_source(*args, **kwargs):
+        print('Downloading russian vocab from https://github.com/danakt/russian-words/', file=sys.stderr)
+        url = 'https://github.com/danakt/russian-words/raw/master/russian.txt'
+        page = requests.get(url)
+        return [word.strip() for word in page.content.decode('cp1251').split('\n')]
+
+
+@register('wikitionary_100K_vocab')
+class Wiki100KDictionary(StaticDictionary):
+    dict_name = 'wikipedia_100K_vocab'
+
+    @staticmethod
+    def _get_source(*args, **kwargs):
+        words = []
+        print('Downloading english vocab from Wiktionary', file=sys.stderr)
+        for i in range(1, 100000, 10000):
+            k = 10000 + i - 1
+            url = 'https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists/PG/2005/08/{}-{}'.format(i, k)
+            page = requests.get(url)
+            tree = html.fromstring(page.content)
+            words += tree.xpath('//div[@class="mw-parser-output"]/p/a/text()')
+        return words

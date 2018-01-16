@@ -23,6 +23,5 @@ from deeppavlov.skills.dummy_skill.dummy import DummySkill
 # from deeppavlov.core.data.vocab import DefaultVocabulary
 from deeppavlov.skills.hcn_new.hcn import HybridCodeNetworkModel
 from deeppavlov.skills.hcn_new.tracker import FeaturizedTracker
-from deeppavlov.vocabs.wiki_100k_dictionary import Wiki100KDictionary
-from deeppavlov.vocabs.russian_words import RussianWordsVocab
+from deeppavlov.vocabs.typos import StaticDictionary, Wiki100KDictionary, RussianWordsVocab
 # from deeppavlov.vocabs.default_vocab import DefaultVocabulary
