@@ -18,7 +18,7 @@ from deeppavlov.core.data.utils import download
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(Inferable, Trainable):
     def __init__(self,
-                 ner_network: NerNetwork):
+                 ner_network: NerNetwork, *args, **kwargs):
         # Make it path
         self.model_path = pathlib.Path(self.model_path)
 
