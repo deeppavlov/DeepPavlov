@@ -23,11 +23,11 @@ from deeppavlov.core.commands.utils import set_usr_dir
 usr_dir = None
 
 try:
-    MODEL_CONFIG_PATH = 'models/spellers/error_model/config_en.json'
+    MODEL_CONFIG_PATH = 'models/ner/config.json'
     set_usr_dir(MODEL_CONFIG_PATH)
     train_model_from_config(MODEL_CONFIG_PATH)
     interact_model(MODEL_CONFIG_PATH)
 # remove if usr_dir is empty:
 finally:
-    if not list(usr_dir.iterdir()):
+    if usr_dir and not list(usr_dir.iterdir()):
         usr_dir.rmdir()
