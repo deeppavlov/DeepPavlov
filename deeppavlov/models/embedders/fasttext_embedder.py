@@ -3,8 +3,6 @@ from pathlib import Path
 
 import numpy as np
 from overrides import overrides
-from gensim.models.wrappers.fasttext import FastText as GensimFasttext
-# import fasttext.FastText as Fasttext
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
@@ -12,7 +10,9 @@ from deeppavlov.core.models.inferable import Inferable
 
 @register('fasttext')
 class FasttextEmbedder(Inferable):
-    def __init__(self, model_dir='fasttext', model_file='fasttext.bin', dim=100,
+# TODO: can't initialize default values other than '' for `model_dir` and
+# TODO: `model_file`
+    def __init__(self, model_dir='', model_file='', dim=100,
                  embedding_url=None, emb_module='fasttext', *args, **kwargs):
         """
         Args:
@@ -24,7 +24,6 @@ class FasttextEmbedder(Inferable):
         self.tok2emb = {}
         self.dim = dim
         self.embedding_url = embedding_url
-        # self.model_path = model_path
         self._model_dir = model_dir
         self._model_file = model_file
         self.emb_module = emb_module
@@ -48,7 +47,8 @@ class FasttextEmbedder(Inferable):
             fname: file name
         """
 
-        if not Path(self.model_path).exists():
+        print("Loading embeddings from `{}`".format(self.model_path_.absolute()))
+        if not Path(self.model_path_).exists():
             if self.embedding_url:
                 try:
                     print('Trying to download a pretrained fasttext model from repository')
@@ -118,6 +118,10 @@ class FasttextEmbedder(Inferable):
             embedded_tokens.append(emb)
 
         if mean:
-            return np.mean([et for et in embedded_tokens if et.any()])
+#TODO: et may contain array.array and np.any() operation is slow
+            filtered = [et for et in embedded_tokens if np.any(et)]
+            if filtered:
+                return np.mean(filtered, axis=0)
+            return np.zeros(self.dim, dtype=np.float32)
 
         return embedded_tokens
