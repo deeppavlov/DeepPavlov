@@ -25,7 +25,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
 
-from deeppavlov.vocabs.default_vocab import DefaultVocabulary
+from deeppavlov.core.data.vocab import DefaultVocabulary
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.encoders.bow import BoW_encoder
 from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel

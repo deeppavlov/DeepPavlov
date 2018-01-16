@@ -65,7 +65,6 @@ class NerNetwork(SimpleTFModel):
         n_chars = len(char_vocab)
 
         # Create placeholders
-        # noinspection PyPackageRequirements
         if embeddings_onethego:
             x_word = tf.placeholder(dtype=tf.float32, shape=[None, None, token_embeddings_dim], name='x_word')
         else:
@@ -303,7 +302,7 @@ class NerNetwork(SimpleTFModel):
 
     @overrides
     def infer(self, instance, *args, **kwargs):
-        pass
+        return self.predict_for_token_batch([instance])
 
     def predict(self, x_word, x_char, mask=None):
 

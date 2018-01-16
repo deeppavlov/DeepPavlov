@@ -44,5 +44,9 @@ def from_params(cls: Type, params: Dict, vocabs: Dict=dict(), **kwargs) -> Type[
         input_vocabs = {key: vocabs[key] for key in params['vocabs']}
         model = cls(**dict(final_params, **input_vocabs, **kwargs))
     else:
-        model = cls(**dict(final_params, **kwargs))
+        try:
+            model = cls(**dict(final_params, **kwargs))
+        except Exception:
+            print(cls)
+            raise
     return model
