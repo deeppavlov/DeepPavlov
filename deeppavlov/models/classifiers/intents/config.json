@@ -39,8 +39,7 @@
       "batch_size": 64,
       "val_every_n_epochs": 5,
       "verbose": true,
-      "val_patience": 5,
-      "show_examples": false
+      "val_patience": 5
     },
     "embedder": {
       "name": "fasttext",

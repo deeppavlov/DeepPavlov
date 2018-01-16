@@ -97,8 +97,7 @@ class KerasIntentModel(KerasModel):
                              "batch_size",
                              "val_every_n_epochs",
                              "verbose",
-                             "val_patience",
-                             "show_examples"]
+                             "val_patience"]
         # Reinitializing of parameters
         for param in changeable_params:
             self.opt[param] = opt[param]
