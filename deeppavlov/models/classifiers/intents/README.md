@@ -34,24 +34,24 @@ This message contains two intents `(thankyou, bye)`.
 |   Parameter         |  Description                                                      | Set of Values                                 | Type    |
 |---------------------|-------------------------------------------------------------------|-----------------------------------------------|---------|
 | model_name          | method of the class that corresponds to the model                 | \[cnn_model, dcnn_model\] or any custom one   | str     |
-| text_size           | length of each sample in words                                    |  (0,$\infty$)                                 | int     |
+| text_size           | length of each sample in words                                    |  (0, ∞)                                       | int     |
 | confident_threshold | boundary value of belonging to a class                            |   \[0., 1.\]                                  | float   |
 | kernel_sizes_cnn    | kernel sizes for shallow-and-wide and deep CNN model              |  i.e "3 3 3"                                  | str     |
-| filters_cnn         | number(-s) of filters for shallow-and-wide (deep) CNN             | (0,\infty) or i.e "128 256"                   | int,str |  
-| dense_size          | size of dense layer previous for classifying one                  |    (0,\infty)                                 | int     |
+| filters_cnn         | number(-s) of filters for shallow-and-wide (deep) CNN             | (0,∞) or i.e "128 256"                        | int,str |  
+| dense_size          | size of dense layer previous for classifying one                  |    (0,∞)                                      | int     |
 | lear_metrics        | learning metrics for training                                     | from keras.metrics                            | str     |
-| lear_rate           | learning rate for training                                        |    (0,\infty)                                 | float   |
-| lear_rate_decay     | learning rate decay for training                                  |    (0,\infty)                                 | float   |
+| lear_rate           | learning rate for training                                        |    (0,∞)                                      | float   |
+| lear_rate_decay     | learning rate decay for training                                  |    (0,∞)                                      | float   |
 | optimizer           | optimizer for training                                            | from keras.optimizers                         | str     |
 | loss                | loss for training                                                 | from keras.losses                             | str     |
 | coef_reg_cnn        | coefficient for kernel l2-regularizer for convolutional layers    |   \[0., 1.\]                                  | float   |
 | coef_reg_den        | coefficient for kernel l2-regularizer for dense layers            |   \[0., 1.\]                                  | float   |
 | dropout_rate        | dropout rate for training                                         |   \[0., 1.\]                                  | float   |
-| epochs              | number of epochs for training                                     |   (0,\infty)                                  |  int    |
-| batch_size          | batch size for training                                           |   (0,\infty)                                  |  int    |
-| val_every_n_epochs  | frequency of validation during training (validate every n epochs) |  (0,\infty)                                   |  int    |
+| epochs              | number of epochs for training                                     |   (0,∞)                                       |  int    |
+| batch_size          | batch size for training                                           |   (0,∞)                                       |  int    |
+| val_every_n_epochs  | frequency of validation during training (validate every n epochs) |  (0,∞)                                        |  int    |
 | verbose             | parameter whether to print training information or not            |  (True, False)                                | bool    |
-| val_patience        | maximal number of validation loss increases before stop training  |   (0,\infty)                                  |  int    |
+| val_patience        | maximal number of validation loss increases before stop training  |   (0,∞)                                       |  int    |
 | classes_file        | file to save list of classes extracted from data                  | i.e "classes.txt"                             | str     |
 
 
