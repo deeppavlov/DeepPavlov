@@ -7,7 +7,6 @@ from deeppavlov.core.common.params import from_params
 
 def build_model_from_config(config):
     model_config = config['model']
-    model_config.update(config['vocabs'])
     model_name = model_config['name']
     
     vocabs = {}
