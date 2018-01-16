@@ -111,7 +111,8 @@ class DefaultVocabulary(Trainable, Inferable):
         return [self.__getitem__(s) for s in samples]
 
     def save(self):
-        with open(self.model_path_, 'wt') as f:
+        print("Saving vocab to `{}`".format(self.model_path_.resolve()))
+        with self.model_path_.open('wt') as f:
             for n in range(len(self._t2i)):
                 token = self._i2t[n]
                 cnt = self.freqs[token]
