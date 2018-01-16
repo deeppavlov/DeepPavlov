@@ -26,8 +26,8 @@ from deeppavlov.core.common import paths
 usr_dir = None
 
 try:
-    #MODEL_CONFIG_PATH = 'skills/hcn_new/config.json'
-    MODEL_CONFIG_PATH = 'models/ner/config.json'
+    MODEL_CONFIG_PATH = 'skills/hcn_new/config.json'
+    #MODEL_CONFIG_PATH = 'models/ner/config.json'
     set_usr_dir(MODEL_CONFIG_PATH)
     train_model_from_config(MODEL_CONFIG_PATH)
     interact_model(MODEL_CONFIG_PATH)
