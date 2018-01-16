@@ -3,6 +3,8 @@ from pathlib import Path
 
 import numpy as np
 from overrides import overrides
+from gensim.models.wrappers.fasttext import FastText as GensimFasttext
+# import fasttext.FastText as Fasttext
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable

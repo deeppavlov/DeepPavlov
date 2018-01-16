@@ -1,8 +1,6 @@
 import tensorflow as tf
 from abc import ABCMeta
-import functools
 from functools import wraps
-import types
 
 from six import with_metaclass
 
@@ -38,3 +36,4 @@ class TfModelMeta(with_metaclass(type, ABCMeta)):
                 setattr(obj, meth, _graph_wrap(attr, obj.graph))
         obj.__init__(*args, **kwargs)
         return obj
+

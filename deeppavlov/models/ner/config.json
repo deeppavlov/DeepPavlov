@@ -9,6 +9,7 @@
   },
   "model": {
     "name": "dstc_slotfilling",
+	"train_now": true,
     "model_path": "data/ner",
     "ner_network": {
       "name": "ner_tagging_network",
