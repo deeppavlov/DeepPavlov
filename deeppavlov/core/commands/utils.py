@@ -17,6 +17,5 @@ def set_usr_dir(config_path: str, usr_dir_name='USR_DIR') -> PosixPath:
     usr_dir.mkdir(exist_ok=True)
 
     paths.USR_PATH = usr_dir
-    return usr_dir
 
 

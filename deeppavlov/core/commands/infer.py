@@ -7,8 +7,16 @@ from deeppavlov.core.common.params import from_params
 
 def build_model_from_config(config):
     model_config = config['model']
+    model_config.update(config['vocabs'])
     model_name = model_config['name']
-    model = from_params(REGISTRY[model_name], model_config)
+    
+    vocabs = {}
+    if 'vocabs' in config:
+        for vocab_param_name, vocab_config in config['vocabs'].items():
+            vocab_name = vocab_config['name']
+            v = from_params(REGISTRY[vocab_name], vocab_config)
+            vocabs[vocab_param_name] = v
+    model = from_params(REGISTRY[model_name], model_config, vocabs)
     model.reset()
     return model
 

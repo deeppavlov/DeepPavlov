@@ -163,7 +163,7 @@ def highway_convolutional_network(input_units,
                                  kernel_initializer=xavier_initializer())
         if use_batch_norm:
             units = tf.layers.batch_normalization(units, training=training_ph)
-        sigmoid_gate = tf.layers.dense(input_units, activation=tf.sigmoid, kernel_initializer=xavier_initializer())
+        sigmoid_gate = tf.layers.dense(input_units, 1, activation=tf.sigmoid, kernel_initializer=xavier_initializer())
         input_units = sigmoid_gate * input_units + (1 - sigmoid_gate) * units
         input_units = tf.nn.relu(input_units)
     return input_units

@@ -1,4 +1,5 @@
 import random
+from abc import abstractmethod
 from typing import List, Dict, Generator, Tuple, Any
 
 
@@ -18,6 +19,7 @@ class Dataset:
 
         rs = random.getstate()
         random.seed(seed)
+        # TODO: consider removing from the init (can forget to override)
         self.random_state = random.getstate()
         random.setstate(rs)
 
@@ -64,3 +66,13 @@ class Dataset:
         data = self.data[data_type]
         for x, y in data:
             yield (x, y)
+
+    @staticmethod
+    @abstractmethod
+    def save_vocab(data, ser_dir):
+        """
+        Extract single words from data and save them to a serialization dir.
+        :param data: dataset
+        :param ser_dir specified by user serialization dir
+        """
+        pass

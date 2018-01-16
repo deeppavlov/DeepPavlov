@@ -10,7 +10,6 @@ from keras import backend as K
 from keras.models import Model
 from keras.layers import Dense, Input
 
-
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.attributes import check_attr_true

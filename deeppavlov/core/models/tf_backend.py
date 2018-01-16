@@ -1,12 +1,14 @@
 import tensorflow as tf
 from abc import ABCMeta
 import functools
+from functools import wraps
 import types
 
 from six import with_metaclass
 
 
 def _graph_wrap(func, graph):
+    @wraps(func)
     def _wrapped(*args, **kwargs):
         with graph.as_default():
             try:
@@ -31,7 +33,8 @@ class TfModelMeta(with_metaclass(type, ABCMeta)):
             attr = getattr(obj, meth)
             # if callable(attr): # leads to an untraceable bug if an attribute
             # is initilaized via a class call, error doesn't raise
-            if isinstance(attr, (types.FunctionType, types.BuiltinFunctionType, functools.partial)):
+            # if isinstance(attr, (types.FunctionType, types.BuiltinFunctionType, functools.partial)):
+            if callable(attr):
                 setattr(obj, meth, _graph_wrap(attr, obj.graph))
         obj.__init__(*args, **kwargs)
         return obj

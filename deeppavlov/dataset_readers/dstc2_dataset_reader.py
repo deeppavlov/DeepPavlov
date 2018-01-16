@@ -7,7 +7,7 @@ You may obtain a copy of the License at
 
     http://www.apache.org/licenses/LICENSE-2.0
 
-Unless required by applicable law or agreed to in writing, software
+Unless required by applicable law or agreed to in writing, softwaredata
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
@@ -23,7 +23,7 @@ from overrides import overrides
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
-from deeppavlov.core.common import paths
+from deeppavlov.core.data.utils import download_untar, mark_done
 
 logger = logging.getLogger(__name__)
 
@@ -31,24 +31,30 @@ logger = logging.getLogger(__name__)
 @register('dstc2_datasetreader')
 class DSTC2DatasetReader(DatasetReader):
 
-    _train_fname = 'dstc2-trn.jsonlist'
-    _valid_fname = 'dstc2-val.jsonlist'
-    _test_fname = 'dstc2-tst.jsonlist'
+    url = 'http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz'
+
+    @staticmethod
+    def _data_fname(datatype):
+        assert datatype in ('trn', 'val', 'tst'), "wrong datatype name"
+        return 'dstc2-{}.jsonlist'.format(datatype)
 
     @overrides
     def read(self, data_path, dialogs=False):
-        def _path(dir_path, fname):
-            return Path(dir_path).joinpath(fname).as_posix()
+
+        required_files = (self._data_fname(dt) for dt in ('trn', 'val', 'tst'))
+        if not all(Path(data_path, f).exists() for f in required_files):
+            print('Loading dstc2 from `{}` to `{}`'.format(self.url, data_path))
+            download_untar(self.url, data_path)
+            mark_done(data_path)
 
         data = {
-            'train': self._read_from_file(_path(data_path, self._train_fname),
-                                          dialogs),
-            'valid': self._read_from_file(_path(data_path, self._valid_fname),
-                                          dialogs),
-            'test': self._read_from_file(_path(data_path, self._test_fname),
-                                         dialogs)
+            'train': self._read_from_file(
+                Path(data_path, self._data_fname('trn')), dialogs),
+            'valid': self._read_from_file(
+                Path(data_path, self._data_fname('val')), dialogs),
+            'test': self._read_from_file(
+                Path(data_path, self._data_fname('tst')), dialogs)
         }
-        self.save_vocab(data, paths.USR_PATH / 'vocab.txt')
         return data
 
     @classmethod
@@ -123,12 +129,3 @@ class DSTC2DatasetReader(DatasetReader):
         if with_indices:
             return utterances, responses, dialog_indices
         return utterances, responses
-
-    @staticmethod
-    @overrides
-    def save_vocab(data, fpath):
-        with open(fpath, 'w') as f:
-            words = sorted(list(set(chain.from_iterable(
-                [turn[0]['text'].split()\
-                 for dt in ['train', 'test', 'valid'] for turn in data[dt]]))))
-            f.write(' '.join(words))
