@@ -87,6 +87,7 @@ class IntentDataset(Dataset):
             with open(Path(classes_file), 'w') as fin:
                 for i in range(len(self.classes)):
                     fin.write(self.classes[i] + '\n')
+
         if fields_to_merge is not None:
             if merged_field is not None:
                 print("Merging fields <<{}>> to new field <<{}>>".format(fields_to_merge,

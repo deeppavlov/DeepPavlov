@@ -9,7 +9,9 @@ The model is multi-class and multi-label that means each text of a dataset
 can belong to several classes or not belong to any one.
 
 Also there is presented pre-trained model for user intent classification for DSTC 2 dataset [CITE].
-Intents for user replies are being constructed by IntentDataset (`deeppavlov/datasets/intent_dataset.py`).
+DSTC 2 dataset does not initially contains information about intents, 
+therefore, `IntentDataset` (`deeppavlov/datasets/intent_dataset.py`) instance artificially extracts 
+intents for each user reply using information from acts and slots.
 Below several examples of intent construction are given:
 
 > System: "Hello, welcome to the Cambridge restaurant system. You can ask for restaurants by area, price range or food type. How may I help you?"
@@ -34,17 +36,10 @@ in `deeppavlov/run_model.py`, and then run
 ```
 python run_model.py 
 ```
-Now user can enter a text string and get a vector of probabilities to belong to each class (to contain an intent):
+Now user can enter a text string and get an intent (class a request belongs with):
 ```
 :: hey! I want cheap chinese restaurant
->> [  5.27572702e-04   7.23480759e-03   1.76249957e-03   1.09066057e-03
-   3.06853256e-03   3.45652481e-03   1.03214942e-03   5.49707853e-04
-   6.54116739e-03   2.15114257e-03   9.90729392e-01   6.34791562e-04
-   9.66436625e-01   2.64307763e-03   6.54205796e-04   8.30116624e-04
-   1.85919739e-03   2.43586794e-04   1.80137530e-03   1.55517610e-03
-   8.78513150e-04   9.00576240e-04   7.22794677e-04   1.37247320e-03
-   3.60768143e-04   5.41293994e-04   8.34978826e-04   3.10848374e-03
-   6.91671812e-06]
+>> ['inform_food' 'inform_pricerange']
 ```
 
 
@@ -72,20 +67,45 @@ Now user can enter a text string and get a vector of probabilities to belong to 
 | verbose             | parameter whether to print training information or not            |  (True, False)                                | bool    |
 | val_patience        | maximal number of validation loss increases before stop training  |   (0,∞)                                       |  int    |
 | classes_file        | file to save list of classes extracted from data                  | i.e "classes.txt"                             | str     |
-      
-
 
 ## Training model
 
-If one wants to train a model on some other data, please
+### Training on DSTC 2
 
-To train model the only action is to set parameter `train_now` to `True` in `config.json`,
- and set `model_path` to the directory where trained model will be saved. All other parameters of model 
- as well as fasttext model could be changed. Then training could be run in the same way:
- ```
+To train model again or with other parameters 
+ the only actions are to set parameter `train_now` to `True` in `config.json` and
+ set `model_path` to the directory where trained model will be saved (it will be created if does not exist). 
+ All other parameters of model as well as fasttext model could be changed. 
+ Then training could be run in the following way:
+```
 python run_model.py 
 ```
 
+### Training on other dataset
+
+Constructing intents from DSTC 2 makes `IntentDataset` a bit difficult, therefore, 
+another dataset reader `ClassificationDatasetReader` and dataset `ClassificationDataset` 
+ are also provided in `deeppavlov/dataset_readers` and `deeppavlov/datasets`.
+ 
+Training data files `train.csv`, `valid.csv` should be presented in the following form:
+
+| text         |class_0|class_1|class_2|class_3| ...|
+|------------- |:-----:|:-----:|:-----:|:-----:|:--:|
+| text_0       | 1     | 0     | 0     |0      |... |
+| text_1       | 0     | 0     | 1     |0      |... |
+| text_2       | 0     | 1     | 0     |0      |... |
+| text_3       | 1     | 0     | 1     |0      |... |
+| ...          | ...   | ...   | ...   |...    |... ||
+
+
+To train model the only actions are to set parameter `train_now` to `True` in `config.json`,
+ set `data_path` to the directory containing `train.csv`, `valid.csv`, and if necessary, `test.csv`,
+ set `model_path` to the directory where trained model will be saved. 
+ All other parameters of model as well as fasttext model could be changed. 
+ Then training could be run in the same way:
+ ```
+python run_model.py 
+```
 
 ## Comparison
 
