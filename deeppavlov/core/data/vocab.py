@@ -113,7 +113,9 @@ class DefaultVocabulary(Trainable, Inferable):
         return [self.__getitem__(s) for s in samples]
 
     def save(self):
-        with open(self.model_path_, 'wt') as f:
+        self.model_path_.parent.mkdir(parents=True, exist_ok=True)
+        print("[saving vocabulary to `{}`]".format(self.model_path_))
+        with self.model_path_.open('wt') as f:
             for n in range(len(self._t2i)):
                 token = self._i2t[n]
                 cnt = self.freqs[token]
@@ -121,9 +123,9 @@ class DefaultVocabulary(Trainable, Inferable):
 
     @check_path_exists()
     def load(self):
-        print("Loading vocabulary from `{}`".format(self.model_path_.absolute()))
+        print("[loading vocabulary from `{}`]".format(self.model_path_))
         tokens, counts = [], []
-        for ln in open(self.model_path_, 'r'):
+        for ln in self.model_path_.open('r'):
             token, cnt = ln.split('\t', 1)
             tokens.append(token)
             counts.append(int(cnt))
