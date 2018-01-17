@@ -232,13 +232,16 @@ class KerasIntentModel(KerasModel):
 
     def infer(self, data, return_proba=False, *args):
         """
-        Method returns predictions on the given data
+        Method infers on the given data
         Args:
-            data: sentence or list of sentences
+            data: single sentence or list of sentences or generator of sentences
+            return_proba: whether to return probabilities distribution or only labels-predictions
             *args:
 
         Returns:
-            Predictions for the given data
+            for each sentence:
+                vector of probabilities to belong with each class
+                or list of labels sentence belongs with
         """
         if type(data) is str:
             features = self.texts2vec([data])
