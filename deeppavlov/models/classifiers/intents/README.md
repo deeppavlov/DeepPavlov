@@ -77,6 +77,8 @@ Now user can enter a text string and get a vector of probabilities to belong to 
 
 ## Training model
 
+If one wants to train a model on some other data, please
+
 To train model the only action is to set parameter `train_now` to `True` in `config.json`,
  and set `model_path` to the directory where trained model will be saved. All other parameters of model 
  as well as fasttext model could be changed. Then training could be run in the same way:
