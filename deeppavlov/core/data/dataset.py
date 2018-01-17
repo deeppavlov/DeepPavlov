@@ -34,24 +34,25 @@ class Dataset:
             'all': self.train + self.test + self.valid
         }
 
-    def batch_generator(self, batch_size: int, data_type: str = 'train') -> Generator:
+    def batch_generator(self, batch_size: int, data_type: str = 'train', shuffle: bool = True) -> Generator:
         r"""This function returns a generator, which serves for generation of raw (no preprocessing such as tokenization)
          batches
         Args:
             batch_size (int): number of samples in batch
             data_type (str): can be either 'train', 'test', or 'valid'
+            shuffle (bool): whether to shuffle dataset before batching
         Returns:
             batch_gen (Generator): a generator, that iterates through the part (defined by data_type) of the dataset
         """
         data = self.data[data_type]
         data_len = len(data)
         order = list(range(data_len))
-
-        rs = random.getstate()
-        random.setstate(self.random_state)
-        random.shuffle(order)
-        self.random_state = random.getstate()
-        random.setstate(rs)
+        if shuffle:
+            rs = random.getstate()
+            random.setstate(self.random_state)
+            random.shuffle(order)
+            self.random_state = random.getstate()
+            random.setstate(rs)
 
         for i in range((data_len - 1) // batch_size + 1):
             yield list(zip(*[data[o] for o in order[i * batch_size:(i + 1) * batch_size]]))
