@@ -11,11 +11,11 @@
   "model": {
     "name": "dstc_slotfilling",
     "train_now": true,
-    "model_path": "models/ner/model/",
+    "model_dir": "model",
+    "model_file": "dstc_ner_model",
     "ner_network": {
       "name": "ner_tagging_network",
       "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
-      "model_path": "models/ner/model/",
       "verbouse": true,
       "filter_width": 7,
       "embeddings_dropout": true,
@@ -35,21 +35,21 @@
         "name": "default_vocab",
         "inputs": ["x"],
 		"level": "token",
-        "model_dir": "data/dstc2",
+        "model_dir": "model/",
 		"model_file": "token.dict"
       },
     "tag_vocab": {
         "name": "default_vocab",
         "inputs": ["y"],
 		"level": "token",
-        "model_dir": "data/dstc2",
+        "model_dir": "model/",
 		"model_file": "tag.dict"
       },
     "char_vocab":{
         "name": "default_vocab",
         "inputs": ["x"],
 		"level": "char",
-        "model_dir": "data/dstc2",
+        "model_dir": "model/",
 		"model_file": "char.dict"
       }
   },
