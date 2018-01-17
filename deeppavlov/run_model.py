@@ -20,7 +20,7 @@ from deeppavlov.core.commands.utils import set_usr_dir
 # NER
 # models/ner/config.json
 
-MODEL_CONFIG_PATH = 'models/ner/config.json'
+MODEL_CONFIG_PATH = 'models/classifiers/intents/config.json'
 usr_dir = set_usr_dir(MODEL_CONFIG_PATH)
 try:
     train_model_from_config(MODEL_CONFIG_PATH)

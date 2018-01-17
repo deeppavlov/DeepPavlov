@@ -58,7 +58,6 @@ class KerasIntentModel(KerasModel):
         else:
             self.add_metrics = None
 
-        self.opt['fasttext_md5'] = None
         self.fasttext_model = embedder
         self.opt['embedding_size'] = self.fasttext_model.dim
         current_fasttext_md5 = md5_hashsum([self.fasttext_model.model_path])
