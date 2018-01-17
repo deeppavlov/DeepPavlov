@@ -24,7 +24,7 @@
       "kernel_sizes_cnn": "3 3 3",
       "filters_cnn": 512,
       "lear_metrics": "binary_accuracy fmeasure",
-      "confident_threshold": 0.5,
+      "confident_threshold": 0.3,
       "optimizer": "Adam",
       "lear_rate": 0.1,
       "lear_rate_decay": 0.1,

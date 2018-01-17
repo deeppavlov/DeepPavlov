@@ -1,4 +1,5 @@
 from pathlib import Path
+import inspect
 
 from typing import Dict, Type
 import numpy as np
@@ -16,7 +17,7 @@ from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.keras_model import KerasModel
 from deeppavlov.models.classifiers.intents import metrics as metrics_file
-from deeppavlov.models.classifiers.intents.utils import labels2onehot, log_metrics
+from deeppavlov.models.classifiers.intents.utils import labels2onehot, log_metrics, proba2labels
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.classifiers.intents.utils import md5_hashsum
 
@@ -129,7 +130,7 @@ class KerasIntentModel(KerasModel):
         """
         Method trains the model on the given batch
         Args:
-            batch - list of tuples (preprocessed text, labels)
+            batch - list of data where batch[0] is list of texts and batch[1] is list of labels
 
         Returns:
             loss and metrics values on the given batch
@@ -140,6 +141,30 @@ class KerasIntentModel(KerasModel):
         onehot_labels = labels2onehot(labels, classes=self.classes)
         metrics_values = self.model.train_on_batch(features, onehot_labels)
         return metrics_values
+
+    def infer_on_batch(self, batch):
+        """
+        Method infers the model on the given batch
+        Args:
+            batch - list of data where batch[0] is list of texts (and if given, batch[1] is list of labels)
+
+        Returns:
+            loss and metrics values on the given batch, if labels are given
+            predictions, otherwise
+        """
+        if self.opt['model_name']:
+            return self.infer_on_batch_tfidf(batch)
+        texts = list(batch[0])
+        if len(batch) == 2:
+            labels = list(batch[1])
+            features = self.texts2vec(texts)
+            onehot_labels = labels2onehot(labels, classes=self.classes)
+            metrics_values = self.model.test_on_batch(features, onehot_labels)
+            return metrics_values
+        else:
+            features = self.texts2vec(texts)
+            predictions = self.model.predict(features)
+            return predictions
 
     @check_attr_true('train_now')
     def train(self, dataset, *args, **kwargs):
@@ -205,7 +230,7 @@ class KerasIntentModel(KerasModel):
 
         self.save()
 
-    def infer(self, data, *args):
+    def infer(self, data, return_proba=False, *args):
         """
         Method returns predictions on the given data
         Args:
@@ -218,10 +243,27 @@ class KerasIntentModel(KerasModel):
         if type(data) is str:
             features = self.texts2vec([data])
             preds = self.model.predict_on_batch(features)[0]
-        else:
+            if return_proba:
+                return preds
+            else:
+                return proba2labels([preds], confident_threshold=self.confident_threshold, classes=self.classes)[0]
+
+        elif inspect.isgeneratorfunction(data):
+            preds = []
+            for step, batch in enumerate(data):
+                preds.extend(self.infer_on_batch(batch))
+                preds = np.array(preds)
+        elif type(data) is list:
             features = self.texts2vec(data)
             preds = self.model.predict_on_batch(features)
-        return preds
+        else:
+            raise ConfigError("Not understand data type for inference")
+
+        if return_proba:
+            return preds
+        else:
+            return proba2labels(preds, confident_threshold=self.confident_threshold, classes=self.classes)
+
 
     def cnn_model(self, params):
         """
