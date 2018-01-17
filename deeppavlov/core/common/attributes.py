@@ -1,6 +1,7 @@
 import os
 
 from typing import Type, Callable
+from functools import wraps
 
 from deeppavlov.core.common.errors import ConfigError
 
@@ -22,6 +23,7 @@ class abstract_attribute(object):
 
 def check_attr_true(attr: str):
     def _check_attr_true(f: Callable):
+        @wraps(f)
         def wrapped(self, *args, **kwargs):
             if getattr(self, attr):
                 return f(self, *args, **kwargs)
@@ -37,6 +39,7 @@ def check_attr_true(attr: str):
 
 def run_alt_meth_if_no_path(alt_f: Callable, attr: str):
     def _run_alt_meth(f):
+        @wraps(f)
         def wrapped(self, *args, **kwargs):
             if self.model_path_.exists():
                 if self.model_path_.is_file() or (
@@ -58,7 +61,8 @@ def run_alt_meth_if_no_path(alt_f: Callable, attr: str):
 
 
 def check_path_exists(path_type='file'):
-    def _chek_path_exists(f: Callable):
+    def _check_path_exists(f: Callable):
+        @wraps(f)
         def wrapped(self, *args, **kwargs):
             if path_type == 'file':
                 if self.model_path_.exists():
@@ -73,4 +77,4 @@ def check_path_exists(path_type='file'):
 
         return wrapped
 
-    return _chek_path_exists
+    return _check_path_exists
