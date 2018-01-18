@@ -7,7 +7,6 @@ Trainable and Inferable interfaces and make a pull-request to deeppavlov.
 from abc import abstractmethod
 
 import tensorflow as tf
-from pathlib import Path
 from overrides import overrides
 
 from deeppavlov.core.models.trainable import Trainable
@@ -17,7 +16,6 @@ from .tf_backend import TfModelMeta
 
 
 class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
-    # _saver = tf.train.Saver
 
     def __init__(self, *args, **kwargs):
         self.sess = None
