@@ -5,12 +5,11 @@ import numpy as np
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.attributes import check_path_exists, check_attr_true
 
 
 @register('default_vocab')
-class DefaultVocabulary(Trainable, Inferable, Serializable):
+class DefaultVocabulary(Trainable, Inferable):
     def __init__(self, inputs, level='token', model_path=None,
                  model_dir='vocabs', model_file='vocab.txt',
                  special_tokens=tuple(), default_token=None,
@@ -29,7 +28,6 @@ class DefaultVocabulary(Trainable, Inferable, Serializable):
         self.reset()
         if self.model_path.exists():
             self.load()
-        print('loaded')
 
     @staticmethod
     def _build_preprocess_fn(inputs, level, tokenize):
@@ -131,7 +129,7 @@ class DefaultVocabulary(Trainable, Inferable, Serializable):
 
     @check_path_exists()
     def load(self):
-    # NOTE: some bad things when dir of model does not exist
+        # NOTE: some bad things when dir of model does not exist
         print("[loading vocabulary from `{}`]".format(self.model_path))
         tokens, counts = [], []
         for ln in self.model_path.open('r'):
