@@ -13,8 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from pathlib import Path
-
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer
@@ -38,9 +36,6 @@ class HybridCodeNetworkModel(TFModel):
                          model_dir=model_dir,
                          model_file=model_file,
                          train_now=train_now)
-
-        if self.model_path:
-            self.model_path = str(Path(self.model_path) / self._model_file)
 
         # initialize parameters
         self._init_params()
