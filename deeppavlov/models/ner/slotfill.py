@@ -10,8 +10,9 @@ from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.models.ner.ner_network import NerNetwork
 from deeppavlov.core.data.utils import tokenize_reg
-from deeppavlov.core.data.utils import download
+from deeppavlov.core.data.utils import download, download_untar
 from deeppavlov.core.common.paths import USR_PATH
+
 
 
 
@@ -21,7 +22,9 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
                  ner_network: NerNetwork,
                  model_file='dstc_ner_model',
                  model_dir=None,
-                 epochs=10):
+                 epochs=10,
+                 download_best_model=False,
+                 ):
         if model_dir is None:
             model_dir = USR_PATH
         self._model_dir = model_dir
@@ -33,6 +36,10 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
             self._download_slot_vals(slot_vals_filepath)
 
         self._ner_network = ner_network
+        if download_best_model:
+            model_path = str(self.model_path_.parent.absolute())
+            best_model_url = 'http://lnsigo.mipt.ru/export/ner/ner_dstc_model.tar.gz'
+            download_untar(best_model_url, model_path)
         self.load()
         with open(slot_vals_filepath) as f:
             self._slot_vals = json.load(f)

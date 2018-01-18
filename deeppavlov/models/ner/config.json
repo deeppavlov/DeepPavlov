@@ -10,8 +10,9 @@
   },
   "model": {
     "name": "dstc_slotfilling",
+    "download_best_model": true,
     "train_now": true,
-    "epochs": 10,
+    "epochs": 5,
     "model_dir": "model",
     "model_file": "dstc_ner_model",
     "ner_network": {
