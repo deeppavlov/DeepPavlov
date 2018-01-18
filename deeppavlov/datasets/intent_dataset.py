@@ -92,7 +92,7 @@ class IntentDataset(Dataset):
             if merged_field is not None:
                 print("Merging fields <<{}>> to new field <<{}>>".format(fields_to_merge,
                                                                          merged_field))
-                self._merge_data(fields_to_merge=fields_to_merge.split(' '),
+                self._merge_data(fields_to_merge=fields_to_merge,
                                  merged_field=merged_field)
             else:
                 raise IOError("Given fields to merge BUT not given name of merged field")
@@ -102,9 +102,9 @@ class IntentDataset(Dataset):
                 print("Splitting field <<{}>> to new fields <<{}>>".format(field_to_split,
                                                                            split_fields))
                 self._split_data(field_to_split=field_to_split,
-                                 split_fields=split_fields.split(" "),
+                                 split_fields=split_fields,
                                  split_proportions=[float(s) for s in
-                                                    split_proportions.split(" ")])
+                                                    split_proportions])
             else:
                 raise IOError("Given field to split BUT not given names of split fields")
 

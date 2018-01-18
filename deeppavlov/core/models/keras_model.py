@@ -84,7 +84,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         else:
             raise AttributeError("Loss {} is not defined".format(loss_name))
 
-        metrics_names = metrics_names.split(' ')
+        metrics_names = metrics_names
         metrics_funcs = []
         for i in range(len(metrics_names)):
             metrics_func = getattr(keras.metrics, metrics_names[i], None)
@@ -168,7 +168,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         else:
             raise AttributeError("Loss {} is not defined".format(loss_name))
 
-        metrics_names = metrics_names.split(' ')
+        metrics_names = metrics_names
         metrics_funcs = []
         for i in range(len(metrics_names)):
             metrics_func = getattr(keras.metrics, metrics_names[i], None)

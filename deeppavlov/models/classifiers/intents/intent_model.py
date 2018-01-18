@@ -54,7 +54,7 @@ class KerasIntentModel(KerasModel):
         self.n_classes = self.classes.shape[0]
         self.confident_threshold = self.opt['confident_threshold']
         if 'add_metrics' in self.opt.keys():
-            self.add_metrics = self.opt['add_metrics'].split()
+            self.add_metrics = self.opt['add_metrics']
             self.add_metrics_values = len(self.add_metrics) * [0.]
         else:
             self.add_metrics = None
@@ -277,8 +277,6 @@ class KerasIntentModel(KerasModel):
         Returns:
             Uncompiled model
         """
-        if type(self.opt['kernel_sizes_cnn']) is str:
-            self.opt['kernel_sizes_cnn'] = list(map(int, self.opt['kernel_sizes_cnn'].split()))
 
         inp = Input(shape=(params['text_size'], params['embedding_size']))
 
@@ -317,8 +315,6 @@ class KerasIntentModel(KerasModel):
         Returns:
             Uncompiled model
         """
-        if type(self.opt['kernel_sizes_cnn']) is str:
-            self.opt['kernel_sizes_cnn'] = list(map(int, self.opt['kernel_sizes_cnn'].split()))
 
         if type(self.opt['filters_cnn']) is str:
             self.opt['filters_cnn'] = list(map(int, self.opt['filters_cnn'].split()))
