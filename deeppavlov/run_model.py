@@ -20,8 +20,6 @@ from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 # NER
 # models/ner/config.json
 
-# usr_dir = None
-
 try:
     MODEL_CONFIG_PATH = 'skills/hcn_new/config.json'
     set_usr_dir(MODEL_CONFIG_PATH)
