@@ -81,7 +81,10 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
         print('model saved')
 
     def get_checkpoint_state(self):
-        return tf.train.get_checkpoint_state(self.model_path.parent)
+        if self.model_path.is_dir():
+            return tf.train.get_checkpoint_state(self.model_path)
+        else:
+            return tf.train.get_checkpoint_state(self.model_path.parent)
 
     @check_path_exists('dir')
     @overrides

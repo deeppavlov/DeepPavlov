@@ -25,7 +25,6 @@ from deeppavlov.models.classifiers.intents.utils import md5_hashsum
 class KerasIntentModel(KerasModel):
     def __init__(self,
                  opt: Dict,
-                 model_path=None, model_dir=None, model_file=None, train_now=False,
                  embedder: Type = FasttextEmbedder,
                  *args, **kwargs):
         """
@@ -35,8 +34,7 @@ class KerasIntentModel(KerasModel):
             *args:
             **kwargs:
         """
-        super().__init__(opt, model_path=model_path, model_dir=model_dir, model_file=model_file,
-                         train_now=train_now)
+        super().__init__(opt, *args, **kwargs)
 
         try:
             classes_file = self.opt['classes_file']
@@ -72,7 +70,7 @@ class KerasIntentModel(KerasModel):
                   "metrics_names": self.opt['lear_metrics'],
                   "add_metrics_file": metrics_file}
 
-        self.model = self.load(**params, fname=self.model_path)
+        self.model = self.load(**params)
 
         # Check if md5 hash sum of current loaded fasttext model
         # is equal to saved

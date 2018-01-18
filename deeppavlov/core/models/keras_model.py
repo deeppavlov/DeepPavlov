@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from pathlib import Path
 
 import tensorflow as tf
 import keras.metrics
@@ -14,7 +15,6 @@ from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.file import save_json, read_json
-from deeppavlov.core.common.attributes import run_alt_meth_if_no_path
 from deeppavlov.core.common.errors import ConfigError
 
 
@@ -33,7 +33,16 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
             **kwargs:
         """
         self.opt = opt
-        super().__init__(*args, **kwargs)
+        model_path = self.opt.get('model_path', None)
+        model_dir = self.opt.get('model_dir', 'intents')
+        model_file = self.opt.get('model_file', 'intent_cnn')
+        train_now = self.opt.get('train_now', False)
+
+        super().__init__(model_path=model_path,
+                         model_dir=model_dir,
+                         model_file=model_file,
+                         train_now=train_now)
+
         self.sess = self._config_session()
         K.set_session(self.sess)
 
@@ -108,16 +117,14 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                       target_tensors=target_tensors)
         return model
 
-    @run_alt_meth_if_no_path(init_model_from_scratch, 'train_now')
     @overrides
-    def load(self, model_name, fname, optimizer_name,
+    def load(self, model_name, optimizer_name,
              lr, decay, loss_name, metrics_names=None, add_metrics_file=None, loss_weights=None,
              sample_weight_mode=None, weighted_metrics=None, target_tensors=None):
         """
         Method initiliazes model from saved params and weights
         Args:
             model_name: name of model function described as a method of this class
-            fname: path and first part of name of model
             optimizer_name: name of optimizer from keras.optimizers
             lr: learning rate
             decay: learning rate decay
@@ -135,19 +142,16 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         """
         print('___Initializing model from saved___'
               '\nModel weights file is %s.h5'
-              '\nNetwork parameters are from %s_opt.json' % (fname, fname))
+              '\nNetwork parameters are from %s_opt.json' % (self._model_file, self._model_file))
 
-        fname = self.model_path.name
-        opt_fname = str(fname) + '_opt.json'
-        weights_fname = str(fname) + '.h5'
-
-        opt_path = self.model_path.joinpath(opt_fname)
-        weights_path = self.model_path.joinpath(weights_fname)
+        opt_path = Path(str(self.model_path) + '_opt.json')
+        weights_path = str(self.model_path) + '.h5'
 
         if opt_path.is_file():
             self.opt = read_json(opt_path)
         else:
-            raise ConfigError("Error: config file %s_opt.json of saved model does not exist" % fname)
+            raise ConfigError(
+                "Error: config file %s_opt.json of saved model does not exist" % self._model_file)
 
         model_func = getattr(self, model_name, None)
         if callable(model_func):
@@ -155,7 +159,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         else:
             raise AttributeError("Model {} is not defined".format(model_name))
 
-        print("Loading weights from `{}`".format(fname + '.h5'))
+        print("Loading weights from `{}{}`".format(self._model_file, '.h5'))
         model.load_weights(weights_path)
 
         optimizer_func = getattr(keras.optimizers, optimizer_name, None)
@@ -218,7 +222,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         pass
 
     @overrides
-    def save(self, fname=None):
+    def save(self):
         """
         Method saves the model parameters into <<fname>>_opt.json (or <<model_file>>_opt.json)
         and model weights into <<fname>>.h5 (or <<model_file>>.h5)
@@ -228,12 +232,9 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         Returns:
             nothing
         """
-        fname = self.model_path.name if fname is None else fname
-        opt_fname = str(fname) + '_opt.json'
-        weights_fname = str(fname) + '.h5'
 
-        opt_path = self.model_path.joinpath(opt_fname)
-        weights_path = self.model_path.joinpath(weights_fname)
+        opt_path = str(self.model_path) + '_opt.json'
+        weights_path = str(self.model_path) + '.h5'
         print("[ saving model: {} ]".format(opt_path))
         self.model.save_weights(weights_path)
 

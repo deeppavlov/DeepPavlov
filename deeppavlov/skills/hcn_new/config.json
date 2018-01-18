@@ -43,15 +43,13 @@
     }
   },
   "model": {
-    "train_now": true,
     "name": "hcn_new",
-    "debug": 1,
+    "debug": 0,
     "num_epochs": 1,
     "template_path": "../data/dstc2/dstc2-templates.txt",
     "network": {
+      "model_path": "/media/olga/Data/projects/iPavlov/Pilot/deeppavlov/USR_DIR/hcn_rnn",
       "name": "custom_rnn",
-      "model_dir": "hcn_rnn",
-      "model_file": "model",
       "learning_rate": 0.03,
       "hidden_dim": 128,
       "obs_size": 831,

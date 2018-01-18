@@ -28,8 +28,8 @@ class HybridCodeNetworkModel(TFModel):
         self.opt = params
 
         model_path = self.opt.get('model_path', None)
-        model_dir = self.opt.get('model_dir', '')
-        model_file = self.opt.get('model_file', None)
+        model_dir = self.opt.get('model_dir', 'hcn_rnn')
+        model_file = self.opt.get('model_file', 'model')
         train_now = self.opt.get('train_now', False)
 
         super().__init__(model_path=model_path,
