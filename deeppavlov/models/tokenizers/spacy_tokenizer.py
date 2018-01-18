@@ -26,6 +26,7 @@ class SpacyTokenizer(Inferable):
 
     def __init__(self, *args, **kwargs):
         self.NLP = spacy.load('en')
+        super().__init__(*args, **kwargs)
 
     def _tokenize(self, text, **kwargs):
         """Tokenize with spacy, placing service words as individual tokens."""
