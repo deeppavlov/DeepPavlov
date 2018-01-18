@@ -20,6 +20,7 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
     # _saver = tf.train.Saver
 
     def __init__(self, *args, **kwargs):
+        self.sess = None
         self._saver = tf.train.Saver
         super().__init__(*args, **kwargs)
 
@@ -82,7 +83,7 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
         print('model saved')
 
     def get_checkpoint_state(self):
-        return tf.train.get_checkpoint_state(Path(self.model_path).parent)
+        return tf.train.get_checkpoint_state(self.model_path.parent)
 
     @check_path_exists('dir')
     @overrides
