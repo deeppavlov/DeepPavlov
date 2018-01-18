@@ -14,20 +14,34 @@
 
 
 import nltk
+
 from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.common.registry import register
 
+@register("nltk_tokenizer")
+class NLTKTokenizer(Inferable):
 
-def NLTKTokenizer(Inferable):
+    def __init__(self):
+        super().__init__()
+        nltk.download()
 
-    def infer(self, batch, tokenizer="word_tokenize"):
-        tokenized_batch = []
+    def infer(self, instance, tokenizer="word_tokenize", *args, **kwargs):
+        if type(instance) is str:
+            tokenizer_ = getattr(nltk.tokenize, tokenizer, None)
+            if callable(tokenizer_):
+                return " ".join(nltk.tokenize.wordpunct_tokenize(instance))
+            else:
+                raise AttributeError("Tokenizer %s is not defined in nltk.tokenizer" % tokenizer)
 
-        tokenizer_ = getattr(nltk.tokenize, tokenizer, None)
-        if callable(tokenizer_):
-            for text in batch:
-                tokenized_batch = " ".join(nltk.tokenize.wordpunct_tokenize(text))
-            return tokenized_batch
-        else:
-            raise AttributeError("Tokenizer %s is not defined in nltk.tokenizer" % tokenizer)
+        elif type(instance) is list:
+            tokenized_batch = []
+
+            tokenizer_ = getattr(nltk.tokenize, tokenizer, None)
+            if callable(tokenizer_):
+                for text in instance:
+                    tokenized_batch.append(" ".join(nltk.tokenize.wordpunct_tokenize(text)))
+                return tokenized_batch
+            else:
+                raise AttributeError("Tokenizer %s is not defined in nltk.tokenizer" % tokenizer)
 
 
