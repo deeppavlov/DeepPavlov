@@ -53,7 +53,7 @@ def main(config_name='config_infer.json'):
     test_preds = []
     test_true = []
     for test_id, test_batch in enumerate(test_batch_gen):
-        test_preds.extend(model.infer(test_batch[0]))
+        test_preds.extend(model.infer(test_batch[0], ))
         test_true.extend(labels2onehot(test_batch[1], model.classes))
         if model.opt['show_examples'] and test_id == 0:
             for j in range(model.opt['batch_size']):

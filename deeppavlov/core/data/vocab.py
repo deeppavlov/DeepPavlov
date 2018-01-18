@@ -93,7 +93,7 @@ class DefaultVocabulary(Trainable, Inferable):
             self.freqs[token] += 0
 
     @check_attr_true('train_now')
-    def train(self, data):
+    def train(self, data, **kwargs):
         self.reset()
         self._train(
             tokens=filter(None, itertools.chain.from_iterable(
@@ -116,7 +116,7 @@ class DefaultVocabulary(Trainable, Inferable):
                 index += 1
             self.freqs[token] += cnt
 
-    def infer(self, samples):
+    def infer(self, samples, **kwargs):
         return [self.__getitem__(s) for s in samples]
 
     def save(self):

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from typing import Dict, Type
+from typing import Dict
 import numpy as np
 from keras.layers import Dense, Input, concatenate, Activation
 from keras.layers.convolutional import Conv1D
@@ -25,8 +25,8 @@ from deeppavlov.models.classifiers.intents.utils import md5_hashsum
 class KerasIntentModel(KerasModel):
     def __init__(self,
                  opt: Dict,
+                 embedder: FasttextEmbedder,
                  model_path=None, model_dir=None, model_file=None, train_now=False,
-                 embedder: Type = FasttextEmbedder,
                  *args, **kwargs):
         """
         Method initializes model using parameters from opt
@@ -39,12 +39,12 @@ class KerasIntentModel(KerasModel):
                          train_now=train_now)
 
         try:
-            classes_file = self.opt['classes_file']
+            classes_file = Path(self.opt['classes_file'])
         except KeyError:  # if no classes path is passed in json
             classes_file = Path(paths.USR_PATH).joinpath('intents', 'classes.txt')
 
         try:
-            with open(str(classes_file)) as fin:
+            with classes_file.open() as fin:
                 self.classes = np.array(fin.read().split("\n"))
 
         except FileNotFoundError:
