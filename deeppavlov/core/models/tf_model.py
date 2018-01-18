@@ -8,6 +8,8 @@ from abc import abstractmethod
 
 import tensorflow as tf
 from overrides import overrides
+from collections import defaultdict
+import numpy as np
 
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
@@ -98,4 +100,51 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
 
 
 class SimpleTFModel(Trainable, Inferable, metaclass=TfModelMeta):
-    pass
+    def train_on_batch(self, batch_x, batch_y):
+        """ Perform single update of trainable parameters given a batch of samples
+
+        Args:
+            batch_x: a list of input parameters or a single
+                 input parameter (all are tensors ready to fed
+                 to the network)
+            batch_y: a lit of output parameters or a single output parameter
+
+        Returns:
+            loss: scalar loss for this batch before update of the parameters
+
+        """
+        pass
+
+    def save(self, model_file_path):
+        """
+        Save model to model_file_path
+        """
+        print('Saving model to {}'.format(model_file_path))
+        saver = tf.train.Saver()
+        saver.save(self._sess, str(model_file_path))
+
+    def load(self, model_file_path):
+        """
+        Load model from the model_file_path
+        """
+        print('Loading model from {}'.format(model_file_path))
+        saver = tf.train.Saver()
+        saver.restore(self._sess, str(model_file_path))
+
+    @staticmethod
+    def print_number_of_parameters():
+        """
+        Print number of *trainable* parameters in the network
+        """
+        print('Number of parameters: ')
+        vars = tf.trainable_variables()
+        blocks = defaultdict(int)
+        for var in vars:
+            # Get the top level scope name of variable
+            block_name = var.name.split('/')[0]
+            number_of_parameters = np.prod(var.get_shape().as_list())
+            blocks[block_name] += number_of_parameters
+        for block_name in blocks:
+            print(block_name, blocks[block_name])
+        total_num_parameters = np.sum(list(blocks.values()))
+        print('Total number of parameters equal {}'.format(total_num_parameters))

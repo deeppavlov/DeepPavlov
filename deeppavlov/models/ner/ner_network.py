@@ -171,14 +171,6 @@ class NerNetwork(SimpleTFModel):
         self._mask = mask_ph
         sess.run(tf.global_variables_initializer())
 
-    def save(self, model_file_path):
-        saver = tf.train.Saver()
-        saver.save(self._sess, str(model_file_path))
-
-    def load(self, model_file_path):
-        saver = tf.train.Saver()
-        saver.restore(self._sess, str(model_file_path))
-
     def tokens_batch_to_numpy_batch(self, batch_x, batch_y=None):
         # Determine dimensions
         batch_size = len(batch_x)
@@ -208,40 +200,43 @@ class NerNetwork(SimpleTFModel):
         return (x_token, x_char, mask), y
 
     def eval_conll(self, data, print_results=True, short_report=True, data_type=None):
-            y_true_list = []
-            y_pred_list = []
-            if data_type is not None:
-                print('Eval on {}:'.format(data_type))
-            for x, y_gt in data:
-                (x_token, x_char, mask), y = self.tokens_batch_to_numpy_batch([x])
-                y_pred = self.predict(x_token, x_char, mask)
-                y_pred = self.tag_vocab.batch_idxs2batch_toks(y_pred)
-                for tags_pred, tags_gt in zip(y_pred, [y_gt]):
-                    for tag_predicted, tag_ground_truth in zip(tags_pred, tags_gt):
-                        y_true_list.append(tag_ground_truth)
-                        y_pred_list.append(tag_predicted)
-                    y_true_list.append('O')
-                    y_pred_list.append('O')
-            return precision_recall_f1(y_true_list,
-                                       y_pred_list,
-                                       print_results,
-                                       short_report)
+        y_true_list = []
+        y_pred_list = []
+        if data_type is not None:
+            print('Eval on {}:'.format(data_type))
+        for x, y_gt in data:
+            (x_token, x_char, mask), y = self.tokens_batch_to_numpy_batch([x])
+            y_pred = self.predict(x_token, x_char, mask)
+            y_pred = self.tag_vocab.batch_idxs2batch_toks(y_pred)
+            for tags_pred, tags_gt in zip(y_pred, [y_gt]):
+                for tag_predicted, tag_ground_truth in zip(tags_pred, tags_gt):
+                    y_true_list.append(tag_ground_truth)
+                    y_pred_list.append(tag_predicted)
+                y_true_list.append('O')
+                y_pred_list.append('O')
+        return precision_recall_f1(y_true_list,
+                                   y_pred_list,
+                                   print_results,
+                                   short_report)
 
     def train(self, data, batch_size=8):
         total_loss = 0
         total_count = 0
         for batch_x, batch_y in data.batch_generator(batch_size):
             (x_toks, x_char, mask), y_tags = self.tokens_batch_to_numpy_batch(batch_x, batch_y)
-            current_loss = self.train_on_bath(x_toks,
-                                              x_char,
-                                              mask,
-                                              y_tags,
-                                              learning_rate=1e-3,
-                                              dropout_rate=0.5)
+            current_loss = self.train_on_batch((x_toks,
+                                                x_char,
+                                                mask
+                                                ),
+                                               y_tags,
+                                               learning_rate=1e-3,
+                                               dropout_rate=0.5)
             total_loss += current_loss
             total_count += len(batch_x)
 
-    def train_on_bath(self, x_word, x_char, mask, y_tag, learning_rate=1e-3, dropout_rate=0.5):
+    def train_on_batch(self, x, y, learning_rate=1e-3, dropout_rate=0.5):
+        x_word, x_char, mask = x
+        y_tag = y
         feed_dict = self._fill_feed_dict(x_word,
                                          x_char,
                                          mask,
@@ -251,21 +246,6 @@ class NerNetwork(SimpleTFModel):
                                          training=True)
         loss, _ = self._sess.run([self._loss, self._train_op], feed_dict=feed_dict)
         return loss
-
-    @staticmethod
-    def print_number_of_parameters():
-        print('Number of parameters: ')
-        vars = tf.trainable_variables()
-        blocks = defaultdict(int)
-        for var in vars:
-            # Get the top level scope name of variable
-            block_name = var.name.split('/')[0]
-            number_of_parameters = np.prod(var.get_shape().as_list())
-            blocks[block_name] += number_of_parameters
-        for block_name in blocks:
-            print(block_name, blocks[block_name])
-        total_num_parameters = np.sum(list(blocks.values()))
-        print('Total number of parameters equal {}'.format(total_num_parameters))
 
     def fit(self, batch_gen=None, batch_size=32, learning_rate=1e-3, epochs=1, dropout_rate=0.5, learning_rate_decay=1):
         for epoch in range(epochs):
