@@ -1,11 +1,11 @@
 {
   "model": {
     "name": "spelling_error_model",
-    "model_name": "error_model_en",
+    "model_file": "error_model_en.tsv",
     "window": 1,
     "train_now": true,
     "dictionary": {
-      "name": "wikipedia_100K_vocab"
+      "name": "wikitionary_100K_vocab"
     }
   },
   "dataset_reader": {

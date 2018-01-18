@@ -5,11 +5,12 @@ from heapq import heappop, heappushpop, heappush
 from math import log, exp
 
 import kenlm
+from tqdm import tqdm
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.vocabs.static_dictionary import StaticDictionary
+from deeppavlov.vocabs.typos import StaticDictionary
 from deeppavlov.core.common.attributes import check_attr_true, check_path_exists
 
 
@@ -172,9 +173,8 @@ class ErrorModel(Inferable, Trainable):
         changes = []
         entries = []
         dataset = list(dataset.iter_all())
-        n = len(dataset)
         window = 4
-        for i, (error, correct) in enumerate(dataset):
+        for error, correct in tqdm(dataset, desc='Training the error model'):
             correct = '⟬{}⟭'.format(correct)
             error = '⟬{}⟭'.format(error)
             d, ops = self._distance_edits(correct, error)
@@ -189,8 +189,6 @@ class ErrorModel(Inferable, Trainable):
 
                 entries += [op[0] for op in ops]
                 changes += [op for op in ops]
-            if i % 1500 == 0:
-                print('{} out of {}'.format(i + 1, n))
 
         e_count = Counter(entries)
         c_count = Counter(changes)

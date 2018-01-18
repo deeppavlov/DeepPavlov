@@ -1,3 +1,5 @@
+import sys
+
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import REGISTRY
 from deeppavlov.core.commands.infer import build_agent_from_config
@@ -29,7 +31,7 @@ def train_agent_models(config_path: str):
             model = from_params(REGISTRY[model_name], model_config)
             model.train(dataset)
         else:
-            print('Model {} is not an instance of Trainable, skip training.'.format(model_name))
+            print('Model {} is not an instance of Trainable, skip training.'.format(model_name), file=sys.stderr)
 
 
 def train_model_from_config(config_path: str):
