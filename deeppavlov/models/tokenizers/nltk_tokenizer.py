@@ -21,9 +21,10 @@ from deeppavlov.core.common.registry import register
 @register("nltk_tokenizer")
 class NLTKTokenizer(Inferable):
 
-    def __init__(self,  tokenizer="wordpunct_tokenize", *args, **kwargs):
+    def __init__(self, download=False, tokenizer="wordpunct_tokenize", *args, **kwargs):
         super().__init__()
-        nltk.download()
+        if download:
+            nltk.download()
         self.tokenizer = getattr(nltk.tokenize, tokenizer, None)
         if not callable(self.tokenizer):
             raise AttributeError("Tokenizer {} is not defined in nltk.tokenizer".format(tokenizer))

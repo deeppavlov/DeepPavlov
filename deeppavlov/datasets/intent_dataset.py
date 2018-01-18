@@ -29,11 +29,10 @@ from deeppavlov.models.preprocessors.preprocessors import PREPROCESSORS
 @register('intent_dataset')
 class IntentDataset(Dataset):
     def __init__(self, data,
-                 seed=None, extract_classes=True, classes_file=None,
+                 seed=None,
                  fields_to_merge=None, merged_field=None,
                  field_to_split=None, split_fields=None, split_proportions=None,
                  prep_method_name: str = None,
-                 dataset_path=None, dataset_dir='intents', dataset_file='classes.txt',
                  *args, **kwargs):
 
         super().__init__(data, seed)
@@ -68,26 +67,6 @@ class IntentDataset(Dataset):
 
         self.data = new_data
 
-        if extract_classes:
-            self.classes = self._extract_classes()
-            if classes_file is None:
-                if dataset_path is None:
-                    ser_dir = Path(paths.USR_PATH).joinpath(dataset_dir)
-                    if not ser_dir.exists():
-                        ser_dir.mkdir()
-                    classes_file = Path(paths.USR_PATH).joinpath(dataset_dir, dataset_file)
-                else:
-                    ser_dir = Path(dataset_path).joinpath(dataset_dir)
-                    if not ser_dir.exists():
-                        ser_dir.mkdir()
-                    classes_file = ser_dir.joinpath(dataset_file)
-
-            print("No file name for classes provided. Classes are saved to file {}".format(
-                classes_file))
-            with open(Path(classes_file), 'w') as fin:
-                for i in range(len(self.classes)):
-                    fin.write(self.classes[i] + '\n')
-
         if fields_to_merge is not None:
             if merged_field is not None:
                 print("Merging fields <<{}>> to new field <<{}>>".format(fields_to_merge,
@@ -112,18 +91,6 @@ class IntentDataset(Dataset):
 
         if prep_method_name:
             self.data = self.preprocess(PREPROCESSORS[prep_method_name])
-
-    def _extract_classes(self):
-        intents = []
-        all_data = self.iter_all(data_type='train')
-        for sample in all_data:
-            intents.extend(sample[1])
-        if 'valid' in self.data.keys():
-            all_data = self.iter_all(data_type='valid')
-            for sample in all_data:
-                intents.extend(sample[1])
-        intents = np.unique(intents)
-        return np.array(sorted(intents))
 
     def _split_data(self, field_to_split, split_fields, split_proportions):
         data_to_div = self.data[field_to_split].copy()

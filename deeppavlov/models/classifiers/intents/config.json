@@ -5,24 +5,48 @@
   },
   "dataset": {
     "name": "intent_dataset",
-    "prep_method_name": "simple_prep",
     "seed": 42,
-    "extract_classes": true,
-    "fields_to_merge": ["train", "valid"],
+    "fields_to_merge": [
+      "train",
+      "valid"
+    ],
     "merged_field": "train",
     "field_to_split": "train",
-    "split_fields": ["train", "valid"],
-    "split_proportions": [0.9, 0.1]
+    "split_fields": [
+      "train",
+      "valid"
+    ],
+    "split_proportions": [
+      0.9,
+      0.1
+    ]
+  },
+  "vocabs": {
+    "classes_vocab": {
+      "name": "default_vocab",
+      "inputs": [
+        "y"
+      ],
+      "level": "token",
+      "model_path": "../data/dstc2/classes.txt",
+      "train_now": true
+    }
   },
   "model": {
     "name": "intent_model",
     "train_now": true,
     "model_path": "./models/classifiers/intents/intent_cnn_best",
     "opt": {
-      "classes_file": "../data/dstc2/classes.txt",
-      "kernel_sizes_cnn": [3, 3, 3],
+      "kernel_sizes_cnn": [
+        3,
+        3,
+        3
+      ],
       "filters_cnn": 512,
-      "lear_metrics": ["binary_accuracy", "fmeasure"],
+      "lear_metrics": [
+        "binary_accuracy",
+        "fmeasure"
+      ],
       "confident_threshold": 0.3,
       "optimizer": "Adam",
       "lear_rate": 0.1,
@@ -42,7 +66,7 @@
     },
     "embedder": {
       "name": "fasttext",
-      "model_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
+      "model_path": "../data/dstc2_fasttext_model_100.bin",
       "emb_module": "fasttext",
       "dim": 100
     },

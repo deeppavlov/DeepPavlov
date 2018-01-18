@@ -1,4 +1,3 @@
-from pathlib import Path
 import inspect
 
 from typing import Dict, Type
@@ -12,7 +11,6 @@ from keras.models import Model
 from keras.regularizers import l2
 
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common import paths
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.keras_model import KerasModel
@@ -20,14 +18,16 @@ from deeppavlov.models.classifiers.intents import metrics as metrics_file
 from deeppavlov.models.classifiers.intents.utils import labels2onehot, log_metrics, proba2labels
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.classifiers.intents.utils import md5_hashsum
-
+from deeppavlov.models.tokenizers.nltk_tokenizer import NLTKTokenizer
 
 @register('intent_model')
 class KerasIntentModel(KerasModel):
     def __init__(self,
+                 vocabs,
                  opt: Dict,
                  model_path=None, model_dir=None, model_file=None, train_now=False,
                  embedder: Type = FasttextEmbedder,
+                 tokenizer: Type = NLTKTokenizer,
                  *args, **kwargs):
         """
         Method initializes model using parameters from opt
@@ -39,21 +39,11 @@ class KerasIntentModel(KerasModel):
         super().__init__(opt, model_path=model_path, model_dir=model_dir, model_file=model_file,
                          train_now=train_now)
 
-        try:
-            classes_file = self.opt['classes_file']
-        except KeyError:  # if no classes path is passed in json
-            classes_file = Path(paths.USR_PATH).joinpath('intents', 'classes.txt')
-
-        try:
-            with open(str(classes_file)) as fin:
-                self.classes = np.array(fin.read().split("\n"))
-
-        except FileNotFoundError:
-            print("Something is bad with the path to dataset classes file. "
-                  "Provide the file path explicitly in json config.")
-            raise
-
+        self.tokenizer = tokenizer
+        self.vocabs = vocabs
+        self.classes = np.sort(np.array(list(self.vocabs["classes_vocab"].keys())))
         self.n_classes = self.classes.shape[0]
+
         self.confident_threshold = self.opt['confident_threshold']
         if 'add_metrics' in self.opt.keys():
             self.add_metrics = self.opt['add_metrics']
@@ -87,8 +77,7 @@ class KerasIntentModel(KerasModel):
 
         # List of parameters that could be changed
         # when the model is initialized from saved and is going to be trained further
-        changeable_params = ["classes_file",
-                             "lear_metrics",
+        changeable_params = ["lear_metrics",
                              "confident_threshold",
                              "optimizer",
                              "lear_rate",
@@ -137,7 +126,7 @@ class KerasIntentModel(KerasModel):
         Returns:
             loss and metrics values on the given batch
         """
-        texts = list(batch[0])
+        texts = self.tokenizer.infer(list(batch[0]))
         labels = list(batch[1])
         features = self.texts2vec(texts)
         onehot_labels = labels2onehot(labels, classes=self.classes)
@@ -154,9 +143,7 @@ class KerasIntentModel(KerasModel):
             loss and metrics values on the given batch, if labels are given
             predictions, otherwise
         """
-        if self.opt['model_name']:
-            return self.infer_on_batch_tfidf(batch)
-        texts = list(batch[0])
+        texts = self.tokenizer.infer(list(batch[0]))
         if len(batch) == 2:
             labels = list(batch[1])
             features = self.texts2vec(texts)
@@ -246,8 +233,7 @@ class KerasIntentModel(KerasModel):
                 or list of labels sentence belongs with
         """
         if type(data) is str:
-            features = self.texts2vec([data])
-            preds = self.model.predict_on_batch(features)[0]
+            preds = self.infer_on_batch([data])[0]
             if return_proba:
                 return preds
             else:
@@ -259,8 +245,7 @@ class KerasIntentModel(KerasModel):
                 preds.extend(self.infer_on_batch(batch))
                 preds = np.array(preds)
         elif type(data) is list:
-            features = self.texts2vec(data)
-            preds = self.model.predict_on_batch(features)
+            preds = self.infer_on_batch(data)
         else:
             raise ConfigError("Not understand data type for inference")
 
