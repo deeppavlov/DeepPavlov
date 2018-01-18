@@ -31,7 +31,7 @@
   },
   "model": {
     "name": "intent_model",
-    "train_now": false,
+    "train_now": true,
     "model_path": "./models/classifiers/intents/intent_cnn_snips",
     "opt": {
       "kernel_sizes_cnn": [
@@ -66,6 +66,10 @@
       "model_path": "../data/reddit_fasttext_model.bin",
       "emb_module": "fasttext",
       "dim": 100
+    },
+    "tokenizer": {
+      "name": "nltk_tokenizer",
+      "tokenizer": "wordpunct_tokenize"
     }
   }
 }

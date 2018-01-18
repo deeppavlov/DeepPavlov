@@ -21,7 +21,9 @@ from deeppavlov.core.data.dataset import Dataset
 @register('intent_dataset')
 class IntentDataset(Dataset):
     """
-    Class gets data dictionary from DatasetReader instance, merge fields if necessary,
+    Class gets data dictionary from DSTC2DatasetReader instance,
+    construct intents from act and slots,
+    merge fields if necessary,
     split a field if necessary
     """
     def __init__(self, data,
@@ -96,14 +98,14 @@ class IntentDataset(Dataset):
 
     def _split_data(self, field_to_split, split_fields, split_proportions):
         """
-
+        Method splits given field of dataset to the given list of fields with corresponding proportions
         Args:
-            field_to_split:
-            split_fields:
-            split_proportions:
+            field_to_split: field name which to split
+            split_fields: list of names of fields to which split
+            split_proportions: corresponding proportions
 
         Returns:
-
+            Nothing
         """
         data_to_div = self.data[field_to_split].copy()
         data_size = len(self.data[field_to_split])
@@ -117,6 +119,15 @@ class IntentDataset(Dataset):
         return True
 
     def _merge_data(self, fields_to_merge, merged_field):
+        """
+        Method merges given fields of dataset
+        Args:
+            fields_to_merge: list of fields to merge
+            merged_field: name of field to which save merged fields
+
+        Returns:
+            Nothing
+        """
         data = self.data.copy()
         data[merged_field] = []
         for name in fields_to_merge:

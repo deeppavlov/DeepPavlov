@@ -1,3 +1,17 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import numpy as np
 
 from keras import backend as K
@@ -5,18 +19,45 @@ import sklearn.metrics
 
 
 def precision_K(y_true, y_pred):
+    """
+    Keras backend function that calculates precision for keras tensors
+    Args:
+        y_true: true labels
+        y_pred: predicted labels
+
+    Returns:
+        precision
+    """
     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
     predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
     precision = true_positives / (predicted_positives + K.epsilon())
     return precision
 
 def recall_K(y_true, y_pred):
+    """
+    Keras backend function that calculates recall for keras tensors
+    Args:
+        y_true: true labels
+        y_pred: predicted labels
+
+    Returns:
+        recall
+    """
     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
     possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
     recall = true_positives / (possible_positives + K.epsilon())
     return recall
 
 def fbeta_score_K(y_true, y_pred, beta=1):
+    """
+    Keras backend function that calculates f-beta score for keras tensors
+    Args:
+        y_true: true labels
+        y_pred: predicted labels
+
+    Returns:
+        f-beta score
+    """
     if beta < 0:
         raise ValueError('The lowest choosable beta is zero (only precision).')
 
@@ -31,6 +72,15 @@ def fbeta_score_K(y_true, y_pred, beta=1):
 
 
 def precision_np(y_true, y_pred):
+    """
+    Function that calculates precision for numpy arrays
+    Args:
+        y_true: true labels
+        y_pred: predicted labels
+
+    Returns:
+        f-beta score
+    """
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
     true_positives = np.sum(np.round(np.clip(y_true * y_pred, 0, 1)))
@@ -40,6 +90,15 @@ def precision_np(y_true, y_pred):
 
 
 def recall_np(y_true, y_pred):
+    """
+    Function that calculates recall for numpy arrays
+    Args:
+        y_true: true labels
+        y_pred: predicted labels
+
+    Returns:
+        recall
+    """
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
     true_positives = np.sum(np.round(np.clip(y_true * y_pred, 0, 1)))
@@ -49,6 +108,15 @@ def recall_np(y_true, y_pred):
 
 
 def fbeta_score_np(y_true, y_pred, beta=1):
+    """
+    Function that calculates f-beta score for numpy arrays
+    Args:
+        y_true: true labels
+        y_pred: predicted labels
+
+    Returns:
+        f-beta score
+    """
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
     if beta < 0:
@@ -65,15 +133,25 @@ def fbeta_score_np(y_true, y_pred, beta=1):
     return fbeta_score
 
 def fmeasure(y_true, y_pred):
+    """
+    Function that calculates F1 score for given numpy arrays or keras tensors
+    Args:
+        y_true: true labels
+        y_pred: predicted labels
+
+    Returns:
+        F1 score
+    """
     try:
         _ = K.is_keras_tensor(y_pred)
         return fbeta_score_K(y_true, y_pred, beta=1)
     except ValueError:
         return fbeta_score_np(y_true, y_pred, beta=1)
 
-def roc_auc_score(y_true, y_pred):
-    """Compute Area Under the Curve (AUC) from prediction scores.
 
+def roc_auc_score(y_true, y_pred):
+    """
+    Function computes Area Under the Curve (AUC) from prediction scores
     Args:
         y_true: true binary labels
         y_pred: target scores, can either be probability estimates of the positive class

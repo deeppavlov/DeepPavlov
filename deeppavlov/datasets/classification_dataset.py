@@ -20,11 +20,29 @@ from deeppavlov.core.data.dataset import Dataset
 
 @register('classification_dataset')
 class ClassificationDataset(Dataset):
+    """
+        Class gets data dictionary from ClassificationDatasetReader instance,
+        merge fields if necessary,
+        split a field if necessary
+        """
     def __init__(self, data, seed=None,
                  fields_to_merge=None, merged_field=None,
                  field_to_split=None, split_fields=None, split_proportions=None,
                  *args, **kwargs):
-
+        """
+        Method initializes dataset using data from DatasetReader,
+        merges and splits fields according to the given parameters
+        Args:
+            data: dictionary of data with fields "train", "valid" and "test" (or some of them)
+            seed: random seed
+            fields_to_merge: list of fields to merge
+            merged_field: name of field to which save merged fields
+            field_to_split: name of field to split
+            split_fields: list of fields to which save splitted field
+            split_proportions: list of corresponding proportions for splitting
+            *args:
+            **kwargs:
+        """
         super().__init__(data, seed)
 
         if fields_to_merge is not None:
@@ -48,6 +66,16 @@ class ClassificationDataset(Dataset):
                 raise IOError("Given field to split BUT not given names of split fields")
 
     def _split_data(self, field_to_split, split_fields, split_proportions):
+        """
+        Method splits given field of dataset to the given list of fields with corresponding proportions
+        Args:
+            field_to_split: field name which to split
+            split_fields: list of names of fields to which split
+            split_proportions: corresponding proportions
+
+        Returns:
+            Nothing
+        """
         data_to_div = self.data[field_to_split].copy()
         data_size = len(self.data[field_to_split])
         for i in range(len(split_fields) - 1):
@@ -60,6 +88,15 @@ class ClassificationDataset(Dataset):
         return True
 
     def _merge_data(self, fields_to_merge, merged_field):
+        """
+        Method merges given fields of dataset
+        Args:
+            fields_to_merge: list of fields to merge
+            merged_field: name of field to which save merged fields
+
+        Returns:
+            Nothing
+        """
         data = self.data.copy()
         data[merged_field] = []
         for name in fields_to_merge:

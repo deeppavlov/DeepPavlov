@@ -146,7 +146,7 @@ class KerasIntentModel(KerasModel):
         Returns:
             loss and metrics values on the given batch
         """
-        texts = self.tokenizer.infer(list(batch[0]))
+        texts = self.tokenizer.infer(instance=list(batch[0]))
         labels = list(batch[1])
         features = self.texts2vec(texts)
         onehot_labels = labels2onehot(labels, classes=self.classes)
@@ -163,7 +163,7 @@ class KerasIntentModel(KerasModel):
             loss and metrics values on the given batch, if labels are given
             predictions, otherwise
         """
-        texts = self.tokenizer.infer(list(batch[0]))
+        texts = self.tokenizer.infer(instance=list(batch[0]))
         if len(batch) == 2:
             labels = list(batch[1])
             features = self.texts2vec(texts)
