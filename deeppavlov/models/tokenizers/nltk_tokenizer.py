@@ -21,27 +21,19 @@ from deeppavlov.core.common.registry import register
 @register("nltk_tokenizer")
 class NLTKTokenizer(Inferable):
 
-    def __init__(self):
+    def __init__(self,  tokenizer="wordpunct_tokenize", *args, **kwargs):
         super().__init__()
         nltk.download()
+        self.tokenizer = getattr(nltk.tokenize, tokenizer, None)
+        if not callable(self.tokenizer):
+            raise AttributeError("Tokenizer {} is not defined in nltk.tokenizer".format(tokenizer))
 
-    def infer(self, instance, tokenizer="word_tokenize", *args, **kwargs):
+    def infer(self, instance, *args, **kwargs):
         if type(instance) is str:
-            tokenizer_ = getattr(nltk.tokenize, tokenizer, None)
-            if callable(tokenizer_):
-                return " ".join(nltk.tokenize.wordpunct_tokenize(instance))
-            else:
-                raise AttributeError("Tokenizer %s is not defined in nltk.tokenizer" % tokenizer)
+            return " ".join(self.tokenizer(instance))
 
         elif type(instance) is list:
             tokenized_batch = []
-
-            tokenizer_ = getattr(nltk.tokenize, tokenizer, None)
-            if callable(tokenizer_):
-                for text in instance:
-                    tokenized_batch.append(" ".join(nltk.tokenize.wordpunct_tokenize(text)))
-                return tokenized_batch
-            else:
-                raise AttributeError("Tokenizer %s is not defined in nltk.tokenizer" % tokenizer)
-
-
+            for text in instance:
+                tokenized_batch.append(" ".join(self.tokenizer(text)))
+            return tokenized_batch

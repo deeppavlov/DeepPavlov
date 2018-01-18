@@ -46,6 +46,10 @@
       "model_path": "../data/dstc2_fasttext_model_100.bin",
       "emb_module": "fasttext",
       "dim": 100
+    },
+    "tokenizer": {
+      "name": "nltk_tokenizer",
+      "tokenizer": "wordpunct_tokenize"
     }
   }
 }
