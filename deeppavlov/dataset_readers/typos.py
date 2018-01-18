@@ -1,6 +1,5 @@
 import csv
 from pathlib import Path
-
 import sys
 
 from deeppavlov.core.common.registry import register
@@ -89,7 +88,7 @@ class TyposKartaslov(DatasetReader):
     @staticmethod
     def read(data_path: str, *args, **kwargs):
         fname = TyposKartaslov.build(data_path)
-        with open(fname, newline='') as csvfile:
+        with open(str(fname), newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter=';')
             next(reader)
             res = [(mistake, correct) for correct, mistake, weight in reader]

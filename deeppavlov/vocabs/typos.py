@@ -1,7 +1,6 @@
 import shutil
 from collections import defaultdict
 from pathlib import Path
-
 import sys
 
 import requests
