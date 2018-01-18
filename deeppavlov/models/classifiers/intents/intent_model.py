@@ -1,7 +1,22 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import inspect
 
 from typing import Dict, Type
 import numpy as np
+import sys
 from keras.layers import Dense, Input, concatenate, Activation
 from keras.layers.convolutional import Conv1D
 from keras.layers.core import Dropout
@@ -44,7 +59,6 @@ class KerasIntentModel(KerasModel):
         self.classes = np.sort(np.array(list(self.vocabs["classes_vocab"].keys())))
         self.n_classes = self.classes.shape[0]
 
-        self.confident_threshold = self.opt['confident_threshold']
         if 'add_metrics' in self.opt.keys():
             self.add_metrics = self.opt['add_metrics']
             self.add_metrics_values = len(self.add_metrics) * [0.]
@@ -55,7 +69,32 @@ class KerasIntentModel(KerasModel):
         self.opt['embedding_size'] = self.fasttext_model.dim
         current_fasttext_md5 = md5_hashsum([self.fasttext_model.model_path])
 
-        params = {"model_name": self.opt['model_name'],
+        # List of parameters that could be changed
+        # when the model is initialized from saved and is going to be trained further
+        changeable_params = {"lear_metrics": ["binary_accuracy"],
+                             "confident_threshold": 0.5,
+                             "optimizer": "Adam",
+                             "lear_rate": 0.1,
+                             "lear_rate_decay": 0.1,
+                             "loss": "binary_crossentropy",
+                             "coef_reg_cnn": 1e-4,
+                             "coef_reg_den": 1e-4,
+                             "dropout_rate": 0.5,
+                             "epochs": 1,
+                             "batch_size": 64,
+                             "val_every_n_epochs": 1,
+                             "verbose": True,
+                             "val_patience": 5}
+        # Reinitializing of parameters
+        for param in changeable_params.keys():
+            if param in self.opt.keys():
+                self.opt[param] = opt[param]
+            else:
+                self.opt[param] = changeable_params[param]
+
+        self.confident_threshold = self.opt['confident_threshold']
+
+        params = {"model_name": self.opt['model_name'] if 'model_name' in self.opt.keys() else None,
                   "optimizer_name": self.opt['optimizer'],
                   "lr": self.opt['lear_rate'],
                   "decay": self.opt['lear_rate_decay'],
@@ -75,25 +114,6 @@ class KerasIntentModel(KerasModel):
             if self.opt['fasttext_md5'] != current_fasttext_md5:
                 raise ConfigError("Given fasttext model does NOT match fasttext model used previously to train loaded model")
 
-        # List of parameters that could be changed
-        # when the model is initialized from saved and is going to be trained further
-        changeable_params = ["lear_metrics",
-                             "confident_threshold",
-                             "optimizer",
-                             "lear_rate",
-                             "lear_rate_decay",
-                             "loss",
-                             "coef_reg_cnn",
-                             "coef_reg_den",
-                             "dropout_rate",
-                             "epochs",
-                             "batch_size",
-                             "val_every_n_epochs",
-                             "verbose",
-                             "val_patience"]
-        # Reinitializing of parameters
-        for param in changeable_params:
-            self.opt[param] = opt[param]
 
         self.metrics_names = self.model.metrics_names
         self.metrics_values = len(self.metrics_names) * [0.]
@@ -184,38 +204,41 @@ class KerasIntentModel(KerasModel):
 
         print('\n____Training over {} samples____\n\n'.format(n_train_samples))
 
-        while epochs_done < self.opt['epochs']:
-            batch_gen = dataset.batch_generator(batch_size=self.opt['batch_size'],
-                                                data_type='train')
-            for step, batch in enumerate(batch_gen):
-                metrics_values = self.train_on_batch(batch)
-                updates += 1
+        try:
+            while epochs_done < self.opt['epochs']:
+                batch_gen = dataset.batch_generator(batch_size=self.opt['batch_size'],
+                                                    data_type='train')
+                for step, batch in enumerate(batch_gen):
+                    metrics_values = self.train_on_batch(batch)
+                    updates += 1
 
-                if self.opt['verbose'] and step % 50 == 0:
-                    log_metrics(names=self.metrics_names,
-                                values=metrics_values,
-                                updates=updates,
-                                mode='train')
+                    if self.opt['verbose'] and step % 50 == 0:
+                        log_metrics(names=self.metrics_names,
+                                    values=metrics_values,
+                                    updates=updates,
+                                    mode='train')
 
-            epochs_done += 1
-            if epochs_done % self.opt['val_every_n_epochs'] == 0:
-                if 'valid' in dataset.data.keys():
-                    valid_metrics_values = self.model.test_on_batch(x=valid_x, y=valid_y)
+                epochs_done += 1
+                if epochs_done % self.opt['val_every_n_epochs'] == 0:
+                    if 'valid' in dataset.data.keys():
+                        valid_metrics_values = self.model.test_on_batch(x=valid_x, y=valid_y)
 
-                    log_metrics(names=self.metrics_names,
-                                values=valid_metrics_values,
-                                mode='valid')
-                    if valid_metrics_values[0] > val_loss:
-                        val_increase += 1
-                        print("__Validation impatience {} out of {}".format(
-                            val_increase, self.opt['val_patience']))
-                        if val_increase == self.opt['val_patience']:
-                            print("___Stop training: validation is out of patience___")
-                            break
-                    else:
-                        val_increase = 0
-                        val_loss = valid_metrics_values[0]
-            print('epochs_done: {}'.format(epochs_done))
+                        log_metrics(names=self.metrics_names,
+                                    values=valid_metrics_values,
+                                    mode='valid')
+                        if valid_metrics_values[0] > val_loss:
+                            val_increase += 1
+                            print("__Validation impatience {} out of {}".format(
+                                val_increase, self.opt['val_patience']))
+                            if val_increase == self.opt['val_patience']:
+                                print("___Stop training: validation is out of patience___")
+                                break
+                        else:
+                            val_increase = 0
+                            val_loss = valid_metrics_values[0]
+                print('epochs_done: {}'.format(epochs_done))
+        except KeyboardInterrupt:
+            print('Interrupted', file=sys.stderr)
 
         self.save()
 

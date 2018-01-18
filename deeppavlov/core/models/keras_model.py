@@ -110,13 +110,15 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
 
     @run_alt_meth_if_no_path(init_model_from_scratch, 'train_now')
     @overrides
-    def load(self, model_name, fname, optimizer_name,
-             lr, decay, loss_name, metrics_names=None, add_metrics_file=None, loss_weights=None,
-             sample_weight_mode=None, weighted_metrics=None, target_tensors=None):
+    def load(self, fname, optimizer_name,
+             lr, decay, loss_name,
+             metrics_names=None, add_metrics_file=None,
+             loss_weights=None,
+             sample_weight_mode=None, weighted_metrics=None, target_tensors=None,
+             *args, **kwargs):
         """
         Method initiliazes model from saved params and weights
         Args:
-            model_name: name of model function described as a method of this class
             fname: path and first part of name of model
             optimizer_name: name of optimizer from keras.optimizers
             lr: learning rate
@@ -149,11 +151,11 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         else:
             raise ConfigError("Error: config file %s_opt.json of saved model does not exist" % fname)
 
-        model_func = getattr(self, model_name, None)
+        model_func = getattr(self, self.opt['model_name'], None)
         if callable(model_func):
             model = model_func(params=self.opt)
         else:
-            raise AttributeError("Model {} is not defined".format(model_name))
+            raise AttributeError("Model {} is not defined".format(self.opt['model_name']))
 
         print("Loading weights from `{}`".format(fname + '.h5'))
         model.load_weights(weights_path)
