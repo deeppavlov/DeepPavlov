@@ -117,7 +117,7 @@ def u_shape(input_units,
         n_filters = input_units.get_shape().as_list()
 
     # Bread Crumbs
-    units_for_skip_conn = list()
+    units_for_skip_conn = []
 
     # Go down the rabbit hole
     for down_step in range(rabbit_hole_depth):

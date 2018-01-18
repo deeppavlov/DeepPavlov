@@ -75,7 +75,7 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
     def infer(self, instance, *args, **kwargs):
         instance = instance.strip()
         if not len(instance):
-            return dict()
+            return {}
         return self.predict_slots(instance.lower())
 
     def interact(self):
@@ -88,7 +88,7 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
         tokens = tokenize_reg(utterance)
         tags = self._ner_network.predict_for_token_batch([tokens])[0]
         entities, slots = self._chunk_finder(tokens, tags)
-        slot_values = dict()
+        slot_values = {}
         for entity, slot in zip(entities, slots):
             slot_values[slot] = self.ner2slot(entity, slot)
         return slot_values
@@ -97,8 +97,8 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
         # Given named entity return normalized slot value
         if isinstance(input_entity, list):
             input_entity = ' '.join(input_entity)
-        entities = list()
-        normalized_slot_vals = list()
+        entities = []
+        normalized_slot_vals = []
         for entity_name in self._slot_vals[slot]:
             for entity in self._slot_vals[slot][entity_name]:
                 entities.append(entity)
@@ -110,9 +110,9 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
     def _chunk_finder(tokens, tags):
         # For BIO labeled sequence of tags extract all named entities form tokens
         prev_tag = ''
-        chunk_tokens = list()
-        entities = list()
-        slots = list()
+        chunk_tokens = []
+        entities = []
+        slots = []
         for token, tag in zip(tokens, tags):
             curent_tag = tag.split('-')[-1].strip()
             current_prefix = tag.split('-')[0]
@@ -120,21 +120,21 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
                 if len(chunk_tokens) > 0:
                     entities.append(' '.join(chunk_tokens))
                     slots.append(prev_tag)
-                    chunk_tokens = list()
+                    chunk_tokens = []
                 chunk_tokens.append(token)
             if current_prefix == 'I':
                 if curent_tag != prev_tag:
                     if len(chunk_tokens) > 0:
                         entities.append(' '.join(chunk_tokens))
                         slots.append(prev_tag)
-                        chunk_tokens = list()
+                        chunk_tokens = []
                 else:
                     chunk_tokens.append(token)
             if current_prefix == 'O':
                 if len(chunk_tokens) > 0:
                     entities.append(' '.join(chunk_tokens))
                     slots.append(prev_tag)
-                    chunk_tokens = list()
+                    chunk_tokens = []
             prev_tag = curent_tag
         if len(chunk_tokens) > 0:
             entities.append(' '.join(chunk_tokens))

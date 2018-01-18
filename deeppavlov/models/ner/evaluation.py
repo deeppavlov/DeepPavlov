@@ -46,8 +46,8 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, 
 
     for tag in tags:
         count = 0
-        true_chunk = list()
-        pred_chunk = list()
+        true_chunk = []
+        pred_chunk = []
         y_true = [str(y) for y in y_true]
         y_pred = [str(y) for y in y_pred]
         prev_tag_true = 'O'

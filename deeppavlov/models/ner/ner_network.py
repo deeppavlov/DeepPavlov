@@ -208,8 +208,8 @@ class NerNetwork(SimpleTFModel):
         return (x_token, x_char, mask), y
 
     def eval_conll(self, data, print_results=True, short_report=True, data_type=None):
-            y_true_list = list()
-            y_pred_list = list()
+            y_true_list = []
+            y_pred_list = []
             if data_type is not None:
                 print('Eval on {}:'.format(data_type))
             for x, y_gt in data:
@@ -332,7 +332,7 @@ class NerNetwork(SimpleTFModel):
                         learning_rate=None,
                         training=False,
                         dropout_rate=1):
-        feed_dict = dict()
+        feed_dict = {}
         feed_dict[self._x_w] = x_w
         feed_dict[self._x_c] = x_c
         feed_dict[self._training_ph] = training
@@ -363,7 +363,7 @@ class NerNetwork(SimpleTFModel):
     def get_trainable_variables(trainable_scope_names=None):
         vars = tf.trainable_variables()
         if trainable_scope_names is not None:
-            vars_to_train = list()
+            vars_to_train = []
             for scope_name in trainable_scope_names:
                 for var in vars:
                     if var.name.startswith(scope_name):
