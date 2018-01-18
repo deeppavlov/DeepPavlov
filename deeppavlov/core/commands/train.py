@@ -4,6 +4,7 @@ from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import REGISTRY
 from deeppavlov.core.commands.infer import build_agent_from_config
 from deeppavlov.core.common.params import from_params
+from deeppavlov.core.data.dataset import Dataset
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.common import paths
 
@@ -77,7 +78,9 @@ def train_batches(config_path: str):
         'val_every_n_epochs': 0,
 
         'log_every_n_batches': 0,
-        'show_examples': False
+        'show_examples': False,
+
+        'test': True
     }
 
     try:
@@ -92,15 +95,63 @@ def train_batches(config_path: str):
 
     dataset_config = config['dataset']
     dataset_name = dataset_config['name']
-    dataset = from_params(REGISTRY[dataset_name], dataset_config, data=data)
+    dataset: Dataset = from_params(REGISTRY[dataset_name], dataset_config, data=data)
 
     vocabs = {}
     for vocab_param_name, vocab_config in config.get('vocabs', {}).items():
         vocab_name: Trainable = vocab_config['name']
         v = from_params(REGISTRY[vocab_name], vocab_config)
-        v.train(dataset.iter_all('train'), )
+        v.train(dataset.iter_all('train'))
+        v.save()
         vocabs[vocab_param_name] = v
 
     model_config = config['model']
     model_name = model_config['name']
     model = from_params(REGISTRY[model_name], model_config, vocabs=vocabs)
+
+    i = 0
+    epochs = 0
+    saved = False
+    patience = 0
+    best = 0
+    try:
+        while True:
+            for batch in dataset.batch_generator(train_config['batch_size']):
+                model.train_on_batch(batch)
+                i += 1
+
+                if train_config['log_every_n_batches'] and i % train_config['log_every_n_batches'] == 0:
+                    print('log')
+
+            epochs += 1
+
+            if train_config['val_every_n_epochs'] and epochs % train_config['val_every_n_epochs'] == 0:
+                y_true = []
+                y_predicted = []
+                for x, y in dataset.batch_generator(train_config['batch_size'], 'valid'):
+                    y_true += y
+                    y_predicted += model.infer()
+
+                metrics = []  # get metrics
+                print('log valid')
+
+                score = metrics[0]
+                if score > best:
+                    patience = 0
+                    best = score
+                    model.save()
+                else:
+                    patience -= 1
+
+                if train_config['validation_patience'] and patience >= train_config['validation_patience']:
+                    print('Run out of patience', file=sys.stderr)
+                    break
+
+            if train_config['epochs'] and train_config['epochs'] >= epochs:
+                break
+    except KeyboardInterrupt:
+        print('Stopped training', file=sys.stderr)
+
+    if not saved:
+        print('Saving model', file=sys.stderr)
+        model.save()

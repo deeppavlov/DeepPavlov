@@ -101,7 +101,6 @@ class DefaultVocabulary(Trainable, Inferable):
             counts=None,
             update=True
         )
-        self.save()
 
     def _train(self, tokens, counts=None, update=True):
         counts = counts or itertools.repeat(1)
