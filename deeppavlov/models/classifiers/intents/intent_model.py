@@ -37,6 +37,9 @@ from deeppavlov.models.tokenizers.nltk_tokenizer import NLTKTokenizer
 
 @register('intent_model')
 class KerasIntentModel(KerasModel):
+    """
+    Class implements keras model for intent recognition task for multi-class multi-label data
+    """
     def __init__(self,
                  vocabs,
                  opt: Dict,
@@ -45,9 +48,20 @@ class KerasIntentModel(KerasModel):
                  tokenizer: Type = NLTKTokenizer,
                  *args, **kwargs):
         """
-        Method initializes model using parameters from opt
+        Method initializes and trains vocabularies, initializes embedder, tokenizer,
+        and then initializes model using parameters from opt dictionary (from config),
+        if model is being initialized from saved
+
         Args:
-            opt: model parameters
+            vocabs: dictionary of considered vocabularies
+            opt: model parameters for network and learning
+            model_path: path to model serialization dir or file.
+                            It is always an empty string and is ignored if it is not set in json config.
+            model_dir: name of a serialization dir, can be default or set in json config
+            model_file: name of a serialization file (usually binary model file),
+                            can be default or set in json config
+            embedder: instance of FasttextEmbedder class
+            tokenizer: instance of NLTKTokenizer class
             *args:
             **kwargs:
         """
@@ -119,6 +133,14 @@ class KerasIntentModel(KerasModel):
         self.metrics_values = len(self.metrics_names) * [0.]
 
     def texts2vec(self, sentences):
+        """
+        Method converts texts to vector representations using embedder and padding up to self.opt["text_size"] tokens
+        Args:
+            sentences: list of texts
+
+        Returns:
+            array of embedded texts
+        """
         embeddings_batch = []
         for sen in sentences:
             tokens = [el for el in sen.split() if el]
@@ -182,8 +204,8 @@ class KerasIntentModel(KerasModel):
         Args:
             dataset: instance of class Dataset
 
-        Returns: None
-
+        Returns:
+            Nothing
         """
         updates = 0
         val_loss = 1e100
@@ -280,12 +302,12 @@ class KerasIntentModel(KerasModel):
 
     def cnn_model(self, params):
         """
-        Method builds uncompiled model of shallow-and-wide CNN
+        Method builds un-compiled model of shallow-and-wide CNN
         Args:
-            params: disctionary of parameters for NN
+            params: dictionary of parameters for NN
 
         Returns:
-            Uncompiled model
+            Un-compiled model
         """
 
         inp = Input(shape=(params['text_size'], params['embedding_size']))
@@ -318,12 +340,12 @@ class KerasIntentModel(KerasModel):
 
     def dcnn_model(self, params):
         """
-        Method builds uncompiled model of deep CNN
+        Method builds un-compiled model of deep CNN
         Args:
             params: dictionary of parameters for NN
 
         Returns:
-            Uncompiled model
+            Un-compiled model
         """
 
         if type(self.opt['filters_cnn']) is str:

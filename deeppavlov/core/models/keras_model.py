@@ -1,3 +1,17 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from abc import abstractmethod
 
 import tensorflow as tf
@@ -20,7 +34,7 @@ from deeppavlov.core.common.errors import ConfigError
 
 class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
     """
-    Class builds keras model
+    Class builds keras model with tensorflow backend
     """
 
     def __init__(self, opt: Dict,
@@ -38,6 +52,11 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         K.set_session(self.sess)
 
     def _config_session(self):
+        """
+        Method configures session for particular device
+        Returns:
+            tensorflow.Session
+        """
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
         config.gpu_options.visible_device_list = '0'
@@ -117,7 +136,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
              sample_weight_mode=None, weighted_metrics=None, target_tensors=None,
              *args, **kwargs):
         """
-        Method initiliazes model from saved params and weights
+        Method initializes model from saved params and weights
         Args:
             fname: path and first part of name of model
             optimizer_name: name of optimizer from keras.optimizers
@@ -228,7 +247,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
             fname: file_path to save model. If not explicitly given seld.opt["model_file"] will be used
 
         Returns:
-            nothing
+            Nothing
         """
         fname = self.model_path.name if fname is None else fname
         opt_fname = str(fname) + '_opt.json'
@@ -249,7 +268,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
     def mlp(self, opt):
         """
         Example of model function
-        Build the un-compiled multilayer perceptron model
+        Build un-compiled multilayer perceptron model
         Args:
             opt: dictionary of parameters
 
