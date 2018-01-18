@@ -11,6 +11,7 @@
   "model": {
     "name": "dstc_slotfilling",
     "train_now": true,
+    "epochs": 10,
     "model_dir": "model",
     "model_file": "dstc_ner_model",
     "ner_network": {
@@ -52,7 +53,6 @@
         "model_dir": "model/",
 		"model_file": "char.dict"
       }
-  },
-  "num_epochs": 10
+  }
 }
 

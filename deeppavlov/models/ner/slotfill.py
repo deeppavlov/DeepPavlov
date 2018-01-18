@@ -20,7 +20,8 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
     def __init__(self,
                  ner_network: NerNetwork,
                  model_file='dstc_ner_model',
-                 model_dir=None):
+                 model_dir=None,
+                 epochs=10):
         if model_dir is None:
             model_dir = USR_PATH
         self._model_dir = model_dir
@@ -35,6 +36,9 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
         self.load()
         with open(slot_vals_filepath) as f:
             self._slot_vals = json.load(f)
+
+        # Training parameters
+        self.epochs = epochs
 
     @overrides
     def load(self):
@@ -55,10 +59,10 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
         self._ner_network.save(path)
 
     @overrides
-    def train(self, data, num_epochs=2):
+    def train(self, data):
         print('Training NER network')
         if self.train_now:
-            for epoch in range(num_epochs):
+            for epoch in range(self.epochs):
                 self._ner_network.train(data)
                 self._ner_network.eval_conll(data.iter_all('valid'), short_report=False, data_type='valid')
             self._ner_network.eval_conll(data.iter_all('train'), short_report=False, data_type='train')
