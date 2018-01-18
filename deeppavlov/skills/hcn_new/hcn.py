@@ -15,7 +15,6 @@ limitations under the License.
 """
 
 import re
-from pathlib import Path
 
 import numpy as np
 from typing import Type
@@ -40,7 +39,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
     def __init__(self, template_path, vocabs,
                  template_type: Type = DualTemplate,
                  slot_filler: Type = DstcSlotFillingNetwork,
-                 intent_classifier:Type = KerasIntentModel,
+                 intent_classifier: Type = KerasIntentModel,
                  bow_encoder: Type = BoW_encoder,
                  embedder: Type = FasttextEmbedder,
                  tokenizer: Type = SpacyTokenizer,
@@ -71,8 +70,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         self.val_patience = val_patience
 
         self.templates = Templates(template_type).load(template_path)
-        print("[using {} templates from `{}`]" \
-              .format(len(self.templates), template_path))
+        print("[using {} templates from `{}`]".format(len(self.templates), template_path))
 
         # intialize parameters
         self.db_result = None
@@ -87,8 +85,8 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         #    'action_size': self.n_actions,
         #    'obs_size': 4 + len(self.word_vocab) + self.embedder.dim +\
         #    2 * self.tracker.state_size + self.n_actions + self.n_intents
-        #}
-        #self.network = HybridCodeNetworkModel(opt)
+        # }
+        # self.network = HybridCodeNetworkModel(opt)
 
     def _encode_context(self, context, db_result=None):
         # tokenize input
@@ -167,7 +165,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         print('\n:: training started')
 
         curr_patience = self.val_patience
-        prev_valid_accuracy = 0. 
+        prev_valid_accuracy = 0.
         # TODO: in case val_patience is off, save model {val_patience} steps before
         for j in range(self.num_epochs):
 
