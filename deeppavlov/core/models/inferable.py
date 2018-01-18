@@ -4,7 +4,6 @@ for all models that can work for inferring. The scope of all inferring models is
 of trainable models. For example, encoders can be inferred, but can't be trained.
 All inferring models should inherit from this class.
 """
-
 from abc import abstractmethod
 
 from .serializable import Serializable
@@ -15,6 +14,9 @@ class Inferable(Serializable):
     :attr:`train_now` expresses a developer intent for whether a model as part of a pipeline
     should be trained in the current experiment run or not.
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     @abstractmethod
     def infer(self, instance, *args, **kwargs):

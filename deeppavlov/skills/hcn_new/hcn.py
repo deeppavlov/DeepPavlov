@@ -20,12 +20,9 @@ from pathlib import Path
 import numpy as np
 from typing import Type
 
-from deeppavlov.core.common import paths
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
-
-from deeppavlov.core.data.vocab import DefaultVocabulary
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.encoders.bow import BoW_encoder
 from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel
@@ -35,11 +32,12 @@ from deeppavlov.models.trackers.default_tracker import DefaultTracker
 from deeppavlov.skills.hcn_new.metrics import DialogMetrics
 from deeppavlov.skills.hcn_new.network import HybridCodeNetworkModel
 from deeppavlov.skills.hcn_new.templates import Templates, DualTemplate
+from deeppavlov.core.common.attributes import check_attr_true
 
 
 @register("hcn_new")
 class HybridCodeNetworkBot(Inferable, Trainable):
-    def __init__(self, template_path,
+    def __init__(self, template_path, vocabs,
                  template_type: Type = DualTemplate,
                  slot_filler: Type = DstcSlotFillingNetwork,
                  intent_classifier:Type = KerasIntentModel,
@@ -48,12 +46,15 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                  tokenizer: Type = SpacyTokenizer,
                  tracker: Type = DefaultTracker,
                  network: Type = HybridCodeNetworkModel,
-                 word_vocab: Type = DefaultVocabulary,
-                 vocab_path=None,
                  use_action_mask=False,
                  debug=False,
                  num_epochs=100,
-                 val_patience=5):
+                 val_patience=5,
+                 train_now=False,
+                 *args,
+                 **kwargs):
+
+        super().__init__(train_now=train_now)
 
         self.episode_done = True
         self.use_action_mask = use_action_mask
@@ -65,7 +66,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         self.tokenizer = tokenizer
         self.tracker = tracker
         self.network = network
-        self.word_vocab = word_vocab
+        self.word_vocab = vocabs['word_vocab']
         self.num_epochs = num_epochs
         self.val_patience = val_patience
 
@@ -161,12 +162,13 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                         action_mask[a_id] = 0
         return action_mask
 
+    @check_attr_true('train_now')
     def train(self, data):
         print('\n:: training started')
 
         curr_patience = self.val_patience
         prev_valid_accuracy = 0. 
-# TODO: in case val_patience is off, save model {val_patience} steps before
+        # TODO: in case val_patience is off, save model {val_patience} steps before
         for j in range(self.num_epochs):
 
             tr_data = data.iter_all('train')

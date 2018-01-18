@@ -50,7 +50,6 @@ def train_model_from_config(config_path: str):
         for vocab_param_name, vocab_config in config['vocabs'].items():
             vocab_name = vocab_config['name']
             v = from_params(REGISTRY[vocab_name], vocab_config)
-            v.reset()
             v.train(dataset.iter_all('train'))
             vocabs[vocab_param_name] = v
 

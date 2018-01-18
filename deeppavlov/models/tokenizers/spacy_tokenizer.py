@@ -24,7 +24,7 @@ from deeppavlov.core.common.registry import register
 @register('spacy_tokenizer')
 class SpacyTokenizer(Inferable):
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.NLP = spacy.load('en')
 
     def _tokenize(self, text, **kwargs):

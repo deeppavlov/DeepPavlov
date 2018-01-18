@@ -1,27 +1,27 @@
 """
 Inherit from this model to implement a `scikit-learn <http://scikit-learn.org/stable/>`_ model.
 """
-from pathlib import Path
-
 from typing import Type, Dict
 
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.common.file import load_pickle, save_pickle
-from deeppavlov.core.common import paths
 
 
 class SklearnModel(Trainable, Inferable):
-    def __init__(self, estimator: Type, params: Dict = None, model_dir_path='sklearn',
-                 model_fpath='estimator.pkl'):
+    def __init__(self, estimator: Type, params: Dict = None, model_path=None, model_dir='sklearn',
+                 model_file='estimator.pkl', train_now=False):
+
+        super().__init__(model_path=model_path,
+                         model_dir=model_dir,
+                         model_file=model_file,
+                         train_now=train_now)
+
         if params is None:
             self._params = {}
         else:
             self._params = params
         self._estimator = estimator().set_params(**self._params)
-        self.model_dir_path = model_dir_path
-        self.model_fpath = model_fpath
-        self.model_path = Path(paths.USR_PATH) / model_dir_path / model_fpath
 
     def infer(self, features, fit_params=None, prediction_type='label'):
         """
@@ -66,21 +66,21 @@ class SklearnModel(Trainable, Inferable):
         """
         Save model to file.
         """
-        if not self.model_path_.parent.exists():
-            self.model_path_.parent.mkdir(mode=0o755)
+        if not self.model_path.parent.exists():
+            self.model_path.parent.mkdir(mode=0o755)
 
-        save_pickle(self._estimator, self.model_path_.as_posix())
+        save_pickle(self._estimator, self.model_path.as_posix())
 
-        print(':: model saved to {}'.format(self.model_path_))
+        print(':: model saved to {}'.format(self.model_path))
 
     def load(self):
         """
         Load model from file.
         """
         try:
-            return load_pickle(self.model_path_)
+            return load_pickle(self.model_path)
         except FileNotFoundError as e:
-            raise (e, "There is no model in the specified path: {}".format(self.model_path_))
+            raise (e, "There is no model in the specified path: {}".format(self.model_path))
 
     def reset(self):
         pass

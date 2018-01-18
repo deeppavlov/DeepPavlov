@@ -6,7 +6,6 @@ from math import log, exp
 
 import kenlm
 
-from deeppavlov.core.common import paths
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
@@ -16,12 +15,13 @@ from deeppavlov.core.common.attributes import check_attr_true, check_path_exists
 
 @register('spelling_error_model')
 class ErrorModel(Inferable, Trainable):
-    def __init__(self, dictionary: StaticDictionary, model_dir=None, window=1,
-                 model_file='error_model.tsv', lm_file=None, *args, **kwargs):
-        if model_dir is None:
-            model_dir = paths.USR_PATH
-        self._model_file = model_file
-        self._model_dir = model_dir
+    def __init__(self, dictionary: StaticDictionary, model_path=None, model_dir=None, window=1,
+                 model_file='error_model.tsv', lm_file=None, train_now=False, *args, **kwargs):
+
+        super().__init__(model_path=model_path,
+                         model_dir=model_dir,
+                         model_file=model_file,
+                         train_now=train_now)
         self.costs = defaultdict(itertools.repeat(float('-inf')).__next__)
         self.dictionary = dictionary
         self.window = window
@@ -34,7 +34,7 @@ class ErrorModel(Inferable, Trainable):
         self.costs[('⟭', '⟭')] = log(1)
         for c in self.dictionary.alphabet:
             self.costs[(c, c)] = log(1)
-        if self.model_path_.is_file():
+        if self.model_path.is_file():
             self.load()
 
         if lm_file:
@@ -208,7 +208,7 @@ class ErrorModel(Inferable, Trainable):
         # if not file_name:
         #     file_name = self.file_name
         # os.makedirs(os.path.dirname(os.path.abspath(file_name)), 0o755, exist_ok=True)
-        with open(self.model_path_, 'w', newline='') as tsv_file:
+        with open(self.model_path, 'w', newline='') as tsv_file:
             writer = csv.writer(tsv_file, delimiter='\t')
             for (w, s), log_p in self.costs.items():
                 writer.writerow([w, s, exp(log_p)])
@@ -217,7 +217,7 @@ class ErrorModel(Inferable, Trainable):
     def load(self):
         # # if not file_name:
         #     file_name = self.file_name
-        with open(self.model_path_, 'r', newline='') as tsv_file:
+        with open(self.model_path, 'r', newline='') as tsv_file:
             reader = csv.reader(tsv_file, delimiter='\t')
             for w, s, p in reader:
                 self.costs[(w, s)] = log(float(p))

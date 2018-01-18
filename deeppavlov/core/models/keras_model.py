@@ -23,7 +23,8 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
     Class builds keras model
     """
 
-    def __init__(self, opt: Dict, *args, **kwargs):
+    def __init__(self, opt: Dict,
+                 *args, **kwargs):
         """
         Method initializes model using parameters from opt
         Args:
@@ -32,6 +33,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
             **kwargs:
         """
         self.opt = opt
+        super().__init__(*args, **kwargs)
         self.sess = self._config_session()
         K.set_session(self.sess)
 
@@ -135,12 +137,12 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
               '\nModel weights file is %s.h5'
               '\nNetwork parameters are from %s_opt.json' % (fname, fname))
 
-        fname = self.model_path_.name
+        fname = self.model_path.name
         opt_fname = str(fname) + '_opt.json'
         weights_fname = str(fname) + '.h5'
 
-        opt_path = self.model_path_.joinpath(opt_fname)
-        weights_path = self.model_path_.joinpath(weights_fname)
+        opt_path = self.model_path.joinpath(opt_fname)
+        weights_path = self.model_path.joinpath(weights_fname)
 
         if opt_path.is_file():
             self.opt = read_json(opt_path)
@@ -226,12 +228,12 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         Returns:
             nothing
         """
-        fname = self.model_path_.name if fname is None else fname
+        fname = self.model_path.name if fname is None else fname
         opt_fname = str(fname) + '_opt.json'
         weights_fname = str(fname) + '.h5'
 
-        opt_path = self.model_path_.joinpath(opt_fname)
-        weights_path = self.model_path_.joinpath(weights_fname)
+        opt_path = self.model_path.joinpath(opt_fname)
+        weights_path = self.model_path.joinpath(weights_fname)
         print("[ saving model: {} ]".format(opt_path))
         self.model.save_weights(weights_path)
 

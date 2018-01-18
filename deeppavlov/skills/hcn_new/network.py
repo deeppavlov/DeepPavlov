@@ -28,8 +28,17 @@ class HybridCodeNetworkModel(TFModel):
 
     def __init__(self, **params):
         self.opt = params
-        self._model_dir = self.opt.get('model_dir', '')
-        self._model_file = 'model'
+
+        model_path = self.opt.get('model_path', None)
+        model_dir = self.opt.get('model_dir', '')
+        model_file = self.opt.get('model_file', None)
+        train_now = self.opt.get('train_now', 'model')
+
+        super().__init__(model_path=model_path,
+                         model_dir=model_dir,
+                         model_file=model_file,
+                         train_now=train_now)
+
         if self.model_path:
             self.model_path = str(Path(self.model_path) / self._model_file)
 

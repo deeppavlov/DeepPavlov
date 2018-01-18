@@ -21,26 +21,14 @@ def from_params(cls: Type, params: Dict, **kwargs) -> Type['T']:
                 continue
             try:
                 subcls = REGISTRY[subcls_name]
-                try:
-                    vocabs = kwargs['vocabs']
-                except KeyError:
-                    vocabs = {}
-                config_params[param_name] = from_params(subcls, subcls_params, vocabs=vocabs)
+                config_params[param_name] = from_params(subcls, subcls_params,
+                                                        vocabs=kwargs['vocabs'])
             except KeyError:
                 raise ConfigError(
                     "The class {} is not registered. Either register this class,"
                     " or rename the parameter.".format(
                         subcls_params['name']))
 
-    final_params = {k: v for k, v in config_params.items()}
-
-    # set superclass parameters:
-    for super_attr, v in config_params.items():
-        if hasattr(cls, super_attr):
-            setattr(cls, super_attr, v)
-            final_params.pop(super_attr)
-
-    # return an instance:
-    model = cls(**dict(final_params, **kwargs))
+    model = cls(**dict(config_params, **kwargs))
 
     return model
