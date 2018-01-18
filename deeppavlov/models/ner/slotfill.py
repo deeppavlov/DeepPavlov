@@ -1,10 +1,8 @@
 import json
-import glob
 
 import tensorflow as tf
 from fuzzywuzzy import process
 from overrides import overrides
-import pathlib
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.trainable import Trainable
@@ -14,19 +12,20 @@ from deeppavlov.core.data.utils import tokenize_reg
 from deeppavlov.core.data.utils import download
 
 
-
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(Inferable, Trainable):
-    def __init__(self,
-                 ner_network: NerNetwork):
-        # Make it path
-        self.model_path = pathlib.Path(self.model_path)
+    def __init__(self, ner_network: NerNetwork,
+                 slots_file='slot_vals.json',
+                 model_path=None,
+                 train_now=False, *args, **kwargs):
+
+        super().__init__(model_path=model_path, train_now=train_now)
 
         # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
-        slot_vals_filepath = self.model_path / 'slot_vals.json'
+        slot_vals_filepath = self.model_path / slots_file
         if not slot_vals_filepath.is_file():
             self._download_slot_vals(slot_vals_filepath)
-        self._ner_model_path = self.model_path / 'dstc_ner_network.ckpt'
+        # self._ner_model_path = self.model_path / model_file
 
         self._ner_network = ner_network
         self.load()
@@ -36,29 +35,32 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
     @overrides
     def load(self):
         # Check prescence of the model files
+        print('Loading DstcSlotFilling')
         path = str(self.model_path.absolute())
         if tf.train.get_checkpoint_state(path) is not None:
             print('Loading model from {}'.format(path))
-            self._ner_network.load(self._ner_model_path)
-        # else:
-        #     raise Warning('Error while loading NER model. There must be 3 dstc_ner_network.ckpt files!')
+            self._ner_network.load()
+            # else:
+            #     raise Warning('Error while loading NER model. There must be 3 dstc_ner_network.ckpt files!')
 
     @overrides
     def save(self):
-        print('Saving model to {}'.format(self._ner_model_path))
-        self._ner_network.save(self._ner_model_path)
+        self._ner_network.save()
 
     @overrides
     def train(self, data, num_epochs=2):
         if self.train_now:
             for epoch in range(num_epochs):
                 self._ner_network.train(data)
-                self._ner_network.eval_conll(data.iter_all('valid'), short_report=False, data_type='valid')
-            self._ner_network.eval_conll(data.iter_all('train'), short_report=False, data_type='train')
-            self._ner_network.eval_conll(data.iter_all('test'), short_report=False, data_type='test')
+                self._ner_network.eval_conll(data.iter_all('valid'), short_report=False,
+                                             data_type='valid')
+            self._ner_network.eval_conll(data.iter_all('train'), short_report=False,
+                                         data_type='train')
+            self._ner_network.eval_conll(data.iter_all('test'), short_report=False,
+                                         data_type='test')
             self.save()
         else:
-            self._ner_network.load(self._ner_model_path)
+            self._ner_network.load()
 
     @overrides
     def infer(self, instance, *args, **kwargs):

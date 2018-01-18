@@ -6,7 +6,6 @@
   "dataset": {
     "name": "intent_dataset",
     "prep_method_name": "simple_prep",
-    "classes_file": "../data/dstc2/classes.txt",
     "seed": 42,
     "extract_classes": true,
     "fields_to_merge": ["train", "valid"],
@@ -43,7 +42,7 @@
     },
     "embedder": {
       "name": "fasttext",
-      "model_path": "../data/dstc2_fasttext_model_100.bin",
+      "model_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
       "emb_module": "fasttext",
       "dim": 100
     },

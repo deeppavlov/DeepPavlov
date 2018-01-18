@@ -20,7 +20,7 @@ from deeppavlov.core.commands.utils import set_usr_dir
 # NER
 # models/ner/config.json
 
-usr_dir = None
+# usr_dir = None
 
 try:
     MODEL_CONFIG_PATH = 'models/classifiers/intents/config.json'
@@ -29,5 +29,6 @@ try:
     interact_model(MODEL_CONFIG_PATH)
 # remove if usr_dir is empty:
 finally:
-    if usr_dir and not list(usr_dir.iterdir()):
+    usr_dir = get_usr_dir()
+    if not list(usr_dir.iterdir()):
         usr_dir.rmdir()

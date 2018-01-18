@@ -9,7 +9,7 @@ from deeppavlov.core.models.inferable import Inferable
 @register('dict_emb')
 class DictEmbedder(Inferable):
     def __init__(self, model_path, dim, *args, **kwargs):
-        self.model_path = model_path
+        super().__init__(model_path=model_path)
         self.tok2emb = {}
         self.dim = dim
 
@@ -27,7 +27,7 @@ class DictEmbedder(Inferable):
         else:
             print('Loading existing dictionary of embeddings from {}'.format(self.model_path))
 
-            with open(str(self.model_path_)) as fin:
+            with open(str(self.model_path)) as fin:
                 for line in fin:
                     values = line.rsplit(sep=' ', maxsplit=self.dim)
                     assert (len(values) == self.dim + 1)

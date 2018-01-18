@@ -10,7 +10,7 @@ from deeppavlov.core.models.inferable import Inferable
 
 @register('fasttext')
 class FasttextEmbedder(Inferable):
-    def __init__(self, model_dir='fasttext', model_file='fasttext.bin', dim=100,
+    def __init__(self, model_path=None, model_dir=None, model_file=None, dim=100,
                  embedding_url=None, emb_module='fasttext', *args, **kwargs):
         """
         Args:
@@ -18,13 +18,12 @@ class FasttextEmbedder(Inferable):
             dim: dimension of embeddings
             embedding_url: url link to embedding to try to download if file does not exist
         """
-        print("Initilizing embedder")
+        super().__init__(model_path=model_path,
+                         model_dir=model_dir,
+                         model_file=model_file)
         self.tok2emb = {}
         self.dim = dim
         self.embedding_url = embedding_url
-        # self.model_path = model_path
-        self._model_dir = model_dir
-        self._model_file = model_file
         self.emb_module = emb_module
         self.model = self.load()
 
@@ -46,16 +45,17 @@ class FasttextEmbedder(Inferable):
             fname: file name
         """
 
+        print("[loading embeddings from `{}`]".format(self.model_path))
         if not Path(self.model_path).exists():
             if self.embedding_url:
                 try:
-                    print('Trying to download a pretrained fasttext model from repository')
+                    print('[trying to download a pretrained fasttext model from repository]')
                     local_filename, _ = urllib.request.urlretrieve(self.embedding_url)
                     with open(local_filename, 'rb') as fin:
                         model_file = fin.read()
 
-                    mp = self.model_path_ / self._model_dir / self._model_file
-                    print("Saving downloaded fasttext model to {}".format(mp))
+                    mp = self.model_path / self._model_dir / self._model_file
+                    print("[saving downloaded fasttext model to {}]".format(mp))
                     if not mp.exists():
                         mp.mkdir()
                     with open(str(mp), 'wb') as fout:
@@ -65,9 +65,10 @@ class FasttextEmbedder(Inferable):
                         'Looks like the provided fasttext url is incorrect', e)
             else:
                 raise FileNotFoundError(
-                    'No pretrained fasttext model provided. Please include "model_path" to json.')
+                    'No pretrained fasttext model provided or provided "model_path" is incorrect.'
+                    ' Please include "model_path" to json.')
         else:
-            model_file = str(self.model_path_)
+            model_file = str(self.model_path)
         if self.emb_module == 'fasttext':
             import fasttext as Fasttext
             model = Fasttext.load_model(model_file)
@@ -116,6 +117,9 @@ class FasttextEmbedder(Inferable):
             embedded_tokens.append(emb)
 
         if mean:
-            return np.mean([et for et in embedded_tokens if et.any()])
+            filtered = [et for et in embedded_tokens if np.any(et)]
+            if filtered:
+                return np.mean(filtered, axis=0)
+            return np.zeros(self.dim, dtype=np.float32)
 
         return embedded_tokens

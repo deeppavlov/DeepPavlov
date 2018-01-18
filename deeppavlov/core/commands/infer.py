@@ -15,7 +15,7 @@ def build_model_from_config(config):
             vocab_name = vocab_config['name']
             v = from_params(REGISTRY[vocab_name], vocab_config)
             vocabs[vocab_param_name] = v
-    model = from_params(REGISTRY[model_name], model_config, vocabs)
+    model = from_params(REGISTRY[model_name], model_config, vocabs=vocabs)
     model.reset()
     return model
 

@@ -27,8 +27,8 @@ def check_attr_true(attr: str):
                 return f(self, *args, **kwargs)
             else:
                 print("'{0}' is False, doing nothing."
-                      " Set {0} to True in json config "
-                      "if you'd like the {1} to proceed.".format(attr, f))
+                      " Set '{0}' to True in json config "
+                      "if you'd like the {1} to proceed.".format(attr, str(f).split()[1]))
 
         return wrapped
 
@@ -38,9 +38,9 @@ def check_attr_true(attr: str):
 def run_alt_meth_if_no_path(alt_f: Callable, attr: str):
     def _run_alt_meth(f):
         def wrapped(self, *args, **kwargs):
-            if self.model_path_.exists():
-                if self.model_path_.is_file() or (
-                            self.model_path_.is_dir() and os.listdir(str(self.model_path_))):
+            if self.model_path.exists():
+                if self.model_path.is_file() or (
+                            self.model_path.is_dir() and os.listdir(str(self.model_path))):
                     try:
                         return f(self, *args, **kwargs)
                     except ConfigError:
@@ -61,10 +61,10 @@ def check_path_exists(path_type='file'):
     def _chek_path_exists(f: Callable):
         def wrapped(self, *args, **kwargs):
             if path_type == 'file':
-                if self.model_path_.exists():
+                if self.model_path.exists():
                     return f(self, *args, **kwargs)
             elif path_type == 'dir':
-                if self.model_path_.parent.exists():
+                if self.model_path.parent.exists():
                     return f(self, *args, **kwargs)
             raise FileNotFoundError(
                 "{}.model_path doesn't exist. Check if there is a pretrained model."
