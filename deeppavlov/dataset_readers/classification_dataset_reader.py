@@ -1,22 +1,4 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, softwaredata
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-import json
 import logging
-from itertools import chain
 from pathlib import Path
 
 import numpy as np
@@ -32,11 +14,26 @@ logger = logging.getLogger(__name__)
 
 @register('classification_datasetreader')
 class ClassificationDatasetReader(DatasetReader):
+    """
+    Class provides reading dataset in .csv format
+    """
 
     url = 'http://lnsigo.mipt.ru/export/datasets/snips_intents/train.csv'
 
     @overrides
     def read(self, data_path, data_types=["train"]):
+        """
+        Method reads dataset from data_path directory.
+        Reading files are all data_types + extension
+        (i.e for data_types=["train", "valid"] files "train.csv" and "valid.csv" form data_path will be read)
+        Args:
+            data_path: directory with files
+            data_types: types of considered data (possible: "train", "valid", "test")
+
+        Returns:
+            dictionary with types from data_types.
+            Each field of dictionary is a list of tuples (x_i, y_i)
+        """
 
         for data_type in data_types:
             if not Path(data_path).joinpath(data_type + ".csv").exists():
@@ -58,4 +55,3 @@ class ClassificationDatasetReader(DatasetReader):
                 new_data[field].append((data[field].loc[i, 'text'], list(columns[data[field].loc[i, columns] == 1.0])))
 
         return new_data
-

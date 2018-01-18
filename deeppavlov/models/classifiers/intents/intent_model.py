@@ -233,7 +233,7 @@ class KerasIntentModel(KerasModel):
                 or list of labels sentence belongs with
         """
         if type(data) is str:
-            preds = self.infer_on_batch([data])[0]
+            preds = self.infer_on_batch([[data]])[0]
             if return_proba:
                 return preds
             else:

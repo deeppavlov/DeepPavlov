@@ -29,12 +29,12 @@
       ],
       "level": "token",
       "model_path": "../data/dstc2/classes.txt",
-      "train_now": true
+      "train_now": false
     }
   },
   "model": {
     "name": "intent_model",
-    "train_now": true,
+    "train_now": false,
     "model_path": "./models/classifiers/intents/intent_cnn_best",
     "opt": {
       "kernel_sizes_cnn": [
@@ -47,7 +47,7 @@
         "binary_accuracy",
         "fmeasure"
       ],
-      "confident_threshold": 0.3,
+      "confident_threshold": 0.5,
       "optimizer": "Adam",
       "lear_rate": 0.1,
       "lear_rate_decay": 0.1,
