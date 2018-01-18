@@ -18,7 +18,7 @@ class Serializable(metaclass=ABCMeta):
      It is always an empty string and is ignored if it is not set in json config.
     """
 
-    def __init__(self, model_path=None, model_dir=None, model_file=None):
+    def __init__(self, model_path=None, model_dir=None, model_file=None, *args, **kwargs):
         self._model_dir = model_dir
         self._model_file = model_file
         self.model_path = self.get_model_path(model_path)
