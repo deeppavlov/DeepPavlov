@@ -1,23 +1,19 @@
 {
   "dataset_reader": {
     "name": "dstc2_datasetreader",
-    "data_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2"
+    "data_path": "../data/dstc2"
   },
   "dataset": {
     "name": "dstc2_ner_dataset",
-    "dataset_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2"
+    "dataset_path": "../data/dstc2"
   },
   "model": {
     "name": "dstc_slotfilling",
     "train_now": true,
-    "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/ner",
+    "model_path": "../data/ner",
     "ner_network": {
+      "train_now": true,
       "name": "ner_tagging_network",
-      "vocabs": [
-        "token_vocab",
-        "tag_vocab",
-        "char_vocab"
-      ],
       "verbouse": true,
       "filter_width": 7,
       "embeddings_dropout": true,
@@ -33,24 +29,27 @@
   },
   "vocabs": {
     "token_vocab": {
+      "train_now": true,
       "name": "default_vocab",
-      "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/ner/token.dict",
+      "model_path": "../data/ner/token.dict",
       "inputs": [
         "x"
       ],
       "level": "token"
     },
     "tag_vocab": {
+      "train_now": true,
       "name": "default_vocab",
-      "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/ner/tag.dict",
+      "model_path": "../data/ner/tag.dict",
       "inputs": [
         "y"
       ],
       "level": "token"
     },
     "char_vocab": {
+      "train_now": true,
       "name": "default_vocab",
-      "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/ner/char.dict",
+      "model_path": "../data/ner/char.dict",
       "inputs": [
         "x"
       ],
@@ -59,4 +58,3 @@
   },
   "num_epochs": 1
 }
-

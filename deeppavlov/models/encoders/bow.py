@@ -6,8 +6,8 @@ from deeppavlov.core.models.inferable import Inferable
 
 @register('bow')
 class BoW_encoder(Inferable):
-    def __init__(self):
-        pass
+    def __init__(self, *args, **kwargs):
+        super().__init__()
 
     def _encode(self, utterance, vocab):
         bow = np.zeros([len(vocab)], dtype=np.int32)

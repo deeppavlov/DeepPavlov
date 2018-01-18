@@ -7,57 +7,62 @@
     "name": "dstc2_dialog_dataset"
   },
   "vocabs": {
-    "token_vocab": {
+    "word_vocab": {
       "train_now": true,
       "name": "default_vocab",
       "inputs": [
         "x"
       ],
-      "level": "token"
+      "level": "token",
+      "tokenize": true,
+      "model_path": "../data/vocabs/word_vocab.dict"
+    },
+    "token_vocab": {
+      "name": "default_vocab",
+      "inputs": [
+        "x"
+      ],
+      "level": "token",
+      "model_path": "../data/ner/token.dict"
     },
     "tag_vocab": {
-      "train_now": true,
       "name": "default_vocab",
       "inputs": [
         "y"
       ],
-      "level": "token"
+      "level": "token",
+      "model_path": "../data/ner/tag.dict"
     },
     "char_vocab": {
-      "train_now": true,
       "name": "default_vocab",
       "inputs": [
         "x"
       ],
-      "level": "char"
+      "level": "char",
+      "model_path": "../data/ner/char.dict"
     }
   },
   "model": {
     "train_now": true,
     "name": "hcn_new",
-    "debug": 0,
-    "template_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2/dstc2-templates.txt",
+    "debug": 1,
+    "num_epochs": 1,
+    "template_path": "../data/dstc2/dstc2-templates.txt",
     "network": {
       "name": "custom_rnn",
       "model_dir": "hcn_rnn",
-      "train_now": true,
+      "model_file": "model",
       "learning_rate": 0.03,
       "hidden_dim": 128,
-      "obs_size": 832,
+      "obs_size": 831,
       "use_action_mask": false,
       "action_size": 45
     },
     "slot_filler": {
       "name": "dstc_slotfilling",
-      "train_now": true,
       "ner_network": {
+        "model_path": "../data/ner",
         "name": "ner_tagging_network",
-        "vocabs": [
-          "token_vocab",
-          "tag_vocab",
-          "char_vocab"
-        ],
-        "verbouse": true,
         "filter_width": 7,
         "embeddings_dropout": true,
         "n_filters": [
@@ -67,22 +72,21 @@
         "token_embeddings_dim": 64,
         "char_embeddings_dim": 32,
         "use_batch_norm": true,
-        "use_crf": true,
-        "model_path": "../data/ner"
+        "use_crf": true
       }
     },
     "intent_classifier": {
       "name": "intent_model",
-      "train_now": true,
-      "model_path": "../data/intent_cnn",
+      "model_path": "models/classifiers/intents/intent_cnn_best",
       "opt": {
-        "classes_file": "../data/dstc2/classes.txt",
+        "model_path": "models/classifiers/intents/intent_cnn_best",
+        "classes_file": "models/classifiers/intents/intent_cnn_best/classes.txt",
         "kernel_sizes_cnn": "3 3 3",
         "filters_cnn": 512,
         "lear_metrics": "binary_accuracy fmeasure",
         "confident_threshold": 0.5,
         "optimizer": "Adam",
-        "lear_rate": 0.1,
+        "lear_rate": 1.0,
         "lear_rate_decay": 0.1,
         "loss": "binary_crossentropy",
         "text_size": 15,
@@ -93,14 +97,14 @@
         "dense_size": 100,
         "model_name": "cnn_model",
         "batch_size": 64,
-        "val_every_n_epochs": 5,
+        "val_every_n_epochs": 1,
         "verbose": true,
         "val_patience": 5,
         "show_examples": false
       },
       "embedder": {
         "name": "fasttext",
-        "model_path": "../data/dstc2_fasttext_model_100.bin",
+        "model_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
         "emb_module": "fasttext",
         "dim": 100
       }
@@ -111,8 +115,9 @@
     "embedder": {
       "name": "fasttext",
       "emb_module": "pyfasttext",
+      "mean": true,
       "dim": 300,
-      "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/wiki-news-300d-1M-subword.vec"
+      "model_path": "../data/embeddings/wiki.en.bin"
     },
     "tokenizer": {
       "name": "spacy_tokenizer"

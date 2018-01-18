@@ -7,6 +7,7 @@ Trainable and Inferable interfaces and make a pull-request to deeppavlov.
 from abc import abstractmethod
 
 import tensorflow as tf
+from pathlib import Path
 from overrides import overrides
 
 from deeppavlov.core.models.trainable import Trainable
@@ -16,10 +17,11 @@ from .tf_backend import TfModelMeta
 
 
 class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
-    _saver = tf.train.Saver
-    # _model_dir = ''
-    # _model_file = ''
-    sess = None
+    # _saver = tf.train.Saver
+
+    def __init__(self, *args, **kwargs):
+        self._saver = tf.train.Saver
+        super().__init__(*args, **kwargs)
 
     @abstractmethod
     def _add_placeholders(self):
@@ -75,12 +77,12 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
         return self._forward(instance, *args)
 
     def save(self):
-        print("Saving model to `{}`".format(self.model_path_.as_posix()))
-        self._saver().save(sess=self.sess, save_path=self.model_path_.as_posix(), global_step=0)
-        print('\n:: Model saved to {} \n'.format(self.model_path_.as_posix()))
+        print('\n:: saving model to {} \n'.format(self.model_path))
+        self._saver().save(sess=self.sess, save_path=str(self.model_path), global_step=0)
+        print('model saved')
 
     def get_checkpoint_state(self):
-        return tf.train.get_checkpoint_state(self.model_path_.parent)
+        return tf.train.get_checkpoint_state(Path(self.model_path).parent)
 
     @check_path_exists('dir')
     @overrides
@@ -98,4 +100,5 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
 
 
 class SimpleTFModel(Trainable, Inferable, metaclass=TfModelMeta):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

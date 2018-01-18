@@ -18,16 +18,25 @@ class Serializable(metaclass=ABCMeta):
      It is always an empty string and is ignored if it is not set in json config.
     """
 
-    _model_dir = ''
-    _model_file = ''
-    model_path = ''
+    def __init__(self, model_path=None, model_dir=None, model_file=None):
+        self._model_dir = model_dir
+        self._model_file = model_file
+        self.model_path = self.get_model_path(model_path)
 
-    @property
-    def model_path_(self) -> Path:
-        if not self.model_path:
-            return Path(paths.USR_PATH) / self._model_dir / self._model_file
+    def __new__(cls, *args, **kwargs):
+        if cls is Serializable:
+            raise TypeError(
+                "TypeError: Can't instantiate abstract class {} directly".format(cls.__name__))
+        return object.__new__(cls)
+
+    def get_model_path(self, model_path):
+        if not model_path:
+            p = paths.USR_PATH
+            if self._model_dir:
+                p = p / self._model_dir
+                p.mkdir(parents=True, exist_ok=True)
+            if self._model_file:
+                p = p / self._model_file
         else:
-            return Path(self.model_path)
-
-    def make_dir(self):
-        self.model_path_.parent.mkdir(mode=0o755, parents=True, exist_ok=True)
+            p = Path(model_path)
+        return p

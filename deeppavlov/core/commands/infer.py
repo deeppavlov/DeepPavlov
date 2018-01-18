@@ -7,10 +7,6 @@ from deeppavlov.core.common.params import from_params
 
 def build_model_from_config(config):
     model_config = config['model']
-    try:
-        model_config.update(config['vocabs'])
-    except KeyError:
-        pass
     model_name = model_config['name']
     
     vocabs = {}
@@ -19,7 +15,7 @@ def build_model_from_config(config):
             vocab_name = vocab_config['name']
             v = from_params(REGISTRY[vocab_name], vocab_config)
             vocabs[vocab_param_name] = v
-    model = from_params(REGISTRY[model_name], model_config, vocabs)
+    model = from_params(REGISTRY[model_name], model_config, vocabs=vocabs)
     model.reset()
     return model
 

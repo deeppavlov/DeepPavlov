@@ -25,7 +25,7 @@ import pathlib
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset import Dataset
-from deeppavlov.data.utils import download
+from deeppavlov.core.data.utils import download
 
 logger = logging.getLogger(__name__)
 
@@ -122,6 +122,7 @@ class DstcNerDataset(Dataset):
                     of different input features.
         """
         self.random_state = random.getstate()
+        #TODO: include slot vals to dstc2.tar.gz
         dataset_path = pathlib.Path(dataset_path) / 'slot_vals.json'
         self._build_slot_vals(dataset_path)
         with open(dataset_path) as f:

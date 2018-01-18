@@ -23,9 +23,10 @@ import sys
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.tf_model import SimpleTFModel
 
+from deeppavlov.core.common.attributes import check_attr_true
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.tf_model import SimpleTFModel, TFModel
 from deeppavlov.models.ner.layers import character_embedding_network
 from deeppavlov.models.ner.layers import embedding_layer
 from deeppavlov.models.ner.layers import highway_convolutional_network
@@ -41,9 +42,7 @@ MODEL_FILE_NAME = 'ner_model'
 @register("ner_tagging_network")
 class NerNetwork(SimpleTFModel):
     def __init__(self,
-                 token_vocab,
-                 char_vocab,
-                 tag_vocab,
+                 vocabs,
                  n_filters=(128, 256),
                  filter_width=3,
                  token_embeddings_dim=128,
@@ -58,14 +57,22 @@ class NerNetwork(SimpleTFModel):
                  net_type='cnn',
                  char_filter_width=5,
                  verbouse=False,
-                 embeddings_onethego=False):
+                 embeddings_onethego=False,
+                 model_path=None,
+                 model_dir='ner',
+                 model_file='dstc_ner_network.ckpt',
+                 train_now=False):
 
-        n_tags = len(tag_vocab)
-        n_tokens = len(token_vocab)
-        n_chars = len(char_vocab)
+        super().__init__(model_path=model_path,
+                         model_dir=model_dir,
+                         model_file=model_file,
+                         train_now=train_now)
+
+        n_tags = len(vocabs['tag_vocab'])
+        n_tokens = len(vocabs['token_vocab'])
+        n_chars = len(vocabs['char_vocab'])
 
         # Create placeholders
-        # noinspection PyPackageRequirements
         if embeddings_onethego:
             x_word = tf.placeholder(dtype=tf.float32, shape=[None, None, token_embeddings_dim], name='x_word')
         else:
@@ -144,9 +151,9 @@ class NerNetwork(SimpleTFModel):
         if logging:
             self.train_writer = tf.summary.FileWriter('summary', sess.graph)
 
-        self.token_vocab = token_vocab
-        self.tag_vocab = tag_vocab
-        self.char_vocab = char_vocab
+        self.token_vocab = vocabs['token_vocab']
+        self.tag_vocab = vocabs['tag_vocab']
+        self.char_vocab = vocabs['char_vocab']
         self._use_crf = use_crf
         self.summary = tf.summary.merge_all()
         self._x_w = x_word
@@ -172,13 +179,14 @@ class NerNetwork(SimpleTFModel):
         self._mask = mask_ph
         sess.run(tf.global_variables_initializer())
 
-    def save(self, model_file_path):
+    def save(self):
+        print('Saving model to {}'.format(self.model_path))
         saver = tf.train.Saver()
-        saver.save(self._sess, str(model_file_path))
+        saver.save(self._sess, str(self.model_path))
 
-    def load(self, model_file_path):
+    def load(self):
         saver = tf.train.Saver()
-        saver.restore(self._sess, str(model_file_path))
+        saver.restore(self._sess, str(self.model_path))
 
     def tokens_batch_to_numpy_batch(self, batch_x, batch_y=None):
         # Determine dimensions
@@ -228,6 +236,7 @@ class NerNetwork(SimpleTFModel):
                                        print_results,
                                        short_report)
 
+    @check_attr_true('train_now')
     def train(self, data, batch_size=8):
         total_loss = 0
         total_count = 0
@@ -242,6 +251,7 @@ class NerNetwork(SimpleTFModel):
             total_loss += current_loss
             total_count += len(batch_x)
 
+    @check_attr_true('train_now')
     def train_on_bath(self, x_word, x_char, mask, y_tag, learning_rate=1e-3, dropout_rate=0.5):
         feed_dict = self._fill_feed_dict(x_word,
                                          x_char,
@@ -303,7 +313,7 @@ class NerNetwork(SimpleTFModel):
 
     @overrides
     def infer(self, instance, *args, **kwargs):
-        pass
+        return self.predict_for_token_batch([instance])
 
     def predict(self, x_word, x_char, mask=None):
 
