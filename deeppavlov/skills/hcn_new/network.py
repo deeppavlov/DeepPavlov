@@ -30,7 +30,7 @@ class HybridCodeNetworkModel(TFModel):
         model_path = self.opt.get('model_path', None)
         model_dir = self.opt.get('model_dir', '')
         model_file = self.opt.get('model_file', None)
-        train_now = self.opt.get('train_now', 'model')
+        train_now = self.opt.get('train_now', False)
 
         super().__init__(model_path=model_path,
                          model_dir=model_dir,
