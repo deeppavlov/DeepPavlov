@@ -59,11 +59,11 @@ One of the main constituents of model is a configuration file. Below the table w
 
 |   Parameter         |  Description                                                      | 
 |---------------------|-------------------------------------------------------------------|
-| dataset_reader ||
+| **dataset_reader** ||
 |   name              | registered name of dataset reader   <br />*SetOfValues*: "dstc2_datasetreader", "classification_datasetreader" |
 |   data_path         | directory where data files are located                          | 
 |   data_types        | which data types is presented in data_path (only for `classification_datasetreader`) *SetOfValues*: list of fields, i.e ["train", "valid", "test"]| 
-| dataset||
+| **dataset** ||
 |   name              | registered name of dataset        <br />*SetOfValues*:  "intent_dataset", classification_dataset"     | 
 |   seed              | seed for batch generator              |
 |   fields_to_merge   | list of fields to merge                <br />*SetOfValues*: list of fields, i.e ["train", "valid", "test"]| 
@@ -71,13 +71,13 @@ One of the main constituents of model is a configuration file. Below the table w
 |   field_to_split    | name of field to split                         <br />*SetOfValues*:  field, i.e "train", "valid", "test"           | 
 |   split_fields      | list of fields to which save splitted field     <br />*SetOfValues*:  list of fields, i.e ["train", "valid", "test"]|
 |   split_proportions | list of corresponding proportions for splitting  <br />*SetOfValues*:  list of floats each of which is in  \[0., 1.\]|
-| vocabs.classes_vocab ||
+| **vocabs.classes_vocab** ||
 | name                | registered name of vocab    <br />*SetOfValues*: "default_vocab"  | 
 |  inputs             | whether to create vocab over x and/or y fields of dataset  <br />*SetOfValues*: list of "x" and/or "y"    |
 |  level              | whether to considered char or token level     <br />*SetOfValues*: "char", "token"   |
 | model_path          | path to file where vocab with classes will be saved    |
 | train_now           | whether to train vocab or not  |
-| model         ||
+| **model**         ||
 | model_name          | method of the class KerasIntentModel that corresponds to the model <br />*SetOfValues*: "cnn_model", "dcnn_model"   | 
 | text_size           | length of each sample in words      | 
 | confident_threshold | boundary value of belonging to a class  <br />*SetOfValues*: \[0., 1.\]                       | 
@@ -97,12 +97,12 @@ One of the main constituents of model is a configuration file. Below the table w
 | val_every_n_epochs  | frequency of validation during training (validate every n epochs)       | 
 | verbose             | parameter whether to print training information or not        | 
 | val_patience        | maximal number of validation loss increases before stop training           | 
-| model.embedder ||
+| **model.embedder** ||
 | name                | registered name of embedder  <br />*SetOfValues*:"fasttext"   |
 | model_path          | path to file where binary embedding model is located      | 
 | emb_module          | fasttext library to use  <br />*SetOfValues*: "fasttext", "pyfasttext", "gensim"            | 
 | dim                 | dimension of embeddings    | 
-| model.tokenizer||
+| **model.tokenizer** ||
 | name                | registered name of tokenizer <br />*SetOfValues*: "nltk_tokenizer"                              | 
 | tokenizer           | tokenizer from nltk.tokenize to use  <br />*SetOfValues*:  any method from nltk.tokenize                 |  
 
