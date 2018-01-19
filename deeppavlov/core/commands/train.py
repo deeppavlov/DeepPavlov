@@ -120,19 +120,19 @@ def train_batches(config_path: str):
                 model.train_on_batch(batch)
                 i += 1
 
-                if train_config['log_every_n_batches'] and i % train_config['log_every_n_batches'] == 0:
-                    print('log')
+                if train_config['log_every_n_batches'] > 0 and i % train_config['log_every_n_batches'] == 0:
+                    print('log')  # TODO: get metrics here
 
             epochs += 1
 
-            if train_config['val_every_n_epochs'] and epochs % train_config['val_every_n_epochs'] == 0:
+            if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
                 y_true = []
                 y_predicted = []
                 for x, y in dataset.batch_generator(train_config['batch_size'], 'valid'):
                     y_true += y
                     y_predicted += model.infer()
 
-                metrics = []  # get metrics
+                metrics = []  # TODO: get metrics
                 print('log valid')
 
                 score = metrics[0]
@@ -140,14 +140,15 @@ def train_batches(config_path: str):
                     patience = 0
                     best = score
                     model.save()
+                    saved = True
                 else:
-                    patience -= 1
+                    patience += 1
 
-                if train_config['validation_patience'] and patience >= train_config['validation_patience']:
+                if patience >= train_config['validation_patience'] > 0:
                     print('Run out of patience', file=sys.stderr)
                     break
 
-            if train_config['epochs'] and train_config['epochs'] >= epochs:
+            if epochs >= train_config['epochs'] > 0:
                 break
     except KeyboardInterrupt:
         print('Stopped training', file=sys.stderr)
