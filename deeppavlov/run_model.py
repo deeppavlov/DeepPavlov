@@ -1,4 +1,4 @@
-from deeppavlov.core.commands.train import train_model_from_config
+from deeppavlov.core.commands.train import train_model_from_config, train_batches
 from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 
@@ -23,9 +23,9 @@ from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 # usr_dir = None
 
 try:
-    MODEL_CONFIG_PATH = 'skills/hcn_new/config.json'
+    MODEL_CONFIG_PATH = 'models/classifiers/intents/config_train.json'
     set_usr_dir(MODEL_CONFIG_PATH)
-    train_model_from_config(MODEL_CONFIG_PATH)
+    train_batches(MODEL_CONFIG_PATH)
     interact_model(MODEL_CONFIG_PATH)
 # remove if usr_dir is empty:
 finally:

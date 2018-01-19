@@ -74,6 +74,8 @@ def train_batches(config_path: str):
         'batch_size': 1,
 
         'metrics': ['accuracy'],
+        'metric_optimization': 'maximize',
+
         'validation_patience': 5,
         'val_every_n_epochs': 0,
 
@@ -83,13 +85,18 @@ def train_batches(config_path: str):
         'test': True
     }
 
+    def accuracy(y_true, y_predicted):
+        pass  # TODO: implement and move away
+        return 0
+
+    metrics_functions = [accuracy]
+
     try:
         train_config.update(config['train'])
     except KeyError:
         raise RuntimeError('training config is missing')
 
     reader_config = config['dataset_reader']
-    # NOTE: Why there are no params for dataset reader?
     reader = from_params(REGISTRY[reader_config['name']], {})
     data = reader.read(reader_config.get('data_path', usr_dir))
 
@@ -114,39 +121,63 @@ def train_batches(config_path: str):
     saved = False
     patience = 0
     best = 0
+    log_on = train_config['log_every_n_batches'] > 0
+    train_y_true = []
+    train_y_predicted = []
     try:
         while True:
             for batch in dataset.batch_generator(train_config['batch_size']):
+                if log_on:
+                    x, y_true = batch
+                    y_predicted = list(model.infer(x))
+                    train_y_true += y_true
+                    train_y_predicted += y_predicted
                 model.train_on_batch(batch)
                 i += 1
 
                 if train_config['log_every_n_batches'] > 0 and i % train_config['log_every_n_batches'] == 0:
-                    print('log')  # TODO: get metrics here
+                    metrics = [f(train_y_true, train_y_predicted) for f in metrics_functions]
+                    print('train: {}'.format(dict(zip(train_config['metrics'], metrics))))
+                    train_y_true = []
+                    train_y_predicted = []
+
+                    if train_config['show_examples']:
+                        for xi, ypi, yti in zip(x, y_predicted, y_true):
+                            print({'in': xi, 'out': ypi, 'expected': yti})
 
             epochs += 1
 
             if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
-                y_true = []
-                y_predicted = []
-                for x, y in dataset.batch_generator(train_config['batch_size'], 'valid'):
-                    y_true += y
-                    y_predicted += model.infer()
+                val_y_true = []
+                val_y_predicted = []
+                for x, y_true in dataset.batch_generator(train_config['batch_size'], 'valid'):
+                    y_predicted = list(model.infer(x))
+                    val_y_true += y_true
+                    val_y_predicted += y_predicted
 
-                metrics = []  # TODO: get metrics
-                print('log valid')
+                metrics = [f(train_y_true, train_y_predicted) for f in metrics_functions]
+                print('valid: {}'.format(dict(zip(train_config['metrics'], metrics))))
+                if train_config['show_examples']:
+                    for xi, ypi, yti in zip(x, y_predicted, y_true):
+                        print({'in': xi, 'out': ypi, 'expected': yti})
 
                 score = metrics[0]
                 if score > best:
                     patience = 0
+                    print('Improved on the previous best {} of {}'.format(train_config['metrics'][0], best),
+                          file=sys.stderr)
                     best = score
                     model.save()
                     saved = True
                 else:
                     patience += 1
 
-                if patience >= train_config['validation_patience'] > 0:
-                    print('Run out of patience', file=sys.stderr)
-                    break
+                    if patience >= train_config['validation_patience'] > 0:
+                        print('Run out of patience', file=sys.stderr)
+                        break
+                    else:
+                        print('Did not improve on the {} of {}'.format(train_config['metrics'][0], best),
+                              file=sys.stderr)
 
             if epochs >= train_config['epochs'] > 0:
                 break

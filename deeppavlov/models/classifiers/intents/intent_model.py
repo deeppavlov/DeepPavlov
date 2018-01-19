@@ -95,13 +95,7 @@ class KerasIntentModel(KerasModel):
                              "loss",
                              "coef_reg_cnn",
                              "coef_reg_den",
-                             "dropout_rate",
-                             "epochs",
-                             "batch_size",
-                             "val_every_n_epochs",
-                             "verbose",
-                             "val_patience",
-                             "show_examples"]
+                             "dropout_rate"]
         # Reinitializing of parameters
         for param in changeable_params:
             self.opt[param] = opt[param]
