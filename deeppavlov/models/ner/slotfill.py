@@ -18,7 +18,7 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
                  slots_dir='slots',
                  slots_file='slot_vals.json',
                  ser_path=None,
-                 train_now=False, *args, **kwargs):
+                 train_now=False, **kwargs):
 
         super().__init__(ser_path=ser_path, ser_dir=slots_dir, ser_file=slots_file,
                          train_now=train_now)

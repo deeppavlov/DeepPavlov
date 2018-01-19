@@ -50,7 +50,6 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                  num_epochs=100,
                  val_patience=5,
                  train_now=False,
-                 *args,
                  **kwargs):
 
         super().__init__(train_now=train_now)

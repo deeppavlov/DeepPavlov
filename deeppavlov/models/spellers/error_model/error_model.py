@@ -17,7 +17,7 @@ from deeppavlov.core.common.attributes import check_attr_true, check_path_exists
 @register('spelling_error_model')
 class ErrorModel(Inferable, Trainable):
     def __init__(self, dictionary: StaticDictionary, ser_path=None, ser_dir='error_model', window=1,
-                 ser_file='error_model.tsv', lm_file=None, train_now=False, *args, **kwargs):
+                 ser_file='error_model.tsv', lm_file=None, train_now=False, **kwargs):
 
         super().__init__(ser_path=ser_path,
                          ser_dir=ser_dir,

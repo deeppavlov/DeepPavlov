@@ -15,8 +15,8 @@ class Inferable(Serializable):
     should be trained in the current experiment run or not.
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     @abstractmethod
     def infer(self, instance):

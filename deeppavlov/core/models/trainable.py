@@ -15,9 +15,9 @@ class Trainable(Serializable):
     should be trained in the current experiment run or not.
     """
 
-    def __init__(self, train_now=False, *args, **kwargs):
+    def __init__(self, train_now=False, **kwargs):
         self.train_now = train_now
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
     @abstractmethod
     def train(self, data):

@@ -23,8 +23,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
     Class builds keras model
     """
 
-    def __init__(self, opt: Dict,
-                 *args, **kwargs):
+    def __init__(self, opt: Dict, **kwargs):
         """
         Method initializes model using parameters from opt
         Args:

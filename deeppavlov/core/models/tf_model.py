@@ -17,10 +17,10 @@ from .tf_backend import TfModelMeta
 
 class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.sess = None
         self._saver = tf.train.Saver
-        super().__init__(*args, **kwargs)
+        super().__init__(**kwargs)
 
     @abstractmethod
     def _add_placeholders(self):

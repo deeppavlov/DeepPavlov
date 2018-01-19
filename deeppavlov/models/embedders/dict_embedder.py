@@ -8,7 +8,7 @@ from deeppavlov.core.models.inferable import Inferable
 
 @register('dict_emb')
 class DictEmbedder(Inferable):
-    def __init__(self, ser_path, dim, *args, **kwargs):
+    def __init__(self, ser_path, dim, **kwargs):
         super().__init__(ser_path=ser_path)
         self.tok2emb = {}
         self.dim = dim

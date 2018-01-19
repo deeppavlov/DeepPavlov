@@ -26,7 +26,7 @@ class KerasIntentModel(KerasModel):
     def __init__(self,
                  opt: Dict,
                  embedder: Type = FasttextEmbedder,
-                 *args, **kwargs):
+                 **kwargs):
         """
         Method initializes model using parameters from opt
         Args:

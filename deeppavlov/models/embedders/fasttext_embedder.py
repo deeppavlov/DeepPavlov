@@ -11,7 +11,7 @@ from deeppavlov.core.models.inferable import Inferable
 @register('fasttext')
 class FasttextEmbedder(Inferable):
     def __init__(self, ser_path=None, ser_dir=None, ser_file=None, dim=100,
-                 embedding_url=None, emb_module='fasttext', *args, **kwargs):
+                 embedding_url=None, emb_module='fasttext', **kwargs):
         """
         Args:
             ser_path: path to binary file with embeddings
