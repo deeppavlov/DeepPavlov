@@ -59,11 +59,11 @@ One of the main constituents of model is a configuration file. Below the table w
 
 | Structure      |   Parameter         |  Description                                                      | Set of Values                                 | Type    |
 |----------------|---------------------|-------------------------------------------------------------------|-----------------------------------------------|---------|
-| dataset_reader |||||
+| **dataset_reader** |||||
 |   name              | registered name of dataset reader                                 | dstc2_datasetreader, classification_datasetreader |
 |   data_path         | directory where data files are located                            | directory                                     | 
 |   data_types        | which data types is presented in data_path (only for `classification_datasetreader`) | list of fields, i.e ["train", "valid", "test"]| 
-| dataset|||||
+| **dataset**|||||
 |   name              | registered name of dataset                                        | "intent_dataset", classification_dataset"     | 
 |   seed              | seed for batch generator                                          | int from \[0., 1.\]                           |
 |   fields_to_merge   | list of fields to merge                                           | list of fields, i.e ["train", "valid", "test"]| 
@@ -71,21 +71,21 @@ One of the main constituents of model is a configuration file. Below the table w
 |   field_to_split    | name of field to split                                            | field, i.e "train", "valid", "test"           | 
 |   split_fields      | list of fields to which save splitted field                       | list of fields, i.e ["train", "valid", "test"]|
 |   split_proportions | list of corresponding proportions for splitting                   | list of floats each of which is in  \[0., 1.\]|
-| vocabs.classes_vocab |||||
+| **vocabs.classes_vocab** |||||
 | name                | registered name of vocab                                          | "default_vocab"                               | 
 |  inputs             | whether to create vocab over x and/or y fields of dataset         | list of "x" and/or "y"                        |
 |  level              | whether to considered char or token level                         | "char", "token"                               |
 | model_path          | path to file where vocab with classes will be saved               | filename                                      |
 | train_now           | whether to train vocab or not                                     | true \| false                                 |
-| model.embedder |||||
+| **model.embedder** |||||
 | name                | registered name of embedder                                       | "fasttext"                                    |
 | model_path          | path to file where binary embedding model is located              | filename                                      | 
 | emb_module          | fasttext library to use                                           | "fasttext", "pyfasttext", "gensim"            | 
 | dim                 | dimension of embeddings                                           |  int from (0,∞)                               | 
-| model.tokenizer|||||
+| **model.tokenizer**|||||
 | name                | registered name of tokenizer                                      | "nltk_tokenizer"                              | 
 | tokenizer           | tokenizer from nltk.tokenize to use                               | any method from nltk.tokenize                 |  
-| model         |||||
+| **model**         |||||
 | model_name          | method of the class KerasIntentModel that corresponds to the model| \[cnn_model, dcnn_model\] or any custom one   | 
 | text_size           | length of each sample in words                                    |  int from (0, ∞)                              | 
 | confident_threshold | boundary value of belonging to a class                            |   float from \[0., 1.\]                       | 
