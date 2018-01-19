@@ -18,6 +18,7 @@
     "name": "intent_model",
     "opt": {
       "train_now": true,
+      "model_path": "/media/olga/Data/projects/iPavlov/Pilot/deeppavlov/USR_DIR/intents",
       "classes_file": "../data/dstc2/classes.txt",
       "kernel_sizes_cnn": "3 3 3",
       "filters_cnn": 512,

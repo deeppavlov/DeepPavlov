@@ -13,7 +13,7 @@ from keras.layers import Dense, Input
 
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.common.attributes import check_attr_true
+from deeppavlov.core.common.attributes import check_attr_true, run_alt_meth_if_no_path
 from deeppavlov.core.common.file import save_json, read_json
 from deeppavlov.core.common.errors import ConfigError
 
@@ -144,57 +144,62 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
               '\nModel weights file is %s.h5'
               '\nNetwork parameters are from %s_opt.json' % (self._model_file, self._model_file))
 
-        opt_path = Path(str(self.model_path) + '_opt.json')
-        weights_path = str(self.model_path) + '.h5'
+        if self.model_path.is_dir():
+            opt_path = "{}/{}_opt.json".format(self.model_path, self._model_file)
+            weights_path = "{}/{}.h5".format(self.model_path, self._model_file)
+        else:
+            opt_path = "{}_opt.json".format(self.model_path)
+            weights_path = "{}.h5".format(self.model_path)
 
-        if opt_path.is_file():
+        if Path(opt_path).exists() and Path(weights_path).exists():
+
             self.opt = read_json(opt_path)
-        else:
-            raise ConfigError(
-                "Error: config file %s_opt.json of saved model does not exist" % self._model_file)
 
-        model_func = getattr(self, model_name, None)
-        if callable(model_func):
-            model = model_func(params=self.opt)
-        else:
-            raise AttributeError("Model {} is not defined".format(model_name))
-
-        print("Loading weights from `{}{}`".format(self._model_file, '.h5'))
-        model.load_weights(weights_path)
-
-        optimizer_func = getattr(keras.optimizers, optimizer_name, None)
-        if callable(optimizer_func):
-            optimizer_ = optimizer_func(lr=lr, decay=decay)
-        else:
-            raise AttributeError("Optimizer {} is not callable".format(optimizer_name))
-
-        loss_func = getattr(keras.losses, loss_name, None)
-        if callable(loss_func):
-            loss = loss_func
-        else:
-            raise AttributeError("Loss {} is not defined".format(loss_name))
-
-        metrics_names = metrics_names.split(' ')
-        metrics_funcs = []
-        for i in range(len(metrics_names)):
-            metrics_func = getattr(keras.metrics, metrics_names[i], None)
-            if callable(metrics_func):
-                metrics_funcs.append(metrics_func)
+            model_func = getattr(self, model_name, None)
+            if callable(model_func):
+                model = model_func(params=self.opt)
             else:
-                metrics_func = getattr(add_metrics_file, metrics_names[i], None)
+                raise AttributeError("Model {} is not defined".format(model_name))
+
+            print("Loading weights from `{}{}`".format(self._model_file, '.h5'))
+            model.load_weights(weights_path)
+
+            optimizer_func = getattr(keras.optimizers, optimizer_name, None)
+            if callable(optimizer_func):
+                optimizer_ = optimizer_func(lr=lr, decay=decay)
+            else:
+                raise AttributeError("Optimizer {} is not callable".format(optimizer_name))
+
+            loss_func = getattr(keras.losses, loss_name, None)
+            if callable(loss_func):
+                loss = loss_func
+            else:
+                raise AttributeError("Loss {} is not defined".format(loss_name))
+
+            metrics_names = metrics_names.split(' ')
+            metrics_funcs = []
+            for i in range(len(metrics_names)):
+                metrics_func = getattr(keras.metrics, metrics_names[i], None)
                 if callable(metrics_func):
                     metrics_funcs.append(metrics_func)
                 else:
-                    raise AttributeError("Metric {} is not defined".format(metrics_names[i]))
+                    metrics_func = getattr(add_metrics_file, metrics_names[i], None)
+                    if callable(metrics_func):
+                        metrics_funcs.append(metrics_func)
+                    else:
+                        raise AttributeError("Metric {} is not defined".format(metrics_names[i]))
 
-        model.compile(optimizer=optimizer_,
-                      loss=loss,
-                      metrics=metrics_funcs,
-                      loss_weights=loss_weights,
-                      sample_weight_mode=sample_weight_mode,
-                      weighted_metrics=weighted_metrics,
-                      target_tensors=target_tensors)
-        return model
+            model.compile(optimizer=optimizer_,
+                          loss=loss,
+                          metrics=metrics_funcs,
+                          loss_weights=loss_weights,
+                          sample_weight_mode=sample_weight_mode,
+                          weighted_metrics=weighted_metrics,
+                          target_tensors=target_tensors)
+            return model
+        else:
+            self.init_model_from_scratch(model_name, optimizer_name,
+                                         lr, decay, loss_name)
 
     @abstractmethod
     def train_on_batch(self, batch):
@@ -232,9 +237,12 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         Returns:
             nothing
         """
-
-        opt_path = str(self.model_path) + '_opt.json'
-        weights_path = str(self.model_path) + '.h5'
+        if self.model_path.is_dir():
+            opt_path = "{}/{}_opt.json".format(self.model_path, self._model_file)
+            weights_path = "{}/{}.h5".format(self.model_path, self._model_file)
+        else:
+            opt_path = "{}_opt.json".format(self.model_path)
+            weights_path = "{}.h5".format(self.model_path)
         print("[ saving model: {} ]".format(opt_path))
         self.model.save_weights(weights_path)
 

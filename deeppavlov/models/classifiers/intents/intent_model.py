@@ -34,7 +34,8 @@ class KerasIntentModel(KerasModel):
             *args:
             **kwargs:
         """
-        super().__init__(opt, *args, **kwargs)
+        self.opt = opt
+        super().__init__(opt)
 
         try:
             classes_file = self.opt['classes_file']
@@ -80,7 +81,8 @@ class KerasIntentModel(KerasModel):
             self.opt['fasttext_md5'] = current_fasttext_md5
         else:
             if self.opt['fasttext_md5'] != current_fasttext_md5:
-                raise ConfigError("Given fasttext model does NOT match fasttext model used previously to train loaded model")
+                raise ConfigError(
+                    "Given fasttext model does NOT match fasttext model used previously to train loaded model")
 
         # List of parameters that could be changed
         # when the model is initialized from saved and is going to be trained further
