@@ -387,14 +387,5 @@ class NerNetwork(SimpleTFModel):
 
         return self.tag_vocab.batch_idxs2batch_toks(y_pred)
 
-    def get_train_op(self, loss, learning_rate, learnable_scopes=None):
-        variables = self.get_trainable_variables(learnable_scopes)
-
-        # For batch norm it is necessary to update running averages
-        extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        with tf.control_dependencies(extra_update_ops):
-            train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss, var_list=variables)
-        return train_op
-
     def shutdown(self):
         self._sess.close()

@@ -148,3 +148,26 @@ class SimpleTFModel(Trainable, Inferable, metaclass=TfModelMeta):
             print(block_name, blocks[block_name])
         total_num_parameters = np.sum(list(blocks.values()))
         print('Total number of parameters equal {}'.format(total_num_parameters))
+
+    def get_train_op(self, loss, learning_rate, learnable_scopes=None, optimizer=None):
+        """ Get train operation for given loss
+
+        Args:
+            loss: loss, tf tensor or scalar
+            learning_rate: scalar or placeholder
+            learnable_scopes: which scopes are trainable (None for all)
+            optimizer: instance of tf.train.Optimizer, default Adam
+
+        Returns:
+            train_op
+        """
+        variables = self.get_trainable_variables(learnable_scopes)
+        if optimizer is None:
+            optimizer = tf.train.AdamOptimizer
+
+        # For batch norm it is necessary to update running averages
+        extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies(extra_update_ops):
+            train_op = optimizer(learning_rate).minimize(loss, var_list=variables)
+        return train_op
+
