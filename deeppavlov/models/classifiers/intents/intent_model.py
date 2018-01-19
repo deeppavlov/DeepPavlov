@@ -34,8 +34,7 @@ class KerasIntentModel(KerasModel):
             *args:
             **kwargs:
         """
-        self.opt = opt
-        super().__init__(opt)
+        super().__init__(opt, **kwargs)
 
         try:
             classes_file = self.opt['classes_file']
