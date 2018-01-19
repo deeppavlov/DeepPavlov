@@ -15,28 +15,28 @@ from deeppavlov.core.data.utils import download
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(Inferable, Trainable):
     def __init__(self, ner_network: NerNetwork,
+                 slots_dir='slots',
                  slots_file='slot_vals.json',
                  model_path=None,
                  train_now=False, *args, **kwargs):
 
-        super().__init__(model_path=model_path, train_now=train_now)
+        super().__init__(model_path=model_path, model_dir=slots_dir, model_file=slots_file,
+                         train_now=train_now)
 
         # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
-        slot_vals_filepath = self.model_path / slots_file
-        if not slot_vals_filepath.is_file():
-            self._download_slot_vals(slot_vals_filepath)
-        # self._ner_model_path = self.model_path / model_file
+        if not self.model_path.is_file():
+            self._download_slot_vals(self.model_pathh)
 
         self._ner_network = ner_network
         self.load()
-        with open(slot_vals_filepath) as f:
+        with open(self.model_path) as f:
             self._slot_vals = json.load(f)
 
     @overrides
     def load(self):
         # Check prescence of the model files
         print('Loading DstcSlotFilling')
-        path = str(self.model_path.absolute())
+        path =str(self._ner_network.model_path)
         if tf.train.get_checkpoint_state(path) is not None:
             print('Loading model from {}'.format(path))
             self._ner_network.load()
