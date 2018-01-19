@@ -20,7 +20,7 @@ class Trainable(Serializable):
         super().__init__(**kwargs)
 
     @abstractmethod
-    def train(self, data):
+    def train(self, data, *args, **kwargs):
         """
         Train a model.
         :param data: any type of input data passed for training
@@ -31,9 +31,9 @@ class Trainable(Serializable):
         pass
 
     @abstractmethod
-    def save(self):
+    def save(self, *args, **kwargs):
         pass
 
     @abstractmethod
-    def load(self):
+    def load(self, *args, **kwargs):
         pass
