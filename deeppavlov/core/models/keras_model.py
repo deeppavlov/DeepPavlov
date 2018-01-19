@@ -55,7 +55,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                                 lr, decay, loss_name, metrics_names=None, add_metrics_file=None,
                                 loss_weights=None,
                                 sample_weight_mode=None, weighted_metrics=None,
-                                target_tensors=None, *args, **kwargs):
+                                target_tensors=None):
         """
         Method initializes model from scratch with given params
         Args:
@@ -110,10 +110,10 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         model.compile(optimizer=optimizer_,
                       loss=loss,
                       metrics=metrics_funcs,
-                      loss_weights=loss_weights,
-                      sample_weight_mode=sample_weight_mode,
-                      weighted_metrics=weighted_metrics,
-                      target_tensors=target_tensors)
+                      loss_weights=loss_weights,  # None
+                      sample_weight_mode=sample_weight_mode,  # None
+                      weighted_metrics=weighted_metrics,  # None
+                      target_tensors=target_tensors)  # None
         return model
 
     @overrides
@@ -139,10 +139,6 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
             model with loaded weights and network parameters from files
             but compiled with given learning parameters
         """
-        print('___Initializing model from saved___'
-              '\nModel weights file is %s.h5'
-              '\nNetwork parameters are from %s_opt.json' % (self._ser_file, self._ser_file))
-
         if self.ser_path.is_dir():
             opt_path = "{}/{}_opt.json".format(self.ser_path, self._ser_file)
             weights_path = "{}/{}.h5".format(self.ser_path, self._ser_file)
@@ -151,6 +147,10 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
             weights_path = "{}.h5".format(self.ser_path)
 
         if Path(opt_path).exists() and Path(weights_path).exists():
+
+            print('___Initializing model from saved___'
+                  '\nModel weights file is %s.h5'
+                  '\nNetwork parameters are from %s_opt.json' % (self._ser_file, self._ser_file))
 
             self.opt = read_json(opt_path)
 
@@ -197,8 +197,13 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                           target_tensors=target_tensors)
             return model
         else:
-            self.init_model_from_scratch(model_name, optimizer_name,
-                                         lr, decay, loss_name)
+            return self.init_model_from_scratch(model_name, optimizer_name,
+                                                lr, decay, loss_name, metrics_names=metrics_names,
+                                                add_metrics_file=add_metrics_file,
+                                                loss_weights=loss_weights,
+                                                sample_weight_mode=sample_weight_mode,
+                                                weighted_metrics=weighted_metrics,
+                                                target_tensors=target_tensors)
 
     @abstractmethod
     def train_on_batch(self, batch):
