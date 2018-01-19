@@ -148,9 +148,13 @@ To train model one should
 python run_model.py 
 ```
 
+**Current `config_classification.json` implies intent recognition for SNIPS benchmark dataset [2] 
+that was restored in `.csv` format.** 
+
 ## Comparison
 
-
+As no one had tried previously intent recognition for DSTC 2 data, 
+the comparison of the presented model is given on SNIPS dataset 
 
 |             Model                          |  AUC-ROC  | F-measure | 
 |--------------------------------------------|-----------|-----------|
@@ -168,3 +172,5 @@ python run_model.py
 # References
 
 [1] Kim Y. Convolutional neural networks for sentence classification //arXiv preprint arXiv:1408.5882. – 2014.
+
+[2] https://github.com/snipsco/nlu-benchmark
