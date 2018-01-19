@@ -16,19 +16,6 @@ from deeppavlov.core.common.file import load_pickle, save_pickle
 class StaticDictionary:
     dict_name = None
 
-    @staticmethod
-    def _get_source(*args, **kwargs):
-        raw_path = args[2] if len(args) > 2 else kwargs.get('raw_dictionary_path', None)
-        if not raw_path:
-            raise RuntimeError('raw_path for StaticDictionary is not set')
-        with open(raw_path, newline='') as f:
-            data = [line.strip().split('\t')[0] for line in f]
-        return data
-
-    @staticmethod
-    def _normalize(word):
-        return '⟬{}⟭'.format(word.strip().lower().replace('ё', 'е'))
-
     def __init__(self, data_dir=None, *args, **kwargs):
         if data_dir is None:
             data_dir = paths.USR_PATH
@@ -75,6 +62,19 @@ class StaticDictionary:
         self.alphabet = load_pickle(alphabet_path)
         self.words_set = load_pickle(words_path)
         self.words_trie = load_pickle(words_trie_path)
+
+    @staticmethod
+    def _get_source(*args, **kwargs):
+        raw_path = args[2] if len(args) > 2 else kwargs.get('raw_dictionary_path', None)
+        if not raw_path:
+            raise RuntimeError('raw_path for StaticDictionary is not set')
+        with open(raw_path, newline='') as f:
+            data = [line.strip().split('\t')[0] for line in f]
+        return data
+
+    @staticmethod
+    def _normalize(word):
+        return '⟬{}⟭'.format(word.strip().lower().replace('ё', 'е'))
 
 
 @register('russian_words_vocab')
