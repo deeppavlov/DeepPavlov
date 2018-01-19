@@ -21,7 +21,7 @@ class Serializable(metaclass=ABCMeta):
     def __init__(self, ser_path=None, ser_dir=None, ser_file=None, *args, **kwargs):
         self._ser_dir = ser_dir
         self._ser_file = ser_file
-        self.ser_path = self.get_model_path(ser_path)
+        self.ser_path = self.get_ser_path(ser_path)
 
     def __new__(cls, *args, **kwargs):
         if cls is Serializable:
@@ -29,7 +29,7 @@ class Serializable(metaclass=ABCMeta):
                 "TypeError: Can't instantiate abstract class {} directly".format(cls.__name__))
         return object.__new__(cls)
 
-    def get_model_path(self, ser_path):
+    def get_ser_path(self, ser_path):
         if not ser_path:
             p = paths.USR_PATH
             if self._ser_dir:
