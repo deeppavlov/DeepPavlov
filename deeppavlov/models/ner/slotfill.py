@@ -25,7 +25,8 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
 
         # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
         if not self.model_path.is_file():
-            self._download_slot_vals(self.model_pathh)
+            self.model_path = self.model_path / self._model_file
+            self._download_slot_vals()
 
         self._ner_network = ner_network
         self.load()
@@ -139,7 +140,6 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
     def reset(self):
         pass
 
-    @staticmethod
-    def _download_slot_vals(slot_vals_json_path):
+    def _download_slot_vals(self):
         url = 'http://lnsigo.mipt.ru/export/datasets/dstc_slot_vals.json'
-        download(slot_vals_json_path, url)
+        download(self.model_path, url)
