@@ -19,7 +19,7 @@ class Inferable(Serializable):
         super().__init__(*args, **kwargs)
 
     @abstractmethod
-    def infer(self, instance, *args, **kwargs):
+    def infer(self, instance):
         """
         Infer a model. Any model can infer other model and ask it to do something (predict, encode,
         etc. via this method)
