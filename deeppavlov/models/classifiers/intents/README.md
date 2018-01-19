@@ -142,6 +142,7 @@ To train model one should
 * set `model_path` to the directory where trained model will be saved, 
 * set all other parameters of model as well as embedder and tokenizer to desired ones. 
 * set `MODEL_CONFIG_PATH='models/classifiers/intents/config_classification.json'` in `run_model.py`.
+
  Then training could be run in the same way:
  ```
 python run_model.py 
