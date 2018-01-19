@@ -53,7 +53,8 @@ Now user can enter a text string and get intents (classes which a request belong
 
 ## Train model
 
-One of the main constituents of model is a configuration file. Below the table with description of parameters is presented.
+One of the main constituents of model is a configuration file. 
+Below the table with description of parameters is presented.
 
 #### Configuration parameters:  
 
@@ -106,24 +107,25 @@ One of the main constituents of model is a configuration file. Below the table w
 | name                | registered name of tokenizer <br />*SetOfValues*: "nltk_tokenizer"                              | 
 | tokenizer           | tokenizer from nltk.tokenize to use  <br />*SetOfValues*:  any method from nltk.tokenize                 |  
 
-### Training on DSTC 2
+### Train on DSTC 2
 
-To train model again or with other parameters 
- the only actions are to set parameter `train_now` to `True` in `config.json` and
- set `model_path` to the directory where trained model will be saved (it will be created if does not exist). 
- All other parameters of model as well as fasttext model could be changed. 
+To train model again or with other parameters on DSTC 2 data
+ the only actions are to set parameter `train_now` to `true` in `config.json` and
+ set `model_path` to the directory where trained model will be saved 
+ (it will be loaded if model exists, and it will be created otherwise). 
+ All other parameters of model as well as embedder and tokenizer could be changed. 
  Then training could be run in the following way:
 ```
 python run_model.py 
 ```
 
-### Training on other dataset
+### Train on other data
 
-Constructing intents from DSTC 2 makes `IntentDataset` a bit difficult, therefore, 
-another dataset reader `ClassificationDatasetReader` and dataset `ClassificationDataset` 
- are also provided in `deeppavlov/dataset_readers` and `deeppavlov/datasets`.
+Constructing intents from DSTC 2 makes `IntentDataset` a bit difficult.
+Therefore, another dataset reader `ClassificationDatasetReader` and dataset `ClassificationDataset` 
+to work with `.csv` files are also provided in `deeppavlov/dataset_readers` and `deeppavlov/datasets`.
  
-Training data files `train.csv`, `valid.csv` should be presented in the following form:
+Training data files `train.csv` (and, if exists, `valid.csv`) should be presented in the following form:
 
 | text         |class_0|class_1|class_2|class_3| ...|
 |------------- |:-----:|:-----:|:-----:|:-----:|:--:|
@@ -134,10 +136,12 @@ Training data files `train.csv`, `valid.csv` should be presented in the followin
 | ...          | ...   | ...   | ...   |...    |... ||
 
 
-To train model the only actions are to set parameter `train_now` to `True` in `config.json`,
- set `data_path` to the directory containing `train.csv`, `valid.csv`, and if necessary, `test.csv`,
- set `model_path` to the directory where trained model will be saved. 
- All other parameters of model as well as fasttext model could be changed. 
+To train model one should 
+* set parameter `train_now` to `True` in `config_classification.json`,
+* set `data_path` to the directory containing `train.csv`, `valid.csv`,
+* set `model_path` to the directory where trained model will be saved, 
+* set all other parameters of model as well as embedder and tokenizer to desired ones. 
+* set `MODEL_CONFIG_PATH='models/classifiers/intents/config_classification.json'`
  Then training could be run in the same way:
  ```
 python run_model.py 
