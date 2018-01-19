@@ -61,7 +61,7 @@ class KerasIntentModel(KerasModel):
 
         self.fasttext_model = embedder
         self.opt['embedding_size'] = self.fasttext_model.dim
-        current_fasttext_md5 = md5_hashsum([self.fasttext_model.model_path])
+        current_fasttext_md5 = md5_hashsum([self.fasttext_model.ser_path])
 
         params = {"model_name": self.opt['model_name'],
                   "optimizer_name": self.opt['optimizer'],

@@ -42,7 +42,7 @@
     },
     "embedder": {
       "name": "fasttext",
-      "model_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
+      "ser_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
       "emb_module": "fasttext",
       "dim": 100
     }

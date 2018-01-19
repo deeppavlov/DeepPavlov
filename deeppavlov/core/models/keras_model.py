@@ -33,14 +33,14 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
             **kwargs:
         """
         self.opt = opt
-        model_path = self.opt.get('model_path', None)
-        model_dir = self.opt.get('model_dir', 'intents')
-        model_file = self.opt.get('model_file', 'intent_cnn')
+        ser_path = self.opt.get('ser_path', None)
+        ser_dir = self.opt.get('ser_dir', 'intents')
+        ser_file = self.opt.get('ser_file', 'intent_cnn')
         train_now = self.opt.get('train_now', False)
 
-        super().__init__(model_path=model_path,
-                         model_dir=model_dir,
-                         model_file=model_file,
+        super().__init__(ser_path=ser_path,
+                         ser_dir=ser_dir,
+                         ser_file=ser_file,
                          train_now=train_now)
 
         self.sess = self._config_session()
@@ -142,14 +142,14 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         """
         print('___Initializing model from saved___'
               '\nModel weights file is %s.h5'
-              '\nNetwork parameters are from %s_opt.json' % (self._model_file, self._model_file))
+              '\nNetwork parameters are from %s_opt.json' % (self._ser_file, self._ser_file))
 
-        if self.model_path.is_dir():
-            opt_path = "{}/{}_opt.json".format(self.model_path, self._model_file)
-            weights_path = "{}/{}.h5".format(self.model_path, self._model_file)
+        if self.ser_path.is_dir():
+            opt_path = "{}/{}_opt.json".format(self.ser_path, self._ser_file)
+            weights_path = "{}/{}.h5".format(self.ser_path, self._ser_file)
         else:
-            opt_path = "{}_opt.json".format(self.model_path)
-            weights_path = "{}.h5".format(self.model_path)
+            opt_path = "{}_opt.json".format(self.ser_path)
+            weights_path = "{}.h5".format(self.ser_path)
 
         if Path(opt_path).exists() and Path(weights_path).exists():
 
@@ -161,7 +161,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
             else:
                 raise AttributeError("Model {} is not defined".format(model_name))
 
-            print("Loading weights from `{}{}`".format(self._model_file, '.h5'))
+            print("Loading weights from `{}{}`".format(self._ser_file, '.h5'))
             model.load_weights(weights_path)
 
             optimizer_func = getattr(keras.optimizers, optimizer_name, None)
@@ -229,20 +229,20 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
     @overrides
     def save(self):
         """
-        Method saves the model parameters into <<fname>>_opt.json (or <<model_file>>_opt.json)
-        and model weights into <<fname>>.h5 (or <<model_file>>.h5)
+        Method saves the model parameters into <<fname>>_opt.json (or <<ser_file>>_opt.json)
+        and model weights into <<fname>>.h5 (or <<ser_file>>.h5)
         Args:
-            fname: file_path to save model. If not explicitly given seld.opt["model_file"] will be used
+            fname: file_path to save model. If not explicitly given seld.opt["ser_file"] will be used
 
         Returns:
             nothing
         """
-        if self.model_path.is_dir():
-            opt_path = "{}/{}_opt.json".format(self.model_path, self._model_file)
-            weights_path = "{}/{}.h5".format(self.model_path, self._model_file)
+        if self.ser_path.is_dir():
+            opt_path = "{}/{}_opt.json".format(self.ser_path, self._ser_file)
+            weights_path = "{}/{}.h5".format(self.ser_path, self._ser_file)
         else:
-            opt_path = "{}_opt.json".format(self.model_path)
-            weights_path = "{}.h5".format(self.model_path)
+            opt_path = "{}_opt.json".format(self.ser_path)
+            weights_path = "{}.h5".format(self.ser_path)
         print("[ saving model: {} ]".format(opt_path))
         self.model.save_weights(weights_path)
 

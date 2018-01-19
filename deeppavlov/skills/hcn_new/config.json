@@ -15,7 +15,7 @@
       ],
       "level": "token",
       "tokenize": true,
-      "model_path": "../data/vocabs/word_vocab.dict"
+      "ser_path": "../data/vocabs/word_vocab.dict"
     },
     "token_vocab": {
       "name": "default_vocab",
@@ -23,7 +23,7 @@
         "x"
       ],
       "level": "token",
-      "model_path": "../data/ner/token.dict"
+      "ser_path": "../data/ner/token.dict"
     },
     "tag_vocab": {
       "name": "default_vocab",
@@ -31,7 +31,7 @@
         "y"
       ],
       "level": "token",
-      "model_path": "../data/ner/tag.dict"
+      "ser_path": "../data/ner/tag.dict"
     },
     "char_vocab": {
       "name": "default_vocab",
@@ -39,7 +39,7 @@
         "x"
       ],
       "level": "char",
-      "model_path": "../data/ner/char.dict"
+      "ser_path": "../data/ner/char.dict"
     }
   },
   "model": {
@@ -48,7 +48,7 @@
     "num_epochs": 1,
     "template_path": "../data/dstc2/dstc2-templates.txt",
     "network": {
-      "model_path": "/media/olga/Data/projects/iPavlov/Pilot/deeppavlov/USR_DIR/hcn_rnn",
+      "ser_path": "/media/olga/Data/projects/iPavlov/Pilot/deeppavlov/USR_DIR/hcn_rnn",
       "name": "custom_rnn",
       "learning_rate": 0.03,
       "hidden_dim": 128,
@@ -59,7 +59,7 @@
     "slot_filler": {
       "name": "dstc_slotfilling",
       "ner_network": {
-        "model_path": "../data/ner",
+        "ser_path": "../data/ner",
         "name": "ner_tagging_network",
         "filter_width": 7,
         "embeddings_dropout": true,
@@ -75,9 +75,9 @@
     },
     "intent_classifier": {
       "name": "intent_model",
-      "model_path": "models/classifiers/intents/intent_cnn_best",
+      "ser_path": "models/classifiers/intents/intent_cnn_best",
       "opt": {
-        "model_path": "models/classifiers/intents/intent_cnn_best",
+        "ser_path": "models/classifiers/intents/intent_cnn_best",
         "classes_file": "models/classifiers/intents/intent_cnn_best/classes.txt",
         "kernel_sizes_cnn": "3 3 3",
         "filters_cnn": 512,
@@ -102,7 +102,7 @@
       },
       "embedder": {
         "name": "fasttext",
-        "model_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
+        "ser_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
         "emb_module": "fasttext",
         "dim": 100
       }
@@ -115,7 +115,7 @@
       "emb_module": "pyfasttext",
       "mean": true,
       "dim": 300,
-      "model_path": "../data/embeddings/wiki.en.bin"
+      "ser_path": "../data/embeddings/wiki.en.bin"
     },
     "tokenizer": {
       "name": "spacy_tokenizer"

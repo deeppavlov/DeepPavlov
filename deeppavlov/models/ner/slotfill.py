@@ -17,27 +17,27 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
     def __init__(self, ner_network: NerNetwork,
                  slots_dir='slots',
                  slots_file='slot_vals.json',
-                 model_path=None,
+                 ser_path=None,
                  train_now=False, *args, **kwargs):
 
-        super().__init__(model_path=model_path, model_dir=slots_dir, model_file=slots_file,
+        super().__init__(ser_path=ser_path, ser_dir=slots_dir, ser_file=slots_file,
                          train_now=train_now)
 
         # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
-        if not self.model_path.is_file():
-            self.model_path = self.model_path / self._model_file
+        if not self.ser_path.is_file():
+            self.ser_path = self.ser_path / self._ser_file
             self._download_slot_vals()
 
         self._ner_network = ner_network
         self.load()
-        with open(self.model_path) as f:
+        with open(self.ser_path) as f:
             self._slot_vals = json.load(f)
 
     @overrides
     def load(self):
         # Check prescence of the model files
         print('Loading DstcSlotFilling')
-        path =str(self._ner_network.model_path)
+        path =str(self._ner_network.ser_path)
         if tf.train.get_checkpoint_state(path) is not None:
             print('Loading model from {}'.format(path))
             self._ner_network.load()
@@ -142,4 +142,4 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
 
     def _download_slot_vals(self):
         url = 'http://lnsigo.mipt.ru/export/datasets/dstc_slot_vals.json'
-        download(self.model_path, url)
+        download(self.ser_path, url)

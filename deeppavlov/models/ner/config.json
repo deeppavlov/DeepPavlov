@@ -10,7 +10,7 @@
   "model": {
     "name": "dstc_slotfilling",
     "train_now": true,
-    "model_path": "../data/ner",
+    "ser_path": "../data/ner",
     "ner_network": {
       "train_now": true,
       "name": "ner_tagging_network",
@@ -31,7 +31,7 @@
     "token_vocab": {
       "train_now": true,
       "name": "default_vocab",
-      "model_path": "../data/ner/token.dict",
+      "ser_path": "../data/ner/token.dict",
       "inputs": [
         "x"
       ],
@@ -40,7 +40,7 @@
     "tag_vocab": {
       "train_now": true,
       "name": "default_vocab",
-      "model_path": "../data/ner/tag.dict",
+      "ser_path": "../data/ner/tag.dict",
       "inputs": [
         "y"
       ],
@@ -49,7 +49,7 @@
     "char_vocab": {
       "train_now": true,
       "name": "default_vocab",
-      "model_path": "../data/ner/char.dict",
+      "ser_path": "../data/ner/char.dict",
       "inputs": [
         "x"
       ],

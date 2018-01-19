@@ -27,14 +27,14 @@ class HybridCodeNetworkModel(TFModel):
     def __init__(self, **params):
         self.opt = params
 
-        model_path = self.opt.get('model_path', None)
-        model_dir = self.opt.get('model_dir', 'hcn_rnn')
-        model_file = self.opt.get('model_file', 'model')
+        ser_path = self.opt.get('ser_path', None)
+        ser_dir = self.opt.get('ser_dir', 'hcn_rnn')
+        ser_file = self.opt.get('ser_file', 'model')
         train_now = self.opt.get('train_now', False)
 
-        super().__init__(model_path=model_path,
-                         model_dir=model_dir,
-                         model_file=model_file,
+        super().__init__(ser_path=ser_path,
+                         ser_dir=ser_dir,
+                         ser_file=ser_file,
                          train_now=train_now)
 
         # initialize parameters

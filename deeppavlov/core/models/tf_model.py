@@ -76,15 +76,15 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
         return self._forward(instance, *args)
 
     def save(self):
-        print('\n:: saving model to {} \n'.format(self.model_path))
-        self._saver().save(sess=self.sess, save_path=str(self.model_path), global_step=0)
+        print('\n:: saving model to {} \n'.format(self.ser_path))
+        self._saver().save(sess=self.sess, save_path=str(self.ser_path), global_step=0)
         print('model saved')
 
     def get_checkpoint_state(self):
-        if self.model_path.is_dir():
-            return tf.train.get_checkpoint_state(self.model_path)
+        if self.ser_path.is_dir():
+            return tf.train.get_checkpoint_state(self.ser_path)
         else:
-            return tf.train.get_checkpoint_state(self.model_path.parent)
+            return tf.train.get_checkpoint_state(self.ser_path.parent)
 
     @check_path_exists('dir')
     @overrides

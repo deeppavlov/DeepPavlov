@@ -8,8 +8,8 @@ from deeppavlov.core.models.inferable import Inferable
 
 @register('dict_emb')
 class DictEmbedder(Inferable):
-    def __init__(self, model_path, dim, *args, **kwargs):
-        super().__init__(model_path=model_path)
+    def __init__(self, ser_path, dim, *args, **kwargs):
+        super().__init__(ser_path=ser_path)
         self.tok2emb = {}
         self.dim = dim
 
@@ -20,14 +20,14 @@ class DictEmbedder(Inferable):
         Load dictionary of embeddings from file.
         """
 
-        if not Path(self.model_path).exists():
+        if not Path(self.ser_path).exists():
             raise FileNotFoundError(
                 'There is no dictionary of embeddings <<{}>> file provided.'.format(
-                    self.model_path))
+                    self.ser_path))
         else:
-            print('Loading existing dictionary of embeddings from {}'.format(self.model_path))
+            print('Loading existing dictionary of embeddings from {}'.format(self.ser_path))
 
-            with open(str(self.model_path)) as fin:
+            with open(str(self.ser_path)) as fin:
                 for line in fin:
                     values = line.rsplit(sep=' ', maxsplit=self.dim)
                     assert (len(values) == self.dim + 1)
