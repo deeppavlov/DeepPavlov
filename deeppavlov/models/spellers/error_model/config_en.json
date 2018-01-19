@@ -1,7 +1,6 @@
 {
   "model": {
     "name": "spelling_error_model",
-    "model_file": "error_model_en.tsv",
     "window": 1,
     "train_now": true,
     "dictionary": {
