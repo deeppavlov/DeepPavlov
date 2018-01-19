@@ -68,6 +68,7 @@ class KerasIntentModel(KerasModel):
         super().__init__(opt, model_path=model_path, model_dir=model_dir, model_file=model_file,
                          train_now=train_now)
 
+        # Tokenizer and vocabulary of classes
         self.tokenizer = tokenizer
         self.vocabs = vocabs
         self.classes = np.sort(np.array(list(self.vocabs["classes_vocab"].keys())))
@@ -75,7 +76,6 @@ class KerasIntentModel(KerasModel):
 
         if 'add_metrics' in self.opt.keys():
             self.add_metrics = self.opt['add_metrics']
-            self.add_metrics_values = len(self.add_metrics) * [0.]
         else:
             self.add_metrics = None
 
@@ -99,6 +99,7 @@ class KerasIntentModel(KerasModel):
                              "val_every_n_epochs": 1,
                              "verbose": True,
                              "val_patience": 5}
+
         # Reinitializing of parameters
         for param in changeable_params.keys():
             if param in self.opt.keys():
@@ -108,6 +109,7 @@ class KerasIntentModel(KerasModel):
 
         self.confident_threshold = self.opt['confident_threshold']
 
+        # Parameters required to init model
         params = {"model_name": self.opt['model_name'] if 'model_name' in self.opt.keys() else None,
                   "optimizer_name": self.opt['optimizer'],
                   "lr": self.opt['lear_rate'],
@@ -128,9 +130,8 @@ class KerasIntentModel(KerasModel):
             if self.opt['fasttext_md5'] != current_fasttext_md5:
                 raise ConfigError("Given fasttext model does NOT match fasttext model used previously to train loaded model")
 
-
+        # Considered metrics including loss
         self.metrics_names = self.model.metrics_names
-        self.metrics_values = len(self.metrics_names) * [0.]
 
     def texts2vec(self, sentences):
         """

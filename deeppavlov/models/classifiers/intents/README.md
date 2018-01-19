@@ -6,7 +6,7 @@
 In this repo one can find code for training and infering intent classification model
 that is presented as shallow-and-wide Convolutional Neural Network[1]. 
 The model is multi-class and multi-label that means each text of a dataset 
-can belong to several classes or not belong to any one.
+can belong to several classes.
 
 Also there is presented pre-trained model for user intent classification for DSTC 2 dataset [CITE].
 DSTC 2 dataset does not initially contains information about intents, 
@@ -19,56 +19,87 @@ Below several examples of intent construction are given:
 > User: "cheap restaurant"
 
 In the original dataset this user reply has characteristics
-`"goals": {"pricerange": "cheap"}, "db_result": null, "dialog-acts": [{"slots": [["pricerange", "cheap"]], "act": "inform"}]}`.
+```
+"goals": {"pricerange": "cheap"}, 
+"db_result": null, 
+"dialog-acts": [{"slots": [["pricerange", "cheap"]], "act": "inform"}]}
+```
 This message contains the only intent `inform_pricerange`.
 
 > User: "thank you good bye",
 
 In the original dataset this user reply has characteristics 
-`"goals": {"food": "dontcare", "pricerange": "cheap", "area": "south"}, "db_result": null, "dialog-acts": [{"slots": [], "act": "thankyou"}, {"slots": [], "act": "bye"}]}`
+```
+"goals": {"food": "dontcare", "pricerange": "cheap", "area": "south"}, 
+"db_result": null, 
+"dialog-acts": [{"slots": [], "act": "thankyou"}, {"slots": [], "act": "bye"}]}
+```
 This message contains two intents `(thankyou, bye)`.
 
 
-## Usage of pre-trained model
+## Infer from pre-trained model
 
-To infer using console interface one can set parameter `MODEL_CONFIG_PATH='models/classifiers/intents/config.json'` 
-in `deeppavlov/run_model.py`, and then run
+To infer using console interface one can set parameter `MODEL_CONFIG_PATH='models/classifiers/intents/config_infer.json'` 
+in `deeppavlov/run_model.py` (minimal required set of parameters to infer pre-trained model),
+and then run
 ```
 python run_model.py 
 ```
-Now user can enter a text string and get an intent (class a request belongs with):
+Now user can enter a text string and get intents (classes which a request belongs with):
 ```
 :: hey! I want cheap chinese restaurant
 >> ['inform_food' 'inform_pricerange']
 ```
 
+## Train model
 
-#### Config parameters:  
+One of the main constituents of model is a configuration file. Below the table with description of parameters is presented.
 
-|   Parameter         |  Description                                                      | Set of Values                                 | Type    |
-|---------------------|-------------------------------------------------------------------|-----------------------------------------------|---------|
-| model_name          | method of the class that corresponds to the model                 | \[cnn_model, dcnn_model\] or any custom one   | str     |
-| text_size           | length of each sample in words                                    |  (0, ∞)                                       | int     |
-| confident_threshold | boundary value of belonging to a class                            |   \[0., 1.\]                                  | float   |
-| kernel_sizes_cnn    | kernel sizes for shallow-and-wide and deep CNN model              |  i.e "3 3 3"                                  | str     |
-| filters_cnn         | number(-s) of filters for shallow-and-wide (deep) CNN             | (0,∞) or i.e "128 256"                        | int,str |  
-| dense_size          | size of dense layer previous for classifying one                  |    (0,∞)                                      | int     |
-| lear_metrics        | learning metrics for training                                     | from keras.metrics                            | str     |
-| lear_rate           | learning rate for training                                        |    (0,∞)                                      | float   |
-| lear_rate_decay     | learning rate decay for training                                  |    (0,∞)                                      | float   |
-| optimizer           | optimizer for training                                            | from keras.optimizers                         | str     |
-| loss                | loss for training                                                 | from keras.losses                             | str     |
-| coef_reg_cnn        | coefficient for kernel l2-regularizer for convolutional layers    |   \[0., 1.\]                                  | float   |
-| coef_reg_den        | coefficient for kernel l2-regularizer for dense layers            |   \[0., 1.\]                                  | float   |
-| dropout_rate        | dropout rate for training                                         |   \[0., 1.\]                                  | float   |
-| epochs              | number of epochs for training                                     |   (0,∞)                                       |  int    |
-| batch_size          | batch size for training                                           |   (0,∞)                                       |  int    |
-| val_every_n_epochs  | frequency of validation during training (validate every n epochs) |  (0,∞)                                        |  int    |
-| verbose             | parameter whether to print training information or not            |  (True, False)                                | bool    |
-| val_patience        | maximal number of validation loss increases before stop training  |   (0,∞)                                       |  int    |
-| classes_file        | file to save list of classes extracted from data                  | i.e "classes.txt"                             | str     |
+#### Configuration parameters:  
 
-## Training model
+| Structure      |   Parameter         |  Description                                                      | Set of Values                                 | Type    |
+|----------------|---------------------|-------------------------------------------------------------------|-----------------------------------------------|---------|
+| dataset_reader |   name              | registered name of dataset reader                                 | dstc2_datasetreader, classification_datasetreader | str |
+|                |   data_path         | directory where data files are located                            | directory                                     | str     |
+|                |   data_types        | which data types is presented in data_path (only for `classification_datasetreader`) | list of fields, i.e ["train", "valid", "test"]| list    |
+| dataset        |   name              | registered name of dataset                                        | "intent_dataset", classification_dataset"     | str     |
+|                |   seed              | seed for batch generator                                          | \[0., 1.\]                                    | int     |
+|                |   fields_to_merge   | list of fields to merge                                           | list of fields, i.e ["train", "valid", "test"]| list    |
+|                |   merged_field      | name of field to which save merged fields                         | field, i.e "train", "valid", "test"           | str     |
+|                |   field_to_split    | name of field to split                                            | field, i.e "train", "valid", "test"           | str     |
+|                |   split_fields      | list of fields to which save splitted field                       | list of fields, i.e ["train", "valid", "test"]| list    |
+|                |   split_proportions | list of corresponding proportions for splitting                   | list of floats each of which is in  \[0., 1.\]|list     |
+| vocabs.classes_vocab | name          | registered name of vocab                                          | "default_vocab"                               | str     |
+|                |  inputs             | whether to create vocab over x and/or y fields of dataset         | list of "x" and/or "y"                        | list    |
+|                |  level              | whether to considered char or token level                         | "char", "token"                               | str     |
+|                | model_path          | path to file where vocab with classes will be saved               | filename                                      | str     |
+|                | train_now           | whether to train vocab or not                                     | true/false                                    | bool    | 
+| model.embedder | name                | registered name of embedder                                       | "fasttext"                                    | str     | 
+|                | model_path          | path to file where binary embedding model is located              | filename                                      | str     | 
+|                | emb_module          | fasttext library to use                                           | "fasttext", "pyfasttext", "gensim"            | str     | 
+|                | dim                 | dimension of embeddings                                           |  (0,∞)                                        | int     | 
+| model.tokenizer| name               | registered name of tokenizer                                      | "nltk_tokenizer"                              | str     | 
+|                | tokenizer           | tokenizer from nltk.tokenize to use                               | any method from nltk.tokenize                 | str     |  
+| model          | model_name          | method of the class KerasIntentModel that corresponds to the model| \[cnn_model, dcnn_model\] or any custom one   | str     |
+|                | text_size           | length of each sample in words                                    |  (0, ∞)                                       | int     |
+|                | confident_threshold | boundary value of belonging to a class                            |   \[0., 1.\]                                  | float   |
+|                | kernel_sizes_cnn    | kernel sizes for shallow-and-wide and deep CNN model              |  i.e "3 3 3"                                  | str     |
+|                | filters_cnn         | number(-s) of filters for shallow-and-wide (deep) CNN             | (0,∞) or i.e "128 256"                        | int,str |  
+|                | dense_size          | size of dense layer previous for classifying one                  |    (0,∞)                                      | int     |
+|                | lear_metrics        | learning metrics for training                                     | from keras.metrics                            | str     |
+|                | lear_rate           | learning rate for training                                        |    (0,∞)                                      | float   |
+|                | lear_rate_decay     | learning rate decay for training                                  |    (0,∞)                                      | float   |
+|                | optimizer           | optimizer for training                                            | from keras.optimizers                         | str     |
+|                | loss                | loss for training                                                 | from keras.losses                             | str     |
+|                | coef_reg_cnn        | coefficient for kernel l2-regularizer for convolutional layers    |   \[0., 1.\]                                  | float   |
+|                | coef_reg_den        | coefficient for kernel l2-regularizer for dense layers            |   \[0., 1.\]                                  | float   |
+|                | dropout_rate        | dropout rate for training                                         |   \[0., 1.\]                                  | float   |
+|                | epochs              | number of epochs for training                                     |   (0,∞)                                       |  int    |
+|                | batch_size          | batch size for training                                           |   (0,∞)                                       |  int    |
+|                | val_every_n_epochs  | frequency of validation during training (validate every n epochs) |  (0,∞)                                        |  int    |
+|                | verbose             | parameter whether to print training information or not            |  (True, False)                                | bool    |
+|                | val_patience        | maximal number of validation loss increases before stop training  |   (0,∞)                                       |  int    |
+|                | classes_file        | file to save list of classes extracted from data                  | i.e "classes.txt"                             | str     |
 
 ### Training on DSTC 2
 

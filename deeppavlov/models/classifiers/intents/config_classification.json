@@ -2,11 +2,10 @@
   "dataset_reader": {
     "name": "classification_datasetreader",
     "data_path": "../data/snips",
-    "data_type": "train"
+    "data_types": ["train"]
   },
   "dataset": {
     "name": "classification_dataset",
-    "prep_method_name": "simple_prep",
     "seed": 42,
     "field_to_split": "train",
     "split_fields": [
