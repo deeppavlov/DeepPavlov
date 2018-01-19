@@ -137,7 +137,7 @@ Training data files `train.csv` (and, if exists, `valid.csv`) should be presente
 
 
 To train model one should 
-* set parameter `train_now` to `True` in `config_classification.json`,
+* set parameter `train_now` to `true` in `config_classification.json`,
 * set `data_path` to the directory containing `train.csv`, `valid.csv`,
 * set `model_path` to the directory where trained model will be saved, 
 * set all other parameters of model as well as embedder and tokenizer to desired ones. 
