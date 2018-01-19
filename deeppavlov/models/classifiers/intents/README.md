@@ -60,9 +60,9 @@ One of the main constituents of model is a configuration file. Below the table w
 |   Parameter         |  Description                                                      | 
 |---------------------|-------------------------------------------------------------------|
 | dataset_reader ||
-|   name              | registered name of dataset reader   <br />SetOfValues: "dstc2_datasetreader", "classification_datasetreader" |
+|   name              | registered name of dataset reader   <br />*SetOfValues*: "dstc2_datasetreader", "classification_datasetreader" |
 |   data_path         | directory where data files are located                          | 
-|   data_types        | which data types is presented in data_path (only for `classification_datasetreader`) SetOfValues: list of fields, i.e ["train", "valid", "test"]| 
+|   data_types        | which data types is presented in data_path (only for `classification_datasetreader`) *SetOfValues*: list of fields, i.e ["train", "valid", "test"]| 
 | dataset||
 |   name              | registered name of dataset        <br />*SetOfValues*:  "intent_dataset", classification_dataset"     | 
 |   seed              | seed for batch generator              |
