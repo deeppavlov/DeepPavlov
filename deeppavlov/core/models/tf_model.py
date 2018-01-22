@@ -16,7 +16,6 @@ from .tf_backend import TfModelMeta
 
 
 class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
-
     def __init__(self, **kwargs):
         self._saver = tf.train.Saver
         super().__init__(**kwargs)
@@ -70,13 +69,15 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
         """
         Just a wrapper for a private method.
         """
-        if not self.train_now:
-            self.load()
         return self._forward(instance, *args)
 
     def save(self):
-        print('\n:: saving model to {} \n'.format(self.ser_path))
-        self._saver().save(sess=self.sess, save_path=str(self.ser_path), global_step=0)
+        if self.ser_path.is_dir():
+            save_path = self.ser_path
+        else:
+            save_path = self.ser_path.parent
+        print('\n:: saving model to {} \n'.format(save_path))
+        self._saver().save(sess=self.sess, save_path=str(save_path), global_step=0)
         print('model saved')
 
     def get_checkpoint_state(self):
