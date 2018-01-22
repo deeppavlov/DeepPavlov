@@ -61,12 +61,14 @@ class NerNetwork(SimpleTFModel):
                  ser_path=None,
                  ser_dir='ner',
                  ser_file='dstc_ner_network.ckpt',
-                 train_now=False):
+                 train_now=False,
+                 **kwargs):
 
         super().__init__(ser_path=ser_path,
                          ser_dir=ser_dir,
                          ser_file=ser_file,
-                         train_now=train_now)
+                         train_now=train_now,
+                         mode=kwargs['mode'])
 
         n_tags = len(vocabs['tag_vocab'])
         n_tokens = len(vocabs['token_vocab'])
