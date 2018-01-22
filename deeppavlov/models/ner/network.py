@@ -15,6 +15,7 @@ limitations under the License.
 """
 
 from collections import defaultdict
+import sys
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer
@@ -25,6 +26,7 @@ from deeppavlov.models.ner.layers import highway_convolutional_network
 from deeppavlov.models.ner.layers import stacked_convolutions
 from deeppavlov.models.ner.layers import stacked_rnn
 from deeppavlov.models.ner.evaluation import precision_recall_f1
+
 
 
 SEED = 42
@@ -194,7 +196,7 @@ class NerNetwork:
         y_true_list = []
         y_pred_list = []
         if data_type is not None:
-            print('Eval on {}:'.format(data_type))
+            print('Eval on {}:'.format(data_type), file=sys.stderr)
         for x, y_gt in data:
             (x_token, x_char, mask), y = self.tokens_batch_to_numpy_batch([x])
             y_pred = self._predict(x_token, x_char, mask)
@@ -269,7 +271,7 @@ class NerNetwork:
         for epoch in range(epochs):
             count = 0
             if self.verbouse:
-                print('Epoch {}'.format(epoch))
+                print('Epoch {}'.format(epoch), file=sys.stderr)
             if batch_gen is None:
                 batch_generator = self.corpus.batch_generator(batch_size, dataset_type='train')
             for (x_word, x_char), y_tag in batch_generator:
@@ -406,7 +408,7 @@ class NerNetwork:
         """
         Print number of *trainable* parameters in the network
         """
-        print('Number of parameters: ')
+        print('Number of parameters: ', file=sys.stderr)
         vars = tf.trainable_variables()
         blocks = defaultdict(int)
         for var in vars:
@@ -415,9 +417,9 @@ class NerNetwork:
             number_of_parameters = np.prod(var.get_shape().as_list())
             blocks[block_name] += number_of_parameters
         for block_name in blocks:
-            print(block_name, blocks[block_name])
+            print(block_name, blocks[block_name], file=sys.stderr)
         total_num_parameters = np.sum(list(blocks.values()))
-        print('Total number of parameters equal {}'.format(total_num_parameters))
+        print('Total number of parameters equal {}'.format(total_num_parameters), file=sys.stderr)
 
     def get_train_op(self, loss, learning_rate, learnable_scopes=None, optimizer=None):
         """ Get train operation for given loss

@@ -1,4 +1,5 @@
 from collections import OrderedDict
+import sys
 
 
 def chunk_finder(current_token, previous_token, tag):
@@ -188,5 +189,5 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, 
                                                            tot_recall=results[entity_of_interest]['recall'],
                                                            tot_f1=results[entity_of_interest]['f1'],
                                                            tot_predicted=results[entity_of_interest]['n_predicted_entities'])
-        print(s)
+        print(s, file=sys.stderr)
     return results

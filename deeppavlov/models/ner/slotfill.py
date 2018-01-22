@@ -1,5 +1,6 @@
 import json
 import inspect
+import sys
 
 import tensorflow as tf
 from fuzzywuzzy import process
@@ -65,20 +66,20 @@ class DstcSlotFillingNetwork(SimpleTFModel):
         path = str(self.model_path_.absolute())
         # Check presence of the model files
         if tf.train.checkpoint_exists(path):
-            print('[loading model from {}]'.format(path))
+            print('[loading model from {}]'.format(path), file=sys.stderr)
             self._ner_network.load(path)
 
     @overrides
     def save(self):
         self.model_path_.parent.mkdir(parents=True, exist_ok=True)
         path = str(self.model_path_.absolute())
-        print('[saving model to {}]'.format(path))
+        print('[saving model to {}]'.format(path), file=sys.stderr)
 
         self._ner_network.save(path)
 
     @overrides
     def train(self, data, default_n_epochs=5):
-        print('Training NER network')
+        print('Training NER network', file=sys.stderr)
         if self.train_now:
             epochs = self.train_parameters.get('epochs', default_n_epochs)
             for epoch in range(epochs):
@@ -100,7 +101,7 @@ class DstcSlotFillingNetwork(SimpleTFModel):
     def interact(self):
         s = input('Type in the message you want to tag: ')
         prediction = self.predict_slots(s)
-        print(prediction)
+        print(prediction, file=sys.stderr)
 
     def predict_slots(self, utterance):
         # For utterance extract named entities and perform normalization for slot filling

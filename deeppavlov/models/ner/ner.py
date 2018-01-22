@@ -2,6 +2,7 @@ import tensorflow as tf
 from overrides import overrides
 from copy import deepcopy
 import inspect
+import sys
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import tokenize_reg
@@ -56,14 +57,14 @@ class NER(SimpleTFModel):
     def save(self):
         self.model_path_.parent.mkdir(parents=True, exist_ok=True)
         path = str(self.model_path_.absolute())
-        print('[saving model to {}]'.format(path))
+        print('[saving model to {}]'.format(path), file=sys.stderr)
 
         self._net.save(path)
 
     @overrides
     def train(self, data, default_n_epochs=10):
         if self.train_now:
-            print('Training NER network')
+            print('Training NER network', file=sys.stderr)
             epochs = self.train_parameters.get('epochs', default_n_epochs)
             for epoch in range(epochs):
                 self._net.train(data, **self.train_parameters)
@@ -72,7 +73,7 @@ class NER(SimpleTFModel):
             self._net.eval_conll(data.iter_all('test'), short_report=False, data_type='test')
             self.save()
         else:
-            print('Loading NER network')
+            print('Loading NER network', file=sys.stderr)
             self._net.load()
 
     @overrides
