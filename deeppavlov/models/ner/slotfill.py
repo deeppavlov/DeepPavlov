@@ -44,10 +44,6 @@ class DstcSlotFillingNetwork(SimpleTFModel):
             best_model_url = 'http://lnsigo.mipt.ru/export/ner/ner_dstc_model.tar.gz'
             download_untar(best_model_url, model_path)
 
-        slot_vals_filepath = self.model_path_.parent / 'slot_vals.json'
-        with open(slot_vals_filepath) as f:
-            self._slot_vals = json.load(f)
-
         # Training parameters
         # Find all parameters for network train
         train_parameters_names = list(inspect.signature(NerNetwork.train_on_batch).parameters)
@@ -58,6 +54,10 @@ class DstcSlotFillingNetwork(SimpleTFModel):
         slot_vals_filepath = self.model_path_.parent / 'slot_vals.json'
         if not slot_vals_filepath.is_file():
             self._download_slot_vals(slot_vals_filepath)
+
+        slot_vals_filepath = self.model_path_.parent / 'slot_vals.json'
+        with open(slot_vals_filepath) as f:
+            self._slot_vals = json.load(f)
 
         self.load()
 
