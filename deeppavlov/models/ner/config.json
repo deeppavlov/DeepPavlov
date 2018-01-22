@@ -10,26 +10,23 @@
   },
   "model": {
     "name": "dstc_slotfilling",
-    "download_best_model": true,
     "train_now": true,
     "epochs": 5,
     "model_dir": "model",
     "model_file": "dstc_ner_model",
-    "ner_network": {
-      "name": "ner_tagging_network",
-      "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
-      "verbouse": true,
-      "filter_width": 7,
-      "embeddings_dropout": true,
-      "n_filters": [
-        64,
-        64
-      ],
-      "token_embeddings_dim": 64,
-      "char_embeddings_dim": 32,
-      "use_batch_norm": true,
-      "use_crf": true
-    }
+    "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
+    "verbouse": true,
+    "filter_width": 7,
+    "embeddings_dropout": true,
+    "n_filters": [
+      64,
+      64
+    ],
+    "token_embeddings_dim": 64,
+    "char_embeddings_dim": 32,
+    "use_batch_norm": true,
+    "use_crf": true
+
   },
 
   "vocabs": {

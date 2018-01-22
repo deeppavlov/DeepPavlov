@@ -1,14 +1,14 @@
 import json
-import glob
+import inspect
 
 import tensorflow as tf
 from fuzzywuzzy import process
 from overrides import overrides
+from copy import deepcopy
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.models.ner.ner_network import NerNetwork
+from deeppavlov.core.models.tf_model import SimpleTFModel
+from deeppavlov.models.ner.network import NerNetwork
 from deeppavlov.core.data.utils import tokenize_reg
 from deeppavlov.core.data.utils import download, download_untar
 from deeppavlov.core.common.paths import USR_PATH
@@ -17,45 +17,56 @@ from deeppavlov.core.common.paths import USR_PATH
 
 
 @register('dstc_slotfilling')
-class DstcSlotFillingNetwork(Inferable, Trainable):
-    def __init__(self,
-                 ner_network: NerNetwork,
-                 model_file='dstc_ner_model',
-                 model_dir=None,
-                 epochs=10,
-                 download_best_model=False,
-                 ):
+class DstcSlotFillingNetwork(SimpleTFModel):
+    def __init__(self, **kwargs):
+        opt = deepcopy(kwargs)
+        model_dir = opt.get('model_dir', None)
+        model_file = opt.get('model_file', 'dstc_ner_model.ckpt')  # default name is dstc_ner_model
+
         if model_dir is None:
             model_dir = USR_PATH
         self._model_dir = model_dir
         self._model_file = model_file
+
+        # Find all input parameters of the network init
+        network_parameter_names = list(inspect.signature(NerNetwork.__init__).parameters)
+
+        # Fill all provided parameters from opt
+        network_parameters = {par: opt[par] for par in network_parameter_names if par in opt}
+
+        # Initialize the network
+        self._ner_network = NerNetwork(**network_parameters)
+
+        download_best_model = opt.get('download_best_model', False)
+        if download_best_model:
+            model_path = str(self.model_path_.parent.absolute())
+            best_model_url = 'http://lnsigo.mipt.ru/export/ner/ner_dstc_model.tar.gz'
+            download_untar(best_model_url, model_path)
+
+        slot_vals_filepath = self.model_path_.parent / 'slot_vals.json'
+        with open(slot_vals_filepath) as f:
+            self._slot_vals = json.load(f)
+
+        # Training parameters
+        # Find all parameters for network train
+        train_parameters_names = list(inspect.signature(NerNetwork.train_on_batch).parameters)
+        train_parameters = {par: opt[par] for par in train_parameters_names if par in opt}
+        self.train_parameters = train_parameters
 
         # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
         slot_vals_filepath = self.model_path_.parent / 'slot_vals.json'
         if not slot_vals_filepath.is_file():
             self._download_slot_vals(slot_vals_filepath)
 
-        self._ner_network = ner_network
-        if download_best_model:
-            model_path = str(self.model_path_.parent.absolute())
-            best_model_url = 'http://lnsigo.mipt.ru/export/ner/ner_dstc_model.tar.gz'
-            download_untar(best_model_url, model_path)
         self.load()
-        with open(slot_vals_filepath) as f:
-            self._slot_vals = json.load(f)
-
-        # Training parameters
-        self.epochs = epochs
 
     @overrides
     def load(self):
-        # Check prescence of the model files
         path = str(self.model_path_.absolute())
+        # Check presence of the model files
         if tf.train.checkpoint_exists(path):
             print('[loading model from {}]'.format(path))
             self._ner_network.load(path)
-        # else:
-        #     raise Warning('Error while loading NER model. There must be 3 dstc_ner_network.ckpt files!')
 
     @overrides
     def save(self):
@@ -66,11 +77,12 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
         self._ner_network.save(path)
 
     @overrides
-    def train(self, data):
+    def train(self, data, default_n_epochs=5):
         print('Training NER network')
         if self.train_now:
-            for epoch in range(self.epochs):
-                self._ner_network.train(data)
+            epochs = self.train_parameters.get('epochs', default_n_epochs)
+            for epoch in range(epochs):
+                self._ner_network.train(data, **self.train_parameters)
                 self._ner_network.eval_conll(data.iter_all('valid'), short_report=False, data_type='valid')
             self._ner_network.eval_conll(data.iter_all('train'), short_report=False, data_type='train')
             self._ner_network.eval_conll(data.iter_all('test'), short_report=False, data_type='test')
