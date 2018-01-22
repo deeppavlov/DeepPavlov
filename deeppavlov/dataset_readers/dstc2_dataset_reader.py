@@ -40,7 +40,7 @@ class DSTC2DatasetReader(DatasetReader):
 
     @overrides
     def read(self, data_path, dialogs=False):
-#TODO: mkdir if it doesn't exist
+    #TODO: mkdir if it doesn't exist
 
         required_files = (self._data_fname(dt) for dt in ('trn', 'val', 'tst'))
         if not all(Path(data_path, f).exists() for f in required_files):

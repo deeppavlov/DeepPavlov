@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import requests
+import sys
 from tqdm import tqdm
 import tarfile
 import re
@@ -22,7 +23,7 @@ def download(dest_file_path, source_url):
     total_length = int(r.headers.get('content-length', 0))
 
     with dest_file_path.open('wb') as f:
-        print('Downloading from {} to {}'.format(source_url, dest_file_path))
+        print('Downloading from {} to {}'.format(source_url, dest_file_path), file=sys.stderr)
 
         pbar = tqdm(total=total_length, unit='B', unit_scale=True)
         for chunk in r.iter_content(chunk_size=32 * 1024):
@@ -62,7 +63,7 @@ def download_untar(url, download_path, extract_path=None):
         extract_path = download_path
     extract_path = Path(extract_path)
     tar_file_path = download_path / file_name
-    print('Extracting {} archive into {}'.format(tar_file_path, extract_path))
+    print('Extracting {} archive into {}'.format(tar_file_path, extract_path), file=sys.stderr)
     download(tar_file_path, url)
     untar(tar_file_path, extract_path)
     tar_file_path.unlink()

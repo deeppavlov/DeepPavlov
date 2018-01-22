@@ -1,6 +1,7 @@
 import os
 
 from typing import Type, Callable
+from functools import wraps
 
 from deeppavlov.core.common.errors import ConfigError
 
@@ -22,13 +23,14 @@ class abstract_attribute(object):
 
 def check_attr_true(attr: str):
     def _check_attr_true(f: Callable):
+        @wraps(f)
         def wrapped(self, *args, **kwargs):
             if getattr(self, attr):
                 return f(self, *args, **kwargs)
             else:
                 print("'{0}' is False, doing nothing."
-                      " Set {0} to True in json config "
-                      "if you'd like the {1} to proceed.".format(attr, f))
+                      " Set '{0}' to True in json config "
+                      "if you'd like the {1} to proceed.".format(attr, str(f).split()[1]))
 
         return wrapped
 
@@ -37,10 +39,11 @@ def check_attr_true(attr: str):
 
 def run_alt_meth_if_no_path(alt_f: Callable, attr: str):
     def _run_alt_meth(f):
+        @wraps(f)
         def wrapped(self, *args, **kwargs):
-            if self.model_path_.exists():
-                if self.model_path_.is_file() or (
-                            self.model_path_.is_dir() and os.listdir(str(self.model_path_))):
+            if self.ser_path.exists():
+                if self.ser_path.is_file() or (
+                            self.ser_path.is_dir() and os.listdir(str(self.ser_path))):
                     try:
                         return f(self, *args, **kwargs)
                     except ConfigError:
@@ -58,19 +61,20 @@ def run_alt_meth_if_no_path(alt_f: Callable, attr: str):
 
 
 def check_path_exists(path_type='file'):
-    def _chek_path_exists(f: Callable):
+    def _check_path_exists(f: Callable):
+        @wraps(f)
         def wrapped(self, *args, **kwargs):
             if path_type == 'file':
-                if self.model_path_.exists():
+                if self.ser_path.exists():
                     return f(self, *args, **kwargs)
             elif path_type == 'dir':
-                if self.model_path_.parent.exists():
+                if self.ser_path.parent.exists():
                     return f(self, *args, **kwargs)
             raise FileNotFoundError(
-                "{}.model_path doesn't exist. Check if there is a pretrained model."
+                "{}.ser_path doesn't exist. Check if there is a pretrained model."
                 "If there is no a pretrained model, you might want to set 'train_now' to true "
                 "in the model json config and run training first.".format(self.__class__.__name__))
 
         return wrapped
 
-    return _chek_path_exists
+    return _check_path_exists

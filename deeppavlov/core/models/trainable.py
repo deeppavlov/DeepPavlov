@@ -14,7 +14,10 @@ class Trainable(Serializable):
     :attr:`train_now` expresses a developer intent for whether a model as part of a pipeline
     should be trained in the current experiment run or not.
     """
-    train_now = False
+
+    def __init__(self, train_now=False, **kwargs):
+        self.train_now = train_now
+        super().__init__(**kwargs)
 
     @abstractmethod
     def train(self, data, *args, **kwargs):
@@ -34,4 +37,3 @@ class Trainable(Serializable):
     @abstractmethod
     def load(self, *args, **kwargs):
         pass
-

@@ -10,11 +10,13 @@ def precision_K(y_true, y_pred):
     precision = true_positives / (predicted_positives + K.epsilon())
     return precision
 
+
 def recall_K(y_true, y_pred):
     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
     possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
     recall = true_positives / (possible_positives + K.epsilon())
     return recall
+
 
 def fbeta_score_K(y_true, y_pred, beta=1):
     if beta < 0:
@@ -64,12 +66,14 @@ def fbeta_score_np(y_true, y_pred, beta=1):
     fbeta_score = (1 + bb) * (p * r) / (bb * p + r + 10e-8)
     return fbeta_score
 
+
 def fmeasure(y_true, y_pred):
     try:
         _ = K.is_keras_tensor(y_pred)
         return fbeta_score_K(y_true, y_pred, beta=1)
     except ValueError:
         return fbeta_score_np(y_true, y_pred, beta=1)
+
 
 def roc_auc_score(y_true, y_pred):
     """Compute Area Under the Curve (AUC) from prediction scores.

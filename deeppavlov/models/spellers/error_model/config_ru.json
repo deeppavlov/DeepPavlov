@@ -1,12 +1,11 @@
 {
   "model": {
     "name": "spelling_error_model",
-    "models_path": "../build",
+    "ser_file": "error_model_ru.tsv",
     "window": 1,
     "train_now": true,
     "dictionary": {
-      "name": "russian_words_vocab",
-      "data_dir": "../data"
+      "name": "russian_words_vocab"
     }
   },
   "dataset_reader": {
