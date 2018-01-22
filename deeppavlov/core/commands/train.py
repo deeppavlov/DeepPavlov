@@ -161,10 +161,6 @@ def train_batches(config_path: str):
                     val_y_predicted += y_predicted
 
                 metrics = [f(train_y_true, train_y_predicted) for f in metrics_functions]
-                print('valid: {}'.format(dict(zip(train_config['metrics'], metrics))))
-                if train_config['show_examples']:
-                    for xi, ypi, yti in zip(x, y_predicted, y_true):
-                        print({'in': xi, 'out': ypi, 'expected': yti})
 
                 score = metrics[0]
                 if score > best:
@@ -176,13 +172,24 @@ def train_batches(config_path: str):
                     saved = True
                 else:
                     patience += 1
+                    print('Did not improve on the {} of {}'.format(train_config['metrics'][0], best),
+                          file=sys.stderr)
 
-                    if patience >= train_config['validation_patience'] > 0:
-                        print('Ran out of patience', file=sys.stderr)
-                        break
-                    else:
-                        print('Did not improve on the {} of {}'.format(train_config['metrics'][0], best),
-                              file=sys.stderr)
+                report = {
+                    'examples_seen': len(val_y_true),
+                    'metrics': dict(zip(train_config['metrics'], metrics)),
+                    'impatience': patience
+                }
+                if train_config['validation_patience'] > 0:
+                    report['patience_limit'] = train_config['validation_patience']
+                print('valid: {}'.format(report))
+                if train_config['show_examples']:
+                    for xi, ypi, yti in zip(x, y_predicted, y_true):
+                        print({'in': xi, 'out': ypi, 'expected': yti})
+
+                if patience >= train_config['validation_patience'] > 0:
+                    print('Ran out of patience', file=sys.stderr)
+                    break
 
             if epochs >= train_config['epochs'] > 0:
                 break
