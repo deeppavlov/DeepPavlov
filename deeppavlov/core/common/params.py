@@ -22,7 +22,8 @@ def from_params(cls: Type, params: Dict, **kwargs) -> Type['T']:
             try:
                 subcls = REGISTRY[subcls_name]
                 config_params[param_name] = from_params(subcls, subcls_params,
-                                                        vocabs=kwargs['vocabs'])
+                                                        vocabs=kwargs['vocabs'],
+                                                        mode=kwargs['mode'])
             except KeyError:
                 raise ConfigError(
                     "The class {} is not registered. Either register this class,"
