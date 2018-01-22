@@ -51,7 +51,6 @@ class NerNetwork:
                  char_filter_width=5,
                  verbouse=False,
                  embeddings_onethego=False):
-
         n_tags = len(tag_vocab)
         n_tokens = len(token_vocab)
         n_chars = len(char_vocab)
@@ -392,7 +391,6 @@ class NerNetwork:
         """
         Save model to model_file_path
         """
-        print('Saving model to {}'.format(model_file_path))
         saver = tf.train.Saver()
         saver.save(self._sess, str(model_file_path))
 
@@ -400,7 +398,6 @@ class NerNetwork:
         """
         Load model from the model_file_path
         """
-        print('Loading model from {}'.format(model_file_path))
         saver = tf.train.Saver()
         saver.restore(self._sess, str(model_file_path))
 

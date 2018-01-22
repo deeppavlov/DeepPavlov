@@ -1,19 +1,13 @@
-import json
-import glob
-
 import tensorflow as tf
-from fuzzywuzzy import process
 from overrides import overrides
 from copy import deepcopy
 import inspect
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import tokenize_reg
-from deeppavlov.core.data.utils import download, download_untar
 from deeppavlov.core.common.paths import USR_PATH
 from deeppavlov.models.ner.network import NerNetwork
 from deeppavlov.core.models.tf_model import SimpleTFModel
-
 
 
 @register('ner')
@@ -67,9 +61,10 @@ class NER(SimpleTFModel):
         self._net.save(path)
 
     @overrides
-    def train(self, data, epochs=10):
+    def train(self, data, default_n_epochs=10):
         if self.train_now:
             print('Training NER network')
+            epochs = self.train_parameters.get('epochs', default_n_epochs)
             for epoch in range(epochs):
                 self._net.train(data, **self.train_parameters)
                 self._net.eval_conll(data.iter_all('valid'), short_report=False, data_type='valid')
@@ -78,7 +73,7 @@ class NER(SimpleTFModel):
             self.save()
         else:
             print('Loading NER network')
-            self._net.load(self._ner_model_path)
+            self._net.load()
 
     @overrides
     def infer(self, sample, *args, **kwargs):
