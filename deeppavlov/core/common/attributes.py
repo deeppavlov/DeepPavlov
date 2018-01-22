@@ -60,16 +60,16 @@ def run_alt_meth_if_no_path(alt_f: Callable, attr: str):
     return _run_alt_meth
 
 
-def check_path_exists(path_type='file'):
+def check_path_exists():
     def _check_path_exists(f: Callable):
         @wraps(f)
         def wrapped(self, *args, **kwargs):
-            if path_type == 'file':
-                if self.ser_path.exists():
-                    return f(self, *args, **kwargs)
-            elif path_type == 'dir':
-                if self.ser_path.parent.exists():
-                    return f(self, *args, **kwargs)
+            if self.ser_path.exists():
+                if self.ser_path.is_file():
+                        return f(self, *args, **kwargs)
+                elif self.ser_path.is_dir():
+                    if self.ser_path.parent.exists():
+                        return f(self, *args, **kwargs)
             raise FileNotFoundError(
                 "{}.ser_path doesn't exist. Check if there is a pretrained model."
                 "If there is no a pretrained model, you might want to set 'train_now' to true "

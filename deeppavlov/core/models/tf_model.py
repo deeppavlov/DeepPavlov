@@ -85,7 +85,7 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
         else:
             return tf.train.get_checkpoint_state(self.ser_path.parent)
 
-    @check_path_exists('dir')
+    @check_path_exists()
     @overrides
     def load(self):
         """
