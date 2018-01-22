@@ -29,19 +29,18 @@ class NER(SimpleTFModel):
 
         # Find all input parameters of the network init
         network_parameter_names = list(inspect.signature(NerNetwork.__init__).parameters)
-
         # Fill all provided parameters from opt
-        network_parameters = {}
-        for parameter_name in network_parameter_names:
-            if parameter_name in opt:
-                network_parameters[parameter_name] = opt[parameter_name]
+        network_parameters = {par: opt[par] for par in network_parameter_names if par in opt}
 
         self._net = NerNetwork(**network_parameters)
 
         # Find all parameters for network train
         train_parameters_names = list(inspect.signature(NerNetwork.train_on_batch).parameters)
-        train_parameters = {par: opt[par] for par in train_parameters_names if parameter_name in opt}
+        # Fill all provided parameters from opt
+        train_parameters = {par: opt[par] for par in train_parameters_names if par in opt}
         self.train_parameters = train_parameters
+
+        self.opt = opt
 
         # Try to load the model (if there are some model files the model will be loaded from them)
         self.load()
@@ -62,10 +61,10 @@ class NER(SimpleTFModel):
         self._net.save(path)
 
     @overrides
-    def train(self, data, default_n_epochs=10):
+    def train(self, data, default_n_epochs=5):
         if self.train_now:
             print('Training NER network', file=sys.stderr)
-            epochs = self.train_parameters.get('epochs', default_n_epochs)
+            epochs = self.opt.get('epochs', default_n_epochs)
             for epoch in range(epochs):
                 self._net.train(data, **self.train_parameters)
                 self._net.eval_conll(data.iter_all('valid'), short_report=False, data_type='valid')
