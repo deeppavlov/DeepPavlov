@@ -18,7 +18,6 @@ from .tf_backend import TfModelMeta
 class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
 
     def __init__(self, **kwargs):
-        self.sess = None
         self._saver = tf.train.Saver
         super().__init__(**kwargs)
 
