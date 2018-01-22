@@ -9,12 +9,12 @@ from deeppavlov.core.common.file import load_pickle, save_pickle
 
 
 class SklearnModel(Trainable, Inferable):
-    def __init__(self, estimator: Type, params: Dict = None, model_path=None, model_dir='sklearn',
-                 model_file='estimator.pkl', train_now=False):
+    def __init__(self, estimator: Type, params: Dict = None, ser_path=None, ser_dir='sklearn',
+                 ser_file='estimator.pkl', train_now=False):
 
-        super().__init__(model_path=model_path,
-                         model_dir=model_dir,
-                         model_file=model_file,
+        super().__init__(model_path=ser_path,
+                         model_dir=ser_dir,
+                         model_file=ser_file,
                          train_now=train_now)
 
         if params is None:
@@ -66,21 +66,21 @@ class SklearnModel(Trainable, Inferable):
         """
         Save model to file.
         """
-        if not self.model_path.parent.exists():
-            self.model_path.parent.mkdir(mode=0o755)
+        if not self.ser_path.parent.exists():
+            self.ser_path.parent.mkdir(mode=0o755)
 
-        save_pickle(self._estimator, self.model_path.as_posix())
+        save_pickle(self._estimator, self.ser_path.as_posix())
 
-        print(':: model saved to {}'.format(self.model_path))
+        print(':: model saved to {}'.format(self.ser_path))
 
     def load(self):
         """
         Load model from file.
         """
         try:
-            return load_pickle(self.model_path)
+            return load_pickle(self.ser_path)
         except FileNotFoundError as e:
-            raise (e, "There is no model in the specified path: {}".format(self.model_path))
+            raise (e, "There is no model in the specified path: {}".format(self.ser_path))
 
     def reset(self):
         pass

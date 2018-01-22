@@ -16,9 +16,8 @@
   },
   "model": {
     "name": "intent_model",
-    "train_now": true,
-    "model_path": "../data/intent_cnn",
     "opt": {
+      "train_now": true,
       "classes_file": "../data/dstc2/classes.txt",
       "kernel_sizes_cnn": "3 3 3",
       "filters_cnn": 512,
@@ -43,7 +42,7 @@
     },
     "embedder": {
       "name": "fasttext",
-      "model_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
+      "ser_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
       "emb_module": "fasttext",
       "dim": 100
     }

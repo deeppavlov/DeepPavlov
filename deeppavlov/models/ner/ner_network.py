@@ -58,14 +58,14 @@ class NerNetwork(SimpleTFModel):
                  char_filter_width=5,
                  verbouse=False,
                  embeddings_onethego=False,
-                 model_path=None,
-                 model_dir='ner',
-                 model_file='dstc_ner_network.ckpt',
+                 ser_path=None,
+                 ser_dir='ner',
+                 ser_file='dstc_ner_network.ckpt',
                  train_now=False):
 
-        super().__init__(model_path=model_path,
-                         model_dir=model_dir,
-                         model_file=model_file,
+        super().__init__(ser_path=ser_path,
+                         ser_dir=ser_dir,
+                         ser_file=ser_file,
                          train_now=train_now)
 
         n_tags = len(vocabs['tag_vocab'])
@@ -180,13 +180,13 @@ class NerNetwork(SimpleTFModel):
         sess.run(tf.global_variables_initializer())
 
     def save(self):
-        print('Saving model to {}'.format(self.model_path))
+        print('Saving model to {}'.format(self.ser_path))
         saver = tf.train.Saver()
-        saver.save(self._sess, str(self.model_path))
+        saver.save(self._sess, str(self.ser_path))
 
     def load(self):
         saver = tf.train.Saver()
-        saver.restore(self._sess, str(self.model_path))
+        saver.restore(self._sess, str(self.ser_path))
 
     def tokens_batch_to_numpy_batch(self, batch_x, batch_y=None):
         # Determine dimensions

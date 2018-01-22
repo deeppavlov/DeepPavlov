@@ -118,6 +118,7 @@ def train_batches(config_path: str):
 
     i = 0
     epochs = 0
+    examples = 0
     saved = False
     patience = 0
     best = 0
@@ -127,17 +128,24 @@ def train_batches(config_path: str):
     try:
         while True:
             for batch in dataset.batch_generator(train_config['batch_size']):
+                x, y_true = batch
                 if log_on:
-                    x, y_true = batch
                     y_predicted = list(model.infer(x))
                     train_y_true += y_true
                     train_y_predicted += y_predicted
                 model.train_on_batch(batch)
                 i += 1
+                examples += len(x)
 
                 if train_config['log_every_n_batches'] > 0 and i % train_config['log_every_n_batches'] == 0:
                     metrics = [f(train_y_true, train_y_predicted) for f in metrics_functions]
-                    print('train: {}'.format(dict(zip(train_config['metrics'], metrics))))
+                    report = {
+                        'epochs_done': epochs,
+                        'batches_seen': i,
+                        'examples_seen': examples,
+                        'metrics': dict(zip(train_config['metrics'], metrics))
+                    }
+                    print('train: {}'.format(report))
                     train_y_true = []
                     train_y_predicted = []
 

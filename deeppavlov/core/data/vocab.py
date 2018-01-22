@@ -10,14 +10,14 @@ from deeppavlov.core.common.attributes import check_path_exists, check_attr_true
 
 @register('default_vocab')
 class DefaultVocabulary(Trainable, Inferable):
-    def __init__(self, inputs, level='token', model_path=None,
-                 model_dir='vocabs', model_file='vocab.txt',
+    def __init__(self, inputs, level='token', ser_path=None,
+                 ser_dir='vocabs', ser_file='vocab.txt',
                  special_tokens=tuple(), default_token=None,
                  tokenize=False, train_now=False, *args, **kwargs):
 
-        super().__init__(model_path=model_path,
-                         model_dir=model_dir,
-                         model_file=model_file,
+        super().__init__(ser_path=ser_path,
+                         ser_dir=ser_dir,
+                         ser_file=ser_file,
                          train_now=train_now)
 
         self.special_tokens = special_tokens
@@ -26,7 +26,7 @@ class DefaultVocabulary(Trainable, Inferable):
 
         # TODO check via decorator
         self.reset()
-        if self.model_path.exists():
+        if self.ser_path.exists():
             self.load()
 
     @staticmethod
@@ -119,8 +119,8 @@ class DefaultVocabulary(Trainable, Inferable):
         return [self.__getitem__(s) for s in samples]
 
     def save(self):
-        print("[saving vocabulary to `{}`]".format(self.model_path))
-        with self.model_path.open('wt') as f:
+        print("[saving vocabulary to `{}`]".format(self.ser_path))
+        with self.ser_path.open('wt') as f:
             for n in range(len(self._t2i)):
                 token = self._i2t[n]
                 cnt = self.freqs[token]
@@ -129,9 +129,9 @@ class DefaultVocabulary(Trainable, Inferable):
     @check_path_exists()
     def load(self):
         # NOTE: some bad things when dir of model does not exist
-        print("[loading vocabulary from `{}`]".format(self.model_path))
+        print("[loading vocabulary from `{}`]".format(self.ser_path))
         tokens, counts = [], []
-        for ln in self.model_path.open('r'):
+        for ln in self.ser_path.open('r'):
             token, cnt = ln.split('\t', 1)
             tokens.append(token)
             counts.append(int(cnt))

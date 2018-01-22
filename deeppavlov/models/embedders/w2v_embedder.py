@@ -9,10 +9,10 @@ from deeppavlov.core.common.attributes import check_attr_true, run_alt_meth_if_n
 
 @register('w2v')
 class Word2VecEmbedder(Trainable, Inferable):
-    def __init__(self, model_path, model_dir='emb', model_file='text8.model', dim=300,
+    def __init__(self, ser_path, ser_dir='emb', ser_file='text8.model', dim=300,
                  train_now=False):
-        super().__init__(model_path=model_path, model_dir=model_dir,
-                         model_file=model_file, train_now=train_now)
+        super().__init__(ser_path=ser_path, ser_dir=ser_dir,
+                         ser_file=ser_file, train_now=train_now)
         self.dim = dim
         self.model = self.load()
 
@@ -26,13 +26,13 @@ class Word2VecEmbedder(Trainable, Inferable):
 
     @check_attr_true('train_now')
     def train(self, *args, **kwargs):
-        sentences = word2vec.Text8Corpus(self.model_path)
+        sentences = word2vec.Text8Corpus(self.ser_path)
 
         print(':: creating new word2vec model')
         model = word2vec.Word2Vec(sentences, size=self.dim)
         self.model = model
 
-        self.model_path.parent.mkdir(parents=True, exist_ok=True)
+        self.ser_path.parent.mkdir(parents=True, exist_ok=True)
         self.save()
         return model
 
@@ -41,8 +41,8 @@ class Word2VecEmbedder(Trainable, Inferable):
 
     @run_alt_meth_if_no_path(train, 'train_now')
     def load(self):
-        return word2vec.Word2Vec.load(str(self.model_path))
+        return word2vec.Word2Vec.load(str(self.ser_path))
 
     def save(self):
-        self.model.save(str(self.model_path))
+        self.model.save(str(self.ser_path))
         print(':: model saved to path')

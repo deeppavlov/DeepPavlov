@@ -26,8 +26,7 @@ class KerasIntentModel(KerasModel):
     def __init__(self,
                  opt: Dict,
                  embedder: FasttextEmbedder,
-                 model_path=None, model_dir=None, model_file=None, train_now=False,
-                 *args, **kwargs):
+                 **kwargs):
         """
         Method initializes model using parameters from opt
         Args:
@@ -35,8 +34,7 @@ class KerasIntentModel(KerasModel):
             *args:
             **kwargs:
         """
-        super().__init__(opt, model_path=model_path, model_dir=model_dir, model_file=model_file,
-                         train_now=train_now)
+        super().__init__(opt, **kwargs)
 
         try:
             classes_file = Path(self.opt['classes_file'])
@@ -62,7 +60,7 @@ class KerasIntentModel(KerasModel):
 
         self.fasttext_model = embedder
         self.opt['embedding_size'] = self.fasttext_model.dim
-        current_fasttext_md5 = md5_hashsum([self.fasttext_model.model_path])
+        current_fasttext_md5 = md5_hashsum([self.fasttext_model.ser_path])
 
         params = {"model_name": self.opt['model_name'],
                   "optimizer_name": self.opt['optimizer'],
@@ -72,7 +70,7 @@ class KerasIntentModel(KerasModel):
                   "metrics_names": self.opt['lear_metrics'],
                   "add_metrics_file": metrics_file}
 
-        self.model = self.load(**params, fname=self.model_path)
+        self.model = self.load(**params)
 
         # Check if md5 hash sum of current loaded fasttext model
         # is equal to saved
@@ -82,7 +80,8 @@ class KerasIntentModel(KerasModel):
             self.opt['fasttext_md5'] = current_fasttext_md5
         else:
             if self.opt['fasttext_md5'] != current_fasttext_md5:
-                raise ConfigError("Given fasttext model does NOT match fasttext model used previously to train loaded model")
+                raise ConfigError(
+                    "Given fasttext model does NOT match fasttext model used previously to train loaded model")
 
         # List of parameters that could be changed
         # when the model is initialized from saved and is going to be trained further
