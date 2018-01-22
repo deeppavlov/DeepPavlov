@@ -248,7 +248,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
             opt_path = "{}_opt.json".format(self.ser_path)
             weights_path = "{}.h5".format(self.ser_path)
         print("[ saving model: {} ]".format(opt_path))
-        self.model_path.mkdir(parents=True, exist_ok=True)
+        self.ser_path.mkdir(parents=True, exist_ok=True)
         self.model.save_weights(weights_path)
 
         save_json(self.opt, opt_path)
