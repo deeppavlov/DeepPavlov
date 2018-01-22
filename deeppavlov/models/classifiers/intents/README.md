@@ -110,9 +110,11 @@ Below the table with description of parameters is presented.
 ### Train on DSTC 2
 
 To train model again or with other parameters on DSTC 2 data
- the only actions are to set parameter `train_now` to `true` in `config.json` and
+ the only actions are to set parameter `train_now` to `true` in `config.json`,
  set `model_path` to the directory where trained model will be saved 
- (it will be loaded if model exists, and it will be created otherwise). 
+ (it will be loaded if model exists, and it will be created otherwise), 
+ set parameter `MODEL_CONFIG_PATH='models/classifiers/intents/config.json'` 
+ in `deeppavlov/run_model.py`.
  All other parameters of model as well as embedder and tokenizer could be changed. 
  Then training could be run in the following way:
 ```
@@ -138,9 +140,9 @@ Training data files `train.csv` (and, if exists, `valid.csv`) should be presente
 
 To train model one should 
 * set parameter `train_now` to `true` in `config_classification.json`,
-* set `data_path` to the directory containing `train.csv`, `valid.csv`,
-* set `model_path` to the directory where trained model will be saved, 
-* set all other parameters of model as well as embedder and tokenizer to desired ones. 
+* set `data_path` to the directory containing `train.csv`, `valid.csv` in `config_classification.json`,
+* set `model_path` to the directory where trained model will be saved in `config_classification.json`, 
+* set all other parameters of model as well as embedder and tokenizer to desired ones in `config_classification.json`,
 * set `MODEL_CONFIG_PATH='models/classifiers/intents/config_classification.json'` in `run_model.py`.
 
  Then training could be run in the same way:
@@ -153,8 +155,8 @@ that was restored in `.csv` format.**
 
 ## Comparison
 
-As no one had tried previously intent recognition for DSTC 2 data, 
-the comparison of the presented model is given on SNIPS dataset 
+As no one had published intent recognition for DSTC 2 data, 
+the comparison of the presented model is given on SNIPS dataset. 
 
 |             Model                          |  AUC-ROC  | F-measure | 
 |--------------------------------------------|-----------|-----------|
@@ -165,12 +167,13 @@ the comparison of the presented model is given on SNIPS dataset
 
 ## Ways to improve
 
-* 
-*
-*
+* One can train the other embeddings using FastText [3] that are more appropriate for the considered dataset.
+* All the parameters have to be tuned for training.
 
 # References
 
 [1] Kim Y. Convolutional neural networks for sentence classification //arXiv preprint arXiv:1408.5882. – 2014.
 
 [2] https://github.com/snipsco/nlu-benchmark
+
+[3] P. Bojanowski*, E. Grave*, A. Joulin, T. Mikolov, Enriching Word Vectors with Subword Information.
