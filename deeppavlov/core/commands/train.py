@@ -7,6 +7,7 @@ from deeppavlov.core.common.params import from_params
 from deeppavlov.core.data.dataset import Dataset
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.common import paths
+from deeppavlov.metrics.registry import get_metrics_by_names
 
 
 # TODO pass paths to local model configs to agent config.
@@ -30,7 +31,7 @@ def train_agent_models(config_path: str):
             dataset = from_params(REGISTRY[dataset_name], dataset_config, data=data)
 
             model = from_params(REGISTRY[model_name], model_config)
-            model.train(dataset, )
+            model.train(dataset)
         else:
             print('Model {} is not an instance of Trainable, skip training.'.format(model_name), file=sys.stderr)
 
@@ -53,14 +54,14 @@ def train_model_from_config(config_path: str):
         for vocab_param_name, vocab_config in config['vocabs'].items():
             vocab_name = vocab_config['name']
             v = from_params(REGISTRY[vocab_name], vocab_config)
-            v.train(dataset.iter_all('train'), )
+            v.train(dataset.iter_all('train'))
             vocabs[vocab_param_name] = v
 
     model_config = config['model']
     model_name = model_config['name']
     model = from_params(REGISTRY[model_name], model_config, vocabs=vocabs)
 
-    model.train(dataset, )
+    model.train(dataset)
 
     # The result is a saved to user_dir trained model.
 
@@ -85,16 +86,12 @@ def train_batches(config_path: str):
         'test': True
     }
 
-    def accuracy(y_true, y_predicted):
-        pass  # TODO: implement and move away
-        return 0
-
-    metrics_functions = [accuracy]
-
     try:
         train_config.update(config['train'])
     except KeyError:
         raise RuntimeError('training config is missing')
+
+    metrics_functions = get_metrics_by_names(train_config['metrics'])
 
     reader_config = config['dataset_reader']
     reader = from_params(REGISTRY[reader_config['name']], {})
@@ -181,7 +178,7 @@ def train_batches(config_path: str):
                     patience += 1
 
                     if patience >= train_config['validation_patience'] > 0:
-                        print('Run out of patience', file=sys.stderr)
+                        print('Ran out of patience', file=sys.stderr)
                         break
                     else:
                         print('Did not improve on the {} of {}'.format(train_config['metrics'][0], best),

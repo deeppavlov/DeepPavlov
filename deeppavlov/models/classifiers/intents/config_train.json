@@ -46,7 +46,7 @@
     "epochs": 100,
     "batch_size": 64,
 
-    "metrics": ["accuracy", "fmeasure"],
+    "metrics": ["accuracy"],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
 

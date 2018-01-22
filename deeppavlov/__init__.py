@@ -24,3 +24,5 @@ from deeppavlov.core.data.vocab import DefaultVocabulary
 from deeppavlov.skills.hcn_new.hcn import HybridCodeNetworkModel
 from deeppavlov.skills.hcn_new.tracker import FeaturizedTracker
 from deeppavlov.vocabs.typos import StaticDictionary, Wiki100KDictionary, RussianWordsVocab
+
+import deeppavlov.metrics.accuracy
