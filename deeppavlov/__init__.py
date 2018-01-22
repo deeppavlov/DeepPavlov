@@ -28,3 +28,4 @@ from deeppavlov.core.data.vocab import DefaultVocabulary
 from deeppavlov.skills.hcn.hybrid import HybridCodeNetwork
 from deeppavlov.skills.hcn_new.hcn import HybridCodeNetworkModel
 from deeppavlov.skills.hcn_new.tracker import FeaturizedTracker
+from deeppavlov.models.ner.ner import NER

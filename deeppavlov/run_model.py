@@ -19,7 +19,7 @@ from deeppavlov.core.commands.utils import set_usr_dir
 # models/classifiers/intents/config.json
 
 # NER
-MODEL_CONFIG_PATH = 'models/ner/config.json'
+MODEL_CONFIG_PATH = 'models/ner/ner_config.json'
 
 # MODEL_CONFIG_PATH = 'models/classifiers/intents/config.json'
 usr_dir = set_usr_dir(MODEL_CONFIG_PATH)
