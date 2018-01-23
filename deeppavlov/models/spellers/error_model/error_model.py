@@ -5,23 +5,25 @@ from heapq import heappop, heappushpop, heappush
 from math import log, exp
 
 import kenlm
+from tqdm import tqdm
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.vocabs.static_dictionary import StaticDictionary
+from deeppavlov.vocabs.typos import StaticDictionary
 from deeppavlov.core.common.attributes import check_attr_true, check_path_exists
 
 
 @register('spelling_error_model')
 class ErrorModel(Inferable, Trainable):
-    def __init__(self, dictionary: StaticDictionary, model_path=None, model_dir=None, window=1,
-                 model_file='error_model.tsv', lm_file=None, train_now=False, *args, **kwargs):
+    def __init__(self, dictionary: StaticDictionary, ser_path=None, ser_dir='error_model', window=1,
+                 ser_file='error_model.tsv', lm_file=None, train_now=False, **kwargs):
 
-        super().__init__(model_path=model_path,
-                         model_dir=model_dir,
-                         model_file=model_file,
-                         train_now=train_now)
+        super().__init__(ser_path=ser_path,
+                         ser_dir=ser_dir,
+                         ser_file=ser_file,
+                         train_now=train_now,
+                         mode=kwargs['mode'])
         self.costs = defaultdict(itertools.repeat(float('-inf')).__next__)
         self.dictionary = dictionary
         self.window = window
@@ -34,7 +36,7 @@ class ErrorModel(Inferable, Trainable):
         self.costs[('⟭', '⟭')] = log(1)
         for c in self.dictionary.alphabet:
             self.costs[(c, c)] = log(1)
-        if self.model_path.is_file():
+        if self.ser_path.is_file():
             self.load()
 
         if lm_file:
@@ -172,9 +174,8 @@ class ErrorModel(Inferable, Trainable):
         changes = []
         entries = []
         dataset = list(dataset.iter_all())
-        n = len(dataset)
         window = 4
-        for i, (error, correct) in enumerate(dataset):
+        for error, correct in tqdm(dataset, desc='Training the error model'):
             correct = '⟬{}⟭'.format(correct)
             error = '⟬{}⟭'.format(error)
             d, ops = self._distance_edits(correct, error)
@@ -189,8 +190,6 @@ class ErrorModel(Inferable, Trainable):
 
                 entries += [op[0] for op in ops]
                 changes += [op for op in ops]
-            if i % 1500 == 0:
-                print('{} out of {}'.format(i + 1, n))
 
         e_count = Counter(entries)
         c_count = Counter(changes)
@@ -208,7 +207,7 @@ class ErrorModel(Inferable, Trainable):
         # if not file_name:
         #     file_name = self.file_name
         # os.makedirs(os.path.dirname(os.path.abspath(file_name)), 0o755, exist_ok=True)
-        with open(self.model_path, 'w', newline='') as tsv_file:
+        with open(self.ser_path, 'w', newline='') as tsv_file:
             writer = csv.writer(tsv_file, delimiter='\t')
             for (w, s), log_p in self.costs.items():
                 writer.writerow([w, s, exp(log_p)])
@@ -217,7 +216,7 @@ class ErrorModel(Inferable, Trainable):
     def load(self):
         # # if not file_name:
         #     file_name = self.file_name
-        with open(self.model_path, 'r', newline='') as tsv_file:
+        with open(self.ser_path, 'r', newline='') as tsv_file:
             reader = csv.reader(tsv_file, delimiter='\t')
             for w, s, p in reader:
                 self.costs[(w, s)] = log(float(p))

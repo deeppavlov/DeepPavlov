@@ -33,6 +33,7 @@ def precision_K(y_true, y_pred):
     precision = true_positives / (predicted_positives + K.epsilon())
     return precision
 
+
 def recall_K(y_true, y_pred):
     """
     Keras backend function that calculates recall for keras tensors
@@ -47,6 +48,7 @@ def recall_K(y_true, y_pred):
     possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
     recall = true_positives / (possible_positives + K.epsilon())
     return recall
+
 
 def fbeta_score_K(y_true, y_pred, beta=1):
     """
@@ -131,6 +133,7 @@ def fbeta_score_np(y_true, y_pred, beta=1):
     bb = beta ** 2
     fbeta_score = (1 + bb) * (p * r) / (bb * p + r + 10e-8)
     return fbeta_score
+
 
 def fmeasure(y_true, y_pred):
     """

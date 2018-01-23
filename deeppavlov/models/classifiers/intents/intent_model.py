@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+import sys
 import inspect
 
 from typing import Dict, Type
 import numpy as np
-import sys
 from keras.layers import Dense, Input, concatenate, Activation
 from keras.layers.convolutional import Conv1D
 from keras.layers.core import Dropout
@@ -26,6 +27,7 @@ from keras.models import Model
 from keras.regularizers import l2
 
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common import paths
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.keras_model import KerasModel
@@ -43,10 +45,9 @@ class KerasIntentModel(KerasModel):
     def __init__(self,
                  vocabs,
                  opt: Dict,
-                 model_path=None, model_dir=None, model_file=None, train_now=False,
                  embedder: Type = FasttextEmbedder,
                  tokenizer: Type = NLTKTokenizer,
-                 *args, **kwargs):
+                 **kwargs):
         """
         Method initializes and trains vocabularies, initializes embedder, tokenizer,
         and then initializes model using parameters from opt dictionary (from config),
@@ -62,11 +63,9 @@ class KerasIntentModel(KerasModel):
                             can be default or set in json config
             embedder: instance of FasttextEmbedder class
             tokenizer: instance of NLTKTokenizer class
-            *args:
             **kwargs:
         """
-        super().__init__(opt, model_path=model_path, model_dir=model_dir, model_file=model_file,
-                         train_now=train_now)
+        super().__init__(opt, **kwargs)
 
         # Tokenizer and vocabulary of classes
         self.tokenizer = tokenizer
@@ -81,7 +80,7 @@ class KerasIntentModel(KerasModel):
 
         self.fasttext_model = embedder
         self.opt['embedding_size'] = self.fasttext_model.dim
-        current_fasttext_md5 = md5_hashsum([self.fasttext_model.model_path])
+        current_fasttext_md5 = md5_hashsum([self.fasttext_model.ser_path])
 
         # List of parameters that could be changed
         # when the model is initialized from saved and is going to be trained further
@@ -118,7 +117,7 @@ class KerasIntentModel(KerasModel):
                   "metrics_names": self.opt['lear_metrics'],
                   "add_metrics_file": metrics_file}
 
-        self.model = self.load(**params, fname=self.model_path)
+        self.model = self.load(**params)
 
         # Check if md5 hash sum of current loaded fasttext model
         # is equal to saved
@@ -128,7 +127,8 @@ class KerasIntentModel(KerasModel):
             self.opt['fasttext_md5'] = current_fasttext_md5
         else:
             if self.opt['fasttext_md5'] != current_fasttext_md5:
-                raise ConfigError("Given fasttext model does NOT match fasttext model used previously to train loaded model")
+                raise ConfigError(
+                    "Given fasttext model does NOT match fasttext model used previously to train loaded model")
 
         # Considered metrics including loss
         self.metrics_names = self.model.metrics_names
@@ -302,7 +302,6 @@ class KerasIntentModel(KerasModel):
             return preds
         else:
             return proba2labels(preds, confident_threshold=self.confident_threshold, classes=self.classes)
-
 
     def cnn_model(self, params):
         """

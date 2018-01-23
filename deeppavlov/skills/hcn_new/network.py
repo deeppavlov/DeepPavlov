@@ -13,8 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from pathlib import Path
-
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer
@@ -29,18 +27,16 @@ class HybridCodeNetworkModel(TFModel):
     def __init__(self, **params):
         self.opt = params
 
-        model_path = self.opt.get('model_path', None)
-        model_dir = self.opt.get('model_dir', '')
-        model_file = self.opt.get('model_file', None)
-        train_now = self.opt.get('train_now', 'model')
+        ser_path = self.opt.get('ser_path', None)
+        ser_dir = self.opt.get('ser_dir', 'hcn_rnn')
+        ser_file = self.opt.get('ser_file', 'model')
+        train_now = self.opt.get('train_now', False)
 
-        super().__init__(model_path=model_path,
-                         model_dir=model_dir,
-                         model_file=model_file,
-                         train_now=train_now)
-
-        if self.model_path:
-            self.model_path = str(Path(self.model_path) / self._model_file)
+        super().__init__(ser_path=ser_path,
+                         ser_dir=ser_dir,
+                         ser_file=ser_file,
+                         train_now=train_now,
+                         mode=self.opt['mode'])
 
         # initialize parameters
         self._init_params()
@@ -49,7 +45,7 @@ class HybridCodeNetworkModel(TFModel):
         # initialize session
         self.sess = tf.Session()
 
-        if not self.opt.get('train_now') and self.get_checkpoint_state():
+        if not self.train_now and self.get_checkpoint_state():
         #TODO: save/load params to json, here check compatability
             self.load()
         else:

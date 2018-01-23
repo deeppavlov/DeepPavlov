@@ -29,18 +29,15 @@ from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 
 # Intents classifier
 # models/classifiers/intents/config.json
-# models/classifiers/intents/config_infer.json
 
 # NER
 # models/ner/config.json
 
-# usr_dir = None
-
 try:
-    MODEL_CONFIG_PATH = 'models/classifiers/intents/config_classification.json'
-    set_usr_dir(MODEL_CONFIG_PATH)
-    train_model_from_config(MODEL_CONFIG_PATH)
-    interact_model(MODEL_CONFIG_PATH)
+    PIPELINE_CONFIG_PATH = 'models/classifiers/intents/config.json'
+    set_usr_dir(PIPELINE_CONFIG_PATH)
+    train_model_from_config(PIPELINE_CONFIG_PATH)
+    interact_model(PIPELINE_CONFIG_PATH)
 # remove if usr_dir is empty:
 finally:
     usr_dir = get_usr_dir()

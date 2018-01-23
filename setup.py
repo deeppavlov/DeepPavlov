@@ -29,9 +29,9 @@ def read_requirements():
     reqs = [str(ir.req) for ir in install_reqs]
     return reqs
 
+
 setup(license='Apache License, Version 2.0',
       packages=find_packages(exclude=('utils', 'ckpt', 'tests')),
       include_package_data=True,
       install_requires=read_requirements()
       )
-
