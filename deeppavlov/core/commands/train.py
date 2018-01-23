@@ -115,7 +115,7 @@ def train_batches(config_path: str):
 
     model_config = config['model']
     model_name = model_config['name']
-    model = from_params(REGISTRY[model_name], model_config, vocabs=vocabs)
+    model = from_params(REGISTRY[model_name], model_config, vocabs=vocabs, mode='train')
 
     i = 0
     epochs = 0
@@ -208,7 +208,7 @@ def train_batches(config_path: str):
         model.save()
 
     if train_config['validate_best'] or train_config['test_best']:
-        model = from_params(REGISTRY[model_name], model_config, vocabs=vocabs)
+        model = from_params(REGISTRY[model_name], model_config, vocabs=vocabs, mode='infer')
         print('Testing the best saved model', file=sys.stderr)
 
         if train_config['validate_best']:
