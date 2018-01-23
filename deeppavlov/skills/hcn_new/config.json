@@ -43,12 +43,13 @@
     }
   },
   "model": {
+    "train_now": true,
     "name": "hcn_new",
     "debug": 0,
     "num_epochs": 1,
     "template_path": "../data/dstc2/dstc2-templates.txt",
     "network": {
-      "ser_path": "/media/olga/Data/projects/iPavlov/Pilot/deeppavlov/USR_DIR/hcn_rnn",
+      "train_now": true,
       "name": "custom_rnn",
       "learning_rate": 0.03,
       "hidden_dim": 128,
@@ -75,9 +76,10 @@
     },
     "intent_classifier": {
       "name": "intent_model",
-      "ser_path": "models/classifiers/intents/intent_cnn_best",
       "opt": {
         "ser_path": "models/classifiers/intents/intent_cnn_best",
+        "ser_dir": "intent_cnn_best",
+        "ser_file": "intent_cnn_best",
         "classes_file": "models/classifiers/intents/intent_cnn_best/classes.txt",
         "kernel_sizes_cnn": "3 3 3",
         "filters_cnn": 512,
