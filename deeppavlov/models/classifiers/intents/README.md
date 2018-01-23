@@ -156,23 +156,26 @@ that was restored in `.csv` format.**
 ## Comparison
 
 As no one had published intent recognition for DSTC 2 data, 
-the comparison of the presented model is given on SNIPS dataset. 
+comparison of the presented model is given on **SNIPS** dataset. 
+Estimation of model scores was conducted in the same way as in [3] to compare with results from the presentation.
+The results were achieved with tuning of parameters.
 
 |             Model    | AddToPlaylist | BookRestaurant | GetWheather | PlayMusic | RateBook | SearchCreativeWork | SearchScreeningEvent | 
 |----------------------|---------------|----------------|-------------|-----------|----------|--------------------|----------------------|
-| api.ai               |  0.9931       |  0.9949        |  0.9935     |   0.9811  | 0.9992   | **0.9659**         | **0.9801**           |
-| ibm.watson           |  0.9931       |  **0.9950**    | **0.9950**  | **0.9822**|**0.9996**| 0.9643             |  0.9750              |
-| microsoft.luis       |  **0.9943**   |   0.9935       |   0.9925    |  0.9815   |  0.9988  | 0.9620             |  0.9749              |
+| api.ai               |  0.9931       |  0.9949        |  0.9935     |   0.9811  | 0.9992   | 0.9659             | 0.9801               |
+| ibm.watson           |  0.9931       |  0.9950        | 0.9950      | 0.9822    | 0.9996   | 0.9643             |  0.9750              |
+| microsoft.luis       |  0.9943       |   0.9935       |   0.9925    |  0.9815   | 0.9988   | 0.9620             |  0.9749              |
 | wit.ai               |    0.9877     |   0.9913       |   0.9921    |  0.9766   | 0.9977   | 0.9458             |  0.9673              |
 | snips.ai             |   0.9873      |   0.9921       |   0.9939    |  0.9729   | 0.9985   | 0.9455             |  0.9613              |
 | recast.ai            |   0.9894      |   0.9943       |   0.9910    |  0.9660   | 0.9981   | 0.9424             |  0.9539              |
 | amazon.lex           |   0.9930      |  0.9862        |   0.9825    |  0.9709   | 0.9981   | 0.9427             |  0.9581              |
 |||||||||
-| Shallow-and-wide CNN |  0.9956       |   0.9973       |   0.9968    |    0.9871 |  0.9998  |   0.9752           |   0.9854             |
+| Shallow-and-wide CNN |  **0.9956**   |   **0.9973**   |   **0.9968**| **0.9871**| **0.9998**| **0.9752**     |   **0.9854**           |
+
 
 ## Ways to improve
 
-* One can train the other embeddings using FastText [3] that are more appropriate for the considered dataset.
+* One can train the other embeddings using FastText [4] that are more appropriate for the considered dataset.
 * All the parameters have to be tuned for training.
 
 # References
@@ -181,4 +184,6 @@ the comparison of the presented model is given on SNIPS dataset.
 
 [2] https://github.com/snipsco/nlu-benchmark
 
-[3] P. Bojanowski*, E. Grave*, A. Joulin, T. Mikolov, Enriching Word Vectors with Subword Information.
+[3] https://www.slideshare.net/KonstantinSavenkov/nlu-intent-detection-benchmark-by-intento-august-2017
+
+[4] P. Bojanowski*, E. Grave*, A. Joulin, T. Mikolov, Enriching Word Vectors with Subword Information.
