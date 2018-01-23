@@ -1,3 +1,5 @@
+import datetime
+import time
 import sys
 
 from deeppavlov.core.common.file import read_json
@@ -123,6 +125,7 @@ def train_batches(config_path: str):
     log_on = train_config['log_every_n_batches'] > 0
     train_y_true = []
     train_y_predicted = []
+    start_time = time.time()
     try:
         while True:
             for batch in dataset.batch_generator(train_config['batch_size']):
@@ -141,7 +144,8 @@ def train_batches(config_path: str):
                         'epochs_done': epochs,
                         'batches_seen': i,
                         'examples_seen': examples,
-                        'metrics': dict(zip(train_config['metrics'], metrics))
+                        'metrics': dict(zip(train_config['metrics'], metrics)),
+                        'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
                     }
                     print('train: {}'.format(report))
                     train_y_true = []
@@ -179,7 +183,8 @@ def train_batches(config_path: str):
                 report = {
                     'examples_seen': len(val_y_true),
                     'metrics': dict(zip(train_config['metrics'], metrics)),
-                    'impatience': patience
+                    'impatience': patience,
+                    'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
                 }
                 if train_config['validation_patience'] > 0:
                     report['patience_limit'] = train_config['validation_patience']
@@ -206,6 +211,7 @@ def train_batches(config_path: str):
         print('Testing the best saved model', file=sys.stderr)
 
         if train_config['validate_best']:
+            start_time = time.time()
             val_y_true = []
             val_y_predicted = []
             for x, y_true in dataset.batch_generator(train_config['batch_size'], 'valid'):
@@ -217,11 +223,13 @@ def train_batches(config_path: str):
 
             report = {
                 'examples_seen': len(val_y_true),
-                'metrics': dict(zip(train_config['metrics'], metrics))
+                'metrics': dict(zip(train_config['metrics'], metrics)),
+                'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
             }
             print('valid: {}'.format(report))
 
         if train_config['test_best']:
+            start_time = time.time()
             val_y_true = []
             val_y_predicted = []
             for x, y_true in dataset.batch_generator(train_config['batch_size'], 'test'):
@@ -233,6 +241,7 @@ def train_batches(config_path: str):
 
             report = {
                 'examples_seen': len(val_y_true),
-                'metrics': dict(zip(train_config['metrics'], metrics))
+                'metrics': dict(zip(train_config['metrics'], metrics)),
+                'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
             }
             print('test: {}'.format(report))
