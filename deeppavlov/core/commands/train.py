@@ -83,7 +83,8 @@ def train_batches(config_path: str):
         'log_every_n_batches': 0,
         'show_examples': False,
 
-        'test': True
+        'validate_best': True,
+        'test_best': True
     }
 
     try:
@@ -199,3 +200,43 @@ def train_batches(config_path: str):
     if not saved:
         print('Saving model', file=sys.stderr)
         model.save()
+
+    if train_config['validate_best'] or train_config['test_best']:
+        model = from_params(REGISTRY[model_name], model_config, vocabs=vocabs)
+        print('Testing the best saved model', file=sys.stderr)
+
+        if train_config['validate_best']:
+            val_y_true = []
+            val_y_predicted = []
+            for x, y_true in dataset.batch_generator(train_config['batch_size'], 'valid'):
+                y_predicted = list(model.infer(x))
+                val_y_true += y_true
+                val_y_predicted += y_predicted
+
+            metrics = [f(train_y_true, train_y_predicted) for f in metrics_functions]
+
+            report = {
+                'examples_seen': len(val_y_true),
+                'metrics': dict(zip(train_config['metrics'], metrics))
+            }
+            if train_config['validation_patience'] > 0:
+                report['patience_limit'] = train_config['validation_patience']
+            print('valid: {}'.format(report))
+
+        if train_config['test_best_best']:
+            val_y_true = []
+            val_y_predicted = []
+            for x, y_true in dataset.batch_generator(train_config['batch_size'], 'test'):
+                y_predicted = list(model.infer(x))
+                val_y_true += y_true
+                val_y_predicted += y_predicted
+
+            metrics = [f(train_y_true, train_y_predicted) for f in metrics_functions]
+
+            report = {
+                'examples_seen': len(val_y_true),
+                'metrics': dict(zip(train_config['metrics'], metrics))
+            }
+            if train_config['validation_patience'] > 0:
+                report['patience_limit'] = train_config['validation_patience']
+            print('test: {}'.format(report))
