@@ -219,11 +219,9 @@ def train_batches(config_path: str):
                 'examples_seen': len(val_y_true),
                 'metrics': dict(zip(train_config['metrics'], metrics))
             }
-            if train_config['validation_patience'] > 0:
-                report['patience_limit'] = train_config['validation_patience']
             print('valid: {}'.format(report))
 
-        if train_config['test_best_best']:
+        if train_config['test_best']:
             val_y_true = []
             val_y_predicted = []
             for x, y_true in dataset.batch_generator(train_config['batch_size'], 'test'):
@@ -237,6 +235,4 @@ def train_batches(config_path: str):
                 'examples_seen': len(val_y_true),
                 'metrics': dict(zip(train_config['metrics'], metrics))
             }
-            if train_config['validation_patience'] > 0:
-                report['patience_limit'] = train_config['validation_patience']
             print('test: {}'.format(report))
