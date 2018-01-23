@@ -4,177 +4,144 @@
 
 # Dialogue Manager for goal-oriented task 
 
-The dialogue manager is based on
-["Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning" (Jason D. Williams et al., 2017)](https://arxiv.org/abs/1702.03274)
-which introduces Hybrid Code Networks (HCNs) that combine an RNN with domain-specific knowledge and system action templates. 
 
-Compared to existing end-to-end approaches, HCNs considerably reduce the amount of training data required, 
-while retaining the key benefit of inferring a latent representation of dialog state.
+The dialogue manager is based on [1] which introduces Hybrid Code Networks (HCNs) that combine an RNN with domain-specific knowledge and system action templates.
+
+Compared to existing end-to-end approaches, HCNs considerably reduce the amount of training data required, while retaining the key benefit of inferring a latent representation of dialog state.
+
+Here is an simple example of interaction with a trained dialogue bot:
+
+```
+::
+>> Hello, welcome to the Phystech restaurant system. You can ask for restaurants by area, price range or food type. How may I help you?
+:: hi, i want some food
+>> What part of town do you have in mind?
+:: north of Dolgoprudny
+>> What kind of food would you like?
+:: tasty =)
+>> "Time to eat" is a great restaurant.
+:: ok, is it cheap?
+>> "Time to eat" is a nice place in the north of town and the prices are cheap.
+:: give me their address then
+>> Sure, "Time to eat" is on Sobina Square, 1/4.
+:: and phone number. In case, i wanted to order something for delivery
+>> The phone number of "Time to eat" is +7(965)173-37-33.
+:: it's useless, but tell me their post code
+>> The post code of "Time to eat" is 141700.
+:: thanks
+>> "Time to eat" is a nice place in the north of town and the prices are cheap.
+:: good bye then
+>> You are welcome!
+```
 
 ## Usage
 
-#### Config parameters:  
+#### Requirements
+
+#### Config parameters:
 * `name` always equals to `"hcn_new"`
-* `train_now` — with the flag set to `true` the model will be trained _(optional)_
+* `train_now` — `true` or `false`(default) depending on whether you are training or using a model _(optional)_
 * `num_epochs` — maximum number of epochs during training _(optional)_
 * `val_patience` — stop training after `val_patience` epochs without improvement of turn accuracy on validation dialogs _(optional)_
 * `template_path` — map from actions to text templates for response generation
-
-#TODO: add vocabs description
 * `vocabs` — vocabs used in model
-    * `word_vocab` — 
-        * `name` — "default_vocab",
-        * `train` — true,
-        *  `inputs` — [ "x" ],
-        * `level` — "token",
-        * `model_path` — "../data/hcn/token.dict"
-* `tokenizer` — description of a tokenizer from from `deeppavlov.models.tokenizers` module
-    * `name` — tokenizer name
-    * `..` — other arguments specific to your tokenizer
+   * `word_vocab` — vocabulary of tokens from context utterances
+   * `train_now` — whether to train it on the current dataset, or use pretrained
+   * `name` — `"default_vocab"`,
+   * `inputs` — `[ "x" ]`,
+   * `level` — `"token"`,
+   * `ser_path` — `"../data/hcn/token.dict"`
+* `tokenizer` — description of a tokenizer from `from deeppavlov.models.tokenizers` module
+   * `name` — tokenizer name
+   * other arguments specific to your tokenizer
 * `bow_encoder` — description of a bag-of-words encoder from `deeppavlov.models.encoders.bow` module
-    * `name` — encoder name
-    * `..` — other arguments specific to your encoder
+   * `name` — encoder name
+   * other arguments specific to your encoder
 * `embedder` — description of an embedder from `deeppavlov.models.embedders` module
-    * `name` — embedder name
-    * `mean` — must be set to `true`
-    * `..`  — other arguments specific to your embedder
+   * `name` — embedder name
+   * `mean` — must be set to `true`
+   * other arguments specific to your embedder
 * `tracker` — dialogue state tracker from `deeppavlov.models.trackers`
-    * `name` — tracker name (`featurized_tracker` recommended)
-    * `..` — other arguments specific to you tracker
-* `network` — 
-    * `name` — "custom_rnn",
-    * `model_path` — name of the file that the model will be saved to and loaded from
-    * `learning_rate` — learning rate while training
-    * `hidden_dim` — hidden state dimension
-    * `obs_size` — input observation size
-    * `use_action_mask` — in case of `true`, action mask is applied to probability distribution
-    * `action_size` — output action size
-* `slot_filler` — 
-* `intent_classifier` — 
+   * `name` — tracker name (`featurized_tracker` recommended)
+   * other arguments specific to your tracker
+* `network` — reccurent network that handles dialogue policy management
+   * `name` — `"custom_rnn"`,
+   * `train_now` — `true` or `false`(default) depending on whether you are training or using a model _(optional)_
+   * `ser_path` — name of the file that the model will be saved to and loaded from
+   * `learning_rate` — learning rate during training
+   * `hidden_dim` — hidden state dimension
+   * `obs_size` — input observation size
+   * `use_action_mask` — in case of true, action mask is applied to probability distribution
+   * `action_size` — output action size
+* `slot_filler` — model that predicts slot values for a given utterance
+   * `name` — slot filler name, `"dstc_slotfilling"` recommended
+   * other slot filler arguments
+* `intent_classifier` — model that outputs intents probability disctibution for a given utterance
+   * `name` — slot filler name, `"intent_model"` recommended
+   * classifier's other arguments
 * `debug` — whether to display debug output (defaults to `false`) _(optional)_
 
-A working config could look like this:
+For a working exemplary config see `deeeppavlov/skills/hcn_new/config.json`.
 
-```json
-{
-  "vocabs": {
-    "word_vocab": {
-      "name": "default_vocab",
-      "train":  true,
-      "inputs": [ "x" ],
-      "level": "token",
-      "model_path": "../data/hcn/token.dict"
-    },
-    "token_vocab": {
-      "name": "default_vocab",
-      "train": false,
-      "inputs": [ "x" ],
-      "level": "token",
-      "model_path": "../data/ner/token.dict"
-    },
-    "tag_vocab": {
-      "name": "default_vocab",
-      "train": false,
-      "inputs": [ "y" ],
-      "level": "token",
-      "model_path": "../data/ner/tag.dict"
-    },
-    "char_vocab": {
-      "name": "default_vocab",
-      "train": false,
-      "inputs": [ "x" ],
-      "level": "char",
-      "model_path": "../data/ner/char.dict"
-    }
-  },
-  "model": {
-    "name": "hcn_new",
-    "train_now": true,
-    "num_epochs": 200,
-    "val_patience": 3,
-    "template_path": "../data/dstc2/dstc2-templates.txt",
-    "tokenizer": {
-      "name": "spacy_tokenizer"
-    },
-    "bow_encoder": {
-      "name": "bow"
-    },
-    "embedder": {
-      "name": "fasttext",
-      "emb_module": "pyfasttext",
-      "mean": true,
-      "dim": 300,
-      "model_path": "../data/embeddings/wiki.en.bin"
-    },
-    "tracker": {
-      "name": "featurized_tracker",
-      "slot_names": [
-        "pricerange",
-        "this",
-        "area",
-        "slot",
-        "food",
-        "name"
-      ]
-    },
-    "network": {
-      "name": "custom_rnn",
-      "train_now": true,
-      "model_path": "../data/hcn/model",
-      "learning_rate": 0.05,
-      "hidden_dim": 128,
-      "obs_size": 831,
-      "use_action_mask": false,
-      "action_size": 45
+#### Usage example
 
-    },
-    "slot_filler": {
-      "name": "dstc_slotfilling",
-      "model_path": "../data/ner",
-      "ner_network": {
-          "name": "ner_tagging_network",
-          "filter_width": 7,
-          "embeddings_dropout": true,
-          "n_filters": [
-              64,
-              64
-          ],
-          "token_embeddings_dim": 64,
-          "char_embeddings_dim": 32,
-          "use_batch_norm": true,
-          "use_crf": true
-        }
-    },
-    "intent_classifier": {
-      "name": "intent_model",
-      "model_path": "models/classifiers/intents/intent_cnn_best",
-      "opt": {
-          "classes_file": "models/classifiers/intents/intent_cnn_best/classes.txt",
-          "lear_metrics": "binary_accuracy fmeasure",
-          "confident_threshold": 0.5,
-          "optimizer": "Adam",
-          "lear_rate": 1.0,
-          "lear_rate_decay": 0.1,
-          "loss": "binary_crossentropy",
-          "coef_reg_cnn": 1e-4,
-          "coef_reg_den": 1e-4,
-          "dropout_rate": 0.5,
-          "epochs": 1,
-          "model_name": "cnn_model",
-          "batch_size": 64,
-          "val_every_n_epochs": 5,
-          "verbose": true,
-          "val_patience": 5,
-          "show_examples": false
-      },
-      "embedder": {
-          "name": "fasttext",
-          "model_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
-          "emb_module": "fasttext",
-          "dim": 100
-      }
-    },
-    "debug": false
-  }
-}
-```
+## Training
+
+#### Config parameters
+
+To be used for training, your config json file should include the following parameters:
+
+* `dataset_reader`
+   * `name` — `"your_reader_here"` for a custom dataset or `"dstc2_datasetreader"` to use DSTC2
+   * `ser_path` — a path to a dataset file, which in case of `"dstc2_datasetreader"` will be automatically downloaded from 
+   internet and placed to `ser_path`
+* `dataset` — it should always be set to `{"name": "dialog_dataset"}`
+
+#TODO: rename dstc2_dialog_dataset to dialog_dataset
+
+Do not forget to set `train_now` parameters to `true` for `vocabs.word_vocab`, `model` and `model.network` sections.
+
+See `deeppavlov/skills/hcn_new/config.json` for details.
+
+#### Train run
+
+The easiest way to run the training is by using `deeppavlov/run_model.py` script:
+
+1. set `MODEL_CONFIG_PATH` to your config path relative to the deeppavlov library
+(for example, `'skills/hcn_new/config.json'`)
+2. then run the script by `python3 run_model.py`
+
+The model will be trained according to your configuration and afterwards an interaction with the model will be run.
+
+## Datasets
+
+#### DSTC2
+
+#TODO: note on dstc2 modification
+
+#### Your data
+
+Constructing intents from DSTC 2 makes IntentDataset a bit difficult. Therefore, another dataset reader ClassificationDatasetReader and dataset ClassificationDataset to work with .csv files are also provided in deeppavlov/dataset_readers and deeppavlov/datasets.
+
+Training data files train.csv (and, if exists, valid.csv) should be presented in the following form:
+
+## Comparison
+
+As far as out dataset is a modified version of official DSTC2-dataset[2], resulting metrics can't be compared with model evaluations on the original dataset.
+
+But comparisons for hcn model modifications trained on out DSTC2-dataset are presented:
+
+|                   Model                      |  Action accuracy  |  Turn accuracy  |  Dialog accuracy |
+|----------------------------------------------|-------------------|-----------------|------------------|
+|basic hcn			                             |                   |                 |                  |
+|hcn with ner slot-filler			              |                   |                 |                  |
+|hcn with ner slot-filler & fasttext embeddings|                   |                 |                  |
+|hcn with ner slot-filler & fasttext & intents |                   |                 |                  |
+
+#TODO: add metrics values
+
+# References
+
+[1] [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017](https://arxiv.org/abs/1702.03274)
+
+[2] [Dialog State Tracking Challenge 2 dataset](http://camdial.org/~mh521/dstc/)
