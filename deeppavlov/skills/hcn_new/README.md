@@ -47,7 +47,7 @@ Here is an simple example of interaction with a trained dialogue bot:
 * `vocabs` — vocabs used in model
    * `word_vocab` — vocabulary of tokens from context utterances
       * `train_now` — whether to train it on the current dataset, or use pretrained
-      * `name` — `"default_vocab"` (for vocabulary implementation see [`deeppavlov.core.data.vocab`](../../core/data/vocab.py))
+      * `name` — `"default_vocab"` (for vocabulary's implementation see [`deeppavlov.core.data.vocab`](../../core/data/vocab.py))
       * `inputs` — `[ "x" ]`,
       * `level` — `"token"`,
       * `ser_path` — `"../data/hcn/token.dict"`
@@ -58,11 +58,11 @@ Here is an simple example of interaction with a trained dialogue bot:
    * `name` — encoder name
    * other arguments specific to your encoder
 * `embedder` — pne of embedders from [`deeppavlov.models.embedders`](../../models/embedders) module
-   * `name` — embedder name (`fasttext` recommended)
+   * `name` — embedder name (`"fasttext"` recommended, see [`deeppavlov.models.embedders.fasttext_embedder`](../../models/embedders/fasttext_embedder.py))
    * `mean` — must be set to `true`
    * other arguments specific to your embedder
 * `tracker` — dialogue state tracker from [`deeppavlov.models.trackers`](../../models/trackers)
-   * `name` — tracker name (`default_tracker` or `featurized_tracker` recommended)
+   * `name` — tracker name (`"default_tracker"` or `"featurized_tracker"` recommended)
    * other arguments specific to your tracker
 * `network` — reccurent network that handles dialogue policy management
    * `name` — `"custom_rnn"`,
@@ -74,10 +74,10 @@ Here is an simple example of interaction with a trained dialogue bot:
    * `use_action_mask` — in case of true, action mask is applied to probability distribution
    * `action_size` — output action size
 * `slot_filler` — model that predicts slot values for a given utterance
-   * `name` — slot filler name, `"dstc_slotfilling"` recommended (for implementation see [`deeppavlov.models.ner`](../../models/ner))
+   * `name` — slot filler name (`"dstc_slotfilling"` recommended, for implementation see [`deeppavlov.models.ner`](../../models/ner))
    * other slot filler arguments
 * `intent_classifier` — model that outputs intents probability disctibution for a given utterance
-   * `name` — slot filler name, `"intent_model"` recommended (for implementation see [`deeppavlov.models.classifiers.intents`](../../models/classifiers/intents))
+   * `name` — slot filler name (`"intent_model"` recommended, for implementation see [`deeppavlov.models.classifiers.intents`](../../models/classifiers/intents))
    * classifier's other arguments
 * `debug` — whether to display debug output (defaults to `false`) _(optional)_
 
@@ -127,7 +127,7 @@ Training data files train.csv (and, if exists, valid.csv) should be presented in
 
 ## Comparison
 
-As far as out dataset is a modified version of official DSTC2-dataset[2], resulting metrics can't be compared with model evaluations on the original dataset.
+As far as out dataset is a modified version of official DSTC2-dataset [[2]](#references), resulting metrics can't be compared with model evaluations on the original dataset.
 
 But comparisons for hcn model modifications trained on out DSTC2-dataset are presented:
 
