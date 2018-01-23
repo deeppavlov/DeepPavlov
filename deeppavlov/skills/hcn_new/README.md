@@ -5,7 +5,7 @@
 # Dialogue Manager for goal-oriented task 
 
 
-The dialogue manager is based on [1] which introduces Hybrid Code Networks (HCNs) that combine an RNN with domain-specific knowledge and system action templates.
+The dialogue manager is based on [[1]](#references) which introduces Hybrid Code Networks (HCNs) that combine an RNN with domain-specific knowledge and system action templates.
 
 Compared to existing end-to-end approaches, HCNs considerably reduce the amount of training data required, while retaining the key benefit of inferring a latent representation of dialog state.
 
@@ -46,23 +46,23 @@ Here is an simple example of interaction with a trained dialogue bot:
 * `template_path` — map from actions to text templates for response generation
 * `vocabs` — vocabs used in model
    * `word_vocab` — vocabulary of tokens from context utterances
-   * `train_now` — whether to train it on the current dataset, or use pretrained
-   * `name` — `"default_vocab"`,
-   * `inputs` — `[ "x" ]`,
-   * `level` — `"token"`,
-   * `ser_path` — `"../data/hcn/token.dict"`
-* `tokenizer` — description of a tokenizer from `from deeppavlov.models.tokenizers` module
+      * `train_now` — whether to train it on the current dataset, or use pretrained
+      * `name` — `"default_vocab"` (for vocabulary implementation see [`deeppavlov.core.data.vocab`](../../core/data/vocab.py))
+      * `inputs` — `[ "x" ]`,
+      * `level` — `"token"`,
+      * `ser_path` — `"../data/hcn/token.dict"`
+* `tokenizer` — one of tokenizers from [`deeppavlov.models.tokenizers`](../../models/tokenizers) module
    * `name` — tokenizer name
    * other arguments specific to your tokenizer
-* `bow_encoder` — description of a bag-of-words encoder from `deeppavlov.models.encoders.bow` module
+* `bow_encoder` — one of bag-of-words encoders from [`deeppavlov.models.encoders.bow`](../../models/encoders/bow) module
    * `name` — encoder name
    * other arguments specific to your encoder
-* `embedder` — description of an embedder from `deeppavlov.models.embedders` module
-   * `name` — embedder name
+* `embedder` — pne of embedders from [`deeppavlov.models.embedders`](../../models/embedders) module
+   * `name` — embedder name (`fasttext` recommended)
    * `mean` — must be set to `true`
    * other arguments specific to your embedder
-* `tracker` — dialogue state tracker from `deeppavlov.models.trackers`
-   * `name` — tracker name (`featurized_tracker` recommended)
+* `tracker` — dialogue state tracker from [`deeppavlov.models.trackers`](../../models/trackers)
+   * `name` — tracker name (`default_tracker` or `featurized_tracker` recommended)
    * other arguments specific to your tracker
 * `network` — reccurent network that handles dialogue policy management
    * `name` — `"custom_rnn"`,
@@ -74,14 +74,14 @@ Here is an simple example of interaction with a trained dialogue bot:
    * `use_action_mask` — in case of true, action mask is applied to probability distribution
    * `action_size` — output action size
 * `slot_filler` — model that predicts slot values for a given utterance
-   * `name` — slot filler name, `"dstc_slotfilling"` recommended
+   * `name` — slot filler name, `"dstc_slotfilling"` recommended (for implementation see [`deeppavlov.models.ner`](../../models/ner))
    * other slot filler arguments
 * `intent_classifier` — model that outputs intents probability disctibution for a given utterance
-   * `name` — slot filler name, `"intent_model"` recommended
+   * `name` — slot filler name, `"intent_model"` recommended (for implementation see [`deeppavlov.models.classifiers.intents`](../../models/classifiers/intents))
    * classifier's other arguments
 * `debug` — whether to display debug output (defaults to `false`) _(optional)_
 
-For a working exemplary config see `deeeppavlov/skills/hcn_new/config.json`.
+For a working exemplary config see [`deeeppavlov/skills/hcn_new/config.json`](config.json).
 
 #### Usage example
 
@@ -92,20 +92,20 @@ For a working exemplary config see `deeeppavlov/skills/hcn_new/config.json`.
 To be used for training, your config json file should include the following parameters:
 
 * `dataset_reader`
-   * `name` — `"your_reader_here"` for a custom dataset or `"dstc2_datasetreader"` to use DSTC2
+   * `name` — `"your_reader_here"` for a custom dataset or `"dstc2_datasetreader"` to use DSTC2 (for implementation see [`deeppavlov.dataset_readers.dstc2_dataset_reader`](../../dataset_readers/dstc2_datasetreader.py))
    * `ser_path` — a path to a dataset file, which in case of `"dstc2_datasetreader"` will be automatically downloaded from 
    internet and placed to `ser_path`
-* `dataset` — it should always be set to `{"name": "dialog_dataset"}`
+* `dataset` — it should always be set to `{"name": "dialog_dataset"}` (for implementation see [`deeppavlov.datasets.dstc2_datasets.py`](../../datasets/dstc2_datasets.py))
 
 #TODO: rename dstc2_dialog_dataset to dialog_dataset
 
 Do not forget to set `train_now` parameters to `true` for `vocabs.word_vocab`, `model` and `model.network` sections.
 
-See `deeppavlov/skills/hcn_new/config.json` for details.
+See [`deeeppavlov/skills/hcn_new/config.json`](config.json) for details.
 
 #### Train run
 
-The easiest way to run the training is by using `deeppavlov/run_model.py` script:
+The easiest way to run the training is by using [`deeppavlov/run_model.py`](../../run_model.py) script:
 
 1. set `MODEL_CONFIG_PATH` to your config path relative to the deeppavlov library
 (for example, `'skills/hcn_new/config.json'`)
@@ -133,8 +133,8 @@ But comparisons for hcn model modifications trained on out DSTC2-dataset are pre
 
 |                   Model                      |  Action accuracy  |  Turn accuracy  |  Dialog accuracy |
 |----------------------------------------------|-------------------|-----------------|------------------|
-|basic hcn			                             |                   |                 |                  |
-|hcn with ner slot-filler			              |                   |                 |                  |
+|basic hcn			                               |                   |                 |                  |
+|hcn with ner slot-filler			                 |                   |                 |                  |
 |hcn with ner slot-filler & fasttext embeddings|                   |                 |                  |
 |hcn with ner slot-filler & fasttext & intents |                   |                 |                  |
 
