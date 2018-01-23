@@ -13,19 +13,19 @@
         "y"
       ],
       "level": "token",
-      "model_path": "../data/dstc2/classes.txt",
+      "ser_path": "../data/dstc2/classes.txt",
       "train_now": false
     }
   },
   "model": {
     "name": "intent_model",
     "train_now": false,
-    "model_path": "./models/classifiers/intents/intent_cnn_best",
     "opt": {
+      "ser_path": "./models/classifiers/intents/intent_cnn_best",
     },
     "embedder": {
       "name": "fasttext",
-      "model_path": "../data/dstc2_fasttext_model_100.bin",
+      "ser_path": "../data/dstc2_fasttext_model_100.bin",
       "emb_module": "fasttext",
       "dim": 100
     },
