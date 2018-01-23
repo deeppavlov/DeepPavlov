@@ -3,8 +3,6 @@
 ![tensorflow 1.4](https://img.shields.io/badge/tensorflow-1.4-green.svg)
 
 # Dialogue Manager for goal-oriented task 
-
-
 The dialogue manager is based on [[1]](#references) which introduces Hybrid Code Networks (HCNs) that combine an RNN with domain-specific knowledge and system action templates.
 
 Compared to existing end-to-end approaches, HCNs considerably reduce the amount of training data required, while retaining the key benefit of inferring a latent representation of dialog state.
@@ -88,13 +86,12 @@ For a working exemplary config see [`deeeppavlov/skills/hcn_new/config.json`](co
 ## Training
 
 #### Config parameters
-
 To be used for training, your config json file should include the following parameters:
 
 * `dataset_reader`
    * `name` — `"your_reader_here"` for a custom dataset or `"dstc2_datasetreader"` to use DSTC2 (for implementation see [`deeppavlov.dataset_readers.dstc2_dataset_reader`](../../dataset_readers/dstc2_datasetreader.py))
-   * `ser_path` — a path to a dataset file, which in case of `"dstc2_datasetreader"` will be automatically downloaded from 
-   internet and placed to `ser_path`
+   * `data_path` — a path to a dataset file, which in case of `"dstc2_datasetreader"` will be automatically downloaded from 
+   internet and placed to `data_path` directory
 * `dataset` — it should always be set to `{"name": "dialog_dataset"}` (for implementation see [`deeppavlov.datasets.dstc2_datasets.py`](../../datasets/dstc2_datasets.py))
 
 #TODO: rename dstc2_dialog_dataset to dialog_dataset
@@ -104,10 +101,9 @@ Do not forget to set `train_now` parameters to `true` for `vocabs.word_vocab`, `
 See [`deeeppavlov/skills/hcn_new/config.json`](config.json) for details.
 
 #### Train run
-
 The easiest way to run the training is by using [`deeppavlov/run_model.py`](../../run_model.py) script:
 
-1. set `MODEL_CONFIG_PATH` to your config path relative to the deeppavlov library
+1. set `PIPELINE_CONFIG_PATH` to your config path relative to the deeppavlov library
 (for example, `'skills/hcn_new/config.json'`)
 2. then run the script by `python3 run_model.py`
 
@@ -116,17 +112,48 @@ The model will be trained according to your configuration and afterwards an inte
 ## Datasets
 
 #### DSTC2
-
-#TODO: note on dstc2 modification
+The Hybrid Code Network model was trained and evaluated on a modification of a dataset from Dialogue State Tracking Challenge 2[[2]](#references). The modifications were as follows:
+* **new actions**
+    * bot dialog actions were concatenated into one action (example: `{"dialog_acts": ["ask", "request"]}` -> `{"dialog_acts": ["ask_request"]}`)
+    * if a slot key was associated with the dialog action, the new act was a concatenation of an act and a slot key (example: `{"dialog_acts": ["ask"], "slot_vals": ["area"]}` -> `{"dialog_acts": ["ask_area"]}`)
+* **new train/dev/test split**
+    * original dstc2 consisted of three different MDP polices, the original train and dev datasets (consisting of two polices) were merged and randomly split into train/dev/test
+* **minor fixes**
+    * fixed several dialogs, where actions were wrongly annotated
+    * uppercased first letter of bot responses
+    * unified punctuation for bot responses'
 
 #### Your data
+If your model uses DSTC2 and relies on `dstc2_datasetreader` [`DatasetReader`](../../core/data/dataset_reader.py), all needed files, if not present in the `dataset_reader.data_path` directory, will be downloaded from internet.
 
-Constructing intents from DSTC 2 makes IntentDataset a bit difficult. Therefore, another dataset reader ClassificationDatasetReader and dataset ClassificationDataset to work with .csv files are also provided in deeppavlov/dataset_readers and deeppavlov/datasets.
+If your model needs be trained on different data, you have several ways of achieving that (sorted by increase in the amount of code):
 
-Training data files train.csv (and, if exists, valid.csv) should be presented in the following form:
+1. Use `"dialog_dataset"` in dataset config section and `"dstc2_datasetreader"` in dataset reader config section (**the simplest, but not the best way**):
+    * set `dataset.data_path` to your data directory;
+    * your data files should have the same format as expected in [`deeppavlov.dataset_readers.dstc2_dataset_reader:DSTC2DatasetReader.read()`](../../dataset_readers/dstc2_dataset_reader.py) function.
+
+2. Use `"dialog_dataset"` in dataset config section and `"your_dataset_reader"` in dataset reader config section (**recommended**): 
+    * clone [`deeppavlov.dataset_readers.dstc2_dataset_reader:DSTC2DatasetReader`](../../dataset_readers/dstc2_dataset_reader.py) to `YourDatasetReader`;
+    * register as `"your_dataset_reader"`;
+    * rewrite so that it implements the same interface as the origin. Particularly, `YourDatasetReader.read()` must have the same output as `DSTC2DatasetReader.read()`:
+      * `train` — training dialog turns consisting of tuples:
+         * first tuple element contains first user's utterance info
+            * `text` — utterance string
+            * `intents` — list of string intents, associated with user's utterance
+            * `db_result` — a database response _(optional)_
+            * `episode_done` — set to `true`, if current utterance is the start of a new dialog, and `false` (or skipped) otherwise _(optional)_
+         * second tuple element contains second user's response info
+            * `text` — utterance string
+            * `act` — an act, associated with the user's utterance
+      * `valid` — validation dialog turns in the same format
+      * `test` — test dialog turns in the same format
+      
+#TODO: change str `act` to a list `acts`
+
+3. Use your own dataset and dataset reader (**if 2. doesn't work for you**):
+    * your `YourDataset.iter()` class method output should match the input format for [`HybridCodeNetworkBot.train()`](hcn.py).
 
 ## Comparison
-
 As far as out dataset is a modified version of official DSTC2-dataset [[2]](#references), resulting metrics can't be compared with model evaluations on the original dataset.
 
 But comparisons for hcn model modifications trained on out DSTC2-dataset are presented:
@@ -141,7 +168,6 @@ But comparisons for hcn model modifications trained on out DSTC2-dataset are pre
 #TODO: add metrics values
 
 # References
-
 [1] [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017](https://arxiv.org/abs/1702.03274)
 
 [2] [Dialog State Tracking Challenge 2 dataset](http://camdial.org/~mh521/dstc/)
