@@ -22,7 +22,8 @@ class ErrorModel(Inferable, Trainable):
         super().__init__(ser_path=ser_path,
                          ser_dir=ser_dir,
                          ser_file=ser_file,
-                         train_now=train_now)
+                         train_now=train_now,
+                         mode=kwargs['mode'])
         self.costs = defaultdict(itertools.repeat(float('-inf')).__next__)
         self.dictionary = dictionary
         self.window = window

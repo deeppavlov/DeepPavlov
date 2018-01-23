@@ -35,7 +35,8 @@ class HybridCodeNetworkModel(TFModel):
         super().__init__(ser_path=ser_path,
                          ser_dir=ser_dir,
                          ser_file=ser_file,
-                         train_now=train_now)
+                         train_now=train_now,
+                         mode=self.opt['mode'])
 
         # initialize parameters
         self._init_params()
@@ -44,7 +45,7 @@ class HybridCodeNetworkModel(TFModel):
         # initialize session
         self.sess = tf.Session()
 
-        if not self.opt.get('train_now') and self.get_checkpoint_state():
+        if not self.train_now and self.get_checkpoint_state():
         #TODO: save/load params to json, here check compatability
             self.load()
         else:

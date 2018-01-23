@@ -40,7 +40,8 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         super().__init__(ser_path=ser_path,
                          ser_dir=ser_dir,
                          ser_file=ser_file,
-                         train_now=train_now)
+                         train_now=train_now,
+                         mode=kwargs['mode'])
 
         self.sess = self._config_session()
         K.set_session(self.sess)
@@ -140,8 +141,8 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
             but compiled with given learning parameters
         """
         if self.ser_path.is_dir():
-            opt_path = "{}/{}_opt.json".format(self.ser_path, self._ser_file)
-            weights_path = "{}/{}.h5".format(self.ser_path, self._ser_file)
+            opt_path = "{}/{}_opt.json".format(self.ser_path, self.ser_path.name)
+            weights_path = "{}/{}.h5".format(self.ser_path, self.ser_path.name)
         else:
             opt_path = "{}_opt.json".format(self.ser_path)
             weights_path = "{}.h5".format(self.ser_path)

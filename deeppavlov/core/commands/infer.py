@@ -5,7 +5,7 @@ from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.common.params import from_params
 
 
-def build_model_from_config(config):
+def build_model_from_config(config, mode='infer'):
     model_config = config['model']
     model_name = model_config['name']
     
@@ -13,9 +13,9 @@ def build_model_from_config(config):
     if 'vocabs' in config:
         for vocab_param_name, vocab_config in config['vocabs'].items():
             vocab_name = vocab_config['name']
-            v = from_params(REGISTRY[vocab_name], vocab_config)
+            v = from_params(REGISTRY[vocab_name], vocab_config, mode=mode)
             vocabs[vocab_param_name] = v
-    model = from_params(REGISTRY[model_name], model_config, vocabs=vocabs)
+    model = from_params(REGISTRY[model_name], model_config, vocabs=vocabs, mode=mode)
     model.reset()
     return model
 
