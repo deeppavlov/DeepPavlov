@@ -22,6 +22,7 @@ from typing import Type
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.encoders.bow import BoW_encoder
 from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel
@@ -164,6 +165,12 @@ class HybridCodeNetworkBot(Inferable, Trainable):
 
     @check_attr_true('train_now')
     def train(self, data):
+        
+        if self.network.train_now is False:
+            raise ConfigError("It looks like 'train_now' of mother model is True, while"
+                              "`train_now` of submodel is False. Set `train_now` of submodel"
+                              "to True.")
+
         print('\n:: training started')
 
         curr_patience = self.val_patience
