@@ -28,7 +28,7 @@
         "y"
       ],
       "level": "token",
-      "ser_path": "../data/dstc2/classes.txt",
+      "ser_path": "./models/classifiers/intents/intent_cnn_best/classes.txt",
       "train_now": true
     }
   },
