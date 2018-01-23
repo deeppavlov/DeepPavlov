@@ -265,8 +265,10 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
             opt_path = "{}/{}_opt.json".format(self.ser_path, self._ser_file)
             weights_path = "{}/{}.h5".format(self.ser_path, self._ser_file)
         else:
+            # TODO: something is incorrect with ser_path if dir but does not exist
             opt_path = "{}_opt.json".format(self.ser_path)
             weights_path = "{}.h5".format(self.ser_path)
+
         print("[ saving model: {} ]".format(opt_path))
         self.ser_path.mkdir(parents=True, exist_ok=True)
         self.model.save_weights(weights_path)

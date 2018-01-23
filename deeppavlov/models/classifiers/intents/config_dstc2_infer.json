@@ -19,9 +19,9 @@
   },
   "model": {
     "name": "intent_model",
-    "train_now": false,
     "opt": {
-      "ser_path": "./models/classifiers/intents/intent_cnn_best",
+      "train_now": false,
+      "ser_path": "./models/classifiers/intents/intent_cnn_best"
     },
     "embedder": {
       "name": "fasttext",

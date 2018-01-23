@@ -17,10 +17,10 @@ from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 
 # HCN
-# skills/hcn/config.json
+# skills/hcn/config_dstc2.json
 
 # HCN_new
-# skills/hcn_new/config.json
+# skills/hcn_new/config_dstc2.json
 
 # Speller
 # models/spellers/error_model/config_en.json
@@ -28,13 +28,13 @@ from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 # models/spellers/error_model/config_ru_custom_vocab.json
 
 # Intents classifier
-# models/classifiers/intents/config.json
+# models/classifiers/intents/config_dstc2.json
 
 # NER
-# models/ner/config.json
+# models/ner/config_dstc2.json
 
 try:
-    PIPELINE_CONFIG_PATH = 'models/classifiers/intents/config.json'
+    PIPELINE_CONFIG_PATH = 'models/classifiers/intents/config_dstc2.json'
     set_usr_dir(PIPELINE_CONFIG_PATH)
     train_model_from_config(PIPELINE_CONFIG_PATH)
     interact_model(PIPELINE_CONFIG_PATH)

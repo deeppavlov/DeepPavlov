@@ -29,13 +29,13 @@
       ],
       "level": "token",
       "ser_path": "../data/dstc2/classes.txt",
-      "train_now": false
+      "train_now": true
     }
   },
   "model": {
     "name": "intent_model",
-    "train_now": false,
     "opt": {
+      "train_now": true,
       "ser_path": "./models/classifiers/intents/intent_cnn_best",
       "kernel_sizes_cnn": [
         3,

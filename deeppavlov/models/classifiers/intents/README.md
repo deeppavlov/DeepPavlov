@@ -39,7 +39,7 @@ This message contains two intents `(thankyou, bye)`.
 
 ## Infer from pre-trained model
 
-To infer using console interface one can set parameter `MODEL_CONFIG_PATH='models/classifiers/intents/config_infer.json'` 
+To infer using console interface one can set parameter `MODEL_CONFIG_PATH='models/classifiers/intents/config_dstc2_infer.json'` 
 in `deeppavlov/run_model.py` (minimal required set of parameters to infer pre-trained model),
 and then run
 ```
@@ -110,10 +110,10 @@ Below the table with description of parameters is presented.
 ### Train on DSTC 2
 
 To train model again or with other parameters on DSTC 2 data
- the only actions are to set parameter `train_now` to `true` in `config.json`,
+ the only actions are to set parameter `train_now` to `true` in `config_dstc2.json`,
  set `model_path` to the directory where trained model will be saved 
  (it will be loaded if model exists, and it will be created otherwise), 
- set parameter `MODEL_CONFIG_PATH='models/classifiers/intents/config.json'` 
+ set parameter `MODEL_CONFIG_PATH='models/classifiers/intents/config_dstc2.json'` 
  in `deeppavlov/run_model.py`.
  All other parameters of model as well as embedder and tokenizer could be changed. 
  Then training could be run in the following way:
@@ -139,18 +139,18 @@ Training data files `train.csv` (and, if exists, `valid.csv`) should be presente
 
 
 To train model one should 
-* set parameter `train_now` to `true` in `config_classification.json`,
-* set `data_path` to the directory containing `train.csv`, `valid.csv` in `config_classification.json`,
-* set `model_path` to the directory where trained model will be saved in `config_classification.json`, 
-* set all other parameters of model as well as embedder and tokenizer to desired ones in `config_classification.json`,
-* set `MODEL_CONFIG_PATH='models/classifiers/intents/config_classification.json'` in `run_model.py`.
+* set parameter `train_now` to `true` in `config_snips.json`,
+* set `data_path` to the directory containing `train.csv`, `valid.csv` in `config_snips.json`,
+* set `model_path` to the directory where trained model will be saved in `config_snips.json`, 
+* set all other parameters of model as well as embedder and tokenizer to desired ones in `config_snips.json`,
+* set `MODEL_CONFIG_PATH='models/classifiers/intents/config_snips.json'` in `run_model.py`.
 
  Then training could be run in the same way:
  ```
 python run_model.py 
 ```
 
-**Current `config_classification.json` implies intent recognition for SNIPS benchmark dataset [2] 
+**Current `config_snips.json` implies intent recognition for SNIPS benchmark dataset [2] 
 that was restored in `.csv` format.** 
 
 ## Comparison
@@ -158,12 +158,17 @@ that was restored in `.csv` format.**
 As no one had published intent recognition for DSTC 2 data, 
 the comparison of the presented model is given on SNIPS dataset. 
 
-|             Model                          |  AUC-ROC  | F-measure | 
-|--------------------------------------------|-----------|-----------|
-| 1                                          | 2         |           | 
-|                                            |           |           | 
-|                                            |           |           | 
-|                                            |           |           |
+|             Model    | AddToPlaylist | BookRestaurant | GetWheather | PlayMusic | RateBook | SearchCreativeWork | SearchScreeningEvent | 
+|----------------------|---------------|----------------|-------------|-----------|----------|--------------------|----------------------|
+| api.ai               |  0.9931       |  0.9949        |  0.9935     |   0.9811  | 0.9992   | **0.9659**         | **0.9801**           |
+| ibm.watson           |  0.9931       |  **0.9950**    | **0.9950**  | **0.9822**|**0.9996**| 0.9643             |  0.9750              |
+| microsoft.luis       |  **0.9943**   |   0.9935       |   0.9925    |  0.9815   |  0.9988  | 0.9620             |  0.9749              |
+| wit.ai               |    0.9877     |   0.9913       |   0.9921    |  0.9766   | 0.9977   | 0.9458             |  0.9673              |
+| snips.ai             |   0.9873      |   0.9921       |   0.9939    |  0.9729   | 0.9985   | 0.9455             |  0.9613              |
+| recast.ai            |   0.9894      |   0.9943       |   0.9910    |  0.9660   | 0.9981   | 0.9424             |  0.9539              |
+| amazon.lex           |   0.9930      |  0.9862        |   0.9825    |  0.9709   | 0.9981   | 0.9427             |  0.9581              |
+|||||||||
+| Shallow-and-wide CNN |  0.9956       |   0.9973       |   0.9968    |    0.9871 |  0.9998  |   0.9752           |   0.9854             |
 
 ## Ways to improve
 
