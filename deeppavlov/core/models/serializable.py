@@ -7,6 +7,7 @@ from abc import ABCMeta
 from pathlib import Path
 
 from deeppavlov.core.common import paths
+from deeppavlov.core.common.errors import ConfigError
 
 
 class Serializable(metaclass=ABCMeta):
@@ -18,7 +19,8 @@ class Serializable(metaclass=ABCMeta):
      It is always an empty string and is ignored if it is not set in json config.
     """
 
-    def __init__(self, ser_path=None, ser_dir=None, ser_file=None, **kwargs):
+    def __init__(self, ser_path=None, ser_dir=None, ser_file=None, url=None, **kwargs):
+        self.url = url
         self._ser_dir = ser_dir
         self._ser_file = ser_file
         self.ser_path = self.get_ser_path(ser_path)
@@ -39,4 +41,13 @@ class Serializable(metaclass=ABCMeta):
                 p = p / self._ser_file
         else:
             p = Path(ser_path)
+            if p.is_dir():
+                if p.name != self._ser_dir:
+                    p = p / self._ser_dir
+                    p.mkdir(parents=True, exist_ok=True)
+            elif p.is_file():
+                pass
+            else:
+                raise ConfigError("Provided ser_path doesn't exist!")
+
         return p
