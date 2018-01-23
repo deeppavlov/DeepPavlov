@@ -21,11 +21,10 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
                  train_now=False, **kwargs):
 
         super().__init__(ser_path=ser_path, ser_dir=slots_dir, ser_file=slots_file,
-                         train_now=train_now)
+                         train_now=train_now, mode=kwargs['mode'])
 
         # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
         if not self.ser_path.is_file():
-            self.ser_path = self.ser_path / self._ser_file
             self._download_slot_vals()
 
         self._ner_network = ner_network

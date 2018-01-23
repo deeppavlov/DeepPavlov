@@ -16,7 +16,11 @@ class Trainable(Serializable):
     """
 
     def __init__(self, train_now=False, **kwargs):
-        self.train_now = train_now
+        mode = kwargs.get('mode', None)
+        if mode == 'train':
+            self.train_now = train_now
+        else:
+            self.train_now = False
         super().__init__(**kwargs)
 
     @abstractmethod

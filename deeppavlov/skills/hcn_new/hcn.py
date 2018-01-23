@@ -52,7 +52,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                  train_now=False,
                  **kwargs):
 
-        super().__init__(train_now=train_now)
+        super().__init__(train_now=train_now, mode=kwargs['mode'])
 
         self.episode_done = True
         self.use_action_mask = use_action_mask
@@ -99,6 +99,9 @@ class HybridCodeNetworkBot(Inferable, Trainable):
 
         # Embeddings
         emb_features = self.embedder.infer(tokenized, mean=True)
+
+        # DEBUG:
+        # emb_features = np.zeros(300)
 
         # Intent features
         intent_features = self.intent_classifier.infer([tokenized]).ravel()
