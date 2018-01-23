@@ -176,19 +176,19 @@ class KerasIntentModel(KerasModel):
         metrics_values = self.model.train_on_batch(features, onehot_labels)
         return metrics_values
 
-    def infer_on_batch(self, batch):
+    def infer_on_batch(self, batch, labels=None):
         """
         Method infers the model on the given batch
         Args:
-            batch - list of data where batch[0] is list of texts (and if given, batch[1] is list of labels)
+            batch - list of texts
+            labels - list of labels
 
         Returns:
             loss and metrics values on the given batch, if labels are given
             predictions, otherwise
         """
-        texts = self.tokenizer.infer(instance=list(batch[0]))
-        if len(batch) == 2:
-            labels = list(batch[1])
+        texts = self.tokenizer.infer(instance=batch)
+        if labels:
             features = self.texts2vec(texts)
             onehot_labels = labels2onehot(labels, classes=self.classes)
             metrics_values = self.model.test_on_batch(features, onehot_labels)
@@ -269,7 +269,8 @@ class KerasIntentModel(KerasModel):
         """
         Method infers on the given data
         Args:
-            data: single sentence or list of sentences or generator of sentences
+            data: single sentence or [list of sentences, list of labels] or
+                    [list of sentences] or generator of sentences
             return_proba: whether to return probabilities distribution or only labels-predictions
             *args:
 
@@ -279,7 +280,8 @@ class KerasIntentModel(KerasModel):
                 or list of labels sentence belongs with
         """
         if type(data) is str:
-            preds = self.infer_on_batch([[data]])[0]
+            preds = self.infer_on_batch([data])[0]
+            preds = np.array(preds)
             if return_proba:
                 return preds
             else:
@@ -289,9 +291,10 @@ class KerasIntentModel(KerasModel):
             preds = []
             for step, batch in enumerate(data):
                 preds.extend(self.infer_on_batch(batch))
-                preds = np.array(preds)
+            preds = np.array(preds)
         elif type(data) is list:
             preds = self.infer_on_batch(data)
+            preds = np.array(preds)
         else:
             raise ConfigError("Not understand data type for inference")
 
