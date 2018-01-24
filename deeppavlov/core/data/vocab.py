@@ -27,6 +27,9 @@ class DefaultVocabulary(Trainable, Inferable):
 
         # TODO check via decorator
         self.reset()
+        if self.ser_path.is_dir():
+            self.ser_path = self.ser_path / self._ser_file
+
         if self.ser_path.exists():
             self.load()
 
@@ -120,6 +123,9 @@ class DefaultVocabulary(Trainable, Inferable):
         return [self.__getitem__(s) for s in samples]
 
     def save(self):
+        self.ser_path.mkdir(parents=True, exist_ok=True)
+        if self.ser_path.is_dir():
+            self.ser_path = self.ser_path / self._ser_file
         print("[saving vocabulary to `{}`]".format(self.ser_path))
         with self.ser_path.open('wt') as f:
             for n in range(len(self._t2i)):
@@ -129,7 +135,8 @@ class DefaultVocabulary(Trainable, Inferable):
 
     @check_path_exists()
     def load(self):
-        # NOTE: some bad things when dir of model does not exist
+        if self.ser_path.is_dir():
+            self.ser_path = self.ser_path / self._ser_file
         print("[loading vocabulary from `{}`]".format(self.ser_path))
         tokens, counts = [], []
         for ln in self.ser_path.open('r'):

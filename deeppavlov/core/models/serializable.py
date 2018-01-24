@@ -50,10 +50,10 @@ class Serializable(metaclass=ABCMeta):
                 if p.name != self._ser_dir:
                     p = p / self._ser_dir
                     p.mkdir(parents=True, exist_ok=True)
-            elif p.is_file():
-                pass
-            else:
-                raise ConfigError("Provided ser_path doesn't exist!")
+            # elif p.is_file():
+            #     pass
+            # else:
+            #     raise ConfigError("Provided ser_path doesn't exist!")
 
         return p
 

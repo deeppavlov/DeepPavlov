@@ -107,7 +107,7 @@ ENV/
 .git/
 
 #Default usr dir
-USR_DIR/
+download/
 
 #project test
 /test/
