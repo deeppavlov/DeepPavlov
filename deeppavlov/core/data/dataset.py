@@ -32,10 +32,9 @@ class Dataset:
             shuffle: whether to shuffle data when batching (from config)
         """
         self.shuffle = shuffle
-        self.seed = seed
 
         rs = random.getstate()
-        random.seed(self.seed)
+        random.seed(seed)
         self.random_state = random.getstate()
         random.setstate(rs)
 
@@ -70,8 +69,6 @@ class Dataset:
         order = list(range(data_len))
         if shuffle:
             rs = random.getstate()
-            random.seed(self.seed)
-            self.random_state = random.getstate()
             random.setstate(self.random_state)
             random.shuffle(order)
             self.random_state = random.getstate()
