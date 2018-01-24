@@ -43,26 +43,23 @@
     }
   },
   "model": {
-    "name": "hcn_new",
     "train_now": true,
+    "name": "hcn_new",
     "debug": 0,
-    "num_epochs": 20,
+    "num_epochs": 1,
     "template_path": "../data/dstc2/dstc2-templates.txt",
     "network": {
       "train_now": true,
-      "ser_path": "../data/hcn",
       "name": "custom_rnn",
       "learning_rate": 0.03,
       "hidden_dim": 128,
-      "obs_size": 830,
+      "obs_size": 831,
       "use_action_mask": false,
       "action_size": 45
     },
     "slot_filler": {
       "name": "dstc_slotfilling",
-
       "ser_path": "../data/ner/",
-      "ser_file": "dstc_ner_model",
       "filter_width": 7,
       "embeddings_dropout": true,
       "n_filters": [
@@ -76,10 +73,11 @@
     },
     "intent_classifier": {
       "name": "intent_model",
-      "ser_path": "../data/intent_cnn_best",
       "opt": {
-        "ser_path": "../data/intent_cnn_best",
-        "classes_file": "../data/intent_cnn_best/classes.txt",
+        "ser_path": "models/classifiers/intents/intent_cnn_best",
+        "ser_dir": "intent_cnn_best",
+        "ser_file": "intent_cnn_best",
+        "classes_file": "models/classifiers/intents/intent_cnn_best/classes.txt",
         "kernel_sizes_cnn": "3 3 3",
         "filters_cnn": 512,
         "lear_metrics": "binary_accuracy fmeasure",
@@ -103,7 +101,7 @@
       },
       "embedder": {
         "name": "fasttext",
-        "ser_path": "/home/mikhail/Data/dstc2_fasttext_model_100.bin",
+        "ser_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
         "emb_module": "fasttext",
         "dim": 100
       }
@@ -116,7 +114,7 @@
       "emb_module": "pyfasttext",
       "mean": true,
       "dim": 300,
-      "ser_path": "/home/mikhail/Data/wiki.en.bin"
+      "ser_path": "../data/embeddings/wiki.en.bin"
     },
     "tokenizer": {
       "name": "spacy_tokenizer"

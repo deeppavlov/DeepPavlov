@@ -1,12 +1,11 @@
 {
   "dataset_reader": {
     "name": "dstc2_datasetreader",
-    "data_path": "/home/mikhail/Projects/Pilot/data/dstc2"
+    "data_path": "../data/dstc2"
   },
   "dataset": {
     "name": "dstc2_ner_dataset",
-    "dataset_path": "/home/mikhail/Projects/Pilot/data/dstc2"
-
+    "dataset_path": "../data/dstc2"
   },
   "model": {
     "name": "dstc_slotfilling",
@@ -27,29 +26,24 @@
     "use_batch_norm": true,
     "use_crf": true
   },
-
   "vocabs": {
     "word_vocab": {
         "name": "default_vocab",
         "inputs": ["x"],
 		"level": "token",
-        "ser_dir": "model/",
-		"ser_file": "token.dict"
+        "ser_path": "../data/ner/word.dict"
       },
     "tag_vocab": {
-        "name": "default_vocab",
-        "inputs": ["y"],
-		"level": "token",
-        "ser_dir": "model/",
-		"ser_file": "tag.dict"
-      },
+      "name": "default_vocab",
+      "inputs": ["y"],
+      "level": "token",
+      "ser_path": "../data/ner/tag.dict"
+    },
     "char_vocab":{
         "name": "default_vocab",
         "inputs": ["x"],
 		"level": "char",
-        "ser_dir": "model/",
-		"ser_file": "char.dict"
+        "ser_path": "../data/ner/char.dict"
       }
   }
 }
-

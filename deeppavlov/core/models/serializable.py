@@ -5,6 +5,8 @@ for all models that can serialize data to a path.
 
 from abc import ABCMeta
 from pathlib import Path
+from urllib import request
+import tarfile
 
 from deeppavlov.core.common import paths
 from deeppavlov.core.common.errors import ConfigError
@@ -24,6 +26,9 @@ class Serializable(metaclass=ABCMeta):
         self._ser_dir = ser_dir
         self._ser_file = ser_file
         self.ser_path = self.get_ser_path(ser_path)
+
+        if self.url:
+            self.download()
 
     def __new__(cls, *args, **kwargs):
         if cls is Serializable:
@@ -51,3 +56,16 @@ class Serializable(metaclass=ABCMeta):
                 raise ConfigError("Provided ser_path doesn't exist!")
 
         return p
+
+    def download(self):
+        url = self.url
+        print("Extracting files from url")
+        local_filename, _ = request.urlretrieve(url)
+        files = tarfile.open(local_filename, mode='r:gz')
+
+        save_path = self.ser_path
+        if not save_path.is_dir():
+            save_path = save_path.parent
+            if save_path.name == self._ser_dir:
+                save_path = save_path.parent
+        files.extractall(save_path)
