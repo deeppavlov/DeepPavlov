@@ -186,9 +186,26 @@ class NerNetwork(SimpleTFModel):
         saver = tf.train.Saver()
         saver.save(self._sess, str(self.ser_path))
 
+
+    def get_checkpoint_state(self):
+        if self.ser_path.is_dir():
+            return tf.train.get_checkpoint_state(self.ser_path)
+        else:
+            return tf.train.get_checkpoint_state(self.ser_path.parent)
+
+    @overrides
     def load(self):
+        """
+        Load session from checkpoint
+        """
         saver = tf.train.Saver()
-        saver.restore(self._sess, str(self.ser_path))
+        ckpt = self.get_checkpoint_state()
+        if ckpt and ckpt.model_checkpoint_path:
+            print('\n:: restoring checkpoint from', ckpt.model_checkpoint_path, '\n')
+            saver.restore(self._sess, ckpt.model_checkpoint_path)
+            print('session restored')
+        else:
+            print('\n:: <ERR> checkpoint not found! \n')
 
     def tokens_batch_to_numpy_batch(self, batch_x, batch_y=None):
         # Determine dimensions

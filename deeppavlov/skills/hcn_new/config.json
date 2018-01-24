@@ -60,7 +60,7 @@
     "slot_filler": {
       "name": "dstc_slotfilling",
       "ner_network": {
-        "ser_path": "../data/ner",
+        "ser_path": "/media/olga/Data/projects/iPavlov/Pilot/deeppavlov/USR_DIR/ner",
         "name": "ner_tagging_network",
         "filter_width": 7,
         "embeddings_dropout": true,

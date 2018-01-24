@@ -18,6 +18,9 @@
     "name": "intent_model",
     "opt": {
       "train_now": true,
+      "ser_dir": "intent_cnn_best",
+      "ser_file": "intent_cnn_best",
+      "url": "http://lnsigo.mipt.ru/export/models/intents/dstc2/intent_cnn_best.tar.gz",
       "classes_file": "../data/dstc2/classes.txt",
       "kernel_sizes_cnn": "3 3 3",
       "filters_cnn": 512,
