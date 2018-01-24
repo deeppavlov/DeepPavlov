@@ -36,11 +36,13 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         ser_dir = self.opt.get('ser_dir', 'intents')
         ser_file = self.opt.get('ser_file', 'intent_cnn')
         train_now = self.opt.get('train_now', False)
+        url = self.opt.get('url', None)
 
         super().__init__(ser_path=ser_path,
                          ser_dir=ser_dir,
                          ser_file=ser_file,
                          train_now=train_now,
+                         url=url,
                          mode=kwargs['mode'])
 
         self.sess = self._config_session()
