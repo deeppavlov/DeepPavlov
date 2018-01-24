@@ -21,4 +21,4 @@ def set_usr_dir(config_path: str, usr_dir_name='download'):
 
 
 def get_usr_dir() -> PosixPath:
-    return paths.USR_PATH
+    return Path(paths.USR_PATH)
