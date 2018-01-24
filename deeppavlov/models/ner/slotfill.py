@@ -27,15 +27,18 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
         if not self.ser_path.is_file():
             self._download_slot_vals()
 
-        self._ner_network = ner_network
-        self.load()
+        print("Loading slot values")
         with open(self.ser_path) as f:
             self._slot_vals = json.load(f)
+
+        self._ner_network = ner_network
+        self.load()
+
 
     @overrides
     def load(self):
         # Check prescence of the model files
-        print('Loading DstcSlotFilling')
+        print('Loading NerNetwork')
         path =str(self._ner_network.ser_path)
         if tf.train.get_checkpoint_state(path) is not None:
             print('Loading model from {}'.format(path))
