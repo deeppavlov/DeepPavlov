@@ -19,9 +19,9 @@ from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 # NER
 # models/ner/config.json
 
+PIPELINE_CONFIG_PATH = 'models/classifiers/intents/config_dstc2.json'
+set_usr_dir(PIPELINE_CONFIG_PATH)
 try:
-    PIPELINE_CONFIG_PATH = 'skills/hcn_new/config.json'
-    set_usr_dir(PIPELINE_CONFIG_PATH)
     train_model_from_config(PIPELINE_CONFIG_PATH)
     interact_model(PIPELINE_CONFIG_PATH)
 # remove if usr_dir is empty:
