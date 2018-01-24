@@ -1,0 +1,37 @@
+                            {
+  "dataset_reader": {
+    "name": "dstc2_datasetreader",
+    "data_path": "../data/dstc2"
+  },
+  "dataset": {
+    "name": "intent_dataset"
+  },
+  "vocabs": {
+    "classes_vocab": {
+      "name": "default_vocab",
+      "inputs": [
+        "y"
+      ],
+      "level": "token",
+      "ser_path": "./models/classifiers/intents/intent_cnn_best/classes.txt",
+      "train_now": false
+    }
+  },
+  "model": {
+    "name": "intent_model",
+    "opt": {
+      "train_now": false,
+      "ser_path": "./models/classifiers/intents/intent_cnn_best"
+    },
+    "embedder": {
+      "name": "fasttext",
+      "ser_path": "../data/dstc2_fasttext_model_100.bin",
+      "emb_module": "fasttext",
+      "dim": 100
+    },
+    "tokenizer": {
+      "name": "nltk_tokenizer",
+      "tokenizer": "wordpunct_tokenize"
+    }
+  }
+}
