@@ -105,7 +105,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         # emb_features = np.zeros(300)
 
         # Intent features
-        intent_features = self.intent_classifier.infer([tokenized], preict_proba=True).ravel()
+        intent_features = self.intent_classifier.infer([tokenized], predict_proba=True).ravel()
         if self.debug:
             from deeppavlov.models.classifiers.intents.utils import proba2labels
             print("Predicted intent = `{}`".format(proba2labels(
