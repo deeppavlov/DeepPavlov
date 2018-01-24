@@ -265,13 +265,13 @@ class KerasIntentModel(KerasModel):
 
         self.save()
 
-    def infer(self, data, return_proba=False, *args):
+    def infer(self, data, predict_proba=False, *args):
         """
         Method infers on the given data
         Args:
             data: single sentence or [list of sentences, list of labels] or
                     [list of sentences] or generator of sentences
-            return_proba: whether to return probabilities distribution or only labels-predictions
+            predict_proba: whether to return probabilities distribution or only labels-predictions
             *args:
 
         Returns:
@@ -282,7 +282,7 @@ class KerasIntentModel(KerasModel):
         if type(data) is str:
             preds = self.infer_on_batch([data])[0]
             preds = np.array(preds)
-            if return_proba:
+            if predict_proba:
                 return preds
             else:
                 return proba2labels([preds], confident_threshold=self.confident_threshold, classes=self.classes)[0]
@@ -298,7 +298,7 @@ class KerasIntentModel(KerasModel):
         else:
             raise ConfigError("Not understand data type for inference")
 
-        if return_proba:
+        if predict_proba:
             return preds
         else:
             return proba2labels(preds, confident_threshold=self.confident_threshold, classes=self.classes)

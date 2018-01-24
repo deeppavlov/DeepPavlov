@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import random
-from abc import abstractmethod
 from typing import List, Dict, Generator, Tuple, Any
 
 
@@ -52,7 +51,7 @@ class Dataset:
         }
 
     def batch_generator(self, batch_size: int, data_type: str = 'train',
-                        shuffle: bool = None, seed: int = None) -> Generator:
+                        shuffle: bool = None) -> Generator:
         r"""This function returns a generator, which serves for generation of raw
         (no preprocessing such as tokenization)
          batches
@@ -60,19 +59,16 @@ class Dataset:
             batch_size (int): number of samples in batch
             data_type (str): can be either 'train', 'test', or 'valid'
             shuffle (bool): whether to shuffle dataset before batching
-            seed (int): random seed for batching
         Returns:
             batch_gen (Generator): a generator, that iterates through the part (defined by data_type) of the dataset
         """
-        if shuffle is not None:
-            self.shuffle = shuffle
-        if seed is not None:
-            self.seed = seed
+        if shuffle is None:
+            shuffle = self.shuffle
 
         data = self.data[data_type]
         data_len = len(data)
         order = list(range(data_len))
-        if self.shuffle:
+        if shuffle:
             rs = random.getstate()
             random.seed(self.seed)
             self.random_state = random.getstate()

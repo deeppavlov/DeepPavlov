@@ -63,7 +63,7 @@
     },
     "embedder": {
       "name": "fasttext",
-      "ser_path": "../data/reddit_fasttext_model.bin",
+      "ser_path": "../data/embeddings/reddit_fasttext_model.bin",
       "emb_module": "fasttext",
       "dim": 100
     },

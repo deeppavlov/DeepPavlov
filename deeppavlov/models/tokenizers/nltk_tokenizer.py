@@ -22,7 +22,7 @@ from deeppavlov.core.common.registry import register
 class NLTKTokenizer(Inferable):
 
     def __init__(self, download=False, tokenizer="wordpunct_tokenize", *args, **kwargs):
-        super().__init__()
+        super().__init__(**kwargs)
         if download:
             nltk.download()
         self.tokenizer = getattr(nltk.tokenize, tokenizer, None)

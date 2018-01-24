@@ -17,5 +17,3 @@ fasttext==0.8.3
 pyfasttext==0.4.4
 kenlm==0.0.0
 nltk
-sklearn
-numpy
