@@ -1,4 +1,4 @@
-from .registry import register_metric
+from deeppavlov.core.common.metrics_registry import register_metric
 
 
 @register_metric('accuracy')

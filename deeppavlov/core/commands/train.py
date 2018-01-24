@@ -4,13 +4,13 @@ import sys
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.registry import REGISTRY
+from deeppavlov.core.common.registry import model as get_model
+from deeppavlov.core.common.metrics_registry import get_metrics_by_names
 from deeppavlov.core.commands.infer import build_agent_from_config
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.data.dataset import Dataset
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.common import paths
-from deeppavlov.metrics.registry import get_metrics_by_names
 
 
 # TODO pass paths to local model configs to agent config.
@@ -24,16 +24,16 @@ def train_agent_models(config_path: str):
         model_config = skill_config['model']
         model_name = model_config['name']
 
-        if issubclass(REGISTRY[model_name], Trainable):
+        if issubclass(get_model(model_name), Trainable):
             reader_config = skill_config['dataset_reader']
-            reader = from_params(REGISTRY[reader_config['name']], {})
+            reader = from_params(get_model(reader_config['name']), {})
             data = reader.read(reader_config.get('data_path', usr_dir))
 
             dataset_config = skill_config['dataset']
             dataset_name = dataset_config['name']
-            dataset = from_params(REGISTRY[dataset_name], dataset_config, data=data)
+            dataset = from_params(get_model(dataset_name), dataset_config, data=data)
 
-            model = from_params(REGISTRY[model_name], model_config)
+            model = from_params(get_model(model_name), model_config)
             model.train(dataset)
         else:
             print('Model {} is not an instance of Trainable, skip training.'.format(model_name),
@@ -46,24 +46,24 @@ def train_model_from_config(config_path: str, mode='train'):
 
     reader_config = config['dataset_reader']
     # NOTE: Why there are no params for dataset reader? Because doesn't have __init__()
-    reader = from_params(REGISTRY[reader_config['name']], {})
+    reader = from_params(get_model(reader_config['name']), {})
     data = reader.read(reader_config.get('data_path', usr_dir))
 
     dataset_config = config['dataset']
     dataset_name = dataset_config['name']
-    dataset = from_params(REGISTRY[dataset_name], dataset_config, data=data)
+    dataset = from_params(get_model(dataset_name), dataset_config, data=data)
 
     vocabs = {}
     if 'vocabs' in config:
         for vocab_param_name, vocab_config in config['vocabs'].items():
             vocab_name = vocab_config['name']
-            v = from_params(REGISTRY[vocab_name], vocab_config, mode=mode)
+            v = from_params(get_model(vocab_name), vocab_config, mode=mode)
             v.train(dataset.iter_all('train'))
             vocabs[vocab_param_name] = v
 
     model_config = config['model']
     model_name = model_config['name']
-    model = from_params(REGISTRY[model_name], model_config, vocabs=vocabs, mode=mode)
+    model = from_params(get_model(model_name), model_config, vocabs=vocabs, mode=mode)
 
     model.train(dataset)
 
@@ -108,24 +108,24 @@ def train_batches(config_path: str):
         raise ConfigError('metric_optimization has to be one of {}'.format(['maximize', 'minimize']))
 
     reader_config = config['dataset_reader']
-    reader = from_params(REGISTRY[reader_config['name']], {})
+    reader = from_params(get_model(reader_config['name']), {})
     data = reader.read(reader_config.get('data_path', usr_dir))
 
     dataset_config = config['dataset']
     dataset_name = dataset_config['name']
-    dataset: Dataset = from_params(REGISTRY[dataset_name], dataset_config, data=data)
+    dataset: Dataset = from_params(get_model(dataset_name), dataset_config, data=data)
 
     vocabs = {}
     for vocab_param_name, vocab_config in config.get('vocabs', {}).items():
         vocab_name: Trainable = vocab_config['name']
-        v = from_params(REGISTRY[vocab_name], vocab_config)
+        v = from_params(get_model(vocab_name), vocab_config)
         v.train(dataset.iter_all('train'))
         v.save()
         vocabs[vocab_param_name] = v
 
     model_config = config['model']
     model_name = model_config['name']
-    model = from_params(REGISTRY[model_name], model_config, vocabs=vocabs, mode='train')
+    model = from_params(get_model(model_name), model_config, vocabs=vocabs, mode='train')
 
     i = 0
     epochs = 0
@@ -218,7 +218,7 @@ def train_batches(config_path: str):
         model.save()
 
     if train_config['validate_best'] or train_config['test_best']:
-        model = from_params(REGISTRY[model_name], model_config, vocabs=vocabs, mode='infer')
+        model = from_params(get_model(model_name), model_config, vocabs=vocabs, mode='infer')
         print('Testing the best saved model', file=sys.stderr)
 
         if train_config['validate_best']:
