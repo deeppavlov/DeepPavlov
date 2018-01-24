@@ -14,7 +14,7 @@ from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 # models/spellers/error_model/config_ru_custom_vocab.json
 
 # Intents classifier
-# models/classifiers/intents/config.json
+# models/classifiers/intents/config_dstc2.json
 
 # NER
 # models/ner/config.json
