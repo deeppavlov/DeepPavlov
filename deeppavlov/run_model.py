@@ -14,7 +14,7 @@ from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 # models/spellers/error_model/config_ru_custom_vocab.json
 
 # Intents classifier
-# models/classifiers/intents/config.json
+# models/classifiers/intents/config_dstc2.json
 
 # NER
 # models/ner/config.json
@@ -22,6 +22,7 @@ from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 try:
     PIPELINE_CONFIG_PATH = 'models/classifiers/intents/config_train.json'
     set_usr_dir(PIPELINE_CONFIG_PATH)
+    # train_model_from_config(PIPELINE_CONFIG_PATH)
     train_batches(PIPELINE_CONFIG_PATH)
     interact_model(PIPELINE_CONFIG_PATH)
 # remove if usr_dir is empty:
