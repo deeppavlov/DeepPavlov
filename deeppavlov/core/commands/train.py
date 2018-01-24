@@ -2,6 +2,7 @@ import datetime
 import time
 import sys
 
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import REGISTRY
 from deeppavlov.core.commands.infer import build_agent_from_config
@@ -93,9 +94,18 @@ def train_batches(config_path: str):
     try:
         train_config.update(config['train'])
     except KeyError:
-        raise RuntimeError('training config is missing')
+        raise ConfigError('training config is missing')
 
     metrics_functions = get_metrics_by_names(train_config['metrics'])
+
+    if train_config['metric_optimization'] == 'maximize':
+        def improved(score, best):
+            return score > best
+    elif train_config['metric_optimization'] == 'minimize':
+        def improved(score, best):
+            return score < best
+    else:
+        raise ConfigError('metric_optimization has to be one of {}'.format(['maximize', 'minimize']))
 
     reader_config = config['dataset_reader']
     reader = from_params(REGISTRY[reader_config['name']], {})
@@ -169,7 +179,7 @@ def train_batches(config_path: str):
                 metrics = [f(train_y_true, train_y_predicted) for f in metrics_functions]
 
                 score = metrics[0]
-                if score > best:
+                if improved(score, best):
                     patience = 0
                     print('Improved on the previous best {} of {}'.format(train_config['metrics'][0], best),
                           file=sys.stderr)
