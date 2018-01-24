@@ -142,7 +142,7 @@ def train_batches(config_path: str):
         for batch in dataset.batch_generator(train_config['batch_size']):
             x, y_true = batch
             if log_on:
-                y_predicted = list(model.infer_on_batch(list(x)))
+                y_predicted = list(model.infer(list(x)))
                 train_y_true += y_true
                 train_y_predicted += y_predicted
             model.train_on_batch(batch)
@@ -172,7 +172,7 @@ def train_batches(config_path: str):
             val_y_true = []
             val_y_predicted = []
             for x, y_true in dataset.batch_generator(train_config['batch_size'], 'valid'):
-                y_predicted = list(model.infer_on_batch(list(x)))
+                y_predicted = list(model.infer(list(x)))
                 val_y_true += y_true
                 val_y_predicted += y_predicted
 
@@ -184,6 +184,7 @@ def train_batches(config_path: str):
                 print('New best {} of {}'.format(train_config['metrics'][0], score),
                       file=sys.stderr)
                 best = score
+                print('Saving model', file=sys.stderr)
                 model.save()
                 saved = True
             else:
@@ -226,11 +227,11 @@ def train_batches(config_path: str):
             val_y_true = []
             val_y_predicted = []
             for x, y_true in dataset.batch_generator(train_config['batch_size'], 'valid'):
-                y_predicted = list(model.infer_on_batch(list(x)))
+                y_predicted = list(model.infer(list(x)))
                 val_y_true += y_true
                 val_y_predicted += y_predicted
 
-            metrics = [f(train_y_true, train_y_predicted) for f in metrics_functions]
+            metrics = [f(val_y_true, val_y_predicted) for f in metrics_functions]
 
             report = {
                 'examples_seen': len(val_y_true),
@@ -244,11 +245,11 @@ def train_batches(config_path: str):
             val_y_true = []
             val_y_predicted = []
             for x, y_true in dataset.batch_generator(train_config['batch_size'], 'test'):
-                y_predicted = list(model.infer_on_batch(list(x)))
+                y_predicted = list(model.infer(list(x)))
                 val_y_true += y_true
                 val_y_predicted += y_predicted
 
-            metrics = [f(train_y_true, train_y_predicted) for f in metrics_functions]
+            metrics = [f(val_y_true, val_y_predicted) for f in metrics_functions]
 
             report = {
                 'examples_seen': len(val_y_true),

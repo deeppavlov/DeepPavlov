@@ -73,7 +73,7 @@
     "epochs": 100,
     "batch_size": 64,
 
-    "metrics": ["accuracy"],
+    "metrics": ["sets_accuracy"],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
 
