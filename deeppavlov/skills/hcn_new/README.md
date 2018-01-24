@@ -36,6 +36,16 @@ Here is an simple example of interaction with a trained dialogue bot:
 
 #### Requirements
 
+#TODO: edit the section after pretrained models' download is available
+
+To use the model:
+1. train named entity recognition model (for config file see [`deeppavlov/models/ner/config.json`](../../models/ner/config.json))
+2. train intents classifier model (for config file see [`deeppavlov/models/classifiers/intents/config.json`](../../models/classifiers/intents/config.json))
+3. download english fasttext embeddings trained on wiki ([https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip](https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip))
+    * you can use any english embeddings of your choice, but edit hybrid code network config accordingly
+4. train hybrid code network bot itself (for config file see [`deeppavlov/skills/hcn_new/config.json`](config.json))
+    * check that paths in the config point to pretrained ner and intent classifier model files
+
 #### Config parameters:
 * `name` always equals to `"hcn_new"`
 * `train_now` — `true` or `false`(default) depending on whether you are training or using a model _(optional)_
@@ -82,11 +92,27 @@ Here is an simple example of interaction with a trained dialogue bot:
 For a working exemplary config see [`deeeppavlov/skills/hcn_new/config.json`](config.json).
 
 #### Usage example
+To infer from a pretrained model with config path equal to `path/to/config.json`, you should run the following:
+```python
+from deeppavlov.core.commands.infer import build_model_from_config
+from deeppavlov.core.commands.utils import set_usr_dir
+from deeppavlov.core.common.file import read_json
+
+CONFIG_PATH = 'path/to/config.json'
+
+set_usr_dir(CONFIG_PATH)
+model = build_model_from_config(read_json(CONFIG_PATH))
+
+utterance = ""
+while utterance != 'quit':
+    print(">> " + model.infer(utterance))
+    utterance = input(':: ')
+```
 
 ## Training
 
 #### Config parameters
-To be used for training, your config json file should include the following parameters:
+To be used for training, your config json file should include parameters:
 
 * `dataset_reader`
    * `name` — `"your_reader_here"` for a custom dataset or `"dstc2_datasetreader"` to use DSTC2 (for implementation see [`deeppavlov.dataset_readers.dstc2_dataset_reader`](../../dataset_readers/dstc2_datasetreader.py))
@@ -112,7 +138,7 @@ The model will be trained according to your configuration and afterwards an inte
 ## Datasets
 
 #### DSTC2
-The Hybrid Code Network model was trained and evaluated on a modification of a dataset from Dialogue State Tracking Challenge 2[[2]](#references). The modifications were as follows:
+The Hybrid Code Network model was trained and evaluated on a modification of a dataset from Dialogue State Tracking Challenge 2 [[2]](#references). The modifications were as follows:
 * **new actions**
     * bot dialog actions were concatenated into one action (example: `{"dialog_acts": ["ask", "request"]}` -> `{"dialog_acts": ["ask_request"]}`)
     * if a slot key was associated with the dialog action, the new act was a concatenation of an act and a slot key (example: `{"dialog_acts": ["ask"], "slot_vals": ["area"]}` -> `{"dialog_acts": ["ask_area"]}`)
