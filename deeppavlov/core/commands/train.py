@@ -171,7 +171,7 @@ def train_batches(config_path: str):
         if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
             val_y_true = []
             val_y_predicted = []
-            for x, y_true in dataset.batch_generator(train_config['batch_size'], 'valid'):
+            for x, y_true in dataset.batch_generator(train_config['batch_size'], 'valid', shuffle=False):
                 y_predicted = list(model.infer(list(x)))
                 val_y_true += y_true
                 val_y_predicted += y_predicted
@@ -226,7 +226,7 @@ def train_batches(config_path: str):
             start_time = time.time()
             val_y_true = []
             val_y_predicted = []
-            for x, y_true in dataset.batch_generator(train_config['batch_size'], 'valid'):
+            for x, y_true in dataset.batch_generator(train_config['batch_size'], 'valid', shuffle=False):
                 y_predicted = list(model.infer(list(x)))
                 val_y_true += y_true
                 val_y_predicted += y_predicted
@@ -244,7 +244,7 @@ def train_batches(config_path: str):
             start_time = time.time()
             val_y_true = []
             val_y_predicted = []
-            for x, y_true in dataset.batch_generator(train_config['batch_size'], 'test'):
+            for x, y_true in dataset.batch_generator(train_config['batch_size'], 'test', shuffle=False):
                 y_predicted = list(model.infer(list(x)))
                 val_y_true += y_true
                 val_y_predicted += y_predicted
