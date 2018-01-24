@@ -141,8 +141,8 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
             but compiled with given learning parameters
         """
         if self.ser_path.is_dir():
-            opt_path = "{}/{}_opt.json".format(self.ser_path, self.ser_path.name)
-            weights_path = "{}/{}.h5".format(self.ser_path, self.ser_path.name)
+            opt_path = "{}/{}_opt.json".format(self.ser_path, self._ser_file)
+            weights_path = "{}/{}.h5".format(self.ser_path, self._ser_file)
         else:
             opt_path = "{}_opt.json".format(self.ser_path)
             weights_path = "{}.h5".format(self.ser_path)

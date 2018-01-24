@@ -45,7 +45,7 @@ class HybridCodeNetworkModel(TFModel):
         # initialize session
         self.sess = tf.Session()
 
-        if not self.train_now and self.get_checkpoint_state():
+        if self.get_checkpoint_state():
         #TODO: save/load params to json, here check compatability
             self.load()
         else:
