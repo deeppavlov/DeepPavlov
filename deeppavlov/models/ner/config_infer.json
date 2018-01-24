@@ -10,49 +10,47 @@
   },
   "model": {
     "name": "dstc_slotfilling",
-    "model_path": "models/ner/model/",
-    "ner_network": {
-      "name": "ner_tagging_network",
-      "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
-      "model_path": "models/ner/model/",
-      "verbouse": true,
-      "filter_width": 7,
-      "embeddings_dropout": true,
-      "n_filters": [
-        64,
-        64
-      ],
-      "token_embeddings_dim": 64,
-      "char_embeddings_dim": 32,
-      "use_batch_norm": true,
-      "use_crf": true
-    }
+    "train_now": false,
+    "download_best_model": true,
+    "epochs": 5,
+    "ser_dir": "model",
+    "ser_file": "dstc_ner_model",
+    "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
+    "verbouse": true,
+    "filter_width": 7,
+    "embeddings_dropout": true,
+    "n_filters": [
+      64,
+      64
+    ],
+    "token_embeddings_dim": 64,
+    "char_embeddings_dim": 32,
+    "use_batch_norm": true,
+    "use_crf": true
   },
 
   "vocabs": {
-    "token_vocab": {
+    "word_vocab": {
         "name": "default_vocab",
         "inputs": ["x"],
 		"level": "token",
-        "model_dir": "data/dstc2",
-		"model_file": "token.dict"
+        "ser_dir": "model/",
+		"ser_file": "token.dict"
       },
     "tag_vocab": {
         "name": "default_vocab",
         "inputs": ["y"],
 		"level": "token",
-        "model_dir": "data/dstc2",
-		"model_file": "tag.dict"
-
+        "ser_dir": "model/",
+		"ser_file": "tag.dict"
       },
     "char_vocab":{
         "name": "default_vocab",
         "inputs": ["x"],
 		"level": "char",
-        "model_dir": "data/dstc2",
-		"model_file": "char.dict"
+        "ser_dir": "model/",
+		"ser_file": "char.dict"
       }
-  },
-  "num_epochs": 10
+  }
 }
 

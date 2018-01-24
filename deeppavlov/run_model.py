@@ -1,8 +1,6 @@
-from pathlib import Path
-
 from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.infer import interact_model
-from deeppavlov.core.commands.utils import set_usr_dir
+from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 
 # HCN
 # skills/hcn/config.json
@@ -19,11 +17,16 @@ from deeppavlov.core.commands.utils import set_usr_dir
 # models/classifiers/intents/config.json
 
 # NER
-MODEL_CONFIG_PATH = 'models/ner/ner_config.json'
+# models/ner/config.json
 
-# MODEL_CONFIG_PATH = 'models/classifiers/intents/config.json'
-usr_dir = set_usr_dir(MODEL_CONFIG_PATH)
-train_model_from_config(MODEL_CONFIG_PATH)
-interact_model(MODEL_CONFIG_PATH)
-
-Path(usr_dir).rmdir()
+try:
+    # PIPELINE_CONFIG_PATH = 'models/ner/ner_config.json'
+    PIPELINE_CONFIG_PATH = 'skills/hcn_new/config.json'
+    set_usr_dir(PIPELINE_CONFIG_PATH)
+    train_model_from_config(PIPELINE_CONFIG_PATH)
+    interact_model(PIPELINE_CONFIG_PATH)
+# remove if usr_dir is empty:
+finally:
+    usr_dir = get_usr_dir()
+    if not list(usr_dir.iterdir()):
+        usr_dir.rmdir()

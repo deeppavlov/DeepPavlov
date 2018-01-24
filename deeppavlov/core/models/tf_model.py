@@ -5,23 +5,23 @@ Trainable and Inferable interfaces and make a pull-request to deeppavlov.
 """
 
 from abc import abstractmethod
+from collections import defaultdict
+import numpy as np
 
 import tensorflow as tf
 from overrides import overrides
-from collections import defaultdict
-import numpy as np
 
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.attributes import check_attr_true, check_path_exists
+from deeppavlov.core.common.errors import ConfigError
 from .tf_backend import TfModelMeta
 
 
 class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
-    _saver = tf.train.Saver
-    _model_dir = ''
-    _model_file = ''
-    sess = None
+    def __init__(self, **kwargs):
+        self._saver = tf.train.Saver
+        super().__init__(**kwargs)
 
     @abstractmethod
     def _add_placeholders(self):
@@ -72,19 +72,27 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
         """
         Just a wrapper for a private method.
         """
-        if not self.train_now:
-            self.load()
         return self._forward(instance, *args)
 
     def save(self):
-        print("Saving model to `{}`".format(self.model_path_.as_posix()))
-        self._saver().save(sess=self.sess, save_path=self.model_path_.as_posix(), global_step=0)
-        print('\n:: Model saved to {} \n'.format(self.model_path_.as_posix()))
+        save_path = self.ser_path
+        if save_path.is_dir():
+            save_path = save_path / self._ser_file
+        elif save_path.parent.is_dir():
+            pass
+        else:
+            raise ConfigError("Provided ser path doesn't exists")
+        print('\n:: saving model to {} \n'.format(save_path))
+        self._saver().save(sess=self.sess, save_path=str(save_path), global_step=0)
+        print('model saved')
 
     def get_checkpoint_state(self):
-        return tf.train.get_checkpoint_state(self.model_path_.parent)
+        if self.ser_path.is_dir():
+            return tf.train.get_checkpoint_state(self.ser_path)
+        else:
+            return tf.train.get_checkpoint_state(self.ser_path.parent)
 
-    @check_path_exists('dir')
+    @check_path_exists()
     @overrides
     def load(self):
         """
@@ -100,6 +108,17 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
 
 
 class SimpleTFModel(Trainable, Inferable, metaclass=TfModelMeta):
+    def __init__(self, *args, **kwargs):
+        ser_path = kwargs.get('ser_path', None)
+        ser_dir = kwargs.get('ser_dir', 'model')
+        ser_file = kwargs.get('ser_file', 'tf_model')
+        train_now = kwargs.get('train_now', False)
+        super().__init__(ser_path=ser_path,
+                         ser_dir=ser_dir,
+                         ser_file=ser_file,
+                         train_now=train_now,
+                         mode=kwargs['mode'])
+
     def train_on_batch(self, batch_x, batch_y):
         """ Perform single update of trainable parameters given a batch of samples
 

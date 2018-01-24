@@ -14,7 +14,7 @@ class TyposDataset(Dataset):
         """
         self.train += self.valid + self.test
 
-        test_ratio = args[0] if args else kwargs.get('test_ratio', 0.15)
+        test_ratio = args[0] if args else kwargs.get('test_ratio', 0)
 
         split = int(len(self.train) * test_ratio)
 

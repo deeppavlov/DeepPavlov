@@ -1,20 +1,32 @@
 {
+  "dataset_reader": {
+    "name": "dstc2_datasetreader",
+    "data_path": "../data/dstc2"
+  },
+  "dataset": {
+    "name": "intent_dataset",
+    "prep_method_name": "simple_prep",
+    "seed": 42,
+    "extract_classes": true,
+    "fields_to_merge": "train valid",
+    "merged_field": "train",
+    "field_to_split": "train",
+    "split_fields": "train valid",
+    "split_proportions": "0.9 0.1"
+  },
   "model": {
     "name": "intent_model",
-    "train_now": true,
-    "model_path": "/media/olga/Data/projects/iPavlov/Pilot/data/intent_cnn",
     "opt": {
-      "classes_file": "/media/olga/Data/projects/iPavlov/Pilot/data/intent_cnn/intents/classes.txt",
+      "train_now": true,
+      "classes_file": "../data/dstc2/classes.txt",
       "kernel_sizes_cnn": "3 3 3",
       "filters_cnn": 512,
-      "embedding_size": 100,
       "lear_metrics": "binary_accuracy fmeasure",
       "confident_threshold": 0.5,
       "optimizer": "Adam",
       "lear_rate": 0.1,
       "lear_rate_decay": 0.1,
       "loss": "binary_crossentropy",
-      "fasttext_model": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2_fasttext_model_100.bin",
       "text_size": 15,
       "coef_reg_cnn": 1e-4,
       "coef_reg_den": 1e-4,
@@ -27,22 +39,12 @@
       "verbose": true,
       "val_patience": 5,
       "show_examples": false
+    },
+    "embedder": {
+      "name": "fasttext",
+      "ser_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
+      "emb_module": "fasttext",
+      "dim": 100
     }
-  },
-  "dataset_reader": {
-    "name": "intent_dataset_reader",
-    "data_path": "/media/olga/Data/projects/iPavlov/Pilot/data/dstc2"
-  },
-  "dataset": {
-    "prep_method_name": "simple_prep",
-    "dataset_path":"/media/olga/Data/projects/iPavlov/Pilot/data/intent_cnn",
-    "name": "intent_dataset",
-    "seed": 42,
-    "extract_classes": true,
-    "fields_to_merge": "train valid",
-    "merged_field": "train",
-    "field_to_split": "train",
-    "split_fields": "train valid",
-    "split_proportions": "0.9 0.1"
   }
 }

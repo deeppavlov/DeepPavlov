@@ -13,10 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
 import numpy as np
 import tensorflow as tf
-
 from tensorflow.contrib.layers import xavier_initializer
 
 from deeppavlov.core.common.registry import register
@@ -28,8 +26,17 @@ class HybridCodeNetworkModel(TFModel):
 
     def __init__(self, **params):
         self.opt = params
-        self._model_dir = self.opt.get('model_dir', 'hcn_rnn')
-        self._model_file = self.opt.get('model_file', 'hcn_rnn')
+
+        ser_path = self.opt.get('ser_path', None)
+        ser_dir = self.opt.get('ser_dir', 'hcn_rnn')
+        ser_file = self.opt.get('ser_file', 'model')
+        train_now = self.opt.get('train_now', False)
+
+        super().__init__(ser_path=ser_path,
+                         ser_dir=ser_dir,
+                         ser_file=ser_file,
+                         train_now=train_now,
+                         mode=self.opt['mode'])
 
         # initialize parameters
         self._init_params()
@@ -38,12 +45,12 @@ class HybridCodeNetworkModel(TFModel):
         # initialize session
         self.sess = tf.Session()
 
-        if not self.opt.get('train_now') and self.get_checkpoint_state():
-#TODO: save/load params to json, here check compatability
-            print("Loading network from `{}`".format(self.model_path_.parent))
+        if self.get_checkpoint_state():
+        #TODO: save/load params to json, here check compatability
             self.load()
         else:
-            print("Initializing network from scratch")
+            print("\n:: initializing `{}` from scratch\n"\
+                  .format(self.__class__.__name__))
             self.sess.run(tf.global_variables_initializer())
 
         self.reset_state()

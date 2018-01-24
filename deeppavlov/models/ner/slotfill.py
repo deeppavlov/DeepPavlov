@@ -1,3 +1,18 @@
+"""
+Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 import json
 import inspect
 import sys
@@ -6,28 +21,24 @@ import tensorflow as tf
 from fuzzywuzzy import process
 from overrides import overrides
 from copy import deepcopy
+from pathlib import Path
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import SimpleTFModel
 from deeppavlov.models.ner.network import NerNetwork
 from deeppavlov.core.data.utils import tokenize_reg
 from deeppavlov.core.data.utils import download, download_untar
-from deeppavlov.core.common.paths import USR_PATH
-
-
 
 
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(SimpleTFModel):
     def __init__(self, **kwargs):
-        opt = deepcopy(kwargs)
-        model_dir = opt.get('model_dir', None)
-        model_file = opt.get('model_file', 'dstc_ner_model.ckpt')  # default name is dstc_ner_model
 
-        if model_dir is None:
-            model_dir = USR_PATH
-        self._model_dir = model_dir
-        self._model_file = model_file
+        super().__init__(**kwargs)
+
+        opt = deepcopy(kwargs)
+        vocabs = opt.pop('vocabs')
+        opt.update(vocabs)
 
         # Find all input parameters of the network init
         network_parameter_names = list(inspect.signature(NerNetwork.__init__).parameters)
@@ -40,8 +51,8 @@ class DstcSlotFillingNetwork(SimpleTFModel):
 
         download_best_model = opt.get('download_best_model', False)
         if download_best_model:
-            model_path = str(self.model_path_.parent.absolute())
-            best_model_url = 'http://lnsigo.mipt.ru/export/ner/ner_dstc_model.tar.gz'
+            model_path = str(self.ser_path.parent.absolute())
+            best_model_url = 'http://lnsigo.mipt.ru/export/models/ner/ner_dstc_model.tar.gz'
             download_untar(best_model_url, model_path)
 
         # Training parameters
@@ -51,11 +62,10 @@ class DstcSlotFillingNetwork(SimpleTFModel):
         self.train_parameters = train_parameters
 
         # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
-        slot_vals_filepath = self.model_path_.parent / 'slot_vals.json'
+        slot_vals_filepath = Path(self.ser_path.parent) / 'slot_vals.json'
         if not slot_vals_filepath.is_file():
             self._download_slot_vals(slot_vals_filepath)
 
-        slot_vals_filepath = self.model_path_.parent / 'slot_vals.json'
         with open(slot_vals_filepath) as f:
             self._slot_vals = json.load(f)
 
@@ -63,7 +73,7 @@ class DstcSlotFillingNetwork(SimpleTFModel):
 
     @overrides
     def load(self):
-        path = str(self.model_path_.absolute())
+        path = str(self.ser_path.absolute())
         # Check presence of the model files
         if tf.train.checkpoint_exists(path):
             print('[loading model from {}]'.format(path), file=sys.stderr)
@@ -71,10 +81,9 @@ class DstcSlotFillingNetwork(SimpleTFModel):
 
     @overrides
     def save(self):
-        self.model_path_.parent.mkdir(parents=True, exist_ok=True)
-        path = str(self.model_path_.absolute())
+        self.ser_path.parent.mkdir(parents=True, exist_ok=True)
+        path = str(self.ser_path.absolute())
         print('[saving model to {}]'.format(path), file=sys.stderr)
-
         self._ner_network.save(path)
 
     @overrides
@@ -89,7 +98,7 @@ class DstcSlotFillingNetwork(SimpleTFModel):
             self._ner_network.eval_conll(data.iter_all('test'), short_report=False, data_type='test')
             self.save()
         else:
-            self._ner_network.load(self._ner_model_path)
+            self._ner_network.load(self.ser_path)
 
     @overrides
     def infer(self, instance, *args, **kwargs):

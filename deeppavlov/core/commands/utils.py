@@ -1,10 +1,10 @@
-from pathlib import Path, PurePath
+from pathlib import Path, PosixPath
 
 from deeppavlov.core.common import paths
 from deeppavlov.core.common.file import read_json
 
 
-def set_usr_dir(config_path: str, usr_dir_name='USR_DIR') -> PurePath:
+def set_usr_dir(config_path: str, usr_dir_name='USR_DIR'):
     """
     Make a serialization user dir.
     """
@@ -12,14 +12,14 @@ def set_usr_dir(config_path: str, usr_dir_name='USR_DIR') -> PurePath:
     try:
         usr_dir = Path(config['usr_dir'])
     except KeyError:
-        usr_dir = Path(config_path).expanduser().absolute().parent / usr_dir_name
+        # usr_dir = Path(config_path).expanduser().absolute().parent / usr_dir_name
+        root_dir = Path(config_path).cwd()
+        usr_dir = root_dir / usr_dir_name
 
     usr_dir.mkdir(exist_ok=True)
 
     paths.USR_PATH = usr_dir
-    return usr_dir
 
 
-def set_vocab_path() -> PurePath:
-    return paths.USR_PATH / 'vocab.txt'
-
+def get_usr_dir() -> PosixPath:
+    return paths.USR_PATH

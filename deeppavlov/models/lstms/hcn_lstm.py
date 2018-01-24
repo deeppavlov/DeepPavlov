@@ -19,13 +19,13 @@ config = tf.ConfigProto(
 class LSTM(TFModel):
     def __init__(self, num_hidden_units=128,
                  optimizer=tf.train.AdadeltaOptimizer(0.1), saver=Saver,
-                 model_dir='ckpt/', model_file='hcn.ckpt'):
+                 ser_dir='ckpt/', ser_file='hcn.ckpt'):
         self._optimizer = optimizer
         self._saver = saver
         self._hps = HParams(num_hidden_units=num_hidden_units)
 
-        self._model_file = model_file
-        self._model_dir = model_dir
+        self._ser_file = ser_file
+        self._ser_dir = ser_dir
         # self.sess = self.load()
 
     def _add_placeholders(self):

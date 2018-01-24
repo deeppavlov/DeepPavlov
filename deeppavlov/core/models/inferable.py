@@ -4,7 +4,6 @@ for all models that can work for inferring. The scope of all inferring models is
 of trainable models. For example, encoders can be inferred, but can't be trained.
 All inferring models should inherit from this class.
 """
-
 from abc import abstractmethod
 
 from .serializable import Serializable
@@ -16,8 +15,11 @@ class Inferable(Serializable):
     should be trained in the current experiment run or not.
     """
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     @abstractmethod
-    def infer(self, instance, *args, **kwargs):
+    def infer(self, instance):
         """
         Infer a model. Any model can infer other model and ask it to do something (predict, encode,
         etc. via this method)

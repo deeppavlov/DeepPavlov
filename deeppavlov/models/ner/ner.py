@@ -1,3 +1,18 @@
+"""
+Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 import tensorflow as tf
 from overrides import overrides
 from copy import deepcopy
@@ -6,7 +21,6 @@ import sys
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import tokenize_reg
-from deeppavlov.core.common.paths import USR_PATH
 from deeppavlov.models.ner.network import NerNetwork
 from deeppavlov.core.models.tf_model import SimpleTFModel
 
@@ -14,18 +28,12 @@ from deeppavlov.core.models.tf_model import SimpleTFModel
 @register('ner')
 class NER(SimpleTFModel):
     def __init__(self, **kwargs):
+
+        super().__init__(**kwargs)
+
         opt = deepcopy(kwargs)
-
-        # Look for model direcory and model file names
-        model_dir = opt.get('model_dir', None)
-        model_file = opt.get('model_file', 'ner_model.ckpt')  # default name is ner_model
-        if model_dir is None:
-            model_dir = USR_PATH
-
-        # Set these arguments to use self.model_path_ property from
-        # Serializable class (inherited from Trainable)
-        self._model_dir = model_dir
-        self._model_file = model_file
+        vocabs = opt.pop('vocabs')
+        opt.update(vocabs)
 
         # Find all input parameters of the network init
         network_parameter_names = list(inspect.signature(NerNetwork.__init__).parameters)
@@ -47,17 +55,17 @@ class NER(SimpleTFModel):
 
     @overrides
     def load(self):
-        # Check prescence of the model files
-        path = str(self.model_path_.absolute())
+        path = str(self.ser_path.absolute())
+        # Check presence of the model files
         if tf.train.checkpoint_exists(path):
+            print('[loading model from {}]'.format(path), file=sys.stderr)
             self._net.load(path)
 
     @overrides
     def save(self):
-        self.model_path_.parent.mkdir(parents=True, exist_ok=True)
-        path = str(self.model_path_.absolute())
+        self.ser_path.parent.mkdir(parents=True, exist_ok=True)
+        path = str(self.ser_path.absolute())
         print('[saving model to {}]'.format(path), file=sys.stderr)
-
         self._net.save(path)
 
     @overrides

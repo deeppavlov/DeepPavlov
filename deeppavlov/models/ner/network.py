@@ -13,7 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
 from collections import defaultdict
 import sys
 import numpy as np
@@ -35,7 +34,7 @@ MODEL_FILE_NAME = 'ner_model'
 
 class NerNetwork:
     def __init__(self,
-                 token_vocab,
+                 word_vocab,
                  char_vocab,
                  tag_vocab,
                  n_filters=(128, 256),
@@ -54,7 +53,7 @@ class NerNetwork:
                  verbouse=False,
                  embeddings_onethego=False):
         n_tags = len(tag_vocab)
-        n_tokens = len(token_vocab)
+        n_tokens = len(word_vocab)
         n_chars = len(char_vocab)
 
         # Create placeholders
@@ -136,7 +135,7 @@ class NerNetwork:
         if logging:
             self.train_writer = tf.summary.FileWriter('summary', sess.graph)
 
-        self.token_vocab = token_vocab
+        self.token_vocab = word_vocab
         self.tag_vocab = tag_vocab
         self.char_vocab = char_vocab
         self._use_crf = use_crf
