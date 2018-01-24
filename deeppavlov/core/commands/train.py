@@ -137,82 +137,82 @@ def train_batches(config_path: str):
     train_y_true = []
     train_y_predicted = []
     start_time = time.time()
-    # try:
-    while True:
-        for batch in dataset.batch_generator(train_config['batch_size']):
-            x, y_true = batch
-            if log_on:
-                y_predicted = list(model.infer(list(x)))
-                train_y_true += y_true
-                train_y_predicted += y_predicted
-            model.train_on_batch(batch)
-            i += 1
-            examples += len(x)
+    try:
+        while True:
+            for batch in dataset.batch_generator(train_config['batch_size']):
+                x, y_true = batch
+                if log_on:
+                    y_predicted = list(model.infer(list(x)))
+                    train_y_true += y_true
+                    train_y_predicted += y_predicted
+                model.train_on_batch(batch)
+                i += 1
+                examples += len(x)
 
-            if train_config['log_every_n_batches'] > 0 and i % train_config['log_every_n_batches'] == 0:
+                if train_config['log_every_n_batches'] > 0 and i % train_config['log_every_n_batches'] == 0:
+                    metrics = [f(train_y_true, train_y_predicted) for f in metrics_functions]
+                    report = {
+                        'epochs_done': epochs,
+                        'batches_seen': i,
+                        'examples_seen': examples,
+                        'metrics': dict(zip(train_config['metrics'], metrics)),
+                        'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
+                    }
+                    print('train: {}'.format(report))
+                    train_y_true = []
+                    train_y_predicted = []
+
+                    if train_config['show_examples']:
+                        for xi, ypi, yti in zip(x, y_predicted, y_true):
+                            print({'in': xi, 'out': ypi, 'expected': yti})
+
+            epochs += 1
+
+            if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
+                val_y_true = []
+                val_y_predicted = []
+                for x, y_true in dataset.batch_generator(train_config['batch_size'], 'valid', shuffle=False):
+                    y_predicted = list(model.infer(list(x)))
+                    val_y_true += y_true
+                    val_y_predicted += y_predicted
+
                 metrics = [f(train_y_true, train_y_predicted) for f in metrics_functions]
+
+                score = metrics[0]
+                if improved(score, best):
+                    patience = 0
+                    print('New best {} of {}'.format(train_config['metrics'][0], score),
+                          file=sys.stderr)
+                    best = score
+                    print('Saving model', file=sys.stderr)
+                    model.save()
+                    saved = True
+                else:
+                    patience += 1
+                    print('Did not improve on the {} of {}'.format(train_config['metrics'][0], best),
+                          file=sys.stderr)
+
                 report = {
-                    'epochs_done': epochs,
-                    'batches_seen': i,
-                    'examples_seen': examples,
+                    'examples_seen': len(val_y_true),
                     'metrics': dict(zip(train_config['metrics'], metrics)),
+                    'impatience': patience,
                     'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
                 }
-                print('train: {}'.format(report))
-                train_y_true = []
-                train_y_predicted = []
-
+                if train_config['validation_patience'] > 0:
+                    report['patience_limit'] = train_config['validation_patience']
+                print('valid: {}'.format(report))
                 if train_config['show_examples']:
                     for xi, ypi, yti in zip(x, y_predicted, y_true):
                         print({'in': xi, 'out': ypi, 'expected': yti})
 
-        epochs += 1
+                if patience >= train_config['validation_patience'] > 0:
+                    print('Ran out of patience', file=sys.stderr)
+                    break
 
-        if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
-            val_y_true = []
-            val_y_predicted = []
-            for x, y_true in dataset.batch_generator(train_config['batch_size'], 'valid', shuffle=False):
-                y_predicted = list(model.infer(list(x)))
-                val_y_true += y_true
-                val_y_predicted += y_predicted
-
-            metrics = [f(train_y_true, train_y_predicted) for f in metrics_functions]
-
-            score = metrics[0]
-            if improved(score, best):
-                patience = 0
-                print('New best {} of {}'.format(train_config['metrics'][0], score),
-                      file=sys.stderr)
-                best = score
-                print('Saving model', file=sys.stderr)
-                model.save()
-                saved = True
-            else:
-                patience += 1
-                print('Did not improve on the {} of {}'.format(train_config['metrics'][0], best),
-                      file=sys.stderr)
-
-            report = {
-                'examples_seen': len(val_y_true),
-                'metrics': dict(zip(train_config['metrics'], metrics)),
-                'impatience': patience,
-                'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
-            }
-            if train_config['validation_patience'] > 0:
-                report['patience_limit'] = train_config['validation_patience']
-            print('valid: {}'.format(report))
-            if train_config['show_examples']:
-                for xi, ypi, yti in zip(x, y_predicted, y_true):
-                    print({'in': xi, 'out': ypi, 'expected': yti})
-
-            if patience >= train_config['validation_patience'] > 0:
-                print('Ran out of patience', file=sys.stderr)
+            if epochs >= train_config['epochs'] > 0:
                 break
-
-        if epochs >= train_config['epochs'] > 0:
-            break
-    # except KeyboardInterrupt:
-    #     print('Stopped training', file=sys.stderr)
+    except KeyboardInterrupt:
+        print('Stopped training', file=sys.stderr)
 
     if not saved:
         print('Saving model', file=sys.stderr)

@@ -42,10 +42,6 @@
         3
       ],
       "filters_cnn": 512,
-      "lear_metrics": [
-        "binary_accuracy",
-        "fmeasure"
-      ],
       "confident_threshold": 0.5,
       "optimizer": "Adam",
       "lear_rate": 0.1,
