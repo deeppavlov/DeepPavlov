@@ -11,7 +11,7 @@ from overrides import overrides
 
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.common.attributes import check_attr_true, check_path_exists
+from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.errors import ConfigError
 from .tf_backend import TfModelMeta
 
@@ -90,7 +90,7 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
         else:
             return tf.train.get_checkpoint_state(self.ser_path.parent)
 
-    @check_path_exists()
+    # @check_path_exists()
     @overrides
     def load(self):
         """
