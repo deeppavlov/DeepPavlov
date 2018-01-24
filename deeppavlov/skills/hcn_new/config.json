@@ -15,7 +15,7 @@
       ],
       "level": "token",
       "tokenize": true,
-      "ser_path": "../data/vocabs/word_vocab.dict"
+      "ser_path": "../data/vocabs/word.dict"
     },
     "token_vocab": {
       "name": "default_vocab",
@@ -40,6 +40,15 @@
       ],
       "level": "char",
       "ser_path": "../data/ner/char.dict"
+    },
+    "classes_vocab": {
+      "name": "default_vocab",
+      "inputs": [
+        "y"
+      ],
+      "level": "token",
+      "ser_path": "../download/vocabs/classes.dict",
+      "train_now": true
     }
   },
   "model": {
@@ -60,7 +69,7 @@
     "slot_filler": {
       "name": "dstc_slotfilling",
       "ner_network": {
-        "ser_path": "/media/olga/Data/projects/iPavlov/Pilot/deeppavlov/USR_DIR/ner",
+        "ser_path": "/media/olga/Data/projects/iPavlov/Pilot/download/ner",
         "name": "ner_tagging_network",
         "filter_width": 7,
         "embeddings_dropout": true,
@@ -77,16 +86,20 @@
     "intent_classifier": {
       "name": "intent_model",
       "opt": {
-        "ser_path": "models/classifiers/intents/intent_cnn_best",
-        "ser_dir": "intent_cnn_best",
-        "ser_file": "intent_cnn_best",
-        "classes_file": "models/classifiers/intents/intent_cnn_best/classes.txt",
-        "kernel_sizes_cnn": "3 3 3",
+        "train_now": true,
+        "kernel_sizes_cnn": [
+          3,
+          3,
+          3
+        ],
         "filters_cnn": 512,
-        "lear_metrics": "binary_accuracy fmeasure",
+        "lear_metrics": [
+          "binary_accuracy",
+          "fmeasure"
+        ],
         "confident_threshold": 0.5,
         "optimizer": "Adam",
-        "lear_rate": 1.0,
+        "lear_rate": 0.1,
         "lear_rate_decay": 0.1,
         "loss": "binary_crossentropy",
         "text_size": 15,
@@ -97,16 +110,19 @@
         "dense_size": 100,
         "model_name": "cnn_model",
         "batch_size": 64,
-        "val_every_n_epochs": 1,
+        "val_every_n_epochs": 5,
         "verbose": true,
-        "val_patience": 5,
-        "show_examples": false
+        "val_patience": 5
       },
       "embedder": {
         "name": "fasttext",
         "ser_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
         "emb_module": "fasttext",
         "dim": 100
+      },
+      "tokenizer": {
+        "name": "nltk_tokenizer",
+        "tokenizer": "wordpunct_tokenize"
       }
     },
     "bow_encoder": {
