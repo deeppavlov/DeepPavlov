@@ -75,7 +75,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         # intialize parameters
         self.db_result = None
         self.n_actions = len(self.templates)
-        self.n_intents = len(self.intent_classifier.infer(['hi'], return_proba=True))
+        self.n_intents = len(self.intent_classifier.infer(['hi'], predict_proba=True))
         self.prev_action = np.zeros(self.n_actions, dtype=np.float32)
 
         # initialize metrics
