@@ -3,6 +3,8 @@ import itertools
 import numpy as np
 import os
 
+import sys
+
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
@@ -125,7 +127,7 @@ class DefaultVocabulary(Trainable, Inferable):
         return [self.__getitem__(s) for s in samples]
 
     def save(self):
-        print("[saving vocabulary to `{}`]".format(self.ser_path))
+        print("[saving vocabulary to `{}`]".format(self.ser_path), file=sys.stderr)
 
         with self.ser_path.open('wt') as f:
             for n in range(len(self._t2i)):
@@ -135,7 +137,7 @@ class DefaultVocabulary(Trainable, Inferable):
 
     @check_path_exists()
     def load(self):
-        print("[loading vocabulary from `{}`]".format(self.ser_path))
+        print("[loading vocabulary from `{}`]".format(self.ser_path), file=sys.stderr)
         tokens, counts = [], []
         for ln in self.ser_path.open('r'):
             token, cnt = ln.split('\t', 1)
