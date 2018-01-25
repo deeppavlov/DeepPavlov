@@ -176,7 +176,7 @@ def train_batches(config_path: str):
                     val_y_true += y_true
                     val_y_predicted += y_predicted
 
-                metrics = [f(train_y_true, train_y_predicted) for f in metrics_functions]
+                metrics = [f(val_y_true, val_y_predicted) for f in metrics_functions]
 
                 score = metrics[0]
                 if improved(score, best):
@@ -256,4 +256,4 @@ def train_batches(config_path: str):
                 'metrics': dict(zip(train_config['metrics'], metrics)),
                 'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
             }
-            print('test: {}'.format(report))
+            print('test:  {}'.format(report))
