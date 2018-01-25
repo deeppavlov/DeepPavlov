@@ -24,7 +24,7 @@
         "y"
       ],
       "level": "token",
-      "ser_path": "../data/snips/classes.txt",
+      "ser_path": "../data/snips/classes.dict",
       "train_now": true
     }
   },
@@ -63,7 +63,7 @@
     },
     "embedder": {
       "name": "fasttext",
-      "ser_path": "../data/reddit_fasttext_model.bin",
+      "ser_path": "../data/fasttext_model.bin",
       "emb_module": "fasttext",
       "dim": 100
     },

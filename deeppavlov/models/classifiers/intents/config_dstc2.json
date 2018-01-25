@@ -28,7 +28,7 @@
         "y"
       ],
       "level": "token",
-      "ser_path": "./models/classifiers/intents/intent_cnn_best/classes.txt",
+      "ser_path": "./models/classifiers/intents/classes.dict",
       "train_now": true
     }
   },
@@ -36,7 +36,7 @@
     "name": "intent_model",
     "opt": {
       "train_now": true,
-      "ser_path": "./models/classifiers/intents/intent_cnn_best",
+      "ser_path": "./models/classifiers/intents/intent_cnn",
       "kernel_sizes_cnn": [
         3,
         3,

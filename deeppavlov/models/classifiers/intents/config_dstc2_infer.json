@@ -13,7 +13,7 @@
         "y"
       ],
       "level": "token",
-      "ser_path": "./models/classifiers/intents/intent_cnn_best/classes.txt",
+      "ser_path": "./models/classifiers/intents/intent_cnn_best/classes.dict",
       "train_now": false
     }
   },
@@ -21,7 +21,7 @@
     "name": "intent_model",
     "opt": {
       "train_now": false,
-      "ser_path": "./models/classifiers/intents/intent_cnn_best"
+      "ser_path": "./models/classifiers/intents/intent_cnn"
     },
     "embedder": {
       "name": "fasttext",
