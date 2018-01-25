@@ -1,4 +1,4 @@
-# Pilot
+# Pilot - Deeppavlov
 An open source library for
  * building complicated natural language processing pipelines
  * training and infering natural language processing algorithms

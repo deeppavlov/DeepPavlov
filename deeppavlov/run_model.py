@@ -1,26 +1,12 @@
-# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 
 # HCN
-# skills/hcn/config_dstc2.json
+# skills/hcn/config.json
 
 # HCN_new
-# skills/hcn_new/config_dstc2.json
+# skills/hcn_new/config.json
 
 # Speller
 # models/spellers/error_model/config_en.json
@@ -31,11 +17,11 @@ from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 # models/classifiers/intents/config_dstc2.json
 
 # NER
-# models/ner/config_dstc2.json
+# models/ner/config.json
 
+PIPELINE_CONFIG_PATH = 'models/classifiers/intents/config_dstc2.json'
+set_usr_dir(PIPELINE_CONFIG_PATH)
 try:
-    PIPELINE_CONFIG_PATH = 'models/classifiers/intents/config_dstc2.json'
-    set_usr_dir(PIPELINE_CONFIG_PATH)
     train_model_from_config(PIPELINE_CONFIG_PATH)
     interact_model(PIPELINE_CONFIG_PATH)
 # remove if usr_dir is empty:

@@ -22,6 +22,7 @@ from typing import Type
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.encoders.bow import BoW_encoder
 from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel
@@ -74,7 +75,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         # intialize parameters
         self.db_result = None
         self.n_actions = len(self.templates)
-        self.n_intents = len(self.intent_classifier.infer(['hi']))
+        self.n_intents = len(self.intent_classifier.infer(['hi'], predict_proba=True))
         self.prev_action = np.zeros(self.n_actions, dtype=np.float32)
 
         # initialize metrics
@@ -104,7 +105,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         # emb_features = np.zeros(300)
 
         # Intent features
-        intent_features = self.intent_classifier.infer([tokenized]).ravel()
+        intent_features = self.intent_classifier.infer([tokenized], predict_proba=True).ravel()
         if self.debug:
             from deeppavlov.models.classifiers.intents.utils import proba2labels
             print("Predicted intent = `{}`".format(proba2labels(
@@ -164,6 +165,12 @@ class HybridCodeNetworkBot(Inferable, Trainable):
 
     @check_attr_true('train_now')
     def train(self, data):
+        
+        if self.network.train_now is False:
+            raise ConfigError("It looks like 'train_now' of mother model is True, while"
+                              "`train_now` of submodel is False. Set `train_now` of submodel"
+                              "to True.")
+
         print('\n:: training started')
 
         curr_patience = self.val_patience

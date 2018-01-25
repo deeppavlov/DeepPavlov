@@ -11,7 +11,8 @@ from overrides import overrides
 
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.common.attributes import check_attr_true, check_path_exists
+from deeppavlov.core.common.attributes import check_attr_true
+from deeppavlov.core.common.errors import ConfigError
 from .tf_backend import TfModelMeta
 
 
@@ -72,10 +73,13 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
         return self._forward(instance, *args)
 
     def save(self):
-        if self.ser_path.is_dir():
-            save_path = self.ser_path
+        save_path = self.ser_path
+        if save_path.is_dir():
+            save_path = save_path / self._ser_file
+        elif save_path.parent.is_dir():
+            pass
         else:
-            save_path = self.ser_path.parent
+            raise ConfigError("Provided ser path doesn't exists")
         print('\n:: saving model to {} \n'.format(save_path))
         self._saver().save(sess=self.sess, save_path=str(save_path), global_step=0)
         print('model saved')
@@ -86,7 +90,7 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
         else:
             return tf.train.get_checkpoint_state(self.ser_path.parent)
 
-    @check_path_exists()
+    # @check_path_exists()
     @overrides
     def load(self):
         """

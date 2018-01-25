@@ -21,8 +21,8 @@ from deeppavlov.core.common.registry import register
 @register("nltk_tokenizer")
 class NLTKTokenizer(Inferable):
 
-    def __init__(self, download=False, tokenizer="wordpunct_tokenize", *args, **kwargs):
-        super().__init__()
+    def __init__(self, save_path=None, download=False, tokenizer="wordpunct_tokenize", *args, **kwargs):
+        super().__init__(save_path=save_path)
         if download:
             nltk.download()
         self.tokenizer = getattr(nltk.tokenize, tokenizer, None)

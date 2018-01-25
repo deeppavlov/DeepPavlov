@@ -4,7 +4,7 @@ from deeppavlov.core.common import paths
 from deeppavlov.core.common.file import read_json
 
 
-def set_usr_dir(config_path: str, usr_dir_name='USR_DIR'):
+def set_usr_dir(config_path: str, usr_dir_name='download'):
     """
     Make a serialization user dir.
     """
@@ -12,8 +12,7 @@ def set_usr_dir(config_path: str, usr_dir_name='USR_DIR'):
     try:
         usr_dir = Path(config['usr_dir'])
     except KeyError:
-        # usr_dir = Path(config_path).expanduser().absolute().parent / usr_dir_name
-        root_dir = Path(config_path).cwd()
+        root_dir = (Path(__file__) / ".." / ".." / ".." / "..").resolve()
         usr_dir = root_dir / usr_dir_name
 
     usr_dir.mkdir(exist_ok=True)
