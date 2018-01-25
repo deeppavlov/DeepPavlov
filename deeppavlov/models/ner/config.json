@@ -11,7 +11,7 @@
     "name": "dstc_slotfilling",
     "train_now": true,
     "epochs": 5,
-    "learning_rate": 1e-4,
+    "learning_rate": 1e-3,
     "ser_dir": "model",
     "ser_file": "dstc_ner_model",
     "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
@@ -30,24 +30,27 @@
   "vocabs": {
     "word_vocab": {
         "name": "default_vocab",
-        "train_now": true,
         "inputs": ["x"],
+        "train_now": true,
 		"level": "token",
-        "ser_path": "../data/ner/word.dict"
+        "ser_dir": "model/",
+		"ser_file": "token.dict"
       },
     "tag_vocab": {
-      "name": "default_vocab",
-      "train_now": true,
-      "inputs": ["y"],
-      "level": "token",
-      "ser_path": "../data/ner/tag.dict"
-    },
+        "name": "default_vocab",
+        "inputs": ["y"],
+        "train_now": true,
+		"level": "token",
+        "ser_dir": "model/",
+		"ser_file": "tag.dict"
+      },
     "char_vocab":{
         "name": "default_vocab",
-        "train_now": true,
         "inputs": ["x"],
+        "train_now": true,
 		"level": "char",
-        "ser_path": "../data/ner/char.dict"
+        "ser_dir": "model/",
+		"ser_file": "char.dict"
       }
   }
 }
