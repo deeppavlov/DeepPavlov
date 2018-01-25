@@ -11,7 +11,7 @@
   "model": {
     "name": "ner",
     "train_now": true,
-    "epochs": 2,
+    "epochs": 10,
     "ser_dir": "model",
     "ser_file": "dstc_ner_model",
     "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
@@ -33,6 +33,7 @@
     "word_vocab": {
         "name": "default_vocab",
         "inputs": ["x"],
+        "train_now": true,
 		"level": "token",
         "ser_dir": "model/",
 		"ser_file": "token.dict"
@@ -40,6 +41,7 @@
     "tag_vocab": {
         "name": "default_vocab",
         "inputs": ["y"],
+        "train_now": true,
 		"level": "token",
         "ser_dir": "model/",
 		"ser_file": "tag.dict"
@@ -47,6 +49,7 @@
     "char_vocab":{
         "name": "default_vocab",
         "inputs": ["x"],
+        "train_now": true,
 		"level": "char",
         "ser_dir": "model/",
 		"ser_file": "char.dict"
