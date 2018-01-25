@@ -211,28 +211,24 @@ class NerNetwork:
                                    print_results,
                                    short_report)
 
-    def train(self, data, batch_size=8):
+    def train(self, data, batch_size=8, learning_rate=1e-3, dropout_rate=0.5):
         total_loss = 0
         total_count = 0
-        for batch_x, batch_y in data.batch_generator(batch_size):
-            (x_toks, x_char, mask), y_tags = self.tokens_batch_to_numpy_batch(batch_x, batch_y)
-            current_loss = self.train_on_batch((x_toks,
-                                                x_char,
-                                                mask
-                                                ),
-                                               y_tags,
-                                               learning_rate=1e-3,
-                                               dropout_rate=0.5)
+        for batch in data.batch_generator(batch_size):
+            current_loss = self.train_on_batch(batch,
+                                               learning_rate=learning_rate,
+                                               dropout_rate=dropout_rate)
             total_loss += current_loss
-            total_count += len(batch_x)
+            # Add len of x
+            total_count += len(batch[0])
 
-    def train_on_batch(self, x, y, learning_rate=1e-3, dropout_rate=0.5):
-        x_toks, x_char, mask = x
-        y_tag = y
+    def train_on_batch(self, batch, learning_rate=1e-3, dropout_rate=0.5):
+        batch_x, batch_y = batch
+        (x_toks, x_char, mask), y_tags = self.tokens_batch_to_numpy_batch(batch_x, batch_y)
         feed_dict = self._fill_feed_dict(x_toks,
                                          x_char,
                                          mask,
-                                         y_tag,
+                                         y_tags,
                                          learning_rate,
                                          dropout_rate=dropout_rate,
                                          training=True)

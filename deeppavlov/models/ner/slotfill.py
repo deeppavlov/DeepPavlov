@@ -64,7 +64,7 @@ class DstcSlotFillingNetwork(SimpleTFModel):
         # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
         slot_vals_filepath = Path(self.ser_path.parent) / 'slot_vals.json'
         if not slot_vals_filepath.is_file():
-            self._download_slot_vals(slot_vals_filepath)
+            self._download_slot_vals()
 
         with open(slot_vals_filepath) as f:
             self._slot_vals = json.load(f)
@@ -99,6 +99,9 @@ class DstcSlotFillingNetwork(SimpleTFModel):
             self.save()
         else:
             self._ner_network.load(self.ser_path)
+
+    def train_on_batch(self, batch):
+        self._net.train_on_batch(batch, **self.train_parameters)
 
     @overrides
     def infer(self, instance, *args, **kwargs):
@@ -179,4 +182,4 @@ class DstcSlotFillingNetwork(SimpleTFModel):
 
     def _download_slot_vals(self):
         url = 'http://lnsigo.mipt.ru/export/datasets/dstc_slot_vals.json'
-        download(self.ser_path, url)
+        download(self.ser_path.parent / 'slot_vals.json', url)

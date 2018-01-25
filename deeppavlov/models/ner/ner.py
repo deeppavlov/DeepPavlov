@@ -83,6 +83,10 @@ class NER(SimpleTFModel):
             print('Loading NER network', file=sys.stderr)
             self._net.load()
 
+    def train_on_batch(self, batch):
+        self._net.train_on_batch(batch, **self.train_parameters)
+
+
     @overrides
     def infer(self, sample, *args, **kwargs):
         sample = sample.strip()
