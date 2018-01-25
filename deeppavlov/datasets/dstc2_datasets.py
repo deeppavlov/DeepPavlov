@@ -113,7 +113,7 @@ class DSTC2DialogDataset(Dataset):
 @register('dstc2_ner_dataset')
 class DstcNerDataset(Dataset):
 
-    def __init__(self, data, dataset_path):
+    def __init__(self, data, dataset_path, shuffle=True):
         r""" Dataset takes a dict with fields 'train', 'test', 'valid'. A list of samples (pairs x, y) is stored
              in each field.
 
@@ -136,6 +136,7 @@ class DstcNerDataset(Dataset):
             'test': self.test,
             'all': self.train + self.test + self.valid
         }
+        self.shuffle = shuffle
 
 
     def _preprocess(self, data_part):

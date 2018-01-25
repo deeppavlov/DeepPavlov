@@ -1,17 +1,17 @@
 {
   "dataset_reader": {
     "name": "dstc2_datasetreader",
-    "data_path": "../data/dstc2"
+    "data_path": "/home/mikhail/Projects/Pilot/data/dstc2"
   },
   "dataset": {
     "name": "dstc2_ner_dataset",
-    "dataset_path": "../data/dstc2"
+    "dataset_path": "/home/mikhail/Projects/Pilot/data/dstc2"
+
   },
   "model": {
-    "name": "dstc_slotfilling",
+    "name": "ner",
     "train_now": true,
-    "epochs": 5,
-    "learning_rate": 1e-3,
+    "epochs": 10,
     "ser_dir": "model",
     "ser_file": "dstc_ner_model",
     "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
@@ -25,8 +25,12 @@
     "token_embeddings_dim": 64,
     "char_embeddings_dim": 32,
     "use_batch_norm": true,
-    "use_crf": true
+    "use_crf": true,
+    "learning_rate": 1e-3,
+    "dropout_rate": 0.5
+
   },
+
   "vocabs": {
     "word_vocab": {
         "name": "default_vocab",
@@ -54,3 +58,4 @@
       }
   }
 }
+

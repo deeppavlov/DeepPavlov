@@ -5,6 +5,8 @@ Trainable and Inferable interfaces and make a pull-request to deeppavlov.
 """
 
 from abc import abstractmethod
+from collections import defaultdict
+import numpy as np
 
 import tensorflow as tf
 from overrides import overrides
@@ -107,4 +109,84 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
 
 class SimpleTFModel(Trainable, Inferable, metaclass=TfModelMeta):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        ser_path = kwargs.get('ser_path', None)
+        ser_dir = kwargs.get('ser_dir', 'model')
+        ser_file = kwargs.get('ser_file', 'tf_model')
+        train_now = kwargs.get('train_now', False)
+        super().__init__(ser_path=ser_path,
+                         ser_dir=ser_dir,
+                         ser_file=ser_file,
+                         train_now=train_now,
+                         mode=kwargs['mode'])
+
+    def train_on_batch(self, batch_x, batch_y):
+        """ Perform single update of trainable parameters given a batch of samples
+
+        Args:
+            batch_x: a list of input parameters or a single
+                 input parameter (all are tensors ready to fed
+                 to the network)
+            batch_y: a lit of output parameters or a single output parameter
+
+        Returns:
+            loss: scalar loss for this batch before update of the parameters
+
+        """
+        pass
+
+    def save(self, model_file_path):
+        """
+        Save model to model_file_path
+        """
+        print('Saving model to {}'.format(model_file_path))
+        saver = tf.train.Saver()
+        saver.save(self._sess, str(model_file_path))
+
+    def load(self, model_file_path):
+        """
+        Load model from the model_file_path
+        """
+        print('Loading model from {}'.format(model_file_path))
+        saver = tf.train.Saver()
+        saver.restore(self._sess, str(model_file_path))
+
+    @staticmethod
+    def print_number_of_parameters():
+        """
+        Print number of *trainable* parameters in the network
+        """
+        print('Number of parameters: ')
+        vars = tf.trainable_variables()
+        blocks = defaultdict(int)
+        for var in vars:
+            # Get the top level scope name of variable
+            block_name = var.name.split('/')[0]
+            number_of_parameters = np.prod(var.get_shape().as_list())
+            blocks[block_name] += number_of_parameters
+        for block_name in blocks:
+            print(block_name, blocks[block_name])
+        total_num_parameters = np.sum(list(blocks.values()))
+        print('Total number of parameters equal {}'.format(total_num_parameters))
+
+    def get_train_op(self, loss, learning_rate, learnable_scopes=None, optimizer=None):
+        """ Get train operation for given loss
+
+        Args:
+            loss: loss, tf tensor or scalar
+            learning_rate: scalar or placeholder
+            learnable_scopes: which scopes are trainable (None for all)
+            optimizer: instance of tf.train.Optimizer, default Adam
+
+        Returns:
+            train_op
+        """
+        variables = self.get_trainable_variables(learnable_scopes)
+        if optimizer is None:
+            optimizer = tf.train.AdamOptimizer
+
+        # For batch norm it is necessary to update running averages
+        extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies(extra_update_ops):
+            train_op = optimizer(learning_rate).minimize(loss, var_list=variables)
+        return train_op
+

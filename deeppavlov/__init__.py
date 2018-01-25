@@ -17,7 +17,6 @@ from deeppavlov.models.embedders.dict_embedder import DictEmbedder
 from deeppavlov.models.encoders.bow import BoW_encoder
 from deeppavlov.models.lstms.hcn_lstm import LSTM
 from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
-from deeppavlov.models.ner.ner_network import NerNetwork
 from deeppavlov.models.spellers.error_model.error_model import ErrorModel
 from deeppavlov.models.trackers.hcn_at import ActionTracker
 from deeppavlov.models.trackers.hcn_et import EntityTracker
@@ -26,5 +25,6 @@ from deeppavlov.core.data.vocab import DefaultVocabulary
 from deeppavlov.skills.hcn_new.hcn import HybridCodeNetworkModel
 from deeppavlov.skills.hcn_new.tracker import FeaturizedTracker
 from deeppavlov.vocabs.typos import StaticDictionary, Wiki100KDictionary, RussianWordsVocab
+from deeppavlov.models.ner.ner import NER
 
 import deeppavlov.metrics.accuracy

@@ -1,4 +1,20 @@
+"""
+Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 from collections import OrderedDict
+import sys
 
 
 def chunk_finder(current_token, previous_token, tag):
@@ -46,8 +62,8 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, 
 
     for tag in tags:
         count = 0
-        true_chunk = list()
-        pred_chunk = list()
+        true_chunk = []
+        pred_chunk = []
         y_true = [str(y) for y in y_true]
         y_pred = [str(y) for y in y_pred]
         prev_tag_true = 'O'
@@ -188,5 +204,5 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, 
                                                            tot_recall=results[entity_of_interest]['recall'],
                                                            tot_f1=results[entity_of_interest]['f1'],
                                                            tot_predicted=results[entity_of_interest]['n_predicted_entities'])
-        print(s)
+        print(s, file=sys.stderr)
     return results

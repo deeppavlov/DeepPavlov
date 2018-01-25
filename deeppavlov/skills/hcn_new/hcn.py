@@ -165,7 +165,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
 
     @check_attr_true('train_now')
     def train(self, data):
-        
+
         if self.network.train_now is False:
             raise ConfigError("It looks like 'train_now' of mother model is True, while"
                               "`train_now` of submodel is False. Set `train_now` of submodel"

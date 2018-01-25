@@ -145,6 +145,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         Method initializes model from saved params and weights
         Args:
             model_name: name of model function described as a method of this class
+            fname: path and first part of name of model
             optimizer_name: name of optimizer from keras.optimizers
             lr: learning rate
             decay: learning rate decay

@@ -13,20 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
-import os
 from collections import defaultdict
-from overrides import overrides
-import pathlib
 import sys
-
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer
 
-from deeppavlov.core.common.attributes import check_attr_true
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.tf_model import SimpleTFModel, TFModel
 from deeppavlov.models.ner.layers import character_embedding_network
 from deeppavlov.models.ner.layers import embedding_layer
 from deeppavlov.models.ner.layers import highway_convolutional_network
@@ -35,14 +27,16 @@ from deeppavlov.models.ner.layers import stacked_rnn
 from deeppavlov.models.ner.evaluation import precision_recall_f1
 
 
+
 SEED = 42
 MODEL_FILE_NAME = 'ner_model'
 
 
-@register("ner_tagging_network")
-class NerNetwork(SimpleTFModel):
+class NerNetwork:
     def __init__(self,
-                 vocabs,
+                 word_vocab,
+                 char_vocab,
+                 tag_vocab,
                  n_filters=(128, 256),
                  filter_width=3,
                  token_embeddings_dim=128,
@@ -57,22 +51,10 @@ class NerNetwork(SimpleTFModel):
                  net_type='cnn',
                  char_filter_width=5,
                  verbouse=False,
-                 embeddings_onethego=False,
-                 ser_path=None,
-                 ser_dir='ner',
-                 ser_file='dstc_ner_network.ckpt',
-                 train_now=False,
-                 **kwargs):
-
-        super().__init__(ser_path=ser_path,
-                         ser_dir=ser_dir,
-                         ser_file=ser_file,
-                         train_now=train_now,
-                         mode=kwargs['mode'])
-
-        n_tags = len(vocabs['tag_vocab'])
-        n_tokens = len(vocabs['token_vocab'])
-        n_chars = len(vocabs['char_vocab'])
+                 embeddings_onethego=False):
+        n_tags = len(tag_vocab)
+        n_tokens = len(word_vocab)
+        n_chars = len(char_vocab)
 
         # Create placeholders
         if embeddings_onethego:
@@ -153,9 +135,9 @@ class NerNetwork(SimpleTFModel):
         if logging:
             self.train_writer = tf.summary.FileWriter('summary', sess.graph)
 
-        self.token_vocab = vocabs['token_vocab']
-        self.tag_vocab = vocabs['tag_vocab']
-        self.char_vocab = vocabs['char_vocab']
+        self.token_vocab = word_vocab
+        self.tag_vocab = tag_vocab
+        self.char_vocab = char_vocab
         self._use_crf = use_crf
         self.summary = tf.summary.merge_all()
         self._x_w = x_word
@@ -180,32 +162,6 @@ class NerNetwork(SimpleTFModel):
         self.verbouse = verbouse
         self._mask = mask_ph
         sess.run(tf.global_variables_initializer())
-
-    def save(self):
-        print('Saving model to {}'.format(self.ser_path))
-        saver = tf.train.Saver()
-        saver.save(self._sess, str(self.ser_path))
-
-
-    def get_checkpoint_state(self):
-        if self.ser_path.is_dir():
-            return tf.train.get_checkpoint_state(self.ser_path)
-        else:
-            return tf.train.get_checkpoint_state(self.ser_path.parent)
-
-    @overrides
-    def load(self):
-        """
-        Load session from checkpoint
-        """
-        saver = tf.train.Saver()
-        ckpt = self.get_checkpoint_state()
-        if ckpt and ckpt.model_checkpoint_path:
-            print('\n:: restoring checkpoint from', ckpt.model_checkpoint_path, '\n')
-            saver.restore(self._sess, ckpt.model_checkpoint_path)
-            print('session restored')
-        else:
-            print('\n:: <ERR> checkpoint not found! \n')
 
     def tokens_batch_to_numpy_batch(self, batch_x, batch_y=None):
         # Determine dimensions
@@ -236,72 +192,81 @@ class NerNetwork(SimpleTFModel):
         return (x_token, x_char, mask), y
 
     def eval_conll(self, data, print_results=True, short_report=True, data_type=None):
-            y_true_list = list()
-            y_pred_list = list()
-            if data_type is not None:
-                print('Eval on {}:'.format(data_type))
-            for x, y_gt in data:
-                (x_token, x_char, mask), y = self.tokens_batch_to_numpy_batch([x])
-                y_pred = self.predict(x_token, x_char, mask)
-                y_pred = self.tag_vocab.batch_idxs2batch_toks(y_pred)
-                for tags_pred, tags_gt in zip(y_pred, [y_gt]):
-                    for tag_predicted, tag_ground_truth in zip(tags_pred, tags_gt):
-                        y_true_list.append(tag_ground_truth)
-                        y_pred_list.append(tag_predicted)
-                    y_true_list.append('O')
-                    y_pred_list.append('O')
-            return precision_recall_f1(y_true_list,
-                                       y_pred_list,
-                                       print_results,
-                                       short_report)
+        y_true_list = []
+        y_pred_list = []
+        if data_type is not None:
+            print('Eval on {}:'.format(data_type), file=sys.stderr)
+        for x, y_gt in data:
+            (x_token, x_char, mask), y = self.tokens_batch_to_numpy_batch([x])
+            y_pred = self._predict(x_token, x_char, mask)
+            y_pred = self.tag_vocab.batch_idxs2batch_toks(y_pred)
+            for tags_pred, tags_gt in zip(y_pred, [y_gt]):
+                for tag_predicted, tag_ground_truth in zip(tags_pred, tags_gt):
+                    y_true_list.append(tag_ground_truth)
+                    y_pred_list.append(tag_predicted)
+                y_true_list.append('O')
+                y_pred_list.append('O')
+        return precision_recall_f1(y_true_list,
+                                   y_pred_list,
+                                   print_results,
+                                   short_report)
 
-    @check_attr_true('train_now')
-    def train(self, data, batch_size=8):
+    def train(self, data, batch_size=8, learning_rate=1e-3, dropout_rate=0.5):
         total_loss = 0
         total_count = 0
-        for batch_x, batch_y in data.batch_generator(batch_size):
-            (x_toks, x_char, mask), y_tags = self.tokens_batch_to_numpy_batch(batch_x, batch_y)
-            current_loss = self.train_on_bath(x_toks,
-                                              x_char,
-                                              mask,
-                                              y_tags,
-                                              learning_rate=1e-3,
-                                              dropout_rate=0.5)
+        for batch in data.batch_generator(batch_size):
+            current_loss = self.train_on_batch(batch,
+                                               learning_rate=learning_rate,
+                                               dropout_rate=dropout_rate)
             total_loss += current_loss
-            total_count += len(batch_x)
+            # Add len of x
+            total_count += len(batch[0])
 
-    @check_attr_true('train_now')
-    def train_on_bath(self, x_word, x_char, mask, y_tag, learning_rate=1e-3, dropout_rate=0.5):
-        feed_dict = self._fill_feed_dict(x_word,
+    def train_on_batch(self, batch, learning_rate=1e-3, dropout_rate=0.5):
+        batch_x, batch_y = batch
+        (x_toks, x_char, mask), y_tags = self.tokens_batch_to_numpy_batch(batch_x, batch_y)
+        feed_dict = self._fill_feed_dict(x_toks,
                                          x_char,
                                          mask,
-                                         y_tag,
+                                         y_tags,
                                          learning_rate,
                                          dropout_rate=dropout_rate,
                                          training=True)
         loss, _ = self._sess.run([self._loss, self._train_op], feed_dict=feed_dict)
         return loss
 
-    @staticmethod
-    def print_number_of_parameters():
-        print('Number of parameters: ')
-        vars = tf.trainable_variables()
-        blocks = defaultdict(int)
-        for var in vars:
-            # Get the top level scope name of variable
-            block_name = var.name.split('/')[0]
-            number_of_parameters = np.prod(var.get_shape().as_list())
-            blocks[block_name] += number_of_parameters
-        for block_name in blocks:
-            print(block_name, blocks[block_name])
-        total_num_parameters = np.sum(list(blocks.values()))
-        print('Total number of parameters equal {}'.format(total_num_parameters))
+    def predict_on_batch(self, x_batch):
+        (x_toks, x_char, mask), _ = self.tokens_batch_to_numpy_batch(x_batch)
+        y_pred = self._predict(x_toks, x_char, mask)
+        # TODO: add padding filtering
+        y_pred_tags = self.tag_vocab.batch_idxs2batch_toks(y_pred)
+        return y_pred_tags
+
+    def _predict(self, x_word, x_char, mask=None):
+
+        feed_dict = self._fill_feed_dict(x_word, x_char, mask, training=False)
+        if self._use_crf:
+            y_pred = []
+            logits, trans_params, sequence_lengths = self._sess.run([self._logits,
+                                                                     self._trainsition_params,
+                                                                     self._sequence_lengths
+                                                                     ],
+                                                                    feed_dict=feed_dict)
+
+            # iterate over the sentences because no batching in viterbi_decode
+            for logit, sequence_length in zip(logits, sequence_lengths):
+                logit = logit[:int(sequence_length)]  # keep only the valid steps
+                viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(logit, trans_params)
+                y_pred += [viterbi_seq]
+        else:
+            y_pred = self._sess.run(self._y_pred, feed_dict=feed_dict)
+        return y_pred
 
     def fit(self, batch_gen=None, batch_size=32, learning_rate=1e-3, epochs=1, dropout_rate=0.5, learning_rate_decay=1):
         for epoch in range(epochs):
             count = 0
             if self.verbouse:
-                print('Epoch {}'.format(epoch))
+                print('Epoch {}'.format(epoch), file=sys.stderr)
             if batch_gen is None:
                 batch_generator = self.corpus.batch_generator(batch_size, dataset_type='train')
             for (x_word, x_char), y_tag in batch_generator:
@@ -330,29 +295,8 @@ class NerNetwork(SimpleTFModel):
             results = self.eval_conll(dataset_type='test', short_report=True)
         return results
 
-    @overrides
     def infer(self, instance, *args, **kwargs):
         return self.predict_for_token_batch([instance])
-
-    def predict(self, x_word, x_char, mask=None):
-
-        feed_dict = self._fill_feed_dict(x_word, x_char, mask, training=False)
-        if self._use_crf:
-            y_pred = []
-            logits, trans_params, sequence_lengths = self._sess.run([self._logits,
-                                                                     self._trainsition_params,
-                                                                     self._sequence_lengths
-                                                                     ],
-                                                                    feed_dict=feed_dict)
-
-            # iterate over the sentences because no batching in viterbi_decode
-            for logit, sequence_length in zip(logits, sequence_lengths):
-                logit = logit[:int(sequence_length)]  # keep only the valid steps
-                viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(logit, trans_params)
-                y_pred += [viterbi_seq]
-        else:
-            y_pred = self._sess.run(self._y_pred, feed_dict=feed_dict)
-        return y_pred
 
     def _fill_feed_dict(self,
                         x_w,
@@ -362,7 +306,7 @@ class NerNetwork(SimpleTFModel):
                         learning_rate=None,
                         training=False,
                         dropout_rate=1):
-        feed_dict = dict()
+        feed_dict = {}
         feed_dict[self._x_w] = x_w
         feed_dict[self._x_c] = x_c
         feed_dict[self._training_ph] = training
@@ -393,7 +337,7 @@ class NerNetwork(SimpleTFModel):
     def get_trainable_variables(trainable_scope_names=None):
         vars = tf.trainable_variables()
         if trainable_scope_names is not None:
-            vars_to_train = list()
+            vars_to_train = []
             for scope_name in trainable_scope_names:
                 for var in vars:
                     if var.name.startswith(scope_name):
@@ -437,14 +381,59 @@ class NerNetwork(SimpleTFModel):
 
         return self.tag_vocab.batch_idxs2batch_toks(y_pred)
 
-    def get_train_op(self, loss, learning_rate, learnable_scopes=None):
+    def shutdown(self):
+        self._sess.close()
+
+    def save(self, model_file_path):
+        """
+        Save model to model_file_path
+        """
+        saver = tf.train.Saver()
+        saver.save(self._sess, str(model_file_path))
+
+    def load(self, model_file_path):
+        """
+        Load model from the model_file_path
+        """
+        saver = tf.train.Saver()
+        saver.restore(self._sess, str(model_file_path))
+
+    @staticmethod
+    def print_number_of_parameters():
+        """
+        Print number of *trainable* parameters in the network
+        """
+        print('Number of parameters: ', file=sys.stderr)
+        vars = tf.trainable_variables()
+        blocks = defaultdict(int)
+        for var in vars:
+            # Get the top level scope name of variable
+            block_name = var.name.split('/')[0]
+            number_of_parameters = np.prod(var.get_shape().as_list())
+            blocks[block_name] += number_of_parameters
+        for block_name in blocks:
+            print(block_name, blocks[block_name], file=sys.stderr)
+        total_num_parameters = np.sum(list(blocks.values()))
+        print('Total number of parameters equal {}'.format(total_num_parameters), file=sys.stderr)
+
+    def get_train_op(self, loss, learning_rate, learnable_scopes=None, optimizer=None):
+        """ Get train operation for given loss
+
+        Args:
+            loss: loss, tf tensor or scalar
+            learning_rate: scalar or placeholder
+            learnable_scopes: which scopes are trainable (None for all)
+            optimizer: instance of tf.train.Optimizer, default Adam
+
+        Returns:
+            train_op
+        """
         variables = self.get_trainable_variables(learnable_scopes)
+        if optimizer is None:
+            optimizer = tf.train.AdamOptimizer
 
         # For batch norm it is necessary to update running averages
         extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(extra_update_ops):
-            train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss, var_list=variables)
+            train_op = optimizer(learning_rate).minimize(loss, var_list=variables)
         return train_op
-
-    def shutdown(self):
-        self._sess.close()
