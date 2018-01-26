@@ -15,20 +15,21 @@ from deeppavlov.core.data.utils import download
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(Inferable, Trainable):
     def __init__(self, ner_network: NerNetwork,
-                 slots_dir='slots',
                  slots_file='slot_vals.json',
                  ser_path=None,
                  train_now=False, **kwargs):
 
-        super().__init__(ser_path=ser_path, ser_dir=slots_dir, ser_file=slots_file,
-                         train_now=train_now, mode=kwargs['mode'])
+        super().__init__(ser_path=ser_path, train_now=train_now, mode=kwargs['mode'])
+# NOTE: bad fix here
+        self.ser_path /= slots_file
 
         # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
         if not self.ser_path.is_file():
+            print("[ downloading slot vals to `{}` ]".format(str(self.ser_path)))
             self._download_slot_vals()
 
-        print("Loading slot values")
-        with open(self.ser_path) as f:
+        print("[ loading slot values from `{}` ]".format(str(self.ser_path)))
+        with self.ser_path.open('r') as f:
             self._slot_vals = json.load(f)
 
         self._ner_network = ner_network
@@ -37,21 +38,21 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
 
     @overrides
     def load(self):
-        # Check prescence of the model files
-        print('Loading NerNetwork')
-        path =str(self._ner_network.ser_path)
-        if tf.train.get_checkpoint_state(path) is not None:
-            print('Loading model from {}'.format(path))
+        # Check presence of the model files
+        if tf.train.get_checkpoint_state(str(path)) is not None:
+            print("\n:: initializing `{}` from saved"\
+                  .format(self.__class__.__name__))
             self._ner_network.load()
-            # else:
-            #     raise Warning('Error while loading NER model. There must be 3 dstc_ner_network.ckpt files!')
+        else:
+            print("\n:: initializing `{}` from scratch\n"\
+                  .format(self.__class__.__name__))
 
     @overrides
     def save(self):
         self._ner_network.save()
 
     @overrides
-    def train(self, data, num_epochs=2):
+    def train(self, data, num_epochs=10):
         if self.train_now:
             for epoch in range(num_epochs):
                 self._ner_network.train(data)
