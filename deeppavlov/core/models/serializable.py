@@ -28,7 +28,7 @@ class Serializable(metaclass=ABCMeta):
             self.load_path = Path(load_path)
         else:
             self.load_path = None
-            warn("No load path is set!")
+            warn("No load path is set for {}!".format(self.__class__.__name__))
 
     def __new__(cls, *args, **kwargs):
         if cls is Serializable:
