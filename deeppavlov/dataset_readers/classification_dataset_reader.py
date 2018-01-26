@@ -37,7 +37,7 @@ class ClassificationDatasetReader(DatasetReader):
     @overrides
     def read(self, data_path, data_types=["train"]):
         """
-        Method reads dataset from data_path directory.
+        Read dataset from data_path directory.
         Reading files are all data_types + extension
         (i.e for data_types=["train", "valid"] files "train.csv" and "valid.csv" form data_path will be read)
         Args:

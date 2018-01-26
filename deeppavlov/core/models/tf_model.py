@@ -1,4 +1,4 @@
-"""
+"""warn
 Here is an abstract class for neural network models based on Tensorflow.
 If you use something different, ex. Pytorch, then write similar to this class, inherit it from
 Trainable and Inferable interfaces and make a pull-request to deeppavlov.

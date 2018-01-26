@@ -28,13 +28,16 @@
         "y"
       ],
       "level": "token",
-      "ser_file": "classes.txt",
+      "save_path": "../download/vocabs/classes.dict",
+      "load_path": "../download/vocabs/classes.dict",
       "train_now": true
     }
   },
   "model": {
     "name": "intent_model",
     "opt": {
+      "save_path": "../download/intents/intent_cnn",
+      "load_path": "../download/intents/intent_cnn",
       "train_now": true,
       "kernel_sizes_cnn": [
         3,
@@ -65,7 +68,8 @@
     },
     "embedder": {
       "name": "fasttext",
-      "ser_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
+      "save_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
+      "load_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
       "emb_module": "fasttext",
       "dim": 100
     },
