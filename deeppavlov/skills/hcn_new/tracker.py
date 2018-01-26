@@ -23,8 +23,8 @@ from deeppavlov.core.common.registry import register
 @register('featurized_tracker')
 class FeaturizedTracker(Inferable):
 
-    def __init__(self, slot_names, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, slot_names, save_path=None, **kwargs):
+        super().__init__(save_path=save_path, **kwargs)
         self.slot_names = list(slot_names)
         self.reset_state()
 

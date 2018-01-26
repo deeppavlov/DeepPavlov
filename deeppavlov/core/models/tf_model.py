@@ -5,6 +5,7 @@ Trainable and Inferable interfaces and make a pull-request to deeppavlov.
 """
 
 from abc import abstractmethod
+from warnings import warn
 
 import tensorflow as tf
 from overrides import overrides
@@ -73,24 +74,20 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
         return self._forward(instance, *args)
 
     def save(self):
-        save_path = self.ser_path
-        if save_path.is_dir():
-            save_path = save_path / self._ser_file
-        elif save_path.parent.is_dir():
-            pass
-        else:
-            raise ConfigError("Provided ser path doesn't exists")
-        print('\n:: saving model to {} \n'.format(save_path))
-        self._saver().save(sess=self.sess, save_path=str(save_path), global_step=0)
-        print('model saved')
+        save_path = str(self.save_path)
+        saver = tf.train.Saver()
+        print('Saving NerNetwork model to {}'.format(save_path))
+        saver.save(self.sess, save_path)
 
     def get_checkpoint_state(self):
-        if self.ser_path.is_dir():
-            return tf.train.get_checkpoint_state(self.ser_path)
+        if self.load_path:
+            if self.load_path.parent.is_dir():
+                return tf.train.get_checkpoint_state(self.load_path.parent)
+            else:
+                warn('Provided `load_path` is incorrect!')
         else:
-            return tf.train.get_checkpoint_state(self.ser_path.parent)
+            warn('No `load_path` is provided for {}".format(self.__class__.__name__)')
 
-    # @check_path_exists()
     @overrides
     def load(self):
         """

@@ -15,7 +15,8 @@
       ],
       "level": "token",
       "tokenize": true,
-      "ser_path": "../data/vocabs/word.dict"
+      "save_path": "../download/vocabs/word.dict",
+      "load_path": "../download/vocabs/word.dict"
     },
     "token_vocab": {
       "name": "default_vocab",
@@ -23,7 +24,8 @@
         "x"
       ],
       "level": "token",
-      "ser_path": "../data/ner/token.dict"
+      "save_path": "../download/vocabs/token.dict",
+      "load_path": "../download/vocabs/token.dict"
     },
     "tag_vocab": {
       "name": "default_vocab",
@@ -31,7 +33,8 @@
         "y"
       ],
       "level": "token",
-      "ser_path": "../data/ner/tag.dict"
+      "save_path": "../download/vocabs/tag.dict",
+      "load_path": "../download/vocabs/tag.dict"
     },
     "char_vocab": {
       "name": "default_vocab",
@@ -39,7 +42,8 @@
         "x"
       ],
       "level": "char",
-      "ser_path": "../data/ner/char.dict"
+      "save_path": "../download/vocabs/char.dict",
+      "load_path": "../download/vocabs/char.dict"
     },
     "classes_vocab": {
       "name": "default_vocab",
@@ -47,8 +51,8 @@
         "y"
       ],
       "level": "token",
-      "ser_path": "../download/vocabs/classes.dict",
-      "train_now": true
+      "save_path": "../download/vocabs/classes.dict",
+      "load_path": "../download/vocabs/classes.dict"
     }
   },
   "model": {
@@ -59,17 +63,22 @@
     "template_path": "../data/dstc2/dstc2-templates.txt",
     "network": {
       "train_now": true,
+      "load_path": "../download/go_hcn_rnn/model",
+      "save_path": "../download/go_hcn_rnn/model",
       "name": "custom_rnn",
       "learning_rate": 0.03,
       "hidden_dim": 128,
-      "obs_size": 831,
+      "obs_size": 830,
       "use_action_mask": false,
       "action_size": 45
     },
     "slot_filler": {
       "name": "dstc_slotfilling",
+      "load_path": "../download/slots/slot_vals.json",
+      "save_path": "../download/slots/slot_vals.json",
       "ner_network": {
-        "ser_path": "/media/olga/Data/projects/iPavlov/Pilot/download/ner",
+        "save_path": "../download/ner/dstc_ner_network",
+        "load_path": "../download/ner/dstc_ner_network",
         "name": "ner_tagging_network",
         "filter_width": 7,
         "embeddings_dropout": true,
@@ -86,6 +95,8 @@
     "intent_classifier": {
       "name": "intent_model",
       "opt": {
+        "save_path": "../download/intents/intent_cnn",
+        "load_path": "../download/intents/intent_cnn",
         "train_now": true,
         "kernel_sizes_cnn": [
           3,
@@ -116,7 +127,8 @@
       },
       "embedder": {
         "name": "fasttext",
-        "ser_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
+        "save_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
+        "load_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
         "emb_module": "fasttext",
         "dim": 100
       },
@@ -133,7 +145,8 @@
       "emb_module": "pyfasttext",
       "mean": true,
       "dim": 300,
-      "ser_path": "../data/embeddings/wiki.en.bin"
+      "save_path": "../data/embeddings/wiki.en.bin",
+      "load_path": "../data/embeddings/wiki.en.bin"
     },
     "tokenizer": {
       "name": "spacy_tokenizer"

@@ -24,8 +24,7 @@ from tensorflow.contrib.layers import xavier_initializer
 
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.models.tf_model import SimpleTFModel, TFModel
+from deeppavlov.core.models.tf_model import SimpleTFModel
 from deeppavlov.models.ner.layers import character_embedding_network
 from deeppavlov.models.ner.layers import embedding_layer
 from deeppavlov.models.ner.layers import highway_convolutional_network
@@ -188,26 +187,6 @@ class NerNetwork(SimpleTFModel):
         print('Saving NerNetwork model to {}'.format(save_path))
         saver.save(self._sess, save_path)
 
-    # def get_checkpoint_state(self):
-    #     if self.ser_path.is_dir():
-    #         return tf.train.get_checkpoint_state(self.ser_path)
-    #     else:
-    #         return tf.train.get_checkpoint_state(self.ser_path.parent)
-
-    # @overrides
-    # def load(self):
-    #     """
-    #     Load session from checkpoint
-    #     """
-    #     saver = tf.train.Saver()
-    #     ckpt = self.get_checkpoint_state()
-    #     if ckpt and ckpt.model_checkpoint_path:
-    #         print('\n:: restoring checkpoint from', ckpt.model_checkpoint_path, '\n')
-    #         saver.restore(self._sess, ckpt.model_checkpoint_path)
-    #         print('session restored')
-    #     else:
-    #         print('\n:: <ERR> checkpoint not found! \n')
-
     @overrides
     def load(self):
         if self.load_path:
@@ -217,7 +196,7 @@ class NerNetwork(SimpleTFModel):
                     print('Restore NerNetwork model from {}'.format(str(self.load_path)))
                     saver.restore(self._sess, str(self.load_path))
                 else:
-                    warn("Provided `load_path` is incorrect!")
+                    warn("Provided `load_path` is empty! Won't restore from checkpoint.")
             else:
                 warn("Provided `load_path` is incorrect!")
         else:

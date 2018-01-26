@@ -14,9 +14,9 @@ from deeppavlov.core.common.errors import ConfigError
 
 @register('default_vocab')
 class DefaultVocabulary(Trainable, Inferable):
-    def __init__(self, inputs, save_path, level='token',
+    def __init__(self, inputs, save_path, load_path, level='token',
                  special_tokens=tuple(), default_token=None,
-                 tokenize=False, train_now=False, load_path=None, *args, **kwargs):
+                 tokenize=False, train_now=False, *args, **kwargs):
 
         super().__init__(load_path=load_path,
                          save_path=save_path,
@@ -29,7 +29,7 @@ class DefaultVocabulary(Trainable, Inferable):
 
         # TODO check via decorator
         self.reset()
-        self.load()
+        self.load(kwargs['mode'])
 
     @staticmethod
     def _build_preprocess_fn(inputs, level, tokenize):
@@ -131,21 +131,22 @@ class DefaultVocabulary(Trainable, Inferable):
                 f.write('{}\t{:d}\n'.format(token, cnt))
 
     # @check_path_exists()
-    def load(self):
-        if self.load_path.is_file():
-            print("[loading vocabulary from `{}`]".format(self.load_path))
-            tokens, counts = [], []
-            for ln in self.load_path.open('r'):
-                token, cnt = ln.split('\t', 1)
-                tokens.append(token)
-                counts.append(int(cnt))
-            self._train(tokens=tokens, counts=counts, update=True)
-        elif isinstance(self.load_path, Path):
+    def load(self, mode):
+        if self.load_path:
+            if self.load_path.is_file():
+                print("[loading vocabulary from `{}`]".format(self.load_path))
+                tokens, counts = [], []
+                for ln in self.load_path.open('r'):
+                    token, cnt = ln.split('\t', 1)
+                    tokens.append(token)
+                    counts.append(int(cnt))
+                self._train(tokens=tokens, counts=counts, update=True)
+            elif isinstance(self.load_path, Path):
                 if not self.load_path.parent.is_dir():
                     raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
                         self.__class__.__name__))
         else:
-            warn("No `load_path` is provided for {}".format(self.__class__.__name__))
+            raise ConfigError("`load_path` for {} is not provided!".format(self))
 
     def idx2tok(self, idx):
         return self._i2t[idx]
