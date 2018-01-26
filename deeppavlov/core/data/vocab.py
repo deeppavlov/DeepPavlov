@@ -29,7 +29,7 @@ class DefaultVocabulary(Trainable, Inferable):
 
         # TODO check via decorator
         self.reset()
-        self.load(kwargs['mode'])
+        self.load()
 
     @staticmethod
     def _build_preprocess_fn(inputs, level, tokenize):
@@ -131,7 +131,7 @@ class DefaultVocabulary(Trainable, Inferable):
                 f.write('{}\t{:d}\n'.format(token, cnt))
 
     # @check_path_exists()
-    def load(self, mode):
+    def load(self):
         if self.load_path:
             if self.load_path.is_file():
                 print("[loading vocabulary from `{}`]".format(self.load_path))

@@ -21,6 +21,7 @@ class Serializable(metaclass=ABCMeta):
 
         if save_path:
             self.save_path = Path(save_path)
+            self.save_path.parent.mkdir(exist_ok=True)
         else:
             self.save_path = None
 
