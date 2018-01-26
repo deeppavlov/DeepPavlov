@@ -46,8 +46,7 @@ def chunk_finder(current_token, previous_token, tag):
     return create_chunk, pop_out
 
 
-@register_metric('ner_f1')
-def precision_recall_f1(y_true, y_pred, print_results=False, short_report=False, entity_of_interest=None):
+def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, entity_of_interest=None):
     # Find all tags
     y_true = list(itertools.chain(*y_true))
     y_pred = list(itertools.chain(*y_pred))
@@ -212,4 +211,10 @@ def precision_recall_f1(y_true, y_pred, print_results=False, short_report=False,
                                                            tot_f1=results[entity_of_interest]['f1'],
                                                            tot_predicted=results[entity_of_interest]['n_predicted_entities'])
         print(s, file=sys.stderr)
-    return results['__total__']['f1']
+    return results
+
+
+@register_metric('ner_f1')
+def train_report(y_true, y_pred):
+    report = precision_recall_f1(y_true, y_pred, print_results=False)
+    return report['__total__']['f1']
