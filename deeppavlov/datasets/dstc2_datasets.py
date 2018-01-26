@@ -22,7 +22,6 @@ import json
 import random
 import pathlib
 
-
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset import Dataset
 from deeppavlov.core.data.utils import download
@@ -32,9 +31,8 @@ logger = logging.getLogger(__name__)
 
 @register('dstc2_dialog_dataset')
 class DSTC2DialogDataset(Dataset):
-
     @overrides
-    def __init__(self, data:Dict[str, List[Tuple[Any, Any]]], *args, **kwargs)\
+    def __init__(self, data: Dict[str, List[Tuple[Any, Any]]], *args, **kwargs) \
             -> None:
         def _wrap(turn):
             x = turn[0]['text']
@@ -59,8 +57,8 @@ class DSTC2DialogDataset(Dataset):
         }
 
     @overrides
-    def batch_generator(self, batch_size:int, data_type:str='train',
-                        shuffle:bool=True) -> Generator:
+    def batch_generator(self, batch_size: int, data_type: str = 'train',
+                        shuffle: bool = True) -> Generator:
         def _dialog(idx):
             return data[idx['start']: idx['end']]
 
@@ -72,10 +70,10 @@ class DSTC2DialogDataset(Dataset):
             random.shuffle(order)
         for i in range((num_dialogs - 1) // batch_size + 1):
             print("Getting dialogs =", [dialog_indices[o] for o in
-                                        order[i*batch_size:(i+1)*batch_size]])
+                                        order[i * batch_size:(i + 1) * batch_size]])
             yield list(itertools.chain.from_iterable(
-                _dialog(dialog_indices[o])\
-                for o in order[i*batch_size:(i+1)*batch_size]))
+                _dialog(dialog_indices[o]) \
+                for o in order[i * batch_size:(i + 1) * batch_size]))
 
     @staticmethod
     def _dialog_indices(data):
@@ -112,7 +110,6 @@ class DSTC2DialogDataset(Dataset):
 
 @register('dstc2_ner_dataset')
 class DstcNerDataset(Dataset):
-
     def __init__(self, data, dataset_path, shuffle=True, seed=None):
         r""" Dataset takes a dict with fields 'train', 'test', 'valid'. A list of samples (pairs x, y) is stored
              in each field.
@@ -122,7 +119,7 @@ class DstcNerDataset(Dataset):
                     of different input features.
         """
         self.random_state = random.getstate()
-        #TODO: include slot vals to dstc2.tar.gz
+        # TODO: include slot vals to dstc2.tar.gz
         dataset_path = pathlib.Path(dataset_path) / 'slot_vals.json'
         self._build_slot_vals(dataset_path)
         with open(dataset_path) as f:
@@ -138,7 +135,6 @@ class DstcNerDataset(Dataset):
         }
         self.shuffle = shuffle
         self.seed = None
-
 
     def _preprocess(self, data_part):
         processed_data_part = list()
@@ -168,7 +164,8 @@ class DstcNerDataset(Dataset):
                 for entity in self._slot_vals[slot_type][slot_val]:
                     slot_tokens = entity.split()
                     slot_len = len(slot_tokens)
-                    if n + slot_len <= n_toks and self._is_equal_sequences(tokens[n: n + slot_len], slot_tokens):
+                    if n + slot_len <= n_toks and self._is_equal_sequences(tokens[n: n + slot_len],
+                                                                           slot_tokens):
                         tags[n] = 'B-' + slot_type
                         for k in range(1, slot_len):
                             tags[n + k] = 'I-' + slot_type
