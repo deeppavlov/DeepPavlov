@@ -141,8 +141,9 @@ class DefaultVocabulary(Trainable, Inferable):
                 counts.append(int(cnt))
             self._train(tokens=tokens, counts=counts, update=True)
         elif isinstance(self.load_path, Path):
-            raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
-                self.__class__.__name__))
+                if not self.load_path.parent.is_dir():
+                    raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
+                        self.__class__.__name__))
         else:
             warn("No `load_path` is provided for {}".format(self.__class__.__name__))
 

@@ -225,6 +225,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                                                     weighted_metrics=weighted_metrics,
                                                     target_tensors=target_tensors)
         else:
+            warn("No `load_path` is provided for {}".format(self.__class__.__name__))
             return self.init_model_from_scratch(model_name, optimizer_name,
                                                 lr, decay, loss_name, metrics_names=metrics_names,
                                                 add_metrics_file=add_metrics_file,
