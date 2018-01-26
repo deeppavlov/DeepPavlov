@@ -101,9 +101,11 @@ def train_batches(config_path: str):
     if train_config['metric_optimization'] == 'maximize':
         def improved(score, best):
             return score > best
+        best = float('-inf')
     elif train_config['metric_optimization'] == 'minimize':
         def improved(score, best):
             return score < best
+        best = float('inf')
     else:
         raise ConfigError('metric_optimization has to be one of {}'.format(['maximize', 'minimize']))
 
@@ -132,7 +134,6 @@ def train_batches(config_path: str):
     examples = 0
     saved = False
     patience = 0
-    best = 0
     log_on = train_config['log_every_n_batches'] > 0
     train_y_true = []
     train_y_predicted = []
