@@ -1,5 +1,5 @@
-# Pilot
-An open source library for
+# DeepPavlov (pre alfa)
+An Apache 2.0 NLP research library, built on TensorFlow and Keras, for 
  * building complicated natural language processing pipelines
  * training and infering natural language processing algorithms
 
@@ -25,3 +25,15 @@ Available configs are:
 *models/ner/config.json*
 
 *models/spellers/error_model/config_en.json*
+
+## Support
+
+If you have any questions, bug reports or feature requests, please don't hesitate to post on our Github Issues page.
+
+## The Team
+
+DeepPavlov is currently maintained by ...
+
+## License
+
+DeepPavlov is Apache 2.0 - licensed.
