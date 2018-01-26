@@ -28,7 +28,7 @@
         "y"
       ],
       "level": "token",
-      "ser_path": "./models/classifiers/intents/classes.dict",
+      "ser_file": "classes.txt",
       "train_now": true
     }
   },
@@ -36,7 +36,6 @@
     "name": "intent_model",
     "opt": {
       "train_now": true,
-      "ser_path": "./models/classifiers/intents/intent_cnn",
       "kernel_sizes_cnn": [
         3,
         3,
@@ -56,7 +55,7 @@
       "coef_reg_cnn": 1e-4,
       "coef_reg_den": 1e-4,
       "dropout_rate": 0.5,
-      "epochs": 1000,
+      "epochs": 1,
       "dense_size": 100,
       "model_name": "cnn_model",
       "batch_size": 64,
@@ -66,7 +65,7 @@
     },
     "embedder": {
       "name": "fasttext",
-      "ser_path": "../data/dstc2_fasttext_model_100.bin",
+      "ser_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
       "emb_module": "fasttext",
       "dim": 100
     },

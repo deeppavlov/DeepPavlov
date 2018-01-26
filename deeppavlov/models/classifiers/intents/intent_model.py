@@ -271,7 +271,8 @@ class KerasIntentModel(KerasModel):
         """
         Method infers on the given data
         Args:
-            data: single sentence  or [list of sentences] or generator of sentences
+            data: single sentence or [list of sentences, list of labels] or
+                    [list of sentences] or generator of sentences
             predict_proba: whether to return probabilities distribution or only labels-predictions
             *args:
 
@@ -287,6 +288,7 @@ class KerasIntentModel(KerasModel):
                 return preds
             else:
                 return proba2labels([preds], confident_threshold=self.confident_threshold, classes=self.classes)[0]
+
         elif inspect.isgeneratorfunction(data):
             preds = []
             for step, batch in enumerate(data):

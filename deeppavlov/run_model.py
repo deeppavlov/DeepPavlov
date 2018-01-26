@@ -29,4 +29,3 @@ finally:
     usr_dir = get_usr_dir()
     if not list(usr_dir.iterdir()):
         usr_dir.rmdir()
- 
