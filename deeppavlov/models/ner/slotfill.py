@@ -10,41 +10,27 @@ from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.models.ner.ner_network import NerNetwork
 from deeppavlov.core.data.utils import tokenize_reg
 from deeppavlov.core.data.utils import download
+from deeppavlov.core.common.file import read_json
 
 
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(Inferable, Trainable):
     def __init__(self, ner_network: NerNetwork,
-                 slots_dir='slots',
-                 slots_file='slot_vals.json',
-                 ser_path=None,
+                 save_path, load_path=None,
                  train_now=False, **kwargs):
 
-        super().__init__(ser_path=ser_path, ser_dir=slots_dir, ser_file=slots_file,
+        super().__init__(save_path=save_path, load_path=load_path,
                          train_now=train_now, mode=kwargs['mode'])
 
         # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
-        if not self.ser_path.is_file():
-            self._download_slot_vals()
+        if not self.load_path.is_file():
+            self.load()
 
         print("Loading slot values")
-        with open(self.ser_path) as f:
-            self._slot_vals = json.load(f)
+        self._slot_vals = read_json(self.load_path)
 
         self._ner_network = ner_network
-        self.load()
-
-
-    @overrides
-    def load(self):
-        # Check prescence of the model files
-        print('Loading NerNetwork')
-        path =str(self._ner_network.ser_path)
-        if tf.train.get_checkpoint_state(path) is not None:
-            print('Loading model from {}'.format(path))
-            self._ner_network.load()
-            # else:
-            #     raise Warning('Error while loading NER model. There must be 3 dstc_ner_network.ckpt files!')
+        self._ner_network.load()
 
     @overrides
     def save(self):
@@ -142,6 +128,7 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
     def reset(self):
         pass
 
-    def _download_slot_vals(self):
+    @overrides
+    def load(self):
         url = 'http://lnsigo.mipt.ru/export/datasets/dstc_slot_vals.json'
-        download(self.ser_path, url)
+        download(self.save_path, url)

@@ -10,10 +10,13 @@
   "model": {
     "name": "dstc_slotfilling",
     "train_now": true,
-    "ser_path": "../data/ner",
+    "save_path": "../download/slots/slot_vals.json",
+    "load_path": "../download/slots/slot_vals.json",
     "ner_network": {
       "train_now": true,
       "name": "ner_tagging_network",
+      "save_path": "../download/ner/dstc_ner_network",
+      "load_path": "../download/ner/dstc_ner_network",
       "verbouse": true,
       "filter_width": 7,
       "embeddings_dropout": true,
@@ -31,7 +34,8 @@
     "token_vocab": {
       "train_now": true,
       "name": "default_vocab",
-      "ser_path": "../data/ner/token.dict",
+      "save_path": "../download/vocabs/token.dict",
+      "load_path": "../download/vocabs/token.dict",
       "inputs": [
         "x"
       ],
@@ -40,7 +44,8 @@
     "tag_vocab": {
       "train_now": true,
       "name": "default_vocab",
-      "ser_path": "../data/ner/tag.dict",
+      "save_path": "../download/vocabs/tag.dict",
+      "load_path": "../download/vocabs/tag.dict",
       "inputs": [
         "y"
       ],
@@ -49,7 +54,8 @@
     "char_vocab": {
       "train_now": true,
       "name": "default_vocab",
-      "ser_path": "../data/ner/char.dict",
+      "save_path": "../download/vocabs/char.dict",
+      "load_path": "../download/vocabs/char.dict",
       "inputs": [
         "x"
       ],
