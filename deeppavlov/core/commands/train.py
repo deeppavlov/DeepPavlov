@@ -2,6 +2,8 @@ import datetime
 import time
 import sys
 
+from typing import List, Callable
+
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import model as get_model
@@ -70,15 +72,104 @@ def train_model_from_config(config_path: str, mode='train'):
     # The result is a saved to user_dir trained model.
 
 
-def train_batches(config_path: str):
+def _fit(model: Trainable, dataset: Dataset, train_config={}):
+    model.fit(dataset.iter_all('train'))
+    model.save()
+    return model
+
+
+def train_experimental(config_path: str):
     usr_dir = paths.USR_PATH
     config = read_json(config_path)
 
+    reader_config = config['dataset_reader']
+    reader = from_params(get_model(reader_config['name']), {})
+    data = reader.read(reader_config.get('data_path', usr_dir))
+
+    dataset_config = config['dataset']
+    dataset_name = dataset_config['name']
+    dataset: Dataset = from_params(get_model(dataset_name), dataset_config, data=data)
+
+    vocabs = {}
+    for vocab_param_name, vocab_config in config.get('vocabs', {}).items():
+        vocab_name = vocab_config['name']
+        v: Trainable = from_params(get_model(vocab_name), vocab_config, mode='train')
+        vocabs[vocab_param_name] = _fit(v, dataset)
+
+    model_config = config['model']
+    model_name = model_config['name']
+    model = from_params(get_model(model_name), model_config, vocabs=vocabs, mode='train')
+
     train_config = {
+        'metrics': ['accuracy'],
+
+        'validate_best': True,
+        'test_best': True
+    }
+
+    try:
+        train_config.update(config['train'])
+    except KeyError:
+        print('Train config is missing. Populating with default values', file=sys.stderr)
+
+    metrics_functions = get_metrics_by_names(train_config['metrics'])
+
+    if callable(getattr(model, 'train_on_batch', None)):
+        _train_batches(model, dataset, train_config, metrics_functions)
+    elif callable(getattr(model, 'fit', None)):
+        _fit(model, dataset, train_config)
+    else:
+        'model is not adapted to the experimental_train yet'
+        model.train(dataset)
+        return
+
+    if train_config['validate_best'] or train_config['test_best']:
+        model = from_params(get_model(model_name), model_config, vocabs=vocabs, mode='infer')
+        print('Testing the best saved model', file=sys.stderr)
+
+        if train_config['validate_best']:
+            start_time = time.time()
+            val_y_true = []
+            val_y_predicted = []
+            for x, y_true in dataset.batch_generator(train_config.get('batch_size', -1), 'valid', shuffle=False):
+                y_predicted = list(model.infer(list(x)))
+                val_y_true += y_true
+                val_y_predicted += y_predicted
+
+            metrics = [f(val_y_true, val_y_predicted) for f in metrics_functions]
+
+            report = {
+                'examples_seen': len(val_y_true),
+                'metrics': dict(zip(train_config['metrics'], metrics)),
+                'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
+            }
+            print('valid: {}'.format(report))
+
+        if train_config['test_best']:
+            start_time = time.time()
+            val_y_true = []
+            val_y_predicted = []
+            for x, y_true in dataset.batch_generator(train_config.get('batch_size', -1), 'test', shuffle=False):
+                y_predicted = list(model.infer(list(x)))
+                val_y_true += y_true
+                val_y_predicted += y_predicted
+
+            metrics = [f(val_y_true, val_y_predicted) for f in metrics_functions]
+
+            report = {
+                'examples_seen': len(val_y_true),
+                'metrics': dict(zip(train_config['metrics'], metrics)),
+                'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
+            }
+            print('test:  {}'.format(report))
+
+
+def _train_batches(model: Trainable, dataset: Dataset, train_config: dict, metrics_functions: List[Callable]):
+
+    default_train_config = {
         'epochs': 0,
         'batch_size': 1,
 
-        'metrics': ['accuracy'],
         'metric_optimization': 'maximize',
 
         'validation_patience': 5,
@@ -91,12 +182,7 @@ def train_batches(config_path: str):
         'test_best': True
     }
 
-    try:
-        train_config.update(config['train'])
-    except KeyError:
-        raise ConfigError('training config is missing')
-
-    metrics_functions = get_metrics_by_names(train_config['metrics'])
+    train_config = dict(default_train_config, ** train_config)
 
     if train_config['metric_optimization'] == 'maximize':
         def improved(score, best):
@@ -108,26 +194,6 @@ def train_batches(config_path: str):
         best = float('inf')
     else:
         raise ConfigError('metric_optimization has to be one of {}'.format(['maximize', 'minimize']))
-
-    reader_config = config['dataset_reader']
-    reader = from_params(get_model(reader_config['name']), {})
-    data = reader.read(reader_config.get('data_path', usr_dir))
-
-    dataset_config = config['dataset']
-    dataset_name = dataset_config['name']
-    dataset: Dataset = from_params(get_model(dataset_name), dataset_config, data=data)
-
-    vocabs = {}
-    for vocab_param_name, vocab_config in config.get('vocabs', {}).items():
-        vocab_name: Trainable = vocab_config['name']
-        v = from_params(get_model(vocab_name), vocab_config, mode='train')
-        v.train(dataset.iter_all('train'))
-        v.save()
-        vocabs[vocab_param_name] = v
-
-    model_config = config['model']
-    model_name = model_config['name']
-    model = from_params(get_model(model_name), model_config, vocabs=vocabs, mode='train')
 
     i = 0
     epochs = 0
@@ -219,42 +285,4 @@ def train_batches(config_path: str):
         print('Saving model', file=sys.stderr)
         model.save()
 
-    if train_config['validate_best'] or train_config['test_best']:
-        model = from_params(get_model(model_name), model_config, vocabs=vocabs, mode='infer')
-        print('Testing the best saved model', file=sys.stderr)
-
-        if train_config['validate_best']:
-            start_time = time.time()
-            val_y_true = []
-            val_y_predicted = []
-            for x, y_true in dataset.batch_generator(train_config['batch_size'], 'valid', shuffle=False):
-                y_predicted = list(model.infer(list(x)))
-                val_y_true += y_true
-                val_y_predicted += y_predicted
-
-            metrics = [f(val_y_true, val_y_predicted) for f in metrics_functions]
-
-            report = {
-                'examples_seen': len(val_y_true),
-                'metrics': dict(zip(train_config['metrics'], metrics)),
-                'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
-            }
-            print('valid: {}'.format(report))
-
-        if train_config['test_best']:
-            start_time = time.time()
-            val_y_true = []
-            val_y_predicted = []
-            for x, y_true in dataset.batch_generator(train_config['batch_size'], 'test', shuffle=False):
-                y_predicted = list(model.infer(list(x)))
-                val_y_true += y_true
-                val_y_predicted += y_predicted
-
-            metrics = [f(val_y_true, val_y_predicted) for f in metrics_functions]
-
-            report = {
-                'examples_seen': len(val_y_true),
-                'metrics': dict(zip(train_config['metrics'], metrics)),
-                'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
-            }
-            print('test:  {}'.format(report))
+    return model

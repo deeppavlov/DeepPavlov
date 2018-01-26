@@ -110,6 +110,16 @@ class DefaultVocabulary(Trainable, Inferable):
             update=True
         )
 
+    @check_attr_true('train_now')
+    def fit(self, data, **kwargs):
+        self.reset()
+        self._train(
+            tokens=filter(None, itertools.chain.from_iterable(
+                map(self.preprocess_fn, data))),
+            counts=None,
+            update=True
+        )
+
     def _train(self, tokens, counts=None, update=True):
         counts = counts or itertools.repeat(1)
         if not update:

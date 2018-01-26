@@ -1,4 +1,4 @@
-from deeppavlov.core.commands.train import train_model_from_config, train_batches
+from deeppavlov.core.commands.train import train_model_from_config, train_experimental
 from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 
@@ -19,12 +19,14 @@ from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 # NER
 # models/ner/config.json
 
-PIPELINE_CONFIG_PATH = 'models/classifiers/intents/config_train.json'
-# PIPELINE_CONFIG_PATH = 'models/ner/ner_config_train.json'
+# PIPELINE_CONFIG_PATH = 'models/classifiers/intents/config_train.json'
+PIPELINE_CONFIG_PATH = 'models/ner/ner_config_train.json'
+# PIPELINE_CONFIG_PATH = 'models/spellers/error_model/config_ru.json'
+# PIPELINE_CONFIG_PATH = 'skills/hcn_new/config.json'
 set_usr_dir(PIPELINE_CONFIG_PATH)
 try:
     # train_model_from_config(PIPELINE_CONFIG_PATH)
-    train_batches(PIPELINE_CONFIG_PATH)
+    train_experimental(PIPELINE_CONFIG_PATH)
     interact_model(PIPELINE_CONFIG_PATH)
 # remove if usr_dir is empty:
 finally:

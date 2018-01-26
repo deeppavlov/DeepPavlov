@@ -43,7 +43,7 @@ class ErrorModel(Inferable, Trainable):
             self.lm = kenlm.Model(lm_file)
             self.beam_size = 4
             self.candidates_count = 4
-            self.infer = self._infer_lm
+            self._infer_instance = self._infer_instance_lm
 
     def _find_candidates_window_0(self, word, k=1, prop_threshold=1e-6):
         threshold = log(prop_threshold)
@@ -107,7 +107,7 @@ class ErrorModel(Inferable, Trainable):
                     heappush(prefixes_heap, (-potential, self.dictionary.words_trie[prefix]))
         return [(w.strip('⟬⟭'), score) for score, w in sorted(candidates, reverse=True) if score > threshold]
 
-    def infer(self, instance: str, *args, **kwargs):
+    def _infer_instance(self, instance: str):
         corrected = []
         for incorrect in instance.split():
             if any([c not in self.dictionary.alphabet for c in incorrect]):
@@ -117,7 +117,7 @@ class ErrorModel(Inferable, Trainable):
                 corrected.append(res[0][0] if res else incorrect)
         return ' '.join(corrected)
 
-    def _infer_lm(self, instance: str, *args, **kwargs):
+    def _infer_instance_lm(self, instance: str, *args, **kwargs):
         candidates = []
         for incorrect in instance.split():
             if any([c not in self.dictionary.alphabet for c in incorrect]):
@@ -145,6 +145,12 @@ class ErrorModel(Inferable, Trainable):
         score, state, words = beam[0]
         return ' '.join(words[:-1])
 
+    def infer(self, data, *args, **kwargs):
+        if isinstance(data, str):
+            return self._infer_instance(data)
+        return [self._infer_instance(instance) for instance in tqdm(data, desc='Infering a batch with the error model',
+                                                                    leave=False)]
+
     def reset(self):
         pass
 
@@ -169,13 +175,17 @@ class ErrorModel(Inferable, Trainable):
 
         return d[-1][-1]
 
-    @check_attr_true('train_now')
     def train(self, dataset, *args, **kwargs):
+        self.fit(dataset.iter_all())
+        self.save()
+
+    @check_attr_true('train_now')
+    def fit(self, data):
         changes = []
         entries = []
-        dataset = list(dataset.iter_all())
+        data = list(data)
         window = 4
-        for error, correct in tqdm(dataset, desc='Training the error model'):
+        for error, correct in tqdm(data, desc='Training the error model'):
             correct = '⟬{}⟭'.format(correct)
             error = '⟬{}⟭'.format(error)
             d, ops = self._distance_edits(correct, error)
@@ -200,8 +210,6 @@ class ErrorModel(Inferable, Trainable):
             e = e_count[w] + incorrect_prior + correct_prior
             p = c / e
             self.costs[(w, s)] = log(p)
-
-        self.save()
 
     def save(self):
         # if not file_name:
