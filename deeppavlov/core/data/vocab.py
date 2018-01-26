@@ -30,7 +30,7 @@ class DefaultVocabulary(Trainable, Inferable):
         self.reset()
 
         if not self.ser_path.is_file():
-            with open(self.ser_path, 'a'):
+            with self.ser_path.open('a'):
                 os.utime(self.ser_path, None)
 
         self.load()
