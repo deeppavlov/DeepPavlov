@@ -180,6 +180,15 @@ class NerNetwork(SimpleTFModel):
         self.verbouse = verbouse
         self._mask = mask_ph
         sess.run(tf.global_variables_initializer())
+    
+        # Check presence of the model files
+        if tf.train.get_checkpoint_state(str(self.ser_path)) is not None:
+            print("\n:: initializing `{}` from saved"\
+                  .format(self.__class__.__name__))
+            self.load()
+        else:
+            print("\n:: initializing `{}` from scratch\n"\
+                  .format(self.__class__.__name__))
 
     def save(self):
         print('Saving model to {}'.format(self.ser_path))

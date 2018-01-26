@@ -56,5 +56,5 @@
       "level": "char"
     }
   },
-  "num_epochs": 1
+  "num_epochs": 5
 }

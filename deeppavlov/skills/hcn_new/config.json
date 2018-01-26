@@ -4,7 +4,7 @@
     "data_path": "../data/dstc2"
   },
   "dataset": {
-    "name": "dstc2_dialog_dataset"
+    "name": "dialog_dataset"
   },
   "vocabs": {
     "word_vocab": {
@@ -47,30 +47,32 @@
         "y"
       ],
       "level": "token",
-      "ser_path": "../download/vocabs/classes.dict",
-      "train_now": true
+      "ser_path": "../download/vocabs/classes.dict"
     }
   },
   "model": {
     "train_now": true,
     "name": "hcn_new",
     "debug": 0,
-    "num_epochs": 1,
+    "num_epochs": 120,
+	"val_patience": 10,
     "template_path": "../data/dstc2/dstc2-templates.txt",
     "network": {
       "train_now": true,
+	  "ser_dir": "rnn_wo_emb2",
       "name": "custom_rnn",
-      "learning_rate": 0.03,
+      "learning_rate": 0.02,
       "hidden_dim": 128,
-      "obs_size": 831,
+      "obs_size": 530,
       "use_action_mask": false,
       "action_size": 45
     },
     "slot_filler": {
       "name": "dstc_slotfilling",
+	  "ser_path": "../download/ner",
       "ner_network": {
-        "ser_path": "/media/olga/Data/projects/iPavlov/Pilot/download/ner",
         "name": "ner_tagging_network",
+        "ser_path": "../download/ner",
         "filter_width": 7,
         "embeddings_dropout": true,
         "n_filters": [
@@ -86,33 +88,8 @@
     "intent_classifier": {
       "name": "intent_model",
       "opt": {
-        "train_now": true,
-        "kernel_sizes_cnn": [
-          3,
-          3,
-          3
-        ],
-        "filters_cnn": 512,
-        "lear_metrics": [
-          "binary_accuracy",
-          "fmeasure"
-        ],
-        "confident_threshold": 0.5,
-        "optimizer": "Adam",
-        "lear_rate": 0.1,
-        "lear_rate_decay": 0.1,
-        "loss": "binary_crossentropy",
-        "text_size": 15,
-        "coef_reg_cnn": 1e-4,
-        "coef_reg_den": 1e-4,
-        "dropout_rate": 0.5,
-        "epochs": 1,
-        "dense_size": 100,
-        "model_name": "cnn_model",
-        "batch_size": 64,
-        "val_every_n_epochs": 5,
-        "verbose": true,
-        "val_patience": 5
+		  "model_name": "cnn_model",
+		  "ser_path": "../download/"
       },
       "embedder": {
         "name": "fasttext",
@@ -128,13 +105,7 @@
     "bow_encoder": {
       "name": "bow"
     },
-    "embedder": {
-      "name": "fasttext",
-      "emb_module": "pyfasttext",
-      "mean": true,
-      "dim": 300,
-      "ser_path": "../data/embeddings/wiki.en.bin"
-    },
+    "embedder": null,
     "tokenizer": {
       "name": "spacy_tokenizer"
     },

@@ -28,7 +28,7 @@
         "y"
       ],
       "level": "token",
-      "ser_file": "classes.txt",
+      "ser_file": "classes.dict",
       "train_now": true
     }
   },
@@ -55,7 +55,7 @@
       "coef_reg_cnn": 1e-4,
       "coef_reg_den": 1e-4,
       "dropout_rate": 0.5,
-      "epochs": 1,
+      "epochs": 1000,
       "dense_size": 100,
       "model_name": "cnn_model",
       "batch_size": 64,

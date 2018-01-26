@@ -15,15 +15,15 @@ from deeppavlov.core.data.utils import download
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(Inferable, Trainable):
     def __init__(self, ner_network: NerNetwork,
+                 slots_dir='slots',
                  slots_file='slot_vals.json',
-                 ser_path=None,
                  train_now=False, **kwargs):
 
-        super().__init__(ser_path=ser_path, train_now=train_now, mode=kwargs['mode'])
-# NOTE: bad fix here
-        self.ser_path /= slots_file
+        super().__init__(ser_dir=slots_dir, ser_file=slots_file,
+                         train_now=train_now, mode=kwargs['mode'])
 
         # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
+        # NOTE: bad fix here
         if not self.ser_path.is_file():
             print("[ downloading slot vals to `{}` ]".format(str(self.ser_path)))
             self._download_slot_vals()
@@ -33,13 +33,11 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
             self._slot_vals = json.load(f)
 
         self._ner_network = ner_network
-        self.load()
-
 
     @overrides
     def load(self):
         # Check presence of the model files
-        if tf.train.get_checkpoint_state(str(path)) is not None:
+        if tf.train.get_checkpoint_state(str(self.ser_path)) is not None:
             print("\n:: initializing `{}` from saved"\
                   .format(self.__class__.__name__))
             self._ner_network.load()
