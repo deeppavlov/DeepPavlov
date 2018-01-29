@@ -21,8 +21,8 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import TFModel
 
 
-@register('custom_rnn')
-class HybridCodeNetworkModel(TFModel):
+@register('go_bot_rnn')
+class GoalOrientedBotNetwork(TFModel):
 
     def __init__(self, **params):
         self.opt = params

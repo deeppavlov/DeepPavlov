@@ -29,20 +29,20 @@ from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel
 from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
 from deeppavlov.models.tokenizers.spacy_tokenizer import SpacyTokenizer
 from deeppavlov.models.trackers.default_tracker import DefaultTracker
-from deeppavlov.skills.hcn_new.metrics import DialogMetrics
-from deeppavlov.skills.hcn_new.network import HybridCodeNetworkModel
-from deeppavlov.skills.hcn_new.templates import Templates, DualTemplate
+from deeppavlov.skills.go_bot.metrics import DialogMetrics
+from deeppavlov.skills.go_bot.network import GoalOrientedBotNetwork
+from deeppavlov.skills.go_bot.templates import Templates, DualTemplate
 from deeppavlov.core.common.attributes import check_attr_true
 
 
-@register("hcn_new")
-class HybridCodeNetworkBot(Inferable, Trainable):
+@register("go_bot")
+class GoalOrientedBot(Inferable, Trainable):
     def __init__(self, template_path, vocabs,
                  template_type: Type = DualTemplate,
                  bow_encoder: Type = BoW_encoder,
                  tokenizer: Type = SpacyTokenizer,
                  tracker: Type = DefaultTracker,
-                 network: Type = HybridCodeNetworkModel,
+                 network: Type = GoalOrientedBotNetwork,
                  embedder=None,
                  slot_filler=None,
                  intent_classifier=None,
@@ -89,7 +89,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
         #    'obs_size': 4 + len(self.word_vocab) + self.embedder.dim +\
         #    self.tracker.num_features + self.n_actions + self.n_intents
         # }
-        # self.network = HybridCodeNetworkModel(opt)
+        # self.network = GoalOrientedBotNetwork(opt)
 
     def _encode_context(self, context, db_result=None):
         # tokenize input

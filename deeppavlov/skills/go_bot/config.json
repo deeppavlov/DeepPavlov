@@ -57,16 +57,16 @@
   },
   "model": {
     "train_now": true,
-    "name": "hcn_new",
+    "name": "go_bot",
     "debug": 0,
     "num_epochs": 120,
 	"val_patience": 5,
     "template_path": "../data/dstc2/dstc2-templates.txt",
     "network": {
       "train_now": true,
-      "load_path": "../download/go_hcn_rnn/model",
-      "save_path": "../download/go_hcn_rnn/model",
-      "name": "custom_rnn",
+      "load_path": "../download/go_bot_rnn/model",
+      "save_path": "../download/go_bot_rnn/model",
+      "name": "go_bot_rnn",
       "learning_rate": 0.02,
       "hidden_dim": 128,
       "obs_size": 830,
@@ -141,14 +141,7 @@
     "bow_encoder": {
       "name": "bow"
     },
-    "embedder": {
-      "name": "fasttext",
-      "emb_module": "pyfasttext",
-      "mean": true,
-      "dim": 300,
-      "save_path": "../data/embeddings/wiki.en.bin",
-      "load_path": "../data/embeddings/wiki.en.bin"
-    },
+    "embedder": null,
     "tokenizer": {
       "name": "spacy_tokenizer"
     },

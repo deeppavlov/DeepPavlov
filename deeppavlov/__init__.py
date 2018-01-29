@@ -23,6 +23,7 @@ from deeppavlov.models.trackers.hcn_at import ActionTracker
 from deeppavlov.models.trackers.hcn_et import EntityTracker
 from deeppavlov.skills.dummy_skill.dummy import DummySkill
 from deeppavlov.core.data.vocab import DefaultVocabulary
-from deeppavlov.skills.hcn_new.hcn import HybridCodeNetworkModel
-from deeppavlov.skills.hcn_new.tracker import FeaturizedTracker
+from deeppavlov.skills.go_bot.go_bot import GoalOrientedBot
+from deeppavlov.skills.go_bot.network import GoalOrientedBotNetwork
+from deeppavlov.skills.go_bot.tracker import FeaturizedTracker
 from deeppavlov.vocabs.typos import StaticDictionary, Wiki100KDictionary, RussianWordsVocab
