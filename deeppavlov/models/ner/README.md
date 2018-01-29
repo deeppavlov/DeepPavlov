@@ -3,7 +3,7 @@
 
 # Neural Named Entity Recognition and Slot Filling
 
-This component solves Named Entity Recognition (NER) and Slot Filling task with different neural network architectures. This component serves for solving DSTC 2 Slot Filling task.
+This component solves Named Entity Recognition (NER) and Slot-Filling task with different neural network architectures. This component serves for solving DSTC 2 Slot-Filling task.
 In most of the cases, NER task can be formulated as:
 
 _Given a sequence of tokens (words, and may be punctuation symbols) provide a tag from predefined set of tags for each token in the sequence._
@@ -39,13 +39,13 @@ Slot Filling can be formulated as:
 
 _Given some entity of certain type and a set of all possible values of this entity type provide a normalized form of the entity._
 
-In this component the Slot Filling task is solved by Levenshtein Distance search across all known entities of given type. Example:
+In this component, the Slot Filling task is solved by Levenshtein Distance search across all known entities of given type. Example:
 
 There is an entity of "food" type:
 
 _chainese_
 
-Definitely it is misspelled. The set of all known food entities is {'chinese', 'russian', 'european'}. The nearest known entity from the given set is _chinese_. So the output of the Slot Filling system should be _chinese_.
+Definitely, it is misspelled. The set of all known food entities is {'chinese', 'russian', 'european'}. The nearest known entity from the given set is _chinese_. So the output of the Slot Filling system should be _chinese_.
 
 
 ## Assemble the model
@@ -54,7 +54,6 @@ The system contains two main parts: Slot Filling System and Named Entity Recogni
 
 The config of the model must have the following fields:
 ```json
-{
 "model": {
     "name": "dstc_slotfilling",
     "train_now": true,
@@ -62,12 +61,11 @@ The config of the model must have the following fields:
     "ner_network": {
         "name": "ner_tagging_network"
     }
-  }
 }
 ```
-wher "name" is always "dstc_slotfilling", reffering to the DstcSlotFillingNetwork class, "train_now" determine whether to train NER network or not, "model_path" defines the path to the files needed for slot filling, "ner_network" is a refference to the NerNetwork class, which has its own parametrs.
+where "name" is always "dstc_slotfilling", referring to the DstcSlotFillingNetwork class, "train_now" determine whether to train NER network or not, "model_path" defines the path to the files needed for slot filling, "ner_network" is a reference to the NerNetwork class, which has its own parameters.
 
-The NER network is a separate model and it has its own initialization parameters, namely:
+The NER network is a separate model, and it has its own initialization parameters, namely:
 ```json
 {
 "ner_network": {
@@ -102,8 +100,7 @@ The NER network is a separate model and it has its own initialization parameters
 
 To perform convertation between tokens and indices there are three vocabularies in the config file:
 ```json
- { 
- "vocabs": {
+ { "vocabs": {
   "token_vocab": {
       "name": "default_vocab",
       "inputs": ["x"],
@@ -128,9 +125,9 @@ To perform convertation between tokens and indices there are three vocabularies 
   }
  }
 ```
-These vocabularies are used by NER network to perform converation between tokens and indices and vice versa. Indices are fed into the network to perform embeddings lookup. The are refference to this vocabularies in the NER network configuration part. These vocabularies are built before initialization of the network and provides parameters (number of tokens, number of tags, ...) to initialize lookup matrices. They are also used for convertation of batch tokens to batch indices.
+These vocabularies are used by NER network to perform conversion between tokens and indices and vice versa. Indices are fed into the network to perform embeddings lookup. The are reference to this vocabulary in the NER network configuration part. These vocabularies are built before initialization of the network and provide parameters (number of tokens, number of tags, ...) to initialize lookup matrices. They are also used for conversion of batch tokens to batch indices.
 
-To build vocabularies and train the network two data components must be specified. Namely: dataset_reader and datset:
+To build vocabularies and train the network two data components must be specified. Namely: dataset_reader and dataset:
 ```json
 {"dataset_reader": {
       "name": "dstc2_datasetreader",
@@ -146,15 +143,16 @@ For DSTC 2 Slot Filling task only dataset_path should be specified. While "dstc2
 
 ## Training
 
-To train the model the config file specifed above must be formed. The field "train_now" in the "model" component must be set to true. Then the following script can be used to train the model:
+To train the model the config file specified above must be formed. The field "train_now" in the "model" component must be set to true. Then the following script can be used to train the model:
 
 This model expects a sentence string with spaced-separated tokens in lowercase as it's input and returns the same string with corrected words
 
 ```python
 from deeppavlov.core.commands.train import train_model_from_config
+from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.commands.utils import set_usr_dir
 
-MODEL_CONFIG_PATH = 'models/ner/slot_config.json'
+MODEL_CONFIG_PATH = 'models/ner/config.json'
 usr_dir = set_usr_dir(MODEL_CONFIG_PATH)
 train_model_from_config(MODEL_CONFIG_PATH)
 ```
@@ -168,14 +166,14 @@ After training the following code will launch interaction with the model:
 from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.commands.utils import set_usr_dir
 
-CONFIG_PATH = 'deeppavlov/models/ner/slot_config.json'
+CONFIG_PATH = 'deeppavlov/models/ner/config.json'
 usr_dir = set_usr_dir(CONFIG_PATH)
 interact_model(CONFIG_PATH)
 ```
 
 ## Results
 
-The NER network component reproduce architecture from the paper "_Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition_" https://arxiv.org/pdf/1709.09686.pdf, which is inspired by LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf.
+The NER network component reproduces architecture from the paper "_Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition_" https://arxiv.org/pdf/1709.09686.pdf, which is inspired by LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf.
 
 Bi-LSTM architecture of NER network were tested on three datasets:
 - Gareev corpus [1] (obtainable by request to authors)
@@ -195,9 +193,6 @@ The F1 measure for the model along with other published solution provided in the
 | Mozharova et al.  [8] |                  | 97.21        |                 |
 | Our (Bi-LSTM+CRF)     | **87.17**        | **99.26**    | 82.10           ||
 
-
-# 
-
 ## Literature
 
 [1] - Rinat Gareev, Maksim Tkachenko, Valery Solovyev, Andrey Simanovsky, Vladimir Ivanov: Introducing Baselines for Russian Named Entity Recognition. Computational Linguistics and Intelligent Text Processing, 329 -- 342 (2013).
@@ -209,7 +204,7 @@ The F1 measure for the model along with other published solution provided in the
 [4] -  Reproducing Russian NER Baseline Quality without Additional Data. In proceedings of the 3rd International Workshop on ConceptDiscovery in Unstructured Data, Moscow, Russia, 54 – 59 (2016)
 
 [5] - Rubaylo A. V., Kosenko M. Y.: Software utilities for natural language information
-retrievial. Almanac of modern science and education, Volume 12 (114), 87 – 92.(2016)
+retrieval. Almanac of modern science and education, Volume 12 (114), 87 – 92.(2016)
 
 [6] - Sysoev A. A., Andrianov I. A.: Named Entity Recognition in Russian: the Power of Wiki-Based Approach. dialog-21.ru
 
