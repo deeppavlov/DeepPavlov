@@ -1,20 +1,22 @@
 {
   "model": {
     "name": "spelling_error_model",
-    "model_file": "error_model_ru.tsv",
     "window": 1,
     "train_now": true,
     "dictionary": {
       "name": "static_dictionary",
       "dictionary_name": "compreno_words",
-      "raw_dictionary_path": "../data/compreno_wordforms.txt"
+      "raw_dictionary_path": "../download/compreno_wordforms.txt"
     },
-    "lm_file": "../data/wiyalen_no_punkt.arpa.binary"
+    "save_path": "../download/error_model/error_model_ru.tsv",
+    "load_path": "../download/error_model/error_model_ru.tsv",
+    "lm_file": "../download/wiyalen_no_punkt.arpa.binary"
   },
   "dataset_reader": {
     "name": "typos_kartaslov_reader"
   },
   "dataset": {
-    "name": "typos_dataset"
+    "name": "typos_dataset",
+    "test_ratio": 0.02
   }
 }
