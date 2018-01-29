@@ -17,13 +17,21 @@ An Apache 2.0 NLP research library, built on TensorFlow and Keras, for
 4. `pip install -r requirements.txt`
 
 ## Basic examples
+With the purpose to interact with our trained models, they should be downloaded first:
+
+```
+python download.py -all
+```
+
+Then the models can be interacted or trained with the following command:
+
 ```
 python deep.py <mode> <path_to_config>
 ```
 * `<mode>` can be 'train' or 'interact'
 * `<path_to_config>` should be a path to an NLP pipeline json config
 
-Available configs are:
+Available model configs are:
 
 *skills/hcn_new/config.json*
 
