@@ -1,10 +1,6 @@
-import os
-from pathlib import Path
-
-from typing import Type, Callable
 from functools import wraps
 
-from deeppavlov.core.common.errors import ConfigError
+from typing import Type, Callable
 
 
 class abstract_attribute(object):
@@ -36,7 +32,6 @@ def check_attr_true(attr: str):
         return wrapped
 
     return _check_attr_true
-
 
 # def run_alt_meth_if_no_path(alt_f: Callable, attr: str):
 #     def _run_alt_meth(f):
