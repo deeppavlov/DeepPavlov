@@ -34,11 +34,18 @@ from deeppavlov.core.data.utils import download, download_untar
 class DstcSlotFillingNetwork(SimpleTFModel):
     def __init__(self, **kwargs):
 
-        super().__init__(**kwargs)
+        save_path = kwargs.get('save_path', None)
+        load_path = kwargs.get('load_path', None)
+        train_now = kwargs.get('train_now', None)
+        mode = kwargs.get('mode', None)
+
+        super().__init__(save_path=save_path, load_path=load_path,
+                         train_now=train_now, mode=mode)
 
         opt = deepcopy(kwargs)
         vocabs = opt.pop('vocabs')
         opt.update(vocabs)
+        self.opt = opt
 
         # Find all input parameters of the network init
         network_parameter_names = list(inspect.signature(NerNetwork.__init__).parameters)
@@ -51,7 +58,7 @@ class DstcSlotFillingNetwork(SimpleTFModel):
 
         download_best_model = opt.get('download_best_model', False)
         if download_best_model:
-            model_path = str(self.ser_path.parent.absolute())
+            model_path = str(self.load_path.parent.absolute())
             best_model_url = 'http://lnsigo.mipt.ru/export/models/ner/ner_dstc_model.tar.gz'
             download_untar(best_model_url, model_path)
 
@@ -62,18 +69,19 @@ class DstcSlotFillingNetwork(SimpleTFModel):
         self.train_parameters = train_parameters
 
         # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
-        slot_vals_filepath = Path(self.ser_path.parent) / 'slot_vals.json'
+        slot_vals_filepath = Path(self.save_path.parent) / 'slot_vals.json'
         if not slot_vals_filepath.is_file():
             self._download_slot_vals()
 
         with open(slot_vals_filepath) as f:
             self._slot_vals = json.load(f)
 
-        self.load()
+        if self.load_path is not None:
+            self.load()
 
     @overrides
     def load(self):
-        path = str(self.ser_path.absolute())
+        path = str(self.load_path.absolute())
         # Check presence of the model files
         if tf.train.checkpoint_exists(path):
             print('[loading model from {}]'.format(path), file=sys.stderr)
@@ -81,16 +89,15 @@ class DstcSlotFillingNetwork(SimpleTFModel):
 
     @overrides
     def save(self):
-        self.ser_path.parent.mkdir(parents=True, exist_ok=True)
-        path = str(self.ser_path.absolute())
+        path = str(self.save_path.absolute())
         print('[saving model to {}]'.format(path), file=sys.stderr)
         self._ner_network.save(path)
 
     @overrides
-    def train(self, data, default_n_epochs=5):
+    def train(self, data, epochs=1):
         print('Training NER network', file=sys.stderr)
         if self.train_now:
-            epochs = self.train_parameters.get('epochs', default_n_epochs)
+            epochs = self.opt.get('epochs', epochs)
             for epoch in range(epochs):
                 self._ner_network.train(data, **self.train_parameters)
                 self._ner_network.eval_conll(data.iter_all('valid'), short_report=False, data_type='valid')
@@ -98,7 +105,7 @@ class DstcSlotFillingNetwork(SimpleTFModel):
             self._ner_network.eval_conll(data.iter_all('test'), short_report=False, data_type='test')
             self.save()
         else:
-            self._ner_network.load(self.ser_path)
+            self._ner_network.load()
 
     def train_on_batch(self, batch):
         self._net.train_on_batch(batch, **self.train_parameters)
@@ -119,6 +126,7 @@ class DstcSlotFillingNetwork(SimpleTFModel):
         # For utterance extract named entities and perform normalization for slot filling
         tokens = tokenize_reg(utterance)
         tags = self._ner_network.predict_for_token_batch([tokens])[0]
+        print(tags)
         entities, slots = self._chunk_finder(tokens, tags)
         slot_values = {}
         for entity, slot in zip(entities, slots):
@@ -182,4 +190,4 @@ class DstcSlotFillingNetwork(SimpleTFModel):
 
     def _download_slot_vals(self):
         url = 'http://lnsigo.mipt.ru/export/datasets/dstc_slot_vals.json'
-        download(self.ser_path.parent / 'slot_vals.json', url)
+        download(self.save_path.parent / 'slot_vals.json', url)

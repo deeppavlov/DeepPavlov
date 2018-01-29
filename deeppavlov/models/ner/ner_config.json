@@ -1,19 +1,17 @@
 {
   "dataset_reader": {
-    "name": "dstc2_datasetreader",
-    "data_path": "/home/mikhail/Projects/Pilot/data/dstc2"
+    "name": "ner_dataset_reader",
+    "data_path": "/home/mikhail/Projects/ner/conll2003/"
   },
   "dataset": {
-    "name": "dstc2_ner_dataset",
-    "dataset_path": "/home/mikhail/Projects/Pilot/data/dstc2"
-
+    "name": "basic_dataset"
   },
   "model": {
     "name": "ner",
     "train_now": true,
-    "epochs": 10,
-    "ser_dir": "model",
-    "ser_file": "dstc_ner_model",
+    "epochs": 3,
+    "save_path": "../download/model/ner_model",
+    "load_path": "../download/model/ner_model",
     "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
     "verbouse": true,
     "filter_width": 7,
@@ -30,31 +28,30 @@
     "dropout_rate": 0.5
 
   },
-
   "vocabs": {
     "word_vocab": {
         "name": "default_vocab",
         "inputs": ["x"],
         "train_now": true,
 		"level": "token",
-        "ser_dir": "model/",
-		"ser_file": "token.dict"
+        "save_path": "../download/model/word.dict",
+        "load_path": "../download/model/word.dict"
       },
     "tag_vocab": {
         "name": "default_vocab",
         "inputs": ["y"],
         "train_now": true,
 		"level": "token",
-        "ser_dir": "model/",
-		"ser_file": "tag.dict"
+        "save_path": "../download/model/tag.dict",
+        "load_path": "../download/model/tag.dict"
       },
     "char_vocab":{
         "name": "default_vocab",
         "inputs": ["x"],
         "train_now": true,
 		"level": "char",
-        "ser_dir": "model/",
-		"ser_file": "char.dict"
+        "save_path": "../download/model/char.dict",
+        "load_path": "../download/model/char.dict"
       }
   }
 }
