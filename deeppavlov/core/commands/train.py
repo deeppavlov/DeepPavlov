@@ -1,8 +1,10 @@
 import datetime
+import json
 import time
 import sys
+from collections import OrderedDict
 
-from typing import List, Callable
+from typing import List, Callable, Tuple
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
@@ -11,6 +13,7 @@ from deeppavlov.core.common.metrics_registry import get_metrics_by_names
 from deeppavlov.core.commands.infer import build_agent_from_config
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.data.dataset import Dataset
+from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.common import paths
 
@@ -112,7 +115,7 @@ def train_experimental(config_path: str):
     except KeyError:
         print('Train config is missing. Populating with default values', file=sys.stderr)
 
-    metrics_functions = get_metrics_by_names(train_config['metrics'])
+    metrics_functions = list(zip(train_config['metrics'], get_metrics_by_names(train_config['metrics'])))
 
     if callable(getattr(model, 'train_on_batch', None)):
         _train_batches(model, dataset, train_config, metrics_functions)
@@ -128,43 +131,44 @@ def train_experimental(config_path: str):
         print('Testing the best saved model', file=sys.stderr)
 
         if train_config['validate_best']:
-            start_time = time.time()
-            val_y_true = []
-            val_y_predicted = []
-            for x, y_true in dataset.batch_generator(train_config.get('batch_size', -1), 'valid', shuffle=False):
-                y_predicted = list(model.infer(list(x)))
-                val_y_true += y_true
-                val_y_predicted += y_predicted
-
-            metrics = [f(val_y_true, val_y_predicted) for f in metrics_functions]
-
             report = {
-                'examples_seen': len(val_y_true),
-                'metrics': dict(zip(train_config['metrics'], metrics)),
-                'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
+                'valid': _test_model(model, metrics_functions, dataset, train_config.get('batch_size', -1), 'valid')
             }
-            print('valid: {}'.format(report))
+
+            print(json.dumps(report, ensure_ascii=False))
 
         if train_config['test_best']:
-            start_time = time.time()
-            val_y_true = []
-            val_y_predicted = []
-            for x, y_true in dataset.batch_generator(train_config.get('batch_size', -1), 'test', shuffle=False):
-                y_predicted = list(model.infer(list(x)))
-                val_y_true += y_true
-                val_y_predicted += y_predicted
-
-            metrics = [f(val_y_true, val_y_predicted) for f in metrics_functions]
-
             report = {
-                'examples_seen': len(val_y_true),
-                'metrics': dict(zip(train_config['metrics'], metrics)),
-                'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
+                'test': _test_model(model, metrics_functions, dataset, train_config.get('batch_size', -1), 'test')
             }
-            print('test:  {}'.format(report))
+
+            print(json.dumps(report, ensure_ascii=False))
 
 
-def _train_batches(model: Trainable, dataset: Dataset, train_config: dict, metrics_functions: List[Callable]):
+def _test_model(model: Inferable, metrics_functions: List[Tuple[str, Callable]],
+                dataset: Dataset, batch_size=-1, data_type='valid', start_time=None):
+    if start_time is None:
+        start_time = time.time()
+
+    val_y_true = []
+    val_y_predicted = []
+    for x, y_true in dataset.batch_generator(batch_size, data_type, shuffle=False):
+        y_predicted = list(model.infer(list(x)))
+        val_y_true += y_true
+        val_y_predicted += y_predicted
+
+    metrics = [(s, f(val_y_true, val_y_predicted)) for s, f in metrics_functions]
+
+    report = {
+        'examples_seen': len(val_y_true),
+        'metrics': OrderedDict(metrics),
+        'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
+    }
+    return report
+
+
+def _train_batches(model: Trainable, dataset: Dataset, train_config: dict,
+                   metrics_functions: List[Tuple[str, Callable]]):
 
     default_train_config = {
         'epochs': 0,
@@ -176,7 +180,7 @@ def _train_batches(model: Trainable, dataset: Dataset, train_config: dict, metri
         'val_every_n_epochs': 0,
 
         'log_every_n_batches': 0,
-        'show_examples': False,
+        # 'show_examples': False,
 
         'validate_best': True,
         'test_best': True
@@ -217,38 +221,34 @@ def _train_batches(model: Trainable, dataset: Dataset, train_config: dict, metri
                 examples += len(x)
 
                 if train_config['log_every_n_batches'] > 0 and i % train_config['log_every_n_batches'] == 0:
-                    metrics = [f(train_y_true, train_y_predicted) for f in metrics_functions]
+                    metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in metrics_functions]
                     report = {
                         'epochs_done': epochs,
                         'batches_seen': i,
                         'examples_seen': examples,
-                        'metrics': dict(zip(train_config['metrics'], metrics)),
+                        'metrics': dict(metrics),
                         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
                     }
-                    print('train: {}'.format(report))
+                    report = {'train': report}
+                    print(json.dumps(report, ensure_ascii=False))
                     train_y_true = []
                     train_y_predicted = []
 
-                    if train_config['show_examples']:
-                        for xi, ypi, yti in zip(x, y_predicted, y_true):
-                            print({'in': xi, 'out': ypi, 'expected': yti})
+                    # if train_config['show_examples']:
+                    #     for xi, ypi, yti in zip(x, y_predicted, y_true):
+                    #         print({'in': xi, 'out': ypi, 'expected': yti})
 
             epochs += 1
 
             if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
-                val_y_true = []
-                val_y_predicted = []
-                for x, y_true in dataset.batch_generator(train_config['batch_size'], 'valid', shuffle=False):
-                    y_predicted = list(model.infer(list(x)))
-                    val_y_true += y_true
-                    val_y_predicted += y_predicted
+                report = _test_model(model, metrics_functions, dataset, train_config['batch_size'], 'valid', start_time)
 
-                metrics = [f(val_y_true, val_y_predicted) for f in metrics_functions]
+                metrics = list(report['metrics'].items())
 
-                score = metrics[0]
+                m_name, score = metrics[0]
                 if improved(score, best):
                     patience = 0
-                    print('New best {} of {}'.format(train_config['metrics'][0], score),
+                    print('New best {} of {}'.format(m_name, score),
                           file=sys.stderr)
                     best = score
                     print('Saving model', file=sys.stderr)
@@ -256,21 +256,15 @@ def _train_batches(model: Trainable, dataset: Dataset, train_config: dict, metri
                     saved = True
                 else:
                     patience += 1
-                    print('Did not improve on the {} of {}'.format(train_config['metrics'][0], best),
+                    print('Did not improve on the {} of {}'.format(m_name, best),
                           file=sys.stderr)
 
-                report = {
-                    'examples_seen': len(val_y_true),
-                    'metrics': dict(zip(train_config['metrics'], metrics)),
-                    'impatience': patience,
-                    'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
-                }
+                report['impatience'] = patience
                 if train_config['validation_patience'] > 0:
                     report['patience_limit'] = train_config['validation_patience']
-                print('valid: {}'.format(report))
-                if train_config['show_examples']:
-                    for xi, ypi, yti in zip(x, y_predicted, y_true):
-                        print({'in': xi, 'out': ypi, 'expected': yti})
+
+                report = {'valid': report}
+                print(json.dumps(report, ensure_ascii=False))
 
                 if patience >= train_config['validation_patience'] > 0:
                     print('Ran out of patience', file=sys.stderr)
