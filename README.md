@@ -20,6 +20,7 @@ An Apache 2.0 NLP research library, built on TensorFlow and Keras, for
 With the purpose to interact with our trained models, they should be downloaded first:
 
 ```
+cd deeppavlov/
 python download.py -all
 ```
 
