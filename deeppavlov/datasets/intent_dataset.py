@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import sys
 from sklearn.model_selection import train_test_split
 
 from deeppavlov.core.common.registry import register
@@ -78,8 +78,8 @@ class IntentDataset(Dataset):
 
         if fields_to_merge is not None:
             if merged_field is not None:
-                print("Merging fields <<{}>> to new field <<{}>>".format(fields_to_merge,
-                                                                         merged_field))
+                print("Merging fields <<{}>> to new field <<{}>>".format(fields_to_merge, merged_field),
+                      file=sys.stderr)
                 self._merge_data(fields_to_merge=fields_to_merge,
                                  merged_field=merged_field)
             else:
@@ -87,8 +87,8 @@ class IntentDataset(Dataset):
 
         if field_to_split is not None:
             if split_fields is not None:
-                print("Splitting field <<{}>> to new fields <<{}>>".format(field_to_split,
-                                                                           split_fields))
+                print("Splitting field <<{}>> to new fields <<{}>>".format(field_to_split, split_fields),
+                      file=sys.stderr)
                 self._split_data(field_to_split=field_to_split,
                                  split_fields=split_fields,
                                  split_proportions=[float(s) for s in

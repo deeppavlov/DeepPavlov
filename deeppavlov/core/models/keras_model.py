@@ -16,6 +16,8 @@ from abc import abstractmethod
 from pathlib import Path
 from warnings import warn
 
+import sys
+
 import tensorflow as tf
 import keras.metrics
 import keras.optimizers
@@ -47,8 +49,8 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
             **kwargs:
         """
         self.opt = opt
-        save_path = self.opt.get('save_path', None)
-        load_path = self.opt.get('load_path', None)
+        save_path = kwargs.get('save_path', None)
+        load_path = kwargs.get('load_path', None)
         train_now = self.opt.get('train_now', False)
         url = self.opt.get('url', None)
 
@@ -95,7 +97,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         Returns:
             compiled model with given network and learning parameters
         """
-        print('[ Initializing model from scratch ]')
+        print('[ Initializing model from scratch ]', file=sys.stderr)
 
         model_func = getattr(self, model_name, None)
         if callable(model_func):
@@ -170,7 +172,8 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
 
                 print('___Initializing model from saved___'
                       '\nModel weights file is {}'
-                      '\nNetwork parameters are from {}'.format(weights_path.name, opt_path.name))
+                      '\nNetwork parameters are from {}'.format(weights_path.name, opt_path.name),
+                      file=sys.stderr)
 
                 self.opt = read_json(opt_path)
 
@@ -180,7 +183,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                 else:
                     raise AttributeError("Model {} is not defined".format(model_name))
 
-                print("Loading weights from `{}`".format(weights_path.name))
+                print("Loading weights from `{}`".format(weights_path.name), file=sys.stderr)
                 model.load_weights(str(weights_path))
 
                 optimizer_func = getattr(keras.optimizers, optimizer_name, None)
@@ -278,7 +281,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         else:
             opt_path = "{}_opt.json".format(str(self.save_path.resolve()))
             weights_path = "{}.h5".format(str(self.save_path.resolve()))
-            print("[ saving model: {} ]".format(opt_path))
+            print("[ saving model: {} ]".format(opt_path), file=sys.stderr)
             self.model.save_weights(weights_path)
 
         save_json(self.opt, opt_path)

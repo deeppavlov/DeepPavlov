@@ -3,6 +3,7 @@ from pathlib import Path
 from warnings import warn
 
 import numpy as np
+import sys
 from overrides import overrides
 
 from deeppavlov.core.common.registry import register
@@ -48,7 +49,7 @@ class FasttextEmbedder(Inferable):
 
         if self.load_path:
             if self.load_path.is_file():
-                print("[loading embeddings from `{}`]".format(self.load_path))
+                print("[loading embeddings from `{}`]".format(self.load_path), file=sys.stderr)
                 model_file = str(self.load_path)
                 if self.emb_module == 'fasttext':
                     import fasttext as Fasttext
@@ -66,7 +67,7 @@ class FasttextEmbedder(Inferable):
             warn("No `load_path` is provided for {}".format(self.__class__.__name__))
             if self.embedding_url:
                 try:
-                    print('[trying to download a pretrained fasttext model from repository]')
+                    print('[trying to download a pretrained fasttext model from repository]', file=sys.stderr)
                     local_filename, _ = urllib.request.urlretrieve(self.embedding_url)
                     with open(local_filename, 'rb') as fin:
                         model_file = fin.read()
@@ -74,7 +75,7 @@ class FasttextEmbedder(Inferable):
                     mp = self.save_path
                     self.load_path = self.save_path
                     model = self.load()
-                    print("[saving downloaded fasttext model to {}]".format(mp))
+                    print("[saving downloaded fasttext model to {}]".format(mp), file=sys.stderr)
                     with open(str(mp), 'wb') as fout:
                         fout.write(model_file)
                 except Exception as e:

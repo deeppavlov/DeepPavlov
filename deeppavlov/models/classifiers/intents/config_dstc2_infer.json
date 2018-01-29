@@ -1,4 +1,4 @@
-                            {
+{
   "dataset_reader": {
     "name": "dstc2_datasetreader",
     "data_path": "../data/dstc2"
@@ -20,11 +20,11 @@
   },
   "model": {
     "name": "intent_model",
+    "save_path": "../download/intents/intent_cnn",
+    "load_path": "../download/intents/intent_cnn",
     "opt": {
       "train_now": false,
-      "model_name": "cnn_model",
-      "save_path": "../download/intents/intent_cnn",
-      "load_path": "../download/intents/intent_cnn"
+      "model_name": "cnn_model"
     },
     "embedder": {
       "name": "fasttext",

@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "dstc2_datasetreader",
-    "data_path": "../data/dstc2"
+    "data_path": "../download/dstc2"
   },
   "dataset": {
     "name": "intent_dataset",
@@ -28,12 +28,15 @@
         "y"
       ],
       "level": "token",
-      "ser_file": "classes.txt",
+      "save_path": "../download/vocabs/classes.dict",
+      "load_path": "../download/vocabs/classes.dict",
       "train_now": true
     }
   },
   "model": {
     "name": "intent_model",
+    "save_path": "../download/intents/intent_cnn",
+    "load_path": "../download/intents/intent_cnn",
     "opt": {
       "train_now": true,
       "kernel_sizes_cnn": [
@@ -56,7 +59,8 @@
     },
     "embedder": {
       "name": "fasttext",
-      "ser_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
+      "save_path": "../download/embeddings/dstc2_fasttext_model_100.bin",
+      "load_path": "../download/embeddings/dstc2_fasttext_model_100.bin",
       "emb_module": "fasttext",
       "dim": 100
     },
@@ -68,11 +72,11 @@
   "train": {
     "epochs": 100,
     "batch_size": 64,
-
-    "metrics": ["sets_accuracy"],
+    "metrics": [
+      "sets_accuracy"
+    ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
-
     "log_every_n_batches": 100,
     "show_examples": false
   }
