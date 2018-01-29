@@ -40,7 +40,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
 
     def __init__(self, opt: Dict, **kwargs):
         """
-        Method initializes model using parameters from opt
+        Initialize model using parameters from opt
         Args:
             opt: model parameters
             *args:
@@ -63,7 +63,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
 
     def _config_session(self):
         """
-        Method configures session for particular device
+        Configure session for particular device
         Returns:
             tensorflow.Session
         """
@@ -78,7 +78,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                                 sample_weight_mode=None, weighted_metrics=None,
                                 target_tensors=None):
         """
-        Method initializes model from scratch with given params
+        Initialize model from scratch with given params
         Args:
             model_name: name of model function described as a method of this class
             optimizer_name: name of optimizer from keras.optimizers
@@ -141,7 +141,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
              lr, decay, loss_name, metrics_names=None, add_metrics_file=None, loss_weights=None,
              sample_weight_mode=None, weighted_metrics=None, target_tensors=None):
         """
-        Method initializes model from saved params and weights
+        Initialize model from saved params and weights
         Args:
             model_name: name of model function described as a method of this class
             optimizer_name: name of optimizer from keras.optimizers
@@ -238,7 +238,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
     @abstractmethod
     def train_on_batch(self, batch):
         """
-        Method trains the model on a single batch of data
+        Train the model on a single batch of data
         Args:
             batch: tuple of (x,y) where x, y - lists of samples and their labels
 
@@ -251,7 +251,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
     @check_attr_true('train_now')
     def train(self, dataset, *args):
         """
-        Method trains the model on a given data as a single batch
+        Train the model on a given data as a single batch
         Args:
             dataset: dataset instance
 
@@ -263,13 +263,13 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
     @overrides
     def save(self, fname=None):
         """
-        Method saves the model parameters into <<fname>>_opt.json (or <<ser_file>>_opt.json)
+        Save the model parameters into <<fname>>_opt.json (or <<ser_file>>_opt.json)
         and model weights into <<fname>>.h5 (or <<ser_file>>.h5)
         Args:
             fname: file_path to save model. If not explicitly given seld.opt["ser_file"] will be used
 
         Returns:
-            Nothing
+            None
         """
         if not self.save_path:
             raise ConfigError("No `save_path` is provided for Keras model!")

@@ -13,7 +13,8 @@
         "y"
       ],
       "level": "token",
-      "ser_path": "./models/classifiers/intents/intent_cnn_best/classes.txt",
+      "save_path": "../download/vocabs/classes.dict",
+      "load_path": "../download/vocabs/classes.dict",
       "train_now": false
     }
   },
@@ -21,11 +22,14 @@
     "name": "intent_model",
     "opt": {
       "train_now": false,
-      "ser_path": "./models/classifiers/intents/intent_cnn_best"
+      "model_name": "cnn_model",
+      "save_path": "../download/intents/intent_cnn",
+      "load_path": "../download/intents/intent_cnn"
     },
     "embedder": {
       "name": "fasttext",
-      "ser_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
+      "save_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
+      "load_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
       "emb_module": "fasttext",
       "dim": 100
     },

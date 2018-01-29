@@ -19,7 +19,7 @@ import hashlib
 
 def labels2onehot(labels, classes):
     """
-    Function converts labels to one-hot vectors for multi-class multi-label classification
+    Convert labels to one-hot vectors for multi-class multi-label classification
     Args:
         labels: list of samples where each sample is a list of classes which sample belongs with
         classes: array of classes' names
@@ -45,7 +45,7 @@ def labels2onehot(labels, classes):
 
 def proba2labels(proba, confident_threshold, classes):
     """
-    Function converts vectors of probabilities to labels using confident threshold
+    Convert vectors of probabilities to labels using confident threshold
     (if probability to belong with the class is bigger than confident_threshold, sample belongs with the class;
     if no probabilities bigger than confident threshold, sample belongs with the class with the biggest probability)
     Args:
@@ -62,14 +62,14 @@ def proba2labels(proba, confident_threshold, classes):
         if len(to_add) > 0:
             y.append(classes[to_add])
         else:
-            y.append([classes[np.argmax(sample)]])
+            y.append(np.array([classes[np.argmax(sample)]]))
     y = np.asarray(y)
     return y
 
 
 def proba2onehot(proba, confident_threshold, classes):
     """
-    Function converts vectors of probabilities to one-hot representations using confident threshold
+    Convert vectors of probabilities to one-hot representations using confident threshold
     Args:
         proba: list of samples where each sample is a vector of probabilities to belong with given classes
         confident_threshold: boundary of probability to belong with a class
@@ -83,7 +83,7 @@ def proba2onehot(proba, confident_threshold, classes):
 
 def log_metrics(names, values, updates=None, mode='train'):
     """
-    Function prints training and validation data in the following view:
+    Print training and validation data in the following view:
         `mode -->	updates: 0   	names[0]: 0.0	names[1]: 0.0	names[2]: 0.0`
     Args:
         names: list of names of considered metrics
@@ -92,7 +92,7 @@ def log_metrics(names, values, updates=None, mode='train'):
         mode: dataset field on which calculation is being doing (i.e "train")
 
     Returns:
-        Nothing
+        None
     """
     sys.stdout.write("\r")  # back to previous line
     print("{} -->\t".format(mode), end="")
@@ -107,7 +107,7 @@ def log_metrics(names, values, updates=None, mode='train'):
 
 def md5_hashsum(file_names):
     """
-    Function calculates md5 hash sum of files listed
+    Calculate md5 hash sum of files listed
     Args:
         file_names: list of file names
 
