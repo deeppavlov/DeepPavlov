@@ -13,12 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
-import os
 from collections import defaultdict
 from overrides import overrides
-import pathlib
-import sys
+from pathlib import Path
+from warnings import warn
 
 import numpy as np
 import tensorflow as tf
@@ -26,14 +24,13 @@ from tensorflow.contrib.layers import xavier_initializer
 
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.tf_model import SimpleTFModel, TFModel
+from deeppavlov.core.models.tf_model import SimpleTFModel
 from deeppavlov.models.ner.layers import character_embedding_network
 from deeppavlov.models.ner.layers import embedding_layer
 from deeppavlov.models.ner.layers import highway_convolutional_network
 from deeppavlov.models.ner.layers import stacked_convolutions
 from deeppavlov.models.ner.layers import stacked_rnn
 from deeppavlov.models.ner.evaluation import precision_recall_f1
-
 
 SEED = 42
 MODEL_FILE_NAME = 'ner_model'
@@ -43,6 +40,7 @@ MODEL_FILE_NAME = 'ner_model'
 class NerNetwork(SimpleTFModel):
     def __init__(self,
                  vocabs,
+                 save_path,
                  n_filters=(128, 256),
                  filter_width=3,
                  token_embeddings_dim=128,
@@ -58,15 +56,12 @@ class NerNetwork(SimpleTFModel):
                  char_filter_width=5,
                  verbouse=False,
                  embeddings_onethego=False,
-                 ser_path=None,
-                 ser_dir='ner',
-                 ser_file='dstc_ner_network.ckpt',
                  train_now=False,
+                 load_path=None,
                  **kwargs):
 
-        super().__init__(ser_path=ser_path,
-                         ser_dir=ser_dir,
-                         ser_file=ser_file,
+        super().__init__(save_path=save_path,
+                         load_path=load_path,
                          train_now=train_now,
                          mode=kwargs['mode'])
 
@@ -76,7 +71,8 @@ class NerNetwork(SimpleTFModel):
 
         # Create placeholders
         if embeddings_onethego:
-            x_word = tf.placeholder(dtype=tf.float32, shape=[None, None, token_embeddings_dim], name='x_word')
+            x_word = tf.placeholder(dtype=tf.float32, shape=[None, None, token_embeddings_dim],
+                                    name='x_word')
         else:
             x_word = tf.placeholder(dtype=tf.int32, shape=[None, None], name='x_word')
         x_char = tf.placeholder(dtype=tf.int32, shape=[None, None, None], name='x_char')
@@ -91,7 +87,8 @@ class NerNetwork(SimpleTFModel):
         # Embeddings
         if not embeddings_onethego:
             with tf.variable_scope('Embeddings'):
-                w_emb = embedding_layer(x_word, n_tokens=n_tokens, token_embedding_dim=token_embeddings_dim)
+                w_emb = embedding_layer(x_word, n_tokens=n_tokens,
+                                        token_embedding_dim=token_embeddings_dim)
                 if use_char_embeddins:
                     c_emb = character_embedding_network(x_char,
                                                         n_characters=n_chars,
@@ -140,7 +137,8 @@ class NerNetwork(SimpleTFModel):
             predictions = None
         else:
             ground_truth_labels = tf.one_hot(y_true, n_tags)
-            loss_tensor = tf.nn.softmax_cross_entropy_with_logits(labels=ground_truth_labels, logits=logits)
+            loss_tensor = tf.nn.softmax_cross_entropy_with_logits(labels=ground_truth_labels,
+                                                                  logits=logits)
             loss_tensor = loss_tensor * mask_ph
             predictions = tf.argmax(logits, axis=-1)
 
@@ -179,42 +177,31 @@ class NerNetwork(SimpleTFModel):
         self._entity_of_interest = entity_of_interest
         self.verbouse = verbouse
         self._mask = mask_ph
+
         sess.run(tf.global_variables_initializer())
-    
-        # Check presence of the model files
-        if tf.train.get_checkpoint_state(str(self.ser_path)) is not None:
-            print("\n:: initializing `{}` from saved"\
-                  .format(self.__class__.__name__))
-            self.load()
-        else:
-            print("\n:: initializing `{}` from scratch\n"\
-                  .format(self.__class__.__name__))
 
     def save(self):
-        print('Saving model to {}'.format(self.ser_path))
+        save_path = str(self.save_path)
         saver = tf.train.Saver()
-        saver.save(self._sess, str(self.ser_path))
-
-
-    def get_checkpoint_state(self):
-        if self.ser_path.is_dir():
-            return tf.train.get_checkpoint_state(self.ser_path)
-        else:
-            return tf.train.get_checkpoint_state(self.ser_path.parent)
+        print('[ saving model to `{}` ]'.format(save_path))
+        saver.save(self._sess, save_path)
 
     @overrides
     def load(self):
-        """
-        Load session from checkpoint
-        """
-        saver = tf.train.Saver()
-        ckpt = self.get_checkpoint_state()
-        if ckpt and ckpt.model_checkpoint_path:
-            print('\n:: restoring checkpoint from', ckpt.model_checkpoint_path, '\n')
-            saver.restore(self._sess, ckpt.model_checkpoint_path)
-            print('session restored')
+        if self.load_path:
+            if isinstance(self.load_path, Path) and self.load_path.parent.is_dir():
+                if tf.train.get_checkpoint_state(self.load_path.parent) is not None:
+                    print("\n:: initializing `{}` from saved"\
+                          .format(self.__class__.__name__))
+                    saver = tf.train.Saver()
+                    print('\n:: restoring checkpoint from {}\n'.format(str(self.load_path)))
+                    saver.restore(self._sess, str(self.load_path))
+                else:
+                    warn("Provided `load_path` is empty! Won't restore from checkpoint.")
+            else:
+                warn("Provided `load_path` is incorrect!")
         else:
-            print('\n:: <ERR> checkpoint not found! \n')
+            warn("No `load_path` is provided for {}".format(self.__class__.__name__))
 
     def tokens_batch_to_numpy_batch(self, batch_x, batch_y=None):
         # Determine dimensions
@@ -223,7 +210,8 @@ class NerNetwork(SimpleTFModel):
         max_token_len = max([len(token) for utt in batch_x for token in utt])
 
         x_token = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_vocab['<PAD>']
-        x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * self.char_vocab['<PAD>']
+        x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * \
+                 self.char_vocab['<PAD>']
         mask = np.zeros_like(x_token)
         if batch_y is not None:
             y = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.tag_vocab['<PAD>']
@@ -245,24 +233,24 @@ class NerNetwork(SimpleTFModel):
         return (x_token, x_char, mask), y
 
     def eval_conll(self, data, print_results=True, short_report=True, data_type=None):
-            y_true_list = list()
-            y_pred_list = list()
-            if data_type is not None:
-                print('Eval on {}:'.format(data_type))
-            for x, y_gt in data:
-                (x_token, x_char, mask), y = self.tokens_batch_to_numpy_batch([x])
-                y_pred = self.predict(x_token, x_char, mask)
-                y_pred = self.tag_vocab.batch_idxs2batch_toks(y_pred)
-                for tags_pred, tags_gt in zip(y_pred, [y_gt]):
-                    for tag_predicted, tag_ground_truth in zip(tags_pred, tags_gt):
-                        y_true_list.append(tag_ground_truth)
-                        y_pred_list.append(tag_predicted)
-                    y_true_list.append('O')
-                    y_pred_list.append('O')
-            return precision_recall_f1(y_true_list,
-                                       y_pred_list,
-                                       print_results,
-                                       short_report)
+        y_true_list = list()
+        y_pred_list = list()
+        if data_type is not None:
+            print('Eval on {}:'.format(data_type))
+        for x, y_gt in data:
+            (x_token, x_char, mask), y = self.tokens_batch_to_numpy_batch([x])
+            y_pred = self.predict(x_token, x_char, mask)
+            y_pred = self.tag_vocab.batch_idxs2batch_toks(y_pred)
+            for tags_pred, tags_gt in zip(y_pred, [y_gt]):
+                for tag_predicted, tag_ground_truth in zip(tags_pred, tags_gt):
+                    y_true_list.append(tag_ground_truth)
+                    y_pred_list.append(tag_predicted)
+                y_true_list.append('O')
+                y_pred_list.append('O')
+        return precision_recall_f1(y_true_list,
+                                   y_pred_list,
+                                   print_results,
+                                   short_report)
 
     @check_attr_true('train_now')
     def train(self, data, batch_size=8):
@@ -306,7 +294,8 @@ class NerNetwork(SimpleTFModel):
         total_num_parameters = np.sum(list(blocks.values()))
         print('Total number of parameters equal {}'.format(total_num_parameters))
 
-    def fit(self, batch_gen=None, batch_size=32, learning_rate=1e-3, epochs=1, dropout_rate=0.5, learning_rate_decay=1):
+    def fit(self, batch_gen=None, batch_size=32, learning_rate=1e-3, epochs=1, dropout_rate=0.5,
+            learning_rate_decay=1):
         for epoch in range(epochs):
             count = 0
             if self.verbouse:
@@ -418,7 +407,8 @@ class NerNetwork(SimpleTFModel):
         max_token_len = max([len(token) for utt in tokens_batch for token in utt])
         # Prepare numpy arrays
         x_token = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_vocab['<PAD>']
-        x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * self.char_vocab['<PAD>']
+        x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * \
+                 self.char_vocab['<PAD>']
         mask = np.zeros([batch_size, max_utt_len], dtype=np.int32)
         # Prepare x batch
         for n, utterance in enumerate(tokens_batch):

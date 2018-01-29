@@ -14,6 +14,7 @@
 
 from abc import abstractmethod
 from pathlib import Path
+from warnings import warn
 
 import tensorflow as tf
 import keras.metrics
@@ -27,7 +28,7 @@ from keras.layers import Dense, Input
 
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.common.attributes import check_attr_true, run_alt_meth_if_no_path
+from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.file import save_json, read_json
 from deeppavlov.core.common.errors import ConfigError
 
@@ -39,22 +40,20 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
 
     def __init__(self, opt: Dict, **kwargs):
         """
-        Method initializes model using parameters from opt
+        Initialize model using parameters from opt
         Args:
             opt: model parameters
             *args:
             **kwargs:
         """
         self.opt = opt
-        ser_path = self.opt.get('ser_path', None)
-        ser_dir = self.opt.get('ser_dir', 'intents')
-        ser_file = self.opt.get('ser_file', 'intent_cnn')
+        save_path = self.opt.get('save_path', None)
+        load_path = self.opt.get('load_path', None)
         train_now = self.opt.get('train_now', False)
         url = self.opt.get('url', None)
 
-        super().__init__(ser_path=ser_path,
-                         ser_dir=ser_dir,
-                         ser_file=ser_file,
+        super().__init__(save_path=save_path,
+                         load_path=load_path,
                          train_now=train_now,
                          url=url,
                          mode=kwargs['mode'])
@@ -64,7 +63,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
 
     def _config_session(self):
         """
-        Method configures session for particular device
+        Configure session for particular device
         Returns:
             tensorflow.Session
         """
@@ -79,7 +78,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                                 sample_weight_mode=None, weighted_metrics=None,
                                 target_tensors=None):
         """
-        Method initializes model from scratch with given params
+        Initialize model from scratch with given params
         Args:
             model_name: name of model function described as a method of this class
             optimizer_name: name of optimizer from keras.optimizers
@@ -143,7 +142,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
              lr, decay, loss_name, metrics_names=None, add_metrics_file=None, loss_weights=None,
              sample_weight_mode=None, weighted_metrics=None, target_tensors=None):
         """
-        Method initializes model from saved params and weights
+        Initialize model from saved params and weights
         Args:
             model_name: name of model function described as a method of this class
             optimizer_name: name of optimizer from keras.optimizers
@@ -161,63 +160,73 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
             model with loaded weights and network parameters from files
             but compiled with given learning parameters
         """
-        if self.ser_path.is_dir():
-            opt_path = "{}/{}_opt.json".format(self.ser_path, self._ser_file)
-            weights_path = "{}/{}.h5".format(self.ser_path, self._ser_file)
-        else:
-            opt_path = "{}_opt.json".format(self.ser_path)
-            weights_path = "{}.h5".format(self.ser_path)
+        if self.load_path:
+            if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
+                raise ConfigError("Provided save path is incorrect!")
 
-        if Path(opt_path).exists() and Path(weights_path).exists():
+            opt_path = Path("{}_opt.json".format(str(self.load_path.resolve())))
+            weights_path = Path("{}.h5".format(str(self.load_path.resolve())))
 
-            print("\n:: initializing `{}` from saved\n"\
-                  .format(self.__class__.__name__))
+            if opt_path.exists() and weights_path.exists():
 
-            print("[ loading parameters from `{}_opt.json` ]".format(self._ser_file))
-            self.opt = read_json(opt_path)
+                print("\n:: initializing `{}` from saved\n"\
+                      .format(self.__class__.__name__))
 
-            model_func = getattr(self, model_name, None)
-            if callable(model_func):
-                model = model_func(params=self.opt)
-            else:
-                raise AttributeError("Model {} is not defined".format(model_name))
-
-            print("[ loading weights from `{}.h5` ]".format(self._ser_file))
-            model.load_weights(weights_path)
-
-            optimizer_func = getattr(keras.optimizers, optimizer_name, None)
-            if callable(optimizer_func):
-                optimizer_ = optimizer_func(lr=lr, decay=decay)
-            else:
-                raise AttributeError("Optimizer {} is not callable".format(optimizer_name))
-
-            loss_func = getattr(keras.losses, loss_name, None)
-            if callable(loss_func):
-                loss = loss_func
-            else:
-                raise AttributeError("Loss {} is not defined".format(loss_name))
-
-            metrics_funcs = []
-            for i in range(len(metrics_names)):
-                metrics_func = getattr(keras.metrics, metrics_names[i], None)
-                if callable(metrics_func):
-                    metrics_funcs.append(metrics_func)
+                self.opt = read_json(opt_path)
+            
+                model_func = getattr(self, model_name, None)
+                if callable(model_func):
+                    model = model_func(params=self.opt)
                 else:
-                    metrics_func = getattr(add_metrics_file, metrics_names[i], None)
+                    raise AttributeError("Model {} is not defined".format(model_name))
+
+                print("[ loading weights from `{}` ]".format(weights_path.name))
+                model.load_weights(str(weights_path))
+
+                optimizer_func = getattr(keras.optimizers, optimizer_name, None)
+                if callable(optimizer_func):
+                    optimizer_ = optimizer_func(lr=lr, decay=decay)
+                else:
+                    raise AttributeError("Optimizer {} is not callable".format(optimizer_name))
+
+                loss_func = getattr(keras.losses, loss_name, None)
+                if callable(loss_func):
+                    loss = loss_func
+                else:
+                    raise AttributeError("Loss {} is not defined".format(loss_name))
+
+                metrics_funcs = []
+                for i in range(len(metrics_names)):
+                    metrics_func = getattr(keras.metrics, metrics_names[i], None)
                     if callable(metrics_func):
                         metrics_funcs.append(metrics_func)
                     else:
-                        raise AttributeError("Metric {} is not defined".format(metrics_names[i]))
+                        metrics_func = getattr(add_metrics_file, metrics_names[i], None)
+                        if callable(metrics_func):
+                            metrics_funcs.append(metrics_func)
+                        else:
+                            raise AttributeError(
+                                "Metric {} is not defined".format(metrics_names[i]))
 
-            model.compile(optimizer=optimizer_,
-                          loss=loss,
-                          metrics=metrics_funcs,
-                          loss_weights=loss_weights,
-                          sample_weight_mode=sample_weight_mode,
-                          weighted_metrics=weighted_metrics,
-                          target_tensors=target_tensors)
-            return model
+                model.compile(optimizer=optimizer_,
+                              loss=loss,
+                              metrics=metrics_funcs,
+                              loss_weights=loss_weights,
+                              sample_weight_mode=sample_weight_mode,
+                              weighted_metrics=weighted_metrics,
+                              target_tensors=target_tensors)
+                return model
+            else:
+                return self.init_model_from_scratch(model_name, optimizer_name,
+                                                    lr, decay, loss_name,
+                                                    metrics_names=metrics_names,
+                                                    add_metrics_file=add_metrics_file,
+                                                    loss_weights=loss_weights,
+                                                    sample_weight_mode=sample_weight_mode,
+                                                    weighted_metrics=weighted_metrics,
+                                                    target_tensors=target_tensors)
         else:
+            warn("No `load_path` is provided for {}".format(self.__class__.__name__))
             return self.init_model_from_scratch(model_name, optimizer_name,
                                                 lr, decay, loss_name, metrics_names=metrics_names,
                                                 add_metrics_file=add_metrics_file,
@@ -229,7 +238,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
     @abstractmethod
     def train_on_batch(self, batch):
         """
-        Method trains the model on a single batch of data
+        Train the model on a single batch of data
         Args:
             batch: tuple of (x,y) where x, y - lists of samples and their labels
 
@@ -242,7 +251,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
     @check_attr_true('train_now')
     def train(self, dataset, *args):
         """
-        Method trains the model on a given data as a single batch
+        Train the model on a given data as a single batch
         Args:
             dataset: dataset instance
 
@@ -254,25 +263,23 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
     @overrides
     def save(self, fname=None):
         """
-        Method saves the model parameters into <<fname>>_opt.json (or <<ser_file>>_opt.json)
+        Save the model parameters into <<fname>>_opt.json (or <<ser_file>>_opt.json)
         and model weights into <<fname>>.h5 (or <<ser_file>>.h5)
         Args:
             fname: file_path to save model. If not explicitly given seld.opt["ser_file"] will be used
 
         Returns:
-            Nothing
+            None
         """
-        if self.ser_path.is_dir():
-            opt_path = "{}/{}_opt.json".format(self.ser_path, self._ser_file)
-            weights_path = "{}/{}.h5".format(self.ser_path, self._ser_file)
+        if not self.save_path:
+            raise ConfigError("No `save_path` is provided for Keras model!")
+        elif isinstance(self.save_path, Path) and not self.save_path.parent.is_dir():
+            raise ConfigError("Provided save path is incorrect!")
         else:
-            # TODO: something is incorrect with ser_path if dir but does not exist
-            opt_path = "{}_opt.json".format(self.ser_path)
-            weights_path = "{}.h5".format(self.ser_path)
-
-        print("\n:: saving model to `{}`\n".format(opt_path))
-        self.ser_path.mkdir(parents=True, exist_ok=True)
-        self.model.save_weights(weights_path)
+            opt_path = "{}_opt.json".format(str(self.save_path.resolve()))
+            weights_path = "{}.h5".format(str(self.save_path.resolve()))
+            print("[ saving model: {} ]".format(opt_path))
+            self.model.save_weights(weights_path)
 
         save_json(self.opt, opt_path)
 

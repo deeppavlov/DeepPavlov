@@ -41,7 +41,7 @@ class DstcNerDataset(Dataset):
         """
         self.shuffle = shuffle
         self.random_state = random.getstate()
-        #TODO: include slot vals to dstc2.tar.gz
+        # TODO: include slot vals to dstc2.tar.gz
         dataset_path = pathlib.Path(dataset_path) / 'slot_vals.json'
         self._build_slot_vals(dataset_path)
         with open(dataset_path) as f:
@@ -55,7 +55,8 @@ class DstcNerDataset(Dataset):
             'test': self.test,
             'all': self.train + self.test + self.valid
         }
-
+        self.shuffle = shuffle
+        self.seed = None
 
     def _preprocess(self, data_part):
         processed_data_part = list()
@@ -85,7 +86,8 @@ class DstcNerDataset(Dataset):
                 for entity in self._slot_vals[slot_type][slot_val]:
                     slot_tokens = entity.split()
                     slot_len = len(slot_tokens)
-                    if n + slot_len <= n_toks and self._is_equal_sequences(tokens[n: n + slot_len], slot_tokens):
+                    if n + slot_len <= n_toks and self._is_equal_sequences(tokens[n: n + slot_len],
+                                                                           slot_tokens):
                         tags[n] = 'B-' + slot_type
                         for k in range(1, slot_len):
                             tags[n + k] = 'I-' + slot_type

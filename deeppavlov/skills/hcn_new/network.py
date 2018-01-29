@@ -27,14 +27,12 @@ class HybridCodeNetworkModel(TFModel):
     def __init__(self, **params):
         self.opt = params
 
-        ser_path = self.opt.get('ser_path', None)
-        ser_dir = self.opt.get('ser_dir', 'hcn_rnn')
-        ser_file = self.opt.get('ser_file', 'model')
+        save_path = self.opt.get('save_path')
+        load_path = self.opt.get('load_path', None)
         train_now = self.opt.get('train_now', False)
 
-        super().__init__(ser_path=ser_path,
-                         ser_dir=ser_dir,
-                         ser_file=ser_file,
+        super().__init__(save_path=save_path,
+                         load_path=load_path,
                          train_now=train_now,
                          mode=self.opt['mode'])
 
@@ -47,10 +45,10 @@ class HybridCodeNetworkModel(TFModel):
 
         if self.get_checkpoint_state():
         #TODO: save/load params to json, here check compatability
+            print("\n:: initializing `{}` from saved".format(self.__class__.__name__))
             self.load()
         else:
-            print("\n:: initializing `{}` from scratch\n"\
-                  .format(self.__class__.__name__))
+            print("\n:: initializing `{}` from scratch\n".format(self.__class__.__name__))
             self.sess.run(tf.global_variables_initializer())
 
         self.reset_state()

@@ -10,47 +10,34 @@ from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.models.ner.ner_network import NerNetwork
 from deeppavlov.core.data.utils import tokenize_reg
 from deeppavlov.core.data.utils import download
+from deeppavlov.core.common.file import read_json
 
 
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(Inferable, Trainable):
     def __init__(self, ner_network: NerNetwork,
-                 slots_dir='slots',
-                 slots_file='slot_vals.json',
+                 save_path, load_path=None,
                  train_now=False, **kwargs):
 
-        super().__init__(ser_dir=slots_dir, ser_file=slots_file,
+        super().__init__(save_path=save_path, load_path=load_path,
                          train_now=train_now, mode=kwargs['mode'])
 
         # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
-        # NOTE: bad fix here
-        if not self.ser_path.is_file():
-            print("[ downloading slot vals to `{}` ]".format(str(self.ser_path)))
-            self._download_slot_vals()
-
-        print("[ loading slot values from `{}` ]".format(str(self.ser_path)))
-        with self.ser_path.open('r') as f:
-            self._slot_vals = json.load(f)
+        if not self.load_path.is_file():
+            self.load()
+            
+        print("[ loading slot values from `{}` ]".format(str(self.load_path)))
+        self._slot_vals = read_json(self.load_path)
 
         self._ner_network = ner_network
-
-    @overrides
-    def load(self):
-        # Check presence of the model files
-        if tf.train.get_checkpoint_state(str(self.ser_path)) is not None:
-            print("\n:: initializing `{}` from saved"\
-                  .format(self.__class__.__name__))
-            self._ner_network.load()
-        else:
-            print("\n:: initializing `{}` from scratch\n"\
-                  .format(self.__class__.__name__))
+        self._ner_network.load()
 
     @overrides
     def save(self):
         self._ner_network.save()
 
     @overrides
-    def train(self, data, num_epochs=10):
+    def train(self, data, num_epochs=2):
         if self.train_now:
             for epoch in range(num_epochs):
                 self._ner_network.train(data)
@@ -141,6 +128,7 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
     def reset(self):
         pass
 
-    def _download_slot_vals(self):
+    @overrides
+    def load(self):
         url = 'http://lnsigo.mipt.ru/export/datasets/dstc_slot_vals.json'
-        download(self.ser_path, url)
+        download(self.save_path, url)

@@ -1,16 +1,18 @@
 import urllib
 from pathlib import Path
+from warnings import warn
 
 import numpy as np
 from overrides import overrides
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.common.errors import ConfigError
 
 
 @register('fasttext')
 class FasttextEmbedder(Inferable):
-    def __init__(self, ser_path=None, ser_dir=None, ser_file=None, dim=100,
+    def __init__(self, save_path, load_path=None, dim=100,
                  embedding_url=None, emb_module='fasttext', **kwargs):
         """
         Args:
@@ -18,9 +20,8 @@ class FasttextEmbedder(Inferable):
             dim: dimension of embeddings
             embedding_url: url link to embedding to try to download if file does not exist
         """
-        super().__init__(ser_path=ser_path,
-                         ser_dir=ser_dir,
-                         ser_file=ser_file)
+        super().__init__(save_path=save_path,
+                         load_path=load_path)
         self.tok2emb = {}
         self.dim = dim
         self.embedding_url = embedding_url
@@ -45,8 +46,24 @@ class FasttextEmbedder(Inferable):
             fname: file name
         """
 
-        print("[loading embeddings from `{}`]".format(self.ser_path))
-        if not Path(self.ser_path).exists():
+        if self.load_path:
+            if self.load_path.is_file():
+                print("[loading embeddings from `{}`]".format(self.load_path))
+                model_file = str(self.load_path)
+                if self.emb_module == 'fasttext':
+                    import fasttext as Fasttext
+                    model = Fasttext.load_model(model_file)
+                elif self.emb_module == 'pyfasttext':
+                    from pyfasttext import FastText as Fasttext
+                    model = Fasttext(model_file)
+                else:
+                    from gensim.models.wrappers.fasttext import FastText as Fasttext
+                    model = Fasttext.load_fasttext_format(model_file)
+            elif isinstance(self.load_path, Path):
+                raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
+                    self.__class__.__name__))
+        else:
+            warn("No `load_path` is provided for {}".format(self.__class__.__name__))
             if self.embedding_url:
                 try:
                     print('[trying to download a pretrained fasttext model from repository]')
@@ -54,10 +71,10 @@ class FasttextEmbedder(Inferable):
                     with open(local_filename, 'rb') as fin:
                         model_file = fin.read()
 
-                    mp = self.ser_path / self._ser_dir / self._ser_file
+                    mp = self.save_path
+                    self.load_path = self.save_path
+                    model = self.load()
                     print("[saving downloaded fasttext model to {}]".format(mp))
-                    if not mp.exists():
-                        mp.mkdir()
                     with open(str(mp), 'wb') as fout:
                         fout.write(model_file)
                 except Exception as e:
@@ -65,19 +82,9 @@ class FasttextEmbedder(Inferable):
                         'Looks like the provided fasttext url is incorrect', e)
             else:
                 raise FileNotFoundError(
-                    'No pretrained fasttext model provided or provided "ser_path" is incorrect.'
-                    ' Please include "ser_path" to json.')
-        else:
-            model_file = str(self.ser_path)
-        if self.emb_module == 'fasttext':
-            import fasttext as Fasttext
-            model = Fasttext.load_model(model_file)
-        elif self.emb_module == 'pyfasttext':
-            from pyfasttext import FastText as Fasttext
-            model = Fasttext(model_file)
-        else:
-            from gensim.models.wrappers.fasttext import FastText as Fasttext
-            model = Fasttext.load_fasttext_format(model_file)
+                    'No pretrained fasttext model provided or provided "load_path" is incorrect.'
+                    ' Please include "load_path" to json.')
+
         return model
 
     @overrides

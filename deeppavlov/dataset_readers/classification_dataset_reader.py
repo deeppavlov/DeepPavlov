@@ -37,9 +37,10 @@ class ClassificationDatasetReader(DatasetReader):
     @overrides
     def read(self, data_path, data_types=["train"]):
         """
-        Method reads dataset from data_path directory.
+        Read dataset from data_path directory.
         Reading files are all data_types + extension
-        (i.e for data_types=["train", "valid"] files "train.csv" and "valid.csv" form data_path will be read)
+        (i.e for data_types=["train", "valid"] files "train.csv" and "valid.csv" form
+        data_path will be read)
         Args:
             data_path: directory with files
             data_types: types of considered data (possible: "train", "valid", "test")
@@ -52,7 +53,8 @@ class ClassificationDatasetReader(DatasetReader):
         for data_type in data_types:
             if not Path(data_path).joinpath(data_type + ".csv").exists():
                 print("Loading {} data from {} to {}".format(data_type, self.url, data_path))
-                download(source_url=self.url, dest_file_path=Path(data_path).joinpath(data_type + ".csv"))
+                download(source_url=self.url,
+                         dest_file_path=Path(data_path).joinpath(data_type + ".csv"))
                 mark_done(data_path)
 
         data = {}
@@ -66,6 +68,7 @@ class ClassificationDatasetReader(DatasetReader):
 
         for field in data_types:
             for i in range(data[field].shape[0]):
-                new_data[field].append((data[field].loc[i, 'text'], list(columns[data[field].loc[i, columns] == 1.0])))
+                new_data[field].append(
+                    (data[field].loc[i, 'text'], list(columns[data[field].loc[i, columns] == 1.0])))
 
         return new_data

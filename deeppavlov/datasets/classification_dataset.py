@@ -25,12 +25,13 @@ class ClassificationDataset(Dataset):
         merge fields if necessary,
         split a field if necessary
         """
-    def __init__(self, data, seed=None,
+    def __init__(self, data,
                  fields_to_merge=None, merged_field=None,
                  field_to_split=None, split_fields=None, split_proportions=None,
+                 seed: int = None, shuffle: bool = True,
                  *args, **kwargs):
         """
-        Method initializes dataset using data from DatasetReader,
+        Initialize dataset using data from DatasetReader,
         merges and splits fields according to the given parameters
         Args:
             data: dictionary of data with fields "train", "valid" and "test" (or some of them)
@@ -43,7 +44,7 @@ class ClassificationDataset(Dataset):
             *args:
             **kwargs:
         """
-        super().__init__(data, seed)
+        super().__init__(data, seed=seed, shuffle=shuffle)
 
         if fields_to_merge is not None:
             if merged_field is not None:
@@ -67,14 +68,14 @@ class ClassificationDataset(Dataset):
 
     def _split_data(self, field_to_split, split_fields, split_proportions):
         """
-        Method splits given field of dataset to the given list of fields with corresponding proportions
+        Split given field of dataset to the given list of fields with corresponding proportions
         Args:
             field_to_split: field name which to split
             split_fields: list of names of fields to which split
             split_proportions: corresponding proportions
 
         Returns:
-            Nothing
+            None
         """
         data_to_div = self.data[field_to_split].copy()
         data_size = len(self.data[field_to_split])
@@ -89,13 +90,13 @@ class ClassificationDataset(Dataset):
 
     def _merge_data(self, fields_to_merge, merged_field):
         """
-        Method merges given fields of dataset
+        Merge given fields of dataset
         Args:
             fields_to_merge: list of fields to merge
             merged_field: name of field to which save merged fields
 
         Returns:
-            Nothing
+            None
         """
         data = self.data.copy()
         data[merged_field] = []
