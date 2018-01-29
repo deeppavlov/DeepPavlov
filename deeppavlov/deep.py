@@ -18,9 +18,9 @@ parser.add_argument("config_path", help="path to a pipeline json config", type=s
 
 def main():
     args = parser.parse_args()
+    pipeline_config_path = args.config_path
+    set_usr_dir(pipeline_config_path)
     try:
-        pipeline_config_path = args.config_path
-        set_usr_dir(pipeline_config_path)
         if args.mode == 'train':
             train_model_from_config(pipeline_config_path)
         elif args.mode == 'interact':
