@@ -38,42 +38,42 @@ def check_attr_true(attr: str):
     return _check_attr_true
 
 
-def run_alt_meth_if_no_path(alt_f: Callable, attr: str):
-    def _run_alt_meth(f):
-        @wraps(f)
-        def wrapped(self, *args, **kwargs):
-            if self.ser_path.exists():
-                if self.ser_path.is_file() or (
-                            self.ser_path.is_dir() and os.listdir(str(self.ser_path))):
-                    try:
-                        return f(self, *args, **kwargs)
-                    except ConfigError:
-                        print('There are no needed model files')
-            setattr(self, attr, True)
-            print(
-                "Attribute '{0}' is set to False, though the path doesn't exist or there"
-                " is no ser data at the given path.\nCan't do {1}()."
-                " Instead will do {2}()".format(attr, str(f).split()[1], str(alt_f).split()[1]))
-            return alt_f(self, *args, **kwargs)
-
-        return wrapped
-
-    return _run_alt_meth
-
-
-def check_path_exists():
-    def _check_path_exists(f: Callable):
-        @wraps(f)
-        def wrapped(self, *args, **kwargs):
-            if self.ser_path.is_dir():
-                return f(self, *args, **kwargs)
-            elif self.ser_path.parent.exists():
-                return f(self, *args, **kwargs)
-            raise FileNotFoundError(
-                "{}.ser_path doesn't exist. Check if there is a pretrained model."
-                "If there is no a pretrained model, you might want to set 'train_now' to true "
-                "in the model json config and run training first.".format(self.__class__.__name__))
-
-        return wrapped
-
-    return _check_path_exists
+# def run_alt_meth_if_no_path(alt_f: Callable, attr: str):
+#     def _run_alt_meth(f):
+#         @wraps(f)
+#         def wrapped(self, *args, **kwargs):
+#             if self.ser_path.exists():
+#                 if self.ser_path.is_file() or (
+#                             self.ser_path.is_dir() and os.listdir(str(self.ser_path))):
+#                     try:
+#                         return f(self, *args, **kwargs)
+#                     except ConfigError:
+#                         print('There are no needed model files')
+#             setattr(self, attr, True)
+#             print(
+#                 "Attribute '{0}' is set to False, though the path doesn't exist or there"
+#                 " is no ser data at the given path.\nCan't do {1}()."
+#                 " Instead will do {2}()".format(attr, str(f).split()[1], str(alt_f).split()[1]))
+#             return alt_f(self, *args, **kwargs)
+#
+#         return wrapped
+#
+#     return _run_alt_meth
+#
+#
+# def check_path_exists():
+#     def _check_path_exists(f: Callable):
+#         @wraps(f)
+#         def wrapped(self, *args, **kwargs):
+#             if self.ser_path.is_dir():
+#                 return f(self, *args, **kwargs)
+#             elif self.ser_path.parent.exists():
+#                 return f(self, *args, **kwargs)
+#             raise FileNotFoundError(
+#                 "{}.ser_path doesn't exist. Check if there is a pretrained model."
+#                 "If there is no a pretrained model, you might want to set 'train_now' to true "
+#                 "in the model json config and run training first.".format(self.__class__.__name__))
+#
+#         return wrapped
+#
+#     return _check_path_exists

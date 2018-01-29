@@ -22,7 +22,7 @@ from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 try:
     PIPELINE_CONFIG_PATH = 'models/ner/ner_config.json'
     # PIPELINE_CONFIG_PATH = 'skills/hcn_new/config.json'
-    set_usr_dir(PIPELINE_CONFIG_PATH)
+    set_usr_dir(PIPELINE_CONFIG_PATH, usr_dir_name='../ner')
     train_model_from_config(PIPELINE_CONFIG_PATH)
     interact_model(PIPELINE_CONFIG_PATH)
 # remove if usr_dir is empty:

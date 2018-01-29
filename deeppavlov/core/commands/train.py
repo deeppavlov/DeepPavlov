@@ -40,6 +40,7 @@ def train_model_from_config(config_path: str, mode='train'):
     config = read_json(config_path)
 
     reader_config = config['dataset_reader']
+    # NOTE: Why there are no params for dataset reader? Because doesn't have __init__()
     reader = from_params(REGISTRY[reader_config['name']], {})
     data = reader.read(reader_config.get('data_path', usr_dir))
 

@@ -1,30 +1,54 @@
-from pathlib import Path
-import copy
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-import numpy as np
 from sklearn.model_selection import train_test_split
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset import Dataset
-from deeppavlov.core.common import paths
-from deeppavlov.models.preprocessors.preprocessors import PREPROCESSORS
 
 
 @register('intent_dataset')
 class IntentDataset(Dataset):
+    """
+    Class gets data dictionary from DSTC2DatasetReader instance,
+    construct intents from act and slots,
+    merge fields if necessary,
+    split a field if necessary
+    """
     def __init__(self, data,
-                 seed=None, extract_classes=True, classes_file=None,
+                 seed=None,
                  fields_to_merge=None, merged_field=None,
                  field_to_split=None, split_fields=None, split_proportions=None,
-                 prep_method_name: str = None,
-                 dataset_path=None, dataset_dir='intents', dataset_file='classes.txt',
                  *args, **kwargs):
+        """
+        Method initializes dataset using data from DatasetReader,
+        merges and splits fields according to the given parameters
+        Args:
+            data: dictionary of data with fields "train", "valid" and "test" (or some of them)
+            seed: random seed
+            fields_to_merge: list of fields to merge
+            merged_field: name of field to which save merged fields
+            field_to_split: name of field to split
+            split_fields: list of fields to which save splitted field
+            split_proportions: list of corresponding proportions for splitting
+            *args:
+            **kwargs:
+        """
 
         super().__init__(data, seed)
         self.classes = None
 
-        # Reconstruct data to the necessary view
-        # (x,y) where x - text, y - list of corresponding intents
         new_data = dict()
         new_data['train'] = []
         new_data['valid'] = []
@@ -52,30 +76,11 @@ class IntentDataset(Dataset):
 
         self.data = new_data
 
-        if extract_classes:
-            self.classes = self._extract_classes()
-            if classes_file is None:
-                if dataset_path is None:
-                    ser_dir = Path(paths.USR_PATH).joinpath(dataset_dir)
-                    if not ser_dir.exists():
-                        ser_dir.mkdir()
-                    classes_file = Path(paths.USR_PATH).joinpath(dataset_dir, dataset_file)
-                else:
-                    ser_dir = Path(dataset_path).joinpath(dataset_dir)
-                    if not ser_dir.exists():
-                        ser_dir.mkdir()
-                    classes_file = ser_dir.joinpath(dataset_file)
-
-            print("No file name for classes provided. Classes are saved to file {}".format(
-                classes_file))
-            with open(Path(classes_file), 'w') as fin:
-                for i in range(len(self.classes)):
-                    fin.write(self.classes[i] + '\n')
         if fields_to_merge is not None:
             if merged_field is not None:
                 print("Merging fields <<{}>> to new field <<{}>>".format(fields_to_merge,
                                                                          merged_field))
-                self._merge_data(fields_to_merge=fields_to_merge.split(' '),
+                self._merge_data(fields_to_merge=fields_to_merge,
                                  merged_field=merged_field)
             else:
                 raise IOError("Given fields to merge BUT not given name of merged field")
@@ -85,30 +90,23 @@ class IntentDataset(Dataset):
                 print("Splitting field <<{}>> to new fields <<{}>>".format(field_to_split,
                                                                            split_fields))
                 self._split_data(field_to_split=field_to_split,
-                                 split_fields=split_fields.split(" "),
+                                 split_fields=split_fields,
                                  split_proportions=[float(s) for s in
-                                                    split_proportions.split(" ")])
+                                                    split_proportions])
             else:
                 raise IOError("Given field to split BUT not given names of split fields")
 
-        self.prep_method_name = prep_method_name
-
-        if prep_method_name:
-            self.data = self.preprocess(PREPROCESSORS[prep_method_name])
-
-    def _extract_classes(self):
-        intents = []
-        all_data = self.iter_all(data_type='train')
-        for sample in all_data:
-            intents.extend(sample[1])
-        if 'valid' in self.data.keys():
-            all_data = self.iter_all(data_type='valid')
-            for sample in all_data:
-                intents.extend(sample[1])
-        intents = np.unique(intents)
-        return np.array(sorted(intents))
-
     def _split_data(self, field_to_split, split_fields, split_proportions):
+        """
+        Method splits given field of dataset to the given list of fields with corresponding proportions
+        Args:
+            field_to_split: field name which to split
+            split_fields: list of names of fields to which split
+            split_proportions: corresponding proportions
+
+        Returns:
+            Nothing
+        """
         data_to_div = self.data[field_to_split].copy()
         data_size = len(self.data[field_to_split])
         for i in range(len(split_fields) - 1):
@@ -121,19 +119,18 @@ class IntentDataset(Dataset):
         return True
 
     def _merge_data(self, fields_to_merge, merged_field):
+        """
+        Method merges given fields of dataset
+        Args:
+            fields_to_merge: list of fields to merge
+            merged_field: name of field to which save merged fields
+
+        Returns:
+            Nothing
+        """
         data = self.data.copy()
         data[merged_field] = []
         for name in fields_to_merge:
             data[merged_field] += self.data[name]
         self.data = data
         return True
-
-    def preprocess(self, prep_method):
-
-        data_copy = copy.deepcopy(self.data)
-
-        for data_type in self.data:
-            chunk = self.data[data_type]
-            for i, sample in enumerate(chunk):
-                data_copy[i] = (prep_method([sample[0]])[0], chunk[i][1])
-        return data_copy
