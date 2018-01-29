@@ -64,7 +64,6 @@
     },
     "embedder": {
       "name": "fasttext",
-      "save_path": "../data/embeddings/reddit_fasttext_model.bin",
       "load_path": "../data/embeddings/reddit_fasttext_model.bin",
       "emb_module": "fasttext",
       "dim": 100

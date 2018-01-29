@@ -76,9 +76,11 @@ Below the table with description of parameters is presented.
 | name                | registered name of vocab    <br />*SetOfValues*: "default_vocab"  | 
 |  inputs             | whether to create vocab over x and/or y fields of dataset  <br />*SetOfValues*: list of "x" and/or "y"    |
 |  level              | whether to considered char or token level     <br />*SetOfValues*: "char", "token"   |
-| model_path          | path to file where vocab with classes will be saved    |
+| load_path           | path to file which vocab with classes will be loaded from    |
+| save_path           | path to file where vocab with classes will be saved    |
 | train_now           | whether to train vocab or not  |
-| **model**         ||
+| **model**           |
+| name                | registered name of model  | 
 | model_name          | method of the class KerasIntentModel that corresponds to the model <br />*SetOfValues*: "cnn_model", "dcnn_model"   | 
 | text_size           | length of each sample in words      | 
 | confident_threshold | boundary value of belonging to a class  <br />*SetOfValues*: \[0., 1.\]                       | 
@@ -98,9 +100,11 @@ Below the table with description of parameters is presented.
 | val_every_n_epochs  | frequency of validation during training (validate every n epochs)       | 
 | verbose             | parameter whether to print training information or not        | 
 | val_patience        | maximal number of validation loss increases before stop training           | 
+| load_path           | path to file which model files will be loaded from    |
+| save_path           | path to file where model files will be saved    |
 | **model.embedder** ||
 | name                | registered name of embedder  <br />*SetOfValues*:"fasttext"   |
-| model_path          | path to file where binary embedding model is located      | 
+| load_path           | path to file which embedding binary file will be loaded from    |
 | emb_module          | fasttext library to use  <br />*SetOfValues*: "fasttext", "pyfasttext", "gensim"            | 
 | dim                 | dimension of embeddings    | 
 | **model.tokenizer** ||
