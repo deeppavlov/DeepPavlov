@@ -25,8 +25,17 @@ class Serializable(metaclass=ABCMeta):
         else:
             self.save_path = None
 
+        mode = kwargs.get('mode', 'infer')
+
         if load_path:
             self.load_path = Path(load_path)
+            if mode != 'train' and self.load_path != self.save_path:
+                warn("Load path '{}' differs from save path '{}' in '{}' mode for {}."
+                     .format(self.load_path, self.save_path, mode, self.__class__.__name__))
+        elif mode != 'train':
+            self.load_path = self.save_path
+            warn("No load path is set for {} in '{}' mode. Using save path instead"
+                 .format(self.__class__.__name__, mode))
         else:
             self.load_path = None
             warn("No load path is set for {}!".format(self.__class__.__name__))
