@@ -29,7 +29,13 @@ from deeppavlov.core.models.tf_model import SimpleTFModel
 class NER(SimpleTFModel):
     def __init__(self, **kwargs):
 
-        super().__init__(**kwargs)
+        save_path = kwargs.get('save_path', None)
+        load_path = kwargs.get('load_path', None)
+        train_now = kwargs.get('train_now', None)
+        mode = kwargs.get('mode', None)
+
+        super().__init__(save_path=save_path, load_path=load_path,
+                         train_now=train_now, mode=mode)
 
         opt = deepcopy(kwargs)
         vocabs = opt.pop('vocabs')
@@ -51,11 +57,12 @@ class NER(SimpleTFModel):
         self.opt = opt
 
         # Try to load the model (if there are some model files the model will be loaded from them)
-        self.load()
+        if self.load_path is not None:
+            self.load()
 
     @overrides
     def load(self):
-        path = str(self.ser_path.absolute())
+        path = str(self.load_path.absolute())
         # Check presence of the model files
         if tf.train.checkpoint_exists(path):
             print('[loading model from {}]'.format(path), file=sys.stderr)
@@ -63,8 +70,7 @@ class NER(SimpleTFModel):
 
     @overrides
     def save(self):
-        self.ser_path.parent.mkdir(parents=True, exist_ok=True)
-        path = str(self.ser_path.absolute())
+        path = str(self.save_path.absolute())
         print('[saving model to {}]'.format(path), file=sys.stderr)
         self._net.save(path)
 

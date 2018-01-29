@@ -1,3 +1,5 @@
+import sys
+
 from typing import Dict, Type, TypeVar
 
 from deeppavlov.core.common.registry import REGISTRY
@@ -29,6 +31,10 @@ def from_params(cls: Type, params: Dict, **kwargs) -> Type['T']:
                                                     vocabs=kwargs['vocabs'],
                                                     mode=kwargs['mode'])
 
-    model = cls(**dict(config_params, **kwargs))
+    try:
+        model = cls(**dict(config_params, **kwargs))
+    except Exception:
+        print("Exception in {}".format(cls), file=sys.stderr)
+        raise
 
     return model

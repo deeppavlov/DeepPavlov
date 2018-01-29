@@ -4,7 +4,7 @@ from gensim.models import word2vec
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.common.attributes import check_attr_true, run_alt_meth_if_no_path
+from deeppavlov.core.common.attributes import check_attr_true
 
 
 @register('w2v')
@@ -39,7 +39,7 @@ class Word2VecEmbedder(Trainable, Inferable):
     def infer(self, sentence: str, *args, **kwargs):
         return self._encode(sentence)
 
-    @run_alt_meth_if_no_path(train, 'train_now')
+    # @run_alt_meth_if_no_path(train, 'train_now')
     def load(self):
         return word2vec.Word2Vec.load(str(self.ser_path))
 

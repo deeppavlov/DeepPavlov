@@ -27,7 +27,6 @@ from deeppavlov.models.ner.layers import stacked_rnn
 from deeppavlov.models.ner.evaluation import precision_recall_f1
 
 
-
 SEED = 42
 MODEL_FILE_NAME = 'ner_model'
 
@@ -55,7 +54,6 @@ class NerNetwork:
         n_tags = len(tag_vocab)
         n_tokens = len(word_vocab)
         n_chars = len(char_vocab)
-
         # Create placeholders
         if embeddings_onethego:
             x_word = tf.placeholder(dtype=tf.float32, shape=[None, None, token_embeddings_dim], name='x_word')
@@ -361,7 +359,6 @@ class NerNetwork:
             x_token[n, :len(utterance)] = self.token_vocab.toks2idxs(utterance)
             for k, token in enumerate(utterance):
                 x_char[n, k, :len(token)] = self.char_vocab.toks2idxs(token)
-
         feed_dict = self._fill_feed_dict(x_token, x_char, mask)
         if self._use_crf:
             y_pred = []

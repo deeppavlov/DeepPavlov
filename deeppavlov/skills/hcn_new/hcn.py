@@ -51,9 +51,10 @@ class HybridCodeNetworkBot(Inferable, Trainable):
                  num_epochs=100,
                  val_patience=5,
                  train_now=False,
+                 save_path=None,
                  **kwargs):
 
-        super().__init__(train_now=train_now, mode=kwargs['mode'])
+        super().__init__(save_path=save_path, train_now=train_now, mode=kwargs['mode'])
 
         self.episode_done = True
         self.use_action_mask = use_action_mask
@@ -165,7 +166,7 @@ class HybridCodeNetworkBot(Inferable, Trainable):
 
     @check_attr_true('train_now')
     def train(self, data):
-
+        
         if self.network.train_now is False:
             raise ConfigError("It looks like 'train_now' of mother model is True, while"
                               "`train_now` of submodel is False. Set `train_now` of submodel"

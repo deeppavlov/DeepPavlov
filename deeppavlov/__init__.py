@@ -1,6 +1,7 @@
 from deeppavlov.core.models.keras_model import KerasModel
 from deeppavlov.dataset_readers.babi_dataset_reader import BabiDatasetReader
 from deeppavlov.dataset_readers.dstc2_dataset_reader import DSTC2DatasetReader
+from deeppavlov.dataset_readers.basic_ner_dataset_reader import NerDatasetReader
 from deeppavlov.dataset_readers.typos import TyposWikipedia, TyposKartaslov, TyposCustom
 from deeppavlov.dataset_readers.classification_dataset_reader import ClassificationDatasetReader
 from deeppavlov.datasets.dstc2_datasets import DSTC2DialogDataset
@@ -26,5 +27,6 @@ from deeppavlov.skills.hcn_new.hcn import HybridCodeNetworkModel
 from deeppavlov.skills.hcn_new.tracker import FeaturizedTracker
 from deeppavlov.vocabs.typos import StaticDictionary, Wiki100KDictionary, RussianWordsVocab
 from deeppavlov.models.ner.ner import NER
+from deeppavlov.core.data.dataset import Dataset
 
 import deeppavlov.metrics.accuracy

@@ -80,7 +80,9 @@ class KerasIntentModel(KerasModel):
 
         self.fasttext_model = embedder
         self.opt['embedding_size'] = self.fasttext_model.dim
-        current_fasttext_md5 = md5_hashsum([self.fasttext_model.ser_path])
+
+        if self.fasttext_model.load_path:
+            current_fasttext_md5 = md5_hashsum([self.fasttext_model.load_path])
 
         # List of parameters that could be changed
         # when the model is initialized from saved and is going to be trained further

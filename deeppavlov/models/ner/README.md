@@ -62,6 +62,7 @@ The config of the model must have the following fields:
     "ner_network": {
         "name": "ner_tagging_network"
     }
+  }
 }
 ```
 wher "name" is always "dstc_slotfilling", reffering to the DstcSlotFillingNetwork class, "train_now" determine whether to train NER network or not, "model_path" defines the path to the files needed for slot filling, "ner_network" is a refference to the NerNetwork class, which has its own parametrs.
@@ -101,7 +102,8 @@ The NER network is a separate model and it has its own initialization parameters
 
 To perform convertation between tokens and indices there are three vocabularies in the config file:
 ```json
- { "vocabs": {
+ { 
+ "vocabs": {
   "token_vocab": {
       "name": "default_vocab",
       "inputs": ["x"],
@@ -150,10 +152,9 @@ This model expects a sentence string with spaced-separated tokens in lowercase a
 
 ```python
 from deeppavlov.core.commands.train import train_model_from_config
-from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.commands.utils import set_usr_dir
 
-MODEL_CONFIG_PATH = 'models/ner/config.json'
+MODEL_CONFIG_PATH = 'models/ner/slot_config.json'
 usr_dir = set_usr_dir(MODEL_CONFIG_PATH)
 train_model_from_config(MODEL_CONFIG_PATH)
 ```
@@ -167,9 +168,9 @@ After training the following code will launch interaction with the model:
 from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.commands.utils import set_usr_dir
 
-CONFIG_PATH = 'deeppavlov/models/ner/config.json'
+CONFIG_PATH = 'deeppavlov/models/ner/slot_config.json'
 usr_dir = set_usr_dir(CONFIG_PATH)
-interact_model(MODEL_CONFIG_PATH)
+interact_model(CONFIG_PATH)
 ```
 
 ## Results
@@ -193,6 +194,9 @@ The F1 measure for the model along with other published solution provided in the
 | Ivanitsky et al.  [7] |                  |              | **87.88**       |
 | Mozharova et al.  [8] |                  | 97.21        |                 |
 | Our (Bi-LSTM+CRF)     | **87.17**        | **99.26**    | 82.10           ||
+
+
+# 
 
 ## Literature
 

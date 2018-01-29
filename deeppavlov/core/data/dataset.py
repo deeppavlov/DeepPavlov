@@ -15,7 +15,10 @@
 import random
 from typing import List, Dict, Generator, Tuple, Any
 
+from deeppavlov.core.common.registry import register
 
+
+@register('basic_dataset')
 class Dataset:
     def split(self, *args, **kwargs):
         pass

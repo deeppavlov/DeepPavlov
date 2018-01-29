@@ -1,26 +1,27 @@
 from collections import Counter, defaultdict
 import itertools
+from warnings import warn
+from pathlib import Path
+
 import numpy as np
-import os
 
 import sys
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.common.attributes import check_path_exists, check_attr_true
+from deeppavlov.core.common.attributes import check_attr_true
+from deeppavlov.core.common.errors import ConfigError
 
 
 @register('default_vocab')
 class DefaultVocabulary(Trainable, Inferable):
-    def __init__(self, inputs, level='token', ser_path=None,
-                 ser_dir='vocabs', ser_file='vocab.txt',
+    def __init__(self, inputs, save_path, load_path, level='token',
                  special_tokens=tuple(), default_token=None,
                  tokenize=False, train_now=False, *args, **kwargs):
 
-        super().__init__(ser_path=ser_path,
-                         ser_dir=ser_dir,
-                         ser_file=ser_file,
+        super().__init__(load_path=load_path,
+                         save_path=save_path,
                          train_now=train_now,
                          mode=kwargs['mode'])
 
@@ -30,11 +31,6 @@ class DefaultVocabulary(Trainable, Inferable):
 
         # TODO check via decorator
         self.reset()
-
-        if not self.ser_path.is_file():
-            with open(self.ser_path, 'a'):
-                os.utime(self.ser_path, None)
-
         self.load()
 
     @staticmethod
@@ -102,16 +98,11 @@ class DefaultVocabulary(Trainable, Inferable):
 
     @check_attr_true('train_now')
     def train(self, data, **kwargs):
-        self.reset()
-        self._train(
-            tokens=filter(None, itertools.chain.from_iterable(
-                map(self.preprocess_fn, data))),
-            counts=None,
-            update=True
-        )
+        self.fit(data)
+        self.save()
 
     @check_attr_true('train_now')
-    def fit(self, data, **kwargs):
+    def fit(self, data):
         self.reset()
         self._train(
             tokens=filter(None, itertools.chain.from_iterable(
@@ -137,23 +128,31 @@ class DefaultVocabulary(Trainable, Inferable):
         return [self.__getitem__(s) for s in samples]
 
     def save(self):
-        print("[saving vocabulary to `{}`]".format(self.ser_path), file=sys.stderr)
+        print("[saving vocabulary to `{}`]".format(self.save_path), file=sys.stderr)
 
-        with self.ser_path.open('wt') as f:
+        with self.save_path.open('wt') as f:
             for n in range(len(self._t2i)):
                 token = self._i2t[n]
                 cnt = self.freqs[token]
                 f.write('{}\t{:d}\n'.format(token, cnt))
 
-    @check_path_exists()
+    # @check_path_exists()
     def load(self):
-        print("[loading vocabulary from `{}`]".format(self.ser_path), file=sys.stderr)
-        tokens, counts = [], []
-        for ln in self.ser_path.open('r'):
-            token, cnt = ln.split('\t', 1)
-            tokens.append(token)
-            counts.append(int(cnt))
-        self._train(tokens=tokens, counts=counts, update=True)
+        if self.load_path:
+            if self.load_path.is_file():
+                print("[loading vocabulary from `{}`]".format(self.load_path), file=sys.stderr)
+                tokens, counts = [], []
+                for ln in self.load_path.open('r'):
+                    token, cnt = ln.split('\t', 1)
+                    tokens.append(token)
+                    counts.append(int(cnt))
+                self._train(tokens=tokens, counts=counts, update=True)
+            elif isinstance(self.load_path, Path):
+                if not self.load_path.parent.is_dir():
+                    raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
+                        self.__class__.__name__))
+        else:
+            raise ConfigError("`load_path` for {} is not provided!".format(self))
 
     def idx2tok(self, idx):
         return self._i2t[idx]
