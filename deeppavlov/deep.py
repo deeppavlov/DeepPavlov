@@ -12,7 +12,7 @@ from deeppavlov.core.commands.infer import interact_model
 parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
-                    choices=['train', 'interact'])
+                    choices={'train', 'interact'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 
 
