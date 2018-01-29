@@ -154,7 +154,7 @@ This model expects a sentence string with spaced-separated tokens in lowercase a
 from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.utils import set_usr_dir
 
-MODEL_CONFIG_PATH = 'models/ner/config.json'
+MODEL_CONFIG_PATH = 'models/ner/slot_config.json'
 usr_dir = set_usr_dir(MODEL_CONFIG_PATH)
 train_model_from_config(MODEL_CONFIG_PATH)
 ```
@@ -168,7 +168,7 @@ After training the following code will launch interaction with the model:
 from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.commands.utils import set_usr_dir
 
-CONFIG_PATH = 'deeppavlov/models/ner/config.json'
+CONFIG_PATH = 'deeppavlov/models/ner/slot_config.json'
 usr_dir = set_usr_dir(CONFIG_PATH)
 interact_model(CONFIG_PATH)
 ```

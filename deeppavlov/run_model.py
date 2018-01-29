@@ -17,9 +17,9 @@ from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 # models/classifiers/intents/config_dstc2.json
 
 # NER
-# models/ner/config.json
+# models/ner/slot_config.json
 
-PIPELINE_CONFIG_PATH = 'models/ner/config.json'
+PIPELINE_CONFIG_PATH = 'models/ner/ner_config.json'
 set_usr_dir(PIPELINE_CONFIG_PATH)
 try:
     train_model_from_config(PIPELINE_CONFIG_PATH)

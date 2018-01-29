@@ -10,15 +10,15 @@
     "name": "ner",
     "train_now": true,
     "epochs": 3,
-    "save_path": "../download/model/ner_model",
-    "load_path": "../download/model/ner_model",
+    "save_path": "../download/ner_model/ner_model",
+    "load_path": "../download/ner_model/ner_model",
     "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
     "verbouse": true,
     "filter_width": 7,
     "embeddings_dropout": true,
     "n_filters": [
-      64,
-      64
+      128,
+      128
     ],
     "token_embeddings_dim": 64,
     "char_embeddings_dim": 32,
@@ -34,24 +34,24 @@
         "inputs": ["x"],
         "train_now": true,
 		"level": "token",
-        "save_path": "../download/model/word.dict",
-        "load_path": "../download/model/word.dict"
+        "save_path": "../download/ner_model/word.dict",
+        "load_path": "../download/ner_model/word.dict"
       },
     "tag_vocab": {
         "name": "default_vocab",
         "inputs": ["y"],
         "train_now": true,
 		"level": "token",
-        "save_path": "../download/model/tag.dict",
-        "load_path": "../download/model/tag.dict"
+        "save_path": "../download/ner_model/tag.dict",
+        "load_path": "../download/ner_model/tag.dict"
       },
     "char_vocab":{
         "name": "default_vocab",
         "inputs": ["x"],
         "train_now": true,
 		"level": "char",
-        "save_path": "../download/model/char.dict",
-        "load_path": "../download/model/char.dict"
+        "save_path": "../download/ner_model/char.dict",
+        "load_path": "../download/ner_model/char.dict"
       }
   }
 }
