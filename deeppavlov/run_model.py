@@ -19,7 +19,7 @@ from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 # NER
 # models/ner/config.json
 
-PIPELINE_CONFIG_PATH = 'skills/hcn_new/config.json'
+PIPELINE_CONFIG_PATH = 'models/classifiers/intents/config_snips.json'
 set_usr_dir(PIPELINE_CONFIG_PATH)
 try:
     train_model_from_config(PIPELINE_CONFIG_PATH)
