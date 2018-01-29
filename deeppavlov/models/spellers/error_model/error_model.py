@@ -5,6 +5,7 @@ from heapq import heappop, heappushpop, heappush
 from math import log, exp
 
 import kenlm
+import sys
 from tqdm import tqdm
 
 from deeppavlov.core.common.registry import register
@@ -214,7 +215,7 @@ class ErrorModel(Inferable, Trainable):
             self.costs[(w, s)] = log(p)
 
     def save(self):
-        print("[saving error_model to `{}`]".format(self.save_path))
+        print("[saving error_model to `{}`]".format(self.save_path), file=sys.stderr)
 
         with open(self.save_path, 'w', newline='') as tsv_file:
             writer = csv.writer(tsv_file, delimiter='\t')
@@ -224,7 +225,7 @@ class ErrorModel(Inferable, Trainable):
     def load(self):
         if self.load_path:
             if self.load_path.is_file():
-                print("[loading error_model from `{}`]".format(self.load_path))
+                print("[loading error_model from `{}`]".format(self.load_path), file=sys.stderr)
                 with open(self.load_path, 'r', newline='') as tsv_file:
                     reader = csv.reader(tsv_file, delimiter='\t')
                     for w, s, p in reader:
