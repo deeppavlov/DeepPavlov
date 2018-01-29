@@ -6,20 +6,18 @@
   "dataset": {
     "name": "dstc2_ner_dataset",
     "dataset_path": "../data/dstc2"
-
   },
   "model": {
     "name": "ner",
     "train_now": true,
-    "ser_dir": "model",
-    "ser_file": "dstc_ner_model",
+    "save_path": "../download/ner_model/ner_model",
     "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
     "verbouse": true,
     "filter_width": 7,
     "embeddings_dropout": true,
     "n_filters": [
-      64,
-      64
+      128,
+      128
     ],
     "token_embeddings_dim": 64,
     "char_embeddings_dim": 32,
@@ -29,31 +27,30 @@
     "dropout_rate": 0.5
 
   },
-
   "vocabs": {
     "word_vocab": {
         "name": "default_vocab",
         "inputs": ["x"],
         "train_now": true,
 		"level": "token",
-        "ser_dir": "model/",
-		"ser_file": "token.dict"
+        "save_path": "../download/ner_model/word.dict",
+        "load_path": "../download/ner_model/word.dict"
       },
     "tag_vocab": {
         "name": "default_vocab",
         "inputs": ["y"],
         "train_now": true,
 		"level": "token",
-        "ser_dir": "model/",
-		"ser_file": "tag.dict"
+        "save_path": "../download/ner_model/tag.dict",
+        "load_path": "../download/ner_model/tag.dict"
       },
     "char_vocab":{
         "name": "default_vocab",
         "inputs": ["x"],
         "train_now": true,
 		"level": "char",
-        "ser_dir": "model/",
-		"ser_file": "char.dict"
+        "save_path": "../download/ner_model/char.dict",
+        "load_path": "../download/ner_model/char.dict"
       }
   },
   "train": {

@@ -86,7 +86,7 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
             else:
                 warn('Provided `load_path` is incorrect!')
         else:
-            warn('No `load_path` is provided for {}".format(self.__class__.__name__)')
+            warn("No `load_path` is provided for {}".format(self.__class__.__name__))
 
     @overrides
     def load(self):

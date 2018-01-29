@@ -20,8 +20,8 @@ from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 # models/ner/slot_config.json
 
 # PIPELINE_CONFIG_PATH = 'models/classifiers/intents/config_train.json'
-PIPELINE_CONFIG_PATH = 'models/ner/ner_config_train.json'
-# PIPELINE_CONFIG_PATH = 'models/spellers/error_model/config_ru.json'
+# PIPELINE_CONFIG_PATH = 'models/ner/ner_config_train.json'
+PIPELINE_CONFIG_PATH = 'models/spellers/error_model/config_ru.json'
 # PIPELINE_CONFIG_PATH = 'skills/hcn_new/config.json'
 set_usr_dir(PIPELINE_CONFIG_PATH)
 try:
