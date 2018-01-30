@@ -47,9 +47,10 @@ python download.py [-all]
 
 Then the models can be interacted or trained with the following command:
 
-```sh
+```
 python deep.py <mode> <path_to_config>
 ```
+
 * `<mode>` can be 'train', 'interact' or 'interactbot'
 * `<path_to_config>` should be a path to an NLP pipeline json config
 
@@ -100,7 +101,9 @@ An NLP pipeline config is a JSON file, which consists of four required elements:
   }
 }
 ```
+
 ### DatasetReader
+
 `DatasetReader` class reads data and returns it in a specified format.
 A concrete `DatasetReader` class should be inherited from base
 `deeppavlov.data.dataset_reader.DatasetReader` class and registered with a codename:
@@ -112,6 +115,7 @@ class DSTC2DatasetReader(DatasetReader):
 
 ### Dataset
 
+`Dataset` forms needed sets of data ('train', 'valid', 'test') and forms 
 ### Vocab
 
 ### Model
