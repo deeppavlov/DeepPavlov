@@ -36,7 +36,7 @@ With the purpose to interact with our pretrained models, they should be download
 cd deeppavlov/
 python download.py [-all]
 ```
-* `[-all]` option is not required for basic examples; it will download **all** our pretrained data.
+* `[-all]` option is not required for basic examples; it will download **all** our pretrained models.
 
 * Warning! `[-all]` requires about 10 GB of free space on disk.
 
