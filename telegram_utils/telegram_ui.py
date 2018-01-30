@@ -64,5 +64,4 @@ def get_model_info(model, trait):
 def interact_model_by_telegram(config_path, token):
     config = read_json(config_path)
     model = build_model_from_config(config)
-    print('MODEL_NAME:::::::' + type(model).__name__)
     init_bot_for_model(token, model)

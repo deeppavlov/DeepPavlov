@@ -15,8 +15,8 @@
     "start_message": "GoalOrientedBot",
     "help_message": "GoalOrientedBot"
   },
-  "3": {
-    "start_message": "DeepPavlov inference bot",
-    "help_message": "DeepPavlov inference bot"
+  "KerasIntentModel": {
+    "start_message": "KerasIntentModel",
+    "help_message": "KerasIntentModel"
   }
 }
