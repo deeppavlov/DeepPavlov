@@ -35,6 +35,7 @@ def download(dest_file_path, source_url):
             if chunk:  # filter out keep-alive new chunks
                 pbar.update(len(chunk))
                 f.write(chunk)
+        f.close()
 
 
 def untar(file_path, extract_folder=None):
