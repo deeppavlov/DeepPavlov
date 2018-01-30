@@ -45,8 +45,11 @@ Then the models can be interacted or trained with the following command:
 ```
 python deep.py <mode> <path_to_config>
 ```
-* `<mode>` can be 'train' or 'interact'
+* `<mode>` can be 'train', 'interact' or 'interactbot'
 * `<path_to_config>` should be a path to an NLP pipeline json config
+
+For 'interactbot' mode you should specify Telegram bot token in `-t` or `--token` parameter or in `TELEGRAM_TOKEN` environment variable. 
+
 
 Available model configs are:
 
