@@ -26,8 +26,7 @@ from pathlib import Path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import SimpleTFModel
 from deeppavlov.models.ner.network import NerNetwork
-from deeppavlov.core.data.utils import tokenize_reg
-from deeppavlov.core.data.utils import download, download_untar
+from deeppavlov.core.data.utils import tokenize_reg, download, download_decompress
 
 
 @register('dstc_slotfilling')
@@ -60,7 +59,7 @@ class DstcSlotFillingNetwork(SimpleTFModel):
         if download_best_model:
             model_path = str(self.load_path.parent.absolute())
             best_model_url = 'http://lnsigo.mipt.ru/export/models/ner/ner_dstc_model.tar.gz'
-            download_untar(best_model_url, model_path)
+            download_decompress(best_model_url, model_path)
 
         # Training parameters
         # Find all parameters for network train
