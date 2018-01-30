@@ -22,10 +22,21 @@ from deeppavlov.core.commands.infer import build_model_from_config
 def init_bot_for_model(token, model):
     bot = telebot.TeleBot(token)
 
-    @bot.message_handler(commands=['start', 'help'])
-    def send_welcome(message):
+    model_name = type(model).__name__
+    models_info = read_json('../telegram_utils/models_info.json')
+    model_info = models_info[model_name] if model_name in models_info else models_info['@default']
+
+    @bot.message_handler(commands=['start'])
+    def send_start_message(message):
         chat_id = message.chat.id
-        bot.send_message(chat_id, 'Welcome to the DeepPavlov inference bot!')
+        out_message = model_info['start_message']
+        bot.send_message(chat_id, out_message)
+
+    @bot.message_handler(commands=['help'])
+    def send_help_message(message):
+        chat_id = message.chat.id
+        out_message = model_info['help_message']
+        bot.send_message(chat_id, out_message)
 
     @bot.message_handler()
     def handle_inference(message):
@@ -39,7 +50,19 @@ def init_bot_for_model(token, model):
     bot.polling()
 
 
+def get_model_info(model, trait):
+    models_info = read_json('../telegram_utils/models_info.json')
+
+    if model in models_info:
+        model_info = models_info[model][trait]
+    else:
+        model_info = "DeepPavlov inference bot"
+
+    return model_info
+
+
 def interact_model_by_telegram(config_path, token):
     config = read_json(config_path)
     model = build_model_from_config(config)
+    print('MODEL_NAME:::::::' + type(model).__name__)
     init_bot_for_model(token, model)

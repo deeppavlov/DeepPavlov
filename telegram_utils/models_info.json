@@ -1,0 +1,22 @@
+{
+  "@default": {
+    "start_message": "DeepPavlov inference bot",
+    "help_message": "DeepPavlov inference bot"
+  },
+  "DstcSlotFillingNetwork": {
+    "start_message": "DstcSlotFillingNetwork",
+    "help_message": "DstcSlotFillingNetwork"
+  },
+  "ErrorModel": {
+    "start_message": "ErrorModel",
+    "help_message": "ErrorModel"
+  },
+  "GoalOrientedBot": {
+    "start_message": "GoalOrientedBot",
+    "help_message": "GoalOrientedBot"
+  },
+  "3": {
+    "start_message": "DeepPavlov inference bot",
+    "help_message": "DeepPavlov inference bot"
+  }
+}
