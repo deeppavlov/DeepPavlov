@@ -21,8 +21,8 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import TFModel
 
 
-@register('custom_rnn')
-class HybridCodeNetworkModel(TFModel):
+@register('go_bot_rnn')
+class GoalOrientedBotNetwork(TFModel):
 
     def __init__(self, **params):
         self.opt = params
@@ -45,6 +45,7 @@ class HybridCodeNetworkModel(TFModel):
 
         if self.get_checkpoint_state():
         #TODO: save/load params to json, here check compatability
+            print("\n:: initializing `{}` from saved".format(self.__class__.__name__))
             self.load()
         else:
             print("\n:: initializing `{}` from scratch\n".format(self.__class__.__name__))

@@ -4,7 +4,7 @@
     "data_path": "../download/dstc2"
   },
   "dataset": {
-    "name": "dstc2_dialog_dataset"
+    "name": "dialog_dataset"
   },
   "vocabs": {
     "word_vocab": {
@@ -57,18 +57,19 @@
   },
   "model": {
     "train_now": true,
-    "name": "hcn_new",
+    "name": "go_bot",
     "debug": 0,
     "num_epochs": 1,
+    "val_patience": 5,
     "template_path": "../download/dstc2/dstc2-templates.txt",
     "network": {
       "train_now": true,
       "load_path": "../download/go_bot_rnn/model",
       "save_path": "../download/go_bot_rnn/model",
-      "name": "custom_rnn",
-      "learning_rate": 0.03,
+      "name": "go_bot_rnn",
+      "learning_rate": 0.02,
       "hidden_dim": 128,
-      "obs_size": 830,
+      "obs_size": 530,
       "use_action_mask": false,
       "action_size": 45
     },
@@ -140,14 +141,7 @@
     "bow_encoder": {
       "name": "bow"
     },
-    "embedder": {
-      "name": "fasttext",
-      "emb_module": "pyfasttext",
-      "mean": true,
-      "dim": 300,
-      "save_path": "../download/embeddings/wiki.en.bin",
-      "load_path": "../download/embeddings/wiki.en.bin"
-    },
+    "embedder": null,
     "tokenizer": {
       "name": "spacy_tokenizer"
     },

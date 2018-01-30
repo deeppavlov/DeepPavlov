@@ -10,6 +10,7 @@
   "model": {
     "name": "dstc_slotfilling",
     "train_now": true,
+	"num_epochs": 10,
     "save_path": "../download/slots/slot_vals.json",
     "load_path": "../download/slots/slot_vals.json",
     "ner_network": {
@@ -62,5 +63,5 @@
       "level": "char"
     }
   },
-  "num_epochs": 1
+  "num_epochs": 5
 }

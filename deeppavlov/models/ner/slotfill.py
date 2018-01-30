@@ -17,6 +17,7 @@ from deeppavlov.core.common.file import read_json
 class DstcSlotFillingNetwork(Inferable, Trainable):
     def __init__(self, ner_network: NerNetwork,
                  save_path, load_path=None,
+                 num_epochs=10,
                  train_now=False, **kwargs):
 
         super().__init__(save_path=save_path, load_path=load_path,
@@ -25,8 +26,8 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
         # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
         if not self.load_path.is_file():
             self.load()
-
-        print("Loading slot values")
+            
+        print("[ loading slot values from `{}` ]".format(str(self.load_path)))
         self._slot_vals = read_json(self.load_path)
 
         self._ner_network = ner_network
@@ -37,7 +38,8 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
         self._ner_network.save()
 
     @overrides
-    def train(self, data, num_epochs=2):
+    def train(self, data, num_epochs=10):
+        num_epochs = num_epochs or self.num_epochs
         if self.train_now:
             for epoch in range(num_epochs):
                 self._ner_network.train(data)

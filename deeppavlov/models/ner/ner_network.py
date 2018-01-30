@@ -178,13 +178,12 @@ class NerNetwork(SimpleTFModel):
         self.verbouse = verbouse
         self._mask = mask_ph
 
-        print("Init NER network")
         sess.run(tf.global_variables_initializer())
 
     def save(self):
         save_path = str(self.save_path)
         saver = tf.train.Saver()
-        print('Saving NerNetwork model to {}'.format(save_path))
+        print('[ saving model to `{}` ]'.format(save_path))
         saver.save(self._sess, save_path)
 
     @overrides
@@ -192,8 +191,10 @@ class NerNetwork(SimpleTFModel):
         if self.load_path:
             if isinstance(self.load_path, Path) and self.load_path.parent.is_dir():
                 if tf.train.get_checkpoint_state(self.load_path.parent) is not None:
+                    print("\n:: initializing `{}` from saved"\
+                          .format(self.__class__.__name__))
                     saver = tf.train.Saver()
-                    print('Restore NerNetwork model from {}'.format(str(self.load_path)))
+                    print('\n:: restoring checkpoint from {}\n'.format(str(self.load_path)))
                     saver.restore(self._sess, str(self.load_path))
                 else:
                     warn("Provided `load_path` is empty! Won't restore from checkpoint.")
