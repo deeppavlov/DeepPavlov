@@ -11,7 +11,7 @@ from deeppavlov.core.data.urls import REQ_URLS, ALL_URLS, EMBEDDING_URLS
 parser = argparse.ArgumentParser()
 
 parser.add_argument('-all', action='store_true',
-                    help="Download everything. Warning! There should be at least 15 GB space"
+                    help="Download everything. Warning! There should be at least 10 GB space"
                          " available on disk.")
 
 
