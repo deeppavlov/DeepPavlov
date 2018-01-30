@@ -6,7 +6,7 @@ p = (Path(__file__) / ".." / "..").resolve()
 sys.path.append(str(p))
 
 from deeppavlov.core.data.utils import download, download_decompress
-from deeppavlov.core.data.urls import REQ_URLS, ALL_URLS, EMBEDDING_URLS
+from deeppavlov.core.data.urls import REQ_URLS, ALL_URLS, EMBEDDING_URLS, DATA_URLS
 
 parser = argparse.ArgumentParser()
 
@@ -32,6 +32,10 @@ def download_resources(args):
             embeddings_path.mkdir(exist_ok=True)
             dest_path = embeddings_path.joinpath(url.split("/")[-1])
             download(dest_path, url)
+
+        elif url in DATA_URLS:
+            dest_path = download_path.joinpath(url.split("/")[-1].split(".")[0])
+            download_decompress(url, dest_path)
 
         else:
             download_decompress(url, dest_path)
