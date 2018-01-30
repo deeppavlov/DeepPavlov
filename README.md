@@ -28,9 +28,6 @@ An Apache 2.0 NLP research library, built on TensorFlow and Keras, for
 2. Activate the environment.
 3. `cd` to the project root.
 4. `pip install -r requirements.txt`
-5. Download spacy requirements:
-
-    `python -m spacy download en`
 
 ## Quick start
 With the purpose to interact with our pretrained models, they should be downloaded first:
