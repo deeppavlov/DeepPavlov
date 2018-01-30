@@ -33,24 +33,24 @@
         "inputs": ["x"],
         "train_now": true,
 		"level": "token",
-        "save_path": "../download/model/word.dict",
-        "load_path": "../download/model/word.dict"
+        "save_path": "../download/vocabs/word.dict",
+        "load_path": "../download/vocabs/word.dict"
       },
     "tag_vocab": {
         "name": "default_vocab",
         "inputs": ["y"],
         "train_now": true,
 		"level": "token",
-        "save_path": "../download/model/tag.dict",
-        "load_path": "../download/model/tag.dict"
+        "save_path": "../download/vocabs/tag.dict",
+        "load_path": "../download/vocabs/tag.dict"
       },
     "char_vocab":{
         "name": "default_vocab",
         "inputs": ["x"],
         "train_now": true,
 		"level": "char",
-        "save_path": "../download/model/char.dict",
-        "load_path": "../download/model/char.dict"
+        "save_path": "../download/vocabs/char.dict",
+        "load_path": "../download/vocabs/char.dict"
       }
   }
 }
