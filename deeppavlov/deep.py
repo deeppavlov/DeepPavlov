@@ -30,7 +30,7 @@ def main():
         if args.mode == 'train':
             train_model_from_config(pipeline_config_path)
         elif args.mode == 'interact':
-                interact_model(pipeline_config_path)
+            interact_model(pipeline_config_path)
         elif args.mode == 'interactbot':
             if not token:
                 print('Token required: initiate -t parm or TELEGRAM_BOT env var with Telegram bot token')
