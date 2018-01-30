@@ -22,7 +22,7 @@ from overrides import overrides
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
-from deeppavlov.core.data.utils import download_untar, mark_done
+from deeppavlov.core.data.utils import download_decompress, mark_done
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +44,7 @@ class DSTC2DatasetReader(DatasetReader):
         required_files = (self._data_fname(dt) for dt in ('trn', 'val', 'tst'))
         if not all(Path(data_path, f).exists() for f in required_files):
             print('Loading dstc2 from `{}` to `{}`'.format(self.url, data_path))
-            download_untar(self.url, data_path)
+            download_decompress(self.url, data_path)
             mark_done(data_path)
 
         data = {
