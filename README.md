@@ -1,12 +1,12 @@
 # DeepPavlov (pre alfa)
 An Apache 2.0 NLP research library, built on TensorFlow and Keras, for 
- * building complicated natural language processing pipelines
- * training and infering natural language processing algorithms
+ * Building complicated NLP pipelines
+ * Training and infering NLP algorithms
  
 ## Features
  * Goal-oriented dialog agent
- * Slot filling commponent
- * Intnet classification component
+ * Slot filling component
+ * Intent classification component
  * Automatic spelling correction component
  * Pretrained embeddings library
 
@@ -17,12 +17,15 @@ An Apache 2.0 NLP research library, built on TensorFlow and Keras, for
 4. `pip install -r requirements.txt`
 
 ## Basic examples
-With the purpose to interact with our trained models, they should be downloaded first:
+With the purpose to interact with our pretrained models, they should be downloaded first:
 
 ```
 cd deeppavlov/
-python download.py -all
+python download.py [-all]
 ```
+* `[-all]` option is not required for basic examples; it will download **all** our pretrained data.
+
+* Warning! `[-all]` requires about 10 GB of free space on disk.
 
 Then the models can be interacted or trained with the following command:
 
