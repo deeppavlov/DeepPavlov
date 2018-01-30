@@ -9,37 +9,31 @@ sys.path.append(str(p))
 from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.infer import interact_model
-from utils.telegram_ui import interact_model_by_telegram
+from telegram_utils.telegram_ui import interact_model_by_telegram
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
                     choices={'train', 'interact'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
-parser.add_argument("--bot", action='store_true',
-                    help="deploy Telegram bot for the model", default=False)
-parser.add_argument("--token", help="telegram bot token", type=str, default=None)
+parser.add_argument("-t", "--token", help="telegram bot token", type=str)
 
 
 def main():
     args = parser.parse_args()
     pipeline_config_path = args.config_path
     set_usr_dir(pipeline_config_path)
-    token = args.token if args.token is not None else os.getenv('TELEGRAM_TOKEN')
+
+    token = args.token or os.getenv('TELEGRAM_TOKEN')
 
     try:
         if args.mode == 'train':
             train_model_from_config(pipeline_config_path)
         elif args.mode == 'interact':
-            if args.bot is False:
+            if not token:
                 interact_model(pipeline_config_path)
             else:
-                if token is None:
-                    print(
-                        'Please, provide Telegram bot token'
-                        ' via command line or TELEGRAM_TOKEN env variable')
-                else:
-                    interact_model_by_telegram(pipeline_config_path, token)
+                interact_model_by_telegram(pipeline_config_path, token)
     finally:
         usr_dir = get_usr_dir()
         if not list(usr_dir.iterdir()):
