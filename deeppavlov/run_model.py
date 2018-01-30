@@ -6,7 +6,7 @@ from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 # skills/hcn/config.json
 
 # HCN_new
-# skills/hcn_new/config.json
+# skills/go_bot/config.json
 
 # Speller
 # models/spellers/error_model/config_en.json
@@ -19,7 +19,7 @@ from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 # NER
 # models/ner/config.json
 
-PIPELINE_CONFIG_PATH = 'skills/hcn_new/basic_config.json'
+PIPELINE_CONFIG_PATH = 'skills/go_bot/config.json'
 set_usr_dir(PIPELINE_CONFIG_PATH)
 try:
     train_model_from_config(PIPELINE_CONFIG_PATH)
