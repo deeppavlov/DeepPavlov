@@ -59,14 +59,14 @@
     "train_now": true,
     "name": "hcn_new",
     "debug": 0,
-    "num_epochs": 1,
+    "num_epochs": 100,
     "template_path": "../download/dstc2/dstc2-templates.txt",
     "network": {
       "train_now": true,
       "load_path": "../download/go_bot_rnn/model",
       "save_path": "../download/go_bot_rnn/model",
       "name": "custom_rnn",
-      "learning_rate": 0.03,
+      "learning_rate": 0.02,
       "hidden_dim": 128,
       "obs_size": 830,
       "use_action_mask": false,
@@ -89,9 +89,9 @@
     },
     "intent_classifier": {
       "name": "intent_model",
+      "save_path": "../download/intents/intent_cnn",
+      "load_path": "../download/intents/intent_cnn",
       "opt": {
-        "save_path": "../download/intents/intent_cnn",
-        "load_path": "../download/intents/intent_cnn",
         "train_now": true,
         "kernel_sizes_cnn": [
           3,
