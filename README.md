@@ -28,6 +28,11 @@ An Apache 2.0 NLP research library, built on TensorFlow and Keras, for
 2. Activate the environment.
 3. `cd` to the project root.
 4. `pip install -r requirements.txt`
+5. Install `spacy` requirements:
+
+    ```
+    python -m spacy download en
+    ```
 
 ## Quick start
 With the purpose to interact with our pretrained models, they should be downloaded first:
@@ -55,7 +60,7 @@ Available model configs are:
 
 *skills/go_bot/config.json*
 
-*models/classifiers/intents/config.json*
+*models/classifiers/intents/config_dstc2.json*
 
 *models/ner/config.json*
 
@@ -77,3 +82,38 @@ DeepPavlov is Apache 2.0 - licensed.
 
 ## DeepPavlov overview
 
+### Describe modules here (skills, models, data, etc.)
+
+### Config
+
+An NLP pipeline config is a JSON file, which consists of four required elements:
+
+```
+{
+  "dataset_reader": {
+  },
+  "dataset": {
+  },
+  "vocabs": {
+  },
+  "model": {
+  }
+}
+```
+### DatasetReader
+`DatasetReader` class reads data and returns it in a specified format.
+A concrete `DatasetReader` class should be inherited from base
+`deeppavlov.data.dataset_reader.DatasetReader` class and registered with a codename:
+
+```python
+@register('dstc2_datasetreader')
+class DSTC2DatasetReader(DatasetReader):
+```
+
+### Dataset
+
+### Vocab
+
+### Model
+
+## Suggested models
