@@ -102,6 +102,11 @@ An NLP pipeline config is a JSON file, which consists of four required elements:
 }
 ```
 
+Each class in the config has `name` parameter, which is its registered codename
+ and can have any other parameters, repeating its `__init__()` method arguments.
+ Default values of `__init__()` arguments will be overriden with the config values
+ during class instance initialization.
+
 ### DatasetReader
 
 `DatasetReader` class reads data and returns it in a specified format.
@@ -115,9 +120,23 @@ class DSTC2DatasetReader(DatasetReader):
 
 ### Dataset
 
-`Dataset` forms needed sets of data ('train', 'valid', 'test') and forms 
+`Dataset` forms needed sets of data ('train', 'valid', 'test') and forms data batches.
+A concrete `Dataset` class should be registered and can be inherited from
+`deeppavlov.data.dataset_reader.Dataset` class. `deeppavlov.data.dataset_reader.Dataset`
+is not an abstract class and can be used as `Dataset` as well.
+
 ### Vocab
+`Vocab` is a trainable class, which forms and serialize vocabs. Vocabs index any data.
+ For example, tokens to indices and backwards, chars to indices, classes to indices, etc.
+ It can index X (features) and y (answers) types of data. A concrete `Vocab` class
+ should be registered and can be inherited from `deeppavlov.data.vocab.DefaultVocabulary` class.
+ `deeppavlov.data.vocab.DefaultVocabulary` is not an abstrat class and can be used as `Vocab` as well.
 
 ### Model
+
+
+
+### Describe usage here (Training and Infering)
+### Describe Interfaces?? Trainable, Inferable and derived model types
 
 ## Suggested models
