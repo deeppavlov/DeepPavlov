@@ -14,7 +14,7 @@ from telegram_utils.telegram_ui import interact_model_by_telegram
 parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
-                    choices={'train', 'interact'})
+                    choices={'train', 'interact', 'interactbot'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 parser.add_argument("-t", "--token", help="telegram bot token", type=str)
 
@@ -30,8 +30,11 @@ def main():
         if args.mode == 'train':
             train_model_from_config(pipeline_config_path)
         elif args.mode == 'interact':
+            interact_model(pipeline_config_path)
+        elif args.mode == 'interactbot':
             if not token:
-                interact_model(pipeline_config_path)
+                print(
+                    'Token required: initiate -t parm or TELEGRAM_BOT env var with Telegram bot token')
             else:
                 interact_model_by_telegram(pipeline_config_path, token)
     finally:

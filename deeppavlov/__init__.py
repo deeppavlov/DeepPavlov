@@ -4,7 +4,7 @@ from deeppavlov.dataset_readers.dstc2_dataset_reader import DSTC2DatasetReader
 from deeppavlov.dataset_readers.basic_ner_dataset_reader import NerDatasetReader
 from deeppavlov.dataset_readers.typos import TyposWikipedia, TyposKartaslov, TyposCustom
 from deeppavlov.dataset_readers.classification_dataset_reader import ClassificationDatasetReader
-from deeppavlov.datasets.dstc2_datasets import DSTC2DialogDataset
+from deeppavlov.datasets.dialog_dataset import DialogDataset
 from deeppavlov.datasets.dstc2_datasets import DstcNerDataset
 from deeppavlov.datasets.hcn_dataset import HCNDataset
 from deeppavlov.datasets.intent_dataset import IntentDataset
@@ -23,8 +23,9 @@ from deeppavlov.models.trackers.hcn_at import ActionTracker
 from deeppavlov.models.trackers.hcn_et import EntityTracker
 from deeppavlov.skills.dummy_skill.dummy import DummySkill
 from deeppavlov.core.data.vocab import DefaultVocabulary
-from deeppavlov.skills.hcn_new.hcn import HybridCodeNetworkModel
-from deeppavlov.skills.hcn_new.tracker import FeaturizedTracker
+from deeppavlov.skills.go_bot.go_bot import GoalOrientedBot
+from deeppavlov.skills.go_bot.network import GoalOrientedBotNetwork
+from deeppavlov.skills.go_bot.tracker import FeaturizedTracker
 from deeppavlov.vocabs.typos import StaticDictionary, Wiki100KDictionary, RussianWordsVocab
 from deeppavlov.models.ner.ner import NER
 from deeppavlov.core.data.dataset import Dataset
