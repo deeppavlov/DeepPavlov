@@ -49,7 +49,7 @@ Then the models can be interacted or trained with the following command:
 
 ```
 python deep.py <mode> <path_to_config>
-```
+```bash
 * `<mode>` can be 'train', 'interact' or 'interactbot'
 * `<path_to_config>` should be a path to an NLP pipeline json config
 
@@ -88,7 +88,7 @@ DeepPavlov is Apache 2.0 - licensed.
 
 An NLP pipeline config is a JSON file, which consists of four required elements:
 
-```
+```json
 {
   "dataset_reader": {
   },
