@@ -32,7 +32,7 @@ class Serializable(metaclass=ABCMeta):
             if mode != 'train' and self.load_path != self.save_path:
                 warn("Load path '{}' differs from save path '{}' in '{}' mode for {}."
                      .format(self.load_path, self.save_path, mode, self.__class__.__name__))
-        elif mode != 'train':
+        elif mode != 'train' and self.save_path:
             self.load_path = self.save_path
             warn("No load path is set for {} in '{}' mode. Using save path instead"
                  .format(self.__class__.__name__, mode))
