@@ -2,10 +2,11 @@
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 ![tensorflow 1.4](https://img.shields.io/badge/tensorflow-1.4-green.svg)
 
-# Dialogue Manager for goal-oriented task 
-The dialogue manager is based on [[1]](#references) which introduces Hybrid Code Networks (HCNs) that combine an RNN with domain-specific knowledge and system action templates.
+# Dialogue Agent for goal-oriented task 
+The dialogue agent is based on [[1]](#references) which introduces Hybrid Code Networks (HCNs) that combine an RNN with domain-specific knowledge and system action templates.
 
-Compared to existing end-to-end approaches, HCNs considerably reduce the amount of training data required, while retaining the key benefit of inferring a latent representation of dialog state.
+![alt text](diagram.png "Goal-oriented bot diagram")
+**Diagram 1.** Dotted lines correspond to unrequired (optional) modules, black squares to trained models, trapezes are modules that depend on a dataset and must be provided by software developer.
 
 Here is an simple example of interaction with a trained dialogue bot:
 
@@ -184,14 +185,15 @@ As far as out dataset is a modified version of official DSTC2-dataset [[2]](#ref
 
 But comparisons for hcn model modifications trained on out DSTC2-dataset are presented:
 
-|                   Model                      |  Action accuracy  |  Turn accuracy  |  Dialog accuracy |
-|----------------------------------------------|-------------------|-----------------|------------------|
-|basic hcn			                               |                   |                 |                  |
-|hcn with ner slot-filler			                 |                   |                 |                  |
-|hcn with ner slot-filler & fasttext embeddings|                   |                 |                  |
-|hcn with ner slot-filler & fasttext & intents |                   |                 |                  |
+|                   Model                      |  Action accuracy  |  Turn accuracy  |
+|----------------------------------------------|-------------------|-----------------|
+|basic hcn			                             |      0.5326       |     0.4845      |
+|hcn with slot filler			                 |                   |                 |
+|hcn with slot filler & fasttext embeddings    |                   |                 |
+|hcn with slot filler & intents                |      0.5391       |     0.5177      |
 
 #TODO: add metrics values
+#TODO: add dialog accuracies
 
 # References
 [1] [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017](https://arxiv.org/abs/1702.03274)
