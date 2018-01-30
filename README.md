@@ -1,6 +1,7 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](/LICENSE.txt)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
+<div style="text-align: justify">
 
 # DeepPavlov (pre alfa)
 An Apache 2.0 NLP research library, built on TensorFlow and Keras, for 
@@ -127,10 +128,10 @@ is not an abstract class and can be used as `Dataset` as well.
 
 ### Vocab
 `Vocab` is a trainable class, which forms and serialize vocabs. Vocabs index any data.
- For example, tokens to indices and backwards, chars to indices, classes to indices, etc.
- It can index X (features) and y (answers) types of data. A concrete `Vocab` class
- should be registered and can be inherited from `deeppavlov.data.vocab.DefaultVocabulary` class.
- `deeppavlov.data.vocab.DefaultVocabulary` is not an abstrat class and can be used as `Vocab` as well.
+For example, tokens to indices and backwards, chars to indices, classes to indices, etc.
+It can index X (features) and y (answers) types of data. A concrete `Vocab` class
+should be registered and can be inherited from `deeppavlov.data.vocab.DefaultVocabulary` class.
+`deeppavlov.data.vocab.DefaultVocabulary` is not an abstrat class and can be used as `Vocab` as well.
 
 ### Model
 
@@ -140,3 +141,4 @@ is not an abstract class and can be used as `Dataset` as well.
 ### Describe Interfaces?? Trainable, Inferable and derived model types
 
 ## Suggested models
+</div>
