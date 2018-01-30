@@ -35,7 +35,9 @@ def main():
                 interact_model(pipeline_config_path)
             else:
                 if token is None:
-                    print('Please, provide Telegram bot token via command line or TELEGRAM_TOKEN env variable')
+                    print(
+                        'Please, provide Telegram bot token'
+                        ' via command line or TELEGRAM_TOKEN env variable')
                 else:
                     interact_model_by_telegram(pipeline_config_path, token)
     finally:
