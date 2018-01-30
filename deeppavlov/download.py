@@ -41,7 +41,7 @@ def main():
     args = parser.parse_args()
     print("Downloading...")
     download_resources(args)
-    print("Download successful!")
+    print("\nDownload successful!")
 
 
 if __name__ == "__main__":
