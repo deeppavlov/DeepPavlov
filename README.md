@@ -50,7 +50,7 @@ python deep.py <mode> <path_to_config>
 
 Available model configs are:
 
-*skills/hcn_new/config.json*
+*skills/go_bot/config.json*
 
 *models/classifiers/intents/config.json*
 
