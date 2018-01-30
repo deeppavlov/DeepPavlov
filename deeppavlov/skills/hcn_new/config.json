@@ -74,23 +74,18 @@
     },
     "slot_filler": {
       "name": "dstc_slotfilling",
-      "load_path": "../download/slots/slot_vals.json",
-      "save_path": "../download/slots/slot_vals.json",
-      "ner_network": {
-        "save_path": "../download/ner/dstc_ner_network",
-        "load_path": "../download/ner/dstc_ner_network",
-        "name": "ner_tagging_network",
-        "filter_width": 7,
-        "embeddings_dropout": true,
-        "n_filters": [
-          64,
-          64
-        ],
-        "token_embeddings_dim": 64,
-        "char_embeddings_dim": 32,
-        "use_batch_norm": true,
-        "use_crf": true
-      }
+      "save_path": "../download/model/dstc_ner_model",
+      "load_path": "../download/model/dstc_ner_model",
+      "filter_width": 7,
+      "embeddings_dropout": true,
+      "n_filters": [
+        64,
+        64
+      ],
+      "token_embeddings_dim": 64,
+      "char_embeddings_dim": 32,
+      "use_batch_norm": true,
+      "use_crf": true
     },
     "intent_classifier": {
       "name": "intent_model",
@@ -127,8 +122,8 @@
       },
       "embedder": {
         "name": "fasttext",
-        "save_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
-        "load_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
+        "save_path": "../download/embeddings/dstc2_fasttext_model_100.bin",
+        "load_path": "../download/embeddings/dstc2_fasttext_model_100.bin",
         "emb_module": "fasttext",
         "dim": 100
       },
@@ -145,8 +140,8 @@
       "emb_module": "pyfasttext",
       "mean": true,
       "dim": 300,
-      "save_path": "../data/embeddings/wiki.en.bin",
-      "load_path": "../data/embeddings/wiki.en.bin"
+      "save_path": "../download/embeddings/wiki.en.bin",
+      "load_path": "../download/embeddings/wiki.en.bin"
     },
     "tokenizer": {
       "name": "spacy_tokenizer"

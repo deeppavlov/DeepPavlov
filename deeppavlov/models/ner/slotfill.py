@@ -108,14 +108,17 @@ class DstcSlotFillingNetwork(SimpleTFModel):
             self._ner_network.load()
 
     def train_on_batch(self, batch):
-        self._net.train_on_batch(batch, **self.train_parameters)
+        self._ner_network.train_on_batch(batch, **self.train_parameters)
 
     @overrides
     def infer(self, instance, *args, **kwargs):
-        instance = instance.strip()
-        if not len(instance):
-            return {}
-        return self.predict_slots(instance.lower())
+        if type(instance) is str:
+            instance = instance.strip()
+            if not len(instance):
+                return {}
+            return self.predict_slots(instance.lower())
+        else:
+            return [self.predict_slots((' '.join(i)).lower()) for i in instance]
 
     def interact(self):
         s = input('Type in the message you want to tag: ')
@@ -126,7 +129,7 @@ class DstcSlotFillingNetwork(SimpleTFModel):
         # For utterance extract named entities and perform normalization for slot filling
         tokens = tokenize_reg(utterance)
         tags = self._ner_network.predict_for_token_batch([tokens])[0]
-        print(tags)
+        # print(tags)
         entities, slots = self._chunk_finder(tokens, tags)
         slot_values = {}
         for entity, slot in zip(entities, slots):
