@@ -226,8 +226,18 @@ The training parameters in JSON config can look like this:
 }
 ```
 
+Training is triggered by `deeppavlov.core.commands.train.train_model_from_config()` function.
 
 ### Inferring
+
+All models inherited from `deeppavlov.core.models.inferable.Inferable` interface can be inferred.
+The `infer()` method should return what a model can do. For example, a *tokenizer* should return
+*tokens*, a *NER recognizer* should return *recognized entities*, a *bot* should return a *replica*.
+A particular format of returned data should be defined in `infer()`.
+
+Inferring is triggered by `deeppavlov.core.commands.train.infer_model_from_config()` function.
+There is no need in s separate JSON for inferring. `train_now` parameter is ignored during
+inferring.
 
 ## Suggested models
 </div>
