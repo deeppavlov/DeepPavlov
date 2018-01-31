@@ -15,7 +15,8 @@ and some hints on how to collect appropriate datasets for other languages.
 #### Config parameters:  
 * `name` always equals to `"spelling_error_model"`
 * `train_now` — without this flag set to `true` train phase of an error model will be skipped
-* `ser_file` — name of the file that the model will be saved to and loaded from, defaults to `"error_model.tsv"`
+* `save_path` — path where the model will be saved at after a training session
+* `load_path` — path to the pretrained model
 * `window` — window size for the error model from `0` to `4`, defaults to `1`
 * `lm_file` — path to the ARPA language model file. If omitted, all of the dictionary words will be handled as equally probable
 * `dictionary` — description of a static dictionary model, instance of (or inherited from) `deeppavlov.vocabs.static_dictionary.StaticDictionary`
@@ -32,7 +33,8 @@ A working config could look like this:
 {
   "model": {
     "name": "spelling_error_model",
-    "model_file": "error_model_en.tsv",
+    "save_path": "../download/error_model/error_model.tsv",
+    "load_path": "../download/error_model/error_model.tsv",
     "train_now": true,
     "window": 1,
     "dictionary": {
@@ -93,7 +95,8 @@ A working training config could look something like:
 {
   "model": {
     "name": "spelling_error_model",
-    "model_file": "error_model_en.tsv",
+    "save_path": "../download/error_model/error_model.tsv",
+    "load_path": "../download/error_model/error_model.tsv",
     "window": 1,
     "train_now": true,
     "dictionary": {
