@@ -50,17 +50,6 @@ def init_bot_for_model(token, model):
     bot.polling()
 
 
-def get_model_info(model, trait):
-    models_info = read_json('../telegram_utils/models_info.json')
-
-    if model in models_info:
-        model_info = models_info[model][trait]
-    else:
-        model_info = "DeepPavlov inference bot"
-
-    return model_info
-
-
 def interact_model_by_telegram(config_path, token):
     config = read_json(config_path)
     model = build_model_from_config(config)
