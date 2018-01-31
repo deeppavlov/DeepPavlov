@@ -11,26 +11,27 @@ The dialogue agent is based on [[1]](#references) which introduces Hybrid Code N
 Here is an simple example of interaction with a trained dialogue bot:
 
 ```
-::
+:: 
 >> Hello, welcome to the Phystech restaurant system. You can ask for restaurants by area, price range or food type. How may I help you?
 :: hi, i want some food
 >> What part of town do you have in mind?
 :: north of Dolgoprudny
->> What kind of food would you like?
-:: tasty =)
->> "Time to eat" is a great restaurant.
-:: ok, is it cheap?
+>> Would you like something in the cheap, moderate, or expensive price range?
+:: something chep, please
 >> "Time to eat" is a nice place in the north of town and the prices are cheap.
-:: give me their address then
+:: what kind of food does it serve? 
+>> "Time to eat" serves russian food.
+:: i like that! give me their address then
 >> Sure, "Time to eat" is on Sobina Square, 1/4.
-:: and phone number. In case, i wanted to order something for delivery
+:: and phone number. In case i wanted anything for delivery.
 >> The phone number of "Time to eat" is +7(965)173-37-33.
-:: it's useless, but tell me their post code
+:: I won't need that, but give me their post code too.
 >> The post code of "Time to eat" is 141700.
-:: thanks
->> "Time to eat" is a nice place in the north of town and the prices are cheap.
-:: good bye then
+:: nice, thanks!
+>> "Time to eat" is a nice place in the centre of town serving tasty creative food.
+:: good bye
 >> You are welcome!
+:: exit
 ```
 
 ## Usage
@@ -187,10 +188,10 @@ But comparisons for hcn model modifications trained on out DSTC2-dataset are pre
 
 |                   Model                      |  Action accuracy  |  Turn accuracy  |
 |----------------------------------------------|-------------------|-----------------|
-|basic hcn			                             |      0.5326       |     0.4845      |
+|basic hcn			                             |      0.5271       |     0.4853      |
 |hcn with slot filler			                 |                   |                 |
 |hcn with slot filler & fasttext embeddings    |                   |                 |
-|hcn with slot filler & intents                |      0.5391       |     0.5177      |
+|hcn with slot filler & intents                |      0.5487       |     0.5259      |
 
 #TODO: add metrics values
 #TODO: add dialog accuracies
