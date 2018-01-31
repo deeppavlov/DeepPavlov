@@ -130,6 +130,7 @@ A concrete `Dataset` class should be registered and can be inherited from
 is not an abstract class and can be used as `Dataset` as well.
 
 ### Vocab
+
 `Vocab` is a trainable class, which forms and serialize vocabs. Vocabs index any data.
 For example, tokens to indices and backwards, chars to indices, classes to indices, etc.
 It can index X (features) and y (answers) types of data. A concrete `Vocab` class
@@ -137,6 +138,50 @@ should be registered and can be inherited from `deeppavlov.data.vocab.DefaultVoc
 `deeppavlov.data.vocab.DefaultVocabulary` is not an abstrat class and can be used as `Vocab` as well.
 
 ### Model
+
+`Model` is the main class which rules the training/infering process and feature generation.
+If a model requires other models to produce features, they need to be passed in its constructor.
+All models can be nested as much as needed. For example, a skeleton of
+`deeppavlov.skills.go_bot.go_bot.GoalOrientedBot` consists of 11 separate model classes,
+3 of which are neural networks:
+
+```javascript
+{
+  "model": {
+    "name": "go_bot",
+    "network": {
+      "name": "go_bot_rnn"
+    },
+    "slot_filler": {
+      "name": "dstc_slotfilling",
+      "ner_network": {
+         "name": "ner_tagging_network",
+      }
+    },
+    "intent_classifier": {
+      "name": "intent_model",
+      "embedder": {
+        "name": "fasttext
+      },
+      "tokenizer": {
+        "name": "nltk_tokenizer"
+      }
+    },
+    "embedder": {
+      "name": "fasttext"
+    },
+    "bow_encoder": {
+      "name": "bow"
+    },
+    "tokenizer": {
+      "name": "spacy_tokenizer"
+    },
+    "tracker": {
+      "name": "featurized_tracker"
+    }
+  }
+}
+```
 
 
 
