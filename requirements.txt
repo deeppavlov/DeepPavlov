@@ -6,7 +6,6 @@ gensim==2.3.0
 tensorflow==1.4.0
 overrides==1.9
 tensorflow==1.4.0
-typing==3.6.2
 kenlm==0.0.0
 six==1.11.0
 h5py==2.7.1

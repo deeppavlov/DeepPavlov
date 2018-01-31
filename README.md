@@ -28,7 +28,10 @@ An Apache 2.0 NLP research library, built on TensorFlow and Keras, for
 1. Create a virtual environment with `Python 3.6`
 2. Activate the environment.
 3. `cd` to the project root.
-4. `pip install -r requirements.txt`
+4. Install the requirements:
+    ```
+    python install.py
+    ```
 5. Install `spacy` requirements:
 
     ```
