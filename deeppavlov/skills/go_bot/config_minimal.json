@@ -23,7 +23,7 @@
     "train_now": true,
     "name": "go_bot",
     "debug": 0,
-    "num_epochs": 140,
+    "num_epochs": 1,
     "val_patience": 10,
     "template_path": "../download/dstc2/dstc2-templates.txt",
     "network": {
