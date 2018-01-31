@@ -32,6 +32,10 @@ An Apache 2.0 NLP research library, built on TensorFlow and Keras, for
     * [Training](#training)
     * [Inferring](#inferring)
  * [Suggested models](#suggested-models)
+    * [Dialogue Bot for goal-oriented task](#dialogue-bot-for-goal-oriented-task)
+    * [Neural Model for Intent Classification](#neural-model-for-intent-classification)
+    * [Neural Named Entity Recognition](#neural-named-entity-recognition)
+    * [Automatic Spelling Correction](#automatic-spelling-correction)
 
 ## Installation
 1. Create a virtual environment with `Python 3.6`
@@ -82,7 +86,8 @@ Available model configs are:
 
 ## Support
 
-If you have any questions, bug reports or feature requests, please don't hesitate to post on our Github Issues page.
+If you have any questions, bug reports or feature requests, please don't hesitate
+to post on our [Github Issues](https://github.com/deepmipt/DeepPavlov/issues) page.
 
 ## The Team
 
@@ -289,4 +294,25 @@ There is no need in s separate JSON for inferring. `train_now` parameter is igno
 inferring.
 
 ## Suggested models
-</div>
+
+The suggested in [Quick start](#quick-start) configs are available for the following models.
+
+### Dialogue Bot for goal-oriented task
+
+A dialog agent based on Hybrid Code Network pretrained for restaurant recommendation task.
+[Details](https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/skills/go_bot)
+
+### Neural Model for Intent Classification
+
+A model for user intent classification for restaurant recommendation task.
+[Details](https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/models/classifiers/intents)
+
+### Neural Named Entity Recognition
+
+A model for entities recognition in restaurant recommendation task.
+[Details](https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/models/ner)
+
+### Automatic Spelling Correction
+
+A spelling correction model, currently available for English and Russian languages.
+[Details](https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/models/spellers/error_model)
