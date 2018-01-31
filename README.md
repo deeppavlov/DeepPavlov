@@ -87,7 +87,46 @@ DeepPavlov is Apache 2.0 - licensed.
 
 ## DeepPavlov overview
 
-### Describe modules here (skills, models, data, etc.)
+### Project modules (skills, models, data, etc.)
+
+<table>
+<tr>
+    <td><b> deeppavlov.core.commands </b></td>
+    <td> ... </td>
+</tr>
+<tr>
+    <td><b> deeppavlov.core.common </b></td>
+    <td> ... </td>
+</tr>
+<tr>
+    <td><b> deeppavlov.core.data </b></td>
+    <td> ... </td>
+</tr>
+<tr>
+    <td><b> deeppavlov.core.models </b></td>
+    <td> ... </td>
+</tr>
+<tr>
+    <td><b> deeppavlov.dataset_readers </b></td>
+    <td> ... </td>
+</tr>
+<tr>
+    <td><b> deeppavlov.datasets </b></td>
+    <td> ... </td>
+</tr>
+<tr>
+    <td><b> deeppavlov.models </b></td>
+    <td> ... </td>
+</tr>
+<tr>
+    <td><b> deeppavlov.skills </b></td>
+    <td> ... </td>
+</tr>
+<tr>
+    <td><b> deeppavlov.vocabs </b></td>
+    <td> ... </td>
+</tr>
+</table>
 
 ### Config
 
