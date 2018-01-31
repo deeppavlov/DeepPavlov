@@ -103,7 +103,7 @@ class KerasIntentModel(KerasModel):
 
         # Reinitializing of parameters
         for param in changeable_params.keys():
-            if param in self.opt.keys():
+            if param in opt.keys():
                 self.opt[param] = opt[param]
             else:
                 self.opt[param] = changeable_params[param]
@@ -120,6 +120,10 @@ class KerasIntentModel(KerasModel):
                   "add_metrics_file": metrics_file}
 
         self.model = self.load(**params)
+
+        for param in changeable_params.keys():
+            if param in opt.keys():
+                self.opt[param] = opt[param]
 
         # Check if md5 hash sum of current loaded fasttext model
         # is equal to saved
