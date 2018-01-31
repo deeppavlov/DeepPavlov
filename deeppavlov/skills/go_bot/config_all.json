@@ -138,14 +138,14 @@
         "tokenizer": "wordpunct_tokenize"
       }
     },
-	"embedder": {
-		"name": "fasttext",
-		"save_path": "../download/embeddings/wiki.en.bin",
-		"load_path": "../download/embeddings/wiki.en.bin",
-		"mean": true,
-		"emb_module": "pyfasttext",
-		"dim": 300
-	},
+    "embedder": {
+      "name": "fasttext",
+      "save_path": "../download/embeddings/wiki.en.bin",
+      "load_path": "../download/embeddings/wiki.en.bin",
+      "mean": true,
+      "emb_module": "pyfasttext",
+      "dim": 300
+    },
     "bow_encoder": {
       "name": "bow"
     },
