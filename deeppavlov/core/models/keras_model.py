@@ -49,8 +49,8 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
             **kwargs:
         """
         self.opt = opt
-        save_path = self.opt.get('save_path', None)
-        load_path = self.opt.get('load_path', None)
+        save_path = kwargs.get('save_path', None)
+        load_path = kwargs.get('load_path', None)
         train_now = self.opt.get('train_now', False)
         url = self.opt.get('url', None)
 

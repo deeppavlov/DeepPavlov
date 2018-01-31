@@ -2,7 +2,9 @@
   "dataset_reader": {
     "name": "classification_datasetreader",
     "data_path": "../data/snips",
-    "data_types": ["train"]
+    "data_types": [
+      "train"
+    ]
   },
   "dataset": {
     "name": "classification_dataset",
@@ -31,10 +33,10 @@
   },
   "model": {
     "name": "intent_model",
+    "save_path": "../download/intents/intent_cnn_snips",
+    "load_path": "../download/intents/intent_cnn_snips",
     "opt": {
-      "train_now": true,
-      "save_path": "../download/intents/intent_cnn_snips",
-      "load_path": "../download/intents/intent_cnn_snips",
+      "train_now": false,
       "kernel_sizes_cnn": [
         1,
         2,
