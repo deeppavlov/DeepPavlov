@@ -1,6 +1,7 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](/LICENSE.txt)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
+<div style="text-align: justify">
 
 # DeepPavlov (pre alfa)
 An Apache 2.0 NLP research library, built on TensorFlow and Keras, for 
@@ -28,6 +29,11 @@ An Apache 2.0 NLP research library, built on TensorFlow and Keras, for
 2. Activate the environment.
 3. `cd` to the project root.
 4. `pip install -r requirements.txt`
+5. Install `spacy` requirements:
+
+    ```
+    python -m spacy download en
+    ```
 
 ## Quick start
 With the purpose to interact with our pretrained models, they should be downloaded first:
@@ -36,7 +42,7 @@ With the purpose to interact with our pretrained models, they should be download
 cd deeppavlov/
 python download.py [-all]
 ```
-* `[-all]` option is not required for basic examples; it will download **all** our pretrained data.
+* `[-all]` option is not required for basic examples; it will download **all** our pretrained models.
 
 * Warning! `[-all]` requires about 10 GB of free space on disk.
 
@@ -45,6 +51,7 @@ Then the models can be interacted or trained with the following command:
 ```
 python deep.py <mode> <path_to_config>
 ```
+
 * `<mode>` can be 'train', 'interact' or 'interactbot'
 * `<path_to_config>` should be a path to an NLP pipeline json config
 
@@ -55,7 +62,7 @@ Available model configs are:
 
 *skills/go_bot/config.json*
 
-*models/classifiers/intents/config.json*
+*models/classifiers/intents/config_dstc2.json*
 
 *models/ner/config.json*
 
@@ -77,3 +84,61 @@ DeepPavlov is Apache 2.0 - licensed.
 
 ## DeepPavlov overview
 
+### Describe modules here (skills, models, data, etc.)
+
+### Config
+
+An NLP pipeline config is a JSON file, which consists of four required elements:
+
+```javascript
+{
+  "dataset_reader": {
+  },
+  "dataset": {
+  },
+  "vocabs": {
+  },
+  "model": {
+  }
+}
+```
+
+Each class in the config has `name` parameter, which is its registered codename
+ and can have any other parameters, repeating its `__init__()` method arguments.
+ Default values of `__init__()` arguments will be overriden with the config values
+ during class instance initialization.
+
+### DatasetReader
+
+`DatasetReader` class reads data and returns it in a specified format.
+A concrete `DatasetReader` class should be inherited from base
+`deeppavlov.data.dataset_reader.DatasetReader` class and registered with a codename:
+
+```python
+@register('dstc2_datasetreader')
+class DSTC2DatasetReader(DatasetReader):
+```
+
+### Dataset
+
+`Dataset` forms needed sets of data ('train', 'valid', 'test') and forms data batches.
+A concrete `Dataset` class should be registered and can be inherited from
+`deeppavlov.data.dataset_reader.Dataset` class. `deeppavlov.data.dataset_reader.Dataset`
+is not an abstract class and can be used as `Dataset` as well.
+
+### Vocab
+`Vocab` is a trainable class, which forms and serialize vocabs. Vocabs index any data.
+For example, tokens to indices and backwards, chars to indices, classes to indices, etc.
+It can index X (features) and y (answers) types of data. A concrete `Vocab` class
+should be registered and can be inherited from `deeppavlov.data.vocab.DefaultVocabulary` class.
+`deeppavlov.data.vocab.DefaultVocabulary` is not an abstrat class and can be used as `Vocab` as well.
+
+### Model
+
+
+
+### Describe usage here (Training and Infering)
+### Describe Interfaces?? Trainable, Inferable and derived model types
+
+## Suggested models
+</div>

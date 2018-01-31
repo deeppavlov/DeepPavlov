@@ -68,8 +68,8 @@
     },
     "embedder": {
       "name": "fasttext",
-      "save_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
-      "load_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
+      "save_path": "../download/embeddings/dstc2_fasttext_model_100.bin",
+      "load_path": "../download/embeddings/dstc2_fasttext_model_100.bin",
       "emb_module": "fasttext",
       "dim": 100
     },
