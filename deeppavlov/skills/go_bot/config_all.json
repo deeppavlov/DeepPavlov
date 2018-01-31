@@ -142,6 +142,7 @@
 		"name": "fasttext",
 		"save_path": "../download/embeddings/wiki.en.bin",
 		"load_path": "../download/embeddings/wiki.en.bin",
+		"mean": true,
 		"emb_module": "pyfasttext",
 		"dim": 300
 	},
