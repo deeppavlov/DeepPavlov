@@ -67,7 +67,7 @@ class FasttextEmbedder(Inferable):
                 print("[loading embeddings from `{}`]".format(self.load_path))
                 model_file = str(self.load_path)
                 if self.emb_module == 'fasttext':
-                    import fastText as Fasttext
+                    import fasttext as Fasttext
                     # model = Fasttext.load_model(model_file)
                     model = Fasttext.load_model(model_file)
                 elif self.emb_module == 'pyfasttext':
@@ -134,11 +134,7 @@ class FasttextEmbedder(Inferable):
                 emb = self.tok2emb[t]
             except KeyError:
                 try:
-                    if self.emb_module == 'fasttext':
-                        import fastText as Fasttext
-                        emb = self.model.get_word_vector(t)[:self.dim]
-                    else:
-                        emb = self.model[t][:self.dim]
+                    emb = self.model[t][:self.dim]
                 except KeyError:
                     emb = np.zeros(self.dim, dtype=np.float32)
                 self.tok2emb[t] = emb

@@ -95,9 +95,9 @@
     },
     "intent_classifier": {
       "name": "intent_model",
+      "save_path": "../download/intents/intent_cnn",
+      "load_path": "../download/intents/intent_cnn",
       "opt": {
-        "save_path": "../download/intents/intent_cnn",
-        "load_path": "../download/intents/intent_cnn",
         "train_now": true,
         "kernel_sizes_cnn": [
           3,
@@ -138,7 +138,7 @@
         "tokenizer": "wordpunct_tokenize"
       }
     },
-	"embedder": null,
+    "embedder": null,
     "bow_encoder": {
       "name": "bow"
     },

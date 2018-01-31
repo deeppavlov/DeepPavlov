@@ -155,7 +155,10 @@ python run_model.py
 ```
 
 **Current `config_snips.json` implies intent recognition for SNIPS benchmark dataset [2] 
-that was restored in `.csv` format.** 
+that was restored in `.csv` format and will be downloaded automatically.**
+
+**Important: there are not provided embedding binary file and pre-trained model files for SNIPS dataset.
+Please, provide you own embedding binary file to train model.**
 
 ## Comparison
 

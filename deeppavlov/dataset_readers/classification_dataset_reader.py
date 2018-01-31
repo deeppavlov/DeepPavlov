@@ -17,7 +17,6 @@ limitations under the License.
 import logging
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 from overrides import overrides
 
@@ -69,6 +68,7 @@ class ClassificationDatasetReader(DatasetReader):
 
         for field in data_types:
             for i in range(data[field].shape[0]):
-                new_data[field].append((data[field].loc[i, 'text'], data[field].loc[i, "intents"].split(",")))
+                new_data[field].append(
+                    (data[field].loc[i, 'text'], data[field].loc[i, "intents"].split(",")))
 
         return new_data
