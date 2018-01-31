@@ -16,6 +16,7 @@ limitations under the License.
 
 from fuzzywuzzy import process
 from overrides import overrides
+import sys
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.trainable import Trainable
@@ -68,19 +69,24 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
 
     @overrides
     def infer(self, instance, *args, **kwargs):
-        instance = instance.strip()
-        if not len(instance):
-            return dict()
-        return self.predict_slots(instance.lower())
+        instance = instance.strip().lower()
+        if not all([ord(c) < 128 for c in instance]):
+            print('Non ASCII symbols in the string, returning empty slots', file=sys.stderr)
+            return {}
+
+        tokens = tokenize_reg(instance)
+        if len(tokens) > 0:
+            return self.predict_slots(tokens)
+        else:
+            return {}
 
     def interact(self):
         s = input('Type in the message you want to tag: ')
         prediction = self.predict_slots(s)
         print(prediction)
 
-    def predict_slots(self, utterance):
+    def predict_slots(self, tokens):
         # For utterance extract named entities and perform normalization for slot filling
-        tokens = tokenize_reg(utterance)
         tags = self._ner_network.predict_for_token_batch([tokens])[0]
         entities, slots = self._chunk_finder(tokens, tags)
         slot_values = dict()
