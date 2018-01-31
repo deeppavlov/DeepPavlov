@@ -2,13 +2,13 @@
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 ![tensorflow 1.4](https://img.shields.io/badge/tensorflow-1.4-green.svg)
 
-# Dialogue Bot Agent for goal-oriented task 
-The dialogue agent is based on [[1]](#references) which introduces Hybrid Code Networks (HCNs) that combine an RNN with domain-specific knowledge and system action templates.
+# Dialogue Bot for goal-oriented task 
+The dialogue bot is based on [[1]](#references) which introduces Hybrid Code Networks (HCNs) that combine an RNN with domain-specific knowledge and system action templates.
 
 ![alt text](diagram.png "Goal-oriented bot diagram")
 **Diagram 1.** Dotted lines correspond to unrequired (optional) modules, black squares to trained models, trapezes are modules that depend on a dataset and must be provided by software developer.
 
-Here is an simple example of interaction with a trained dialogue bot:
+Here is a simple example of interaction with a trained dialogue bot (can be downloaded with [`deeppavlov/download.py`](../../download.py)):
 
 ```
 :: 
@@ -38,15 +38,18 @@ Here is an simple example of interaction with a trained dialogue bot:
 
 #### Requirements
 
-#TODO: edit the section after pretrained models' download is available
-
-To use the model:
-1. train named entity recognition model (for config file see [`deeppavlov/models/ner/config.json`](../../models/ner/config.json))
-2. train intents classifier model (for config file see [`deeppavlov/models/classifiers/intents/config.json`](../../models/classifiers/intents/config.json))
-3. download english fasttext embeddings trained on wiki ([https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip](https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip))
-    * you can use any english embeddings of your choice, but edit hybrid code network config accordingly
-4. train hybrid code network bot itself (for config file see [`deeppavlov/skills/go_bot/config.json`](config.json))
-    * check that paths in the config point to pretrained ner and intent classifier model files
+To use a go_bot model you should have:
+1. (_optional, but recommended_) pretrained named entity recognition model (NER) 
+   * config [`deeppavlov/models/ner/config.json`](../../models/ner/config.json) is recommended
+2. (_optional, but recommended_) pretrained intents classifier model 
+   * config [`deeppavlov/models/classifiers/intents/config_dstc2.json`](../../models/classifiers/intents/config_dstc2.json) is recommended
+3. (_optional_) downloaded english fasttext embeddings trained on wiki ([https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip](https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip))
+   * you can use any english embeddings of your choice, but edit go_bot config accordingly
+4. pretrained goal-oriented bot model itself 
+   * config [`deeppavlov/skills/go_bot/config.json`](config.json) is recommended
+   * `slot_filler` section of go_bot's config should match NER's configuration
+   * `intent_classifier` section of go_bot's config should match classifier's configuration
+   * double-check that corresponding `load_path`s point to NER and intent classifier model files
 
 #### Config parameters:
 * `name` always equals to `"go_bot"`
@@ -75,7 +78,7 @@ To use the model:
    * other arguments specific to your embedder
 * `tracker` — dialogue state tracker from [`deeppavlov.models.trackers`](../../models/trackers)
    * `name` — tracker name (`"default_tracker"` or `"featurized_tracker"` recommended)
-   * other arguments specific to your tracker
+   * `slot_vals` — list of slots that should be tracked
 * `network` — reccurent network that handles dialogue policy management
    * `name` — `"go_bot_rnn"`,
    * `train_now` — `true` or `false`(default) depending on whether you are training or using a model _(optional)_
@@ -95,7 +98,9 @@ To use the model:
 * `debug` — whether to display debug output (defaults to `false`) _(optional)_
 
 For a working exemplary config see [`deeeppavlov/skills/go_bot/config.json`](config.json) (model without embeddings).
+
 A minimal model without `slot_filler`, `intent_classifier` and `embedder` is configured in [`deeeppavlov/skills/go_bot/config_minimal.json`](config_minimal.json).
+
 A full model (with fasttext embeddings) configuration is in [`deeeppavlov/skills/go_bot/config_all.json`](config_all.json)
 
 #### Usage example
@@ -122,10 +127,10 @@ while utterance != 'quit':
 To be used for training, your config json file should include parameters:
 
 * `dataset_reader`
-   * `name` — `"your_reader_here"` for a custom dataset or `"dstc2_datasetreader"` to use DSTC2 (for implementation see [`deeppavlov.dataset_readers.dstc2_dataset_reader`](../../dataset_readers/dstc2_datasetreader.py))
+   * `name` — `"your_reader_here"` for a custom dataset or `"dstc2_datasetreader"` to use DSTC2 (for implementation see [`deeppavlov.dataset_readers.dstc2_dataset_reader`](../../dataset_readers/dstc2_dataset_reader.py))
    * `data_path` — a path to a dataset file, which in case of `"dstc2_datasetreader"` will be automatically downloaded from 
    internet and placed to `data_path` directory
-* `dataset` — it should always be set to `{"name": "dialog_dataset"}` (for implementation see [`deeppavlov.datasets.dstc2_datasets.py`](../../datasets/dstc2_datasets.py))
+* `dataset` — it should always be set to `{"name": "dialog_dataset"}` (for implementation see [`deeppavlov.datasets.dialog_dataset.py`](../../datasets/dialog_dataset.py))
 
 Do not forget to set `train_now` parameters to `true` for `vocabs.word_vocab`, `model` and `model.network` sections.
 
@@ -157,7 +162,7 @@ The Hybrid Code Network model was trained and evaluated on a modification of a d
 #### Your data
 If your model uses DSTC2 and relies on `dstc2_datasetreader` [`DatasetReader`](../../core/data/dataset_reader.py), all needed files, if not present in the `dataset_reader.data_path` directory, will be downloaded from internet.
 
-If your model needs be trained on different data, you have several ways of achieving that (sorted by increase in the amount of code):
+If your model needs to be trained on different data, you have several ways of achieving that (sorted by increase in the amount of code):
 
 1. Use `"dialog_dataset"` in dataset config section and `"dstc2_datasetreader"` in dataset reader config section (**the simplest, but not the best way**):
     * set `dataset.data_path` to your data directory;
@@ -179,13 +184,13 @@ If your model needs be trained on different data, you have several ways of achie
       * `valid` — validation dialog turns in the same format
       * `test` — test dialog turns in the same format
       
-#TODO: change str `act` to a list `acts`
+#TODO: change str `act` to a list of `acts`
 
 3. Use your own dataset and dataset reader (**if 2. doesn't work for you**):
     * your `YourDataset.iter()` class method output should match the input format for [`HybridCodeNetworkBot.train()`](go_bot.py).
 
 ## Comparison
-As far as out dataset is a modified version of official DSTC2-dataset [[2]](#references), resulting metrics can't be compared with model evaluations on the original dataset.
+As far as our dataset is a modified version of official DSTC2-dataset [[2]](#references), resulting metrics can't be compared with evaluations on the original dataset.
 
 But comparisons for bot model modifications trained on out DSTC2-dataset are presented:
 
