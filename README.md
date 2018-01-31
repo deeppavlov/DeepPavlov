@@ -161,7 +161,7 @@ All models can be nested as much as needed. For example, a skeleton of
     "intent_classifier": {
       "name": "intent_model",
       "embedder": {
-        "name": "fasttext
+        "name": "fasttext"
       },
       "tokenizer": {
         "name": "nltk_tokenizer"
