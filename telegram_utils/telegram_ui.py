@@ -44,7 +44,7 @@ def init_bot_for_model(token, model):
         context = message.text
 
         pred = model.infer(context)
-        reply_message = 'model prediction: {}'.format(str(pred))
+        reply_message = str(pred)
         bot.send_message(chat_id, reply_message)
 
     bot.polling()
