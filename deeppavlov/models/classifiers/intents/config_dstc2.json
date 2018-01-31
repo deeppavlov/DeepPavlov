@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "dstc2_datasetreader",
-    "data_path": "../data/dstc2"
+    "data_path": "../download/dstc2"
   },
   "dataset": {
     "name": "intent_dataset",
@@ -68,8 +68,8 @@
     },
     "embedder": {
       "name": "fasttext",
-      "save_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
-      "load_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
+      "save_path": "../download/embeddings/dstc2_fasttext_model_100.bin",
+      "load_path": "../download/embeddings/dstc2_fasttext_model_100.bin",
       "emb_module": "fasttext",
       "dim": 100
     },

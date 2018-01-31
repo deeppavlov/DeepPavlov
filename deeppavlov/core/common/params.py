@@ -1,3 +1,19 @@
+"""
+Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+
+Licensed inder the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 import sys
 
 from typing import Dict, Type, TypeVar
@@ -23,14 +39,14 @@ def from_params(cls: Type, params: Dict, **kwargs) -> Type['T']:
                 continue
             try:
                 subcls = REGISTRY[subcls_name]
-                config_params[param_name] = from_params(subcls, subcls_params,
-                                                        vocabs=kwargs['vocabs'],
-                                                        mode=kwargs['mode'])
             except KeyError:
                 raise ConfigError(
                     "The class {} is not registered. Either register this class,"
                     " or rename the parameter.".format(
                         subcls_params['name']))
+            config_params[param_name] = from_params(subcls, subcls_params,
+                                                    vocabs=kwargs['vocabs'],
+                                                    mode=kwargs['mode'])
 
     try:
         model = cls(**dict(config_params, **kwargs))

@@ -18,7 +18,6 @@ import numpy as np
 
 
 class DialogMetrics(object):
-
     EPS = 1e-40
 
     def __init__(self, n):
@@ -97,7 +96,7 @@ class DialogMetrics(object):
                 ' act_turn_acc:{:.4f}, act_dialog_acc:{:.4f}'
                 ' act_weighted_f1:{:.4f}'
                 ' turn_acc:{:.4f} dialog_acc:{:.4f} ]'.format(
-                    self.n_dialogs, self.n_examples, self.mean_train_loss,
-                    self.action_accuracy, self.action_d_accuracy,
-                    self.action_weighted_f_beta(1),
-                    self.accuracy, self.d_accuracy))
+            self.n_dialogs, self.n_examples, self.mean_train_loss,
+            self.action_accuracy, self.action_d_accuracy,
+            self.action_weighted_f_beta(1),
+            self.accuracy, self.d_accuracy))

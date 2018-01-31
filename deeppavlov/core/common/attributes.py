@@ -1,10 +1,22 @@
-import os
-from pathlib import Path
+"""
+Copyright 2017 Neural Networks and Deep Learning lab, MIPT
 
-from typing import Type, Callable
+Licensed inder the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 from functools import wraps
 
-from deeppavlov.core.common.errors import ConfigError
+from typing import Type, Callable
 
 
 class abstract_attribute(object):
@@ -36,7 +48,6 @@ def check_attr_true(attr: str):
         return wrapped
 
     return _check_attr_true
-
 
 # def run_alt_meth_if_no_path(alt_f: Callable, attr: str):
 #     def _run_alt_meth(f):

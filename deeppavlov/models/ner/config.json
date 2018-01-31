@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "dstc2_datasetreader",
-    "data_path": "../data/dstc2"
+    "data_path": "../download/dstc2"
   },
   "dataset": {
     "name": "dstc2_ner_dataset",
@@ -16,8 +16,8 @@
     "ner_network": {
       "train_now": true,
       "name": "ner_tagging_network",
-      "save_path": "../download/ner/dstc_ner_network",
-      "load_path": "../download/ner/dstc_ner_network",
+      "save_path": "../download/ner/dstc_ner_model",
+      "load_path": "../download/ner/dstc_ner_model",
       "verbouse": true,
       "filter_width": 7,
       "embeddings_dropout": true,

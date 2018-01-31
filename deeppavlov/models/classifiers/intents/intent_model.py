@@ -1,17 +1,18 @@
-# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+"""
+Copyright 2017 Neural Networks and Deep Learning lab, MIPT
 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 
 import sys
 import inspect
@@ -102,7 +103,7 @@ class KerasIntentModel(KerasModel):
 
         # Reinitializing of parameters
         for param in changeable_params.keys():
-            if param in self.opt.keys():
+            if param in opt.keys():
                 self.opt[param] = opt[param]
             else:
                 self.opt[param] = changeable_params[param]
@@ -119,6 +120,10 @@ class KerasIntentModel(KerasModel):
                   "add_metrics_file": metrics_file}
 
         self.model = self.load(**params)
+
+        for param in changeable_params.keys():
+            if param in opt.keys():
+                self.opt[param] = opt[param]
 
         # Check if md5 hash sum of current loaded fasttext model
         # is equal to saved
