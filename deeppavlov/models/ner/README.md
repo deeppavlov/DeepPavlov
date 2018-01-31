@@ -75,7 +75,8 @@ The NER network is a separate model, and it has its initialization parameters, n
 "ner_network": {
     "name": "ner_tagging_network",
     "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
-    "model_path": "models/ner/model/",
+    "save_path": "../download/model/ner_model.ckpt",
+    "load_path": "../download/model/ner_model.ckpt",
     "verbouse": true,
     "filter_width": 7,
     "embeddings_dropout": true,
@@ -92,7 +93,8 @@ The NER network is a separate model, and it has its initialization parameters, n
 ```
 - "name" is always equal to "ner_tagging_network",
 - "vocabs" is equal to ["token_vocab", "tag_vocab", "char_vocab"] and specify vocabularies needed to construct the network (which will be mentioned below),
-- "model_path" defines the path to save the network parameters files,
+- "save_path" defines the path to save the network parameters files,
+- "load_path" defines the path to load from the network parameters files,
 - "verbouse" - whether to show supplimentary information about the network or not,
 - "filter_width" - the width of convolutional kernel
 - "embeddings_dropout" - whether to use dropout for embeddings or not
@@ -109,26 +111,36 @@ To perform convertation between tokens and indices there are three vocabularies 
       "name": "default_vocab",
       "inputs": ["x"],
       "level": "token",
-      "model_dir": "data/dstc2",
-      "model_file": "token.dict"
+      "save_path": "../download/vocabs/token_vocab.dict",
+      "load_path": "../download/vocabs/token_vocab.dict"
     },
   "tag_vocab": {
       "name": "default_vocab",
       "inputs": ["y"],
       "level": "token",
-      "model_dir": "data/dstc2",
-      "model_file": "tag.dict"
+      "save_path": "../download/vocabs/tag_vocab.dict",
+      "load_path": "../download/vocabs/tag_vocab.dict"
     },
   "char_vocab":{
       "name": "default_vocab",
       "inputs": ["x"],
       "level": "char",
-      "model_dir": "data/dstc2",
-      "model_file": "char.dict"
+      "save_path": "../download/vocabs/char_vocab.dict",
+      "load_path": "../download/vocabs/char_vocab.dict"
     }
   }
  }
 ```
+
+wher each vocabulary ("word_vocab", "tag_vocab", or "char_vocab") there are parameters:
+
+- "name" - always equal to `"default_vocab"`
+- "inputs" -  which input is use: x or y (tokens or tags), can be `["x"]` for tokens or `["y"]` for tags.
+- "train_now" - whether to train (build) vocab or not. If false there assumed to be a vocabulary in `load_path`
+- "level" -char or token level tokenization
+- "save_path" - path to the model where it will be saved
+- "load_path" - path to load pretrained model
+
 These vocabularies are used by NER network to perform conversion between tokens and indices and vice versa. Indices are fed into the network to perform embeddings lookup. The is reference to this vocabulary in the NER network configuration part. These vocabularies are built before initialization of the network and provide parameters (number of tokens, number of tags, ...) to initialize lookup matrices. They are also used for conversion of batch tokens to batch indices.
 
 To build vocabularies and train the network two data components must be specified. Namely: dataset_reader and dataset:
@@ -143,7 +155,7 @@ To build vocabularies and train the network two data components must be specifie
   }
 }
 ```
-For DSTC 2 Slot Filling task only dataset_path should be specified. While "dstc2_datasetreader" performs downloading of the raw dataset, "dstc2_ner_dataset" extracts entities from the raw data forming pairs of samples (utterance_tokens_list, utterance_tags_list) and forms dataset, which is essentialy a python dict with fields "train", "valid", and "test". In eacch field a list of samples is stored. The samples from the dataset is used to build dictionaries.
+For DSTC 2 Slot Filling task only dataset_path should be specified. While "dstc2_datasetreader" performs downloading of the raw dataset, "dstc2_ner_dataset" extracts entities from the raw data forming pairs of samples (utterance_tokens_list, utterance_tags_list) and forms dataset, which is essentialy a python dict with fields "train", "valid", and "test". In each field a list of samples is stored. The samples from the dataset is used to build dictionaries.
 
 ## Training
 
