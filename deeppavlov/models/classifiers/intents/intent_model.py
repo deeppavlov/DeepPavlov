@@ -83,6 +83,8 @@ class KerasIntentModel(KerasModel):
         if self.fasttext_model.load_path:
             current_fasttext_md5 = md5_hashsum([self.fasttext_model.load_path])
 
+        self.confident_threshold = self.opt['confident_threshold']
+
         # List of parameters that could be changed
         # when the model is initialized from saved and is going to be trained further
         changeable_params = {"lear_metrics": ["binary_accuracy"],
@@ -102,12 +104,10 @@ class KerasIntentModel(KerasModel):
 
         # Reinitializing of parameters
         for param in changeable_params.keys():
-            if param in self.opt.keys():
+            if param in opt.keys():
                 self.opt[param] = opt[param]
             else:
                 self.opt[param] = changeable_params[param]
-
-        self.confident_threshold = self.opt['confident_threshold']
 
         # Parameters required to init model
         params = {"model_name": self.opt['model_name'] if 'model_name' in self.opt.keys() else None,
@@ -119,6 +119,11 @@ class KerasIntentModel(KerasModel):
                   "add_metrics_file": metrics_file}
 
         self.model = self.load(**params)
+
+        # Reinitializing of parameters
+        for param in changeable_params.keys():
+            if param in opt.keys():
+                self.opt[param] = opt[param]
 
         # Check if md5 hash sum of current loaded fasttext model
         # is equal to saved
