@@ -23,6 +23,15 @@ An Apache 2.0 NLP research library, built on TensorFlow and Keras, for
  * [The Team](#the-team)
  * [License](#license)
  * [Deeppavlov overview](#deeppavlov-overview)
+    * [Project modules](#project-modules)
+    * [Config](#config)
+    * [DatasetReader](#datasetreader)
+    * [Dataset](#dataset)
+    * [Vocab](#vocab)
+    * [Model](#model)
+    * [Training](#training)
+    * [Inferring](#inferring)
+ * [Suggested models](#suggested-models)
 
 ## Installation
 1. Create a virtual environment with `Python 3.6`
@@ -87,44 +96,45 @@ DeepPavlov is Apache 2.0 - licensed.
 
 ## DeepPavlov overview
 
-### Project modules (skills, models, data, etc.)
+### Project modules
 
 <table>
 <tr>
     <td><b> deeppavlov.core.commands </b></td>
-    <td> ... </td>
+    <td> basic training and inferring functions  </td>
 </tr>
 <tr>
     <td><b> deeppavlov.core.common </b></td>
-    <td> ... </td>
+    <td> registration and classes initialization functionality, class method decorators </td>
 </tr>
 <tr>
     <td><b> deeppavlov.core.data </b></td>
-    <td> ... </td>
+    <td> basic <font color=#ff6666><i>Dataset</i></font>,
+     <font color=#ff6666><i>DatasetReader</i></font> and <font color=#ff6666><i>Vocab</i></font> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.core.models </b></td>
-    <td> ... </td>
+    <td> abstract model classes and interfaces </td>
 </tr>
 <tr>
     <td><b> deeppavlov.dataset_readers </b></td>
-    <td> ... </td>
+    <td> concrete <font color=#ff6666><i>DatasetReader</i></font> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.datasets </b></td>
-    <td> ... </td>
+    <td> concrete <font color=#ff6666><i>Dataset</i></font> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.models </b></td>
-    <td> ... </td>
+    <td> concrete <font color=#ff6666><i>Model</i></font> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.skills </b></td>
-    <td> ... </td>
+    <td> <font color=#ff6666><i>Skill</i></font> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.vocabs </b></td>
-    <td> ... </td>
+    <td> concrete <font color=#ff6666><i>Vocab</i></font> classes </td>
 </tr>
 </table>
 
