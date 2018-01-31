@@ -2,7 +2,7 @@
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 ![tensorflow 1.4](https://img.shields.io/badge/tensorflow-1.4-green.svg)
 
-# Dialogue Agent for goal-oriented task 
+# Dialogue Bot Agent for goal-oriented task 
 The dialogue agent is based on [[1]](#references) which introduces Hybrid Code Networks (HCNs) that combine an RNN with domain-specific knowledge and system action templates.
 
 ![alt text](diagram.png "Goal-oriented bot diagram")
@@ -45,11 +45,11 @@ To use the model:
 2. train intents classifier model (for config file see [`deeppavlov/models/classifiers/intents/config.json`](../../models/classifiers/intents/config.json))
 3. download english fasttext embeddings trained on wiki ([https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip](https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip))
     * you can use any english embeddings of your choice, but edit hybrid code network config accordingly
-4. train hybrid code network bot itself (for config file see [`deeppavlov/skills/hcn_new/config.json`](config.json))
+4. train hybrid code network bot itself (for config file see [`deeppavlov/skills/go_bot/config.json`](config.json))
     * check that paths in the config point to pretrained ner and intent classifier model files
 
 #### Config parameters:
-* `name` always equals to `"hcn_new"`
+* `name` always equals to `"go_bot"`
 * `train_now` — `true` or `false`(default) depending on whether you are training or using a model _(optional)_
 * `num_epochs` — maximum number of epochs during training _(optional)_
 * `val_patience` — stop training after `val_patience` epochs without improvement of turn accuracy on validation dialogs _(optional)_
@@ -60,14 +60,16 @@ To use the model:
       * `name` — `"default_vocab"` (for vocabulary's implementation see [`deeppavlov.core.data.vocab`](../../core/data/vocab.py))
       * `inputs` — `[ "x" ]`,
       * `level` — `"token"`,
-      * `ser_path` — `"../data/hcn/token.dict"`
+      * `tokenize` — `true`,
+      * `save_path` — `"../download/vocabs/token.dict"`
+      * `load_path` — `"../download/vocabs/token.dict"`
 * `tokenizer` — one of tokenizers from [`deeppavlov.models.tokenizers`](../../models/tokenizers) module
    * `name` — tokenizer name
    * other arguments specific to your tokenizer
 * `bow_encoder` — one of bag-of-words encoders from [`deeppavlov.models.encoders.bow`](../../models/encoders/bow) module
    * `name` — encoder name
    * other arguments specific to your encoder
-* `embedder` — pne of embedders from [`deeppavlov.models.embedders`](../../models/embedders) module
+* `embedder` — one of embedders from [`deeppavlov.models.embedders`](../../models/embedders) module
    * `name` — embedder name (`"fasttext"` recommended, see [`deeppavlov.models.embedders.fasttext_embedder`](../../models/embedders/fasttext_embedder.py))
    * `mean` — must be set to `true`
    * other arguments specific to your embedder
@@ -75,23 +77,26 @@ To use the model:
    * `name` — tracker name (`"default_tracker"` or `"featurized_tracker"` recommended)
    * other arguments specific to your tracker
 * `network` — reccurent network that handles dialogue policy management
-   * `name` — `"custom_rnn"`,
+   * `name` — `"go_bot_rnn"`,
    * `train_now` — `true` or `false`(default) depending on whether you are training or using a model _(optional)_
-   * `ser_path` — name of the file that the model will be saved to and loaded from
+   * `save_path` — name of the file that the model will be saved to
+   * `load_path` — name of the file that the model will be loaded from
    * `learning_rate` — learning rate during training
    * `hidden_dim` — hidden state dimension
-   * `obs_size` — input observation size
+   * `obs_size` — input observation size (must be set to number of `bow_embedder` features, `embedder` features, `intent_classifier` features, context features(=2) plus `tracker` state size plus action size)
    * `use_action_mask` — in case of true, action mask is applied to probability distribution
    * `action_size` — output action size
 * `slot_filler` — model that predicts slot values for a given utterance
    * `name` — slot filler name (`"dstc_slotfilling"` recommended, for implementation see [`deeppavlov.models.ner`](../../models/ner))
    * other slot filler arguments
-* `intent_classifier` — model that outputs intents probability disctibution for a given utterance
-   * `name` — slot filler name (`"intent_model"` recommended, for implementation see [`deeppavlov.models.classifiers.intents`](../../models/classifiers/intents))
+* `intent_classifier` — model that outputs intents probability distribution for a given utterance
+   * `name` — intent classifier name (`"intent_model"` recommended, for implementation see [`deeppavlov.models.classifiers.intents`](../../models/classifiers/intents))
    * classifier's other arguments
 * `debug` — whether to display debug output (defaults to `false`) _(optional)_
 
-For a working exemplary config see [`deeeppavlov/skills/hcn_new/config.json`](config.json).
+For a working exemplary config see [`deeeppavlov/skills/go_bot/config.json`](config.json) (model without embeddings).
+A minimal model without `slot_filler`, `intent_classifier` and `embedder` is configured in [`deeeppavlov/skills/go_bot/config_minimal.json`](config_minimal.json).
+A full model (with fasttext embeddings) configuration is in [`deeeppavlov/skills/go_bot/config_all.json`](config_all.json)
 
 #### Usage example
 To infer from a pretrained model with config path equal to `path/to/config.json`, you should run the following:
@@ -122,17 +127,15 @@ To be used for training, your config json file should include parameters:
    internet and placed to `data_path` directory
 * `dataset` — it should always be set to `{"name": "dialog_dataset"}` (for implementation see [`deeppavlov.datasets.dstc2_datasets.py`](../../datasets/dstc2_datasets.py))
 
-#TODO: rename dstc2_dialog_dataset to dialog_dataset
-
 Do not forget to set `train_now` parameters to `true` for `vocabs.word_vocab`, `model` and `model.network` sections.
 
-See [`deeeppavlov/skills/hcn_new/config.json`](config.json) for details.
+See [`deeeppavlov/skills/go_bot/config.json`](config.json) for details.
 
 #### Train run
 The easiest way to run the training is by using [`deeppavlov/run_model.py`](../../run_model.py) script:
 
 1. set `PIPELINE_CONFIG_PATH` to your config path relative to the deeppavlov library
-(for example, `'skills/hcn_new/config.json'`)
+(for example, `'skills/go_bot/config.json'`)
 2. then run the script by `python3 run_model.py`
 
 The model will be trained according to your configuration and afterwards an interaction with the model will be run.
@@ -179,19 +182,19 @@ If your model needs be trained on different data, you have several ways of achie
 #TODO: change str `act` to a list `acts`
 
 3. Use your own dataset and dataset reader (**if 2. doesn't work for you**):
-    * your `YourDataset.iter()` class method output should match the input format for [`HybridCodeNetworkBot.train()`](hcn.py).
+    * your `YourDataset.iter()` class method output should match the input format for [`HybridCodeNetworkBot.train()`](go_bot.py).
 
 ## Comparison
 As far as out dataset is a modified version of official DSTC2-dataset [[2]](#references), resulting metrics can't be compared with model evaluations on the original dataset.
 
-But comparisons for hcn model modifications trained on out DSTC2-dataset are presented:
+But comparisons for bot model modifications trained on out DSTC2-dataset are presented:
 
 |                   Model                      |  Action accuracy  |  Turn accuracy  |
 |----------------------------------------------|-------------------|-----------------|
-|basic hcn			                             |      0.5271       |     0.4853      |
-|hcn with slot filler			                 |                   |                 |
-|hcn with slot filler & fasttext embeddings    |                   |                 |
-|hcn with slot filler & intents                |      0.5487       |     0.5259      |
+|basic bot			                             |      0.5271       |     0.4853      |
+|bot with slot filler			                 |                   |                 |
+|bot with slot filler & fasttext embeddings    |                   |                 |
+|bot with slot filler & intents                |      0.5487       |     0.5259      |
 
 #TODO: add metrics values
 #TODO: add dialog accuracies
