@@ -30,6 +30,8 @@ def init_bot_for_model(token, model):
     def send_start_message(message):
         chat_id = message.chat.id
         out_message = model_info['start_message']
+        if hasattr(model, 'reset'):
+            model.reset()
         bot.send_message(chat_id, out_message)
 
     @bot.message_handler(commands=['help'])
