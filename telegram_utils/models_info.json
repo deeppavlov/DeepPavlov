@@ -1,7 +1,7 @@
 {
   "@default": {
     "start_message": "Welcome to DeepPavlov inference bot!",
-    "help_message": "Welcomr to DeepPavlov inference bot!"
+    "help_message": "Welcome to DeepPavlov inference bot!"
   },
   "DstcSlotFillingNetwork": {
     "start_message": "Welcome to the UI of the DSTC slot filling model. You can enter a text string and get identified slots with values. Example:\n\nFrench cusine\n\nmodel prediction: {'food': 'french'}",
