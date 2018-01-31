@@ -21,17 +21,17 @@ In this component
 Furthermore, to distinguish consequent entities with the same tags BIO tagging scheme is used. "B" stands for beginning,
 "I" stands for the continuation of an entity and "O" means the absence of entity. Example with dropped punctuation:
 
-Restaraunt  O
-in          O
-the         O
-west        B-LOC
-of          O
-the         O
-city        O
-serving     O
-modern      B-FOOD
-european    I-FOOD
-cuisine     O
+    Restaraunt  O
+    in          O
+    the         O
+    west        B-LOC
+    of          O
+    the         O
+    city        O
+    serving     O
+    modern      B-FOOD
+    european    I-FOOD
+    cuisine     O
 
 In the example above PER means person tag, and "B-" and "I-" are prefixes identifying beginnings and continuations of the entities.
 
@@ -57,15 +57,19 @@ The config of the model must have the following fields:
 "model": {
     "name": "dstc_slotfilling",
     "train_now": true,
-    "model_path": "models/ner/model/",
+    "save_path": "../download/model/slot_vals.json",
+    "load_path": "../download/model/slot_vals.json",
     "ner_network": {
-        "name": "ner_tagging_network"
+        "name": "ner_tagging_network",
+        "...": "..."
     }
 }
 ```
-where "name" is always "dstc_slotfilling", referring to the DstcSlotFillingNetwork class, "train_now" determine whether to train NER network or not, "model_path" defines the path to the files needed for slot filling, "ner_network" is a reference to the NerNetwork class, which has its own parameters.
 
-The NER network is a separate model, and it has its own initialization parameters, namely:
+
+where "name" is always "dstc_slotfilling", referring to the DstcSlotFillingNetwork class, "train_now" determine whether to train NER network or not, "save_path" defines the path where slot values needed for slot filling will be saved, and "load_path" defines path to existing slot values json file (if there is no slot_vals.json file it will be loaded from remote server), "ner_network" is a reference to the NerNetwork class, which has its parameters.
+
+The NER network is a separate model, and it has its initialization parameters, namely:
 ```json
 {
 "ner_network": {
@@ -89,7 +93,7 @@ The NER network is a separate model, and it has its own initialization parameter
 - "name" is always equal to "ner_tagging_network",
 - "vocabs" is equal to ["token_vocab", "tag_vocab", "char_vocab"] and specify vocabularies needed to construct the network (which will be mentioned below),
 - "model_path" defines the path to save the network parameters files,
--"verbouse" - show supplimentary information about the network or not,
+- "verbouse" - whether to show supplimentary information about the network or not,
 - "filter_width" - the width of convolutional kernel
 - "embeddings_dropout" - whether to use dropout for embeddings or not
 - "n_filters" - number of filters in convolutional network
@@ -125,17 +129,17 @@ To perform convertation between tokens and indices there are three vocabularies 
   }
  }
 ```
-These vocabularies are used by NER network to perform conversion between tokens and indices and vice versa. Indices are fed into the network to perform embeddings lookup. The are reference to this vocabulary in the NER network configuration part. These vocabularies are built before initialization of the network and provide parameters (number of tokens, number of tags, ...) to initialize lookup matrices. They are also used for conversion of batch tokens to batch indices.
+These vocabularies are used by NER network to perform conversion between tokens and indices and vice versa. Indices are fed into the network to perform embeddings lookup. The is reference to this vocabulary in the NER network configuration part. These vocabularies are built before initialization of the network and provide parameters (number of tokens, number of tags, ...) to initialize lookup matrices. They are also used for conversion of batch tokens to batch indices.
 
 To build vocabularies and train the network two data components must be specified. Namely: dataset_reader and dataset:
 ```json
 {"dataset_reader": {
       "name": "dstc2_datasetreader",
-      "data_path": "/home/user/data/dstc2"
+      "data_path": "../download/dstc2"
   },
   "dataset": {
       "name": "dstc2_ner_dataset",
-      "dataset_path": "/home/user/data/dstc2"
+      "dataset_path": "../download/dstc2"
   }
 }
 ```
@@ -149,7 +153,6 @@ This model expects a sentence string with spaced-separated tokens in lowercase a
 
 ```python
 from deeppavlov.core.commands.train import train_model_from_config
-from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.commands.utils import set_usr_dir
 
 MODEL_CONFIG_PATH = 'models/ner/config.json'
@@ -166,16 +169,16 @@ After training the following code will launch interaction with the model:
 from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.commands.utils import set_usr_dir
 
-CONFIG_PATH = 'deeppavlov/models/ner/config.json'
-usr_dir = set_usr_dir(CONFIG_PATH)
-interact_model(CONFIG_PATH)
+PIPELINE_CONFIG_PATH = 'deeppavlov/models/ner/config.json'
+usr_dir = set_usr_dir(PIPELINE_CONFIG_PATH)
+interact_model(PIPELINE_CONFIG_PATH)
 ```
 
 ## Results
 
 The NER network component reproduces architecture from the paper "_Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition_" https://arxiv.org/pdf/1709.09686.pdf, which is inspired by LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf.
 
-Bi-LSTM architecture of NER network were tested on three datasets:
+Bi-LSTM architecture of NER network was tested on three datasets:
 - Gareev corpus [1] (obtainable by request to authors)
 - FactRuEval 2016 [2]
 - Persons-1000 [3]
