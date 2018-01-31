@@ -136,14 +136,6 @@
     "bow_encoder": {
       "name": "bow"
     },
-    "embedder": {
-      "name": "fasttext",
-      "emb_module": "pyfasttext",
-      "mean": true,
-      "dim": 300,
-      "save_path": "../download/embeddings/wiki.en.bin",
-      "load_path": "../download/embeddings/wiki.en.bin"
-    },
     "tokenizer": {
       "name": "spacy_tokenizer"
     },
