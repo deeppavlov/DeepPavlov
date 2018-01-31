@@ -140,8 +140,8 @@ should be registered and can be inherited from `deeppavlov.data.vocab.DefaultVoc
 ### Model
 
 `Model` is the main class which rules the training/infering process and feature generation.
-If a model requires other models to produce features, they need to be passed in its constructor.
-All models can be nested as much as needed. For example, a skeleton of
+If a model requires other models to produce features, they need to be passed in its constructor
+and config. All models can be nested as much as needed. For example, a skeleton of
 `deeppavlov.skills.go_bot.go_bot.GoalOrientedBot` consists of 11 separate model classes,
 3 of which are neural networks:
 
@@ -183,10 +183,51 @@ All models can be nested as much as needed. For example, a skeleton of
 }
 ```
 
+All models should be registered and inherited from `deeppavlov.core.models.inferable.Inferable`
+or from both `Inferable` and `deeppavlov.core.models.trainable.Trainable` interfaces.
+Models inherited from `Trainable` interface can be trained. Models inherited from `Inferable`
+interface can be only inferred. Usually `Inferable` models are rule-based models or
+pretraned models that we import from third-party libraries (like `NLTK`, `Spacy`, etc.).
+
+### Training
+
+All models inherited from `deeppavlov.core.models.trainable.Trainable` interface can be trained.
+The training process should be described in `train()` method:
+
+ ```python
+ @register("my_model")
+ class MyModel(Inferable, Trainable):
+
+    def train(*args, **kwargs):
+        """
+        Implement training here.
+        """
+ ```
+
+All parameters for training which can be changed during experiments (like *num of epochs*,
+*batch size*, *patience*, *learning rate*, *optimizer*) should be passed to a model's
+`__init__()`. The default parameters values from `__init__()` are overridden with JSON config values.
+To change these values, there is no need to rewrite the code, only the config should be changed.
+
+The training process is managed by `train_now` attribute. If `train_now` is *True*,
+a model is being trained. This parameter is useful when using `Vocab`, because in a single
+model run some vocabs can be trained, while some only inferred by other models in pipeline.
+The training parameters in JSON config can look like this:
+
+```javascript
+{
+  "model": {
+    "name": "my_model",
+    "train_now": true,
+    "optimizer": "Adam",
+    "learning_rate": 0.2,
+    "num_epochs": 1000
+  }
+}
+```
 
 
-### Describe usage here (Training and Infering)
-### Describe Interfaces?? Trainable, Inferable and derived model types
+### Inferring
 
 ## Suggested models
 </div>
