@@ -1,17 +1,31 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/deepmipt/DeepPavlov/blob/master/LICENSE)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 
-# DeepPavlov (pre-alfa)
-An Apache 2.0 NLP research library, built on TensorFlow and Keras, for 
- * Building complicated NLP pipelines
- * Training and inferring NLP algorithms
+# DeepPavlov (pre alfa)
+An open-source conversational AI library, built on TensorFlow and Keras, and designed for
+ * NLP and dialog systems research
+ * implementation and evaluation of complex conversational systems
  
+Our goal is to provide researchers with:
+ * a framework for implementing and testing their own dialog models with subsequent sharing of that models
+ * set of predefined NLP models / dialog system components (ML/DL/Rule-based) and pipeline templates
+ * benchmarking environment for conversational models and systematized access to relevant datasets
+ 
+and AI-application developers with:
+ * framework for building conversational software
+ * tools for application integration with adjacent infrastructure (messengers, helpdesk software etc.)
+ * Licensed under the Apache License, Version 2.0.
+
 ## Features
- * Goal-oriented dialog agent
- * Slot filling component
- * Intent classification component
- * Automatic spelling correction component
- * Pre-trained embeddings library
+ * [Goal-oriented dialog agent](deeppavlov/skills/go_bot/README.md). The Goal-oriented bot is based on Hybrid Code Networks (HCNs) architecture from [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017](https://arxiv.org/abs/1702.03274). It allows to predict responses in the goal-oriented task dialogue. The model is quite customizable: embeddings, slot filler and intent classifier can be used or not on demand.
+
+ * [Slot filling component](deeppavlov/models/ner/README.md). The Slot filling component uses neural Named Entity Recognition network and fuzzy Levenshtein search to extract normalized slot values from the text. The NER network component reproduces architecture from the paper [Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition](https://arxiv.org/pdf/1709.09686.pdf), which is inspired by LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf.
+
+ * [Intent classification component](https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/models/classifiers/intents/README.md). The Intent classifier component is based on shallow-and-wide Convolutional Neural Network architecture from [Kim Y. Convolutional neural networks for sentence classification – 2014](https://arxiv.org/pdf/1408.5882). The model allows multilabel classification of sentences.
+
+ * [Automatic spelling correction component](models/spellers/error_model/README.md). Automatic spelling correction component is based on [An Improved Error Model for Noisy Channel Spelling Correction by Eric Brill and Robert C. Moore](http://www.aclweb.org/anthology/P00-1037) and uses statistics based error model, a static dictionary and an ARPA language model to correct spelling errors.
+ 
+ * [Pre-trained embeddings library](pretrained-vectors.md). Pre-trained on joint [Russian Wikipedia](https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0) and [Lenta.ru](https://lenta.ru/) corpora word vectors for Russian language. 
 
 ### Contents
 
@@ -86,14 +100,14 @@ Available model configs are:
 
 *models/spellers/error_model/config_en.json*
 
-## Support
 
-If you have any questions, bug reports or feature requests, please do not hesitate
-to post on our [Github Issues](https://github.com/deepmipt/DeepPavlov/issues) page.
+## Support & collaboration
+
+If you have any questions, bug reports or feature requests, please feel free to post on our [Github Issues](https://github.com/deepmipt/DeepPavlov/issues) page. Please tag your issue with 'bug', 'feature request', or 'question'.  Also we’ll be glad to see your pull-requests to add new datasets, models, embeddings and e.t.c.
 
 ## The Team
 
-DeepPavlov is currently maintained by ...
+DeepPavlov is built and maintained by [Neural Networks and Deep Learning Lab](https://mipt.ru/english/research/labs/neural-networks-and-deep-learning-lab) at [MIPT](https://mipt.ru/english/) within [iPavlov](http://ipavlov.ai/) project (part of [National Technology Initiative](https://asi.ru/eng/nti/)) and in partnership with [Sberbank](http://www.sberbank.com/).
 
 ## License
 
