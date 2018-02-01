@@ -6,7 +6,7 @@
 </p>
 
 # <center>DeepPavlov</center>
-## We are in a really early Alfa release. You have to be ready to hard adventures.
+## We are in a really early Alfa release. You have to be ready for hard adventures.
 An open-source conversational AI library, built on TensorFlow and Keras, and designed for
  * NLP and dialog systems research
  * implementation and evaluation of complex conversational systems
@@ -51,12 +51,18 @@ and AI-application developers with:
 
 ## Installation
 1. Create a virtual environment with `Python 3.6`
+    ```
+    virtualenv env
+    ```
 2. Activate the environment.
-3. Clone the repo
+    ```
+    source ./env/bin/activate
+    ```
+3. Clone the repo and `cd` to project root
    ```
    git clone https://github.com/deepmipt/DeepPavlov.git
+   cd DeepPavlov
    ```
-4. `cd` to the project root.
 5. Install the requirements:
     ```
     python install.py
@@ -65,19 +71,40 @@ and AI-application developers with:
     ```
     python -m spacy download en
     ```
+7. To interact with our pre-trained models, they should be downloaded first:
+    ```
+    python download.py [-all] 
+    ```
+    * `[-all]` option is not required for basic examples; it will download **all** our pre-trained models.
+
+    * Warning! `[-all]` requires about 10 GB of free space on disk.
+
+## Basic Samples
+
+View video demo of deploy goal-oriented bot and slot-filling model with Telegram UI
+
+[![Alt text for your video](https://img.youtube.com/vi/T-D1KVIuvjA/0.jpg)](https://youtu.be/3Ic0b9OVnCE)
+          
+ * Run goal-oriented bot with Telegram interface:
+ ```
+ python deep.py interactbot skills/go_bot/config.json -t <TELEGRAM_TOKEN>
+ ```
+ * Run goal-oriented bot with console interface:
+ ```
+ python deep.py interact skills/go_bot/config.json
+ ```
+ * Run slot-filling model with Telegram interface
+ ```
+ python deep.py interactbot models/ner/config.json -t <TELEGRAM_TOKEN>
+ ```
+ * Run slot-filling model with console interface
+ ```
+ python deep.py interact models/ner/config.json
+ ```
 
 ## Quick start
-With the purpose to interact with our pre-trained models, they should be downloaded first:
 
-```
-cd deeppavlov/
-python download.py [-all]
-```
-* `[-all]` option is not required for basic examples; it will download **all** our pre-trained models.
-
-* Warning! `[-all]` requires about 10 GB of free space on disk.
-
-Then the models can be interacted or trained with the following command:
+Our models can be interacted or trained with the following command:
 
 ```
 python deep.py <mode> <path_to_config>
@@ -98,6 +125,7 @@ Available model configs are:
 *models/ner/config.json*
 
 *models/spellers/error_model/config_en.json*
+
 
 
 ## Support & collaboration
