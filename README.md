@@ -69,12 +69,12 @@ The library is designed following the principles:
 ### Target Architecture
 Target architecture of our library:
 <p align="left">
-<img src="https://lh3.googleusercontent.com/OA0o0Hx5se9mN8z-XUsKYQDVVRumHPdGSW2dbkmHfeI55pCKtvmHS0WWUj5EMUoSj7wvceMExDe0SV_Vt3TF=w2493-h1273-rw" width="50%" height="50%"/>
+<img src="http://lnsigo.mipt.ru/export/images/deeppavlov_architecture.png" width="50%" height="50%"/>
 </p>
 DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). Other external libraries can be used to build basic components.
 
 ### Key Concepts
- * `Agent` - conversational agent communicated with users in natural language (text)
+ * `Agent` - conversational agent communicating with users in natural language (text)
  * `Skill` - unit of interaction that fulfills a user’s need. Typically, a user’s need is fulfilled by presenting information or completing a transaction (e.g. answer question by FAQ, booking tickets etc.); however, for some experiences success is defined as continued engagement (e.g. chit-chat)
  * `Components` - atomic functionality blocks
    * `Rule-based Components` - can not be trained
