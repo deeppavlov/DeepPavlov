@@ -130,7 +130,7 @@ DeepPavlov is Apache 2.0 - licensed.
 </tr>
 <tr>
     <td><b> deeppavlov.core.data </b></td>
-    <td> basic <b><i>Dataset</i></b>, <b><i>DatasetReader</b></i> and <b><i>Vocab</b></i> classes </td>
+    <td> basic <b><i>Dataset</i></b>, <b><i>DatasetReader</i></b> and <b><i>Vocab</i></b> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.core.models </b></td>
@@ -138,23 +138,23 @@ DeepPavlov is Apache 2.0 - licensed.
 </tr>
 <tr>
     <td><b> deeppavlov.dataset_readers </b></td>
-    <td> concrete <b><i>DatasetReader</b></i> classes </td>
+    <td> concrete <b><i>DatasetReader</i></b> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.datasets </b></td>
-    <td> concrete <b><i>Dataset</b></i> classes </td>
+    <td> concrete <b><i>Dataset</i></b> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.models </b></td>
-    <td> concrete <b><i>Model</b></i> classes </td>
+    <td> concrete <b><i>Model</i></b> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.skills </b></td>
-    <td> <b><i>Skill</b></i> classes. Skills are dialog models.</td>
+    <td> <b><i>Skill</i></b> classes. Skills are dialog models.</td>
 </tr>
 <tr>
     <td><b> deeppavlov.vocabs </b></td>
-    <td> concrete <b><i>Vocab</b></i> classes </td>
+    <td> concrete <b><i>Vocab</i></b> classes </td>
 </tr>
 </table>
 
