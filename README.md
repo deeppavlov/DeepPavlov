@@ -1,8 +1,8 @@
-[![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](/LICENSE.txt)
+[![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](/LICENSE)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
-[![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
+<div style="text-align: justify">
 
-# DeepPavlov (pre alfa)
+# DeepPavlov (pre-alfa)
 An Apache 2.0 NLP research library, built on TensorFlow and Keras, for 
  * Building complicated NLP pipelines
  * Training and infering NLP algorithms
@@ -12,7 +12,7 @@ An Apache 2.0 NLP research library, built on TensorFlow and Keras, for
  * Slot filling component
  * Intent classification component
  * Automatic spelling correction component
- * Pretrained embeddings library
+ * Pre-trained embeddings library
 
 ### Contents
 
@@ -30,7 +30,7 @@ An Apache 2.0 NLP research library, built on TensorFlow and Keras, for
     * [Model](#model)
     * [Training](#training)
     * [Inferring](#inferring)
- * [Suggested models](#suggested-models)
+ * [Pre-trained models](#pre-trained-models)
     * [Dialogue Bot for goal-oriented task](#dialogue-bot-for-goal-oriented-task)
     * [Neural Model for Intent Classification](#neural-model-for-intent-classification)
     * [Neural Named Entity Recognition](#neural-named-entity-recognition)
@@ -39,6 +39,10 @@ An Apache 2.0 NLP research library, built on TensorFlow and Keras, for
 ## Installation
 1. Create a virtual environment with `Python 3.6`
 2. Activate the environment.
+3. Clone the repo
+   ```
+   git clone https://github.com/deepmipt/DeepPavlov.git
+   ```
 3. `cd` to the project root.
 4. Install the requirements:
     ```
@@ -51,13 +55,13 @@ An Apache 2.0 NLP research library, built on TensorFlow and Keras, for
     ```
 
 ## Quick start
-With the purpose to interact with our pretrained models, they should be downloaded first:
+With the purpose to interact with our pre-trained models, they should be downloaded first:
 
 ```
 cd deeppavlov/
 python download.py [-all]
 ```
-* `[-all]` option is not required for basic examples; it will download **all** our pretrained models.
+* `[-all]` option is not required for basic examples; it will download **all** our pre-trained models.
 
 * Warning! `[-all]` requires about 10 GB of free space on disk.
 
@@ -85,7 +89,7 @@ Available model configs are:
 
 ## Support
 
-If you have any questions, bug reports or feature requests, please don't hesitate
+If you have any questions, bug reports or feature requests, please do not hesitate
 to post on our [Github Issues](https://github.com/deepmipt/DeepPavlov/issues) page.
 
 ## The Team
@@ -161,7 +165,7 @@ An NLP pipeline config is a JSON file, which consists of four required elements:
 
 Each class in the config has `name` parameter, which is its registered codename
  and can have any other parameters, repeating its `__init__()` method arguments.
- Default values of `__init__()` arguments will be overriden with the config values
+ Default values of `__init__()` arguments will be overridden with the config values
  during class instance initialization.
 
 ### DatasetReader
@@ -188,7 +192,7 @@ is not an abstract class and can be used as `Dataset` as well.
 For example, tokens to indices and backwards, chars to indices, classes to indices, etc.
 It can index X (features) and y (answers) types of data. A concrete `Vocab` class
 should be registered and can be inherited from `deeppavlov.data.vocab.DefaultVocabulary` class.
-`deeppavlov.data.vocab.DefaultVocabulary` is not an abstrat class and can be used as `Vocab` as well.
+`deeppavlov.data.vocab.DefaultVocabulary` is not an abstract class and can be used as `Vocab` as well.
 
 ### Model
 
@@ -240,7 +244,7 @@ All models should be registered and inherited from `deeppavlov.core.models.infer
 or from both `Inferable` and `deeppavlov.core.models.trainable.Trainable` interfaces.
 Models inherited from `Trainable` interface can be trained. Models inherited from `Inferable`
 interface can be only inferred. Usually `Inferable` models are rule-based models or
-pretraned models that we import from third-party libraries (like `NLTK`, `Spacy`, etc.).
+pre-trained models that we import from third-party libraries (like `NLTK`, `Spacy`, etc.).
 
 ### Training
 
@@ -292,13 +296,13 @@ Inferring is triggered by `deeppavlov.core.commands.train.infer_model_from_confi
 There is no need in s separate JSON for inferring. `train_now` parameter is ignored during
 inferring.
 
-## Suggested models
+## Pre-trained models
 
 The suggested in [Quick start](#quick-start) configs are available for the following models.
 
 ### Dialogue Bot for goal-oriented task
 
-A dialog agent based on Hybrid Code Network pretrained for restaurant recommendation task.
+A dialog agent based on Hybrid Code Network pre-trained for restaurant recommendation task.
 [Details](https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/skills/go_bot)
 
 ### Neural Model for Intent Classification
@@ -315,3 +319,4 @@ A model for entities recognition in restaurant recommendation task.
 
 A spelling correction model, currently available for English and Russian languages.
 [Details](https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/models/spellers/error_model)
+</div>
