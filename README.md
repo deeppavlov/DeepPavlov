@@ -1,6 +1,5 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](/LICENSE)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
-<div style="text-align: justify">
 
 # DeepPavlov (pre-alfa)
 An Apache 2.0 NLP research library, built on TensorFlow and Keras, for 
@@ -319,4 +318,3 @@ A model for entities recognition in restaurant recommendation task.
 
 A spelling correction model, currently available for English and Russian languages.
 [Details](https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/models/spellers/error_model)
-</div>
