@@ -4,7 +4,7 @@
 # DeepPavlov (pre-alfa)
 An Apache 2.0 NLP research library, built on TensorFlow and Keras, for 
  * Building complicated NLP pipelines
- * Training and infering NLP algorithms
+ * Training and inferring NLP algorithms
  
 ## Features
  * Goal-oriented dialog agent
