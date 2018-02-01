@@ -80,21 +80,17 @@ def ungzip(file_path, extract_folder=None):
 
         """
     CHUNK = 16 * 1024
-    fname = str(file_path).split("/")[-1][:-3]
     file_path = Path(file_path)
-    if extract_folder is None:
-        extract_folder = file_path.parent
-    extract_folder = Path(extract_folder)
-    extract_path = extract_folder / fname
+    extract_path = file_path.with_suffix('')
+    if extract_folder is not None:
+        extract_path = Path(extract_folder) / extract_path.name
 
-    with file_path.open('rb') as fin:
-        fout = gzip.open(extract_path, 'wb')
+    with gzip.open(file_path, 'rb') as fin, extract_path.open('wb') as fout:
         while True:
             block = fin.read(CHUNK)
             if not block:
                 break
             fout.write(block)
-        fout.close()
 
 
 def download_decompress(url, download_path, extract_path=None):
