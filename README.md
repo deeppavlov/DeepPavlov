@@ -130,7 +130,7 @@ DeepPavlov is Apache 2.0 - licensed.
 </tr>
 <tr>
     <td><b> deeppavlov.core.data </b></td>
-    <td> basic <b><i>Dataset</b></i>, <b><i>DatasetReader</b></i> and <b><i>Vocab</b></i> classes </td>
+    <td> basic <b><i>Dataset</i></b>, <b><i>DatasetReader</b></i> and <b><i>Vocab</b></i> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.core.models </b></td>
