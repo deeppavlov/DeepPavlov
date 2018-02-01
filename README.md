@@ -88,7 +88,7 @@ DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). O
 
  * [Installation](#installation)
  * [Quick start](#quick-start)
- * [Deeppavlov overview](#deeppavlov-overview)
+ * [Technical overview](#deeppavlov-overview)
     * [Project modules](#project-modules)
     * [Config](#config)
     * [DatasetReader](#datasetreader)
@@ -162,7 +162,7 @@ Available model configs are:
 
 ---
 
-## DeepPavlov overview
+## Technical overview
 
 ### Project modules
 
