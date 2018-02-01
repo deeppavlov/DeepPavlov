@@ -47,7 +47,7 @@ A working config could look like this:
 
 #### Usage example
 This model expects a sentence string with space-separated tokens in lowercase as its input and returns the same string with corrected words.
-Here's an example code that will read input data from stdin line by line and output resulting text into stdout:
+Here's an example code that will read input data from stdin line by line and output resulting text to the `output.txt` file:
 
 ```python
 import json
@@ -56,21 +56,22 @@ import sys
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.commands.utils import set_usr_dir
 
-CONFIG_PATH = 'deeppavlov/models/spellers/error_model/config_ru_custom_vocab.json'
+CONFIG_PATH = 'models/spellers/error_model/config_ru_custom_vocab.json'
 set_usr_dir(CONFIG_PATH)
 
 with open(CONFIG_PATH) as config_file:
     config = json.load(config_file)
 
 model = build_model_from_config(config)
-for line in sys.stdin:
-    print(model.infer(line), flush=True)
+with open('output.txt', 'w') as f:
+    for line in sys.stdin:
+        print(model.infer(line), file=f, flush=True)
 ```
 
 if we save it as `example.py` then it could be used like so:
 
 ```bash
-cat input.txt | python3 example.py > output.txt
+cat input.txt | python3 example.py
 ```
 
 ## Training
