@@ -197,6 +197,7 @@ def _train_batches(model: Trainable, dataset: Dataset, train_config: dict,
         'val_every_n_epochs': 0,
 
         'log_every_n_batches': 0,
+        'log_every_n_epochs': 0,
         # 'show_examples': False,
 
         'validate_best': True,
@@ -221,7 +222,7 @@ def _train_batches(model: Trainable, dataset: Dataset, train_config: dict,
     examples = 0
     saved = False
     patience = 0
-    log_on = train_config['log_every_n_batches'] > 0
+    log_on = train_config['log_every_n_batches'] > 0 or train_config['log_every_n_epochs'] > 0
     train_y_true = []
     train_y_predicted = []
     start_time = time.time()
@@ -251,11 +252,21 @@ def _train_batches(model: Trainable, dataset: Dataset, train_config: dict,
                     train_y_true = []
                     train_y_predicted = []
 
-                    # if train_config['show_examples']:
-                    #     for xi, ypi, yti in zip(x, y_predicted, y_true):
-                    #         print({'in': xi, 'out': ypi, 'expected': yti})
-
             epochs += 1
+
+            if train_config['log_every_n_epochs'] > 0 and epochs % train_config['log_every_n_epochs'] == 0 and train_y_true:
+                metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in metrics_functions]
+                report = {
+                    'epochs_done': epochs,
+                    'batches_seen': i,
+                    'examples_seen': examples,
+                    'metrics': dict(metrics),
+                    'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
+                }
+                report = {'train': report}
+                print(json.dumps(report, ensure_ascii=False))
+                train_y_true = []
+                train_y_predicted = []
 
             if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
                 report = _test_model(model, metrics_functions, dataset, train_config['batch_size'], 'valid', start_time)

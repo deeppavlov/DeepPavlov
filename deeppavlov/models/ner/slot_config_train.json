@@ -61,7 +61,7 @@
     "validation_patience": 5,
     "val_every_n_epochs": 5,
 
-    "log_every_n_batches": 25,
+    "log_every_n_epochs": 1,
     "show_examples": false
   }
 }
