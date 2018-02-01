@@ -37,7 +37,7 @@ and AI-application developers with:
 
 View video demo of deploy goal-oriented bot and slot-filling model with Telegram UI
 
-[![Alt text for your video](https://img.youtube.com/vi/T-D1KVIuvjA/0.jpg)](https://youtu.be/3Ic0b9OVnCE)
+[![Alt text for your video](https://img.youtube.com/vi/3Ic0b9OVnCE/0.jpg)](https://youtu.be/3Ic0b9OVnCE)
           
  * Run goal-oriented bot with Telegram interface:
  ```
