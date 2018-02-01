@@ -5,7 +5,7 @@
  <img src="http://ipavlov.ai/img/ipavlov_logo.png" width="20%" height="20%">
 </p>
 
-# DeepPavlov (pre-alfa)
+# DeepPavlov (unstable, pre-alfa)
 An open-source conversational AI library, built on TensorFlow and Keras, and designed for
  * NLP and dialog systems research
  * implementation and evaluation of complex conversational systems
