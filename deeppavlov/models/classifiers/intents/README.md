@@ -8,7 +8,7 @@ that is presented as shallow-and-wide Convolutional Neural Network[1].
 The model is multi-class and multi-label that means each text of a dataset 
 can belong to several classes.
 
-Also there is presented pre-trained model for user intent classification for DSTC 2 dataset [CITE].
+Also there is presented pre-trained model for user intent classification for DSTC 2 dataset.
 DSTC 2 dataset does not initially contains information about intents, 
 therefore, `IntentDataset` (`deeppavlov/datasets/intent_dataset.py`) instance artificially extracts 
 intents for each user reply using information from acts and slots.

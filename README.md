@@ -48,11 +48,6 @@ and AI-application developers with:
     * [Model](#model)
     * [Training](#training)
     * [Inferring](#inferring)
- * [Pre-trained models](#pre-trained-models)
-    * [Dialogue Bot for goal-oriented task](#dialogue-bot-for-goal-oriented-task)
-    * [Neural Model for Intent Classification](#neural-model-for-intent-classification)
-    * [Neural Named Entity Recognition](#neural-named-entity-recognition)
-    * [Automatic Spelling Correction](#automatic-spelling-correction)
 
 ## Installation
 1. Create a virtual environment with `Python 3.6`
@@ -61,12 +56,15 @@ and AI-application developers with:
    ```
    git clone https://github.com/deepmipt/DeepPavlov.git
    ```
-3. `cd` to the project root.
-4. Install the requirements:
+4. `cd` to the project root.
+5. Install the requirements:
     ```
     python install.py
     ```
-5. If there were errors during installation, try to run the previous command again.
+6. Install `spacy` dependencies:
+    ```
+    python -m spacy download en
+    ```
 
 ## Quick start
 With the purpose to interact with our pre-trained models, they should be downloaded first:
