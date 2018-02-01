@@ -1,4 +1,4 @@
-[![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](/LICENSE)
+[![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/deepmipt/DeepPavlov/blob/master/LICENSE)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 
 # DeepPavlov (pre-alfa)
@@ -116,8 +116,8 @@ DeepPavlov is Apache 2.0 - licensed.
 </tr>
 <tr>
     <td><b> deeppavlov.core.data </b></td>
-    <td> basic <font color=#ff6666><i><b>Dataset</b></i></font>,
-     <font color=#ff6666><i><b>DatasetReader</b></i></font> and <font color=#ff6666><i><b>Vocab</b></i></font> classes </td>
+    <td> basic <font color=red><i><b>Dataset</b></i></font>,
+     <font color=red><i><b>DatasetReader</b></i></font> and <font color=red><i><b>Vocab</b></i></font> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.core.models </b></td>
@@ -125,23 +125,23 @@ DeepPavlov is Apache 2.0 - licensed.
 </tr>
 <tr>
     <td><b> deeppavlov.dataset_readers </b></td>
-    <td> concrete <font color=#ff6666><i><b>DatasetReader</b></i></font> classes </td>
+    <td> concrete <font color=red><i><b>DatasetReader</b></i></font> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.datasets </b></td>
-    <td> concrete <font color=#ff6666><i><b>Dataset</b></i></font> classes </td>
+    <td> concrete <font color=red><i><b>Dataset</b></i></font> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.models </b></td>
-    <td> concrete <font color=#ff6666><i><b>Model</b></i></font> classes </td>
+    <td> concrete <font color=red><i><b>Model</b></i></font> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.skills </b></td>
-    <td> <font color=#ff6666><i><b>Skill</b></i></font> classes. Skills are dialog models.</td>
+    <td> <font color=red><i><b>Skill</b></i></font> classes. Skills are dialog models.</td>
 </tr>
 <tr>
     <td><b> deeppavlov.vocabs </b></td>
-    <td> concrete <font color=#ff6666><i><b>Vocab</b></i></font> classes </td>
+    <td> concrete <font color=red><i><b>Vocab</b></i></font> classes </td>
 </tr>
 </table>
 
@@ -195,7 +195,7 @@ should be registered and can be inherited from `deeppavlov.data.vocab.DefaultVoc
 
 ### Model
 
-`Model` is the main class which rules the training/infering process and feature generation.
+`Model` is the main class which rules the training/inferring process and feature generation.
 If a model requires other models to produce features, they need to be passed in its constructor
 and config. All models can be nested as much as needed. For example, a skeleton of
 `deeppavlov.skills.go_bot.go_bot.GoalOrientedBot` consists of 11 separate model classes,
