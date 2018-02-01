@@ -77,20 +77,20 @@ View video demo of deploy goal-oriented bot and slot-filling model with Telegram
     ```
     virtualenv env
     ```
-2. Activate the environment.
+1. Activate the environment.
     ```
     source ./env/bin/activate
     ```
-3. Clone the repo and `cd` to project root
+1. Clone the repo and `cd` to project root
    ```
    git clone https://github.com/deepmipt/DeepPavlov.git
    cd DeepPavlov
    ```
-5. Install the requirements:
+1. Install the requirements:
     ```
     python install.py
     ```
-6. Install `spacy` dependencies:
+1. Install `spacy` dependencies:
     ```
     python -m spacy download en
     ```
@@ -98,12 +98,11 @@ View video demo of deploy goal-oriented bot and slot-filling model with Telegram
 ## Quick start
 
 To interact with our pre-trained models, they should be downloaded first:
-    ```
-    python download.py [-all] 
-    ```
-    * `[-all]` option is not required for basic examples; it will download **all** our pre-trained models.
-
-    * Warning! `[-all]` requires about 10 GB of free space on disk.
+```
+python download.py [-all] 
+```
+* `[-all]` option is not required for basic examples; it will download **all** our pre-trained models.
+* Warning! `[-all]` requires about 10 GB of free space on disk.
     
 Then models can be interacted or trained with the following command:
 
