@@ -61,11 +61,7 @@ and AI-application developers with:
     ```
     python install.py
     ```
-5. Install `spacy` requirements:
-
-    ```
-    python -m spacy download en
-    ```
+5. If there were errors during installation, try to run the previous command again.
 
 ## Quick start
 With the purpose to interact with our pre-trained models, they should be downloaded first:
