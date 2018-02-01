@@ -81,20 +81,24 @@ View video demo of deploy goal-oriented bot and slot-filling model with Telegram
     ```
     virtualenv env
     ```
-1. Activate the environment.
+2. Activate the environment.
     ```
     source ./env/bin/activate
     ```
-1. Clone the repo and `cd` to project root
+3. Clone the repo and `cd` to project root
    ```
    git clone https://github.com/deepmipt/DeepPavlov.git
    cd DeepPavlov
    ```
-1. Install the requirements:
+4. Install the requirements:
     ```
-    python install.py
+    python setup.py install
     ```
-1. Install `spacy` dependencies:
+5. Clean the installation:
+    ```
+    python setup.py clean --all
+    ```
+6. Install `spacy` dependencies:
     ```
     python -m spacy download en
     ```
