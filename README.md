@@ -5,7 +5,7 @@
  <img src="http://ipavlov.ai/img/ipavlov_logo.png" width="20%" height="20%">
 </p>
 
-# DeepPavlov
+# <center>DeepPavlov</center>
 ## We are in a really early Alfa release. You have to be ready to hard adventures.
 An open-source conversational AI library, built on TensorFlow and Keras, and designed for
  * NLP and dialog systems research
@@ -48,11 +48,6 @@ and AI-application developers with:
     * [Model](#model)
     * [Training](#training)
     * [Inferring](#inferring)
- * [Pre-trained models](#pre-trained-models)
-    * [Dialogue Bot for goal-oriented task](#dialogue-bot-for-goal-oriented-task)
-    * [Neural Model for Intent Classification](#neural-model-for-intent-classification)
-    * [Neural Named Entity Recognition](#neural-named-entity-recognition)
-    * [Automatic Spelling Correction](#automatic-spelling-correction)
 
 ## Installation
 1. Create a virtual environment with `Python 3.6`
@@ -61,12 +56,15 @@ and AI-application developers with:
    ```
    git clone https://github.com/deepmipt/DeepPavlov.git
    ```
-3. `cd` to the project root.
-4. Install the requirements:
+4. `cd` to the project root.
+5. Install the requirements:
     ```
     python install.py
     ```
-5. If there were errors during installation, try to run the previous command again.
+6. Install `spacy` dependencies:
+    ```
+    python -m spacy download en
+    ```
 
 ## Quick start
 With the purpose to interact with our pre-trained models, they should be downloaded first:
@@ -312,27 +310,3 @@ A particular format of returned data should be defined in `infer()`.
 Inferring is triggered by `deeppavlov.core.commands.train.infer_model_from_config()` function.
 There is no need in s separate JSON for inferring. `train_now` parameter is ignored during
 inferring.
-
-## Pre-trained models
-
-The suggested in [Quick start](#quick-start) configs are available for the following models.
-
-### Dialogue Bot for goal-oriented task
-
-A dialog agent based on Hybrid Code Network pre-trained for restaurant recommendation task.
-[Details](https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/skills/go_bot)
-
-### Neural Model for Intent Classification
-
-A model for user intent classification for restaurant recommendation task.
-[Details](https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/models/classifiers/intents)
-
-### Neural Named Entity Recognition
-
-A model for entities recognition in restaurant recommendation task.
-[Details](https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/models/ner)
-
-### Automatic Spelling Correction
-
-A spelling correction model, currently available for English and Russian languages.
-[Details](https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/models/spellers/error_model)
