@@ -21,15 +21,18 @@ and AI-application developers with:
  * tools for application integration with adjacent infrastructure (messengers, helpdesk software etc.)
 
 ## Features
- * [Goal-oriented dialog agent](deeppavlov/skills/go_bot/README.md) is based on Hybrid Code Networks (HCNs) architecture from [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017](https://arxiv.org/abs/1702.03274). It allows to predict responses in the goal-oriented task dialogue. The model is quite customizable: embeddings, slot filler and intent classifier can be used or not on demand.
 
- * [Slot filling component](deeppavlov/models/ner/README.md) is based on neural Named Entity Recognition network and fuzzy Levenshtein search to extract normalized slot values from the text. The NER network component reproduces architecture from the paper [Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition](https://arxiv.org/pdf/1709.09686.pdf), which is inspired by LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf.
 
- * [Intent classification component](deeppavlov/models/classifiers/intents/README.md) is based on shallow-and-wide Convolutional Neural Network architecture from [Kim Y. Convolutional neural networks for sentence classification – 2014](https://arxiv.org/pdf/1408.5882). The model allows multilabel classification of sentences.
+| Component | Description |
+| --------- | ----------- |
+| [Slot filling component](deeppavlov/models/ner/README.md) | is based on neural Named Entity Recognition network and fuzzy Levenshtein search to extract normalized slot values from the text. The NER network component reproduces architecture from the paper [Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition](https://arxiv.org/pdf/1709.09686.pdf), which is inspired by LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf. |
+| [Intent classification component](deeppavlov/models/classifiers/intents/README.md) | Based on shallow-and-wide Convolutional Neural Network architecture from [Kim Y. Convolutional neural networks for sentence classification – 2014](https://arxiv.org/pdf/1408.5882). The model allows multilabel classification of sentences. |
+| [Automatic spelling correction component](deeppavlov/models/spellers/error_model/README.md) | Based on [An Improved Error Model for Noisy Channel Spelling Correction by Eric Brill and Robert C. Moore](http://www.aclweb.org/anthology/P00-1037) and uses statistics based error model, a static dictionary and an ARPA language model to correct spelling errors. |
+| **Skill** |  |
+| [Goal-oriented bot](deeppavlov/skills/go_bot/README.md) | Based on Hybrid Code Networks (HCNs) architecture from [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017](https://arxiv.org/abs/1702.03274). It allows to predict responses in the goal-oriented task dialogue. The model is quite customizable: embeddings, slot filler and intent classifier can be used or not on demand. |
+| **Embeddings** |  |
+| [Pre-trained embeddings for Russin language](pretrained-vectors.md) | Pre-trained on joint [Russian Wikipedia](https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0) and [Lenta.ru](https://lenta.ru/) corpora word vectors for Russian language. | 
 
- * [Automatic spelling correction component](deeppavlov/models/spellers/error_model/README.md) is based on [An Improved Error Model for Noisy Channel Spelling Correction by Eric Brill and Robert C. Moore](http://www.aclweb.org/anthology/P00-1037) and uses statistics based error model, a static dictionary and an ARPA language model to correct spelling errors.
- 
- * [Pre-trained embeddings library](pretrained-vectors.md). Pre-trained on joint [Russian Wikipedia](https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0) and [Lenta.ru](https://lenta.ru/) corpora word vectors for Russian language. 
 
 ## Basic examples
 
@@ -53,6 +56,7 @@ View video demo of deploy goal-oriented bot and slot-filling model with Telegram
  ```
  python deep.py interact models/ner/config.json
  ```
+
 
 ### Contents
 
