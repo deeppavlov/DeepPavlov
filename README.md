@@ -1,7 +1,6 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](/LICENSE.txt)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
-<div style="text-align: justify">
 
 # DeepPavlov (pre alfa)
 An Apache 2.0 NLP research library, built on TensorFlow and Keras, for 
