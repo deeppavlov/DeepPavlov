@@ -39,12 +39,19 @@ This message contains two intents `(thankyou, bye)`.
 
 ## Infer from pre-trained model
 
-To infer using console interface one can set parameter `MODEL_CONFIG_PATH='models/classifiers/intents/config_dstc2_infer.json'` 
-in `deeppavlov/run_model.py` (minimal required set of parameters to infer pre-trained model),
-and then run
+To infer using console interface one have tp set parameter `train_now` to `false` 
+in `models/classifiers/intents/config_dstc2.json` and then run
 ```
-python run_model.py 
+python deep.py interact models/classifiers/intents/config_dstc2.json
 ```
+or
+```
+python deep.py interactbot models/classifiers/intents/config_dstc2_infer.json
+```
+For 'interactbot' mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` 
+environment variable.
+
+
 Now user can enter a text string and get intents (classes which a request belongs with):
 ```
 :: hey! I want cheap chinese restaurant
@@ -114,15 +121,13 @@ Below the table with description of parameters is presented.
 ### Train on DSTC 2
 
 To train model again or with other parameters on DSTC 2 data
- the only actions are to set parameter `train_now` to `true` in `config_dstc2.json`,
+ the only actions are to set parameter `train_now` to `true` in `models/classifiers/intents/config_dstc2.json`,
  set `model_path` to the directory where trained model will be saved 
- (it will be loaded if model exists, and it will be created otherwise), 
- set parameter `MODEL_CONFIG_PATH='models/classifiers/intents/config_dstc2.json'` 
- in `deeppavlov/run_model.py`.
+ (it will be loaded if model exists, and it will be created otherwise).
  All other parameters of model as well as embedder and tokenizer could be changed. 
  Then training could be run in the following way:
 ```
-python run_model.py 
+python deep.py train models/classifiers/intents/config_dstc2.json
 ```
 
 ### Train on other data
@@ -143,15 +148,14 @@ Training data files `train.csv` (and, if exists, `valid.csv`) should be presente
 
 
 To train model one should 
-* set parameter `train_now` to `true` in `config_snips.json`,
-* set `data_path` to the directory containing `train.csv`, `valid.csv` in `config_snips.json`,
-* set `model_path` to the directory where trained model will be saved in `config_snips.json`, 
-* set all other parameters of model as well as embedder and tokenizer to desired ones in `config_snips.json`,
-* set `MODEL_CONFIG_PATH='models/classifiers/intents/config_snips.json'` in `run_model.py`.
+* set parameter `train_now` to `true` in `models/classifiers/intents/config_snips.json`,
+* set `data_path` to the directory where `train.csv` will be downloaded to,
+* set `model_path` to the directory where trained model will be saved to, 
+* set all other parameters of model as well as embedder and tokenizer to desired ones.
 
- Then training could be run in the same way:
- ```
-python run_model.py 
+Then training could be run in the same way:
+```
+python deep.py train models/classifiers/intents/config_snips.json
 ```
 
 **Current `config_snips.json` implies intent recognition for SNIPS benchmark dataset [2] 
