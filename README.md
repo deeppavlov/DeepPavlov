@@ -33,7 +33,6 @@ and AI-application developers with:
 | **Embeddings** |  |
 | [Pre-trained embeddings for Russin language](pretrained-vectors.md) | Pre-trained on joint [Russian Wikipedia](https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0) and [Lenta.ru](https://lenta.ru/) corpora word vectors for Russian language. | 
 
-
 ## Basic examples
 
 View video demo of deploy goal-oriented bot and slot-filling model with Telegram UI
@@ -56,6 +55,33 @@ View video demo of deploy goal-oriented bot and slot-filling model with Telegram
  ```
  python deep.py interact models/ner/config.json
  ```
+## Conceptual overview
+
+### Principles
+The library is designed following the principles:
+ * end-to-end deep learning architecture as long-term goal
+ * hybrid ML/DL/Rule-based architecture as a current approach
+ * modular dialog system architecture
+ * component-based software engineering, reusability maximization
+ * easy to extend and benchmark
+ * multiple components by one NLP task with data-driven selection of suitable components
+
+### Target Architecture
+Target architecture of our library:
+<p align="left">
+<img src="https://lh3.googleusercontent.com/OA0o0Hx5se9mN8z-XUsKYQDVVRumHPdGSW2dbkmHfeI55pCKtvmHS0WWUj5EMUoSj7wvceMExDe0SV_Vt3TF=w2493-h1273-rw" width="50%" height="50%"/>
+</p>
+DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). Other external libraries can be used to build basic components.
+
+### Key Concepts
+ * `Agent` - conversational agent communicated with users in natural language (text)
+ * `Skill` - unit of interaction that fulfills a user’s need. Typically, a user’s need is fulfilled by presenting information or completing a transaction (e.g. answer question by FAQ, booking tickets etc.); however, for some experiences success is defined as continued engagement (e.g. chit-chat)
+ * `Components` - atomic functionality blocks
+   * `Rule-based Components` - can not be trained
+   * `Machine Learning Components` - can be trained only separately
+   * `Deep Learning Components` - can be trained separately and in end-to-end mode being joined in chain
+ * `Switcher` - mechanism by which agent ranks and selects the final response shown to the user
+ * `Components Chainer` - tool for agents/components pipeline building from heterogeneous components (rule-based/ml/dl), which allow to train and inference pipeline as a whole.
 
 
 ### Contents
