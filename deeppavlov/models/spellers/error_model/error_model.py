@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import sys
 import csv
 import itertools
 from collections import defaultdict, Counter
@@ -223,7 +224,7 @@ class ErrorModel(Inferable, Trainable):
         self.save()
 
     def save(self):
-        print("[saving error_model to `{}`]".format(self.save_path))
+        print("[saving error_model to `{}`]".format(self.save_path), file=sys.stderr)
 
         with open(self.save_path, 'w', newline='') as tsv_file:
             writer = csv.writer(tsv_file, delimiter='\t')
@@ -233,7 +234,7 @@ class ErrorModel(Inferable, Trainable):
     def load(self):
         if self.load_path:
             if self.load_path.is_file():
-                print("[loading error_model from `{}`]".format(self.load_path))
+                print("[loading error_model from `{}`]".format(self.load_path), file=sys.stderr)
                 with open(self.load_path, 'r', newline='') as tsv_file:
                     reader = csv.reader(tsv_file, delimiter='\t')
                     for w, s, p in reader:
