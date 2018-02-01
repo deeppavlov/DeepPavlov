@@ -311,27 +311,3 @@ A particular format of returned data should be defined in `infer()`.
 Inferring is triggered by `deeppavlov.core.commands.train.infer_model_from_config()` function.
 There is no need in s separate JSON for inferring. `train_now` parameter is ignored during
 inferring.
-
-## Pre-trained models
-
-The suggested in [Quick start](#quick-start) configs are available for the following models.
-
-### Dialogue Bot for goal-oriented task
-
-A dialog agent based on Hybrid Code Network pre-trained for restaurant recommendation task.
-[Details](https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/skills/go_bot)
-
-### Neural Model for Intent Classification
-
-A model for user intent classification for restaurant recommendation task.
-[Details](https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/models/classifiers/intents)
-
-### Neural Named Entity Recognition
-
-A model for entities recognition in restaurant recommendation task.
-[Details](https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/models/ner)
-
-### Automatic Spelling Correction
-
-A spelling correction model, currently available for English and Russian languages.
-[Details](https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/models/spellers/error_model)
