@@ -1,7 +1,7 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/deepmipt/DeepPavlov/blob/master/LICENSE)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 
-# DeepPavlov (pre alfa)
+# DeepPavlov (pre-alfa)
 An open-source conversational AI library, built on TensorFlow and Keras, and designed for
  * NLP and dialog systems research
  * implementation and evaluation of complex conversational systems
@@ -130,7 +130,7 @@ DeepPavlov is Apache 2.0 - licensed.
 </tr>
 <tr>
     <td><b> deeppavlov.core.data </b></td>
-    <td> basic <b><i>Dataset</b></i>, <i><b>DatasetReader</b></i> and <i><b>Vocab</b></i> classes </td>
+    <td> basic <b><i>Dataset</b></i>, <b><i>DatasetReader</b></i> and <b><i>Vocab</b></i> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.core.models </b></td>
@@ -138,23 +138,23 @@ DeepPavlov is Apache 2.0 - licensed.
 </tr>
 <tr>
     <td><b> deeppavlov.dataset_readers </b></td>
-    <td> concrete <i><b>DatasetReader</b></i> classes </td>
+    <td> concrete <b><i>DatasetReader</b></i> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.datasets </b></td>
-    <td> concrete <i><b>Dataset</b></i> classes </td>
+    <td> concrete <b><i>Dataset</b></i> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.models </b></td>
-    <td> concrete <i><b>Model</b></i> classes </td>
+    <td> concrete <b><i>Model</b></i> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.skills </b></td>
-    <td> <i><b>Skill</b></i> classes. Skills are dialog models.</td>
+    <td> <b><i>Skill</b></i> classes. Skills are dialog models.</td>
 </tr>
 <tr>
     <td><b> deeppavlov.vocabs </b></td>
-    <td> concrete <i><b>Vocab</b></i> classes </td>
+    <td> concrete <b><i>Vocab</b></i> classes </td>
 </tr>
 </table>
 
