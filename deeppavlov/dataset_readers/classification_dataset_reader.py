@@ -17,7 +17,6 @@ limitations under the License.
 import logging
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 from overrides import overrides
 
@@ -66,11 +65,10 @@ class ClassificationDatasetReader(DatasetReader):
         new_data = {'train': [],
                     'valid': [],
                     'test': []}
-        columns = np.array(data["train"].columns)
 
         for field in data_types:
             for i in range(data[field].shape[0]):
                 new_data[field].append(
-                    (data[field].loc[i, 'text'], list(columns[data[field].loc[i, columns] == 1.0])))
+                    (data[field].loc[i, 'text'], data[field].loc[i, "intents"].split(",")))
 
         return new_data

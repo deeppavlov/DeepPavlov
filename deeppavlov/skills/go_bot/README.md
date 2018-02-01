@@ -2,52 +2,57 @@
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 ![tensorflow 1.4](https://img.shields.io/badge/tensorflow-1.4-green.svg)
 
-# Dialogue Manager for goal-oriented task 
-The dialogue manager is based on [[1]](#references) which introduces Hybrid Code Networks (HCNs) that combine an RNN with domain-specific knowledge and system action templates.
+# Dialogue Bot for goal-oriented task 
+The dialogue bot is based on [[1]](#references) which introduces Hybrid Code Networks (HCNs) that combine an RNN with domain-specific knowledge and system action templates.
 
-Compared to existing end-to-end approaches, HCNs considerably reduce the amount of training data required, while retaining the key benefit of inferring a latent representation of dialog state.
+![alt text](diagram.png "Goal-oriented bot diagram")
+**Diagram 1.** Dotted lines correspond to unrequired (optional) modules, black squares to trained models, trapezes are modules that depend on a dataset and must be provided by software developer.
 
-Here is an simple example of interaction with a trained dialogue bot:
+Here is a simple example of interaction with a trained dialogue bot (can be downloaded with [`deeppavlov/download.py`](../../download.py)):
 
 ```
-::
+:: 
 >> Hello, welcome to the Phystech restaurant system. You can ask for restaurants by area, price range or food type. How may I help you?
 :: hi, i want some food
 >> What part of town do you have in mind?
 :: north of Dolgoprudny
->> What kind of food would you like?
-:: tasty =)
->> "Time to eat" is a great restaurant.
-:: ok, is it cheap?
+>> Would you like something in the cheap, moderate, or expensive price range?
+:: something chep, please
 >> "Time to eat" is a nice place in the north of town and the prices are cheap.
-:: give me their address then
+:: what kind of food does it serve? 
+>> "Time to eat" serves russian food.
+:: i like that! give me their address then
 >> Sure, "Time to eat" is on Sobina Square, 1/4.
-:: and phone number. In case, i wanted to order something for delivery
+:: and phone number. In case i wanted anything for delivery.
 >> The phone number of "Time to eat" is +7(965)173-37-33.
-:: it's useless, but tell me their post code
+:: I won't need that, but give me their post code too.
 >> The post code of "Time to eat" is 141700.
-:: thanks
->> "Time to eat" is a nice place in the north of town and the prices are cheap.
-:: good bye then
+:: nice, thanks!
+>> "Time to eat" is a nice place in the centre of town serving tasty creative food.
+:: good bye
 >> You are welcome!
+:: exit
 ```
 
 ## Usage
 
 #### Requirements
 
-#TODO: edit the section after pretrained models' download is available
-
-To use the model:
-1. train named entity recognition model (for config file see [`deeppavlov/models/ner/config.json`](../../models/ner/config.json))
-2. train intents classifier model (for config file see [`deeppavlov/models/classifiers/intents/config.json`](../../models/classifiers/intents/config.json))
-3. download english fasttext embeddings trained on wiki ([https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip](https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip))
-    * you can use any english embeddings of your choice, but edit hybrid code network config accordingly
-4. train hybrid code network bot itself (for config file see [`deeppavlov/skills/hcn_new/config.json`](config.json))
-    * check that paths in the config point to pretrained ner and intent classifier model files
+To use a go_bot model you should have:
+1. (_optional, but recommended_) pretrained named entity recognition model (NER) 
+   * config [`deeppavlov/models/ner/config.json`](../../models/ner/config.json) is recommended
+2. (_optional, but recommended_) pretrained intents classifier model 
+   * config [`deeppavlov/models/classifiers/intents/config_dstc2.json`](../../models/classifiers/intents/config_dstc2.json) is recommended
+3. (_optional_) downloaded english fasttext embeddings trained on wiki ([https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip](https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip))
+   * you can use any english embeddings of your choice, but edit go_bot config accordingly
+4. pretrained goal-oriented bot model itself 
+   * config [`deeppavlov/skills/go_bot/config.json`](config.json) is recommended
+   * `slot_filler` section of go_bot's config should match NER's configuration
+   * `intent_classifier` section of go_bot's config should match classifier's configuration
+   * double-check that corresponding `load_path`s point to NER and intent classifier model files
 
 #### Config parameters:
-* `name` always equals to `"hcn_new"`
+* `name` always equals to `"go_bot"`
 * `train_now` — `true` or `false`(default) depending on whether you are training or using a model _(optional)_
 * `num_epochs` — maximum number of epochs during training _(optional)_
 * `val_patience` — stop training after `val_patience` epochs without improvement of turn accuracy on validation dialogs _(optional)_
@@ -58,38 +63,45 @@ To use the model:
       * `name` — `"default_vocab"` (for vocabulary's implementation see [`deeppavlov.core.data.vocab`](../../core/data/vocab.py))
       * `inputs` — `[ "x" ]`,
       * `level` — `"token"`,
-      * `ser_path` — `"../data/hcn/token.dict"`
+      * `tokenize` — `true`,
+      * `save_path` — `"../download/vocabs/token.dict"`
+      * `load_path` — `"../download/vocabs/token.dict"`
 * `tokenizer` — one of tokenizers from [`deeppavlov.models.tokenizers`](../../models/tokenizers) module
    * `name` — tokenizer name
    * other arguments specific to your tokenizer
 * `bow_encoder` — one of bag-of-words encoders from [`deeppavlov.models.encoders.bow`](../../models/encoders/bow) module
    * `name` — encoder name
    * other arguments specific to your encoder
-* `embedder` — pne of embedders from [`deeppavlov.models.embedders`](../../models/embedders) module
+* `embedder` — one of embedders from [`deeppavlov.models.embedders`](../../models/embedders) module
    * `name` — embedder name (`"fasttext"` recommended, see [`deeppavlov.models.embedders.fasttext_embedder`](../../models/embedders/fasttext_embedder.py))
    * `mean` — must be set to `true`
    * other arguments specific to your embedder
 * `tracker` — dialogue state tracker from [`deeppavlov.models.trackers`](../../models/trackers)
    * `name` — tracker name (`"default_tracker"` or `"featurized_tracker"` recommended)
-   * other arguments specific to your tracker
+   * `slot_vals` — list of slots that should be tracked
 * `network` — reccurent network that handles dialogue policy management
-   * `name` — `"custom_rnn"`,
+   * `name` — `"go_bot_rnn"`,
    * `train_now` — `true` or `false`(default) depending on whether you are training or using a model _(optional)_
-   * `ser_path` — name of the file that the model will be saved to and loaded from
+   * `save_path` — name of the file that the model will be saved to
+   * `load_path` — name of the file that the model will be loaded from
    * `learning_rate` — learning rate during training
    * `hidden_dim` — hidden state dimension
-   * `obs_size` — input observation size
+   * `obs_size` — input observation size (must be set to number of `bow_embedder` features, `embedder` features, `intent_classifier` features, context features(=2) plus `tracker` state size plus action size)
    * `use_action_mask` — in case of true, action mask is applied to probability distribution
    * `action_size` — output action size
 * `slot_filler` — model that predicts slot values for a given utterance
    * `name` — slot filler name (`"dstc_slotfilling"` recommended, for implementation see [`deeppavlov.models.ner`](../../models/ner))
    * other slot filler arguments
-* `intent_classifier` — model that outputs intents probability disctibution for a given utterance
-   * `name` — slot filler name (`"intent_model"` recommended, for implementation see [`deeppavlov.models.classifiers.intents`](../../models/classifiers/intents))
+* `intent_classifier` — model that outputs intents probability distribution for a given utterance
+   * `name` — intent classifier name (`"intent_model"` recommended, for implementation see [`deeppavlov.models.classifiers.intents`](../../models/classifiers/intents))
    * classifier's other arguments
 * `debug` — whether to display debug output (defaults to `false`) _(optional)_
 
-For a working exemplary config see [`deeeppavlov/skills/hcn_new/config.json`](config.json).
+For a working exemplary config see [`deeeppavlov/skills/go_bot/config.json`](config.json) (model without embeddings).
+
+A minimal model without `slot_filler`, `intent_classifier` and `embedder` is configured in [`deeeppavlov/skills/go_bot/config_minimal.json`](config_minimal.json).
+
+A full model (with fasttext embeddings) configuration is in [`deeeppavlov/skills/go_bot/config_all.json`](config_all.json)
 
 #### Usage example
 To infer from a pretrained model with config path equal to `path/to/config.json`, you should run the following:
@@ -115,22 +127,20 @@ while utterance != 'quit':
 To be used for training, your config json file should include parameters:
 
 * `dataset_reader`
-   * `name` — `"your_reader_here"` for a custom dataset or `"dstc2_datasetreader"` to use DSTC2 (for implementation see [`deeppavlov.dataset_readers.dstc2_dataset_reader`](../../dataset_readers/dstc2_datasetreader.py))
+   * `name` — `"your_reader_here"` for a custom dataset or `"dstc2_datasetreader"` to use DSTC2 (for implementation see [`deeppavlov.dataset_readers.dstc2_dataset_reader`](../../dataset_readers/dstc2_dataset_reader.py))
    * `data_path` — a path to a dataset file, which in case of `"dstc2_datasetreader"` will be automatically downloaded from 
    internet and placed to `data_path` directory
-* `dataset` — it should always be set to `{"name": "dialog_dataset"}` (for implementation see [`deeppavlov.datasets.dstc2_datasets.py`](../../datasets/dstc2_datasets.py))
-
-#TODO: rename dstc2_dialog_dataset to dialog_dataset
+* `dataset` — it should always be set to `{"name": "dialog_dataset"}` (for implementation see [`deeppavlov.datasets.dialog_dataset.py`](../../datasets/dialog_dataset.py))
 
 Do not forget to set `train_now` parameters to `true` for `vocabs.word_vocab`, `model` and `model.network` sections.
 
-See [`deeeppavlov/skills/hcn_new/config.json`](config.json) for details.
+See [`deeeppavlov/skills/go_bot/config.json`](config.json) for details.
 
 #### Train run
 The easiest way to run the training is by using [`deeppavlov/run_model.py`](../../run_model.py) script:
 
 1. set `PIPELINE_CONFIG_PATH` to your config path relative to the deeppavlov library
-(for example, `'skills/hcn_new/config.json'`)
+(for example, `'skills/go_bot/config.json'`)
 2. then run the script by `python3 run_model.py`
 
 The model will be trained according to your configuration and afterwards an interaction with the model will be run.
@@ -152,7 +162,7 @@ The Hybrid Code Network model was trained and evaluated on a modification of a d
 #### Your data
 If your model uses DSTC2 and relies on `dstc2_datasetreader` [`DatasetReader`](../../core/data/dataset_reader.py), all needed files, if not present in the `dataset_reader.data_path` directory, will be downloaded from internet.
 
-If your model needs be trained on different data, you have several ways of achieving that (sorted by increase in the amount of code):
+If your model needs to be trained on different data, you have several ways of achieving that (sorted by increase in the amount of code):
 
 1. Use `"dialog_dataset"` in dataset config section and `"dstc2_datasetreader"` in dataset reader config section (**the simplest, but not the best way**):
     * set `dataset.data_path` to your data directory;
@@ -174,24 +184,25 @@ If your model needs be trained on different data, you have several ways of achie
       * `valid` — validation dialog turns in the same format
       * `test` — test dialog turns in the same format
       
-#TODO: change str `act` to a list `acts`
+#TODO: change str `act` to a list of `acts`
 
 3. Use your own dataset and dataset reader (**if 2. doesn't work for you**):
-    * your `YourDataset.iter()` class method output should match the input format for [`HybridCodeNetworkBot.train()`](hcn.py).
+    * your `YourDataset.iter()` class method output should match the input format for [`HybridCodeNetworkBot.train()`](go_bot.py).
 
 ## Comparison
-As far as out dataset is a modified version of official DSTC2-dataset [[2]](#references), resulting metrics can't be compared with model evaluations on the original dataset.
+As far as our dataset is a modified version of official DSTC2-dataset [[2]](#references), resulting metrics can't be compared with evaluations on the original dataset.
 
-But comparisons for hcn model modifications trained on out DSTC2-dataset are presented:
+But comparisons for bot model modifications trained on out DSTC2-dataset are presented:
 
-|                   Model                      |  Action accuracy  |  Turn accuracy  |  Dialog accuracy |
-|----------------------------------------------|-------------------|-----------------|------------------|
-|basic hcn			                               |                   |                 |                  |
-|hcn with ner slot-filler			                 |                   |                 |                  |
-|hcn with ner slot-filler & fasttext embeddings|                   |                 |                  |
-|hcn with ner slot-filler & fasttext & intents |                   |                 |                  |
+|                   Model                      |  Action accuracy  |  Turn accuracy  |
+|----------------------------------------------|-------------------|-----------------|
+|basic bot			                             |      0.5271       |     0.4853      |
+|bot with slot filler			                 |                   |                 |
+|bot with slot filler & fasttext embeddings    |                   |                 |
+|bot with slot filler & intents                |      0.5487       |     0.5259      |
 
 #TODO: add metrics values
+#TODO: add dialog accuracies
 
 # References
 [1] [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017](https://arxiv.org/abs/1702.03274)

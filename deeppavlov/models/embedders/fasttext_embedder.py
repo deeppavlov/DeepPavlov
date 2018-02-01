@@ -69,6 +69,7 @@ class FasttextEmbedder(Inferable):
                 model_file = str(self.load_path)
                 if self.emb_module == 'fasttext':
                     import fasttext as Fasttext
+                    # model = Fasttext.load_model(model_file)
                     model = Fasttext.load_model(model_file)
                 elif self.emb_module == 'pyfasttext':
                     from pyfasttext import FastText as Fasttext

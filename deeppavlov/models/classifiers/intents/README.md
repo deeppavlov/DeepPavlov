@@ -133,13 +133,13 @@ to work with `.csv` files are also provided in `deeppavlov/dataset_readers` and 
  
 Training data files `train.csv` (and, if exists, `valid.csv`) should be presented in the following form:
 
-| text         |class_0|class_1|class_2|class_3| ...|
-|------------- |:-----:|:-----:|:-----:|:-----:|:--:|
-| text_0       | 1     | 0     | 0     |0      |... |
-| text_1       | 0     | 0     | 1     |0      |... |
-| text_2       | 0     | 1     | 0     |0      |... |
-| text_3       | 1     | 0     | 1     |0      |... |
-| ...          | ...   | ...   | ...   |...    |... ||
+| text         |intents|
+|------------- |:-----:|
+| text_0       | intent_0     |
+| text_1       | intent_0     |
+| text_2       | intent_1,intent_2     |
+| text_3       | intent_1,intent_0    | 
+| ...          | ...   ||
 
 
 To train model one should 
@@ -155,7 +155,10 @@ python run_model.py
 ```
 
 **Current `config_snips.json` implies intent recognition for SNIPS benchmark dataset [2] 
-that was restored in `.csv` format.** 
+that was restored in `.csv` format and will be downloaded automatically.**
+
+**Important: there are not provided embedding binary file and pre-trained model files for SNIPS dataset.
+Please, provide you own embedding binary file to train model.**
 
 ## Comparison
 

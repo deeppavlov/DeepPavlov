@@ -165,7 +165,7 @@ class NerNetwork:
     def tokens_batch_to_numpy_batch(self, batch_x, batch_y=None):
         # Determine dimensions
         batch_size = len(batch_x)
-        max_utt_len = max([len(utt) for utt in batch_x])
+        max_utt_len = max([len(utt) for utt in batch_x] + [2])
         max_token_len = max([len(token) for utt in batch_x for token in utt])
 
         x_token = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_vocab['<PAD>']

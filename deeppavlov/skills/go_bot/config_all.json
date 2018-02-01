@@ -69,24 +69,29 @@
       "name": "go_bot_rnn",
       "learning_rate": 0.02,
       "hidden_dim": 128,
-      "obs_size": 530,
+      "obs_size": 830,
       "use_action_mask": false,
       "action_size": 45
     },
     "slot_filler": {
       "name": "dstc_slotfilling",
-      "save_path": "../download/model/dstc_ner_model",
-      "load_path": "../download/model/dstc_ner_model",
-      "filter_width": 7,
-      "embeddings_dropout": true,
-      "n_filters": [
-        64,
-        64
-      ],
-      "token_embeddings_dim": 64,
-      "char_embeddings_dim": 32,
-      "use_batch_norm": true,
-      "use_crf": true
+      "load_path": "../download/slots/slot_vals.json",
+      "save_path": "../download/slots/slot_vals.json",
+      "ner_network": {
+        "save_path": "../download/ner/dstc_ner_model",
+        "load_path": "../download/ner/dstc_ner_model",
+        "name": "ner_tagging_network",
+        "filter_width": 7,
+        "embeddings_dropout": true,
+        "n_filters": [
+          64,
+          64
+        ],
+        "token_embeddings_dim": 64,
+        "char_embeddings_dim": 32,
+        "use_batch_norm": true,
+        "use_crf": true
+      }
     },
     "intent_classifier": {
       "name": "intent_model",
@@ -133,7 +138,14 @@
         "tokenizer": "wordpunct_tokenize"
       }
     },
-    "embedder": null,
+    "embedder": {
+      "name": "fasttext",
+      "save_path": "../download/embeddings/wiki.en.bin",
+      "load_path": "../download/embeddings/wiki.en.bin",
+      "mean": true,
+      "emb_module": "pyfasttext",
+      "dim": 300
+    },
     "bow_encoder": {
       "name": "bow"
     },

@@ -48,8 +48,8 @@ class GoalOrientedBot(Inferable, Trainable):
                  intent_classifier=None,
                  use_action_mask=False,
                  debug=False,
-                 num_epochs=100,
-                 val_patience=5,
+                 num_epochs=200,
+                 val_patience=10,
                  train_now=False,
                  save_path=None,
                  **kwargs):

@@ -22,10 +22,23 @@ from deeppavlov.core.commands.infer import build_model_from_config
 def init_bot_for_model(token, model):
     bot = telebot.TeleBot(token)
 
-    @bot.message_handler(commands=['start', 'help'])
-    def send_welcome(message):
+    model_name = type(model).__name__
+    models_info = read_json('../telegram_utils/models_info.json')
+    model_info = models_info[model_name] if model_name in models_info else models_info['@default']
+
+    @bot.message_handler(commands=['start'])
+    def send_start_message(message):
         chat_id = message.chat.id
-        bot.send_message(chat_id, 'Welcome to the DeepPavlov inference bot!')
+        out_message = model_info['start_message']
+        if hasattr(model, 'reset'):
+            model.reset()
+        bot.send_message(chat_id, out_message)
+
+    @bot.message_handler(commands=['help'])
+    def send_help_message(message):
+        chat_id = message.chat.id
+        out_message = model_info['help_message']
+        bot.send_message(chat_id, out_message)
 
     @bot.message_handler()
     def handle_inference(message):
@@ -33,7 +46,7 @@ def init_bot_for_model(token, model):
         context = message.text
 
         pred = model.infer(context)
-        reply_message = 'model prediction: {}'.format(str(pred))
+        reply_message = str(pred)
         bot.send_message(chat_id, reply_message)
 
     bot.polling()

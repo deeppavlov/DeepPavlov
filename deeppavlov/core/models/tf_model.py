@@ -92,8 +92,9 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
     def save(self):
         save_path = str(self.save_path)
         saver = tf.train.Saver()
-        print('Saving NerNetwork model to {}'.format(save_path))
+        print('\n:: saving model to {}'.format(save_path))
         saver.save(self.sess, save_path)
+        print('model saved')
 
     def get_checkpoint_state(self):
         if self.load_path:
