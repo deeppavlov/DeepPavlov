@@ -116,8 +116,7 @@ DeepPavlov is Apache 2.0 - licensed.
 </tr>
 <tr>
     <td><b> deeppavlov.core.data </b></td>
-    <td> basic <b>Dataset</b>,
-     <font color=red><i><b>DatasetReader</b></i></font> and <font color=red><i><b>Vocab</b></i></font> classes </td>
+    <td> basic <b><i>Dataset</b></i>, <i><b>DatasetReader</b></i> and <i><b>Vocab</b></i> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.core.models </b></td>
@@ -125,23 +124,23 @@ DeepPavlov is Apache 2.0 - licensed.
 </tr>
 <tr>
     <td><b> deeppavlov.dataset_readers </b></td>
-    <td> concrete <font color=red><i><b>DatasetReader</b></i></font> classes </td>
+    <td> concrete <i><b>DatasetReader</b></i> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.datasets </b></td>
-    <td> concrete <font color=red><i><b>Dataset</b></i></font> classes </td>
+    <td> concrete <i><b>Dataset</b></i> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.models </b></td>
-    <td> concrete <font color=red><i><b>Model</b></i></font> classes </td>
+    <td> concrete <i><b>Model</b></i> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.skills </b></td>
-    <td> <font color=red><i><b>Skill</b></i></font> classes. Skills are dialog models.</td>
+    <td> <i><b>Skill</b></i> classes. Skills are dialog models.</td>
 </tr>
 <tr>
     <td><b> deeppavlov.vocabs </b></td>
-    <td> concrete <font color=red><i><b>Vocab</b></i></font> classes </td>
+    <td> concrete <i><b>Vocab</b></i> classes </td>
 </tr>
 </table>
 
