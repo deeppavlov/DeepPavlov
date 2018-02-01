@@ -57,6 +57,7 @@ To use a go_bot model you should have:
 * `num_epochs` — maximum number of epochs during training _(optional)_
 * `val_patience` — stop training after `val_patience` epochs without improvement of turn accuracy on validation dialogs _(optional)_
 * `template_path` — map from actions to text templates for response generation
+* `use_action_mask` — in case of true, action mask is applied to network output
 * `vocabs` — vocabs used in model
    * `word_vocab` — vocabulary of tokens from context utterances
       * `train_now` — whether to train it on the current dataset, or use pretrained
@@ -87,7 +88,6 @@ To use a go_bot model you should have:
    * `learning_rate` — learning rate during training
    * `hidden_dim` — hidden state dimension
    * `obs_size` — input observation size (must be set to number of `bow_embedder` features, `embedder` features, `intent_classifier` features, context features(=2) plus `tracker` state size plus action size)
-   * `use_action_mask` — in case of true, action mask is applied to probability distribution
    * `action_size` — output action size
 * `slot_filler` — model that predicts slot values for a given utterance
    * `name` — slot filler name (`"dstc_slotfilling"` recommended, for implementation see [`deeppavlov.models.ner`](../../models/ner))
@@ -104,7 +104,7 @@ A minimal model without `slot_filler`, `intent_classifier` and `embedder` is con
 A full model (with fasttext embeddings) configuration is in [`deeeppavlov/skills/go_bot/config_all.json`](config_all.json)
 
 #### Usage example
-To infer from a pretrained model with config path equal to `path/to/config.json`, you should run the following:
+* To infer from a pretrained model with config path equal to `path/to/config.json`:
 ```python
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.commands.utils import set_usr_dir
@@ -119,6 +119,12 @@ utterance = ""
 while utterance != 'quit':
     print(">> " + model.infer(utterance))
     utterance = input(':: ')
+```
+
+* To interact via command line use [`deeppavlov/deep.py`](../../deep.py) script:
+```bash
+cd deeppavlov
+python3 deep.py interact path/to/config.json
 ```
 
 ## Training
@@ -137,13 +143,12 @@ Do not forget to set `train_now` parameters to `true` for `vocabs.word_vocab`, `
 See [`deeeppavlov/skills/go_bot/config.json`](config.json) for details.
 
 #### Train run
-The easiest way to run the training is by using [`deeppavlov/run_model.py`](../../run_model.py) script:
+The easiest way to run the training is by using [`deeppavlov/deep.py`](../../deep.py) script:
 
-1. set `PIPELINE_CONFIG_PATH` to your config path relative to the deeppavlov library
-(for example, `'skills/go_bot/config.json'`)
-2. then run the script by `python3 run_model.py`
-
-The model will be trained according to your configuration and afterwards an interaction with the model will be run.
+```bash
+cd deeppavlov
+python3 deep.py train path/to/config.json
+```
 
 ## Datasets
 
@@ -194,14 +199,13 @@ As far as our dataset is a modified version of official DSTC2-dataset [[2]](#ref
 
 But comparisons for bot model modifications trained on out DSTC2-dataset are presented:
 
-|                   Model                      |  Action accuracy  |  Turn accuracy  |
-|----------------------------------------------|-------------------|-----------------|
-|basic bot			                             |      0.5271       |     0.4853      |
-|bot with slot filler			                 |                   |                 |
-|bot with slot filler & fasttext embeddings    |                   |                 |
-|bot with slot filler & intents                |      0.5487       |     0.5259      |
+|                   Model                      | Config      |  Test action accuracy   |  Test turn accuracy  |
+|----------------------------------------------|-------------|-------------------------|----------------------|
+|basic bot			                               | [`config_minimal.json`](config_minimal.json) | 0.5271             |     0.4853           |
+|bot with slot filler & fasttext embeddings    |        |      0.5305             |     0.5147           |
+|bot with slot filler & intents                | [`config.json`](config.json)                 |   **0.5436**         |     **0.5261**       |
+|bot with slot filler & intents & embeddings   | [`config_all.json`](config_all.json)         |      0.5307             |     0.5145           |
 
-#TODO: add metrics values
 #TODO: add dialog accuracies
 
 # References
