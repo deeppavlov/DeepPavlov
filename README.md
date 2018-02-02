@@ -1,10 +1,6 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/deepmipt/DeepPavlov/blob/master/LICENSE)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 
-<p align="center">
- <img src="http://ipavlov.ai/img/ipavlov_logo.png" width="10%" height="10%">
-</p>
-
 # <center>DeepPavlov</center>
 ### *We are in a really early Alfa release. You have to be ready for hard adventures.*
 An open-source conversational AI library, built on TensorFlow and Keras, and designed for
@@ -33,12 +29,11 @@ and AI-application developers with:
 | **Embeddings** |  |
 | [Pre-trained embeddings for Russin language](pretrained-vectors.md) | Pre-trained on joint [Russian Wikipedia](https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0) and [Lenta.ru](https://lenta.ru/) corpora word vectors for Russian language. | 
 
-
 ## Basic examples
 
 View video demo of deploy goal-oriented bot and slot-filling model with Telegram UI
 
-[![Alt text for your video](https://img.youtube.com/vi/T-D1KVIuvjA/0.jpg)](https://youtu.be/3Ic0b9OVnCE)
+[![Alt text for your video](https://img.youtube.com/vi/3Ic0b9OVnCE/0.jpg)](https://youtu.be/3Ic0b9OVnCE)
           
  * Run goal-oriented bot with Telegram interface:
  ```
@@ -56,13 +51,40 @@ View video demo of deploy goal-oriented bot and slot-filling model with Telegram
  ```
  python deep.py interact models/ner/config.json
  ```
+## Conceptual overview
+
+### Principles
+The library is designed following the principles:
+ * end-to-end deep learning architecture as long-term goal
+ * hybrid ML/DL/Rule-based architecture as a current approach
+ * modular dialog system architecture
+ * component-based software engineering, reusability maximization
+ * easy to extend and benchmark
+ * multiple components by one NLP task with data-driven selection of suitable components
+
+### Target Architecture
+Target architecture of our library:
+<p align="left">
+<img src="http://lnsigo.mipt.ru/export/images/deeppavlov_architecture.png" width="50%" height="50%"/>
+</p>
+DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). Other external libraries can be used to build basic components.
+
+### Key Concepts
+ * `Agent` - conversational agent communicating with users in natural language (text)
+ * `Skill` - unit of interaction that fulfills a user’s need. Typically, a user’s need is fulfilled by presenting information or completing a transaction (e.g. answer question by FAQ, booking tickets etc.); however, for some experiences success is defined as continued engagement (e.g. chit-chat)
+ * `Components` - atomic functionality blocks
+   * `Rule-based Components` - can not be trained
+   * `Machine Learning Components` - can be trained only separately
+   * `Deep Learning Components` - can be trained separately and in end-to-end mode being joined in chain
+ * `Switcher` - mechanism by which agent ranks and selects the final response shown to the user
+ * `Components Chainer` - tool for agents/components pipeline building from heterogeneous components (rule-based/ml/dl), which allow to train and inference pipeline as a whole.
 
 
 ### Contents
 
  * [Installation](#installation)
  * [Quick start](#quick-start)
- * [Deeppavlov overview](#deeppavlov-overview)
+ * [Technical overview](#technical-overview)
     * [Project modules](#project-modules)
     * [Config](#config)
     * [DatasetReader](#datasetreader)
@@ -136,7 +158,7 @@ Available model configs are:
 
 ---
 
-## DeepPavlov overview
+## Technical overview
 
 ### Project modules
 
