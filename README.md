@@ -78,11 +78,11 @@ View video demo of deploy goal-oriented bot and slot-filling model with Telegram
 
 ## Installation
 1. Create a virtual environment with `Python 3.6`
-    ```
+    ```bash
     virtualenv env
     ```
 2. Activate the environment.
-    ```
+    ```shell
     source ./env/bin/activate
     ```
 3. Clone the repo and `cd` to project root
