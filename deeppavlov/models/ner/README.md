@@ -77,7 +77,6 @@ The NER network is a separate model, and it has its initialization parameters, n
     "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
     "save_path": "../download/model/ner_model.ckpt",
     "load_path": "../download/model/ner_model.ckpt",
-    "verbouse": true,
     "filter_width": 7,
     "embeddings_dropout": true,
     "n_filters": [
@@ -95,7 +94,6 @@ The NER network is a separate model, and it has its initialization parameters, n
 - "vocabs" is equal to ["token_vocab", "tag_vocab", "char_vocab"] and specify vocabularies needed to construct the network (which will be mentioned below),
 - "save_path" defines the path to save the network parameters files,
 - "load_path" defines the path to load from the network parameters files,
-- "verbouse" - whether to show supplimentary information about the network or not,
 - "filter_width" - the width of convolutional kernel
 - "embeddings_dropout" - whether to use dropout for embeddings or not
 - "n_filters" - number of filters in convolutional network
@@ -104,7 +102,7 @@ The NER network is a separate model, and it has its initialization parameters, n
 - "use_batch_norm" - whether to use batch normalization or not
 - "use_crf" - whether to apply Conditional Random Fields on top of the network
 
-To perform convertation between tokens and indices there are three vocabularies in the config file:
+To perform conversion between tokens and indices there are three vocabularies in the config file:
 ```json
  { "vocabs": {
   "token_vocab": {
@@ -132,7 +130,7 @@ To perform convertation between tokens and indices there are three vocabularies 
  }
 ```
 
-wher each vocabulary ("word_vocab", "tag_vocab", or "char_vocab") there are parameters:
+For each vocabulary ("word_vocab", "tag_vocab", or "char_vocab") there are parameters:
 
 - "name" - always equal to `"default_vocab"`
 - "inputs" -  which input is use: x or y (tokens or tags), can be `["x"]` for tokens or `["y"]` for tags.
@@ -159,31 +157,21 @@ For DSTC 2 Slot Filling task only dataset_path should be specified. While "dstc2
 
 ## Training
 
-To train the model the config file specified above must be formed. The field "train_now" in the "model" component must be set to true. Then the following script can be used to train the model:
+To train the model the config file specified above must be formed. Then from the root directory of the project, the following command will launch training:
 
-This model expects a sentence string with spaced-separated tokens in lowercase as it's input and returns the same string with corrected words
-
-```python
-from deeppavlov.core.commands.train import train_model_from_config
-from deeppavlov.core.commands.utils import set_usr_dir
-
-MODEL_CONFIG_PATH = 'models/ner/config.json'
-usr_dir = set_usr_dir(MODEL_CONFIG_PATH)
-train_model_from_config(MODEL_CONFIG_PATH)
+```bash
+cd deeppavlov
+python deep.py train models/ner/config.json
 ```
 
 
 ## Inference
 
-After training the following code will launch interaction with the model:
+After training the following commands from the root of the project will launch the interaction with the model:
 
-```python
-from deeppavlov.core.commands.infer import interact_model
-from deeppavlov.core.commands.utils import set_usr_dir
-
-PIPELINE_CONFIG_PATH = 'models/ner/config.json'
-usr_dir = set_usr_dir(PIPELINE_CONFIG_PATH)
-interact_model(PIPELINE_CONFIG_PATH)
+```bash
+cd deeppavlov
+python deep.py interact models/ner/config.json
 ```
 
 ## Results

@@ -2,11 +2,11 @@
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 
 <p align="center">
- <img src="http://ipavlov.ai/img/ipavlov_logo.png" width="20%" height="20%">
+ <img src="http://ipavlov.ai/img/ipavlov_logo.png" width="10%" height="10%">
 </p>
 
 # <center>DeepPavlov</center>
-## We are in a really early Alfa release. You have to be ready to hard adventures.
+### *We are in a really early Alfa release. You have to be ready for hard adventures.*
 An open-source conversational AI library, built on TensorFlow and Keras, and designed for
  * NLP and dialog systems research
  * implementation and evaluation of complex conversational systems
@@ -19,27 +19,76 @@ Our goal is to provide researchers with:
 and AI-application developers with:
  * framework for building conversational software
  * tools for application integration with adjacent infrastructure (messengers, helpdesk software etc.)
- * Licensed under the Apache License, Version 2.0.
 
 ## Features
- * [Goal-oriented dialog agent](deeppavlov/skills/go_bot/README.md) is based on Hybrid Code Networks (HCNs) architecture from [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017](https://arxiv.org/abs/1702.03274). It allows to predict responses in the goal-oriented task dialogue. The model is quite customizable: embeddings, slot filler and intent classifier can be used or not on demand.
 
- * [Slot filling component](deeppavlov/models/ner/README.md) is based on neural Named Entity Recognition network and fuzzy Levenshtein search to extract normalized slot values from the text. The NER network component reproduces architecture from the paper [Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition](https://arxiv.org/pdf/1709.09686.pdf), which is inspired by LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf.
 
- * [Intent classification component](deeppavlov/models/classifiers/intents/README.md) is based on shallow-and-wide Convolutional Neural Network architecture from [Kim Y. Convolutional neural networks for sentence classification – 2014](https://arxiv.org/pdf/1408.5882). The model allows multilabel classification of sentences.
+| Component | Description |
+| --------- | ----------- |
+| [Slot filling component](deeppavlov/models/ner/README.md) | is based on neural Named Entity Recognition network and fuzzy Levenshtein search to extract normalized slot values from the text. The NER network component reproduces architecture from the paper [Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition](https://arxiv.org/pdf/1709.09686.pdf), which is inspired by LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf. |
+| [Intent classification component](deeppavlov/models/classifiers/intents/README.md) | Based on shallow-and-wide Convolutional Neural Network architecture from [Kim Y. Convolutional neural networks for sentence classification – 2014](https://arxiv.org/pdf/1408.5882). The model allows multilabel classification of sentences. |
+| [Automatic spelling correction component](deeppavlov/models/spellers/error_model/README.md) | Based on [An Improved Error Model for Noisy Channel Spelling Correction by Eric Brill and Robert C. Moore](http://www.aclweb.org/anthology/P00-1037) and uses statistics based error model, a static dictionary and an ARPA language model to correct spelling errors. |
+| **Skill** |  |
+| [Goal-oriented bot](deeppavlov/skills/go_bot/README.md) | Based on Hybrid Code Networks (HCNs) architecture from [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017](https://arxiv.org/abs/1702.03274). It allows to predict responses in the goal-oriented task dialogue. The model is quite customizable: embeddings, slot filler and intent classifier can be used or not on demand. |
+| **Embeddings** |  |
+| [Pre-trained embeddings for Russin language](pretrained-vectors.md) | Pre-trained on joint [Russian Wikipedia](https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0) and [Lenta.ru](https://lenta.ru/) corpora word vectors for Russian language. | 
 
- * [Automatic spelling correction component](deeppavlov/models/spellers/error_model/README.md) is based on [An Improved Error Model for Noisy Channel Spelling Correction by Eric Brill and Robert C. Moore](http://www.aclweb.org/anthology/P00-1037) and uses statistics based error model, a static dictionary and an ARPA language model to correct spelling errors.
- 
- * [Pre-trained embeddings library](pretrained-vectors.md). Pre-trained on joint [Russian Wikipedia](https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0) and [Lenta.ru](https://lenta.ru/) corpora word vectors for Russian language. 
+## Basic examples
+
+View video demo of deploy goal-oriented bot and slot-filling model with Telegram UI
+
+[![Alt text for your video](https://img.youtube.com/vi/3Ic0b9OVnCE/0.jpg)](https://youtu.be/3Ic0b9OVnCE)
+          
+ * Run goal-oriented bot with Telegram interface:
+ ```
+ python deep.py interactbot skills/go_bot/config.json -t <TELEGRAM_TOKEN>
+ ```
+ * Run goal-oriented bot with console interface:
+ ```
+ python deep.py interact skills/go_bot/config.json
+ ```
+ * Run slot-filling model with Telegram interface
+ ```
+ python deep.py interactbot models/ner/config.json -t <TELEGRAM_TOKEN>
+ ```
+ * Run slot-filling model with console interface
+ ```
+ python deep.py interact models/ner/config.json
+ ```
+## Conceptual overview
+
+### Principles
+The library is designed following the principles:
+ * end-to-end deep learning architecture as long-term goal
+ * hybrid ML/DL/Rule-based architecture as a current approach
+ * modular dialog system architecture
+ * component-based software engineering, reusability maximization
+ * easy to extend and benchmark
+ * multiple components by one NLP task with data-driven selection of suitable components
+
+### Target Architecture
+Target architecture of our library:
+<p align="left">
+<img src="http://lnsigo.mipt.ru/export/images/deeppavlov_architecture.png" width="50%" height="50%"/>
+</p>
+DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). Other external libraries can be used to build basic components.
+
+### Key Concepts
+ * `Agent` - conversational agent communicating with users in natural language (text)
+ * `Skill` - unit of interaction that fulfills a user’s need. Typically, a user’s need is fulfilled by presenting information or completing a transaction (e.g. answer question by FAQ, booking tickets etc.); however, for some experiences success is defined as continued engagement (e.g. chit-chat)
+ * `Components` - atomic functionality blocks
+   * `Rule-based Components` - can not be trained
+   * `Machine Learning Components` - can be trained only separately
+   * `Deep Learning Components` - can be trained separately and in end-to-end mode being joined in chain
+ * `Switcher` - mechanism by which agent ranks and selects the final response shown to the user
+ * `Components Chainer` - tool for agents/components pipeline building from heterogeneous components (rule-based/ml/dl), which allow to train and inference pipeline as a whole.
+
 
 ### Contents
 
  * [Installation](#installation)
  * [Quick start](#quick-start)
- * [Support](#support)
- * [The Team](#the-team)
- * [License](#license)
- * [Deeppavlov overview](#deeppavlov-overview)
+ * [Technical overview](#technical-overview)
     * [Project modules](#project-modules)
     * [Config](#config)
     * [DatasetReader](#datasetreader)
@@ -48,18 +97,32 @@ and AI-application developers with:
     * [Model](#model)
     * [Training](#training)
     * [Inferring](#inferring)
+ * [License](#license)
+ * [Support and collaboration](#support-and-collaboration)
+ * [The Team](#the-team)
+ 
 
 ## Installation
 1. Create a virtual environment with `Python 3.6`
+    ```
+    virtualenv env
+    ```
 2. Activate the environment.
-3. Clone the repo
+    ```
+    source ./env/bin/activate
+    ```
+3. Clone the repo and `cd` to project root
    ```
    git clone https://github.com/deepmipt/DeepPavlov.git
+   cd DeepPavlov
    ```
-4. `cd` to the project root.
-5. Install the requirements:
+4. Install the requirements:
     ```
-    python install.py
+    python setup.py install
+    ```
+5. Clean the installation:
+    ```
+    python setup.py clean --all
     ```
 6. Install `spacy` dependencies:
     ```
@@ -67,17 +130,15 @@ and AI-application developers with:
     ```
 
 ## Quick start
-With the purpose to interact with our pre-trained models, they should be downloaded first:
 
+To interact with our pre-trained models, they should be downloaded first:
 ```
-cd deeppavlov/
-python download.py [-all]
+python download.py [-all] 
 ```
 * `[-all]` option is not required for basic examples; it will download **all** our pre-trained models.
-
 * Warning! `[-all]` requires about 10 GB of free space on disk.
-
-Then the models can be interacted or trained with the following command:
+    
+Then models can be interacted or trained with the following command:
 
 ```
 python deep.py <mode> <path_to_config>
@@ -99,26 +160,9 @@ Available model configs are:
 
 *models/spellers/error_model/config_en.json*
 
-
-## Support & collaboration
-
-If you have any questions, bug reports or feature requests, please feel free to post on our [Github Issues](https://github.com/deepmipt/DeepPavlov/issues) page. Please tag your issue with 'bug', 'feature request', or 'question'.  Also we’ll be glad to see your pull-requests to add new datasets, models, embeddings and etc.
-
-## The Team
-
-DeepPavlov is built and maintained by [Neural Networks and Deep Learning Lab](https://mipt.ru/english/research/labs/neural-networks-and-deep-learning-lab) at [MIPT](https://mipt.ru/english/) within [iPavlov](http://ipavlov.ai/) project (part of [National Technology Initiative](https://asi.ru/eng/nti/)) and in partnership with [Sberbank](http://www.sberbank.com/).
-
-<p align="center">
-<img src="http://ipavlov.ai/img/ipavlov_footer.png" width="50%" height="50%"/>
-</p>
-
-## License
-
-DeepPavlov is Apache 2.0 - licensed.
-
 ---
 
-## DeepPavlov overview
+## Technical overview
 
 ### Project modules
 
@@ -310,3 +354,20 @@ A particular format of returned data should be defined in `infer()`.
 Inferring is triggered by `deeppavlov.core.commands.train.infer_model_from_config()` function.
 There is no need in s separate JSON for inferring. `train_now` parameter is ignored during
 inferring.
+
+## License
+
+DeepPavlov is Apache 2.0 - licensed.
+
+## Support and collaboration
+
+If you have any questions, bug reports or feature requests, please feel free to post on our [Github Issues](https://github.com/deepmipt/DeepPavlov/issues) page. Please tag your issue with 'bug', 'feature request', or 'question'.  Also we’ll be glad to see your pull-requests to add new datasets, models, embeddings and etc.
+
+## The Team
+
+DeepPavlov is built and maintained by [Neural Networks and Deep Learning Lab](https://mipt.ru/english/research/labs/neural-networks-and-deep-learning-lab) at [MIPT](https://mipt.ru/english/) within [iPavlov](http://ipavlov.ai/) project (part of [National Technology Initiative](https://asi.ru/eng/nti/)) and in partnership with [Sberbank](http://www.sberbank.com/).
+
+<p align="center">
+<img src="http://ipavlov.ai/img/ipavlov_footer.png" width="50%" height="50%"/>
+</p>
+
