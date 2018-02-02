@@ -70,7 +70,7 @@ To use a go_bot model you should have:
 * `tokenizer` — one of tokenizers from [`deeppavlov.models.tokenizers`](../../models/tokenizers) module
    * `name` — tokenizer name
    * other arguments specific to your tokenizer
-* `bow_encoder` — one of bag-of-words encoders from [`deeppavlov.models.encoders.bow`](../../models/encoders/bow) module
+* `bow_encoder` — one of bag-of-words encoders from [`deeppavlov.models.encoders.bow`](../../models/encoders/bow.py) module
    * `name` — encoder name
    * other arguments specific to your encoder
 * `embedder` — one of embedders from [`deeppavlov.models.embedders`](../../models/embedders) module
