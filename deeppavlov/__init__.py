@@ -15,13 +15,11 @@ from deeppavlov.models.embedders.w2v_embedder import Word2VecEmbedder
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.embedders.dict_embedder import DictEmbedder
 from deeppavlov.models.encoders.bow import BoW_encoder
-from deeppavlov.models.lstms.hcn_lstm import LSTM
 from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
 from deeppavlov.models.ner.ner_network import NerNetwork
 from deeppavlov.models.spellers.error_model.error_model import ErrorModel
 from deeppavlov.models.trackers.hcn_at import ActionTracker
 from deeppavlov.models.trackers.hcn_et import EntityTracker
-from deeppavlov.skills.dummy_skill.dummy import DummySkill
 from deeppavlov.core.data.vocab import DefaultVocabulary
 from deeppavlov.skills.go_bot.go_bot import GoalOrientedBot
 from deeppavlov.skills.go_bot.network import GoalOrientedBotNetwork
