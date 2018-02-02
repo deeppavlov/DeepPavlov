@@ -105,6 +105,7 @@ A full model (with fasttext embeddings) configuration is in [`deeeppavlov/skills
 
 #### Usage example
 * To infer from a pretrained model with config path equal to `path/to/config.json`:
+
 ```python
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.commands.utils import set_usr_dir
@@ -122,6 +123,7 @@ while utterance != 'quit':
 ```
 
 * To interact via command line use [`deeppavlov/deep.py`](../../deep.py) script:
+
 ```bash
 cd deeppavlov
 python3 deep.py interact path/to/config.json
