@@ -37,7 +37,7 @@ and AI-application developers with:
 
 View video demo of deploy goal-oriented bot and slot-filling model with Telegram UI
 
-[![Alt text for your video](https://img.youtube.com/vi/T-D1KVIuvjA/0.jpg)](https://youtu.be/3Ic0b9OVnCE)
+[![Alt text for your video](https://img.youtube.com/vi/3Ic0b9OVnCE/0.jpg)](https://youtu.be/3Ic0b9OVnCE)
           
  * Run goal-oriented bot with Telegram interface:
  ```
@@ -88,7 +88,7 @@ DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). O
 
  * [Installation](#installation)
  * [Quick start](#quick-start)
- * [Deeppavlov overview](#deeppavlov-overview)
+ * [Technical overview](#technical-overview)
     * [Project modules](#project-modules)
     * [Config](#config)
     * [DatasetReader](#datasetreader)
@@ -162,7 +162,7 @@ Available model configs are:
 
 ---
 
-## DeepPavlov overview
+## Technical overview
 
 ### Project modules
 
