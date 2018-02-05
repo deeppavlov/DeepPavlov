@@ -18,20 +18,26 @@ from setuptools import setup, find_packages
 from pip.req import parse_requirements
 from pip.download import PipSession
 import os
+import pip
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 
 def read_requirements():
-    # parses requirements from requirements.txt
+    # # parses requirements from requirements.txt
     reqs_path = os.path.join(__location__, 'requirements.txt')
     install_reqs = parse_requirements(reqs_path, session=PipSession())
     reqs = [str(ir.req) for ir in install_reqs]
+
+    for r in reqs:
+        pip.main(['install', '-U', r])
     return reqs
 
 
 setup(license='Apache License, Version 2.0',
-      packages=find_packages(exclude=('utils', 'ckpt', 'tests')),
+      packages=find_packages(exclude=('tests')),
+      version='0.0.1',
       include_package_data=True,
-      install_requires=read_requirements()
+      install_requires=read_requirements(),
+      name='deeppavlov'
       )
