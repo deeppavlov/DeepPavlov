@@ -29,70 +29,52 @@ logger = logging.getLogger(__name__)
 @register('dialog_dataset')
 class DialogDataset(Dataset):
 
+    # @overrides
+    # def __init__(self, data: Dict[str, List[Tuple[Any, Any]]], *args, **kwargs) -> None:
+    #     def _wrap(turn):
+    #         x = turn[0]['text']
+    #         y = turn[1]['text']
+    #         other = {}
+    #         other['act'] = turn[1]['act']
+    #         if turn[0].get('db_result') is not None:
+    #             other['db_result'] = turn[0]['db_result']
+    #         if turn[0].get('episode_done'):
+    #             other['episode_done'] = True
+    #         return x, y, other
+    #
+    #     self.train = list(map(_wrap, data.get('train', [])))
+    #     self.valid = list(map(_wrap, data.get('valid', [])))
+    #     self.test = list(map(_wrap, data.get('test', [])))
+    #     self.split(*args, **kwargs)
+    #     self.data = {
+    #         'train': self.train,
+    #         'valid': self.valid,
+    #         'test': self.test,
+    #         'all': self.train + self.test + self.valid
+    #     }
+
     @overrides
-    def __init__(self, data:Dict[str, List[Tuple[Any, Any]]], *args, **kwargs)\
-            -> None:
-        def _wrap(turn):
-            x = turn[0]['text']
-            y = turn[1]['text']
-            other = {}
-            other['act'] = turn[1]['act']
-            if turn[0].get('db_result') is not None:
-                other['db_result'] = turn[0]['db_result']
-            if turn[0].get('episode_done'):
-                other['episode_done'] = True
-            return (x, y, other)
-
-        self.train = list(map(_wrap, data.get('train', [])))
-        self.valid = list(map(_wrap, data.get('valid', [])))
-        self.test = list(map(_wrap, data.get('test', [])))
-        self.split(*args, **kwargs)
-        self.data = {
-            'train': self.train,
-            'valid': self.valid,
-            'test': self.test,
-            'all': self.train + self.test + self.valid
-        }
-
-    @overrides
-    def batch_generator(self, batch_size:int, data_type:str='train',
-                        shuffle:bool=True) -> Generator:
-        def _dialog(idx):
-            return data[idx['start']: idx['end']]
-
-        data = self.data[data_type]
-        dialog_indices = self._dialog_indices(data)
-        num_dialogs = len(dialog_indices)
+    def batch_generator(self, batch_size: int, data_type: str = 'train', shuffle: bool = True) -> Generator:
+        if batch_size != 1:
+            raise RuntimeError('Dialogs currently only support batch size of 1')
+        dialogs = self._dialogs(self.data[data_type])
+        num_dialogs = len(dialogs)
         order = list(range(num_dialogs))
         if shuffle:
+            rs = random.getstate()
+            random.setstate(self.random_state)
             random.shuffle(order)
-        for i in range((num_dialogs - 1) // batch_size + 1):
-            print("Getting dialogs =", [dialog_indices[o] for o in
-                                        order[i*batch_size:(i+1)*batch_size]])
-            yield list(itertools.chain.from_iterable(
-                _dialog(dialog_indices[o])\
-                for o in order[i*batch_size:(i+1)*batch_size]))
+            self.random_state = random.getstate()
+            random.setstate(rs)
+        for i in order:
+            for x, y in dialogs[i]:
+                yield [x], [y]
 
     @staticmethod
-    def _dialog_indices(data):
-        dialog_indices = []
-        i, last_idx = 0, 0
-        dialog = {}
-        for turn in data:
-            if turn[2].get('episode_done'):
-                if dialog:
-                    dialog['end'] = i
-                    last_idx = i
-                    dialog_indices.append(dialog)
-                dialog = {'start': last_idx}
-            i += 1
-        dialog['end'] = i
-        dialog_indices.append(dialog)
-        return dialog_indices
-
-    @overrides
-    def iter_all(self, data_type: str = 'train') -> Generator:
-        data = self.data[data_type]
-        for instance in data:
-            yield instance
-
+    def _dialogs(data):
+        dialogs = []
+        for x, y in data:
+            if x.get('episode_done'):
+                dialogs.append([])
+            dialogs[-1].append((x, y))
+        return dialogs

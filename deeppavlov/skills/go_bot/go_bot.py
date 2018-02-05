@@ -191,17 +191,17 @@ class GoalOrientedBot(Inferable, Trainable):
 
             self.reset_metrics()
 
-            for context, response, other in tr_data:
-                if other.get('episode_done'):
+            for context, response in tr_data:
+                if context.get('episode_done'):
                     self.reset()
                     self.metrics.n_dialogs += 1
 
-                if other.get('db_result') is not None:
-                    self.db_result = other['db_result']
-                action_id = self._encode_response(response, other['act'])
+                if context.get('db_result') is not None:
+                    self.db_result = context['db_result']
+                action_id = self._encode_response(response['text'], response['act'])
 
                 loss, pred_id = self.network.train(
-                    self._encode_context(context, other.get('db_result')),
+                    self._encode_context(context['text'], context.get('db_result')),
                     action_id,
                     self._action_mask()
                 )
@@ -210,7 +210,7 @@ class GoalOrientedBot(Inferable, Trainable):
                 self.prev_action[pred_id] = 1.
 
                 pred = self._decode_response(pred_id).lower()
-                true = self.tokenizer.infer(response.lower().split())
+                true = self.tokenizer.infer(response['text'].lower().split())
 
                 # update metrics
                 self.metrics.n_examples += 1
@@ -244,6 +244,10 @@ class GoalOrientedBot(Inferable, Trainable):
             print("\n:: stopping because max number of epochs encountered\n")
         self.save()
 
+    # def train_on_batch(self, batch):
+    #     x, y = batch
+    #     pass
+
     def infer(self, context, db_result=None):
         if db_result is not None:
             self.db_result = db_result
@@ -258,17 +262,17 @@ class GoalOrientedBot(Inferable, Trainable):
     def evaluate(self, eval_data):
         metrics = DialogMetrics(self.n_actions)
 
-        for context, response, other in eval_data:
+        for context, response in eval_data:
 
-            if other.get('episode_done'):
+            if context.get('episode_done'):
                 self.reset()
                 metrics.n_dialogs += 1
 
-            if other.get('db_result') is not None:
-                self.db_result = other['db_result']
+            if context.get('db_result') is not None:
+                self.db_result = context['db_result']
 
             probs, pred_id = self.network.infer(
-                self._encode_context(context, other.get('db_result')),
+                self._encode_context(context['text'], context.get('db_result')),
                 self._action_mask()
             )
 
@@ -276,11 +280,11 @@ class GoalOrientedBot(Inferable, Trainable):
             self.prev_action[pred_id] = 1.
 
             pred = self._decode_response(pred_id).lower()
-            true = self.tokenizer.infer(response.lower().split())
+            true = self.tokenizer.infer(response['text'].lower().split())
 
             # update metrics
             metrics.n_examples += 1
-            action_id = self._encode_response(response, other['act'])
+            action_id = self._encode_response(response['text'], response['act'])
             metrics.conf_matrix[pred_id, action_id] += 1
             metrics.n_corr_examples += int(pred == true)
         return metrics
