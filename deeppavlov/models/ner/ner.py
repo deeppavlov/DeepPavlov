@@ -18,6 +18,7 @@ from overrides import overrides
 from copy import deepcopy
 import inspect
 import sys
+from itertools import chain
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import tokenize_reg
@@ -94,14 +95,18 @@ class NER(SimpleTFModel):
 
     @overrides
     def infer(self, sample, *args, **kwargs):
-        if isinstance(sample, str):
-            sample = sample.strip()
-        if not len(sample):
-            return ''
-        if isinstance(sample, list):
+        # Check is the sample a batch
+        if isinstance(sample[0], list):
             return self._net.predict_on_batch(sample)
-        else:
+        # Check is the sample is a token sequence
+        elif isinstance(sample[0], str) and isinstance(sample, list) and ' ' not in list(chain(*sample)):
+            return self._net.predict_on_batch([sample])
+        # Check is the sample is a utterance string
+        elif isinstance(sample, str):
             return self._net.predict_on_batch([self.preprocess_tokenize(sample)])[0]
+        else:
+            raise RuntimeError('The input of infer function of NER model should be one of the following: '
+                               'list of lists of tokens, or list of tokens, or string!')
 
     def preprocess_tokenize(self, utterance):
         sample = tokenize_reg(utterance)

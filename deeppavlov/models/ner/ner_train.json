@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "ner_dataset_reader",
-    "data_path": "/home/mikhail/Projects/ner/conll2003/"
+    "data_path": "../data/conll2003/"
   },
   "dataset": {
     "name": "basic_dataset"
@@ -9,7 +9,6 @@
   "model": {
     "name": "ner",
     "train_now": true,
-    "epochs": 3,
     "save_path": "../download/ner_model/ner_model",
     "load_path": "../download/ner_model/ner_model",
     "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
@@ -59,12 +58,10 @@
 
     "metrics": ["ner_f1"],
     "validation_patience": 5,
-    "val_every_n_epochs": 1,
+    "val_every_n_epochs": 5,
 
     "log_every_n_epochs": 1,
     "show_examples": false
   }
 }
-
-
 

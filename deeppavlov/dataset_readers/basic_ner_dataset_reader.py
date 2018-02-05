@@ -11,8 +11,7 @@ class NerDatasetReader(DatasetReader):
         assert any('train.txt' in str(file_path) for file_path in files)
         dataset = {}
         for file_name in files:
-            file_name = str(file_name)
-            name = (file_name.split('.')[0]).split('/')[-1]
+            name = file_name.with_suffix('').name
             dataset[name] = self.parse_ner_file(file_name)
         return dataset
 

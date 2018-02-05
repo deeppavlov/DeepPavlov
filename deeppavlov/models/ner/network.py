@@ -434,7 +434,6 @@ class NerNetwork:
 
         # For batch norm it is necessary to update running averages
         extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        print(variables)
         with tf.control_dependencies(extra_update_ops):
             train_op = optimizer(learning_rate).minimize(loss, var_list=variables)
         return train_op
