@@ -26,8 +26,7 @@ from pathlib import Path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import SimpleTFModel
 from deeppavlov.models.ner.network import NerNetwork
-from deeppavlov.core.data.utils import tokenize_reg
-from deeppavlov.core.data.utils import download, download_decompress
+from deeppavlov.core.data.utils import tokenize_reg, download, download_decompress
 
 
 @register('dstc_slotfilling')

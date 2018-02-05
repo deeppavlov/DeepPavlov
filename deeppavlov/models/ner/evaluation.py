@@ -13,8 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+
 from collections import OrderedDict
 import sys
+
+import itertools
+
+from deeppavlov.core.common.metrics_registry import register_metric
 
 
 def chunk_finder(current_token, previous_token, tag):
@@ -44,8 +49,10 @@ def chunk_finder(current_token, previous_token, tag):
 
 def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, entity_of_interest=None):
     # Find all tags
+    y_true = list(itertools.chain(*y_true))
+    y_pred = list(itertools.chain(*y_pred))
     tags = set()
-    for tag in y_true + y_pred:
+    for tag in itertools.chain(y_true, y_pred):
         if tag != 'O':
             current_tag = tag[2:]
             tags.add(current_tag)
@@ -206,3 +213,9 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, 
                                                            tot_predicted=results[entity_of_interest]['n_predicted_entities'])
         print(s, file=sys.stderr)
     return results
+
+
+@register_metric('ner_f1')
+def train_report(y_true, y_pred):
+    report = precision_recall_f1(y_true, y_pred, print_results=False)
+    return report['__total__']['f1']
