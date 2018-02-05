@@ -51,9 +51,11 @@ class NerNetwork:
                  char_filter_width=5,
                  verbouse=False,
                  embeddings_onethego=False):
+
         n_tags = len(tag_vocab)
         n_tokens = len(word_vocab)
         n_chars = len(char_vocab)
+        print('n_tags: {}, n_tokens: {}, n_chars: {}'.format(n_tags, n_tokens, n_chars))
         # Create placeholders
         if embeddings_onethego:
             x_word = tf.placeholder(dtype=tf.float32, shape=[None, None, token_embeddings_dim], name='x_word')
@@ -164,7 +166,7 @@ class NerNetwork:
     def tokens_batch_to_numpy_batch(self, batch_x, batch_y=None):
         # Determine dimensions
         batch_size = len(batch_x)
-        max_utt_len = max([len(utt) for utt in batch_x])
+        max_utt_len = max([len(utt) for utt in batch_x] + [2])
         max_token_len = max([len(token) for utt in batch_x for token in utt])
 
         x_token = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_vocab['<PAD>']
@@ -431,6 +433,7 @@ class NerNetwork:
 
         # For batch norm it is necessary to update running averages
         extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        print(variables)
         with tf.control_dependencies(extra_update_ops):
             train_op = optimizer(learning_rate).minimize(loss, var_list=variables)
         return train_op

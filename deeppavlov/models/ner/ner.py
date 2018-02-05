@@ -92,13 +92,16 @@ class NER(SimpleTFModel):
     def train_on_batch(self, batch):
         self._net.train_on_batch(batch, **self.train_parameters)
 
-
     @overrides
     def infer(self, sample, *args, **kwargs):
-        sample = sample.strip()
+        if isinstance(sample, str):
+            sample = sample.strip()
         if not len(sample):
             return ''
-        return self._net.predict_on_batch([self.preprocess_tokenize(sample)])[0]
+        if isinstance(sample, list):
+            return self._net.predict_on_batch(sample)
+        else:
+            return self._net.predict_on_batch([self.preprocess_tokenize(sample)])[0]
 
     def preprocess_tokenize(self, utterance):
         sample = tokenize_reg(utterance)

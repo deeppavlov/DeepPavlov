@@ -27,7 +27,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import SimpleTFModel
 from deeppavlov.models.ner.network import NerNetwork
 from deeppavlov.core.data.utils import tokenize_reg
-from deeppavlov.core.data.utils import download, download_untar
+from deeppavlov.core.data.utils import download, download_decompress
 
 
 @register('dstc_slotfilling')
@@ -60,7 +60,7 @@ class DstcSlotFillingNetwork(SimpleTFModel):
         if download_best_model:
             model_path = str(self.load_path.parent.absolute())
             best_model_url = 'http://lnsigo.mipt.ru/export/models/ner/ner_dstc_model.tar.gz'
-            download_untar(best_model_url, model_path)
+            download_decompress(best_model_url, model_path)
 
         # Training parameters
         # Find all parameters for network train
@@ -108,25 +108,33 @@ class DstcSlotFillingNetwork(SimpleTFModel):
             self._ner_network.load()
 
     def train_on_batch(self, batch):
-        self._net.train_on_batch(batch, **self.train_parameters)
+        self._ner_network.train_on_batch(batch, **self.train_parameters)
 
     @overrides
     def infer(self, instance, *args, **kwargs):
-        instance = instance.strip()
+        if isinstance(instance, str):
+            instance = instance.strip()
+            instance = [tokenize_reg(instance)]
         if not len(instance):
             return {}
-        return self.predict_slots(instance.lower())
+        tokens_batch = instance
+        tags_batch = self._ner_network.predict_for_token_batch(tokens_batch)
+        slots = []
+        for tokens, tags in zip(tokens_batch, tags_batch):
+            slots.append(self.predict_slots(tokens, tags))
+
+        return slots
 
     def interact(self):
         s = input('Type in the message you want to tag: ')
-        prediction = self.predict_slots(s)
+        tokens = tokenize_reg(s)
+        tags = self._ner_network.predict_for_token_batch([tokens])[0]
+        prediction = self.predict_slots(tokens, tags)
         print(prediction, file=sys.stderr)
 
-    def predict_slots(self, utterance):
+    def predict_slots(self, tokens, tags):
         # For utterance extract named entities and perform normalization for slot filling
-        tokens = tokenize_reg(utterance)
-        tags = self._ner_network.predict_for_token_batch([tokens])[0]
-        print(tags)
+
         entities, slots = self._chunk_finder(tokens, tags)
         slot_values = {}
         for entity, slot in zip(entities, slots):
