@@ -1,8 +1,25 @@
+"""
+Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 import urllib
 from pathlib import Path
 from warnings import warn
 
 import numpy as np
+import sys
 from overrides import overrides
 
 from deeppavlov.core.common.registry import register
@@ -48,10 +65,11 @@ class FasttextEmbedder(Inferable):
 
         if self.load_path:
             if self.load_path.is_file():
-                print("[loading embeddings from `{}`]".format(self.load_path))
+                print("[loading embeddings from `{}`]".format(self.load_path), file=sys.stderr)
                 model_file = str(self.load_path)
                 if self.emb_module == 'fasttext':
                     import fasttext as Fasttext
+                    # model = Fasttext.load_model(model_file)
                     model = Fasttext.load_model(model_file)
                 elif self.emb_module == 'pyfasttext':
                     from pyfasttext import FastText as Fasttext
@@ -66,7 +84,7 @@ class FasttextEmbedder(Inferable):
             warn("No `load_path` is provided for {}".format(self.__class__.__name__))
             if self.embedding_url:
                 try:
-                    print('[trying to download a pretrained fasttext model from repository]')
+                    print('[trying to download a pretrained fasttext model from repository]', file=sys.stderr)
                     local_filename, _ = urllib.request.urlretrieve(self.embedding_url)
                     with open(local_filename, 'rb') as fin:
                         model_file = fin.read()
@@ -74,7 +92,7 @@ class FasttextEmbedder(Inferable):
                     mp = self.save_path
                     self.load_path = self.save_path
                     model = self.load()
-                    print("[saving downloaded fasttext model to {}]".format(mp))
+                    print("[saving downloaded fasttext model to {}]".format(mp), file=sys.stderr)
                     with open(str(mp), 'wb') as fout:
                         fout.write(model_file)
                 except Exception as e:

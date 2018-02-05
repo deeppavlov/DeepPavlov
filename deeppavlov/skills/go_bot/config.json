@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
     "name": "dstc2_datasetreader",
-    "data_path": "../data/dstc2"
+    "data_path": "../download/dstc2"
   },
   "dataset": {
-    "name": "dstc2_dialog_dataset"
+    "name": "dialog_dataset"
   },
   "vocabs": {
     "word_vocab": {
@@ -57,46 +57,42 @@
   },
   "model": {
     "train_now": true,
-    "name": "hcn_new",
+    "name": "go_bot",
     "debug": 0,
     "num_epochs": 1,
-    "template_path": "../data/dstc2/dstc2-templates.txt",
+    "val_patience": 10,
+    "template_path": "../download/dstc2/dstc2-templates.txt",
     "network": {
       "train_now": true,
-      "load_path": "../download/go_hcn_rnn/model",
-      "save_path": "../download/go_hcn_rnn/model",
-      "name": "custom_rnn",
-      "learning_rate": 0.03,
+      "load_path": "../download/go_bot_rnn/model",
+      "save_path": "../download/go_bot_rnn/model",
+      "name": "go_bot_rnn",
+      "learning_rate": 0.02,
       "hidden_dim": 128,
-      "obs_size": 830,
+      "obs_size": 530,
       "use_action_mask": false,
       "action_size": 45
     },
     "slot_filler": {
       "name": "dstc_slotfilling",
-      "load_path": "../download/slots/slot_vals.json",
-      "save_path": "../download/slots/slot_vals.json",
-      "ner_network": {
-        "save_path": "../download/ner/dstc_ner_network",
-        "load_path": "../download/ner/dstc_ner_network",
-        "name": "ner_tagging_network",
-        "filter_width": 7,
-        "embeddings_dropout": true,
-        "n_filters": [
-          64,
-          64
-        ],
-        "token_embeddings_dim": 64,
-        "char_embeddings_dim": 32,
-        "use_batch_norm": true,
-        "use_crf": true
-      }
+      "save_path": "../download/model/dstc_ner_model",
+      "load_path": "../download/model/dstc_ner_model",
+      "filter_width": 7,
+      "embeddings_dropout": true,
+      "n_filters": [
+        64,
+        64
+      ],
+      "token_embeddings_dim": 64,
+      "char_embeddings_dim": 32,
+      "use_batch_norm": true,
+      "use_crf": true
     },
     "intent_classifier": {
       "name": "intent_model",
+      "save_path": "../download/intents/intent_cnn",
+      "load_path": "../download/intents/intent_cnn",
       "opt": {
-        "save_path": "../download/intents/intent_cnn",
-        "load_path": "../download/intents/intent_cnn",
         "train_now": true,
         "kernel_sizes_cnn": [
           3,
@@ -127,8 +123,8 @@
       },
       "embedder": {
         "name": "fasttext",
-        "save_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
-        "load_path": "../data/embeddings/dstc2_fasttext_model_100.bin",
+        "save_path": "../download/embeddings/dstc2_fasttext_model_100.bin",
+        "load_path": "../download/embeddings/dstc2_fasttext_model_100.bin",
         "emb_module": "fasttext",
         "dim": 100
       },
@@ -137,16 +133,9 @@
         "tokenizer": "wordpunct_tokenize"
       }
     },
+    "embedder": null,
     "bow_encoder": {
       "name": "bow"
-    },
-    "embedder": {
-      "name": "fasttext",
-      "emb_module": "pyfasttext",
-      "mean": true,
-      "dim": 300,
-      "save_path": "../data/embeddings/wiki.en.bin",
-      "load_path": "../data/embeddings/wiki.en.bin"
     },
     "tokenizer": {
       "name": "spacy_tokenizer"

@@ -15,7 +15,8 @@ and some hints on how to collect appropriate datasets for other languages.
 #### Config parameters:  
 * `name` always equals to `"spelling_error_model"`
 * `train_now` — without this flag set to `true` train phase of an error model will be skipped
-* `ser_file` — name of the file that the model will be saved to and loaded from, defaults to `"error_model.tsv"`
+* `save_path` — path where the model will be saved at after a training session
+* `load_path` — path to the pretrained model
 * `window` — window size for the error model from `0` to `4`, defaults to `1`
 * `lm_file` — path to the ARPA language model file. If omitted, all of the dictionary words will be handled as equally probable
 * `dictionary` — description of a static dictionary model, instance of (or inherited from) `deeppavlov.vocabs.static_dictionary.StaticDictionary`
@@ -32,7 +33,8 @@ A working config could look like this:
 {
   "model": {
     "name": "spelling_error_model",
-    "model_file": "error_model_en.tsv",
+    "save_path": "../download/error_model/error_model.tsv",
+    "load_path": "../download/error_model/error_model.tsv",
     "train_now": true,
     "window": 1,
     "dictionary": {
@@ -45,7 +47,7 @@ A working config could look like this:
 
 #### Usage example
 This model expects a sentence string with space-separated tokens in lowercase as its input and returns the same string with corrected words.
-Here's an example code that will read input data from stdin line by line and output resulting text into stdout:
+Here's an example code that will read input data from stdin line by line and output resulting text to the `output.txt` file:
 
 ```python
 import json
@@ -54,21 +56,22 @@ import sys
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.commands.utils import set_usr_dir
 
-CONFIG_PATH = 'deeppavlov/models/spellers/error_model/config_ru_custom_vocab.json'
-usr_dir = set_usr_dir(CONFIG_PATH)
+CONFIG_PATH = 'models/spellers/error_model/config_ru_custom_vocab.json'
+set_usr_dir(CONFIG_PATH)
 
 with open(CONFIG_PATH) as config_file:
     config = json.load(config_file)
 
 model = build_model_from_config(config)
-for line in sys.stdin:
-    print(model.infer(line), flush=True)
+with open('output.txt', 'w') as f:
+    for line in sys.stdin:
+        print(model.infer(line), file=f, flush=True)
 ```
 
 if we save it as `example.py` then it could be used like so:
 
 ```bash
-cat input.txt | python3 example.py > output.txt
+cat input.txt | python3 example.py
 ```
 
 ## Training
@@ -93,7 +96,8 @@ A working training config could look something like:
 {
   "model": {
     "name": "spelling_error_model",
-    "model_file": "error_model_en.tsv",
+    "save_path": "../download/error_model/error_model.tsv",
+    "load_path": "../download/error_model/error_model.tsv",
     "window": 1,
     "train_now": true,
     "dictionary": {
@@ -116,7 +120,7 @@ from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.utils import set_usr_dir
 
 MODEL_CONFIG_PATH = 'deeppavlov/models/spellers/error_model/config_en.json'
-usr_dir = set_usr_dir(MODEL_CONFIG_PATH)
+set_usr_dir(MODEL_CONFIG_PATH)
 train_model_from_config(MODEL_CONFIG_PATH)
 ```
 

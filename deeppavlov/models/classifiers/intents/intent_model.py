@@ -1,22 +1,23 @@
-# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+"""
+Copyright 2017 Neural Networks and Deep Learning lab, MIPT
 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 
 import sys
 import inspect
 
-from typing import Dict, Type
+from typing import Dict
 import numpy as np
 from keras.layers import Dense, Input, concatenate, Activation
 from keras.layers.convolutional import Conv1D
@@ -27,7 +28,6 @@ from keras.models import Model
 from keras.regularizers import l2
 
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common import paths
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.keras_model import KerasModel
@@ -45,12 +45,12 @@ class KerasIntentModel(KerasModel):
     def __init__(self,
                  vocabs,
                  opt: Dict,
-                 embedder: Type = FasttextEmbedder,
-                 tokenizer: Type = NLTKTokenizer,
+                 embedder: FasttextEmbedder,
+                 tokenizer: NLTKTokenizer,
                  **kwargs):
         """
-        Method initializes and trains vocabularies, initializes embedder, tokenizer,
-        and then initializes model using parameters from opt dictionary (from config),
+        Initialize and train vocabularies, initializes embedder, tokenizer,
+        and then initialize model using parameters from opt dictionary (from config),
         if model is being initialized from saved
 
         Args:
@@ -84,6 +84,8 @@ class KerasIntentModel(KerasModel):
         if self.fasttext_model.load_path:
             current_fasttext_md5 = md5_hashsum([self.fasttext_model.load_path])
 
+        self.confident_threshold = self.opt['confident_threshold']
+
         # List of parameters that could be changed
         # when the model is initialized from saved and is going to be trained further
         changeable_params = {"lear_metrics": ["binary_accuracy"],
@@ -103,12 +105,10 @@ class KerasIntentModel(KerasModel):
 
         # Reinitializing of parameters
         for param in changeable_params.keys():
-            if param in self.opt.keys():
+            if param in opt.keys():
                 self.opt[param] = opt[param]
             else:
                 self.opt[param] = changeable_params[param]
-
-        self.confident_threshold = self.opt['confident_threshold']
 
         # Parameters required to init model
         params = {"model_name": self.opt['model_name'] if 'model_name' in self.opt.keys() else None,
@@ -120,6 +120,11 @@ class KerasIntentModel(KerasModel):
                   "add_metrics_file": metrics_file}
 
         self.model = self.load(**params)
+
+        # Reinitializing of parameters
+        for param in changeable_params.keys():
+            if param in opt.keys():
+                self.opt[param] = opt[param]
 
         # Check if md5 hash sum of current loaded fasttext model
         # is equal to saved
@@ -137,7 +142,7 @@ class KerasIntentModel(KerasModel):
 
     def texts2vec(self, sentences):
         """
-        Method converts texts to vector representations using embedder and padding up to self.opt["text_size"] tokens
+        Convert texts to vector representations using embedder and padding up to self.opt["text_size"] tokens
         Args:
             sentences: list of texts
 
@@ -164,7 +169,7 @@ class KerasIntentModel(KerasModel):
 
     def train_on_batch(self, batch):
         """
-        Method trains the model on the given batch
+        Train the model on the given batch
         Args:
             batch - list of data where batch[0] is list of texts and batch[1] is list of labels
 
@@ -180,7 +185,7 @@ class KerasIntentModel(KerasModel):
 
     def infer_on_batch(self, batch, labels=None):
         """
-        Method infers the model on the given batch
+        Infer the model on the given batch
         Args:
             batch - list of texts
             labels - list of labels
@@ -203,12 +208,12 @@ class KerasIntentModel(KerasModel):
     @check_attr_true('train_now')
     def train(self, dataset, *args, **kwargs):
         """
-        Method trains the model using batches and validation
+        Train the model using batches and validation
         Args:
             dataset: instance of class Dataset
 
         Returns:
-            Nothing
+            None
         """
         updates = 0
         val_loss = 1e100
@@ -269,7 +274,7 @@ class KerasIntentModel(KerasModel):
 
     def infer(self, data, predict_proba=False, *args):
         """
-        Method infers on the given data
+        Infer on the given data
         Args:
             data: single sentence or [list of sentences, list of labels] or
                     [list of sentences] or generator of sentences
@@ -307,7 +312,7 @@ class KerasIntentModel(KerasModel):
 
     def cnn_model(self, params):
         """
-        Method builds un-compiled model of shallow-and-wide CNN
+        Build un-compiled model of shallow-and-wide CNN
         Args:
             params: dictionary of parameters for NN
 
@@ -345,7 +350,7 @@ class KerasIntentModel(KerasModel):
 
     def dcnn_model(self, params):
         """
-        Method builds un-compiled model of deep CNN
+        Build un-compiled model of deep CNN
         Args:
             params: dictionary of parameters for NN
 

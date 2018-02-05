@@ -1,9 +1,26 @@
+"""
+Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 from collections import Counter, defaultdict
 import itertools
-from warnings import warn
 from pathlib import Path
 
 import numpy as np
+
+import sys
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.trainable import Trainable
@@ -95,7 +112,12 @@ class DefaultVocabulary(Trainable, Inferable):
             self.freqs[token] += 0
 
     @check_attr_true('train_now')
-    def train(self, data):
+    def train(self, data, **kwargs):
+        self.fit(data)
+        self.save()
+
+    @check_attr_true('train_now')
+    def fit(self, data):
         self.reset()
         self._train(
             tokens=filter(None, itertools.chain.from_iterable(
@@ -103,7 +125,6 @@ class DefaultVocabulary(Trainable, Inferable):
             counts=None,
             update=True
         )
-        self.save()
 
     def _train(self, tokens, counts=None, update=True):
         counts = counts or itertools.repeat(1)
@@ -118,11 +139,11 @@ class DefaultVocabulary(Trainable, Inferable):
                 index += 1
             self.freqs[token] += cnt
 
-    def infer(self, samples):
+    def infer(self, samples, **kwargs):
         return [self.__getitem__(s) for s in samples]
 
     def save(self):
-        print("[saving vocabulary to `{}`]".format(self.save_path))
+        print("[saving vocabulary to `{}`]".format(self.save_path), file=sys.stderr)
 
         with self.save_path.open('wt') as f:
             for n in range(len(self._t2i)):
@@ -134,7 +155,7 @@ class DefaultVocabulary(Trainable, Inferable):
     def load(self):
         if self.load_path:
             if self.load_path.is_file():
-                print("[loading vocabulary from `{}`]".format(self.load_path))
+                print("[loading vocabulary from `{}`]".format(self.load_path), file=sys.stderr)
                 tokens, counts = [], []
                 for ln in self.load_path.open('r'):
                     token, cnt = ln.split('\t', 1)

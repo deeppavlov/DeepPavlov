@@ -1,4 +1,20 @@
 """
+Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
+"""
 Here is an abstract class for neural network models based on Tensorflow.
 If you use something different, ex. Pytorch, then write similar to this class, inherit it from
 Trainable and Inferable interfaces and make a pull-request to deeppavlov.
@@ -76,8 +92,9 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
     def save(self):
         save_path = str(self.save_path)
         saver = tf.train.Saver()
-        print('Saving NerNetwork model to {}'.format(save_path))
+        print('\n:: saving model to {}'.format(save_path))
         saver.save(self.sess, save_path)
+        print('model saved')
 
     def get_checkpoint_state(self):
         if self.load_path:
@@ -86,7 +103,7 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
             else:
                 warn('Provided `load_path` is incorrect!')
         else:
-            warn('No `load_path` is provided for {}".format(self.__class__.__name__)')
+            warn("No `load_path` is provided for {}".format(self.__class__.__name__))
 
     @overrides
     def load(self):
