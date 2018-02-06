@@ -83,11 +83,11 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
         """
         return self._train_step(features, *args, **kwargs)
 
-    def infer(self, instance, *args):
+    def infer(self, instance, *args, **kwargs):
         """
         Just a wrapper for a private method.
         """
-        return self._forward(instance, *args)
+        return self._forward(instance, *args, **kwargs)
 
     def save(self):
         save_path = str(self.save_path)
