@@ -19,20 +19,20 @@ from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 
 # HCN_new
-# config_examples/go_bot/config.json
+# configs/go_bot/config.json
 
 # Speller
-# config_examples/error_model/config_en.json
-# config_examples/error_model/config_ru.json
-# config_examples/error_model/config_ru_custom_vocab.json
+# configs/error_model/config_en.json
+# configs/error_model/config_ru.json
+# configs/error_model/config_ru_custom_vocab.json
 
 # Intents classifier
-# config_examples/intents/config_dstc2.json
+# configs/intents/config_dstc2.json
 
 # NER
-# config_examples/ner/config.json
+# configs/ner/config.json
 
-PIPELINE_CONFIG_PATH = 'config_examples/go_bot/config.json'
+PIPELINE_CONFIG_PATH = 'configs/go_bot/config.json'
 set_usr_dir(PIPELINE_CONFIG_PATH)
 try:
     train_model_from_config(PIPELINE_CONFIG_PATH)
