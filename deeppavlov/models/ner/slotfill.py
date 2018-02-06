@@ -111,24 +111,31 @@ class DstcSlotFillingNetwork(SimpleTFModel):
 
     @overrides
     def infer(self, instance, *args, **kwargs):
-        if type(instance) is str:
+        if isinstance(instance, str):
             instance = instance.strip()
             if not len(instance):
                 return {}
-            return self.predict_slots(instance.lower())
+            tokens = tokenize_reg(instance)
+            tags = self._ner_network.predict_for_token_batch([instance])[0]
+            return self.predict_slots(tokens, tags)
         else:
-            return [self.predict_slots((' '.join(i)).lower()) for i in instance]
+            tokens_batch = instance
+            tags_batch = self._ner_network.predict_for_token_batch(tokens_batch)
+            slots = []
+            for tokens, tags in zip(tokens_batch, tags_batch):
+                slots.append(self.predict_slots(tokens, tags))
+            return slots
 
     def interact(self):
         s = input('Type in the message you want to tag: ')
-        prediction = self.predict_slots(s)
+        tokens = tokenize_reg(s)
+        tags = self._ner_network.predict_for_token_batch([tokens])[0]
+        prediction = self.predict_slots(tokens, tags)
         print(prediction, file=sys.stderr)
 
-    def predict_slots(self, utterance):
+    def predict_slots(self, tokens, tags):
         # For utterance extract named entities and perform normalization for slot filling
-        tokens = tokenize_reg(utterance)
-        tags = self._ner_network.predict_for_token_batch([tokens])[0]
-        # print(tags)
+
         entities, slots = self._chunk_finder(tokens, tags)
         slot_values = {}
         for entity, slot in zip(entities, slots):

@@ -29,3 +29,4 @@ from deeppavlov.models.ner.ner import NER
 from deeppavlov.core.data.dataset import Dataset
 
 import deeppavlov.metrics.accuracy
+import deeppavlov.metrics.fmeasure

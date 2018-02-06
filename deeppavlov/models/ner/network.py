@@ -52,9 +52,11 @@ class NerNetwork:
                  char_filter_width=5,
                  verbouse=False,
                  embeddings_onethego=False):
+
         n_tags = len(tag_vocab)
         n_tokens = len(word_vocab)
         n_chars = len(char_vocab)
+        print('n_tags: {}, n_tokens: {}, n_chars: {}'.format(n_tags, n_tokens, n_chars))
         # Create placeholders
         if embeddings_onethego:
             x_word = tf.placeholder(dtype=tf.float32, shape=[None, None, token_embeddings_dim], name='x_word')

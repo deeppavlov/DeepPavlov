@@ -14,6 +14,7 @@
     "learning_rate": 1e-3,
     "save_path": "../download/model/dstc_ner_model",
     "load_path": "../download/model/dstc_ner_model",
+    "vocabs": ["word_vocab", "tag_vocab", "char_vocab"],
     "verbouse": true,
     "filter_width": 7,
     "embeddings_dropout": true,
@@ -32,24 +33,35 @@
         "inputs": ["x"],
         "train_now": true,
 		"level": "token",
-        "save_path": "../download/vocabs/word.dict",
-        "load_path": "../download/vocabs/word.dict"
+        "save_path": "../download/model/word.dict",
+        "load_path": "../download/model/word.dict"
       },
     "tag_vocab": {
         "name": "default_vocab",
         "inputs": ["y"],
         "train_now": true,
 		"level": "token",
-        "save_path": "../download/vocabs/tag.dict",
-        "load_path": "../download/vocabs/tag.dict"
+        "save_path": "../download/model/tag.dict",
+        "load_path": "../download/model/tag.dict"
       },
     "char_vocab":{
         "name": "default_vocab",
         "inputs": ["x"],
         "train_now": true,
 		"level": "char",
-        "save_path": "../download/vocabs/char.dict",
-        "load_path": "../download/vocabs/char.dict"
+        "save_path": "../download/model/char.dict",
+        "load_path": "../download/model/char.dict"
       }
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 64,
+
+    "metrics": ["slots_accuracy"],
+    "validation_patience": 5,
+    "val_every_n_epochs": 1,
+
+    "log_every_n_epochs": 1,
+    "show_examples": false
   }
 }
