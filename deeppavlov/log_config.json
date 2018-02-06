@@ -43,13 +43,5 @@
       "formatter": "default",
       "stream": "ext://sys.stderr"
     }
-  },
-  "loggers":
-  {
-    "default":
-    {
-      "level": "WARNING",
-      "handlers" : ["_default"]
-    }
   }
 }
