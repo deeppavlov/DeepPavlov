@@ -7,8 +7,11 @@ from deeppavlov.core.common.registry import register
 class NerDatasetReader(DatasetReader):
     def read(self, file_path: str):
         dir_path = Path(file_path)
+        if not dir_path.is_dir():
+            raise RuntimeError('Dataset directory "{}" does not exists'.format(dir_path))
         files = list(dir_path.glob('*.txt'))
-        assert any('train.txt' in str(file_path) for file_path in files)
+        if 'train.txt' not in {file_path.name for file_path in files}:
+            raise RuntimeError('train.txt not found in "{}"'.format(dir_path))
         dataset = {}
         for file_name in files:
             name = file_name.with_suffix('').name
@@ -16,9 +19,9 @@ class NerDatasetReader(DatasetReader):
         return dataset
 
     @staticmethod
-    def parse_ner_file(file_name: str):
+    def parse_ner_file(file_name: Path):
         samples = []
-        with open(file_name) as f:
+        with file_name.open() as f:
             tokens = []
             tags = []
             for line in f:
