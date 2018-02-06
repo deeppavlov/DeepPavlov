@@ -14,34 +14,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.train import train_model_from_config, train_experimental
 from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 
-# HCN
-# skills/hcn/config.json
-
 # HCN_new
-# skills/go_bot/config.json
+# configs/go_bot/config.json
 
 # Speller
-# models/spellers/error_model/config_en.json
-# models/spellers/error_model/config_ru.json
-# models/spellers/error_model/config_ru_custom_vocab.json
+# configs/error_model/config_en.json
+# configs/error_model/config_ru.json
+# configs/error_model/config_ru_custom_vocab.json
 
 # Intents classifier
-# models/classifiers/intents/config_dstc2.json
+# configs/intents/config_dstc2.json
 
 # NER
-# models/ner/slot_config.json
+# configs/ner/slot_config.json
 
-# PIPELINE_CONFIG_PATH = 'models/classifiers/intents/config_train.json'
-PIPELINE_CONFIG_PATH = 'models/ner/ner_train.json'
-# PIPELINE_CONFIG_PATH = 'models/ner/slot_config_train.json'
-# PIPELINE_CONFIG_PATH = 'models/spellers/error_model/config_en.json'
-# PIPELINE_CONFIG_PATH = 'models/spellers/error_model/config_ru_custom_vocab.json'
-# PIPELINE_CONFIG_PATH = 'skills/go_bot/config.json'
+# PIPELINE_CONFIG_PATH = 'configs/intents/config_train.json'
+# PIPELINE_CONFIG_PATH = 'configs/ner/ner_train.json'
+PIPELINE_CONFIG_PATH = 'configs/ner/slot_config_train.json'
+# PIPELINE_CONFIG_PATH = 'configs/error_model/config_en.json'
+# PIPELINE_CONFIG_PATH = 'configs/error_model/config_ru_custom_vocab.json'
+# PIPELINE_CONFIG_PATH = 'configs/go_bot/config.json'
 set_usr_dir(PIPELINE_CONFIG_PATH)
 try:
     # train_model_from_config(PIPELINE_CONFIG_PATH)
