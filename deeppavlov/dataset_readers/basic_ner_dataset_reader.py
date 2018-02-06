@@ -1,3 +1,6 @@
+from deeppavlov.core.data.utils import download_decompress
+import sys
+
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from pathlib import Path
 from deeppavlov.core.common.registry import register
@@ -5,13 +8,20 @@ from deeppavlov.core.common.registry import register
 
 @register('ner_dataset_reader')
 class NerDatasetReader(DatasetReader):
-    def read(self, file_path: str):
-        dir_path = Path(file_path)
-        if not dir_path.is_dir():
-            raise RuntimeError('Dataset directory "{}" does not exists'.format(dir_path))
+
+    def download_conll(self, dir_path):
+        download_decompress('http://lnsigo.mipt.ru/export/datasets/conll2003.tar.gz', dir_path)
+
+    def read(self, dir_path: str, dataset_name='conll2003'):
+        dir_path = Path(dir_path)
         files = list(dir_path.glob('*.txt'))
         if 'train.txt' not in {file_path.name for file_path in files}:
-            raise RuntimeError('train.txt not found in "{}"'.format(dir_path))
+            if dataset_name == 'conll2003':
+                dir_path.mkdir(exist_ok=True, parents=True)
+                self.download_conll(dir_path)
+                files = list(dir_path.glob('*.txt'))
+            else:
+                raise RuntimeError('train.txt not found in "{}"'.format(dir_path))
         dataset = {}
         for file_name in files:
             name = file_name.with_suffix('').name
