@@ -18,8 +18,6 @@ import argparse
 from pathlib import Path
 import sys
 import os
-import logging
-import logging.config
 
 p = (Path(__file__) / ".." / "..").resolve()
 sys.path.append(str(p))
@@ -27,14 +25,11 @@ sys.path.append(str(p))
 from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.infer import interact_model
-from deeppavlov.core.common.file import read_json
+from deeppavlov.log import get_logger
 from telegram_utils.telegram_ui import interact_model_by_telegram
 
 
-log_config_path = (p / 'log_config.json').resolve()
-log_config = read_json(log_config_path)
-logging.config.dictConfig(log_config)
-log = logging.getLogger(__name__)
+log = get_logger(__name__)
 
 parser = argparse.ArgumentParser()
 

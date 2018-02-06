@@ -25,3 +25,4 @@ from deeppavlov.skills.go_bot.go_bot import GoalOrientedBot
 from deeppavlov.skills.go_bot.network import GoalOrientedBotNetwork
 from deeppavlov.skills.go_bot.tracker import FeaturizedTracker
 from deeppavlov.vocabs.typos import StaticDictionary, Wiki100KDictionary, RussianWordsVocab
+from deeppavlov.log import get_logger

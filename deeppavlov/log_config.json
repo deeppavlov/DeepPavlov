@@ -35,6 +35,21 @@
       "level": "DEBUG",
       "formatter": "default",
       "stream": "ext://sys.stderr"
+    },
+    "_default":
+    {
+      "class": "logging.StreamHandler",
+      "level": "WARNING",
+      "formatter": "default",
+      "stream": "ext://sys.stderr"
+    }
+  },
+  "loggers":
+  {
+    "default":
+    {
+      "level": "WARNING",
+      "handlers" : ["_default"]
     }
   }
 }
