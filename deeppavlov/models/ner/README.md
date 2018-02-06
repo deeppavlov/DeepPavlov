@@ -161,7 +161,7 @@ To train the model the config file specified above must be formed. Then from the
 
 ```bash
 cd deeppavlov
-python deep.py train models/ner/config.json
+python deep.py train configs/ner/config.json
 ```
 
 
@@ -171,7 +171,7 @@ After training the following commands from the root of the project will launch t
 
 ```bash
 cd deeppavlov
-python deep.py interact models/ner/config.json
+python deep.py interact configs/ner/config.json
 ```
 
 ## Results

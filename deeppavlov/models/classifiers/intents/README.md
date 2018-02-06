@@ -40,13 +40,13 @@ This message contains two intents `(thankyou, bye)`.
 ## Infer from pre-trained model
 
 To infer using console interface one have tp set parameter `train_now` to `false` 
-in `models/classifiers/intents/config_dstc2.json` and then run
+in `configs/intents/config_dstc2.json` and then run
 ```
-python deep.py interact models/classifiers/intents/config_dstc2.json
+python deep.py interact configs/intents/config_dstc2.json
 ```
 or
 ```
-python deep.py interactbot models/classifiers/intents/config_dstc2_infer.json
+python deep.py interactbot configs/intents/config_dstc2_infer.json
 ```
 For 'interactbot' mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` 
 environment variable.
@@ -121,13 +121,13 @@ Below the table with description of parameters is presented.
 ### Train on DSTC 2
 
 To train model again or with other parameters on DSTC 2 data
- the only actions are to set parameter `train_now` to `true` in `models/classifiers/intents/config_dstc2.json`,
+ the only actions are to set parameter `train_now` to `true` in `configs/intents/config_dstc2.json`,
  set `model_path` to the directory where trained model will be saved 
  (it will be loaded if model exists, and it will be created otherwise).
  All other parameters of model as well as embedder and tokenizer could be changed. 
  Then training could be run in the following way:
 ```
-python deep.py train models/classifiers/intents/config_dstc2.json
+python deep.py train configs/intents/config_dstc2.json
 ```
 
 ### Train on other data
@@ -148,14 +148,14 @@ Training data files `train.csv` (and, if exists, `valid.csv`) should be presente
 
 
 To train model one should 
-* set parameter `train_now` to `true` in `models/classifiers/intents/config_snips.json`,
+* set parameter `train_now` to `true` in `configs/intents/config_snips.json`,
 * set `data_path` to the directory where `train.csv` will be downloaded to,
 * set `model_path` to the directory where trained model will be saved to, 
 * set all other parameters of model as well as embedder and tokenizer to desired ones.
 
 Then training could be run in the same way:
 ```
-python deep.py train models/classifiers/intents/config_snips.json
+python deep.py train configs/intents/config_snips.json
 ```
 
 **Current `config_snips.json` implies intent recognition for SNIPS benchmark dataset [2] 
