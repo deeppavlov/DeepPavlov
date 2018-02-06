@@ -67,8 +67,9 @@ class DialogDataset(Dataset):
             self.random_state = random.getstate()
             random.setstate(rs)
         for i in order:
-            for x, y in dialogs[i]:
-                yield [x], [y]
+            yield dialogs[i]
+            #for x, y in dialogs[i]:
+            #    yield [x], [y]
 
     @staticmethod
     def _dialogs(data):
