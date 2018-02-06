@@ -113,16 +113,18 @@ class DstcSlotFillingNetwork(SimpleTFModel):
     def infer(self, instance, *args, **kwargs):
         if isinstance(instance, str):
             instance = instance.strip()
-            instance = [tokenize_reg(instance)]
-        if not len(instance):
-            return {}
-        tokens_batch = instance
-        tags_batch = self._ner_network.predict_for_token_batch(tokens_batch)
-        slots = []
-        for tokens, tags in zip(tokens_batch, tags_batch):
-            slots.append(self.predict_slots(tokens, tags))
-
-        return slots
+            if not len(instance):
+                return {}
+            tokens = tokenize_reg(instance)
+            tags = self._ner_network.predict_for_token_batch([instance])[0]
+            return self.predict_slots(tokens, tags)
+        else:
+            tokens_batch = instance
+            tags_batch = self._ner_network.predict_for_token_batch(tokens_batch)
+            slots = []
+            for tokens, tags in zip(tokens_batch, tags_batch):
+                slots.append(self.predict_slots(tokens, tags))
+            return slots
 
     def interact(self):
         s = input('Type in the message you want to tag: ')
