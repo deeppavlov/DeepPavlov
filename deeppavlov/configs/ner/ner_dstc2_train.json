@@ -1,17 +1,18 @@
 {
   "dataset_reader": {
-    "name": "ner_dataset_reader",
-    "data_path": "../data/conll2003/"
+    "name": "dstc2_datasetreader",
+    "data_path": "../data/dstc2"
   },
   "dataset": {
-    "name": "basic_dataset"
+    "name": "dstc2_ner_dataset",
+    "dataset_path": "../data/dstc2"
   },
   "model": {
     "name": "ner",
     "train_now": true,
-    "save_path": "../download/ner_model/ner_model",
-    "load_path": "../download/ner_model/ner_model",
+    "save_path": "../download/ner_dstc2_model/ner_model",
     "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
+    "verbouse": true,
     "filter_width": 7,
     "embeddings_dropout": true,
     "n_filters": [
@@ -32,35 +33,35 @@
         "inputs": ["x"],
         "train_now": true,
 		"level": "token",
-        "save_path": "../download/ner_model/word.dict",
-        "load_path": "../download/ner_model/word.dict"
+        "save_path": "../download/ner_dstc2_model/word.dict",
+        "load_path": "../download/ner_dstc2_model/word.dict"
       },
     "tag_vocab": {
         "name": "default_vocab",
         "inputs": ["y"],
         "train_now": true,
 		"level": "token",
-        "save_path": "../download/ner_model/tag.dict",
-        "load_path": "../download/ner_model/tag.dict"
+        "save_path": "../download/ner_dstc2_model/tag.dict",
+        "load_path": "../download/ner_dstc2_model/tag.dict"
       },
     "char_vocab":{
         "name": "default_vocab",
         "inputs": ["x"],
         "train_now": true,
 		"level": "char",
-        "save_path": "../download/ner_model/char.dict",
-        "load_path": "../download/ner_model/char.dict"
+        "save_path": "../download/ner_dstc2_model/char.dict",
+        "load_path": "../download/ner_dstc2_model/char.dict"
       }
   },
   "train": {
     "epochs": 100,
     "batch_size": 64,
 
-    "metrics": ["ner_f1"],
+    "metrics": ["ner_f1", "per_item_accuracy"],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
 
-    "log_every_n_epochs": 1,
+    "log_every_n_batches": 100,
     "show_examples": false
   }
 }

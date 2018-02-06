@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "ner_dataset_reader",
-    "data_path": "/home/mikhail/Projects/ner/conll2003/"
+    "data_path": "../download/conll2003/"
   },
   "dataset": {
     "name": "basic_dataset"
@@ -9,11 +9,9 @@
   "model": {
     "name": "ner",
     "train_now": true,
-    "epochs": 3,
-    "save_path": "../download/ner_model/ner_model",
-    "load_path": "../download/ner_model/ner_model",
+    "save_path": "../download/ner_conll2003_model/ner_model",
+    "load_path": "../download/ner_conll2003_model/ner_model",
     "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
-    "verbouse": true,
     "filter_width": 7,
     "embeddings_dropout": true,
     "n_filters": [
@@ -34,25 +32,36 @@
         "inputs": ["x"],
         "train_now": true,
 		"level": "token",
-        "save_path": "../download/ner_model/word.dict",
-        "load_path": "../download/ner_model/word.dict"
+        "save_path": "../download/ner_conll2003_model/word.dict",
+        "load_path": "../download/ner_conll2003_model/word.dict"
       },
     "tag_vocab": {
         "name": "default_vocab",
         "inputs": ["y"],
         "train_now": true,
 		"level": "token",
-        "save_path": "../download/ner_model/tag.dict",
-        "load_path": "../download/ner_model/tag.dict"
+        "save_path": "../download/ner_conll2003_model/tag.dict",
+        "load_path": "../download/ner_conll2003_model/tag.dict"
       },
     "char_vocab":{
         "name": "default_vocab",
         "inputs": ["x"],
         "train_now": true,
 		"level": "char",
-        "save_path": "../download/ner_model/char.dict",
-        "load_path": "../download/ner_model/char.dict"
+        "save_path": "../download/ner_conll2003_model/char.dict",
+        "load_path": "../download/ner_conll2003_model/char.dict"
       }
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 64,
+
+    "metrics": ["ner_f1"],
+    "validation_patience": 5,
+    "val_every_n_epochs": 5,
+
+    "log_every_n_epochs": 1,
+    "show_examples": false
   }
 }
 
