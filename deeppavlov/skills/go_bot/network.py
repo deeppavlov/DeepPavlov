@@ -141,8 +141,9 @@ class GoalOrientedBotNetwork(TFModel):
         _train_op = optimizer(learning_rate).minimize(loss, name='train_op')
         # TODO: check clipping of gradients
         #optimizer = tf.train.AdamOptimizer(learning_rate)
+        #clip_rate = 1.
         #gards_and_vars = optimizer.compute_gradients(loss, tf.trainable_variables())
-        #grads_and_vars = [(tf.clip_by_norm(grad, 1), var) for grad, var in grads_and_vars]
+        #grads_and_vars = [(tf.clip_by_norm(grad, clip_rate), var) for grad, var in grads_and_vars]
         #optimizer.apply_gradients(grads_and_vars)
         return _train_op
 

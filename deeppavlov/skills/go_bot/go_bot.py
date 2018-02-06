@@ -182,61 +182,59 @@ class GoalOrientedBot(Inferable, Trainable):
         # TODO: in case val_patience is off, save model {val_patience} steps before
         for j in range(self.num_epochs):
 
-            tr_data = data.iter_all('train')
+            tr_data = data.batch_generator(1, 'train', shuffle=False)
             eval_data = data.iter_all('valid')
+            #eval_data = data.batch_generator(1, 'valid')
 
             self.reset_metrics()
-            self.reset()
 
-            dial_features, dial_actions, dial_masks = [], [], []
-            for context, response in tr_data:
-                #TODO: add last dialog to training
-                if context.get('episode_done'):
-                    if self.metrics.n_dialogs > 0:
-                        #TODO: rm debug
-                        #print("Training with lengths:", len(dial_features),
-                        #      len(dial_actions), len(dial_masks))
-                        loss, preds = self.network.train(
-                            dial_features, dial_actions, dial_masks)
+            for dialog in tr_data:
 
-                        for pred_id in preds:
-                            pred = ""
-                            # TODO: decoding is using wrong state
-                            #self._decode_response(pred_id).lower()
-                            true = self.tokenizer.infer(response['text'].lower().split())
+                self.reset()
+                self.metrics.n_dialogs += 1
+                d_features, d_actions, d_masks = [], [], []
 
-                            # update metrics
-                            self.metrics.n_examples += 1
-                            self.metrics.train_loss += loss
-                            self.metrics.conf_matrix[pred_id, action_id] += 1
-                            #self.metrics.n_corr_examples += int(pred == true)
-                            if self.debug and ((pred == true) != (pred_id == action_id)):
-                                print("Slot filling problem: ")
-                                print("Pred = {}: {}".format(pred_id, pred))
-                                print("True = {}: {}".format(action_id, true))
-                                #print("State =", self.tracker.get_state())
-                                #print("db_result =", self.db_result)
-                                # TODO: update dialog metrics
-                    self.reset()
-                    dial_features, dial_actions, dial_masks = [], [], []
-                    self.metrics.n_dialogs += 1
+                for context, response in dialog:
+                    features = self._encode_context(context['text'],
+                                                    context.get('db_result'))
+                    if context.get('db_result') is not None:
+                        self.db_result = context['db_result']
+                    d_features.append(features)
 
-                features = self._encode_context(context['text'],
-                                                context.get('db_result'))
-                if context.get('db_result') is not None:
-                    self.db_result = context['db_result']
-                dial_features.append(features)
+                    action_id = self._encode_response(response['text'], 
+                                                      response['act'])
+                    # previous action is teacher-forced here
+                    self.prev_action *= 0.
+                    self.prev_action[action_id] = 1.
+                    d_actions.append(action_id)
 
-                action_id = self._encode_response(response['text'], response['act'])
-                # previous action is teacher-forced here
-                self.prev_action *= 0.
-                self.prev_action[action_id] = 1.
-                dial_actions.append(action_id)
+                    d_masks.append(self._action_mask())
 
-                dial_masks.append(self._action_mask())
+                loss, d_preds = self.network.train(d_features, d_actions, d_masks)
 
+                for pred_id, action_id in zip(d_preds, d_actions):
+                    pred = ""
+                    # TODO: decoding is using wrong state
+                    #self._decode_response(pred_id).lower()
+                    true = self.tokenizer.infer(response['text'].lower().split())
+
+                    # update metrics
+                    self.metrics.n_examples += 1
+                    self.metrics.train_loss += loss
+                    self.metrics.conf_matrix[pred_id, action_id] += 1
+                    #self.metrics.n_corr_examples += int(pred == true)
+                    if self.debug and ((pred == true) != (pred_id == action_id)):
+                        print("Slot filling problem: ")
+                        print("Pred = {}: {}".format(pred_id, pred))
+                        print("True = {}: {}".format(action_id, true))
+                        #print("State =", self.tracker.get_state())
+                        #print("db_result =", self.db_result)
+                        # TODO: update dialog metrics
+                
             print('\n\n:: {}.train {}'.format(j + 1, self.metrics.report()))
 
+            train_metrics = self.evaluate(data.iter_all('train'))
+            print(':: {}.train {}'.format(j + 1, train_metrics.report()))
             valid_metrics = self.evaluate(eval_data)
             print(':: {}.valid {}'.format(j + 1, valid_metrics.report()))
 
@@ -265,7 +263,9 @@ class GoalOrientedBot(Inferable, Trainable):
             self._action_mask(),
             prob=True
         )
-        self.prev_action = probs
+        #self.prev_action = probs
+        self.prev_action *= 0
+        self.prev_action[pred_id] = 1
         if db_result is not None:
             self.db_result = db_result
         pred_id = np.argmax(probs)
@@ -291,7 +291,9 @@ class GoalOrientedBot(Inferable, Trainable):
 
             # predicted probabilities instead of true action
             # TODO: check!
-            self.prev_action = probs
+            #self.prev_action = probs
+            self.prev_action *= 0
+            self.prev_action[pred_id] = 1
 
             pred = self._decode_response(pred_id).lower()
             true = self.tokenizer.infer(response['text'].lower().split())
