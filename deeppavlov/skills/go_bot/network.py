@@ -61,6 +61,7 @@ class GoalOrientedBotNetwork(TFModel):
         self.learning_rate = params['learning_rate']
         self.n_hidden = params['hidden_dim']
         self.n_actions = params['action_size']
+        #TODO: try obs_size=None or as a placeholder
         self.obs_size = params['obs_size']
 
     def _build_graph(self):
@@ -68,61 +69,83 @@ class GoalOrientedBotNetwork(TFModel):
         self._add_placeholders()
 
         # build body
-        _logits = self._build_body()
+        _logits, self._state = self._build_body()
+        print("DEBUG: state =", self._state)
+        print("DEBUG: logits =", _logits)
+
+        # probabilities normalization : elemwise multiply with action mask
+        self._probs = tf.squeeze(tf.nn.softmax(_logits))
+        #TODO: add action mask
+        #self._probs = tf.multiply(tf.squeeze(tf.nn.softmax(_logits)),
+        #                          self._action_mask,
+        #                          name='probs')
 
         # loss, train and predict operations
-        self._prediction = tf.argmax(self._probs, axis=0, name='prediction')
-        self._loss = tf.nn.sparse_softmax_cross_entropy_with_logits(
-            logits=_logits, labels=self._action, name='loss'
-        )
-        self._step = tf.Variable(0, trainable=False, name='global_step')
-        self._train_op = tf.train.AdadeltaOptimizer(self.learning_rate)\
-            .minimize(self._loss, global_step=self._step, name='train_op')
+        self._prediction = tf.argmax(self._probs, axis=-1, name='prediction')
+        _loss_tensor = \
+            tf.losses.sparse_softmax_cross_entropy(logits=_logits,
+                                                   labels=self._action)
+        self._loss = tf.reduce_mean(_loss_tensor, name='loss')
+        self._train_op = self._get_train_op(self._loss, self.learning_rate)
 
     def _add_placeholders(self):
-        self._features = tf.placeholder(tf.float32, [1, self.obs_size],
+        # TODO: make batch_size != 1
+        _initial_state_c = \
+            tf.placeholder_with_default(np.zeros([1, self.n_hidden], np.float32),
+                                        shape=[1, self.n_hidden])
+        _initial_state_h = \
+            tf.placeholder_with_default(np.zeros([1, self.n_hidden], np.float32),
+                                        shape=[1, self.n_hidden])
+        self._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c,
+                                                            _initial_state_h)
+        self._features = tf.placeholder(tf.float32, [1, None, self.obs_size],
                                         name='features')
-        self._state_c = tf.placeholder(tf.float32, [1, self.n_hidden],
-                                       name='state_c')
-        self._state_h = tf.placeholder(tf.float32, [1, self.n_hidden],
-                                       name='state_h')
-        self._action = tf.placeholder(tf.int32,
+        self._action = tf.placeholder(tf.int32, [1, None],
                                       name='ground_truth_action')
-        self._action_mask = tf.placeholder(tf.float32, [self.n_actions],
+        self._action_mask = tf.placeholder(tf.float32, [1, None, self.n_actions],
                                            name='action_mask')
 
     def _build_body(self):
         # input projection
-        _Wi = tf.get_variable('Wi', [self.obs_size, self.n_hidden],
-                              initializer=xavier_initializer())
-        _bi = tf.get_variable('bi', [self.n_hidden],
-                              initializer=tf.constant_initializer(0.))
+        _projected_features = \
+            tf.layers.dense(self._features,
+                            self.n_hidden,
+                            kernel_initializer=xavier_initializer())
 
-        # add relu/tanh here if necessary
-        _projected_features = tf.matmul(self._features, _Wi) + _bi
-
-        _lstm_f = tf.contrib.rnn.LSTMCell(self.n_hidden, state_is_tuple=True)
-        _lstm_op, self._next_state = _lstm_f(inputs=_projected_features,
-                                             state=(self._state_c,
-                                                    self._state_h))
-
-        # reshape LSTM's state tuple (2,n_hidden) -> (1,n_hidden*2)
-        _state_reshaped = tf.concat(axis=1,
-                                    values=(self._next_state.c,
-                                            self._next_state.h))
-
+        # recurrent network unit
+        _lstm_cell = tf.nn.rnn_cell.LSTMCell(self.n_hidden)
+        _output, _state = tf.nn.dynamic_rnn(_lstm_cell,
+                                             _projected_features,
+                                             initial_state=self._initial_state)
+ 
         # output projection
-        _Wo = tf.get_variable('Wo', [self.n_hidden*2, self.n_actions],
-                              initializer=xavier_initializer())
-        _bo = tf.get_variable('bo', [self.n_actions],
-                              initializer=tf.constant_initializer(0.))
-        # get logits
-        _logits = tf.matmul(_state_reshaped, _Wo) + _bo
-        # probabilities normalization : elemwise multiply with action mask
-        self._probs = tf.multiply(tf.squeeze(tf.nn.softmax(_logits)),
-                                  self._action_mask,
-                                  name='probs')
-        return _logits
+        # TODO: try multiplying logits to action_mask
+        _logits = tf.layers.dense(_output,
+                                  self.n_actions,
+                                  kernel_initializer=xavier_initializer())
+        return _logits, _state
+
+    def _get_train_op(self, loss, learning_rate, optimizer=None):
+        """ Get train operation for given loss
+
+        Args:
+            loss: loss function, tf tensor or scalar
+            learning_rate: scalar or placeholder
+            optimizer: instance of tf.train.Optimizer, Adam, by default
+
+        Returns:
+            train_op
+        """
+
+        optimizer = optimizer or tf.train.AdamOptimizer
+        _train_op = optimizer(learning_rate).minimize(loss, name='train_op')
+        # TODO: check clipping of gradients
+        #optimizer = tf.train.AdamOptimizer(learning_rate)
+        #clip_rate = 1.
+        #gards_and_vars = optimizer.compute_gradients(loss, tf.trainable_variables())
+        #grads_and_vars = [(tf.clip_by_norm(grad, clip_rate), var) for grad, var in grads_and_vars]
+        #optimizer.apply_gradients(grads_and_vars)
+        return _train_op
 
     def reset_state(self):
         # set zero state
@@ -130,37 +153,31 @@ class GoalOrientedBotNetwork(TFModel):
         self.state_h = np.zeros([1, self.n_hidden], dtype=np.float32)
 
     def _train_step(self, features, action, action_mask):
-        _, loss_value, self.state_c, self.state_h, prediction = \
+        _, loss_value, prediction = \
             self.sess.run(
-                [
-                    self._train_op, self._loss, self._next_state.c,
-                    self._next_state.h, self._prediction
-                ],
+                [ self._train_op, self._loss, self._prediction ],
                 feed_dict={
-                    self._features: features.reshape([1, self.obs_size]),
+                    self._features: [features],
                     self._action: [action],
-                    self._state_c: self.state_c,
-                    self._state_h: self.state_h,
-                    self._action_mask: action_mask
+                    self._action_mask: [action_mask]
                 }
             )
-        return loss_value[0], prediction
+        return loss_value, prediction
 
-    def _forward(self, features, action_mask):
-        probs, prediction, self.state_c, self.state_h = \
+    def _forward(self, features, action_mask, prob=False):
+        probs, prediction, state = \
             self.sess.run(
-                [
-                    self._probs, self._prediction, self._next_state.c,
-                    self._next_state.h
-                ],
+                [ self._probs, self._prediction, self._state ],
                 feed_dict={
-                    self._features: features.reshape([1, self.obs_size]),
-                    self._state_c: self.state_c,
-                    self._state_h: self.state_h,
-                    self._action_mask: action_mask
+                    self._features: [[features]],
+                    self._initial_state: (self.state_c, self.state_h),
+                    self._action_mask: [[action_mask]]
                 }
             )
-        return probs, prediction
+        self.state_c, self._state_h = state
+        if prob:
+            return probs
+        return prediction
 
     def shutdown(self):
         self.sess.close()
