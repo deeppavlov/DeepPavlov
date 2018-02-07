@@ -100,15 +100,8 @@ class FasttextEmbedder(Inferable):
                             fout.write(model_file)
                     except Exception as e:
                         log.error('Looks like the provided fasttext url is incorrect', exc_info=True)
-                        # TODO: remove commented code after testing this scenario
-                        # raise RuntimeError(
-                        #     'Looks like the provided fasttext url is incorrect', e)
                 else:
                     raise FileNotFoundError
-                    # TODO: remove commented code after testing this scenario
-                    # raise FileNotFoundError(
-                    #     'No pretrained fasttext model provided or provided "load_path" is incorrect.'
-                    #     ' Please include "load_path" to json.')
             except Exception:
                 log.error('No pretrained fasttext model provided or provided "load_path" is incorrect.'
                           ' Please include "load_path" to json.', exc_info=True)
