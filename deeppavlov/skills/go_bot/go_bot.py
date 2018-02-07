@@ -33,6 +33,10 @@ from deeppavlov.skills.go_bot.metrics import DialogMetrics
 from deeppavlov.skills.go_bot.network import GoalOrientedBotNetwork
 from deeppavlov.skills.go_bot.templates import Templates, DualTemplate
 from deeppavlov.core.common.attributes import check_attr_true
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 @register("go_bot")
@@ -71,7 +75,7 @@ class GoalOrientedBot(Inferable, Trainable):
         self.val_patience = val_patience
 
         self.templates = Templates(template_type).load(template_path)
-        print("[using {} templates from `{}`]".format(len(self.templates), template_path))
+        log.info("[using {} templates from `{}`]".format(len(self.templates), template_path))
 
         # intialize parameters
         self.db_result = None
@@ -95,7 +99,7 @@ class GoalOrientedBot(Inferable, Trainable):
         # tokenize input
         tokenized = ' '.join(self.tokenizer.infer(context)).strip()
         if self.debug:
-            print("Text tokens = `{}`".format(tokenized))
+            log.warning("Text tokens = `{}`".format(tokenized))
 
         # Bag of words features
         bow_features = self.bow_encoder.infer(tokenized, self.word_vocab)
@@ -115,14 +119,14 @@ class GoalOrientedBot(Inferable, Trainable):
             intent_features = self.intent_classifier.infer(tokenized,
                                                            predict_proba=True).ravel()
             if self.debug:
-                print("Predicted intent = `{}`".format(
+                log.warning("Predicted intent = `{}`".format(
                     self.intent_classifier.infer(tokenized)))
 
         # Text entity features
         if hasattr(self.slot_filler, 'infer'):
             self.tracker.update_state(self.slot_filler.infer(tokenized))
             if self.debug:
-                print("Slot vals:", self.slot_filler.infer(tokenized))
+                log.warning("Slot vals: {}".format(str(self.slot_filler.infer(tokenized))))
 
         state_features = self.tracker.infer()
 
@@ -132,12 +136,20 @@ class GoalOrientedBot(Inferable, Trainable):
                                     dtype=np.float32)
 
         if self.debug:
-            print("num bow features =", len(bow_features),
-                  " num emb features =", len(emb_features),
-                  " num intent features =", len(intent_features),
-                  " num state features =", len(state_features),
-                  " num context features =", len(context_features),
-                  " prev_action shape =", len(self.prev_action))
+            debug_msg = "num bow features = {}, " \
+                        "num emb features = {}, " \
+                        "num intent features = {}, " \
+                        "num state features = {}, " \
+                        "num context features = {}, " \
+                        "prev_action shape = {}".format(len(bow_features),
+                                                        len(emb_features),
+                                                        len(intent_features),
+                                                        len(state_features),
+                                                        len(context_features),
+                                                        len(self.prev_action))
+
+            log.warning(debug_msg)
+
         return np.hstack((bow_features, emb_features, intent_features,
                           state_features, context_features,
                           self.prev_action))[np.newaxis, :]
@@ -179,7 +191,7 @@ class GoalOrientedBot(Inferable, Trainable):
                               "`train_now` of submodel is False. Set `train_now` of submodel"
                               "to True.")
 
-        print('\n:: training started')
+        log.info(':: training started')
 
         curr_patience = self.val_patience
         best_valid_accuracy = 0.
@@ -218,30 +230,30 @@ class GoalOrientedBot(Inferable, Trainable):
                 self.metrics.conf_matrix[pred_id, action_id] += 1
                 self.metrics.n_corr_examples += int(pred == true)
                 if self.debug and ((pred == true) != (pred_id == action_id)):
-                    print("Slot filling problem: ")
-                    print("Pred = {}: {}".format(pred_id, pred))
-                    print("True = {}: {}".format(action_id, true))
-                    print("State =", self.tracker.get_state())
-                    print("db_result =", self.db_result)
+                    log.debug("Slot filling problem: ")
+                    log.debug("Pred = {}: {}".format(pred_id, pred))
+                    log.debug("True = {}: {}".format(action_id, true))
+                    log.debug("State = {}".format(str(self.tracker.get_state())))
+                    log.debug("db_result = {}".format(str(self.db_result)))
                     # TODO: update dialog metrics
-            print('\n\n:: {}.train {}'.format(j + 1, self.metrics.report()))
+            log.info(':: {}.train {}'.format(j + 1, self.metrics.report()))
 
             valid_metrics = self.evaluate(eval_data)
-            print(':: {}.valid {}'.format(j + 1, valid_metrics.report()))
+            log.info(':: {}.valid {}'.format(j + 1, valid_metrics.report()))
 
             if valid_metrics.action_accuracy < best_valid_accuracy:
                 curr_patience -= 1
-                print(":: patience decreased by 1, is equal to {}".format(curr_patience))
+                log.info(":: patience decreased by 1, is equal to {}".format(curr_patience))
             else:
                 if curr_patience != self.val_patience:
                     curr_patience = self.val_patience
-                    print(":: patience is equal to {}".format(curr_patience))
+                    log.info(":: patience is equal to {}".format(curr_patience))
                 best_valid_accuracy = valid_metrics.action_accuracy
             if curr_patience < 1:
-                print("\n:: patience is over, stopped training\n")
+                log.info(":: patience is over, stopped training")
                 break
         else:
-            print("\n:: stopping because max number of epochs encountered\n")
+            log.info(":: stopping because max number of epochs encountered")
         self.save()
 
     def infer(self, context, db_result=None):

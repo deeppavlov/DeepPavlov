@@ -30,6 +30,10 @@ from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.vocabs.typos import StaticDictionary
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.log import get_logger
+
+
+logger = get_logger(__name__)
 
 
 @register('spelling_error_model')
@@ -223,7 +227,7 @@ class ErrorModel(Inferable, Trainable):
         self.save()
 
     def save(self):
-        print("[saving error_model to `{}`]".format(self.save_path))
+        logger.info("[saving error_model to `{}`]".format(self.save_path))
 
         with open(self.save_path, 'w', newline='') as tsv_file:
             writer = csv.writer(tsv_file, delimiter='\t')
@@ -233,7 +237,7 @@ class ErrorModel(Inferable, Trainable):
     def load(self):
         if self.load_path:
             if self.load_path.is_file():
-                print("[loading error_model from `{}`]".format(self.load_path))
+                logger.info("[loading error_model from `{}`]".format(self.load_path))
                 with open(self.load_path, 'r', newline='') as tsv_file:
                     reader = csv.reader(tsv_file, delimiter='\t')
                     for w, s, p in reader:

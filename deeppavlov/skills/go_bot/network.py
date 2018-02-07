@@ -19,6 +19,10 @@ from tensorflow.contrib.layers import xavier_initializer
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import TFModel
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 @register('go_bot_rnn')
@@ -45,10 +49,10 @@ class GoalOrientedBotNetwork(TFModel):
 
         if self.get_checkpoint_state():
         #TODO: save/load params to json, here check compatability
-            print("\n:: initializing `{}` from saved".format(self.__class__.__name__))
+            log.info(":: initializing `{}` from saved".format(self.__class__.__name__))
             self.load()
         else:
-            print("\n:: initializing `{}` from scratch\n".format(self.__class__.__name__))
+            log.info(":: initializing `{}` from scratch\n".format(self.__class__.__name__))
             self.sess.run(tf.global_variables_initializer())
 
         self.reset_state()

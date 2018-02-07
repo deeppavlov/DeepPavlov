@@ -26,6 +26,10 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import is_done, mark_done
 from deeppavlov.core.common import paths
 from deeppavlov.core.common.file import load_pickle, save_pickle
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 @register('static_dictionary')
@@ -46,7 +50,7 @@ class StaticDictionary:
         words_trie_path = data_dir / 'words_trie.pkl'
 
         if not is_done(data_dir):
-            print('Trying to build a dictionary in {}'.format(data_dir), file=sys.stderr)
+            log.info('Trying to build a dictionary in {}'.format(data_dir))
             if data_dir.is_dir():
                 shutil.rmtree(data_dir)
             data_dir.mkdir(parents=True)
@@ -71,9 +75,9 @@ class StaticDictionary:
             save_pickle(words_trie, words_trie_path)
 
             mark_done(data_dir)
-            print('built', file=sys.stderr)
+            log.info('built')
         else:
-            print('Loading a dictionary from {}'.format(data_dir), file=sys.stderr)
+            log.info('Loading a dictionary from {}'.format(data_dir))
 
         self.alphabet = load_pickle(alphabet_path)
         self.words_set = load_pickle(words_path)
@@ -99,7 +103,7 @@ class RussianWordsVocab(StaticDictionary):
 
     @staticmethod
     def _get_source(*args, **kwargs):
-        print('Downloading russian vocab from https://github.com/danakt/russian-words/', file=sys.stderr)
+        log.info('Downloading russian vocab from https://github.com/danakt/russian-words/')
         url = 'https://github.com/danakt/russian-words/raw/master/russian.txt'
         page = requests.get(url)
         return [word.strip() for word in page.content.decode('cp1251').split('\n')]
@@ -112,7 +116,7 @@ class Wiki100KDictionary(StaticDictionary):
     @staticmethod
     def _get_source(*args, **kwargs):
         words = []
-        print('Downloading english vocab from Wiktionary', file=sys.stderr)
+        log.info('Downloading english vocab from Wiktionary')
         for i in range(1, 100000, 10000):
             k = 10000 + i - 1
             url = 'https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists/PG/2005/08/{}-{}'.format(i, k)
