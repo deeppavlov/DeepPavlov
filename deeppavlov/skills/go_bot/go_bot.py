@@ -99,7 +99,7 @@ class GoalOrientedBot(Inferable, Trainable):
         # tokenize input
         tokenized = ' '.join(self.tokenizer.infer(context)).strip()
         if self.debug:
-            log.warning("Text tokens = `{}`".format(tokenized))
+            log.debug("Text tokens = `{}`".format(tokenized))
 
         # Bag of words features
         bow_features = self.bow_encoder.infer(tokenized, self.word_vocab)
@@ -119,14 +119,14 @@ class GoalOrientedBot(Inferable, Trainable):
             intent_features = self.intent_classifier.infer(tokenized,
                                                            predict_proba=True).ravel()
             if self.debug:
-                log.warning("Predicted intent = `{}`".format(
+                log.debug("Predicted intent = `{}`".format(
                     self.intent_classifier.infer(tokenized)))
 
         # Text entity features
         if hasattr(self.slot_filler, 'infer'):
             self.tracker.update_state(self.slot_filler.infer(tokenized))
             if self.debug:
-                log.warning("Slot vals: {}".format(str(self.slot_filler.infer(tokenized))))
+                log.debug("Slot vals: {}".format(str(self.slot_filler.infer(tokenized))))
 
         state_features = self.tracker.infer()
 
@@ -148,7 +148,7 @@ class GoalOrientedBot(Inferable, Trainable):
                                                         len(context_features),
                                                         len(self.prev_action))
 
-            log.warning(debug_msg)
+            log.debug(debug_msg)
 
         return np.hstack((bow_features, emb_features, intent_features,
                           state_features, context_features,

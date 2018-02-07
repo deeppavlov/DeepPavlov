@@ -21,7 +21,6 @@ Trainable and Inferable interfaces and make a pull-request to deeppavlov.
 """
 
 from abc import abstractmethod
-from warnings import warn
 
 import tensorflow as tf
 from overrides import overrides
@@ -30,8 +29,8 @@ from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.common.errors import ConfigError
 from .tf_backend import TfModelMeta
-
 
 log = get_logger(__name__)
 
@@ -101,12 +100,15 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
 
     def get_checkpoint_state(self):
         if self.load_path:
-            if self.load_path.parent.is_dir():
-                return tf.train.get_checkpoint_state(self.load_path.parent)
-            else:
-                warn('Provided `load_path` is incorrect!')
+            try:
+                if self.load_path.parent.is_dir():
+                    return tf.train.get_checkpoint_state(self.load_path.parent)
+                else:
+                    raise ConfigError
+            except ConfigError:
+                log.error('Provided `load_path` is incorrect!', exc_info=True)
         else:
-            warn('No `load_path` is provided for {}".format(self.__class__.__name__)')
+            log.warning('No `load_path` is provided for {}".format(self.__class__.__name__)')
 
     @overrides
     def load(self):

@@ -17,7 +17,6 @@ limitations under the License.
 from collections import defaultdict
 from overrides import overrides
 from pathlib import Path
-from warnings import warn
 
 import numpy as np
 import tensorflow as tf
@@ -202,11 +201,11 @@ class NerNetwork(SimpleTFModel):
                     log.info(':: restoring checkpoint from {}'.format(str(self.load_path)))
                     saver.restore(self._sess, str(self.load_path))
                 else:
-                    warn("Provided `load_path` is empty! Won't restore from checkpoint.")
+                    log.warning("Provided `load_path` is empty! Won't restore from checkpoint.")
             else:
-                warn("Provided `load_path` is incorrect!")
+                log.warning("Provided `load_path` is incorrect!")
         else:
-            warn("No `load_path` is provided for {}".format(self.__class__.__name__))
+            log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
 
     def tokens_batch_to_numpy_batch(self, batch_x, batch_y=None):
         # Determine dimensions

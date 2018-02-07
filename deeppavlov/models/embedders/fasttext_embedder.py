@@ -16,7 +16,6 @@ limitations under the License.
 
 import urllib
 from pathlib import Path
-from warnings import warn
 
 import numpy as np
 from overrides import overrides
@@ -84,27 +83,35 @@ class FasttextEmbedder(Inferable):
                 raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
                     self.__class__.__name__))
         else:
-            warn("No `load_path` is provided for {}".format(self.__class__.__name__))
-            if self.embedding_url:
-                try:
-                    log.info('[trying to download a pretrained fasttext model from repository]')
-                    local_filename, _ = urllib.request.urlretrieve(self.embedding_url)
-                    with open(local_filename, 'rb') as fin:
-                        model_file = fin.read()
+            try:
+                log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
+                if self.embedding_url:
+                    try:
+                        log.info('[trying to download a pretrained fasttext model from repository]')
+                        local_filename, _ = urllib.request.urlretrieve(self.embedding_url)
+                        with open(local_filename, 'rb') as fin:
+                            model_file = fin.read()
 
-                    mp = self.save_path
-                    self.load_path = self.save_path
-                    model = self.load()
-                    log.info("[saving downloaded fasttext model to {}]".format(mp))
-                    with open(str(mp), 'wb') as fout:
-                        fout.write(model_file)
-                except Exception as e:
-                    raise RuntimeError(
-                        'Looks like the provided fasttext url is incorrect', e)
-            else:
-                raise FileNotFoundError(
-                    'No pretrained fasttext model provided or provided "load_path" is incorrect.'
-                    ' Please include "load_path" to json.')
+                        mp = self.save_path
+                        self.load_path = self.save_path
+                        model = self.load()
+                        log.info("[saving downloaded fasttext model to {}]".format(mp))
+                        with open(str(mp), 'wb') as fout:
+                            fout.write(model_file)
+                    except Exception as e:
+                        log.error('Looks like the provided fasttext url is incorrect', exc_info=True)
+                        # TODO: remove commented code after testing this scenario
+                        # raise RuntimeError(
+                        #     'Looks like the provided fasttext url is incorrect', e)
+                else:
+                    raise FileNotFoundError
+                    # TODO: remove commented code after testing this scenario
+                    # raise FileNotFoundError(
+                    #     'No pretrained fasttext model provided or provided "load_path" is incorrect.'
+                    #     ' Please include "load_path" to json.')
+            except Exception:
+                log.error('No pretrained fasttext model provided or provided "load_path" is incorrect.'
+                          ' Please include "load_path" to json.', exc_info=True)
 
         return model
 
