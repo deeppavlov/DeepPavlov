@@ -1,0 +1,168 @@
+{
+  "dataset_reader": {
+    "name": "dstc2_datasetreader",
+    "data_path": "../download/dstc2"
+  },
+  "dataset": {
+    "name": "dialog_dataset"
+  },
+  "vocabs": {
+    "word_vocab": {
+      "train_now": true,
+      "name": "default_vocab",
+      "inputs": [
+        "x"
+      ],
+      "level": "token",
+      "tokenize": true,
+      "save_path": "../download/vocabs/word.dict",
+      "load_path": "../download/vocabs/word.dict"
+    },
+    "token_vocab": {
+      "name": "default_vocab",
+      "inputs": [
+        "x"
+      ],
+      "level": "token",
+      "save_path": "../download/vocabs/token.dict",
+      "load_path": "../download/vocabs/token.dict"
+    },
+    "tag_vocab": {
+      "name": "default_vocab",
+      "inputs": [
+        "y"
+      ],
+      "level": "token",
+      "save_path": "../download/vocabs/tag.dict",
+      "load_path": "../download/vocabs/tag.dict"
+    },
+    "char_vocab": {
+      "name": "default_vocab",
+      "inputs": [
+        "x"
+      ],
+      "level": "char",
+      "save_path": "../download/vocabs/char.dict",
+      "load_path": "../download/vocabs/char.dict"
+    },
+    "classes_vocab": {
+      "name": "default_vocab",
+      "inputs": [
+        "y"
+      ],
+      "level": "token",
+      "save_path": "../download/vocabs/classes.dict",
+      "load_path": "../download/vocabs/classes.dict"
+    }
+  },
+  "model": {
+    "train_now": true,
+    "name": "go_bot",
+    "debug": 0,
+    "num_epochs": 1,
+    "val_patience": 10,
+    "template_path": "../download/dstc2/dstc2-templates.txt",
+    "network": {
+      "train_now": true,
+      "load_path": "../download/go_bot_rnn/model",
+      "save_path": "../download/go_bot_rnn/model",
+      "name": "go_bot_rnn",
+      "learning_rate": 0.0005,
+      "hidden_dim": 128,
+      "obs_size": 530,
+      "use_action_mask": false,
+      "action_size": 45
+    },
+    "slot_filler": {
+      "name": "dstc_slotfilling",
+      "save_path": "../download/model/dstc_ner_model",
+      "load_path": "../download/model/dstc_ner_model",
+      "filter_width": 7,
+      "embeddings_dropout": true,
+      "n_filters": [
+        64,
+        64
+      ],
+      "token_embeddings_dim": 64,
+      "char_embeddings_dim": 32,
+      "use_batch_norm": true,
+      "use_crf": true
+    },
+    "intent_classifier": {
+      "name": "intent_model",
+      "save_path": "../download/intents/intent_cnn",
+      "load_path": "../download/intents/intent_cnn",
+      "opt": {
+        "train_now": true,
+        "kernel_sizes_cnn": [
+          3,
+          3,
+          3
+        ],
+        "filters_cnn": 512,
+        "lear_metrics": [
+          "binary_accuracy",
+          "fmeasure"
+        ],
+        "confident_threshold": 0.5,
+        "optimizer": "Adam",
+        "lear_rate": 0.1,
+        "lear_rate_decay": 0.1,
+        "loss": "binary_crossentropy",
+        "text_size": 15,
+        "coef_reg_cnn": 1e-4,
+        "coef_reg_den": 1e-4,
+        "dropout_rate": 0.5,
+        "epochs": 1,
+        "dense_size": 100,
+        "model_name": "cnn_model",
+        "batch_size": 64,
+        "val_every_n_epochs": 5,
+        "verbose": true,
+        "val_patience": 5
+      },
+      "embedder": {
+        "name": "fasttext",
+        "save_path": "../download/embeddings/dstc2_fasttext_model_100.bin",
+        "load_path": "../download/embeddings/dstc2_fasttext_model_100.bin",
+        "emb_module": "fasttext",
+        "dim": 100
+      },
+      "tokenizer": {
+        "name": "nltk_tokenizer",
+        "tokenizer": "wordpunct_tokenize"
+      }
+    },
+    "embedder": null,
+    "bow_encoder": {
+      "name": "bow"
+    },
+    "tokenizer": {
+      "name": "spacy_tokenizer"
+    },
+    "tracker": {
+      "name": "featurized_tracker",
+      "slot_names": [
+        "pricerange",
+        "this",
+        "area",
+        "slot",
+        "food",
+        "name"
+      ]
+    }
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 1,
+
+    "metrics": ["per_item_dialog_accuracy"],
+    "validation_patience": 5,
+    "val_every_n_epochs": 1,
+
+    "log_every_n_batches": -1,
+    "log_every_n_epochs": 1,
+    "show_examples": false
+  }
+}
+

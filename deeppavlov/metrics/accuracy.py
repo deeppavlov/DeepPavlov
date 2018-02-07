@@ -31,3 +31,12 @@ def per_item_accuracy(y_true, y_predicted):
     examples_len = len(y_true)
     correct = sum([y1 == y2 for y1, y2 in zip(y_true, y_predicted)])
     return correct / examples_len if examples_len else 0
+
+
+@register_metric('per_item_dialog_accuracy')
+def per_item_accuracy(y_true, y_predicted):
+    y_true = [y['text'] for dialog in y_true for y in dialog]
+    y_predicted = itertools.chain(*y_predicted)
+    examples_len = len(y_true)
+    correct = sum([y1.strip().lower() == y2.strip().lower() for y1, y2 in zip(y_true, y_predicted)])
+    return correct / examples_len if examples_len else 0

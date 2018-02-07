@@ -138,7 +138,7 @@ class GoalOrientedBot(Inferable, Trainable):
         return np.hstack((bow_features, emb_features, intent_features,
                           state_features, context_features, self.prev_action))
 
-    def _encode_response(self, response, act):
+    def _encode_response(self, act):
         return self.templates.actions.index(act)
 
     def _decode_response(self, action_id):
@@ -166,6 +166,27 @@ class GoalOrientedBot(Inferable, Trainable):
                             and entity not in (self.db_result or {}):
                         action_mask[a_id] = 0
         return action_mask
+
+    def train_on_batch(self, batch):
+        for dialog in zip(*batch):
+            self.reset()
+            d_features, d_actions, d_masks = [], [], []
+            for context, response in zip(*dialog):
+                features = self._encode_context(context['text'],
+                                                context.get('db_result'))
+                if context.get('db_result') is not None:
+                    self.db_result = context['db_result']
+                d_features.append(features)
+
+                action_id = self._encode_response(response['act'])
+                # previous action is teacher-forced here
+                self.prev_action *= 0.
+                self.prev_action[action_id] = 1.
+                d_actions.append(action_id)
+
+                d_masks.append(self._action_mask())
+
+            self.network.train(d_features, d_actions, d_masks)
 
     @check_attr_true('train_now')
     def train(self, data):
@@ -202,8 +223,7 @@ class GoalOrientedBot(Inferable, Trainable):
                         self.db_result = context['db_result']
                     d_features.append(features)
 
-                    action_id = self._encode_response(response['text'], 
-                                                      response['act'])
+                    action_id = self._encode_response(response['act'])
                     # previous action is teacher-forced here
                     self.prev_action *= 0.
                     self.prev_action[action_id] = 1.
@@ -258,8 +278,8 @@ class GoalOrientedBot(Inferable, Trainable):
     #     x, y = batch
     #     pass
 
-    def infer_on_batch(self, x):
-        pass
+    def infer_on_batch(self, xs):
+        return [self._infer_dialog(x) for x in xs]
 
     def _infer(self, context, db_result=None):
         probs = self.network.infer(
@@ -276,10 +296,23 @@ class GoalOrientedBot(Inferable, Trainable):
             self.db_result = db_result
         return self._decode_response(pred_id)
 
+    def _infer_dialog(self, contexts):
+        self.reset()
+        res = []
+        for context in contexts:
+            if context.get('prev_resp_act') is not None:
+                action_id = self._encode_response(context.get('prev_resp_act'))
+                # previous action is teacher-forced here
+                self.prev_action *= 0.
+                self.prev_action[action_id] = 1.
+
+            res.append(self._infer(context['text'], context.get('db_result')))
+        return res
+
     def infer(self, x):
-        if isinstance(x, list):
-            return self.infer_on_batch(x)
-        return self._infer(x)
+        if isinstance(x, str):
+            return self._infer(x)
+        return self.infer_on_batch(x)
 
     def evaluate(self, eval_data):
         metrics = DialogMetrics(self.n_actions)
@@ -301,7 +334,7 @@ class GoalOrientedBot(Inferable, Trainable):
 
             # predicted probabilities instead of true action
             # teacher-forcing previous action
-            action_id = self._encode_response(response['text'], response['act'])
+            action_id = self._encode_response(response['act'])
             self.prev_action *= 0
             self.prev_action[action_id] = 1
 

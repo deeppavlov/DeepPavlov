@@ -51,8 +51,11 @@ class DefaultVocabulary(Trainable, Inferable):
     @staticmethod
     def _build_preprocess_fn(inputs, level, tokenize):
         def iter_level(utter):
-            if isinstance(utter, dict):
+            if isinstance(utter, list) and isinstance(utter[0], dict):
+                utter = ' '.join(u['text'] for u in utter)
+            elif isinstance(utter, dict):
                 utter = utter['text']
+
             if tokenize:
                 utter = utter.split()
             if level == 'token':
