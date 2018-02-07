@@ -184,6 +184,7 @@ class GoalOrientedBot(Inferable, Trainable):
 
             tr_data = data.batch_generator(1, 'train', shuffle=False)
             eval_data = data.iter_all('valid')
+            # TODO: rewrite evaluate() so that it evaluates on batches
             #eval_data = data.batch_generator(1, 'valid')
 
             self.reset_metrics()
@@ -257,19 +258,28 @@ class GoalOrientedBot(Inferable, Trainable):
     #     x, y = batch
     #     pass
 
-    def infer(self, context, db_result=None):
+    def infer_on_batch(self, x):
+        pass
+
+    def _infer(self, context, db_result=None):
         probs = self.network.infer(
             self._encode_context(context, db_result),
             self._action_mask(),
             prob=True
         )
+        pred_id = np.argmax(probs)
+        # TODO: check probs and one-hot encoding variant
         #self.prev_action = probs
         self.prev_action *= 0
         self.prev_action[pred_id] = 1
         if db_result is not None:
             self.db_result = db_result
-        pred_id = np.argmax(probs)
         return self._decode_response(pred_id)
+
+    def infer(self, x):
+        if isinstance(x, list):
+            return self.infer_on_batch(x)
+        return self._infer(x)
 
     def evaluate(self, eval_data):
         metrics = DialogMetrics(self.n_actions)
@@ -290,17 +300,16 @@ class GoalOrientedBot(Inferable, Trainable):
                 self.db_result = context['db_result']
 
             # predicted probabilities instead of true action
-            # TODO: check!
-            #self.prev_action = probs
+            # teacher-forcing previous action
+            action_id = self._encode_response(response['text'], response['act'])
             self.prev_action *= 0
-            self.prev_action[pred_id] = 1
+            self.prev_action[action_id] = 1
 
             pred = self._decode_response(pred_id).lower()
             true = self.tokenizer.infer(response['text'].lower().split())
 
             # update metrics
             metrics.n_examples += 1
-            action_id = self._encode_response(response['text'], response['act'])
             metrics.conf_matrix[pred_id, action_id] += 1
             metrics.n_corr_examples += int(pred == true)
         return metrics
