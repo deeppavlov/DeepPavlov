@@ -40,13 +40,13 @@ Here is a simple example of interaction with a trained dialogue bot (can be down
 
 To use a go_bot model you should have:
 1. (_optional, but recommended_) pretrained named entity recognition model (NER) 
-   * config [`deeppavlov/models/ner/config.json`](../../models/ner/config.json) is recommended
+   * config [`deeppavlov/configs/ner/config.json`](../../configs/ner/config.json) is recommended
 2. (_optional, but recommended_) pretrained intents classifier model 
-   * config [`deeppavlov/models/classifiers/intents/config_dstc2.json`](../../models/classifiers/intents/config_dstc2.json) is recommended
+   * config [`deeppavlov/configs/intents/config_dstc2.json`](../../configs/intents/config_dstc2.json) is recommended
 3. (_optional_) downloaded english fasttext embeddings trained on wiki ([https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip](https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip))
    * you can use any english embeddings of your choice, but edit go_bot config accordingly
 4. pretrained goal-oriented bot model itself 
-   * config [`deeppavlov/skills/go_bot/config.json`](config.json) is recommended
+   * config [`deeppavlov/configs/go_bot/config.json`](../../configs/go_bot/config.json) is recommended
    * `slot_filler` section of go_bot's config should match NER's configuration
    * `intent_classifier` section of go_bot's config should match classifier's configuration
    * double-check that corresponding `load_path`s point to NER and intent classifier model files
@@ -97,11 +97,11 @@ To use a go_bot model you should have:
    * classifier's other arguments
 * `debug` — whether to display debug output (defaults to `false`) _(optional)_
 
-For a working exemplary config see [`deeeppavlov/skills/go_bot/config.json`](config.json) (model without embeddings).
+For a working exemplary config see [`deeeppavlov/configs/go_bot/config.json`](../../configs/go_bot/config.json) (model without embeddings).
 
-A minimal model without `slot_filler`, `intent_classifier` and `embedder` is configured in [`deeeppavlov/skills/go_bot/config_minimal.json`](config_minimal.json).
+A minimal model without `slot_filler`, `intent_classifier` and `embedder` is configured in [`deeeppavlov/configs/go_bot/config_minimal.json`](../../configs/go_bot/config_minimal.json).
 
-A full model (with fasttext embeddings) configuration is in [`deeeppavlov/skills/go_bot/config_all.json`](config_all.json)
+A full model (with fasttext embeddings) configuration is in [`deeeppavlov/configs/go_bot/config_all.json`](../../configs/go_bot/config_all.json)
 
 #### Usage example
 * To infer from a pretrained model with config path equal to `path/to/config.json`:
@@ -142,7 +142,7 @@ To be used for training, your config json file should include parameters:
 
 Do not forget to set `train_now` parameters to `true` for `vocabs.word_vocab`, `model` and `model.network` sections.
 
-See [`deeeppavlov/skills/go_bot/config.json`](config.json) for details.
+See [`deeeppavlov/configs/go_bot/config.json`](../../configs/go_bot/config.json) for details.
 
 #### Train run
 The easiest way to run the training is by using [`deeppavlov/deep.py`](../../deep.py) script:
@@ -203,10 +203,10 @@ But comparisons for bot model modifications trained on out DSTC2-dataset are pre
 
 |                   Model                      | Config      |  Test action accuracy   |  Test turn accuracy  |
 |----------------------------------------------|-------------|-------------------------|----------------------|
-|basic bot			                               | [`config_minimal.json`](config_minimal.json) | 0.5271             |     0.4853           |
+|basic bot			                               | [`config_minimal.json`](../../configs/go_bot/config_minimal.json) | 0.5271             |     0.4853           |
 |bot with slot filler & fasttext embeddings    |        |      0.5305             |     0.5147           |
-|bot with slot filler & intents                | [`config.json`](config.json)                 |   **0.5436**         |     **0.5261**       |
-|bot with slot filler & intents & embeddings   | [`config_all.json`](config_all.json)         |      0.5307             |     0.5145           |
+|bot with slot filler & intents                | [`config.json`](../../configs/go_bot/config.json)                 |   **0.5436**         |     **0.5261**       |
+|bot with slot filler & intents & embeddings   | [`config_all.json`](../../configs/go_bot/config_all.json)         |      0.5307             |     0.5145           |
 
 #TODO: add dialog accuracies
 
