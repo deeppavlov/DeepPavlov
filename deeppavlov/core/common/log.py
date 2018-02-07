@@ -21,6 +21,7 @@ import sys
 
 
 LOG_CONFIG_FILENAME = 'log_config.json'
+TRACEBACK_LOGGER_ERRORS = True
 
 
 def get_logger(logger_name):
@@ -39,7 +40,7 @@ def get_logger(logger_name):
         logger.setLevel(logging.WARNING)
 
         formatter = logging.Formatter(
-            '%(asctime)s.%(msecs)d %(levelname)s in \'%(module)s\' at line %(lineno)d: %(message)s',
+            '%(asctime)s.%(msecs)d %(levelname)s in \'%(name)s\'[\'%(module)s\'] at line %(lineno)d: %(message)s',
             '%Y-%m-%d %H:%M:%S')
 
         handler = logging.StreamHandler(sys.stderr)
@@ -50,6 +51,6 @@ def get_logger(logger_name):
 
         logger.error(
             'LOGGER ERROR: Can not initialise {} logger, '
-            'logging to the stderr. Error traceback:\n'.format(logger_name), exc_info=1)
+            'logging to the stderr. Error traceback:\n'.format(logger_name), exc_info=TRACEBACK_LOGGER_ERRORS)
 
     return logger

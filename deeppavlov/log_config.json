@@ -9,7 +9,7 @@
   {
     "default":
     {
-      "format": "%(asctime)s.%(msecs)d %(levelname)s in '%(module)s' at line %(lineno)d: %(message)s",
+      "format": "%(asctime)s.%(msecs)d %(levelname)s in '%(name)s'['%(module)s'] at line %(lineno)d: %(message)s",
       "datefmt": "%Y-%m-%d %H:%M:%S"
     }
   },
@@ -33,13 +33,6 @@
     {
       "class": "logging.StreamHandler",
       "level": "DEBUG",
-      "formatter": "default",
-      "stream": "ext://sys.stderr"
-    },
-    "_default":
-    {
-      "class": "logging.StreamHandler",
-      "level": "WARNING",
       "formatter": "default",
       "stream": "ext://sys.stderr"
     }
