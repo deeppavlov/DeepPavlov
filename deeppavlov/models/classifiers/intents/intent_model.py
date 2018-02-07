@@ -36,6 +36,11 @@ from deeppavlov.models.classifiers.intents.utils import labels2onehot, log_metri
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.classifiers.intents.utils import md5_hashsum
 from deeppavlov.models.tokenizers.nltk_tokenizer import NLTKTokenizer
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
+
 
 @register('intent_model')
 class KerasIntentModel(KerasModel):
@@ -232,7 +237,7 @@ class KerasIntentModel(KerasModel):
         valid_x = self.texts2vec(valid_x)
         valid_y = labels2onehot(valid_y, classes=self.classes)
 
-        print('\n____Training over {} samples____\n\n'.format(n_train_samples))
+        log.warning('____Training over {} samples____'.format(n_train_samples))
 
         try:
             while epochs_done < self.opt['epochs']:
@@ -258,17 +263,17 @@ class KerasIntentModel(KerasModel):
                                     mode='valid')
                         if valid_metrics_values[0] > val_loss:
                             val_increase += 1
-                            print("__Validation impatience {} out of {}".format(
-                                val_increase, self.opt['val_patience']))
+                            log.info("__Validation impatience {} out of {}".format(
+                                     val_increase, self.opt['val_patience']))
                             if val_increase == self.opt['val_patience']:
-                                print("___Stop training: validation is out of patience___")
+                                log.info("___Stop training: validation is out of patience___")
                                 break
                         else:
                             val_increase = 0
                             val_loss = valid_metrics_values[0]
-                print('epochs_done: {}'.format(epochs_done))
+                log.info('epochs_done: {}'.format(epochs_done))
         except KeyboardInterrupt:
-            print('Interrupted', file=sys.stderr)
+            log.warning('Interrupted')
 
         self.save()
 

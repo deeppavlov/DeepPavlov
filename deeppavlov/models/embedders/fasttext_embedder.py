@@ -24,6 +24,10 @@ from overrides import overrides
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 @register('fasttext')
@@ -64,7 +68,7 @@ class FasttextEmbedder(Inferable):
 
         if self.load_path:
             if self.load_path.is_file():
-                print("[loading embeddings from `{}`]".format(self.load_path))
+                log.info("[loading embeddings from `{}`]".format(self.load_path))
                 model_file = str(self.load_path)
                 if self.emb_module == 'fasttext':
                     import fasttext as Fasttext
@@ -83,7 +87,7 @@ class FasttextEmbedder(Inferable):
             warn("No `load_path` is provided for {}".format(self.__class__.__name__))
             if self.embedding_url:
                 try:
-                    print('[trying to download a pretrained fasttext model from repository]')
+                    log.info('[trying to download a pretrained fasttext model from repository]')
                     local_filename, _ = urllib.request.urlretrieve(self.embedding_url)
                     with open(local_filename, 'rb') as fin:
                         model_file = fin.read()
@@ -91,7 +95,7 @@ class FasttextEmbedder(Inferable):
                     mp = self.save_path
                     self.load_path = self.save_path
                     model = self.load()
-                    print("[saving downloaded fasttext model to {}]".format(mp))
+                    log.info("[saving downloaded fasttext model to {}]".format(mp))
                     with open(str(mp), 'wb') as fout:
                         fout.write(model_file)
                 except Exception as e:
