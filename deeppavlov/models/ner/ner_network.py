@@ -195,8 +195,7 @@ class NerNetwork(SimpleTFModel):
         if self.load_path:
             if isinstance(self.load_path, Path) and self.load_path.parent.is_dir():
                 if tf.train.get_checkpoint_state(self.load_path.parent) is not None:
-                    log.info(":: initializing `{}` from saved"\
-                             .format(self.__class__.__name__))
+                    log.info(":: initializing `{}` from saved".format(self.__class__.__name__))
                     saver = tf.train.Saver()
                     log.info(':: restoring checkpoint from {}'.format(str(self.load_path)))
                     saver.restore(self._sess, str(self.load_path))

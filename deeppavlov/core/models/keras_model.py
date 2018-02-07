@@ -100,8 +100,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         Returns:
             compiled model with given network and learning parameters
         """
-        log.info("\n:: initializing `{}` from scratch\n"\
-                 .format(self.__class__.__name__))
+        log.info(":: initializing `{}` from scratch".format(self.__class__.__name__))
 
         model_func = getattr(self, model_name, None)
         if callable(model_func):
@@ -174,8 +173,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
 
             if opt_path.exists() and weights_path.exists():
 
-                log.info("\n:: initializing `{}` from saved\n"\
-                         .format(self.__class__.__name__))
+                log.info(":: initializing `{}` from saved".format(self.__class__.__name__))
 
                 self.opt = read_json(opt_path)
             

@@ -52,7 +52,7 @@ class GoalOrientedBotNetwork(TFModel):
             log.info(":: initializing `{}` from saved".format(self.__class__.__name__))
             self.load()
         else:
-            log.info(":: initializing `{}` from scratch\n".format(self.__class__.__name__))
+            log.info(":: initializing `{}` from scratch".format(self.__class__.__name__))
             self.sess.run(tf.global_variables_initializer())
 
         self.reset_state()
