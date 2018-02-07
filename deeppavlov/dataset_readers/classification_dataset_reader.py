@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import logging
 from pathlib import Path
 
 import pandas as pd
@@ -23,8 +22,10 @@ from overrides import overrides
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.data.utils import download, mark_done
+from deeppavlov.core.common.log import get_logger
 
-logger = logging.getLogger(__name__)
+
+log = get_logger(__name__)
 
 
 @register('classification_datasetreader')
@@ -53,7 +54,7 @@ class ClassificationDatasetReader(DatasetReader):
 
         for data_type in data_types:
             if not Path(data_path).joinpath(data_type + ".csv").exists():
-                print("Loading {} data from {} to {}".format(data_type, self.url, data_path))
+                log.info("Loading {} data from {} to {}".format(data_type, self.url, data_path))
                 download(source_url=self.url,
                          dest_file_path=Path(data_path).joinpath(data_type + ".csv"))
                 mark_done(data_path)

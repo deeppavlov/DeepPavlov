@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import logging
 import itertools
 from overrides import overrides
 from typing import Dict, Tuple, List, Generator, Any
@@ -22,8 +21,10 @@ import random
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset import Dataset
+from deeppavlov.core.common.log import get_logger
 
-logger = logging.getLogger(__name__)
+
+log = get_logger(__name__)
 
 
 @register('dialog_dataset')
@@ -67,8 +68,8 @@ class DialogDataset(Dataset):
         if shuffle:
             random.shuffle(order)
         for i in range((num_dialogs - 1) // batch_size + 1):
-            print("Getting dialogs =", [dialog_indices[o] for o in
-                                        order[i*batch_size:(i+1)*batch_size]])
+            log.info("Getting dialogs = {}".format(str([dialog_indices[o] for o in
+                                                   order[i*batch_size:(i+1)*batch_size]])))
             yield list(itertools.chain.from_iterable(
                 _dialog(dialog_indices[o])\
                 for o in order[i*batch_size:(i+1)*batch_size]))
