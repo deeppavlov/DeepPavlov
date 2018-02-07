@@ -10,7 +10,7 @@ LOG_CONFIG_FILENAME = 'log_config.json'
 def get_logger(logger_name):
     try:
         config_dir = pathlib.PurePath(__file__).parent
-        log_config_path = pathlib.Path(config_dir, LOG_CONFIG_FILENAME).resolve()
+        log_config_path = pathlib.Path(config_dir, '..', '..', LOG_CONFIG_FILENAME).resolve()
 
         with open(log_config_path) as log_config_json:
             log_config = json.load(log_config_json)
