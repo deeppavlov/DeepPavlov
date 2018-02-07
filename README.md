@@ -37,19 +37,19 @@ View video demo of deploy goal-oriented bot and slot-filling model with Telegram
           
  * Run goal-oriented bot with Telegram interface:
  ```
- python deep.py interactbot skills/go_bot/config.json -t <TELEGRAM_TOKEN>
+ python deep.py interactbot configs/go_bot/config.json -t <TELEGRAM_TOKEN>
  ```
  * Run goal-oriented bot with console interface:
  ```
- python deep.py interact skills/go_bot/config.json
+ python deep.py interact configs/go_bot/config.json
  ```
  * Run slot-filling model with Telegram interface
  ```
- python deep.py interactbot models/ner/config.json -t <TELEGRAM_TOKEN>
+ python deep.py interactbot configs/ner/config.json -t <TELEGRAM_TOKEN>
  ```
  * Run slot-filling model with console interface
  ```
- python deep.py interact models/ner/config.json
+ python deep.py interact configs/ner/config.json
  ```
 ## Conceptual overview
 
@@ -148,13 +148,13 @@ For 'interactbot' mode you should specify Telegram bot token in `-t` parameter o
 
 Available model configs are:
 
-*skills/go_bot/config.json*
+*configs/go_bot/config.json*
 
-*models/classifiers/intents/config_dstc2.json*
+*configs/intents/config_dstc2.json*
 
-*models/ner/config.json*
+*configs/ner/config.json*
 
-*models/spellers/error_model/config_en.json*
+*configs/error_model/config_en.json*
 
 ---
 
