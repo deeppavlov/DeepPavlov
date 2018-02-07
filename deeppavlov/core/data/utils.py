@@ -23,6 +23,11 @@ import tarfile
 import gzip
 import re
 
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
+
 _MARK_DONE = '.done'
 
 tqdm.monitor_interval = 0
@@ -44,7 +49,7 @@ def download(dest_file_path, source_url):
     total_length = int(r.headers.get('content-length', 0))
 
     with dest_file_path.open('wb') as f:
-        print('Downloading from {} to {}'.format(source_url, dest_file_path), file=sys.stderr)
+        log.info('Downloading from {} to {}'.format(source_url, dest_file_path))
 
         pbar = tqdm(total=total_length, unit='B', unit_scale=True)
         for chunk in r.iter_content(chunk_size=CHUNK):
@@ -108,7 +113,7 @@ def download_decompress(url, download_path, extract_path=None):
         extract_path = download_path
     extract_path = Path(extract_path)
     arch_file_path = download_path / file_name
-    print('Extracting {} archive into {}'.format(arch_file_path, extract_path), file=sys.stderr)
+    log.info('Extracting {} archive into {}'.format(arch_file_path, extract_path))
     download(arch_file_path, url)
     if url.endswith('.tar.gz'):
         untar(arch_file_path, extract_path)

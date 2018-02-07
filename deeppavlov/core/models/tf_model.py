@@ -29,7 +29,11 @@ from overrides import overrides
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.attributes import check_attr_true
+from deeppavlov.core.common.log import get_logger
 from .tf_backend import TfModelMeta
+
+
+log = get_logger(__name__)
 
 
 class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
@@ -91,9 +95,9 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
     def save(self):
         save_path = str(self.save_path)
         saver = tf.train.Saver()
-        print('\n:: saving model to {}'.format(save_path))
+        log.info('\n:: saving model to {}'.format(save_path))
         saver.save(self.sess, save_path)
-        print('model saved')
+        log.info('model saved')
 
     def get_checkpoint_state(self):
         if self.load_path:
@@ -111,11 +115,11 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
         """
         ckpt = self.get_checkpoint_state()
         if ckpt and ckpt.model_checkpoint_path:
-            print('\n:: restoring checkpoint from', ckpt.model_checkpoint_path, '\n')
+            log.info('\n:: restoring checkpoint from', ckpt.model_checkpoint_path, '\n')
             self._saver().restore(self.sess, ckpt.model_checkpoint_path)
-            print('session restored')
+            log.info('session restored')
         else:
-            print('\n:: <ERR> checkpoint not found! \n')
+            log.error('\n:: <ERR> checkpoint not found! \n')
 
 
 class SimpleTFModel(Trainable, Inferable, metaclass=TfModelMeta):
