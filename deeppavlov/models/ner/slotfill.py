@@ -23,6 +23,7 @@ from overrides import overrides
 from copy import deepcopy
 from pathlib import Path
 
+from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import SimpleTFModel
 from deeppavlov.models.ner.network import NerNetwork
@@ -92,20 +93,7 @@ class DstcSlotFillingNetwork(SimpleTFModel):
         print('[saving model to {}]'.format(path), file=sys.stderr)
         self._ner_network.save(path)
 
-    @overrides
-    def train(self, data, epochs=1):
-        print('Training NER network', file=sys.stderr)
-        if self.train_now:
-            epochs = self.opt.get('epochs', epochs)
-            for epoch in range(epochs):
-                self._ner_network.train(data, **self.train_parameters)
-                self._ner_network.eval_conll(data.iter_all('valid'), short_report=False, data_type='valid')
-            self._ner_network.eval_conll(data.iter_all('train'), short_report=False, data_type='train')
-            self._ner_network.eval_conll(data.iter_all('test'), short_report=False, data_type='test')
-            self.save()
-        else:
-            self._ner_network.load()
-
+    @check_attr_true('train_now')
     def train_on_batch(self, batch):
         self._ner_network.train_on_batch(batch, **self.train_parameters)
 

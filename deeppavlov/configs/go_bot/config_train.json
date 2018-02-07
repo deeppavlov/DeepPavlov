@@ -67,7 +67,7 @@
       "load_path": "../download/go_bot_rnn/model",
       "save_path": "../download/go_bot_rnn/model",
       "name": "go_bot_rnn",
-      "learning_rate": 0.0005,
+      "learning_rate": 0.005,
       "hidden_dim": 128,
       "obs_size": 530,
       "use_action_mask": false,
@@ -157,7 +157,7 @@
     "batch_size": 1,
 
     "metrics": ["per_item_dialog_accuracy"],
-    "validation_patience": 5,
+    "validation_patience": 10,
     "val_every_n_epochs": 1,
 
     "log_every_n_batches": -1,

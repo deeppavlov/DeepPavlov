@@ -167,6 +167,7 @@ class GoalOrientedBot(Inferable, Trainable):
                         action_mask[a_id] = 0
         return action_mask
 
+    @check_attr_true('train_now')
     def train_on_batch(self, batch):
         for dialog in zip(*batch):
             self.reset()
@@ -187,96 +188,6 @@ class GoalOrientedBot(Inferable, Trainable):
                 d_masks.append(self._action_mask())
 
             self.network.train(d_features, d_actions, d_masks)
-
-    @check_attr_true('train_now')
-    def train(self, data):
-        
-        if self.network.train_now is False:
-            raise ConfigError("It looks like 'train_now' of mother model is True, while"
-                              "`train_now` of submodel is False. Set `train_now` of submodel"
-                              "to True.")
-
-        print('\n:: training started')
-
-        curr_patience = self.val_patience
-        best_valid_accuracy = 0.
-        # TODO: in case val_patience is off, save model {val_patience} steps before
-        for j in range(self.num_epochs):
-
-            tr_data = data.batch_generator(1, 'train', shuffle=False)
-            eval_data = data.iter_all('valid')
-            # TODO: rewrite evaluate() so that it evaluates on batches
-            #eval_data = data.batch_generator(1, 'valid')
-
-            self.reset_metrics()
-
-            for dialog in tr_data:
-
-                self.reset()
-                self.metrics.n_dialogs += 1
-                d_features, d_actions, d_masks = [], [], []
-
-                for context, response in dialog:
-                    features = self._encode_context(context['text'],
-                                                    context.get('db_result'))
-                    if context.get('db_result') is not None:
-                        self.db_result = context['db_result']
-                    d_features.append(features)
-
-                    action_id = self._encode_response(response['act'])
-                    # previous action is teacher-forced here
-                    self.prev_action *= 0.
-                    self.prev_action[action_id] = 1.
-                    d_actions.append(action_id)
-
-                    d_masks.append(self._action_mask())
-
-                loss, d_preds = self.network.train(d_features, d_actions, d_masks)
-
-                for pred_id, action_id in zip(d_preds, d_actions):
-                    pred = ""
-                    # TODO: decoding is using wrong state
-                    #self._decode_response(pred_id).lower()
-                    true = self.tokenizer.infer(response['text'].lower().split())
-
-                    # update metrics
-                    self.metrics.n_examples += 1
-                    self.metrics.train_loss += loss
-                    self.metrics.conf_matrix[pred_id, action_id] += 1
-                    #self.metrics.n_corr_examples += int(pred == true)
-                    if self.debug and ((pred == true) != (pred_id == action_id)):
-                        print("Slot filling problem: ")
-                        print("Pred = {}: {}".format(pred_id, pred))
-                        print("True = {}: {}".format(action_id, true))
-                        #print("State =", self.tracker.get_state())
-                        #print("db_result =", self.db_result)
-                        # TODO: update dialog metrics
-                
-            print('\n\n:: {}.train {}'.format(j + 1, self.metrics.report()))
-
-            train_metrics = self.evaluate(data.iter_all('train'))
-            print(':: {}.train {}'.format(j + 1, train_metrics.report()))
-            valid_metrics = self.evaluate(eval_data)
-            print(':: {}.valid {}'.format(j + 1, valid_metrics.report()))
-
-            if valid_metrics.action_accuracy < best_valid_accuracy:
-                curr_patience -= 1
-                print(":: patience decreased by 1, is equal to {}".format(curr_patience))
-            else:
-                if curr_patience != self.val_patience:
-                    curr_patience = self.val_patience
-                    print(":: patience is equal to {}".format(curr_patience))
-                best_valid_accuracy = valid_metrics.action_accuracy
-            if curr_patience < 1:
-                print("\n:: patience is over, stopped training\n")
-                break
-        else:
-            print("\n:: stopping because max number of epochs encountered\n")
-        self.save()
-
-    # def train_on_batch(self, batch):
-    #     x, y = batch
-    #     pass
 
     def infer_on_batch(self, xs):
         return [self._infer_dialog(x) for x in xs]

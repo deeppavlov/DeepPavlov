@@ -194,10 +194,6 @@ class ErrorModel(Inferable, Trainable):
 
         return d[-1][-1]
 
-    def train(self, dataset, *args, **kwargs):
-        self.fit(dataset.iter_all())
-        self.save()
-
     @check_attr_true('train_now')
     def fit(self, data):
         changes = []
