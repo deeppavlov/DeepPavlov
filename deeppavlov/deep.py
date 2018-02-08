@@ -23,7 +23,7 @@ p = (Path(__file__) / ".." / "..").resolve()
 sys.path.append(str(p))
 
 from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
-from deeppavlov.core.commands.train import train_experimental
+from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.infer import interact_model
 from telegram_utils.telegram_ui import interact_model_by_telegram
 
@@ -44,7 +44,7 @@ def main():
 
     try:
         if args.mode == 'train':
-            train_experimental(pipeline_config_path)
+            train_model_from_config(pipeline_config_path)
         elif args.mode == 'interact':
             interact_model(pipeline_config_path)
         elif args.mode == 'interactbot':
