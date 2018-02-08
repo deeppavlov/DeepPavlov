@@ -10,7 +10,6 @@
   "model": {
     "name": "dstc_slotfilling",
     "train_now": true,
-    "epochs": 1,
     "learning_rate": 1e-3,
     "save_path": "../download/model/dstc_ner_model",
     "load_path": "../download/model/dstc_ner_model",
