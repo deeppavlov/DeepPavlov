@@ -3,7 +3,7 @@
   "root":
   {
     "level": "DEBUG",
-    "handlers": ["stdout"]
+    "handlers": ["stderr"]
   },
   "formatters":
   {
