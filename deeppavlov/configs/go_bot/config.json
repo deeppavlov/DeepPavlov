@@ -67,7 +67,7 @@
       "load_path": "../download/go_bot_rnn_tmp/model",
       "save_path": "../download/go_bot_rnn_tmp/model",
       "name": "go_bot_rnn",
-      "learning_rate": 0.0005,
+      "learning_rate": 0.00005,
       "hidden_dim": 128,
       "obs_size": 530,
       "use_action_mask": false,
@@ -75,8 +75,8 @@
     },
     "slot_filler": {
       "name": "dstc_slotfilling",
-      "save_path": "../download/model/dstc_ner_model2",
-      "load_path": "../download/model/dstc_ner_model2",
+      "save_path": "../download/ner/dstc_ner_model",
+      "load_path": "../download/ner/dstc_ner_model",
       "filter_width": 7,
       "embeddings_dropout": true,
       "n_filters": [
