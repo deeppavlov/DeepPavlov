@@ -15,10 +15,11 @@ limitations under the License.
 """
 
 import urllib
+import sys
 from pathlib import Path
+from overrides import overrides
 
 import numpy as np
-from overrides import overrides
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
@@ -105,6 +106,7 @@ class FasttextEmbedder(Inferable):
             except Exception:
                 log.error('No pretrained fasttext model provided or provided "load_path" is incorrect.'
                           ' Please include "load_path" to json.', exc_info=True)
+                sys.exit(1)
 
         return model
 

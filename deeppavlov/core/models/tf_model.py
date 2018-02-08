@@ -20,6 +20,7 @@ If you use something different, ex. Pytorch, then write similar to this class, i
 Trainable and Inferable interfaces and make a pull-request to deeppavlov.
 """
 
+import sys
 from abc import abstractmethod
 
 import tensorflow as tf
@@ -107,6 +108,7 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
                     raise ConfigError
             except ConfigError:
                 log.error('Provided `load_path` is incorrect!', exc_info=True)
+                sys.exit(1)
         else:
             log.warning('No `load_path` is provided for {}".format(self.__class__.__name__)')
 
