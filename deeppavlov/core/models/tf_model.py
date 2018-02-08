@@ -20,8 +20,8 @@ If you use something different, ex. Pytorch, then write similar to this class, i
 Trainable and Inferable interfaces and make a pull-request to deeppavlov.
 """
 
+import sys
 from abc import abstractmethod
-from warnings import warn
 
 import tensorflow as tf
 from overrides import overrides
@@ -29,8 +29,11 @@ from overrides import overrides
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.attributes import check_attr_true
+from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.errors import ConfigError
 from .tf_backend import TfModelMeta
+
+log = get_logger(__name__)
 
 
 class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
@@ -92,18 +95,22 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
     def save(self):
         save_path = str(self.save_path)
         saver = tf.train.Saver()
-        print('\n:: saving model to {}'.format(save_path))
+        log.info(':: saving model to {}'.format(save_path))
         saver.save(self.sess, save_path)
-        print('model saved')
+        log.info('model saved')
 
     def get_checkpoint_state(self):
         if self.load_path:
-            if self.load_path.parent.is_dir():
-                return tf.train.get_checkpoint_state(self.load_path.parent)
-            else:
-                warn('Provided `load_path` is incorrect!')
+            try:
+                if self.load_path.parent.is_dir():
+                    return tf.train.get_checkpoint_state(self.load_path.parent)
+                else:
+                    raise ConfigError
+            except ConfigError:
+                log.error('Provided `load_path` is incorrect!', exc_info=True)
+                sys.exit(1)
         else:
-            warn("No `load_path` is provided for {}".format(self.__class__.__name__))
+            log.warning('No `load_path` is provided for {}'.format(self.__class__.__name__))
 
     @overrides
     def load(self):
@@ -112,11 +119,11 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
         """
         ckpt = self.get_checkpoint_state()
         if ckpt and ckpt.model_checkpoint_path:
-            print('\n:: restoring checkpoint from', ckpt.model_checkpoint_path, '\n')
+            log.info(':: restoring checkpoint from {}'.format(ckpt.model_checkpoint_path))
             self._saver().restore(self.sess, ckpt.model_checkpoint_path)
-            print('session restored')
+            log.info('session restored')
         else:
-            print('\n:: <ERR> checkpoint not found! \n')
+            log.error(':: <ERR> checkpoint not found!')
 
 
 class SimpleTFModel(Trainable, Inferable, metaclass=TfModelMeta):

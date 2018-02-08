@@ -20,13 +20,15 @@ from pathlib import Path
 
 import numpy as np
 
-import sys
-
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 @register('default_vocab')
@@ -143,7 +145,7 @@ class DefaultVocabulary(Trainable, Inferable):
         return [self.__getitem__(s) for s in samples]
 
     def save(self):
-        print("[saving vocabulary to `{}`]".format(self.save_path), file=sys.stderr)
+        log.info("[saving vocabulary to `{}`]".format(self.save_path))
 
         with self.save_path.open('wt') as f:
             for n in range(len(self._t2i)):
@@ -155,7 +157,7 @@ class DefaultVocabulary(Trainable, Inferable):
     def load(self):
         if self.load_path:
             if self.load_path.is_file():
-                print("[loading vocabulary from `{}`]".format(self.load_path), file=sys.stderr)
+                log.info("[loading vocabulary from `{}`]".format(self.load_path))
                 tokens, counts = [], []
                 for ln in self.load_path.open('r'):
                     token, cnt = ln.split('\t', 1)

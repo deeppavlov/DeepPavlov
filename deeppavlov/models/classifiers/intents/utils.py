@@ -18,6 +18,11 @@ import numpy as np
 import sys
 import hashlib
 
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
+
 
 def labels2onehot(labels, classes):
     """
@@ -36,7 +41,7 @@ def labels2onehot(labels, classes):
         curr = np.zeros(n_classes)
         for intent in sample:
             if intent not in classes:
-                print('Warning: unknown intent {} detected'.format(intent))
+                log.warning('Unknown intent {} detected'.format(intent))
                 curr += eye[np.where(classes == 'unknown')[0]].reshape(-1)
             else:
                 curr += eye[np.where(classes == intent)[0]].reshape(-1)
@@ -97,13 +102,12 @@ def log_metrics(names, values, updates=None, mode='train'):
         None
     """
     sys.stdout.write("\r")  # back to previous line
-    print("{} -->\t".format(mode), end="")
+    log.info("{} -->\t".format(mode))
     if updates is not None:
-        print("updates: {}\t".format(updates), end="")
+        log.info("updates: {}\t".format(updates))
 
     for id in range(len(names)):
-        print("{}: {}\t".format(names[id], values[id]), end="")
-    print(" ")  # , end='\r')
+        log.info("{}: {}\t".format(names[id], values[id]))
     return
 
 

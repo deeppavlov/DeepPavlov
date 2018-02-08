@@ -20,6 +20,10 @@ from overrides import overrides
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 @register('dict_emb')
@@ -41,7 +45,7 @@ class DictEmbedder(Inferable):
                 'There is no dictionary of embeddings <<{}>> file provided.'.format(
                     self.ser_path))
         else:
-            print('Loading existing dictionary of embeddings from {}'.format(self.ser_path))
+            log.info('Loading existing dictionary of embeddings from {}'.format(self.ser_path))
 
             with open(str(self.ser_path)) as fin:
                 for line in fin:

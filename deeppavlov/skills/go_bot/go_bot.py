@@ -33,6 +33,10 @@ from deeppavlov.skills.go_bot.metrics import DialogMetrics
 from deeppavlov.skills.go_bot.network import GoalOrientedBotNetwork
 from deeppavlov.skills.go_bot.templates import Templates, DualTemplate
 from deeppavlov.core.common.attributes import check_attr_true
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 @register("go_bot")
@@ -71,7 +75,7 @@ class GoalOrientedBot(Inferable, Trainable):
         self.val_patience = val_patience
 
         self.templates = Templates(template_type).load(template_path)
-        print("[using {} templates from `{}`]".format(len(self.templates), template_path))
+        log.info("[using {} templates from `{}`]".format(len(self.templates), template_path))
 
         # intialize parameters
         self.db_result = None
@@ -95,7 +99,7 @@ class GoalOrientedBot(Inferable, Trainable):
         # tokenize input
         tokenized = ' '.join(self.tokenizer.infer(context)).strip()
         if self.debug:
-            print("Text tokens = `{}`".format(tokenized))
+            log.debug("Text tokens = `{}`".format(tokenized))
 
         # Bag of words features
         bow_features = self.bow_encoder.infer(tokenized, self.word_vocab)
@@ -112,14 +116,14 @@ class GoalOrientedBot(Inferable, Trainable):
             intent_features = self.intent_classifier.infer(tokenized,
                                                            predict_proba=True).ravel()
             if self.debug:
-                print("Predicted intent = `{}`".format(
+                log.debug("Predicted intent = `{}`".format(
                     self.intent_classifier.infer(tokenized)))
 
         # Text entity features
         if hasattr(self.slot_filler, 'infer'):
             self.tracker.update_state(self.slot_filler.infer(tokenized))
             if self.debug:
-                print("Slot vals:", self.slot_filler.infer(tokenized))
+                log.debug("Slot vals: {}".format(str(self.slot_filler.infer(tokenized))))
 
         state_features = self.tracker.infer()
 
@@ -129,12 +133,20 @@ class GoalOrientedBot(Inferable, Trainable):
                                     dtype=np.float32)
 
         if self.debug:
-            print("num bow features =", len(bow_features),
-                  " num emb features =", len(emb_features),
-                  " num intent features =", len(intent_features),
-                  " num state features =", len(state_features),
-                  " num context features =", len(context_features),
-                  " prev_action shape =", len(self.prev_action))
+            debug_msg = "num bow features = {}, " \
+                        "num emb features = {}, " \
+                        "num intent features = {}, " \
+                        "num state features = {}, " \
+                        "num context features = {}, " \
+                        "prev_action shape = {}".format(len(bow_features),
+                                                        len(emb_features),
+                                                        len(intent_features),
+                                                        len(state_features),
+                                                        len(context_features),
+                                                        len(self.prev_action))
+
+            log.debug(debug_msg)
+
         return np.hstack((bow_features, emb_features, intent_features,
                           state_features, context_features, self.prev_action))
 
@@ -224,39 +236,6 @@ class GoalOrientedBot(Inferable, Trainable):
         if isinstance(x, str):
             return self._infer(x)
         return self.infer_on_batch(x)
-
-    def evaluate(self, eval_data):
-        metrics = DialogMetrics(self.n_actions)
-
-        for context, response in eval_data:
-
-            if context.get('episode_done'):
-                self.reset()
-                metrics.n_dialogs += 1
-
-            probs = self.network.infer(
-                self._encode_context(context['text'], context.get('db_result')),
-                self._action_mask(),
-                prob=True
-            )
-            pred_id = np.argmax(probs)
-            if context.get('db_result') is not None:
-                self.db_result = context['db_result']
-
-            # predicted probabilities instead of true action
-            # teacher-forcing previous action
-            action_id = self._encode_response(response['act'])
-            self.prev_action *= 0
-            self.prev_action[action_id] = 1
-
-            pred = self._decode_response(pred_id).lower()
-            true = self.tokenizer.infer(response['text'].lower().split())
-
-            # update metrics
-            metrics.n_examples += 1
-            metrics.conf_matrix[pred_id, action_id] += 1
-            metrics.n_corr_examples += int(pred == true)
-        return metrics
 
     def reset(self):
         self.tracker.reset_state()

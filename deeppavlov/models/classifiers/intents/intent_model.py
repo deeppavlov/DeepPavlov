@@ -36,6 +36,11 @@ from deeppavlov.models.classifiers.intents.utils import labels2onehot, log_metri
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.classifiers.intents.utils import md5_hashsum
 from deeppavlov.models.tokenizers.nltk_tokenizer import NLTKTokenizer
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
+
 
 @register('intent_model')
 class KerasIntentModel(KerasModel):

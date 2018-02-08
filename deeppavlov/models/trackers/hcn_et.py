@@ -5,6 +5,11 @@ import numpy as np
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
+
 
 ENTITIES = {
     '<cuisine>': None,
@@ -63,7 +68,7 @@ class EntityTracker(Inferable):
         return self.ctxt_features
 
     def action_mask(self):
-        print('Not yet implemented. Need a list of action templates!')
+        log.warning('Not yet implemented. Need a list of action templates!')
 
     def reset(self):
         if hasattr(self, 'ctxt_features'):

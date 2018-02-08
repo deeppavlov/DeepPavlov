@@ -20,6 +20,10 @@ from typing import Dict, Type, TypeVar
 
 from deeppavlov.core.common.registry import REGISTRY
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 T = TypeVar('T')
 
@@ -50,7 +54,7 @@ def from_params(cls: Type, params: Dict, **kwargs) -> Type['T']:
     try:
         model = cls(**dict(config_params, **kwargs))
     except Exception:
-        print("Exception in {}".format(cls), file=sys.stderr)
+        log.error("Exception in {}".format(cls), exc_info=True)
         raise
 
     return model

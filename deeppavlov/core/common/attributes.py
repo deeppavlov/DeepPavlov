@@ -18,6 +18,11 @@ from functools import wraps
 
 from typing import Type, Callable
 
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
+
 
 class abstract_attribute(object):
     def __get__(self, obj, t: Type):
@@ -41,9 +46,9 @@ def check_attr_true(attr: str):
             if getattr(self, attr):
                 return f(self, *args, **kwargs)
             else:
-                print("'{0}' is False, doing nothing."
-                      " Set '{0}' to True in json config "
-                      "if you'd like the {1} to proceed.".format(attr, str(f).split()[1]))
+                log.warning("'{0}' is False, doing nothing."
+                            " Set '{0}' to True in json config "
+                            "if you'd like the {1} to proceed.".format(attr, str(f).split()[1]))
 
         return wrapped
 

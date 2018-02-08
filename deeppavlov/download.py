@@ -23,6 +23,10 @@ sys.path.append(str(p))
 
 from deeppavlov.core.data.utils import download, download_decompress
 from deeppavlov.core.data.urls import REQ_URLS, ALL_URLS, EMBEDDING_URLS, DATA_URLS
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 parser = argparse.ArgumentParser()
 
@@ -59,9 +63,9 @@ def download_resources(args):
 
 def main():
     args = parser.parse_args()
-    print("Downloading...")
+    log.info("Downloading...")
     download_resources(args)
-    print("\nDownload successful!")
+    log.info("\nDownload successful!")
 
 
 if __name__ == "__main__":

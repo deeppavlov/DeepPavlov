@@ -31,7 +31,10 @@ from deeppavlov.core.data.dataset import Dataset
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.common import paths
+from deeppavlov.core.common.log import get_logger
 
+
+log = get_logger(__name__)
 
 def _fit(model: Trainable, dataset: Dataset, train_config={}):
     model.fit(dataset.iter_all('train'))
@@ -71,7 +74,7 @@ def train_model_from_config(config_path: str):
     try:
         train_config.update(config['train'])
     except KeyError:
-        print('Train config is missing. Populating with default values', file=sys.stderr)
+        log.warning('Train config is missing. Populating with default values')
 
     metrics_functions = list(zip(train_config['metrics'], get_metrics_by_names(train_config['metrics'])))
 
@@ -88,9 +91,9 @@ def train_model_from_config(config_path: str):
         try:
             model_config['load_path'] = model_config['save_path']
         except KeyError:
-            print('So "save_path" parameter for the model, so "load_path" will not be renewed')
+            log.warning('No "save_path" parameter for the model, so "load_path" will not be renewed')
         model = from_params(get_model(model_name), model_config, vocabs=vocabs, mode='infer')
-        print('Testing the best saved model', file=sys.stderr)
+        log.info('Testing the best saved model')
 
         if train_config['validate_best']:
             report = {
@@ -221,16 +224,14 @@ def _train_batches(model: Trainable, dataset: Dataset, train_config: dict,
                 m_name, score = metrics[0]
                 if improved(score, best):
                     patience = 0
-                    print('New best {} of {}'.format(m_name, score),
-                          file=sys.stderr)
+                    log.info('New best {} of {}'.format(m_name, score))
                     best = score
-                    print('Saving model', file=sys.stderr)
+                    log.info('Saving model')
                     model.save()
                     saved = True
                 else:
                     patience += 1
-                    print('Did not improve on the {} of {}'.format(m_name, best),
-                          file=sys.stderr)
+                    log.info('Did not improve on the {} of {}'.format(m_name, best))
 
                 report['impatience'] = patience
                 if train_config['validation_patience'] > 0:
@@ -240,16 +241,16 @@ def _train_batches(model: Trainable, dataset: Dataset, train_config: dict,
                 print(json.dumps(report, ensure_ascii=False))
 
                 if patience >= train_config['validation_patience'] > 0:
-                    print('Ran out of patience', file=sys.stderr)
+                    log.info('Ran out of patience')
                     break
 
             if epochs >= train_config['epochs'] > 0:
                 break
     except KeyboardInterrupt:
-        print('Stopped training', file=sys.stderr)
+        log.info('Stopped training')
 
     if not saved:
-        print('Saving model', file=sys.stderr)
+        log.info('Saving model')
         model.save()
 
     return model
