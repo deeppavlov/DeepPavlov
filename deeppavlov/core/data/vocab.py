@@ -117,11 +117,6 @@ class DefaultVocabulary(Trainable, Inferable):
             self.freqs[token] += 0
 
     @check_attr_true('train_now')
-    def train(self, data, **kwargs):
-        self.fit(data)
-        self.save()
-
-    @check_attr_true('train_now')
     def fit(self, data):
         self.reset()
         self._train(

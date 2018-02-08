@@ -34,7 +34,7 @@ def per_item_accuracy(y_true, y_predicted):
 
 
 @register_metric('per_item_dialog_accuracy')
-def per_item_accuracy(y_true, y_predicted):
+def per_item_dialog_accuracy(y_true, y_predicted):
     y_true = [y['text'] for dialog in y_true for y in dialog]
     y_predicted = itertools.chain(*y_predicted)
     examples_len = len(y_true)

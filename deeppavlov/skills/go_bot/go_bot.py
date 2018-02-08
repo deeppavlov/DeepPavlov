@@ -167,6 +167,7 @@ class GoalOrientedBot(Inferable, Trainable):
                         action_mask[a_id] = 0
         return action_mask
 
+    @check_attr_true('train_now')
     def train_on_batch(self, batch):
         for dialog in zip(*batch):
             self.reset()
@@ -296,7 +297,7 @@ class GoalOrientedBot(Inferable, Trainable):
         self.prev_action[pred_id] = 1
         if db_result is not None:
             self.db_result = db_result
-        return self._decode_response(pred_id)
+        return self.tokenizer.infer(self._decode_response(pred_id).split())
 
     def _infer_dialog(self, contexts):
         self.reset()

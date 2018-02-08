@@ -20,6 +20,7 @@ import inspect
 import sys
 from itertools import chain
 
+from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import tokenize_reg
 from deeppavlov.models.ner.network import NerNetwork
@@ -75,21 +76,7 @@ class NER(SimpleTFModel):
         print('[saving model to {}]'.format(path), file=sys.stderr)
         self._net.save(path)
 
-    @overrides
-    def train(self, data, default_n_epochs=5):
-        if self.train_now:
-            print('Training NER network', file=sys.stderr)
-            epochs = self.opt.get('epochs', default_n_epochs)
-            for epoch in range(epochs):
-                self._net.train(data, **self.train_parameters)
-                self._net.eval_conll(data.iter_all('valid'), short_report=False, data_type='valid')
-            self._net.eval_conll(data.iter_all('train'), short_report=False, data_type='train')
-            self._net.eval_conll(data.iter_all('test'), short_report=False, data_type='test')
-            self.save()
-        else:
-            print('Loading NER network', file=sys.stderr)
-            self._net.load()
-
+    @check_attr_true('train_now')
     def train_on_batch(self, batch):
         self._net.train_on_batch(batch, **self.train_parameters)
 

@@ -13,6 +13,7 @@
     "name": "typos_wikipedia_reader"
   },
   "dataset": {
-    "name": "typos_dataset"
+    "name": "typos_dataset",
+    "test_ratio": 0.05
   }
 }
