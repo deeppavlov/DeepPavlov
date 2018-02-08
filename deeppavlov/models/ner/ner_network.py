@@ -17,7 +17,6 @@ limitations under the License.
 from collections import defaultdict
 from overrides import overrides
 from pathlib import Path
-from warnings import warn
 
 import numpy as np
 import tensorflow as tf
@@ -25,6 +24,7 @@ from tensorflow.contrib.layers import xavier_initializer
 
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.tf_model import SimpleTFModel
 from deeppavlov.models.ner.layers import character_embedding_network
 from deeppavlov.models.ner.layers import embedding_layer
@@ -33,8 +33,11 @@ from deeppavlov.models.ner.layers import stacked_convolutions
 from deeppavlov.models.ner.layers import stacked_rnn
 from deeppavlov.models.ner.evaluation import precision_recall_f1
 
+
 SEED = 42
 MODEL_FILE_NAME = 'ner_model'
+
+log = get_logger(__name__)
 
 
 @register("ner_tagging_network")
@@ -184,7 +187,7 @@ class NerNetwork(SimpleTFModel):
     def save(self):
         save_path = str(self.save_path)
         saver = tf.train.Saver()
-        print('[ saving model to `{}` ]'.format(save_path))
+        log.info('[ saving model to `{}` ]'.format(save_path))
         saver.save(self._sess, save_path)
 
     @overrides
@@ -192,17 +195,16 @@ class NerNetwork(SimpleTFModel):
         if self.load_path:
             if isinstance(self.load_path, Path) and self.load_path.parent.is_dir():
                 if tf.train.get_checkpoint_state(self.load_path.parent) is not None:
-                    print("\n:: initializing `{}` from saved"\
-                          .format(self.__class__.__name__))
+                    log.info(":: initializing `{}` from saved".format(self.__class__.__name__))
                     saver = tf.train.Saver()
-                    print('\n:: restoring checkpoint from {}\n'.format(str(self.load_path)))
+                    log.info(':: restoring checkpoint from {}'.format(str(self.load_path)))
                     saver.restore(self._sess, str(self.load_path))
                 else:
-                    warn("Provided `load_path` is empty! Won't restore from checkpoint.")
+                    log.warning("Provided `load_path` is empty! Won't restore from checkpoint.")
             else:
-                warn("Provided `load_path` is incorrect!")
+                log.warning("Provided `load_path` is incorrect!")
         else:
-            warn("No `load_path` is provided for {}".format(self.__class__.__name__))
+            log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
 
     def tokens_batch_to_numpy_batch(self, batch_x, batch_y=None):
         # Determine dimensions
@@ -237,7 +239,7 @@ class NerNetwork(SimpleTFModel):
         y_true_list = list()
         y_pred_list = list()
         if data_type is not None:
-            print('Eval on {}:'.format(data_type))
+            log.info('Eval on {}:'.format(data_type))
         for x, y_gt in data:
             (x_token, x_char, mask), y = self.tokens_batch_to_numpy_batch([x])
             y_pred = self.predict(x_token, x_char, mask)

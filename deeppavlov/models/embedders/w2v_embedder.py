@@ -21,6 +21,10 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.attributes import check_attr_true
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 @register('w2v')
@@ -44,7 +48,7 @@ class Word2VecEmbedder(Trainable, Inferable):
     def train(self, *args, **kwargs):
         sentences = word2vec.Text8Corpus(self.ser_path)
 
-        print(':: creating new word2vec model')
+        log.info(':: creating new word2vec model')
         model = word2vec.Word2Vec(sentences, size=self.dim)
         self.model = model
 
@@ -61,4 +65,4 @@ class Word2VecEmbedder(Trainable, Inferable):
 
     def save(self):
         self.model.save(str(self.ser_path))
-        print(':: model saved to path')
+        log.info(':: model saved to path')

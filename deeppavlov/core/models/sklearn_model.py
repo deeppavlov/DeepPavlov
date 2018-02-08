@@ -22,6 +22,10 @@ from typing import Type, Dict
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.common.file import load_pickle, save_pickle
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 class SklearnModel(Trainable, Inferable):
@@ -87,7 +91,7 @@ class SklearnModel(Trainable, Inferable):
 
         save_pickle(self._estimator, self.ser_path.as_posix())
 
-        print(':: model saved to {}'.format(self.ser_path))
+        log.info(':: model saved to {}'.format(self.ser_path))
 
     def load(self):
         """

@@ -21,6 +21,10 @@ import sys
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import is_done, download, mark_done
 from deeppavlov.core.data.dataset_reader import DatasetReader
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 @register('typos_custom_reader')
@@ -76,7 +80,7 @@ class TyposWikipedia(TyposCustom):
 
             mark_done(data_path)
 
-            print('Built', file=sys.stderr)
+            log.info('Built')
         return fname
 
 
@@ -98,7 +102,7 @@ class TyposKartaslov(DatasetReader):
 
             mark_done(data_path)
 
-            print('Built', file=sys.stderr)
+            log.info('Built')
         return fname
 
     @staticmethod

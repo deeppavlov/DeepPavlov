@@ -21,7 +21,11 @@ for all models that can serialize data to a path.
 
 from abc import ABCMeta
 from pathlib import Path
-from warnings import warn
+
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 class Serializable(metaclass=ABCMeta):
@@ -45,7 +49,7 @@ class Serializable(metaclass=ABCMeta):
             self.load_path = Path(load_path)
         else:
             self.load_path = None
-            warn("No load path is set for {}!".format(self.__class__.__name__))
+            log.warning("No load path is set for {}!".format(self.__class__.__name__))
 
     def __new__(cls, *args, **kwargs):
         if cls is Serializable:

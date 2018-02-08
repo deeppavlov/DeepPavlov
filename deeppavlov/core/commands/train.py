@@ -22,7 +22,10 @@ from deeppavlov.core.commands.infer import build_agent_from_config
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.models.trainable import Trainable
 from deeppavlov.core.common import paths
+from deeppavlov.core.common.log import get_logger
 
+
+log = get_logger(__name__)
 
 # TODO pass paths to local model configs to agent config.
 
@@ -47,8 +50,7 @@ def train_agent_models(config_path: str):
             model = from_params(REGISTRY[model_name], model_config)
             model.train(dataset)
         else:
-            print('Model {} is not an instance of Trainable, skip training.'.format(model_name),
-                  file=sys.stderr)
+            log.warning('Model {} is not an instance of Trainable, skip training.'.format(model_name))
 
 
 def train_model_from_config(config_path: str, mode='train'):

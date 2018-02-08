@@ -25,6 +25,10 @@ from deeppavlov.models.ner.ner_network import NerNetwork
 from deeppavlov.core.data.utils import tokenize_reg
 from deeppavlov.core.data.utils import download
 from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 @register('dstc_slotfilling')
@@ -41,7 +45,7 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
         if not self.load_path.is_file():
             self.load()
             
-        print("[ loading slot values from `{}` ]".format(str(self.load_path)))
+        log.info("[ loading slot values from `{}` ]".format(str(self.load_path)))
         self._slot_vals = read_json(self.load_path)
 
         self._ner_network = ner_network
@@ -71,7 +75,7 @@ class DstcSlotFillingNetwork(Inferable, Trainable):
     def infer(self, instance, *args, **kwargs):
         instance = instance.strip().lower()
         if not all([ord(c) < 128 for c in instance]):
-            print('Non ASCII symbols in the string, returning empty slots', file=sys.stderr)
+            log.warning('Non ASCII symbols in the string, returning empty slots')
             return {}
 
         tokens = tokenize_reg(instance)

@@ -25,7 +25,11 @@ sys.path.append(str(p))
 from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
 from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.infer import interact_model
+from deeppavlov.core.common.log import get_logger
 from telegram_utils.telegram_ui import interact_model_by_telegram
+
+
+log = get_logger(__name__)
 
 parser = argparse.ArgumentParser()
 
@@ -49,8 +53,7 @@ def main():
             interact_model(pipeline_config_path)
         elif args.mode == 'interactbot':
             if not token:
-                print(
-                    'Token required: initiate -t parm or TELEGRAM_BOT env var with Telegram bot token')
+                log.error('Token required: initiate -t parm or TELEGRAM_BOT env var with Telegram bot token')
             else:
                 interact_model_by_telegram(pipeline_config_path, token)
     finally:
