@@ -56,7 +56,6 @@ class NerNetwork:
         n_tags = len(tag_vocab)
         n_tokens = len(word_vocab)
         n_chars = len(char_vocab)
-        print('n_tags: {}, n_tokens: {}, n_chars: {}'.format(n_tags, n_tokens, n_chars))
         # Create placeholders
         if embeddings_onethego:
             x_word = tf.placeholder(dtype=tf.float32, shape=[None, None, token_embeddings_dim], name='x_word')
@@ -131,8 +130,6 @@ class NerNetwork:
 
         # Initialize session
         sess = tf.Session()
-        if verbouse:
-            self.print_number_of_parameters()
         if logging:
             self.train_writer = tf.summary.FileWriter('summary', sess.graph)
 

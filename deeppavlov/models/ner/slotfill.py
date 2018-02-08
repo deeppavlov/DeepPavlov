@@ -104,7 +104,7 @@ class DstcSlotFillingNetwork(SimpleTFModel):
             if not len(instance):
                 return {}
             tokens = tokenize_reg(instance)
-            tags = self._ner_network.predict_for_token_batch([instance])[0]
+            tags = self._ner_network.predict_for_token_batch([tokens])[0]
             return self.predict_slots(tokens, tags)
         else:
             tokens_batch = instance
