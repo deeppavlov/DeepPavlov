@@ -143,7 +143,10 @@ def train_experimental(config_path: str):
         return
 
     if train_config['validate_best'] or train_config['test_best']:
-        model_config['load_path'] = model_config['save_path']
+        try:
+            model_config['load_path'] = model_config['save_path']
+        except KeyError:
+            print('So "save_path" parameter for the model, so "load_path" will not be renewed')
         model = from_params(get_model(model_name), model_config, vocabs=vocabs, mode='infer')
         print('Testing the best saved model', file=sys.stderr)
 

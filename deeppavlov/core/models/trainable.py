@@ -40,17 +40,6 @@ class Trainable(Serializable):
         super().__init__(**kwargs)
 
     @abstractmethod
-    def train(self, data, *args, **kwargs):
-        """
-        Train a model.
-        :param data: any type of input data passed for training
-        :param args: all needed params for training
-        As a result of training, the model should be saved to user dir defined at
-        deeppavlov.common.paths.USR_PATH. A particular path is assigned in runtime.
-        """
-        pass
-
-    @abstractmethod
     def save(self, *args, **kwargs):
         pass
 
