@@ -74,8 +74,8 @@ class GoalOrientedBotNetwork(TFModel):
 
         # build body
         _logits, self._state = self._build_body()
-        print("DEBUG: state =", self._state)
-        print("DEBUG: logits =", _logits)
+        log.debug("state = {}".format(self._state))
+        log.debug("logits = {}".format(_logits))
 
         # probabilities normalization : elemwise multiply with action mask
         self._probs = tf.squeeze(tf.nn.softmax(_logits))

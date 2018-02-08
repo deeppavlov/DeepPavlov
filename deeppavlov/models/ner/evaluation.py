@@ -15,11 +15,12 @@ limitations under the License.
 """
 
 from collections import OrderedDict
-import sys
-
 import itertools
 
-from deeppavlov.core.common.metrics_registry import register_metric
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 def chunk_finder(current_token, previous_token, tag):
@@ -209,5 +210,5 @@ def precision_recall_f1(y_true, y_pred, print_results=True, short_report=False, 
                                                            tot_recall=results[entity_of_interest]['recall'],
                                                            tot_f1=results[entity_of_interest]['f1'],
                                                            tot_predicted=results[entity_of_interest]['n_predicted_entities'])
-        print(s, file=sys.stderr)
+        log.debug(s)
     return results
