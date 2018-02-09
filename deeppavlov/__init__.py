@@ -29,3 +29,5 @@ from deeppavlov.core.data.dataset import Dataset
 
 import deeppavlov.metrics.accuracy
 import deeppavlov.metrics.fmeasure
+
+from deeppavlov.core.common.log import get_logger

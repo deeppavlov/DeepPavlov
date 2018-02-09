@@ -19,6 +19,10 @@ from deeppavlov.core.common.registry import REGISTRY
 
 from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.common.params import from_params
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 def build_model_from_config(config, mode='infer'):
@@ -65,7 +69,7 @@ def interact_agent(config_path):
 
         a.history.append({'context': context, "predictions": predictions,
                           "winner": {"idx": idx, "model": name, "prediction": pred}})
-        print("Current history: {}".format(a.history))
+        log.debug("Current history: {}".format(a.history))
 
 
 def interact_model(config_path):

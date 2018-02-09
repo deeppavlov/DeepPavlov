@@ -15,7 +15,6 @@ limitations under the License.
 """
 import json
 import inspect
-import sys
 
 import tensorflow as tf
 from fuzzywuzzy import process
@@ -28,7 +27,10 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import SimpleTFModel
 from deeppavlov.models.ner.network import NerNetwork
 from deeppavlov.core.data.utils import tokenize_reg, download, download_decompress
+from deeppavlov.core.common.log import get_logger
 
+
+log = get_logger(__name__)
 
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(SimpleTFModel):
@@ -84,13 +86,13 @@ class DstcSlotFillingNetwork(SimpleTFModel):
         path = str(self.load_path.absolute())
         # Check presence of the model files
         if tf.train.checkpoint_exists(path):
-            print('[loading model from {}]'.format(path), file=sys.stderr)
+            log.info('[loading model from {}]'.format(path))
             self._ner_network.load(path)
 
     @overrides
     def save(self):
         path = str(self.save_path.absolute())
-        print('[saving model to {}]'.format(path), file=sys.stderr)
+        log.info('[saving model to {}]'.format(path))
         self._ner_network.save(path)
 
     @check_attr_true('train_now')
@@ -119,7 +121,7 @@ class DstcSlotFillingNetwork(SimpleTFModel):
         tokens = tokenize_reg(s)
         tags = self._ner_network.predict_for_token_batch([tokens])[0]
         prediction = self.predict_slots(tokens, tags)
-        print(prediction, file=sys.stderr)
+        log.debug(prediction)
 
     def predict_slots(self, tokens, tags):
         # For utterance extract named entities and perform normalization for slot filling

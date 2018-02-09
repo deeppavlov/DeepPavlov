@@ -15,16 +15,19 @@ limitations under the License.
 """
 
 import urllib
+import sys
 from pathlib import Path
-from warnings import warn
+from overrides import overrides
 
 import numpy as np
-import sys
-from overrides import overrides
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 @register('fasttext')
@@ -65,7 +68,7 @@ class FasttextEmbedder(Inferable):
 
         if self.load_path:
             if self.load_path.is_file():
-                print("[loading embeddings from `{}`]".format(self.load_path), file=sys.stderr)
+                log.info("[loading embeddings from `{}`]".format(self.load_path))
                 model_file = str(self.load_path)
                 if self.emb_module == 'fasttext':
                     import fasttext as Fasttext
@@ -81,27 +84,29 @@ class FasttextEmbedder(Inferable):
                 raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
                     self.__class__.__name__))
         else:
-            warn("No `load_path` is provided for {}".format(self.__class__.__name__))
-            if self.embedding_url:
-                try:
-                    print('[trying to download a pretrained fasttext model from repository]', file=sys.stderr)
-                    local_filename, _ = urllib.request.urlretrieve(self.embedding_url)
-                    with open(local_filename, 'rb') as fin:
-                        model_file = fin.read()
+            try:
+                log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
+                if self.embedding_url:
+                    try:
+                        log.info('[trying to download a pretrained fasttext model from repository]')
+                        local_filename, _ = urllib.request.urlretrieve(self.embedding_url)
+                        with open(local_filename, 'rb') as fin:
+                            model_file = fin.read()
 
-                    mp = self.save_path
-                    self.load_path = self.save_path
-                    model = self.load()
-                    print("[saving downloaded fasttext model to {}]".format(mp), file=sys.stderr)
-                    with open(str(mp), 'wb') as fout:
-                        fout.write(model_file)
-                except Exception as e:
-                    raise RuntimeError(
-                        'Looks like the provided fasttext url is incorrect', e)
-            else:
-                raise FileNotFoundError(
-                    'No pretrained fasttext model provided or provided "load_path" is incorrect.'
-                    ' Please include "load_path" to json.')
+                        mp = self.save_path
+                        self.load_path = self.save_path
+                        model = self.load()
+                        log.info("[saving downloaded fasttext model to {}]".format(mp))
+                        with open(str(mp), 'wb') as fout:
+                            fout.write(model_file)
+                    except Exception as e:
+                        log.error('Looks like the provided fasttext url is incorrect', exc_info=True)
+                else:
+                    raise FileNotFoundError
+            except Exception:
+                log.error('No pretrained fasttext model provided or provided "load_path" is incorrect.'
+                          ' Please include "load_path" to json.', exc_info=True)
+                sys.exit(1)
 
         return model
 

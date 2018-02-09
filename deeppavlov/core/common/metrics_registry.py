@@ -1,6 +1,8 @@
-import sys
-
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 _REGISTRY = {}
 
@@ -8,8 +10,8 @@ _REGISTRY = {}
 def register_metric(metric_name):
     def decorate(f):
         if metric_name in _REGISTRY:
-            print('"{}" is already registered as a metric name, the old function will be ignored'.format(metric_name),
-                  file=sys.stderr)
+            log.warning('"{}" is already registered as a metric name, the old function will be ignored'
+                        .format(metric_name))
         _REGISTRY[metric_name] = f
         return f
     return decorate
