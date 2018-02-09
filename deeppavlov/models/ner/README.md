@@ -57,8 +57,8 @@ The config of the model must have the following fields:
 "model": {
     "name": "dstc_slotfilling",
     "train_now": true,
-    "save_path": "../download/model/slot_vals.json",
-    "load_path": "../download/model/slot_vals.json",
+    "save_path": "model/slot_vals.json",
+    "load_path": "model/slot_vals.json",
     "ner_network": {
         "name": "ner_tagging_network",
         "...": "..."
@@ -75,8 +75,8 @@ The NER network is a separate model, and it has its initialization parameters, n
 "ner_network": {
     "name": "ner_tagging_network",
     "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
-    "save_path": "../download/model/ner_model.ckpt",
-    "load_path": "../download/model/ner_model.ckpt",
+    "save_path": "model/ner_model.ckpt",
+    "load_path": "model/ner_model.ckpt",
     "filter_width": 7,
     "embeddings_dropout": true,
     "n_filters": [
@@ -109,22 +109,22 @@ To perform conversion between tokens and indices there are three vocabularies in
       "name": "default_vocab",
       "inputs": ["x"],
       "level": "token",
-      "save_path": "../download/vocabs/token_vocab.dict",
-      "load_path": "../download/vocabs/token_vocab.dict"
+      "save_path": "vocabs/token_vocab.dict",
+      "load_path": "vocabs/token_vocab.dict"
     },
   "tag_vocab": {
       "name": "default_vocab",
       "inputs": ["y"],
       "level": "token",
-      "save_path": "../download/vocabs/tag_vocab.dict",
-      "load_path": "../download/vocabs/tag_vocab.dict"
+      "save_path": "vocabs/tag_vocab.dict",
+      "load_path": "vocabs/tag_vocab.dict"
     },
   "char_vocab":{
       "name": "default_vocab",
       "inputs": ["x"],
       "level": "char",
-      "save_path": "../download/vocabs/char_vocab.dict",
-      "load_path": "../download/vocabs/char_vocab.dict"
+      "save_path": "vocabs/char_vocab.dict",
+      "load_path": "vocabs/char_vocab.dict"
     }
   }
  }
@@ -145,11 +145,11 @@ To build vocabularies and train the network two data components must be specifie
 ```json
 {"dataset_reader": {
       "name": "dstc2_datasetreader",
-      "data_path": "../download/dstc2"
+      "data_path": "dstc2"
   },
   "dataset": {
       "name": "dstc2_ner_dataset",
-      "dataset_path": "../download/dstc2"
+      "dataset_path": "dstc2"
   }
 }
 ```
