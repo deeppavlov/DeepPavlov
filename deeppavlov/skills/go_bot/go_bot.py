@@ -291,7 +291,7 @@ class GoalOrientedBot(Inferable, Trainable):
     def infer_on_batch(self, xs):
         return [self._infer_dialog(x) for x in xs]
 
-    def _infer(self, context, db_result=None, probs=False):
+    def _infer(self, context, db_result=None, prob=False):
         probs = self.network.infer(
             self._encode_context(context, db_result),
             self._action_mask(),
@@ -302,7 +302,7 @@ class GoalOrientedBot(Inferable, Trainable):
             self.db_result = db_result
 
         # one-hot encoding seems to work better then probabilities
-        if probs:
+        if prob:
             self.prev_action = probs
         else:
             self.prev_action *= 0
