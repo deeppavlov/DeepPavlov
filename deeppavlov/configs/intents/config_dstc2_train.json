@@ -45,10 +45,6 @@
         3
       ],
       "filters_cnn": 512,
-      "lear_metrics": [
-        "binary_accuracy",
-        "fmeasure"
-      ],
       "confident_threshold": 0.5,
       "optimizer": "Adam",
       "lear_rate": 0.1,
@@ -58,13 +54,8 @@
       "coef_reg_cnn": 1e-4,
       "coef_reg_den": 1e-4,
       "dropout_rate": 0.5,
-      "epochs": 1,
       "dense_size": 100,
-      "model_name": "cnn_model",
-      "batch_size": 64,
-      "val_every_n_epochs": 5,
-      "verbose": true,
-      "val_patience": 5
+      "model_name": "cnn_model"
     },
     "embedder": {
       "name": "fasttext",
@@ -77,5 +68,16 @@
       "name": "nltk_tokenizer",
       "tokenizer": "wordpunct_tokenize"
     }
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 64,
+    "metrics": [
+      "sets_accuracy"
+    ],
+    "validation_patience": 5,
+    "val_every_n_epochs": 5,
+    "log_every_n_batches": 100,
+    "show_examples": false
   }
 }
