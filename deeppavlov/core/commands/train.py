@@ -17,11 +17,10 @@ limitations under the License.
 import datetime
 import json
 import time
-import sys
 from collections import OrderedDict
-
 from typing import List, Callable, Tuple
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import model as get_model
@@ -30,11 +29,11 @@ from deeppavlov.core.common.params import from_params
 from deeppavlov.core.data.dataset import Dataset
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.common import paths
 from deeppavlov.core.common.log import get_logger
 
 
 log = get_logger(__name__)
+
 
 def _fit(model: Trainable, dataset: Dataset, train_config={}):
     model.fit(dataset.iter_all('train'))
@@ -43,12 +42,12 @@ def _fit(model: Trainable, dataset: Dataset, train_config={}):
 
 
 def train_model_from_config(config_path: str):
-    usr_dir = paths.USR_PATH
     config = read_json(config_path)
 
     reader_config = config['dataset_reader']
     reader = from_params(get_model(reader_config['name']), {})
-    data = reader.read(reader_config.get('data_path', usr_dir))
+    data_path = expand_path(reader_config.get('data_path', ''))
+    data = reader.read(data_path)
 
     dataset_config = config['dataset']
     dataset_name = dataset_config['name']

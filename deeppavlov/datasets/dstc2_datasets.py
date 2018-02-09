@@ -15,12 +15,10 @@ limitations under the License.
 """
 
 import logging
-from overrides import overrides
-from typing import Dict, Tuple, List, Generator, Any
 import json
 import random
-import pathlib
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset import Dataset
 from deeppavlov.core.data.utils import download
@@ -42,7 +40,7 @@ class DstcNerDataset(Dataset):
         self.shuffle = shuffle
         self.random_state = random.getstate()
         # TODO: include slot vals to dstc2.tar.gz
-        dataset_path = pathlib.Path(dataset_path) / 'slot_vals.json'
+        dataset_path = expand_path(dataset_path) / 'slot_vals.json'
         self._build_slot_vals(dataset_path)
         with open(dataset_path) as f:
             self._slot_vals = json.load(f)
