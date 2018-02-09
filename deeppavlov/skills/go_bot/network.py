@@ -70,8 +70,6 @@ class GoalOrientedBotNetwork(TFModel):
 
         # build body
         _logits, self._state = self._build_body()
-        print("DEBUG: state =", self._state)
-        print("DEBUG: logits =", _logits)
 
         # probabilities normalization : elemwise multiply with action mask
         self._probs = tf.squeeze(tf.nn.softmax(_logits))
@@ -125,7 +123,7 @@ class GoalOrientedBotNetwork(TFModel):
                                   kernel_initializer=xavier_initializer())
         return _logits, _state
 
-    def _get_train_op(self, loss, learning_rate, optimizer=None):
+    def _get_train_op(self, loss, learning_rate, optimizer=None, clip_norm=1.):
         """ Get train operation for given loss
 
         Args:
@@ -138,14 +136,11 @@ class GoalOrientedBotNetwork(TFModel):
         """
 
         optimizer = optimizer or tf.train.AdamOptimizer
-        _train_op = optimizer(learning_rate).minimize(loss, name='train_op')
-        # TODO: check clipping of gradients
-        #optimizer = tf.train.AdamOptimizer(learning_rate)
-        #clip_rate = 1.
-        #gards_and_vars = optimizer.compute_gradients(loss, tf.trainable_variables())
-        #grads_and_vars = [(tf.clip_by_norm(grad, clip_rate), var) for grad, var in grads_and_vars]
-        #optimizer.apply_gradients(grads_and_vars)
-        return _train_op
+        optimizer = optimizer(learning_rate)
+        grads_and_vars = optimizer.compute_gradients(loss, tf.trainable_variables())
+        grads_and_vars = [(tf.clip_by_norm(grad, clip_norm), var)\
+                          for grad, var in grads_and_vars]
+        return optimizer.apply_gradients(grads_and_vars, name='train_op')
 
     def reset_state(self):
         # set zero state
