@@ -56,7 +56,7 @@ import sys
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.commands.utils import set_usr_dir
 
-CONFIG_PATH = configs
+CONFIG_PATH = 'configs/error_model/config_ru_custom_vocab.json'
 set_usr_dir(CONFIG_PATH)
 
 with open(CONFIG_PATH) as config_file:
@@ -119,7 +119,7 @@ And a script to use this config:
 from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.utils import set_usr_dir
 
-MODEL_CONFIG_PATH = configs
+MODEL_CONFIG_PATH = 'configs/error_model/config_en.json'
 set_usr_dir(MODEL_CONFIG_PATH)
 train_model_from_config(MODEL_CONFIG_PATH)
 ```

@@ -63,8 +63,8 @@ def interact_agent(config_path):
 
         predictions = []
         for model in models:
-            predictions.append({model.__class__.__name__: model.infer(context)})
-        idx, name, pred = commutator.infer(predictions, a.history)
+            predictions.append({model.__class__.__name__: model.infer(context, )})
+        idx, name, pred = commutator.infer(predictions, )
         print('>>', pred)
 
         a.history.append({'context': context, "predictions": predictions,
@@ -85,7 +85,7 @@ def interact_model(config_path):
             return
 
         try:
-            pred = model.infer(context)
+            pred = model.infer(context, )
             print('>>', pred)
         except Exception as e:
             raise e

@@ -86,11 +86,11 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
         """
         return self._train_step(features, *args, **kwargs)
 
-    def infer(self, instance, *args):
+    def infer(self, instance, *args, **kwargs):
         """
         Just a wrapper for a private method.
         """
-        return self._forward(instance, *args)
+        return self._forward(instance, *args, **kwargs)
 
     def save(self):
         save_path = str(self.save_path)
@@ -110,7 +110,7 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
                 log.error('Provided `load_path` is incorrect!', exc_info=True)
                 sys.exit(1)
         else:
-            log.warning('No `load_path` is provided for {}".format(self.__class__.__name__)')
+            log.warning('No `load_path` is provided for {}'.format(self.__class__.__name__))
 
     @overrides
     def load(self):

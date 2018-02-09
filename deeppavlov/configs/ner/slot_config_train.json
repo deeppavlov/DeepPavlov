@@ -1,0 +1,66 @@
+{
+  "dataset_reader": {
+    "name": "dstc2_datasetreader",
+    "data_path": "../download/data/dstc2"
+  },
+  "dataset": {
+    "name": "dstc2_ner_dataset",
+    "dataset_path": "../download/data/dstc2"
+  },
+  "model": {
+    "name": "dstc_slotfilling",
+    "train_now": true,
+    "learning_rate": 1e-3,
+    "save_path": "../download/model/dstc_ner_model",
+    "load_path": "../download/model/dstc_ner_model",
+    "vocabs": ["word_vocab", "tag_vocab", "char_vocab"],
+    "verbouse": true,
+    "filter_width": 7,
+    "embeddings_dropout": true,
+    "n_filters": [
+      64,
+      64
+    ],
+    "token_embeddings_dim": 64,
+    "char_embeddings_dim": 32,
+    "use_batch_norm": true,
+    "use_crf": true
+  },
+  "vocabs": {
+    "word_vocab": {
+        "name": "default_vocab",
+        "inputs": ["x"],
+        "train_now": true,
+		"level": "token",
+        "save_path": "../download/vocabs/word.dict",
+        "load_path": "../download/vocabs/word.dict"
+      },
+    "tag_vocab": {
+        "name": "default_vocab",
+        "inputs": ["y"],
+        "train_now": true,
+		"level": "token",
+        "save_path": "../download/vocabs/tag.dict",
+        "load_path": "../download/vocabs/tag.dict"
+      },
+    "char_vocab":{
+        "name": "default_vocab",
+        "inputs": ["x"],
+        "train_now": true,
+		"level": "char",
+        "save_path": "../download/vocabs/char.dict",
+        "load_path": "../download/vocabs/char.dict"
+      }
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 64,
+
+    "metrics": ["slots_accuracy"],
+    "validation_patience": 5,
+    "val_every_n_epochs": 5,
+
+    "log_every_n_epochs": 1,
+    "show_examples": false
+  }
+}

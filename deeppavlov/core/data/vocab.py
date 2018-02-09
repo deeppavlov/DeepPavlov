@@ -53,6 +53,11 @@ class DefaultVocabulary(Trainable, Inferable):
     @staticmethod
     def _build_preprocess_fn(inputs, level, tokenize):
         def iter_level(utter):
+            if isinstance(utter, list) and isinstance(utter[0], dict):
+                utter = ' '.join(u['text'] for u in utter)
+            elif isinstance(utter, dict):
+                utter = utter['text']
+
             if tokenize:
                 utter = utter.split()
             if level == 'token':
@@ -114,7 +119,7 @@ class DefaultVocabulary(Trainable, Inferable):
             self.freqs[token] += 0
 
     @check_attr_true('train_now')
-    def train(self, data):
+    def fit(self, data):
         self.reset()
         self._train(
             tokens=filter(None, itertools.chain.from_iterable(
@@ -122,7 +127,6 @@ class DefaultVocabulary(Trainable, Inferable):
             counts=None,
             update=True
         )
-        self.save()
 
     def _train(self, tokens, counts=None, update=True):
         counts = counts or itertools.repeat(1)
@@ -137,7 +141,7 @@ class DefaultVocabulary(Trainable, Inferable):
                 index += 1
             self.freqs[token] += cnt
 
-    def infer(self, samples):
+    def infer(self, samples, **kwargs):
         return [self.__getitem__(s) for s in samples]
 
     def save(self):
