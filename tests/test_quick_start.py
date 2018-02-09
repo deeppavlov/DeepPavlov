@@ -4,10 +4,14 @@ import os
 import shutil
 
 
-N2C = {"go_bot": "../deeppavlov/configs/go_bot/config.json",
-       "intents": "../deeppavlov/configs/intents/config_dstc2.json",
-       "ner": "../deeppavlov/configs/ner/config.json",
-       "error_model": "../deeppavlov/configs/error_model/config_en.json"}
+N2C = {"go_bot": ("../deeppavlov/configs/go_bot/config.json",
+                  "../deeppavlov/configs/go_bot/config_train.json"),
+       "intents": ("../deeppavlov/configs/intents/config_dstc2_infer.json",
+                   "../deeppavlov/configs/intents/config_dstc2_train.json"),
+       "ner": ("../deeppavlov/configs/ner/ner_dstc2_train.json",
+               "../deeppavlov/configs/ner/ner_dstc2_train.json"),
+       "error_model": ("../deeppavlov/configs/error_model/config_en.json",
+                       "../deeppavlov/configs/error_model/config_en.json")}
 
 
 def download(full=None):
@@ -22,7 +26,7 @@ class TestQuickStart(object):
 
     @staticmethod
     def interact(query, mdl):
-        p = sp.Popen(["python", "-m", "deeppavlov.deep", "interact", N2C[mdl]],
+        p = sp.Popen(["python", "-m", "deeppavlov.deep", "interact", N2C[mdl][0]],
                      stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
         out, _ = p.communicate(f"{query}".encode())
         return out
@@ -33,11 +37,11 @@ class TestQuickStart(object):
         assert os.path.exists("../download/" + model)
 
     def test_interact_pretrained_model(self, model):
-        assert self.interact("In the center of the city", model)
+        assert self.interact("In the center of the city, near the hotel", model)
 
     def test_model_training(self, model):
         shutil.rmtree("../download/" + model)
-        p = sp.run(["python", "-m", "deeppavlov.deep", "train", N2C[model]])
+        p = sp.run(["python", "-m", "deeppavlov.deep", "train", N2C[model][1]])
         assert p.returncode == 0
 
     def test_interact_trained_model(self, model):
