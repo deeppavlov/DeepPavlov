@@ -257,7 +257,7 @@ and config. All models can be nested as much as needed. For example, a skeleton 
 `deeppavlov.skills.go_bot.go_bot.GoalOrientedBot` consists of 11 separate model classes,
 3 of which are neural networks:
 
-```javascript
+```json
 {
   "model": {
     "name": "go_bot",
@@ -310,7 +310,7 @@ The training process should be described in `train()` method:
  @register("my_model")
  class MyModel(Inferable, Trainable):
 
-    def train(*args, **kwargs):
+    def train_on_batch(self, batch: Tuple[list, list]):
         """
         Implement training here.
         """
@@ -326,7 +326,7 @@ a model is being trained. This parameter is useful when using `Vocab`, because i
 model run some vocabs can be trained, while some only inferred by other models in pipeline.
 The training parameters in JSON config can look like this:
 
-```javascript
+```json
 {
   "model": {
     "name": "my_model",

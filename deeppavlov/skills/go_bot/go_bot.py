@@ -110,9 +110,6 @@ class GoalOrientedBot(Inferable, Trainable):
         if hasattr(self.embedder, 'infer'):
             emb_features = self.embedder.infer(tokenized, mean=True)
 
-        # DEBUG:
-        # emb_features = np.zeros(300)
-
         # Intent features
         intent_features = []
         if hasattr(self.intent_classifier, 'infer'):
@@ -151,10 +148,9 @@ class GoalOrientedBot(Inferable, Trainable):
             log.debug(debug_msg)
 
         return np.hstack((bow_features, emb_features, intent_features,
-                          state_features, context_features,
-                          self.prev_action))[np.newaxis, :]
+                          state_features, context_features, self.prev_action))
 
-    def _encode_response(self, response, act):
+    def _encode_response(self, act):
         return self.templates.actions.index(act)
 
     def _decode_response(self, action_id):
@@ -184,118 +180,62 @@ class GoalOrientedBot(Inferable, Trainable):
         return action_mask
 
     @check_attr_true('train_now')
-    def train(self, data):
-        
-        if self.network.train_now is False:
-            raise ConfigError("It looks like 'train_now' of mother model is True, while"
-                              "`train_now` of submodel is False. Set `train_now` of submodel"
-                              "to True.")
+    def train_on_batch(self, batch):
+        for dialog in zip(*batch):
+            self.reset()
+            d_features, d_actions, d_masks = [], [], []
+            for context, response in zip(*dialog):
+                features = self._encode_context(context['text'],
+                                                context.get('db_result'))
+                if context.get('db_result') is not None:
+                    self.db_result = context['db_result']
+                d_features.append(features)
 
-        log.info(':: training started')
-
-        curr_patience = self.val_patience
-        best_valid_accuracy = 0.
-        # TODO: in case val_patience is off, save model {val_patience} steps before
-        for j in range(self.num_epochs):
-
-            tr_data = data.iter_all('train')
-            eval_data = data.iter_all('valid')
-
-            self.reset_metrics()
-
-            for context, response, other in tr_data:
-                if other.get('episode_done'):
-                    self.reset()
-                    self.metrics.n_dialogs += 1
-
-                if other.get('db_result') is not None:
-                    self.db_result = other['db_result']
-                action_id = self._encode_response(response, other['act'])
-
-                loss, pred_id = self.network.train(
-                    self._encode_context(context, other.get('db_result')),
-                    action_id,
-                    self._action_mask()
-                )
-
+                action_id = self._encode_response(response['act'])
+                # previous action is teacher-forced here
                 self.prev_action *= 0.
-                self.prev_action[pred_id] = 1.
+                self.prev_action[action_id] = 1.
+                d_actions.append(action_id)
 
-                pred = self._decode_response(pred_id).lower()
-                true = self.tokenizer.infer(response.lower().split())
+                d_masks.append(self._action_mask())
 
-                # update metrics
-                self.metrics.n_examples += 1
-                self.metrics.train_loss += loss
-                self.metrics.conf_matrix[pred_id, action_id] += 1
-                self.metrics.n_corr_examples += int(pred == true)
-                if self.debug and ((pred == true) != (pred_id == action_id)):
-                    log.debug("Slot filling problem: ")
-                    log.debug("Pred = {}: {}".format(pred_id, pred))
-                    log.debug("True = {}: {}".format(action_id, true))
-                    log.debug("State = {}".format(str(self.tracker.get_state())))
-                    log.debug("db_result = {}".format(str(self.db_result)))
-                    # TODO: update dialog metrics
-            log.info(':: {}.train {}'.format(j + 1, self.metrics.report()))
+            self.network.train(d_features, d_actions, d_masks)
 
-            valid_metrics = self.evaluate(eval_data)
-            log.info(':: {}.valid {}'.format(j + 1, valid_metrics.report()))
+    def infer_on_batch(self, xs):
+        return [self._infer_dialog(x) for x in xs]
 
-            if valid_metrics.action_accuracy < best_valid_accuracy:
-                curr_patience -= 1
-                log.info(":: patience decreased by 1, is equal to {}".format(curr_patience))
-            else:
-                if curr_patience != self.val_patience:
-                    curr_patience = self.val_patience
-                    log.info(":: patience is equal to {}".format(curr_patience))
-                best_valid_accuracy = valid_metrics.action_accuracy
-            if curr_patience < 1:
-                log.info(":: patience is over, stopped training")
-                break
-        else:
-            log.info(":: stopping because max number of epochs encountered")
-        self.save()
-
-    def infer(self, context, db_result=None):
+    def _infer(self, context, db_result=None):
+        probs = self.network.infer(
+            self._encode_context(context, db_result),
+            self._action_mask(),
+            prob=True
+        )
+        pred_id = np.argmax(probs)
+        # TODO: check probs and one-hot encoding variant
+        #self.prev_action = probs
+        self.prev_action *= 0
+        self.prev_action[pred_id] = 1
         if db_result is not None:
             self.db_result = db_result
-        probs, pred_id = self.network.infer(
-            self._encode_context(context, db_result),
-            self._action_mask()
-        )
-        self.prev_action *= 0.
-        self.prev_action[pred_id] = 1.
-        return self._decode_response(pred_id)
+        return self.tokenizer.infer(self._decode_response(pred_id).split())
 
-    def evaluate(self, eval_data):
-        metrics = DialogMetrics(self.n_actions)
+    def _infer_dialog(self, contexts):
+        self.reset()
+        res = []
+        for context in contexts:
+            if context.get('prev_resp_act') is not None:
+                action_id = self._encode_response(context.get('prev_resp_act'))
+                # previous action is teacher-forced here
+                self.prev_action *= 0.
+                self.prev_action[action_id] = 1.
 
-        for context, response, other in eval_data:
+            res.append(self._infer(context['text'], context.get('db_result')))
+        return res
 
-            if other.get('episode_done'):
-                self.reset()
-                metrics.n_dialogs += 1
-
-            if other.get('db_result') is not None:
-                self.db_result = other['db_result']
-
-            probs, pred_id = self.network.infer(
-                self._encode_context(context, other.get('db_result')),
-                self._action_mask()
-            )
-
-            self.prev_action *= 0.
-            self.prev_action[pred_id] = 1.
-
-            pred = self._decode_response(pred_id).lower()
-            true = self.tokenizer.infer(response.lower().split())
-
-            # update metrics
-            metrics.n_examples += 1
-            action_id = self._encode_response(response, other['act'])
-            metrics.conf_matrix[pred_id, action_id] += 1
-            metrics.n_corr_examples += int(pred == true)
-        return metrics
+    def infer(self, x):
+        if isinstance(x, str):
+            return self._infer(x)
+        return self.infer_on_batch(x)
 
     def reset(self):
         self.tracker.reset_state()

@@ -176,7 +176,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                 log.info(":: initializing `{}` from saved".format(self.__class__.__name__))
 
                 self.opt = read_json(opt_path)
-            
+
                 model_func = getattr(self, model_name, None)
                 if callable(model_func):
                     model = model_func(params=self.opt)
@@ -247,19 +247,6 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
 
         Returns:
             metrics values on a given batch
-        """
-        pass
-
-    @abstractmethod
-    @check_attr_true('train_now')
-    def train(self, dataset, *args):
-        """
-        Train the model on a given data as a single batch
-        Args:
-            dataset: dataset instance
-
-        Returns:
-            metrics values on a given data
         """
         pass
 

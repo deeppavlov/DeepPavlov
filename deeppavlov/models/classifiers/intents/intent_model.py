@@ -17,7 +17,7 @@ limitations under the License.
 import sys
 import inspect
 
-from typing import Dict, Type
+from typing import Dict
 import numpy as np
 from keras.layers import Dense, Input, concatenate, Activation
 from keras.layers.convolutional import Conv1D
@@ -50,8 +50,8 @@ class KerasIntentModel(KerasModel):
     def __init__(self,
                  vocabs,
                  opt: Dict,
-                 embedder: Type = FasttextEmbedder,
-                 tokenizer: Type = NLTKTokenizer,
+                 embedder: FasttextEmbedder,
+                 tokenizer: NLTKTokenizer,
                  **kwargs):
         """
         Initialize and train vocabularies, initializes embedder, tokenizer,
@@ -172,6 +172,7 @@ class KerasIntentModel(KerasModel):
         embeddings_batch = np.asarray(embeddings_batch)
         return embeddings_batch
 
+    @check_attr_true('train_now')
     def train_on_batch(self, batch):
         """
         Train the model on the given batch
@@ -209,73 +210,6 @@ class KerasIntentModel(KerasModel):
             features = self.texts2vec(texts)
             predictions = self.model.predict(features)
             return predictions
-
-    @check_attr_true('train_now')
-    def train(self, dataset, *args, **kwargs):
-        """
-        Train the model using batches and validation
-        Args:
-            dataset: instance of class Dataset
-
-        Returns:
-            None
-        """
-        updates = 0
-        val_loss = 1e100
-        val_increase = 0
-        epochs_done = 0
-
-        n_train_samples = len(dataset.data['train'])
-
-        valid_iter_all = dataset.iter_all(data_type='valid')
-        valid_x = []
-        valid_y = []
-        for valid_i, valid_sample in enumerate(valid_iter_all):
-            valid_x.append(valid_sample[0])
-            valid_y.append(valid_sample[1])
-
-        valid_x = self.texts2vec(valid_x)
-        valid_y = labels2onehot(valid_y, classes=self.classes)
-
-        log.warning('____Training over {} samples____'.format(n_train_samples))
-
-        try:
-            while epochs_done < self.opt['epochs']:
-                batch_gen = dataset.batch_generator(batch_size=self.opt['batch_size'],
-                                                    data_type='train')
-                for step, batch in enumerate(batch_gen):
-                    metrics_values = self.train_on_batch(batch)
-                    updates += 1
-
-                    if self.opt['verbose'] and step % 50 == 0:
-                        log_metrics(names=self.metrics_names,
-                                    values=metrics_values,
-                                    updates=updates,
-                                    mode='train')
-
-                epochs_done += 1
-                if epochs_done % self.opt['val_every_n_epochs'] == 0:
-                    if 'valid' in dataset.data.keys():
-                        valid_metrics_values = self.model.test_on_batch(x=valid_x, y=valid_y)
-
-                        log_metrics(names=self.metrics_names,
-                                    values=valid_metrics_values,
-                                    mode='valid')
-                        if valid_metrics_values[0] > val_loss:
-                            val_increase += 1
-                            log.info("__Validation impatience {} out of {}".format(
-                                     val_increase, self.opt['val_patience']))
-                            if val_increase == self.opt['val_patience']:
-                                log.info("___Stop training: validation is out of patience___")
-                                break
-                        else:
-                            val_increase = 0
-                            val_loss = valid_metrics_values[0]
-                log.info('epochs_done: {}'.format(epochs_done))
-        except KeyboardInterrupt:
-            log.warning('Interrupted')
-
-        self.save()
 
     def infer(self, data, predict_proba=False, *args):
         """

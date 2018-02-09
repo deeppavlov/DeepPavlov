@@ -16,6 +16,7 @@
     "name": "typos_kartaslov_reader"
   },
   "dataset": {
-    "name": "typos_dataset"
+    "name": "typos_dataset",
+    "test_ratio": 0.02
   }
 }

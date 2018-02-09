@@ -19,7 +19,6 @@ import itertools
 from collections import defaultdict, Counter
 from heapq import heappop, heappushpop, heappush
 from math import log, exp
-from pathlib import Path
 
 import kenlm
 from tqdm import tqdm
@@ -55,6 +54,7 @@ class ErrorModel(Inferable, Trainable):
         self.costs[('', '')] = log(1)
         self.costs[('⟬', '⟬')] = log(1)
         self.costs[('⟭', '⟭')] = log(1)
+
         for c in self.dictionary.alphabet:
             self.costs[(c, c)] = log(1)
         # if self.ser_path.is_file():
@@ -64,7 +64,7 @@ class ErrorModel(Inferable, Trainable):
             self.lm = kenlm.Model(lm_file)
             self.beam_size = 4
             self.candidates_count = 4
-            self.infer = self._infer_lm
+            self._infer_instance = self._infer_instance_lm
 
     def _find_candidates_window_0(self, word, k=1, prop_threshold=1e-6):
         threshold = log(prop_threshold)
@@ -130,7 +130,7 @@ class ErrorModel(Inferable, Trainable):
         return [(w.strip('⟬⟭'), score) for score, w in sorted(candidates, reverse=True) if
                 score > threshold]
 
-    def infer(self, instance: str, *args, **kwargs):
+    def _infer_instance(self, instance: str):
         corrected = []
         for incorrect in instance.split():
             if any([c not in self.dictionary.alphabet for c in incorrect]):
@@ -140,7 +140,7 @@ class ErrorModel(Inferable, Trainable):
                 corrected.append(res[0][0] if res else incorrect)
         return ' '.join(corrected)
 
-    def _infer_lm(self, instance: str, *args, **kwargs):
+    def _infer_instance_lm(self, instance: str, *args, **kwargs):
         candidates = []
         for incorrect in instance.split():
             if any([c not in self.dictionary.alphabet for c in incorrect]):
@@ -168,6 +168,12 @@ class ErrorModel(Inferable, Trainable):
         score, state, words = beam[0]
         return ' '.join(words[:-1])
 
+    def infer(self, data, *args, **kwargs):
+        if isinstance(data, str):
+            return self._infer_instance(data)
+        return [self._infer_instance(instance) for instance in tqdm(data, desc='Infering a batch with the error model',
+                                                                    leave=False)]
+
     def reset(self):
         pass
 
@@ -193,12 +199,12 @@ class ErrorModel(Inferable, Trainable):
         return d[-1][-1]
 
     @check_attr_true('train_now')
-    def train(self, dataset, *args, **kwargs):
+    def fit(self, data):
         changes = []
         entries = []
-        dataset = list(dataset.iter_all())
+        data = list(data)
         window = 4
-        for error, correct in tqdm(dataset, desc='Training the error model'):
+        for error, correct in tqdm(data, desc='Training the error model'):
             correct = '⟬{}⟭'.format(correct)
             error = '⟬{}⟭'.format(error)
             d, ops = self._distance_edits(correct, error)
@@ -224,8 +230,6 @@ class ErrorModel(Inferable, Trainable):
             p = c / e
             self.costs[(w, s)] = log(p)
 
-        self.save()
-
     def save(self):
         logger.info("[saving error_model to `{}`]".format(self.save_path))
 
@@ -242,9 +246,8 @@ class ErrorModel(Inferable, Trainable):
                     reader = csv.reader(tsv_file, delimiter='\t')
                     for w, s, p in reader:
                         self.costs[(w, s)] = log(float(p))
-            elif isinstance(self.load_path, Path):
-                if not self.load_path.parent.is_dir():
-                    raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
-                        self.__class__.__name__))
+            elif not self.load_path.parent.is_dir():
+                raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
+                    self.__class__.__name__))
         else:
             raise ConfigError("`load_path` for {} is not provided!".format(self))
