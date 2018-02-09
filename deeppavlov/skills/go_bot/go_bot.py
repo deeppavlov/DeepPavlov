@@ -276,28 +276,27 @@ class GoalOrientedBot(Inferable, Trainable):
             print("\n:: stopping because max number of epochs encountered\n")
         self.save()
 
-    # def train_on_batch(self, batch):
-    #     x, y = batch
-    #     pass
-
     def infer_on_batch(self, xs):
         return [self._infer_dialog(x) for x in xs]
 
-    def _infer(self, context, db_result=None):
-        #probs = self.network.infer(
-        pred_id = self.network.infer(
+    def _infer(self, context, db_result=None, probs=False):
+        probs = self.network.infer(
             self._encode_context(context, db_result),
-            self._action_mask()
-        #    ,prob=True
+            self._action_mask(),
+            prob=True
         )
-        #pred_id = np.argmax(probs)
-        # TODO: check probs and one-hot encoding variant
-        #self.prev_action = probs
-        self.prev_action *= 0
-        self.prev_action[pred_id] = 1
+        pred_id = np.argmax(probs)
         if db_result is not None:
             self.db_result = db_result
-        return self.tokenizer.infer(self._decode_response(pred_id).split())
+
+        # one-hot encoding seems to work better then probabilities
+        if probs:
+            self.prev_action = probs
+        else:
+            self.prev_action *= 0
+            self.prev_action[pred_id] = 1
+
+        return self._decode_response(pred_id)
 
     def _infer_dialog(self, contexts):
         self.reset()
