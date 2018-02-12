@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "dstc2_datasetreader",
-    "data_path": "../download/dstc2"
+    "data_path": "dstc2"
   },
   "dataset": {
     "name": "dialog_dataset"
@@ -15,8 +15,8 @@
       ],
       "level": "token",
       "tokenize": true,
-      "save_path": "../download/vocabs/word.dict",
-      "load_path": "../download/vocabs/word.dict"
+      "save_path": "vocabs/word.dict",
+      "load_path": "vocabs/word.dict"
     }
   },
   "model": {
@@ -25,11 +25,11 @@
     "debug": 0,
     "num_epochs": 1,
     "val_patience": 10,
-    "template_path": "../download/dstc2/dstc2-templates.txt",
+    "template_path": "dstc2/dstc2-templates.txt",
     "network": {
       "train_now": true,
-      "load_path": "../download/go_bot_rnn_minimal/model",
-      "save_path": "../download/go_bot_rnn_minimal/model",
+      "load_path": "go_bot_rnn_minimal/model",
+      "save_path": "go_bot_rnn_minimal/model",
       "name": "go_bot_rnn",
       "learning_rate": 0.02,
       "hidden_dim": 128,

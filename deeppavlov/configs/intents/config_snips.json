@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "classification_datasetreader",
-    "data_path": "../data/snips",
+    "data_path": "snips",
     "data_types": [
       "train"
     ]
@@ -26,15 +26,15 @@
         "y"
       ],
       "level": "token",
-      "save_path": "../download/vocabs/snips_classes.dict",
-      "load_path": "../download/vocabs/snips_classes.dict",
+      "save_path": "vocabs/snips_classes.dict",
+      "load_path": "vocabs/snips_classes.dict",
       "train_now": true
     }
   },
   "model": {
     "name": "intent_model",
-    "save_path": "../download/intents/intent_cnn_snips",
-    "load_path": "../download/intents/intent_cnn_snips",
+    "save_path": "intents/intent_cnn_snips",
+    "load_path": "intents/intent_cnn_snips",
     "opt": {
       "train_now": true,
       "kernel_sizes_cnn": [
@@ -62,8 +62,8 @@
     },
     "embedder": {
       "name": "fasttext",
-      "save_path": "../download/embeddings/reddit_fasttext_model.bin",
-      "load_path": "../download/embeddings/reddit_fasttext_model.bin",
+      "save_path": "embeddings/reddit_fasttext_model.bin",
+      "load_path": "embeddings/reddit_fasttext_model.bin",
       "emb_module": "fasttext",
       "dim": 100
     },

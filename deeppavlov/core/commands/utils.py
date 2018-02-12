@@ -14,27 +14,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from pathlib import Path, PosixPath
+from pathlib import Path
+
+from typing import Union
 
 from deeppavlov.core.common import paths
 from deeppavlov.core.common.file import read_json
 
 
-def set_usr_dir(config_path: str, usr_dir_name='download'):
+def set_deeppavlov_root(config_path: str):
     """
     Make a serialization user dir.
     """
     config = read_json(config_path)
     try:
-        usr_dir = Path(config['usr_dir'])
+        deeppavlov_root = Path(config['deeppavlov_root'])
     except KeyError:
-        root_dir = (Path(__file__) / ".." / ".." / ".." / "..").resolve()
-        usr_dir = root_dir / usr_dir_name
+        deeppavlov_root = Path(__file__, "..", "..", "..", "..", "download").resolve()
 
-    usr_dir.mkdir(exist_ok=True)
+    deeppavlov_root.mkdir(exist_ok=True)
 
-    paths.USR_PATH = usr_dir
+    paths.deeppavlov_root = deeppavlov_root
 
 
-def get_usr_dir() -> PosixPath:
-    return paths.USR_PATH
+def get_deeppavlov_root() -> Path:
+    return paths.deeppavlov_root
+
+
+def expand_path(path: Union[str, Path]):
+    return get_deeppavlov_root() / Path(path).expanduser()

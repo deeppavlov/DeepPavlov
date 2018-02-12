@@ -13,17 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.log import get_logger
+from abc import ABCMeta
 """
 :class:`deeppavlov.models.model.Serializable` is an abstract base class that expresses the interface
 for all models that can serialize data to a path.
 """
-
-from abc import ABCMeta
-from pathlib import Path
-
-from deeppavlov.core.common.log import get_logger
-
 
 log = get_logger(__name__)
 
@@ -40,7 +36,7 @@ class Serializable(metaclass=ABCMeta):
     def __init__(self, save_path, load_path=None, **kwargs):
 
         if save_path:
-            self.save_path = Path(save_path)
+            self.save_path = expand_path(save_path)
             self.save_path.parent.mkdir(exist_ok=True)
         else:
             self.save_path = None
@@ -48,14 +44,14 @@ class Serializable(metaclass=ABCMeta):
         mode = kwargs.get('mode', 'infer')
 
         if load_path:
-            self.load_path = Path(load_path)
+            self.load_path = expand_path(load_path)
             if mode != 'train' and self.load_path != self.save_path:
-                warn("Load path '{}' differs from save path '{}' in '{}' mode for {}."
-                     .format(self.load_path, self.save_path, mode, self.__class__.__name__))
+                log.warning("Load path '{}' differs from save path '{}' in '{}' mode for {}."
+                            .format(self.load_path, self.save_path, mode, self.__class__.__name__))
         elif mode != 'train' and self.save_path:
             self.load_path = self.save_path
-            warn("No load path is set for {} in '{}' mode. Using save path instead"
-                 .format(self.__class__.__name__, mode))
+            log.warning("No load path is set for {} in '{}' mode. Using save path instead"
+                        .format(self.__class__.__name__, mode))
         else:
             self.load_path = None
             log.warning("No load path is set for {}!".format(self.__class__.__name__))

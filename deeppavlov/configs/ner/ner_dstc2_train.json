@@ -1,16 +1,16 @@
 {
   "dataset_reader": {
     "name": "dstc2_datasetreader",
-    "data_path": "../data/dstc2"
+    "data_path": "dstc2"
   },
   "dataset": {
     "name": "dstc2_ner_dataset",
-    "dataset_path": "../data/dstc2"
+    "dataset_path": "dstc2"
   },
   "model": {
     "name": "ner",
     "train_now": true,
-    "save_path": "../download/ner_dstc2_model/ner_model",
+    "save_path": "ner_dstc2_model/ner_model",
     "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
     "verbouse": true,
     "filter_width": 7,
@@ -33,24 +33,24 @@
         "inputs": ["x"],
         "train_now": true,
 		"level": "token",
-        "save_path": "../download/ner_dstc2_model/word.dict",
-        "load_path": "../download/ner_dstc2_model/word.dict"
+        "save_path": "ner_dstc2_model/word.dict",
+        "load_path": "ner_dstc2_model/word.dict"
       },
     "tag_vocab": {
         "name": "default_vocab",
         "inputs": ["y"],
         "train_now": true,
 		"level": "token",
-        "save_path": "../download/ner_dstc2_model/tag.dict",
-        "load_path": "../download/ner_dstc2_model/tag.dict"
+        "save_path": "ner_dstc2_model/tag.dict",
+        "load_path": "ner_dstc2_model/tag.dict"
       },
     "char_vocab":{
         "name": "default_vocab",
         "inputs": ["x"],
         "train_now": true,
 		"level": "char",
-        "save_path": "../download/ner_dstc2_model/char.dict",
-        "load_path": "../download/ner_dstc2_model/char.dict"
+        "save_path": "ner_dstc2_model/char.dict",
+        "load_path": "ner_dstc2_model/char.dict"
       }
   },
   "train": {

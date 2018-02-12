@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "dstc2_datasetreader",
-    "data_path": "../download/dstc2"
+    "data_path": "dstc2"
   },
   "dataset": {
     "name": "intent_dataset"
@@ -13,23 +13,23 @@
         "y"
       ],
       "level": "token",
-      "save_path": "../download/vocabs/classes.dict",
-      "load_path": "../download/vocabs/classes.dict",
+      "save_path": "vocabs/classes.dict",
+      "load_path": "vocabs/classes.dict",
       "train_now": false
     }
   },
   "model": {
     "name": "intent_model",
-    "save_path": "../download/intents/intent_cnn",
-    "load_path": "../download/intents/intent_cnn",
+    "save_path": "intents/intent_cnn",
+    "load_path": "intents/intent_cnn",
     "opt": {
       "train_now": false,
       "model_name": "cnn_model"
     },
     "embedder": {
       "name": "fasttext",
-      "save_path": "../download/embeddings/dstc2_fasttext_model_100.bin",
-      "load_path": "../download/embeddings/dstc2_fasttext_model_100.bin",
+      "save_path": "embeddings/dstc2_fasttext_model_100.bin",
+      "load_path": "embeddings/dstc2_fasttext_model_100.bin",
       "emb_module": "fasttext",
       "dim": 100
     },

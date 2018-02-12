@@ -16,15 +16,13 @@ limitations under the License.
 
 import shutil
 from collections import defaultdict
-from pathlib import Path
-import sys
 
 import requests
 from lxml import html
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import is_done, mark_done
-from deeppavlov.core.common import paths
 from deeppavlov.core.common.file import load_pickle, save_pickle
 from deeppavlov.core.common.log import get_logger
 
@@ -37,9 +35,7 @@ class StaticDictionary:
     dict_name = None
 
     def __init__(self, data_dir=None, *args, **kwargs):
-        if data_dir is None:
-            data_dir = paths.USR_PATH
-        data_dir = Path(data_dir)
+        data_dir = expand_path(data_dir or '')
         if self.dict_name is None:
             self.dict_name = args[0] if args else kwargs.get('dictionary_name', 'dictionary')
 
@@ -88,6 +84,7 @@ class StaticDictionary:
         raw_path = args[2] if len(args) > 2 else kwargs.get('raw_dictionary_path', None)
         if not raw_path:
             raise RuntimeError('raw_path for StaticDictionary is not set')
+        raw_path = expand_path(raw_path)
         with open(raw_path, newline='') as f:
             data = [line.strip().split('\t')[0] for line in f]
         return data
