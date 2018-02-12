@@ -15,37 +15,38 @@ from deeppavlov.core.common.attributes import check_attr_true
 @register('rove')
 class RoVeEmbedder(TFModel):
     def __init__(self, ser_path, ser_dir='emb', ser_file='text8.model', dim=256,
+                 model='lstm', rnn_size=128, num_layers=2, batch_size=32, seq_length=8,
+                 letter_size=200, w2v_size=300, dropout_keep_prob=0.8, grad_clip=5.0,
                  train_now=False):
         super().__init__(ser_path=ser_path, ser_dir=ser_dir,
                          ser_file=ser_file, train_now=train_now)
         self.dim = dim
         self.model = self.load()
 
-        self.args = args
-        if infer:
-            args.batch_size = 1
-            args.seq_length = 1
+        if not train_now:
+            batch_size = 1
+            seq_length = 1
 
-        if args.model == 'rnn':
+        if model == 'rnn':
             cell_fn = rnn_cell.BasicRNNCell
-        elif args.model == 'gru':
+        elif model == 'gru':
             cell_fn = rnn_cell.GRUCell
-        elif args.model == 'lstm':
+        elif model == 'lstm':
             cell_fn = rnn_cell.BasicLSTMCell
         else:
-            raise Exception("model type not supported: {}".format(args.model))
+            raise Exception("model type not supported: {}".format(model))
 
         #with tf.variable_scope("rnn", reuse=True):
-        cell = cell_fn(args.rnn_size, state_is_tuple=False)# is not necesery arg
+        cell = cell_fn(rnn_size, state_is_tuple=False)# is not necesery arg
 
-        self.cell = cell = rnn_cell.MultiRNNCell([cell] * args.num_layers, state_is_tuple=False)
+        self.cell = cell = rnn_cell.MultiRNNCell([cell] * num_layers, state_is_tuple=False)
 
-        self.input_data = tf.placeholder(tf.float32, [args.batch_size, args.seq_length, args.letter_size])
-        self.initial_state = cell.zero_state(args.batch_size, tf.float32)
-        self.change = tf.placeholder(tf.bool, [args.batch_size])
+        self.input_data = tf.placeholder(tf.float32, [batch_size, seq_length, letter_size])
+        self.initial_state = cell.zero_state(batch_size, tf.float32)
+        self.change = tf.placeholder(tf.bool, [batch_size])
         #initial_state = tf.where(self.change, cell.zero_state(args.batch_size, tf.float32), self.initial_state)
         initial_state = self.initial_state
-        inputs = tf.split(self.input_data, args.seq_length, 1)
+        inputs = tf.split(self.input_data, seq_length, 1)
         inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
 
         with tf.variable_scope("input_linear"):
@@ -60,7 +61,7 @@ class RoVeEmbedder(TFModel):
             for i in range(len(inputs)):
                 if i > 0:
                     tf.get_variable_scope().reuse_variables()
-                linears.append((rnn_cell._linear(inputs[i], args.rnn_size, bias=True)))
+                linears.append((rnn_cell._linear(inputs[i], rnn_size, bias=True)))
 
         #fixed_input = tf.stack(linears, axis=1)
         #fixed_input = tf.reshape(fixed_input, [self.args.batch_size, self.args.seq_length, -1])
@@ -79,7 +80,7 @@ class RoVeEmbedder(TFModel):
         loss2 = tf.constant(0.0)
         final_vectors = []
 
-        ones = tf.diag([1.] * args.batch_size)
+        ones = tf.diag([1.] * batch_size)
         #outputs = tf.unstack(outputs, axis = 1)
         with tf.variable_scope("output_linear"):
             for i in range(len(outputs)):
@@ -91,17 +92,17 @@ class RoVeEmbedder(TFModel):
                 # print(output.shape)
                 if i > 0:
                     tf.get_variable_scope().reuse_variables()
-                output = rnn_cell._linear(outputs[i], args.w2v_size, bias=True)
+                output = rnn_cell._linear(outputs[i], w2v_size, bias=True)
 
                 output = tf.nn.l2_normalize(output, 1)
-                output = tf.nn.dropout(output, args.dropout_keep_prob)
+                output = tf.nn.dropout(output, dropout_keep_prob)
                 # negative sampling
                 matrix = tf.matmul(output, output, transpose_b=True) - ones
                 loss1 += tf.maximum(0.0, matrix)
                 final_vectors.append(output)
 
-        seq_slices = tf.reshape(tf.concat(final_vectors, 1), [args.batch_size, args.seq_length, args.w2v_size])
-        seq_slices = tf.split(seq_slices, args.batch_size, 0)
+        seq_slices = tf.reshape(tf.concat(final_vectors, 1), [batch_size, seq_length, w2v_size])
+        seq_slices = tf.split(seq_slices, batch_size, 0)
         seq_slices = [tf.squeeze(input_, [0]) for input_ in seq_slices]
         with tf.variable_scope("additional_loss"):
             for i in range(len(seq_slices)):  # should be length of batch_size
@@ -113,8 +114,8 @@ class RoVeEmbedder(TFModel):
                 loss2 += 1. - matrix
 
         self.target = final_vectors[-1]
-        self.cost = tf.reduce_sum(loss1) / args.batch_size / args.seq_length
-        self.cost += tf.reduce_sum(loss2) / args.batch_size / args.seq_length
+        self.cost = tf.reduce_sum(loss1) / batch_size / seq_length
+        self.cost += tf.reduce_sum(loss2) / batch_size / seq_length
         self.final_state = last_state
         self.lr = tf.Variable(0.0, trainable=False)
         tvars = tf.trainable_variables()
@@ -123,11 +124,11 @@ class RoVeEmbedder(TFModel):
             grads, _ = tf.clip_by_global_norm(tf.gradients(self.cost, tvars,
                                                            aggregation_method=
                                                            tf.AggregationMethod.EXPERIMENTAL_ACCUMULATE_N),
-                                              args.grad_clip)
+                                              grad_clip)
             optimizer = tf.train.AdamOptimizer(self.lr)
             self.train_op = optimizer.apply_gradients(zip(grads, tvars))
         # Validation
-        self.valid_data = tf.placeholder(tf.float32, [1, 1, args.letter_size])
+        self.valid_data = tf.placeholder(tf.float32, [1, 1, letter_size])
         self.valid_initial_state = cell.zero_state(1, tf.float32)
 
         valid_initial_state = self.valid_initial_state
@@ -140,7 +141,7 @@ class RoVeEmbedder(TFModel):
             for i, _input in enumerate(valid_inputs):
                 if i > 0:
                     tf.get_variable_scope().reuse_variables()
-                valid_fixed_input.append((rnn_cell._linear(valid_inputs[i], args.rnn_size, bias=True)))
+                valid_fixed_input.append((rnn_cell._linear(valid_inputs[i], rnn_size, bias=True)))
 
         # valid_fixed_input = tf.stack(valid_fixed_input, axis=1)
         # valid_fixed_input = tf.reshape(valid_fixed_input, [1, 1, args.rnn_size])
@@ -164,7 +165,7 @@ class RoVeEmbedder(TFModel):
                 # valid_vectors.append(output)
                 if i > 0:
                     tf.get_variable_scope().reuse_variables()
-                output = rnn_cell._linear(valid_outputs[i], args.w2v_size, bias=True)
+                output = rnn_cell._linear(valid_outputs[i], w2v_size, bias=True)
                 valid_vectors.append(output)
         self.valid_vector = valid_vectors[-1]
 
