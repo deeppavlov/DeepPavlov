@@ -14,6 +14,9 @@ from deeppavlov.core.common.attributes import check_attr_true
 
 @register('rove')
 class RoVeEmbedder(TFModel):
+    def _train_step(self, features, *args):
+        pass
+
     def __init__(self, ser_path, ser_dir='emb', ser_file='text8.model', dim=256,
                  model='lstm', rnn_size=128, num_layers=2, batch_size=32, seq_length=8,
                  letter_size=200, w2v_size=300, dropout_keep_prob=0.8, grad_clip=5.0,
@@ -40,36 +43,21 @@ class RoVeEmbedder(TFModel):
         cell = cell_fn(rnn_size, state_is_tuple=False)# is not necesery arg
 
         self.cell = cell = rnn_cell.MultiRNNCell([cell] * num_layers, state_is_tuple=False)
-
         self.input_data = tf.placeholder(tf.float32, [batch_size, seq_length, letter_size])
         self.initial_state = cell.zero_state(batch_size, tf.float32)
         self.change = tf.placeholder(tf.bool, [batch_size])
-        #initial_state = tf.where(self.change, cell.zero_state(args.batch_size, tf.float32), self.initial_state)
+
         initial_state = self.initial_state
         inputs = tf.split(self.input_data, seq_length, 1)
         inputs = [tf.squeeze(input_, [1]) for input_ in inputs]
 
         with tf.variable_scope("input_linear"):
             linears = []
-            # for i, _input in enumerate(inputs):
-            #     if i > 0:
-            #         tf.get_variable_scope()
-                # full_vector = tf.contrib.layers.fully_connected(_input, args.rnn_size,
-                #                                                 activation_fn=None)
-                # linears.append(full_vector)
 
             for i in range(len(inputs)):
                 if i > 0:
                     tf.get_variable_scope().reuse_variables()
                 linears.append((rnn_cell._linear(inputs[i], rnn_size, bias=True)))
-
-        #fixed_input = tf.stack(linears, axis=1)
-        #fixed_input = tf.reshape(fixed_input, [self.args.batch_size, self.args.seq_length, -1])
-        # with tf.variable_scope("rnn_scope"):
-        #     tf.get_variable_scope().reuse_variables()
-        # outputs, last_state = tf.nn.dynamic_rnn(cell, fixed_input,
-        #                                        initial_state=initial_state,
-        #                                        scope="rnnlm")
 
         outputs, last_state = rnn_decoder(linears, initial_state, cell,
                                           scope="rnnlm")
@@ -81,15 +69,8 @@ class RoVeEmbedder(TFModel):
         final_vectors = []
 
         ones = tf.diag([1.] * batch_size)
-        #outputs = tf.unstack(outputs, axis = 1)
         with tf.variable_scope("output_linear"):
             for i in range(len(outputs)):
-                # if i > 0:
-                #     tf.get_variable_scope()
-                # output = tf.contrib.layers.fully_connected(outputs[i], args.w2v_size,
-                #                                            activation_fn=None)
-                #
-                # print(output.shape)
                 if i > 0:
                     tf.get_variable_scope().reuse_variables()
                 output = rnn_cell._linear(outputs[i], w2v_size, bias=True)
@@ -143,14 +124,8 @@ class RoVeEmbedder(TFModel):
                     tf.get_variable_scope().reuse_variables()
                 valid_fixed_input.append((rnn_cell._linear(valid_inputs[i], rnn_size, bias=True)))
 
-        # valid_fixed_input = tf.stack(valid_fixed_input, axis=1)
-        # valid_fixed_input = tf.reshape(valid_fixed_input, [1, 1, args.rnn_size])
-
         valid_outputs, valid_last_state = rnn_decoder(valid_fixed_input, valid_initial_state, cell,
                                           scope="rnnlm")
-        # valid_outputs, valid_last_state = tf.nn.dynamic_rnn(cell, valid_fixed_input,
-        #                                        initial_state=valid_initial_state,
-        #                                        scope="lst_valid")
 
         self.valid_state = valid_last_state
 
@@ -159,16 +134,11 @@ class RoVeEmbedder(TFModel):
         valid_outputs = tf.unstack(valid_outputs, axis = 1)
         with tf.variable_scope("output_valid"):
             for i in range(len(valid_outputs)):
-                # if i > 0:
-                #     tf.get_variable_scope().reuse_variables()
-                # output = tf.nn.l2_normalize(output, 1)
-                # valid_vectors.append(output)
                 if i > 0:
                     tf.get_variable_scope().reuse_variables()
                 output = rnn_cell._linear(valid_outputs[i], w2v_size, bias=True)
                 valid_vectors.append(output)
         self.valid_vector = valid_vectors[-1]
-
 
     def _encode(self, sentence: str):
         embs = [self.model[w] for w in sentence.split() if w and w in self.model]
