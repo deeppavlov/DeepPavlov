@@ -58,16 +58,13 @@
   "model": {
     "train_now": true,
     "name": "go_bot",
-    "debug": 0,
-    "num_epochs": 50,
-    "val_patience": 3,
     "template_path": "../download/dstc2/dstc2-templates.txt",
     "network": {
       "train_now": true,
-      "load_path": "../download/go_bot_rnn_tmp/model",
-      "save_path": "../download/go_bot_rnn_tmp/model",
+      "load_path": "../download/go_bot_rnn/model",
+      "save_path": "../download/go_bot_rnn/model",
       "name": "go_bot_rnn",
-      "learning_rate": 0.00005,
+      "learning_rate": 0.001,
       "hidden_dim": 128,
       "obs_size": 530,
       "use_action_mask": false,
@@ -151,6 +148,18 @@
         "name"
       ]
     }
+  },
+  "train": {
+    "epochs": 200,
+    "batch_size": 1,
+
+    "metrics": ["per_item_dialog_accuracy"],
+    "validation_patience": 30,
+    "val_every_n_epochs": 1,
+
+    "log_every_n_batches": -1,
+    "log_every_n_epochs": 1,
+    "show_examples": false
   }
 }
 
