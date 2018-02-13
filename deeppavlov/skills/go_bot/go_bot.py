@@ -69,8 +69,9 @@ class GoalOrientedBot(Inferable, Trainable):
         self.network = network
         self.word_vocab = vocabs['word_vocab']
 
+        log.info("[loading templates from `{}`]".format(template_path))
         self.templates = Templates(template_type).load(template_path)
-        log.info("[ using {} templates from `{}` ]".format(len(self.templates), template_path))
+        log.info("{} templates loaded".format(len(self.templates)))
 
         # intialize parameters
         self.db_result = None

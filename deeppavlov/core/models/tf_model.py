@@ -95,7 +95,7 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
     def save(self):
         save_path = str(self.save_path)
         saver = tf.train.Saver()
-        log.info('[ saving model to {} ]'.format(save_path))
+        log.info('[saving model to {}]'.format(save_path))
         saver.save(self.sess, save_path)
         log.info('model saved')
 
@@ -119,7 +119,7 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
         """
         ckpt = self.get_checkpoint_state()
         if ckpt and ckpt.model_checkpoint_path:
-            log.info('[ restoring checkpoint from {} ]'.format(ckpt.model_checkpoint_path))
+            log.info('[restoring checkpoint from {}]'.format(ckpt.model_checkpoint_path))
             self._saver().restore(self.sess, ckpt.model_checkpoint_path)
             log.info('session restored')
         else:

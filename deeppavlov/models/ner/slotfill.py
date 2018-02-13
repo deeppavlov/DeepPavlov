@@ -86,13 +86,13 @@ class DstcSlotFillingNetwork(SimpleTFModel):
         path = str(self.load_path.absolute())
         # Check presence of the model files
         if tf.train.checkpoint_exists(path):
-            log.info('[ restoring model from {} ]'.format(path))
+            log.info('[restoring model from {}]'.format(path))
             self._ner_network.load(path)
 
     @overrides
     def save(self):
         path = str(self.save_path.absolute())
-        log.info('[ saving model to {} ]'.format(path))
+        log.info('[saving model to {}]'.format(path))
         self._ner_network.save(path)
 
     @check_attr_true('train_now')

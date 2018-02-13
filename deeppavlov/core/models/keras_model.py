@@ -100,7 +100,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         Returns:
             compiled model with given network and learning parameters
         """
-        log.info("[ initializing `{}` from scratch ]".format(self.__class__.__name__))
+        log.info("[initializing `{}` from scratch]".format(self.__class__.__name__))
 
         model_func = getattr(self, model_name, None)
         if callable(model_func):
@@ -173,7 +173,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
 
             if opt_path.exists() and weights_path.exists():
 
-                log.info("[ initializing `{}` from saved ]".format(self.__class__.__name__))
+                log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
 
                 self.opt = read_json(opt_path)
 
@@ -183,7 +183,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                 else:
                     raise AttributeError("Model {} is not defined".format(model_name))
 
-                log.info("[ loading weights from {} ]".format(weights_path.name))
+                log.info("[loading weights from {}]".format(weights_path.name))
                 model.load_weights(str(weights_path))
 
                 optimizer_func = getattr(keras.optimizers, optimizer_name, None)
@@ -268,7 +268,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         else:
             opt_path = "{}_opt.json".format(str(self.save_path.resolve()))
             weights_path = "{}.h5".format(str(self.save_path.resolve()))
-            log.info("[ saving model to {} ]".format(opt_path))
+            log.info("[saving model to {}]".format(opt_path))
             self.model.save_weights(weights_path)
 
         save_json(self.opt, opt_path)
