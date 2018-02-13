@@ -58,37 +58,34 @@
   "model": {
     "train_now": true,
     "name": "go_bot",
+	"debug": false,
     "template_path": "../download/dstc2/dstc2-templates.txt",
     "network": {
       "train_now": true,
-      "load_path": "../download/go_bot_rnn/model",
-      "save_path": "../download/go_bot_rnn/model",
+      "load_path": "../download/go_bot_rnn_all/model",
+      "save_path": "../download/go_bot_rnn_all/model",
       "name": "go_bot_rnn",
       "learning_rate": 0.02,
       "hidden_dim": 128,
+	  "dense_size": 32,
       "obs_size": 830,
       "use_action_mask": false,
       "action_size": 45
     },
     "slot_filler": {
       "name": "dstc_slotfilling",
-      "load_path": "../download/slots/slot_vals.json",
-      "save_path": "../download/slots/slot_vals.json",
-      "ner_network": {
-        "save_path": "../download/ner/dstc_ner_model",
-        "load_path": "../download/ner/dstc_ner_model",
-        "name": "ner_tagging_network",
-        "filter_width": 7,
-        "embeddings_dropout": true,
-        "n_filters": [
-          64,
-          64
-        ],
-        "token_embeddings_dim": 64,
-        "char_embeddings_dim": 32,
-        "use_batch_norm": true,
-        "use_crf": true
-      }
+      "save_path": "../download/ner/dstc_ner_model",
+	  "load_path": "../download/ner/dstc_ner_model",
+      "filter_width": 7,
+      "embeddings_dropout": true,
+      "n_filters": [
+        64,
+        64
+      ],
+      "token_embeddings_dim": 64,
+      "char_embeddings_dim": 32,
+      "use_batch_norm": true,
+      "use_crf": true
     },
     "intent_classifier": {
       "name": "intent_model",
@@ -173,7 +170,5 @@
     "log_every_n_epochs": 1,
     "show_examples": false
   }
-}
-
 }
 

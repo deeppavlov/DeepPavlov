@@ -22,6 +22,7 @@
   "model": {
     "train_now": true,
     "name": "go_bot",
+	"debug": false,
     "template_path": "../download/dstc2/dstc2-templates.txt",
     "network": {
       "train_now": true,
@@ -30,6 +31,7 @@
       "name": "go_bot_rnn",
       "learning_rate": 0.02,
       "hidden_dim": 128,
+	  "dense_size": 32,
       "obs_size": 502,
       "use_action_mask": false,
       "action_size": 45
