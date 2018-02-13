@@ -49,10 +49,10 @@ class GoalOrientedBotNetwork(TFModel):
 
         if self.get_checkpoint_state():
         #TODO: save/load params to json, here check compatability
-            log.info("[ initializing `{}` from saved ]".format(self.__class__.__name__))
+            log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
             self.load()
         else:
-            log.info("[ initializing `{}` from scratch ]".format(self.__class__.__name__))
+            log.info("[initializing `{}` from scratch]".format(self.__class__.__name__))
             self.sess.run(tf.global_variables_initializer())
 
         self.reset_state()
@@ -67,6 +67,7 @@ class GoalOrientedBotNetwork(TFModel):
         self.n_actions = params['action_size']
         #TODO: try obs_size=None or as a placeholder
         self.obs_size = params['obs_size']
+        self.dense_size = params['dense_size'] or params['hidden_dim']
 
     def _build_graph(self):
 
@@ -111,14 +112,14 @@ class GoalOrientedBotNetwork(TFModel):
         # input projection
         _projected_features = \
             tf.layers.dense(self._features,
-                            self.n_hidden,
+                            self.dense_size,
                             kernel_initializer=xavier_initializer())
 
         # recurrent network unit
         _lstm_cell = tf.nn.rnn_cell.LSTMCell(self.n_hidden)
         _output, _state = tf.nn.dynamic_rnn(_lstm_cell,
-                                             _projected_features,
-                                             initial_state=self._initial_state)
+                                            _projected_features,
+                                            initial_state=self._initial_state)
  
         # output projection
         # TODO: try multiplying logits to action_mask
