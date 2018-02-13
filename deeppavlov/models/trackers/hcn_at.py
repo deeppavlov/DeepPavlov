@@ -40,7 +40,7 @@ class ActionTracker:
         # maintain an instance of EntityTracker
         self.et = ent_tracker
         # get a list of action templates
-        self.action_templates = self.get_action_templates(Path(paths.USR_PATH) / 'responses.txt')
+        self.action_templates = self.get_action_templates(Path(paths.deeppavlov_root) / 'responses.txt')
         self.action_size = len(self.action_templates)
         # action mask
         self.am = np.zeros([self.action_size], dtype=np.float32)

@@ -6,8 +6,8 @@
     "dictionary": {
       "name": "russian_words_vocab"
     },
-    "save_path": "../download/error_model/error_model_ru.tsv",
-    "load_path": "../download/error_model/error_model_ru.tsv"
+    "save_path": "error_model/error_model_ru.tsv",
+    "load_path": "error_model/error_model_ru.tsv"
   },
   "dataset_reader": {
     "name": "typos_kartaslov_reader"

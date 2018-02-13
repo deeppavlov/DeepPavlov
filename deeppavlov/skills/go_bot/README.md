@@ -65,8 +65,8 @@ To use a go_bot model you should have:
       * `inputs` — `[ "x" ]`,
       * `level` — `"token"`,
       * `tokenize` — `true`,
-      * `save_path` — `"../download/vocabs/token.dict"`
-      * `load_path` — `"../download/vocabs/token.dict"`
+      * `save_path` — `"vocabs/token.dict"`
+      * `load_path` — `"vocabs/token.dict"`
 * `tokenizer` — one of tokenizers from [`deeppavlov.models.tokenizers`](../../models/tokenizers) module
    * `name` — tokenizer name
    * other arguments specific to your tokenizer

@@ -33,8 +33,8 @@ A working config could look like this:
 {
   "model": {
     "name": "spelling_error_model",
-    "save_path": "../download/error_model/error_model.tsv",
-    "load_path": "../download/error_model/error_model.tsv",
+    "save_path": "error_model/error_model.tsv",
+    "load_path": "error_model/error_model.tsv",
     "train_now": true,
     "window": 1,
     "dictionary": {
@@ -96,8 +96,8 @@ A working training config could look something like:
 {
   "model": {
     "name": "spelling_error_model",
-    "save_path": "../download/error_model/error_model.tsv",
-    "load_path": "../download/error_model/error_model.tsv",
+    "save_path": "error_model/error_model.tsv",
+    "load_path": "error_model/error_model.tsv",
     "window": 1,
     "train_now": true,
     "dictionary": {

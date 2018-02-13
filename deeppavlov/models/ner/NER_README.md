@@ -106,8 +106,8 @@ The model part of the configuration file contains the specification of the neura
     "name": "ner",
     "train_now": true,
     "epochs": 3,
-    "save_path": "../download/ner_model/ner_model",
-    "load_path": "../download/ner_model/ner_model",
+    "save_path": "ner_model/ner_model",
+    "load_path": "ner_model/ner_model",
     "vocabs": ["token_vocab", "tag_vocab", "char_vocab"],
     "verbouse": true,
     "filter_width": 7,
@@ -156,24 +156,24 @@ Vocabularies form a block of the following form:
         "inputs": ["x"],
         "train_now": true,
         "level": "token",
-        "save_path": "../download/ner_model/word.dict",
-        "load_path": "../download/ner_model/word.dict"
+        "save_path": "ner_model/word.dict",
+        "load_path": "ner_model/word.dict"
       },
     "tag_vocab": {
         "name": "default_vocab",
         "inputs": ["y"],
         "train_now": true,
         "level": "token",
-        "save_path": "../download/ner_model/tag.dict",
-        "load_path": "../download/ner_model/tag.dict"
+        "save_path": "ner_model/tag.dict",
+        "load_path": "ner_model/tag.dict"
       },
     "char_vocab":{
         "name": "default_vocab",
         "inputs": ["x"],
         "train_now": true,
         "level": "char",
-        "save_path": "../download/ner_model/char.dict",
-        "load_path": "../download/ner_model/char.dict"
+        "save_path": "ner_model/char.dict",
+        "load_path": "ner_model/char.dict"
       }
 }
 ```
