@@ -75,8 +75,8 @@
     },
     "slot_filler": {
       "name": "dstc_slotfilling",
-      "save_path": "model/dstc_ner_model",
-      "load_path": "model/dstc_ner_model",
+      "save_path": "ner/dstc_ner_model",
+      "load_path": "ner/dstc_ner_model",
       "filter_width": 7,
       "embeddings_dropout": true,
       "n_filters": [
