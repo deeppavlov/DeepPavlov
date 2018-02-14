@@ -6,27 +6,39 @@ import subprocess as sp
 import shutil
 
 
-N2C = {"error_model": ("configs/error_model/config_en.json",
-                       "configs/error_model/config_ru.json"),
-       "go_bot": ("configs/go_bot/config.json",
-                  "configs/go_bot/config_all.json",
-                  "configs/go_bot/config_minimal.json"),
-       "intents": ("configs/intents/config_dstc2_infer.json",
-                   "configs/intents/config_dstc2_train.json"),
-       "ner": ("configs/ner/ner_conll2003_train.json",
-               "configs/ner/ner_dstc2_train.json",
-               "configs/ner/slot_config_train.json")}
-
-TEST_QUERY = "In the center of the city, near the hotel"
+# Mapping from model names to configs and corresponding Query-Response pairs
+MCQR = {"error_model": {"configs/error_model/config_en.json":
+                            ("", ""),
+                        "configs/error_model/config_ru.json":
+                            ("", "")
+                        },
+        "go_bot": {"configs/go_bot/config.json":
+                       ("", ""),
+                   "configs/go_bot/config_all.json":
+                       ("", ""),
+                   "configs/go_bot/config_minimal.json":
+                       ("", "")
+                   },
+        "intents": {"configs/intents/config_dstc2_train.json":
+                        ("", "")
+                    },
+        "ner": {"configs/ner/ner_conll2003_train.json":
+                    ("", ""),
+                "configs/ner/ner_dstc2_train.json":
+                    ("", ""),
+                "configs/ner/slot_config_train.json":
+                    ("", "")
+                }
+        }
 
 
 def setup_module():
     src_dir = (Path() / "../deeppavlov").resolve()
     tests_dir = Path().resolve()
     (tests_dir / "configs").mkdir()
-    for m_name, conf_files in N2C.items():
+    for m_name, conf_files in MCQR.items():
         (tests_dir / "configs" / m_name).mkdir()
-        for conf_file in conf_files:
+        for conf_file, qr in conf_files.items():
             with (src_dir / conf_file).open() as fin:
                 config = json.load(fin)
             try:
@@ -48,15 +60,15 @@ def download(full=None):
     sp.run(cmd)
 
 
-@pytest.mark.parametrize("model", [k for k, v in N2C.items()])
+@pytest.mark.parametrize("model", [k for k, v in MCQR.items()])
 class TestQuickStart(object):
 
     @staticmethod
-    def interact(config, query):
+    def interact(config, query="exit"):
         p = sp.Popen(["python", "-m", "deeppavlov.deep", "interact", config],
                      stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
         out, _ = p.communicate(f"{query}".encode())
-        return out
+        return p.returncode
 
     def test_downloaded_model_exist(self, model):
         if not (Path() / "../download").resolve().exists():
@@ -64,12 +76,12 @@ class TestQuickStart(object):
         assert (Path() / "../download/" / model).exists(), f"{model} was not downloaded"
 
     def test_interact_pretrained_model(self, model):
-        for c in N2C[model]:
-            assert self.interact(c, TEST_QUERY), f"Error in interacting with pretrained {model}: {c}"
+        for c, qr in MCQR[model].items():
+            assert self.interact(c) == 0, f"Error in interacting with pretrained {model}: {c}"
 
     def test_consecutive_training_and_interacting(self, model):
-        for c in N2C[model]:
+        for c, qr in MCQR[model].items():
             shutil.rmtree("../download/" + model)
             p = sp.run(["python", "-m", "deeppavlov.deep", "train", c])
             assert p.returncode == 0, f"Training process of {model} with {c} returned non-zero exit code"
-            assert self.interact(c, TEST_QUERY), f"Error in interacting with 1-epoch trained {model}: {c}"
+            assert self.interact(c) == 0, f"Error in interacting with 1-epoch trained {model}: {c}"
