@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 REQ_URLS = {
-    'http://lnsigo.mipt.ru/export/deeppavlov_data/go_bot_rnn.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/go_bot.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/intents.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ner.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/error_model.tar.gz',
