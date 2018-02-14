@@ -14,8 +14,8 @@ MCQR = {"error_model": {"configs/error_model/config_en.json":
                         },
         "go_bot": {"configs/go_bot/config.json":
                        ("go_bot", "", ""),
-                   "configs/go_bot/config_all.json":
-                       ("go_bot_all", "", ""),
+                   # "configs/go_bot/config_all.json":
+                   #     ("go_bot_all", "", ""),
                    "configs/go_bot/config_minimal.json":
                        ("go_bot_minimal", "", "")
                    },
