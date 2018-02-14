@@ -64,9 +64,9 @@
     "template_path": "dstc2/dstc2-templates.txt",
     "network": {
       "train_now": true,
-      "load_path": "go_bot_rnn/model",
-      "save_path": "go_bot_rnn/model",
       "name": "go_bot_rnn",
+      "load_path": "go_bot_all/model",
+      "save_path": "go_bot_all/model",
       "learning_rate": 0.02,
       "hidden_dim": 128,
       "obs_size": 830,
