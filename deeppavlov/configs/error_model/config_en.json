@@ -6,8 +6,8 @@
     "dictionary": {
       "name": "wikitionary_100K_vocab"
     },
-    "save_path": "../download/error_model/error_model.tsv",
-    "load_path": "../download/error_model/error_model.tsv"
+    "save_path": "error_model/error_model.tsv",
+    "load_path": "error_model/error_model.tsv"
   },
   "dataset_reader": {
     "name": "typos_wikipedia_reader"

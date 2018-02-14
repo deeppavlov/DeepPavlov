@@ -42,7 +42,7 @@ To use a go_bot model you should have:
 1. (_optional, but recommended_) pretrained named entity recognition model (NER) 
    * config [`deeppavlov/configs/ner/config.json`](../../configs/ner/config.json) is recommended
 2. (_optional, but recommended_) pretrained intents classifier model 
-   * config [`deeppavlov/configs/intents/config_dstc2.json`](../../configs/intents/config_dstc2.json) is recommended
+   * config [`deeppavlov/configs/intents/config_dstc2_train.json`](../../configs/intents/config_dstc2_train.json) is recommended
 3. (_optional_) downloaded english fasttext embeddings trained on wiki ([https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip](https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip))
    * you can use any english embeddings of your choice, but edit go_bot config accordingly
 4. pretrained goal-oriented bot model itself 
@@ -65,8 +65,8 @@ To use a go_bot model you should have:
       * `inputs` — `[ "x" ]`,
       * `level` — `"token"`,
       * `tokenize` — `true`,
-      * `save_path` — `"../download/vocabs/token.dict"`
-      * `load_path` — `"../download/vocabs/token.dict"`
+      * `save_path` — `"vocabs/token.dict"`
+      * `load_path` — `"vocabs/token.dict"`
 * `tokenizer` — one of tokenizers from [`deeppavlov.models.tokenizers`](../../models/tokenizers) module
    * `name` — tokenizer name
    * other arguments specific to your tokenizer

@@ -16,23 +16,20 @@ limitations under the License.
 
 from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.infer import interact_model
-from deeppavlov.core.commands.utils import set_usr_dir, get_usr_dir
+from deeppavlov.core.commands.utils import set_deeppavlov_root
 
 
-# PIPELINE_CONFIG_PATH = 'configs/intents/config_train.json'
+# PIPELINE_CONFIG_PATH = 'configs/intents/config_dstc2_train.json'
+# PIPELINE_CONFIG_PATH = 'configs/intents/config_snips.json'
 # PIPELINE_CONFIG_PATH = 'configs/ner/ner_dstc2_train.json'
 # PIPELINE_CONFIG_PATH = 'configs/ner/ner_conll2003_train.json'
 # PIPELINE_CONFIG_PATH = 'configs/ner/slot_config_train.json'
 # PIPELINE_CONFIG_PATH = 'configs/error_model/config_en.json'
 # PIPELINE_CONFIG_PATH = 'configs/error_model/config_ru.json'
 PIPELINE_CONFIG_PATH = 'configs/go_bot/config_train.json'
-set_usr_dir(PIPELINE_CONFIG_PATH)
-try:
-    # train_model_from_config(PIPELINE_CONFIG_PATH)
-    train_model_from_config(PIPELINE_CONFIG_PATH)
-    interact_model(PIPELINE_CONFIG_PATH)
-# remove if usr_dir is empty:
-finally:
-    usr_dir = get_usr_dir()
-    if not list(usr_dir.iterdir()):
-        usr_dir.rmdir()
+
+set_deeppavlov_root(PIPELINE_CONFIG_PATH)
+
+# train_model_from_config(PIPELINE_CONFIG_PATH)
+train_model_from_config(PIPELINE_CONFIG_PATH)
+interact_model(PIPELINE_CONFIG_PATH)

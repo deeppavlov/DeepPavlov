@@ -67,7 +67,7 @@ class GoalOrientedBotNetwork(TFModel):
         self.n_actions = params['action_size']
         #TODO: try obs_size=None or as a placeholder
         self.obs_size = params['obs_size']
-        self.dense_size = params['dense_size'] or params['hidden_dim']
+        self.dense_size = params.get('dense_size', params['hidden_dim'])
 
     def _build_graph(self):
 

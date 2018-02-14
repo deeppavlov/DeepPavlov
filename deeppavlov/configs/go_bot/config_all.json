@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "dstc2_datasetreader",
-    "data_path": "../download/dstc2"
+    "data_path": "dstc2"
   },
   "dataset": {
     "name": "dialog_dataset"
@@ -15,8 +15,8 @@
       ],
       "level": "token",
       "tokenize": true,
-      "save_path": "../download/vocabs/word.dict",
-      "load_path": "../download/vocabs/word.dict"
+      "save_path": "vocabs/word.dict",
+      "load_path": "vocabs/word.dict"
     },
     "token_vocab": {
       "name": "default_vocab",
@@ -24,8 +24,8 @@
         "x"
       ],
       "level": "token",
-      "save_path": "../download/vocabs/token.dict",
-      "load_path": "../download/vocabs/token.dict"
+      "save_path": "vocabs/token.dict",
+      "load_path": "vocabs/token.dict"
     },
     "tag_vocab": {
       "name": "default_vocab",
@@ -33,8 +33,8 @@
         "y"
       ],
       "level": "token",
-      "save_path": "../download/vocabs/tag.dict",
-      "load_path": "../download/vocabs/tag.dict"
+      "save_path": "vocabs/tag.dict",
+      "load_path": "vocabs/tag.dict"
     },
     "char_vocab": {
       "name": "default_vocab",
@@ -42,8 +42,8 @@
         "x"
       ],
       "level": "char",
-      "save_path": "../download/vocabs/char.dict",
-      "load_path": "../download/vocabs/char.dict"
+      "save_path": "vocabs/char.dict",
+      "load_path": "vocabs/char.dict"
     },
     "classes_vocab": {
       "name": "default_vocab",
@@ -51,20 +51,20 @@
         "y"
       ],
       "level": "token",
-      "save_path": "../download/vocabs/classes.dict",
-      "load_path": "../download/vocabs/classes.dict"
+      "save_path": "vocabs/classes.dict",
+      "load_path": "vocabs/classes.dict"
     }
   },
   "model": {
     "train_now": true,
     "name": "go_bot",
 	"debug": false,
-    "template_path": "../download/dstc2/dstc2-templates.txt",
+    "template_path": "dstc2/dstc2-templates.txt",
     "network": {
       "train_now": true,
-      "load_path": "../download/go_bot_rnn_all/model",
-      "save_path": "../download/go_bot_rnn_all/model",
       "name": "go_bot_rnn",
+      "load_path": "go_bot_all/model",
+      "save_path": "go_bot_all/model",
       "learning_rate": 0.02,
       "hidden_dim": 128,
 	  "dense_size": 32,
@@ -74,8 +74,8 @@
     },
     "slot_filler": {
       "name": "dstc_slotfilling",
-      "save_path": "../download/ner/dstc_ner_model",
-	  "load_path": "../download/ner/dstc_ner_model",
+      "save_path": "ner/dstc_ner_model",
+	  "load_path": "ner/dstc_ner_model",
       "filter_width": 7,
       "embeddings_dropout": true,
       "n_filters": [
@@ -89,8 +89,8 @@
     },
     "intent_classifier": {
       "name": "intent_model",
-      "save_path": "../download/intents/intent_cnn",
-      "load_path": "../download/intents/intent_cnn",
+      "save_path": "intents/intent_cnn",
+      "load_path": "intents/intent_cnn",
       "opt": {
         "train_now": true,
         "kernel_sizes_cnn": [
@@ -122,8 +122,8 @@
       },
       "embedder": {
         "name": "fasttext",
-        "save_path": "../download/embeddings/dstc2_fasttext_model_100.bin",
-        "load_path": "../download/embeddings/dstc2_fasttext_model_100.bin",
+        "save_path": "embeddings/dstc2_fasttext_model_100.bin",
+        "load_path": "embeddings/dstc2_fasttext_model_100.bin",
         "emb_module": "fasttext",
         "dim": 100
       },
@@ -134,8 +134,8 @@
     },
     "embedder": {
       "name": "fasttext",
-      "save_path": "../download/embeddings/wiki.en.bin",
-      "load_path": "../download/embeddings/wiki.en.bin",
+      "save_path": "embeddings/wiki.en.bin",
+      "load_path": "embeddings/wiki.en.bin",
       "mean": true,
       "emb_module": "pyfasttext",
       "dim": 300

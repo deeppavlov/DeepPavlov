@@ -6,11 +6,11 @@
     "dictionary": {
       "name": "static_dictionary",
       "dictionary_name": "compreno_words",
-      "raw_dictionary_path": "../download/compreno_wordforms.txt"
+      "raw_dictionary_path": "compreno_wordforms.txt"
     },
-    "save_path": "../download/error_model/error_model_ru.tsv",
-    "load_path": "../download/error_model/error_model_ru.tsv",
-    "lm_file": "../download/wiyalen_no_punkt.arpa.binary"
+    "save_path": "error_model/error_model_ru.tsv",
+    "load_path": "error_model/error_model_ru.tsv",
+    "lm_file": "wiyalen_no_punkt.arpa.binary"
   },
   "dataset_reader": {
     "name": "typos_kartaslov_reader"

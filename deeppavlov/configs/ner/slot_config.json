@@ -1,18 +1,18 @@
 {
   "dataset_reader": {
     "name": "dstc2_datasetreader",
-    "data_path": "../download/data/dstc2"
+    "data_path": "dstc2"
   },
   "dataset": {
     "name": "dstc2_ner_dataset",
-    "dataset_path": "../download/data/dstc2"
+    "dataset_path": "dstc2"
   },
   "model": {
     "name": "dstc_slotfilling",
     "train_now": false,
     "learning_rate": 1e-3,
-    "save_path": "../download/ner/dstc_ner_model",
-    "load_path": "../download/ner/dstc_ner_model",
+    "save_path": "ner/dstc_ner_model",
+    "load_path": "ner/dstc_ner_model",
     "verbouse": true,
     "filter_width": 7,
     "embeddings_dropout": true,
@@ -31,24 +31,24 @@
         "inputs": ["x"],
         "train_now": true,
 		"level": "token",
-        "save_path": "../download/vocabs/word.dict",
-        "load_path": "../download/vocabs/word.dict"
+        "save_path": "vocabs/word.dict",
+        "load_path": "vocabs/word.dict"
       },
     "tag_vocab": {
         "name": "default_vocab",
         "inputs": ["y"],
         "train_now": true,
 		"level": "token",
-        "save_path": "../download/vocabs/tag.dict",
-        "load_path": "../download/vocabs/tag.dict"
+        "save_path": "vocabs/tag.dict",
+        "load_path": "vocabs/tag.dict"
       },
     "char_vocab":{
         "name": "default_vocab",
         "inputs": ["x"],
         "train_now": true,
 		"level": "char",
-        "save_path": "../download/vocabs/char.dict",
-        "load_path": "../download/vocabs/char.dict"
+        "save_path": "vocabs/char.dict",
+        "load_path": "vocabs/char.dict"
       }
   }
 }

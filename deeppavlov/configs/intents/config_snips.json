@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "classification_datasetreader",
-    "data_path": "../data/snips",
+    "data_path": "snips",
     "data_types": [
       "train"
     ]
@@ -26,15 +26,15 @@
         "y"
       ],
       "level": "token",
-      "save_path": "../download/vocabs/snips_classes.dict",
-      "load_path": "../download/vocabs/snips_classes.dict",
+      "save_path": "vocabs/snips_classes.dict",
+      "load_path": "vocabs/snips_classes.dict",
       "train_now": true
     }
   },
   "model": {
     "name": "intent_model",
-    "save_path": "../download/intents/intent_cnn_snips",
-    "load_path": "../download/intents/intent_cnn_snips",
+    "save_path": "intents/intent_cnn_snips",
+    "load_path": "intents/intent_cnn_snips",
     "opt": {
       "train_now": true,
       "kernel_sizes_cnn": [
@@ -58,16 +58,12 @@
       "dropout_rate": 0.5,
       "epochs": 1000,
       "dense_size": 100,
-      "model_name": "cnn_model",
-      "batch_size": 64,
-      "val_every_n_epochs": 1,
-      "verbose": true,
-      "val_patience": 5
+      "model_name": "cnn_model"
     },
     "embedder": {
       "name": "fasttext",
-      "save_path": "../data/embeddings/reddit_fasttext_model.bin",
-      "load_path": "../data/embeddings/reddit_fasttext_model.bin",
+      "save_path": "embeddings/reddit_fasttext_model.bin",
+      "load_path": "embeddings/reddit_fasttext_model.bin",
       "emb_module": "fasttext",
       "dim": 100
     },
@@ -75,5 +71,16 @@
       "name": "nltk_tokenizer",
       "tokenizer": "wordpunct_tokenize"
     }
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 64,
+    "metrics": [
+      "sets_accuracy"
+    ],
+    "validation_patience": 5,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
+    "show_examples": false
   }
 }

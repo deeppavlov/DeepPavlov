@@ -19,6 +19,7 @@ import re
 import numpy as np
 from typing import Type
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.models.trainable import Trainable
@@ -69,6 +70,7 @@ class GoalOrientedBot(Inferable, Trainable):
         self.network = network
         self.word_vocab = vocabs['word_vocab']
 
+        template_path = expand_path(template_path)
         log.info("[loading templates from `{}`]".format(template_path))
         self.templates = Templates(template_type).load(template_path)
         log.info("{} templates loaded".format(len(self.templates)))

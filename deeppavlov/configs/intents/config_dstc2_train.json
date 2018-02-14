@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "dstc2_datasetreader",
-    "data_path": "../download/dstc2"
+    "data_path": "dstc2"
   },
   "dataset": {
     "name": "intent_dataset",
@@ -28,15 +28,15 @@
         "y"
       ],
       "level": "token",
-      "save_path": "../download/vocabs/classes.dict",
-      "load_path": "../download/vocabs/classes.dict",
+      "save_path": "vocabs/classes.dict",
+      "load_path": "vocabs/classes.dict",
       "train_now": true
     }
   },
   "model": {
     "name": "intent_model",
-    "save_path": "../download/intents/intent_cnn",
-    "load_path": "../download/intents/intent_cnn",
+    "save_path": "intents/intent_cnn",
+    "load_path": "intents/intent_cnn",
     "opt": {
       "train_now": true,
       "kernel_sizes_cnn": [
@@ -45,10 +45,6 @@
         3
       ],
       "filters_cnn": 512,
-      "lear_metrics": [
-        "binary_accuracy",
-        "fmeasure"
-      ],
       "confident_threshold": 0.5,
       "optimizer": "Adam",
       "lear_rate": 0.1,
@@ -58,18 +54,13 @@
       "coef_reg_cnn": 1e-4,
       "coef_reg_den": 1e-4,
       "dropout_rate": 0.5,
-      "epochs": 1,
       "dense_size": 100,
-      "model_name": "cnn_model",
-      "batch_size": 64,
-      "val_every_n_epochs": 5,
-      "verbose": true,
-      "val_patience": 5
+      "model_name": "cnn_model"
     },
     "embedder": {
       "name": "fasttext",
-      "save_path": "../download/embeddings/dstc2_fasttext_model_100.bin",
-      "load_path": "../download/embeddings/dstc2_fasttext_model_100.bin",
+      "save_path": "embeddings/dstc2_fasttext_model_100.bin",
+      "load_path": "embeddings/dstc2_fasttext_model_100.bin",
       "emb_module": "fasttext",
       "dim": 100
     },
@@ -77,5 +68,16 @@
       "name": "nltk_tokenizer",
       "tokenizer": "wordpunct_tokenize"
     }
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 64,
+    "metrics": [
+      "sets_accuracy"
+    ],
+    "validation_patience": 5,
+    "val_every_n_epochs": 5,
+    "log_every_n_batches": 100,
+    "show_examples": false
   }
 }
