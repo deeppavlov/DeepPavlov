@@ -419,7 +419,7 @@ class NerNetwork:
         for block_name in blocks:
             log.info(block_name, blocks[block_name])
         total_num_parameters = np.sum(list(blocks.values()))
-        log.info('Total number of parameters equal {}'.format(total_num_parameters))
+        log.info('Total number of parameters equals {}'.format(total_num_parameters))
 
     def get_train_op(self, loss, learning_rate, learnable_scopes=None, optimizer=None):
         """ Get train operation for given loss

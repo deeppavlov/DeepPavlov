@@ -30,7 +30,6 @@ from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel
 from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
 from deeppavlov.models.tokenizers.spacy_tokenizer import SpacyTokenizer
 from deeppavlov.models.trackers.default_tracker import DefaultTracker
-from deeppavlov.skills.go_bot.metrics import DialogMetrics
 from deeppavlov.skills.go_bot.network import GoalOrientedBotNetwork
 from deeppavlov.skills.go_bot.templates import Templates, DualTemplate
 from deeppavlov.core.common.attributes import check_attr_true
@@ -53,8 +52,6 @@ class GoalOrientedBot(Inferable, Trainable):
                  intent_classifier=None,
                  use_action_mask=False,
                  debug=False,
-                 num_epochs=200,
-                 val_patience=10,
                  train_now=False,
                  save_path=None,
                  **kwargs):
@@ -72,13 +69,11 @@ class GoalOrientedBot(Inferable, Trainable):
         self.tracker = tracker
         self.network = network
         self.word_vocab = vocabs['word_vocab']
-        self.num_epochs = num_epochs
-        self.val_patience = val_patience
 
         template_path = expand_path(template_path)
-
+        log.info("[loading templates from {}]".format(template_path))
         self.templates = Templates(template_type).load(template_path)
-        log.info("[using {} templates from `{}`]".format(len(self.templates), template_path))
+        log.info("{} templates loaded".format(len(self.templates)))
 
         # intialize parameters
         self.db_result = None
@@ -87,9 +82,6 @@ class GoalOrientedBot(Inferable, Trainable):
         if hasattr(self.intent_classifier, 'n_classes'):
             self.n_intents = self.intent_classifier.n_classes
         self.prev_action = np.zeros(self.n_actions, dtype=np.float32)
-
-        # initialize metrics
-        self.metrics = DialogMetrics(self.n_actions)
 
         # opt = {
         #    'action_size': self.n_actions,
@@ -207,20 +199,24 @@ class GoalOrientedBot(Inferable, Trainable):
     def infer_on_batch(self, xs):
         return [self._infer_dialog(x) for x in xs]
 
-    def _infer(self, context, db_result=None):
+    def _infer(self, context, db_result=None, prob=False):
         probs = self.network.infer(
             self._encode_context(context, db_result),
             self._action_mask(),
             prob=True
         )
         pred_id = np.argmax(probs)
-        # TODO: check probs and one-hot encoding variant
-        #self.prev_action = probs
-        self.prev_action *= 0
-        self.prev_action[pred_id] = 1
         if db_result is not None:
             self.db_result = db_result
-        return self.tokenizer.infer(self._decode_response(pred_id).split())
+
+        # one-hot encoding seems to work better then probabilities
+        if prob:
+            self.prev_action = probs
+        else:
+            self.prev_action *= 0
+            self.prev_action[pred_id] = 1
+
+        return self._decode_response(pred_id)
 
     def _infer_dialog(self, contexts):
         self.reset()
@@ -228,7 +224,7 @@ class GoalOrientedBot(Inferable, Trainable):
         for context in contexts:
             if context.get('prev_resp_act') is not None:
                 action_id = self._encode_response(context.get('prev_resp_act'))
-                # previous action is teacher-forced here
+                # previous action is teacher-forced
                 self.prev_action *= 0.
                 self.prev_action[action_id] = 1.
 
@@ -245,12 +241,6 @@ class GoalOrientedBot(Inferable, Trainable):
         self.db_result = None
         self.prev_action = np.zeros(self.n_actions, dtype=np.float32)
         self.network.reset_state()
-
-    def report(self):
-        return self.metrics.report()
-
-    def reset_metrics(self):
-        self.metrics.reset()
 
     def save(self):
         """Save the parameters of the model to a file."""
