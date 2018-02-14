@@ -54,7 +54,7 @@ def teardown_module():
 
 
 def download(full=None):
-    cmd = ["python", "-m", "deeppavlov.download"]
+    cmd = ["python3", "-m", "deeppavlov.download"]
     if full:
         cmd.append("-all")
     sp.run(cmd)
@@ -65,7 +65,7 @@ class TestQuickStart(object):
 
     @staticmethod
     def interact(config, query="exit"):
-        p = sp.Popen(["python", "-m", "deeppavlov.deep", "interact", config],
+        p = sp.Popen(["python3", "-m", "deeppavlov.deep", "interact", config],
                      stdin=sp.PIPE, stdout=sp.PIPE, stderr=sp.PIPE)
         out, _ = p.communicate(f"{query}".encode())
         return out
@@ -82,6 +82,6 @@ class TestQuickStart(object):
     def test_consecutive_training_and_interacting(self, model):
         for c, fqr in MCQR[model].items():
             shutil.rmtree("../download/" + fqr[0],  ignore_errors=True)
-            p = sp.run(["python", "-m", "deeppavlov.deep", "train", c])
+            p = sp.run(["python3", "-m", "deeppavlov.deep", "train", c])
             assert p.returncode == 0, f"Training process of {model} with {c} returned non-zero exit code"
             assert self.interact(c), f"Error in interacting with 1-epoch trained {model}: {c}"
