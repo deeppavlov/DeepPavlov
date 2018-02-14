@@ -8,9 +8,9 @@ import shutil
 
 # Mapping from model names to configs and corresponding Query-Response pairs
 MCQR = {"error_model": {"configs/error_model/config_en.json":
-                            ("error_model.tsv", "", ""),
+                            ("error_model", "", ""),
                         "configs/error_model/config_ru.json":
-                            ("error_model_ru.tsv", "", "")
+                            ("error_model", "", "")
                         },
         "go_bot": {"configs/go_bot/config.json":
                        ("go_bot", "", ""),
@@ -77,11 +77,11 @@ class TestQuickStart(object):
 
     def test_interact_pretrained_model(self, model):
         for c, fqr in MCQR[model].items():
-            assert not self.interact(c), f"Error in interacting with pretrained {model}: {c}"
+            assert self.interact(c), f"Error in interacting with pretrained {model}: {c}"
 
     def test_consecutive_training_and_interacting(self, model):
         for c, fqr in MCQR[model].items():
             shutil.rmtree("../download/" + fqr[0],  ignore_errors=True)
             p = sp.run(["python", "-m", "deeppavlov.deep", "train", c])
             assert p.returncode == 0, f"Training process of {model} with {c} returned non-zero exit code"
-            assert not self.interact(c), f"Error in interacting with 1-epoch trained {model}: {c}"
+            assert self.interact(c), f"Error in interacting with 1-epoch trained {model}: {c}"
