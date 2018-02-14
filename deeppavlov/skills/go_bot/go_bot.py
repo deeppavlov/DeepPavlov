@@ -71,7 +71,7 @@ class GoalOrientedBot(Inferable, Trainable):
         self.word_vocab = vocabs['word_vocab']
 
         template_path = expand_path(template_path)
-        log.info("[loading templates from `{}`]".format(template_path))
+        log.info("[loading templates from {}]".format(template_path))
         self.templates = Templates(template_type).load(template_path)
         log.info("{} templates loaded".format(len(self.templates)))
 
