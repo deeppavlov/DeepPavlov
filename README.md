@@ -114,13 +114,9 @@ DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). O
    ```
 4. Install the requirements:
     ```
-    python setup.py install
+    python setup.py develop
     ```
-5. Clean the installation:
-    ```
-    python setup.py clean --all
-    ```
-6. Install `spacy` dependencies:
+5. Install `spacy` dependencies:
     ```
     python -m spacy download en
     ```
