@@ -49,10 +49,10 @@ class GoalOrientedBotNetwork(TFModel):
 
         if self.get_checkpoint_state():
         #TODO: save/load params to json, here check compatability
-            log.info(":: initializing `{}` from saved".format(self.__class__.__name__))
+            log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
             self.load()
         else:
-            log.info(":: initializing `{}` from scratch".format(self.__class__.__name__))
+            log.info("[initializing `{}` from scratch]".format(self.__class__.__name__))
             self.sess.run(tf.global_variables_initializer())
 
         self.reset_state()
@@ -67,6 +67,7 @@ class GoalOrientedBotNetwork(TFModel):
         self.n_actions = params['action_size']
         #TODO: try obs_size=None or as a placeholder
         self.obs_size = params['obs_size']
+        self.dense_size = params.get('dense_size', params['hidden_dim'])
 
     def _build_graph(self):
 
@@ -74,8 +75,6 @@ class GoalOrientedBotNetwork(TFModel):
 
         # build body
         _logits, self._state = self._build_body()
-        log.debug("state = {}".format(self._state))
-        log.debug("logits = {}".format(_logits))
 
         # probabilities normalization : elemwise multiply with action mask
         self._probs = tf.squeeze(tf.nn.softmax(_logits))
@@ -113,14 +112,14 @@ class GoalOrientedBotNetwork(TFModel):
         # input projection
         _projected_features = \
             tf.layers.dense(self._features,
-                            self.n_hidden,
+                            self.dense_size,
                             kernel_initializer=xavier_initializer())
 
         # recurrent network unit
         _lstm_cell = tf.nn.rnn_cell.LSTMCell(self.n_hidden)
         _output, _state = tf.nn.dynamic_rnn(_lstm_cell,
-                                             _projected_features,
-                                             initial_state=self._initial_state)
+                                            _projected_features,
+                                            initial_state=self._initial_state)
  
         # output projection
         # TODO: try multiplying logits to action_mask
@@ -129,7 +128,7 @@ class GoalOrientedBotNetwork(TFModel):
                                   kernel_initializer=xavier_initializer())
         return _logits, _state
 
-    def _get_train_op(self, loss, learning_rate, optimizer=None):
+    def _get_train_op(self, loss, learning_rate, optimizer=None, clip_norm=1.):
         """ Get train operation for given loss
 
         Args:
@@ -142,14 +141,11 @@ class GoalOrientedBotNetwork(TFModel):
         """
 
         optimizer = optimizer or tf.train.AdamOptimizer
-        _train_op = optimizer(learning_rate).minimize(loss, name='train_op')
-        # TODO: check clipping of gradients
-        #optimizer = tf.train.AdamOptimizer(learning_rate)
-        #clip_rate = 1.
-        #gards_and_vars = optimizer.compute_gradients(loss, tf.trainable_variables())
-        #grads_and_vars = [(tf.clip_by_norm(grad, clip_rate), var) for grad, var in grads_and_vars]
-        #optimizer.apply_gradients(grads_and_vars)
-        return _train_op
+        optimizer = optimizer(learning_rate)
+        grads_and_vars = optimizer.compute_gradients(loss, tf.trainable_variables())
+        grads_and_vars = [(tf.clip_by_norm(grad, clip_norm), var)\
+                          for grad, var in grads_and_vars]
+        return optimizer.apply_gradients(grads_and_vars, name='train_op')
 
     def reset_state(self):
         # set zero state

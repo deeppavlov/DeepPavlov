@@ -58,9 +58,7 @@
   "model": {
     "train_now": true,
     "name": "go_bot",
-    "debug": 0,
-    "num_epochs": 1,
-    "val_patience": 10,
+    "debug": false,
     "template_path": "dstc2/dstc2-templates.txt",
     "network": {
       "train_now": true,
@@ -151,6 +149,18 @@
         "name"
       ]
     }
+  },
+  "train": {
+    "epochs": 200,
+    "batch_size": 1,
+
+    "metrics": ["per_item_dialog_accuracy"],
+    "validation_patience": 30,
+    "val_every_n_epochs": 1,
+
+    "log_every_n_batches": -1,
+    "log_every_n_epochs": 1,
+    "show_examples": false
   }
 }
 

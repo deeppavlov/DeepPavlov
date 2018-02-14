@@ -15,6 +15,7 @@ limitations under the License.
 """
 
 import copy
+import re
 from abc import ABCMeta, abstractmethod
 
 
@@ -69,6 +70,16 @@ class DualTemplate(Template):
         self.default = default
         self.dontcare = dontcare
 
+    @property
+    def dontcare_slots(self):
+        default_slots = self._slots(self.default)
+        dontcare_slots = self._slots(self.dontcare)
+        return default_slots - dontcare_slots
+
+    @staticmethod
+    def _slots(text):
+        return set(re.findall('#(\w+)', text))
+
     @classmethod
     def from_str(cls, s):
         return cls(*s.split('\t', 1))
@@ -96,10 +107,11 @@ class DualTemplate(Template):
 
     def generate_text(self, slots):
         t = copy.copy(self.default)
-        if any(s[1] == 'dontcare' for s in slots):
-            t = copy.copy(self.dontcare)
         if isinstance(slots, dict):
             slots = slots.items()
+        dontcare_slots = (s[0] for s in slots if s[1] == 'dontcare')
+        if self.dontcare and self.dontcare_slots.issubset(dontcare_slots):
+            t = copy.copy(self.dontcare)
         for slot, value in slots:
             t = t.replace('#' + slot, value, 1)
         if t:

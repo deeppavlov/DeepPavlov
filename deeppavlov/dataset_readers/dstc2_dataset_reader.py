@@ -45,7 +45,7 @@ class DSTC2DatasetReader(DatasetReader):
 
         required_files = (self._data_fname(dt) for dt in ('trn', 'val', 'tst'))
         if not all(Path(data_path, f).exists() for f in required_files):
-            log.info('Loading dstc2 from `{}` to `{}`'.format(self.url, data_path))
+            log.info('[downloading dstc2 from {} to {}]'.format(self.url, data_path))
             download_decompress(self.url, data_path)
             mark_done(data_path)
 
@@ -62,7 +62,7 @@ class DSTC2DatasetReader(DatasetReader):
     @classmethod
     def _read_from_file(cls, file_path, dialogs=False):
         """Returns data from single file"""
-        log.info("Reading dialog turns from `{}`.".format(file_path))
+        log.info("[loading dialogs from {}]".format(file_path))
 
         utterances, responses, dialog_indices =\
                 cls._get_turns(cls._iter_file(file_path), with_indices=True)
