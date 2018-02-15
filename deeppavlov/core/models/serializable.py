@@ -15,7 +15,8 @@ limitations under the License.
 """
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.log import get_logger
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
+
 """
 :class:`deeppavlov.models.model.Serializable` is an abstract base class that expresses the interface
 for all models that can serialize data to a path.
@@ -37,7 +38,7 @@ class Serializable(metaclass=ABCMeta):
 
         if save_path:
             self.save_path = expand_path(save_path)
-            self.save_path.parent.mkdir(exist_ok=True)
+            self.save_path.parent.mkdir(parents=True, exist_ok=True)
         else:
             self.save_path = None
 
@@ -45,7 +46,7 @@ class Serializable(metaclass=ABCMeta):
 
         if load_path:
             self.load_path = expand_path(load_path)
-            if mode != 'train' and self.load_path != self.save_path:
+            if mode != 'train' and self.save_path and self.load_path != self.save_path:
                 log.warning("Load path '{}' differs from save path '{}' in '{}' mode for {}."
                             .format(self.load_path, self.save_path, mode, self.__class__.__name__))
         elif mode != 'train' and self.save_path:
@@ -56,8 +57,12 @@ class Serializable(metaclass=ABCMeta):
             self.load_path = None
             log.warning("No load path is set for {}!".format(self.__class__.__name__))
 
-    def __new__(cls, *args, **kwargs):
-        if cls is Serializable:
-            raise TypeError(
-                "TypeError: Can't instantiate abstract class {} directly".format(cls.__name__))
-        return object.__new__(cls)
+        super().__init__()
+
+    @abstractmethod
+    def save(self, *args, **kwargs):
+        pass
+
+    @abstractmethod
+    def load(self, *args, **kwargs):
+        pass

@@ -13,19 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
-"""
-:class:`deeppavlov.models.model.Trainable` is an abstract base class that expresses the interface
-for all models that can be trained (ex. neural networks, scikit-learn estimators, gensim models,
-etc.). All trainable models should inherit from this class.
-"""
-
 from abc import abstractmethod
 
+from typing import Tuple, Iterable
+
+from .component import Component
 from .serializable import Serializable
 
 
-class Trainable(Serializable):
+class Estimator(Component, Serializable):
     """
     :attr:`train_now` expresses a developer intent for whether a model as part of a pipeline
     should be trained in the current experiment run or not.
@@ -40,9 +36,5 @@ class Trainable(Serializable):
         super().__init__(**kwargs)
 
     @abstractmethod
-    def save(self, *args, **kwargs):
-        pass
-
-    @abstractmethod
-    def load(self, *args, **kwargs):
+    def fit(self, data: Tuple[list, list]):
         pass

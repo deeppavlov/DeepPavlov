@@ -27,9 +27,7 @@ from keras import backend as K
 from keras.models import Model
 from keras.layers import Dense, Input
 
-from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.common.attributes import check_attr_true
+from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.file import save_json, read_json
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.log import get_logger
@@ -38,7 +36,7 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
+class KerasModel(NNModel, metaclass=TfModelMeta):
     """
     Class builds keras model with tensorflow backend
     """

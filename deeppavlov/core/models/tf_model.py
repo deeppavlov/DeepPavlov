@@ -26,8 +26,8 @@ from abc import abstractmethod
 import tensorflow as tf
 from overrides import overrides
 
-from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.models.nn_model import NNModel
+from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.errors import ConfigError
@@ -36,7 +36,7 @@ from .tf_backend import TfModelMeta
 log = get_logger(__name__)
 
 
-class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
+class TFModel(NNModel, metaclass=TfModelMeta):
     def __init__(self, **kwargs):
         self._saver = tf.train.Saver
         super().__init__(**kwargs)
@@ -126,6 +126,6 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
             log.error('checkpoint not found!')
 
 
-class SimpleTFModel(Trainable, Inferable, metaclass=TfModelMeta):
+class SimpleTFModel(NNModel, metaclass=TfModelMeta):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
