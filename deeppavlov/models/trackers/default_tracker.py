@@ -64,5 +64,5 @@ class DefaultTracker(Component):
                 feats[i] = 1.
         return feats
 
-    def infer(self):
+    def __call__(self):
         return self.curr_feats

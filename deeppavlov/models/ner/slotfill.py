@@ -104,10 +104,15 @@ class DstcSlotFillingNetwork(SimpleTFModel):
     def __call__(self, batch, *args, **kwargs):
         if isinstance(batch[0], str):
             batch = [tokenize_reg(instance.strip()) for instance in batch]
-        tags_batch = self._ner_network.predict_for_token_batch(batch)
-        slots = []
-        for tokens, tags in zip(batch, tags_batch):
-            slots.append(self.predict_slots(tokens, tags))
+
+        slots = [{}] * len(batch)
+
+        m = [i for i, v in enumerate(batch) if v]
+        if m:
+            batch = [batch[i] for i in m]
+            tags_batch = self._ner_network.predict_for_token_batch(list(batch))
+            for i, tokens, tags in zip(m, batch, tags_batch):
+                slots[i] = (self.predict_slots(tokens, tags))
         return slots
 
     def predict_slots(self, tokens, tags):

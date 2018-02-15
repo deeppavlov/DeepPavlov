@@ -21,9 +21,10 @@ from deeppavlov.core.models.component import Component
 
 
 @register('bow')
-class BoW_encoder(Component):
-    def __init__(self, save_path=None, **kwargs):
-        super().__init__(save_path=save_path)
+class BoWEncoder(Component):
+
+    def __init__(self, *args, **kwargs):
+        pass
 
     def _encode(self, utterance, vocab):
         bow = np.zeros([len(vocab)], dtype=np.int32)
@@ -33,5 +34,5 @@ class BoW_encoder(Component):
                 bow[idx] += 1
         return bow
 
-    def __call__(self, utterance, vocab, *args):
-        return self._encode(utterance, vocab)
+    def __call__(self, batch, vocab, *args):
+        return [self._encode(utterance, vocab) for utterance in batch]

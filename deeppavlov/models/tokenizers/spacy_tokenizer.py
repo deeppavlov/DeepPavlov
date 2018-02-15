@@ -24,9 +24,8 @@ from deeppavlov.core.common.registry import register
 @register('spacy_tokenizer')
 class SpacyTokenizer(Component):
 
-    def __init__(self, save_path=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.NLP = spacy.load('en')
-        super().__init__(save_path=save_path, **kwargs)
 
     def _tokenize(self, text, **kwargs):
         """Tokenize with spacy, placing service words as individual tokens."""

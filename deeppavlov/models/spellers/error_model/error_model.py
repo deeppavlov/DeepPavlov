@@ -36,13 +36,9 @@ logger = get_logger(__name__)
 
 @register('spelling_error_model')
 class ErrorModel(Estimator):
-    def __init__(self, dictionary: StaticDictionary, save_path, load_path=None, window=1,
-                 lm_file=None, train_now=False, **kwargs):
+    def __init__(self, dictionary: StaticDictionary, window=1, lm_file=None, *args, **kwargs):
 
-        super().__init__(load_path=load_path,
-                         save_path=save_path,
-                         train_now=train_now,
-                         mode=kwargs['mode'])
+        super().__init__(*args, **kwargs)
         self.costs = defaultdict(itertools.repeat(float('-inf')).__next__)
         self.dictionary = dictionary
         self.window = window

@@ -23,10 +23,10 @@ from deeppavlov.core.common.registry import register
 @register('featurized_tracker')
 class FeaturizedTracker(Component):
 
-    def __init__(self, slot_names, save_path=None, **kwargs):
-        super().__init__(save_path=save_path, **kwargs)
+    def __init__(self, slot_names, *args, **kwargs):
         self.slot_names = list(slot_names)
         self.reset_state()
+
 
     @property
     def state_size(self):
@@ -79,5 +79,5 @@ class FeaturizedTracker(Component):
                 feats[i] = 1.
         return feats
 
-    def infer(self):
+    def __call__(self):
         return self.curr_feats
