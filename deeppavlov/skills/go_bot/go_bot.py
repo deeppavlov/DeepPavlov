@@ -21,8 +21,8 @@ from typing import Type
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.core.models.component import Component
+from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.encoders.bow import BoW_encoder
@@ -40,7 +40,7 @@ log = get_logger(__name__)
 
 
 @register("go_bot")
-class GoalOrientedBot(Inferable, Trainable):
+class GoalOrientedBot(NNModel):
     def __init__(self, template_path, vocabs,
                  template_type: Type = DualTemplate,
                  bow_encoder: Type = BoW_encoder,
@@ -231,7 +231,7 @@ class GoalOrientedBot(Inferable, Trainable):
             res.append(self._infer(context['text'], context.get('db_result')))
         return res
 
-    def infer(self, x):
+    def __call__(self, x):
         if isinstance(x, str):
             return self._infer(x)
         return self.infer_on_batch(x)

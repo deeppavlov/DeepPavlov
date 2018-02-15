@@ -211,7 +211,7 @@ class KerasIntentModel(KerasModel):
             predictions = self.model.predict(features)
             return predictions
 
-    def infer(self, data, predict_proba=False, *args):
+    def __call__(self, data, predict_proba=False, *args):
         """
         Infer on the given data
         Args:

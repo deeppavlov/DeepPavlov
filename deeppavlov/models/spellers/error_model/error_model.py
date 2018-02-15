@@ -24,8 +24,7 @@ import kenlm
 from tqdm import tqdm
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.vocabs.typos import StaticDictionary
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.errors import ConfigError
@@ -36,7 +35,7 @@ logger = get_logger(__name__)
 
 
 @register('spelling_error_model')
-class ErrorModel(Inferable, Trainable):
+class ErrorModel(Estimator):
     def __init__(self, dictionary: StaticDictionary, save_path, load_path=None, window=1,
                  lm_file=None, train_now=False, **kwargs):
 
@@ -168,7 +167,7 @@ class ErrorModel(Inferable, Trainable):
         score, state, words = beam[0]
         return ' '.join(words[:-1])
 
-    def infer(self, data, *args, **kwargs):
+    def __call__(self, data, *args, **kwargs):
         if isinstance(data, str):
             return self._infer_instance(data)
         return [self._infer_instance(instance) for instance in tqdm(data, desc='Infering a batch with the error model',
@@ -202,7 +201,7 @@ class ErrorModel(Inferable, Trainable):
     def fit(self, data):
         changes = []
         entries = []
-        data = list(data)
+        data = list(zip(*data))
         window = 4
         for error, correct in tqdm(data, desc='Training the error model'):
             correct = '⟬{}⟭'.format(correct)

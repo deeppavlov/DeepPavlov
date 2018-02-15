@@ -32,6 +32,7 @@ from deeppavlov.core.common.log import get_logger
 
 log = get_logger(__name__)
 
+
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(SimpleTFModel):
     def __init__(self, **kwargs):
@@ -100,28 +101,14 @@ class DstcSlotFillingNetwork(SimpleTFModel):
         self._ner_network.train_on_batch(batch, **self.train_parameters)
 
     @overrides
-    def infer(self, instance, *args, **kwargs):
-        if isinstance(instance, str):
-            instance = instance.strip()
-            if not len(instance):
-                return {}
-            tokens = tokenize_reg(instance)
-            tags = self._ner_network.predict_for_token_batch([tokens])[0]
-            return self.predict_slots(tokens, tags)
-        else:
-            tokens_batch = instance
-            tags_batch = self._ner_network.predict_for_token_batch(tokens_batch)
-            slots = []
-            for tokens, tags in zip(tokens_batch, tags_batch):
-                slots.append(self.predict_slots(tokens, tags))
-            return slots
-
-    def interact(self):
-        s = input('Type in the message you want to tag: ')
-        tokens = tokenize_reg(s)
-        tags = self._ner_network.predict_for_token_batch([tokens])[0]
-        prediction = self.predict_slots(tokens, tags)
-        log.debug(prediction)
+    def __call__(self, batch, *args, **kwargs):
+        if isinstance(batch[0], str):
+            batch = [tokenize_reg(instance.strip()) for instance in batch]
+        tags_batch = self._ner_network.predict_for_token_batch(batch)
+        slots = []
+        for tokens, tags in zip(batch, tags_batch):
+            slots.append(self.predict_slots(tokens, tags))
+        return slots
 
     def predict_slots(self, tokens, tags):
         # For utterance extract named entities and perform normalization for slot filling
@@ -183,9 +170,6 @@ class DstcSlotFillingNetwork(SimpleTFModel):
     def shutdown(self):
         with self.graph.as_default():
             self.ner_network.shutdown()
-
-    def reset(self):
-        pass
 
     def _download_slot_vals(self):
         url = 'http://lnsigo.mipt.ru/export/datasets/dstc_slot_vals.json'

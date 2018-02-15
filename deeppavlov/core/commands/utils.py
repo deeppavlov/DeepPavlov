@@ -41,5 +41,5 @@ def get_deeppavlov_root() -> Path:
     return paths.deeppavlov_root
 
 
-def expand_path(path: Union[str, Path]):
+def expand_path(path: Union[str, Path]) -> Path:
     return get_deeppavlov_root() / Path(path).expanduser()

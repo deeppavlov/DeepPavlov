@@ -16,12 +16,12 @@ limitations under the License.
 
 import numpy as np
 
-from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
 
 
 @register('featurized_tracker')
-class FeaturizedTracker(Inferable):
+class FeaturizedTracker(Component):
 
     def __init__(self, slot_names, save_path=None, **kwargs):
         super().__init__(save_path=save_path, **kwargs)

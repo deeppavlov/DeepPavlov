@@ -81,31 +81,10 @@ class NER(SimpleTFModel):
         self._net.train_on_batch(batch, **self.train_parameters)
 
     @overrides
-    def infer(self, sample, *args, **kwargs):
-        # Check is the sample a batch
-        if isinstance(sample[0], list):
-            return self._net.predict_on_batch(sample)
-        # Check is the sample is a token sequence
-        elif isinstance(sample[0], str) and isinstance(sample, list) and ' ' not in list(chain(*sample)):
-            return self._net.predict_on_batch([sample])
-        # Check is the sample is a utterance string
-        elif isinstance(sample, str):
-            return self._net.predict_on_batch([self.preprocess_tokenize(sample)])[0]
-        else:
-            raise RuntimeError('The input of infer function of NER model should be one of the following: '
-                               'list of lists of tokens, or list of tokens, or string!')
-
-    def preprocess_tokenize(self, utterance):
-        sample = tokenize_reg(utterance)
-        return sample
-
-    def interact(self):
-        s = input('Type in the message you want to tag: ')
-        prediction = self.infer(s)
-        print(prediction)
+    def __call__(self, batch, *args, **kwargs):
+        if isinstance(batch[0], str):
+            batch = [tokenize_reg(utterance) for utterance in batch]
+        return self._net.predict_on_batch(batch)
 
     def shutdown(self):
         self.ner.shutdown()
-
-    def reset(self):
-        pass

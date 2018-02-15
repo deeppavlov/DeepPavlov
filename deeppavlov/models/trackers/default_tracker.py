@@ -16,12 +16,12 @@ limitations under the License.
 
 import numpy as np
 
-from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
 
 
 @register('default_tracker')
-class DefaultTracker(Inferable):
+class DefaultTracker(Component):
 
     def __init__(self, slot_names):
         self.slot_names = list(slot_names)

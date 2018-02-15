@@ -17,20 +17,20 @@ limitations under the License.
 from random import choice
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.models.component import Component
 
 
 @register("random")
-class RandomCommutator(Inferable):
-    def __init__(self):
-        pass
+class RandomCommutator(Component):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-    def _commutate(self, predictions, history):
+    def _commutate(self, predictions):
         idx = choice(range(len(predictions)))
         winner = predictions[idx]
         name = list(winner.keys())[0]
         prediction = list(winner.values())[0]
         return idx, name, prediction
 
-    def infer(self, predictions, history):
-        return self._commutate(predictions,  history)
+    def __call__(self, batch):
+        return [self._commutate(predictions) for predictions in batch]

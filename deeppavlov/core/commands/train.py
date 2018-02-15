@@ -27,15 +27,15 @@ from deeppavlov.core.common.registry import model as get_model
 from deeppavlov.core.common.metrics_registry import get_metrics_by_names
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.data.dataset import Dataset
-from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.core.models.component import Component
+from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.log import get_logger
 
 
 log = get_logger(__name__)
 
 
-def _fit(model: Trainable, dataset: Dataset, train_config={}):
+def _fit(model: NNModel, dataset: Dataset, train_config={}):
     model.fit(dataset.iter_all('train'))
     model.save()
     return model
@@ -56,7 +56,7 @@ def train_model_from_config(config_path: str):
     vocabs = {}
     for vocab_param_name, vocab_config in config.get('vocabs', {}).items():
         vocab_name = vocab_config['name']
-        v: Trainable = from_params(get_model(vocab_name), vocab_config, mode='train')
+        v: NNModel = from_params(get_model(vocab_name), vocab_config, mode='train')
         vocabs[vocab_param_name] = _fit(v, dataset)
 
     model_config = config['model']
@@ -109,7 +109,7 @@ def train_model_from_config(config_path: str):
             print(json.dumps(report, ensure_ascii=False))
 
 
-def _test_model(model: Inferable, metrics_functions: List[Tuple[str, Callable]],
+def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
                 dataset: Dataset, batch_size=-1, data_type='valid', start_time=None):
     if start_time is None:
         start_time = time.time()
@@ -117,7 +117,7 @@ def _test_model(model: Inferable, metrics_functions: List[Tuple[str, Callable]],
     val_y_true = []
     val_y_predicted = []
     for x, y_true in dataset.batch_generator(batch_size, data_type, shuffle=False):
-        y_predicted = list(model.infer(list(x)))
+        y_predicted = list(model(list(x)))
         val_y_true += y_true
         val_y_predicted += y_predicted
 
@@ -131,7 +131,7 @@ def _test_model(model: Inferable, metrics_functions: List[Tuple[str, Callable]],
     return report
 
 
-def _train_batches(model: Trainable, dataset: Dataset, train_config: dict,
+def _train_batches(model: NNModel, dataset: Dataset, train_config: dict,
                    metrics_functions: List[Tuple[str, Callable]]):
 
     default_train_config = {
@@ -178,7 +178,7 @@ def _train_batches(model: Trainable, dataset: Dataset, train_config: dict,
             for batch in dataset.batch_generator(train_config['batch_size']):
                 x, y_true = batch
                 if log_on:
-                    y_predicted = list(model.infer(list(x)))
+                    y_predicted = list(model(list(x)))
                     train_y_true += y_true
                     train_y_predicted += y_predicted
                 model.train_on_batch(batch)
