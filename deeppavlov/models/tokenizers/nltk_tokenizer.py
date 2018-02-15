@@ -18,11 +18,11 @@ import nltk
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
 
+
 @register("nltk_tokenizer")
 class NLTKTokenizer(Component):
 
-    def __init__(self, save_path=None, download=False, tokenizer="wordpunct_tokenize", *args, **kwargs):
-        super().__init__(save_path=save_path)
+    def __init__(self, download=False, tokenizer="wordpunct_tokenize", *args, **kwargs):
         if download:
             nltk.download()
         self.tokenizer = getattr(nltk.tokenize, tokenizer, None)

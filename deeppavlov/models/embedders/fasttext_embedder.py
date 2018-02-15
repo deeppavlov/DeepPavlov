@@ -59,7 +59,8 @@ class FasttextEmbedder(Component, Serializable):
                 from gensim.models.wrappers.fasttext import FastText as Fasttext
                 model = Fasttext.load_fasttext_format(model_file)
         else:
-            log.error('No pretrained fasttext model provided or provided "load_path" is incorrect.')
+            log.error('No pretrained fasttext model provided or provided load_path "{}" is incorrect.'
+                      .format(self.load_path))
             sys.exit(1)
 
         return model

@@ -34,7 +34,7 @@ class Serializable(metaclass=ABCMeta):
      It is always an empty string and is ignored if it is not set in json config.
     """
 
-    def __init__(self, save_path, load_path=None, **kwargs):
+    def __init__(self, save_path, load_path=None, train_now=False, mode='infer', *args, **kwargs):
 
         if save_path:
             self.save_path = expand_path(save_path)
@@ -42,7 +42,10 @@ class Serializable(metaclass=ABCMeta):
         else:
             self.save_path = None
 
-        mode = kwargs.get('mode', 'infer')
+        if mode == 'train':
+            self.train_now = train_now
+        else:
+            self.train_now = False
 
         if load_path:
             self.load_path = expand_path(load_path)
@@ -56,8 +59,6 @@ class Serializable(metaclass=ABCMeta):
         else:
             self.load_path = None
             log.warning("No load path is set for {}!".format(self.__class__.__name__))
-
-        super().__init__()
 
     @abstractmethod
     def save(self, *args, **kwargs):

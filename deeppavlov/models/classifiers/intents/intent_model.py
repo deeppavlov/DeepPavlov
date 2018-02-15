@@ -154,20 +154,10 @@ class KerasIntentModel(KerasModel):
         Returns:
             array of embedded texts
         """
-        embeddings_batch = []
-        for sen in sentences:
-            tokens = [el for el in sen.split() if el]
-            if len(tokens) > self.opt['text_size']:
-                tokens = tokens[:self.opt['text_size']]
+        pad = np.zeros(self.opt['embedding_size'])
 
-            embeddings = self.fasttext_model.infer(' '.join(tokens))
-            if len(tokens) < self.opt['text_size']:
-                pads = [np.zeros(self.opt['embedding_size'])
-                        for _ in range(self.opt['text_size'] - len(tokens))]
-                embeddings = pads + embeddings
-
-            embeddings = np.asarray(embeddings)
-            embeddings_batch.append(embeddings)
+        embeddings_batch = self.fasttext_model([' '.join(sen.split()[:self.opt['text_size']]) for sen in sentences])
+        embeddings_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + tokens for tokens in embeddings_batch]
 
         embeddings_batch = np.asarray(embeddings_batch)
         return embeddings_batch
@@ -182,8 +172,8 @@ class KerasIntentModel(KerasModel):
         Returns:
             loss and metrics values on the given batch
         """
-        texts = self.tokenizer.infer(instance=list(batch[0]))
-        labels = list(batch[1])
+        texts, labels = batch
+        texts = self.tokenizer(list(texts))
         features = self.texts2vec(texts)
         onehot_labels = labels2onehot(labels, classes=self.classes)
         metrics_values = self.model.train_on_batch(features, onehot_labels)
@@ -200,7 +190,7 @@ class KerasIntentModel(KerasModel):
             loss and metrics values on the given batch, if labels are given
             predictions, otherwise
         """
-        texts = self.tokenizer.infer(instance=batch)
+        texts = self.tokenizer(batch)
         if labels:
             features = self.texts2vec(texts)
             onehot_labels = labels2onehot(labels, classes=self.classes)

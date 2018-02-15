@@ -15,25 +15,13 @@ limitations under the License.
 """
 from abc import abstractmethod
 
-from typing import Tuple, Iterable
+from typing import Tuple
 
 from .component import Component
 from .serializable import Serializable
 
 
 class Estimator(Component, Serializable):
-    """
-    :attr:`train_now` expresses a developer intent for whether a model as part of a pipeline
-    should be trained in the current experiment run or not.
-    """
-
-    def __init__(self, train_now=False, **kwargs):
-        mode = kwargs.get('mode', None)
-        if mode == 'train':
-            self.train_now = train_now
-        else:
-            self.train_now = False
-        super().__init__(**kwargs)
 
     @abstractmethod
     def fit(self, data: Tuple[list, list]):
