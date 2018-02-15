@@ -13,10 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
-import sys
-import inspect
-
 from typing import Dict
 import numpy as np
 from keras.layers import Dense, Input, concatenate, Activation
@@ -205,8 +201,7 @@ class KerasIntentModel(KerasModel):
         """
         Infer on the given data
         Args:
-            data: single sentence or [list of sentences, list of labels] or
-                    [list of sentences] or generator of sentences
+            data: [list of sentences]
             predict_proba: whether to return probabilities distribution or only labels-predictions
             *args:
 
@@ -215,24 +210,7 @@ class KerasIntentModel(KerasModel):
                 vector of probabilities to belong with each class
                 or list of labels sentence belongs with
         """
-        if type(data) is str:
-            preds = self.infer_on_batch([data])[0]
-            preds = np.array(preds)
-            if predict_proba:
-                return preds
-            else:
-                return proba2labels([preds], confident_threshold=self.confident_threshold, classes=self.classes)[0]
-
-        elif inspect.isgeneratorfunction(data):
-            preds = []
-            for step, batch in enumerate(data):
-                preds.extend(self.infer_on_batch(batch))
-            preds = np.array(preds)
-        elif type(data) is list:
-            preds = self.infer_on_batch(data)
-            preds = np.array(preds)
-        else:
-            raise ConfigError("Not understand data type for inference")
+        preds = np.array(self.infer_on_batch(data))
 
         if predict_proba:
             return preds
