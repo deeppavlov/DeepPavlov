@@ -28,6 +28,7 @@ from deeppavlov.core.common.metrics_registry import get_metrics_by_names
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.data.dataset import Dataset
 from deeppavlov.core.models.component import Component
+from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.log import get_logger
 
@@ -35,7 +36,7 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-def _fit(model: NNModel, dataset: Dataset, train_config={}):
+def _fit(model: Estimator, dataset: Dataset, train_config={}):
     model.fit(dataset.iter_all('train'))
     model.save()
     return model
@@ -56,7 +57,7 @@ def train_model_from_config(config_path: str):
     vocabs = {}
     for vocab_param_name, vocab_config in config.get('vocabs', {}).items():
         vocab_name = vocab_config['name']
-        v: NNModel = from_params(get_model(vocab_name), vocab_config, mode='train')
+        v: Estimator = from_params(get_model(vocab_name), vocab_config, mode='train')
         vocabs[vocab_param_name] = _fit(v, dataset)
 
     model_config = config['model']
@@ -201,7 +202,8 @@ def _train_batches(model: NNModel, dataset: Dataset, train_config: dict,
 
             epochs += 1
 
-            if train_config['log_every_n_epochs'] > 0 and epochs % train_config['log_every_n_epochs'] == 0 and train_y_true:
+            if train_config['log_every_n_epochs'] > 0 and epochs % train_config['log_every_n_epochs'] == 0\
+                    and train_y_true:
                 metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in metrics_functions]
                 report = {
                     'epochs_done': epochs,
