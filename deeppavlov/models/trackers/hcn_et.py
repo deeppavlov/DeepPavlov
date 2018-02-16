@@ -4,7 +4,7 @@ from enum import Enum
 import numpy as np
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
 
 
@@ -20,7 +20,7 @@ ENTITIES = {
 
 
 @register('hcn_et')
-class EntityTracker(Inferable):
+class EntityTracker(Component):
     def __init__(self, entities=copy.deepcopy(ENTITIES)):
         self.entities = entities
         self.num_features = 4  # tracking 4 entities

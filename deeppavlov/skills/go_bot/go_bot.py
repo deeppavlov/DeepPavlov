@@ -21,11 +21,11 @@ from typing import Type
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.core.models.component import Component
+from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
-from deeppavlov.models.encoders.bow import BoW_encoder
+from deeppavlov.models.encoders.bow import BoWEncoder
 from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel
 from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
 from deeppavlov.models.tokenizers.spacy_tokenizer import SpacyTokenizer
@@ -40,10 +40,10 @@ log = get_logger(__name__)
 
 
 @register("go_bot")
-class GoalOrientedBot(Inferable, Trainable):
+class GoalOrientedBot(NNModel):
     def __init__(self, template_path, vocabs,
                  template_type: Type = DualTemplate,
-                 bow_encoder: Type = BoW_encoder,
+                 bow_encoder: Type = BoWEncoder,
                  tokenizer: Type = SpacyTokenizer,
                  tracker: Type = DefaultTracker,
                  network: Type = GoalOrientedBotNetwork,
@@ -92,35 +92,34 @@ class GoalOrientedBot(Inferable, Trainable):
 
     def _encode_context(self, context, db_result=None):
         # tokenize input
-        tokenized = ' '.join(self.tokenizer.infer(context)).strip()
+        tokenized = ' '.join(self.tokenizer([context])[0]).strip()
         if self.debug:
             log.debug("Text tokens = `{}`".format(tokenized))
 
         # Bag of words features
-        bow_features = self.bow_encoder.infer(tokenized, self.word_vocab)
+        bow_features = self.bow_encoder([tokenized], self.word_vocab)[0]
         bow_features = bow_features.astype(np.float32)
 
         # Embeddings
         emb_features = []
-        if hasattr(self.embedder, 'infer'):
-            emb_features = self.embedder.infer(tokenized, mean=True)
+        if callable(self.embedder):
+            emb_features = self.embedder([tokenized], mean=True)[0]
 
         # Intent features
         intent_features = []
-        if hasattr(self.intent_classifier, 'infer'):
-            intent_features = self.intent_classifier.infer(tokenized,
-                                                           predict_proba=True).ravel()
+        if callable(self.intent_classifier):
+            intent_features = self.intent_classifier([tokenized], predict_proba=True).ravel()
             if self.debug:
                 log.debug("Predicted intent = `{}`".format(
                     self.intent_classifier.infer(tokenized)))
 
         # Text entity features
-        if hasattr(self.slot_filler, 'infer'):
-            self.tracker.update_state(self.slot_filler.infer(tokenized))
+        if callable(self.slot_filler):
+            self.tracker.update_state(self.slot_filler([tokenized])[0])
             if self.debug:
-                log.debug("Slot vals: {}".format(str(self.slot_filler.infer(tokenized))))
+                log.debug("Slot vals: {}".format(str(self.slot_filler(tokenized))))
 
-        state_features = self.tracker.infer()
+        state_features = self.tracker()
 
         # Other features
         context_features = np.array([(db_result == {}) * 1.,
@@ -175,11 +174,11 @@ class GoalOrientedBot(Inferable, Trainable):
         return action_mask
 
     @check_attr_true('train_now')
-    def train_on_batch(self, batch):
-        for dialog in zip(*batch):
+    def train_on_batch(self, x, y):
+        for contexts, responses in zip(x, y):
             self.reset()
             d_features, d_actions, d_masks = [], [], []
-            for context, response in zip(*dialog):
+            for context, response in zip(contexts, responses):
                 features = self._encode_context(context['text'],
                                                 context.get('db_result'))
                 if context.get('db_result') is not None:
@@ -231,10 +230,10 @@ class GoalOrientedBot(Inferable, Trainable):
             res.append(self._infer(context['text'], context.get('db_result')))
         return res
 
-    def infer(self, x):
-        if isinstance(x, str):
-            return self._infer(x)
-        return self.infer_on_batch(x)
+    def __call__(self, batch):
+        if isinstance(batch[0], str):
+            return [self._infer(x) for x in batch]
+        return self.infer_on_batch(batch)
 
     def reset(self):
         self.tracker.reset_state()

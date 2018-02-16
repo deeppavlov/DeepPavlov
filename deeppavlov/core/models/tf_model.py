@@ -14,29 +14,29 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-"""
-Here is an abstract class for neural network models based on Tensorflow.
-If you use something different, ex. Pytorch, then write similar to this class, inherit it from
-Trainable and Inferable interfaces and make a pull-request to deeppavlov.
-"""
-
 import sys
 from abc import abstractmethod
 
 import tensorflow as tf
 from overrides import overrides
 
-from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.models.nn_model import NNModel
+from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.errors import ConfigError
 from .tf_backend import TfModelMeta
 
+"""
+Here is an abstract class for neural network models based on Tensorflow.
+If you use something different, ex. Pytorch, then write similar to this class, inherit it from
+Trainable and Inferable interfaces and make a pull-request to deeppavlov.
+"""
+
 log = get_logger(__name__)
 
 
-class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
+class TFModel(Serializable, metaclass=TfModelMeta):
     def __init__(self, **kwargs):
         self._saver = tf.train.Saver
         super().__init__(**kwargs)
@@ -126,6 +126,6 @@ class TFModel(Trainable, Inferable, metaclass=TfModelMeta):
             log.error('checkpoint not found!')
 
 
-class SimpleTFModel(Trainable, Inferable, metaclass=TfModelMeta):
+class SimpleTFModel(NNModel, metaclass=TfModelMeta):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

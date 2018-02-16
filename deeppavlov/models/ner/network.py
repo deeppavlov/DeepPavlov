@@ -228,8 +228,7 @@ class NerNetwork:
             # Add len of x
             total_count += len(batch[0])
 
-    def train_on_batch(self, batch, learning_rate=1e-3, dropout_rate=0.5):
-        batch_x, batch_y = batch
+    def train_on_batch(self, batch_x, batch_y, learning_rate=1e-3, dropout_rate=0.5):
         (x_toks, x_char, mask), y_tags = self.tokens_batch_to_numpy_batch(batch_x, batch_y)
         feed_dict = self._fill_feed_dict(x_toks,
                                          x_char,

@@ -18,5 +18,9 @@
   "dataset": {
     "name": "typos_dataset",
     "test_ratio": 0.02
+  },
+  "train": {
+    "validate_best": false,
+    "test_best": true
   }
 }

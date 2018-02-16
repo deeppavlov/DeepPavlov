@@ -26,7 +26,7 @@ from deeppavlov.core.commands.utils import set_deeppavlov_root
 # PIPELINE_CONFIG_PATH = 'configs/ner/slot_config_train.json'
 # PIPELINE_CONFIG_PATH = 'configs/error_model/config_en.json'
 # PIPELINE_CONFIG_PATH = 'configs/error_model/config_ru.json'
-PIPELINE_CONFIG_PATH = 'configs/go_bot/config_train.json'
+PIPELINE_CONFIG_PATH = 'configs/go_bot/config.json'
 
 set_deeppavlov_root(PIPELINE_CONFIG_PATH)
 

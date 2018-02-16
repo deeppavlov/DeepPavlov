@@ -167,7 +167,7 @@ class GoalOrientedBotNetwork(TFModel):
     def _forward(self, features, action_mask, prob=False):
         probs, prediction, state = \
             self.sess.run(
-                [ self._probs, self._prediction, self._state ],
+                [self._probs, self._prediction, self._state],
                 feed_dict={
                     self._features: [[features]],
                     self._initial_state: (self.state_c, self.state_h),
