@@ -21,6 +21,7 @@
     "name": "ranking_model",
     "train_now": true,
     "vocabs_path": "insuranceQA-master/V1",
+    "download_url": "http://lnsigo.mipt.ru/export/embeddings/insurance_v1_word2vec",
     "emb_model_file": "insurance_v1_word2vec",
     "emb_vocab_file": "insurance_v1_w2v.emb",
     "seed": 243,

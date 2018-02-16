@@ -4,6 +4,7 @@ from gensim.models.wrappers import FastText
 from gensim.models import Word2Vec
 from keras.preprocessing.sequence import pad_sequences
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.data.utils import download
 
 
 class EmbeddingsDict(object):
@@ -16,7 +17,7 @@ class EmbeddingsDict(object):
         fasttext_model_file: a file containing fasttext binary model
     """
 
-    def __init__(self, toks, emb_model_file, embedding_dim, max_sequence_length,
+    def __init__(self, toks, emb_model_file, embedding_dim, max_sequence_length, download_url=None,
                  emb_vocab_file=None, embeddings="word2vec", padding="post", truncating="pre"):
         """Initialize the class according to given parameters."""
         self.max_sequence_length = max_sequence_length
@@ -26,6 +27,8 @@ class EmbeddingsDict(object):
         self.embedding_dim = embedding_dim
         self.emb_model_file = str(expand_path(emb_model_file))
         self.emb_vocab_file = str(expand_path(emb_vocab_file))
+        if not expand_path(emb_model_file).exists():
+            download(source_url=download_url, dest_file_path=expand_path(emb_model_file))
 
         self.tok2emb = {}
         self.tok_index = {}
@@ -41,8 +44,6 @@ class EmbeddingsDict(object):
         self.add_items(toks)
         self.create_emb_matrix()
         self.save_items()
-
-
 
     def add_items(self, toks_li):
         """Add new items to the tok2emb dictionary from a given text."""
@@ -76,9 +77,10 @@ class EmbeddingsDict(object):
 
         if self.emb_vocab_file is not None:
             if not os.path.isfile(self.emb_vocab_file):
-                print('There is no %s file provided. Initializing new dictionary.' % self.emb_vocab_file)
+                # print('There is no %s file provided. Initializing new dictionary.' % self.emb_vocab_file)
+                pass
             else:
-                print('Loading existing dictionary  from %s.' % self.emb_vocab_file)
+                # print('Loading existing dictionary  from %s.' % self.emb_vocab_file)
                 with open(self.emb_vocab_file, 'r') as f:
                     for line in f:
                         values = line.rsplit(sep=' ', maxsplit=self.embedding_dim)
