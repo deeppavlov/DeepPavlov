@@ -26,6 +26,10 @@ from deeppavlov.skills.go_bot.tracker import FeaturizedTracker
 from deeppavlov.vocabs.typos import StaticDictionary, Wiki100KDictionary, RussianWordsVocab
 from deeppavlov.models.ner.ner import NER
 from deeppavlov.core.data.dataset import Dataset
+import deeppavlov.dataset_readers.ranking_dataset_reader
+import deeppavlov.datasets.ranking_dataset
+import deeppavlov.models.ranking.ranking_model
+import deeppavlov.models.ranking.metrics
 
 import deeppavlov.metrics.accuracy
 import deeppavlov.metrics.fmeasure

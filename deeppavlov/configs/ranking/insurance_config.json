@@ -1,0 +1,46 @@
+{
+  "deeppavlov_root": "./ranking_data",
+  "dataset_reader": {
+    "name": "insurance_dataset_reader",
+    "data_path": "insuranceQA-master/V1"
+  },
+  "dataset": {
+    "name": "insurance_dataset",
+    "seed": 243,
+    "sample_candidates": "global",
+    "sample_candidates_valid": "pool",
+    "sample_candidates_test": "pool",
+    "num_negative_samples": 500,
+    "num_ranking_samples_valid": 500,
+    "num_ranking_samples_test": 500
+  },
+  "vocabs": {
+  },
+  "model": {
+    "device_num": 0,
+    "name": "ranking_model",
+    "train_now": true,
+    "vocabs_path": "insuranceQA-master/V1",
+    "emb_model_file": "insurance_v1_word2vec",
+    "emb_vocab_file": "insurance_v1_w2v.emb",
+    "seed": 243,
+    "max_sequence_length": 200,
+    "hidden_dim": 300,
+    "learning_rate": 1e-3,
+    "margin": 0.1,
+    "embedding_dim": 100,
+    "save_path": "model.h5",
+    "load_path": "model.h5"
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 256,
+    "metrics": [
+      "r_at_1", "rank_response"
+    ],
+    "validation_patience": 5,
+    "val_every_n_epochs": 20,
+    "show_examples": true
+  }
+
+}
