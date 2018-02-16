@@ -8,16 +8,14 @@ import numpy as np
 
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.tf_backend import TfModelMeta
-from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.ranking.ranking_network import RankingNetwork
 from deeppavlov.models.ranking.dict import InsuranceDict
 from deeppavlov.models.ranking.emb_dict import EmbeddingsDict
 
 
 @register('ranking_model')
-class RankingModel(Trainable, Inferable, metaclass=TfModelMeta):
+class RankingModel(NNModel):
     def __init__(self, **kwargs):
         """ Initialize the model and additional parent classes attributes
 
@@ -99,8 +97,8 @@ class RankingModel(Trainable, Inferable, metaclass=TfModelMeta):
         self._net.save(path)
 
     @check_attr_true('train_now')
-    def train_on_batch(self, batch):
-        [context, response, negative_response], y = batch
+    def train_on_batch(self, x, y):
+        context, response, negative_response = x
         context = self.dict.make_toks(context, type="context")
         context = self.embdict.make_ints(context)
         response = self.dict.make_toks(response, type="response")
@@ -111,7 +109,7 @@ class RankingModel(Trainable, Inferable, metaclass=TfModelMeta):
         self._net.train_on_batch(b)
 
     @overrides
-    def infer(self, batch):
+    def __call__(self, batch):
         context = [el[0] for el in batch]
         response = [el[1] for el in batch]
         batch_size = len(response)
