@@ -13,26 +13,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from abc import abstractmethod
 
-import numpy as np
-
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.component import Component
+from .component import Component
+from .serializable import Serializable
 
 
-@register('bow')
-class BoWEncoder(Component):
+class NNModel(Component, Serializable):
 
-    def __init__(self, *args, **kwargs):
+    @abstractmethod
+    def train_on_batch(self, x: list, y: list):
         pass
-
-    def _encode(self, utterance, vocab):
-        bow = np.zeros([len(vocab)], dtype=np.int32)
-        for word in utterance.split(' '):
-            if word in vocab:
-                idx = vocab[word]
-                bow[idx] += 1
-        return bow
-
-    def __call__(self, batch, vocab, *args):
-        return [self._encode(utterance, vocab) for utterance in batch]

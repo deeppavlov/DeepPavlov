@@ -19,7 +19,7 @@ from pathlib import Path
 from overrides import overrides
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
 
 
@@ -27,7 +27,7 @@ log = get_logger(__name__)
 
 
 @register('dict_emb')
-class DictEmbedder(Inferable):
+class DictEmbedder(Component):
     def __init__(self, ser_path, dim, **kwargs):
         super().__init__(ser_path=ser_path)
         self.tok2emb = {}
@@ -56,7 +56,7 @@ class DictEmbedder(Inferable):
                     self.tok2emb[word] = coefs
 
     @overrides
-    def infer(self, sentence: str, *args, **kwargs) -> list:
+    def __call__(self, batch, *args, **kwargs) -> list:
         """
         Method returns embedded sentence
         Args:
@@ -65,4 +65,4 @@ class DictEmbedder(Inferable):
         Returns:
             embedded sentence
         """
-        return [self.tok2emb[t] for t in sentence.split()]
+        return [[self.tok2emb[t] for t in sentence.split()] for sentence in batch]

@@ -14,7 +14,7 @@ from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel
 from deeppavlov.models.commutators.random_commutator import RandomCommutator
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.embedders.dict_embedder import DictEmbedder
-from deeppavlov.models.encoders.bow import BoW_encoder
+from deeppavlov.models.encoders.bow import BoWEncoder
 from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
 from deeppavlov.models.spellers.error_model.error_model import ErrorModel
 from deeppavlov.models.trackers.hcn_at import ActionTracker
