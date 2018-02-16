@@ -37,7 +37,8 @@ log = get_logger(__name__)
 
 
 def _fit(model: Estimator, dataset: Dataset, train_config={}):
-    model.fit(dataset.iter_all('train'))
+    x, y = dataset.iter_all('train')
+    model.fit(x, y)
     model.save()
     return model
 
@@ -176,13 +177,12 @@ def _train_batches(model: NNModel, dataset: Dataset, train_config: dict,
     start_time = time.time()
     try:
         while True:
-            for batch in dataset.batch_generator(train_config['batch_size']):
-                x, y_true = batch
+            for x, y_true in dataset.batch_generator(train_config['batch_size']):
                 if log_on:
                     y_predicted = list(model(list(x)))
                     train_y_true += y_true
                     train_y_predicted += y_predicted
-                model.train_on_batch(batch)
+                model.train_on_batch(x, y_true)
                 i += 1
                 examples += len(x)
 

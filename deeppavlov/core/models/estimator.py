@@ -15,8 +15,6 @@ limitations under the License.
 """
 from abc import abstractmethod
 
-from typing import Tuple
-
 from .component import Component
 from .serializable import Serializable
 
@@ -24,5 +22,5 @@ from .serializable import Serializable
 class Estimator(Component, Serializable):
 
     @abstractmethod
-    def fit(self, data: Tuple[list, list]):
+    def fit(self, x: list, y: list):
         pass

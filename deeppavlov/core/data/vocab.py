@@ -117,11 +117,11 @@ class DefaultVocabulary(Estimator):
             self.freqs[token] += 0
 
     @check_attr_true('train_now')
-    def fit(self, data):
+    def fit(self, x, y):
         self.reset()
         self._train(
             tokens=filter(None, itertools.chain.from_iterable(
-                map(self.preprocess_fn, zip(*data)))),
+                map(self.preprocess_fn, zip(x, y)))),
             counts=None,
             update=True
         )

@@ -15,8 +15,6 @@ limitations under the License.
 """
 from abc import abstractmethod
 
-from typing import Tuple
-
 from .component import Component
 from .serializable import Serializable
 
@@ -24,5 +22,5 @@ from .serializable import Serializable
 class NNModel(Component, Serializable):
 
     @abstractmethod
-    def train_on_batch(self, batch: Tuple[list, list]):
+    def train_on_batch(self, x: list, y: list):
         pass

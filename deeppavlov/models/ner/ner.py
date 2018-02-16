@@ -77,8 +77,8 @@ class NER(SimpleTFModel):
         self._net.save(path)
 
     @check_attr_true('train_now')
-    def train_on_batch(self, batch):
-        self._net.train_on_batch(batch, **self.train_parameters)
+    def train_on_batch(self, batch_x, batch_y):
+        self._net.train_on_batch(batch_x, batch_y, **self.train_parameters)
 
     @overrides
     def __call__(self, batch, *args, **kwargs):

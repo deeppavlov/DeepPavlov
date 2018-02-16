@@ -194,10 +194,10 @@ class ErrorModel(Estimator):
         return d[-1][-1]
 
     @check_attr_true('train_now')
-    def fit(self, data):
+    def fit(self, x, y):
         changes = []
         entries = []
-        data = list(zip(*data))
+        data = list(zip(x, y))
         window = 4
         for error, correct in tqdm(data, desc='Training the error model'):
             correct = '⟬{}⟭'.format(correct)

@@ -236,18 +236,6 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
                                                 weighted_metrics=weighted_metrics,
                                                 target_tensors=target_tensors)
 
-    @abstractmethod
-    def train_on_batch(self, batch):
-        """
-        Train the model on a single batch of data
-        Args:
-            batch: tuple of (x,y) where x, y - lists of samples and their labels
-
-        Returns:
-            metrics values on a given batch
-        """
-        pass
-
     @overrides
     def save(self, fname=None):
         """

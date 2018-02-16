@@ -174,11 +174,11 @@ class GoalOrientedBot(NNModel):
         return action_mask
 
     @check_attr_true('train_now')
-    def train_on_batch(self, batch):
-        for dialog in zip(*batch):
+    def train_on_batch(self, x, y):
+        for contexts, responses in zip(x, y):
             self.reset()
             d_features, d_actions, d_masks = [], [], []
-            for context, response in zip(*dialog):
+            for context, response in zip(contexts, responses):
                 features = self._encode_context(context['text'],
                                                 context.get('db_result'))
                 if context.get('db_result') is not None:

@@ -97,8 +97,8 @@ class DstcSlotFillingNetwork(SimpleTFModel):
         self._ner_network.save(path)
 
     @check_attr_true('train_now')
-    def train_on_batch(self, batch):
-        self._ner_network.train_on_batch(batch, **self.train_parameters)
+    def train_on_batch(self, batch_x, batch_y):
+        self._ner_network.train_on_batch(batch_x, batch_y, **self.train_parameters)
 
     @overrides
     def __call__(self, batch, *args, **kwargs):
@@ -110,9 +110,9 @@ class DstcSlotFillingNetwork(SimpleTFModel):
         m = [i for i, v in enumerate(batch) if v]
         if m:
             batch = [batch[i] for i in m]
-            tags_batch = self._ner_network.predict_for_token_batch(list(batch))
+            tags_batch = self._ner_network.predict_for_token_batch(batch)
             for i, tokens, tags in zip(m, batch, tags_batch):
-                slots[i] = (self.predict_slots(tokens, tags))
+                slots[i] = self.predict_slots(tokens, tags)
         return slots
 
     def predict_slots(self, tokens, tags):

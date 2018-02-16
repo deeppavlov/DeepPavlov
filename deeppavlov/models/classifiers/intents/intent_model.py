@@ -159,7 +159,7 @@ class KerasIntentModel(KerasModel):
         return embeddings_batch
 
     @check_attr_true('train_now')
-    def train_on_batch(self, batch):
+    def train_on_batch(self, texts, labels):
         """
         Train the model on the given batch
         Args:
@@ -168,7 +168,6 @@ class KerasIntentModel(KerasModel):
         Returns:
             loss and metrics values on the given batch
         """
-        texts, labels = batch
         texts = self.tokenizer(list(texts))
         features = self.texts2vec(texts)
         onehot_labels = labels2onehot(labels, classes=self.classes)
