@@ -13,10 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
-import sys
-import inspect
-
 from typing import Dict
 import numpy as np
 from keras.layers import Dense, Input, concatenate, Activation
@@ -154,26 +150,16 @@ class KerasIntentModel(KerasModel):
         Returns:
             array of embedded texts
         """
-        embeddings_batch = []
-        for sen in sentences:
-            tokens = [el for el in sen.split() if el]
-            if len(tokens) > self.opt['text_size']:
-                tokens = tokens[:self.opt['text_size']]
+        pad = np.zeros(self.opt['embedding_size'])
 
-            embeddings = self.fasttext_model.infer(' '.join(tokens))
-            if len(tokens) < self.opt['text_size']:
-                pads = [np.zeros(self.opt['embedding_size'])
-                        for _ in range(self.opt['text_size'] - len(tokens))]
-                embeddings = pads + embeddings
-
-            embeddings = np.asarray(embeddings)
-            embeddings_batch.append(embeddings)
+        embeddings_batch = self.fasttext_model([' '.join(sen.split()[:self.opt['text_size']]) for sen in sentences])
+        embeddings_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + tokens for tokens in embeddings_batch]
 
         embeddings_batch = np.asarray(embeddings_batch)
         return embeddings_batch
 
     @check_attr_true('train_now')
-    def train_on_batch(self, batch):
+    def train_on_batch(self, texts, labels):
         """
         Train the model on the given batch
         Args:
@@ -182,8 +168,7 @@ class KerasIntentModel(KerasModel):
         Returns:
             loss and metrics values on the given batch
         """
-        texts = self.tokenizer.infer(instance=list(batch[0]))
-        labels = list(batch[1])
+        texts = self.tokenizer(list(texts))
         features = self.texts2vec(texts)
         onehot_labels = labels2onehot(labels, classes=self.classes)
         metrics_values = self.model.train_on_batch(features, onehot_labels)
@@ -200,7 +185,7 @@ class KerasIntentModel(KerasModel):
             loss and metrics values on the given batch, if labels are given
             predictions, otherwise
         """
-        texts = self.tokenizer.infer(instance=batch)
+        texts = self.tokenizer(batch)
         if labels:
             features = self.texts2vec(texts)
             onehot_labels = labels2onehot(labels, classes=self.classes)
@@ -211,12 +196,11 @@ class KerasIntentModel(KerasModel):
             predictions = self.model.predict(features)
             return predictions
 
-    def infer(self, data, predict_proba=False, *args):
+    def __call__(self, data, predict_proba=False, *args):
         """
         Infer on the given data
         Args:
-            data: single sentence or [list of sentences, list of labels] or
-                    [list of sentences] or generator of sentences
+            data: [list of sentences]
             predict_proba: whether to return probabilities distribution or only labels-predictions
             *args:
 
@@ -225,24 +209,7 @@ class KerasIntentModel(KerasModel):
                 vector of probabilities to belong with each class
                 or list of labels sentence belongs with
         """
-        if type(data) is str:
-            preds = self.infer_on_batch([data])[0]
-            preds = np.array(preds)
-            if predict_proba:
-                return preds
-            else:
-                return proba2labels([preds], confident_threshold=self.confident_threshold, classes=self.classes)[0]
-
-        elif inspect.isgeneratorfunction(data):
-            preds = []
-            for step, batch in enumerate(data):
-                preds.extend(self.infer_on_batch(batch))
-            preds = np.array(preds)
-        elif type(data) is list:
-            preds = self.infer_on_batch(data)
-            preds = np.array(preds)
-        else:
-            raise ConfigError("Not understand data type for inference")
+        preds = np.array(self.infer_on_batch(data))
 
         if predict_proba:
             return preds

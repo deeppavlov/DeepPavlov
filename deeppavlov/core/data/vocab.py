@@ -21,18 +21,16 @@ from pathlib import Path
 import numpy as np
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.log import get_logger
-
+from deeppavlov.core.models.estimator import Estimator
 
 log = get_logger(__name__)
 
 
 @register('default_vocab')
-class DefaultVocabulary(Trainable, Inferable):
+class DefaultVocabulary(Estimator):
     def __init__(self, inputs, save_path, load_path, level='token',
                  special_tokens=tuple(), default_token=None,
                  tokenize=False, train_now=False, *args, **kwargs):
@@ -119,11 +117,11 @@ class DefaultVocabulary(Trainable, Inferable):
             self.freqs[token] += 0
 
     @check_attr_true('train_now')
-    def fit(self, data):
+    def fit(self, x, y):
         self.reset()
         self._train(
             tokens=filter(None, itertools.chain.from_iterable(
-                map(self.preprocess_fn, data))),
+                map(self.preprocess_fn, zip(x, y)))),
             counts=None,
             update=True
         )
@@ -141,8 +139,8 @@ class DefaultVocabulary(Trainable, Inferable):
                 index += 1
             self.freqs[token] += cnt
 
-    def infer(self, samples, **kwargs):
-        return [self.__getitem__(s) for s in samples]
+    def __call__(self, samples, **kwargs):
+        return [self[s] for s in samples]
 
     def save(self):
         log.info("[saving vocabulary to {}]".format(self.save_path))

@@ -85,7 +85,7 @@ def interact_model(config_path):
             return
 
         try:
-            pred = model.infer(context, )
-            print('>>', pred)
+            pred = model([context])
+            print('>>', pred[0])
         except Exception as e:
             raise e

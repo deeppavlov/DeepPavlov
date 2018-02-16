@@ -17,16 +17,15 @@ limitations under the License.
 import spacy
 import re
 
-from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
 
 
 @register('spacy_tokenizer')
-class SpacyTokenizer(Inferable):
+class SpacyTokenizer(Component):
 
-    def __init__(self, save_path=None, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.NLP = spacy.load('en')
-        super().__init__(save_path=save_path, **kwargs)
 
     def _tokenize(self, text, **kwargs):
         """Tokenize with spacy, placing service words as individual tokens."""
@@ -50,10 +49,9 @@ class SpacyTokenizer(Inferable):
         step6 = step5.replace(" ` ", " '")
         return step6.strip()
 
-    def infer(self, x):
-        if isinstance(x, str):
-            return self._tokenize(x)
-        if isinstance(x, list):
-            return self._detokenize(x)
-        raise TypeError("SpacyTokenize.infer() not implemented for `{}`"\
-                        .format(type(x)))
+    def __call__(self, batch):
+        if isinstance(batch[0], str):
+            return [self._tokenize(sent) for sent in batch]
+        if isinstance(batch[0], list):
+            return [self._detokenize(sent) for sent in batch]
+        raise TypeError("SpacyTokenizer.__call__() not implemented for `{}`".format(type(batch[0])))

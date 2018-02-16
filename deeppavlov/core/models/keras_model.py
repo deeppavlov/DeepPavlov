@@ -27,9 +27,7 @@ from keras import backend as K
 from keras.models import Model
 from keras.layers import Dense, Input
 
-from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.common.attributes import check_attr_true
+from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.file import save_json, read_json
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.log import get_logger
@@ -38,7 +36,7 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
+class KerasModel(NNModel, metaclass=TfModelMeta):
     """
     Class builds keras model with tensorflow backend
     """
@@ -237,18 +235,6 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                                                 sample_weight_mode=sample_weight_mode,
                                                 weighted_metrics=weighted_metrics,
                                                 target_tensors=target_tensors)
-
-    @abstractmethod
-    def train_on_batch(self, batch):
-        """
-        Train the model on a single batch of data
-        Args:
-            batch: tuple of (x,y) where x, y - lists of samples and their labels
-
-        Returns:
-            metrics values on a given batch
-        """
-        pass
 
     @overrides
     def save(self, fname=None):
