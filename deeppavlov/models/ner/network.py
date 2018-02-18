@@ -15,17 +15,12 @@ limitations under the License.
 """
 
 from collections import defaultdict
-from overrides import overrides
-from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer
 
-from deeppavlov.core.common.attributes import check_attr_true
-from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.models.tf_model import SimpleTFModel
 from deeppavlov.models.ner.layers import character_embedding_network
 from deeppavlov.models.ner.layers import embedding_layer
 from deeppavlov.models.ner.layers import highway_convolutional_network
@@ -59,7 +54,8 @@ class NerNetwork:
                  net_type='cnn',
                  char_filter_width=5,
                  verbouse=False,
-                 embeddings_onethego=False):
+                 embeddings_onethego=False,
+                 sess=None):
 
         n_tags = len(tag_vocab)
         n_tokens = len(word_vocab)
@@ -137,7 +133,8 @@ class NerNetwork:
         loss = tf.reduce_mean(loss_tensor)
 
         # Initialize session
-        sess = tf.Session()
+        if sess is None:
+            sess = tf.Session()
         if logging:
             self.train_writer = tf.summary.FileWriter('summary', sess.graph)
 

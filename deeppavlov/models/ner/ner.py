@@ -24,11 +24,11 @@ from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import tokenize_reg
 from deeppavlov.models.ner.network import NerNetwork
-from deeppavlov.core.models.tf_model import SimpleTFModel
+from deeppavlov.core.models.tf_model import TFModel
 
 
 @register('ner')
-class NER(SimpleTFModel):
+class NER(TFModel):
     def __init__(self, **kwargs):
 
         save_path = kwargs.get('save_path', None)
@@ -48,6 +48,8 @@ class NER(SimpleTFModel):
         # Fill all provided parameters from opt
         network_parameters = {par: opt[par] for par in network_parameter_names if par in opt}
 
+        self.sess = tf.Session()
+        network_parameters['sess'] = self.sess
         self._net = NerNetwork(**network_parameters)
 
         # Find all parameters for network train
@@ -61,20 +63,6 @@ class NER(SimpleTFModel):
         # Try to load the model (if there are some model files the model will be loaded from them)
         if self.load_path is not None:
             self.load()
-
-    @overrides
-    def load(self):
-        path = str(self.load_path.absolute())
-        # Check presence of the model files
-        if tf.train.checkpoint_exists(path):
-            print('[loading model from {}]'.format(path), file=sys.stderr)
-            self._net.load(path)
-
-    @overrides
-    def save(self):
-        path = str(self.save_path.absolute())
-        print('[saving model to {}]'.format(path), file=sys.stderr)
-        self._net.save(path)
 
     @check_attr_true('train_now')
     def train_on_batch(self, batch_x, batch_y):

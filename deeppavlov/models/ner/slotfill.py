@@ -24,7 +24,7 @@ from pathlib import Path
 
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.tf_model import SimpleTFModel
+from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.models.ner.network import NerNetwork
 from deeppavlov.core.data.utils import tokenize_reg, download, download_decompress
 from deeppavlov.core.common.log import get_logger
@@ -34,16 +34,9 @@ log = get_logger(__name__)
 
 
 @register('dstc_slotfilling')
-class DstcSlotFillingNetwork(SimpleTFModel):
+class DstcSlotFillingNetwork(TFModel):
     def __init__(self, **kwargs):
-
-        save_path = kwargs.get('save_path', None)
-        load_path = kwargs.get('load_path', None)
-        train_now = kwargs.get('train_now', None)
-        mode = kwargs.get('mode', None)
-
-        super().__init__(save_path=save_path, load_path=load_path,
-                         train_now=train_now, mode=mode)
+        super().__init__(**kwargs)
 
         opt = deepcopy(kwargs)
         vocabs = opt.pop('vocabs')
@@ -57,6 +50,8 @@ class DstcSlotFillingNetwork(SimpleTFModel):
         network_parameters = {par: opt[par] for par in network_parameter_names if par in opt}
 
         # Initialize the network
+        self.sess = tf.Session()
+        network_parameters['sess'] = self.sess
         self._ner_network = NerNetwork(**network_parameters)
 
         download_best_model = opt.get('download_best_model', False)
@@ -81,20 +76,6 @@ class DstcSlotFillingNetwork(SimpleTFModel):
 
         if self.load_path is not None:
             self.load()
-
-    @overrides
-    def load(self):
-        path = str(self.load_path.absolute())
-        # Check presence of the model files
-        if tf.train.checkpoint_exists(path):
-            log.info('[restoring model from {}]'.format(path))
-            self._ner_network.load(path)
-
-    @overrides
-    def save(self):
-        path = str(self.save_path.absolute())
-        log.info('[saving model to {}]'.format(path))
-        self._ner_network.save(path)
 
     @check_attr_true('train_now')
     def train_on_batch(self, batch_x, batch_y):
