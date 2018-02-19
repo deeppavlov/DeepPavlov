@@ -27,7 +27,6 @@ log = get_logger(__name__)
 
 @register('go_bot_rnn')
 class GoalOrientedBotNetwork(TFModel):
-
     def __init__(self, **params):
         self.opt = params
 
@@ -47,18 +46,36 @@ class GoalOrientedBotNetwork(TFModel):
         # initialize session
         self.sess = tf.Session()
 
-        if self.get_checkpoint_state():
+        self.sess.run(tf.global_variables_initializer())
+        if tf.train.checkpoint_exists(str(self.save_path.resolve())):
         #TODO: save/load params to json, here check compatability
             log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
             self.load()
         else:
             log.info("[initializing `{}` from scratch]".format(self.__class__.__name__))
-            self.sess.run(tf.global_variables_initializer())
 
         self.reset_state()
 
-    def run_sess(self):
-        pass
+    def __call__(self, features, action_mask, prob=False):
+        # TODO: make input list
+        probs, prediction, state = \
+            self.sess.run(
+                [self._probs, self._prediction, self._state],
+                feed_dict={
+                    self._features: [[features]],
+                    self._initial_state: (self.state_c, self.state_h),
+                    self._action_mask: [[action_mask]]
+                }
+            )
+        self.state_c, self._state_h = state
+        if prob:
+            return probs
+        return prediction
+
+    def train_on_batch(self, x: list, y: list):
+        features, action_mask = x
+        action = y
+        self._train_step(features, action, action_mask)
 
     def _init_params(self, params=None):
         params = params or self.opt
@@ -89,7 +106,7 @@ class GoalOrientedBotNetwork(TFModel):
             tf.losses.sparse_softmax_cross_entropy(logits=_logits,
                                                    labels=self._action)
         self._loss = tf.reduce_mean(_loss_tensor, name='loss')
-        self._train_op = self._get_train_op(self._loss, self.learning_rate)
+        self._train_op = self.get_train_op(self._loss, self.learning_rate)
 
     def _add_placeholders(self):
         # TODO: make batch_size != 1
@@ -128,25 +145,6 @@ class GoalOrientedBotNetwork(TFModel):
                                   kernel_initializer=xavier_initializer())
         return _logits, _state
 
-    def _get_train_op(self, loss, learning_rate, optimizer=None, clip_norm=1.):
-        """ Get train operation for given loss
-
-        Args:
-            loss: loss function, tf tensor or scalar
-            learning_rate: scalar or placeholder
-            optimizer: instance of tf.train.Optimizer, Adam, by default
-
-        Returns:
-            train_op
-        """
-
-        optimizer = optimizer or tf.train.AdamOptimizer
-        optimizer = optimizer(learning_rate)
-        grads_and_vars = optimizer.compute_gradients(loss, tf.trainable_variables())
-        grads_and_vars = [(tf.clip_by_norm(grad, clip_norm), var)\
-                          for grad, var in grads_and_vars]
-        return optimizer.apply_gradients(grads_and_vars, name='train_op')
-
     def reset_state(self):
         # set zero state
         self.state_c = np.zeros([1, self.n_hidden], dtype=np.float32)
@@ -163,21 +161,6 @@ class GoalOrientedBotNetwork(TFModel):
                 }
             )
         return loss_value, prediction
-
-    def _forward(self, features, action_mask, prob=False):
-        probs, prediction, state = \
-            self.sess.run(
-                [self._probs, self._prediction, self._state],
-                feed_dict={
-                    self._features: [[features]],
-                    self._initial_state: (self.state_c, self.state_h),
-                    self._action_mask: [[action_mask]]
-                }
-            )
-        self.state_c, self._state_h = state
-        if prob:
-            return probs
-        return prediction
 
     def shutdown(self):
         self.sess.close()
