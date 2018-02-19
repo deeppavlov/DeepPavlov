@@ -17,8 +17,6 @@ import tensorflow as tf
 from overrides import overrides
 from copy import deepcopy
 import inspect
-import sys
-from itertools import chain
 
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
