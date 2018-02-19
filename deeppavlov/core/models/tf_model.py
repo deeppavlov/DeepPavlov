@@ -52,14 +52,19 @@ class TFModel(NNModel, metaclass=TfModelMeta):
         # Check presence of the model files
         if tf.train.checkpoint_exists(path):
             print('[loading model from {}]'.format(path), file=sys.stderr)
-            saver = tf.train.Saver()
+            # Exclude optimizer variables from saved variables
+            var_list = [var for var in tf.trainable_variables()
+                        if not var.name.startswith('Optimizer')]
+            saver = tf.train.Saver(var_list)
             saver.restore(self.sess, path)
 
     def save(self):
         """Save model parameters to self.save_path"""
         path = str(self.save_path.resolve())
         print('[saving model to {}]'.format(path), file=sys.stderr)
-        saver = tf.train.Saver()
+        var_list = [var for var in tf.trainable_variables()
+                    if not var.name.startswith('Optimizer')]
+        saver = tf.train.Saver(var_list)
         saver.save(self.sess, path)
 
     @abstractmethod
@@ -87,28 +92,28 @@ class TFModel(NNModel, metaclass=TfModelMeta):
         Returns:
             train_op
         """
+        with tf.variable_scope('Optimizer'):
+            if learnable_scopes is None:
+                variables_to_train = tf.trainable_variables()
+            else:
+                variables_to_train = []
+                for scope_name in learnable_scopes:
+                    for var in tf.trainable_variables():
+                        if var.name.startswith(scope_name):
+                            variables_to_train.append(var)
 
-        if learnable_scopes is None:
-            variables_to_train = tf.trainable_variables()
-        else:
-            variables_to_train = []
-            for scope_name in learnable_scopes:
-                for var in tf.trainable_variables():
-                    if var.name.startswith(scope_name):
-                        variables_to_train.append(var)
+            if optimizer is None:
+                optimizer = tf.train.AdamOptimizer
 
-        if optimizer is None:
-            optimizer = tf.train.AdamOptimizer
-
-        # For batch norm it is necessary to update running averages
-        extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        with tf.control_dependencies(extra_update_ops):
-            opt = optimizer(learning_rate)
-            grads_and_vars = opt.compute_gradients(loss, var_list=variables_to_train)
-            if clip_norm is not None:
-                grads_and_vars = [(tf.clip_by_norm(grad, clip_norm), var)
-                                  for grad, var in grads_and_vars]
-            train_op = opt.apply_gradients(grads_and_vars)
+            # For batch norm it is necessary to update running averages
+            extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+            with tf.control_dependencies(extra_update_ops):
+                opt = optimizer(learning_rate)
+                grads_and_vars = opt.compute_gradients(loss, var_list=variables_to_train)
+                if clip_norm is not None:
+                    grads_and_vars = [(tf.clip_by_norm(grad, clip_norm), var)
+                                      for grad, var in grads_and_vars]
+                train_op = opt.apply_gradients(grads_and_vars)
         return train_op
 
     @staticmethod
