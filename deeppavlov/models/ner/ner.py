@@ -75,4 +75,4 @@ class NER(TFModel):
         return self._net.predict_on_batch(batch)
 
     def shutdown(self):
-        self.ner.shutdown()
+        self._net.shutdown()
