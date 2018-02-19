@@ -72,8 +72,6 @@ class RankingModel(NNModel):
         # Try to load the model (if there are some model files the model will be loaded from them)
         self.load()
 
-
-
     @overrides
     def load(self):
         """Check existence of the model file, load the model if the file exists"""
@@ -86,7 +84,8 @@ class RankingModel(NNModel):
         # Check presence of the model files
         if model_file_exist:
             print('[loading model from {}]'.format(path), file=sys.stderr)
-            self._net.load(path)
+            self._net.load(path+'.h5')
+            self.dict.load(path+'.npy')
 
     @overrides
     def save(self):
@@ -94,41 +93,57 @@ class RankingModel(NNModel):
         already created by super().__init__ part in called in __init__ of this class"""
         path = str(self.save_path.absolute())
         print('[saving model to {}]'.format(path), file=sys.stderr)
-        self._net.save(path)
+        self._net.save(path+'.h5')
+        self.dict.save(path+'.npy')
 
     @check_attr_true('train_now')
     def train_on_batch(self, x, y):
+
+        if self.dict.label2emb_vocab[0] is not None:
+            for i in range(len(self.dict.label2emb_vocab)):
+                self.dict.label2emb_vocab[i] = None
+
         context, response, negative_response = x
-        context = self.dict.make_toks(context, type="context")
-        context = self.embdict.make_ints(context)
-        response = self.dict.make_toks(response, type="response")
-        response = self.embdict.make_ints(response)
-        negative_response = self.dict.make_toks(negative_response, type="response")
-        negative_response = self.embdict.make_ints(negative_response)
-        b = [context, response, negative_response], y
+        c = self.dict.make_toks(context, type="context")
+        c = self.embdict.make_ints(c)
+        rp = self.dict.make_toks(response, type="response")
+        rp = self.embdict.make_ints(rp)
+        rn = self.dict.make_toks(negative_response, type="response")
+        rn = self.embdict.make_ints(rn)
+        b = [c, rp, rn], y
         self._net.train_on_batch(b)
 
     @overrides
     def __call__(self, batch):
+
+        if self.dict.label2emb_vocab[0] is None:
+            r = []
+            for i in range(len(self.dict.label2toks_vocab)):
+                r.append(self.dict.label2toks_vocab[i])
+            r = self.embdict.make_ints(r)
+            response_embeddings = self._net.predict_response_emb([r, r, r], 512)
+            for i in range(len(self.dict.label2toks_vocab)):
+                self.dict.label2emb_vocab[i] = response_embeddings[i]
+
         context = [el[0] for el in batch]
         response = [el[1] for el in batch]
         batch_size = len(response)
         ranking_length = len(response[0])
-        context = [ranking_length * [el] for el in context]
+        # context = [ranking_length * [el] for el in context]
+        # context = [reduce(operator.concat, context)][0]
         response = reduce(operator.concat, response)
-        context = [reduce(operator.concat, context)][0]
+        response = [response[i:batch_size*ranking_length:ranking_length] for i in range(ranking_length)]
         y_pred = []
         for i in range(ranking_length):
-            c = context[i*batch_size:(i+1)*batch_size]
-            r = response[i*batch_size:(i+1)*batch_size]
-            c = self.dict.make_toks(c, type="context")
+            c = self.dict.make_toks(context, type="context")
             c = self.embdict.make_ints(c)
+            r = response[i]
             r = self.dict.make_toks(r, type="response")
             r = self.embdict.make_ints(r)
             b = [c, r, r]
             yp = self._net.predict_on_batch(b)
-            y_pred += list(np.squeeze(yp))
-        y_pred = [y_pred[i*ranking_length:(i+1)*ranking_length] for i in range(batch_size)]
+            y_pred.append(yp)
+        y_pred = np.hstack(y_pred)
         return y_pred
 
     def interact(self):

@@ -1,3 +1,4 @@
+import numpy as np
 from pathlib import Path
 from deeppavlov.core.commands.utils import expand_path
 
@@ -8,11 +9,13 @@ class InsuranceDict(object):
         vocabs_path =expand_path(vocabs_path)
         self.idx2tok_vocab = {}
         self.label2toks_vocab = {}
+        self.label2emb_vocab = {}
         idx2tok_fname = Path(vocabs_path) / 'vocabulary'
         self.build_idx2tok_vocab(idx2tok_fname)
         label2idxs_fname = Path(vocabs_path) / 'answers.label.token_idx'
         self.build_label2toks_vocabulary(label2idxs_fname)
         self.toks = [el[1] for el in self.idx2tok_vocab.items()]
+        self.build_label2emb_vocabulary()
 
     def build_idx2tok_vocab(self, fname):
         with open(fname) as f:
@@ -26,6 +29,10 @@ class InsuranceDict(object):
                                         (el.split('\t')[1][:-1]).split(' ') for el in data}
         for el in label2idxs_vocab.items():
             self.label2toks_vocab[el[0]] = [self.idx2tok_vocab[idx] for idx in el[1]]
+
+    def build_label2emb_vocabulary(self):
+        for i in range(len(self.label2toks_vocab)):
+            self.label2emb_vocab[i] = None
 
     def idxs2toks(self, idxs_li):
         toks_li = []
@@ -44,3 +51,15 @@ class InsuranceDict(object):
         elif type == "response":
             toks_li = self.labels2toks(items_li)
         return toks_li
+
+    def save(self, path):
+        response_embeddings = []
+        for i in range(len(self.label2emb_vocab)):
+            response_embeddings.append(self.label2emb_vocab[i])
+        response_embeddings = np.vstack(response_embeddings)
+        np.save(path, response_embeddings)
+
+    def load(self, path):
+        response_embeddings_arr = np.load(path)
+        for i in range(response_embeddings_arr.shape[0]):
+            self.label2emb_vocab[i] = response_embeddings_arr[i]

@@ -32,6 +32,10 @@ class RankingNetwork(object):
         self.obj_model.compile(loss=self.loss, optimizer=self.optimizer)
         self.score_model = Model(inputs=self.obj_model.input,
                                  outputs=self.obj_model.get_layer(name="score_model").get_output_at(0))
+        self.response_embedding = Model(inputs=self.obj_model.input,
+                                 outputs=self.obj_model.get_layer(name="pooling").get_output_at(0))
+        self.response_embedding = Model(inputs=self.obj_model.input,
+                                 outputs=self.obj_model.get_layer(name="pooling").get_output_at(1))
 
 
     def _config_session(self):
@@ -132,7 +136,7 @@ class RankingNetwork(object):
         lstm_rp = lstm_layer_b(emb_rp)
         lstm_rn = lstm_layer_b(emb_rn)
         if self.pooling is None or self.pooling == "max":
-            pooling_layer = GlobalMaxPooling1D()
+            pooling_layer = GlobalMaxPooling1D(name="pooling")
             lstm_c = pooling_layer(lstm_c)
             lstm_rp = pooling_layer(lstm_rp)
             lstm_rn = pooling_layer(lstm_rn)
@@ -153,3 +157,10 @@ class RankingNetwork(object):
 
     def predict_on_batch(self, batch):
         return self.score_model.predict_on_batch(x=batch)
+
+    def predict_response_emb(self, batch, bs):
+        return self.response_embedding.predict(x=batch, batch_size=bs)
+
+    def predict_context_emb(self, batch):
+        return self.context_embedding.predict_on_batch(x=batch)
+
