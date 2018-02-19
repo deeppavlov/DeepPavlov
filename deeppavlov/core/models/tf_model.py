@@ -60,7 +60,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
         path = str(self.save_path.resolve())
         print('[saving model to {}]'.format(path), file=sys.stderr)
         saver = tf.train.Saver()
-        saver.restore(self.sess, path)
+        saver.save(self.sess, path)
 
     @abstractmethod
     def __call__(self, x_batch):
