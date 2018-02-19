@@ -74,12 +74,13 @@ class TFModel(NNModel, metaclass=TfModelMeta):
         """
         pass
 
-    def get_train_op(self, loss, learning_rate, learnable_scopes=None, optimizer=None):
+    def get_train_op(self, loss, learning_rate, optimizer=None, clip_norm=None, learnable_scopes=None):
         """ Get train operation for given loss
 
         Args:
             loss: loss, tf tensor or scalar
             learning_rate: scalar or placeholder
+            clip_norm: clip gradients norm by clip_norm
             learnable_scopes: which scopes are trainable (None for all)
             optimizer: instance of tf.train.Optimizer, default Adam
 
@@ -102,7 +103,12 @@ class TFModel(NNModel, metaclass=TfModelMeta):
         # For batch norm it is necessary to update running averages
         extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(extra_update_ops):
-            train_op = optimizer(learning_rate).minimize(loss, var_list=variables_to_train)
+            opt = optimizer(learning_rate)
+            grads_and_vars = opt.compute_gradients(loss, var_list=variables_to_train)
+            if clip_norm is not None:
+                grads_and_vars = [(tf.clip_by_norm(grad, clip_norm), var)
+                                  for grad, var in grads_and_vars]
+            train_op = opt.apply_gradients(grads_and_vars)
         return train_op
 
     @staticmethod
