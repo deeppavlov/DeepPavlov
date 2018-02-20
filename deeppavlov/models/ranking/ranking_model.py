@@ -5,6 +5,8 @@ import sys
 from functools import reduce
 import operator
 import numpy as np
+import nltk
+from nltk.tokenize import sent_tokenize, word_tokenize
 
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
@@ -12,6 +14,7 @@ from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.ranking.ranking_network import RankingNetwork
 from deeppavlov.models.ranking.dict import InsuranceDict
 from deeppavlov.models.ranking.emb_dict import EmbeddingsDict
+from deeppavlov.core.commands.utils import get_deeppavlov_root
 
 
 @register('ranking_model')
@@ -36,6 +39,8 @@ class RankingModel(NNModel):
         # if it doesn't exist
         super().__init__(save_path=save_path, load_path=load_path,
                          train_now=train_now, mode=mode)
+
+        nltk.download('punkt', download_dir=str(get_deeppavlov_root().resolve()))
 
         # Dicts are mutable! To prevent changes in config dict outside this class
         # we use deepcopy
@@ -127,6 +132,47 @@ class RankingModel(NNModel):
 
     @overrides
     def __call__(self, batch):
+        if self.dict.label2emb_vocab[0] is None:
+            r = []
+            for i in range(len(self.dict.label2toks_vocab)):
+                r.append(self.dict.label2toks_vocab[i])
+            r = self.embdict.make_ints(r)
+            response_embeddings = self._net.predict_response_emb([r, r, r], 512)
+            for i in range(len(self.dict.label2toks_vocab)):
+                self.dict.label2emb_vocab[i] = response_embeddings[i]
+
+        if type(batch[0]) == list:
+            context = [el[0] for el in batch]
+            c = self.dict.make_toks(context, type="context")
+            c = self.embdict.make_ints(c)
+            c_emb = self._net.predict_context_emb([c, c, c])
+            response = [el[1] for el in batch]
+            batch_size = len(response)
+            ranking_length = len(response[0])
+            response = reduce(operator.concat, response)
+            response = [response[i:batch_size*ranking_length:ranking_length] for i in range(ranking_length)]
+            y_pred = []
+            for i in range(ranking_length):
+                r_emb = [self.dict.label2emb_vocab[el] for el in response[i]]
+                r_emb = np.vstack(r_emb)
+                yp = np.sum(c_emb * r_emb, axis=1) / np.linalg.norm(c_emb, axis=1) / np.linalg.norm(r_emb, axis=1)
+                y_pred.append(np.expand_dims(yp, axis=1))
+            y_pred = np.hstack(y_pred)
+            return y_pred
+
+        elif type(batch[0]) == str:
+            c = tokenize(batch)
+            c = self.embdict.make_ints(c)
+            c_emb = self._net.predict_context_emb([c, c, c])
+            r_emb = [self.dict.label2emb_vocab[i] for i in range(len(self.dict.label2emb_vocab))]
+            r_emb = np.vstack(r_emb)
+            y_pred = np.sum(c_emb * r_emb, axis=1) / np.linalg.norm(c_emb, axis=1) / np.linalg.norm(r_emb, axis=1)
+            y_pred = np.flip(np.argsort(y_pred), 0)[:3]
+            y_pred = [[' '.join(self.dict.label2toks_vocab[el]) for el in y_pred]]
+            return y_pred
+
+    def interact(self, batch):
+        """Interactive inferrence. Type your x and get y printed"""
 
         if self.dict.label2emb_vocab[0] is None:
             r = []
@@ -137,33 +183,20 @@ class RankingModel(NNModel):
             for i in range(len(self.dict.label2toks_vocab)):
                 self.dict.label2emb_vocab[i] = response_embeddings[i]
 
-        context = [el[0] for el in batch]
-        c = self.dict.make_toks(context, type="context")
-        c = self.embdict.make_ints(c)
-        c_emb = self._net.predict_context_emb([c, c, c])
-        response = [el[1] for el in batch]
-        batch_size = len(response)
-        ranking_length = len(response[0])
-        response = reduce(operator.concat, response)
-        response = [response[i:batch_size*ranking_length:ranking_length] for i in range(ranking_length)]
-        y_pred = []
-        for i in range(ranking_length):
-            r_emb = [self.dict.label2emb_vocab[el] for el in response[i]]
-            r_emb = np.vstack(r_emb)
-            yp = np.sum(c_emb * r_emb, axis=1) / np.linalg.norm(c_emb, axis=1) / np.linalg.norm(r_emb, axis=1)
-            y_pred.append(np.expand_dims(yp, axis=1))
-        y_pred = np.hstack(y_pred)
-        return y_pred
-
-    def interact(self):
-        """Interactive inferrence. Type your x and get y printed"""
-        s = input('Type in your x: ')
-
-        prediction = self.infer(s)
-        print(prediction)
 
     def shutdown(self):
         pass
 
     def reset(self):
         pass
+
+
+def tokenize(sen_list):
+    sen_tokens_list = []
+    for sen in sen_list:
+        sent_toks = sent_tokenize(sen)
+        word_toks = [word_tokenize(el) for el in sent_toks]
+        tokens = [val for sublist in word_toks for val in sublist]
+        tokens = [el for el in tokens if el != '']
+        sen_tokens_list.append(tokens)
+    return sen_tokens_list

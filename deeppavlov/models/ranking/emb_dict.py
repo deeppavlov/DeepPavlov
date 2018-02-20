@@ -30,9 +30,9 @@ class EmbeddingsDict(object):
         if not expand_path(emb_model_file).exists():
             download(source_url=download_url, dest_file_path=expand_path(emb_model_file))
 
-        self.tok2emb = {}
-        self.tok_index = {}
-        self.emb_index = 0
+        self.tok2emb = {None: list(np.zeros(self.embedding_dim))}
+        self.tok2int = {None: 0}
+        self.emb_index = 1
 
         self.load_items()
 
@@ -54,8 +54,8 @@ class EmbeddingsDict(object):
                     self.tok2emb[tok] = self.embeddings_model[tok]
                 except:
                     self.tok2emb[tok] = dummy_emb
-            if self.tok_index.get(tok) is None:
-                self.tok_index[tok] = self.emb_index
+            if self.tok2int.get(tok) is None:
+                self.tok2int[tok] = self.emb_index
                 self.emb_index += 1
 
     def save_items(self):
@@ -94,7 +94,11 @@ class EmbeddingsDict(object):
         for toks in toks_li:
             ints = []
             for tok in toks:
-                ints.append(self.tok_index[tok])
+                index = self.tok2int.get(tok)
+                if self.tok2int.get(tok) is not None:
+                    ints.append(index)
+                else:
+                    ints.append(0)
             ints_li.append(ints)
         ints_li = pad_sequences(ints_li,
                                 maxlen=self.max_sequence_length,
@@ -104,7 +108,7 @@ class EmbeddingsDict(object):
 
     def create_emb_matrix(self):
         self.emb_matrix = np.zeros((self.emb_index, self.embedding_dim))
-        for tok, i in self.tok_index.items():
+        for tok, i in self.tok2int.items():
             self.emb_matrix[i] = self.tok2emb.get(tok)
 
 
