@@ -32,28 +32,37 @@ class TFModel(NNModel, metaclass=TfModelMeta):
                                ' have sess attribute!'.format(self.__class__.__name__))
         super().__init__(*args, **kwargs)
 
-    def load(self):
+    def load(self, exclude_scopes=['Optimizer']):
         """Load model parameters from self.load_path"""
         path = str(self.load_path.resolve())
         # Check presence of the model files
         if tf.train.checkpoint_exists(path):
             log.info('[loading model from {}]'.format(path))
             # Exclude optimizer variables from saved variables
-            var_list = [var for var in tf.trainable_variables()
-                        if not var.name.startswith('Optimizer')]
+            var_list = self._get_trainable_variables(exclude_scopes)
             saver = tf.train.Saver(var_list)
             saver.restore(self.sess, path)
 
-    def save(self):
+    def save(self, exclude_scopes=['Optimizer']):
         """Save model parameters to self.save_path"""
         path = str(self.save_path.resolve())
         log.info('[saving model to {}]'.format(path))
-        var_list = [var for var in tf.trainable_variables()
-                    if not var.name.startswith('Optimizer')]
+        var_list = self._get_trainable_variables(exclude_scopes)
         saver = tf.train.Saver(var_list)
         saver.save(self.sess, path)
 
-    def get_train_op(self, loss, learning_rate, optimizer=None, clip_norm=None, learnable_scopes=None):
+    def _get_trainable_variables(self, exclude_scopes=[]):
+        all_vars = tf.trainable_variables()
+        vars_to_train = [var for var in all_vars if all(sc not in var.name for sc in exclude_scopes)]
+        return vars_to_train
+
+    def get_train_op(self,
+                     loss,
+                     learning_rate,
+                     optimizer=None,
+                     clip_norm=None,
+                     learnable_scopes=None,
+                     optimizer_scope_name=None):
         """ Get train operation for given loss
 
         Args:
@@ -66,7 +75,11 @@ class TFModel(NNModel, metaclass=TfModelMeta):
         Returns:
             train_op
         """
-        with tf.variable_scope('Optimizer'):
+        if optimizer_scope_name is None:
+            opt_scope = tf.variable_scope('Optimizer')
+        else:
+            opt_scope = tf.variable_scope(optimizer_scope_name)
+        with opt_scope:
             if learnable_scopes is None:
                 variables_to_train = tf.trainable_variables()
             else:
