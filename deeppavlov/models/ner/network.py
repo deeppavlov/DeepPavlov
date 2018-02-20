@@ -399,24 +399,6 @@ class NerNetwork:
         saver = tf.train.Saver()
         saver.restore(self._sess, str(model_file_path))
 
-    @staticmethod
-    def print_number_of_parameters():
-        """
-        Print number of *trainable* parameters in the network
-        """
-        log.info('Number of parameters: ')
-        vars = tf.trainable_variables()
-        blocks = defaultdict(int)
-        for var in vars:
-            # Get the top level scope name of variable
-            block_name = var.name.split('/')[0]
-            number_of_parameters = np.prod(var.get_shape().as_list())
-            blocks[block_name] += number_of_parameters
-        for block_name in blocks:
-            log.info(block_name, blocks[block_name])
-        total_num_parameters = np.sum(list(blocks.values()))
-        log.info('Total number of parameters equals {}'.format(total_num_parameters))
-
     def get_train_op(self, loss, learning_rate, learnable_scopes=None, optimizer=None):
         """ Get train operation for given loss
 
