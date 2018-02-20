@@ -34,9 +34,6 @@ class NER(TFModel):
         train_now = kwargs.get('train_now', None)
         mode = kwargs.get('mode', None)
 
-        super().__init__(save_path=save_path, load_path=load_path,
-                         train_now=train_now, mode=mode)
-
         opt = deepcopy(kwargs)
         vocabs = opt.pop('vocabs')
         opt.update(vocabs)
@@ -59,6 +56,8 @@ class NER(TFModel):
         self.opt = opt
 
         # Try to load the model (if there are some model files the model will be loaded from them)
+        super().__init__(save_path=save_path, load_path=load_path,
+                         train_now=train_now, mode=mode)
         if self.load_path is not None:
             self.load()
 

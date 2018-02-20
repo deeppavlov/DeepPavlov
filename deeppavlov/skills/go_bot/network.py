@@ -34,11 +34,6 @@ class GoalOrientedBotNetwork(TFModel):
         load_path = self.opt.get('load_path', None)
         train_now = self.opt.get('train_now', False)
 
-        super().__init__(save_path=save_path,
-                         load_path=load_path,
-                         train_now=train_now,
-                         mode=self.opt['mode'])
-
         # initialize parameters
         self._init_params()
         # build computational graph
@@ -47,6 +42,11 @@ class GoalOrientedBotNetwork(TFModel):
         self.sess = tf.Session()
 
         self.sess.run(tf.global_variables_initializer())
+
+        super().__init__(save_path=save_path,
+                         load_path=load_path,
+                         train_now=train_now,
+                         mode=self.opt['mode'])
         if tf.train.checkpoint_exists(str(self.save_path.resolve())):
         #TODO: save/load params to json, here check compatability
             log.info("[initializing `{}` from saved]".format(self.__class__.__name__))

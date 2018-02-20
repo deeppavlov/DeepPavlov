@@ -36,7 +36,7 @@ log = get_logger(__name__)
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(TFModel):
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+
 
         opt = deepcopy(kwargs)
         vocabs = opt.pop('vocabs')
@@ -65,6 +65,8 @@ class DstcSlotFillingNetwork(TFModel):
         train_parameters_names = list(inspect.signature(NerNetwork.train_on_batch).parameters)
         train_parameters = {par: opt[par] for par in train_parameters_names if par in opt}
         self.train_parameters = train_parameters
+
+        super().__init__(**kwargs)
 
         # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
         slot_vals_filepath = Path(self.save_path.parent) / 'slot_vals.json'
