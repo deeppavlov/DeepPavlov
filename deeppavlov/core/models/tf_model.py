@@ -31,21 +31,6 @@ class TFModel(NNModel, metaclass=TfModelMeta):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    @abstractmethod
-    def train_on_batch(self, x_batch, y_batch):
-        """ Perform single step of optimization given batch of samples
-
-        Args:
-            x_batch: batch of x-s it could be anything: dict, list, numpy array. However,
-                     it must contain  number of samples
-            y_batch: batch of y-s. It must contain same number of samples as x_batch.
-
-        Returns:
-            loss: mean loss over batch
-
-        """
-        pass
-
     def load(self):
         """Load model parameters from self.load_path"""
         path = str(self.load_path.resolve())
@@ -66,18 +51,6 @@ class TFModel(NNModel, metaclass=TfModelMeta):
                     if not var.name.startswith('Optimizer')]
         saver = tf.train.Saver(var_list)
         saver.save(self.sess, path)
-
-    @abstractmethod
-    def __call__(self, x_batch):
-        """ Infer y_batch from x_batch
-
-        Args:
-            x_batch: a batch of samples
-
-        Returns:
-            y_batch: a batch of samples inferred from x_batch
-        """
-        pass
 
     def get_train_op(self, loss, learning_rate, optimizer=None, clip_norm=None, learnable_scopes=None):
         """ Get train operation for given loss
