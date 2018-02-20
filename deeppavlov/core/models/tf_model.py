@@ -51,7 +51,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
         path = str(self.load_path.resolve())
         # Check presence of the model files
         if tf.train.checkpoint_exists(path):
-            print('[loading model from {}]'.format(path), file=sys.stderr)
+            log.info('[loading model from {}]'.format(path), file=sys.stderr)
             # Exclude optimizer variables from saved variables
             var_list = [var for var in tf.trainable_variables()
                         if not var.name.startswith('Optimizer')]
@@ -61,7 +61,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
     def save(self):
         """Save model parameters to self.save_path"""
         path = str(self.save_path.resolve())
-        print('[saving model to {}]'.format(path), file=sys.stderr)
+        log.info('[saving model to {}]'.format(path), file=sys.stderr)
         var_list = [var for var in tf.trainable_variables()
                     if not var.name.startswith('Optimizer')]
         saver = tf.train.Saver(var_list)
