@@ -28,20 +28,14 @@ from deeppavlov.core.models.tf_model import TFModel
 @register('ner')
 class NER(TFModel):
     def __init__(self, **kwargs):
-
-        save_path = kwargs.get('save_path', None)
-        load_path = kwargs.get('load_path', None)
-        train_now = kwargs.get('train_now', None)
-        mode = kwargs.get('mode', None)
-
-        opt = deepcopy(kwargs)
-        vocabs = opt.pop('vocabs')
-        opt.update(vocabs)
+        self.opt = deepcopy(kwargs)
+        vocabs = self.opt.pop('vocabs')
+        self.opt.update(vocabs)
 
         # Find all input parameters of the network init
         network_parameter_names = list(inspect.signature(NerNetwork.__init__).parameters)
         # Fill all provided parameters from opt
-        network_parameters = {par: opt[par] for par in network_parameter_names if par in opt}
+        network_parameters = {par: self.opt[par] for par in network_parameter_names if par in self.opt}
 
         self.sess = tf.Session()
         network_parameters['sess'] = self.sess
@@ -50,14 +44,11 @@ class NER(TFModel):
         # Find all parameters for network train
         train_parameters_names = list(inspect.signature(NerNetwork.train_on_batch).parameters)
         # Fill all provided parameters from opt
-        train_parameters = {par: opt[par] for par in train_parameters_names if par in opt}
+        train_parameters = {par: self.opt[par] for par in train_parameters_names if par in self.opt}
         self.train_parameters = train_parameters
 
-        self.opt = opt
-
         # Try to load the model (if there are some model files the model will be loaded from them)
-        super().__init__(save_path=save_path, load_path=load_path,
-                         train_now=train_now, mode=mode)
+        super().__init__(**self.opt)
         if self.load_path is not None:
             self.load()
 

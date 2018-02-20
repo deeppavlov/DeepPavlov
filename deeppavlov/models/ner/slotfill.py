@@ -36,25 +36,22 @@ log = get_logger(__name__)
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(TFModel):
     def __init__(self, **kwargs):
-
-
-        opt = deepcopy(kwargs)
-        vocabs = opt.pop('vocabs')
-        opt.update(vocabs)
-        self.opt = opt
+        self.opt = deepcopy(kwargs)
+        vocabs = self.opt.pop('vocabs')
+        self.opt.update(vocabs)
 
         # Find all input parameters of the network init
         network_parameter_names = list(inspect.signature(NerNetwork.__init__).parameters)
 
         # Fill all provided parameters from opt
-        network_parameters = {par: opt[par] for par in network_parameter_names if par in opt}
+        network_parameters = {par: self.opt[par] for par in network_parameter_names if par in self.opt}
 
         # Initialize the network
         self.sess = tf.Session()
         network_parameters['sess'] = self.sess
         self._ner_network = NerNetwork(**network_parameters)
 
-        download_best_model = opt.get('download_best_model', False)
+        download_best_model = self.opt.get('download_best_model', False)
         if download_best_model:
             model_path = str(self.load_path.parent.absolute())
             best_model_url = 'http://lnsigo.mipt.ru/export/models/ner/ner_dstc_model.tar.gz'
@@ -63,7 +60,7 @@ class DstcSlotFillingNetwork(TFModel):
         # Training parameters
         # Find all parameters for network train
         train_parameters_names = list(inspect.signature(NerNetwork.train_on_batch).parameters)
-        train_parameters = {par: opt[par] for par in train_parameters_names if par in opt}
+        train_parameters = {par: self.opt[par] for par in train_parameters_names if par in self.opt}
         self.train_parameters = train_parameters
 
         super().__init__(**kwargs)
