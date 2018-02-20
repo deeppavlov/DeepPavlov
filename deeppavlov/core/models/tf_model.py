@@ -73,7 +73,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
                 variables_to_train = []
                 for scope_name in learnable_scopes:
                     for var in tf.trainable_variables():
-                        if var.name.startswith(scope_name):
+                        if scope_name in var.name:
                             variables_to_train.append(var)
 
             if optimizer is None:
