@@ -31,7 +31,8 @@
     "margin": 0.1,
     "embedding_dim": 100,
     "save_path": "model",
-    "load_path": "model"
+    "load_path": "model",
+    "interact_pred_num": 3
   },
   "train": {
     "epochs": 100,

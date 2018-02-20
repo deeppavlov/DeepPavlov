@@ -45,7 +45,7 @@ class RankingModel(NNModel):
         # Dicts are mutable! To prevent changes in config dict outside this class
         # we use deepcopy
         opt = deepcopy(kwargs)
-
+        self.interact_pred_num = opt['interact_pred_num']
         # Get vocabularies. Vocabularies are made to perform token -> index / index -> token
         # transformations as well as class -> index / index -> class for classification tasks
         self.vocabs = opt.get('vocabs', None)
@@ -167,7 +167,7 @@ class RankingModel(NNModel):
             r_emb = [self.dict.label2emb_vocab[i] for i in range(len(self.dict.label2emb_vocab))]
             r_emb = np.vstack(r_emb)
             y_pred = np.sum(c_emb * r_emb, axis=1) / np.linalg.norm(c_emb, axis=1) / np.linalg.norm(r_emb, axis=1)
-            y_pred = np.flip(np.argsort(y_pred), 0)[:3]
+            y_pred = np.flip(np.argsort(y_pred), 0)[:self.interact_pred_num]
             y_pred = [[' '.join(self.dict.label2toks_vocab[el]) for el in y_pred]]
             return y_pred
 
@@ -182,7 +182,6 @@ class RankingModel(NNModel):
             response_embeddings = self._net.predict_response_emb([r, r, r], 512)
             for i in range(len(self.dict.label2toks_vocab)):
                 self.dict.label2emb_vocab[i] = response_embeddings[i]
-
 
     def shutdown(self):
         pass
