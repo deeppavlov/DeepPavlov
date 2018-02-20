@@ -162,7 +162,7 @@ class NerNetwork:
         self._train_op = self.get_train_op(loss, learning_rate_ph)
         self._embeddings_onethego = embeddings_onethego
         self._entity_of_interest = entity_of_interest
-        self.verbouse = verbouse
+        self.verbose = verbouse
         self._mask = mask_ph
         sess.run(tf.global_variables_initializer())
 
@@ -267,7 +267,7 @@ class NerNetwork:
     def fit(self, batch_gen=None, batch_size=32, learning_rate=1e-3, epochs=1, dropout_rate=0.5, learning_rate_decay=1):
         for epoch in range(epochs):
             count = 0
-            if self.verbouse:
+            if self.verbose:
                 log.info('Epoch {}'.format(epoch))
             if batch_gen is None:
                 batch_generator = self.corpus.batch_generator(batch_size, dataset_type='train')
@@ -285,11 +285,11 @@ class NerNetwork:
 
                 self._sess.run(self._train_op, feed_dict=feed_dict)
                 count += len(x_word)
-            if self.verbouse:
+            if self.verbose:
                 self.eval_conll('valid', print_results=True)
             self.save()
 
-        if self.verbouse:
+        if self.verbose:
             self.eval_conll(dataset_type='train', short_report=False)
             self.eval_conll(dataset_type='valid', short_report=False)
             results = self.eval_conll(dataset_type='test', short_report=False)
