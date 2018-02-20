@@ -78,23 +78,35 @@ class RankingModel(NNModel):
 
         # General way (load path from config assumed to be the path
         # to the file including extension of the file model)
-        model_file_exist = self.load_path.exists()
-        path = str(self.load_path.resolve())
+        weights_path = self.load_path / "model_weights.h5"
+        weights_file_exist = self.load_path.exists()
+        weights_path = str(weights_path.resolve())
+
+        embs_path = self.load_path / "response_embs.npy"
+        embs_file_exist = embs_path.exists()
+        embs_path = str(embs_path.resolve())
 
         # Check presence of the model files
-        if model_file_exist:
-            print('[loading model from {}]'.format(path), file=sys.stderr)
-            self._net.load(path+'.h5')
-            self.dict.load(path+'.npy')
+        if weights_file_exist and embs_file_exist:
+            print('[loading model from {}]'.format(self.load_path.resolve()), file=sys.stderr)
+            self._net.load(weights_path)
+            self.dict.load(embs_path)
 
     @overrides
     def save(self):
         """Save model to the save_path, provided in config. The directory is
         already created by super().__init__ part in called in __init__ of this class"""
-        path = str(self.save_path.absolute())
-        print('[saving model to {}]'.format(path), file=sys.stderr)
-        self._net.save(path+'.h5')
-        self.dict.save(path+'.npy')
+
+        if not self.save_path.exists():
+            self.save_path.mkdir()
+
+        weights_path = self.save_path / "model_weights.h5"
+        weights_path = str(weights_path.resolve())
+        embs_path = self.load_path / "response_embs.npy"
+        embs_path = str(embs_path.resolve())
+        print('[saving model to {}]'.format(self.save_path.resolve()), file=sys.stderr)
+        self._net.save(weights_path)
+        self.dict.save(embs_path)
 
     @check_attr_true('train_now')
     def train_on_batch(self, x, y):
@@ -126,23 +138,20 @@ class RankingModel(NNModel):
                 self.dict.label2emb_vocab[i] = response_embeddings[i]
 
         context = [el[0] for el in batch]
+        c = self.dict.make_toks(context, type="context")
+        c = self.embdict.make_ints(c)
+        c_emb = self._net.predict_context_emb([c, c, c])
         response = [el[1] for el in batch]
         batch_size = len(response)
         ranking_length = len(response[0])
-        # context = [ranking_length * [el] for el in context]
-        # context = [reduce(operator.concat, context)][0]
         response = reduce(operator.concat, response)
         response = [response[i:batch_size*ranking_length:ranking_length] for i in range(ranking_length)]
         y_pred = []
         for i in range(ranking_length):
-            c = self.dict.make_toks(context, type="context")
-            c = self.embdict.make_ints(c)
-            r = response[i]
-            r = self.dict.make_toks(r, type="response")
-            r = self.embdict.make_ints(r)
-            b = [c, r, r]
-            yp = self._net.predict_on_batch(b)
-            y_pred.append(yp)
+            r_emb = [self.dict.label2emb_vocab[el] for el in response[i]]
+            r_emb = np.vstack(r_emb)
+            yp = np.sum(c_emb * r_emb, axis=1) / np.linalg.norm(c_emb, axis=1) / np.linalg.norm(r_emb, axis=1)
+            y_pred.append(np.expand_dims(yp, axis=1))
         y_pred = np.hstack(y_pred)
         return y_pred
 

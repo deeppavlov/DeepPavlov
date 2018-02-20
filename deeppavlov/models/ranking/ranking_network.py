@@ -32,7 +32,7 @@ class RankingNetwork(object):
         self.obj_model.compile(loss=self.loss, optimizer=self.optimizer)
         self.score_model = Model(inputs=self.obj_model.input,
                                  outputs=self.obj_model.get_layer(name="score_model").get_output_at(0))
-        self.response_embedding = Model(inputs=self.obj_model.input,
+        self.context_embedding = Model(inputs=self.obj_model.input,
                                  outputs=self.obj_model.get_layer(name="pooling").get_output_at(0))
         self.response_embedding = Model(inputs=self.obj_model.input,
                                  outputs=self.obj_model.get_layer(name="pooling").get_output_at(1))
