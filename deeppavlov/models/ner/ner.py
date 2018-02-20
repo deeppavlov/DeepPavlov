@@ -48,7 +48,7 @@ class NER(TFModel):
         self.train_parameters = train_parameters
 
         # Try to load the model (if there are some model files the model will be loaded from them)
-        super().__init__(**self.opt)
+        super().__init__(**kwargs)
         if self.load_path is not None:
             self.load()
 
