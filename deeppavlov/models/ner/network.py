@@ -15,17 +15,12 @@ limitations under the License.
 """
 
 from collections import defaultdict
-from overrides import overrides
-from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer
 
-from deeppavlov.core.common.attributes import check_attr_true
-from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.models.tf_model import SimpleTFModel
 from deeppavlov.models.ner.layers import character_embedding_network
 from deeppavlov.models.ner.layers import embedding_layer
 from deeppavlov.models.ner.layers import highway_convolutional_network
@@ -59,7 +54,8 @@ class NerNetwork:
                  net_type='cnn',
                  char_filter_width=5,
                  verbouse=False,
-                 embeddings_onethego=False):
+                 embeddings_onethego=False,
+                 sess=None):
 
         n_tags = len(tag_vocab)
         n_tokens = len(word_vocab)
@@ -137,7 +133,8 @@ class NerNetwork:
         loss = tf.reduce_mean(loss_tensor)
 
         # Initialize session
-        sess = tf.Session()
+        if sess is None:
+            sess = tf.Session()
         if logging:
             self.train_writer = tf.summary.FileWriter('summary', sess.graph)
 
@@ -165,7 +162,7 @@ class NerNetwork:
         self._train_op = self.get_train_op(loss, learning_rate_ph)
         self._embeddings_onethego = embeddings_onethego
         self._entity_of_interest = entity_of_interest
-        self.verbouse = verbouse
+        self.verbose = verbouse
         self._mask = mask_ph
         sess.run(tf.global_variables_initializer())
 
@@ -270,7 +267,7 @@ class NerNetwork:
     def fit(self, batch_gen=None, batch_size=32, learning_rate=1e-3, epochs=1, dropout_rate=0.5, learning_rate_decay=1):
         for epoch in range(epochs):
             count = 0
-            if self.verbouse:
+            if self.verbose:
                 log.info('Epoch {}'.format(epoch))
             if batch_gen is None:
                 batch_generator = self.corpus.batch_generator(batch_size, dataset_type='train')
@@ -288,11 +285,11 @@ class NerNetwork:
 
                 self._sess.run(self._train_op, feed_dict=feed_dict)
                 count += len(x_word)
-            if self.verbouse:
+            if self.verbose:
                 self.eval_conll('valid', print_results=True)
             self.save()
 
-        if self.verbouse:
+        if self.verbose:
             self.eval_conll(dataset_type='train', short_report=False)
             self.eval_conll(dataset_type='valid', short_report=False)
             results = self.eval_conll(dataset_type='test', short_report=False)
@@ -401,24 +398,6 @@ class NerNetwork:
         """
         saver = tf.train.Saver()
         saver.restore(self._sess, str(model_file_path))
-
-    @staticmethod
-    def print_number_of_parameters():
-        """
-        Print number of *trainable* parameters in the network
-        """
-        log.info('Number of parameters: ')
-        vars = tf.trainable_variables()
-        blocks = defaultdict(int)
-        for var in vars:
-            # Get the top level scope name of variable
-            block_name = var.name.split('/')[0]
-            number_of_parameters = np.prod(var.get_shape().as_list())
-            blocks[block_name] += number_of_parameters
-        for block_name in blocks:
-            log.info(block_name, blocks[block_name])
-        total_num_parameters = np.sum(list(blocks.values()))
-        log.info('Total number of parameters equals {}'.format(total_num_parameters))
 
     def get_train_op(self, loss, learning_rate, learnable_scopes=None, optimizer=None):
         """ Get train operation for given loss
