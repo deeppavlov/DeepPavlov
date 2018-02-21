@@ -26,7 +26,7 @@ class EmbeddingsDict(object):
         self.embedding_dim = embedding_dim
         self.emb_model_file = expand_path(emb_model_file)
         self.emb_vocab_file = expand_path(emb_vocab_file)
-        if not self.emb_model_file.exists():
+        if not self.emb_model_file.is_file():
             download(source_url=download_url, dest_file_path=self.emb_model_file)
 
         self.tok2emb = {None: list(np.zeros(self.embedding_dim))}
@@ -71,11 +71,7 @@ class EmbeddingsDict(object):
 
     def load_items(self):
         """Initialize embeddings from the file."""
-        if not self.emb_vocab_file.is_file():
-            # print('There is no %s file provided. Initializing new dictionary.' % self.emb_vocab_file)
-            pass
-        else:
-            # print('Loading existing dictionary  from %s.' % self.emb_vocab_file)
+        if self.emb_vocab_file.is_file():
             with self.emb_vocab_file.open('r') as f:
                 for line in f:
                     values = line.rsplit(sep=' ', maxsplit=self.embedding_dim)

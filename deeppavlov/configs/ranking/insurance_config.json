@@ -41,7 +41,7 @@
       "r_at_1", "rank_response"
     ],
     "validation_patience": 5,
-    "val_every_n_epochs": 20,
+    "val_every_n_epochs": 10,
     "show_examples": true
   }
 
