@@ -29,8 +29,8 @@ class EmbeddingsDict(object):
         if not self.emb_model_file.is_file():
             download(source_url=download_url, dest_file_path=self.emb_model_file)
 
-        self.tok2emb = {None: list(np.zeros(self.embedding_dim))}
-        self.tok2int = {None: 0}
+        self.tok2emb = {'<UNK>': list(np.zeros(self.embedding_dim))}
+        self.tok2int = {'<UNK>': 0}
         self.emb_index = 1
 
         self.load_items()
