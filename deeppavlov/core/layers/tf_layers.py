@@ -298,6 +298,76 @@ def character_embedding_network(char_placeholder: tf.Tensor,
     return embeddings
 
 
+def expand_tile(units, axis):
+    """Expand and tile tensor along given axis
+    Args:
+        units: tf tensor with dimensions [batch_size, time_steps, n_input_features]
+        axis: axis along which expand and tile. Must be 1 or 2
+
+    """
+    assert axis in (1, 2)
+    n_time_steps = tf.shape(units)[1]
+    repetitions = [1, 1, 1, 1]
+    repetitions[axis] = n_time_steps
+    return tf.tile(tf.expand_dims(units, axis), repetitions)
+
+
+def additive_self_attention(units, n_hidden=None, n_output_features=None, activation=None):
+    """ Computes additive self attention for time series of vectors (with batch dimension)
+        the formula: score(h_i, h_j) = <v, tanh(W_1 h_i + W_2 h_j)>
+        v is a learnable vector of n_hidden dimensionality,
+        W_1 and W_2 are learnable [n_hidden, n_input_features] matrices
+
+    Args:
+        units: tf tensor with dimensionality [batch_size, time_steps, n_input_features]
+        n_hidden: number of2784131 units in hidden representation of similarity measure
+        n_output_features: number of features in output dense layer
+        activation: activation at the output
+
+    Returns:
+        output: self attended tensor with dimensionality [batch_size, time_steps, n_output_features]
+    """
+    n_input_features = units.get_shape().as_list()[2]
+    if n_hidden is None:
+        n_hidden = n_input_features
+    if n_output_features is None:
+        n_output_features = n_input_features
+    units_pairs = tf.concat([expand_tile(units, 1), expand_tile(units, 2)], 3)
+    query = tf.layers.dense(units_pairs, n_hidden, activation=tf.tanh)
+    attention = tf.nn.softmax(tf.layers.dense(query, 1), dim=2)
+    attended_units = tf.reduce_sum(attention * expand_tile(units, 1), axis=2)
+    output = tf.layers.dense(attended_units, n_output_features, activation)
+    return output
+
+
+def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, activation=None):
+    """ Computes multiplicative self attention for time series of vectors (with batch dimension)
+    the formula: score(h_i, h_j) = <W_1 h_i,  W_2 h_j>,  W_1 and W_2 are learnable matrices
+    with dimensionality [n_hidden, n_input_features]
+
+    Args:
+        units: tf tensor with dimensionality [batch_size, time_steps, n_input_features]
+        n_hidden: number of units in hidden representation of similarity measure
+        n_output_features: number of features in output dense layer
+        activation: activation at the output
+
+    Returns:
+        output: self attended tensor with dimensionality [batch_size, time_steps, n_output_features]
+    """
+    n_input_features = units.get_shape().as_list()[2]
+    if n_hidden is None:
+        n_hidden = n_input_features
+    if n_output_features is None:
+        n_output_features = n_input_features
+    queries = tf.layers.dense(expand_tile(units, 1), n_hidden)
+    keys = tf.layers.dense(expand_tile(units, 2), n_hidden)
+    scores = tf.reduce_sum(queries * keys, axis=3, keep_dims=True)
+    attention = tf.nn.softmax(scores, dim=2)
+    attended_units = tf.reduce_sum(attention * expand_tile(units, 1), axis=2)
+    output = tf.layers.dense(attended_units, n_output_features, activation)
+    return output
+
+
 if __name__ == '__main__':
     batch_size = 4
     tokens = 16
@@ -308,3 +378,5 @@ if __name__ == '__main__':
     stacked_cnn(var, [100, 200])
     stacked_rnn(var, [100, 200], 'gru')
     stacked_rnn(var, [100, 200], 'lstm', use_peepholes=True)
+    additive_self_attention(var)
+    multiplicative_self_attention(var)
