@@ -165,7 +165,7 @@ def u_shape(units: tf.Tensor,
                        'training_ph': training_ph}
 
     # Go down the rabbit hole
-    for n_hidden in range(n_hidden_list):
+    for n_hidden in n_hidden_list:
 
         units = stacked_cnn(units, [n_hidden], **conv_net_params)
         units_for_skip_conn.append(units)
@@ -174,20 +174,23 @@ def u_shape(units: tf.Tensor,
     units = stacked_cnn(units, [n_hidden], **conv_net_params)
 
     # Up to the sun light
-    for down_step, n_hidden in enumerate(n_hidden_list):
+    for down_step, n_hidden in enumerate(n_hidden_list[::-1]):
         units = tf.expand_dims(units, axis=2)
         units = tf.layers.conv2d_transpose(units, n_hidden, filter_width, strides=(2, 1), padding='same')
         units = tf.squeeze(units, axis=2)
 
         # Skip connection
-        units = units_for_skip_conn[-(down_step + 1)] + units
+        skip_units = units_for_skip_conn[-(down_step + 1)]
+        if skip_units.get_shape().as_list()[-1] != n_hidden:
+            skip_units = tf.layers.dense(skip_units, n_hidden)
+        units = skip_units + units
 
-        units = stacked_cnn(units, **conv_net_params)
+        units = stacked_cnn(units, [n_hidden], **conv_net_params)
     return units
 
 
 def stacked_highway_cnn(units: tf.Tensor,
-                        n_hidden_list,
+                        n_hidden_list: List,
                         filter_width=3,
                         use_batch_norm=False,
                         use_dilation=False,
@@ -208,7 +211,12 @@ def stacked_highway_cnn(units: tf.Tensor,
         units: tensor at the output of the last convolutional layer
                 with dimensionality [None, n_tokens, n_hidden_list[-1]]
     """
+
     for n_layer, n_hidden in enumerate(n_hidden_list):
+        input_units = units
+        # Projection if needed
+        if input_units.get_shape().as_list()[-1] != n_hidden:
+            input_units = tf.layers.dense(input_units, n_hidden)
         if use_dilation:
             dilation_rate = 2**n_layer
         else:
@@ -366,17 +374,3 @@ def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, 
     attended_units = tf.reduce_sum(attention * expand_tile(units, 1), axis=2)
     output = tf.layers.dense(attended_units, n_output_features, activation)
     return output
-
-
-if __name__ == '__main__':
-    batch_size = 4
-    tokens = 16
-    features = 50
-    var = tf.Variable(np.random.randn(batch_size, tokens, features).astype(np.float32))
-    u_shape(var, 2, 100, 2, 3)
-    stacked_highway_cnn(var, [100, 200])
-    stacked_cnn(var, [100, 200])
-    stacked_rnn(var, [100, 200], 'gru')
-    stacked_rnn(var, [100, 200], 'lstm', use_peepholes=True)
-    additive_self_attention(var)
-    multiplicative_self_attention(var)
