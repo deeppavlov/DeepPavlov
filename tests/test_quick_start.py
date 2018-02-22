@@ -28,7 +28,10 @@ MCQR = {"error_model": {"configs/error_model/config_en.json":
                     ("ner_dstc2_model", "", ""),
                 "configs/ner/slot_config_train.json":
                     ("ner", "", "")
-                }
+                },
+        "ranking": {"configs/ranking/insurance_config.json":
+                        ("ranking", "", "")
+                    }
         }
 
 
