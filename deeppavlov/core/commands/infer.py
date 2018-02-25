@@ -32,10 +32,9 @@ def build_model_from_config(config, mode='infer'):
     vocabs = {}
     if 'vocabs' in config:
         for vocab_param_name, vocab_config in config['vocabs'].items():
-            vocab_name = vocab_config['name']
-            v = from_params(REGISTRY[vocab_name], vocab_config, mode=mode)
+            v = from_params(vocab_config, mode=mode)
             vocabs[vocab_param_name] = v
-    model = from_params(REGISTRY[model_name], model_config, vocabs=vocabs, mode=mode)
+    model = from_params(model_config, vocabs=vocabs, mode=mode)
     model.reset()
     return model
 
@@ -49,8 +48,7 @@ def build_agent_from_config(config_path: str):
 
 def interact_agent(config_path):
     a = build_agent_from_config(config_path)
-    commutator_name = a.commutator_config['name']
-    commutator = from_params(REGISTRY[commutator_name], a.commutator_config)
+    commutator = from_params(a.commutator_config)
 
     models = [build_model_from_config(sk) for sk in a.skill_configs]
     while True:
