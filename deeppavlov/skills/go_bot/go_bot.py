@@ -193,13 +193,14 @@ class GoalOrientedBot(NNModel):
 
                 d_masks.append(self._action_mask())
 
-            self.network.train(d_features, d_actions, d_masks)
+            # self.network.train(d_features, d_actions, d_masks)
+            self.network.train_on_batch([d_features, d_masks], d_actions)
 
     def infer_on_batch(self, xs):
         return [self._infer_dialog(x) for x in xs]
 
     def _infer(self, context, db_result=None, prob=False):
-        probs = self.network.infer(
+        probs = self.network(
             self._encode_context(context, db_result),
             self._action_mask(),
             prob=True
