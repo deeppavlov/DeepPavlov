@@ -23,7 +23,7 @@ from deeppavlov.core.layers.tf_layers import character_embedding_network
 from deeppavlov.core.layers.tf_layers import embedding_layer
 from deeppavlov.core.layers.tf_layers import stacked_cnn
 from deeppavlov.core.layers.tf_layers import stacked_highway_cnn
-from deeppavlov.core.layers.tf_layers import stacked_rnn
+from deeppavlov.core.layers.tf_layers import stacked_bi_rnn
 from deeppavlov.models.ner.evaluation import precision_recall_f1
 
 SEED = 42
@@ -52,7 +52,8 @@ class NerNetwork:
                  char_filter_width=5,
                  verbouse=False,
                  embeddings_onethego=False,
-                 sess=None):
+                 sess=None,
+                 cell_type='lstm'):
 
         n_tags = len(tag_vocab)
         n_tokens = len(word_vocab)
@@ -99,7 +100,7 @@ class NerNetwork:
                                     use_batch_norm=use_batch_norm,
                                     training_ph=training_ph)
         elif 'rnn' in net_type.lower():
-            units = stacked_rnn(emb, n_filters, cell_type='lstm')
+            units, _ = stacked_bi_rnn(emb, n_filters, cell_type)
 
         elif 'cnn_highway' in net_type.lower():
             units = stacked_highway_cnn(emb,
