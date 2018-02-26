@@ -102,8 +102,8 @@ def dense_convolutional_network(units: tf.Tensor,
 
 def stacked_bi_rnn(units: tf.Tensor,
                    n_hidden_list: List,
-                   seq_lengths=None,
                    cell_type='gru',
+                   seq_lengths=None,
                    use_peepholes=False,
                    name='RNN_layer'):
     """ Stackted recurrent neural networks GRU or LSTM
