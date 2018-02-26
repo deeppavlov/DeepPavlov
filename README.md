@@ -2,7 +2,7 @@
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 
 # <center>DeepPavlov</center>
-### *We are in a really early Alfa release. You have to be ready for hard adventures.*
+### *We are in a really early Alpha release. You have to be ready for hard adventures.*
 An open-source conversational AI library, built on TensorFlow and Keras, and designed for
  * NLP and dialog systems research
  * implementation and evaluation of complex conversational systems
