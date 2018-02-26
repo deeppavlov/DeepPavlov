@@ -195,7 +195,7 @@ def stacked_highway_cnn(units: tf.Tensor,
                         use_batch_norm=False,
                         use_dilation=False,
                         training_ph=None):
-    """Highway convolutional network. Skip connection with gating
+    """ Highway convolutional network. Skip connection with gating
         mechanism.
 
     Args:
@@ -328,7 +328,7 @@ def additive_self_attention(units, n_hidden=None, n_output_features=None, activa
 
     Args:
         units: tf tensor with dimensionality [batch_size, time_steps, n_input_features]
-        n_hidden: number of2784131 units in hidden representation of similarity measure
+        n_hidden: number of units in hidden representation of similarity measure
         n_output_features: number of features in output dense layer
         activation: activation at the output
 
@@ -350,8 +350,9 @@ def additive_self_attention(units, n_hidden=None, n_output_features=None, activa
 
 def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, activation=None):
     """ Computes multiplicative self attention for time series of vectors (with batch dimension)
-    the formula: score(h_i, h_j) = <W_1 h_i,  W_2 h_j>,  W_1 and W_2 are learnable matrices
-    with dimensionality [n_hidden, n_input_features]
+        the formula: score(h_i, h_j) = <W_1 h_i,  W_2 h_j>,  W_1 and W_2 are learnable matrices
+        with dimensionality [n_hidden, n_input_features], where <a, b> stands for a and b
+        dot product
 
     Args:
         units: tf tensor with dimensionality [batch_size, time_steps, n_input_features]
