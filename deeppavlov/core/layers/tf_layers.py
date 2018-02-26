@@ -42,7 +42,7 @@ def stacked_cnn(units: tf.Tensor,
 
     for n_layer, n_hidden in enumerate(n_hidden_list):
         if use_dilation:
-            dilation_rate = 2**n_layer
+            dilation_rate = 2 ** n_layer
         else:
             dilation_rate = 1
         units = tf.layers.conv1d(units,
@@ -84,7 +84,7 @@ def dense_convolutional_network(units: tf.Tensor,
     for n_layer, n_filters in enumerate(n_hidden_list):
         total_units = tf.concat(units_list, axis=-1)
         if use_dilation:
-            dilation_rate = 2**n_layer
+            dilation_rate = 2 ** n_layer
         else:
             dilation_rate = 1
         units = tf.layers.conv1d(total_units,
@@ -166,7 +166,6 @@ def u_shape(units: tf.Tensor,
 
     # Go down the rabbit hole
     for n_hidden in n_hidden_list:
-
         units = stacked_cnn(units, [n_hidden], **conv_net_params)
         units_for_skip_conn.append(units)
         units = tf.layers.max_pooling1d(units, pool_size=2, strides=2, padding='same')
@@ -218,7 +217,7 @@ def stacked_highway_cnn(units: tf.Tensor,
         if input_units.get_shape().as_list()[-1] != n_hidden:
             input_units = tf.layers.dense(input_units, n_hidden)
         if use_dilation:
-            dilation_rate = 2**n_layer
+            dilation_rate = 2 ** n_layer
         else:
             dilation_rate = 1
         units = tf.layers.conv1d(units,
@@ -240,7 +239,7 @@ def embedding_layer(token_indices=None,
                     token_embedding_matrix=None,
                     n_tokens=None,
                     token_embedding_dim=None,
-                    name: str=None,
+                    name: str = None,
                     trainable=True):
     """ Token embedding layer. Create matrix of for token embeddings.
         Can be initialized with given matrix (for example pre-trained
@@ -375,3 +374,93 @@ def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, 
     attended_units = tf.reduce_sum(attention * expand_tile(units, 1), axis=2)
     output = tf.layers.dense(attended_units, n_output_features, activation)
     return output
+
+
+def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, activation=None):
+    """ Computes multiplicative self attention for time series of vectors (with batch dimension)
+        the formula: score(h_i, h_j) = <W_1 h_i,  W_2 h_j>,  W_1 and W_2 are learnable matrices
+        with dimensionality [n_hidden, n_input_features], where <a, b> stands for a and b
+        dot product
+
+    Args:
+        units: tf tensor with dimensionality [batch_size, time_steps, n_input_features]
+        n_hidden: number of units in hidden representation of similarity measure
+        n_output_features: number of features in output dense layer
+        activation: activation at the output
+
+    Returns:
+        output: self attended tensor with dimensionality [batch_size, time_steps, n_output_features]
+    """
+    n_input_features = units.get_shape().as_list()[2]
+    if n_hidden is None:
+        n_hidden = n_input_features
+    if n_output_features is None:
+        n_output_features = n_input_features
+    queries = tf.layers.dense(expand_tile(units, 1), n_hidden)
+    keys = tf.layers.dense(expand_tile(units, 2), n_hidden)
+    scores = tf.reduce_sum(queries * keys, axis=3, keep_dims=True)
+    attention = tf.nn.softmax(scores, dim=2)
+    attended_units = tf.reduce_sum(attention * expand_tile(units, 1), axis=2)
+    output = tf.layers.dense(attended_units, n_output_features, activation)
+    return output
+
+
+def cudnn_gru(units, n_hidden, n_layers=1):
+    """ Fast CuDNN GRU implementation
+
+    Args:
+        units: tf.Tensor with dimensions [B x T x F], where
+            B - batch size
+            T - number of tokens
+            F - features
+        n_hidden: dimensionality of hidden state
+        n_layers: number of layers
+
+    Returns:
+        h - all hidden states along T dimension,
+            tf.Tensor with dimensionality [B x T x F]
+        h_last - last hidden state, tf.Tensor with dimensionality [B x H]
+    """
+    gru = tf.contrib.cudnn_rnn.CudnnGRU(num_layers=n_layers,
+                                        num_units=n_hidden,
+                                        input_size=units.get_shape().as_list()[-1])
+    param = tf.Variable(tf.random_uniform(
+        [gru.params_size()], -0.1, 0.1), validate_shape=False)
+    init_h = tf.zeros([1, tf.shape(units)[0], n_hidden])
+    h, h_last = gru(tf.transpose(units, (1, 0, 2)), init_h, param)
+    h = tf.transpose(h, (1, 0, 2))
+    h_last = tf.squeeze(h_last, 0)
+    return h, h_last
+
+
+def cudnn_lstm(units, n_hidden, n_layers=1):
+    """ Fast CuDNN LSTM implementation
+
+        Args:
+            units: tf.Tensor with dimensions [B x T x F], where
+                B - batch size
+                T - number of tokens
+                F - features
+            n_hidden: dimensionality of hidden state
+            n_layers: number of layers
+
+        Returns:
+            h - all hidden states along T dimension,
+                tf.Tensor with dimensionality [B x T x F]
+            h_last - last hidden state, tf.Tensor with dimensionality [B x H]
+                where H - number of hidden units
+            c_last - last cell state, tf.Tensor with dimensionality [B x H]
+                where H - number of hidden units
+        """
+    lstm = tf.contrib.cudnn_rnn.CudnnLSTM(num_layers=n_layers,
+                                          num_units=n_hidden,
+                                          input_size=units.get_shape().as_list()[-1])
+    param = tf.Variable(tf.random_uniform(
+        [lstm.params_size()], -0.1, 0.1), validate_shape=False)
+    init_h = tf.zeros([1, tf.shape(units)[0], n_hidden])
+    init_c = tf.zeros([1, tf.shape(units)[0], n_hidden])
+    h, h_last, c_last = lstm(tf.transpose(units, (1, 0, 2)), init_h, init_c, param)
+    h = tf.transpose(h, (1, 0, 2))
+    h_last = tf.squeeze(h_last, 0)
+    c_last = tf.squeeze(c_last, 0)
+    return h, (h_last, c_last)
