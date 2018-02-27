@@ -33,7 +33,7 @@ Furthermore, to distinguish consequent entities with the same tags BIO tagging s
     european    I-FOOD
     cuisine     O
 
-In the example above PER means person tag, and "B-" and "I-" are prefixes identifying beginnings and continuations of the entities.
+In the example above, `FOOD` means food tag (and `LOC` means location tag), and "B-" and "I-" are prefixes identifying beginnings and continuations of the entities.
 
 Slot Filling can be formulated as:
 
