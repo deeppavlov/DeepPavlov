@@ -21,6 +21,7 @@ from collections import OrderedDict
 from typing import List, Callable, Tuple
 
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
@@ -44,49 +45,32 @@ def _fit(model: Estimator, dataset: Dataset, train_config={}):
     return model
 
 
-def train_chainer(config_path: str):
-    config = read_json(config_path)
-
-    reader_config = config['dataset_reader']
-    reader = get_model(reader_config['name'])()
-    data_path = expand_path(reader_config.get('data_path', ''))
-    data = reader.read(data_path)
-
-    dataset_config = config['dataset']
-    dataset: Dataset = from_params(dataset_config, data=data)
-    *x, y = dataset.iter_all('train')
+def fit_chainer(config: dict, dataset: Dataset):
 
     chainer_config: dict = config['chainer']
-    chainer_forward = Chainer(chainer_config['in'], chainer_config['out'])
-    chainer_train = Chainer(chainer_config['in_train'],
-                            chainer_config.get('out_train', chainer_config['out']))
-    forward_map = set(chainer_config['in'])
-    train_map = set(chainer_config['in_train'])
+    chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
     for component_config in chainer_config['pipe']:
         component = from_params(component_config, vocabs=[], mode='train')
         if 'fit_on' in component_config:
             component: Estimator
 
-            component.fit(*chainer_train(*x, y, to_return=component_config['fit_on']))
+            preprocessed = chainer(*dataset.iter_all('train'), to_return=component_config['fit_on'])
+            if len(component_config['fit_on']) == 1:
+                preprocessed = [preprocessed]
+            component.fit(*preprocessed)
             component.save()
 
         if 'in' in component_config:
-            c_in = component_config.pop('in')
-            c_out = component_config.pop('out')
-            if train_map.issuperset(c_in):
-                chainer_train.append(c_in, c_out, component)
-                train_map = train_map.union(c_out)
-            if forward_map.issuperset(c_in):
-                chainer_forward.append(c_in, c_out, component)
-                forward_map = forward_map.union(c_out)
-    print(chainer_forward(['Helllo tqhere', 'firend']))
-    raise Exception
+            c_in = component_config['in']
+            c_out = component_config['out']
+            in_y = component_config.get('in_y', None)
+            main = component_config.get('main', False)
+            chainer.append(c_in, c_out, component, in_y, main)
+    return chainer
 
 
 def train_model_from_config(config_path: str):
     config = read_json(config_path)
-    if 'chainer' in config:
-        return train_chainer(config_path)
 
     reader_config = config['dataset_reader']
     reader = get_model(reader_config['name'])()
@@ -96,13 +80,16 @@ def train_model_from_config(config_path: str):
     dataset_config = config['dataset']
     dataset: Dataset = from_params(dataset_config, data=data)
 
-    vocabs = {}
-    for vocab_param_name, vocab_config in config.get('vocabs', {}).items():
-        v: Estimator = from_params(vocab_config, mode='train')
-        vocabs[vocab_param_name] = _fit(v, dataset)
+    if 'chainer' in config:
+        model = fit_chainer(config, dataset)
+    else:
+        vocabs = {}
+        for vocab_param_name, vocab_config in config.get('vocabs', {}).items():
+            v: Estimator = from_params(vocab_config, mode='train')
+            vocabs[vocab_param_name] = _fit(v, dataset)
 
-    model_config = config['model']
-    model = from_params(model_config, vocabs=vocabs, mode='train')
+        model_config = config['model']
+        model = from_params(model_config, vocabs=vocabs, mode='train')
 
     train_config = {
         'metrics': ['accuracy'],
@@ -120,14 +107,17 @@ def train_model_from_config(config_path: str):
 
     if callable(getattr(model, 'train_on_batch', None)):
         _train_batches(model, dataset, train_config, metrics_functions)
-    _fit(model, dataset, train_config)
+    elif callable(getattr(model, 'fit', None)):
+        _fit(model, dataset, train_config)
+    elif not isinstance(model, Chainer):
+        log.warning('Nothing to train')
 
     if train_config['validate_best'] or train_config['test_best']:
-        try:
-            model_config['load_path'] = model_config['save_path']
-        except KeyError:
-            log.warning('No "save_path" parameter for the model, so "load_path" will not be renewed')
-        model = from_params(model_config, vocabs=vocabs, mode='infer')
+        # try:
+        #     model_config['load_path'] = model_config['save_path']
+        # except KeyError:
+        #     log.warning('No "save_path" parameter for the model, so "load_path" will not be renewed')
+        model = build_model_from_config(config)
         log.info('Testing the best saved model')
 
         if train_config['validate_best']:

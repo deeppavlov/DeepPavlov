@@ -193,7 +193,7 @@ class ErrorModel(Estimator):
 
         return d[-1][-1]
 
-    @check_attr_true('train_now')
+    # @check_attr_true('train_now')
     def fit(self, x, y):
         changes = []
         entries = []

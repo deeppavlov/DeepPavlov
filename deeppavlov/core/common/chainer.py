@@ -1,28 +1,74 @@
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
 
 
 class Chainer(Component):
-    def __init__(self, in_params, out_params, *args, **kwargs):
+    def __init__(self, in_x, out_params, in_y=None, *args, **kwargs):
         self.pipe = []
-        self.in_params = in_params
+        self.train_pipe = []
+        self.in_x = in_x
+        self.in_y = in_y or []
         self.out_params = out_params
 
-    def append(self, in_params, out_params, component):
-        self.pipe.append((in_params, out_params, component))
+        self.forward_map = set(self.in_x)
+        self.train_map = self.forward_map.union(self.in_y)
 
-    def __call__(self, *args, to_return=None, **kwargs):
+        self.main = None
+
+    def append(self, in_x, out_params, component, in_y=None, main=False):
+        if in_y is not None:
+            main = True
+            assert self.train_map.issuperset(in_x+in_y), ('Arguments {} are expected but only {} are set'
+                                                          .format(in_x+in_y, self.train_map))
+            preprocessor = Chainer(self.in_x, in_x+in_y, self.in_y)
+            for t_in_x, t_out, t_component in self.train_pipe:
+                preprocessor.append(t_in_x, t_out, t_component)
+
+            def train_on_batch(*args, **kwargs):
+                preprocessed = preprocessor(*args, **kwargs)
+                return component.train_on_batch(*preprocessed)
+
+            self.train_on_batch = train_on_batch
+        if main:
+            self.main = component
+        if self.forward_map.issuperset(in_x):
+            self.pipe.append((in_x, out_params, component))
+            self.forward_map = self.forward_map.union(out_params)
+        if self.train_map.issuperset(in_x):
+            self.train_pipe.append((in_x, out_params, component))
+            self.train_map = self.train_map.union(out_params)
+        else:
+            raise ConfigError('Arguments {} are expected but only {} are set'.format(in_x, self.train_map))
+
+    def __call__(self, x, y=None, to_return=None):
+        in_params = list(self.in_x)
+        if len(in_params) == 1:
+            args = [x]
+        else:
+            args = list(zip(*x))
+
         if to_return is None:
             to_return = self.out_params
+        if self.forward_map.issuperset(to_return):
+            pipe = self.pipe
+        elif y is None:
+            raise RuntimeError('Expected to return {} but only {} are set in memory'
+                               .format(to_return, self.forward_map))
+        elif self.train_map.issuperset(to_return):
+            pipe = self.train_pipe
+            if len(self.in_y) == 1:
+                args.append(y)
+            else:
+                args += list(zip(*y))
+            in_params += self.in_y
+        else:
+            raise RuntimeError('Expected to return {} but only {} are set in memory'
+                               .format(to_return, self.train_map))
 
-        args = list(args)
-        mem = {}
-        for k in self.in_params:
-            try:
-                mem[k] = kwargs.pop(k)
-            except KeyError:
-                mem[k] = args.pop(0)
+        mem = {k: args[i] for i, k in enumerate(in_params)}
+        del args, x, y
 
-        for in_params, out_params, component in self.pipe:
+        for in_params, out_params, component in pipe:
             res = component(*[mem[k] for k in in_params])
             if len(out_params) == 1:
                 mem[out_params[0]] = res
@@ -34,3 +80,9 @@ class Chainer(Component):
         if len(res) == 1:
             return res[0]
         return res
+
+    def get_main_component(self):
+        return self.main or self.pipe[-1]
+
+    def save(self):
+        self.get_main_component().save()

@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import REGISTRY
 
@@ -26,8 +26,24 @@ log = get_logger(__name__)
 
 
 def build_model_from_config(config, mode='infer'):
+    if 'chainer' in config:
+        model_config = config['chainer']
+
+        model = Chainer(model_config['in'], model_config['out'], model_config.get('in_y'))
+
+        for component_config in model_config['pipe']:
+            component = from_params(component_config, vocabs=[], mode=mode)
+
+            if 'in' in component_config:
+                c_in = component_config['in']
+                c_out = component_config['out']
+                in_y = component_config.get('in_y', None)
+                main = component_config.get('main', False)
+                model.append(c_in, c_out, component, in_y, main)
+
+        return model
+
     model_config = config['model']
-    model_name = model_config['name']
 
     vocabs = {}
     if 'vocabs' in config:

@@ -8,7 +8,7 @@
   },
   "chainer":{
     "in": ["x"],
-    "in_train": ["x", "y"],
+    "in_y": ["y"],
     "pipe": [
       {
         "name": "str_lower",
@@ -34,7 +34,6 @@
         "out": ["y_predicted"],
         "name": "spelling_error_model",
         "window": 1,
-        "train_now": true,
         "dictionary": {
           "name": "wikitionary_100K_vocab"
         },
