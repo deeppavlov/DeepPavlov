@@ -33,11 +33,10 @@ log = get_logger(__name__)
 class DefaultVocabulary(Estimator):
     def __init__(self, save_path, load_path, inputs=None, level='token',
                  special_tokens=tuple(), default_token=None,
-                 tokenize=False, train_now=False, *args, **kwargs):
+                 tokenize=False, *args, **kwargs):
 
         super().__init__(load_path=load_path,
                          save_path=save_path,
-                         train_now=train_now,
                          mode=kwargs['mode'])
 
         self.special_tokens = special_tokens

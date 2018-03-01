@@ -52,11 +52,10 @@ class GoalOrientedBot(NNModel):
                  intent_classifier=None,
                  use_action_mask=False,
                  debug=False,
-                 train_now=False,
                  save_path=None,
                  **kwargs):
 
-        super().__init__(save_path=save_path, train_now=train_now, mode=kwargs['mode'])
+        super().__init__(save_path=save_path, mode=kwargs['mode'])
 
         self.episode_done = True
         self.use_action_mask = use_action_mask
@@ -173,7 +172,6 @@ class GoalOrientedBot(NNModel):
                         action_mask[a_id] = 0
         return action_mask
 
-    @check_attr_true('train_now')
     def train_on_batch(self, x, y):
         for contexts, responses in zip(x, y):
             self.reset()

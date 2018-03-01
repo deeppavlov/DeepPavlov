@@ -52,12 +52,10 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         self.opt = opt
         save_path = kwargs.get('save_path', None)
         load_path = kwargs.get('load_path', None)
-        train_now = self.opt.get('train_now', False)
         url = self.opt.get('url', None)
 
         super().__init__(save_path=save_path,
                          load_path=load_path,
-                         train_now=train_now,
                          url=url,
                          mode=kwargs['mode'])
 
