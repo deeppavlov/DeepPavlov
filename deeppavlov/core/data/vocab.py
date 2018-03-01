@@ -76,7 +76,7 @@ class DefaultVocabulary(Estimator):
                         yield from iter_level(data[1])
             else:
                 for d in data:
-                    yield from d
+                    yield from iter_level(d)
 
         return preprocess_fn
 
