@@ -118,7 +118,6 @@ class DefaultVocabulary(Estimator):
             self._i2t[i] = token
             self.freqs[token] += 0
 
-    @check_attr_true('train_now')
     def fit(self, *args):
         self.reset()
         self._train(

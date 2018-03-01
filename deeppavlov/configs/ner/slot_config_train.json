@@ -7,50 +7,60 @@
     "name": "dstc2_ner_dataset",
     "dataset_path": "dstc2"
   },
-  "model": {
-    "name": "dstc_slotfilling",
-    "train_now": true,
-    "learning_rate": 1e-3,
-    "save_path": "ner/dstc_ner_model",
-    "load_path": "ner/dstc_ner_model",
-    "vocabs": ["word_vocab", "tag_vocab", "char_vocab"],
-    "verbouse": true,
-    "filter_width": 7,
-    "embeddings_dropout": true,
-    "n_filters": [
-      64,
-      64
-    ],
-    "token_embeddings_dim": 64,
-    "char_embeddings_dim": 32,
-    "use_batch_norm": true,
-    "use_crf": true
-  },
-  "vocabs": {
-    "word_vocab": {
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "id": "word_vocab",
         "name": "default_vocab",
-        "inputs": ["x"],
-        "train_now": true,
+        "fit_on": ["x"],
 		"level": "token",
-        "save_path": "vocabs/word.dict",
-        "load_path": "vocabs/word.dict"
+        "save_path": "ner_dstc2_model/word.dict",
+        "load_path": "ner_dstc2_model/word.dict"
       },
-    "tag_vocab": {
+      {
+        "id": "tag_vocab",
         "name": "default_vocab",
-        "inputs": ["y"],
-        "train_now": true,
+        "fit_on": ["y"],
 		"level": "token",
-        "save_path": "vocabs/tag.dict",
-        "load_path": "vocabs/tag.dict"
+        "save_path": "ner_dstc2_model/tag.dict",
+        "load_path": "ner_dstc2_model/tag.dict"
       },
-    "char_vocab":{
+      {
+        "id": "char_vocab",
         "name": "default_vocab",
-        "inputs": ["x"],
-        "train_now": true,
+        "fit_on": ["x"],
 		"level": "char",
-        "save_path": "vocabs/char.dict",
-        "load_path": "vocabs/char.dict"
+        "save_path": "ner_dstc2_model/char.dict",
+        "load_path": "ner_dstc2_model/char.dict"
+      },
+      {
+        "in": ["x"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "main": true,
+        "name": "dstc_slotfilling",
+        "learning_rate": 1e-3,
+        "save_path": "ner/dstc_ner_model",
+        "load_path": "ner/dstc_ner_model",
+        "word_vocab": "#word_vocab",
+        "tag_vocab": "#tag_vocab",
+        "char_vocab": "#char_vocab",
+        "verbouse": true,
+        "filter_width": 7,
+        "embeddings_dropout": true,
+        "n_filters": [
+          64,
+          64
+        ],
+        "token_embeddings_dim": 64,
+        "char_embeddings_dim": 32,
+        "use_batch_norm": true,
+        "use_crf": true
       }
+    ],
+    "out": ["y_predicted"]
   },
   "train": {
     "epochs": 100,
