@@ -41,7 +41,7 @@ log = get_logger(__name__)
 
 @register("go_bot")
 class GoalOrientedBot(NNModel):
-    def __init__(self, template_path, vocabs,
+    def __init__(self, template_path,
                  template_type: Type = DualTemplate,
                  bow_encoder: Type = BoWEncoder,
                  tokenizer: Type = SpacyTokenizer,
@@ -53,6 +53,8 @@ class GoalOrientedBot(NNModel):
                  use_action_mask=False,
                  debug=False,
                  save_path=None,
+                 word_vocab=None,
+                 vocabs=None,
                  **kwargs):
 
         super().__init__(save_path=save_path, mode=kwargs['mode'])
@@ -67,7 +69,7 @@ class GoalOrientedBot(NNModel):
         self.tokenizer = tokenizer
         self.tracker = tracker
         self.network = network
-        self.word_vocab = vocabs['word_vocab']
+        self.word_vocab = word_vocab or vocabs['word_vocab']
 
         template_path = expand_path(template_path)
         log.info("[loading templates from {}]".format(template_path))

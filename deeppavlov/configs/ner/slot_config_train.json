@@ -16,24 +16,24 @@
         "name": "default_vocab",
         "fit_on": ["x"],
 		"level": "token",
-        "save_path": "ner_dstc2_model/word.dict",
-        "load_path": "ner_dstc2_model/word.dict"
+        "save_path": "vocabs/word.dict",
+        "load_path": "vocabs/word.dict"
       },
       {
         "id": "tag_vocab",
         "name": "default_vocab",
         "fit_on": ["y"],
 		"level": "token",
-        "save_path": "ner_dstc2_model/tag.dict",
-        "load_path": "ner_dstc2_model/tag.dict"
+        "save_path": "vocabs/tag.dict",
+        "load_path": "vocabs/tag.dict"
       },
       {
         "id": "char_vocab",
         "name": "default_vocab",
         "fit_on": ["x"],
 		"level": "char",
-        "save_path": "ner_dstc2_model/char.dict",
-        "load_path": "ner_dstc2_model/char.dict"
+        "save_path": "vocabs/char.dict",
+        "load_path": "vocabs/char.dict"
       },
       {
         "in": ["x"],
