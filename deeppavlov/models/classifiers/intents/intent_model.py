@@ -161,7 +161,6 @@ class KerasIntentModel(KerasModel):
         embeddings_batch = np.asarray(embeddings_batch)
         return embeddings_batch
 
-    @check_attr_true('train_now')
     def train_on_batch(self, texts, labels):
         """
         Train the model on the given batch

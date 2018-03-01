@@ -35,12 +35,12 @@
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],
+        "main": true,
         "name": "intent_model",
         "save_path": "intents/intent_cnn_snips",
         "load_path": "intents/intent_cnn_snips",
         "classes": "#classes_vocab.keys()",
         "opt": {
-          "train_now": true,
           "kernel_sizes_cnn": [
             1,
             2,
@@ -88,6 +88,8 @@
     "validation_patience": 5,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
-    "show_examples": false
+    "show_examples": false,
+    "validate_best": true,
+    "test_best": false
   }
 }

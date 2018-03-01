@@ -37,12 +37,12 @@
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],
+        "main": true,
         "name": "intent_model",
         "save_path": "intents/intent_cnn",
         "load_path": "intents/intent_cnn",
         "classes": "#classes_vocab.keys()",
         "opt": {
-          "train_now": true,
           "kernel_sizes_cnn": [
             3,
             3,
