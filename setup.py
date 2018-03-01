@@ -36,7 +36,7 @@ def read_requirements():
 
 setup(license='Apache License, Version 2.0',
       packages=find_packages(exclude=('tests')),
-      version='0.0.1',
+      version='0.0.2',
       include_package_data=True,
       install_requires=read_requirements(),
       name='deeppavlov'
