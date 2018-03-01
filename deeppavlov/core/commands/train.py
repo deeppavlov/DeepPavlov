@@ -117,7 +117,7 @@ def train_model_from_config(config_path: str):
         #     model_config['load_path'] = model_config['save_path']
         # except KeyError:
         #     log.warning('No "save_path" parameter for the model, so "load_path" will not be renewed')
-        model = build_model_from_config(config)
+        model = build_model_from_config(config, load_trained=True)
         log.info('Testing the best saved model')
 
         if train_config['validate_best']:

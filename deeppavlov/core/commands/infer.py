@@ -25,13 +25,19 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-def build_model_from_config(config, mode='infer'):
+def build_model_from_config(config, mode='infer', load_trained=False):
     if 'chainer' in config:
         model_config = config['chainer']
 
         model = Chainer(model_config['in'], model_config['out'], model_config.get('in_y'))
 
         for component_config in model_config['pipe']:
+            if load_trained and ('fit_on' in component_config or 'in_y' in component_config):
+                try:
+                    component_config['load_path'] = component_config['save_path']
+                except KeyError:
+                    log.warning('No "save_path" parameter for the {} component, so "load_path" will not be renewed'
+                                .format(component_config.get('name', component_config['ref'])))
             component = from_params(component_config, vocabs=[], mode=mode)
 
             if 'in' in component_config:
@@ -44,6 +50,11 @@ def build_model_from_config(config, mode='infer'):
         return model
 
     model_config = config['model']
+    if load_trained:
+        try:
+            model_config['load_path'] = model_config['save_path']
+        except KeyError:
+            log.warning('No "save_path" parameter for the model, so "load_path" will not be renewed')
 
     vocabs = {}
     if 'vocabs' in config:
