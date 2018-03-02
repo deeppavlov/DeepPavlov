@@ -257,6 +257,33 @@ Every NNModel has to implement `train_on_batch` method.
 
 ### Train config
 
+Estimators that need to be trained have to also have `fit_on` parameter with a list of names input parameters.
+An NNModel has to have `in_y` parameter with list of names of ground truth answers. For example:
+
+```json
+[
+  {
+    "id": "classes_vocab",
+    "name": "default_vocab",
+    "fit_on": ["y"],
+    "level": "token",
+    "save_path": "vocabs/classes.dict",
+    "load_path": "vocabs/classes.dict"
+  },
+  {
+    "in": ["x"],
+    "in_y": ["y"],
+    "out": ["y_predicted"],
+    "name": "intent_model",
+    "save_path": "intents/intent_cnn",
+    "load_path": "intents/intent_cnn",
+    "classes_vocab": {
+      "ref": "classes_vocab"
+    }
+  }
+]
+```
+
 Config for training the pipeline has to have three additional elements: `dataset_reader`, `dataset` and `train`:
 
 ```json
