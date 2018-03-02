@@ -400,14 +400,11 @@ Training is triggered by `deeppavlov.core.commands.train.train_model_from_config
 
 ### Inferring
 
-All models inherited from `deeppavlov.core.models.inferable.Inferable` interface can be inferred.
-The `infer()` method should return what a model can do. For example, a *tokenizer* should return
+All components inherited from `deeppavlov.core.models.component.Componet` abstract class can be inferred. The `__call__()` method should return what a compoent can do. For example, a *tokenizer* should return
 *tokens*, a *NER recognizer* should return *recognized entities*, a *bot* should return a *replica*.
-A particular format of returned data should be defined in `infer()`.
+A particular format of returned data should be defined in `__call__()`.
 
-Inferring is triggered by `deeppavlov.core.commands.train.infer_model_from_config()` function.
-There is no need in s separate JSON for inferring. `train_now` parameter is ignored during
-inferring.
+Inferring is triggered by `deeppavlov.core.commands.infer.interact_model()` function. There is no need in s separate JSON for inferring. 
 
 ## License
 
