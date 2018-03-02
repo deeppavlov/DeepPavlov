@@ -214,14 +214,36 @@ An NLP pipeline config is a JSON file that contains one required element `chaine
 }
 ```
 
-# TELL ABOUT CHAINER!!!
-
-# TELL ABOUT ELEMENTS IN PIPE!!! 
-
-Each class in the config has `name` parameter, which is its registered codename
- and can have any other parameters, repeating its `__init__()` method arguments.
- Default values of `__init__()` arguments will be overridden with the config values
- during class instance initialization.
+Chainer is a core comcept of DeepPavlov library: chainer build a pipeline from heterogeneous components (rule-based/ml/dl) and allow to train and inference pipeline as a whole. Each component in the pipeline specifies its inputs and outputs as array of names, for example: `"in": ["tokens", "features"]` and `"out": ["token_embeddings", "features_embeddings"]` and you can chain outputs of one components with inputs of other components:
+```json
+{
+  "name": "str_lower",
+  "in": ["x"],
+  "out": ["x_lower"]
+},
+{
+  "name": "nltk_tokenizer",
+  "in": ["x_lower"],
+  "out": ["x_tokens"]
+},
+```
+Each [Component](deeppavlov/core/models/component.py) in the pipeline must implement method `__call__` and has `name` parameter, which is its registered codename and can have any other parameters, repeating its `__init__()` method arguments.
+ Default values of `__init__()` arguments will be overridden with the config values  during class instance initialization.
+ 
+You can reuse components in the pipeline for process different parts of data with help of `id` and `ref` parameters:
+```json
+{
+  "name": "nltk_tokenizer",
+  "id": "tokenizer",
+  "in": ["x_lower"],
+  "out": ["x_tokens"]
+},
+{
+  "ref": "tokenizer",
+  "in": ["y"],
+  "out": ["y_tokens"]
+},
+```
  
 ### Training
 
