@@ -392,35 +392,6 @@ def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, 
     return output
 
 
-def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, activation=None):
-    """ Computes multiplicative self attention for time series of vectors (with batch dimension)
-        the formula: score(h_i, h_j) = <W_1 h_i,  W_2 h_j>,  W_1 and W_2 are learnable matrices
-        with dimensionality [n_hidden, n_input_features], where <a, b> stands for a and b
-        dot product
-
-    Args:
-        units: tf tensor with dimensionality [batch_size, time_steps, n_input_features]
-        n_hidden: number of units in hidden representation of similarity measure
-        n_output_features: number of features in output dense layer
-        activation: activation at the output
-
-    Returns:
-        output: self attended tensor with dimensionality [batch_size, time_steps, n_output_features]
-    """
-    n_input_features = units.get_shape().as_list()[2]
-    if n_hidden is None:
-        n_hidden = n_input_features
-    if n_output_features is None:
-        n_output_features = n_input_features
-    queries = tf.layers.dense(expand_tile(units, 1), n_hidden)
-    keys = tf.layers.dense(expand_tile(units, 2), n_hidden)
-    scores = tf.reduce_sum(queries * keys, axis=3, keep_dims=True)
-    attention = tf.nn.softmax(scores, dim=2)
-    attended_units = tf.reduce_sum(attention * expand_tile(units, 1), axis=2)
-    output = tf.layers.dense(attended_units, n_output_features, activation)
-    return output
-
-
 def cudnn_gru(units, n_hidden, n_layers=1):
     """ Fast CuDNN GRU implementation
 
