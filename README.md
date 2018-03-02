@@ -260,8 +260,8 @@ Training is triggered by `deeppavlov.core.commands.train.train_model_from_config
 
 ### Train config
 
-Estimators that are trained should also have `fit_on` parameter with a list of input parameters's names.
-A NNModel has to have `in_y` parameter with list of ground truth answers's names. For example:
+Estimators that are trained should also have `fit_on` parameter with a list of input parameters' names.
+A NNModel should have `in_y` parameter with a list of ground truth answers' names. For example:
 
 ```json
 [
