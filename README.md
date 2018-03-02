@@ -41,15 +41,15 @@ View video demo of deploy goal-oriented bot and slot-filling model with Telegram
  ```
  * Run goal-oriented bot with console interface:
  ```
- python deep.py interact configs/go_bot/config.json
+ python deep.py interact configs/go_bot/gobot_dstc2.json
  ```
  * Run slot-filling model with Telegram interface
  ```
- python deep.py interactbot configs/ner/config.json -t <TELEGRAM_TOKEN>
+ python deep.py interactbot configs/ner/slotfill_dstc2.json -t <TELEGRAM_TOKEN>
  ```
  * Run slot-filling model with console interface
  ```
- python deep.py interact configs/ner/config.json
+ python deep.py interact configs/ner/slotfill_dstc2.json
  ```
 ## Conceptual overview
 
@@ -144,13 +144,13 @@ For 'interactbot' mode you should specify Telegram bot token in `-t` parameter o
 
 Available model configs are:
 
-*configs/go_bot/config.json*
+*configs/go_bot/gobot_dstc2.json*
 
-*configs/intents/config_dstc2.json*
+*configs/intents/intents_dstc2.json*
 
-*configs/ner/config.json*
+*configs/ner/slotfill_dstc2.json*
 
-*configs/error_model/config_en.json*
+*configs/error_model/brillmoore_wikitypos_en.json*
 
 ---
 
@@ -199,25 +199,52 @@ Available model configs are:
 
 ### Config
 
-An NLP pipeline config is a JSON file, which consists of four required elements:
+An NLP pipeline config is a JSON file that contains one required element `chainer`:
 
-```javascript
+```json
 {
-  "dataset_reader": {
-  },
-  "dataset": {
-  },
-  "vocabs": {
-  },
-  "model": {
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      ...
+    ],
+    "out": ["y_predicted"]
   }
 }
 ```
+
+# TELL ABOUT CHAINER!!!
+
+# TELL ABOUT ELEMENTS IN PIPE!!! 
 
 Each class in the config has `name` parameter, which is its registered codename
  and can have any other parameters, repeating its `__init__()` method arguments.
  Default values of `__init__()` arguments will be overridden with the config values
  during class instance initialization.
+ 
+### Train config
+
+Config for training the pipeline has to have three additional elements: `dataset_reader`, `dataset` and `train`:
+
+```json
+{
+  "dataset_reader": {
+    "name": ...,
+    ...
+  }
+  "dataset": {
+    "name": ...,
+    ...
+  },
+  "chainer": {
+    ...
+  }
+  "train": {
+    ...
+  }
+}
+```
 
 ### DatasetReader
 
@@ -226,6 +253,9 @@ A concrete `DatasetReader` class should be inherited from base
 `deeppavlov.data.dataset_reader.DatasetReader` class and registered with a codename:
 
 ```python
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.dataset_reader import DatasetReader
+
 @register('dstc2_datasetreader')
 class DSTC2DatasetReader(DatasetReader):
 ```
