@@ -133,7 +133,7 @@ form:
   }
 ```
 The inputs and outputs must be specified in the pype. "in" means regular input that is used 
-for inference, evaluation, and train mode. "in_y" is used for training and evaluation and regularly 
+for inference and train mode. "in_y" is used for training and regularly 
 contains ground truth answers. "out" field stands for model prediction. The model inside the 
 pipe must have output variable with name "y_predicted" so that "out" knows where to get 
 predictions.
@@ -222,9 +222,9 @@ config:
 
 All network parameters are:
 - **`in`** - the input to be taken from shared memory. Treated as x. So it is used both 
-during the training, evaluation, and inference
+during the training and inference
 - **`in_y`** - the target or y input to be taken from shared memory. This input is used during
- the training and evaluation.
+ the training.
 - **`name`** - the name of the model to be used. In this case we use 'ner' model originally 
 imported from deeppavlov.models.ner.ner. We use only 'ner' name relying on the @registry 
 decorator.
