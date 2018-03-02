@@ -111,8 +111,8 @@ class GoalOrientedBot(NNModel):
         if callable(self.intent_classifier):
             intent_features = self.intent_classifier([tokenized], predict_proba=True).ravel()
             if self.debug:
-                log.debug("Predicted intent = `{}`".format(
-                    self.intent_classifier.infer(tokenized)))
+                log.debug("Predicted intent = `{}`"\
+                          .format(self.intent_classifier([tokenized])))
 
         # Text entity features
         if callable(self.slot_filler):
@@ -196,9 +196,6 @@ class GoalOrientedBot(NNModel):
             # self.network.train(d_features, d_actions, d_masks)
             self.network.train_on_batch([d_features, d_masks], d_actions)
 
-    def infer_on_batch(self, xs):
-        return [self._infer_dialog(x) for x in xs]
-
     def _infer(self, context, db_result=None, prob=False):
         # TODO: check if prob=True works better
         probs = self.network(
@@ -235,7 +232,7 @@ class GoalOrientedBot(NNModel):
     def __call__(self, batch):
         if isinstance(batch[0], str):
             return [self._infer(x) for x in batch]
-        return self.infer_on_batch(batch)
+        return [self._infer_dialog(x) for x in batch]
 
     def reset(self):
         self.tracker.reset_state()
