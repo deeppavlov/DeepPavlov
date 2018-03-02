@@ -255,6 +255,8 @@ are [vocabs](deeppavlov/core/data/vocab.py). Every Estimator has to implement me
 it predicts on plus ground truth answers for multiple epochs with periodic validation and logging.
 Every NNModel has to implement `train_on_batch` method.
 
+Training is triggered by `deeppavlov.core.commands.train.train_model_from_config()` function.
+
 ### Train config
 
 Estimators that need to be trained have to also have `fit_on` parameter with a list of names input parameters.
@@ -305,6 +307,17 @@ Config for training the pipeline has to have three additional elements: `dataset
 }
 ```
 
+### Train Parameters
+* `epochs` — maximum number of epochs to train NNModel, defaults to `-1`, infinite
+* `batch_size`,
+* `metrics` — list of names of [registered metrics](deeppavlov/metrics) to evaluate the model on. First one in the list
+is used for validation patience
+* `metric_optimization` — one of `maximize` or `minimize`, defaults to `maximize`
+* `validation_patience` — how many times in a row validation metric has to not improve to stop training, defaults to `5`
+* `val_every_n_epochs` — how often to validate the pipe, defaults to `-1`, never
+* `log_every_n_batches`, `log_every_n_epochs` — how often to calculate metrics for train data, defaults to `-1`, never
+* `validate_best`, `test_best` flags to infer the best saved model on valid and test data, defaults to `true`
+
 ### DatasetReader
 
 `DatasetReader` class reads data and returns it in a specified format.
@@ -326,112 +339,13 @@ A concrete `Dataset` class should be registered and can be inherited from
 `deeppavlov.data.dataset_reader.Dataset` class. `deeppavlov.data.dataset_reader.Dataset`
 is not an abstract class and can be used as `Dataset` as well.
 
-### Vocab
-
-`Vocab` is a trainable class, which forms and serialize vocabs. Vocabs index any data.
-For example, tokens to indices and backwards, chars to indices, classes to indices, etc.
-It can index X (features) and y (answers) types of data. A concrete `Vocab` class
-should be registered and can be inherited from `deeppavlov.data.vocab.DefaultVocabulary` class.
-`deeppavlov.data.vocab.DefaultVocabulary` is not an abstract class and can be used as `Vocab` as well.
-
-### Model
-
-`Model` is the main class which rules the training/inferring process and feature generation.
-If a model requires other models to produce features, they need to be passed in its constructor
-and config. All models can be nested as much as needed. For example, a skeleton of
-`deeppavlov.skills.go_bot.go_bot.GoalOrientedBot` consists of 11 separate model classes,
-3 of which are neural networks:
-
-```json
-{
-  "model": {
-    "name": "go_bot",
-    "network": {
-      "name": "go_bot_rnn"
-    },
-    "slot_filler": {
-      "name": "dstc_slotfilling",
-      "ner_network": {
-         "name": "ner_tagging_network",
-      }
-    },
-    "intent_classifier": {
-      "name": "intent_model",
-      "embedder": {
-        "name": "fasttext"
-      },
-      "tokenizer": {
-        "name": "nltk_tokenizer"
-      }
-    },
-    "embedder": {
-      "name": "fasttext"
-    },
-    "bow_encoder": {
-      "name": "bow"
-    },
-    "tokenizer": {
-      "name": "spacy_tokenizer"
-    },
-    "tracker": {
-      "name": "featurized_tracker"
-    }
-  }
-}
-```
-
-All models should be registered and inherited from `deeppavlov.core.models.inferable.Inferable`
-or from both `Inferable` and `deeppavlov.core.models.trainable.Trainable` interfaces.
-Models inherited from `Trainable` interface can be trained. Models inherited from `Inferable`
-interface can be only inferred. Usually `Inferable` models are rule-based models or
-pre-trained models that we import from third-party libraries (like `NLTK`, `Spacy`, etc.).
-
-### Training
-
-All models inherited from `deeppavlov.core.models.trainable.Trainable` interface can be trained.
-The training process should be described in `train()` method:
-
- ```python
- @register("my_model")
- class MyModel(Inferable, Trainable):
-
-    def train_on_batch(self, batch: Tuple[list, list]):
-        """
-        Implement training here.
-        """
- ```
-
-All parameters for training which can be changed during experiments (like *num of epochs*,
-*batch size*, *patience*, *learning rate*, *optimizer*) should be passed to a model's
-`__init__()`. The default parameters values from `__init__()` are overridden with JSON config values.
-To change these values, there is no need to rewrite the code, only the config should be changed.
-
-The training process is managed by `train_now` attribute. If `train_now` is *True*,
-a model is being trained. This parameter is useful when using `Vocab`, because in a single
-model run some vocabs can be trained, while some only inferred by other models in pipeline.
-The training parameters in JSON config can look like this:
-
-```json
-{
-  "model": {
-    "name": "my_model",
-    "train_now": true,
-    "optimizer": "Adam",
-    "learning_rate": 0.2,
-    "num_epochs": 1000
-  }
-}
-```
-
-Training is triggered by `deeppavlov.core.commands.train.train_model_from_config()` function.
-
 ### Inferring
 
 All components inherited from `deeppavlov.core.models.component.Componet` abstract class can be inferred. The `__call__()` method should return what a compoent can do. For example, a *tokenizer* should return
 *tokens*, a *NER recognizer* should return *recognized entities*, a *bot* should return a *replica*.
 A particular format of returned data should be defined in `__call__()`.
 
-Inferring is triggered by `deeppavlov.core.commands.infer.interact_model()` function. There is no need in s separate JSON for inferring. 
+Inferring is triggered by `deeppavlov.core.commands.infer.interact_model()` function. There is no need in a separate JSON for inferring. 
 
 ## License
 
