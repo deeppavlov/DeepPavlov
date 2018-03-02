@@ -3,7 +3,9 @@
 
 # Neural Named Entity Recognition and Slot Filling
 
-This component solves Named Entity Recognition (NER) and Slot-Filling task with different neural network architectures. This component serves for solving DSTC 2 Slot-Filling task.
+This component solves Named Entity Recognition (NER) and Slot-Filling task with different neural network architectures.
+ To read about NER without slot filling please address [**README_NER.md**](deeppavlov/models/ner/README_NER.md). 
+ This component serves for solving DSTC 2 Slot-Filling task.
 In most of the cases, NER task can be formulated as:
 
 _Given a sequence of tokens (words, and may be punctuation symbols) provide a tag from predefined set of tags for each token in the sequence._
