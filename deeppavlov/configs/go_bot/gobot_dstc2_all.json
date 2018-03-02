@@ -59,11 +59,13 @@
         "template_path": "dstc2/dstc2-templates.txt",
         "network": {
           "name": "go_bot_rnn",
-          "load_path": "go_bot/model",
-          "save_path": "go_bot/model",
-          "learning_rate": 0.02,
+          "load_path": "go_bot_all/model",
+          "save_path": "go_bot_all/model",
+          "learning_rate": 0.002,
+          "dropout_rate": 0.8,
           "hidden_dim": 128,
-          "obs_size": 530,
+          "dense_size": 64,
+          "obs_size": 830,
           "use_action_mask": false,
           "action_size": 45
         },
@@ -131,7 +133,14 @@
             "tokenizer": "wordpunct_tokenize"
           }
         },
-        "embedder": null,
+        "embedder": {
+          "name": "fasttext",
+          "save_path": "embeddings/wiki.en.bin",
+          "load_path": "embeddings/wiki.en.bin",
+          "mean": true,
+          "emb_module": "pyfasttext",
+          "dim": 300
+        },
         "bow_encoder": {
           "name": "bow"
         },
