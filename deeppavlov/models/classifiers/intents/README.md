@@ -60,9 +60,9 @@ Now user can enter a text string and get intents (classes which a request belong
 ## Train model
 
 One of the main constituents of model is a configuration file.
-Following [this link](deeppavlov/configs/intents) one can find examples of config files.
+Following [this link](../../../configs/intents) one can find examples of config files.
 Below the table with description of parameters for 
-[intents_dstc2.json](deeppavlov/configs/intents/intents_dstc2.json) config is presented.
+[intents_dstc2.json](../../../configs/intents/intents_dstc2.json) config is presented.
 
 #### Configuration parameters:  
 
