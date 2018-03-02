@@ -7,8 +7,8 @@ import shutil
 
 
 # Mapping from model names to configs and corresponding Query-Response pairs
-MCQR = {"error_model": {"configs/error_model/config_en.json": ("error_model", "", ""),
-                        "configs/error_model/config_ru.json": ("error_model", "", "")
+MCQR = {"error_model": {"configs/error_model/brillmoore_wikitypos.json": ("error_model", "", ""),
+                        "configs/error_model/brillmoore_kartaslov.json": ("error_model", "", "")
                         },
         "go_bot": {"configs/go_bot/gobot_dstc2.json": ("go_bot", "", ""),
                    # "configs/go_bot/config_all.json":
