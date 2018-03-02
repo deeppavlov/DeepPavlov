@@ -166,8 +166,9 @@ class ErrorModel(Estimator):
     def __call__(self, data, *args, **kwargs):
         if isinstance(data, str):
             return self._infer_instance(data)
-        return [self._infer_instance(instance) for instance in tqdm(data, desc='Infering a batch with the error model',
-                                                                    leave=False)]
+        if len(data) > 1:
+            data = tqdm(data, desc='Infering a batch with the error model', leave=False)
+        return [self._infer_instance(instance) for instance in data]
 
     def reset(self):
         pass
