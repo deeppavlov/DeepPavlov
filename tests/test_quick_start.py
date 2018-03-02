@@ -7,27 +7,19 @@ import shutil
 
 
 # Mapping from model names to configs and corresponding Query-Response pairs
-MCQR = {"error_model": {"configs/error_model/config_en.json":
-                            ("error_model", "", ""),
-                        "configs/error_model/config_ru.json":
-                            ("error_model", "", "")
+MCQR = {"error_model": {"configs/error_model/config_en.json": ("error_model", "", ""),
+                        "configs/error_model/config_ru.json": ("error_model", "", "")
                         },
-        "go_bot": {"configs/go_bot/config.json":
-                       ("go_bot", "", ""),
+        "go_bot": {"configs/go_bot/gobot_dstc2.json": ("go_bot", "", ""),
                    # "configs/go_bot/config_all.json":
                    #     ("go_bot_all", "", ""),
-                   "configs/go_bot/config_minimal.json":
-                       ("go_bot_minimal", "", "")
+                   "configs/go_bot/gobot_dstc2_minimal.json": ("go_bot_minimal", "", "")
                    },
-        "intents": {"configs/intents/config_dstc2_train.json":
-                        ("intents", "", "")
+        "intents": {"configs/intents/intents_dstc2.json": ("intents", "", "")
                     },
-        "ner": {"configs/ner/ner_conll2003_train.json":
-                    ("ner_conll2003_model", "", ""),
-                "configs/ner/ner_dstc2_train.json":
-                    ("ner_dstc2_model", "", ""),
-                "configs/ner/slot_config_train.json":
-                    ("ner", "", "")
+        "ner": {"configs/ner/ner_conll2003.json": ("ner_conll2003_model", "", ""),
+                "configs/ner/ner_dstc2.json": ("ner_dstc2_model", "", ""),
+                "configs/ner/slotfill_dstc2.json": ("ner", "", "")
                 }
         }
 
