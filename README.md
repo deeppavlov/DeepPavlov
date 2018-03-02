@@ -3,6 +3,7 @@
 
 # <center>DeepPavlov</center>
 ### *We are in a really early Alpha release. You have to be ready for hard adventures.*
+### *If you have updated to version 0.0.2 - please re-download all pretrained models*
 An open-source conversational AI library, built on TensorFlow and Keras, and designed for
  * NLP and dialog systems research
  * implementation and evaluation of complex conversational systems
