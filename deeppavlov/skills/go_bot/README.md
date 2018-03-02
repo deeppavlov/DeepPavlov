@@ -46,6 +46,8 @@ To use a go_bot model you should have:
 3. (_optional_) downloaded english fasttext embeddings trained on wiki ([https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip](https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip))
    * fasttext embeddings can loaded via `python3 deeppavlov/download.py --all`
    * you can use any english embeddings of your choice, but edit go_bot config accordingly
+4. pretrained vocabulary of dataset utterance tokens
+   * it can be trained alongside go_bot model
 4. pretrained goal-oriented bot model itself 
    * config [`deeppavlov/configs/go_bot/gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json) is recommended
    * `slot_filler` section of go_bot's config should match NER's configuration
@@ -58,7 +60,6 @@ To use a go_bot model you should have:
 * `use_action_mask` — in case of true, action mask is applied to network output
 * `word_vocab` — vocabulary of tokens from context utterances
    * `name` — `"default_vocab"` (for vocabulary's implementation see [`deeppavlov.core.data.vocab`](../../core/data/vocab.py))
-   * `fit_on` — `[ "x" ]`,
    * `level` — `"token"`,
    * `tokenize` — `true`,
    * `save_path` — `"vocabs/token.dict"`
