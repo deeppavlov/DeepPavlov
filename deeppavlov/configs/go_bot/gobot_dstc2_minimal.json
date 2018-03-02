@@ -29,6 +29,7 @@
         "debug": false,
         "word_vocab": "#token_vocab",
         "template_path": "dstc2/dstc2-templates.txt",
+        "use_action_mask": false,
         "network": {
           "name": "go_bot_rnn",
           "load_path": "go_bot_minimal/model",
@@ -38,7 +39,6 @@
           "hidden_dim": 128,
           "dense_size": 64,
           "obs_size": 502,
-          "use_action_mask": false,
           "action_size": 45
         },
         "slot_filler": null,
