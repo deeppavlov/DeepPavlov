@@ -22,11 +22,10 @@ from deeppavlov.core.common import paths
 from deeppavlov.core.common.file import read_json
 
 
-def set_deeppavlov_root(config_path: str):
+def set_deeppavlov_root(config: dict):
     """
     Make a serialization user dir.
     """
-    config = read_json(config_path)
     try:
         deeppavlov_root = Path(config['deeppavlov_root'])
     except KeyError:

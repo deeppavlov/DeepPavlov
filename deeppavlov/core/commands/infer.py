@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from deeppavlov.core.commands.utils import set_deeppavlov_root
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import REGISTRY
@@ -26,6 +27,7 @@ log = get_logger(__name__)
 
 
 def build_model_from_config(config, mode='infer', load_trained=False):
+    set_deeppavlov_root(config)
     if 'chainer' in config:
         model_config = config['chainer']
 

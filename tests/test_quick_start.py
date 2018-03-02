@@ -22,11 +22,11 @@ MCQR = {"error_model": {"configs/error_model/config_en.json":
         "intents": {"configs/intents/config_dstc2_train.json":
                         ("intents", "", "")
                     },
-        "ner": {"configs/ner/ner_conll2003_train.json":
+        "ner": {"configs/ner/ner_conll2003.json":
                     ("ner_conll2003_model", "", ""),
-                "configs/ner/ner_dstc2_train.json":
+                "configs/ner/ner_dstc2.json":
                     ("ner_dstc2_model", "", ""),
-                "configs/ner/slot_config_train.json":
+                "configs/ner/slotfill_dstc2.json":
                     ("ner", "", "")
                 }
         }

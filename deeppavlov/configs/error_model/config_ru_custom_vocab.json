@@ -20,7 +20,6 @@
         "name": "nltk_tokenizer",
         "id": "tokenizer",
         "in": ["x_lower"],
-        "batch_size": 15,
         "out": ["x_tokens"]
       },
       {
