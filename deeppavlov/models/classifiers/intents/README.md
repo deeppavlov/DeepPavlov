@@ -59,18 +59,20 @@ Now user can enter a text string and get intents (classes which a request belong
 
 ## Train model
 
-One of the main constituents of model is a configuration file. 
-Below the table with description of parameters is presented.
+One of the main constituents of model is a configuration file.
+Following [this link](deeppavlov/configs/intents) one can find examples of config files.
+Below the table with description of parameters for 
+[intents_dstc2.json](deeppavlov/configs/intents/intents_dstc2.json) config is presented.
 
 #### Configuration parameters:  
 
 |   Parameter         |  Description                                                      | 
 |---------------------|-------------------------------------------------------------------|
-| **dataset_reader**  | instance to read datasets from files |
+| **dataset_reader**  | *instance to read datasets from files* |
 |   name              | registered name of dataset reader   <br />*SetOfValues*: "dstc2_datasetreader", "classification_datasetreader" |
 |   data_path         | directory where data files are located                          | 
 |   data_types        | which data types is presented in data_path (only for `classification_datasetreader`) *SetOfValues*: list of fields, i.e ["train", "valid", "test"]| 
-| **dataset**         | instance to provide models with data in the standard form (each example is a tuple (x, y) where x and y could be numbers, binaries, lists or strings) |
+| **dataset**         | *instance to provide models with data in the standard form (each example is a tuple (x, y) where x and y could be numbers, binaries, lists or strings)* |
 |   name              | registered name of dataset        <br />*SetOfValues*:  "intent_dataset", classification_dataset"     | 
 |   seed              | seed for batch generator              |
 |   fields_to_merge   | list of fields to merge                <br />*SetOfValues*: list of fields, i.e ["train", "valid", "test"]| 
@@ -78,19 +80,19 @@ Below the table with description of parameters is presented.
 |   field_to_split    | name of field to split                         <br />*SetOfValues*:  field, i.e "train", "valid", "test"           | 
 |   split_fields      | list of fields to which save splitted field     <br />*SetOfValues*:  list of fields, i.e ["train", "valid", "test"]|
 |   split_proportions | list of corresponding proportions for splitting  <br />*SetOfValues*:  list of floats each of which is in  \[0., 1.\]|
-| **chainer**         | chainer is a structure that receives tuple `(in, in_y)` and produces `out`     |
-|in                   | user-defined name of input (or list of names in case of different inputs) <br />*SetOfValues*: list of names, i.e ["x"], ["x0", "x1"] |
-|in_y                 | user-defined name of input targets (or list of names in case of different input targets) <br />*SetOfValues*: list of names, i.e ["y"], ["y0", "y1"] |
-|out                  | user-defined name of output (or list of names in case of different outputs) <br />*SetOfValues*: list of names, i.e ["y_pred"], ["y_pred0", "y_pred1"] |
-| **chainer.pipe**    | list that contains sequence of models (including vocabs, preprocessors, postprocessors etc.) |
-| **chainer.pipe.vocabs** | instances to create vocabularies over x and y |
+| **chainer**         | *chainer is a structure that receives tuples `(in, in_y)` and produces `out`*     |
+| in                  | user-defined name of input (or list of names in case of different inputs) <br />*SetOfValues*: list of names, i.e ["x"], ["x0", "x1"] |
+| in_y                | user-defined name of input targets (or list of names in case of different input targets) <br />*SetOfValues*: list of names, i.e ["y"], ["y0", "y1"] |
+| out                 | user-defined name of output (or list of names in case of different outputs) <br />*SetOfValues*: list of names, i.e ["y_pred"], ["y_pred0", "y_pred1"] |
+| **chainer.pipe**    | *list that contains sequence of model components (including vocabs, preprocessors, postprocessors etc.)* |
+|                     | *following parameters are for composing vocabulary*  |
 | id                  | key name for considered model for further references |
 | name                | registered name of vocab    <br />*SetOfValues*: "default_vocab"  | 
-|  fit_on             | whether to create vocab over x and/or y fields of dataset  <br />*SetOfValues*: list of "x" and/or "y"    |
+|  fit_on             | whether to create vocab over x and/or y fields of dataset  <br />*SetOfValues*: list of names defined in chainer.in or chainer.in_y  |
 |  level              | whether to considered char or token level     <br />*SetOfValues*: "char", "token"   |
 | load_path           | path to file which vocab with classes will be loaded from    |
 | save_path           | path to file where vocab with classes will be saved    |
-| **chainer.pipe.model** |  |
+|                     | *following parameters are for composing main part of model* |
 | in                  | inputs for the model <br />*SetOfValues*: list of names from chainer.in, chainer.in_y or outputs of previous models |
 | in_y                | input targets for the model, obligatory for training <br />*SetOfValues*: list of names from chainer.in, chainer.in_y or outputs of previous models  |
 | out                 | outputs for the model <br />*SetOfValues*: list of names |
@@ -99,29 +101,29 @@ Below the table with description of parameters is presented.
 | load_path           | path to file which model files will be loaded from    |
 | save_path           | path to file where model files will be saved    |
 | classes             | list of classes names. In this case they could be simply obtained from `classes_vocab.keys()` method |
-| opt                 | dictionary of parameters for model |
-| opt.model_name      | method of the class KerasIntentModel that corresponds to the model <br />*SetOfValues*: "cnn_model", "dcnn_model"   | 
-| opt.text_size       | length of each sample in words      | 
-| opt.confident_threshold | boundary value of belonging to a class  <br />*SetOfValues*: \[0., 1.\]                       | 
-| opt.kernel_sizes_cnn| kernel sizes for shallow-and-wide and deep CNN model        | 
-| opt.filters_cnn     | number(-s) of filters for shallow-and-wide (deep) CNN   | 
-| opt.dense_size      | size of dense layer previous for classifying one    | 
-| opt.lear_rate       | learning rate for training    | 
-| opt.lear_rate_decay | learning rate decay for training          | 
-| opt.optimizer       | optimizer for training    <br />*SetOfValues*: any method from keras.optimizers                         |
-| opt.loss            | loss for training       <br />*SetOfValues*: any method from keras.losses                             |
-| opt.coef_reg_cnn    | coefficient for kernel l2-regularizer for convolutional layers   |
-| opt.coef_reg_den    | coefficient for kernel l2-regularizer for dense layers  |
-| opt.dropout_rate    | dropout rate for training    |
-| **model.embedder**            | instance to produce word vectors |
+| opt                 | *following parameters are for  model* |
+| model_name          | method of the class KerasIntentModel that corresponds to the model <br />*SetOfValues*: "cnn_model", "dcnn_model"   | 
+| text_size           | length of each sample in words      | 
+| confident_threshold | boundary value of belonging to a class  <br />*SetOfValues*: \[0., 1.\]                       | 
+| kernel_sizes_cnn    | kernel sizes for shallow-and-wide and deep CNN model        | 
+| filters_cnn         | number(-s) of filters for shallow-and-wide (deep) CNN   | 
+| dense_size          | size of dense layer previous for classifying one    | 
+| lear_rate           | learning rate for training    | 
+| lear_rate_decay     | learning rate decay for training          | 
+| optimizer           | optimizer for training    <br />*SetOfValues*: any method from keras.optimizers                         |
+| loss                | loss for training       <br />*SetOfValues*: any method from keras.losses                             |
+| coef_reg_cnn        | coefficient for kernel l2-regularizer for convolutional layers   |
+| coef_reg_den        | coefficient for kernel l2-regularizer for dense layers  |
+| dropout_rate        | dropout rate for training    |
+| **model.embedder**  | *instance to produce word vectors* |
 | embedder.name       | registered name of embedder  <br />*SetOfValues*:"fasttext"   |
 | embedder.load_path  | path to file which embedding binary file will be loaded from    |
 | embedder.emb_module | fasttext library to use  <br />*SetOfValues*: "fasttext", "pyfasttext", "gensim"            | 
 | embedder.dim        | dimension of embeddings    | 
-| **model.tokenizer**           | instance to tokenize texts |
+| **model.tokenizer** | *instance to tokenize texts* |
 | tokenizer.name      | registered name of tokenizer <br />*SetOfValues*: "nltk_tokenizer"                              | 
 | tokenizer.tokenizer | tokenizer from nltk.tokenize to use  <br />*SetOfValues*:  any method from nltk.tokenize    |  
-| **train**            | |
+| **train**           | *following parameters are for training* |
 | epochs              | number of epochs for training    |
 | batch_size          | batch size for training    |
 | metrics             | learning metrics for training  <br />*SetOfValues*: any method from from keras.metrics         | 
