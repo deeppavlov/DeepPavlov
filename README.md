@@ -22,7 +22,7 @@ and AI-application developers with:
 
 | Component | Description |
 | --------- | ----------- |
-| [Slot filling component](deeppavlov/models/ner/README.md) | is based on neural Named Entity Recognition network and fuzzy Levenshtein search to extract normalized slot values from the text. The NER network component reproduces architecture from the paper [Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition](https://arxiv.org/pdf/1709.09686.pdf), which is inspired by LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf. |
+| [Slot filling and NER componenst](deeppavlov/models/ner/README.md) | Based on neural Named Entity Recognition network and fuzzy Levenshtein search to extract normalized slot values from the text. The NER component reproduces architecture from the paper [Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition](https://arxiv.org/pdf/1709.09686.pdf), which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf. |
 | [Intent classification component](deeppavlov/models/classifiers/intents/README.md) | Based on shallow-and-wide Convolutional Neural Network architecture from [Kim Y. Convolutional neural networks for sentence classification – 2014](https://arxiv.org/pdf/1408.5882). The model allows multilabel classification of sentences. |
 | [Automatic spelling correction component](deeppavlov/models/spellers/error_model/README.md) | Based on [An Improved Error Model for Noisy Channel Spelling Correction by Eric Brill and Robert C. Moore](http://www.aclweb.org/anthology/P00-1037) and uses statistics based error model, a static dictionary and an ARPA language model to correct spelling errors. |
 | **Skill** |  |
