@@ -251,18 +251,17 @@ You can reuse components in the pipeline to process different parts of data with
 
 There are two abstract classes for trainable components: **Estimator** and **NNModel**.  
 [**Estimators**](deeppavlov/core/models/estimator.py) are fit once on any data with no batching or validation patience,
-so it can be painlessly done at the time of pipeline initialization. A good example of Estimators
-are [vocabs](deeppavlov/core/data/vocab.py). Every Estimator has to implement method `fit`.  
-[**NNModel**](deeppavlov/core/models/nn_model.py) requires a more complex training, it trains on the same data
-it predicts on plus ground truth answers for multiple epochs with periodic validation and logging.
-Every NNModel has to implement `train_on_batch` method.
+so it can be painlessly done at the time of pipeline initialization. [Vocab](deeppavlov/core/data/vocab.py) is a good example of Estimator. `fit` method has to be implemented for each Estimator.  
+[**NNModel**](deeppavlov/core/models/nn_model.py) requires a more complex training. It trains on the same data
+it predicts on and ground truth answers. The process takes multiple epochs with periodic validation and logging.
+`train_on_batch` method has to be implemented for each NNModel.
 
 Training is triggered by `deeppavlov.core.commands.train.train_model_from_config()` function.
 
 ### Train config
 
-Estimators that need to be trained have to also have `fit_on` parameter with a list of names input parameters.
-An NNModel has to have `in_y` parameter with list of names of ground truth answers. For example:
+Estimators that are trained should also have `fit_on` parameter with a list of input parameters's names.
+A NNModel has to have `in_y` parameter with list of ground truth answers's names. For example:
 
 ```json
 [
