@@ -12,11 +12,11 @@ MCQR = {"error_model": {"configs/error_model/config_en.json":
                         "configs/error_model/config_ru.json":
                             ("error_model", "", "")
                         },
-        "go_bot": {"configs/go_bot/config.json":
+        "go_bot": {"configs/go_bot/gobot_dstc2.json":
                        ("go_bot", "", ""),
                    # "configs/go_bot/config_all.json":
                    #     ("go_bot_all", "", ""),
-                   "configs/go_bot/config_minimal.json":
+                   "configs/go_bot/gobot_dstc2_minimal.json":
                        ("go_bot_minimal", "", "")
                    },
         "intents": {"configs/intents/config_dstc2_train.json":
