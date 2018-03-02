@@ -18,11 +18,15 @@ import argparse
 from pathlib import Path
 import sys
 
-p = (Path(__file__) / ".." / "..").resolve()
-sys.path.append(str(p))
+root_path = (Path(__file__) / ".." / "..").resolve()
+sys.path.append(str(root_path))
 
 from deeppavlov.core.data.utils import download, download_decompress
 from deeppavlov.core.data.urls import REQ_URLS, ALL_URLS, EMBEDDING_URLS, DATA_URLS
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 parser = argparse.ArgumentParser()
 
@@ -38,7 +42,7 @@ def download_resources(args):
         urls = REQ_URLS
 
     for url in urls:
-        download_path = Path('../download')
+        download_path = root_path / 'download'
         download_path.mkdir(exist_ok=True)
         dest_path = download_path
 
@@ -59,9 +63,9 @@ def download_resources(args):
 
 def main():
     args = parser.parse_args()
-    print("Downloading...")
+    log.info("Downloading...")
     download_resources(args)
-    print("\nDownload successful!")
+    log.info("\nDownload successful!")
 
 
 if __name__ == "__main__":

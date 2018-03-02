@@ -14,44 +14,82 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import sys
-
-from typing import Dict, Type, TypeVar
+from typing import Dict, Type
 
 from deeppavlov.core.common.registry import REGISTRY
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.models.component import Component
 
-T = TypeVar('T')
+log = get_logger(__name__)
+
+_refs = {}
 
 
-def from_params(cls: Type, params: Dict, **kwargs) -> Type['T']:
+def _resolve(val):
+    if isinstance(val, str) and val.startswith('#'):
+        component_id, *attributes = val[1:].split('.')
+        try:
+            val = _refs[component_id]
+        except KeyError:
+            e = ConfigError('Component with id "{id}" was referenced but not initialized'
+                            .format(id=component_id))
+            log.exception(e)
+            raise e
+        attributes = ['val'] + attributes
+        val = eval('.'.join(attributes))
+    return val
+
+
+def from_params(params: Dict, **kwargs) -> Component:
     # what is passed in json:
-    config_params = {k: v for k, v in params.items() if k != 'name'}
+    config_params = {k: _resolve(v) for k, v in params.items()}
+
+    # get component by reference (if any)
+    if 'ref' in config_params:
+        try:
+            return _refs[config_params['ref']]
+        except KeyError:
+            e = ConfigError('Component with id "{id}" was referenced but not initialized'
+                            .format(id=config_params['ref']))
+            log.exception(e)
+            raise e
+
+    try:
+        cls_name = config_params.pop('name')
+    except KeyError:
+        e = ConfigError('Component config has no `name` nor `ref` fields')
+        log.exception(e)
+        raise e
+    try:
+        cls = REGISTRY[cls_name]
+    except KeyError:
+        e = ConfigError('Class {} is not registered.'.format(cls_name))
+        log.exception(e)
+        raise e
 
     # find the submodels params recursively
     for param_name, subcls_params in config_params.items():
         if isinstance(subcls_params, dict):
-            try:
-                subcls_name = subcls_params['name']
-            except KeyError:
+            if 'name' not in subcls_params and 'ref' not in subcls_params:
                 "This parameter is passed as dict to the class constructor."
-                " The user didn't intent it to be a model."
+                " The user didn't intent it to be a component."
+                for k, v in subcls_params.items():
+                    subcls_params[k] = _resolve(v)
                 continue
-            try:
-                subcls = REGISTRY[subcls_name]
-            except KeyError:
-                raise ConfigError(
-                    "The class {} is not registered. Either register this class,"
-                    " or rename the parameter.".format(
-                        subcls_params['name']))
-            config_params[param_name] = from_params(subcls, subcls_params,
+
+            config_params[param_name] = from_params(subcls_params,
                                                     vocabs=kwargs['vocabs'],
                                                     mode=kwargs['mode'])
 
     try:
-        model = cls(**dict(config_params, **kwargs))
+        component = cls(**dict(config_params, **kwargs))
+        try:
+            _refs[config_params['id']] = component
+        except KeyError:
+            pass
     except Exception:
-        print("Exception in {}".format(cls), file=sys.stderr)
+        log.exception("Exception in {}".format(cls))
         raise
 
-    return model
+    return component

@@ -21,21 +21,22 @@ from pathlib import Path
 import numpy as np
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.models.inferable import Inferable
 from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.models.estimator import Estimator
+
+log = get_logger(__name__)
 
 
 @register('default_vocab')
-class DefaultVocabulary(Trainable, Inferable):
-    def __init__(self, inputs, save_path, load_path, level='token',
+class DefaultVocabulary(Estimator):
+    def __init__(self, save_path, load_path, inputs=None, level='token',
                  special_tokens=tuple(), default_token=None,
-                 tokenize=False, train_now=False, *args, **kwargs):
+                 tokenize=False, *args, **kwargs):
 
         super().__init__(load_path=load_path,
                          save_path=save_path,
-                         train_now=train_now,
                          mode=kwargs['mode'])
 
         self.special_tokens = special_tokens
@@ -49,6 +50,11 @@ class DefaultVocabulary(Trainable, Inferable):
     @staticmethod
     def _build_preprocess_fn(inputs, level, tokenize):
         def iter_level(utter):
+            if isinstance(utter, list) and isinstance(utter[0], dict):
+                utter = ' '.join(u['text'] for u in utter)
+            elif isinstance(utter, dict):
+                utter = utter['text']
+
             if tokenize:
                 utter = utter.split()
             if level == 'token':
@@ -61,13 +67,15 @@ class DefaultVocabulary(Trainable, Inferable):
                                  " or to `char`")
 
         def preprocess_fn(data):
-            for f in inputs:
-                if f == 'x':
-                    yield from iter_level(data[0])
-                elif f == 'y':
-                    yield from iter_level(data[1])
-                else:
-                    yield from iter_level(data[2][f])
+            if inputs is not None:
+                for f in inputs:
+                    if f == 'x':
+                        yield from iter_level(data[0])
+                    elif f == 'y':
+                        yield from iter_level(data[1])
+            else:
+                for d in data:
+                    yield from iter_level(d)
 
         return preprocess_fn
 
@@ -109,16 +117,14 @@ class DefaultVocabulary(Trainable, Inferable):
             self._i2t[i] = token
             self.freqs[token] += 0
 
-    @check_attr_true('train_now')
-    def train(self, data):
+    def fit(self, *args):
         self.reset()
         self._train(
             tokens=filter(None, itertools.chain.from_iterable(
-                map(self.preprocess_fn, data))),
+                map(self.preprocess_fn, zip(*args)))),
             counts=None,
             update=True
         )
-        self.save()
 
     def _train(self, tokens, counts=None, update=True):
         counts = counts or itertools.repeat(1)
@@ -133,11 +139,11 @@ class DefaultVocabulary(Trainable, Inferable):
                 index += 1
             self.freqs[token] += cnt
 
-    def infer(self, samples):
-        return [self.__getitem__(s) for s in samples]
+    def __call__(self, samples, **kwargs):
+        return [self[s] for s in samples]
 
     def save(self):
-        print("[saving vocabulary to `{}`]".format(self.save_path))
+        log.info("[saving vocabulary to {}]".format(self.save_path))
 
         with self.save_path.open('wt') as f:
             for n in range(len(self._t2i)):
@@ -149,7 +155,7 @@ class DefaultVocabulary(Trainable, Inferable):
     def load(self):
         if self.load_path:
             if self.load_path.is_file():
-                print("[loading vocabulary from `{}`]".format(self.load_path))
+                log.info("[loading vocabulary from {}]".format(self.load_path))
                 tokens, counts = [], []
                 for ln in self.load_path.open('r'):
                     token, cnt = ln.split('\t', 1)

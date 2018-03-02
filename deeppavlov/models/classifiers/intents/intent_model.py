@@ -13,11 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
-import sys
-import inspect
-
-from typing import Dict, Type
+from typing import Dict
 import numpy as np
 from keras.layers import Dense, Input, concatenate, Activation
 from keras.layers.convolutional import Conv1D
@@ -36,6 +32,11 @@ from deeppavlov.models.classifiers.intents.utils import labels2onehot, log_metri
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.classifiers.intents.utils import md5_hashsum
 from deeppavlov.models.tokenizers.nltk_tokenizer import NLTKTokenizer
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
+
 
 @register('intent_model')
 class KerasIntentModel(KerasModel):
@@ -43,10 +44,11 @@ class KerasIntentModel(KerasModel):
     Class implements keras model for intent recognition task for multi-class multi-label data
     """
     def __init__(self,
-                 vocabs,
                  opt: Dict,
-                 embedder: Type = FasttextEmbedder,
-                 tokenizer: Type = NLTKTokenizer,
+                 embedder: FasttextEmbedder,
+                 tokenizer: NLTKTokenizer,
+                 classes=None,
+                 vocabs=None,
                  **kwargs):
         """
         Initialize and train vocabularies, initializes embedder, tokenizer,
@@ -69,8 +71,10 @@ class KerasIntentModel(KerasModel):
 
         # Tokenizer and vocabulary of classes
         self.tokenizer = tokenizer
-        self.vocabs = vocabs
-        self.classes = np.sort(np.array(list(self.vocabs["classes_vocab"].keys())))
+        if classes:
+            self.classes = np.sort(np.array(list(classes)))
+        else:
+            self.classes = np.sort(np.array(list(vocabs["classes_vocab"].keys())))
         self.n_classes = self.classes.shape[0]
 
         if 'add_metrics' in self.opt.keys():
@@ -149,25 +153,15 @@ class KerasIntentModel(KerasModel):
         Returns:
             array of embedded texts
         """
-        embeddings_batch = []
-        for sen in sentences:
-            tokens = [el for el in sen.split() if el]
-            if len(tokens) > self.opt['text_size']:
-                tokens = tokens[:self.opt['text_size']]
+        pad = np.zeros(self.opt['embedding_size'])
 
-            embeddings = self.fasttext_model.infer(' '.join(tokens))
-            if len(tokens) < self.opt['text_size']:
-                pads = [np.zeros(self.opt['embedding_size'])
-                        for _ in range(self.opt['text_size'] - len(tokens))]
-                embeddings = pads + embeddings
-
-            embeddings = np.asarray(embeddings)
-            embeddings_batch.append(embeddings)
+        embeddings_batch = self.fasttext_model([' '.join(sen.split()[:self.opt['text_size']]) for sen in sentences])
+        embeddings_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + tokens for tokens in embeddings_batch]
 
         embeddings_batch = np.asarray(embeddings_batch)
         return embeddings_batch
 
-    def train_on_batch(self, batch):
+    def train_on_batch(self, texts, labels):
         """
         Train the model on the given batch
         Args:
@@ -176,8 +170,7 @@ class KerasIntentModel(KerasModel):
         Returns:
             loss and metrics values on the given batch
         """
-        texts = self.tokenizer.infer(instance=list(batch[0]))
-        labels = list(batch[1])
+        texts = self.tokenizer(list(texts))
         features = self.texts2vec(texts)
         onehot_labels = labels2onehot(labels, classes=self.classes)
         metrics_values = self.model.train_on_batch(features, onehot_labels)
@@ -194,7 +187,7 @@ class KerasIntentModel(KerasModel):
             loss and metrics values on the given batch, if labels are given
             predictions, otherwise
         """
-        texts = self.tokenizer.infer(instance=batch)
+        texts = self.tokenizer(batch)
         if labels:
             features = self.texts2vec(texts)
             onehot_labels = labels2onehot(labels, classes=self.classes)
@@ -205,79 +198,11 @@ class KerasIntentModel(KerasModel):
             predictions = self.model.predict(features)
             return predictions
 
-    @check_attr_true('train_now')
-    def train(self, dataset, *args, **kwargs):
-        """
-        Train the model using batches and validation
-        Args:
-            dataset: instance of class Dataset
-
-        Returns:
-            None
-        """
-        updates = 0
-        val_loss = 1e100
-        val_increase = 0
-        epochs_done = 0
-
-        n_train_samples = len(dataset.data['train'])
-
-        valid_iter_all = dataset.iter_all(data_type='valid')
-        valid_x = []
-        valid_y = []
-        for valid_i, valid_sample in enumerate(valid_iter_all):
-            valid_x.append(valid_sample[0])
-            valid_y.append(valid_sample[1])
-
-        valid_x = self.texts2vec(valid_x)
-        valid_y = labels2onehot(valid_y, classes=self.classes)
-
-        print('\n____Training over {} samples____\n\n'.format(n_train_samples))
-
-        try:
-            while epochs_done < self.opt['epochs']:
-                batch_gen = dataset.batch_generator(batch_size=self.opt['batch_size'],
-                                                    data_type='train')
-                for step, batch in enumerate(batch_gen):
-                    metrics_values = self.train_on_batch(batch)
-                    updates += 1
-
-                    if self.opt['verbose'] and step % 50 == 0:
-                        log_metrics(names=self.metrics_names,
-                                    values=metrics_values,
-                                    updates=updates,
-                                    mode='train')
-
-                epochs_done += 1
-                if epochs_done % self.opt['val_every_n_epochs'] == 0:
-                    if 'valid' in dataset.data.keys():
-                        valid_metrics_values = self.model.test_on_batch(x=valid_x, y=valid_y)
-
-                        log_metrics(names=self.metrics_names,
-                                    values=valid_metrics_values,
-                                    mode='valid')
-                        if valid_metrics_values[0] > val_loss:
-                            val_increase += 1
-                            print("__Validation impatience {} out of {}".format(
-                                val_increase, self.opt['val_patience']))
-                            if val_increase == self.opt['val_patience']:
-                                print("___Stop training: validation is out of patience___")
-                                break
-                        else:
-                            val_increase = 0
-                            val_loss = valid_metrics_values[0]
-                print('epochs_done: {}'.format(epochs_done))
-        except KeyboardInterrupt:
-            print('Interrupted', file=sys.stderr)
-
-        self.save()
-
-    def infer(self, data, predict_proba=False, *args):
+    def __call__(self, data, predict_proba=False, *args):
         """
         Infer on the given data
         Args:
-            data: single sentence or [list of sentences, list of labels] or
-                    [list of sentences] or generator of sentences
+            data: [list of sentences]
             predict_proba: whether to return probabilities distribution or only labels-predictions
             *args:
 
@@ -286,24 +211,7 @@ class KerasIntentModel(KerasModel):
                 vector of probabilities to belong with each class
                 or list of labels sentence belongs with
         """
-        if type(data) is str:
-            preds = self.infer_on_batch([data])[0]
-            preds = np.array(preds)
-            if predict_proba:
-                return preds
-            else:
-                return proba2labels([preds], confident_threshold=self.confident_threshold, classes=self.classes)[0]
-
-        elif inspect.isgeneratorfunction(data):
-            preds = []
-            for step, batch in enumerate(data):
-                preds.extend(self.infer_on_batch(batch))
-            preds = np.array(preds)
-        elif type(data) is list:
-            preds = self.infer_on_batch(data)
-            preds = np.array(preds)
-        else:
-            raise ConfigError("Not understand data type for inference")
+        preds = np.array(self.infer_on_batch(data))
 
         if predict_proba:
             return preds

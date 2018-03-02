@@ -16,7 +16,6 @@ limitations under the License.
 
 from abc import abstractmethod
 from pathlib import Path
-from warnings import warn
 
 import tensorflow as tf
 import keras.metrics
@@ -28,14 +27,16 @@ from keras import backend as K
 from keras.models import Model
 from keras.layers import Dense, Input
 
-from deeppavlov.core.models.trainable import Trainable
-from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.common.attributes import check_attr_true
+from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.file import save_json, read_json
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.log import get_logger
 
 
-class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
+log = get_logger(__name__)
+
+
+class KerasModel(NNModel, metaclass=TfModelMeta):
     """
     Class builds keras model with tensorflow backend
     """
@@ -51,12 +52,10 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         self.opt = opt
         save_path = kwargs.get('save_path', None)
         load_path = kwargs.get('load_path', None)
-        train_now = self.opt.get('train_now', False)
         url = self.opt.get('url', None)
 
         super().__init__(save_path=save_path,
                          load_path=load_path,
-                         train_now=train_now,
                          url=url,
                          mode=kwargs['mode'])
 
@@ -97,8 +96,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         Returns:
             compiled model with given network and learning parameters
         """
-        print("\n:: initializing `{}` from scratch\n"\
-              .format(self.__class__.__name__))
+        log.info("[initializing `{}` from scratch]".format(self.__class__.__name__))
 
         model_func = getattr(self, model_name, None)
         if callable(model_func):
@@ -171,18 +169,17 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
 
             if opt_path.exists() and weights_path.exists():
 
-                print("\n:: initializing `{}` from saved\n"\
-                      .format(self.__class__.__name__))
+                log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
 
                 self.opt = read_json(opt_path)
-            
+
                 model_func = getattr(self, model_name, None)
                 if callable(model_func):
                     model = model_func(params=self.opt)
                 else:
                     raise AttributeError("Model {} is not defined".format(model_name))
 
-                print("[ loading weights from `{}` ]".format(weights_path.name))
+                log.info("[loading weights from {}]".format(weights_path.name))
                 model.load_weights(str(weights_path))
 
                 optimizer_func = getattr(keras.optimizers, optimizer_name, None)
@@ -228,7 +225,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                                                     weighted_metrics=weighted_metrics,
                                                     target_tensors=target_tensors)
         else:
-            warn("No `load_path` is provided for {}".format(self.__class__.__name__))
+            log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
             return self.init_model_from_scratch(model_name, optimizer_name,
                                                 lr, decay, loss_name, metrics_names=metrics_names,
                                                 add_metrics_file=add_metrics_file,
@@ -236,31 +233,6 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
                                                 sample_weight_mode=sample_weight_mode,
                                                 weighted_metrics=weighted_metrics,
                                                 target_tensors=target_tensors)
-
-    @abstractmethod
-    def train_on_batch(self, batch):
-        """
-        Train the model on a single batch of data
-        Args:
-            batch: tuple of (x,y) where x, y - lists of samples and their labels
-
-        Returns:
-            metrics values on a given batch
-        """
-        pass
-
-    @abstractmethod
-    @check_attr_true('train_now')
-    def train(self, dataset, *args):
-        """
-        Train the model on a given data as a single batch
-        Args:
-            dataset: dataset instance
-
-        Returns:
-            metrics values on a given data
-        """
-        pass
 
     @overrides
     def save(self, fname=None):
@@ -280,7 +252,7 @@ class KerasModel(Trainable, Inferable, metaclass=TfModelMeta):
         else:
             opt_path = "{}_opt.json".format(str(self.save_path.resolve()))
             weights_path = "{}.h5".format(str(self.save_path.resolve()))
-            print("[ saving model: {} ]".format(opt_path))
+            log.info("[saving model to {}]".format(opt_path))
             self.model.save_weights(weights_path)
 
         save_json(self.opt, opt_path)

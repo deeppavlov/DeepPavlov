@@ -18,6 +18,10 @@ from sklearn.model_selection import train_test_split
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset import Dataset
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 @register('classification_dataset')
@@ -50,8 +54,8 @@ class ClassificationDataset(Dataset):
 
         if fields_to_merge is not None:
             if merged_field is not None:
-                print("Merging fields <<{}>> to new field <<{}>>".format(fields_to_merge,
-                                                                         merged_field))
+                log.info("Merging fields <<{}>> to new field <<{}>>".format(fields_to_merge,
+                                                                            merged_field))
                 self._merge_data(fields_to_merge=fields_to_merge,
                                  merged_field=merged_field)
             else:
@@ -59,8 +63,8 @@ class ClassificationDataset(Dataset):
 
         if field_to_split is not None:
             if split_fields is not None:
-                print("Splitting field <<{}>> to new fields <<{}>>".format(field_to_split,
-                                                                           split_fields))
+                log.info("Splitting field <<{}>> to new fields <<{}>>".format(field_to_split,
+                                                                              split_fields))
                 self._split_data(field_to_split=field_to_split,
                                  split_fields=split_fields,
                                  split_proportions=[float(s) for s in

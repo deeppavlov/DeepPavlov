@@ -15,17 +15,12 @@ limitations under the License.
 """
 
 from collections import defaultdict
-from overrides import overrides
-from pathlib import Path
-from warnings import warn
 
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer
 
-from deeppavlov.core.common.attributes import check_attr_true
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.tf_model import SimpleTFModel
+from deeppavlov.core.common.log import get_logger
 from deeppavlov.models.ner.layers import character_embedding_network
 from deeppavlov.models.ner.layers import embedding_layer
 from deeppavlov.models.ner.layers import highway_convolutional_network
@@ -33,15 +28,18 @@ from deeppavlov.models.ner.layers import stacked_convolutions
 from deeppavlov.models.ner.layers import stacked_rnn
 from deeppavlov.models.ner.evaluation import precision_recall_f1
 
+
 SEED = 42
 MODEL_FILE_NAME = 'ner_model'
 
+log = get_logger(__name__)
 
-@register("ner_tagging_network")
-class NerNetwork(SimpleTFModel):
+
+class NerNetwork:
     def __init__(self,
-                 vocabs,
-                 save_path,
+                 word_vocab,
+                 char_vocab,
+                 tag_vocab,
                  n_filters=(128, 256),
                  filter_width=3,
                  token_embeddings_dim=128,
@@ -57,23 +55,14 @@ class NerNetwork(SimpleTFModel):
                  char_filter_width=5,
                  verbouse=False,
                  embeddings_onethego=False,
-                 train_now=False,
-                 load_path=None,
-                 **kwargs):
+                 sess=None):
 
-        super().__init__(save_path=save_path,
-                         load_path=load_path,
-                         train_now=train_now,
-                         mode=kwargs['mode'])
-
-        n_tags = len(vocabs['tag_vocab'])
-        n_tokens = len(vocabs['token_vocab'])
-        n_chars = len(vocabs['char_vocab'])
-
+        n_tags = len(tag_vocab)
+        n_tokens = len(word_vocab)
+        n_chars = len(char_vocab)
         # Create placeholders
         if embeddings_onethego:
-            x_word = tf.placeholder(dtype=tf.float32, shape=[None, None, token_embeddings_dim],
-                                    name='x_word')
+            x_word = tf.placeholder(dtype=tf.float32, shape=[None, None, token_embeddings_dim], name='x_word')
         else:
             x_word = tf.placeholder(dtype=tf.int32, shape=[None, None], name='x_word')
         x_char = tf.placeholder(dtype=tf.int32, shape=[None, None, None], name='x_char')
@@ -88,8 +77,7 @@ class NerNetwork(SimpleTFModel):
         # Embeddings
         if not embeddings_onethego:
             with tf.variable_scope('Embeddings'):
-                w_emb = embedding_layer(x_word, n_tokens=n_tokens,
-                                        token_embedding_dim=token_embeddings_dim)
+                w_emb = embedding_layer(x_word, n_tokens=n_tokens, token_embedding_dim=token_embeddings_dim)
                 if use_char_embeddins:
                     c_emb = character_embedding_network(x_char,
                                                         n_characters=n_chars,
@@ -138,23 +126,21 @@ class NerNetwork(SimpleTFModel):
             predictions = None
         else:
             ground_truth_labels = tf.one_hot(y_true, n_tags)
-            loss_tensor = tf.nn.softmax_cross_entropy_with_logits(labels=ground_truth_labels,
-                                                                  logits=logits)
+            loss_tensor = tf.nn.softmax_cross_entropy_with_logits(labels=ground_truth_labels, logits=logits)
             loss_tensor = loss_tensor * mask_ph
             predictions = tf.argmax(logits, axis=-1)
 
         loss = tf.reduce_mean(loss_tensor)
 
         # Initialize session
-        sess = tf.Session()
-        if verbouse:
-            self.print_number_of_parameters()
+        if sess is None:
+            sess = tf.Session()
         if logging:
             self.train_writer = tf.summary.FileWriter('summary', sess.graph)
 
-        self.token_vocab = vocabs['token_vocab']
-        self.tag_vocab = vocabs['tag_vocab']
-        self.char_vocab = vocabs['char_vocab']
+        self.token_vocab = word_vocab
+        self.tag_vocab = tag_vocab
+        self.char_vocab = char_vocab
         self._use_crf = use_crf
         self.summary = tf.summary.merge_all()
         self._x_w = x_word
@@ -176,33 +162,9 @@ class NerNetwork(SimpleTFModel):
         self._train_op = self.get_train_op(loss, learning_rate_ph)
         self._embeddings_onethego = embeddings_onethego
         self._entity_of_interest = entity_of_interest
-        self.verbouse = verbouse
+        self.verbose = verbouse
         self._mask = mask_ph
-
         sess.run(tf.global_variables_initializer())
-
-    def save(self):
-        save_path = str(self.save_path)
-        saver = tf.train.Saver()
-        print('[ saving model to `{}` ]'.format(save_path))
-        saver.save(self._sess, save_path)
-
-    @overrides
-    def load(self):
-        if self.load_path:
-            if isinstance(self.load_path, Path) and self.load_path.parent.is_dir():
-                if tf.train.get_checkpoint_state(self.load_path.parent) is not None:
-                    print("\n:: initializing `{}` from saved"\
-                          .format(self.__class__.__name__))
-                    saver = tf.train.Saver()
-                    print('\n:: restoring checkpoint from {}\n'.format(str(self.load_path)))
-                    saver.restore(self._sess, str(self.load_path))
-                else:
-                    warn("Provided `load_path` is empty! Won't restore from checkpoint.")
-            else:
-                warn("Provided `load_path` is incorrect!")
-        else:
-            warn("No `load_path` is provided for {}".format(self.__class__.__name__))
 
     def tokens_batch_to_numpy_batch(self, batch_x, batch_y=None):
         # Determine dimensions
@@ -211,8 +173,7 @@ class NerNetwork(SimpleTFModel):
         max_token_len = max([len(token) for utt in batch_x for token in utt])
 
         x_token = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_vocab['<PAD>']
-        x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * \
-                 self.char_vocab['<PAD>']
+        x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * self.char_vocab['<PAD>']
         mask = np.zeros_like(x_token)
         if batch_y is not None:
             y = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.tag_vocab['<PAD>']
@@ -234,13 +195,13 @@ class NerNetwork(SimpleTFModel):
         return (x_token, x_char, mask), y
 
     def eval_conll(self, data, print_results=True, short_report=True, data_type=None):
-        y_true_list = list()
-        y_pred_list = list()
+        y_true_list = []
+        y_pred_list = []
         if data_type is not None:
-            print('Eval on {}:'.format(data_type))
+            log.info('Eval on {}:'.format(data_type))
         for x, y_gt in data:
             (x_token, x_char, mask), y = self.tokens_batch_to_numpy_batch([x])
-            y_pred = self.predict(x_token, x_char, mask)
+            y_pred = self._predict(x_token, x_char, mask)
             y_pred = self.tag_vocab.batch_idxs2batch_toks(y_pred)
             for tags_pred, tags_gt in zip(y_pred, [y_gt]):
                 for tag_predicted, tag_ground_truth in zip(tags_pred, tags_gt):
@@ -253,87 +214,37 @@ class NerNetwork(SimpleTFModel):
                                    print_results,
                                    short_report)
 
-    @check_attr_true('train_now')
-    def train(self, data, batch_size=8):
+    def train(self, data, batch_size=8, learning_rate=1e-3, dropout_rate=0.5):
         total_loss = 0
         total_count = 0
-        for batch_x, batch_y in data.batch_generator(batch_size):
-            (x_toks, x_char, mask), y_tags = self.tokens_batch_to_numpy_batch(batch_x, batch_y)
-            current_loss = self.train_on_bath(x_toks,
-                                              x_char,
-                                              mask,
-                                              y_tags,
-                                              learning_rate=1e-3,
-                                              dropout_rate=0.5)
+        for batch in data.batch_generator(batch_size):
+            current_loss = self.train_on_batch(batch,
+                                               learning_rate=learning_rate,
+                                               dropout_rate=dropout_rate)
             total_loss += current_loss
-            total_count += len(batch_x)
+            # Add len of x
+            total_count += len(batch[0])
 
-    @check_attr_true('train_now')
-    def train_on_bath(self, x_word, x_char, mask, y_tag, learning_rate=1e-3, dropout_rate=0.5):
-        feed_dict = self._fill_feed_dict(x_word,
+    def train_on_batch(self, batch_x, batch_y, learning_rate=1e-3, dropout_rate=0.5):
+        (x_toks, x_char, mask), y_tags = self.tokens_batch_to_numpy_batch(batch_x, batch_y)
+        feed_dict = self._fill_feed_dict(x_toks,
                                          x_char,
                                          mask,
-                                         y_tag,
+                                         y_tags,
                                          learning_rate,
                                          dropout_rate=dropout_rate,
                                          training=True)
         loss, _ = self._sess.run([self._loss, self._train_op], feed_dict=feed_dict)
         return loss
 
-    @staticmethod
-    def print_number_of_parameters():
-        print('Number of parameters: ')
-        vars = tf.trainable_variables()
-        blocks = defaultdict(int)
-        for var in vars:
-            # Get the top level scope name of variable
-            block_name = var.name.split('/')[0]
-            number_of_parameters = np.prod(var.get_shape().as_list())
-            blocks[block_name] += number_of_parameters
-        for block_name in blocks:
-            print(block_name, blocks[block_name])
-        total_num_parameters = np.sum(list(blocks.values()))
-        print('Total number of parameters equal {}'.format(total_num_parameters))
+    def predict_on_batch(self, x_batch):
+        (x_toks, x_char, mask), _ = self.tokens_batch_to_numpy_batch(x_batch)
+        y_pred = self._predict(x_toks, x_char, mask)
+        # TODO: add padding filtering
+        y_pred_tags = self.tag_vocab.batch_idxs2batch_toks(y_pred)
+        return y_pred_tags
 
-    def fit(self, batch_gen=None, batch_size=32, learning_rate=1e-3, epochs=1, dropout_rate=0.5,
-            learning_rate_decay=1):
-        for epoch in range(epochs):
-            count = 0
-            if self.verbouse:
-                print('Epoch {}'.format(epoch))
-            if batch_gen is None:
-                batch_generator = self.corpus.batch_generator(batch_size, dataset_type='train')
-            for (x_word, x_char), y_tag in batch_generator:
-
-                feed_dict = self._fill_feed_dict(x_word,
-                                                 x_char,
-                                                 y_tag,
-                                                 learning_rate,
-                                                 dropout_rate=dropout_rate,
-                                                 training=True)
-                if self._logging:
-                    summary, _ = self._sess.run([self.summary, self._train_op], feed_dict=feed_dict)
-                    self.train_writer.add_summary(summary)
-
-                self._sess.run(self._train_op, feed_dict=feed_dict)
-                count += len(x_word)
-            if self.verbouse:
-                self.eval_conll('valid', print_results=True)
-            self.save()
-
-        if self.verbouse:
-            self.eval_conll(dataset_type='train', short_report=False)
-            self.eval_conll(dataset_type='valid', short_report=False)
-            results = self.eval_conll(dataset_type='test', short_report=False)
-        else:
-            results = self.eval_conll(dataset_type='test', short_report=True)
-        return results
-
-    @overrides
-    def infer(self, instance, *args, **kwargs):
-        return self.predict_for_token_batch([instance])
-
-    def predict(self, x_word, x_char, mask=None):
+    def _predict(self, x_word, x_char, mask=None):
 
         feed_dict = self._fill_feed_dict(x_word, x_char, mask, training=False)
         if self._use_crf:
@@ -353,6 +264,42 @@ class NerNetwork(SimpleTFModel):
             y_pred = self._sess.run(self._y_pred, feed_dict=feed_dict)
         return y_pred
 
+    def fit(self, batch_gen=None, batch_size=32, learning_rate=1e-3, epochs=1, dropout_rate=0.5, learning_rate_decay=1):
+        for epoch in range(epochs):
+            count = 0
+            if self.verbose:
+                log.info('Epoch {}'.format(epoch))
+            if batch_gen is None:
+                batch_generator = self.corpus.batch_generator(batch_size, dataset_type='train')
+            for (x_word, x_char), y_tag in batch_generator:
+
+                feed_dict = self._fill_feed_dict(x_word,
+                                                 x_char,
+                                                 y_tag,
+                                                 learning_rate,
+                                                 dropout_rate=dropout_rate,
+                                                 training=True)
+                if self._logging:
+                    summary, _ = self._sess.run([self.summary, self._train_op], feed_dict=feed_dict)
+                    self.train_writer.add_summary(summary)
+
+                self._sess.run(self._train_op, feed_dict=feed_dict)
+                count += len(x_word)
+            if self.verbose:
+                self.eval_conll('valid', print_results=True)
+            self.save()
+
+        if self.verbose:
+            self.eval_conll(dataset_type='train', short_report=False)
+            self.eval_conll(dataset_type='valid', short_report=False)
+            results = self.eval_conll(dataset_type='test', short_report=False)
+        else:
+            results = self.eval_conll(dataset_type='test', short_report=True)
+        return results
+
+    def infer(self, instance, *args, **kwargs):
+        return self.predict_for_token_batch([instance])
+
     def _fill_feed_dict(self,
                         x_w,
                         x_c,
@@ -361,7 +308,7 @@ class NerNetwork(SimpleTFModel):
                         learning_rate=None,
                         training=False,
                         dropout_rate=1):
-        feed_dict = dict()
+        feed_dict = {}
         feed_dict[self._x_w] = x_w
         feed_dict[self._x_c] = x_c
         feed_dict[self._training_ph] = training
@@ -392,7 +339,7 @@ class NerNetwork(SimpleTFModel):
     def get_trainable_variables(trainable_scope_names=None):
         vars = tf.trainable_variables()
         if trainable_scope_names is not None:
-            vars_to_train = list()
+            vars_to_train = []
             for scope_name in trainable_scope_names:
                 for var in vars:
                     if var.name.startswith(scope_name):
@@ -408,8 +355,7 @@ class NerNetwork(SimpleTFModel):
         max_token_len = max([len(token) for utt in tokens_batch for token in utt])
         # Prepare numpy arrays
         x_token = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_vocab['<PAD>']
-        x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * \
-                 self.char_vocab['<PAD>']
+        x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * self.char_vocab['<PAD>']
         mask = np.zeros([batch_size, max_utt_len], dtype=np.int32)
         # Prepare x batch
         for n, utterance in enumerate(tokens_batch):
@@ -417,7 +363,6 @@ class NerNetwork(SimpleTFModel):
             x_token[n, :len(utterance)] = self.token_vocab.toks2idxs(utterance)
             for k, token in enumerate(utterance):
                 x_char[n, k, :len(token)] = self.char_vocab.toks2idxs(token)
-
         feed_dict = self._fill_feed_dict(x_token, x_char, mask)
         if self._use_crf:
             y_pred = []
@@ -437,14 +382,41 @@ class NerNetwork(SimpleTFModel):
 
         return self.tag_vocab.batch_idxs2batch_toks(y_pred)
 
-    def get_train_op(self, loss, learning_rate, learnable_scopes=None):
+    def shutdown(self):
+        self._sess.close()
+
+    def save(self, model_file_path):
+        """
+        Save model to model_file_path
+        """
+        saver = tf.train.Saver()
+        saver.save(self._sess, str(model_file_path))
+
+    def load(self, model_file_path):
+        """
+        Load model from the model_file_path
+        """
+        saver = tf.train.Saver()
+        saver.restore(self._sess, str(model_file_path))
+
+    def get_train_op(self, loss, learning_rate, learnable_scopes=None, optimizer=None):
+        """ Get train operation for given loss
+
+        Args:
+            loss: loss, tf tensor or scalar
+            learning_rate: scalar or placeholder
+            learnable_scopes: which scopes are trainable (None for all)
+            optimizer: instance of tf.train.Optimizer, default Adam
+
+        Returns:
+            train_op
+        """
         variables = self.get_trainable_variables(learnable_scopes)
+        if optimizer is None:
+            optimizer = tf.train.AdamOptimizer
 
         # For batch norm it is necessary to update running averages
         extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(extra_update_ops):
-            train_op = tf.train.AdamOptimizer(learning_rate).minimize(loss, var_list=variables)
+            train_op = optimizer(learning_rate).minimize(loss, var_list=variables)
         return train_op
-
-    def shutdown(self):
-        self._sess.close()

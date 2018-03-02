@@ -17,7 +17,10 @@ limitations under the License.
 import random
 from typing import List, Dict, Generator, Tuple, Any
 
+from deeppavlov.core.common.registry import register
 
+
+@register('basic_dataset')
 class Dataset:
     def split(self, *args, **kwargs):
         pass
@@ -68,6 +71,10 @@ class Dataset:
 
         data = self.data[data_type]
         data_len = len(data)
+
+        if data_len == 0:
+            return
+
         order = list(range(data_len))
         if shuffle:
             rs = random.getstate()
@@ -76,10 +83,13 @@ class Dataset:
             self.random_state = random.getstate()
             random.setstate(rs)
 
-        for i in range((data_len - 1) // batch_size + 1):
-            yield list(zip(*[data[o] for o in order[i * batch_size:(i + 1) * batch_size]]))
+        if batch_size < 0:
+            batch_size = data_len
 
-    def iter_all(self, data_type: str = 'train') -> Generator:
+        for i in range((data_len - 1) // batch_size + 1):
+            yield tuple(zip(*[data[o] for o in order[i * batch_size:(i + 1) * batch_size]]))
+
+    def iter_all(self, data_type: str = 'train') -> tuple:
         r"""Iterate through all data. It can be used for building dictionary or
         Args:
             data_type (str): can be either 'train', 'test', or 'valid'
@@ -87,5 +97,4 @@ class Dataset:
             samples_gen: a generator, that iterates through the all samples in the selected data type of the dataset
         """
         data = self.data[data_type]
-        for x, y in data:
-            yield (x, y)
+        return tuple(zip(*data))

@@ -17,13 +17,14 @@ limitations under the License.
 import numpy as np
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.inferable import Inferable
+from deeppavlov.core.models.component import Component
 
 
 @register('bow')
-class BoW_encoder(Inferable):
-    def __init__(self, save_path=None, **kwargs):
-        super().__init__(save_path=save_path)
+class BoWEncoder(Component):
+
+    def __init__(self, *args, **kwargs):
+        pass
 
     def _encode(self, utterance, vocab):
         bow = np.zeros([len(vocab)], dtype=np.int32)
@@ -33,5 +34,5 @@ class BoW_encoder(Inferable):
                 bow[idx] += 1
         return bow
 
-    def infer(self, utterance, vocab):
-        return self._encode(utterance, vocab)
+    def __call__(self, batch, vocab, *args):
+        return [self._encode(utterance, vocab) for utterance in batch]

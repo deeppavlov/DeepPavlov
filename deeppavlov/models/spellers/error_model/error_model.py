@@ -19,28 +19,26 @@ import itertools
 from collections import defaultdict, Counter
 from heapq import heappop, heappushpop, heappush
 from math import log, exp
-from pathlib import Path
 
 import kenlm
 from tqdm import tqdm
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.inferable import Inferable
-from deeppavlov.core.models.trainable import Trainable
+from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.vocabs.typos import StaticDictionary
-from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.log import get_logger
+
+
+logger = get_logger(__name__)
 
 
 @register('spelling_error_model')
-class ErrorModel(Inferable, Trainable):
-    def __init__(self, dictionary: StaticDictionary, save_path, load_path=None, window=1,
-                 lm_file=None, train_now=False, **kwargs):
+class ErrorModel(Estimator):
+    def __init__(self, dictionary: StaticDictionary, window=1, lm_file=None, *args, **kwargs):
 
-        super().__init__(load_path=load_path,
-                         save_path=save_path,
-                         train_now=train_now,
-                         mode=kwargs['mode'])
+        super().__init__(*args, **kwargs)
         self.costs = defaultdict(itertools.repeat(float('-inf')).__next__)
         self.dictionary = dictionary
         self.window = window
@@ -51,16 +49,17 @@ class ErrorModel(Inferable, Trainable):
         self.costs[('', '')] = log(1)
         self.costs[('⟬', '⟬')] = log(1)
         self.costs[('⟭', '⟭')] = log(1)
+
         for c in self.dictionary.alphabet:
             self.costs[(c, c)] = log(1)
         # if self.ser_path.is_file():
         self.load()
 
         if lm_file:
-            self.lm = kenlm.Model(lm_file)
+            self.lm = kenlm.Model(str(expand_path(lm_file)))
             self.beam_size = 4
             self.candidates_count = 4
-            self.infer = self._infer_lm
+            self._infer_instance = self._infer_instance_lm
 
     def _find_candidates_window_0(self, word, k=1, prop_threshold=1e-6):
         threshold = log(prop_threshold)
@@ -126,7 +125,7 @@ class ErrorModel(Inferable, Trainable):
         return [(w.strip('⟬⟭'), score) for score, w in sorted(candidates, reverse=True) if
                 score > threshold]
 
-    def infer(self, instance: str, *args, **kwargs):
+    def _infer_instance(self, instance: str):
         corrected = []
         for incorrect in instance.split():
             if any([c not in self.dictionary.alphabet for c in incorrect]):
@@ -136,7 +135,7 @@ class ErrorModel(Inferable, Trainable):
                 corrected.append(res[0][0] if res else incorrect)
         return ' '.join(corrected)
 
-    def _infer_lm(self, instance: str, *args, **kwargs):
+    def _infer_instance_lm(self, instance: str, *args, **kwargs):
         candidates = []
         for incorrect in instance.split():
             if any([c not in self.dictionary.alphabet for c in incorrect]):
@@ -164,6 +163,13 @@ class ErrorModel(Inferable, Trainable):
         score, state, words = beam[0]
         return ' '.join(words[:-1])
 
+    def __call__(self, data, *args, **kwargs):
+        if isinstance(data, str):
+            return self._infer_instance(data)
+        if len(data) > 1:
+            data = tqdm(data, desc='Infering a batch with the error model', leave=False)
+        return [self._infer_instance(instance) for instance in data]
+
     def reset(self):
         pass
 
@@ -188,13 +194,12 @@ class ErrorModel(Inferable, Trainable):
 
         return d[-1][-1]
 
-    @check_attr_true('train_now')
-    def train(self, dataset, *args, **kwargs):
+    def fit(self, x, y):
         changes = []
         entries = []
-        dataset = list(dataset.iter_all())
+        data = list(zip(x, y))
         window = 4
-        for error, correct in tqdm(dataset, desc='Training the error model'):
+        for error, correct in tqdm(data, desc='Training the error model'):
             correct = '⟬{}⟭'.format(correct)
             error = '⟬{}⟭'.format(error)
             d, ops = self._distance_edits(correct, error)
@@ -220,10 +225,8 @@ class ErrorModel(Inferable, Trainable):
             p = c / e
             self.costs[(w, s)] = log(p)
 
-        self.save()
-
     def save(self):
-        print("[saving error_model to `{}`]".format(self.save_path))
+        logger.info("[saving error_model to `{}`]".format(self.save_path))
 
         with open(self.save_path, 'w', newline='') as tsv_file:
             writer = csv.writer(tsv_file, delimiter='\t')
@@ -233,14 +236,13 @@ class ErrorModel(Inferable, Trainable):
     def load(self):
         if self.load_path:
             if self.load_path.is_file():
-                print("[loading error_model from `{}`]".format(self.load_path))
+                logger.info("loading error_model from `{}`".format(self.load_path))
                 with open(self.load_path, 'r', newline='') as tsv_file:
                     reader = csv.reader(tsv_file, delimiter='\t')
                     for w, s, p in reader:
                         self.costs[(w, s)] = log(float(p))
-            elif isinstance(self.load_path, Path):
-                if not self.load_path.parent.is_dir():
-                    raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
-                        self.__class__.__name__))
+            elif not self.load_path.parent.is_dir():
+                raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
+                    self.__class__.__name__))
         else:
-            raise ConfigError("`load_path` for {} is not provided!".format(self))
+            logger.info('No load_path provided, initializing error model from scratch')

@@ -1,1 +1,1 @@
-USR_PATH = ''
+deeppavlov_root = ''
