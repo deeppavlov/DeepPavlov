@@ -31,13 +31,12 @@ log = get_logger(__name__)
 
 @register('default_vocab')
 class DefaultVocabulary(Estimator):
-    def __init__(self, inputs, save_path, load_path, level='token',
+    def __init__(self, save_path, load_path, inputs=None, level='token',
                  special_tokens=tuple(), default_token=None,
-                 tokenize=False, train_now=False, *args, **kwargs):
+                 tokenize=False, *args, **kwargs):
 
         super().__init__(load_path=load_path,
                          save_path=save_path,
-                         train_now=train_now,
                          mode=kwargs['mode'])
 
         self.special_tokens = special_tokens
@@ -68,13 +67,15 @@ class DefaultVocabulary(Estimator):
                                  " or to `char`")
 
         def preprocess_fn(data):
-            for f in inputs:
-                if f == 'x':
-                    yield from iter_level(data[0])
-                elif f == 'y':
-                    yield from iter_level(data[1])
-                else:
-                    yield from iter_level(data[2][f])
+            if inputs is not None:
+                for f in inputs:
+                    if f == 'x':
+                        yield from iter_level(data[0])
+                    elif f == 'y':
+                        yield from iter_level(data[1])
+            else:
+                for d in data:
+                    yield from iter_level(d)
 
         return preprocess_fn
 
@@ -116,12 +117,11 @@ class DefaultVocabulary(Estimator):
             self._i2t[i] = token
             self.freqs[token] += 0
 
-    @check_attr_true('train_now')
-    def fit(self, x, y):
+    def fit(self, *args):
         self.reset()
         self._train(
             tokens=filter(None, itertools.chain.from_iterable(
-                map(self.preprocess_fn, zip(x, y)))),
+                map(self.preprocess_fn, zip(*args)))),
             counts=None,
             update=True
         )

@@ -2,7 +2,7 @@
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 
 # <center>DeepPavlov</center>
-### *We are in a really early Alfa release. You have to be ready for hard adventures.*
+### *We are in a really early Alpha release. You have to be ready for hard adventures.*
 An open-source conversational AI library, built on TensorFlow and Keras, and designed for
  * NLP and dialog systems research
  * implementation and evaluation of complex conversational systems
@@ -33,7 +33,7 @@ and AI-application developers with:
 
 View video demo of deploy goal-oriented bot and slot-filling model with Telegram UI
 
-[![Alt text for your video](https://img.youtube.com/vi/3Ic0b9OVnCE/0.jpg)](https://youtu.be/3Ic0b9OVnCE)
+[![Alt text for your video](https://img.youtube.com/vi/yzoiCa_sMuY/0.jpg)](https://youtu.be/yzoiCa_sMuY)
           
  * Run goal-oriented bot with Telegram interface:
  ```
@@ -41,15 +41,15 @@ View video demo of deploy goal-oriented bot and slot-filling model with Telegram
  ```
  * Run goal-oriented bot with console interface:
  ```
- python deep.py interact configs/go_bot/config.json
+ python deep.py interact configs/go_bot/gobot_dstc2.json
  ```
  * Run slot-filling model with Telegram interface
  ```
- python deep.py interactbot configs/ner/config.json -t <TELEGRAM_TOKEN>
+ python deep.py interactbot configs/ner/slotfill_dstc2.json -t <TELEGRAM_TOKEN>
  ```
  * Run slot-filling model with console interface
  ```
- python deep.py interact configs/ner/config.json
+ python deep.py interact configs/ner/slotfill_dstc2.json
  ```
 ## Conceptual overview
 
@@ -87,11 +87,11 @@ DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). O
  * [Technical overview](#technical-overview)
     * [Project modules](#project-modules)
     * [Config](#config)
+    * [Training](#training)
+    * [Train config](#train-config)
+    * [Train parameters](#train-parameters)
     * [DatasetReader](#datasetreader)
     * [Dataset](#dataset)
-    * [Vocab](#vocab)
-    * [Model](#model)
-    * [Training](#training)
     * [Inferring](#inferring)
  * [License](#license)
  * [Support and collaboration](#support-and-collaboration)
@@ -144,13 +144,13 @@ For 'interactbot' mode you should specify Telegram bot token in `-t` parameter o
 
 Available model configs are:
 
-*configs/go_bot/config.json*
+*configs/go_bot/gobot_dstc2.json*
 
-*configs/intents/config_dstc2.json*
+*configs/intents/intents_dstc2.json*
 
-*configs/ner/config.json*
+*configs/ner/slotfill_dstc2.json*
 
-*configs/error_model/config_en.json*
+*configs/error_model/brillmoore_wikitypos_en.json*
 
 ---
 
@@ -199,25 +199,125 @@ Available model configs are:
 
 ### Config
 
-An NLP pipeline config is a JSON file, which consists of four required elements:
+An NLP pipeline config is a JSON file that contains one required element `chainer`:
 
-```javascript
+```json
 {
-  "dataset_reader": {
-  },
-  "dataset": {
-  },
-  "vocabs": {
-  },
-  "model": {
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      ...
+    ],
+    "out": ["y_predicted"]
   }
 }
 ```
 
-Each class in the config has `name` parameter, which is its registered codename
- and can have any other parameters, repeating its `__init__()` method arguments.
- Default values of `__init__()` arguments will be overridden with the config values
- during class instance initialization.
+Chainer is a core concept of DeepPavlov library: chainer builds a pipeline from heterogeneous components
+(rule-based/ml/dl) and allows to train and infer pipeline as a whole. Each component in the pipeline specifies
+its inputs and outputs as array of names, for example: `"in": ["tokens", "features"]` and `"out": ["token_embeddings", "features_embeddings"]` and you can chain outputs of one components with inputs of other components:
+```json
+{
+  "name": "str_lower",
+  "in": ["x"],
+  "out": ["x_lower"]
+},
+{
+  "name": "nltk_tokenizer",
+  "in": ["x_lower"],
+  "out": ["x_tokens"]
+},
+```
+Each [Component](deeppavlov/core/models/component.py) in the pipeline must implement method `__call__` and has `name` parameter, which is its registered codename and can have any other parameters, repeating its `__init__()` method arguments.
+ Default values of `__init__()` arguments will be overridden with the config values  during class instance initialization.
+ 
+You can reuse components in the pipeline to process different parts of data with help of `id` and `ref` parameters:
+```json
+{
+  "name": "nltk_tokenizer",
+  "id": "tokenizer",
+  "in": ["x_lower"],
+  "out": ["x_tokens"]
+},
+{
+  "ref": "tokenizer",
+  "in": ["y"],
+  "out": ["y_tokens"]
+},
+```
+ 
+### Training
+
+There are two abstract classes for trainable components: **Estimator** and **NNModel**.  
+[**Estimators**](deeppavlov/core/models/estimator.py) are fit once on any data with no batching or validation patience,
+so it can be painlessly done at the time of pipeline initialization. [Vocab](deeppavlov/core/data/vocab.py) is a good example of Estimator. `fit` method has to be implemented for each Estimator.  
+[**NNModel**](deeppavlov/core/models/nn_model.py) requires a more complex training. It trains on the same data
+it predicts on and ground truth answers. The process takes multiple epochs with periodic validation and logging.
+`train_on_batch` method has to be implemented for each NNModel.
+
+Training is triggered by `deeppavlov.core.commands.train.train_model_from_config()` function.
+
+### Train config
+
+Estimators that are trained should also have `fit_on` parameter with a list of input parameters' names.
+A NNModel should have `in_y` parameter with a list of ground truth answers' names. For example:
+
+```json
+[
+  {
+    "id": "classes_vocab",
+    "name": "default_vocab",
+    "fit_on": ["y"],
+    "level": "token",
+    "save_path": "vocabs/classes.dict",
+    "load_path": "vocabs/classes.dict"
+  },
+  {
+    "in": ["x"],
+    "in_y": ["y"],
+    "out": ["y_predicted"],
+    "name": "intent_model",
+    "save_path": "intents/intent_cnn",
+    "load_path": "intents/intent_cnn",
+    "classes_vocab": {
+      "ref": "classes_vocab"
+    }
+  }
+]
+```
+
+Config for training the pipeline has to have three additional elements: `dataset_reader`, `dataset` and `train`:
+
+```json
+{
+  "dataset_reader": {
+    "name": ...,
+    ...
+  }
+  "dataset": {
+    "name": ...,
+    ...
+  },
+  "chainer": {
+    ...
+  }
+  "train": {
+    ...
+  }
+}
+```
+
+### Train Parameters
+* `epochs` — maximum number of epochs to train NNModel, defaults to `-1`, infinite
+* `batch_size`,
+* `metrics` — list of names of [registered metrics](deeppavlov/metrics) to evaluate the model on. First one in the list
+is used for validation patience
+* `metric_optimization` — one of `maximize` or `minimize`, defaults to `maximize`
+* `validation_patience` — how many times in a row validation metric has to not improve to stop training, defaults to `5`
+* `val_every_n_epochs` — how often to validate the pipe, defaults to `-1`, never
+* `log_every_n_batches`, `log_every_n_epochs` — how often to calculate metrics for train data, defaults to `-1`, never
+* `validate_best`, `test_best` flags to infer the best saved model on valid and test data, defaults to `true`
 
 ### DatasetReader
 
@@ -226,6 +326,9 @@ A concrete `DatasetReader` class should be inherited from base
 `deeppavlov.data.dataset_reader.DatasetReader` class and registered with a codename:
 
 ```python
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.dataset_reader import DatasetReader
+
 @register('dstc2_datasetreader')
 class DSTC2DatasetReader(DatasetReader):
 ```
@@ -237,115 +340,13 @@ A concrete `Dataset` class should be registered and can be inherited from
 `deeppavlov.data.dataset_reader.Dataset` class. `deeppavlov.data.dataset_reader.Dataset`
 is not an abstract class and can be used as `Dataset` as well.
 
-### Vocab
-
-`Vocab` is a trainable class, which forms and serialize vocabs. Vocabs index any data.
-For example, tokens to indices and backwards, chars to indices, classes to indices, etc.
-It can index X (features) and y (answers) types of data. A concrete `Vocab` class
-should be registered and can be inherited from `deeppavlov.data.vocab.DefaultVocabulary` class.
-`deeppavlov.data.vocab.DefaultVocabulary` is not an abstract class and can be used as `Vocab` as well.
-
-### Model
-
-`Model` is the main class which rules the training/inferring process and feature generation.
-If a model requires other models to produce features, they need to be passed in its constructor
-and config. All models can be nested as much as needed. For example, a skeleton of
-`deeppavlov.skills.go_bot.go_bot.GoalOrientedBot` consists of 11 separate model classes,
-3 of which are neural networks:
-
-```json
-{
-  "model": {
-    "name": "go_bot",
-    "network": {
-      "name": "go_bot_rnn"
-    },
-    "slot_filler": {
-      "name": "dstc_slotfilling",
-      "ner_network": {
-         "name": "ner_tagging_network",
-      }
-    },
-    "intent_classifier": {
-      "name": "intent_model",
-      "embedder": {
-        "name": "fasttext"
-      },
-      "tokenizer": {
-        "name": "nltk_tokenizer"
-      }
-    },
-    "embedder": {
-      "name": "fasttext"
-    },
-    "bow_encoder": {
-      "name": "bow"
-    },
-    "tokenizer": {
-      "name": "spacy_tokenizer"
-    },
-    "tracker": {
-      "name": "featurized_tracker"
-    }
-  }
-}
-```
-
-All models should be registered and inherited from `deeppavlov.core.models.inferable.Inferable`
-or from both `Inferable` and `deeppavlov.core.models.trainable.Trainable` interfaces.
-Models inherited from `Trainable` interface can be trained. Models inherited from `Inferable`
-interface can be only inferred. Usually `Inferable` models are rule-based models or
-pre-trained models that we import from third-party libraries (like `NLTK`, `Spacy`, etc.).
-
-### Training
-
-All models inherited from `deeppavlov.core.models.trainable.Trainable` interface can be trained.
-The training process should be described in `train()` method:
-
- ```python
- @register("my_model")
- class MyModel(Inferable, Trainable):
-
-    def train_on_batch(self, batch: Tuple[list, list]):
-        """
-        Implement training here.
-        """
- ```
-
-All parameters for training which can be changed during experiments (like *num of epochs*,
-*batch size*, *patience*, *learning rate*, *optimizer*) should be passed to a model's
-`__init__()`. The default parameters values from `__init__()` are overridden with JSON config values.
-To change these values, there is no need to rewrite the code, only the config should be changed.
-
-The training process is managed by `train_now` attribute. If `train_now` is *True*,
-a model is being trained. This parameter is useful when using `Vocab`, because in a single
-model run some vocabs can be trained, while some only inferred by other models in pipeline.
-The training parameters in JSON config can look like this:
-
-```json
-{
-  "model": {
-    "name": "my_model",
-    "train_now": true,
-    "optimizer": "Adam",
-    "learning_rate": 0.2,
-    "num_epochs": 1000
-  }
-}
-```
-
-Training is triggered by `deeppavlov.core.commands.train.train_model_from_config()` function.
-
 ### Inferring
 
-All models inherited from `deeppavlov.core.models.inferable.Inferable` interface can be inferred.
-The `infer()` method should return what a model can do. For example, a *tokenizer* should return
+All components inherited from `deeppavlov.core.models.component.Componet` abstract class can be inferred. The `__call__()` method should return what a compoent can do. For example, a *tokenizer* should return
 *tokens*, a *NER recognizer* should return *recognized entities*, a *bot* should return a *replica*.
-A particular format of returned data should be defined in `infer()`.
+A particular format of returned data should be defined in `__call__()`.
 
-Inferring is triggered by `deeppavlov.core.commands.train.infer_model_from_config()` function.
-There is no need in s separate JSON for inferring. `train_now` parameter is ignored during
-inferring.
+Inferring is triggered by `deeppavlov.core.commands.infer.interact_model()` function. There is no need in a separate JSON for inferring. 
 
 ## License
 

@@ -23,10 +23,10 @@ from math import log, exp
 import kenlm
 from tqdm import tqdm
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.vocabs.typos import StaticDictionary
-from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.log import get_logger
 
@@ -56,7 +56,7 @@ class ErrorModel(Estimator):
         self.load()
 
         if lm_file:
-            self.lm = kenlm.Model(lm_file)
+            self.lm = kenlm.Model(str(expand_path(lm_file)))
             self.beam_size = 4
             self.candidates_count = 4
             self._infer_instance = self._infer_instance_lm
@@ -166,8 +166,9 @@ class ErrorModel(Estimator):
     def __call__(self, data, *args, **kwargs):
         if isinstance(data, str):
             return self._infer_instance(data)
-        return [self._infer_instance(instance) for instance in tqdm(data, desc='Infering a batch with the error model',
-                                                                    leave=False)]
+        if len(data) > 1:
+            data = tqdm(data, desc='Infering a batch with the error model', leave=False)
+        return [self._infer_instance(instance) for instance in data]
 
     def reset(self):
         pass
@@ -193,7 +194,6 @@ class ErrorModel(Estimator):
 
         return d[-1][-1]
 
-    @check_attr_true('train_now')
     def fit(self, x, y):
         changes = []
         entries = []
@@ -236,7 +236,7 @@ class ErrorModel(Estimator):
     def load(self):
         if self.load_path:
             if self.load_path.is_file():
-                logger.info("[loading error_model from `{}`]".format(self.load_path))
+                logger.info("loading error_model from `{}`".format(self.load_path))
                 with open(self.load_path, 'r', newline='') as tsv_file:
                     reader = csv.reader(tsv_file, delimiter='\t')
                     for w, s, p in reader:
@@ -245,4 +245,4 @@ class ErrorModel(Estimator):
                 raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
                     self.__class__.__name__))
         else:
-            raise ConfigError("`load_path` for {} is not provided!".format(self))
+            logger.info('No load_path provided, initializing error model from scratch')

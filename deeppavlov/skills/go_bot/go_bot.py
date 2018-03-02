@@ -41,7 +41,7 @@ log = get_logger(__name__)
 
 @register("go_bot")
 class GoalOrientedBot(NNModel):
-    def __init__(self, template_path, vocabs,
+    def __init__(self, template_path,
                  template_type: Type = DualTemplate,
                  bow_encoder: Type = BoWEncoder,
                  tokenizer: Type = SpacyTokenizer,
@@ -52,11 +52,12 @@ class GoalOrientedBot(NNModel):
                  intent_classifier=None,
                  use_action_mask=False,
                  debug=False,
-                 train_now=False,
                  save_path=None,
+                 word_vocab=None,
+                 vocabs=None,
                  **kwargs):
 
-        super().__init__(save_path=save_path, train_now=train_now, mode=kwargs['mode'])
+        super().__init__(save_path=save_path, mode=kwargs['mode'])
 
         self.episode_done = True
         self.use_action_mask = use_action_mask
@@ -68,7 +69,7 @@ class GoalOrientedBot(NNModel):
         self.tokenizer = tokenizer
         self.tracker = tracker
         self.network = network
-        self.word_vocab = vocabs['word_vocab']
+        self.word_vocab = word_vocab or vocabs['word_vocab']
 
         template_path = expand_path(template_path)
         log.info("[loading templates from {}]".format(template_path))
@@ -110,8 +111,8 @@ class GoalOrientedBot(NNModel):
         if callable(self.intent_classifier):
             intent_features = self.intent_classifier([tokenized], predict_proba=True).ravel()
             if self.debug:
-                log.debug("Predicted intent = `{}`".format(
-                    self.intent_classifier.infer(tokenized)))
+                log.debug("Predicted intent = `{}`"\
+                          .format(self.intent_classifier([tokenized])))
 
         # Text entity features
         if callable(self.slot_filler):
@@ -164,16 +165,14 @@ class GoalOrientedBot(NNModel):
     def _action_mask(self):
         action_mask = np.ones(self.n_actions, dtype=np.float32)
         if self.use_action_mask:
-            # TODO: non-ones action mask
+            known_entities = {**self.tracker.get_state(), **(self.db_result or {})}
             for a_id in range(self.n_actions):
                 tmpl = str(self.templates.templates[a_id])
-                for entity in re.findall('#{}', tmpl):
-                    if entity not in self.tracker.get_state() \
-                            and entity not in (self.db_result or {}):
+                for entity in set(re.findall('#([A-Za-z]+)', tmpl)):
+                    if entity not in known_entities:
                         action_mask[a_id] = 0
         return action_mask
 
-    @check_attr_true('train_now')
     def train_on_batch(self, x, y):
         for contexts, responses in zip(x, y):
             self.reset()
@@ -196,10 +195,8 @@ class GoalOrientedBot(NNModel):
             # self.network.train(d_features, d_actions, d_masks)
             self.network.train_on_batch([d_features, d_masks], d_actions)
 
-    def infer_on_batch(self, xs):
-        return [self._infer_dialog(x) for x in xs]
-
     def _infer(self, context, db_result=None, prob=False):
+        # TODO: check if prob=True works better
         probs = self.network(
             self._encode_context(context, db_result),
             self._action_mask(),
@@ -234,7 +231,7 @@ class GoalOrientedBot(NNModel):
     def __call__(self, batch):
         if isinstance(batch[0], str):
             return [self._infer(x) for x in batch]
-        return self.infer_on_batch(batch)
+        return [self._infer_dialog(x) for x in batch]
 
     def reset(self):
         self.tracker.reset_state()

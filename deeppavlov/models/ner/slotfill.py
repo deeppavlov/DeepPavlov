@@ -76,7 +76,6 @@ class DstcSlotFillingNetwork(TFModel):
         if self.load_path is not None:
             self.load()
 
-    @check_attr_true('train_now')
     def train_on_batch(self, batch_x, batch_y):
         self._ner_network.train_on_batch(batch_x, batch_y, **self.train_parameters)
 
