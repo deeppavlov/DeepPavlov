@@ -40,33 +40,28 @@ Here is a simple example of interaction with a trained dialogue bot (can be down
 
 To use a go_bot model you should have:
 1. (_optional, but recommended_) pretrained named entity recognition model (NER) 
-   * config [`deeppavlov/configs/ner/config.json`](../../configs/ner/config.json) is recommended
+   * config [`deeppavlov/configs/ner/ner_dstc2.json`](../../configs/ner/ner_dstc2.json) is recommended
 2. (_optional, but recommended_) pretrained intents classifier model 
-   * config [`deeppavlov/configs/intents/config_dstc2_train.json`](../../configs/intents/config_dstc2_train.json) is recommended
+   * config [`deeppavlov/configs/intents/intents_dstc2.json`](../../configs/intents/intents_dstc2.json) is recommended
 3. (_optional_) downloaded english fasttext embeddings trained on wiki ([https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip](https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip))
+   * fasttext embeddings can loaded via `python3 deeppavlov/download.py --all`
    * you can use any english embeddings of your choice, but edit go_bot config accordingly
 4. pretrained goal-oriented bot model itself 
-   * config [`deeppavlov/configs/go_bot/config.json`](../../configs/go_bot/config.json) is recommended
+   * config [`deeppavlov/configs/go_bot/gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json) is recommended
    * `slot_filler` section of go_bot's config should match NER's configuration
    * `intent_classifier` section of go_bot's config should match classifier's configuration
    * double-check that corresponding `load_path`s point to NER and intent classifier model files
 
 #### Config parameters:
 * `name` always equals to `"go_bot"`
-* `train_now` — `true` or `false`(default) depending on whether you are training or using a model _(optional)_
-* `num_epochs` — maximum number of epochs during training _(optional)_
-* `val_patience` — stop training after `val_patience` epochs without improvement of turn accuracy on validation dialogs _(optional)_
 * `template_path` — map from actions to text templates for response generation
-* `use_action_mask` — in case of true, action mask is applied to network output
-* `vocabs` — vocabs used in model
-   * `word_vocab` — vocabulary of tokens from context utterances
-      * `train_now` — whether to train it on the current dataset, or use pretrained
-      * `name` — `"default_vocab"` (for vocabulary's implementation see [`deeppavlov.core.data.vocab`](../../core/data/vocab.py))
-      * `inputs` — `[ "x" ]`,
-      * `level` — `"token"`,
-      * `tokenize` — `true`,
-      * `save_path` — `"vocabs/token.dict"`
-      * `load_path` — `"vocabs/token.dict"`
+* `word_vocab` — vocabulary of tokens from context utterances
+   * `name` — `"default_vocab"` (for vocabulary's implementation see [`deeppavlov.core.data.vocab`](../../core/data/vocab.py))
+   * `fit_on` — `[ "x" ]`,
+   * `level` — `"token"`,
+   * `tokenize` — `true`,
+   * `save_path` — `"vocabs/token.dict"`
+   * `load_path` — `"vocabs/token.dict"`
 * `tokenizer` — one of tokenizers from [`deeppavlov.models.tokenizers`](../../models/tokenizers) module
    * `name` — tokenizer name
    * other arguments specific to your tokenizer
@@ -82,13 +77,15 @@ To use a go_bot model you should have:
    * `slot_vals` — list of slots that should be tracked
 * `network` — reccurent network that handles dialogue policy management
    * `name` — `"go_bot_rnn"`,
-   * `train_now` — `true` or `false`(default) depending on whether you are training or using a model _(optional)_
    * `save_path` — name of the file that the model will be saved to
    * `load_path` — name of the file that the model will be loaded from
    * `learning_rate` — learning rate during training
+   * `dropout_rate` — rate for dropout layer applied to input features
    * `hidden_dim` — hidden state dimension
-   * `obs_size` — input observation size (must be set to number of `bow_embedder` features, `embedder` features, `intent_classifier` features, context features(=2) plus `tracker` state size plus action size)
+   * `dense_size` — LSTM input size
+   * `obs_size` — input features size (must be set to number of `bow_embedder` features, `embedder` features, `intent_classifier` features, context features(=2) plus `tracker` state size plus action size)
    * `action_size` — output action size
+   * `use_action_mask` — in case of true, action mask is applied to network output
 * `slot_filler` — model that predicts slot values for a given utterance
    * `name` — slot filler name (`"dstc_slotfilling"` recommended, for implementation see [`deeppavlov.models.ner`](../../models/ner))
    * other slot filler arguments
@@ -97,28 +94,25 @@ To use a go_bot model you should have:
    * classifier's other arguments
 * `debug` — whether to display debug output (defaults to `false`) _(optional)_
 
-For a working exemplary config see [`deeeppavlov/configs/go_bot/config.json`](../../configs/go_bot/config.json) (model without embeddings).
+For a working exemplary config see [`deeeppavlov/configs/go_bot/gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json) (model without embeddings).
 
-A minimal model without `slot_filler`, `intent_classifier` and `embedder` is configured in [`deeeppavlov/configs/go_bot/config_minimal.json`](../../configs/go_bot/config_minimal.json).
+A minimal model without `slot_filler`, `intent_classifier` and `embedder` is configured in [`deeeppavlov/configs/go_bot/gobot_dstc2_minimal.json`](../../configs/go_bot/gobot_dstc2_minimal.json).
 
-A full model (with fasttext embeddings) configuration is in [`deeeppavlov/configs/go_bot/config_all.json`](../../configs/go_bot/config_all.json)
+A full model (with fasttext embeddings) configuration is in [`deeeppavlov/configs/go_bot/gobot_dstc2_all.json`](../../configs/go_bot/gobot_dstc2_all.json)
 
 #### Usage example
 * To infer from a pretrained model with config path equal to `path/to/config.json`:
 
 ```python
 from deeppavlov.core.commands.infer import build_model_from_config
-from deeppavlov.core.commands.utils import set_usr_dir
 from deeppavlov.core.common.file import read_json
 
 CONFIG_PATH = 'path/to/config.json'
-
-set_usr_dir(CONFIG_PATH)
 model = build_model_from_config(read_json(CONFIG_PATH))
 
 utterance = ""
-while utterance != 'quit':
-    print(">> " + model.infer(utterance))
+while utterance != 'exit':
+    print(">> " + model([utterance])[0])
     utterance = input(':: ')
 ```
 
@@ -140,9 +134,7 @@ To be used for training, your config json file should include parameters:
    internet and placed to `data_path` directory
 * `dataset` — it should always be set to `{"name": "dialog_dataset"}` (for implementation see [`deeppavlov.datasets.dialog_dataset.py`](../../datasets/dialog_dataset.py))
 
-Do not forget to set `train_now` parameters to `true` for `vocabs.word_vocab`, `model` and `model.network` sections.
-
-See [`deeeppavlov/configs/go_bot/config.json`](../../configs/go_bot/config.json) for details.
+See [`deeeppavlov/configs/go_bot/gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json) for details.
 
 #### Train run
 The easiest way to run the training is by using [`deeppavlov/deep.py`](../../deep.py) script:
@@ -203,10 +195,10 @@ But comparisons for bot model modifications trained on out DSTC2-dataset are pre
 
 |                   Model                      | Config      |  Test action accuracy   |  Test turn accuracy  |
 |----------------------------------------------|-------------|-------------------------|----------------------|
-|basic bot			                               | [`config_minimal.json`](../../configs/go_bot/config_minimal.json) | 0.5271             |     0.4853           |
+|basic bot			                               | [`gobot_dstc2_minimal.json`](../../configs/go_bot/gobot_dstc2_minimal.json) | 0.5271             |     0.4853           |
 |bot with slot filler & fasttext embeddings    |        |      0.5305             |     0.5147           |
-|bot with slot filler & intents                | [`config.json`](../../configs/go_bot/config.json)                 |   **0.5436**         |     **0.5261**       |
-|bot with slot filler & intents & embeddings   | [`config_all.json`](../../configs/go_bot/config_all.json)         |      0.5307             |     0.5145           |
+|bot with slot filler & intents                | [`gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json)                 |   **0.5436**         |     **0.5261**       |
+|bot with slot filler & intents & embeddings   | [`gobot_dstc2_all.json`](../../configs/go_bot/gobot_dstc2_all.json)         |      0.5307             |     0.5145           |
 
 #TODO: add dialog accuracies
 
