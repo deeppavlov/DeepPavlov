@@ -223,6 +223,16 @@ Each class in the config has `name` parameter, which is its registered codename
  Default values of `__init__()` arguments will be overridden with the config values
  during class instance initialization.
  
+### Training
+
+There are two abstract classes for trainable components: **Estimator** and **NNModel**.  
+[**Estimators**](deeppavlov/core/models/estimator.py) are fit once on any data with no batching or validation patience,
+so it can be painlessly done at the time of pipeline initialization. A good example of Estimators
+are [vocabs](deeppavlov/core/data/vocab.py). Every Estimator has to implement method `fit`.  
+[**NNModel**](deeppavlov/core/models/nn_model.py) requires a more complex training, it trains on the same data
+it predicts on plus ground truth answers for multiple epochs with periodic validation and logging.
+Every NNModel has to implement `train_on_batch` method.
+
 ### Train config
 
 Config for training the pipeline has to have three additional elements: `dataset_reader`, `dataset` and `train`:
