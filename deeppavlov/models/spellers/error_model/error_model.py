@@ -23,10 +23,10 @@ from math import log, exp
 import kenlm
 from tqdm import tqdm
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.vocabs.typos import StaticDictionary
-from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.log import get_logger
 
@@ -56,7 +56,7 @@ class ErrorModel(Estimator):
         self.load()
 
         if lm_file:
-            self.lm = kenlm.Model(lm_file)
+            self.lm = kenlm.Model(str(expand_path(lm_file)))
             self.beam_size = 4
             self.candidates_count = 4
             self._infer_instance = self._infer_instance_lm
