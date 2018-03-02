@@ -30,7 +30,5 @@ PIPELINE_CONFIG_PATH = 'configs/error_model/config_en.json'
 # PIPELINE_CONFIG_PATH = 'configs/go_bot/config_minimal.json'
 # PIPELINE_CONFIG_PATH = 'configs/go_bot/config_all.json'
 
-set_deeppavlov_root(PIPELINE_CONFIG_PATH)
-
 train_model_from_config(PIPELINE_CONFIG_PATH)
 interact_model(PIPELINE_CONFIG_PATH)

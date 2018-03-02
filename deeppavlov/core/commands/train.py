@@ -20,7 +20,7 @@ import time
 from collections import OrderedDict
 from typing import List, Callable, Tuple
 
-from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.errors import ConfigError
@@ -71,6 +71,7 @@ def fit_chainer(config: dict, dataset: Dataset):
 
 def train_model_from_config(config_path: str):
     config = read_json(config_path)
+    set_deeppavlov_root(config)
 
     reader_config = config['dataset_reader']
     reader = get_model(reader_config['name'])()
