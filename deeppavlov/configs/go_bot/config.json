@@ -61,8 +61,10 @@
           "name": "go_bot_rnn",
           "load_path": "go_bot/model",
           "save_path": "go_bot/model",
-          "learning_rate": 0.02,
+          "learning_rate": 0.002,
+          "dropout_rate": 0.8,
           "hidden_dim": 128,
+          "dense_size": 64,
           "obs_size": 530,
           "use_action_mask": false,
           "action_size": 45
@@ -157,7 +159,7 @@
     "batch_size": 1,
 
     "metrics": ["per_item_dialog_accuracy"],
-    "validation_patience": 30,
+    "validation_patience": 20,
     "val_every_n_epochs": 1,
 
     "log_every_n_batches": -1,

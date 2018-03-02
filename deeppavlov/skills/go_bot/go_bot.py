@@ -200,6 +200,7 @@ class GoalOrientedBot(NNModel):
         return [self._infer_dialog(x) for x in xs]
 
     def _infer(self, context, db_result=None, prob=False):
+        # TODO: check if prob=True works better
         probs = self.network(
             self._encode_context(context, db_result),
             self._action_mask(),

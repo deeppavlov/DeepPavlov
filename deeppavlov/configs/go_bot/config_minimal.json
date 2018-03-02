@@ -33,9 +33,9 @@
           "name": "go_bot_rnn",
           "load_path": "go_bot_minimal/model",
           "save_path": "go_bot_minimal/model",
-          "learning_rate": 0.02,
+          "learning_rate": 0.01,
           "hidden_dim": 128,
-          "dense_size": 32,
+          "dense_size": 64,
           "obs_size": 502,
           "use_action_mask": false,
           "action_size": 45
