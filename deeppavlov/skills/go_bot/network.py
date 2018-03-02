@@ -151,6 +151,7 @@ class GoalOrientedBotNetwork(TFModel):
                 feed_dict={
                     self._dropout: self.dropout_rate,
                     self._features: [features],
+                    self._initial_state: (self.state_c, self.state_h),
                     self._action: [action],
                     self._action_mask: [action_mask]
                 }
