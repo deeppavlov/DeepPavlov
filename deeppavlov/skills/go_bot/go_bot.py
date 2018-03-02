@@ -165,12 +165,11 @@ class GoalOrientedBot(NNModel):
     def _action_mask(self):
         action_mask = np.ones(self.n_actions, dtype=np.float32)
         if self.use_action_mask:
-            # TODO: non-ones action mask
+            known_entities = {**self.tracker.get_state(), **(self.db_result or {})}
             for a_id in range(self.n_actions):
                 tmpl = str(self.templates.templates[a_id])
-                for entity in re.findall('#{}', tmpl):
-                    if entity not in self.tracker.get_state() \
-                            and entity not in (self.db_result or {}):
+                for entity in set(re.findall('#([A-Za-z]+)', tmpl)):
+                    if entity not in known_entities:
                         action_mask[a_id] = 0
         return action_mask
 

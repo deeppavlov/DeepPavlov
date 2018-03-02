@@ -55,6 +55,7 @@ To use a go_bot model you should have:
 #### Config parameters:
 * `name` always equals to `"go_bot"`
 * `template_path` — map from actions to text templates for response generation
+* `use_action_mask` — in case of true, action mask is applied to network output
 * `word_vocab` — vocabulary of tokens from context utterances
    * `name` — `"default_vocab"` (for vocabulary's implementation see [`deeppavlov.core.data.vocab`](../../core/data/vocab.py))
    * `fit_on` — `[ "x" ]`,
@@ -85,7 +86,6 @@ To use a go_bot model you should have:
    * `dense_size` — LSTM input size
    * `obs_size` — input features size (must be set to number of `bow_embedder` features, `embedder` features, `intent_classifier` features, context features(=2) plus `tracker` state size plus action size)
    * `action_size` — output action size
-   * `use_action_mask` — in case of true, action mask is applied to network output
 * `slot_filler` — model that predicts slot values for a given utterance
    * `name` — slot filler name (`"dstc_slotfilling"` recommended, for implementation see [`deeppavlov.models.ner`](../../models/ner))
    * other slot filler arguments
