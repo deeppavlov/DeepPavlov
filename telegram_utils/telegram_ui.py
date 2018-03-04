@@ -45,7 +45,7 @@ def init_bot_for_model(token, model):
         chat_id = message.chat.id
         context = message.text
 
-        pred = model.infer(context)
+        pred = model(context)
         reply_message = str(pred)
         bot.send_message(chat_id, reply_message)
 
