@@ -38,7 +38,7 @@ View video demo of deploy goal-oriented bot and slot-filling model with Telegram
           
  * Run goal-oriented bot with Telegram interface:
  ```
- python deep.py interactbot configs/go_bot/config.json -t <TELEGRAM_TOKEN>
+ python deep.py interactbot configs/go_bot/gobot_dstc2.json -t <TELEGRAM_TOKEN>
  ```
  * Run goal-oriented bot with console interface:
  ```
