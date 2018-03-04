@@ -45,8 +45,8 @@ def init_bot_for_model(token, model):
         chat_id = message.chat.id
         context = message.text
 
-        pred = model(context)
-        reply_message = str(pred)
+        pred = model([context])
+        reply_message = str(pred[0])
         bot.send_message(chat_id, reply_message)
 
     bot.polling()
