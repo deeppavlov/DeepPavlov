@@ -13,14 +13,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from abc import abstractmethod
 
-from .component import Component
-from .serializable import Serializable
+from typing import List
+
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 
 
-class Estimator(Component, Serializable):
-
-    @abstractmethod
-    def fit(self, *args, **kwargs):
+@register('str_lower')
+class StrLower(Component):
+    def __init__(self, *args, **kwargs):
         pass
+
+    def __call__(self, lines: List[str], **kwargs):
+        return [line.lower() for line in lines]

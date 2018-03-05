@@ -1,0 +1,77 @@
+{
+  "dataset_reader": {
+    "name": "ner_dataset_reader",
+    "data_path": "conll2003/"
+  },
+  "dataset": {
+    "name": "basic_dataset"
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "id": "word_vocab",
+        "name": "default_vocab",
+        "fit_on": ["x"],
+		"level": "token",
+        "save_path": "ner_conll2003_model/word.dict",
+        "load_path": "ner_conll2003_model/word.dict"
+      },
+      {
+        "id": "tag_vocab",
+        "name": "default_vocab",
+        "fit_on": ["y"],
+		"level": "token",
+        "save_path": "ner_conll2003_model/tag.dict",
+        "load_path": "ner_conll2003_model/tag.dict"
+      },
+      {
+        "id": "char_vocab",
+        "name": "default_vocab",
+        "fit_on": ["x"],
+		"level": "char",
+        "save_path": "ner_conll2003_model/char.dict",
+        "load_path": "ner_conll2003_model/char.dict"
+      },
+      {
+        "in": ["x"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "name": "ner",
+        "main": true,
+        "save_path": "ner_conll2003_model/ner_model",
+        "load_path": "ner_conll2003_model/ner_model",
+        "word_vocab": "#word_vocab",
+        "tag_vocab": "#tag_vocab",
+        "char_vocab": "#char_vocab",
+        "verbouse": true,
+        "filter_width": 7,
+        "embeddings_dropout": true,
+        "n_filters": [
+          128,
+          128
+        ],
+        "token_embeddings_dim": 64,
+        "char_embeddings_dim": 32,
+        "use_batch_norm": true,
+        "use_crf": true,
+        "learning_rate": 1e-3,
+        "dropout_rate": 0.5
+      }
+    ],
+    "out": ["y_predicted"]
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 64,
+
+    "metrics": ["ner_f1"],
+    "validation_patience": 5,
+    "val_every_n_epochs": 5,
+
+    "log_every_n_epochs": 1,
+    "show_examples": false
+  }
+}
+

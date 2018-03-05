@@ -55,6 +55,7 @@ class GoalOrientedBotNetwork(TFModel):
             self.sess.run(
                 [self._probs, self._prediction, self._state],
                 feed_dict={
+                    self._dropout: 1.,
                     self._features: [[features]],
                     self._initial_state: (self.state_c, self.state_h),
                     self._action_mask: [[action_mask]]
@@ -73,6 +74,7 @@ class GoalOrientedBotNetwork(TFModel):
     def _init_params(self, params=None):
         params = params or self.opt
         self.learning_rate = params['learning_rate']
+        self.dropout_rate = params.get('dropout_rate', 1.)
         self.n_hidden = params['hidden_dim']
         self.n_actions = params['action_size']
         #TODO: try obs_size=None or as a placeholder
@@ -87,11 +89,9 @@ class GoalOrientedBotNetwork(TFModel):
         _logits, self._state = self._build_body()
 
         # probabilities normalization : elemwise multiply with action mask
-        self._probs = tf.squeeze(tf.nn.softmax(_logits))
-        #TODO: add action mask
-        #self._probs = tf.multiply(tf.squeeze(tf.nn.softmax(_logits)),
-        #                          self._action_mask,
-        #                          name='probs')
+        self._probs = tf.multiply(tf.squeeze(tf.nn.softmax(_logits)),
+                                  self._action_mask,
+                                  name='probs')
 
         # loss, train and predict operations
         self._prediction = tf.argmax(self._probs, axis=-1, name='prediction')
@@ -99,10 +99,11 @@ class GoalOrientedBotNetwork(TFModel):
             tf.losses.sparse_softmax_cross_entropy(logits=_logits,
                                                    labels=self._action)
         self._loss = tf.reduce_mean(_loss_tensor, name='loss')
-        self._train_op = self.get_train_op(self._loss, self.learning_rate)
+        self._train_op = self.get_train_op(self._loss, self.learning_rate, clip_norm=2.)
 
     def _add_placeholders(self):
         # TODO: make batch_size != 1
+        self._dropout = tf.placeholder_with_default(1.0, shape=[])
         _initial_state_c = \
             tf.placeholder_with_default(np.zeros([1, self.n_hidden], np.float32),
                                         shape=[1, self.n_hidden])
@@ -115,20 +116,20 @@ class GoalOrientedBotNetwork(TFModel):
                                         name='features')
         self._action = tf.placeholder(tf.int32, [1, None],
                                       name='ground_truth_action')
-        self._action_mask = tf.placeholder(tf.float32, [1, None, self.n_actions],
+        self._action_mask = tf.placeholder(tf.float32, [None, None, self.n_actions],
                                            name='action_mask')
 
     def _build_body(self):
         # input projection
-        _projected_features = \
-            tf.layers.dense(self._features,
-                            self.dense_size,
-                            kernel_initializer=xavier_initializer())
+        _units = tf.nn.dropout(self._features, self._dropout)
+        _units = tf.layers.dense(_units,
+                                 self.dense_size,
+                                 kernel_initializer=xavier_initializer())
 
         # recurrent network unit
         _lstm_cell = tf.nn.rnn_cell.LSTMCell(self.n_hidden)
         _output, _state = tf.nn.dynamic_rnn(_lstm_cell,
-                                            _projected_features,
+                                            _units,
                                             initial_state=self._initial_state)
  
         # output projection
@@ -148,7 +149,9 @@ class GoalOrientedBotNetwork(TFModel):
             self.sess.run(
                 [ self._train_op, self._loss, self._prediction ],
                 feed_dict={
+                    self._dropout: self.dropout_rate,
                     self._features: [features],
+                    self._initial_state: (self.state_c, self.state_h),
                     self._action: [action],
                     self._action_mask: [action_mask]
                 }

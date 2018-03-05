@@ -42,7 +42,6 @@ parser.add_argument("-t", "--token", help="telegram bot token", type=str)
 def main():
     args = parser.parse_args()
     pipeline_config_path = args.config_path
-    set_deeppavlov_root(pipeline_config_path)
 
     token = args.token or os.getenv('TELEGRAM_TOKEN')
 

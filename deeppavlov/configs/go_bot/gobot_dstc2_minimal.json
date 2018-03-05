@@ -1,0 +1,80 @@
+{
+  "dataset_reader": {
+    "name": "dstc2_datasetreader",
+    "data_path": "dstc2"
+  },
+  "dataset": {
+    "name": "dialog_dataset"
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "out": ["y_predicted"],
+    "pipe": [
+      {
+        "id": "token_vocab",
+        "fit_on": ["x"],
+        "name": "default_vocab",
+        "level": "token",
+        "tokenize": true,
+        "save_path": "vocabs/token.dict",
+        "load_path": "vocabs/token.dict"
+      },
+      {
+        "in": ["x"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "main": true,
+        "name": "go_bot",
+        "debug": false,
+        "word_vocab": "#token_vocab",
+        "template_path": "dstc2/dstc2-templates.txt",
+        "use_action_mask": false,
+        "network": {
+          "name": "go_bot_rnn",
+          "load_path": "go_bot_minimal/model",
+          "save_path": "go_bot_minimal/model",
+          "learning_rate": 0.01,
+          "dropout_rate": 0.9,
+          "hidden_dim": 128,
+          "dense_size": 64,
+          "obs_size": 502,
+          "action_size": 45
+        },
+        "slot_filler": null,
+        "intent_classifier": null,
+        "embedder": null,
+        "bow_encoder": {
+          "name": "bow"
+        },
+        "tokenizer": {
+          "name": "spacy_tokenizer"
+        },
+        "tracker": {
+          "name": "featurized_tracker",
+          "slot_names": [
+            "pricerange",
+            "this",
+            "area",
+            "slot",
+            "food",
+            "name"
+          ]
+        }
+      }
+    ]
+  },
+  "train": {
+	"epochs": 200,
+	"batch_size": 1,
+
+	"metrics": ["per_item_dialog_accuracy"],
+	"validation_patience": 20,
+	"val_every_n_epochs": 1,
+
+	"log_every_n_batches": -1,
+	"log_every_n_epochs": 1,
+	"show_examples": false
+  }
+}
+
