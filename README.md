@@ -4,7 +4,7 @@
 # <center>DeepPavlov</center>
 ### *We are in a really early Alpha release. You should be ready for hard adventures.*
 ### *If you have updated to version 0.0.2 - please re-download all pre-trained models*
-An open-source conversational AI library is built on TensorFlow and Keras and designed for
+DeepPavlov is an open-source conversational AI library built on TensorFlow and Keras. It is designed for
  * NLP and dialog systems research
  * implementation and evaluation of complex conversational systems
  
@@ -32,7 +32,7 @@ and AI-application developers with:
 
 ## Basic examples
 
-View video demo of deploy a goal-oriented bot and a slot-filling model with Telegram UI
+View video demo of deployment of a goal-oriented bot and a slot-filling model with Telegram UI
 
 [![Alt text for your video](https://img.youtube.com/vi/yzoiCa_sMuY/0.jpg)](https://youtu.be/yzoiCa_sMuY)
           
@@ -68,7 +68,7 @@ Target architecture of our library:
 <p align="left">
 <img src="http://lnsigo.mipt.ru/export/images/deeppavlov_architecture.png" width="50%" height="50%"/>
 </p>
-DeepPavlov is built on top machine learning frameworks (TensorFlow, Keras). Other external libraries can be used to build basic components.
+DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). Other external libraries can be used to build basic components.
 
 ### Key Concepts
  * `Agent` - a conversational agent communicating with users in natural language (text)
