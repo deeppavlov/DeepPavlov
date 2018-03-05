@@ -51,14 +51,17 @@ class GoalOrientedBotNetwork(TFModel):
 
     def __call__(self, features, action_mask, prob=False):
         # TODO: make input list
+        # TODO: batch_size != 1
+        #batch_size = len(features)
         probs, prediction, state = \
             self.sess.run(
                 [self._probs, self._prediction, self._state],
                 feed_dict={
                     self._dropout: 1.,
-                    self._features: [[features]],
+                    self._utterance_mask: [[1.]],
+                    self._features: features,
                     self._initial_state: (self.state_c, self.state_h),
-                    self._action_mask: [[action_mask]]
+                    self._action_mask: action_mask
                 }
             )
         self.state_c, self._state_h = state
@@ -67,9 +70,9 @@ class GoalOrientedBotNetwork(TFModel):
         return prediction
 
     def train_on_batch(self, x: list, y: list):
-        features, action_mask = x
+        features, utter_mask, action_mask = x
         action = y
-        self._train_step(features, action, action_mask)
+        self._train_step(features, utter_mask, action_mask, action)
 
     def _init_params(self, params=None):
         params = params or self.opt
@@ -77,7 +80,6 @@ class GoalOrientedBotNetwork(TFModel):
         self.dropout_rate = params.get('dropout_rate', 1.)
         self.n_hidden = params['hidden_dim']
         self.n_actions = params['action_size']
-        #TODO: try obs_size=None or as a placeholder
         self.obs_size = params['obs_size']
         self.dense_size = params.get('dense_size', params['hidden_dim'])
 
@@ -87,37 +89,57 @@ class GoalOrientedBotNetwork(TFModel):
 
         # build body
         _logits, self._state = self._build_body()
+        # multiply with batch utteranct mask
+        #_logits = tf.multiply(_logits, tf.expand_dims(self._utterance_mask, -1))
+        # TODO: try multiplying logits to action_mask
 
         # probabilities normalization : elemwise multiply with action mask
-        self._probs = tf.multiply(tf.squeeze(tf.nn.softmax(_logits)),
-                                  self._action_mask,
-                                  name='probs')
+        #self._probs = tf.multiply(_logits, self._action_mask)
+        #self._probs = tf.squeeze(tf.nn.softmax(self._probs), name='probs')
+        self._probs = tf.squeeze(tf.nn.softmax(_logits), name='probs')
 
         # loss, train and predict operations
         self._prediction = tf.argmax(self._probs, axis=-1, name='prediction')
+        #_weights=tf.expand_dims((self._utterance_mask + 1) % 2, -1)
+        _weights = tf.expand_dims(self._utterance_mask, -1)
         _loss_tensor = \
             tf.losses.sparse_softmax_cross_entropy(logits=_logits,
-                                                   labels=self._action)
+                                                   labels=self._action,
+                                                   reduction="none")
+        print(_loss_tensor)
+        _loss_tensor = tf.multiply(_loss_tensor, self._utterance_mask)
         self._loss = tf.reduce_mean(_loss_tensor, name='loss')
         self._train_op = self.get_train_op(self._loss, self.learning_rate, clip_norm=2.)
 
     def _add_placeholders(self):
         # TODO: make batch_size != 1
         self._dropout = tf.placeholder_with_default(1.0, shape=[])
+        self._features = tf.placeholder(tf.float32,
+                                        [None, None, self.obs_size],
+                                        name='features')
+        self._action = tf.placeholder(tf.int32,
+                                      [None, None],
+                                      name='ground_truth_action')
+        self._action_mask = tf.placeholder(tf.float32,
+                                           [None, None, self.n_actions],
+                                           name='action_mask')
+        #self._utterance_mask = tf.placeholder_with_default([[1.]],
+        self._utterance_mask = tf.placeholder(tf.float32,
+                                              shape=[None, None],
+                                              name='utterance_mask')
         _initial_state_c = \
             tf.placeholder_with_default(np.zeros([1, self.n_hidden], np.float32),
-                                        shape=[1, self.n_hidden])
+                                        shape=[None, self.n_hidden])
         _initial_state_h = \
             tf.placeholder_with_default(np.zeros([1, self.n_hidden], np.float32),
-                                        shape=[1, self.n_hidden])
+                                        shape=[None, self.n_hidden])
         self._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c,
                                                             _initial_state_h)
-        self._features = tf.placeholder(tf.float32, [1, None, self.obs_size],
-                                        name='features')
-        self._action = tf.placeholder(tf.int32, [1, None],
-                                      name='ground_truth_action')
-        self._action_mask = tf.placeholder(tf.float32, [None, None, self.n_actions],
-                                           name='action_mask')
+        #batch_size = tf.shape(self._features)[0]
+        #self._initial_state = \
+            #tf.concat([tf.tile(_initial_state_c, [batch_size, 1]),
+            #           tf.tile(_initial_state_h, [batch_size, 1])],
+            #          axis=0)
 
     def _build_body(self):
         # input projection
@@ -133,7 +155,6 @@ class GoalOrientedBotNetwork(TFModel):
                                             initial_state=self._initial_state)
  
         # output projection
-        # TODO: try multiplying logits to action_mask
         _logits = tf.layers.dense(_output,
                                   self.n_actions,
                                   kernel_initializer=xavier_initializer())
@@ -144,16 +165,25 @@ class GoalOrientedBotNetwork(TFModel):
         self.state_c = np.zeros([1, self.n_hidden], dtype=np.float32)
         self.state_h = np.zeros([1, self.n_hidden], dtype=np.float32)
 
-    def _train_step(self, features, action, action_mask):
+    def _train_step(self, features, utter_mask, action_mask, action):
+        batch_size = len(features)
+        #print("Train step received batch_size =", batch_size)
+        #print(np.asarray(features).shape, np.asarray(utter_mask).shape,
+        #      np.asarray(action_mask).shape, np.asarray(action).shape)
+        #print("Utter_mask =", np.asarray(utter_mask))
+        #print("action mask =", np.asarray(action_mask))
+        #print("Action =", np.asarray(action))
         _, loss_value, prediction = \
             self.sess.run(
                 [ self._train_op, self._loss, self._prediction ],
                 feed_dict={
                     self._dropout: self.dropout_rate,
-                    self._features: [features],
-                    self._initial_state: (self.state_c, self.state_h),
-                    self._action: [action],
-                    self._action_mask: [action_mask]
+                    self._utterance_mask: utter_mask,
+                    self._initial_state: (np.tile(self.state_c, [batch_size, 1]),
+                                          np.tile(self.state_h, [batch_size, 1])),
+                    self._features: features,
+                    self._action: action,
+                    self._action_mask: action_mask
                 }
             )
         return loss_value, prediction

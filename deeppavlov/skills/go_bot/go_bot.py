@@ -77,12 +77,11 @@ class GoalOrientedBot(NNModel):
         log.info("{} templates loaded".format(len(self.templates)))
 
         # intialize parameters
-        self.db_result = None
         self.n_actions = len(self.templates)
         self.n_intents = 0
         if hasattr(self.intent_classifier, 'n_classes'):
             self.n_intents = self.intent_classifier.n_classes
-        self.prev_action = np.zeros(self.n_actions, dtype=np.float32)
+        self.reset()
 
         # opt = {
         #    'action_size': self.n_actions,
@@ -174,10 +173,12 @@ class GoalOrientedBot(NNModel):
         return action_mask
 
     def train_on_batch(self, x, y):
-        for contexts, responses in zip(x, y):
+        b_features, b_u_masks, b_a_masks, b_actions = [], [], [], []
+        max_num_utter = max(len(d_contexts) for d_contexts in x)
+        for d_contexts, d_responses in zip(x, y):
             self.reset()
-            d_features, d_actions, d_masks = [], [], []
-            for context, response in zip(contexts, responses):
+            d_features, d_a_masks, d_actions = [], [], []
+            for context, response in zip(d_contexts, d_responses):
                 features = self._encode_context(context['text'],
                                                 context.get('db_result'))
                 if context.get('db_result') is not None:
@@ -190,16 +191,27 @@ class GoalOrientedBot(NNModel):
                 self.prev_action[action_id] = 1.
                 d_actions.append(action_id)
 
-                d_masks.append(self._action_mask())
+                d_a_masks.append(self._action_mask())
+    
+            # padding to max_num_utter
+            num_padds = max_num_utter - len(d_contexts)
+            d_features.extend([np.zeros_like(d_features[0])] * num_padds)
+            d_u_mask = [1] * len(d_contexts) + [0] * num_padds
+            d_a_masks.extend([np.zeros_like(d_a_masks[0])] * num_padds)
+            d_actions.extend([0] * num_padds)
 
-            # self.network.train(d_features, d_actions, d_masks)
-            self.network.train_on_batch([d_features, d_masks], d_actions)
+            b_features.append(d_features) 
+            b_u_masks.append(d_u_mask)
+            b_a_masks.append(d_a_masks)
+            b_actions.append(d_actions) 
+        # self.network.train(b_features, b_actions, b_masks)
+        self.network.train_on_batch([b_features, b_u_masks, b_a_masks], b_actions)
 
     def _infer(self, context, db_result=None, prob=False):
         # TODO: check if prob=True works better
         probs = self.network(
-            self._encode_context(context, db_result),
-            self._action_mask(),
+            [[self._encode_context(context, db_result)]],
+            [[self._action_mask()]],
             prob=True
         )
         pred_id = np.argmax(probs)
@@ -216,6 +228,7 @@ class GoalOrientedBot(NNModel):
         return self._decode_response(pred_id)
 
     def _infer_dialog(self, contexts):
+        #print("In Infer_dialog")
         self.reset()
         res = []
         for context in contexts:
