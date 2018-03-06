@@ -89,25 +89,28 @@ class GoalOrientedBotNetwork(TFModel):
 
         # build body
         _logits, self._state = self._build_body()
-        # multiply with batch utteranct mask
-        #_logits = tf.multiply(_logits, tf.expand_dims(self._utterance_mask, -1))
-        # TODO: try multiplying logits to action_mask
 
         # probabilities normalization : elemwise multiply with action mask
-        #self._probs = tf.multiply(_logits, self._action_mask)
-        #self._probs = tf.squeeze(tf.nn.softmax(self._probs), name='probs')
-        self._probs = tf.squeeze(tf.nn.softmax(_logits), name='probs')
+        self._probs = tf.multiply(_logits, self._action_mask)
+        self._probs = tf.squeeze(tf.nn.softmax(self._probs), name='probs')
 
         # loss, train and predict operations
         self._prediction = tf.argmax(self._probs, axis=-1, name='prediction')
-        #_weights=tf.expand_dims((self._utterance_mask + 1) % 2, -1)
+
         _weights = tf.expand_dims(self._utterance_mask, -1)
+        # TODO: try multiplying logits to action_mask
+        #onehots = tf.one_hot(self._action, self.n_actions)
+        #_loss_tensor = \
+            #tf.losses.softmax_cross_entropy(logits=_logits, onehot_labels=onehots,
+            #                                weights=_weights,
+            #                                reduction=tf.losses.Reduction.NONE)
         _loss_tensor = \
             tf.losses.sparse_softmax_cross_entropy(logits=_logits,
                                                    labels=self._action,
-                                                   reduction="none")
-        print(_loss_tensor)
-        _loss_tensor = tf.multiply(_loss_tensor, self._utterance_mask)
+                                                   weights=_weights,
+                                                   reduction=tf.losses.Reduction.NONE)
+        # multiply with batch utterance mask
+        #_loss_tensor = tf.multiply(_loss_tensor, self._utterance_mask)
         self._loss = tf.reduce_mean(_loss_tensor, name='loss')
         self._train_op = self.get_train_op(self._loss, self.learning_rate, clip_norm=2.)
 
@@ -123,7 +126,6 @@ class GoalOrientedBotNetwork(TFModel):
         self._action_mask = tf.placeholder(tf.float32,
                                            [None, None, self.n_actions],
                                            name='action_mask')
-        #self._utterance_mask = tf.placeholder_with_default([[1.]],
         self._utterance_mask = tf.placeholder(tf.float32,
                                               shape=[None, None],
                                               name='utterance_mask')
@@ -135,11 +137,6 @@ class GoalOrientedBotNetwork(TFModel):
                                         shape=[None, self.n_hidden])
         self._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c,
                                                             _initial_state_h)
-        #batch_size = tf.shape(self._features)[0]
-        #self._initial_state = \
-            #tf.concat([tf.tile(_initial_state_c, [batch_size, 1]),
-            #           tf.tile(_initial_state_h, [batch_size, 1])],
-            #          axis=0)
 
     def _build_body(self):
         # input projection
@@ -167,12 +164,6 @@ class GoalOrientedBotNetwork(TFModel):
 
     def _train_step(self, features, utter_mask, action_mask, action):
         batch_size = len(features)
-        #print("Train step received batch_size =", batch_size)
-        #print(np.asarray(features).shape, np.asarray(utter_mask).shape,
-        #      np.asarray(action_mask).shape, np.asarray(action).shape)
-        #print("Utter_mask =", np.asarray(utter_mask))
-        #print("action mask =", np.asarray(action_mask))
-        #print("Action =", np.asarray(action))
         _, loss_value, prediction = \
             self.sess.run(
                 [ self._train_op, self._loss, self._prediction ],
