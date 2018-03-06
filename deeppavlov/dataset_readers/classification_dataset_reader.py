@@ -53,30 +53,18 @@ class ClassificationDatasetReader(DatasetReader):
         """
         data_types = ["train", "valid", "test"]
 
-        for data_type in data_types:
-            if not Path(data_path).joinpath(data_type + ".csv").exists():
-                if data_type == "train":
-                    log.info("Loading {} data from {} to {}".format(data_type, self.url, data_path))
-                    download(source_url=self.url,
-                             dest_file_path=Path(data_path).joinpath(data_type + ".csv"))
-                    mark_done(data_path)
+        if not Path(data_path, "train.csv").exists():
+            log.info("Loading train data from {} to {}".format(self.url, data_path))
+            download(source_url=self.url, dest_file_path=Path(data_path, "train.csv"))
 
         data = {"train": [],
                 "valid": [],
                 "test": []}
         for data_type in data_types:
             try:
-                data[data_type] = pd.read_csv(Path(data_path).joinpath(data_type + ".csv"))
+                df = pd.read_csv(Path(data_path).joinpath(data_type + ".csv"))
+                data[data_type] = [(row['text'], row['intents'].split(',')) for _, row in df.iterrows()]
             except FileNotFoundError:
-                print("Cannot find {}.csv data file".format(data_type))
+                log.warning("Cannot find {}.csv data file".format(data_type))
 
-        new_data = {'train': [],
-                    'valid': [],
-                    'test': []}
-
-        for field in data_types:
-            for i in range(len(data[field])):
-                new_data[field].append(
-                    (data[field].loc[i, 'text'], data[field].loc[i, "intents"].split(",")))
-
-        return new_data
+        return data
