@@ -58,7 +58,8 @@
   "model": {
     "train_now": true,
     "name": "go_bot",
-	"debug": false,
+	  "debug": false,
+	  "max_of_context_tokens": 20,
     "template_path": "dstc2/dstc2-templates.txt",
     "network": {
       "train_now": true,
@@ -68,8 +69,15 @@
       "learning_rate": 0.02,
       "hidden_dim": 128,
 	  "dense_size": 32,
-      "obs_size": 830,
+      "obs_size": 530,
       "use_action_mask": false,
+      "attention_mechanism": "general",
+      "attention_mechanism": "cs_general",
+      "att_hidden_dim": 32,
+      "attention_depth": 3,
+      "max_of_context_tokens": 20,
+      "token_dim": 300,
+      "key_dim": 45,
       "action_size": 45
     },
     "slot_filler": {

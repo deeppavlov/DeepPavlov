@@ -38,6 +38,7 @@ from deeppavlov.core.common.log import get_logger
 
 log = get_logger(__name__)
 
+DEBUG=True
 
 @register("go_bot")
 class GoalOrientedBot(NNModel):
@@ -54,6 +55,7 @@ class GoalOrientedBot(NNModel):
                  debug=False,
                  train_now=False,
                  save_path=None,
+                 max_of_context_tokens=100,
                  **kwargs):
 
         super().__init__(save_path=save_path, train_now=train_now, mode=kwargs['mode'])
@@ -61,6 +63,7 @@ class GoalOrientedBot(NNModel):
         self.episode_done = True
         self.use_action_mask = use_action_mask
         self.debug = debug
+        self.max_of_context_tokens = max_of_context_tokens
         self.slot_filler = slot_filler
         self.intent_classifier = intent_classifier
         self.bow_encoder = bow_encoder
@@ -103,15 +106,20 @@ class GoalOrientedBot(NNModel):
         # Embeddings
         emb_features = []
         if callable(self.embedder):
-            emb_features = self.embedder([tokenized], mean=True)[0]
-
+            if tokenized :
+                pad = np.zeros((self.max_of_context_tokens, self.embedder.dim), dtype=np.float32)
+                sen = np.array(self.embedder([tokenized])[0]) # TODO : Unsupport of  batch_size more than 1
+                csg_emb_features = np.concatenate((pad,sen))[-self.max_of_context_tokens:]
+            else:
+                csg_emb_features = np.zeros((self.max_of_context_tokens, self.network.token_dim), dtype=np.float32)
+            # emb_features = self.embedder([tokenized], mean=True)[0]
         # Intent features
         intent_features = []
         if callable(self.intent_classifier):
             intent_features = self.intent_classifier([tokenized], predict_proba=True).ravel()
             if self.debug:
                 log.debug("Predicted intent = `{}`".format(
-                    self.intent_classifier.infer(tokenized)))
+                    self.intent_classifier(tokenized)))
 
         # Text entity features
         if callable(self.slot_filler):
@@ -141,8 +149,10 @@ class GoalOrientedBot(NNModel):
 
             log.debug(debug_msg)
 
-        return np.hstack((bow_features, emb_features, intent_features,
-                          state_features, context_features, self.prev_action))
+        return np.hstack((bow_features, intent_features,
+                          state_features, context_features, self.prev_action)), csg_emb_features, self.prev_action
+        # return np.hstack((bow_features, emb_features, intent_features,
+        #                   state_features, context_features, self.prev_action))
 
     def _encode_response(self, act):
         return self.templates.actions.index(act)
@@ -178,12 +188,15 @@ class GoalOrientedBot(NNModel):
         for contexts, responses in zip(x, y):
             self.reset()
             d_features, d_actions, d_masks = [], [], []
+            d_emb_context, d_key= [], []
             for context, response in zip(contexts, responses):
-                features = self._encode_context(context['text'],
+                features, emb_context, key = self._encode_context(context['text'],
                                                 context.get('db_result'))
                 if context.get('db_result') is not None:
                     self.db_result = context['db_result']
                 d_features.append(features)
+                d_emb_context.append(emb_context)
+                d_key.append(key)
 
                 action_id = self._encode_response(response['act'])
                 # previous action is teacher-forced here
@@ -194,14 +207,16 @@ class GoalOrientedBot(NNModel):
                 d_masks.append(self._action_mask())
 
             # self.network.train(d_features, d_actions, d_masks)
-            self.network.train_on_batch([d_features, d_masks], d_actions)
+            self.network.train_on_batch([d_features, d_emb_context, d_key, d_masks], d_actions)
 
     def infer_on_batch(self, xs):
         return [self._infer_dialog(x) for x in xs]
 
     def _infer(self, context, db_result=None, prob=False):
+        features, emb_context, key = self._encode_context(context,
+                                        db_result)
         probs = self.network(
-            self._encode_context(context, db_result),
+            features, emb_context, key,
             self._action_mask(),
             prob=True
         )
