@@ -27,6 +27,7 @@ import deeppavlov.skills.go_bot.go_bot
 import deeppavlov.skills.go_bot.network
 import deeppavlov.skills.go_bot.tracker
 import deeppavlov.vocabs.typos
+import deeppavlov.dataset_readers.morphotagging_dataset_reader
 
 import deeppavlov.metrics.accuracy
 import deeppavlov.metrics.fmeasure
