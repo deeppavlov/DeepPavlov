@@ -12,6 +12,7 @@ import deeppavlov.datasets.hcn_dataset
 import deeppavlov.datasets.intent_dataset
 import deeppavlov.datasets.typos_dataset
 import deeppavlov.datasets.classification_dataset
+import deeppavlov.datasets.morphotagger_dataset
 import deeppavlov.models.classifiers.intents.intent_model
 import deeppavlov.models.commutators.random_commutator
 import deeppavlov.models.embedders.fasttext_embedder

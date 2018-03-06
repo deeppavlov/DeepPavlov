@@ -1,0 +1,9 @@
+{
+  "dataset_reader": {
+    "name": "morphotagger_dataset_reader",
+    "data_path": "data/UD2.0_source",
+    "read_params": {"language": "hu"}
+  },
+  "dataset": {"name": "morphotagger_dataset"},
+  "train_batch_size": 32, "dev_batch_size": 128
+}

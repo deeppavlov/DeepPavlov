@@ -62,9 +62,13 @@ class MorphotaggerDatasetReader(DatasetReader):
     def read(self, data_path, language=None, data_types=None,
              is_filepath=False, **kwargs):
         """
-        Read UD dataset from data_path directory.
+        Reads UD dataset from data_path.
 
-
+        data_path: str or list, can be either
+            1. a directory containing files. The file for data_type 'mode'
+            is then data_path / {language}-ud-{mode}.conllu
+            2. a single file. Set is_filepath=True in this case.
+            3. a list of files, containing the same number of items as data_types
         """
         if data_types is None:
             data_types = ["train", "dev"]
