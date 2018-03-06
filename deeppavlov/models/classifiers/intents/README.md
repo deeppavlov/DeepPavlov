@@ -71,7 +71,6 @@ Below the table with description of parameters for
 | **dataset_reader**  | **instance to read datasets from files** |
 |   name              | registered name of dataset reader   <br />*SetOfValues*: "dstc2_datasetreader", "classification_datasetreader" |
 |   data_path         | directory where data files are located                          | 
-|   data_types        | which data types is presented in data_path (only for `classification_datasetreader`) *SetOfValues*: list of fields, i.e ["train", "valid", "test"]| 
 | **dataset**         | **instance to provide models with data in the standard form (each example is a tuple (x, y) where x and y could be numbers, binaries, lists or strings)** |
 |   name              | registered name of dataset        <br />*SetOfValues*:  "intent_dataset", classification_dataset"     | 
 |   seed              | seed for batch generator              |

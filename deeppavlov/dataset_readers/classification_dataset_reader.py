@@ -37,7 +37,7 @@ class ClassificationDatasetReader(DatasetReader):
     url = 'http://lnsigo.mipt.ru/export/datasets/snips_intents/train.csv'
 
     @overrides
-    def read(self, data_path, data_types=["train"]):
+    def read(self, data_path):
         """
         Read dataset from data_path directory.
         Reading files are all data_types + extension
@@ -51,25 +51,20 @@ class ClassificationDatasetReader(DatasetReader):
             dictionary with types from data_types.
             Each field of dictionary is a list of tuples (x_i, y_i)
         """
+        data_types = ["train", "valid", "test"]
 
+        if not Path(data_path, "train.csv").exists():
+            log.info("Loading train data from {} to {}".format(self.url, data_path))
+            download(source_url=self.url, dest_file_path=Path(data_path, "train.csv"))
+
+        data = {"train": [],
+                "valid": [],
+                "test": []}
         for data_type in data_types:
-            if not Path(data_path).joinpath(data_type + ".csv").exists():
-                log.info("Loading {} data from {} to {}".format(data_type, self.url, data_path))
-                download(source_url=self.url,
-                         dest_file_path=Path(data_path).joinpath(data_type + ".csv"))
-                mark_done(data_path)
+            try:
+                df = pd.read_csv(Path(data_path).joinpath(data_type + ".csv"))
+                data[data_type] = [(row['text'], row['intents'].split(',')) for _, row in df.iterrows()]
+            except FileNotFoundError:
+                log.warning("Cannot find {}.csv data file".format(data_type))
 
-        data = {}
-        for data_type in data_types:
-            data[data_type] = pd.read_csv(Path(data_path).joinpath(data_type + ".csv"))
-
-        new_data = {'train': [],
-                    'valid': [],
-                    'test': []}
-
-        for field in data_types:
-            for i in range(data[field].shape[0]):
-                new_data[field].append(
-                    (data[field].loc[i, 'text'], data[field].loc[i, "intents"].split(",")))
-
-        return new_data
+        return data
