@@ -39,14 +39,13 @@ This message contains two intents `(thankyou, bye)`.
 
 ## Infer from pre-trained model
 
-To infer using console interface one have tp set parameter `train_now` to `false` 
-in `configs/intents/config_dstc2.json` and then run
+To infer using console interface one have to run
 ```
-python deep.py interact configs/intents/config_dstc2.json
+python deep.py interact configs/intents/intents_dstc2.json
 ```
 or
 ```
-python deep.py interactbot configs/intents/config_dstc2_infer.json
+python deep.py interactbot configs/intents/intents_dstc2.json -t <TELEGRAM_TOKEN>
 ```
 For 'interactbot' mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` 
 environment variable.
@@ -60,18 +59,20 @@ Now user can enter a text string and get intents (classes which a request belong
 
 ## Train model
 
-One of the main constituents of model is a configuration file. 
-Below the table with description of parameters is presented.
+One of the main constituents of model is a configuration file.
+Following [this link](../../../configs/intents) one can find examples of config files.
+Below the table with description of parameters for 
+[intents_dstc2.json](../../../configs/intents/intents_dstc2.json) config is presented.
 
 #### Configuration parameters:  
 
 |   Parameter         |  Description                                                      | 
 |---------------------|-------------------------------------------------------------------|
-| **dataset_reader** ||
+| **dataset_reader**  | **instance to read datasets from files** |
 |   name              | registered name of dataset reader   <br />*SetOfValues*: "dstc2_datasetreader", "classification_datasetreader" |
 |   data_path         | directory where data files are located                          | 
 |   data_types        | which data types is presented in data_path (only for `classification_datasetreader`) *SetOfValues*: list of fields, i.e ["train", "valid", "test"]| 
-| **dataset** ||
+| **dataset**         | **instance to provide models with data in the standard form (each example is a tuple (x, y) where x and y could be numbers, binaries, lists or strings)** |
 |   name              | registered name of dataset        <br />*SetOfValues*:  "intent_dataset", classification_dataset"     | 
 |   seed              | seed for batch generator              |
 |   fields_to_merge   | list of fields to merge                <br />*SetOfValues*: list of fields, i.e ["train", "valid", "test"]| 
@@ -79,22 +80,34 @@ Below the table with description of parameters is presented.
 |   field_to_split    | name of field to split                         <br />*SetOfValues*:  field, i.e "train", "valid", "test"           | 
 |   split_fields      | list of fields to which save splitted field     <br />*SetOfValues*:  list of fields, i.e ["train", "valid", "test"]|
 |   split_proportions | list of corresponding proportions for splitting  <br />*SetOfValues*:  list of floats each of which is in  \[0., 1.\]|
-| **vocabs.classes_vocab** ||
+| **chainer**         | **chainer is a structure that receives tuples `(in, in_y)` and produces `out`**     |
+| in                  | user-defined name of input (or list of names in case of different inputs) <br />*SetOfValues*: list of names, i.e ["x"], ["x0", "x1"] |
+| in_y                | user-defined name of input targets (or list of names in case of different input targets) <br />*SetOfValues*: list of names, i.e ["y"], ["y0", "y1"] |
+| out                 | user-defined name of output (or list of names in case of different outputs) <br />*SetOfValues*: list of names, i.e ["y_pred"], ["y_pred0", "y_pred1"] |
+| **pipe**            | **list that contains sequence of model components (including vocabs, preprocessors, postprocessors etc.)**|
+|                     | **following parameters are for composing vocabulary**  |
+| id                  | key name for considered model for further references |
 | name                | registered name of vocab    <br />*SetOfValues*: "default_vocab"  | 
-|  inputs             | whether to create vocab over x and/or y fields of dataset  <br />*SetOfValues*: list of "x" and/or "y"    |
+|  fit_on             | whether to create vocab over x and/or y fields of dataset  <br />*SetOfValues*: list of names defined in chainer.in or chainer.in_y  |
 |  level              | whether to considered char or token level     <br />*SetOfValues*: "char", "token"   |
 | load_path           | path to file which vocab with classes will be loaded from    |
 | save_path           | path to file where vocab with classes will be saved    |
-| train_now           | whether to train vocab or not  |
-| **model**           |
+|                     | **following parameters are for composing main part of model** |
+| in                  | inputs for the model <br />*SetOfValues*: list of names from chainer.in, chainer.in_y or outputs of previous models |
+| in_y                | input targets for the model, obligatory for training <br />*SetOfValues*: list of names from chainer.in, chainer.in_y or outputs of previous models  |
+| out                 | outputs for the model <br />*SetOfValues*: list of names |
+| main                | determines main part of the pipe |
 | name                | registered name of model  | 
+| load_path           | path to file which model files will be loaded from    |
+| save_path           | path to file where model files will be saved    |
+| classes             | list of classes names. In this case they could be simply obtained from `classes_vocab.keys()` method |
+| opt                 | **following parameters are for  model** |
 | model_name          | method of the class KerasIntentModel that corresponds to the model <br />*SetOfValues*: "cnn_model", "dcnn_model"   | 
 | text_size           | length of each sample in words      | 
 | confident_threshold | boundary value of belonging to a class  <br />*SetOfValues*: \[0., 1.\]                       | 
 | kernel_sizes_cnn    | kernel sizes for shallow-and-wide and deep CNN model        | 
 | filters_cnn         | number(-s) of filters for shallow-and-wide (deep) CNN   | 
 | dense_size          | size of dense layer previous for classifying one    | 
-| lear_metrics        | learning metrics for training  <br />*SetOfValues*: any method from from keras.metrics                            | 
 | lear_rate           | learning rate for training    | 
 | lear_rate_decay     | learning rate decay for training          | 
 | optimizer           | optimizer for training    <br />*SetOfValues*: any method from keras.optimizers                         |
@@ -102,32 +115,32 @@ Below the table with description of parameters is presented.
 | coef_reg_cnn        | coefficient for kernel l2-regularizer for convolutional layers   |
 | coef_reg_den        | coefficient for kernel l2-regularizer for dense layers  |
 | dropout_rate        | dropout rate for training    |
+| **embedder**        | **instance to produce word vectors** |
+| embedder.name       | registered name of embedder  <br />*SetOfValues*:"fasttext"   |
+| embedder.load_path  | path to file which embedding binary file will be loaded from    |
+| embedder.emb_module | fasttext library to use  <br />*SetOfValues*: "fasttext", "pyfasttext", "gensim"            | 
+| embedder.dim        | dimension of embeddings    | 
+| **tokenizer**       | **instance to tokenize texts** |
+| tokenizer.name      | registered name of tokenizer <br />*SetOfValues*: "nltk_tokenizer"                              | 
+| tokenizer.tokenizer | tokenizer from nltk.tokenize to use  <br />*SetOfValues*:  any method from nltk.tokenize    |  
+| **train**           | **following parameters are for training** |
 | epochs              | number of epochs for training    |
 | batch_size          | batch size for training    |
+| metrics             | learning metrics for training  <br />*SetOfValues*: any method from from keras.metrics         | 
+| validation_patience | maximal number of validation loss increases before stop training           | 
 | val_every_n_epochs  | frequency of validation during training (validate every n epochs)       | 
-| verbose             | parameter whether to print training information or not        | 
-| val_patience        | maximal number of validation loss increases before stop training           | 
-| load_path           | path to file which model files will be loaded from    |
-| save_path           | path to file where model files will be saved    |
-| **model.embedder** ||
-| name                | registered name of embedder  <br />*SetOfValues*:"fasttext"   |
-| load_path           | path to file which embedding binary file will be loaded from    |
-| emb_module          | fasttext library to use  <br />*SetOfValues*: "fasttext", "pyfasttext", "gensim"            | 
-| dim                 | dimension of embeddings    | 
-| **model.tokenizer** ||
-| name                | registered name of tokenizer <br />*SetOfValues*: "nltk_tokenizer"                              | 
-| tokenizer           | tokenizer from nltk.tokenize to use  <br />*SetOfValues*:  any method from nltk.tokenize                 |  
+| val_every_n_batches | frequency of validation during training (validate every n batches)      | 
+| show_examples       | parameter whether to print training information or not        | 
 
-### Train on DSTC 2
+### Train on DSTC-2
 
-To train model again or with other parameters on DSTC 2 data
- the only actions are to set parameter `train_now` to `true` in `configs/intents/config_dstc2.json`,
- set `model_path` to the directory where trained model will be saved 
- (it will be loaded if model exists, and it will be created otherwise).
+To train model again or with other parameters on DSTC-2 dataset,
+ set `save_path` to the directory where trained model will be saved 
+ (pre-trained model will be loaded if `load_path` is provided and files exist, and it will be created from scratch otherwise).
  All other parameters of model as well as embedder and tokenizer could be changed. 
  Then training could be run in the following way:
 ```
-python deep.py train configs/intents/config_dstc2.json
+python deep.py train configs/intents/intents_dstc2.json
 ```
 
 ### Train on other data
@@ -147,26 +160,25 @@ Training data files `train.csv` (and, if exists, `valid.csv`) should be presente
 | ...          | ...   ||
 
 
-To train model one should 
-* set parameter `train_now` to `true` in `configs/intents/config_snips.json`,
+To train model one should
 * set `data_path` to the directory where `train.csv` will be downloaded to,
-* set `model_path` to the directory where trained model will be saved to, 
+* set `save_path` to the directory where trained model will be saved to, 
 * set all other parameters of model as well as embedder and tokenizer to desired ones.
 
 Then training could be run in the same way:
 ```
-python deep.py train configs/intents/config_snips.json
+python deep.py train configs/intents/intents_snips.json
 ```
 
-**Current `config_snips.json` implies intent recognition for SNIPS benchmark dataset [2] 
+**Current `intents_snips.json` implies intent recognition for SNIPS benchmark dataset [2] 
 that was restored in `.csv` format and will be downloaded automatically.**
 
-**Important: there are not provided embedding binary file and pre-trained model files for SNIPS dataset.
-Please, provide you own embedding binary file to train model.**
+**Important: there are not provided special embedding binary file and pre-trained model files for SNIPS dataset.
+Please, provide you own embedding binary file to train model because embedding file trained on DSTC-2 dataset is not the best choice for this task.**
 
 ## Comparison
 
-As no one had published intent recognition for DSTC 2 data, 
+As no one had published intent recognition for DSTC-2 data, 
 comparison of the presented model is given on **SNIPS** dataset. 
 Estimation of model scores was conducted in the same way as in [3] to compare with results from the presentation.
 The results were achieved with tuning of parameters.
@@ -186,7 +198,7 @@ The results were achieved with tuning of parameters.
 
 ## Ways to improve
 
-* One can train the other embeddings using FastText [4] that are more appropriate for the considered dataset.
+* One can train another embeddings using FastText [4] that are more appropriate for considered datasets.
 * All the parameters have to be tuned for training.
 
 # References

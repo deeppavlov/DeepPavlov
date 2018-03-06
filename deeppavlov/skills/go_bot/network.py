@@ -53,6 +53,8 @@ class GoalOrientedBotNetwork(TFModel):
 
     def __call__(self, features, emb_context, key, action_mask, prob=False):
         # TODO: make input list
+        # TODO: batch_size != 1
+        #batch_size = len(features)
         probs, prediction, state = \
             self.sess.run(
                 [self._probs, self._prediction, self._state],
@@ -60,6 +62,8 @@ class GoalOrientedBotNetwork(TFModel):
                     self._features: [[features]],
                     self._emb_context: [[emb_context]],
                     self._key: [[key]],
+                    self._dropout: 1.,
+                    self._utterance_mask: [[1.]],
                     self._initial_state: (self.state_c, self.state_h),
                     self._action_mask: [[action_mask]]
                 }
@@ -70,24 +74,23 @@ class GoalOrientedBotNetwork(TFModel):
         return prediction
 
     def train_on_batch(self, x: list, y: list):
-        features, emb_context, key, action_mask = x
+        features, emb_context, key, utter_mask, action_mask = x
         action = y
-        self._train_step(features, emb_context, key, action, action_mask)
+        self._train_step(features, emb_context, key, utter_mask, action, action_mask)
 
     def _init_params(self, params=None):
         params = params or self.opt
         self.learning_rate = params['learning_rate']
+        self.dropout_rate = params.get('dropout_rate', 1.)
         self.n_hidden = params['hidden_dim']
         self.n_att_hidden = params['att_hidden_dim']
         self.n_actions = params['action_size']
-        #TODO: try obs_size=None or as a placeholder
         self.obs_size = params['obs_size']
         self.max_of_context_tokens = params['max_of_context_tokens']
         self.token_dim = params['token_dim']
         self.key_dim = params['key_dim']
         self.attention_mechanism = params['attention_mechanism']
         self.attention_depth = params.get('attention_depth')
-        self.batch_size = 1
         self.dense_size = params.get('dense_size', params['hidden_dim'])
 
     def _build_graph(self):
@@ -98,54 +101,83 @@ class GoalOrientedBotNetwork(TFModel):
         _logits, self._state = self._build_body()
 
         # probabilities normalization : elemwise multiply with action mask
-        self._probs = tf.squeeze(tf.nn.softmax(_logits))
-        #TODO: add action mask
-        #self._probs = tf.multiply(tf.squeeze(tf.nn.softmax(_logits)),
-        #                          self._action_mask,
-        #                          name='probs')
+        self._probs = tf.multiply(_logits, self._action_mask)
+        self._probs = tf.squeeze(tf.nn.softmax(self._probs), name='probs')
 
         # loss, train and predict operations
         self._prediction = tf.argmax(self._probs, axis=-1, name='prediction')
+
+        _weights = tf.expand_dims(self._utterance_mask, -1)
+        # TODO: try multiplying logits to action_mask
+        #onehots = tf.one_hot(self._action, self.n_actions)
+        #_loss_tensor = \
+            #tf.losses.softmax_cross_entropy(logits=_logits, onehot_labels=onehots,
+            #                                weights=_weights,
+            #                                reduction=tf.losses.Reduction.NONE)
         _loss_tensor = \
             tf.losses.sparse_softmax_cross_entropy(logits=_logits,
-                                                   labels=self._action)
+                                                   labels=self._action,
+                                                   weights=_weights,
+                                                   reduction=tf.losses.Reduction.NONE)
+        # multiply with batch utterance mask
+        #_loss_tensor = tf.multiply(_loss_tensor, self._utterance_mask)
         self._loss = tf.reduce_mean(_loss_tensor, name='loss')
-        self._train_op = self.get_train_op(self._loss, self.learning_rate)
+        self._train_op = self.get_train_op(self._loss, self.learning_rate, clip_norm=2.)
 
     def _add_placeholders(self):
         # TODO: make batch_size != 1
+        self._dropout = tf.placeholder_with_default(1.0, shape=[])
+        self._features = tf.placeholder(tf.float32,
+                                        [None, None, self.obs_size],
+                                        name='features')
+        self._action = tf.placeholder(tf.int32,
+                                      [None, None],
+                                      name='ground_truth_action')
+        self._action_mask = tf.placeholder(tf.float32,
+                                           [None, None, self.n_actions],
+                                           name='action_mask')
+        self._utterance_mask = tf.placeholder(tf.float32,
+                                              shape=[None, None],
+                                              name='utterance_mask')
         _initial_state_c = \
-            tf.placeholder_with_default(np.zeros([self.batch_size, self.n_hidden], np.float32),
-                                        shape=[self.batch_size, self.n_hidden])
+            tf.placeholder_with_default(np.zeros([1, self.n_hidden], np.float32),
+                                        shape=[None, self.n_hidden])
         _initial_state_h = \
-            tf.placeholder_with_default(np.zeros([self.batch_size, self.n_hidden], np.float32),
-                                        shape=[self.batch_size, self.n_hidden])
+            tf.placeholder_with_default(np.zeros([1, self.n_hidden], np.float32),
+                                        shape=[None, self.n_hidden])
         self._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c,
                                                             _initial_state_h)
-        self._features = tf.placeholder(tf.float32, [self.batch_size, None, self.obs_size],
+        self._features = tf.placeholder(tf.float32, [None, None, self.obs_size],
                                         name='features')
-        self._emb_context = tf.placeholder(tf.float32, [self.batch_size, None, self.max_of_context_tokens, self.token_dim],
+        self._emb_context = tf.placeholder(tf.float32, [None, None, self.max_of_context_tokens, self.token_dim],
                                         name='emb_context')
-        self._key = tf.placeholder(tf.float32, [self.batch_size, None, self.key_dim],
+        self._key = tf.placeholder(tf.float32, [None, None, self.key_dim],
                                         name='key')
-        self._action = tf.placeholder(tf.int32, [self.batch_size, None],
+        self._action = tf.placeholder(tf.int32, [None, None],
                                       name='ground_truth_action')
-        self._action_mask = tf.placeholder(tf.float32, [self.batch_size, None, self.n_actions],
+        self._action_mask = tf.placeholder(tf.float32, [None, None, self.n_actions],
                                            name='action_mask')
+        #     tf.placeholder_with_default(np.zeros([1, self.n_hidden], np.float32),
+        #                                 shape=[None, self.n_hidden])
+        # _initial_state_h = \
+        #     tf.placeholder_with_default(np.zeros([1, self.n_hidden], np.float32),
+        #                                 shape=[None, self.n_hidden])
+        # self._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c,
+        #                                                     _initial_state_h)
 
     def _build_body(self):
         # input projection
-        _projected_features = \
-            tf.layers.dense(self._features,
-                            self.dense_size,
-                            kernel_initializer=xavier_initializer())
+        _units = tf.nn.dropout(self._features, self._dropout)
+        _units = tf.layers.dense(_units,
+                                 self.dense_size,
+                                 kernel_initializer=xavier_initializer())
 
         if self.attention_mechanism == 'general':
             _att_mech_output_tensor = self._general_att_mech()
         elif self.attention_mechanism == 'cs_general':
             _att_mech_output_tensor = self._cs_general_att_mech()
 
-        _concatenated_features = tf.concat([_projected_features, _att_mech_output_tensor],-1)
+        _concatenated_features = tf.concat([_units, _att_mech_output_tensor],-1)
         # _concatenated_features = _projected_features
 
 
@@ -156,7 +188,6 @@ class GoalOrientedBotNetwork(TFModel):
                                             initial_state=self._initial_state)
 
         # output projection
-        # TODO: try multiplying logits to action_mask
         _logits = tf.layers.dense(_output,
                                   self.n_actions,
                                   kernel_initializer=xavier_initializer())
@@ -167,18 +198,18 @@ class GoalOrientedBotNetwork(TFModel):
 
             _raw_key = self._key
             _n_hidden = (self.n_att_hidden//2)*2
-            _batch_size = self.batch_size
             _max_of_context_tokens = self.max_of_context_tokens
             _token_dim = self.token_dim
             _context = self._emb_context
 
             _context_dim = tf.shape(_context)
+            _batch_size = _context_dim[0]
             _r_context = tf.reshape(_context, shape = [-1, _max_of_context_tokens, _token_dim])
 
             _projected_key = \
                     tf.layers.dense(_raw_key,
                                 _n_hidden,
-                                kernel_initializer=xavier_initializer()) # [self.batch_size, None, _n_hidden]
+                                kernel_initializer=xavier_initializer()) # [None, None, _n_hidden]
             _projected_key_dim = tf.shape(_projected_key)
             _r_projected_key = tf.reshape(_projected_key, shape = [-1, _n_hidden, 1])
 
@@ -203,13 +234,13 @@ class GoalOrientedBotNetwork(TFModel):
             _raw_key = self._key
             _attention_depth = self.attention_depth
             _n_hidden = (self.n_att_hidden//2)*2
-            _batch_size = self.batch_size
             _max_of_context_tokens = self.max_of_context_tokens
             _token_dim = self.token_dim
             _key_dim = self.key_dim
             _context = self._emb_context
 
             _context_dim = tf.shape(_context)
+            _batch_size = _context_dim[0]
             _r_context = tf.reshape(_context, shape = [-1, _max_of_context_tokens, _token_dim])
             assert _attention_depth is not None
 
@@ -234,16 +265,21 @@ class GoalOrientedBotNetwork(TFModel):
         self.state_c = np.zeros([1, self.n_hidden], dtype=np.float32)
         self.state_h = np.zeros([1, self.n_hidden], dtype=np.float32)
 
-    def _train_step(self, features, emb_context, key, action, action_mask):
+    def _train_step(self, features, emb_context, key, utter_mask, action, action_mask):
+        batch_size = len(features)
         _, loss_value, prediction = \
             self.sess.run(
                 [ self._train_op, self._loss, self._prediction ],
                 feed_dict={
-                    self._features: [features],
-                    self._emb_context: [emb_context],
-                    self._key: [key],
-                    self._action:[action],
-                    self._action_mask: [action_mask]
+                    self._dropout: self.dropout_rate,
+                    self._utterance_mask: utter_mask,
+                    self._initial_state: (np.tile(self.state_c, [batch_size, 1]),
+                                          np.tile(self.state_h, [batch_size, 1])),
+                    self._features: features,
+                    self._emb_context: emb_context,
+                    self._key: key,
+                    self._action: action,
+                    self._action_mask: action_mask
                 }
             )
         return loss_value, prediction

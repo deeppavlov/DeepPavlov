@@ -27,7 +27,6 @@ class FeaturizedTracker(Component):
         self.slot_names = list(slot_names)
         self.reset_state()
 
-
     @property
     def state_size(self):
         return len(self.slot_names)

@@ -34,18 +34,13 @@ class Serializable(metaclass=ABCMeta):
      It is always an empty string and is ignored if it is not set in json config.
     """
 
-    def __init__(self, save_path, load_path=None, train_now=False, mode='infer', *args, **kwargs):
+    def __init__(self, save_path, load_path=None, mode='infer', *args, **kwargs):
 
         if save_path:
             self.save_path = expand_path(save_path)
             self.save_path.parent.mkdir(parents=True, exist_ok=True)
         else:
             self.save_path = None
-
-        if mode == 'train':
-            self.train_now = train_now
-        else:
-            self.train_now = False
 
         if load_path:
             self.load_path = expand_path(load_path)
