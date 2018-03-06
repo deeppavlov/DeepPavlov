@@ -1,10 +1,7 @@
 {
   "dataset_reader": {
     "name": "classification_datasetreader",
-    "data_path": "snips",
-    "data_types": [
-      "train"
-    ]
+    "data_path": "snips"
   },
   "dataset": {
     "name": "classification_dataset",
