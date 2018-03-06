@@ -44,10 +44,11 @@ class KerasIntentModel(KerasModel):
     Class implements keras model for intent recognition task for multi-class multi-label data
     """
     def __init__(self,
-                 vocabs,
                  opt: Dict,
                  embedder: FasttextEmbedder,
                  tokenizer: NLTKTokenizer,
+                 classes=None,
+                 vocabs=None,
                  **kwargs):
         """
         Initialize and train vocabularies, initializes embedder, tokenizer,
@@ -70,8 +71,10 @@ class KerasIntentModel(KerasModel):
 
         # Tokenizer and vocabulary of classes
         self.tokenizer = tokenizer
-        self.vocabs = vocabs
-        self.classes = np.sort(np.array(list(self.vocabs["classes_vocab"].keys())))
+        if classes:
+            self.classes = np.sort(np.array(list(classes)))
+        else:
+            self.classes = np.sort(np.array(list(vocabs["classes_vocab"].keys())))
         self.n_classes = self.classes.shape[0]
 
         if 'add_metrics' in self.opt.keys():
@@ -158,7 +161,6 @@ class KerasIntentModel(KerasModel):
         embeddings_batch = np.asarray(embeddings_batch)
         return embeddings_batch
 
-    @check_attr_true('train_now')
     def train_on_batch(self, texts, labels):
         """
         Train the model on the given batch

@@ -1,0 +1,49 @@
+{
+  "dataset_reader": {
+    "name": "typos_kartaslov_reader"
+  },
+  "dataset": {
+    "name": "typos_dataset",
+    "test_ratio": 0.02
+  },
+  "chainer":{
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "name": "str_lower",
+        "id": "lower",
+        "in": ["x"],
+        "out": ["x_lower"]
+      },
+      {
+        "name": "nltk_tokenizer",
+        "id": "tokenizer",
+        "in": ["x_lower"],
+        "out": ["x_tokens"]
+      },
+      {
+        "ref": "tokenizer",
+        "in": ["y"],
+        "out": ["y_tokens"]
+      },
+      {
+        "fit_on": ["x_tokens", "y_tokens"],
+        "in": ["x_tokens"],
+        "out": ["y_predicted"],
+        "name": "spelling_error_model",
+        "window": 1,
+        "dictionary": {
+          "name": "russian_words_vocab"
+        },
+        "save_path": "error_model/error_model_ru.tsv",
+        "load_path": "error_model/error_model_ru.tsv"
+      }
+    ],
+    "out": ["y_predicted"]
+  },
+  "train": {
+    "validate_best": false,
+    "test_best": true
+  }
+}
