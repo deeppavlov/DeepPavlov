@@ -72,6 +72,8 @@ class RankingModel(NNModel):
 
         self.train_parameters = train_parameters
 
+        self.train_now = opt['train_now']
+
         self.opt = opt
 
         # Try to load the model (if there are some model files the model will be loaded from them)
