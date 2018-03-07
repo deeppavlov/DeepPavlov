@@ -5,10 +5,10 @@
 Named Entity Recognition (NER) is one of the most common tasks in natural language processing. 
 In most of the cases, NER task can be formulated as: 
 
-_Given a sequence of tokens (words, and maybe punctuation symbols) provide a tag from 
+_Given a sequence of tokens (words, and maybe punctuation symbols) provide a tag from a
 predefined set of tags for each token in the sequence._
 
-For NER task there are some common types of entities which essentially are tags:
+For NER task there are some common types of entities used as tags:
 - persons
 - locations
 - organizations
@@ -16,9 +16,8 @@ For NER task there are some common types of entities which essentially are tags:
 - quantities
 - monetary values 
 
-Furthermore, to distinguish consequent entities with the same tags BIO tagging scheme is used. 
-"B" stands for beginning, "I" stands for the continuation of an entity and "O" means the 
-absence of entity. Example with dropped punctuation:
+Furthermore, to distinguish adjacent entities with the same tag many applications use BIO tagging scheme. 
+Here "B" denotes beginning of an entity, "I" stands for "inside" and is used for all words comprising the entity except the first one, and "O" means the absence of entity. Example with dropped punctuation:
 
     Bernhard        B-PER
     Riemann         I-PER
@@ -61,30 +60,29 @@ To train the neural network, you need to have a dataset in the following format:
 
     ...
 
-The source text is tokenized and tagged. For each token, there is a separate tag with BIO 
-markup. Tags are separated from tokens with whitespaces. Sentences are separated by empty 
+The source text is tokenized and tagged. For each token, there is a tag with BIO 
+markup. Tags are separated from tokens with whitespaces. Sentences are separated with empty 
 lines.
 
-The dataset is a text file or a set of text files.
-The dataset must be split into three partitions: train, test, and validation. The train set 
+Dataset is a text file or a set of text files.
+The dataset must be split into three parts: train, test, and validation. The train set 
 is used for training the network, namely adjusting the weights with gradient descent. The 
 validation set is used for monitoring learning progress and early stopping. The test set is 
-used for final estimation of model quality. Typical partitions of train, validation, and test 
-are 80%, 10%, 10% respectively.
+used for final evaluation of model quality. Typical partition of a dataset into train, validation, and test 
+are 80%, 10%, 10%, respectively.
 
 
 ## Configuration of the model
 
 Configuration of the model can be performed in code or in JSON configuration file. To train 
-the model four groups of parameters must be specified:
+the model you need to specify four groups of parameters:
 
 - **`dataset_reader`**
 - **`dataset`**
 - **`chainer`**
 - **`train`**
 
-The following parts assume that config file is used. However, it can be used in the code
-replacing the JSON with python dictionary.
+In the subsequent text we show the parameter specification in config file. However, the same notation can be used to specify parameters in code by replacing the JSON with python dictionary.
 
 ### Dataset Reader
 
@@ -99,14 +97,14 @@ The dataset reader config part with "ner_dataset_reader" should look like:
 ```
 
 where "name" refers to the basic ner dataset reader class and data_path is the path to the 
-folder with three files, namely: "train.txt", "valid.txt", and "test.txt". Each file 
-contains data in the format presented in *Training data* section. Each line in the file 
-may contain additional information such as POS tags. However, the token must be first in 
-line and tags must be last.
+folder with three files, namely: "train.txt", "valid.txt", and "test.txt". Each file should
+contain data in the format presented in *Training data* section. Each line in the file 
+may contain additional information such as POS tags. However, the token must be the first in 
+line and NER tag must be the last.
 
 ### Dataset
 
-In order to perform simple batching and shuffling "basic_dataset" is used. The part of the 
+For simple batching and shuffling you can use "basic_dataset". The part of the 
 configuration file for the dataset looks like:
  ```json
 "dataset": {
@@ -119,8 +117,7 @@ There is no additional parameters in this part.
 ### Chainer
 
 The chainer part of the configuration file contains the specification of the neural network 
-model and supplementary things such as vocabularies. The chainer part must have the following 
-form:
+model and supplementary things such as vocabularies. Chainer should be defined as follows:
 
 ```json
 "chainer": {
@@ -132,9 +129,8 @@ form:
     "out": ["y_predicted"]
   }
 ```
-The inputs and outputs must be specified in the pype. "in" means regular input that is used 
-for inference and train mode. "in_y" is used for training and regularly 
-contains ground truth answers. "out" field stands for model prediction. The model inside the 
+The inputs and outputs must be specified in the pipe. "in" means regular input that is used 
+for inference and train mode. "in_y" is used for training and usually contains ground truth answers. "out" field stands for model prediction. The model inside the 
 pipe must have output variable with name "y_predicted" so that "out" knows where to get 
 predictions.
 
@@ -170,26 +166,25 @@ we define vocabularies needed to build the neural network:
     ...
 ]
 ```
-Parameters for vocabulary are:
+Parameters for the vocabulary are:
 
 - **`id`** - the name of the vocabulary which will be used in other models
 - **`name`** - always equal to `"default_vocab"`
-- **`fit_on`** - on which data part of the data the vocabulary should be fitted (built), 
-possible options: ["x"] or ["y"]
+- **`fit_on`** - on which part of the data the vocabulary should be fitted (built), 
+possible values are ["x"] or ["y"]
 - **`level`** - char or token level tokenization
-- **`save_path`** - path to the vocabulary where it will be saved
-- **`load_path`** - path to load existing vocabulary
+- **`save_path`** - path to a new file to save the vocabulary
+- **`load_path`** - path to an existing vocabulary
 
-Vocabularies are used for holding sets of tokens, tags, or characters. They assign indexes to 
+Vocabularies are used for holding sets of tokens, tags, or characters. They assign indices to 
 elements of given sets an allow conversion from tokens to indices and vice versa. Conversion of such kind 
 is needed to perform lookup in embeddings matrices and compute cross-entropy between predicted 
 probabilities and target values. For each vocabulary "default_vocab" model is used. "fit_on" 
-parameter defines on which part of the data build (assemble or train) the vocabulary. [\"x\"] 
-stends for x part of the data (tokens) and [\"y\"] stands for y part (tags). We also can 
-assemble character level vocabularies by defining level": "char" instead of "token".
+parameter defines on which part of the data the vocabulary is built. [\"x\"] 
+stands for the x part of the data (tokens) and [\"y\"] stands for the y part (tags). We can also 
+assemble character-level vocabularies by changing the value of "level" parameter: "char" instead of "token".
 
-The following part is network part. The network is defined by the following part of JSON 
-config:
+The network is defined by the following part of JSON config:
 ```json
 "pipe": [
     ...
@@ -221,45 +216,44 @@ config:
 ```
 
 All network parameters are:
-- **`in`** - the input to be taken from shared memory. Treated as x. So it is used both 
-during the training and inference
+- **`in`** - the input to be taken from shared memory. Treated as x. It is used both 
+during the training and the inference
 - **`in_y`** - the target or y input to be taken from shared memory. This input is used during
  the training.
 - **`name`** - the name of the model to be used. In this case we use 'ner' model originally 
 imported from deeppavlov.models.ner.ner. We use only 'ner' name relying on the @registry 
 decorator.
 - **`main`** - (reserved for future use) a boolean parameter defining whether this is the main model. 
-- **`save_path`** - path to the model where it will be saved
-- **`load_path`** - path to load pretrained model
+- **`save_path`** - path to the new file where the model will be saved
+- **`load_path`** - path to a pretrained model from where it will be loaded
 - **`token_embeddings_dim`** - token embeddings dimensionality (must agree with embeddings 
 if they are provided), typical values are from 100 to 300
-- **`word_vocab`** - in this field a link to word vocabulary from pipe must be provided. To address
+- **`word_vocab`** - in this field a link to word vocabulary from the pipe should be provided. To address
 the vocabulary we use "#word_vocab" expression, where _word_vocab_ is the name of other vocabulary
 defined in the pipe before
 - **`net_type`** - type of the network, either 'cnn' or 'rnn'
-- **`tag_vocab`** - in this field a link to tag vocabulary from pipe must be provided. In this case
+- **`tag_vocab`** - in this field a link to the tag vocabulary from the pipe should be provided. In this case
 "#tag_vocab" reference is used, addressing previously defined tag vocabulary
-- **`char_vocab`** - in this field a link to char vocabulary from pipe must be provided. In this case
+- **`char_vocab`** - in this field a link to the char vocabulary from the pipe must be provided. In this case
 "#char_vocab" reference is used, addressing previously defined char vocabulary
 - **`filter_width`** - the width of the convolutional kernel for Convolutional Neural Networks
 - **`embeddings_dropout`** - boolean, whether to use dropout on embeddings or not
-- **`n_filters`** - list of output feature dimensionality for each layer. For [100, 200] 
-there will be two layers with 100 and 200 number of units respectively. 
+- **`n_filters`** - a list of output feature dimensionality for each layer. A value `[100, 200]`
+means that there will be two layers with 100 and 200 units, respectively. 
 - **`token_embeddings_dim`** - dimensionality of token embeddings. If embeddings are trained on
-the go this parameter determine dimensionality of embedding matrix. If the case of pre-trained 
-embeddings this argument must agree with pre-trained dimensionality
+the go, this parameter determines dimensionality of the embedding matrix. If the pre-trained 
+embeddings this argument must agree with the dimensionality of pre-trained embeddings
 - **`char_embeddings_dim`** - character embeddings dimensionality, typical values are 25 - 100
-- **`use_crf`** - whether to use Conditional Random Fields on the top (suggested to always use
- True)
-- **`use_batch_norm`** - whether to use Batch Normalization or not. Affects only CNN networks
-- **`use_capitalization`** - whether to include capitalization binary features to the input 
-of the network. If True than binary feature indicating whether the word starts with a capital 
+- **`use_crf`** - boolean, whether to use Conditional Random Fields on top of the network (recommended)
+- **`use_batch_norm`** - boolean, whether to use Batch Normalization or not. Affects only CNN networks
+- **`use_capitalization`** - boolean, whether to include capitalization binary features to the input 
+of the network. If True, a binary feature indicating whether the word starts with a capital 
 letter will be concatenated to the word embeddings.
 - **`dropout_rate`** - probability of dropping the hidden state, values from 0 to 1. 0.5 
 works well in most of the cases
-- **`learning_rate`**: learning rate to use durint the training (0.01 - 0.0001 typical)
+- **`learning_rate`**: learning rate to use during the training (usually from 0.01 to 0.0001)
 
-After defining the "chainer" the "train" part must be specified:
+After the "chainer" part you should specify the "train" part:
 
 ```json
 "train": {
@@ -276,12 +270,12 @@ After defining the "chainer" the "train" part must be specified:
 ```
  
 training parameters are:
-- **`epochs`** - number of epochs (10 - 100 typical)
-- **`batch_size`** - number of samples in the batch (4 - 64 typical)
-- **`metrics`** - metrics to validated the model. For NER task ["ner_f1"] should be used
-- **`validation_patience`** - how many epochs continue training without improvement of metric
-- **`val_every_n_epochs`** - how often calculate metrics on validation set
-- **`log_every_n_epochs`** - how often to log the results
+- **`epochs`** - number of epochs (usually 10 - 100)
+- **`batch_size`** - number of samples in a batch (usually 4 - 64)
+- **`metrics`** - metrics to validate the model. For NER task we recommend using ["ner_f1"]
+- **`validation_patience`** - parameter of early stopping: for how many epochs the training can continue without improvement of metric value on the validation set
+- **`val_every_n_epochs`** - how often the metrics should be computed on the validation set
+- **`log_every_n_epochs`** - how often the results should be logged
 - **`show_examples`** - whether to show results of the network predictions
 
 
@@ -365,7 +359,7 @@ And now all parts together:
 
 ## Train and use the model
 
-To train and use model for prediction the following code can be used:
+Please see an example of training a NER model and using it for prediction:
 
 ```python
 from deeppavlov.core.commands.train import train_model_from_config
@@ -380,14 +374,14 @@ This example assumes that the working directory is deeppavlov.
 
 ## Results
 
-The NER network component reproduces architecture from the paper "_Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition_" https://arxiv.org/pdf/1709.09686.pdf, which is inspired by LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf.
+The NER network component reproduces the architecture from the paper "_Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition_" https://arxiv.org/pdf/1709.09686.pdf, which is inspired by LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf.
 
 Bi-LSTM architecture of NER network was tested on three datasets:
 - Gareev corpus [1] (obtainable by request to authors)
 - FactRuEval 2016 [2]
 - Persons-1000 [3]
 
-The F1 measure for the model along with other published solution provided in the table below:
+The F1 measure for our model along with the results of other published solutions are provided in the table below:
 
 | Models                | Gareev’s dataset | Persons-1000 | FactRuEval 2016 |
 |---------------------- |:----------------:|:------------:|:---------------:|
