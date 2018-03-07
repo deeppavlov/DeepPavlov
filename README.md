@@ -100,6 +100,8 @@ DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). O
  
 
 ## Installation
+0. Currently we support only Linux platform
+
 1. Create a virtual environment with `Python 3.6`
     ```
     virtualenv env
