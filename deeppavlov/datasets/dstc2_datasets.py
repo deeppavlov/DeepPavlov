@@ -16,7 +16,7 @@ limitations under the License.
 
 import logging
 import json
-import random
+from random import Random
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 @register('dstc2_ner_dataset')
 class DstcNerDataset(Dataset):
 
-    def __init__(self, data, dataset_path, shuffle=False):
+    def __init__(self, data, dataset_path, seed=None, shuffle=False):
         r""" Dataset takes a dict with fields 'train', 'test', 'valid'. A list of samples (pairs x, y) is stored
              in each field.
 
@@ -38,7 +38,7 @@ class DstcNerDataset(Dataset):
                     of different input features.
         """
         self.shuffle = shuffle
-        self.random_state = random.getstate()
+        self.random = Random(seed)
         # TODO: include slot vals to dstc2.tar.gz
         dataset_path = expand_path(dataset_path) / 'slot_vals.json'
         self._build_slot_vals(dataset_path)
@@ -54,7 +54,6 @@ class DstcNerDataset(Dataset):
             'all': self.train + self.test + self.valid
         }
         self.shuffle = shuffle
-        self.seed = None
 
     def _preprocess(self, data_part):
         processed_data_part = list()
