@@ -158,12 +158,12 @@ def TemporalDropout(inputs, dropout=0.0):
     return answer
 
 
-def positions_func(inputs):
+def positions_func(inputs, pad=PAD):
     """
     A layer filling i-th column of a 2D tensor with
     1+ln(1+i) when it contaings a meaningful symbol
     and with 0 when it contains PAD
     """
     position_inputs = kb.cumsum(kb.ones_like(inputs, dtype="float32"), axis=1)
-    position_inputs *= kb.cast(kb.not_equal(inputs, PAD), "float32")
+    position_inputs *= kb.cast(kb.not_equal(inputs, pad), "float32")
     return kb.log(1.0 + position_inputs)

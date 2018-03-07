@@ -21,7 +21,6 @@ import keras.layers as kl
 import keras.optimizers as ko
 import keras.regularizers as kreg
 from keras import Model
-from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 
 from .common import *
 from .cells import Highway
@@ -42,7 +41,6 @@ class CharacterTagger:
                  intermediate_dropout=0.0, lstm_dropout=0.0,
                  word_lstm_layers=1, word_lstm_units=128,
                  word_dropout=0.0, regularizer=None,
-                 batch_size=16, validation_split=0.2, nepochs=25,
                  min_prob=0.01, max_diff=2.0,
                  callbacks=None, verbose=1):
         self.symbols = symbols
@@ -63,9 +61,6 @@ class CharacterTagger:
         self.lstm_dropout = lstm_dropout
         self.word_dropout = word_dropout
         self.regularizer = regularizer
-        self.batch_size = batch_size
-        self.validation_split = validation_split
-        self.nepochs=nepochs
         self.min_prob = min_prob
         self.max_diff = max_diff
         self.callbacks = callbacks
@@ -89,11 +84,11 @@ class CharacterTagger:
 
     @property
     def symbols_number_(self):
-        return len(self.symbols_)
+        return len(self.symbols)
 
     @property
     def tags_number_(self):
-        return len(self.tags_)
+        return len(self.tags)
 
     def build(self):
         word_inputs = kl.Input(shape=(None, MAX_WORD_LENGTH+2), dtype="int32")
@@ -165,4 +160,46 @@ class CharacterTagger:
                          activity_regularizer=self.regularizer),
                 name="p")(lstm_outputs)
         return pre_outputs, lstm_outputs
+
+    def train_on_batch(self, data, labels, **kwargs):
+        """
+        Trains model on a single batch
+
+        X: a batch of word sequences
+        y: a batch of correct tag sequences
+        """
+        L = max(len(x) for x in data)
+        X = np.array([self._make_sent_vector(x, L) for x in data])
+        Y = np.array([self._make_tags_vector(y, L) for y in labels])
+        # TO_DO: add weights to deal with padded instances
+        return self.model_.train_on_batch(X, Y)
+
+    def _make_sent_vector(self, sent, bucket_length=None):
+        bucket_length = bucket_length or len(sent)
+        answer = np.zeros(shape=(bucket_length, MAX_WORD_LENGTH+2), dtype=np.int32)
+        for i, word in enumerate(sent):
+            answer[i, 0] = self.tags.tok2idx("BEGIN")
+            m = min(len(word), MAX_WORD_LENGTH)
+            for j, x in enumerate(word[-m:]):
+                answer[i, j+1] = self.symbols.tok2idx(x)
+            answer[i, m+1] = self.tags.tok2idx("END")
+            answer[i, m+2:] = self.tags.tok2idx("PAD")
+        return answer
+
+    def _make_tags_vector(self, tags, bucket_length=None):
+        bucket_length = bucket_length or len(tags)
+        answer = np.zeros(shape=(bucket_length,), dtype=np.int32)
+        for i, tag in enumerate(tags):
+            answer[i] = self.tags.tok2idx(tag)
+        return answer
+
+    def save(self, outfile):
+        """
+        outfile: file with model weights (other model components should be given in config)
+        """
+        self.model_.save_weights(outfile)
+
+    def load(self, infile):
+        self.model_.load_weights(infile)
+
 
