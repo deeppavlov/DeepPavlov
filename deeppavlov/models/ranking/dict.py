@@ -16,6 +16,11 @@ class InsuranceDict(object):
         self.build_label2toks_vocabulary(label2idxs_fname)
         self.toks = [el[1] for el in self.idx2tok_vocab.items()]
         self.build_label2emb_vocabulary()
+        self.context2toks_vocab = {}
+        self.context2emb_vocab = {}
+        context2idxs_fname = Path(vocabs_path) / 'question.train.token_idx.label'
+        self.build_context2toks_vocabulary(context2idxs_fname)
+        self.build_context2emb_vocabulary()
 
     def build_idx2tok_vocab(self, fname):
         with open(fname) as f:
@@ -30,9 +35,25 @@ class InsuranceDict(object):
         for el in label2idxs_vocab.items():
             self.label2toks_vocab[el[0]] = [self.idx2tok_vocab[idx] for idx in el[1]]
 
+    def build_context2toks_vocabulary(self, fname):
+        contexts = []
+        with open(fname, 'r') as f:
+            data = f.readlines()
+        for eli in data:
+            eli = eli[:-1]
+            c, _ = eli.split('\t')
+            contexts.append(c.split(' '))
+
+        for el in enumerate(contexts):
+            self.context2toks_vocab[el[0]] = [self.idx2tok_vocab[idx] for idx in el[1]]
+
     def build_label2emb_vocabulary(self):
         for i in range(len(self.label2toks_vocab)):
             self.label2emb_vocab[i] = None
+
+    def build_context2emb_vocabulary(self):
+        for i in range(len(self.context2toks_vocab)):
+            self.context2emb_vocab[i] = None
 
     def idxs2toks(self, idxs_li):
         toks_li = []
@@ -52,14 +73,26 @@ class InsuranceDict(object):
             toks_li = self.labels2toks(items_li)
         return toks_li
 
-    def save(self, path):
+    def save_resp(self, path):
         response_embeddings = []
         for i in range(len(self.label2emb_vocab)):
             response_embeddings.append(self.label2emb_vocab[i])
         response_embeddings = np.vstack(response_embeddings)
         np.save(path, response_embeddings)
 
-    def load(self, path):
+    def save_cont(self, path):
+        context_embeddings = []
+        for i in range(len(self.context2emb_vocab)):
+            context_embeddings.append(self.context2emb_vocab[i])
+        context_embeddings = np.vstack(context_embeddings)
+        np.save(path, context_embeddings)
+
+    def load_resp(self, path):
         response_embeddings_arr = np.load(path)
         for i in range(response_embeddings_arr.shape[0]):
             self.label2emb_vocab[i] = response_embeddings_arr[i]
+
+    def load_cont(self, path):
+        context_embeddings_arr = np.load(path)
+        for i in range(context_embeddings_arr.shape[0]):
+            self.context2emb_vocab[i] = context_embeddings_arr[i]

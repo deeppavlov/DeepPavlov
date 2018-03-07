@@ -89,15 +89,21 @@ class RankingModel(NNModel):
         weights_file_exist = self.load_path.exists()
         weights_path = str(weights_path.resolve())
 
-        embs_path = self.load_path / "response_embs.npy"
-        embs_file_exist = embs_path.exists()
-        embs_path = str(embs_path.resolve())
+        resp_embs_path = self.load_path / "response_embs.npy"
+        resp_embs_file_exist = resp_embs_path.exists()
+        resp_embs_path = str(resp_embs_path.resolve())
+
+        cont_embs_path = self.load_path / "context_embs.npy"
+        cont_embs_file_exist = cont_embs_path.exists()
+        cont_embs_path = str(cont_embs_path.resolve())
 
         # Check presence of the model files
-        if weights_file_exist and embs_file_exist:
+        if weights_file_exist and resp_embs_file_exist and cont_embs_file_exist:
             print('[loading model from {}]'.format(self.load_path.resolve()), file=sys.stderr)
             self._net.load(weights_path)
-            self.dict.load(embs_path)
+            self.dict.load_resp(resp_embs_path)
+            self.dict.load_cont(cont_embs_path)
+
 
     @overrides
     def save(self):
@@ -109,11 +115,14 @@ class RankingModel(NNModel):
 
         weights_path = self.save_path / "model_weights.h5"
         weights_path = str(weights_path.resolve())
-        embs_path = self.load_path / "response_embs.npy"
-        embs_path = str(embs_path.resolve())
+        resp_embs_path = self.load_path / "response_embs.npy"
+        resp_embs_path = str(resp_embs_path.resolve())
+        cont_embs_path = self.load_path / "context_embs.npy"
+        cont_embs_path = str(cont_embs_path.resolve())
         print('[saving model to {}]'.format(self.save_path.resolve()), file=sys.stderr)
         self._net.save(weights_path)
-        self.dict.save(embs_path)
+        self.dict.save_resp(resp_embs_path)
+        self.dict.save_cont(cont_embs_path)
 
     @check_attr_true('train_now')
     def train_on_batch(self, x, y):
@@ -142,12 +151,20 @@ class RankingModel(NNModel):
             response_embeddings = self._net.predict_response_emb([r, r, r], 512)
             for i in range(len(self.dict.label2toks_vocab)):
                 self.dict.label2emb_vocab[i] = response_embeddings[i]
+        if self.dict.context2emb_vocab[0] is None:
+            contexts = []
+            for i in range(len(self.dict.context2toks_vocab)):
+                contexts.append(self.dict.context2toks_vocab[i])
+            contexts = self.embdict.make_ints(contexts)
+            context_embeddings = self._net.predict_context_emb([contexts, contexts, contexts], 512)
+            for i in range(len(self.dict.context2toks_vocab)):
+                self.dict.context2emb_vocab[i] = context_embeddings[i]
 
         if type(batch[0]) == list:
             context = [el[0] for el in batch]
             c = self.dict.make_toks(context, type="context")
             c = self.embdict.make_ints(c)
-            c_emb = self._net.predict_context_emb([c, c, c])
+            c_emb = self._net.predict_context_emb([c, c, c], bs=len(batch))
             response = [el[1] for el in batch]
             batch_size = len(response)
             ranking_length = len(response[0])
@@ -163,27 +180,25 @@ class RankingModel(NNModel):
             return y_pred
 
         elif type(batch[0]) == str:
-            c = tokenize(batch)
-            c = self.embdict.make_ints(c)
-            c_emb = self._net.predict_context_emb([c, c, c])
+            c_input = tokenize(batch)
+            c_input = self.embdict.make_ints(c_input)
+            c_input_emb = self._net.predict_context_emb([c_input, c_input, c_input], bs=1)
+
+            c_emb = [self.dict.context2emb_vocab[i] for i in range(len(self.dict.context2emb_vocab))]
+            c_emb = np.vstack(c_emb)
+            pred_cont = np.sum(c_input_emb * c_emb, axis=1)\
+                     / np.linalg.norm(c_input_emb, axis=1) / np.linalg.norm(c_emb, axis=1)
+            pred_cont = np.flip(np.argsort(pred_cont), 0)[:self.interact_pred_num]
+            pred_cont = [' '.join(self.dict.context2toks_vocab[el]) for el in pred_cont]
+
             r_emb = [self.dict.label2emb_vocab[i] for i in range(len(self.dict.label2emb_vocab))]
             r_emb = np.vstack(r_emb)
-            y_pred = np.sum(c_emb * r_emb, axis=1) / np.linalg.norm(c_emb, axis=1) / np.linalg.norm(r_emb, axis=1)
-            y_pred = np.flip(np.argsort(y_pred), 0)[:self.interact_pred_num]
-            y_pred = [[' '.join(self.dict.label2toks_vocab[el]) for el in y_pred]]
+            pred_resp = np.sum(c_input_emb * r_emb, axis=1)\
+                     / np.linalg.norm(c_input_emb, axis=1) / np.linalg.norm(r_emb, axis=1)
+            pred_resp = np.flip(np.argsort(pred_resp), 0)[:self.interact_pred_num]
+            pred_resp = [' '.join(self.dict.label2toks_vocab[el]) for el in pred_resp]
+            y_pred = [{"contexts": pred_cont, "responses": pred_resp}]
             return y_pred
-
-    def interact(self, batch):
-        """Interactive inferrence. Type your x and get y printed"""
-
-        if self.dict.label2emb_vocab[0] is None:
-            r = []
-            for i in range(len(self.dict.label2toks_vocab)):
-                r.append(self.dict.label2toks_vocab[i])
-            r = self.embdict.make_ints(r)
-            response_embeddings = self._net.predict_response_emb([r, r, r], 512)
-            for i in range(len(self.dict.label2toks_vocab)):
-                self.dict.label2emb_vocab[i] = response_embeddings[i]
 
     def shutdown(self):
         pass

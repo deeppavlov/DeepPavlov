@@ -35,7 +35,7 @@
     "interact_pred_num": 3
   },
   "train": {
-    "epochs": 100,
+    "epochs": 120,
     "batch_size": 256,
     "metrics": [
       "r_at_1", "rank_response"

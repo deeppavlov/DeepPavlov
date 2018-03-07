@@ -161,6 +161,6 @@ class RankingNetwork(object):
     def predict_response_emb(self, batch, bs):
         return self.response_embedding.predict(x=batch, batch_size=bs)
 
-    def predict_context_emb(self, batch):
-        return self.context_embedding.predict_on_batch(x=batch)
+    def predict_context_emb(self, batch, bs):
+        return self.context_embedding.predict(x=batch, batch_size=bs)
 
