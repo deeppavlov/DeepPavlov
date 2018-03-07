@@ -28,13 +28,13 @@ class InsuranceDataset:
             'all': self.train + self.test + self.valid
         }
 
-    def batch_generator(self, batch_size, data_type="train", shuffle=False):
+    def batch_generator(self, batch_size, data_type="train", shuffle=True):
         y = np.zeros(batch_size)
         data = self.data[data_type]
         num_steps = len(data) // batch_size
-        if shuffle:
-            np.random.shuffle(data)
         if data_type == "train":
+            if shuffle:
+                np.random.shuffle(data)
             for i in range(num_steps):
                 context_response_data = data[i * batch_size:(i + 1) * batch_size]
                 context = [el["context"] for el in context_response_data]
