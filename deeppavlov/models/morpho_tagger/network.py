@@ -16,12 +16,14 @@ limitations under the License.
 
 import inspect
 import json
+from typing import List
 
 import keras.layers as kl
 import keras.optimizers as ko
 import keras.regularizers as kreg
 from keras import Model
 
+from deeppavlov.core.data.vocab import DefaultVocabulary
 from .common import *
 from .cells import Highway
 
@@ -32,7 +34,7 @@ class CharacterTagger:
     """
     A class for character-based neural morphological tagger
     """
-    def __init__(self, symbols, tags,
+    def __init__(self, symbols: DefaultVocabulary, tags: DefaultVocabulary,
                  reverse=False, word_rnn="cnn",
                  char_embeddings_size=16, char_conv_layers=1,
                  char_window_size=5, char_filters=None,
@@ -66,6 +68,7 @@ class CharacterTagger:
         self.callbacks = callbacks
         self.verbose = verbose
         self.initialize()
+        print("{} symbols, {} tags".format(self.symbols_number_, self.tags_number_))
         self.build()
 
     def initialize(self):
@@ -161,18 +164,43 @@ class CharacterTagger:
                 name="p")(lstm_outputs)
         return pre_outputs, lstm_outputs
 
-    def train_on_batch(self, data, labels, **kwargs):
+    def _transform_batch(self, data, labels=None, transform_to_one_hot=True):
+        L = max(len(x) for x in data)
+        X = np.array([self._make_sent_vector(x, L) for x in data])
+        if labels is not None:
+            Y = np.array([self._make_tags_vector(y, L) for y in labels])
+            if transform_to_one_hot:
+                Y = to_one_hot(Y, len(self.tags))
+            return X, Y
+        else:
+            return X
+
+    def train_on_batch(self, data: List[List[str]], labels: List[List[str]], **kwargs):
         """
         Trains model on a single batch
 
-        X: a batch of word sequences
-        y: a batch of correct tag sequences
+        data: a batch of word sequences
+        labels: a batch of correct tag sequences
         """
-        L = max(len(x) for x in data)
-        X = np.array([self._make_sent_vector(x, L) for x in data])
-        Y = np.array([self._make_tags_vector(y, L) for y in labels])
+        X, Y = self._transform_batch(data, labels)
         # TO_DO: add weights to deal with padded instances
         return self.model_.train_on_batch(X, Y)
+
+    def predict_on_batch(self, data: List[str]):
+        """
+        Makes predictions on a single batch
+
+        data: a batch of word sequences,
+        -----------------------------------------
+        answer: a batch of label sequences
+        """
+        X = self._transform_batch(data)
+        Y = self.model_.predict_on_batch(X)
+        labels = np.argmax(Y, axis=-1)
+        answer: List[List[str]] = [None] * len(X)
+        for i, elem in enumerate(labels):
+            answer[i] = self.tags.idxs2toks(elem[:len(data[i])])
+        return answer
 
     def _make_sent_vector(self, sent, bucket_length=None):
         bucket_length = bucket_length or len(sent)

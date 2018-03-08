@@ -5,6 +5,8 @@ from deeppavlov.core.data.dataset import Dataset
 from deeppavlov.core.commands.train import fit_chainer, _train_batches
 from deeppavlov.core.common.metrics_registry import get_metrics_by_names
 
+import os
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 
 MODE = "train"
 
@@ -29,7 +31,7 @@ if __name__ == "__main__":
     elif MODE == "dataset":
         config = read_json("configs/morpho_tagger/test_dataset.json")
         data = test_reader(config)
-        dataset : Dataset = from_params(config['dataset'], data=data)
+        dataset: Dataset = from_params(config['dataset'], data=data)
         print("Train batch generation:")
         for i, batch in enumerate(dataset.batch_generator(
                 batch_size=config["train_batch_size"], data_type="train"), 1):
@@ -43,7 +45,7 @@ if __name__ == "__main__":
     elif MODE == "train":
         config = read_json("configs/morpho_tagger/test_train_config.json")
         data = test_reader(config)
-        dataset: Dataset = from_params(config['dataset'], data=data)
+        dataset = from_params(config['dataset'], data=data)
         model = fit_chainer(config, dataset)
         train_config = { 'metrics': ['accuracy'], 'validate_best': True, 'test_best': True}
         train_config.update(config["train"])

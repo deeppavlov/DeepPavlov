@@ -18,14 +18,16 @@
         "name": "default_vocab",
         "fit_on": ["y"],
 		"level": "token",
+        "special_tokens": ["PAD", "BEGIN", "END"],
         "save_path": "morpho_tagger/tag.dict",
         "load_path": "morpho_tagger/tag.dict"
       },
       {
         "id": "char_vocab",
         "name": "default_vocab",
+        "min_freq": 3,
         "fit_on": ["x"],
-        "special_tokens": ["PAD", "BEGIN", "END", "UNKNOWN"],
+        "special_tokens": ["PAD", "BEGIN", "END"],
 		"level": "char",
         "save_path": "morpho_tagger/char.dict",
         "load_path": "morpho_tagger/char.dict"
@@ -51,11 +53,11 @@
     "out": ["y_predicted"]
   },
   "train": {
-    "epochs": 5,
-    "batch_size": 32,
+    "epochs": 50,
+    "batch_size": 16,
 
     "metrics": ["per_item_accuracy"],
-    "validation_patience": 5,
+    "validation_patience": 10,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1
   }

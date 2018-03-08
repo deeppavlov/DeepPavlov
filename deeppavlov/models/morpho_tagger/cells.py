@@ -8,7 +8,6 @@ from keras.engine.topology import InputSpec
 
 
 INFTY = -100
-from .common import PAD
 
 
 class Highway(kl.Layer):
@@ -158,7 +157,7 @@ def TemporalDropout(inputs, dropout=0.0):
     return answer
 
 
-def positions_func(inputs, pad=PAD):
+def positions_func(inputs, pad=0):
     """
     A layer filling i-th column of a 2D tensor with
     1+ln(1+i) when it contaings a meaningful symbol

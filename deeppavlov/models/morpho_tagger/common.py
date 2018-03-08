@@ -9,7 +9,7 @@ import keras.backend as kb
 EPS = 1e-15
 
 # AUXILIARY = ['PAD', 'BEGIN', 'END', 'UNKNOWN']
-AUXILIARY_CODES = PAD, BEGIN, END, UNKNOWN = 0, 1, 2, 3
+# AUXILIARY_CODES = PAD, BEGIN, END, UNKNOWN = 0, 1, 2, 3
 
 def to_one_hot(x, k):
     """

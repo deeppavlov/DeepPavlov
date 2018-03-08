@@ -45,7 +45,9 @@ def read_infile(infile, word_column=WORD_COLUMN, pos_column=POS_COLUMN,
                 continue
             curr_word_sent.append(splitted[word_column])
             if not read_only_words:
-                curr_tag_sent.append((splitted[pos_column], splitted[tag_column]))
+                pos, tag = splitted[pos_column], splitted[tag_column]
+                tag = pos if tag == "_" else "{},{}".format(pos, tag)
+                curr_tag_sent.append(tag)
         if len(curr_word_sent) > 0:
             if read_only_words:
                 curr_tag_sent = None

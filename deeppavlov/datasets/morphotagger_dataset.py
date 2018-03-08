@@ -26,6 +26,7 @@ class MorphoTaggerDataset(Dataset):
 
     def __init__(self, data, seed=None, shuffle=True,
                  validation_split=0.2, bucket=True):
+
         self.bucket = bucket
         self.validation_split = validation_split
         super().__init__(data, seed, shuffle)
