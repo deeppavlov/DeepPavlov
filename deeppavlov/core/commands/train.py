@@ -38,6 +38,20 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
+def prettify_metrics(metrics, precision=4):
+    """
+    Prettifies the dictionary of metrics
+    """
+    prettified_metrics = dict()
+    for key, value in metrics.items():
+        if key.endswith("accuracy"):
+            value = round(100*value, precision)
+        else:
+            value = round(value, precision)
+        prettified_metrics[key] = value
+    return prettified_metrics
+
+
 def _fit(model: Estimator, dataset: Dataset, train_config={}):
     x, y = dataset.iter_all('train')
     model.fit(x, y)
@@ -152,7 +166,7 @@ def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
 
     report = {
         'examples_seen': len(val_y_true),
-        'metrics': OrderedDict(metrics),
+        'metrics': OrderedDict(prettify_metrics(metrics)),
         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
     }
     return report
@@ -210,14 +224,13 @@ def _train_batches(model: NNModel, dataset: Dataset, train_config: dict,
                 model.train_on_batch(x, y_true)
                 i += 1
                 examples += len(x)
-
                 if train_config['log_every_n_batches'] > 0 and i % train_config['log_every_n_batches'] == 0:
                     metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in metrics_functions]
                     report = {
                         'epochs_done': epochs,
                         'batches_seen': i,
                         'examples_seen': examples,
-                        'metrics': dict(metrics),
+                        'metrics': prettify_metrics(dict(metrics)),
                         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
                     }
                     report = {'train': report}
@@ -234,7 +247,7 @@ def _train_batches(model: NNModel, dataset: Dataset, train_config: dict,
                     'epochs_done': epochs,
                     'batches_seen': i,
                     'examples_seen': examples,
-                    'metrics': dict(metrics),
+                    'metrics': prettify_metrics(dict(metrics)),
                     'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
                 }
                 report = {'train': report}
@@ -243,7 +256,8 @@ def _train_batches(model: NNModel, dataset: Dataset, train_config: dict,
                 train_y_predicted = []
 
             if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
-                report = _test_model(model, metrics_functions, dataset, train_config['batch_size'], 'valid', start_time)
+                report = _test_model(model, metrics_functions, dataset,
+                                     train_config['batch_size'], 'valid', start_time)
 
                 metrics = list(report['metrics'].items())
 
