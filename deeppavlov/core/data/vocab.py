@@ -33,7 +33,7 @@ log = get_logger(__name__)
 class DefaultVocabulary(Estimator):
     def __init__(self, save_path, load_path, inputs=None, level='token',
                  special_tokens=tuple(), default_token=None,
-                 tokenize=False, *args, **kwargs):
+                 tokenize=False, min_freq=1, *args, **kwargs):
 
         super().__init__(load_path=load_path,
                          save_path=save_path,
@@ -41,6 +41,7 @@ class DefaultVocabulary(Estimator):
 
         self.special_tokens = special_tokens
         self.default_token = default_token
+        self.min_freq = min_freq
         self.preprocess_fn = self._build_preprocess_fn(inputs, level, tokenize)
 
         # TODO check via decorator
@@ -91,16 +92,16 @@ class DefaultVocabulary(Estimator):
         return item in self._t2i
 
     def __len__(self):
-        return len(self.freqs)
+        return len(self._t2i)
 
     def keys(self):
-        return (k for k, v in self.freqs.most_common())
+        return (k for k, v in self.freqs.most_common() if k in self._t2i)
 
     def values(self):
-        return (v for k, v in self.freqs.most_common())
+        return (v for k, v in self.freqs.most_common() if k in self._t2i)
 
     def items(self):
-        return self.freqs.most_common()
+        return ((k, v) for k, v in self.freqs.most_common() if k in self._t2i)
 
     def reset(self):
         # default index is the position of default_token
@@ -126,18 +127,21 @@ class DefaultVocabulary(Estimator):
             update=True
         )
 
-    def _train(self, tokens, counts=None, update=True):
+    def _train(self, tokens, counts=None, update=True, filter_min_freq=True):
         counts = counts or itertools.repeat(1)
         if not update:
             self.reset()
 
-        index = len(self.freqs)
         for token, cnt in zip(tokens, counts):
-            if token not in self._t2i:
+            self.freqs[token] += cnt
+
+        index = len(self._t2i)
+        for token, count in self.freqs.items():
+            if token not in self._t2i and count >= self.min_freq:
                 self._t2i[token] = index
                 self._i2t[index] = token
                 index += 1
-            self.freqs[token] += cnt
+        return
 
     def __call__(self, samples, **kwargs):
         return [self[s] for s in samples]
@@ -145,7 +149,7 @@ class DefaultVocabulary(Estimator):
     def save(self):
         log.info("[saving vocabulary to {}]".format(self.save_path))
 
-        with self.save_path.open('wt') as f:
+        with self.save_path.open('wt', encoding="utf8") as f:
             for n in range(len(self._t2i)):
                 token = self._i2t[n]
                 cnt = self.freqs[token]
@@ -157,7 +161,7 @@ class DefaultVocabulary(Estimator):
             if self.load_path.is_file():
                 log.info("[loading vocabulary from {}]".format(self.load_path))
                 tokens, counts = [], []
-                for ln in self.load_path.open('r'):
+                for ln in self.load_path.open('r', encoding="utf8"):
                     token, cnt = ln.split('\t', 1)
                     tokens.append(token)
                     counts.append(int(cnt))
