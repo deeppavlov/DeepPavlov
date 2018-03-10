@@ -2,7 +2,8 @@ from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import model as get_model
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.data.dataset import Dataset
-from deeppavlov.core.commands.train import fit_chainer, _train_batches
+from deeppavlov.core.commands.train import fit_chainer, _train_batches, train_model_from_config
+from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.common.metrics_registry import get_metrics_by_names
 
 import os
@@ -43,12 +44,13 @@ if __name__ == "__main__":
             print("Dev batch {}, {} items, lengths from {} to {}".format(
                 i, len(batch[0]), len(batch[0][0]), len(batch[0][-1])))
     elif MODE == "train":
-        config = read_json("configs/morpho_tagger/test_train_config.json")
-        data = test_reader(config)
-        dataset = from_params(config['dataset'], data=data)
-        model = fit_chainer(config, dataset)
-        train_config = { 'metrics': ['accuracy'], 'validate_best': True, 'test_best': True}
-        train_config.update(config["train"])
-        metrics_functions = list(zip(train_config['metrics'],
-                                     get_metrics_by_names(train_config['metrics'])))
-        _train_batches(model, dataset, train_config, metrics_functions)
+        # config = read_json("configs/morpho_tagger/test_train_config.json")
+        # data = test_reader(config)
+        # dataset = from_params(config['dataset'], data=data)
+        # model = fit_chainer(config, dataset)
+        # train_config = { 'metrics': ['accuracy'], 'validate_best': True, 'test_best': True}
+        # train_config.update(config["train"])
+        # metrics_functions = list(zip(train_config['metrics'],
+        #                              get_metrics_by_names(train_config['metrics'])))
+        # _train_batches(model, dataset, train_config, metrics_functions)
+        train_model_from_config("configs/morpho_tagger/test_test_config.json", is_trained=True)
