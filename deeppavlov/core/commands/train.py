@@ -42,8 +42,8 @@ def prettify_metrics(metrics, precision=4):
     """
     Prettifies the dictionary of metrics
     """
-    prettified_metrics = dict()
-    for key, value in metrics.items():
+    prettified_metrics = OrderedDict()
+    for key, value in metrics:
         if key.endswith("accuracy"):
             value = round(100*value, precision)
         else:
@@ -83,33 +83,24 @@ def fit_chainer(config: dict, dataset: Dataset):
     return chainer
 
 
-def train_model_from_config(config_path: str):
+def train_model_from_config(config_path: str, is_trained=True):
     config = read_json(config_path)
     set_deeppavlov_root(config)
 
     reader_config = config['dataset_reader']
     reader = get_model(reader_config['name'])()
     data_path = expand_path(reader_config.get('data_path', ''))
-    data = reader.read(data_path)
+    read_params = reader_config.get("read_params", dict())
+    data = reader.read(data_path, **read_params)
 
     dataset_config = config['dataset']
     dataset: Dataset = from_params(dataset_config, data=data)
 
-    if 'chainer' in config:
-        model = fit_chainer(config, dataset)
-    else:
-        vocabs = {}
-        for vocab_param_name, vocab_config in config.get('vocabs', {}).items():
-            v: Estimator = from_params(vocab_config, mode='train')
-            vocabs[vocab_param_name] = _fit(v, dataset)
 
-        model_config = config['model']
-        model = from_params(model_config, vocabs=vocabs, mode='train')
 
     train_config = {
         'metrics': ['accuracy'],
-
-        'validate_best': True,
+        'validate_best': not(is_trained),
         'test_best': True
     }
 
@@ -120,12 +111,25 @@ def train_model_from_config(config_path: str):
 
     metrics_functions = list(zip(train_config['metrics'], get_metrics_by_names(train_config['metrics'])))
 
-    if callable(getattr(model, 'train_on_batch', None)):
-        _train_batches(model, dataset, train_config, metrics_functions)
-    elif callable(getattr(model, 'fit', None)):
-        _fit(model, dataset, train_config)
-    elif not isinstance(model, Chainer):
-        log.warning('Nothing to train')
+    if not is_trained:
+
+        if 'chainer' in config:
+            model = fit_chainer(config, dataset)
+        else:
+            vocabs = {}
+            for vocab_param_name, vocab_config in config.get('vocabs', {}).items():
+                v: Estimator = from_params(vocab_config, mode='train')
+                vocabs[vocab_param_name] = _fit(v, dataset)
+
+            model_config = config['model']
+            model = from_params(model_config, vocabs=vocabs, mode='train')
+
+        if callable(getattr(model, 'train_on_batch', None)):
+            _train_batches(model, dataset, train_config, metrics_functions)
+        elif callable(getattr(model, 'fit', None)):
+            _fit(model, dataset, train_config)
+        elif not isinstance(model, Chainer):
+            log.warning('Nothing to train')
 
     if train_config['validate_best'] or train_config['test_best']:
         # try:
@@ -230,7 +234,7 @@ def _train_batches(model: NNModel, dataset: Dataset, train_config: dict,
                         'epochs_done': epochs,
                         'batches_seen': i,
                         'examples_seen': examples,
-                        'metrics': prettify_metrics(dict(metrics)),
+                        'metrics': prettify_metrics(metrics),
                         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
                     }
                     report = {'train': report}
@@ -247,7 +251,7 @@ def _train_batches(model: NNModel, dataset: Dataset, train_config: dict,
                     'epochs_done': epochs,
                     'batches_seen': i,
                     'examples_seen': examples,
-                    'metrics': prettify_metrics(dict(metrics)),
+                    'metrics': prettify_metrics(metrics),
                     'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
                 }
                 report = {'train': report}
