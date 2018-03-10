@@ -82,6 +82,7 @@ class MorphotaggerDatasetReader(DatasetReader):
                                  "datatypes are allowed".format(data_type))
         if isinstance(data_path, str):
             data_path = Path(data_path)
+        if isinstance(data_path, Path):
             if is_filepath:
                 # path to a single file
                 data_path = [data_path]
