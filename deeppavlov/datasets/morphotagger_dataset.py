@@ -21,15 +21,53 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset import Dataset
 
 
+def process_word(word, to_lower=False, append_case=None):
+    if all(x.isupper() for x in word) and len(word) > 1:
+        uppercase = "<ALL_UPPER>"
+    elif word[0].isupper():
+        uppercase = "<FIRST_UPPER>"
+    else:
+        uppercase = None
+    if to_lower:
+        word = word.lower()
+    if word.isdigit():
+        answer = ["<DIGIT>"]
+    elif word.startswith("http://") or word.startswith("www."):
+        answer = ["<HTTP>"]
+    else:
+        answer = list(word)
+    if to_lower and uppercase is not None:
+        if append_case == "first":
+            answer = [uppercase] + answer
+        elif append_case == "last":
+            answer = answer + [uppercase]
+    return tuple(answer)
+
+
+def preprocess_data(data, to_lower=True, append_case="first"):
+    new_data = []
+    for words, tags in data:
+        new_words = [process_word(word, to_lower=to_lower, append_case=append_case)
+                     for word in words]
+        # tags could also be processed in future
+        new_tags = tags
+        new_data.append((new_words, new_tags))
+    return new_data
+
+
 @register('morphotagger_dataset')
 class MorphoTaggerDataset(Dataset):
 
     def __init__(self, data, seed=None, shuffle=True,
-                 validation_split=0.2, bucket=True):
+                 validation_split=0.2, bucket=True,
+                 to_lower=True, append_case="first"):
 
+        processed_data = {mode: preprocess_data(sample, to_lower=to_lower,
+                                                append_case=append_case)
+                          for mode, sample in data.items()}
         self.bucket = bucket
         self.validation_split = validation_split
-        super().__init__(data, seed, shuffle)
+        super().__init__(processed_data, seed, shuffle)
 
     def split(self):
         if len(self.valid) == 0:
@@ -49,5 +87,7 @@ class MorphoTaggerDataset(Dataset):
         lengths = [len(x[0]) for x in data]
         indexes = np.argsort(lengths)
         L = len(data)
+        if batch_size < 0:
+            batch_size = L
         for start in range(0, L, batch_size):
             yield tuple(zip(*([data[i] for i in indexes[start:start+batch_size]])))
