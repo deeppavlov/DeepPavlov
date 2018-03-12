@@ -14,8 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import random
-
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset import Dataset
 
@@ -32,11 +30,7 @@ class TyposDataset(Dataset):
 
         split = int(len(self.train) * test_ratio)
 
-        rs = random.getstate()
-        random.setstate(self.random_state)
-        random.shuffle(self.train)
-        self.random_state = random.getstate()
-        random.setstate(rs)
+        self.random.shuffle(self.train)
 
         self.test = self.train[:split]
         self.train = self.train[split:]

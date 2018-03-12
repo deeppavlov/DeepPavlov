@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import random
+from random import Random
 from typing import List, Dict, Generator, Tuple, Any
 
 from deeppavlov.core.common.registry import register
@@ -38,10 +38,7 @@ class Dataset:
         """
         self.shuffle = shuffle
 
-        rs = random.getstate()
-        random.seed(seed)
-        self.random_state = random.getstate()
-        random.setstate(rs)
+        self.random = Random(seed)
 
         self.train = data.get('train', [])
         self.valid = data.get('valid', [])
@@ -77,11 +74,7 @@ class Dataset:
 
         order = list(range(data_len))
         if shuffle:
-            rs = random.getstate()
-            random.setstate(self.random_state)
-            random.shuffle(order)
-            self.random_state = random.getstate()
-            random.setstate(rs)
+            self.random.shuffle(order)
 
         if batch_size < 0:
             batch_size = data_len
