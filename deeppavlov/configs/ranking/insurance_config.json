@@ -14,32 +14,38 @@
     "num_ranking_samples_valid": 500,
     "num_ranking_samples_test": 500
   },
-  "vocabs": {
-  },
-  "model": {
-    "device_num": 0,
-    "name": "ranking_model",
-    "train_now": true,
-    "vocabs_path": "insuranceQA-master/V1",
-    "download_url": "http://lnsigo.mipt.ru/export/embeddings/insurance_v1_word2vec",
-    "emb_model_file": "insurance_v1_word2vec",
-    "emb_vocab_file": "insurance_v1_w2v.emb",
-    "seed": 243,
-    "max_sequence_length": 200,
-    "hidden_dim": 300,
-    "learning_rate": 1e-3,
-    "margin": 0.1,
-    "embedding_dim": 100,
-    "save_path": "model",
-    "load_path": "model",
-    "interact_pred_num": 3
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "in": ["x"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "name": "ranking_model",
+        "device_num": 0,
+        "train_now": true,
+        "vocabs_path": "insuranceQA-master/V1",
+        "download_url": "http://lnsigo.mipt.ru/export/embeddings/insurance_v1_word2vec",
+        "emb_model_file": "insurance_v1_word2vec",
+        "emb_vocab_file": "insurance_v1_w2v.emb",
+        "seed": 243,
+        "max_sequence_length": 200,
+        "hidden_dim": 300,
+        "learning_rate": 1e-3,
+        "margin": 0.1,
+        "embedding_dim": 100,
+        "save_path": "model",
+        "load_path": "model",
+        "interact_pred_num": 3
+      }
+    ],
+    "out": ["y_predicted"]
   },
   "train": {
-    "epochs": 120,
+    "epochs": 100,
     "batch_size": 256,
-    "metrics": [
-      "r_at_1", "rank_response"
-    ],
+    "metrics": ["r_at_1", "rank_response"],
     "validation_patience": 5,
     "val_every_n_epochs": 10,
     "show_examples": true
