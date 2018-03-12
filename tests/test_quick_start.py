@@ -6,6 +6,9 @@ import shutil
 
 
 tests_dir = Path(__file__, '..').resolve()
+test_configs_path = tests_dir / "configs"
+download_path = tests_dir / "download"
+
 
 # Mapping from model name to config-model_dir and corresponding query-response pairs.
 PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "error_model"):
@@ -57,9 +60,9 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
 
 def setup_module():
     src_dir = tests_dir.parent / "deeppavlov"
-    test_configs_path = tests_dir / "configs"
 
     shutil.rmtree(str(test_configs_path), ignore_errors=True)
+    shutil.rmtree(str(download_path), ignore_errors=True)
     test_configs_path.mkdir()
 
     for m_name, conf_dict in PARAMS.items():
@@ -71,16 +74,18 @@ def setup_module():
                 config["train"]["epochs"] = 1
             except KeyError:
                 pass
+            config["deeppavlov_root"] = str(download_path)
             with (tests_dir / conf_file).open("w") as fout:
                 json.dump(config, fout)
 
 
 def teardown_module():
-    shutil.rmtree(str(tests_dir / "configs"))
+    shutil.rmtree(str(test_configs_path))
+    shutil.rmtree(str(download_path))
 
 
 def download(full=None):
-    cmd = "python3 -m deeppavlov.download"
+    cmd = "python3 -m deeppavlov.download -test"
     if full:
         cmd += " -all"
     pexpect.run(cmd)
@@ -104,17 +109,17 @@ class TestQuickStart(object):
         assert p.expect(pexpect.EOF) == 0, f"Error in quitting from deep.py ({conf_file})"
 
     def test_downloaded_model_existence(self, model, conf_file, model_dir):
-        if not tests_dir.parent.joinpath("download").exists():
+        if not download_path.exists():
             download()
-        assert tests_dir.parent.joinpath("download", model_dir).exists(), f"{model_dir} was not downloaded"
+        assert download_path.joinpath(model_dir).exists(), f"{model_dir} was not downloaded"
 
     def test_interacting_pretrained_model(self, model, conf_file, model_dir):
         self.interact(tests_dir / conf_file, model_dir, PARAMS[model][(conf_file, model_dir)])
 
     def test_consecutive_training_and_interacting(self, model, conf_file, model_dir):
         c = tests_dir / conf_file
-        model_path = tests_dir.parent / "download" / model_dir
-        shutil.rmtree(str(model_path),  ignore_errors=True)  # this test removes downloaded or early trained models
+        model_path = download_path / model_dir
+        shutil.rmtree(str(model_path),  ignore_errors=True)
         _, exitstatus = pexpect.run("python3 -m deeppavlov.deep train " + str(c), timeout=None, withexitstatus=True)
         assert exitstatus == 0, f"Training process of {model_dir} returned non-zero exit code"
         self.interact(c, model_dir)
