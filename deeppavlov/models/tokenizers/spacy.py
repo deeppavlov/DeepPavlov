@@ -15,10 +15,10 @@ limitations under the License.
 """
 
 import spacy
-import re
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
+from .utils import detokenize
 
 
 @register('spacy_tokenizer')
@@ -31,27 +31,9 @@ class SpacyTokenizer(Component):
         """Tokenize with spacy, placing service words as individual tokens."""
         return [t.text for t in self.NLP.tokenizer(text)]
 
-    def _detokenize(self, tokens):
-        """
-        Detokenizing a text undoes the tokenizing operation, restoring
-        punctuation and spaces to the places that people expect them to be.
-        Ideally, `detokenize(tokenize(text))` should be identical to `text`,
-        except for line breaks.
-        """
-        text = ' '.join(tokens)
-        step0 = text.replace('. . .',  '...')
-        step1 = step0.replace("`` ", '"').replace(" ''", '"')
-        step2 = step1.replace(" ( ", " (").replace(" ) ", ") ")
-        step3 = re.sub(r' ([.,:;?!%]+)([ \'"`])', r"\1\2", step2)
-        step4 = re.sub(r' ([.,:;?!%]+)$', r"\1", step3)
-        step5 = step4.replace(" '", "'").replace(" n't", "n't")\
-            .replace(" nt", "nt").replace("can not", "cannot")
-        step6 = step5.replace(" ` ", " '")
-        return step6.strip()
-
     def __call__(self, batch):
         if isinstance(batch[0], str):
             return [self._tokenize(sent) for sent in batch]
         if isinstance(batch[0], list):
-            return [self._detokenize(sent) for sent in batch]
+            return [detokenize(sent) for sent in batch]
         raise TypeError("SpacyTokenizer.__call__() not implemented for `{}`".format(type(batch[0])))
