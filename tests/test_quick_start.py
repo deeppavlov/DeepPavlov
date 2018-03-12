@@ -7,20 +7,22 @@ import shutil
 
 
 # Mapping from model names to configs and corresponding Query-Response pairs
-MCQR = {"error_model": {"configs/error_model/brillmoore_wikitypos_en.json": ("error_model", "", ""),
-                        "configs/error_model/brillmoore_kartaslov_ru.json": ("error_model", "", "")
-                        },
-        "go_bot": {"configs/go_bot/gobot_dstc2.json": ("go_bot", "", ""),
-                   # "configs/go_bot/config_all.json":
-                   #     ("go_bot_all", "", ""),
-                   "configs/go_bot/gobot_dstc2_minimal.json": ("go_bot_minimal", "", "")
-                   },
-        "intents": {"configs/intents/intents_dstc2.json": ("intents", "", "")
-                    },
-        "ner": {"configs/ner/ner_conll2003.json": ("ner_conll2003_model", "", ""),
-                "configs/ner/ner_dstc2.json": ("ner_dstc2_model", "", ""),
-                "configs/ner/slotfill_dstc2.json": ("ner", "", "")
-                }
+MCQR = {
+        # "error_model": {"configs/error_model/brillmoore_wikitypos_en.json": ("error_model", "", ""),
+        #                 "configs/error_model/brillmoore_kartaslov_ru.json": ("error_model", "", "")
+        #                 },
+        # "go_bot": {"configs/go_bot/gobot_dstc2.json": ("go_bot", "", ""),
+        #            # "configs/go_bot/config_all.json":
+        #            #     ("go_bot_all", "", ""),
+        #            "configs/go_bot/gobot_dstc2_minimal.json": ("go_bot_minimal", "", "")
+        #            },
+        # "intents": {"configs/intents/intents_dstc2.json": ("intents", "", "")
+        #             },
+        # "ner": {"configs/ner/ner_conll2003.json": ("ner_conll2003_model", "", ""),
+        #         "configs/ner/ner_dstc2.json": ("ner_dstc2_model", "", ""),
+        #         "configs/ner/slotfill_dstc2.json": ("ner", "", "")
+        #         },
+        "morpho_tagger": {"configs/morpho_tagger/test_train_config.json": ("morpho_tagger", "", "")}
         }
 
 
