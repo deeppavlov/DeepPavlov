@@ -22,7 +22,7 @@ REQ_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/slots.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/dstc2_fasttext_model_100.bin',
-    'http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz'
+    'http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ranking.tar.gz'
 }
 
