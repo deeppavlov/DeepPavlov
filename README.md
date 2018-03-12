@@ -38,15 +38,15 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
           
  * Run goal-oriented bot with Telegram interface:
  ```
- python deeppavlov/deep.py interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -t <TELEGRAM_TOKEN>
+ python -m deeppavlov.deep interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -t <TELEGRAM_TOKEN>
  ```
  * Run goal-oriented bot with console interface:
  ```
- python deeppavlov/deep.py interact deeppavlov/configs/go_bot/gobot_dstc2.json
+ python -m deeppavlov.deep interact deeppavlov/configs/go_bot/gobot_dstc2.json
  ```
  * Run slot-filling model with Telegram interface:
  ```
- python deeppavlov/deep.py interactbot deeppavlov/configs/ner/slotfill_dstc2.json -t <TELEGRAM_TOKEN>
+ python -m deeppavlov.deep interactbot deeppavlov/configs/ner/slotfill_dstc2.json -t <TELEGRAM_TOKEN>
  ```
  * Run slot-filling model with console interface:
  ```
@@ -128,7 +128,7 @@ DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). O
 
 To use our pre-trained models, you should first download them:
 ```
-python deeppavlov/download.py [-all] 
+python -m deeppavlov.download [-all] 
 ```
 * running this command without options will download basic examples, `[-all]` option will download **all** our pre-trained models.
 * Warning! `[-all]` requires about 10 GB of free space on disk.
@@ -136,7 +136,7 @@ python deeppavlov/download.py [-all]
 Then you can interact with the models or train them with the following command:
 
 ```
-python deeppavlov/deep.py <mode> <path_to_config>
+python -m deeppavlov.deep <mode> <path_to_config>
 ```
 
 * `<mode>` can be 'train', 'interact' or 'interactbot'
