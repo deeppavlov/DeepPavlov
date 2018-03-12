@@ -38,19 +38,19 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
           
  * Run goal-oriented bot with Telegram interface:
  ```
- python deep.py interactbot configs/go_bot/gobot_dstc2.json -t <TELEGRAM_TOKEN>
+ python -m deeppavlov.deep interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -t <TELEGRAM_TOKEN>
  ```
  * Run goal-oriented bot with console interface:
  ```
- python deep.py interact configs/go_bot/gobot_dstc2.json
+ python -m deeppavlov.deep interact deeppavlov/configs/go_bot/gobot_dstc2.json
  ```
  * Run slot-filling model with Telegram interface:
  ```
- python deep.py interactbot configs/ner/slotfill_dstc2.json -t <TELEGRAM_TOKEN>
+ python -m deeppavlov.deep interactbot deeppavlov/configs/ner/slotfill_dstc2.json -t <TELEGRAM_TOKEN>
  ```
  * Run slot-filling model with console interface:
  ```
- python deep.py interact configs/ner/slotfill_dstc2.json
+ python -m deeppavlov.deep interact deeppavlov/configs/ner/slotfill_dstc2.json
  ```
 ## Conceptual overview
 
@@ -128,7 +128,7 @@ DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). O
 
 To use our pre-trained models, you should first download them:
 ```
-python download.py [-all] 
+python -m deeppavlov.download [-all] 
 ```
 * running this command without options will download basic examples, `[-all]` option will download **all** our pre-trained models.
 * Warning! `[-all]` requires about 10 GB of free space on disk.
@@ -136,7 +136,7 @@ python download.py [-all]
 Then you can interact with the models or train them with the following command:
 
 ```
-python deep.py <mode> <path_to_config>
+python -m deeppavlov.deep <mode> <path_to_config>
 ```
 
 * `<mode>` can be 'train', 'interact' or 'interactbot'
@@ -147,13 +147,13 @@ For 'interactbot' mode you should specify Telegram bot token in `-t` parameter o
 
 Available model configs are:
 
-*configs/go_bot/gobot_dstc2.json*
+*deeppavlov/configs/go_bot/gobot_dstc2.json*
 
-*configs/intents/intents_dstc2.json*
+*deeppavlov/configs/intents/intents_dstc2.json*
 
-*configs/ner/slotfill_dstc2.json*
+*deeppavlov/configs/ner/slotfill_dstc2.json*
 
-*configs/error_model/brillmoore_wikitypos_en.json*
+*deeppavlov/configs/error_model/brillmoore_wikitypos_en.json*
 
 ---
 
