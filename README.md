@@ -38,19 +38,19 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
           
  * Run goal-oriented bot with Telegram interface:
  ```
- python deep.py interactbot configs/go_bot/gobot_dstc2.json -t <TELEGRAM_TOKEN>
+ python deeppavlov/deep.py interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -t <TELEGRAM_TOKEN>
  ```
  * Run goal-oriented bot with console interface:
  ```
- python deep.py interact configs/go_bot/gobot_dstc2.json
+ python deeppavlov/deep.py interact deeppavlov/configs/go_bot/gobot_dstc2.json
  ```
  * Run slot-filling model with Telegram interface:
  ```
- python deep.py interactbot configs/ner/slotfill_dstc2.json -t <TELEGRAM_TOKEN>
+ python deeppavlov/deep.py interactbot deeppavlov/configs/ner/slotfill_dstc2.json -t <TELEGRAM_TOKEN>
  ```
  * Run slot-filling model with console interface:
  ```
- python deep.py interact configs/ner/slotfill_dstc2.json
+ python -m deeppavlov.deep interact deeppavlov/configs/ner/slotfill_dstc2.json
  ```
 ## Conceptual overview
 
