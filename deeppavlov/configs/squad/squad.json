@@ -1,0 +1,41 @@
+{
+  "dataset_reader": {
+    "name": "squad_dataset_reader",
+    "data_path": "squad/"
+  },
+  "dataset": {
+    "name": "squad_dataset",
+    "seed": 1337
+  },
+  "chainer": {
+    "in": ["c_raw", "q_raw"],
+    "in_y": ["ans_raw", "ans_raw_start"],
+    "pipe": [
+      {
+        "name": "squad_preprocessor",
+        "id": "squad_prepr",
+        "in": ["c_raw", "q_raw"],
+        "out": ["c", "c_tokens", "c_chars", "c_r2p", "c_p2r", "q", "q_tokens", "q_chars", "spans"]
+      },
+      {
+        "name": "squad_ans_preprocessor",
+        "id": "squad_ans_prepr",
+        "in": ["ans_raw", "ans_raw_start", "c_r2p", "spans"],
+        "out": ["ans", "ans_start", "ans_end"]
+      }
+    ],
+    "out": ["c", "q"]
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 64,
+
+    "metrics": [],
+    "validation_patience": 5,
+    "val_every_n_epochs": 5,
+
+    "log_every_n_epochs": 1,
+    "show_examples": false
+  }
+}
+
