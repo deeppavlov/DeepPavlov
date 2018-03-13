@@ -4,7 +4,7 @@
     "data_path": "dstc2"
   },
   "dataset_iterator": {
-    "name": "dstc2_dialog_iterator"
+    "name": "dialog_iterator"
   },
   "chainer": {
     "in": ["x"],
