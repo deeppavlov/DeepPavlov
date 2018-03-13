@@ -5,12 +5,12 @@ import deeppavlov.dataset_readers.babi_reader
 import deeppavlov.dataset_readers.dstc2_reader
 import deeppavlov.dataset_readers.conll2003_reader
 import deeppavlov.dataset_readers.typos_reader
-import deeppavlov.dataset_readers.snips_intents_reader
+import deeppavlov.dataset_readers.csv_classification_reader
 import deeppavlov.dataset_iterators.dstc2_dialog_iterator
 import deeppavlov.dataset_iterators.dstc2_ner_iterator
 import deeppavlov.dataset_iterators.dstc2_intents_iterator
 import deeppavlov.dataset_iterators.typos_iterator
-import deeppavlov.dataset_iterators.snips_intents_iterator
+import deeppavlov.dataset_iterators.basic_classification_iterator
 import deeppavlov.models.classifiers.intents.intent_model
 import deeppavlov.models.commutators.random_commutator
 import deeppavlov.models.embedders.fasttext_embedder

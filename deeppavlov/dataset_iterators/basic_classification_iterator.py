@@ -24,10 +24,10 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-@register('snips_intents_iterator')
-class SnipsIntentsDatasetIterator(BasicDatasetIterator):
+@register('basic_classification_iterator')
+class BasicClassificationDatasetIterator(BasicDatasetIterator):
     """
-        Class gets data dictionary from SnipsIntentsDatasetReader instance,
+        Class gets data dictionary from DatasetReader instance,
         merge fields if necessary,
         split a field if necessary
         """

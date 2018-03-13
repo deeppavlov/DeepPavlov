@@ -76,7 +76,10 @@ def train_model_from_config(config_path: str):
     reader_config = config['dataset_reader']
     reader = get_model(reader_config['name'])()
     data_path = expand_path(reader_config.get('data_path', ''))
-    data = reader.read(data_path)
+    kwargs = reader_config.copy()
+    if "name" in kwargs: del kwargs["name"]
+    if "data_path" in kwargs: del kwargs["data_path"]
+    data = reader.read(data_path, **kwargs)
 
     dataset_config = config['dataset_iterator']
     dataset: BasicDatasetIterator = from_params(dataset_config, data=data)
