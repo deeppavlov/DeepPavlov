@@ -7,13 +7,21 @@
     "name": "dialog_dataset"
   },
   "chainer": {
-    "in": ["x"],
-    "in_y": ["y"],
-    "out": ["y_predicted"],
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
+    "out": [
+      "y_predicted"
+    ],
     "pipe": [
       {
         "id": "token_vocab",
-        "fit_on": ["x"],
+        "fit_on": [
+          "x"
+        ],
         "name": "default_vocab",
         "level": "token",
         "tokenize": true,
@@ -49,9 +57,15 @@
         "load_path": "vocabs/classes.dict"
       },
       {
-        "in": ["x"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
+        "in": [
+          "x"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_predicted"
+        ],
         "main": true,
         "name": "go_bot",
         "debug": false,
@@ -145,7 +159,8 @@
           "name": "bow"
         },
         "tokenizer": {
-          "name": "spacy_tokenizer"
+          "name": "stream_spacy_tokenizer",
+          "lowercase": false
         },
         "tracker": {
           "name": "featurized_tracker",
@@ -164,11 +179,11 @@
   "train": {
     "epochs": 200,
     "batch_size": 1,
-
-    "metrics": ["per_item_dialog_accuracy"],
+    "metrics": [
+      "per_item_dialog_accuracy"
+    ],
     "validation_patience": 30,
     "val_every_n_epochs": 1,
-
     "log_every_n_batches": -1,
     "log_every_n_epochs": 1,
     "show_examples": false
