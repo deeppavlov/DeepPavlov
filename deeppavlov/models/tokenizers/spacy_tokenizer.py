@@ -22,9 +22,8 @@ from spacy.lang.en import English
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.tokenizers.utils import detokenize
+from deeppavlov.models.tokenizers.utils import detokenize, ngramize
 from deeppavlov.core.common.log import get_logger
-
 
 logger = get_logger(__name__)
 
@@ -72,7 +71,7 @@ class StreamSpacyTokenizer(Component):
         if isinstance(batch[0], list):
             return [detokenize(doc) for doc in batch]
         raise TypeError(
-            "SpacyTokenizer.__call__() not implemented for `{}`".format(type(batch[0])))
+            "StreamSpacyTokenizer.__call__() is not implemented for `{}`".format(type(batch[0])))
 
     def _tokenize(self, data: List[str], ngram_range=(1, 1), batch_size=10000, n_threads=1,
                   lowercase=True) -> Generator[List[str], Any, None]:
@@ -107,7 +106,8 @@ class StreamSpacyTokenizer(Component):
                 tokens = [t.lower_ for t in doc]
             else:
                 tokens = [t.text for t in doc]
-            processed_doc = self._ngramize(tokens, ngram_range=_ngram_range)
+            filtered = self._filter(tokens)
+            processed_doc = ngramize(filtered, ngram_range=_ngram_range)
             yield from processed_doc
 
     def _lemmatize(self, data: List[str], ngram_range=(1, 1), batch_size=10000, n_threads=1) -> \
@@ -134,31 +134,18 @@ class StreamSpacyTokenizer(Component):
             # DEBUG
             # logger.info("Lemmatize doc {} from {}".format(i, size))
             lemmas = chain.from_iterable([sent.lemma_.split() for sent in doc.sents])
-            processed_doc = self._ngramize(lemmas, ngram_range=_ngram_range)
+            filtered = self._filter(lemmas)
+            processed_doc = ngramize(filtered, ngram_range=_ngram_range)
             yield from processed_doc
 
-    def _ngramize(self, items: List[str], ngram_range=(1, 1)) -> Generator[
-        List[str], Any, None]:
+    def _filter(self, items):
         """
         Make ngrams from a list of tokens/lemmas
         :param items: list of tokens, lemmas or other strings to form ngrams
-        :param ngram_range: range for producing ngrams, ex. for unigrams + bigrams should be set to
-        (1, 2), for bigrams only should be set to (2, 2)
-        :return: ngrams (as strings) generator
+        :return: filtered list of tokens/lemmas
         """
-        _ngram_range = self.ngram_range or ngram_range
-
-        filtered = list(
-            filter(lambda x: x.isalpha() and x not in self.stopwords, items))
-
-        ngrams = []
-        ranges = [(0, i) for i in range(_ngram_range[0], _ngram_range[1] + 1)]
-        for r in ranges:
-            ngrams += list(zip(*[filtered[j:] for j in range(*r)]))
-
-        formatted_ngrams = [' '.join(item) for item in ngrams]
-
-        yield formatted_ngrams
+        filtered = list(filter(lambda x: x.isalpha() and x not in self.stopwords, items))
+        return filtered
 
     def set_stopwords(self, stopwords):
         self.stopwords = stopwords
