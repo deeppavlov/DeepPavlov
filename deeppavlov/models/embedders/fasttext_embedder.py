@@ -49,8 +49,8 @@ class FasttextEmbedder(Component, Serializable):
         if self.load_path and self.load_path.is_file():
             log.info("[loading embeddings from `{}`]".format(self.load_path))
             model_file = str(self.load_path)
-            if self.emb_module == 'fasttext':
-                import fasttext as Fasttext
+            if self.emb_module == 'fastText':
+                import fastText as Fasttext
                 model = Fasttext.load_model(model_file)
             elif self.emb_module == 'pyfasttext':
                 from pyfasttext import FastText as Fasttext
@@ -80,7 +80,11 @@ class FasttextEmbedder(Component, Serializable):
                 emb = self.tok2emb[t]
             except KeyError:
                 try:
-                    emb = self.model[t][:self.dim]
+                    if self.emb_module == 'fastText':
+                        import fastText as Fasttext
+                        emb = self.model.get_word_vector(t)
+                    elif self.emb_module == 'pyfasttext':
+                        emb = self.model[t][:self.dim]
                 except KeyError:
                     emb = np.zeros(self.dim, dtype=np.float32)
                 self.tok2emb[t] = emb
