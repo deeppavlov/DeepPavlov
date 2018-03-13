@@ -30,7 +30,7 @@ log = get_logger(__name__)
 @register('fasttext')
 class FasttextEmbedder(Component, Serializable):
     def __init__(self, load_path, save_path=None, dim=100,
-                 emb_module='fasttext', **kwargs):
+                 emb_module='fastText', **kwargs):
         super().__init__(save_path=save_path,
                          load_path=load_path)
         self.tok2emb = {}
