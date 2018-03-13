@@ -14,24 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import logging
 from itertools import chain
 from typing import List, Generator, Any, Tuple
-
-from deeppavlov.core.models.component import Component
-from deeppavlov.core.common.registry import register
-from deeppavlov.models.tokenizers.utils import detokenize
 
 import spacy
 from spacy.lang.en import English
 
+from deeppavlov.core.models.component import Component
+from deeppavlov.core.common.registry import register
+from deeppavlov.models.tokenizers.utils import detokenize
+from deeppavlov.core.common.log import get_logger
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-fmt = logging.Formatter('%(asctime)s: [ %(message)s ]', '%m/%d/%Y %I:%M:%S %p')
-console = logging.StreamHandler()
-console.setFormatter(fmt)
-logger.addHandler(console)
+
+logger = get_logger(__name__)
 
 
 @register('stream_spacy_tokenizer')
@@ -93,7 +88,7 @@ class StreamSpacyTokenizer(Component):
         :param lowercase: whether to perform lowercasing or not
         :return: a single processed doc generator
         """
-        # #DEBUG
+        # DEBUG
         # size = len(data)
         _batch_size = self.batch_size or batch_size
         _ngram_range = self.ngram_range or ngram_range
@@ -106,7 +101,7 @@ class StreamSpacyTokenizer(Component):
 
         for i, doc in enumerate(
                 self.tokenizer.pipe(data, batch_size=_batch_size, n_threads=_n_threads)):
-            # #DEBUG
+            # DEBUG
             # logger.info("Tokenize doc {} from {}".format(i, size))
             if _lowercase:
                 tokens = [t.lower_ for t in doc]
@@ -128,7 +123,7 @@ class StreamSpacyTokenizer(Component):
          on a standard Python
         :return: a single processed doc generator
         """
-        # #DEBUG
+        # DEBUG
         # size = len(data)
         _batch_size = self.batch_size or batch_size
         _ngram_range = self.ngram_range or ngram_range
@@ -136,7 +131,7 @@ class StreamSpacyTokenizer(Component):
 
         for i, doc in enumerate(
                 self.model.pipe(data, batch_size=_batch_size, n_threads=_n_threads)):
-            # #DEBUG
+            # DEBUG
             # logger.info("Lemmatize doc {} from {}".format(i, size))
             lemmas = chain.from_iterable([sent.lemma_.split() for sent in doc.sents])
             processed_doc = self._ngramize(lemmas, ngram_range=_ngram_range)
