@@ -145,10 +145,11 @@ class StreamSpacyTokenizer(Component):
     def _ngramize(self, items: List[str], ngram_range=(1, 1)) -> Generator[
         List[str], Any, None]:
         """
+        Make ngrams from a list of tokens/lemmas
         :param items: list of tokens, lemmas or other strings to form ngrams
         :param ngram_range: range for producing ngrams, ex. for unigrams + bigrams should be set to
         (1, 2), for bigrams only should be set to (2, 2)
-        :return:
+        :return: ngrams (as strings) generator
         """
         _ngram_range = self.ngram_range or ngram_range
 
