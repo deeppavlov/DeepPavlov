@@ -13,7 +13,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.ranking.ranking_network import RankingNetwork
 from deeppavlov.models.ranking.dict import InsuranceDict
-from deeppavlov.models.ranking.emb_dict import EmbeddingsDict
+from deeppavlov.models.ranking.emb_dict import Embeddings
 from deeppavlov.core.commands.utils import get_deeppavlov_root
 
 
@@ -50,11 +50,13 @@ class RankingModel(NNModel):
         # transformations as well as class -> index / index -> class for classification tasks
         self.vocabs = opt.get('vocabs', None)
 
-        self.dict = InsuranceDict(opt["vocabs_path"])
+        dict_parameter_names = list(inspect.signature(InsuranceDict.__init__).parameters)
+        dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
+        self.dict = InsuranceDict(**dict_parameters)
 
-        embdict_parameter_names = list(inspect.signature(EmbeddingsDict.__init__).parameters)
+        embdict_parameter_names = list(inspect.signature(Embeddings.__init__).parameters)
         embdict_parameters = {par: opt[par] for par in embdict_parameter_names if par in opt}
-        self.embdict= EmbeddingsDict(self.dict.toks, **embdict_parameters)
+        self.embdict= Embeddings(self.dict.tok2int, **embdict_parameters)
 
         # Find all input parameters of the network __init__ to pass them into network later
         network_parameter_names = list(inspect.signature(RankingNetwork.__init__).parameters)
@@ -104,7 +106,6 @@ class RankingModel(NNModel):
             self.dict.load_resp(resp_embs_path)
             self.dict.load_cont(cont_embs_path)
 
-
     @overrides
     def save(self):
         """Save model to the save_path, provided in config. The directory is
@@ -121,49 +122,30 @@ class RankingModel(NNModel):
         cont_embs_path = str(cont_embs_path.resolve())
         print('[saving model to {}]'.format(self.save_path.resolve()), file=sys.stderr)
         self._net.save(weights_path)
+        self.set_embeddings()
         self.dict.save_resp(resp_embs_path)
         self.dict.save_cont(cont_embs_path)
 
     @check_attr_true('train_now')
     def train_on_batch(self, x, y):
-
-        if self.dict.label2emb_vocab[0] is not None:
-            for i in range(len(self.dict.label2emb_vocab)):
-                self.dict.label2emb_vocab[i] = None
-
+        self.reset_embeddings()
         context, response, negative_response = x
         c = self.dict.make_toks(context, type="context")
-        c = self.embdict.make_ints(c)
+        c = self.dict.make_ints(c)
         rp = self.dict.make_toks(response, type="response")
-        rp = self.embdict.make_ints(rp)
+        rp = self.dict.make_ints(rp)
         rn = self.dict.make_toks(negative_response, type="response")
-        rn = self.embdict.make_ints(rn)
+        rn = self.dict.make_ints(rn)
         b = [c, rp, rn], y
         self._net.train_on_batch(b)
 
     @overrides
     def __call__(self, batch):
-        if self.dict.label2emb_vocab[0] is None:
-            r = []
-            for i in range(len(self.dict.label2toks_vocab)):
-                r.append(self.dict.label2toks_vocab[i])
-            r = self.embdict.make_ints(r)
-            response_embeddings = self._net.predict_response_emb([r, r, r], 512)
-            for i in range(len(self.dict.label2toks_vocab)):
-                self.dict.label2emb_vocab[i] = response_embeddings[i]
-        if self.dict.context2emb_vocab[0] is None:
-            contexts = []
-            for i in range(len(self.dict.context2toks_vocab)):
-                contexts.append(self.dict.context2toks_vocab[i])
-            contexts = self.embdict.make_ints(contexts)
-            context_embeddings = self._net.predict_context_emb([contexts, contexts, contexts], 512)
-            for i in range(len(self.dict.context2toks_vocab)):
-                self.dict.context2emb_vocab[i] = context_embeddings[i]
-
+        self.set_embeddings()
         if type(batch[0]) == list:
             context = [el[0] for el in batch]
             c = self.dict.make_toks(context, type="context")
-            c = self.embdict.make_ints(c)
+            c = self.dict.make_ints(c)
             c_emb = self._net.predict_context_emb([c, c, c], bs=len(batch))
             response = [el[1] for el in batch]
             batch_size = len(response)
@@ -181,7 +163,7 @@ class RankingModel(NNModel):
 
         elif type(batch[0]) == str:
             c_input = tokenize(batch)
-            c_input = self.embdict.make_ints(c_input)
+            c_input = self.dict.make_ints(c_input)
             c_input_emb = self._net.predict_context_emb([c_input, c_input, c_input], bs=1)
 
             c_emb = [self.dict.context2emb_vocab[i] for i in range(len(self.dict.context2emb_vocab))]
@@ -199,6 +181,33 @@ class RankingModel(NNModel):
             pred_resp = [' '.join(self.dict.label2toks_vocab[el]) for el in pred_resp]
             y_pred = [{"contexts": pred_cont, "responses": pred_resp}]
             return y_pred
+
+    def set_embeddings(self):
+        if self.dict.label2emb_vocab[0] is None:
+            r = []
+            for i in range(len(self.dict.label2toks_vocab)):
+                r.append(self.dict.label2toks_vocab[i])
+            r = self.dict.make_ints(r)
+            response_embeddings = self._net.predict_response_emb([r, r, r], 512)
+            for i in range(len(self.dict.label2toks_vocab)):
+                self.dict.label2emb_vocab[i] = response_embeddings[i]
+        if self.dict.context2emb_vocab[0] is None:
+            contexts = []
+            for i in range(len(self.dict.context2toks_vocab)):
+                contexts.append(self.dict.context2toks_vocab[i])
+            contexts = self.dict.make_ints(contexts)
+            context_embeddings = self._net.predict_context_emb([contexts, contexts, contexts], 512)
+            for i in range(len(self.dict.context2toks_vocab)):
+                self.dict.context2emb_vocab[i] = context_embeddings[i]
+
+    def reset_embeddings(self):
+        if self.dict.label2emb_vocab[0] is not None:
+            for i in range(len(self.dict.label2emb_vocab)):
+                self.dict.label2emb_vocab[i] = None
+        if self.dict.context2emb_vocab[0] is not None:
+            for i in range(len(self.dict.context2emb_vocab)):
+                self.dict.context2emb_vocab[i] = None
+
 
     def shutdown(self):
         pass

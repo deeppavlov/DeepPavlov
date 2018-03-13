@@ -1,20 +1,24 @@
 import numpy as np
 from pathlib import Path
 from deeppavlov.core.commands.utils import expand_path
-
+from keras.preprocessing.sequence import pad_sequences
 
 class InsuranceDict(object):
 
-    def __init__(self, vocabs_path):
+    def __init__(self, vocabs_path, max_sequence_length, padding="post", truncating="pre"):
+        self.max_sequence_length = max_sequence_length
+        self.padding = padding
+        self.truncating = truncating
+
         vocabs_path =expand_path(vocabs_path)
         self.idx2tok_vocab = {}
         self.label2toks_vocab = {}
         self.label2emb_vocab = {}
         idx2tok_fname = Path(vocabs_path) / 'vocabulary'
         self.build_idx2tok_vocab(idx2tok_fname)
+        self.build_tok2int_vocab()
         label2idxs_fname = Path(vocabs_path) / 'answers.label.token_idx'
         self.build_label2toks_vocabulary(label2idxs_fname)
-        self.toks = [el[1] for el in self.idx2tok_vocab.items()]
         self.build_label2emb_vocabulary()
         self.context2toks_vocab = {}
         self.context2emb_vocab = {}
@@ -26,6 +30,11 @@ class InsuranceDict(object):
         with open(fname) as f:
             data = f.readlines()
             self.idx2tok_vocab = {el.split('\t')[0]: el.split('\t')[1][:-1] for el in data}
+
+    def build_tok2int_vocab(self):
+        """Add new items to the tok2emb dictionary from a given text."""
+        toks = ['<UNK>'] + list(self.idx2tok_vocab.values())
+        self.tok2int = {el[1]: el[0] for el in enumerate(toks)}
 
     def build_label2toks_vocabulary(self, fname):
         with open(fname, 'r') as f:
@@ -72,6 +81,24 @@ class InsuranceDict(object):
         elif type == "response":
             toks_li = self.labels2toks(items_li)
         return toks_li
+
+    def make_ints(self, toks_li):
+        ints_li = []
+        for toks in toks_li:
+            ints = []
+            for tok in toks:
+                index = self.tok2int.get(tok)
+                if self.tok2int.get(tok) is not None:
+                    ints.append(index)
+                else:
+                    ints.append(0)
+            ints_li.append(ints)
+        ints_li = pad_sequences(ints_li,
+                                maxlen=self.max_sequence_length,
+                                padding=self.padding,
+                                truncating=self.truncating)
+        return ints_li
+
 
     def save_resp(self, path):
         response_embeddings = []
