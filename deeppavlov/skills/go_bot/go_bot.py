@@ -28,7 +28,7 @@ from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.encoders.bow import BoWEncoder
 from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel
 from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
-from deeppavlov.models.tokenizers.spacy_tokenizer import SpacyTokenizer
+from deeppavlov.models.tokenizers.spacy_tokenizer import StreamSpacyTokenizer
 from deeppavlov.models.trackers.default_tracker import DefaultTracker
 from deeppavlov.skills.go_bot.network import GoalOrientedBotNetwork
 from deeppavlov.skills.go_bot.templates import Templates, DualTemplate
@@ -44,7 +44,7 @@ class GoalOrientedBot(NNModel):
     def __init__(self, template_path,
                  template_type: Type = DualTemplate,
                  bow_encoder: Type = BoWEncoder,
-                 tokenizer: Type = SpacyTokenizer,
+                 tokenizer: Type = StreamSpacyTokenizer,
                  tracker: Type = DefaultTracker,
                  network: Type = GoalOrientedBotNetwork,
                  embedder=None,
