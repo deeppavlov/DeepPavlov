@@ -39,8 +39,8 @@
         "out": ["y_predicted"],
         "main": true,
         "name": "intent_model",
-        "save_path": "intents/intent_cnn",
-        "load_path": "intents/intent_cnn",
+        "save_path": "intents/intent_cnn_v2",
+        "load_path": "intents/intent_cnn_v2",
         "classes": "#classes_vocab.keys()",
         "opt": {
           "kernel_sizes_cnn": [
@@ -63,10 +63,10 @@
         },
         "embedder": {
           "name": "fasttext",
-          "save_path": "embeddings/dstc2_fasttext_model.bin",
-          "load_path": "embeddings/dstc2_fasttext_model.bin",
+          "save_path": "embeddings/wiki.en.bin",
+          "load_path": "embeddings/wiki.en.bin",
           "emb_module": "fastText",
-          "dim": 100
+          "dim": 300
         },
         "tokenizer": {
           "name": "nltk_tokenizer",
