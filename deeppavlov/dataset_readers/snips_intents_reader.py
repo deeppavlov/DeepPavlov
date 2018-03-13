@@ -28,8 +28,8 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-@register('classification_datasetreader')
-class ClassificationDatasetReader(DatasetReader):
+@register('snips_intents_reader')
+class SnipsIntentsDatasetReader(DatasetReader):
     """
     Class provides reading dataset in .csv format
     """

@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "name": "classification_datasetreader",
+    "name": "snips_intents_reader",
     "data_path": "snips"
   },
   "dataset_iterator": {
-    "name": "classification_iterator",
+    "name": "snips_intents_iterator",
     "seed": 42,
     "field_to_split": "train",
     "split_fields": [

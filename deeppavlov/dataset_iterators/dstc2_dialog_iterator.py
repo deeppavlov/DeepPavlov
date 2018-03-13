@@ -19,8 +19,8 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_iterator import BasicDatasetIterator
 
 
-@register('dialog_iterator')
-class DialogDatasetIterator(BasicDatasetIterator):
+@register('dstc2_dialog_iterator')
+class Dstc2DialogDatasetIterator(BasicDatasetIterator):
     @staticmethod
     def _dialogs(data):
         dialogs = []

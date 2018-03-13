@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 @register('dstc2_ner_iterator')
-class DstcNerDataset(BasicDatasetIterator):
+class Dstc2NerDatasetIterator(BasicDatasetIterator):
 
     def __init__(self, data, dataset_path, seed=None, shuffle=False):
         r""" Dataset takes a dict with fields 'train', 'test', 'valid'. A list of samples (pairs x, y) is stored

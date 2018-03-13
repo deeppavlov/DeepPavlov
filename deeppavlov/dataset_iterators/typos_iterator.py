@@ -19,7 +19,7 @@ from deeppavlov.core.data.dataset_iterator import BasicDatasetIterator
 
 
 @register('typos_iterator')
-class TyposDataset(BasicDatasetIterator):
+class TyposDatasetIterator(BasicDatasetIterator):
     def split(self, test_ratio=0., *args, **kwargs):
         """Split all data into train and test
 

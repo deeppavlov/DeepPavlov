@@ -1,6 +1,6 @@
 {
   "dataset_reader": {
-    "name": "ner_dataset_reader",
+    "name": "conll2003_reader",
     "data_path": "conll2003/"
   },
   "dataset_iterator": {
