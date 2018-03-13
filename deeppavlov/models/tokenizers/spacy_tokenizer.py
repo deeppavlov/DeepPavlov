@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 from itertools import chain
-from typing import List, Generator, Any
+from typing import List, Generator, Any, Tuple
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
@@ -25,8 +25,6 @@ import spacy
 from spacy.lang.en import English
 
 
-# TODO think about duplicating import names in modules and scripts
-
 @register('stream_spacy_tokenizer')
 class StreamSpacyTokenizer(Component):
     """
@@ -35,8 +33,9 @@ class StreamSpacyTokenizer(Component):
     Works only for English language.
     """
 
-    def __init__(self, disable=None, stopwords=None, batch_size=None, ngram_range=None,
-                 lemmas=False, n_threads=None):
+    def __init__(self, disable: list=None, stopwords: list=None, batch_size: int=None,
+                 ngram_range: Tuple[int, int]=None, lemmas=False, n_threads: int=None,
+                 lowercase: bool=None):
         """
         :param disable: pipeline processors to omit; if nothing should be disabled,
          pass an empty list
@@ -58,6 +57,7 @@ class StreamSpacyTokenizer(Component):
         self.ngram_range = ngram_range
         self.lemmas = lemmas
         self.n_threads = n_threads
+        self.lowercase = lowercase
 
     def __call__(self, batch):
         if isinstance(batch[0], str):
@@ -71,7 +71,7 @@ class StreamSpacyTokenizer(Component):
             "SpacyTokenizer.__call__() not implemented for `{}`".format(type(batch[0])))
 
     def _tokenize(self, data: List[str], ngram_range=(1, 1), batch_size=10000, n_threads=1,
-                  lower=True) -> Generator[List[str], Any, None]:
+                  lowercase=True) -> Generator[List[str], Any, None]:
         """
         Tokenize a list of documents.
         :param data: a list of documents to process
@@ -81,7 +81,7 @@ class StreamSpacyTokenizer(Component):
         improves the spacy 'pipe' performance; shouldn't be too small
         :param n_threads: a number of threads for parallel computing; doesn't work good
          on a standard Python
-        :param lower: whether to perform lowercasing or not
+        :param lowercase: whether to perform lowercasing or not
         :return: a single processed doc generator
         """
 
@@ -89,9 +89,14 @@ class StreamSpacyTokenizer(Component):
         _ngram_range = self.ngram_range or ngram_range
         _n_threads = self.n_threads or n_threads
 
+        if self.lowercase is None:
+            _lowercase = lowercase
+        else:
+            _lowercase = self.lowercase
+
         for i, doc in enumerate(
                 self.tokenizer.pipe(data, batch_size=_batch_size, n_threads=_n_threads)):
-            if lower:
+            if _lowercase:
                 tokens = [t.lower_ for t in doc]
             else:
                 tokens = [t.text for t in doc]
@@ -146,4 +151,3 @@ class StreamSpacyTokenizer(Component):
 
     def set_stopwords(self, stopwords):
         self.stopwords = stopwords
-
