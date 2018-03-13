@@ -63,9 +63,9 @@
         },
         "embedder": {
           "name": "fasttext",
-          "save_path": "embeddings/dstc2_fasttext_model_100.bin",
-          "load_path": "embeddings/dstc2_fasttext_model_100.bin",
-          "emb_module": "fasttext",
+          "save_path": "embeddings/dstc2_fasttext_model.bin",
+          "load_path": "embeddings/dstc2_fasttext_model.bin",
+          "emb_module": "fastText",
           "dim": 100
         },
         "tokenizer": {
