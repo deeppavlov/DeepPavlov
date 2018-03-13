@@ -19,7 +19,7 @@ import re
 
 def detokenize(tokens):
     """
-    Detokenizing a text undoes the tokenizing operation, restoring
+    Detokenizing a text undoes the tokenizing operation, restores
     punctuation and spaces to the places that people expect them to be.
     Ideally, `detokenize(tokenize(text))` should be identical to `text`,
     except for line breaks.
