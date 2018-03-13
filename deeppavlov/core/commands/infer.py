@@ -16,7 +16,6 @@ limitations under the License.
 from deeppavlov.core.commands.utils import set_deeppavlov_root
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.registry import REGISTRY
 
 from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.common.params import from_params
@@ -116,3 +115,5 @@ def interact_model(config_path):
             print('>>', pred[0])
         except Exception as e:
             raise e
+
+

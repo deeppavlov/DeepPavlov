@@ -83,7 +83,7 @@ def fit_chainer(config: dict, dataset: Dataset):
     return chainer
 
 
-def train_model_from_config(config_path: str, is_trained=True):
+def train_model_from_config(config_path: str, is_trained=False):
     config = read_json(config_path)
     set_deeppavlov_root(config)
 

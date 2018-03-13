@@ -78,7 +78,7 @@ class MorphoTaggerDataset(Dataset):
         return
 
     def batch_generator(self, batch_size: int, data_type: str = 'train',
-                        shuffle: bool = None):
+                        shuffle: bool = None, return_indexes: bool = False):
         if shuffle is None:
             shuffle = self.shuffle
         data = self.data[data_type]
@@ -90,4 +90,9 @@ class MorphoTaggerDataset(Dataset):
         if batch_size < 0:
             batch_size = L
         for start in range(0, L, batch_size):
-            yield tuple(zip(*([data[i] for i in indexes[start:start+batch_size]])))
+            indexes_to_yield = indexes[start:start+batch_size]
+            data_to_yield = tuple(zip(*([data[i] for i in indexes_to_yield])))
+            if return_indexes:
+                yield indexes_to_yield, data_to_yield
+            else:
+                yield data_to_yield

@@ -39,6 +39,7 @@ class DefaultVocabulary(Estimator):
                          save_path=save_path,
                          mode=kwargs['mode'])
 
+        self.level = level  # to modify __call__ method
         self.special_tokens = special_tokens
         self.default_token = default_token
         self.min_freq = min_freq
@@ -127,7 +128,7 @@ class DefaultVocabulary(Estimator):
             update=True
         )
 
-    def _train(self, tokens, counts=None, update=True, filter_min_freq=True):
+    def _train(self, tokens, counts=None, update=True):
         counts = counts or itertools.repeat(1)
         if not update:
             self.reset()
@@ -144,7 +145,10 @@ class DefaultVocabulary(Estimator):
         return
 
     def __call__(self, samples, **kwargs):
-        return [self[s] for s in samples]
+        if self.level == "token":
+            return [self[s] for s in samples]
+        elif self.level == "char":
+            return [[self[x] for x in s] for s in samples]
 
     def save(self):
         log.info("[saving vocabulary to {}]".format(self.save_path))

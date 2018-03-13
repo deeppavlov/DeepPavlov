@@ -23,3 +23,11 @@ def to_one_hot(x, k):
 def repeat_(x, k):
     tile_factor = [1, k] + [1] * (kb.ndim(x) - 1)
     return kb.tile(x[:, None, :], tile_factor)
+
+
+def make_pos_and_tag(tag):
+    if "," in tag:
+        pos, tag = tag.split(",", maxsplit=1)
+    else:
+        pos, tag = tag, "_"
+    return pos, tag

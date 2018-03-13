@@ -44,7 +44,7 @@ if __name__ == "__main__":
             print("Dev batch {}, {} items, lengths from {} to {}".format(
                 i, len(batch[0]), len(batch[0][0]), len(batch[0][-1])))
     elif MODE == "train":
-        # config = read_json("configs/morpho_tagger/test_train_config.json")
+        # config = read_json("configs/morpho_tagger/train_config.json")
         # data = test_reader(config)
         # dataset = from_params(config['dataset'], data=data)
         # model = fit_chainer(config, dataset)
@@ -53,4 +53,4 @@ if __name__ == "__main__":
         # metrics_functions = list(zip(train_config['metrics'],
         #                              get_metrics_by_names(train_config['metrics'])))
         # _train_batches(model, dataset, train_config, metrics_functions)
-        train_model_from_config("configs/morpho_tagger/test_test_config.json", is_trained=True)
+        train_model_from_config("configs/morpho_tagger/test_config.json", is_trained=True)

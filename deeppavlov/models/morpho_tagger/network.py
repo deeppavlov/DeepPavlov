@@ -186,7 +186,7 @@ class CharacterTagger:
         # TO_DO: add weights to deal with padded instances
         return self.model_.train_on_batch(X, Y)
 
-    def predict_on_batch(self, data: List[str]):
+    def predict_on_batch(self, data: List[str], return_indexes=False):
         """
         Makes predictions on a single batch
 
@@ -199,7 +199,8 @@ class CharacterTagger:
         labels = np.argmax(Y, axis=-1)
         answer: List[List[str]] = [None] * len(X)
         for i, elem in enumerate(labels):
-            answer[i] = self.tags.idxs2toks(elem[:len(data[i])])
+            elem = elem[:len(data[i])]
+            answer[i] = elem if return_indexes else self.tags.idxs2toks(elem)
         return answer
 
     def _make_sent_vector(self, sent, bucket_length=None):

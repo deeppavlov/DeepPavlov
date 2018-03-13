@@ -79,6 +79,7 @@ class MorphoTaggerWrapper(NNModel):
         # to the file including extension of the file model)
         model_file_exist = self.load_path.exists()
         path = str(self.load_path.resolve())
+        print(model_file_exist, path)
         # Check presence of the model files
         if model_file_exist:
             print('[loading model from {}]'.format(path), file=sys.stderr)
@@ -103,13 +104,13 @@ class MorphoTaggerWrapper(NNModel):
         """
         self._net.train_on_batch(x, y, **self.train_parameters)
 
-    def __call__(self, x_batch):
-        """Infer is similar to predict, however it should work with single samples,
-        not batches.
+    def __call__(self, x_batch, **kwargs):
+        """
+        Predicts answers on batch elements.
 
         Args:
-            instance: a single x sample, not batch!
+            instance: a batch to predict answers on
 
         """
-        return self._net.predict_on_batch(x_batch)
+        return self._net.predict_on_batch(x_batch, **kwargs)
 

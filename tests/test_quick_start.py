@@ -22,7 +22,7 @@ MCQR = {
         #         "configs/ner/ner_dstc2.json": ("ner_dstc2_model", "", ""),
         #         "configs/ner/slotfill_dstc2.json": ("ner", "", "")
         #         },
-        "morpho_tagger": {"configs/morpho_tagger/test_train_config.json": ("morpho_tagger", "", "")}
+        "morpho_tagger": {"configs/morpho_tagger/train_config.json": ("morpho_tagger", "", "")}
         }
 
 
