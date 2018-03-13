@@ -19,11 +19,13 @@ from typing import List, Generator, Any
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
-from .utils import detokenize
+from deeppavlov.models.tokenizers.utils import detokenize
 
 import spacy
 from spacy.lang.en import English
 
+
+# TODO think about duplicating import names in modules and scripts
 
 @register('stream_spacy_tokenizer')
 class StreamSpacyTokenizer(Component):
@@ -60,9 +62,9 @@ class StreamSpacyTokenizer(Component):
     def __call__(self, batch):
         if isinstance(batch[0], str):
             if self.lemmas:
-                return self._lemmatize(batch)
+                return list(self._lemmatize(batch))
             else:
-                return self._tokenize(batch)
+                return list(self._tokenize(batch))
         if isinstance(batch[0], list):
             return [detokenize(doc) for doc in batch]
         raise TypeError(
@@ -144,3 +146,4 @@ class StreamSpacyTokenizer(Component):
 
     def set_stopwords(self, stopwords):
         self.stopwords = stopwords
+
