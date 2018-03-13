@@ -13,6 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from pathlib import Path
+
 import telebot
 
 from deeppavlov.core.common.file import read_json
@@ -23,7 +25,8 @@ def init_bot_for_model(token, model):
     bot = telebot.TeleBot(token)
 
     model_name = type(model).__name__
-    models_info = read_json('../telegram_utils/models_info.json')
+    config_path = Path(__file__).parent / 'models_info.json'
+    models_info = read_json(str(config_path))
     model_info = models_info[model_name] if model_name in models_info else models_info['@default']
 
     @bot.message_handler(commands=['start'])
