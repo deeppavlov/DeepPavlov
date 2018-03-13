@@ -1,0 +1,57 @@
+{
+  "dataset_reader": {
+    "name": "morphotagger_dataset_reader",
+    "data_path": "UD2.0_source",
+    "read_params": {
+      "language": "hu", "data_types": ["test"]
+    }
+  },
+  "dataset": {
+    "name": "morphotagger_dataset"
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "id": "tag_vocab",
+        "name": "default_vocab",
+        "level": "token",
+        "special_tokens": ["PAD", "BEGIN", "END"],
+        "save_path": "morpho_tagger/tag.dict",
+        "load_path": "morpho_tagger/tag.dict"
+      },
+      {
+        "id": "char_vocab",
+        "name": "default_vocab",
+        "min_freq": 3,
+        "special_tokens": ["PAD", "BEGIN", "END"],
+		"level": "char",
+        "save_path": "morpho_tagger/char.dict",
+        "load_path": "morpho_tagger/char.dict"
+      },
+      {
+        "in": ["x"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "name": "morpho_tagger",
+        "main": true,
+        "save_path": "morpho_tagger/UD2.0/ud_hungarian.hdf5",
+        "load_path": "morpho_tagger/UD2.0/ud_hungarian.hdf5",
+        "tags": "#tag_vocab",
+        "symbols": "#char_vocab",
+        "verbose": 1,
+        "char_embeddings_size": 32, "char_window_size": [1, 2, 3, 4, 5, 6, 7],
+        "word_lstm_units": 128, "conv_dropout": 0.0, "char_conv_layers": 1,
+        "char_highway_layers": 1, "highway_dropout": 0.0, "word_lstm_layers": 1,
+        "char_filter_multiple": 50, "intermediate_dropout": 0.0,
+        "word_dropout": 0.3, "lstm_dropout": 0.3, "regularizer": 0.001
+      }
+    ],
+    "out": ["y_predicted"]
+  },
+  "predict": {
+    "batch_size": 32,
+    "outfile": "results/ud_hungarian_test.res"
+  }
+}

@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "morphotagger_dataset_reader",
-    "data_path": "data/UD2.0_source",
+    "data_path": "UD2.0_source",
     "read_params": {
       "language": "hu"
     }
@@ -19,8 +19,8 @@
         "fit_on": ["y"],
 		"level": "token",
         "special_tokens": ["PAD", "BEGIN", "END"],
-        "save_path": "morpho_tagger/tag.dict",
-        "load_path": "morpho_tagger/tag.dict"
+        "save_path": "morpho_tagger/tag_1.dict",
+        "load_path": "morpho_tagger/tag_1.dict"
       },
       {
         "id": "char_vocab",
@@ -29,8 +29,8 @@
         "fit_on": ["x"],
         "special_tokens": ["PAD", "BEGIN", "END"],
 		"level": "char",
-        "save_path": "morpho_tagger/char.dict",
-        "load_path": "morpho_tagger/char.dict"
+        "save_path": "morpho_tagger/char_1.dict",
+        "load_path": "morpho_tagger/char_1.dict"
       },
       {
         "in": ["x"],
@@ -38,8 +38,8 @@
         "out": ["y_predicted"],
         "name": "morpho_tagger",
         "main": true,
-        "save_path": "morpho_tagger/UD2.0/ud_hungarian.hdf5",
-        "load_path": "morpho_tagger/UD2.0/ud_hungarian.hdf5",
+        "save_path": "morpho_tagger/UD2.0/ud_hungarian_1.hdf5",
+        "load_path": "morpho_tagger/UD2.0/ud_hungarian_1.hdf5",
         "tags": "#tag_vocab",
         "symbols": "#char_vocab",
         "verbose": 1,
@@ -53,7 +53,7 @@
     "out": ["y_predicted"]
   },
   "train": {
-    "epochs": 50,
+    "epochs": 2,
     "batch_size": 16,
 
     "metrics": ["per_item_accuracy"],
