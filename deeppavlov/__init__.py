@@ -1,3 +1,8 @@
+# check version
+import sys
+assert sys.hexversion >= 0x3060000, 'Does not work in python3.5 or lower'
+
+
 import deeppavlov.core.models.keras_model
 import deeppavlov.core.data.dataset
 import deeppavlov.core.data.vocab
