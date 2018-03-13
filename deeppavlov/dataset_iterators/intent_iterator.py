@@ -17,15 +17,15 @@ limitations under the License.
 from sklearn.model_selection import train_test_split
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.dataset import Dataset
+from deeppavlov.core.data.dataset_iterator import BasicDatasetIterator
 from deeppavlov.core.common.log import get_logger
 
 
 log = get_logger(__name__)
 
 
-@register('intent_dataset')
-class IntentDataset(Dataset):
+@register('intent_iterator')
+class IntentDataset(BasicDatasetIterator):
     """
     Class gets data dictionary from DSTC2DatasetReader instance,
     construct intents from act and slots,

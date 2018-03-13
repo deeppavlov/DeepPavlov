@@ -17,15 +17,15 @@ limitations under the License.
 from sklearn.model_selection import train_test_split
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.dataset import Dataset
+from deeppavlov.core.data.dataset_iterator import BasicDatasetIterator
 from deeppavlov.core.common.log import get_logger
 
 
 log = get_logger(__name__)
 
 
-@register('classification_dataset')
-class ClassificationDataset(Dataset):
+@register('classification_iterator')
+class ClassificationDatasetIterator(BasicDatasetIterator):
     """
         Class gets data dictionary from ClassificationDatasetReader instance,
         merge fields if necessary,

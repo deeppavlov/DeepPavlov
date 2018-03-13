@@ -3,8 +3,8 @@
     "name": "dstc2_datasetreader",
     "data_path": "dstc2"
   },
-  "dataset": {
-    "name": "intent_dataset",
+  "dataset_iterator": {
+    "name": "intent_iterator",
     "seed": 42,
     "fields_to_merge": [
       "train",

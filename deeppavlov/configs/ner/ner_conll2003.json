@@ -3,8 +3,8 @@
     "name": "ner_dataset_reader",
     "data_path": "conll2003/"
   },
-  "dataset": {
-    "name": "basic_dataset"
+  "dataset_iterator": {
+    "name": "basic_dataset_iterator"
   },
   "chainer": {
     "in": ["x"],

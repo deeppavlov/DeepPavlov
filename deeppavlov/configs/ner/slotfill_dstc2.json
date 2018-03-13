@@ -3,8 +3,8 @@
     "name": "dstc2_datasetreader",
     "data_path": "dstc2"
   },
-  "dataset": {
-    "name": "dstc2_ner_dataset",
+  "dataset_iterator": {
+    "name": "dstc2_ner_iterator",
     "dataset_path": "dstc2"
   },
   "chainer": {
