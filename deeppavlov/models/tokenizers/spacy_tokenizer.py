@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import logging
 from itertools import chain
 from typing import List, Generator, Any, Tuple
 
@@ -25,6 +26,14 @@ import spacy
 from spacy.lang.en import English
 
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+fmt = logging.Formatter('%(asctime)s: [ %(message)s ]', '%m/%d/%Y %I:%M:%S %p')
+console = logging.StreamHandler()
+console.setFormatter(fmt)
+logger.addHandler(console)
+
+
 @register('stream_spacy_tokenizer')
 class StreamSpacyTokenizer(Component):
     """
@@ -33,9 +42,9 @@ class StreamSpacyTokenizer(Component):
     Works only for English language.
     """
 
-    def __init__(self, disable: list=None, stopwords: list=None, batch_size: int=None,
-                 ngram_range: Tuple[int, int]=None, lemmas=False, n_threads: int=None,
-                 lowercase: bool=None):
+    def __init__(self, disable: list = None, stopwords: list = None, batch_size: int = None,
+                 ngram_range: Tuple[int, int] = None, lemmas=False, n_threads: int = None,
+                 lowercase: bool = None):
         """
         :param disable: pipeline processors to omit; if nothing should be disabled,
          pass an empty list
@@ -84,7 +93,8 @@ class StreamSpacyTokenizer(Component):
         :param lowercase: whether to perform lowercasing or not
         :return: a single processed doc generator
         """
-
+        # #DEBUG
+        # size = len(data)
         _batch_size = self.batch_size or batch_size
         _ngram_range = self.ngram_range or ngram_range
         _n_threads = self.n_threads or n_threads
@@ -96,6 +106,8 @@ class StreamSpacyTokenizer(Component):
 
         for i, doc in enumerate(
                 self.tokenizer.pipe(data, batch_size=_batch_size, n_threads=_n_threads)):
+            # #DEBUG
+            # logger.info("Tokenize doc {} from {}".format(i, size))
             if _lowercase:
                 tokens = [t.lower_ for t in doc]
             else:
@@ -116,13 +128,16 @@ class StreamSpacyTokenizer(Component):
          on a standard Python
         :return: a single processed doc generator
         """
-
+        # #DEBUG
+        # size = len(data)
         _batch_size = self.batch_size or batch_size
         _ngram_range = self.ngram_range or ngram_range
         _n_threads = self.n_threads or n_threads
 
         for i, doc in enumerate(
                 self.model.pipe(data, batch_size=_batch_size, n_threads=_n_threads)):
+            # #DEBUG
+            # logger.info("Lemmatize doc {} from {}".format(i, size))
             lemmas = chain.from_iterable([sent.lemma_.split() for sent in doc.sents])
             processed_doc = self._ngramize(lemmas, ngram_range=_ngram_range)
             yield from processed_doc
