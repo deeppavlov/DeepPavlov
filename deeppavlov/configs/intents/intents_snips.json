@@ -1,10 +1,11 @@
 {
   "dataset_reader": {
-    "name": "classification_datasetreader",
-    "data_path": "snips"
+    "name": "csv_classification_reader",
+    "data_path": "snips",
+    "url": "http://lnsigo.mipt.ru/export/datasets/snips_intents/train.csv"
   },
-  "dataset": {
-    "name": "classification_dataset",
+  "dataset_iterator": {
+    "name": "basic_classification_iterator",
     "seed": 42,
     "field_to_split": "train",
     "split_fields": [

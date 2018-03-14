@@ -20,8 +20,8 @@ from typing import List, Dict, Generator, Tuple, Any
 from deeppavlov.core.common.registry import register
 
 
-@register('basic_dataset')
-class Dataset:
+@register('basic_dataset_iterator')
+class BasicDatasetIterator:
     def split(self, *args, **kwargs):
         pass
 
