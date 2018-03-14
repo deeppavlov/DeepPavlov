@@ -95,7 +95,7 @@ class Chainer(Component):
         res = [mem[k] for k in to_return]
         if len(res) == 1:
             return res[0]
-        return list(zip(*res))
+        return res
 
     def get_main_component(self):
         return self.main or self.pipe[-1]

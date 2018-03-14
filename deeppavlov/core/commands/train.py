@@ -57,6 +57,8 @@ def fit_chainer(config: dict, dataset: Dataset):
             preprocessed = chainer(*dataset.iter_all('train'), to_return=component_config['fit_on'])
             if len(component_config['fit_on']) == 1:
                 preprocessed = [preprocessed]
+            else:
+                preprocessed = zip(*preprocessed)
             component.fit(*preprocessed)
             component.save()
 
@@ -118,7 +120,9 @@ def train_model_from_config(config_path: str):
         #     model_config['load_path'] = model_config['save_path']
         # except KeyError:
         #     log.warning('No "save_path" parameter for the model, so "load_path" will not be renewed')
+
         model = build_model_from_config(config, load_trained=True)
+
         log.info('Testing the best saved model')
 
         if train_config['validate_best']:
@@ -134,7 +138,7 @@ def train_model_from_config(config_path: str):
             }
 
             print(json.dumps(report, ensure_ascii=False))
-
+    return model
 
 def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
                 dataset: Dataset, batch_size=-1, data_type='valid', start_time=None):

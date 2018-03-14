@@ -14,6 +14,9 @@
       {
         "name": "squad_preprocessor",
         "id": "squad_prepr",
+        "context_limit": 400,
+        "question_limit": 150,
+        "char_limit": 16,
         "in": ["c_raw", "q_raw"],
         "out": ["c", "c_tokens", "c_chars", "c_r2p", "c_p2r", "q", "q_tokens", "q_chars", "spans"]
       },
@@ -22,20 +25,44 @@
         "id": "squad_ans_prepr",
         "in": ["ans_raw", "ans_raw_start", "c_r2p", "spans"],
         "out": ["ans", "ans_start", "ans_end"]
+      },
+      {
+        "name": "squad_vocab_embedder",
+        "id": "vocab_embedder",
+        "level": "token",
+        "emb_folder": "squad/emb",
+        "emb_url": "http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M.vec",
+        "save_path": "squad/emb/vocab_embedder.pckl",
+        "load_path": "squad/emb/vocab_embedder.pckl",
+        "context_limit": "#squad_prepr.context_limit",
+        "question_limit": "#squad_prepr.question_limit",
+        "char_limit": "#squad_prepr.context_limit",
+        "fit_lol": ["c_tokens", "q_tokens"],
+        "in": ["c_tokens", "q_tokens"],
+        "out": ["c_tokens_idxs", "q_tokens_idxs"]
+      },
+      {
+        "name": "squad_vocab_embedder",
+        "id": "char_vocab_embedder",
+        "level": "char",
+        "emb_folder": "squad/emb",
+        "emb_url": "http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M-char.vec",
+        "save_path": "squad/emb/char_vocab_embedder.pckl",
+        "load_path": "squad/emb/char_vocab_embedder.pckl",
+        "context_limit": "#squad_prepr.context_limit",
+        "question_limit": "#squad_prepr.question_limit",
+        "char_limit": "#squad_prepr.char_limit",
+        "fit_lol": ["c_chars", "q_chars"],
+        "in": ["c_chars", "q_chars"],
+        "out": ["c_chars_idxs", "q_chars_idxs"]
       }
     ],
-    "out": ["c", "q"]
+    "out": ["c_tokens_idxs", "c_chars_idxs", "q_tokens_idxs", "q_chars_idxs"]
   },
   "train": {
-    "epochs": 100,
-    "batch_size": 64,
-
-    "metrics": [],
-    "validation_patience": 5,
-    "val_every_n_epochs": 5,
-
-    "log_every_n_epochs": 1,
-    "show_examples": false
+    "show_examples": false,
+    "test_best": false,
+    "validate_best": false
   }
 }
 
