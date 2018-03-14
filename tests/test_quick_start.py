@@ -88,7 +88,7 @@ def download(full=None):
     cmd = "python3 -m deeppavlov.download -test"
     if full:
         cmd += " -all"
-    pexpect.run(cmd)
+    pexpect.run(cmd, timeout=None)
 
 
 @pytest.mark.parametrize("model,conf_file,model_dir", [(m, c, md) for m in PARAMS.keys() for c, md in PARAMS[m].keys()])
@@ -110,7 +110,7 @@ class TestQuickStart(object):
 
     def test_downloaded_model_existence(self, model, conf_file, model_dir):
         if not download_path.exists():
-            download()
+            download(True)
         assert download_path.joinpath(model_dir).exists(), f"{model_dir} was not downloaded"
 
     def test_interacting_pretrained_model(self, model, conf_file, model_dir):
