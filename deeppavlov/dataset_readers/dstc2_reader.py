@@ -29,7 +29,7 @@ log = get_logger(__name__)
 
 
 
-@register('dstc2_datasetreader')
+@register('dstc2_reader')
 class DSTC2DatasetReader(DatasetReader):
 
     url = 'http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz'

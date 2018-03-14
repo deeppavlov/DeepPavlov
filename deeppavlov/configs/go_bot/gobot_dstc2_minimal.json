@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "name": "dstc2_datasetreader",
+    "name": "dstc2_reader",
     "data_path": "dstc2"
   },
-  "dataset": {
-    "name": "dialog_dataset"
+  "dataset_iterator": {
+    "name": "dialog_iterator"
   },
   "chainer": {
     "in": ["x"],

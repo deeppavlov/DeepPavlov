@@ -17,20 +17,21 @@ limitations under the License.
 from sklearn.model_selection import train_test_split
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.dataset import Dataset
+from deeppavlov.core.data.dataset_iterator import BasicDatasetIterator
 from deeppavlov.core.common.log import get_logger
 
 
 log = get_logger(__name__)
 
 
-@register('classification_dataset')
-class ClassificationDataset(Dataset):
+@register('dstc2_intents_iterator')
+class Dstc2IntentsDatasetIterator(BasicDatasetIterator):
     """
-        Class gets data dictionary from ClassificationDatasetReader instance,
-        merge fields if necessary,
-        split a field if necessary
-        """
+    Class gets data dictionary from DSTC2DatasetReader instance,
+    construct intents from act and slots,
+    merge fields if necessary,
+    split a field if necessary
+    """
     def __init__(self, data,
                  fields_to_merge=None, merged_field=None,
                  field_to_split=None, split_fields=None, split_proportions=None,
@@ -38,7 +39,7 @@ class ClassificationDataset(Dataset):
                  *args, **kwargs):
         """
         Initialize dataset using data from DatasetReader,
-        merges and splits fields according to the given parameters
+        merge and split fields according to the given parameters
         Args:
             data: dictionary of data with fields "train", "valid" and "test" (or some of them)
             seed: random seed
@@ -50,7 +51,36 @@ class ClassificationDataset(Dataset):
             *args:
             **kwargs:
         """
+
         super().__init__(data, seed=seed, shuffle=shuffle)
+        self.classes = None
+
+        new_data = dict()
+        new_data['train'] = []
+        new_data['valid'] = []
+        new_data['test'] = []
+
+        for field in ['train', 'valid', 'test']:
+            for turn in self.data[field]:
+                reply = turn[0]
+                curr_intents = []
+                if reply['intents']:
+                    for intent in reply['intents']:
+                        for slot in intent['slots']:
+                            if slot[0] == 'slot':
+                                curr_intents.append(intent['act'] + '_' + slot[1])
+                            else:
+                                curr_intents.append(intent['act'] + '_' + slot[0])
+                        if len(intent['slots']) == 0:
+                            curr_intents.append(intent['act'])
+                else:
+                    if reply['text']:
+                        curr_intents.append('unknown')
+                    else:
+                        continue
+                new_data[field].append((reply['text'], curr_intents))
+
+        self.data = new_data
 
         if fields_to_merge is not None:
             if merged_field is not None:
