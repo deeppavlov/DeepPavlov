@@ -64,10 +64,10 @@
         },
         "embedder": {
           "name": "fasttext",
-          "save_path": "embeddings/wiki.en.bin",
-          "load_path": "embeddings/wiki.en.bin",
-          "emb_module": "fastText",
-          "dim": 300
+          "save_path": "embeddings/dstc2_fastText_model.bin",
+          "load_path": "embeddings/dstc2_fastText_model.bin",
+          "emb_module": "fasttext",
+          "dim": 100
         },
         "tokenizer": {
           "name": "nltk_tokenizer",

@@ -30,7 +30,7 @@ log = get_logger(__name__)
 @register('fasttext')
 class FasttextEmbedder(Component, Serializable):
     def __init__(self, load_path, save_path=None, dim=100,
-                 emb_module='fastText', **kwargs):
+                 emb_module='fasttext', **kwargs):
         super().__init__(save_path=save_path,
                          load_path=load_path)
         self.tok2emb = {}
@@ -49,7 +49,7 @@ class FasttextEmbedder(Component, Serializable):
         if self.load_path and self.load_path.is_file():
             log.info("[loading embeddings from `{}`]".format(self.load_path))
             model_file = str(self.load_path)
-            if self.emb_module == 'fastText':
+            if self.emb_module == 'fasttext':
                 import fastText as Fasttext
                 model = Fasttext.load_model(model_file)
             elif self.emb_module == 'pyfasttext':
@@ -80,7 +80,7 @@ class FasttextEmbedder(Component, Serializable):
                 emb = self.tok2emb[t]
             except KeyError:
                 try:
-                    if self.emb_module == 'fastText':
+                    if self.emb_module == 'fasttext':
                         import fastText as Fasttext
                         emb = self.model.get_word_vector(t)
                     elif self.emb_module == 'pyfasttext':

@@ -110,7 +110,8 @@ class TestQuickStart(object):
 
     def test_downloaded_model_existence(self, model, conf_file, model_dir):
         if not download_path.exists():
-            download()
+            # download()
+            download(True)
         assert download_path.joinpath(model_dir).exists(), f"{model_dir} was not downloaded"
 
     def test_interacting_pretrained_model(self, model, conf_file, model_dir):
