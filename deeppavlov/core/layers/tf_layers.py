@@ -542,7 +542,7 @@ def cudnn_bi_lstm(units, n_hidden, seq_lengths, n_layers=1):
 
     h = tf.concat([h_fw, h_bw], axis=2)
     h_last = tf.concat([h_last_fw, h_last_bw], axis=2)
-    c_last = tf.concat([c_last_fw, c_last_fw], axis=2)
+    c_last = tf.concat([c_last_fw, c_last_bw], axis=2)
 
     h = tf.transpose(h, (1, 0, 2))
     h_last = tf.squeeze(h_last, 0)
