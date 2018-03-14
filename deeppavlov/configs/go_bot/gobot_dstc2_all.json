@@ -89,8 +89,8 @@
         },
         "intent_classifier": {
           "name": "intent_model",
-          "save_path": "intents/intent_cnn",
-          "load_path": "intents/intent_cnn",
+          "save_path": "intents/intent_cnn_v2",
+          "load_path": "intents/intent_cnn_v2",
           "classes": "#classes_vocab.keys()",
           "opt": {
             "train_now": true,
@@ -123,10 +123,10 @@
           },
           "embedder": {
             "name": "fasttext",
-            "save_path": "embeddings/dstc2_fasttext_model_100.bin",
-            "load_path": "embeddings/dstc2_fasttext_model_100.bin",
-            "emb_module": "fasttext",
-            "dim": 100
+            "save_path": "embeddings/wiki.en.bin",
+            "load_path": "embeddings/wiki.en.bin",
+            "emb_module": "fastText",
+            "dim": 300
           },
           "tokenizer": {
             "name": "nltk_tokenizer",
