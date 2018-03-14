@@ -60,13 +60,13 @@
         "use_action_mask": false,
         "network": {
           "name": "go_bot_rnn",
-          "load_path": "go_bot/model",
-          "save_path": "go_bot/model",
-          "learning_rate": 0.002,
+          "load_path": "go_bot_no_bow/model",
+          "save_path": "go_bot_no_bow/model",
+          "learning_rate": 0.001,
           "dropout_rate": 0.8,
-          "hidden_size": 128,
+          "hidden_dim": 128,
           "dense_size": 64,
-          "obs_size": 530,
+          "obs_size": 389,
           "action_size": 45
         },
         "slot_filler": {
@@ -133,10 +133,15 @@
             "tokenizer": "wordpunct_tokenize"
           }
         },
-        "embedder": null,
-        "bow_encoder": {
-          "name": "bow"
+        "embedder": {
+          "name": "fasttext",
+          "save_path": "embeddings/wiki.en.bin",
+          "load_path": "embeddings/wiki.en.bin",
+          "mean": true,
+          "emb_module": "pyfasttext",
+          "dim": 300
         },
+        "bow_encoder": null,
         "tokenizer": {
           "name": "spacy_tokenizer"
         },
@@ -159,7 +164,7 @@
     "batch_size": 1,
 
     "metrics": ["per_item_dialog_accuracy"],
-    "validation_patience": 20,
+    "validation_patience": 30,
     "val_every_n_epochs": 1,
 
     "log_every_n_batches": -1,
