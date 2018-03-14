@@ -14,20 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from collections import defaultdict
-
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer
 
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.models.ner.layers import character_embedding_network
-from deeppavlov.models.ner.layers import embedding_layer
-from deeppavlov.models.ner.layers import highway_convolutional_network
-from deeppavlov.models.ner.layers import stacked_convolutions
-from deeppavlov.models.ner.layers import stacked_rnn
+from deeppavlov.core.layers.tf_layers import character_embedding_network
+from deeppavlov.core.layers.tf_layers import embedding_layer
+from deeppavlov.core.layers.tf_layers import stacked_cnn
+from deeppavlov.core.layers.tf_layers import stacked_highway_cnn
+from deeppavlov.core.layers.tf_layers import stacked_bi_rnn
 from deeppavlov.models.ner.evaluation import precision_recall_f1
-
 
 SEED = 42
 MODEL_FILE_NAME = 'ner_model'
@@ -55,7 +52,8 @@ class NerNetwork:
                  char_filter_width=5,
                  verbouse=False,
                  embeddings_onethego=False,
-                 sess=None):
+                 sess=None,
+                 cell_type='lstm'):
 
         n_tags = len(tag_vocab)
         n_tokens = len(word_vocab)
@@ -96,20 +94,20 @@ class NerNetwork:
         if 'cnn' in net_type.lower():
             # Convolutional network
             with tf.variable_scope('ConvNet'):
-                units = stacked_convolutions(emb,
-                                             n_filters=n_filters,
-                                             filter_width=filter_width,
-                                             use_batch_norm=use_batch_norm,
-                                             training_ph=training_ph)
+                units = stacked_cnn(emb,
+                                    n_hidden_list=n_filters,
+                                    filter_width=filter_width,
+                                    use_batch_norm=use_batch_norm,
+                                    training_ph=training_ph)
         elif 'rnn' in net_type.lower():
-            units = stacked_rnn(emb, n_filters, cell_type='lstm')
+            units, _ = stacked_bi_rnn(emb, n_filters, cell_type)
 
         elif 'cnn_highway' in net_type.lower():
-            units = highway_convolutional_network(emb,
-                                                  n_filters=n_filters,
-                                                  filter_width=filter_width,
-                                                  use_batch_norm=use_batch_norm,
-                                                  training_ph=training_ph)
+            units = stacked_highway_cnn(emb,
+                                        n_hidden_list=n_filters,
+                                        filter_width=filter_width,
+                                        use_batch_norm=use_batch_norm,
+                                        training_ph=training_ph)
         else:
             raise KeyError('There is no such type of network: {}'.format(net_type))
         # Classifier
