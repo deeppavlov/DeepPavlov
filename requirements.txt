@@ -20,4 +20,3 @@ spacy==2.0.5
 pytelegrambotapi==3.5.2
 python-Levenshtein==0.12.0
 msgpack-python==0.5.4
-sftp://gpu5/home/jesus/Projects/toxic/lm.py
