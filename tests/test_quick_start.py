@@ -88,7 +88,7 @@ def download(full=None):
     cmd = "python3 -m deeppavlov.download -test"
     if full:
         cmd += " -all"
-    pexpect.run(cmd)
+    pexpect.run(cmd, timeout=None)
 
 
 @pytest.mark.parametrize("model,conf_file,model_dir", [(m, c, md) for m in PARAMS.keys() for c, md in PARAMS[m].keys()])
