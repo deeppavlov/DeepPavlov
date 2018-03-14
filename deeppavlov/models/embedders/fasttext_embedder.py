@@ -52,9 +52,6 @@ class FasttextEmbedder(Component, Serializable):
             if self.emb_module == 'fasttext':
                 import fastText as Fasttext
                 model = Fasttext.load_model(model_file)
-            elif self.emb_module == 'pyfasttext':
-                from pyfasttext import FastText as Fasttext
-                model = Fasttext(model_file)
             else:
                 from gensim.models.wrappers.fasttext import FastText as Fasttext
                 model = Fasttext.load_fasttext_format(model_file)
@@ -83,8 +80,6 @@ class FasttextEmbedder(Component, Serializable):
                     if self.emb_module == 'fasttext':
                         import fastText as Fasttext
                         emb = self.model.get_word_vector(t)
-                    elif self.emb_module == 'pyfasttext':
-                        emb = self.model[t][:self.dim]
                 except KeyError:
                     emb = np.zeros(self.dim, dtype=np.float32)
                 self.tok2emb[t] = emb
