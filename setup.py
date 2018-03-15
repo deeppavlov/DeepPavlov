@@ -29,8 +29,11 @@ def read_requirements():
     install_reqs = parse_requirements(reqs_path, session=PipSession())
     reqs = [str(ir.req) for ir in install_reqs]
 
-    for r in reqs:
-        pip.main(['install', '-U', r])
+    reqs = []
+    for ir in install_reqs:
+        pip.main(['install', str(ir.req or ir.link)])
+        if ir.req:
+            reqs.append(str(ir.req))
     return reqs
 
 
