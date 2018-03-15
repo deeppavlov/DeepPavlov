@@ -22,11 +22,10 @@ import os
 p = (Path(__file__) / ".." / "..").resolve()
 sys.path.append(str(p))
 
-from deeppavlov.core.commands.utils import set_deeppavlov_root
 from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.common.log import get_logger
-from telegram_utils.telegram_ui import interact_model_by_telegram
+from utils.telegram_utils.telegram_ui import interact_model_by_telegram
 
 
 log = get_logger(__name__)
