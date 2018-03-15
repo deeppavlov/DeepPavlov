@@ -62,8 +62,8 @@
           "name": "go_bot_rnn",
           "load_path": "go_bot_all/model",
           "save_path": "go_bot_all/model",
-          "learning_rate": 0.002,
-          "dropout_rate": 0.8,
+          "learning_rate": 0.0009,
+          "dropout_rate": 0.7,
           "hidden_dim": 128,
           "dense_size": 64,
           "obs_size": 830,
@@ -89,8 +89,8 @@
         },
         "intent_classifier": {
           "name": "intent_model",
-          "save_path": "intents/intent_cnn",
-          "load_path": "intents/intent_cnn",
+          "save_path": "intents/intent_cnn_v2",
+          "load_path": "intents/intent_cnn_v2",
           "classes": "#classes_vocab.keys()",
           "opt": {
             "train_now": true,
@@ -123,8 +123,8 @@
           },
           "embedder": {
             "name": "fasttext",
-            "save_path": "embeddings/dstc2_fasttext_model_100.bin",
-            "load_path": "embeddings/dstc2_fasttext_model_100.bin",
+            "save_path": "embeddings/dstc2_fastText_model.bin",
+            "load_path": "embeddings/dstc2_fastText_model.bin",
             "emb_module": "fasttext",
             "dim": 100
           },
@@ -138,7 +138,7 @@
           "save_path": "embeddings/wiki.en.bin",
           "load_path": "embeddings/wiki.en.bin",
           "mean": true,
-          "emb_module": "pyfasttext",
+          "emb_module": "fasttext",
           "dim": 300
         },
         "bow_encoder": {
