@@ -62,11 +62,11 @@
           "name": "go_bot_rnn",
           "load_path": "go_bot_all/model",
           "save_path": "go_bot_all/model",
-          "learning_rate": 0.002,
-          "dropout_rate": 0.8,
+          "learning_rate": 0.0009,
+          "dropout_rate": 0.7,
           "hidden_dim": 128,
           "dense_size": 64,
-          "obs_size": 630,
+          "obs_size": 830,
           "action_size": 45
         },
         "slot_filler": {
@@ -135,11 +135,11 @@
         },
         "embedder": {
           "name": "fasttext",
-          "save_path": "embeddings/dstc2_fastText_model.bin",
-          "load_path": "embeddings/dstc2_fastText_model.bin",
+          "save_path": "embeddings/wiki.en.bin",
+          "load_path": "embeddings/wiki.en.bin",
           "mean": true,
           "emb_module": "fasttext",
-          "dim": 100
+          "dim": 300
         },
         "bow_encoder": {
           "name": "bow"
