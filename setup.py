@@ -27,16 +27,17 @@ def read_requirements():
     # # parses requirements from requirements.txt
     reqs_path = os.path.join(__location__, 'requirements.txt')
     install_reqs = parse_requirements(reqs_path, session=PipSession())
-    reqs = [str(ir.req) for ir in install_reqs]
-
-    for r in reqs:
-        pip.main(['install', '-U', r])
+    reqs = []
+    for ir in install_reqs:
+        pip.main(['install', str(ir.req or ir.link)])
+        if ir.req:
+            reqs.append(str(ir.req))
     return reqs
 
 
 setup(license='Apache License, Version 2.0',
-      packages=find_packages(exclude=('tests')),
-      version='0.0.2',
+      packages=find_packages(exclude=('tests',)),
+      version='0.0.3',
       include_package_data=True,
       install_requires=read_requirements(),
       name='deeppavlov'

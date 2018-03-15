@@ -27,7 +27,7 @@ from deeppavlov.core.data.dataset_reader import DatasetReader
 logger = logging.getLogger(__name__)
 
 
-@register('babi')
+@register('babi_reader')
 class BabiDatasetReader(DatasetReader):
     def __init__(self):
         pass

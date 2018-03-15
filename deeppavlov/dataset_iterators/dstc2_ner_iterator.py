@@ -20,14 +20,14 @@ from random import Random
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.dataset import Dataset
+from deeppavlov.core.data.dataset_iterator import BasicDatasetIterator
 from deeppavlov.core.data.utils import download
 
 logger = logging.getLogger(__name__)
 
 
-@register('dstc2_ner_dataset')
-class DstcNerDataset(Dataset):
+@register('dstc2_ner_iterator')
+class Dstc2NerDatasetIterator(BasicDatasetIterator):
 
     def __init__(self, data, dataset_path, seed=None, shuffle=False):
         r""" Dataset takes a dict with fields 'train', 'test', 'valid'. A list of samples (pairs x, y) is stored

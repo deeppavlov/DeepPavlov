@@ -4,19 +4,18 @@ assert sys.hexversion >= 0x3060000, 'Does not work in python3.5 or lower'
 
 
 import deeppavlov.core.models.keras_model
-import deeppavlov.core.data.dataset
+import deeppavlov.core.data.dataset_iterator
 import deeppavlov.core.data.vocab
-import deeppavlov.dataset_readers.babi_dataset_reader
-import deeppavlov.dataset_readers.dstc2_dataset_reader
-import deeppavlov.dataset_readers.basic_ner_dataset_reader
-import deeppavlov.dataset_readers.typos
-import deeppavlov.dataset_readers.classification_dataset_reader
-import deeppavlov.datasets.dialog_dataset
-import deeppavlov.datasets.dstc2_datasets
-import deeppavlov.datasets.hcn_dataset
-import deeppavlov.datasets.intent_dataset
-import deeppavlov.datasets.typos_dataset
-import deeppavlov.datasets.classification_dataset
+import deeppavlov.dataset_readers.babi_reader
+import deeppavlov.dataset_readers.dstc2_reader
+import deeppavlov.dataset_readers.conll2003_reader
+import deeppavlov.dataset_readers.typos_reader
+import deeppavlov.dataset_readers.csv_classification_reader
+import deeppavlov.dataset_iterators.dialog_iterator
+import deeppavlov.dataset_iterators.dstc2_ner_iterator
+import deeppavlov.dataset_iterators.dstc2_intents_iterator
+import deeppavlov.dataset_iterators.typos_iterator
+import deeppavlov.dataset_iterators.basic_classification_iterator
 import deeppavlov.models.classifiers.intents.intent_model
 import deeppavlov.models.commutators.random_commutator
 import deeppavlov.models.embedders.fasttext_embedder
