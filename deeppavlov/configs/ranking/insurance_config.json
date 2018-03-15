@@ -1,5 +1,4 @@
 {
-  "deeppavlov_root": "./ranking_data",
   "dataset_reader": {
     "name": "insurance_dataset_reader",
     "data_path": "insuranceQA-master/V1"
@@ -34,18 +33,18 @@
         "learning_rate": 1e-3,
         "margin": 0.1,
         "embedding_dim": 100,
-        "save_path": "model/model_weights.h5",
-        "load_path": "model/model_weights.h5",
-        "tok_save_path": "model/tok2int.dict",
-        "tok_load_path": "model/tok2int.dict",
-        "cont_save_path": "model/cont2toks.dict",
-        "cont_load_path": "model/cont2toks.dict",
-        "resp_save_path": "model/resp2toks.dict",
-        "resp_load_path": "model/resp2toks.dict",
-        "cemb_save_path": "model/context_embs.npy",
-        "cemb_load_path": "model/context_embs.npy",
-        "remb_save_path": "model/response_embs.npy",
-        "remb_load_path": "model/response_embs.npy",
+        "save_path": "ranking/model_weights.h5",
+        "load_path": "ranking/model_weights.h5",
+        "tok_save_path": "ranking/tok2int.dict",
+        "tok_load_path": "ranking/tok2int.dict",
+        "cont_save_path": "ranking/cont2toks.dict",
+        "cont_load_path": "ranking/cont2toks.dict",
+        "resp_save_path": "ranking/resp2toks.dict",
+        "resp_load_path": "ranking/resp2toks.dict",
+        "cemb_save_path": "ranking/context_embs.npy",
+        "cemb_load_path": "ranking/context_embs.npy",
+        "remb_save_path": "ranking/response_embs.npy",
+        "remb_load_path": "ranking/response_embs.npy",
 
         "interact_pred_num": 3
       }
