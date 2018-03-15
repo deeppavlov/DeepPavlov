@@ -57,10 +57,32 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
                   },
           "ranking": {("configs/ranking/insurance_config.json", "ranking"):
                       [
-                        #
+                          ("How are you?", "{'contexts':"
+                           " ['How Much Does Yearly Homeowner',"
+                           " 'How Much To Invest In Annuities',"
+                           " 'Whats Bad About Annuities'],"
+                           " 'responses': ['I encourage you listen to Peggy advice"
+                           " above there really be policy out there for so many situation"
+                           " every person have a unique position be sure find an advisor"
+                           " who can customize specific to your plan need an example will"
+                           " be even if you need $1.5M in coverage but can only afford $625k"
+                           " - then just get that amount for now you can always ladder coverage"
+                           " later I have see situation where someone think they have have"
+                           " the whole thing so they opt do nothing and that do not work"
+                           " either great question Sheryl Brown / @AshBrokerage',"
+                           " 'I recommend you call a local independent insurance agent"
+                           " an independent agent work with many different insurance provider"
+                           " and can shop for you the best rate and coverage meet your insurance"
+                           " need also an independent be primarily beholden to the client which"
+                           " be you and not the company so your good interest be always in mind',"
+                           " 'I be a Insurance Broker practicing in New Jersey ,"
+                           " I will be more then happy help you I can answer any question you have ,"
+                           " provide you with your option and enroll you in a plan of your"
+                           " choose please send me an email or give me a call"
+                           " Christopher@Lawrence-Financial-Consulting.com (609)-453-4359']}")
                       ]
-                     }
-        }
+                      }
+          }
 
 
 def setup_module():

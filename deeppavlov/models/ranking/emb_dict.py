@@ -16,7 +16,7 @@ class Embeddings(object):
         fasttext_model_file: a file containing fasttext binary model
     """
 
-    def __init__(self, tok2int, emb_model_file, embedding_dim, download_url=None, embeddings="word2vec"):
+    def __init__(self, tok2int_vocab, emb_model_file, embedding_dim, download_url=None, embeddings="word2vec"):
         """Initialize the class according to given parameters."""
         self.embeddings = embeddings
         self.embedding_dim = embedding_dim
@@ -29,12 +29,12 @@ class Embeddings(object):
         elif self.embeddings == "word2vec":
             self.embeddings_model = Word2Vec.load(str(self.emb_model_file))
 
-        self.create_emb_matrix(tok2int)
+        self.create_emb_matrix(tok2int_vocab)
 
-    def create_emb_matrix(self, tok2int):
+    def create_emb_matrix(self, tok2int_vocab):
         dummy_emb = list(np.zeros(self.embedding_dim))
-        self.emb_matrix = np.zeros((len(tok2int), self.embedding_dim))
-        for tok, i in tok2int.items():
+        self.emb_matrix = np.zeros((len(tok2int_vocab), self.embedding_dim))
+        for tok, i in tok2int_vocab.items():
             try:
                 self.emb_matrix[i] = self.embeddings_model[tok]
             except:

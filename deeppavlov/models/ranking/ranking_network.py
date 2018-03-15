@@ -9,9 +9,9 @@ import tensorflow as tf
 
 class RankingNetwork(object):
 
-    def __init__(self, emb_matrix, max_sequence_length, hidden_dim, learning_rate, margin,
+    def __init__(self, toks_num, max_sequence_length, hidden_dim, learning_rate, margin,
                  embedding_dim, device_num=0, seed=None, type_of_weights="shared", pooling="max", reccurent="bilstm"):
-        self.emb_matrix = emb_matrix
+        self.toks_num = toks_num
         self.seed = seed
         self.max_sequence_length = max_sequence_length
         self.hidden_dim = hidden_dim
@@ -37,7 +37,6 @@ class RankingNetwork(object):
         self.response_embedding = Model(inputs=self.obj_model.input,
                                  outputs=self.obj_model.get_layer(name="pooling").get_output_at(1))
 
-
     def _config_session(self):
         """
         Configure session for particular device
@@ -55,25 +54,29 @@ class RankingNetwork(object):
     def save(self, path):
         self.obj_model.save_weights(path)
 
+    def set_emb_matrix(self, emb_matrix):
+        if self.type_of_weights == "shared":
+            self.obj_model.get_layer(name="embedding").set_weights([emb_matrix])
+        if self.type_of_weights == "separate":
+            self.obj_model.get_layer(name="embedding_a").set_weights([emb_matrix])
+            self.obj_model.get_layer(name="embedding_b").set_weights([emb_matrix])
+
     def embedding_layer(self):
         if self.type_of_weights == "shared":
-            out_a = Embedding(self.emb_matrix.shape[0],
+            out_a = Embedding(self.toks_num,
                             self.embedding_dim,
-                            weights=[self.emb_matrix],
                             input_length=self.max_sequence_length,
-                            trainable=True)
+                            trainable=True, name="embedding")
             return out_a, out_a
         elif self.type_of_weights == "separate":
-            out_a = Embedding(self.emb_matrix.shape[0],
+            out_a = Embedding(self.toks_num,
                             self.embedding_dim,
-                            weights=[self.emb_matrix],
                             input_length=self.max_sequence_length,
-                            trainable=True)
-            out_b = Embedding(self.emb_matrix.shape[0],
+                            trainable=True, name="embedding_a")
+            out_b = Embedding(self.toks_num,
                             self.embedding_dim,
-                            weights=[self.emb_matrix],
                             input_length=self.max_sequence_length,
-                            trainable=True)
+                            trainable=True, name="embedding_b")
             return out_a, out_b
 
     def lstm_layer(self):

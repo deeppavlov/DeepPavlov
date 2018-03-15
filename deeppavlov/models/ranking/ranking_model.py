@@ -42,89 +42,52 @@ class RankingModel(NNModel):
 
         nltk.download('punkt', download_dir=str(get_deeppavlov_root().resolve()))
 
-        # Dicts are mutable! To prevent changes in config dict outside this class
-        # we use deepcopy
         opt = deepcopy(kwargs)
         self.interact_pred_num = opt['interact_pred_num']
-        # Get vocabularies. Vocabularies are made to perform token -> index / index -> token
-        # transformations as well as class -> index / index -> class for classification tasks
         self.vocabs = opt.get('vocabs', None)
 
         dict_parameter_names = list(inspect.signature(InsuranceDict.__init__).parameters)
         dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
-        self.dict = InsuranceDict(**dict_parameters)
-
-        embdict_parameter_names = list(inspect.signature(Embeddings.__init__).parameters)
-        embdict_parameters = {par: opt[par] for par in embdict_parameter_names if par in opt}
-        self.embdict= Embeddings(self.dict.tok2int, **embdict_parameters)
-
-        # Find all input parameters of the network __init__ to pass them into network later
         network_parameter_names = list(inspect.signature(RankingNetwork.__init__).parameters)
-        # Fill all provided parameters from opt (opt is a dictionary formed from the model
-        # json config file, except the "name" field)
         network_parameters = {par: opt[par] for par in network_parameter_names if par in opt}
 
-        self._net = RankingNetwork(self.embdict.emb_matrix, **network_parameters)
+        self.dict = InsuranceDict(**dict_parameters)
 
-        # Find all parameters for network train to pass them into train method later
+        if not self.load_path.exists():
+            self.dict.init_from_scratch()
+            self._net = RankingNetwork(len(self.dict.tok2int_vocab), **network_parameters)
+            embdict_parameter_names = list(inspect.signature(Embeddings.__init__).parameters)
+            embdict_parameters = {par: opt[par] for par in embdict_parameter_names if par in opt}
+            embdict= Embeddings(self.dict.tok2int_vocab, **embdict_parameters)
+            self._net.set_emb_matrix(embdict.emb_matrix)
+        else:
+            print('[loading model from {}]'.format(self.load_path.resolve()), file=sys.stderr)
+            self.dict.load()
+            self._net = RankingNetwork(len(self.dict.tok2int_vocab), **network_parameters)
+            self._net.load(self.load_path)
+
         train_parameters_names = list(inspect.signature(self._net.train_on_batch).parameters)
-
-        # Fill all provided parameters from opt
-        train_parameters = {par: opt[par] for par in train_parameters_names if par in opt}
-
-        self.train_parameters = train_parameters
-
+        self.train_parameters = {par: opt[par] for par in train_parameters_names if par in opt}
         self.train_now = opt['train_now']
-
         self.opt = opt
 
         # Try to load the model (if there are some model files the model will be loaded from them)
-        self.load()
+        # self.load()
 
     @overrides
     def load(self):
-        """Check existence of the model file, load the model if the file exists"""
-
-        # General way (load path from config assumed to be the path
-        # to the file including extension of the file model)
-        weights_path = self.load_path / "model_weights.h5"
-        weights_file_exist = self.load_path.exists()
-        weights_path = str(weights_path.resolve())
-
-        resp_embs_path = self.load_path / "response_embs.npy"
-        resp_embs_file_exist = resp_embs_path.exists()
-        resp_embs_path = str(resp_embs_path.resolve())
-
-        cont_embs_path = self.load_path / "context_embs.npy"
-        cont_embs_file_exist = cont_embs_path.exists()
-        cont_embs_path = str(cont_embs_path.resolve())
-
-        # Check presence of the model files
-        if weights_file_exist and resp_embs_file_exist and cont_embs_file_exist:
-            print('[loading model from {}]'.format(self.load_path.resolve()), file=sys.stderr)
-            self._net.load(weights_path)
-            self.dict.load_resp(resp_embs_path)
-            self.dict.load_cont(cont_embs_path)
+        pass
 
     @overrides
     def save(self):
         """Save model to the save_path, provided in config. The directory is
         already created by super().__init__ part in called in __init__ of this class"""
 
-        if not self.save_path.exists():
-            self.save_path.mkdir()
-
-        weights_path = self.save_path / "model_weights.h5"
-        weights_path = str(weights_path.resolve())
-        resp_embs_path = self.load_path / "response_embs.npy"
-        resp_embs_path = str(resp_embs_path.resolve())
-        cont_embs_path = self.load_path / "context_embs.npy"
-        cont_embs_path = str(cont_embs_path.resolve())
         print('[saving model to {}]'.format(self.save_path.resolve()), file=sys.stderr)
-        self._net.save(weights_path)
+        self._net.save(self.save_path)
         self.set_embeddings()
-        self.dict.save_resp(resp_embs_path)
-        self.dict.save_cont(cont_embs_path)
+        self.dict.save()
+
 
     @check_attr_true('train_now')
     def train_on_batch(self, x, y):
@@ -154,7 +117,7 @@ class RankingModel(NNModel):
             response = [response[i:batch_size*ranking_length:ranking_length] for i in range(ranking_length)]
             y_pred = []
             for i in range(ranking_length):
-                r_emb = [self.dict.label2emb_vocab[el] for el in response[i]]
+                r_emb = [self.dict.response2emb_vocab[el] for el in response[i]]
                 r_emb = np.vstack(r_emb)
                 yp = np.sum(c_emb * r_emb, axis=1) / np.linalg.norm(c_emb, axis=1) / np.linalg.norm(r_emb, axis=1)
                 y_pred.append(np.expand_dims(yp, axis=1))
@@ -173,24 +136,24 @@ class RankingModel(NNModel):
             pred_cont = np.flip(np.argsort(pred_cont), 0)[:self.interact_pred_num]
             pred_cont = [' '.join(self.dict.context2toks_vocab[el]) for el in pred_cont]
 
-            r_emb = [self.dict.label2emb_vocab[i] for i in range(len(self.dict.label2emb_vocab))]
+            r_emb = [self.dict.response2emb_vocab[i] for i in range(len(self.dict.response2emb_vocab))]
             r_emb = np.vstack(r_emb)
             pred_resp = np.sum(c_input_emb * r_emb, axis=1)\
                      / np.linalg.norm(c_input_emb, axis=1) / np.linalg.norm(r_emb, axis=1)
             pred_resp = np.flip(np.argsort(pred_resp), 0)[:self.interact_pred_num]
-            pred_resp = [' '.join(self.dict.label2toks_vocab[el]) for el in pred_resp]
+            pred_resp = [' '.join(self.dict.response2toks_vocab[el]) for el in pred_resp]
             y_pred = [{"contexts": pred_cont, "responses": pred_resp}]
             return y_pred
 
     def set_embeddings(self):
-        if self.dict.label2emb_vocab[0] is None:
+        if self.dict.response2emb_vocab[0] is None:
             r = []
-            for i in range(len(self.dict.label2toks_vocab)):
-                r.append(self.dict.label2toks_vocab[i])
+            for i in range(len(self.dict.response2toks_vocab)):
+                r.append(self.dict.response2toks_vocab[i])
             r = self.dict.make_ints(r)
             response_embeddings = self._net.predict_response_emb([r, r, r], 512)
-            for i in range(len(self.dict.label2toks_vocab)):
-                self.dict.label2emb_vocab[i] = response_embeddings[i]
+            for i in range(len(self.dict.response2toks_vocab)):
+                self.dict.response2emb_vocab[i] = response_embeddings[i]
         if self.dict.context2emb_vocab[0] is None:
             contexts = []
             for i in range(len(self.dict.context2toks_vocab)):
@@ -201,9 +164,9 @@ class RankingModel(NNModel):
                 self.dict.context2emb_vocab[i] = context_embeddings[i]
 
     def reset_embeddings(self):
-        if self.dict.label2emb_vocab[0] is not None:
-            for i in range(len(self.dict.label2emb_vocab)):
-                self.dict.label2emb_vocab[i] = None
+        if self.dict.response2emb_vocab[0] is not None:
+            for i in range(len(self.dict.response2emb_vocab)):
+                self.dict.response2emb_vocab[i] = None
         if self.dict.context2emb_vocab[0] is not None:
             for i in range(len(self.dict.context2emb_vocab)):
                 self.dict.context2emb_vocab[i] = None
