@@ -54,7 +54,6 @@ class GoalOrientedBot(NNModel):
                  use_action_mask=False,
                  debug=False,
                  save_path=None,
-                 max_of_context_tokens=100,
                  word_vocab=None,
                  vocabs=None,
                  **kwargs):
@@ -64,7 +63,6 @@ class GoalOrientedBot(NNModel):
         self.episode_done = True
         self.use_action_mask = use_action_mask
         self.debug = debug
-        self.max_of_context_tokens = max_of_context_tokens
         self.slot_filler = slot_filler
         self.intent_classifier = intent_classifier
         self.bow_encoder = bow_encoder
@@ -107,18 +105,21 @@ class GoalOrientedBot(NNModel):
 
         # Embeddings
         emb_features = []
+        emb_context = []
         if callable(self.embedder):
-            if tokenized :
-                pad = np.zeros((self.max_of_context_tokens, self.embedder.dim), dtype=np.float32)
-                sen = np.array(self.embedder([tokenized])[0]) # TODO : Unsupport of  batch_size more than 1
-                csg_emb_features = np.concatenate((pad,sen))[-self.max_of_context_tokens:]
+            if self.network.attention_mechanism:
+                if tokenized :
+                    pad = np.zeros((self.network.attention_mechanism.max_of_context_tokens, self.embedder.dim), dtype=np.float32)
+                    sen = np.array(self.embedder([tokenized])[0]) # TODO : Unsupport of  batch_size more than 1
+                    emb_context = np.concatenate((pad,sen))[-self.network.attention_mechanism.max_of_context_tokens:]
+                else:
+                    emb_context = np.zeros((self.network.attention_mechanism.max_of_context_tokens, self.network.attention_mechanism.token_dim), dtype=np.float32)
             else:
-                csg_emb_features = np.zeros((self.max_of_context_tokens, self.network.token_dim), dtype=np.float32)
-            # emb_features = self.embedder([tokenized], mean=True)[0]
-            # # random embedding instead of zeros
-            # if np.all(emb_features < 1e-20):
-            #     emb_dim = self.embedder.dim
-            #     emb_features = np.fabs(np.random.normal(0, 1/emb_dim, emb_dim))
+                emb_features = self.embedder([tokenized], mean=True)[0]
+                # random embedding instead of zeros
+                if np.all(emb_features < 1e-20):
+                    emb_dim = self.embedder.dim
+                    emb_features = np.fabs(np.random.normal(0, 1/emb_dim, emb_dim))
 
         # Intent features
         intent_features = []
@@ -156,10 +157,9 @@ class GoalOrientedBot(NNModel):
 
             log.debug(debug_msg)
 
-        return np.hstack((bow_features, intent_features,
-                          state_features, context_features, self.prev_action)), csg_emb_features, self.prev_action
-        # return np.hstack((bow_features, emb_features, intent_features,
-        #                   state_features, context_features, self.prev_action))
+        return np.hstack((bow_features, emb_features, intent_features,
+                          state_features, context_features, self.prev_action)), emb_context, self.prev_action
+
 
     def _encode_response(self, act):
         return self.templates.actions.index(act)
@@ -191,12 +191,12 @@ class GoalOrientedBot(NNModel):
 
     def train_on_batch(self, x, y):
         b_features, b_u_masks, b_a_masks, b_actions = [], [], [], []
-        b_emb_context, b_keys = [], []
+        b_emb_context, b_keys = [], [] #for attention
         max_num_utter = max(len(d_contexts) for d_contexts in x)
         for d_contexts, d_responses in zip(x, y):
             self.reset()
             d_features, d_actions, d_a_masks = [], [], []
-            d_emb_context, d_key= [], []
+            d_emb_context, d_key= [], [] #for attention
             for context, response in zip(d_contexts, d_responses):
                 features, emb_context, key = self._encode_context(context['text'],
                                                 context.get('db_result'))

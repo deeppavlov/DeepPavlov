@@ -55,28 +55,29 @@
         "main": true,
         "name": "go_bot",
         "debug": false,
-    	  "max_of_context_tokens": 20,
         "word_vocab": "#token_vocab",
         "template_path": "dstc2/dstc2-templates.txt",
         "use_action_mask": false,
         "network": {
           "name": "go_bot_rnn",
-          "load_path": "go_bot_all/model",
-          "save_path": "go_bot_all/model",
+          "load_path": "go_bot_all_cs_attn/model",
+          "save_path": "go_bot_all_cs_attn/model",
           "learning_rate": 0.002,
           "dropout_rate": 0.8,
           "hidden_dim": 128,
           "dense_size": 64,
-          "obs_size": 530,
+          "obs_size": 830,
           "use_action_mask": false,
-          "attention_mechanism": "general",
-          "attention_mechanism": "cs_general",
-          "att_hidden_dim": 32,
-          "attention_depth": 3,
-          "max_of_context_tokens": 20,
-          "token_dim": 300,
-          "key_dim": 45,
-          "action_size": 45
+          "action_size": 45,
+          "attention_mechanism": {
+            "type":"cs_general",
+            "att_hidden_dim": 32,
+            "attention_depth": 3,
+            "max_of_context_tokens": 100,
+            "obs_size_correction": 530,
+            "token_dim": 300,
+            "key_dim": 45
+          }
         },
         "slot_filler": {
           "name": "dstc_slotfilling",
@@ -172,7 +173,7 @@
   },
   "train": {
     "epochs": 200,
-    "batch_size": 1,
+    "batch_size": 16,
 
     "metrics": ["per_item_dialog_accuracy"],
     "validation_patience": 30,
