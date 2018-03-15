@@ -39,8 +39,8 @@
         "out": ["y_predicted"],
         "main": true,
         "name": "intent_model",
-        "save_path": "intents/intent_cnn",
-        "load_path": "intents/intent_cnn",
+        "save_path": "intents/intent_cnn_v2",
+        "load_path": "intents/intent_cnn_v2",
         "classes": "#classes_vocab.keys()",
         "opt": {
           "kernel_sizes_cnn": [
@@ -63,8 +63,8 @@
         },
         "embedder": {
           "name": "fasttext",
-          "save_path": "embeddings/dstc2_fasttext_model_100.bin",
-          "load_path": "embeddings/dstc2_fasttext_model_100.bin",
+          "save_path": "embeddings/dstc2_fastText_model.bin",
+          "load_path": "embeddings/dstc2_fastText_model.bin",
           "emb_module": "fasttext",
           "dim": 100
         },
