@@ -31,7 +31,7 @@ def init_bot_for_model(token, model):
     config_path = Path(config_dir, TELEGRAM_UI_CONFIG_FILENAME).resolve()
     models_info = read_json(str(config_path))
 
-    model_name = type(model).__name__
+    model_name = type(model.get_main_component()).__name__
     model_info = models_info[model_name] if model_name in models_info else models_info['@default']
 
     @bot.message_handler(commands=['start'])
