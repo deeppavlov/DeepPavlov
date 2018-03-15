@@ -66,7 +66,7 @@
           "dropout_rate": 0.8,
           "hidden_dim": 128,
           "dense_size": 64,
-          "obs_size": 830,
+          "obs_size": 630,
           "action_size": 45
         },
         "slot_filler": {
