@@ -98,7 +98,7 @@ class Chainer(Component):
         return res
 
     def get_main_component(self):
-        return self.main or self.pipe[-1]
+        return self.main or self.pipe[-1][-1]
 
     def save(self):
         self.get_main_component().save()

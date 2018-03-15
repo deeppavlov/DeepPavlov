@@ -28,16 +28,14 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-@register('classification_datasetreader')
-class ClassificationDatasetReader(DatasetReader):
+@register('csv_classification_reader')
+class CsvClassificationDatasetReader(DatasetReader):
     """
     Class provides reading dataset in .csv format
     """
 
-    url = 'http://lnsigo.mipt.ru/export/datasets/snips_intents/train.csv'
-
     @overrides
-    def read(self, data_path):
+    def read(self, data_path, url=None, *args, **kwargs):
         """
         Read dataset from data_path directory.
         Reading files are all data_types + extension
@@ -46,6 +44,7 @@ class ClassificationDatasetReader(DatasetReader):
         Args:
             data_path: directory with files
             data_types: types of considered data (possible: "train", "valid", "test")
+            url: download data files if data_path not exists or empty
 
         Returns:
             dictionary with types from data_types.
@@ -54,8 +53,10 @@ class ClassificationDatasetReader(DatasetReader):
         data_types = ["train", "valid", "test"]
 
         if not Path(data_path, "train.csv").exists():
-            log.info("Loading train data from {} to {}".format(self.url, data_path))
-            download(source_url=self.url, dest_file_path=Path(data_path, "train.csv"))
+            if url is None:
+                raise Exception("data path {} is not exists or empty and download url parameter not specified!".format(data_path))
+            log.info("Loading train data from {} to {}".format(url, data_path))
+            download(source_url=url, dest_file_path=Path(data_path, "train.csv"))
 
         data = {"train": [],
                 "valid": [],
