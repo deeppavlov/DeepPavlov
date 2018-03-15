@@ -1,6 +1,8 @@
 {
   "dataset_reader": {
-    "name": "csv_classification_reader",
+    "name": "basic_classification_reader",
+    "x": "text",
+    "y": "intents",
     "data_path": "snips",
     "url": "http://lnsigo.mipt.ru/export/datasets/snips_intents/train.csv"
   },

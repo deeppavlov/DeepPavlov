@@ -11,17 +11,17 @@ download_path = tests_dir / "download"
 
 
 # Mapping from model name to config-model_dir and corresponding query-response pairs.
-PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "error_model"):
+PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "error_model", True):
                               [
                                   ("helllo", "hello"),
                                   ("datha", "data")
                               ],
-                          ("configs/error_model/brillmoore_kartaslov_ru.json", "error_model"):
+                          ("configs/error_model/brillmoore_kartaslov_ru.json", "error_model", True):
                               [
 
                               ]
                           },
-          "go_bot": {("configs/go_bot/gobot_dstc2.json", "go_bot"):
+          "go_bot": {("configs/go_bot/gobot_dstc2.json", "go_bot", True):
                          [
 
                          ],
@@ -30,25 +30,24 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
                      #
                      #     ]
                      },
-          "intents": {("configs/intents/intents_dstc2.json", "intents"):
-                          [
-
-                          ]
-                      },
-          "ner": {("configs/ner/ner_conll2003.json", "ner_conll2003_model"):
+          "intents": {("configs/intents/intents_dstc2.json", "intents", True):  []},
+          "snips": {("configs/intents/intents_snips.json", "intents", False): []},
+          "sample": {("configs/intents/intents_sample_csv.json", "intents", False): [],
+                    ("configs/intents/intents_sample_json.json", "intents", False): []},
+          "ner": {("configs/ner/ner_conll2003.json", "ner_conll2003_model", True):
                       [
                           # ("Albert Einstein and Erwin Schrodinger", "['B-PER', 'I-PER', 'O', 'B-PER', 'I-PER']"),
                           # ("Antananarivo is the capital of Madagascar", "['B-LOC', 'O', 'O', 'O', 'O', 'B-LOC']"),
                           # ("UN launches new global data collection tool to help reduce disaster",
                           #  "['B-ORG', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O']")
                       ],
-                  ("configs/ner/ner_dstc2.json", "ner"):
+                  ("configs/ner/ner_dstc2.json", "ner", True):
                       [
                           # ("chinese food", "['B-food', 'O']"),
                           # ("in the west part", "['O', 'O', 'B-area', 'O']"),
                           # ("moderate price range", "['B-pricerange', 'O', 'O']")
                       ],
-                  ("configs/ner/slotfill_dstc2.json", "ner"):
+                  ("configs/ner/slotfill_dstc2.json", "ner", True):
                       [
                           ("chinese food", "{'food': 'chinese'}"),
                           ("in the west part", "{'area': 'west'}"),
@@ -67,7 +66,7 @@ def setup_module():
 
     for m_name, conf_dict in PARAMS.items():
         test_configs_path.joinpath(m_name).mkdir()
-        for (conf_file, _), _ in conf_dict.items():
+        for (conf_file, _, _), _ in conf_dict.items():
             with (src_dir / conf_file).open() as fin:
                 config = json.load(fin)
             try:
@@ -91,7 +90,7 @@ def download(full=None):
     pexpect.run(cmd, timeout=None)
 
 
-@pytest.mark.parametrize("model,conf_file,model_dir", [(m, c, md) for m in PARAMS.keys() for c, md in PARAMS[m].keys()])
+@pytest.mark.parametrize("model,conf_file,model_dir,d", [(m, c, md, d) for m in PARAMS.keys() for c, md, d in PARAMS[m].keys()])
 class TestQuickStart(object):
 
     @staticmethod
@@ -108,15 +107,17 @@ class TestQuickStart(object):
         p.sendline("quit")
         assert p.expect(pexpect.EOF) == 0, f"Error in quitting from deep.py ({conf_file})"
 
-    def test_downloaded_model_existence(self, model, conf_file, model_dir):
-        if not download_path.exists():
-            download()
-        assert download_path.joinpath(model_dir).exists(), f"{model_dir} was not downloaded"
+    def test_downloaded_model_existence(self, model, conf_file, model_dir, d):
+        if d:
+            if not download_path.exists():
+                download()
+            assert download_path.joinpath(model_dir).exists(), f"{model_dir} was not downloaded"
 
-    def test_interacting_pretrained_model(self, model, conf_file, model_dir):
-        self.interact(tests_dir / conf_file, model_dir, PARAMS[model][(conf_file, model_dir)])
+    def test_interacting_pretrained_model(self, model, conf_file, model_dir, d):
+        if d:
+            self.interact(tests_dir / conf_file, model_dir, PARAMS[model][(conf_file, model_dir, d)])
 
-    def test_consecutive_training_and_interacting(self, model, conf_file, model_dir):
+    def test_consecutive_training_and_interacting(self, model, conf_file, model_dir, d):
         c = tests_dir / conf_file
         model_path = download_path / model_dir
         shutil.rmtree(str(model_path),  ignore_errors=True)

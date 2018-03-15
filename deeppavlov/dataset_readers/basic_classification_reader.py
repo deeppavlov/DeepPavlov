@@ -80,7 +80,7 @@ class BasicClassificationDatasetReader(DatasetReader):
                     raise Exception('Unsupported file format: {}'.format(file_format))
 
                 x = kwargs.get("x", "text")
-                y = kwargs.get('y', 'label')
+                y = kwargs.get('y', 'labels')
                 class_sep = kwargs.get('class_sep', ',')
                 data[data_type] = [(row[x], row[y].split(class_sep)) for _, row in df.iterrows()]
             else:
