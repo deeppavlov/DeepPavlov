@@ -64,7 +64,7 @@
           "save_path": "go_bot/model",
           "learning_rate": 0.002,
           "dropout_rate": 0.8,
-          "hidden_dim": 128,
+          "hidden_size": 128,
           "dense_size": 64,
           "obs_size": 530,
           "action_size": 45
