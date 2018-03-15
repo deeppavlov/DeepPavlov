@@ -57,8 +57,6 @@ def fit_chainer(config: dict, dataset: Dataset):
             preprocessed = chainer(*dataset.iter_all('train'), to_return=component_config['fit_on'])
             if len(component_config['fit_on']) == 1:
                 preprocessed = [preprocessed]
-            else:
-                preprocessed = zip(*preprocessed)
             component.fit(*preprocessed)
             component.save()
 

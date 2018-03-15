@@ -55,9 +55,24 @@
         "fit_lol": ["c_chars", "q_chars"],
         "in": ["c_chars", "q_chars"],
         "out": ["c_chars_idxs", "q_chars_idxs"]
+      },
+      {
+        "name": "squad_model",
+        "id": "squad",
+        "word_emb": "#vocab_embedder.emb_mat",
+        "char_emb": "#char_vocab_embedder.emb_mat",
+        "context_limit": "#squad_prepr.context_limit",
+        "question_limit": "#squad_prepr.question_limit",
+        "char_limit": "#squad_prepr.char_limit",
+        "train_char_emb": true,
+        "char_hidden_size": 100,
+        "encoder_hidden_size": 75,
+        "attention_hidden_size": 75,
+        "in": ["c_tokens_idxs"],
+        "out": ["y_predicted"]
       }
     ],
-    "out": ["c_tokens_idxs", "c_chars_idxs", "q_tokens_idxs", "q_chars_idxs"]
+    "out": ["y_predicted"]
   },
   "train": {
     "show_examples": false,

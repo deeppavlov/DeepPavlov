@@ -183,11 +183,11 @@ class SquadVocabEmbedder(Estimator):
         if not self.loaded:
             logger.info('SquadVocabEmbedder: fitting with {}s'.format(self.level))
             if self.level == 'token':
-                for line in contexts + questions:
+                for line in tqdm(contexts + questions):
                     for token in line:
                         self.vocab[token] += 1
             elif self.level == 'char':
-                for line in contexts + questions:
+                for line in tqdm(contexts + questions):
                     for token in line:
                         for c in token:
                             self.vocab[c] += 1
@@ -213,7 +213,7 @@ class SquadVocabEmbedder(Estimator):
             self.embedding_dict[self.OOV] = [0. for _ in range(self.emb_dim)]
             idx2emb_dict = {idx: self.embedding_dict[token]
                             for token, idx in self.token2idx_dict.items()}
-            self.emb_mat = [idx2emb_dict[idx] for idx in range(len(idx2emb_dict))]
+            self.emb_mat = np.array([idx2emb_dict[idx] for idx in range(len(idx2emb_dict))])
 
     def load(self, *args, **kwargs):
         logger.info('SquadVocabEmbedder: loading saved {}s vocab from {}'.format(self.level, self.load_path))
