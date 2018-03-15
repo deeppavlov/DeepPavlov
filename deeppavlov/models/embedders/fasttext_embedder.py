@@ -18,6 +18,7 @@ import sys
 from overrides import overrides
 
 import numpy as np
+import fastText as Fasttext
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -29,13 +30,10 @@ log = get_logger(__name__)
 
 @register('fasttext')
 class FasttextEmbedder(Component, Serializable):
-    def __init__(self, load_path, save_path=None, dim=100,
-                 emb_module='fasttext', **kwargs):
-        super().__init__(save_path=save_path,
-                         load_path=load_path)
+    def __init__(self, load_path, save_path=None, dim=100, **kwargs):
+        super().__init__(save_path=save_path, load_path=load_path)
         self.tok2emb = {}
         self.dim = dim
-        self.emb_module = emb_module
         self.model = self.load()
 
     def save(self, *args, **kwargs):
@@ -49,9 +47,7 @@ class FasttextEmbedder(Component, Serializable):
         if self.load_path and self.load_path.is_file():
             log.info("[loading embeddings from `{}`]".format(self.load_path))
             model_file = str(self.load_path)
-            if self.emb_module == 'fasttext':
-                import fastText as Fasttext
-                model = Fasttext.load_model(model_file)
+            model = Fasttext.load_model(model_file)
         else:
             log.error('No pretrained fasttext model provided or provided load_path "{}" is incorrect.'
                       .format(self.load_path))
@@ -74,9 +70,7 @@ class FasttextEmbedder(Component, Serializable):
                 emb = self.tok2emb[t]
             except KeyError:
                 try:
-                    if self.emb_module == 'fasttext':
-                        import fastText as Fasttext
-                        emb = self.model.get_word_vector(t)
+                    emb = self.model.get_word_vector(t)
                 except KeyError:
                     emb = np.zeros(self.dim, dtype=np.float32)
                 self.tok2emb[t] = emb
