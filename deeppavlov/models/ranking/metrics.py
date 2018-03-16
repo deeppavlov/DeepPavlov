@@ -3,17 +3,17 @@ from deeppavlov.core.common.metrics_registry import register_metric
 import numpy as np
 
 
-@register_metric('r_at_1')
+@register_metric('r@1')
 def r_at_1(y_true, y_pred):
     return recall_at_k(y_true, y_pred, k=1)
 
 
-@register_metric('r_at_2')
+@register_metric('r@2')
 def r_at_2(y_true, y_pred):
     return recall_at_k(y_true, y_pred, k=2)
 
 
-@register_metric('r_at_5')
+@register_metric('r@5')
 def r_at_5(labels, predictions):
     return recall_at_k(labels, predictions, k=5)
 

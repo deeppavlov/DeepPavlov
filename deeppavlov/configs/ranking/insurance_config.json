@@ -30,12 +30,14 @@
         "embedding_dim": 100,
         "seed": 243,
         "max_sequence_length": 200,
+        "reccurent": "bilstm",
+        "max_pooling": true,
+        "type_of_weights": "shared",
         "hidden_dim": 300,
         "learning_rate": 1e-3,
         "margin": 0.1,
         "save_path": "ranking/model_weights.h5",
         "load_path": "ranking/model_weights.h5",
-
         "interact_pred_num": 3
       }
     ],
@@ -44,10 +46,9 @@
   "train": {
     "epochs": 100,
     "batch_size": 256,
-    "metrics": ["r_at_1", "rank_response"],
+    "metrics": ["r@1", "rank_response"],
     "validation_patience": 5,
-    "val_every_n_epochs": 10,
-    "show_examples": true
+    "val_every_n_epochs": 10
   }
 
 }

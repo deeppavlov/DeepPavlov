@@ -10,7 +10,7 @@ import tensorflow as tf
 class RankingNetwork(object):
 
     def __init__(self, toks_num, max_sequence_length, hidden_dim, learning_rate, margin,
-                 embedding_dim, device_num=0, seed=None, type_of_weights="shared", pooling="max", reccurent="bilstm"):
+                 embedding_dim, device_num=0, seed=None, type_of_weights="shared", max_pooling=True, reccurent="bilstm"):
         self.toks_num = toks_num
         self.seed = seed
         self.max_sequence_length = max_sequence_length
@@ -20,7 +20,7 @@ class RankingNetwork(object):
         self.embedding_dim = embedding_dim
         self.device_num = device_num
         self.type_of_weights = type_of_weights
-        self.pooling = pooling
+        self.pooling = max_pooling
         self.recurrent = reccurent
 
         self.sess = self._config_session()
@@ -81,9 +81,9 @@ class RankingNetwork(object):
 
     def lstm_layer(self):
         """Create a LSTM layer of a model."""
-        if self.pooling is None or self.pooling == "max":
+        if self.pooling:
             ret_seq = True
-        elif self.pooling == "no":
+        else:
             ret_seq = False
         ker_in = glorot_uniform(seed=self.seed)
         rec_in = Orthogonal(seed=self.seed)
@@ -138,7 +138,7 @@ class RankingNetwork(object):
         lstm_c = lstm_layer_a(emb_c)
         lstm_rp = lstm_layer_b(emb_rp)
         lstm_rn = lstm_layer_b(emb_rn)
-        if self.pooling is None or self.pooling == "max":
+        if self.pooling:
             pooling_layer = GlobalMaxPooling1D(name="pooling")
             lstm_c = pooling_layer(lstm_c)
             lstm_rp = pooling_layer(lstm_rp)
