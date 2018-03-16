@@ -28,11 +28,12 @@ def init_model(model_config_path):
 
 def get_server_params(config, model_name):
     server_params = config['common_defaults']
-    model_defaults = config['model_defaults'][model_name]
 
-    for param_name in model_defaults.keys():
-        if model_defaults[param_name]:
-            server_params[param_name] = model_defaults[param_name]
+    if model_name in config['model_defaults']:
+        model_defaults = config['model_defaults'][model_name]
+        for param_name in model_defaults.keys():
+            if model_defaults[param_name]:
+                server_params[param_name] = model_defaults[param_name]
 
     for param_name in server_params.keys():
         if not server_params[param_name]:

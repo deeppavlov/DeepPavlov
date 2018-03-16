@@ -2,7 +2,7 @@
   "common_defaults": {
     "host": "0.0.0.0",
     "port": 5000,
-    "model_endpoint": "",
+    "model_endpoint": "/ModelInfer",
     "model_args_names": ["context"]
   },
   "model_defaults": {
@@ -28,6 +28,12 @@
       "host": "",
       "port": "",
       "model_endpoint": "/KerasIntentModel",
+      "model_args_names": ""
+    },
+    "NER": {
+      "host": "",
+      "port": "",
+      "model_endpoint": "/NER",
       "model_args_names": ""
     }
   }
