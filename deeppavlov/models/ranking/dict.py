@@ -5,26 +5,27 @@ from keras.preprocessing.sequence import pad_sequences
 
 class InsuranceDict(object):
 
-    def __init__(self, vocabs_path,tok_save_path, tok_load_path,
-                 cont_save_path, cont_load_path, resp_save_path, resp_load_path,
-                 cemb_save_path, cemb_load_path, remb_save_path, remb_load_path,
+    def __init__(self, vocabs_path, save_path, load_path,
                  max_sequence_length, padding="post", truncating="pre",
                  ):
         self.max_sequence_length = max_sequence_length
         self.padding = padding
         self.truncating = truncating
 
-        self.vocabs_path =expand_path(vocabs_path)
-        self.tok_save_path =expand_path(tok_save_path).resolve()
-        self.tok_load_path =expand_path(tok_load_path).resolve()
-        self.cont_save_path =expand_path(cont_save_path).resolve()
-        self.cont_load_path =expand_path(cont_load_path).resolve()
-        self.resp_save_path =expand_path(resp_save_path).resolve()
-        self.resp_load_path =expand_path(resp_load_path).resolve()
-        self.cemb_save_path =str(expand_path(cemb_save_path).resolve())
-        self.cemb_load_path =str(expand_path(cemb_load_path).resolve())
-        self.remb_save_path =str(expand_path(remb_save_path).resolve())
-        self.remb_load_path =str(expand_path(remb_load_path).resolve())
+        save_path = expand_path(save_path).resolve().parent
+        load_path = expand_path(load_path).resolve().parent
+
+        self.vocabs_path = expand_path(vocabs_path)
+        self.tok_save_path = save_path / "tok2int.dict"
+        self.tok_load_path = load_path / "tok2int.dict"
+        self.cont_save_path = save_path / "cont2toks.dict"
+        self.cont_load_path = load_path / "cont2toks.dict"
+        self.resp_save_path = save_path / "resp2toks.dict"
+        self.resp_load_path = load_path / "resp2toks.dict"
+        self.cemb_save_path =str(save_path / "context_embs.npy")
+        self.cemb_load_path =str(load_path / "context_embs.npy")
+        self.remb_save_path =str(save_path / "response_embs.npy")
+        self.remb_load_path =str(load_path / "response_embs.npy")
 
         self.int2tok_vocab = {}
         self.tok2int_vocab = {}
