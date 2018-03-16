@@ -246,20 +246,21 @@ class SquadAnsPostprocessor(Component):
     def __init__(self, *args, **kwargs):
         pass
 
-    def __call__(self, ans_start, ans_end, contexts, p2rs, **kwargs):
+    def __call__(self, ans_start, ans_end, contexts, p2rs, spans, **kwargs):
         """Postprocesses predicted answers for SQuAD dataset
 
         :param ans_start: predicted start position in processed context
         :param ans_end: predicted end position in processed context
         :param contexts: raw contexts
         :param p2rs: mapping from processed context to raw
+        :param spans: tokens positions in context
         :return: postprocessed answer text, start position in raw context, end position in raw context
         """
         answers = []
         start = []
         end = []
-        for a_st, a_end, c, p2r in zip(ans_start, ans_end, contexts, p2rs):
-            start.append(p2r[a_st])
-            end.append(p2r[a_end])
-            answers.append(c[a_st:a_end])
+        for a_st, a_end, c, p2r, span in zip(ans_start, ans_end, contexts, p2rs, spans):
+            start.append(p2r[span[a_st][0]])
+            end.append(p2r[span[a_end][1]])
+            answers.append(c[start[-1]:end[-1]])
         return answers, start, end
