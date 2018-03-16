@@ -38,7 +38,7 @@ class StreamSpacyTokenizer(Component):
 
     def __init__(self, disable: list = None, stopwords: list = None, batch_size: int = None,
                  ngram_range: Tuple[int, int] = None, lemmas=False, n_threads: int = None,
-                 lowercase: bool = None):
+                 lowercase: bool = None, **kwargs):
         """
         :param disable: pipeline processors to omit; if nothing should be disabled,
          pass an empty list
