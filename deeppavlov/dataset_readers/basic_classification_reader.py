@@ -28,8 +28,8 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-@register('csv_classification_reader')
-class CsvClassificationDatasetReader(DatasetReader):
+@register('basic_classification_reader')
+class BasicClassificationDatasetReader(DatasetReader):
     """
     Class provides reading dataset in .csv format
     """
@@ -52,20 +52,38 @@ class CsvClassificationDatasetReader(DatasetReader):
         """
         data_types = ["train", "valid", "test"]
 
-        if not Path(data_path, "train.csv").exists():
+        train_file = format(kwargs.get('train', 'train.csv'))
+
+        if not Path(data_path, train_file).exists():
             if url is None:
                 raise Exception("data path {} is not exists or empty and download url parameter not specified!".format(data_path))
             log.info("Loading train data from {} to {}".format(url, data_path))
-            download(source_url=url, dest_file_path=Path(data_path, "train.csv"))
+            download(source_url=url, dest_file_path=Path(data_path, train_file))
 
         data = {"train": [],
                 "valid": [],
                 "test": []}
         for data_type in data_types:
-            try:
-                df = pd.read_csv(Path(data_path).joinpath(data_type + ".csv"))
-                data[data_type] = [(row['text'], row['intents'].split(',')) for _, row in df.iterrows()]
-            except FileNotFoundError:
-                log.warning("Cannot find {}.csv data file".format(data_type))
+            file_format = kwargs.get('format', 'csv')
+            file_name = kwargs.get(data_type, '{}.{}'.format(data_type, file_format))
+            file = Path(data_path).joinpath(file_name)
+            if file.exists():
+                if file_format == 'csv':
+                    keys = ('sep', 'header', 'names')
+                    options = {k: kwargs[k] for k in keys if k in kwargs}
+                    df = pd.read_csv(file, **options)
+                elif file_format == 'json':
+                    keys = ('orient', 'lines')
+                    options = {k: kwargs[k] for k in keys if k in kwargs}
+                    df = pd.read_json(file, **options)
+                else:
+                    raise Exception('Unsupported file format: {}'.format(file_format))
+
+                x = kwargs.get("x", "text")
+                y = kwargs.get('y', 'labels')
+                class_sep = kwargs.get('class_sep', ',')
+                data[data_type] = [(row[x], row[y].split(class_sep)) for _, row in df.iterrows()]
+            else:
+                log.warning("Cannot find {} file".format(file))
 
         return data
