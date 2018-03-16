@@ -6,8 +6,8 @@ from pathlib import Path
 from deeppavlov.core.common.registry import register
 
 
-@register('ner_dataset_reader')
-class NerDatasetReader(DatasetReader):
+@register('conll2003_reader')
+class Conll2003DatasetReader(DatasetReader):
 
     def download_conll(self, dir_path):
         download_decompress('http://lnsigo.mipt.ru/export/datasets/conll2003.tar.gz', dir_path)

@@ -93,7 +93,7 @@ class GoalOrientedBot(NNModel):
 
     def _encode_context(self, context, db_result=None):
         # tokenize input
-        tokenized = ' '.join(self.tokenizer([context])[0]).strip()
+        tokenized = ' '.join(self.tokenizer([context])[0]).lower().strip()
         if self.debug:
             log.debug("Text tokens = `{}`".format(tokenized))
 
