@@ -43,40 +43,37 @@ class RankingModel(NNModel):
         nltk.download('punkt', download_dir=str(get_deeppavlov_root().resolve()))
 
         opt = deepcopy(kwargs)
+        self.train_now = opt['train_now']
+        self.opt = opt
         self.interact_pred_num = opt['interact_pred_num']
         self.vocabs = opt.get('vocabs', None)
 
         dict_parameter_names = list(inspect.signature(InsuranceDict.__init__).parameters)
         dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
         network_parameter_names = list(inspect.signature(RankingNetwork.__init__).parameters)
-        network_parameters = {par: opt[par] for par in network_parameter_names if par in opt}
+        self.network_parameters = {par: opt[par] for par in network_parameter_names if par in opt}
 
         self.dict = InsuranceDict(**dict_parameters)
 
+        self.load()
+
+        train_parameters_names = list(inspect.signature(self._net.train_on_batch).parameters)
+        self.train_parameters = {par: opt[par] for par in train_parameters_names if par in opt}
+
+    @overrides
+    def load(self):
         if not self.load_path.exists():
             self.dict.init_from_scratch()
-            self._net = RankingNetwork(len(self.dict.tok2int_vocab), **network_parameters)
+            self._net = RankingNetwork(len(self.dict.tok2int_vocab), **self.network_parameters)
             embdict_parameter_names = list(inspect.signature(Embeddings.__init__).parameters)
-            embdict_parameters = {par: opt[par] for par in embdict_parameter_names if par in opt}
+            embdict_parameters = {par: self.opt[par] for par in embdict_parameter_names if par in self.opt}
             embdict= Embeddings(self.dict.tok2int_vocab, **embdict_parameters)
             self._net.set_emb_matrix(embdict.emb_matrix)
         else:
             print('[loading model from {}]'.format(self.load_path.resolve()), file=sys.stderr)
             self.dict.load()
-            self._net = RankingNetwork(len(self.dict.tok2int_vocab), **network_parameters)
+            self._net = RankingNetwork(len(self.dict.tok2int_vocab), **self.network_parameters)
             self._net.load(self.load_path)
-
-        train_parameters_names = list(inspect.signature(self._net.train_on_batch).parameters)
-        self.train_parameters = {par: opt[par] for par in train_parameters_names if par in opt}
-        self.train_now = opt['train_now']
-        self.opt = opt
-
-        # Try to load the model (if there are some model files the model will be loaded from them)
-        # self.load()
-
-    @overrides
-    def load(self):
-        pass
 
     @overrides
     def save(self):
