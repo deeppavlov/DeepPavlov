@@ -4,7 +4,7 @@ python:
 - '3.6'
 
 install:
-- pip3 install --user -r requirements-dev.txt
+- pip3 install -r requirements-dev.txt
 - python3 setup.py develop
 - python3 -m spacy download en
 
