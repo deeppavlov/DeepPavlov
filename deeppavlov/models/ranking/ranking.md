@@ -36,7 +36,10 @@ All parameters for [insurance_config.json](../../configs/ranking/insurance_confi
 | **dataset**         | **an object that provides models with data|
 |   name              | registered name of the dataset        <br />*SetOfValues*:  "intent_dataset", classification_dataset"     | 
 |   seed              | seed for the batch generator              |
-|   sample candiates  | {"global", "pool"}. 
+|   sample_candiates  | {"global", "pool"}. The method of negative sampling in train data. If "pool", negative samples for each data sample should be provided. If "global", negative sampling over the whole data is performed.|
+|   sample_candiates_valid  | {"global", "pool"}. The method of selecting_candidates for ranking in valid data. If "pool", candidates for ranking for each data sample should be provided. If "global",  all data samples are taken as candidates for ranking.|
+|   sample_candiates_test  | {"global", "pool"}. The method of selecting_candidates for ranking in valid data. If "pool", candidates for ranking for each data sample should be provided. If "global",  all data samples are taken as candidates for ranking.|
+
  **chainer**         | **chainer is a structure that receives tuples `(in, in_y)` and produces `out`**     |
 | in                  | user-defined name of input (or list of names in case of multiple inputs) <br />*SetOfValues*: list of names, i.e ["x"], ["x0", "x1"] |
 | in_y                | user-defined name of input targets (or list of names in case of multiple input targets) <br />*SetOfValues*: list of names, i.e ["y"], ["y0", "y1"] |
