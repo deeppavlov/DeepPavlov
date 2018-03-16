@@ -84,8 +84,7 @@ class RankingModel(NNModel):
     def save(self):
         """Save model to the save_path, provided in config. The directory is
         already created by super().__init__ part in called in __init__ of this class"""
-
-        print('[saving model to {}]'.format(self.save_path.resolve()), file=sys.stderr)
+        log.info('[saving model to {}]'.format(self.save_path.resolve()))
         self._net.save(self.save_path)
         self.set_embeddings()
         self.dict.save()

@@ -51,13 +51,13 @@ All parameters for [insurance_config.json](../../configs/ranking/insurance_confi
 | in                  | the same as "in" parameter in "chainer". |
 | in_y                | the same as "in_y" parameter in "chainer". |
 | out                 | the same as "out" parameter in "chainer". |
-| name                | a registered name of the model.  | 
+| name                | a registered name of the model. | 
 | device_num | int, GPU card number to train the model, if several cards are available in the system. |
 | load_path           | a path to a file from which model files will be loaded.    |
 | save_path           | a path to a file where model files will be saved.   |
 | train_now | bool, if it is True, than the model training will be done, else validation and test only.
 | vocabs_path | a path to a directory with data files from where the model vocabularies will be built. |
-| download_url | url where a pretrained model with word embeddings is stored.|
+| download_url | url where a pre-trained model with word embeddings is stored.|
 | seed | seed to initialize the model weights |
 
 | dense_size          | size of dense layer that is followed by the classification dense layer    | 
