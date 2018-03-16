@@ -15,6 +15,10 @@ from deeppavlov.models.ranking.ranking_network import RankingNetwork
 from deeppavlov.models.ranking.dict import InsuranceDict
 from deeppavlov.models.ranking.emb_dict import Embeddings
 from deeppavlov.core.commands.utils import get_deeppavlov_root
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 @register('ranking_model')
@@ -63,6 +67,7 @@ class RankingModel(NNModel):
     @overrides
     def load(self):
         if not self.load_path.exists():
+            log.info("[initializing new `{}`]".format(self.__class__.__name__))
             self.dict.init_from_scratch()
             self._net = RankingNetwork(len(self.dict.tok2int_vocab), **self.network_parameters)
             embdict_parameter_names = list(inspect.signature(Embeddings.__init__).parameters)
@@ -70,7 +75,7 @@ class RankingModel(NNModel):
             embdict= Embeddings(self.dict.tok2int_vocab, **embdict_parameters)
             self._net.set_emb_matrix(embdict.emb_matrix)
         else:
-            print('[loading model from {}]'.format(self.load_path.resolve()), file=sys.stderr)
+            log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
             self.dict.load()
             self._net = RankingNetwork(len(self.dict.tok2int_vocab), **self.network_parameters)
             self._net.load(self.load_path)
