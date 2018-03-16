@@ -82,8 +82,8 @@ class KvretDatasetReader(DatasetReader):
             x['task'] = turn[0]['task']
             x['kb_columns'] = turn[0]['kb_columns']
             x['kb_items'] = turn[0]['kb_items']
-        if turn[1]['end_dialogue']:
-            x['episode_done'] = True
+        if turn[0].get('episode_done') is not None:
+            x['episode_done'] = turn[0]['episode_done']
         y = {'text': turn[1]['utterance'],
              'requested': turn[1].get('requested', {}),
              'slots': turn[1].get('slots', {})}
@@ -137,6 +137,7 @@ class KvretDatasetReader(DatasetReader):
             for i, turn in enumerate(dialog):
                 replica = turn['data']
                 if i == 0:
+                    replica['episode_done'] = True
                     replica['task'] = scenario['task']
                     replica['kb_columns'] = scenario['kb']['column_names']
                     replica['kb_items'] = scenario['kb']['items']
