@@ -75,8 +75,8 @@ def train_model_from_config(config_path: str):
 
     dataset_config = config.get('dataset', None)
 
-    if dataset_config is not None:
-        del config['dataset']
+    if dataset_config:
+        config.pop('dataset')
         ds_type = dataset_config['type']
         if ds_type == 'classification':
             reader = {'name': 'basic_classification_reader'}
@@ -89,9 +89,7 @@ def train_model_from_config(config_path: str):
     reader_config = config['dataset_reader']
     reader = get_model(reader_config['name'])()
     data_path = expand_path(reader_config.get('data_path', ''))
-    kwargs = reader_config.copy()
-    if "name" in kwargs: del kwargs["name"]
-    if "data_path" in kwargs: del kwargs["data_path"]
+    kwargs = {k: v for k, v in reader_config.items() if k not in ['name', 'data_path']}
     data = reader.read(data_path, **kwargs)
 
     iterator_config = config['dataset_iterator']
