@@ -54,7 +54,7 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
                           ("moderate price range", "{'pricerange': 'moderate'}")
                       ]
                   },
-          "ranking": {("configs/ranking/insurance_config.json", "ranking"):
+          "ranking": {("configs/ranking/insurance_config.json", "ranking", True):
                       [
                       ]
                       }
