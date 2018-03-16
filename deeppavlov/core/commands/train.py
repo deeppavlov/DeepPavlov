@@ -138,6 +138,7 @@ def train_model_from_config(config_path: str):
             print(json.dumps(report, ensure_ascii=False))
     return model
 
+
 def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
                 dataset: Dataset, batch_size=-1, data_type='valid', start_time=None):
     if start_time is None:

@@ -19,8 +19,8 @@ els = [el for el in bg]
 for x, y in els[:3]:
     print(x)
     out = chainer(x, y)
-    print(out.shape)
-    #for el in out:
-    #    print(el.shape)
+    #print(out.shape)
+    for el in out:
+        print(el)
 
 x, y = dataset.iter_all()

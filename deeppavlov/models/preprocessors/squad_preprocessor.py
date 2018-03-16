@@ -116,7 +116,11 @@ class SquadAnsPreprocessor(Component):
             for idx, sp in enumerate(span):
                 if not (ans_end <= sp[0] or ans_st >= sp[1]):
                     answer_span.append(idx)
-            y1, y2 = answer_span[0], answer_span[-1]
+            if len(answer_span) != 0:
+                y1, y2 = answer_span[0], answer_span[-1]
+            else:
+                # answer not found in context
+                y1, y2 = 0, 0
             answers_start.append(y1)
             answers_end.append(y2)
             answers.append(ans)
@@ -235,3 +239,27 @@ class SquadVocabEmbedder(Estimator):
             if e in self.token2idx_dict:
                 return self.token2idx_dict[e]
         return 1
+
+
+@register('squad_ans_postprocessor')
+class SquadAnsPostprocessor(Component):
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, ans_start, ans_end, contexts, p2rs, **kwargs):
+        """Postprocesses predicted answers for SQuAD dataset
+
+        :param ans_start: predicted start position in processed context
+        :param ans_end: predicted end position in processed context
+        :param contexts: raw contexts
+        :param p2rs: mapping from processed context to raw
+        :return: postprocessed answer text, start position in raw context, end position in raw context
+        """
+        answers = []
+        start = []
+        end = []
+        for a_st, a_end, c, p2r in zip(ans_start, ans_end, contexts, p2rs):
+            start.append(p2r[a_st])
+            end.append(p2r[a_end])
+            answers.append(c[a_st:a_end])
+        return answers, start, end

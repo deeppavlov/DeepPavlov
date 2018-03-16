@@ -34,6 +34,7 @@ import deeppavlov.vocabs.typos
 
 import deeppavlov.metrics.accuracy
 import deeppavlov.metrics.fmeasure
+import deeppavlov.metrics.squad_metrics
 
 import deeppavlov.core.common.log
 

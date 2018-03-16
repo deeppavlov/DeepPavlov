@@ -68,16 +68,32 @@
         "char_hidden_size": 100,
         "encoder_hidden_size": 75,
         "attention_hidden_size": 75,
-        "in": ["c_tokens_idxs"],
-        "out": ["y_predicted"]
+        "learning_rate": 0.5,
+        "keep_prob": 0.6,
+        "grad_clip": 5.0,
+        "save_path": "squad/model",
+        "load_path": "squad/model",
+        "in": ["c_tokens_idxs", "c_chars_idxs", "q_tokens_idxs", "q_chars_idxs"],
+        "in_y": ["ans_start", "ans_end"],
+        "out": ["ans_start_predicted", "ans_end_predicted"]
+      },
+      {
+        "name": "squad_ans_postprocessor",
+        "id": "squad_ans_postprepr",
+        "in": ["ans_start_predicted", "ans_end_predicted", "c_raw", "c_p2r"],
+        "out": ["ans_predicted", "ans_start_predicted", "ans_end_predicted"]
       }
     ],
-    "out": ["y_predicted"]
+    "out": ["ans_predicted", "ans_start_predicted"]
   },
   "train": {
     "show_examples": false,
     "test_best": false,
-    "validate_best": false
+    "validate_best": false,
+    "log_every_n_batches": 500,
+    "val_every_n_epochs": 1,
+    "batch_size": 64,
+    "metrics": ["exact_match", "squad_f1"]
   }
 }
 
