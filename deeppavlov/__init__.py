@@ -27,6 +27,7 @@ import deeppavlov.models.trackers.hcn_at
 import deeppavlov.models.trackers.hcn_et
 import deeppavlov.models.preprocessors.str_lower
 import deeppavlov.models.ner.ner
+import deeppavlov.models.tokenizers.spacy_tokenizer
 import deeppavlov.skills.go_bot.go_bot
 import deeppavlov.skills.go_bot.network
 import deeppavlov.skills.go_bot.tracker
