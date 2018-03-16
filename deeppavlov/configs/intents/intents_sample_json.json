@@ -1,13 +1,14 @@
 {
-  "dataset_reader": {
-    "name": "basic_classification_reader",
+  "dataset": {
+    "type": "classification",
+    "format": "json",
+    "orient": "records",
+    "lines": true,
+    "data_path": "sample",
+    "train": "sample.json",
     "x": "text",
     "y": "intents",
-    "data_path": "snips",
-    "url": "http://lnsigo.mipt.ru/export/datasets/snips_intents/train.csv"
-  },
-  "dataset_iterator": {
-    "name": "basic_classification_iterator",
+    "url": "http://lnsigo.mipt.ru/export/datasets/snips_intents/train.json",
     "seed": 42,
     "field_to_split": "train",
     "split_fields": [
