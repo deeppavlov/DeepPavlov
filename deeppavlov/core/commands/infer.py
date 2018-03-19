@@ -104,15 +104,19 @@ def interact_model(config_path):
     model = build_model_from_config(config)
 
     while True:
-        # get input from user
-        context = input(':: ')
-
-        # check for exit command
-        if context == 'exit' or context == 'stop' or context == 'quit' or context == 'q':
-            return
+        args = []
+        for in_x in model.in_x:
+            args.append(input('{}::'.format(in_x)))
+            # check for exit command
+            if args[-1] == 'exit' or args[-1] == 'stop' or args[-1] == 'quit' or args[-1] == 'q':
+                return
 
         try:
-            pred = model([context])
-            print('>>', pred[0])
+            if len(args) == 1:
+                pred = model(args)
+            else:
+                pred = model([args])
+
+            print('>>', *pred)
         except Exception as e:
             raise e
