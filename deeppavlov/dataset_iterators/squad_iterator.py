@@ -30,10 +30,15 @@ class SquadIterator(BasicDatasetIterator):
 
     @staticmethod
     def _extract_cqas(data):
-        """Extracts context, question, answer, answer_start from SQuAD data
+        """ Extracts context, question, answer, answer_start from SQuAD data
 
-        :param data: data in squad format
-        :return: list of (context, question), (answer_text, answer_start)
+        Args:
+            data: data in squad format
+
+        Returns:
+            list of (context, question), (answer_text, answer_start)
+            answer text and answer_start are lists
+
         """
         cqas = []
         for article in data['data']:

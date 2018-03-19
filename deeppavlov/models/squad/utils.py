@@ -78,6 +78,24 @@ class PtrNet:
 
 
 def dot_attention(inputs, memory, mask, att_size, keep_prob=1.0, scope="dot_attention"):
+    """Computes attention vector for each item in inputs:
+       attention vector is a weighted sum of memory items.
+       Dot product between input and memory vector is used as similarity measure.
+
+       Gate mechanism is applied to attention vectors to produce output.
+
+    Args:
+        inputs: Tensor [batch_size x input_len x feature_size]
+        memory: Tensor [batch_size x memory_len x feature_size]
+        mask: inputs mask
+        att_size: hidden size of attention
+        keep_prob: dropout keep_prob
+        scope:
+
+    Returns:
+        attention vectors [batch_size x input_len x (feature_size + att_size)]
+
+    """
     with tf.variable_scope(scope):
         BS, IL, IH = tf.unstack(tf.shape(inputs))
         BS, ML, MH = tf.unstack(tf.shape(memory))
@@ -103,6 +121,7 @@ def dot_attention(inputs, memory, mask, att_size, keep_prob=1.0, scope="dot_atte
 
 def simple_attention(memory, att_size, mask, keep_prob=1.0, scope="simple_attention"):
     """Simple attention without any conditions.
+
        Computes weighted sum of memory elements.
     """
     with tf.variable_scope(scope):

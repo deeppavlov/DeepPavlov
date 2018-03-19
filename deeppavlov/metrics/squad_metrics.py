@@ -7,13 +7,16 @@ from deeppavlov.core.common.metrics_registry import register_metric
 
 @register_metric('exact_match')
 def exact_match(y_true, y_predicted):
-    """Calculates Exact Match score between y_true and y_predicted
-    EM score uses the best matching y_true answer:
-        if y_pred equal at least to one answer in y_true then EM = 1, else EM = 0
+    """ Calculates Exact Match score between y_true and y_predicted
+        EM score uses the best matching y_true answer:
+            if y_pred equal at least to one answer in y_true then EM = 1, else EM = 0
 
-    :param y_true: list of tuples (y_true_text, y_true_start), y_true_text and y_true_start are lists of len num_answers
-    :param y_predicted: list of tuples (y_pred_text, y_pred_start), y_pred_text - str, y_pred_start - int
-    :return: exact match score
+    Args:
+        y_true: list of tuples (y_true_text, y_true_start), y_true_text and y_true_start are lists of len num_answers
+        y_predicted: list of tuples (y_pred_text, y_pred_start), y_pred_text : str, y_pred_start : int
+
+    Returns:
+        exact match score : float
     """
     y_predicted = hotfix(y_predicted)
     EM_total = 0
@@ -25,12 +28,15 @@ def exact_match(y_true, y_predicted):
 
 @register_metric('squad_f1')
 def squad_f1(y_true, y_predicted):
-    """Calculates F-1 score between y_true and y_predicted
-    F-1 score uses the best matching y_true answer
+    """ Calculates F-1 score between y_true and y_predicted
+        F-1 score uses the best matching y_true answer
 
-    :param y_true:
-    :param y_predicted:
-    :return:
+    Args:
+        y_true: list of tuples (y_true_text, y_true_start), y_true_text and y_true_start are lists of len num_answers
+        y_predicted: list of tuples (y_pred_text, y_pred_start), y_pred_text : str, y_pred_start : int
+
+    Returns:
+        F-1 score : float
     """
     y_predicted = hotfix(y_predicted)
     f1_total = 0.0

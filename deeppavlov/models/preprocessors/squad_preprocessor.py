@@ -54,11 +54,15 @@ class SquadPreprocessor(Component):
 
     @staticmethod
     def preprocess_str(line, return_mapping=False):
-        """Removes unicode and other characters from str
+        """ Removes unicode and other characters from str
 
-        :param line:
-        :param return_mapping: return mapping from line to preprocessed line
-        :return: preprocessed line, raw2preprocessed, preprocessed2raw
+        Args:
+            line:
+            return_mapping: return mapping from line to preprocessed line or not
+
+        Returns:
+            preprocessed line, raw2preprocessed, preprocessed2raw
+
         """
         line = line.replace("''", '" ').replace("``", '" ')
         if not return_mapping:
@@ -96,14 +100,19 @@ class SquadAnsPreprocessor(Component):
         pass
 
     def __call__(self, answers_raw, answers_start, r2ps, spans, **kwargs):
-        """Processes answers for SQuAD dataset
+        """ Processes answers for SQuAD dataset
 
-        :param answers_raw: list: batch_size x number_of_answers
-        :param answers_start: start position of answer (in chars): batch_size x number_of_answers
-        :param r2ps: mapping from raw context to processed context
-        :param spans:
-        :return: processed answer text, start position in tokens, end position in tokens
-                 each of them with shape batch_size x number_of_answers
+        Args:
+            answers_raw: list of str [batch_size x number_of_answers]
+            answers_start: start position of answer (in chars) [batch_size x number_of_answers]
+            r2ps: mapping from raw context to processed context
+            spans: mapping for tokens in context to position in context
+            **kwargs:
+
+        Returns:
+            processed answer text, start position in tokens, end position in tokens
+            [batch_size x number_of_answers]
+
         """
         answers = []
         start = []
@@ -233,11 +242,13 @@ class SquadVocabEmbedder(Estimator):
         pickle.dump((self.emb_dim, self.emb_mat, self.token2idx_dict), self.save_path.open('wb'))
 
     def _get_idx(self, el):
-        """Returns idx for el (token or char).
-        If el is not in vocabulary then looks for el.lower() and etc
+        """ Returns idx for el (token or char).
 
-        :param el: token or character
-        :return: idx in vocabulary
+        Args:
+            el: token or character
+
+        Returns:
+            idx in vocabulary
         """
         for e in (el, el.lower(), el.capitalize(), el.upper()):
             if e in self.token2idx_dict:
@@ -251,14 +262,18 @@ class SquadAnsPostprocessor(Component):
         pass
 
     def __call__(self, ans_start, ans_end, contexts, p2rs, spans, **kwargs):
-        """Postprocesses predicted answers for SQuAD dataset
+        """ Postprocesses predicted answers for SQuAD dataset
 
-        :param ans_start: predicted start position in processed context: list of int with len(ans_start) == batch_size
-        :param ans_end: predicted end position in processed context
-        :param contexts: raw contexts
-        :param p2rs: mapping from processed context to raw
-        :param spans: tokens positions in context
-        :return: postprocessed answer text, start position in raw context, end position in raw context
+        Args:
+            ans_start: predicted start position in processed context: list of ints with len(ans_start) == batch_size
+            ans_end: predicted end position in processed context
+            contexts: raw contexts
+            p2rs: mapping from processed context to raw
+            spans: tokens positions in context
+            **kwargs:
+
+        Returns:
+            postprocessed answer text, start position in raw context, end position in raw context
         """
         answers = []
         start = []
