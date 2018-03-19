@@ -93,7 +93,7 @@ def dot_attention(inputs, memory, mask, att_size, keep_prob=1.0, scope="dot_atte
         scope:
 
     Returns:
-        attention vectors [batch_size x input_len x (feature_size + att_size)]
+        attention vectors [batch_size x input_len x (feature_size + feature_size)]
 
     """
     with tf.variable_scope(scope):
@@ -106,10 +106,10 @@ def dot_attention(inputs, memory, mask, att_size, keep_prob=1.0, scope="dot_atte
         with tf.variable_scope("attention"):
             inputs_att = tf.layers.dense(d_inputs, att_size, use_bias=False, activation=tf.nn.relu)
             memory_att = tf.layers.dense(d_memory, att_size, use_bias=False, activation=tf.nn.relu)
-            outputs = tf.matmul(inputs_att, tf.transpose(memory_att, [0, 2, 1])) / (att_size ** 0.5)
+            logits = tf.matmul(inputs_att, tf.transpose(memory_att, [0, 2, 1])) / (att_size ** 0.5)
             mask = tf.tile(tf.expand_dims(mask, axis=1), [1, IL, 1])
-            logits = tf.nn.softmax(softmax_mask(outputs, mask))
-            outputs = tf.matmul(logits, memory)
+            att_weights = tf.nn.softmax(softmax_mask(logits, mask))
+            outputs = tf.matmul(att_weights, memory)
             res = tf.concat([inputs, outputs], axis=2)
 
         with tf.variable_scope("gate"):
