@@ -5,7 +5,8 @@
   },
   "dataset": {
     "name": "squad_dataset",
-    "seed": 1337
+    "seed": 1337,
+    "shuffle": true
   },
   "chainer": {
     "in": ["c_raw", "q_raw"],
@@ -80,7 +81,7 @@
       {
         "name": "squad_ans_postprocessor",
         "id": "squad_ans_postprepr",
-        "in": ["ans_start_predicted", "ans_end_predicted", "c_raw", "c_p2r"],
+        "in": ["ans_start_predicted", "ans_end_predicted", "c_raw", "c_p2r", "spans"],
         "out": ["ans_predicted", "ans_start_predicted", "ans_end_predicted"]
       }
     ],
@@ -89,11 +90,11 @@
   "train": {
     "show_examples": false,
     "test_best": false,
-    "validate_best": false,
-    "log_every_n_batches": 500,
+    "validate_best": true,
+    "log_every_n_batches": 250,
     "val_every_n_epochs": 1,
     "batch_size": 64,
-    "metrics": ["exact_match", "squad_f1"]
+    "metrics": ["squad_f1", "exact_match"]
   }
 }
 

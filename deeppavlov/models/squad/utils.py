@@ -24,9 +24,9 @@ class CudnnGRU:
             init_bw = tf.expand_dims(tf.tile(tf.expand_dims(init_bw, axis=0), [batch_size, 1]), axis=0)
 
             mask_fw = tf.nn.dropout(tf.ones([1, batch_size, input_size_], dtype=tf.float32),
-                                    keep_prob=keep_prob)
+                                    keep_prob=keep_prob) * keep_prob
             mask_bw = tf.nn.dropout(tf.ones([1, batch_size, input_size_], dtype=tf.float32),
-                                    keep_prob=keep_prob)
+                                    keep_prob=keep_prob) * keep_prob
 
             self.grus.append((gru_fw, gru_bw,))
             self.params.append((param_fw, param_bw,))
@@ -68,7 +68,7 @@ class PtrNet:
             BS, ML, MH = tf.unstack(tf.shape(match))
             BS, IH = tf.unstack(tf.shape(init))
             match_do = tf.nn.dropout(match, keep_prob=self.keep_prob, noise_shape=[BS, 1, MH])
-            dropout_mask = tf.nn.dropout(tf.ones([BS, IH], dtype=tf.float32), keep_prob=self.keep_prob)
+            dropout_mask = tf.nn.dropout(tf.ones([BS, IH], dtype=tf.float32), keep_prob=self.keep_prob) * self.keep_prob
             inp, logits1 = attention(match_do, init * dropout_mask, hidden, mask)
             inp_do = tf.nn.dropout(inp, keep_prob=self.keep_prob)
             _, state = self.gru(inp_do, init)
