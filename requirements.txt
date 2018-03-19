@@ -7,6 +7,7 @@ overrides==1.9
 kenlm==0.0.0
 h5py==2.7.1
 keras==2.1.2
+gensim==2.3.0
 pandas==0.21.1
 fuzzywuzzy==0.16.0
 git+https://github.com/facebookresearch/fastText.git@3872afadb3a9f30de7c7792ff2ff1bda64242097
@@ -18,4 +19,3 @@ python-Levenshtein==0.12.0
 flask==0.12.2
 flasgger==0.6.6
 flask_cors==3.0.3
-gensim==2.3.0
