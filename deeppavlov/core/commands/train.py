@@ -86,11 +86,17 @@ def train_model_from_config(config_path: str):
         else:
             raise Exception("Unsupported dataset type: {}".format(ds_type))
 
-    reader_config = config['dataset_reader']
-    reader = get_model(reader_config['name'])()
-    data_path = expand_path(reader_config.get('data_path', ''))
-    kwargs = {k: v for k, v in reader_config.items() if k not in ['name', 'data_path']}
-    data = reader.read(data_path, **kwargs)
+    data = []
+    reader_config = config.get('dataset_reader', None)
+
+    if reader_config:
+        reader_config = config['dataset_reader']
+        reader = get_model(reader_config['name'])()
+        data_path = expand_path(reader_config.get('data_path', ''))
+        kwargs = {k: v for k, v in reader_config.items() if k not in ['name', 'data_path']}
+        data = reader.read(data_path, **kwargs)
+    else:
+        log.warning("No dataset reader is provided in the JSON config.")
 
     iterator_config = config['dataset_iterator']
     dataset: BasicDatasetIterator = from_params(iterator_config, data=data)
