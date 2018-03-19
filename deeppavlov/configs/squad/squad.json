@@ -38,7 +38,7 @@
         "context_limit": "#squad_prepr.context_limit",
         "question_limit": "#squad_prepr.question_limit",
         "char_limit": "#squad_prepr.context_limit",
-        "fit_lol": ["c_tokens", "q_tokens"],
+        "fit_on": ["c_tokens", "q_tokens"],
         "in": ["c_tokens", "q_tokens"],
         "out": ["c_tokens_idxs", "q_tokens_idxs"]
       },
@@ -53,7 +53,7 @@
         "context_limit": "#squad_prepr.context_limit",
         "question_limit": "#squad_prepr.question_limit",
         "char_limit": "#squad_prepr.char_limit",
-        "fit_lol": ["c_chars", "q_chars"],
+        "fit_on": ["c_chars", "q_chars"],
         "in": ["c_chars", "q_chars"],
         "out": ["c_chars_idxs", "q_chars_idxs"]
       },
