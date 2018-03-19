@@ -1,9 +1,6 @@
-from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.dataset_readers.squad_dataset_reader import SquadDatasetReader
 from deeppavlov.datasets.squad_dataset import SquadDataset
-
-import json
 
 d = SquadDatasetReader()
 data = d.read('download/squad')
@@ -18,6 +15,7 @@ els = [el for el in bg]
 
 for x, y in els[:3]:
     print(x)
+    print(y)
     out = chainer(x, y)
     #print(out.shape)
     for el in out:

@@ -41,7 +41,10 @@ class SquadDataset(Dataset):
                 context = par['context']
                 for qa in par['qas']:
                     q = qa['question']
-                    ans_text = qa['answers'][0]['text']
-                    ans_start = qa['answers'][0]['answer_start']
+                    ans_text = []
+                    ans_start = []
+                    for answer in qa['answers']:
+                        ans_text.append(answer['text'])
+                        ans_start.append(answer['answer_start'])
                     cqas.append(((context, q), (ans_text, ans_start)))
         return cqas

@@ -1,10 +1,10 @@
-from deeppavlov.core.models.tf_model import TFModel
-from deeppavlov.core.common.registry import register
-from deeppavlov.models.squad.utils import CudnnGRU, dot_attention, simple_attention, PtrNet
+from copy import deepcopy
 
 import tensorflow as tf
-from copy import deepcopy
-import numpy as np
+
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.tf_model import TFModel
+from deeppavlov.models.squad.utils import CudnnGRU, dot_attention, simple_attention, PtrNet
 
 
 @register('squad_model')
@@ -24,8 +24,6 @@ class SquadModel(TFModel):
         self.grad_clip = self.opt['grad_clip']
         self.word_emb_dim = self.init_word_emb.shape[1]
         self.char_emb_dim = self.init_char_emb.shape[1]
-        print(self.init_word_emb.shape)
-        print(self.init_char_emb.shape)
 
         self.sess_config = tf.ConfigProto(allow_soft_placement=True)
         self.sess_config.gpu_options.allow_growth = True
@@ -178,10 +176,12 @@ class SquadModel(TFModel):
 
     def train_on_batch(self, c_tokens, c_chars, q_tokens, q_chars, y1s, y2s):
         # TODO: filter examples in batches with answer position greater self.context_limit
+        # select one answer from list of correct answers
+        y1s = list(map(lambda x: x[0], y1s))
+        y2s = list(map(lambda x: x[0], y2s))
         feed_dict = self._build_feed_dict(c_tokens, c_chars, q_tokens, q_chars, y1s, y2s)
         loss, _ = self.sess.run([self.loss, self.train_op], feed_dict=feed_dict)
         return loss
-
 
     def __call__(self, c_tokens, c_chars, q_tokens, q_chars, *args, **kwargs):
         feed_dict = self._build_feed_dict(c_tokens, c_chars, q_tokens, q_chars)

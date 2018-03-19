@@ -1,18 +1,17 @@
+import pickle
 import unicodedata
 from collections import Counter
-import pickle
+
+import numpy as np
+from nltk import word_tokenize
+from tqdm import tqdm
 
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import download
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.estimator import Estimator
-
-from nltk import word_tokenize
-from tqdm import tqdm
-import numpy as np
-
-from deeppavlov.core.common.log import get_logger
 
 logger = get_logger(__name__)
 
@@ -96,35 +95,40 @@ class SquadAnsPreprocessor(Component):
     def __init__(self, *args, **kwargs):
         pass
 
-    def __call__(self, ans_raw, ans_start, r2ps, spans, **kwargs):
+    def __call__(self, answers_raw, answers_start, r2ps, spans, **kwargs):
         """Processes answers for SQuAD dataset
 
-        :param ans_raw: answer text
-        :param ans_start: start position of answer (in chars)
-        :param r2ps: mapping from raw context to processed
+        :param answers_raw: list: batch_size x number_of_answers
+        :param answers_start: start position of answer (in chars): batch_size x number_of_answers
+        :param r2ps: mapping from raw context to processed context
         :param spans:
         :return: processed answer text, start position in tokens, end position in tokens
+                 each of them with shape batch_size x number_of_answers
         """
         answers = []
-        answers_start = []
-        answers_end = []
-        for a_raw, a_st, r2p, span in zip(ans_raw, ans_start, r2ps, spans):
-            ans = SquadPreprocessor.preprocess_str(a_raw)
-            ans_st = r2p[a_st]
-            ans_end = ans_st + len(ans)
-            answer_span = []
-            for idx, sp in enumerate(span):
-                if not (ans_end <= sp[0] or ans_st >= sp[1]):
-                    answer_span.append(idx)
-            if len(answer_span) != 0:
-                y1, y2 = answer_span[0], answer_span[-1]
-            else:
-                # answer not found in context
-                y1, y2 = 0, 0
-            answers_start.append(y1)
-            answers_end.append(y2)
-            answers.append(ans)
-        return answers, answers_start, answers_end
+        start = []
+        end = []
+        for ans_raw, ans_st, r2p, span in zip(answers_raw, answers_start, r2ps, spans):
+            start.append([])
+            end.append([])
+            answers.append([])
+            for a_raw, a_st in zip(ans_raw, ans_st):
+                ans = SquadPreprocessor.preprocess_str(a_raw)
+                ans_st = r2p[a_st]
+                ans_end = ans_st + len(ans)
+                answer_span = []
+                for idx, sp in enumerate(span):
+                    if not (ans_end <= sp[0] or ans_st >= sp[1]):
+                        answer_span.append(idx)
+                if len(answer_span) != 0:
+                    y1, y2 = answer_span[0], answer_span[-1]
+                else:
+                    # answer not found in context
+                    y1, y2 = 0, 0
+                start[-1].append(y1)
+                end[-1].append(y2)
+                answers[-1].append(ans)
+        return answers, start, end
 
 
 @register('squad_vocab_embedder')
@@ -249,7 +253,7 @@ class SquadAnsPostprocessor(Component):
     def __call__(self, ans_start, ans_end, contexts, p2rs, spans, **kwargs):
         """Postprocesses predicted answers for SQuAD dataset
 
-        :param ans_start: predicted start position in processed context
+        :param ans_start: predicted start position in processed context: list of int with len(ans_start) == batch_size
         :param ans_end: predicted end position in processed context
         :param contexts: raw contexts
         :param p2rs: mapping from processed context to raw
