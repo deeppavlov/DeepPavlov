@@ -1,4 +1,4 @@
-import random
+from random import Random
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_iterator import BasicDatasetIterator
@@ -17,10 +17,7 @@ class SquadIterator(BasicDatasetIterator):
 
         self.data = dict()
 
-        rs = random.getstate()
-        random.seed(seed)
-        self.random_state = random.getstate()
-        random.setstate(rs)
+        self.random = Random(seed)
 
         for dt in ['train', 'valid']:
             self.data[dt] = SquadIterator._extract_cqas(self.raw_data[dt])
