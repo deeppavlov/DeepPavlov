@@ -1,11 +1,11 @@
 import random
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.dataset import Dataset
+from deeppavlov.core.data.dataset_iterator import BasicDatasetIterator
 
 
-@register('squad_dataset')
-class SquadDataset(Dataset):
+@register('squad_iterator')
+class SquadIterator(BasicDatasetIterator):
     def __init__(self, data, seed, shuffle=False):
         self.raw_data = data
         self.seed = seed
@@ -23,10 +23,10 @@ class SquadDataset(Dataset):
         random.setstate(rs)
 
         for dt in ['train', 'valid']:
-            self.data[dt] = SquadDataset._extract_cqas(self.raw_data[dt])
+            self.data[dt] = SquadIterator._extract_cqas(self.raw_data[dt])
 
         # there is no public test set for SQuAD
-        self.data['test'] = SquadDataset._extract_cqas(self.raw_data['valid'])
+        self.data['test'] = SquadIterator._extract_cqas(self.raw_data['valid'])
 
     @staticmethod
     def _extract_cqas(data):

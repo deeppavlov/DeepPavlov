@@ -16,6 +16,7 @@ import deeppavlov.dataset_iterators.dstc2_ner_iterator
 import deeppavlov.dataset_iterators.dstc2_intents_iterator
 import deeppavlov.dataset_iterators.typos_iterator
 import deeppavlov.dataset_iterators.basic_classification_iterator
+import deeppavlov.dataset_iterators.squad_iterator
 import deeppavlov.models.classifiers.intents.intent_model
 import deeppavlov.models.commutators.random_commutator
 import deeppavlov.models.embedders.fasttext_embedder

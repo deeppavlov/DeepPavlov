@@ -3,8 +3,8 @@
     "name": "squad_dataset_reader",
     "data_path": "squad/"
   },
-  "dataset": {
-    "name": "squad_dataset",
+  "dataset_iterator": {
+    "name": "squad_iterator",
     "seed": 1337,
     "shuffle": true
   },

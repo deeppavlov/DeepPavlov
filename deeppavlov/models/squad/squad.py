@@ -106,14 +106,14 @@ class SquadModel(TFModel):
             q = rnn(q_emb, seq_len=self.q_len)
 
         with tf.variable_scope("attention"):
-            qc_att = dot_attention(c, q, mask=self.q_mask, hidden=self.attention_hidden_size,
+            qc_att = dot_attention(c, q, mask=self.q_mask, att_size=self.attention_hidden_size,
                                    keep_prob=self.keep_prob_ph)
             rnn = CudnnGRU(num_layers=1, num_units=self.hidden_size, batch_size=bs,
                            input_size=qc_att.get_shape().as_list()[-1], keep_prob=self.keep_prob_ph)
             att = rnn(qc_att, seq_len=self.c_len)
 
         with tf.variable_scope("match"):
-            self_att = dot_attention(att, att, mask=self.c_mask, hidden=self.attention_hidden_size,
+            self_att = dot_attention(att, att, mask=self.c_mask, att_size=self.attention_hidden_size,
                                      keep_prob=self.keep_prob_ph)
             rnn = CudnnGRU(num_layers=1, num_units=self.hidden_size, batch_size=bs,
                            input_size=self_att.get_shape().as_list()[-1], keep_prob=self.keep_prob_ph)
