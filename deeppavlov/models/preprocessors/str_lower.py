@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from typing import List
+from typing import List, Dict
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -25,5 +25,10 @@ class StrLower(Component):
     def __init__(self, *args, **kwargs):
         pass
 
-    def __call__(self, lines: List[str], **kwargs):
+    def __call__(self, lines: List, **kwargs):
+        if isinstance(lines[0], list) and isinstance(lines[0][0], dict):
+            for i in range(len(lines)):
+                for j, line in enumerate(lines[i]):
+                    lines[i][j]['text'] = line['text'].lower()
+            return lines
         return [line.lower() for line in lines]
