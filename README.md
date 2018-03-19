@@ -38,19 +38,27 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
           
  * Run goal-oriented bot with Telegram interface:
  ```
- python deep.py interactbot configs/go_bot/gobot_dstc2.json -t <TELEGRAM_TOKEN>
+ python -m deeppavlov.deep interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -t <TELEGRAM_TOKEN>
  ```
  * Run goal-oriented bot with console interface:
  ```
- python deep.py interact configs/go_bot/gobot_dstc2.json
+ python -m deeppavlov.deep interact deeppavlov/configs/go_bot/gobot_dstc2.json
  ```
- * Run slot-filling model with Telegram interface:
+  * Run goal-oriented bot with REST API:
  ```
- python deep.py interactbot configs/ner/slotfill_dstc2.json -t <TELEGRAM_TOKEN>
+ python -m deeppavlov.deep riseapi deeppavlov/configs/go_bot/gobot_dstc2.json
+ ``` 
+  * Run slot-filling model with Telegram interface:
+ ```
+ python -m deeppavlov.deep interactbot deeppavlov/configs/ner/slotfill_dstc2.json -t <TELEGRAM_TOKEN>
  ```
  * Run slot-filling model with console interface:
  ```
- python deep.py interact configs/ner/slotfill_dstc2.json
+ python -m deeppavlov.deep interact deeppavlov/configs/ner/slotfill_dstc2.json
+ ```
+ * Run slot-filling model with REST API:
+ ```
+ python -m deeppavlov.deep riseapi deeppavlov/configs/ner/slotfill_dstc2.json
  ```
 ## Conceptual overview
 
@@ -100,7 +108,7 @@ DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). O
  
 
 ## Installation
-0. Currently we support only Linux platform
+0. Currently we support only `Linux` platform and `Python 3.6` (**`Python 3.5` is not supported!**)
 
 1. Create a virtual environment with `Python 3.6`
     ```
@@ -128,7 +136,7 @@ DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). O
 
 To use our pre-trained models, you should first download them:
 ```
-python download.py [-all] 
+python -m deeppavlov.download [-all] 
 ```
 * running this command without options will download basic examples, `[-all]` option will download **all** our pre-trained models.
 * Warning! `[-all]` requires about 10 GB of free space on disk.
@@ -136,24 +144,25 @@ python download.py [-all]
 Then you can interact with the models or train them with the following command:
 
 ```
-python deep.py <mode> <path_to_config>
+python -m deeppavlov.deep <mode> <path_to_config>
 ```
 
-* `<mode>` can be 'train', 'interact' or 'interactbot'
+* `<mode>` can be 'train', 'interact', 'interactbot' or 'riseapi'
 * `<path_to_config>` should be a path to an NLP pipeline json config
 
 For 'interactbot' mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable.
 
+For 'riseapi' mode you should specify api settings (host, port, etc.) in [*utils/server_utils/server_config.json*](utils/server_utils/server_config.json) configuration file. If provided, values from *model_defaults* section override values for the same parameters from *common_defaults* section. Model names in *model_defaults* section should be similar to the class names of the models main component.
 
 Available model configs are:
 
-*configs/go_bot/gobot_dstc2.json*
+*deeppavlov/configs/go_bot/gobot_dstc2.json*
 
-*configs/intents/intents_dstc2.json*
+*deeppavlov/configs/intents/intents_dstc2.json*
 
-*configs/ner/slotfill_dstc2.json*
+*deeppavlov/configs/ner/slotfill_dstc2.json*
 
-*configs/error_model/brillmoore_wikitypos_en.json*
+*deeppavlov/configs/error_model/brillmoore_wikitypos_en.json*
 
 ---
 

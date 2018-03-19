@@ -76,6 +76,8 @@ class KerasIntentModel(KerasModel):
         else:
             self.classes = np.sort(np.array(list(vocabs["classes_vocab"].keys())))
         self.n_classes = self.classes.shape[0]
+        if self.n_classes == 0:
+            ConfigError("Please, provide vocabulary with considered intents.")
 
         if 'add_metrics' in self.opt.keys():
             self.add_metrics = self.opt['add_metrics']

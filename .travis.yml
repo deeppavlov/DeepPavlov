@@ -1,0 +1,18 @@
+language: python
+
+python:
+- '3.6'
+
+install:
+- pip3 install -r requirements-dev.txt
+- python3 setup.py develop
+- python3 -m spacy download en
+
+script:
+- git config --replace-all remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
+- git fetch --unshallow
+- if [ "${TRAVIS_PULL_REQUEST}" != "false" ];
+  then git checkout ${TRAVIS_PULL_REQUEST_BRANCH};
+  else git checkout ${TRAVIS_BRANCH};
+  fi
+- pytest -v

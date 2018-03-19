@@ -14,28 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from overrides import overrides
-from typing import Generator
-
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.dataset import Dataset
+from deeppavlov.core.data.dataset_iterator import BasicDatasetIterator
 
 
-@register('hcn_dataset')
-class HCNDataset(Dataset):
+@register('typos_iterator')
+class TyposDatasetIterator(BasicDatasetIterator):
+    def split(self, test_ratio=0., *args, **kwargs):
+        """Split all data into train and test
 
-    def __init__(self, data):
-        super().__init__(data)
+        Args:
+            test_ratio (float): ratio of test data to train, from 0. to 1. Defaults to 0.
+        """
+        self.train += self.valid + self.test
 
-    @overrides
-    def split(self, num_train_instances=200, num_test_instances=50):
-        self.test = self.train[num_train_instances:num_train_instances+num_test_instances]
-        self.train = self.train[:num_train_instances]
+        split = int(len(self.train) * test_ratio)
 
-    @overrides
-    def iter_all(self, data_type: str = 'train') -> Generator:
-        data = self.data[data_type]
-        for instance in data:
-            yield instance
+        self.random.shuffle(self.train)
 
-
+        self.test = self.train[:split]
+        self.train = self.train[split:]
+        self.valid = []

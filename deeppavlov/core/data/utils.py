@@ -23,6 +23,7 @@ import tarfile
 import gzip
 import zipfile
 import re
+import zipfile
 
 from deeppavlov.core.common.log import get_logger
 

@@ -1,0 +1,54 @@
+{
+  "dataset_reader": {
+    "name": "insurance_dataset_reader",
+    "data_path": "insuranceQA-master/V1"
+  },
+  "dataset_iterator": {
+    "name": "insurance_dataset",
+    "seed": 243,
+    "sample_candidates": "global",
+    "sample_candidates_valid": "pool",
+    "sample_candidates_test": "pool",
+    "num_negative_samples": 500,
+    "num_ranking_samples_valid": 500,
+    "num_ranking_samples_test": 500
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "in": ["x"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "name": "ranking_model",
+        "device_num": 0,
+        "train_now": true,
+        "vocabs_path": "insuranceQA-master/V1",
+        "download_url": "http://lnsigo.mipt.ru/export/embeddings/insurance_v1_word2vec",
+        "embeddings": "word2vec",
+        "embedding_dim": 100,
+        "seed": 243,
+        "max_sequence_length": 200,
+        "reccurent": "bilstm",
+        "max_pooling": true,
+        "type_of_weights": "shared",
+        "hidden_dim": 300,
+        "learning_rate": 1e-3,
+        "margin": 0.1,
+        "save_path": "ranking/model_weights.h5",
+        "load_path": "ranking/model_weights.h5",
+        "interact_pred_num": 3
+      }
+    ],
+    "out": ["y_predicted"]
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 256,
+    "metrics": ["r@1", "rank_response"],
+    "validation_patience": 5,
+    "val_every_n_epochs": 10
+  }
+
+}

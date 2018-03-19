@@ -28,7 +28,7 @@ from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import model as get_model
 from deeppavlov.core.common.metrics_registry import get_metrics_by_names
 from deeppavlov.core.common.params import from_params
-from deeppavlov.core.data.dataset import Dataset
+from deeppavlov.core.data.dataset_iterator import BasicDatasetIterator
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.nn_model import NNModel
@@ -38,14 +38,14 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-def _fit(model: Estimator, dataset: Dataset, train_config={}):
+def _fit(model: Estimator, dataset: BasicDatasetIterator, train_config={}):
     x, y = dataset.iter_all('train')
     model.fit(x, y)
     model.save()
     return model
 
 
-def fit_chainer(config: dict, dataset: Dataset):
+def fit_chainer(config: dict, dataset: BasicDatasetIterator):
 
     chainer_config: dict = config['chainer']
     chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
@@ -73,13 +73,27 @@ def train_model_from_config(config_path: str):
     config = read_json(config_path)
     set_deeppavlov_root(config)
 
+    dataset_config = config.get('dataset', None)
+
+    if dataset_config:
+        config.pop('dataset')
+        ds_type = dataset_config['type']
+        if ds_type == 'classification':
+            reader = {'name': 'basic_classification_reader'}
+            iterator = {'name': 'basic_classification_iterator'}
+            config['dataset_reader'] = {**dataset_config, **reader}
+            config['dataset_iterator'] = {**dataset_config, **iterator}
+        else:
+            raise Exception("Unsupported dataset type: {}".format(ds_type))
+
     reader_config = config['dataset_reader']
     reader = get_model(reader_config['name'])()
     data_path = expand_path(reader_config.get('data_path', ''))
-    data = reader.read(data_path)
+    kwargs = {k: v for k, v in reader_config.items() if k not in ['name', 'data_path']}
+    data = reader.read(data_path, **kwargs)
 
-    dataset_config = config['dataset']
-    dataset: Dataset = from_params(dataset_config, data=data)
+    iterator_config = config['dataset_iterator']
+    dataset: BasicDatasetIterator = from_params(iterator_config, data=data)
 
     if 'chainer' in config:
         model = fit_chainer(config, dataset)
@@ -140,7 +154,7 @@ def train_model_from_config(config_path: str):
 
 
 def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
-                dataset: Dataset, batch_size=-1, data_type='valid', start_time=None):
+                dataset: BasicDatasetIterator, batch_size=-1, data_type='valid', start_time=None):
     if start_time is None:
         start_time = time.time()
 
@@ -161,7 +175,7 @@ def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
     return report
 
 
-def _train_batches(model: NNModel, dataset: Dataset, train_config: dict,
+def _train_batches(model: NNModel, dataset: BasicDatasetIterator, train_config: dict,
                    metrics_functions: List[Tuple[str, Callable]]):
 
     default_train_config = {
