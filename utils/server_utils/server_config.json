@@ -1,0 +1,40 @@
+{
+  "common_defaults": {
+    "host": "0.0.0.0",
+    "port": 5000,
+    "model_endpoint": "/model",
+    "model_args_names": ["context"]
+  },
+  "model_defaults": {
+    "DstcSlotFillingNetwork": {
+      "host": "",
+      "port": "",
+      "model_endpoint": "/slot-fill",
+      "model_args_names": ""
+    },
+    "ErrorModel": {
+      "host": "",
+      "port": "",
+      "model_endpoint": "/error-model",
+      "model_args_names": ""
+    },
+    "GoalOrientedBot": {
+      "host": "",
+      "port": "",
+      "model_endpoint": "/go-bot",
+      "model_args_names": ""
+    },
+    "KerasIntentModel": {
+      "host": "",
+      "port": "",
+      "model_endpoint": "/intents",
+      "model_args_names": ""
+    },
+    "NER": {
+      "host": "",
+      "port": "",
+      "model_endpoint": "/ner",
+      "model_args_names": ""
+    }
+  }
+}

@@ -73,16 +73,27 @@ def train_model_from_config(config_path: str):
     config = read_json(config_path)
     set_deeppavlov_root(config)
 
+    dataset_config = config.get('dataset', None)
+
+    if dataset_config:
+        config.pop('dataset')
+        ds_type = dataset_config['type']
+        if ds_type == 'classification':
+            reader = {'name': 'basic_classification_reader'}
+            iterator = {'name': 'basic_classification_iterator'}
+            config['dataset_reader'] = {**dataset_config, **reader}
+            config['dataset_iterator'] = {**dataset_config, **iterator}
+        else:
+            raise Exception("Unsupported dataset type: {}".format(ds_type))
+
     reader_config = config['dataset_reader']
     reader = get_model(reader_config['name'])()
     data_path = expand_path(reader_config.get('data_path', ''))
-    kwargs = reader_config.copy()
-    if "name" in kwargs: del kwargs["name"]
-    if "data_path" in kwargs: del kwargs["data_path"]
+    kwargs = {k: v for k, v in reader_config.items() if k not in ['name', 'data_path']}
     data = reader.read(data_path, **kwargs)
 
-    dataset_config = config['dataset_iterator']
-    dataset: BasicDatasetIterator = from_params(dataset_config, data=data)
+    iterator_config = config['dataset_iterator']
+    dataset: BasicDatasetIterator = from_params(iterator_config, data=data)
 
     if 'chainer' in config:
         model = fit_chainer(config, dataset)

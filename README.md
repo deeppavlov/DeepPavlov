@@ -44,13 +44,21 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
  ```
  python -m deeppavlov.deep interact deeppavlov/configs/go_bot/gobot_dstc2.json
  ```
- * Run slot-filling model with Telegram interface:
+  * Run goal-oriented bot with REST API:
+ ```
+ python -m deeppavlov.deep riseapi deeppavlov/configs/go_bot/gobot_dstc2.json
+ ``` 
+  * Run slot-filling model with Telegram interface:
  ```
  python -m deeppavlov.deep interactbot deeppavlov/configs/ner/slotfill_dstc2.json -t <TELEGRAM_TOKEN>
  ```
  * Run slot-filling model with console interface:
  ```
  python -m deeppavlov.deep interact deeppavlov/configs/ner/slotfill_dstc2.json
+ ```
+ * Run slot-filling model with REST API:
+ ```
+ python -m deeppavlov.deep riseapi deeppavlov/configs/ner/slotfill_dstc2.json
  ```
 ## Conceptual overview
 
@@ -139,11 +147,12 @@ Then you can interact with the models or train them with the following command:
 python -m deeppavlov.deep <mode> <path_to_config>
 ```
 
-* `<mode>` can be 'train', 'interact' or 'interactbot'
+* `<mode>` can be 'train', 'interact', 'interactbot' or 'riseapi'
 * `<path_to_config>` should be a path to an NLP pipeline json config
 
 For 'interactbot' mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable.
 
+For 'riseapi' mode you should specify api settings (host, port, etc.) in [*utils/server_utils/server_config.json*](utils/server_utils/server_config.json) configuration file. If provided, values from *model_defaults* section override values for the same parameters from *common_defaults* section. Model names in *model_defaults* section should be similar to the class names of the models main component.
 
 Available model configs are:
 

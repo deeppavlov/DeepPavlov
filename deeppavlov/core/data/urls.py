@@ -20,6 +20,7 @@ REQ_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ner.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_conll2003_model.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/error_model.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/ranking.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/slots.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/dstc2_fastText_model.bin',

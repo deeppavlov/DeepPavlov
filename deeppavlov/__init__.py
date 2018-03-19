@@ -11,7 +11,7 @@ import deeppavlov.dataset_readers.dstc2_reader
 import deeppavlov.dataset_readers.kvret_reader
 import deeppavlov.dataset_readers.conll2003_reader
 import deeppavlov.dataset_readers.typos_reader
-import deeppavlov.dataset_readers.csv_classification_reader
+import deeppavlov.dataset_readers.basic_classification_reader
 import deeppavlov.dataset_iterators.dialog_iterator
 import deeppavlov.dataset_iterators.kvret_dialog_iterator
 import deeppavlov.dataset_iterators.dstc2_ner_iterator
@@ -29,10 +29,15 @@ import deeppavlov.models.trackers.hcn_at
 import deeppavlov.models.trackers.hcn_et
 import deeppavlov.models.preprocessors.str_lower
 import deeppavlov.models.ner.ner
+import deeppavlov.models.tokenizers.spacy_tokenizer
 import deeppavlov.skills.go_bot.go_bot
 import deeppavlov.skills.go_bot.network
 import deeppavlov.skills.go_bot.tracker
 import deeppavlov.vocabs.typos
+import deeppavlov.dataset_readers.ranking_dataset_reader
+import deeppavlov.datasets.ranking_dataset
+import deeppavlov.models.ranking.ranking_model
+import deeppavlov.models.ranking.metrics
 
 import deeppavlov.metrics.accuracy
 import deeppavlov.metrics.fmeasure

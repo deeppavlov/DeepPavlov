@@ -138,7 +138,8 @@
           "name": "bow"
         },
         "tokenizer": {
-          "name": "spacy_tokenizer"
+          "name": "stream_spacy_tokenizer",
+          "lowercase": false
         },
         "tracker": {
           "name": "featurized_tracker",
@@ -167,4 +168,3 @@
     "show_examples": false
   }
 }
-
