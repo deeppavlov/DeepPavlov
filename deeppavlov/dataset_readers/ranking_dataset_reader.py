@@ -2,12 +2,14 @@ from deeppavlov.core.data.dataset_reader import DatasetReader
 from pathlib import Path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import download_decompress, mark_done, is_done
-from deeppavlov.core.commands.utils import get_deeppavlov_root
+from deeppavlov.core.commands.utils import get_deeppavlov_root, expand_path
+
 
 @register('insurance_dataset_reader')
 class InsuranceDatasetReader(DatasetReader):
     
     def read(self, data_path):
+        data_path = expand_path(data_path)
         self.download_data(data_path)
         dataset = {'train': None, 'valid': None, 'test': None}
         train_fname = Path(data_path) / 'question.train.token_idx.label'
@@ -21,7 +23,7 @@ class InsuranceDatasetReader(DatasetReader):
     def download_data(self, data_path):
         if not is_done(Path(data_path)):
             download_decompress(url="https://github.com/shuzi/insuranceQA/archive/master.zip",
-                                download_path=get_deeppavlov_root())
+                                download_path=data_path)
             mark_done(data_path)
 
     def preprocess_data_train(self, fname):
