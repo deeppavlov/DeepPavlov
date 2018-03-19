@@ -22,6 +22,7 @@ from tqdm import tqdm
 import tarfile
 import gzip
 import re
+import zipfile
 
 from deeppavlov.core.common.log import get_logger
 
@@ -119,6 +120,10 @@ def download_decompress(url, download_path, extract_path=None):
         untar(arch_file_path, extract_path)
     elif url.endswith('.gz'):
         ungzip(arch_file_path, extract_path)
+    elif url.endswith('.zip'):
+        zip_ref = zipfile.ZipFile(arch_file_path, 'r')
+        zip_ref.extractall(extract_path)
+        zip_ref.close()
     arch_file_path.unlink()
 
 

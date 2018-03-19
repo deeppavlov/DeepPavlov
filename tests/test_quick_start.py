@@ -53,8 +53,12 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
                           ("in the west part", "{'area': 'west'}"),
                           ("moderate price range", "{'pricerange': 'moderate'}")
                       ]
-                }
-        }
+                  },
+          "ranking": {("configs/ranking/insurance_config.json", "ranking", True):
+                      [
+                      ]
+                      }
+          }
 
 
 def setup_module():
