@@ -27,13 +27,25 @@ Datasets, which follow this task format:
 * [SDSJ Task B](https://www.sdsj.ru/ru/contest.html) (RU)
 
 ## Model
-Question Answering Model is based on R-Net, proposed by Microsoft Research Asia ("R-NET: Machine Reading Comprehension with Self-matching Networks"[[link]](https://www.microsoft.com/en-us/research/publication/mrc/)) and its realization by Wenxuan Zhou [[link]](https://github.com/HKUST-KnowComp/R-Net).
+Question Answering Model is based on R-Net, proposed by Microsoft Research Asia ("R-NET: Machine Reading Comprehension with Self-matching Networks" [[link]](https://www.microsoft.com/en-us/research/publication/mrc/)) and its realization by Wenxuan Zhou [[link]](https://github.com/HKUST-KnowComp/R-Net).
   
 ## Configuration
 
-## Training and Running
-**Tensorflow-1.4.0 with GPU support is required** to run this model .
-### Pretrained model for SQuAD
+## Running model
+**Tensorflow-1.4.0 with GPU support is required** to run this model.
+## Training
+**Warning**: training with default config requires about 10Gb on  GPU. Run following command to train the model:  
+```bash
+python -m deeppavlov.deep train deeppavlov/configs/squad/squad.json
+```
+## Interact mode
+Interact mode provides command line interface to trained model:
+
+To run model in interact mode run the following command:
+ ```bash
+python -m deeppavlov.deep interact deeppavlov/configs/squad/squad.json
+```
+Model will ask you to type in context and question.
 
 
 ## Training on SDSJ Task B
