@@ -192,6 +192,8 @@ class GoalOrientedBotNetwork(TFModel):
                 _att_mech_output_tensor = self._general_att_mech()
             elif self.attention_mechanism.type == 'cs_general':
                 _att_mech_output_tensor = self._cs_general_att_mech()
+            elif self.attention_mechanism.type == 'light_general':
+                _att_mech_output_tensor = self._light_general_att_mech()
             _concatenated_features = tf.concat([_units, _att_mech_output_tensor],-1)
         else:
             _concatenated_features = _units
@@ -238,10 +240,81 @@ class GoalOrientedBotNetwork(TFModel):
                                                     dtype=tf.float32)
             _bilstm_output = tf.concat([_output_fw, _output_bw],-1) # [-1,self.max_of_context_tokens,_n_hidden])
 
-            _score = tf.nn.softmax(tf.matmul(_bilstm_output,_r_projected_key))
+            _attn = tf.nn.softmax(tf.matmul(_bilstm_output,_r_projected_key), dim=1)
 
             _t_bilstm_output = tf.transpose(_bilstm_output, [0, 2, 1])
-            _output_tensor = tf.reshape(tf.matmul(_t_bilstm_output,_score), shape = [_batch_size, -1, _n_hidden])
+            _output_tensor = tf.reshape(tf.matmul(_t_bilstm_output,_attn), shape = [_batch_size, -1, _n_hidden])
+        return _output_tensor
+
+    def _light_general_att_mech(self):
+        with tf.name_scope("attention_mechanism/light_general"):
+
+            _raw_key = self._key
+            _n_hidden = (self.attention_mechanism.att_hidden_dim//2)*2
+            _max_of_context_tokens = self.attention_mechanism.max_of_context_tokens
+            _token_dim = self.attention_mechanism.token_dim
+            _context = self._emb_context
+
+            _context_dim = tf.shape(_context)
+            _batch_size = _context_dim[0]
+            _r_context = tf.reshape(_context, shape = [-1, _max_of_context_tokens, _token_dim])
+
+            _projected_key = \
+                    tf.layers.dense(_raw_key,
+                                _n_hidden,
+                                kernel_initializer=xavier_initializer()) # [None, None, _n_hidden]
+
+            _projected_context = \
+                    tf.layers.dense(_r_context,
+                                _n_hidden,
+                                kernel_initializer=xavier_initializer()) # [None, None, _n_hidden]
+            _projected_key_dim = tf.shape(_projected_key)
+            _r_projected_key = tf.reshape(_projected_key, shape = [-1, _n_hidden, 1])
+
+            _attn = tf.nn.softmax(tf.matmul(_projected_context,_r_projected_key), dim=1)
+
+            _t_context = tf.transpose(_r_context, [0, 2, 1])
+            _output_tensor = tf.reshape(tf.matmul(_t_context,_attn), shape = [_batch_size, -1, _token_dim])
+        return _output_tensor
+
+    def _light_bahdanau_att_mech(self):
+        with tf.name_scope("attention_mechanism/light_general"):
+
+            _raw_key = self._key
+            _n_hidden = (self.attention_mechanism.att_hidden_dim//2)*2
+            _max_of_context_tokens = self.attention_mechanism.max_of_context_tokens
+            _token_dim = self.attention_mechanism.token_dim
+            _context = self._emb_context
+
+            _context_dim = tf.shape(_context)
+            _batch_size = _context_dim[0]
+            _r_context = tf.reshape(_context, shape = [-1, _max_of_context_tokens, _token_dim])
+
+            _projected_key = \
+                    tf.layers.dense(_raw_key,
+                                _n_hidden,
+                                kernel_initializer=xavier_initializer()) # [None, None, _n_hidden]
+
+            _projected_context = \
+                    tf.layers.dense(_r_context,
+                                _n_hidden,
+                                kernel_initializer=xavier_initializer()) # [None, None, _n_hidden]
+            _projected_key_dim = tf.shape(_projected_key)
+            _r_projected_key = tf.reshape(_projected_key, shape = [-1, _n_hidden, 1])
+
+            _r_projected_key = tf.tile(tf.reshape(_projected_key, shape = [-1,1, _n_hidden]), [1,_max_of_context_tokens,1])
+            _concat_h_state = tf.concat([_projected_context,_r_projected_key], -1)
+            _projected_state = tf.layers.dense(_concat_h_state,
+                                        _n_hidden, use_bias=False,
+                                        kernel_initializer=xavier_initializer())
+            _score = tf.layers.dense(tf.tanh(_projected_state), use_bias=False,
+                                        kernel_initializer=xavier_initializer())
+
+
+            _attn = tf.nn.softmax(_score)
+
+            _t_context = tf.transpose(_projected_context, [0, 2, 1])
+            _output_tensor = tf.reshape(tf.matmul(_t_context,_attn), shape = [_batch_size, -1, _n_hidden])
         return _output_tensor
 
     def _cs_general_att_mech(self):
