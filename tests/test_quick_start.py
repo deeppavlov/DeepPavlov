@@ -34,7 +34,7 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
           "snips": {("configs/intents/intents_snips.json", "intents", False): []},
           "sample": {("configs/intents/intents_sample_csv.json", "intents", False): [],
                     ("configs/intents/intents_sample_json.json", "intents", False): []},
-          "ner": {("configs/ner/ner_conll2003.json", "ner_conll2003_model", True):
+          "ner": {("configs/ner/ner_conll2003.json", "ner_conll2003", True):
                       [
                           # ("Albert Einstein and Erwin Schrodinger", "['B-PER', 'I-PER', 'O', 'B-PER', 'I-PER']"),
                           # ("Antananarivo is the capital of Madagascar", "['B-LOC', 'O', 'O', 'O', 'O', 'B-LOC']"),
@@ -113,6 +113,7 @@ class TestQuickStart(object):
 
     def test_downloaded_model_existence(self, model, conf_file, model_dir, d):
         if d:
+
             if not download_path.exists():
                 download()
             assert download_path.joinpath(model_dir).exists(), f"{model_dir} was not downloaded"
