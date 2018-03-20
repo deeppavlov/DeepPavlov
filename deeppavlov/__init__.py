@@ -43,5 +43,6 @@ import deeppavlov.models.ranking.metrics
 
 import deeppavlov.metrics.accuracy
 import deeppavlov.metrics.fmeasure
+import deeppavlov.metrics.bleu
 
 import deeppavlov.core.common.log
