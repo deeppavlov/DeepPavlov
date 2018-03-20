@@ -1,6 +1,7 @@
 import pickle
 import unicodedata
 from collections import Counter
+from pathlib import Path
 
 import numpy as np
 from nltk import word_tokenize
@@ -147,7 +148,7 @@ class SquadVocabEmbedder(Estimator):
         self.emb_folder = expand_path(emb_folder)
         self.level = level
         self.emb_url = emb_url
-        self.emb_file_name = '{}_emb.vec'.format(self.level)
+        self.emb_file_name = Path(emb_url).name
         self.save_path = expand_path(save_path)
         self.load_path = expand_path(load_path)
         self.context_limit = context_limit
