@@ -194,6 +194,8 @@ class GoalOrientedBotNetwork(TFModel):
                 _att_mech_output_tensor = self._cs_general_att_mech()
             elif self.attention_mechanism.type == 'light_general':
                 _att_mech_output_tensor = self._light_general_att_mech()
+            elif self.attention_mechanism.type == 'light_bahdanau':
+                _att_mech_output_tensor = self._light_bahdanau_att_mech()
             _concatenated_features = tf.concat([_units, _att_mech_output_tensor],-1)
         else:
             _concatenated_features = _units
@@ -307,15 +309,17 @@ class GoalOrientedBotNetwork(TFModel):
             _projected_state = tf.layers.dense(_concat_h_state,
                                         _n_hidden, use_bias=False,
                                         kernel_initializer=xavier_initializer())
-            _score = tf.layers.dense(tf.tanh(_projected_state), use_bias=False,
+            _score = tf.layers.dense(tf.tanh(_projected_state), units = 1,
+                                        use_bias=False,
                                         kernel_initializer=xavier_initializer())
 
 
             _attn = tf.nn.softmax(_score)
 
-            _t_context = tf.transpose(_projected_context, [0, 2, 1])
-            _output_tensor = tf.reshape(tf.matmul(_t_context,_attn), shape = [_batch_size, -1, _n_hidden])
+            _t_context = tf.transpose(_r_context, [0, 2, 1])
+            _output_tensor = tf.reshape(tf.matmul(_t_context,_attn), shape = [_batch_size, -1, _token_dim])
         return _output_tensor
+
 
     def _cs_general_att_mech(self):
         with tf.name_scope("attention_mechanism/cs_general"):
