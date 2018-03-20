@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "insurance_reader",
-    "data_path": "insuranceQA-master/V1"
+    "data_path": "./"
   },
   "dataset_iterator": {
     "name": "ranking_iterator",

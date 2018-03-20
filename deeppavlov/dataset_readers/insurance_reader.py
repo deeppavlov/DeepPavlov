@@ -12,17 +12,17 @@ class InsuranceReader(DatasetReader):
         data_path = expand_path(data_path)
         self.download_data(data_path)
         dataset = {'train': None, 'valid': None, 'test': None}
-        train_fname = Path(data_path) / 'question.train.token_idx.label'
+        train_fname = Path(data_path) / 'insuranceQA-master/V1/question.train.token_idx.label'
         dataset["train"] = self.preprocess_data_train(train_fname)
-        valid_fname = Path(data_path) / 'question.dev.label.token_idx.pool'
+        valid_fname = Path(data_path) / 'insuranceQA-master/V1/question.dev.label.token_idx.pool'
         dataset["valid"] = self.preprocess_data_valid_test(valid_fname)
-        test_fname = Path(data_path) / 'question.test1.label.token_idx.pool'
+        test_fname = Path(data_path) / 'insuranceQA-master/V1/question.test1.label.token_idx.pool'
         dataset["test"] = self.preprocess_data_valid_test(test_fname)
         return dataset
     
     def download_data(self, data_path):
         if not is_done(Path(data_path)):
-            download_decompress(url="https://github.com/shuzi/insuranceQA/archive/master.zip",
+            download_decompress(url="http://lnsigo.mipt.ru/export/datasets/insuranceQA-master.zip",
                                 download_path=data_path)
             mark_done(data_path)
 
