@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "name": "insurance_dataset_reader",
-    "data_path": "insuranceQA-master/V1"
+    "name": "insurance_reader",
+    "data_path": "./"
   },
   "dataset_iterator": {
-    "name": "insurance_dataset",
+    "name": "ranking_iterator",
     "seed": 243,
     "sample_candidates": "global",
     "sample_candidates_valid": "pool",
@@ -44,7 +44,7 @@
     "out": ["y_predicted"]
   },
   "train": {
-    "epochs": 100,
+    "epochs": 150,
     "batch_size": 256,
     "metrics": ["r@1", "rank_response"],
     "validation_patience": 5,
