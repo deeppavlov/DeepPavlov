@@ -15,24 +15,24 @@
         "name": "default_vocab",
         "fit_on": ["x"],
 		"level": "token",
-        "save_path": "ner_conll2003_model/word.dict",
-        "load_path": "ner_conll2003_model/word.dict"
+        "save_path": "ner_conll2003/word.dict",
+        "load_path": "ner_conll2003/word.dict"
       },
       {
         "id": "tag_vocab",
         "name": "default_vocab",
         "fit_on": ["y"],
 		"level": "token",
-        "save_path": "ner_conll2003_model/tag.dict",
-        "load_path": "ner_conll2003_model/tag.dict"
+        "save_path": "ner_conll2003/tag.dict",
+        "load_path": "ner_conll2003/tag.dict"
       },
       {
         "id": "char_vocab",
         "name": "default_vocab",
         "fit_on": ["x"],
 		"level": "char",
-        "save_path": "ner_conll2003_model/char.dict",
-        "load_path": "ner_conll2003_model/char.dict"
+        "save_path": "ner_conll2003/char.dict",
+        "load_path": "ner_conll2003/char.dict"
       },
       {
         "in": ["x"],
@@ -40,8 +40,8 @@
         "out": ["y_predicted"],
         "name": "ner",
         "main": true,
-        "save_path": "ner_conll2003_model/ner_model",
-        "load_path": "ner_conll2003_model/ner_model",
+        "save_path": "ner_conll2003/ner_model",
+        "load_path": "ner_conll2003/ner_model",
         "word_vocab": "#word_vocab",
         "tag_vocab": "#tag_vocab",
         "char_vocab": "#char_vocab",
