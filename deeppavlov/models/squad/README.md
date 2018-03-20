@@ -5,23 +5,16 @@ Question Answering on SQuAD dataset is a task to find an answer on question in a
 question is a segment of the context:
 
 Context:
-```markdown
-In meteorology, precipitation is any product of the condensation of atmospheric 
-water vapor that falls under gravity. The main forms of precipitation include drizzle, 
-rain, sleet, snow, graupel and hail... Precipitation forms as smaller droplets coalesce 
-via collision with other rain drops or ice crystals **within a cloud**. Short, intense
-periods of rain in scattered locations are called “showers”.
-```
+> In meteorology, precipitation is any product of the condensation of atmospheric water vapor that falls under gravity. The main forms of precipitation include drizzle, rain, sleet, snow, graupel and hail... Precipitation forms as smaller droplets coalesce via collision with other rain drops or ice crystals **within a cloud**. Short, intense periods of rain in scattered locations are called “showers”.
+
 
 Question:
-```text
-Where do water droplets collide with ice crystals to form precipitation?
-```
+> Where do water droplets collide with ice crystals to form precipitation?
+
 
 Answer:
-```text
-within a cloud
-```
+> within a cloud
+
 Datasets, which follow this task format:
 * Stanford Question Answering Dataset ([SQuAD](https://rajpurkar.github.io/SQuAD-explorer/)) (EN)
 * [SDSJ Task B](https://www.sdsj.ru/ru/contest.html) (RU)
@@ -39,7 +32,7 @@ Question Answering Model is based on R-Net, proposed by Microsoft Research Asia 
 python -m deeppavlov.deep train deeppavlov/configs/squad/squad.json
 ```
 ## Interact mode
-Interact mode provides command line interface to trained model:
+Interact mode provides command line interface to already trained model:
 
 To run model in interact mode run the following command:
  ```bash
