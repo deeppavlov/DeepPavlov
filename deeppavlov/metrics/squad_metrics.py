@@ -18,7 +18,6 @@ def exact_match(y_true, y_predicted):
     Returns:
         exact match score : float
     """
-    y_predicted = hotfix(y_predicted)
     EM_total = 0
     for (ground_truth, _), (prediction, _) in zip(y_true, y_predicted):
         EMs = [int(normalize_answer(gt) == normalize_answer(prediction)) for gt in ground_truth]
@@ -38,7 +37,6 @@ def squad_f1(y_true, y_predicted):
     Returns:
         F-1 score : float
     """
-    y_predicted = hotfix(y_predicted)
     f1_total = 0.0
     for (ground_truth, _), (prediction, _) in zip(y_true, y_predicted):
         prediction_tokens = normalize_answer(prediction).split()
@@ -56,22 +54,6 @@ def squad_f1(y_true, y_predicted):
             f1s.append(f1)
         f1_total += max(f1s)
     return 100 * f1_total / len(y_true) if len(y_true) > 0 else 0
-
-
-def hotfix(y_predicted):
-    """
-    hotfix:
-    [[arg1, arg1, ...], [arg2, arg2, ...], [arg1, arg1, ...], [arg2, arg2, ...], ...]
-    ->
-    [(arg1, arg2), (arg1, arg2), ...]
-    """
-    assert len(y_predicted) % 2 == 0
-    a, p = [], []
-    for i in range(len(y_predicted) // 2):
-        a.extend(y_predicted[i * 2])
-        p.extend(y_predicted[i * 2 + 1])
-
-    return list(zip(a, p))
 
 
 def normalize_answer(s):
