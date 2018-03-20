@@ -80,12 +80,12 @@ class DefaultVocabulary(Estimator):
         return preprocess_fn
 
     def __getitem__(self, key):
-        if isinstance(key, int):
+        if isinstance(key, (int, np.integer)):
             return self._i2t[key]
         elif isinstance(key, str):
             return self._t2i[key]
         else:
-            return NotImplemented("not implemented for type `{}`".format(type(key)))
+            raise NotImplementedError("not implemented for type `{}`".format(type(key)))
 
     def __contains__(self, item):
         return item in self._t2i
