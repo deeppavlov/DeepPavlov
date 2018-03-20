@@ -183,6 +183,7 @@ def _train_batches(model: NNModel, iterator: BasicDatasetIterator, train_config:
 
     default_train_config = {
         'epochs': 0,
+        'max_batches': 0,
         'batch_size': 1,
 
         'metric_optimization': 'maximize',
@@ -244,6 +245,9 @@ def _train_batches(model: NNModel, iterator: BasicDatasetIterator, train_config:
                     print(json.dumps(report, ensure_ascii=False))
                     train_y_true.clear()
                     train_y_predicted.clear()
+
+                if i >= train_config['max_batches'] > 0:
+                    break
 
             epochs += 1
 
