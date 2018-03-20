@@ -111,12 +111,9 @@ def interact_model(config_path):
             if args[-1] == 'exit' or args[-1] == 'stop' or args[-1] == 'quit' or args[-1] == 'q':
                 return
 
-        try:
-            if len(args) == 1:
-                pred = model(args)
-            else:
-                pred = model([args])
+        if len(args) == 1:
+            pred = model(args)
+        else:
+            pred = model([args])
 
-            print('>>', *pred)
-        except Exception as e:
-            raise e
+        print('>>', *pred)
