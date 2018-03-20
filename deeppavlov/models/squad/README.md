@@ -23,6 +23,7 @@ Datasets, which follow this task format:
 Question Answering Model is based on R-Net, proposed by Microsoft Research Asia ("R-NET: Machine Reading Comprehension with Self-matching Networks" [[link]](https://www.microsoft.com/en-us/research/publication/mrc/)) and its realization by Wenxuan Zhou [[link]](https://github.com/HKUST-KnowComp/R-Net).
   
 ## Configuration
+Default config could be found at `deeppavlov/configs/squad/squad.json`
 ### Config components
 * **squad_dataset_reader** - downloads and reads SQuAD dataset
   * data_path - path to save dataset
@@ -94,9 +95,6 @@ Question Answering Model is based on R-Net, proposed by Microsoft Research Asia 
    * **ans_predicted** - text of predicted answer in raw context
    * **ans_start_predicted** - start position of predicted answer in raw context
    * **ans_end_predicted** - end position of predicted answer in raw context
-
-### Config file
-Default config, which could be found at `deeppavlov/configs/squad/squad.json`
 
 ## Running model
 **Tensorflow-1.4.0 with GPU support is required** to run this model.
