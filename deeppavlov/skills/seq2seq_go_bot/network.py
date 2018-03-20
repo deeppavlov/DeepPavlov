@@ -81,7 +81,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         #self._loss = tf.reduce_mean(_loss_tensor, name='loss')
 # TODO: tune clip_norm
         self._train_op = \
-            self.get_train_op(self._loss, self.learning_rate, clip_norm=5.) 
+            self.get_train_op(self._loss, self.learning_rate, clip_norm=10.) 
 
     def _add_placeholders(self):
         # _encoder_inputs: [batch_size, max_input_time]
@@ -217,8 +217,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         return loss_value
 
     def load(self, *args, **kwargs):
-        super().load(*args, **kwargs)
         self.load_params()
+        super().load(*args, **kwargs)
 
     def load_params(self):
         path = str(self.load_path.with_suffix('.json').resolve())

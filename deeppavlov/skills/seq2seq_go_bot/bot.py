@@ -105,7 +105,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
 
     def __call__(self, batch):
         if isinstance(batch[0], str):
-            return self._infer_on_batch([{'text': x} for x in batch])
+            return self._infer_on_batch([[{'text': x} for x in batch]])[0]
         return self._infer_on_batch(batch)
 
     def _infer_on_batch(self, contexts):
