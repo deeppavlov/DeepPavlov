@@ -3,8 +3,8 @@ from deeppavlov.core.common.registry import register
 import numpy as np
 
 
-@register('insurance_dataset')
-class InsuranceDataset:
+@register('insurance_iterator')
+class InsuranceIterator:
 
     def __init__(self, data,
                  sample_candidates, sample_candidates_valid, sample_candidates_test,
