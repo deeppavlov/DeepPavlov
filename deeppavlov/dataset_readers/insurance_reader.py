@@ -5,8 +5,8 @@ from deeppavlov.core.data.utils import download_decompress, mark_done, is_done
 from deeppavlov.core.commands.utils import get_deeppavlov_root, expand_path
 
 
-@register('insurance_dataset_reader')
-class InsuranceDatasetReader(DatasetReader):
+@register('insurance_reader')
+class InsuranceReader(DatasetReader):
     
     def read(self, data_path):
         data_path = expand_path(data_path)
