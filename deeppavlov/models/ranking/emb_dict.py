@@ -35,7 +35,10 @@ class Embeddings(object):
         dummy_emb = list(np.zeros(self.embedding_dim))
         self.emb_matrix = np.zeros((len(tok2int_vocab), self.embedding_dim))
         for tok, i in tok2int_vocab.items():
-            try:
-                self.emb_matrix[i] = self.embeddings_model[tok]
-            except:
+            if tok == '<UNK>':
                 self.emb_matrix[i] = dummy_emb
+            else:
+                try:
+                    self.emb_matrix[i] = self.embeddings_model[tok]
+                except:
+                    self.emb_matrix[i] = dummy_emb
