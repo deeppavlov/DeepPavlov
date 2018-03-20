@@ -38,15 +38,14 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         # initialize parameters
         #self.embedder = embedder
         self._init_params(params)
-
-        super().__init__(**params)
-
         # build computational graph
         self._build_graph()
         # initialize session
         self.sess = tf.Session()
 
-        self.sess.run(tf.global_varibales_initializer())
+        self.sess.run(tf.global_variables_initializer())
+
+        super().__init__(**params)
 
         if tf.train.checkpoint_exists(str(self.save_path.resolve())):
             log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
@@ -58,6 +57,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         self.opt = params
         
         self.learning_rate = self.opt['learning_rate']
+        self.tgt_sos_id = self.opt['target_start_of_sequence_index']
+        self.tgt_eos_id = self.opt['target_end_of_sequence_index']
         self.src_vocab_size = self.opt['source_vocab_size']
         self.tgt_vocab_size = self.opt['target_vocab_size']
         #self.embedding_size = self.opt['embedding_size']
@@ -67,7 +68,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
         self._add_placeholders()
 
-        logits = self._build_body()
+        _logits, self._predictions = self._build_body()
        
         _weights = tf.expand_dims(self._tgt_weights, -1)
         _loss_tensor = \
@@ -76,7 +77,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                                                    weights=_weights,
                                                    reduction=tf.losses.Reduction.NONE)
         # normalize loss by batch_size
-        self._loss = tf.reduce_sum(_loss_tensor) / self._batch_size
+        self._loss = tf.reduce_sum(_loss_tensor) / tf.cast(self._batch_size, tf.float32)
         #self._loss = tf.reduce_mean(_loss_tensor, name='loss')
 # TODO: tune clip_norm
         self._train_op = \
@@ -86,28 +87,28 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         # _encoder_inputs: [batch_size, max_input_time]
         self._encoder_inputs = tf.placeholder(tf.int32, 
                                               [None, None],
-                                              name='encoder inputs')
+                                              name='encoder_inputs')
         self._batch_size = tf.shape(self._encoder_inputs)[0]
         # _decoder_inputs: [batch_size, max_output_time]
         self._decoder_inputs = tf.placeholder(tf.int32, 
                                               [None, None],
-                                              name='decoder inputs')
+                                              name='decoder_inputs')
         # _decoder_outputs: [batch_size, max_output_time]
         self._decoder_outputs = tf.placeholder(tf.int32, 
                                                [None, None],
-                                               name='decoder inputs')
+                                               name='decoder_inputs')
 #TODO: compute sequence lengths on the go
-        # _src_sequence_length, _tgt_sequence_length: [batch_size]
-        self._src_sequence_length = tf.placeholder(tf.int32,
+        # _src_sequence_lengths, _tgt_sequence_lengths: [batch_size]
+        self._src_sequence_lengths = tf.placeholder(tf.int32,
                                                    [None],
-                                                   name='input sequence lengths')
-        self._tgt_sequence_length = tf.placeholder(tf.int32,
+                                                   name='input_sequence_lengths')
+        self._tgt_sequence_lengths = tf.placeholder(tf.int32,
                                                    [None],
-                                                   name='output sequence lengths')
+                                                   name='output_sequence_lengths')
         # _tgt_weights: [batch_size, max_output_time]
         self._tgt_weights = tf.placeholder(tf.int32,
                                            [None, None],
-                                           name='target weights')
+                                           name='target_weights')
 
     def _build_body(self):
 #TODO: try learning embeddings
@@ -130,9 +131,10 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             # Run Dynamic RNN
             #   _encoder_outputs: [max_time, batch_size, num_units]
             #   _encoder_state: [batch_size, num_units]
+# input_states?
             _encoder_outputs, _encoder_state = tf.nn.dynamic_rnn(
-                _encoder_cell, _encoder_emb_inp,
-                sequence_length=self._src_sequence_length, time_major=False)
+                _encoder_cell, _encoder_emb_inp, dtype=tf.float32,
+                sequence_length=self._src_sequence_lengths, time_major=False)
 
         with tf.variable_scope("Decoder"):
             _decoder_cell = tf.nn.rnn_cell.BasicLSTMCell(self.hidden_size)
@@ -141,26 +143,78 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                 _decoder_emb_inp, self._tgt_sequence_lengths, time_major=False)
             # Output dense layer
             _projection_layer = \
-                tf.python.layers.core.Dense(self.tgt_vocab_size, use_bias=False)
+                tf.layers.Dense(self.tgt_vocab_size, use_bias=False)
             # Decoder
             _decoder = tf.contrib.seq2seq.BasicDecoder(
                 _decoder_cell, _helper, _encoder_state,
                 output_layer=_projection_layer)
             # Dynamic decoding
 # NOTE: pass extra arguments to dynamic_decode?
-            _outputs, _ = tf.contrib.seq2seq.dynamic_decode(_decoder,
+# TRY: impute_finished = True,
+            _outputs, _, _ = tf.contrib.seq2seq.dynamic_decode(_decoder,
                                                             output_time_major=False)
             _logits = _outputs.rnn_output
-        return _logits
 
-    def __call__(self, features, prob=False):
-        prediction ,probs = None, None
+        with tf.variable_scope("DecoderOnInfer"):
+            _maximum_iterations = \
+                tf.round(tf.reduce_max(self._src_sequence_lengths) * 2)
+            # Helper
+            _helper_infer = tf.contrib.seq2seq.GreedyEmbeddingHelper(
+                lambda d: tf.one_hot(d, self.tgt_vocab_size),
+                tf.fill([self._batch_size], self.tgt_sos_id), self.tgt_eos_id)
+
+            # Decoder
+            _decoder_infer = tf.contrib.seq2seq.BasicDecoder(
+                _decoder_cell, _helper_infer, _encoder_state,
+                output_layer=_projection_layer)
+            # Dynamic decoding
+            _outputs_infer, _, _ = tf.contrib.seq2seq.dynamic_decode(
+                _decoder_infer, maximum_iterations=_maximum_iterations)
+            _predictions = _outputs_infer.sample_id
+        return _logits, _predictions
+
+    def __call__(self, enc_inputs, src_seq_lengths, prob=False):
+        predictions = self.sess.run(
+            self._predictions,
+            feed_dict={
+                self._encoder_inputs: enc_inputs,
+                self._src_sequence_lengths: src_seq_lengths
+            }
+        )
+# TODO: implement infer probabilities
         if prob:
-            return probs
-        return prediction
+            raise NotImplementedError("Probs not available for now.")
+        return predictions
 
-    def train_on_batch(self, x: list, y: list):
-        pass
+    """def infer_on_batch(self, enc_inputs, dec_inputs, dec_outputs, 
+                       src_seq_lengths, tgt_seq_lengths, tgt_weights):
+        predictions = self.sess.run(
+            [ self._train_predictions ],
+            feed_dict={
+                self._encoder_inputs: enc_inputs,
+                self._decoder_inputs: dec_inputs,
+                self._decorder_outputs: dec_outputs,
+                self._src_sequence_lengths: src_seq_lengths,
+                self._tgt_sequence_lengths: tgt_seq_lengths,
+                self._tgt_weights: tgt_weights
+            }
+        )
+        return loss_value"""
+
+    def train_on_batch(self, enc_inputs, dec_inputs, dec_outputs, 
+                       src_seq_lengths, tgt_seq_lengths, tgt_weights):
+        _, loss_value = self.sess.run(
+            [ self._train_op, self._loss ],
+            feed_dict={
+                self._encoder_inputs: enc_inputs,
+                self._decoder_inputs: dec_inputs,
+                self._decoder_outputs: dec_outputs,
+                self._src_sequence_lengths: src_seq_lengths,
+                self._tgt_sequence_lengths: tgt_seq_lengths,
+                self._tgt_weights: tgt_weights
+            }
+        )
+        return loss_value
 
     def load(self, *args, **kwargs):
         super().load(*args, **kwargs)
