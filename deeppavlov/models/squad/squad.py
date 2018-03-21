@@ -147,14 +147,15 @@ class SquadModel(TFModel):
         self.is_train_ph = tf.placeholder_with_default(False, shape=[], name='is_train_ph')
 
     def _init_optimizer(self):
-        self.global_step = tf.get_variable('global_step', shape=[], dtype=tf.int32,
-                                           initializer=tf.constant_initializer(0), trainable=False)
-        self.opt = tf.train.AdadeltaOptimizer(learning_rate=self.lr_ph, epsilon=1e-6)
-        grads = self.opt.compute_gradients(self.loss)
-        gradients, variables = zip(*grads)
+        with tf.variable_scope('Optimizer'):
+            self.global_step = tf.get_variable('global_step', shape=[], dtype=tf.int32,
+                                               initializer=tf.constant_initializer(0), trainable=False)
+            self.opt = tf.train.AdadeltaOptimizer(learning_rate=self.lr_ph, epsilon=1e-6)
+            grads = self.opt.compute_gradients(self.loss)
+            gradients, variables = zip(*grads)
 
-        capped_grads, _ = tf.clip_by_global_norm(gradients, self.grad_clip)
-        self.train_op = self.opt.apply_gradients(zip(capped_grads, variables), global_step=self.global_step)
+            capped_grads, _ = tf.clip_by_global_norm(gradients, self.grad_clip)
+            self.train_op = self.opt.apply_gradients(zip(capped_grads, variables), global_step=self.global_step)
 
     def _build_feed_dict(self, c_tokens, c_chars, q_tokens, q_chars, y1=None, y2=None):
         feed_dict = {
