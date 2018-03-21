@@ -33,7 +33,7 @@ log = get_logger(__name__)
 class DefaultVocabulary(Estimator):
     def __init__(self, save_path, load_path, inputs=None, level='token',
                  special_tokens=tuple(), default_token=None,
-                 tokenize=False, *args, **kwargs):
+                 tokenizer=None, *args, **kwargs):
 
         super().__init__(load_path=load_path,
                          save_path=save_path,
@@ -41,22 +41,22 @@ class DefaultVocabulary(Estimator):
 
         self.special_tokens = special_tokens
         self.default_token = default_token
-        self.preprocess_fn = self._build_preprocess_fn(inputs, level, tokenize)
+        self.preprocess_fn = self._build_preprocess_fn(inputs, level, tokenizer)
 
         # TODO check via decorator
         self.reset()
         self.load()
 
     @staticmethod
-    def _build_preprocess_fn(inputs, level, tokenize):
+    def _build_preprocess_fn(inputs, level, tokenizer=None):
         def iter_level(utter):
             if isinstance(utter, list) and isinstance(utter[0], dict):
                 utter = ' '.join(u['text'] for u in utter)
             elif isinstance(utter, dict):
                 utter = utter['text']
 
-            if tokenize:
-                utter = utter.split()
+            if tokenizer is not None:
+                utter = tokenizer(utter)
             if level == 'token':
                 yield from utter
             elif level == 'char':
@@ -140,6 +140,8 @@ class DefaultVocabulary(Estimator):
             self.freqs[token] += cnt
 
     def __call__(self, samples, **kwargs):
+        if isinstance(samples[0], list):
+            return [self.__call__(s) for s in samples]
         return [self[s] for s in samples]
 
     def save(self):
