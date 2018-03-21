@@ -20,7 +20,7 @@ Datasets, which follow this task format:
 * [SDSJ Task B](https://www.sdsj.ru/ru/contest.html) (RU)
 
 ## Model
-Question Answering Model is based on R-Net, proposed by Microsoft Research Asia ("R-NET: Machine Reading Comprehension with Self-matching Networks" [[link]](https://www.microsoft.com/en-us/research/publication/mrc/)) and its realization by Wenxuan Zhou [[link]](https://github.com/HKUST-KnowComp/R-Net).
+Question Answering Model is based on R-Net, proposed by Microsoft Research Asia (["R-NET: Machine Reading Comprehension with Self-matching Networks"](https://www.microsoft.com/en-us/research/publication/mrc/)) and its [realization](https://github.com/HKUST-KnowComp/R-Net) by Wenxuan Zhou.
   
 ## Configuration
 Default config could be found at `deeppavlov/configs/squad/squad.json`
@@ -113,11 +113,9 @@ python -m deeppavlov.deep interact deeppavlov/configs/squad/squad.json
 Model will ask you to type in context and question.
 
 ## Pretrained model on SQuAD
-Model is available at the following [[link]](lnsigo.mipt.ru/export/deeppavlov_data/squad_model.tar.gz)
+Pretrained model is available and can be downloaded: [http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model.tar.gz](http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model.tar.gz)
 
-It achieves ~79 F-1 score and ~70 EM on dev set. 
-
-Leaderboard for SQuAD is available [here](https://rajpurkar.github.io/SQuAD-explorer/). 
+It achieves ~79 F-1 score and ~70 EM on dev set. Results of the most recent solutions could be found on [SQuAD Leadearboad](https://rajpurkar.github.io/SQuAD-explorer/). 
 
 ## Training on SDSJ Task B
 If you want to train this model on SDSJ Task B then you should follow these steps:
