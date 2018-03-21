@@ -24,7 +24,8 @@ REQ_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/slots.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/dstc2_fastText_model.bin',
-    'http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz'
+    'http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/odqa/wiki_tfidf_matrix.npz'
 }
 
 OPT_URLS = {
@@ -36,6 +37,10 @@ ALL_URLS = REQ_URLS.union(OPT_URLS)
 EMBEDDING_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/dstc2_fastText_model.bin'
+}
+
+BINARY_URLS = {
+   'http://lnsigo.mipt.ru/export/deeppavlov_data/odqa/wiki_tfidf_matrix.npz'
 }
 
 DATA_URLS = {
