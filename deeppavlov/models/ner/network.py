@@ -50,15 +50,15 @@ class NerNetwork:
                  net_type='cnn',
                  char_filter_width=5,
                  verbose=False,
-                 embeddings_onethego=False,
                  sess=None,
-                 cell_type='lstm'):
+                 cell_type='lstm',
+                 embedder=None):
 
         n_tags = len(tag_vocab)
         n_tokens = len(word_vocab)
         n_chars = len(char_vocab)
         # Create placeholders
-        if embeddings_onethego:
+        if embedder is not None:
             x_word = tf.placeholder(dtype=tf.float32, shape=[None, None, token_embeddings_dim], name='x_word')
         else:
             x_word = tf.placeholder(dtype=tf.int32, shape=[None, None], name='x_word')
@@ -72,7 +72,7 @@ class NerNetwork:
         mask_ph = tf.placeholder(dtype=tf.float32, shape=[None, None])
 
         # Embeddings
-        if not embeddings_onethego:
+        if embedder is None:
             with tf.variable_scope('Embeddings'):
                 w_emb = embedding_layer(x_word, n_tokens=n_tokens, token_embedding_dim=token_embeddings_dim)
                 if use_char_embeddins:
@@ -109,6 +109,7 @@ class NerNetwork:
                                         training_ph=training_ph)
         else:
             raise KeyError('There is no such type of network: {}'.format(net_type))
+
         # Classifier
         with tf.variable_scope('Classifier'):
             logits = tf.layers.dense(units, n_tags, kernel_initializer=xavier_initializer())
@@ -135,6 +136,7 @@ class NerNetwork:
         if logging:
             self.train_writer = tf.summary.FileWriter('summary', sess.graph)
 
+        self._token_embeddings_dim = token_embeddings_dim
         self.token_vocab = word_vocab
         self.tag_vocab = tag_vocab
         self.char_vocab = char_vocab
@@ -157,7 +159,7 @@ class NerNetwork:
         self._training_ph = training_ph
         self._logging = logging
         self._train_op = self.get_train_op(loss, learning_rate_ph)
-        self._embeddings_onethego = embeddings_onethego
+        self._embedder = embedder
         self.verbose = verbose
         self._mask = mask_ph
         sess.run(tf.global_variables_initializer())
@@ -167,10 +169,12 @@ class NerNetwork:
         batch_size = len(batch_x)
         max_utt_len = max([len(utt) for utt in batch_x] + [2])
         max_token_len = max([len(token) for utt in batch_x for token in utt])
-
-        x_token = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_vocab['<PAD>']
+        if self._embedder is None:
+            x_token = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_vocab['<PAD>']
+        else:
+            x_token = self._embedder(batch_x)
         x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * self.char_vocab['<PAD>']
-        mask = np.zeros_like(x_token)
+        mask = np.zeros([batch_size, max_utt_len])
         if batch_y is not None:
             y = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.tag_vocab['<PAD>']
         else:
@@ -179,7 +183,8 @@ class NerNetwork:
         # Prepare x batch
         for n, utterance in enumerate(batch_x):
             mask[n, :len(utterance)] = 1
-            x_token[n, :len(utterance)] = self.token_vocab.toks2idxs(utterance)
+            if self._embedder is None:
+                x_token[n, :len(utterance)] = self.token_vocab.toks2idxs(utterance)
             for k, token in enumerate(utterance):
                 x_char[n, k, :len(token)] = self.char_vocab.toks2idxs(token)
 
