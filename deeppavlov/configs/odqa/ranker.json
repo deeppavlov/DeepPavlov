@@ -1,7 +1,0 @@
-{
-  "dataset_iterator": {
-    "name": "sqlite_iterator",
-    "data_path": "odqa",
-    "data_url": "http://lnsigo.mipt.ru/export/datasets/wikipedia/wiki_test.db"
-  }
-}
