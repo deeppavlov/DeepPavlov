@@ -117,7 +117,11 @@ Model is available at the following [[link]](lnsigo.mipt.ru/export/deeppavlov_da
 
 It achieves ~79 F-1 score and ~70 EM on dev set. 
 
+Leaderboard for SQuAD is available [here](https://rajpurkar.github.io/SQuAD-explorer/). 
+
 ## Training on SDSJ Task B
 If you want to train this model on SDSJ Task B then you should follow these steps:
 * Convert data to SQuAD format
+  * Change **data_path** argument in **dataset_reader** in config file.
 * Use Russian [word](http://lnsigo.mipt.ru/export/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.vec) and [character](http://lnsigo.mipt.ru/export/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize-char.vec) embeddings
+  * Change urls to Russian embeddings in config file.
