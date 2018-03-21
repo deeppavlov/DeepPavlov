@@ -246,3 +246,6 @@ class ErrorModel(Estimator):
                     self.__class__.__name__))
         else:
             logger.info('No load_path provided, initializing error model from scratch')
+
+    def fit_batch(self, *args, **kwargs):
+        pass

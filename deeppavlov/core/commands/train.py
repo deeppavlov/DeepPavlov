@@ -18,7 +18,7 @@ import datetime
 import json
 import time
 from collections import OrderedDict
-from typing import List, Callable, Tuple, Union
+from typing import List, Callable, Tuple, Dict, Union
 
 from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root
 from deeppavlov.core.commands.infer import build_model_from_config
@@ -39,7 +39,7 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-def _fit(model: Estimator, iterator: DataLearningIterator, train_config={}):
+def _fit(model: Estimator, iterator: DataLearningIterator, train_config={}) -> Estimator:
     x, y = iterator.get_instances('train')
     model.fit(x, y)
     model.save()
@@ -63,8 +63,9 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
 
             preprocessed = chainer(*iterator.get_instances('train'), to_return=component_config['fit_on'])
             if len(component_config['fit_on']) == 1:
-                preprocessed = [preprocessed]
-            component.fit(*preprocessed)
+                component.fit(preprocessed)
+            else:
+                component.fit(*preprocessed)
             component.save()
 
         if 'in' in component_config:
@@ -76,7 +77,7 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
     return chainer
 
 
-def train_model_from_config(config_path: str):
+def train_model_from_config(config_path: str) -> None:
     config = read_json(config_path)
     set_deeppavlov_root(config)
 
@@ -112,8 +113,8 @@ def train_model_from_config(config_path: str):
     if 'chainer' in config:
         model = fit_chainer(config, iterator)
     else:
-        vocabs = {}
-        for vocab_param_name, vocab_config in config.get('vocabs', {}).items():
+        vocabs = config.get('vocabs', {})
+        for vocab_param_name, vocab_config in vocabs.items():
             v: Estimator = from_params(vocab_config, mode='train')
             vocabs[vocab_param_name] = _fit(v, iterator)
 
@@ -132,7 +133,8 @@ def train_model_from_config(config_path: str):
     except KeyError:
         log.warning('Train config is missing. Populating with default values')
 
-    metrics_functions = list(zip(train_config['metrics'], get_metrics_by_names(train_config['metrics'])))
+    metrics_functions = list(zip(train_config['metrics'],
+                                 get_metrics_by_names(train_config['metrics'])))
 
     if callable(getattr(model, 'train_on_batch', None)):
         _train_batches(model, iterator, train_config, metrics_functions)
@@ -169,13 +171,14 @@ def train_model_from_config(config_path: str):
 
 
 def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
-                dataset: DataLearningIterator, batch_size=-1, data_type='valid', start_time=None):
+                iterator: Union[DataLearningIterator, DataFittingIterator], batch_size=-1,
+                data_type='valid', start_time: float=None) -> Dict[str, Union[int, OrderedDict, str]]:
     if start_time is None:
         start_time = time.time()
 
     val_y_true = []
     val_y_predicted = []
-    for x, y_true in dataset.gen_batch(batch_size, data_type, shuffle=False):
+    for x, y_true in iterator.gen_batch(batch_size, data_type, shuffle=False):
         y_predicted = list(model(list(x)))
         val_y_true += y_true
         val_y_predicted += y_predicted
@@ -185,16 +188,17 @@ def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
     report = {
         'examples_seen': len(val_y_true),
         'metrics': OrderedDict(metrics),
-        'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
+        'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
     }
     return report
 
 
-def _train_batches(model: NNModel, dataset: DataLearningIterator, train_config: dict,
+def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config: dict,
                    metrics_functions: List[Tuple[str, Callable]]):
 
     default_train_config = {
         'epochs': 0,
+        'max_batches': 0,
         'batch_size': 1,
 
         'metric_optimization': 'maximize',
@@ -210,7 +214,7 @@ def _train_batches(model: NNModel, dataset: DataLearningIterator, train_config: 
         'test_best': True
     }
 
-    train_config = dict(default_train_config, ** train_config)
+    train_config = dict(default_train_config, **train_config)
 
     if train_config['metric_optimization'] == 'maximize':
         def improved(score, best):
@@ -234,7 +238,7 @@ def _train_batches(model: NNModel, dataset: DataLearningIterator, train_config: 
     start_time = time.time()
     try:
         while True:
-            for x, y_true in dataset.gen_batch(train_config['batch_size']):
+            for x, y_true in iterator.gen_batch(train_config['batch_size']):
                 if log_on:
                     y_predicted = list(model(list(x)))
                     train_y_true += y_true
@@ -250,12 +254,15 @@ def _train_batches(model: NNModel, dataset: DataLearningIterator, train_config: 
                         'batches_seen': i,
                         'examples_seen': examples,
                         'metrics': dict(metrics),
-                        'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
+                        'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                     }
                     report = {'train': report}
                     print(json.dumps(report, ensure_ascii=False))
-                    train_y_true = []
-                    train_y_predicted = []
+                    train_y_true.clear()
+                    train_y_predicted.clear()
+
+                if i >= train_config['max_batches'] > 0:
+                    break
 
             epochs += 1
 
@@ -267,15 +274,16 @@ def _train_batches(model: NNModel, dataset: DataLearningIterator, train_config: 
                     'batches_seen': i,
                     'examples_seen': examples,
                     'metrics': dict(metrics),
-                    'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
+                    'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                 }
                 report = {'train': report}
                 print(json.dumps(report, ensure_ascii=False))
-                train_y_true = []
-                train_y_predicted = []
+                train_y_true.clear()
+                train_y_predicted.clear()
 
             if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
-                report = _test_model(model, metrics_functions, dataset, train_config['batch_size'], 'valid', start_time)
+                report = _test_model(model, metrics_functions, iterator,
+                                     train_config['batch_size'], 'valid', start_time)
 
                 metrics = list(report['metrics'].items())
 

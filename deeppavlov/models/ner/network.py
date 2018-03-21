@@ -46,11 +46,10 @@ class NerNetwork:
                  dense_dropout=False,
                  use_batch_norm=False,
                  logging=False,
-                 entity_of_interest=None,
                  use_crf=False,
                  net_type='cnn',
                  char_filter_width=5,
-                 verbouse=False,
+                 verbose=False,
                  embeddings_onethego=False,
                  sess=None,
                  cell_type='lstm'):
@@ -159,8 +158,7 @@ class NerNetwork:
         self._logging = logging
         self._train_op = self.get_train_op(loss, learning_rate_ph)
         self._embeddings_onethego = embeddings_onethego
-        self._entity_of_interest = entity_of_interest
-        self.verbose = verbouse
+        self.verbose = verbose
         self._mask = mask_ph
         sess.run(tf.global_variables_initializer())
 

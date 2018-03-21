@@ -34,7 +34,7 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
           "snips": {("configs/intents/intents_snips.json", "intents", False): []},
           "sample": {("configs/intents/intents_sample_csv.json", "intents", False): [],
                     ("configs/intents/intents_sample_json.json", "intents", False): []},
-          "ner": {("configs/ner/ner_conll2003.json", "ner_conll2003_model", True):
+          "ner": {("configs/ner/ner_conll2003.json", "ner_conll2003", True):
                       [
                           # ("Albert Einstein and Erwin Schrodinger", "['B-PER', 'I-PER', 'O', 'B-PER', 'I-PER']"),
                           # ("Antananarivo is the capital of Madagascar", "['B-LOC', 'O', 'O', 'O', 'O', 'B-LOC']"),
@@ -88,7 +88,7 @@ def teardown_module():
 
 
 def download(full=None):
-    cmd = "python3 -m deeppavlov.download -test"
+    cmd = "python deeppavlov/download.py -test"
     if full:
         cmd += " -all"
     pexpect.run(cmd, timeout=None)
@@ -100,7 +100,7 @@ class TestQuickStart(object):
     @staticmethod
     def interact(conf_file, model_dir, qr_list=None):
         qr_list = qr_list or []
-        p = pexpect.spawn("python3", ["-m", "deeppavlov.deep", "interact", str(conf_file)], timeout=None)
+        p = pexpect.spawn("python", ["deeppavlov/deep.py", "interact", str(conf_file)], timeout=None)
         for (query, expected_response) in qr_list:  # works until the first failed query
             p.expect(":: ")
             p.sendline(query)
@@ -125,6 +125,6 @@ class TestQuickStart(object):
         c = tests_dir / conf_file
         model_path = download_path / model_dir
         shutil.rmtree(str(model_path),  ignore_errors=True)
-        _, exitstatus = pexpect.run("python3 -m deeppavlov.deep train " + str(c), timeout=None, withexitstatus=True)
+        _, exitstatus = pexpect.run("python deeppavlov/deep.py train " + str(c), timeout=None, withexitstatus=True)
         assert exitstatus == 0, f"Training process of {model_dir} returned non-zero exit code"
         self.interact(c, model_dir)

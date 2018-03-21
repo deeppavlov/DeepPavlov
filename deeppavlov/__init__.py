@@ -6,19 +6,25 @@ assert sys.hexversion >= 0x3060000, 'Does not work in python3.5 or lower'
 import deeppavlov.core.models.keras_model
 import deeppavlov.core.data.data_learning_iterator
 import deeppavlov.core.data.vocab
+import deeppavlov.core.common.log
+
 import deeppavlov.dataset_readers.babi_reader
 import deeppavlov.dataset_readers.dstc2_reader
 import deeppavlov.dataset_readers.conll2003_reader
 import deeppavlov.dataset_readers.typos_reader
 import deeppavlov.dataset_readers.basic_classification_reader
-import deeppavlov.dataset_readers.ranking_dataset_reader
+import deeppavlov.dataset_readers.insurance_reader
+
 import deeppavlov.dataset_iterators.dialog_iterator
 import deeppavlov.dataset_iterators.dstc2_ner_iterator
 import deeppavlov.dataset_iterators.dstc2_intents_iterator
 import deeppavlov.dataset_iterators.typos_iterator
 import deeppavlov.dataset_iterators.basic_classification_iterator
 import deeppavlov.dataset_iterators.sqlite_iterator
-import deeppavlov.datasets.ranking_dataset
+import deeppavlov.dataset_iterators.ranking_iterator
+
+import deeppavlov.vocabs.typos
+
 import deeppavlov.models.classifiers.intents.intent_model
 import deeppavlov.models.commutators.random_commutator
 import deeppavlov.models.embedders.fasttext_embedder
@@ -35,13 +41,10 @@ import deeppavlov.models.ranking.metrics
 import deeppavlov.models.tokenizers.spacy_tokenizer
 import deeppavlov.models.vectorizers.hashing_tfidf_vectorizer
 import deeppavlov.models.odqa.ranker
+
 import deeppavlov.skills.go_bot.go_bot
 import deeppavlov.skills.go_bot.network
 import deeppavlov.skills.go_bot.tracker
-import deeppavlov.vocabs.typos
-
 
 import deeppavlov.metrics.accuracy
 import deeppavlov.metrics.fmeasure
-
-import deeppavlov.core.common.log
