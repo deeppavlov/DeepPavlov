@@ -6,6 +6,8 @@ from keras.optimizers import Adam
 from keras.initializers import glorot_uniform, Orthogonal
 from keras import backend as K
 import tensorflow as tf
+import numpy as np
+
 
 class RankingNetwork(object):
 
@@ -156,7 +158,7 @@ class RankingNetwork(object):
         return K.mean(K.maximum(self.margin - y_pred, 0.), axis=-1)
 
     def train_on_batch(self, batch):
-        self.obj_model.train_on_batch(x=batch[0], y=batch[1])
+        self.obj_model.train_on_batch(x=batch[0], y=np.asarray(batch[1]))
 
     def predict_on_batch(self, batch):
         return self.score_model.predict_on_batch(x=batch)

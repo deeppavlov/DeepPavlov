@@ -25,11 +25,11 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
           "go_bot": {("configs/go_bot/gobot_dstc2.json", "go_bot", True):
                          [
 
-                         ],
+                     #     ],
                      # ("configs/go_bot/gobot_dstc2_minimal.json", "go_bot_minimal"):
                      #     [
-                     #
-                     #     ]
+
+                         ]
                      },
           "intents": {("configs/intents/intents_dstc2.json", "intents", True):  []},
           "snips": {("configs/intents/intents_snips.json", "intents", False): []},
@@ -57,10 +57,12 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
                   },
           "ranking": {("configs/ranking/insurance_config.json", "ranking", True):
                       [
+
                       ]
                       },
           "squad": {("configs/squad/squad.json", "squad_model", True):
                         [
+
                         ]
                     }
           }
