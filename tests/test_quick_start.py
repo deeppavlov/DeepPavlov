@@ -17,37 +17,14 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
                                   ("helllo", "hello"),
                                   ("datha", "data")
                               ],
-                          ("configs/error_model/brillmoore_kartaslov_ru.json", "error_model", True):
-                              [
-
-                              ]
-                          },
-          "go_bot": {("configs/go_bot/gobot_dstc2.json", "go_bot", True):
-                         [
-
-                     #     ],
-                     # ("configs/go_bot/gobot_dstc2_minimal.json", "go_bot_minimal"):
-                     #     [
-
-                         ]
-                     },
+                          ("configs/error_model/brillmoore_kartaslov_ru.json", "error_model", True): []},
+          "go_bot": {("configs/go_bot/gobot_dstc2.json", "go_bot", True): []},
           "intents": {("configs/intents/intents_dstc2.json", "intents", True):  []},
           "snips": {("configs/intents/intents_snips.json", "intents", False): []},
           "sample": {("configs/intents/intents_sample_csv.json", "intents", False): [],
                     ("configs/intents/intents_sample_json.json", "intents", False): []},
-          "ner": {("configs/ner/ner_conll2003.json", "ner_conll2003", True):
-                      [
-                          # ("Albert Einstein and Erwin Schrodinger", "['B-PER', 'I-PER', 'O', 'B-PER', 'I-PER']"),
-                          # ("Antananarivo is the capital of Madagascar", "['B-LOC', 'O', 'O', 'O', 'O', 'B-LOC']"),
-                          # ("UN launches new global data collection tool to help reduce disaster",
-                          #  "['B-ORG', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O']")
-                      ],
-                  ("configs/ner/ner_dstc2.json", "ner", True):
-                      [
-                          # ("chinese food", "['B-food', 'O']"),
-                          # ("in the west part", "['O', 'O', 'B-area', 'O']"),
-                          # ("moderate price range", "['B-pricerange', 'O', 'O']")
-                      ],
+          "ner": {("configs/ner/ner_conll2003.json", "ner_conll2003", True): [],
+                  ("configs/ner/ner_dstc2.json", "ner", True): [],
                   ("configs/ner/slotfill_dstc2.json", "ner", True):
                       [
                           ("chinese food", "{'food': 'chinese'}"),
@@ -55,16 +32,8 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
                           ("moderate price range", "{'pricerange': 'moderate'}")
                       ]
                   },
-          "ranking": {("configs/ranking/insurance_config.json", "ranking", True):
-                      [
-
-                      ]
-                      },
-          "squad": {("configs/squad/squad.json", "squad_model", True):
-                        [
-
-                        ]
-                    }
+          "ranking": {("configs/ranking/insurance_config.json", "ranking", True): []},
+          "squad": {("configs/squad/squad.json", "squad_model", True): []}
           }
 
 
