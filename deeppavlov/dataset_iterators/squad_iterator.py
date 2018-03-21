@@ -1,29 +1,12 @@
-from random import Random
-
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_iterator import BasicDatasetIterator
 
 
 @register('squad_iterator')
 class SquadIterator(BasicDatasetIterator):
-    def __init__(self, data, seed, shuffle=False):
-        self.raw_data = data
-        self.seed = seed
-        self.shuffle = shuffle
-
-        self.train = []
-        self.valid = []
-        self.test = []
-
-        self.data = dict()
-
-        self.random = Random(seed)
-
-        for dt in ['train', 'valid']:
-            self.data[dt] = SquadIterator._extract_cqas(self.raw_data[dt])
-
-        # there is no public test set for SQuAD
-        self.data['test'] = SquadIterator._extract_cqas(self.raw_data['valid'])
+    def split(self, *args, **kwargs):
+        for dt in ['train', 'valid', 'test']:
+            setattr(self, dt, SquadIterator._extract_cqas(getattr(self, dt)))
 
     @staticmethod
     def _extract_cqas(data):
@@ -38,15 +21,16 @@ class SquadIterator(BasicDatasetIterator):
 
         """
         cqas = []
-        for article in data['data']:
-            for par in article['paragraphs']:
-                context = par['context']
-                for qa in par['qas']:
-                    q = qa['question']
-                    ans_text = []
-                    ans_start = []
-                    for answer in qa['answers']:
-                        ans_text.append(answer['text'])
-                        ans_start.append(answer['answer_start'])
-                    cqas.append(((context, q), (ans_text, ans_start)))
+        if data:
+            for article in data['data']:
+                for par in article['paragraphs']:
+                    context = par['context']
+                    for qa in par['qas']:
+                        q = qa['question']
+                        ans_text = []
+                        ans_start = []
+                        for answer in qa['answers']:
+                            ans_text.append(answer['text'])
+                            ans_start.append(answer['answer_start'])
+                        cqas.append(((context, q), (ans_text, ans_start)))
         return cqas
