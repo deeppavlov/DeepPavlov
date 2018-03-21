@@ -3,6 +3,7 @@ from pathlib import Path
 import pexpect
 import json
 import shutil
+import re
 
 
 tests_dir = Path(__file__, '..').resolve()
@@ -57,7 +58,11 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
           "ranking": {("configs/ranking/insurance_config.json", "ranking", True):
                       [
                       ]
-                      }
+                      },
+          "squad": {("configs/squad/squad.json", "squad_model", True):
+                        [
+                        ]
+                    }
           }
 
 
@@ -73,10 +78,10 @@ def setup_module():
         for (conf_file, _, _), _ in conf_dict.items():
             with (src_dir / conf_file).open() as fin:
                 config = json.load(fin)
-            try:
+            if config.get("train") and config["train"].get("epochs"):
                 config["train"]["epochs"] = 1
-            except KeyError:
-                pass
+                if config["train"].get("max_batches") == 0:
+                    config["train"]["max_batches"] = 2
             config["deeppavlov_root"] = str(download_path)
             with (tests_dir / conf_file).open("w") as fout:
                 json.dump(config, fout)
@@ -101,13 +106,14 @@ class TestQuickStart(object):
     def interact(conf_file, model_dir, qr_list=None):
         qr_list = qr_list or []
         p = pexpect.spawn("python3", ["-m", "deeppavlov.deep", "interact", str(conf_file)], timeout=None)
-        for (query, expected_response) in qr_list:  # works until the first failed query
-            p.expect(":: ")
-            p.sendline(query)
+        for *query, expected_response in qr_list:  # works until the first failed query
+            for q in query:
+                p.expect("::")
+                p.sendline(q)
             p.expect(">> ")
             actual_response = p.readline().decode().strip()
             assert expected_response == actual_response, f"Error in interacting with {model_dir} ({conf_file}): {query}"
-        p.expect(":: ")
+        p.expect("::")
         p.sendline("quit")
         assert p.expect(pexpect.EOF) == 0, f"Error in quitting from deep.py ({conf_file})"
 
