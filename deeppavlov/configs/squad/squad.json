@@ -95,7 +95,7 @@
     "validate_best": true,
     "log_every_n_batches": 250,
     "val_every_n_epochs": 1,
-    "batch_size": 64,
+    "batch_size": 50,
     "metrics": ["squad_f1", "exact_match"]
   }
 }
