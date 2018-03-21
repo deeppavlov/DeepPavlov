@@ -16,11 +16,15 @@ limitations under the License.
 
 import sqlite3
 from typing import List, Any, Dict, Optional, Generator, Tuple
+from random import Random
+
+from overrides import overrides
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import download
 from deeppavlov.core.commands.utils import expand_path, is_empty
+from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 
 logger = get_logger(__name__)
 
@@ -28,11 +32,12 @@ DB_URL = 'http://lnsigo.mipt.ru/export/datasets/wikipedia/wiki_full.db'
 
 
 @register('sqlite_iterator')
-class SQLiteDataIterator:
+class SQLiteDataIterator(DataFittingIterator):
     """
     Load a SQLite database, read data batches and get docs content.
     """
-    def __init__(self, data_path: str='', data_url: str=DB_URL, batch_size: int=None, **kwargs):
+    def __init__(self, data_path: str='', data_url: str=DB_URL, batch_size: int=None,
+                 shuffle: bool = None, seed: int = None, **kwargs):
         """
         :param load_path: a path to a SQLite database
         :param batch_size: a batch size for reading from the database
@@ -49,7 +54,10 @@ class SQLiteDataIterator:
         self.doc_ids = self.get_doc_ids()
         self.doc2index = self.map_doc2idx()
         self.batch_size = batch_size
+        self.shuffle = shuffle
+        self.random = Random(seed)
 
+    @overrides
     def get_doc_ids(self) -> List[Any]:
         cursor = self.connect.cursor()
         cursor.execute('SELECT id FROM {}'.format(self.db_name))
@@ -67,7 +75,7 @@ class SQLiteDataIterator:
 
     def map_doc2idx(self) -> Dict[int, Any]:
         doc2idx = {doc_id: i for i, doc_id in enumerate(self.doc_ids)}
-        print("The size of database is {} documents".format(len(doc2idx)))
+        print("SQLite iterator: The size of the database is {} documents".format(len(doc2idx)))
         return doc2idx
 
     def get_doc_content(self, doc_id: Any) -> Optional[str]:
@@ -80,8 +88,14 @@ class SQLiteDataIterator:
         cursor.close()
         return result if result is None else result[0]
 
-    def read_batch(self, batch_size=1000) -> Generator[Tuple[List[str], list], Any, None]:
+    @overrides
+    def gen_batch(self, batch_size=1000, shuffle=False) -> Generator[Tuple[List[str], list], Any, None]:
         _batch_size = self.batch_size or batch_size
+        _shuffle = self.shuffle or shuffle
+
+        if _shuffle:
+            self.random.shuffle(self.doc_ids)
+
         batches = [self.doc_ids[i:i + _batch_size] for i in
                    range(0, len(self.doc_ids), _batch_size)]
         # DEBUG
