@@ -55,6 +55,8 @@ class DefaultVocabulary(Estimator):
                 utter = ' '.join(u['text'] for u in utter)
             elif isinstance(utter, dict):
                 utter = utter['text']
+            elif isinstance(utter, list) and isinstance(utter[0], str):
+                utter = ' '.join(utter) 
 
             if tokenizer is not None:
                 utter = tokenizer([utter])[0]

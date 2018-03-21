@@ -7,55 +7,56 @@
     "name": "kvret_dialog_iterator"
   },
   "chainer": {
-    "in": ["x_text", "x"],
+    "in": ["x_text", "x_meta"],
     "in_y": ["y_text"],
     "out": ["y_predicted"],
     "pipe": [
       {
+        "name": "stream_spacy_tokenizer",
+        "lowercase": "true",
+        "in": ["x_text"],
+        "out": ["x_tokens"]
+      },
+      {
+        "name": "stream_spacy_tokenizer",
+        "lowercase": "true",
+        "in": ["y_text"],
+        "out": ["y_tokens"]
+      },
+      {
         "id": "src_token_vocab",
-        "fit_on": ["x_text"],
+        "fit_on": ["x_tokens"],
         "name": "default_vocab",
         "level": "token",
-        "tokenizer": 
-        {
-          "name": "stream_spacy_tokenizer",
-          "lowercase": "true"
-        },
+        "tokenizer": { "name": "split_tokenizer" },
         "special_tokens": ["<SOS>"],
         "save_path": "vocabs/src_tokens.dict",
         "load_path": "vocabs/src_tokens.dict"
       },
       {
         "id": "tgt_token_vocab",
-        "fit_on": ["y_text"],
+        "fit_on": ["y_tokens"],
+        "debug": true,
         "name": "default_vocab",
         "level": "token",
-        "tokenizer": 
-        {
-          "name": "stream_spacy_tokenizer",
-          "lowercase": "true"
-        },
+        "tokenizer": { "name": "split_tokenizer" },
         "special_tokens": ["<SOS>", "<EOS>"],
         "save_path": "vocabs/tgt_tokens.dict",
         "load_path": "vocabs/tgt_tokens.dict"
       },
       {
-        "in": ["x_text", "x"],
-        "in_y": ["y_text"],
+        "in": ["x_tokens", "x_meta"],
+        "in_y": ["y_tokens"],
         "out": ["y_predicted"],
         "main": true,
         "name": "seq2seq_go_bot",
-        "tokenizer": {
-          "name": "stream_spacy_tokenizer",
-          "lowercase": true
-        },
         "start_of_sequence_token": "<SOS>",
         "end_of_sequence_token": "<EOS>",
         "network": {
           "name": "seq2seq_go_bot_nn",
           "load_path": "seq2seq_go_bot/model",
           "save_path": "seq2seq_go_bot/model",
-          "learning_rate": 0.002,
+          "learning_rate": 0.001,
           "target_start_of_sequence_index": "#tgt_token_vocab.__getitem__('SOS')",
           "target_end_of_sequence_index": "#tgt_token_vocab.__getitem__('EOS')",
           "source_vocab_size": "#src_token_vocab.__len__()",
@@ -74,7 +75,7 @@
   },
   "train": {
     "epochs": 200,
-    "batch_size": 10,
+    "batch_size": 20,
 
     "metrics": ["per_item_bleu", "per_item_accuracy"],
     "validation_patience": 20,
