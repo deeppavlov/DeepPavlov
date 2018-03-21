@@ -8,8 +8,8 @@ gpus[1]=1
 gpus[2]=2
 gpus[3]=6
 #start
-# setenvdp-go-gpu
-# CUDA_VISIBLE_DEVICES=${gpus[$1]}
+setenvdp-go-gpu
+CUDA_VISIBLE_DEVICES=${gpus[$1]}
 for i in  ${model_set[$1]};
 do
 echo "Used model is $i "'#START_TOKEN ';;
