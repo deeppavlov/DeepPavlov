@@ -33,6 +33,7 @@ import deeppavlov.skills.go_bot.network
 import deeppavlov.skills.go_bot.tracker
 import deeppavlov.vocabs.typos
 import deeppavlov.dataset_readers.insurance_reader
+import deeppavlov.dataset_readers.ubuntu_reader
 import deeppavlov.dataset_iterators.ranking_iterator
 import deeppavlov.models.ranking.ranking_model
 import deeppavlov.models.ranking.metrics

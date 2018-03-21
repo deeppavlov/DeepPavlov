@@ -12,7 +12,7 @@ from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.ranking.ranking_network import RankingNetwork
-from deeppavlov.models.ranking.dict import InsuranceDict
+from deeppavlov.models.ranking.insurance_dict import InsuranceDict
 from deeppavlov.models.ranking.emb_dict import Embeddings
 from deeppavlov.core.commands.utils import get_deeppavlov_root
 from deeppavlov.core.common.log import get_logger

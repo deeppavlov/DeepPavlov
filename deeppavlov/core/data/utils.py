@@ -118,6 +118,8 @@ def download_decompress(url, download_path, extract_path=None):
     download(arch_file_path, url)
     if url.endswith('.tar.gz'):
         untar(arch_file_path, extract_path)
+    elif url.endswith('.tgz'):
+        untar(arch_file_path, extract_path)
     elif url.endswith('.gz'):
         ungzip(arch_file_path, extract_path)
     elif url.endswith('.zip'):

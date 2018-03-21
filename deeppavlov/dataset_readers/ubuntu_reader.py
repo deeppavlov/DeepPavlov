@@ -5,28 +5,26 @@ from deeppavlov.core.data.utils import download_decompress, mark_done, is_done
 from deeppavlov.core.commands.utils import get_deeppavlov_root, expand_path
 import pickle
 import numpy as np
+
+
 @register('ubuntu_reader')
 class UbuntuReader(DatasetReader):
 
     def read(self, data_path):
         data_path = expand_path(data_path)
         self.download_data(data_path)
-        # dataset = {'train': None, 'valid': None, 'test': None}
         fname = Path(data_path) / 'dataset_1MM/dataset.pkl'
         dataset = self.preprocess_data(fname)
         return dataset
 
     def download_data(self, data_path):
         if not is_done(Path(data_path)):
-            download_decompress(url="http://lnsigo.mipt.ru/export/datasets/ubuntu_dialogs.tgz",
+            download_decompress(url="http://lnsigo.mipt.ru/export/datasets/ubuntu_blobs.tgz",
                                 download_path=data_path)
             mark_done(data_path)
 
     def preprocess_data(self, fname):
 
-        positive_responses_pool = []
-        contexts = []
-        responses = []
         with open(fname, 'rb') as f:
             data = pickle.load(f)
         all_resps = data[0]['r'] + data[1]['r'] + data[2]['r']
@@ -38,26 +36,46 @@ class UbuntuReader(DatasetReader):
         train_data = [{"context": el[0], "response": el[1],
                        "pos_pool": el[1], "neg_pool": None}
                       for el in train_data]
+        contexts = []
         val_resps = [vocab[' '.join(map(str, el))] for el in data[1]['r']]
         pos_resps = []
         neg_resps = []
         neg_resp = []
-        for el in zip(val_resps, data[1]['y']):
-            if el[1] == '1':
-                pos_resps.append(el[0])
+        for el in zip(data[1]['c'], val_resps, data[1]['y']):
+            if el[2] == '1':
+                contexts.append(el[0])
+                pos_resps.append(el[1])
                 if len(neg_resp) > 0:
                     neg_resps.append(neg_resp)
                     neg_resp = []
             else:
-                neg_resp.append(el[0])
+                neg_resp.append(el[1])
+        prob = np.ones(len(vocab))
+        prob[pos_resps[-1]] = 0
+        prob /= np.sum(prob)
+        neg_resp += list(np.random.choice(np.arange(len(vocab)), size=4, p=prob))
         neg_resps.append(neg_resp)
-
-
-        val_data = [[el[0], el[1]] for el in zip(data[1]['c'], val_resps, data[1]['y']) if el[2] == '1']
+        val_data = list(zip(contexts, pos_resps, neg_resps))
         val_data = [{"context": el[0], "response": el[1],
-                       "pos_pool": el[1], "neg_pool": None}
-                      for el in val_data]
+                     "pos_pool": el[1], "neg_pool": el[2]} for el in val_data]
 
+        contexts = []
+        test_resps = [vocab[' '.join(map(str, el))] for el in data[2]['r']]
+        pos_resps = []
+        neg_resps = []
+        neg_resp = []
+        for el in zip(data[2]['c'], test_resps, data[2]['y']):
+            if el[2] == '1':
+                contexts.append(el[0])
+                pos_resps.append(el[1])
+                if len(neg_resp) > 0:
+                    neg_resps.append(neg_resp)
+                    neg_resp = []
+            else:
+                neg_resp.append(el[1])
+        neg_resps.append(neg_resp)
+        test_data = list(zip(contexts, pos_resps, neg_resps))
+        test_data = [{"context": el[0], "response": el[1],
+                     "pos_pool": el[1], "neg_pool": el[2]} for el in test_data]
 
-
-        return train_data
+        return {'train': train_data, 'valid': val_data, 'test': test_data}
