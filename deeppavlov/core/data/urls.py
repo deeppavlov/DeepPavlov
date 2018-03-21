@@ -42,5 +42,6 @@ EMBEDDING_URLS = {
 
 DATA_URLS = {
     'http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz',
-    'http://lnsigo.mipt.ru/export/datasets/insuranceQA-master.zip'
+    'http://lnsigo.mipt.ru/export/datasets/insuranceQA-master.zip',
+    'http://lnsigo.mipt.ru/export/datasets/ubuntu_dialogs.tgz'
 }
