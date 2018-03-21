@@ -51,6 +51,6 @@ def ngramize(items: List[str], ngram_range=(1, 1)) -> Generator[List[str], Any, 
     for r in ranges:
         ngrams += list(zip(*[items[j:] for j in range(*r)]))
 
-    formatted_ngrams = [' '.join(item) for item in ngrams]
+    formatted_ngrams = [' '.join(item) for item in ngrams] or ['']
 
     yield formatted_ngrams
