@@ -9,7 +9,7 @@
     "shuffle": true
   },
   "chainer": {
-    "in": ["c_raw", "q_raw"],
+    "in": ["context_raw", "question_raw"],
     "in_y": ["ans_raw", "ans_raw_start"],
     "pipe": [
       {
@@ -18,8 +18,10 @@
         "context_limit": 400,
         "question_limit": 150,
         "char_limit": 16,
-        "in": ["c_raw", "q_raw"],
-        "out": ["c", "c_tokens", "c_chars", "c_r2p", "c_p2r", "q", "q_tokens", "q_chars", "spans"]
+        "in": ["context_raw", "question_raw"],
+        "out": ["context", "context_tokens", "context_chars",
+                "c_r2p", "c_p2r", "question",
+                "question_tokens", "question_chars", "spans"]
       },
       {
         "name": "squad_ans_preprocessor",
@@ -38,9 +40,9 @@
         "context_limit": "#squad_prepr.context_limit",
         "question_limit": "#squad_prepr.question_limit",
         "char_limit": "#squad_prepr.context_limit",
-        "fit_on": ["c_tokens", "q_tokens"],
-        "in": ["c_tokens", "q_tokens"],
-        "out": ["c_tokens_idxs", "q_tokens_idxs"]
+        "fit_on": ["context_tokens", "question_tokens"],
+        "in": ["context_tokens", "question_tokens"],
+        "out": ["context_tokens_idxs", "question_tokens_idxs"]
       },
       {
         "name": "squad_vocab_embedder",
@@ -53,9 +55,9 @@
         "context_limit": "#squad_prepr.context_limit",
         "question_limit": "#squad_prepr.question_limit",
         "char_limit": "#squad_prepr.char_limit",
-        "fit_on": ["c_chars", "q_chars"],
-        "in": ["c_chars", "q_chars"],
-        "out": ["c_chars_idxs", "q_chars_idxs"]
+        "fit_on": ["context_chars", "question_chars"],
+        "in": ["context_chars", "question_chars"],
+        "out": ["context_chars_idxs", "question_chars_idxs"]
       },
       {
         "name": "squad_model",
@@ -74,14 +76,14 @@
         "grad_clip": 5.0,
         "save_path": "squad_model/model",
         "load_path": "squad_model/model",
-        "in": ["c_tokens_idxs", "c_chars_idxs", "q_tokens_idxs", "q_chars_idxs"],
+        "in": ["context_tokens_idxs", "context_chars_idxs", "question_tokens_idxs", "question_chars_idxs"],
         "in_y": ["ans_start", "ans_end"],
         "out": ["ans_start_predicted", "ans_end_predicted"]
       },
       {
         "name": "squad_ans_postprocessor",
         "id": "squad_ans_postprepr",
-        "in": ["ans_start_predicted", "ans_end_predicted", "c_raw", "c_p2r", "spans"],
+        "in": ["ans_start_predicted", "ans_end_predicted", "context_raw", "c_p2r", "spans"],
         "out": ["ans_predicted", "ans_start_predicted", "ans_end_predicted"]
       }
     ],

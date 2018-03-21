@@ -29,16 +29,16 @@ Default config could be found at `deeppavlov/configs/squad/squad.json`
   * data_path - path to save dataset
 * **squad_iterator** - create batches from SQuAD dataset
 * **squad_preprocessor** - preprocesses context, question by cleaning data and tokenizing
-  * in: **c_raw**, **q_raw** - not processed contexts and questions
+  * in: **context_raw**, **question_raw** - not processed contexts and questions
   * out: 
-    * **c** - processed context (cleaned unicode symbols and quoting)
-    * **c_tokens** - tokenized context
-    * **c_chars** - tokenized context split on chars
+    * **context** - processed context (cleaned unicode symbols and quoting)
+    * **context_tokens** - tokenized context
+    * **context_chars** - tokenized context split on chars
     * **c_r2p** - mapping from raw context to processed context
     * **c_p2r** - mapping from processed context to raw context
-    * **q** - processed question
-    * **q_tokens** - tokenized question
-    * **q_chars** - tokenized question split on chars
+    * **question** - processed question
+    * **question_tokens** - tokenized question
+    * **question_chars** - tokenized question split on chars
     * **spans** - mapping from word indices to position in text
   * context_limit - maximum length of context in words
   * question_limit - maximum length of question in words
@@ -55,12 +55,12 @@ Default config could be found at `deeppavlov/configs/squad/squad.json`
     * **ans_end** - end position of processed answer
 * **squad_vocab_embedder** - builds vocabulary and embedding matrix
   * in:
-    * **c_tokens**
-    * **q_tokens**
+    * **context_tokens**
+    * **question_tokens**
   * out
-    * **c_tokens_idxs**
-    * **q_tokens_idxs**
-  * fit_on: **c_tokens** and **q_tokens**
+    * **context_tokens_idxs**
+    * **question_tokens_idxs**
+  * fit_on: **context_tokens** and **question_tokens**
   * level - token or char
   * emb_folder - path to store pretrained embeddings
   * emb_url - url to donwload embeddings
@@ -70,7 +70,7 @@ Default config could be found at `deeppavlov/configs/squad/squad.json`
   * question_limit - maximum length of question in words
   * char_limit - maximum number of chars in token
 * squad_model - model to find answer on question in context  
-  * in: **c_tokens_idxs**, **c_chars_idxs**, **q_tokens_idxs**, **q_chars_idxs**
+  * in: **context_tokens_idxs**, **context_chars_idxs**, **question_tokens_idxs**, **question_chars_idxs**
   * in_y: **ans_start**, **ans_end**
   * out:
     * **ans_start_predicted** - start position of predicted answer
@@ -90,7 +90,7 @@ Default config could be found at `deeppavlov/configs/squad/squad.json`
   * save_path
   * load_path
 * squad_ans_postprocessor - extracts predicted answer from context
- * in: **ans_start_predicted**, **ans_end_predicted**, **c_raw**, **c_p2r**, **spans**
+ * in: **ans_start_predicted**, **ans_end_predicted**, **context_raw**, **c_p2r**, **spans**
  * out: 
    * **ans_predicted** - text of predicted answer in raw context
    * **ans_start_predicted** - start position of predicted answer in raw context
