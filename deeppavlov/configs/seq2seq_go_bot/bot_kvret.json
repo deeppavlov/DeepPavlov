@@ -7,45 +7,41 @@
     "name": "kvret_dialog_iterator"
   },
   "chainer": {
-    "in": ["x"],
-    "in_y": ["y"],
+    "in": ["x_text", "x"],
+    "in_y": ["y_text"],
     "out": ["y_predicted"],
     "pipe": [
       {
-          "name": "str_lower",
-          "id": "lower",
-          "in": ["x"],
-          "out": ["x_lower"]
-      },
-      {
-          "name": "str_lower",
-          "id": "lower",
-          "in": ["y"],
-          "out": ["y_lower"]
-      },
-      {
         "id": "src_token_vocab",
-        "fit_on": ["x_lower"],
+        "fit_on": ["x_text"],
         "name": "default_vocab",
         "level": "token",
-        "special_tokens": ["<EOS>"],
-        "tokenize": true,
-        "save_path": "vocabs/token.dict",
-        "load_path": "vocabs/token.dict"
+        "tokenizer": 
+        {
+          "name": "stream_spacy_tokenizer",
+          "lowercase": "true"
+        },
+        "special_tokens": ["<SOS>"],
+        "save_path": "vocabs/src_tokens.dict",
+        "load_path": "vocabs/src_tokens.dict"
       },
       {
         "id": "tgt_token_vocab",
-        "fit_on": ["y_lower"],
+        "fit_on": ["y_text"],
         "name": "default_vocab",
         "level": "token",
+        "tokenizer": 
+        {
+          "name": "stream_spacy_tokenizer",
+          "lowercase": "true"
+        },
         "special_tokens": ["<SOS>", "<EOS>"],
-        "tokenize": true,
-        "save_path": "vocabs/classes.dict",
-        "load_path": "vocabs/classes.dict"
+        "save_path": "vocabs/tgt_tokens.dict",
+        "load_path": "vocabs/tgt_tokens.dict"
       },
       {
-        "in": ["x_lower"],
-        "in_y": ["y_lower"],
+        "in": ["x_text", "x"],
+        "in_y": ["y_text"],
         "out": ["y_predicted"],
         "main": true,
         "name": "seq2seq_go_bot",
@@ -71,13 +67,14 @@
         "bow_encoder": {
           "name": "bow"
         },
+        "debug": true,
         "debug": false
       }
     ]
   },
   "train": {
     "epochs": 200,
-    "batch_size": 2,
+    "batch_size": 4,
 
     "metrics": ["per_item_dialog_bleu", "per_item_dialog_accuracy"],
     "validation_patience": 20,

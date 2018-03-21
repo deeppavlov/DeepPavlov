@@ -60,13 +60,14 @@ class Seq2SeqGoalOrientedBot(NNModel):
         b_enc_ins, b_src_seq_lens = [], []
         b_dec_ins, b_dec_outs, b_tgt_seq_lens, b_tgt_weights = [], [], [], []
         for d_contexts, d_responses in zip(x, y):
-            for context, response in zip(d_contexts, d_responses):
+            d_utters, d_meta = d_contexts
+            for utter, meta, resp in zip(d_utters, d_meta, d_responses):
 
-                enc_in = self._encode_context(context['text'])
+                enc_in = self._encode_context(utter)
                 b_enc_ins.append(enc_in)
                 b_src_seq_lens.append(len(enc_in))
 
-                dec_in, dec_out = self._encode_response(response['text'])
+                dec_in, dec_out = self._encode_response(resp)
                 b_dec_ins.append(dec_in)
                 b_dec_outs.append(dec_out)
                 b_tgt_seq_lens.append(len(dec_out))
@@ -78,7 +79,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
         for i, (src_seq_len, tgt_seq_len) in enumerate(zip(b_src_seq_lens, b_tgt_seq_lens)):
             src_padd_len = max_src_seq_len - src_seq_len
             tgt_padd_len = max_tgt_seq_len - tgt_seq_len
-            b_enc_ins[i].extend([self.src_vocab[self.eos_token]] * src_padd_len)
+            b_enc_ins[i].extend([self.src_vocab[self.sos_token]] * src_padd_len)
             b_dec_ins[i].extend([self.tgt_vocab[self.eos_token]] * tgt_padd_len)
             b_dec_outs[i].extend([self.tgt_vocab[self.eos_token]] * tgt_padd_len)
             b_tgt_weights[i].extend([0] * tgt_padd_len)
