@@ -49,7 +49,7 @@ def setup_module():
         for (conf_file, _, _), _ in conf_dict.items():
             with (src_dir / conf_file).open() as fin:
                 config = json.load(fin)
-            if config.get("train") and config["train"].get("epochs"):
+            if config.get("train"):
                 config["train"]["epochs"] = 1
                 if config["train"].get("max_batches") == 0:
                     config["train"]["max_batches"] = 2
