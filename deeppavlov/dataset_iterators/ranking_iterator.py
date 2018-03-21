@@ -6,10 +6,11 @@ import numpy as np
 @register('ranking_iterator')
 class RankingIterator:
 
-    def __init__(self, data,
+    def __init__(self, data, len_vocab,
                  sample_candidates, sample_candidates_valid, sample_candidates_test,
                  num_negative_samples, num_ranking_samples_valid, num_ranking_samples_test,
                  seed=None):
+        self.len_vocab = len_vocab
         self.sample_candidates = sample_candidates
         self.sample_candidates_valid = sample_candidates_valid
         self.sample_candidates_test = sample_candidates_test
@@ -66,9 +67,9 @@ class RankingIterator:
         elif sample_candidates == "global":
             candidates = []
             for i in range(batch_size):
-                candidate = np.random.randint(0, 24981, 1)[0]
+                candidate = np.random.randint(0, self.len_vocab, 1)[0]
                 while candidate in context_response_data[i]["pos_pool"]:
-                    candidate = np.random.randint(0, 24981, 1)[0]
+                    candidate = np.random.randint(0, self.len_vocab, 1)[0]
                 candidates.append(candidate)
             negative_response_data = candidates
         return negative_response_data
@@ -90,7 +91,7 @@ class RankingIterator:
                 response_data.append(response[:ranking_length])
 
         elif sample_candidates == "global" or sample_candidates is None:
-            ranking_length = 24981
+            ranking_length = self.len_vocab
             y = [len(el["pos_pool"]) * np.ones(ranking_length) for el in context_response_data]
             response_data = []
             for i in range(len(context_response_data)):

@@ -6,6 +6,7 @@
   "dataset_iterator": {
     "name": "ranking_iterator",
     "seed": 243,
+    "len_vocab": 24981,
     "sample_candidates": "global",
     "sample_candidates_valid": "pool",
     "sample_candidates_test": "pool",
