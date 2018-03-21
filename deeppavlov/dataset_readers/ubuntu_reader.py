@@ -4,7 +4,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import download_decompress, mark_done, is_done
 from deeppavlov.core.commands.utils import get_deeppavlov_root, expand_path
 import pickle
-
+import numpy as np
 @register('ubuntu_reader')
 class UbuntuReader(DatasetReader):
 
@@ -43,12 +43,14 @@ class UbuntuReader(DatasetReader):
         neg_resps = []
         neg_resp = []
         for el in zip(val_resps, data[1]['y']):
-            if el[1] == 1:
+            if el[1] == '1':
                 pos_resps.append(el[0])
-                neg_resp = []
+                if len(neg_resp) > 0:
+                    neg_resps.append(neg_resp)
+                    neg_resp = []
             else:
                 neg_resp.append(el[0])
-
+        neg_resps.append(neg_resp)
 
 
         val_data = [[el[0], el[1]] for el in zip(data[1]['c'], val_resps, data[1]['y']) if el[2] == '1']
