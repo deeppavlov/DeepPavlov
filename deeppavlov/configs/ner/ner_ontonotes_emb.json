@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "conll2003_reader",
-    "data_path": "conll2003/"
+    "data_path": "ontonotes/"
   },
   "dataset_iterator": {
     "name": "basic_dataset_iterator"
@@ -47,8 +47,8 @@
         "name": "ner",
         "main": true,
         "embeddings_onethego": true,
-        "save_path": "ner_conll2003/ner_model_emb",
-        "load_path": "ner_conll2003/ner_model_emb",
+        "save_path": "ner_ontonotes/ner_model_emb",
+        "load_path": "ner_ontonotes/ner_model_emb",
         "word_vocab": "#word_vocab",
         "tag_vocab": "#tag_vocab",
         "char_vocab": "#char_vocab",

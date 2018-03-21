@@ -22,10 +22,12 @@ REQ_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/error_model.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ranking.tar.gz',
     'http://lnsigo.mipt.ru/export/embeddings/insurance_v1_word2vec',
+    'http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/slots.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/dstc2_fastText_model.bin',
-    'http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz'
+    'http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz',
+    'http://lnsigo.mipt.ru/export/datasets/ontonotes.tar.gz'
 }
 
 OPT_URLS = {
@@ -37,10 +39,12 @@ ALL_URLS = REQ_URLS.union(OPT_URLS)
 EMBEDDING_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/dstc2_fastText_model.bin',
-    'http://lnsigo.mipt.ru/export/embeddings/insurance_v1_word2vec'
+    'http://lnsigo.mipt.ru/export/embeddings/insurance_v1_word2vec',
+    'http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt'
 }
 
 DATA_URLS = {
+    'http://lnsigo.mipt.ru/export/datasets/ontonotes.tar.gz',
     'http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz',
     'http://lnsigo.mipt.ru/export/datasets/insuranceQA-master.zip'
 }
