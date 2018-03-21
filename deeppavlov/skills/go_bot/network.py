@@ -244,8 +244,10 @@ class GoalOrientedBotNetwork(TFModel):
 
             _attn = tf.nn.softmax(tf.matmul(_bilstm_output,_r_projected_key), dim=1)
 
-            _t_bilstm_output = tf.transpose(_bilstm_output, [0, 2, 1])
-            _output_tensor = tf.reshape(tf.matmul(_t_bilstm_output,_attn), shape = [_batch_size, -1, _n_hidden])
+            # _t_bilstm_output = tf.transpose(_bilstm_output, [0, 2, 1])
+            # _output_tensor = tf.reshape(tf.matmul(_t_bilstm_output,_attn), shape = [_batch_size, -1, _n_hidden])
+            _t_context = tf.transpose(_r_context, [0, 2, 1])
+            _output_tensor = tf.reshape(tf.matmul(_t_context,_attn), shape = [_batch_size, -1, _token_dim])
         return _output_tensor
 
     def _light_general_att_mech(self):
