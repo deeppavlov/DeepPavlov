@@ -31,7 +31,7 @@ log = get_logger(__name__)
 
 @register('default_vocab')
 class DefaultVocabulary(Estimator):
-    def __init__(self, save_path, load_path, inputs=None, level='token',
+    def __init__(self, save_path, load_path, level='token',
                  special_tokens=tuple(), default_token=None,
                  tokenizer=None, *args, **kwargs):
 
@@ -41,14 +41,15 @@ class DefaultVocabulary(Estimator):
 
         self.special_tokens = special_tokens
         self.default_token = default_token
-        self.preprocess_fn = self._build_preprocess_fn(inputs, level, tokenizer)
+        self.preprocess_fn = self._build_preprocess_fn(level, tokenizer)
 
         # TODO check via decorator
         self.reset()
-        self.load()
+        if self.load_path:
+            self.load()
 
     @staticmethod
-    def _build_preprocess_fn(inputs, level, tokenizer=None):
+    def _build_preprocess_fn(level, tokenizer=None):
         def iter_level(utter):
             if isinstance(utter, list) and isinstance(utter[0], dict):
                 utter = ' '.join(u['text'] for u in utter)
@@ -56,7 +57,7 @@ class DefaultVocabulary(Estimator):
                 utter = utter['text']
 
             if tokenizer is not None:
-                utter = tokenizer(utter)
+                utter = tokenizer([utter])[0]
             if level == 'token':
                 yield from utter
             elif level == 'char':
@@ -67,15 +68,8 @@ class DefaultVocabulary(Estimator):
                                  " or to `char`")
 
         def preprocess_fn(data):
-            if inputs is not None:
-                for f in inputs:
-                    if f == 'x':
-                        yield from iter_level(data[0])
-                    elif f == 'y':
-                        yield from iter_level(data[1])
-            else:
-                for d in data:
-                    yield from iter_level(d)
+            for d in data:
+                yield from iter_level(d)
 
         return preprocess_fn
 
@@ -180,10 +174,6 @@ class DefaultVocabulary(Estimator):
             if not filter_paddings or idx != self.tok2idx('<PAD>'):
                 toks.append(self._i2t[idx])
         return toks
-
-    def iter_all(self):
-        for token in self.frequencies:
-            yield token
 
     def tok2idx(self, tok):
         return self._t2i[tok]

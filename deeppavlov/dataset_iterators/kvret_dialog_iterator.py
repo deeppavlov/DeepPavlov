@@ -27,17 +27,35 @@ class KvretDialogDatasetIterator(BasicDatasetIterator):
         dialogs = []
         history = []
         for x, y in data:
-            if x.get('episode_done'):
+            if x.get('episode_done') is not None:
                 history = []
-                dialogs.append(([], []))
+                dialogs.append((([], []), []))
             history.append((copy.deepcopy(x), y))
             x['history'] = history[:-1]
-            dialogs[-1][0].append(x)
-            dialogs[-1][1].append(y)
+            dialogs[-1][0][0].append(x.pop('text'))
+            dialogs[-1][0][1].append(x)
+            #dialogs[-1][0].append(x)
+            dialogs[-1][1].append(y.pop('text'))
         return dialogs
+
+    @staticmethod
+    def _utterances(data):
+        #utters = (([], []), [])
+        utters = []
+        history = []
+        for x, y in data:
+            if x.get('episode_done'):
+                history = []
+            history.append((copy.deepcopy(x), y))
+            x['history'] = history[:-1]
+            #utters[0][0].append(x.pop('text'))
+            #utters[0][1].append(x)
+            #utters[1].append(y.pop('text'))
+            utters.append(((x.pop('text'), x), y.pop('text')))
+        return utters
 
     @overrides
     def split(self, *args, **kwargs):
-        self.train = self._dialogs(self.train)
-        self.valid = self._dialogs(self.valid)
-        self.test = self._dialogs(self.test)
+        self.train = self._utterances(self.train)
+        self.valid = self._utterances(self.valid)
+        self.test = self._utterances(self.test)

@@ -56,22 +56,20 @@ class Seq2SeqGoalOrientedBot(NNModel):
         #self.embedder = embedder
         self.debug = debug
 
-    def train_on_batch(self, x, y):
+    def train_on_batch(self, x_utters, x_meta, y):
         b_enc_ins, b_src_seq_lens = [], []
         b_dec_ins, b_dec_outs, b_tgt_seq_lens, b_tgt_weights = [], [], [], []
-        for d_contexts, d_responses in zip(x, y):
-            d_utters, d_meta = d_contexts
-            for utter, meta, resp in zip(d_utters, d_meta, d_responses):
+        for utter, meta, resp in zip(x_utters, x_meta, y):
 
-                enc_in = self._encode_context(utter)
-                b_enc_ins.append(enc_in)
-                b_src_seq_lens.append(len(enc_in))
+            enc_in = self._encode_context(utter)
+            b_enc_ins.append(enc_in)
+            b_src_seq_lens.append(len(enc_in))
 
-                dec_in, dec_out = self._encode_response(resp)
-                b_dec_ins.append(dec_in)
-                b_dec_outs.append(dec_out)
-                b_tgt_seq_lens.append(len(dec_out))
-                b_tgt_weights.append([1] * len(dec_out))
+            dec_in, dec_out = self._encode_response(resp)
+            b_dec_ins.append(dec_in)
+            b_dec_outs.append(dec_out)
+            b_tgt_seq_lens.append(len(dec_out))
+            b_tgt_weights.append([1] * len(dec_out))
 
         # Sequence padding
         max_src_seq_len = max(b_src_seq_lens)
@@ -104,21 +102,18 @@ class Seq2SeqGoalOrientedBot(NNModel):
         return ([self.tgt_vocab[self.sos_token]] + token_idxs,
                 token_idxs + [self.tgt_vocab[self.eos_token]])
 
-    def __call__(self, batch):
-        if isinstance(batch[0], str):
-            return self._infer_on_batch([[{'text': x} for x in batch]])[0]
-        return self._infer_on_batch(batch)
+    def __call__(self, x_utters, x_metas):
+        #if isinstance(batch[0], str):
+        #    return self._infer_on_batch([[{'text': x} for x in batch]])[0]
+        return self._infer_on_batch(x_utters, x_metas)
 
-    def _infer_on_batch(self, contexts):
+    def _infer_on_batch(self, x_utters, x_metas):
 # TODO: history as input
         b_enc_ins, b_src_seq_lens = [], []
-        d_idxs = []
-        for d_contexts in contexts:
-            d_idxs.append({'start': len(d_idxs), 'end': len(d_idxs) + len(d_contexts)})
-            for context in d_contexts:
-                enc_in = self._encode_context(context['text'])
-                b_enc_ins.append(enc_in)
-                b_src_seq_lens.append(len(enc_in))
+        for utter, meta in zip(x_utters, x_metas):
+            enc_in = self._encode_context(utter)
+            b_enc_ins.append(enc_in)
+            b_src_seq_lens.append(len(enc_in))
 
         # Sequence padding
         max_src_seq_len = max(b_src_seq_lens)
@@ -127,16 +122,10 @@ class Seq2SeqGoalOrientedBot(NNModel):
             b_enc_ins[i].extend([self.src_vocab[self.eos_token]] * src_padd_len)
 
         pred_idxs = self.network(b_enc_ins, b_src_seq_lens)
+        preds = [' '.join(self.tgt_vocab(utter_idxs.tolist()))\
+                 for utter_idxs in pred_idxs]
         if self.debug:
-            print(pred_idxs, len(pred_idxs), len(pred_idxs[0]))
-        preds = []
-        for d_idx in d_idxs:
-            d_pred_idxs = pred_idxs[d_idx['start']:d_idx['end']]
-            preds.append([])
-            for utter_idxs in d_pred_idxs:
-                preds[-1].append(' '.join(self.tgt_vocab(list(utter_idxs))))
-            if self.debug:
-                print("Dialog predictions = \"{}\"".format(preds[-1]))
+            print("Dialog predictions = \"{}\"".format(preds[-1]))
         return preds
 
     def save(self):

@@ -64,19 +64,19 @@
         },
         "source_vocab": "#src_token_vocab",
         "target_vocab": "#tgt_token_vocab",
+        "debug": true,
+        "debug": false,
         "bow_encoder": {
           "name": "bow"
-        },
-        "debug": true,
-        "debug": false
+        }
       }
     ]
   },
   "train": {
     "epochs": 200,
-    "batch_size": 4,
+    "batch_size": 10,
 
-    "metrics": ["per_item_dialog_bleu", "per_item_dialog_accuracy"],
+    "metrics": ["per_item_bleu", "per_item_accuracy"],
     "validation_patience": 20,
     "val_every_n_epochs": 1,
 
