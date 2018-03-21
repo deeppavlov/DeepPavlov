@@ -98,8 +98,11 @@ class TFModel(NNModel, metaclass=TfModelMeta):
                 opt = optimizer(learning_rate)
                 grads_and_vars = opt.compute_gradients(loss, var_list=variables_to_train)
                 if clip_norm is not None:
+                    for grad, var in grads_and_vars:
+                        if grad is None:
+                            print(var)
                     grads_and_vars = [(tf.clip_by_norm(grad, clip_norm), var)
-                                      for grad, var in grads_and_vars]
+                                      for grad, var in grads_and_vars] #  if grad is not None
                 train_op = opt.apply_gradients(grads_and_vars)
         return train_op
 

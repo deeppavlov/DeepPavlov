@@ -60,8 +60,8 @@
         "use_action_mask": false,
         "network": {
           "name": "go_bot_rnn",
-          "load_path": "go_bot_all_light_bahdanau_attn/model",
-          "save_path": "go_bot_all_light_bahdanau_attn/model",
+          "load_path": "bah_cs_large_projected_bs1/model",
+          "save_path": "bah_cs_large_projected_bs1/model",
           "learning_rate": 0.002,
           "dropout_rate": 0.8,
           "hidden_dim": 128,
@@ -70,7 +70,7 @@
           "use_action_mask": false,
           "action_size": 45,
           "attention_mechanism": {
-            "type":"light_bahdanau",
+            "type":"cs_bahdanau",
             "att_hidden_dim": 32,
             "max_of_context_tokens": 100,
             "obs_size_correction": 530,

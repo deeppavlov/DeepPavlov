@@ -32,6 +32,7 @@ log = get_logger(__name__)
 class GoalOrientedBotNetwork(TFModel):
     def __init__(self, **params):
         self.opt = params
+        self.debug_pipe = None
 
         # initialize parameters
         self._init_params()
@@ -105,6 +106,7 @@ class GoalOrientedBotNetwork(TFModel):
                             attention_mechanism.keys())(**attention_mechanism)
         if self.attention_mechanism:
             self.obs_size = self.attention_mechanism.obs_size_correction
+            self.projected_attn_alignment = self.attention_mechanism.projected_attn_alignment
         self.dense_size = params.get('dense_size', params['hidden_dim'])
 
     def _build_graph(self):
@@ -171,27 +173,24 @@ class GoalOrientedBotNetwork(TFModel):
                                       name='ground_truth_action')
         self._action_mask = tf.placeholder(tf.float32, [None, None, self.n_actions],
                                            name='action_mask')
-        #     tf.placeholder_with_default(np.zeros([1, self.n_hidden], np.float32),
-        #                                 shape=[None, self.n_hidden])
-        # _initial_state_h = \
-        #     tf.placeholder_with_default(np.zeros([1, self.n_hidden], np.float32),
-        #                                 shape=[None, self.n_hidden])
-        # self._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c,
-        #                                                     _initial_state_h)
 
     def _build_body(self):
         # input projection
         _units = tf.nn.dropout(self._features, self._dropout)
         _units = tf.layers.dense(_units,
                                  self.dense_size,
-                                 kernel_initializer=xavier_initializer())
+                                 kernel_initializer=xavier_initializer(), name='units')
 
 
         if self.attention_mechanism:
             if self.attention_mechanism.type == 'general':
                 _att_mech_output_tensor = self._general_att_mech()
+            elif self.attention_mechanism.type == 'bahdanau':
+                _att_mech_output_tensor = self._bahdanau_att_mech()
             elif self.attention_mechanism.type == 'cs_general':
                 _att_mech_output_tensor = self._cs_general_att_mech()
+            elif self.attention_mechanism.type == 'cs_bahdanau':
+                _att_mech_output_tensor = self._cs_bah_att_mech()
             elif self.attention_mechanism.type == 'light_general':
                 _att_mech_output_tensor = self._light_general_att_mech()
             elif self.attention_mechanism.type == 'light_bahdanau':
@@ -210,7 +209,7 @@ class GoalOrientedBotNetwork(TFModel):
         # output projection
         _logits = tf.layers.dense(_output,
                                   self.n_actions,
-                                  kernel_initializer=xavier_initializer())
+                                  kernel_initializer=xavier_initializer(), name='logits')
         return _logits, _state
 
     def _general_att_mech(self):
@@ -244,10 +243,14 @@ class GoalOrientedBotNetwork(TFModel):
 
             _attn = tf.nn.softmax(tf.matmul(_bilstm_output,_r_projected_key), dim=1)
 
-            # _t_bilstm_output = tf.transpose(_bilstm_output, [0, 2, 1])
-            # _output_tensor = tf.reshape(tf.matmul(_t_bilstm_output,_attn), shape = [_batch_size, -1, _n_hidden])
-            _t_context = tf.transpose(_r_context, [0, 2, 1])
-            _output_tensor = tf.reshape(tf.matmul(_t_context,_attn), shape = [_batch_size, -1, _token_dim])
+            if self.projected_attn_alignment:
+                log.info("Using projected attnention alignment")
+                _t_context = tf.transpose(_bilstm_output, [0, 2, 1])
+                _output_tensor = tf.reshape(tf.matmul(_t_context,_attn), shape = [_batch_size, -1, _n_hidden])
+            else:
+                log.info("Using without projected attnention alignment")
+                _t_context = tf.transpose(_r_context, [0, 2, 1])
+                _output_tensor = tf.reshape(tf.matmul(_t_context,_attn), shape = [_batch_size, -1, _token_dim])
         return _output_tensor
 
     def _light_general_att_mech(self):
@@ -316,11 +319,102 @@ class GoalOrientedBotNetwork(TFModel):
                                         kernel_initializer=xavier_initializer())
 
 
-            _attn = tf.nn.softmax(_score)
-
-            _t_context = tf.transpose(_r_context, [0, 2, 1])
-            _output_tensor = tf.reshape(tf.matmul(_t_context,_attn), shape = [_batch_size, -1, _token_dim])
+            _attn = tf.nn.softmax(_score, dim = 1)
+            # self.debug_pipe = {'_attn':_attn,'_score':_score}
+            if self.projected_attn_alignment:
+                log.info("Using projected attnention alignment")
+                _t_context = tf.transpose(_projected_context, [0, 2, 1])
+                _output_tensor = tf.reshape(tf.matmul(_t_context,_attn), shape = [_batch_size, -1, _n_hidden])
+            else:
+                log.info("Using without projected attnention alignment")
+                _t_context = tf.transpose(_r_context, [0, 2, 1])
+                _output_tensor = tf.reshape(tf.matmul(_t_context,_attn), shape = [_batch_size, -1, _token_dim])
         return _output_tensor
+
+    def _bahdanau_att_mech(self):
+        with tf.name_scope("attention_mechanism/general"):
+
+            _raw_key = self._key
+            _n_hidden = (self.attention_mechanism.att_hidden_dim//2)*2
+            _max_of_context_tokens = self.attention_mechanism.max_of_context_tokens
+            _token_dim = self.attention_mechanism.token_dim
+            _context = self._emb_context
+
+            _context_dim = tf.shape(_context)
+            _batch_size = _context_dim[0]
+            _r_context = tf.reshape(_context, shape = [-1, _max_of_context_tokens, _token_dim])
+
+            _projected_key = \
+                    tf.layers.dense(_raw_key,
+                                _n_hidden,
+                                kernel_initializer=xavier_initializer()) # [None, None, _n_hidden]
+            _projected_key_dim = tf.shape(_projected_key)
+            _r_projected_key = tf.tile(tf.reshape(_projected_key, shape = [-1,1, _n_hidden]), [1,_max_of_context_tokens,1])
+
+            _lstm_fw_cell = tf.nn.rnn_cell.LSTMCell(_n_hidden//2)
+            _lstm_bw_cell = tf.nn.rnn_cell.LSTMCell(_n_hidden//2)
+            (_output_fw, _output_bw), _states = \
+                    tf.nn.bidirectional_dynamic_rnn(cell_fw=_lstm_fw_cell,
+                                                    cell_bw=_lstm_bw_cell,
+                                                    inputs=_r_context,
+                                                    dtype=tf.float32)
+
+            _bilstm_output = tf.concat([_output_fw, _output_bw],-1) # [-1,self.max_of_context_tokens,_n_hidden])
+            _concat_h_state = tf.concat([_r_projected_key,_output_fw, _output_bw], -1)
+            _projected_state = tf.layers.dense(_concat_h_state,
+                                        _n_hidden, use_bias=False,
+                                        kernel_initializer=xavier_initializer())
+            _score = tf.layers.dense(tf.tanh(_projected_state), units = 1,
+                                        use_bias=False,
+                                        kernel_initializer=xavier_initializer())
+
+            _attn = tf.nn.softmax(_score, dim = 1)
+
+            # _t_bilstm_output = tf.transpose(_bilstm_output, [0, 2, 1])
+            # _output_tensor = tf.reshape(tf.matmul(_t_bilstm_output,_attn), shape = [_batch_size, -1, _n_hidden])
+
+            if self.projected_attn_alignment:
+                log.info("Using projected attnention alignment")
+                _t_context = tf.transpose(_bilstm_output, [0, 2, 1])
+                _output_tensor = tf.reshape(tf.matmul(_t_context,_attn), shape = [_batch_size, -1, _n_hidden])
+            else:
+                log.info("Using without projected attnention alignment")
+                _t_context = tf.transpose(_r_context, [0, 2, 1])
+                _output_tensor = tf.reshape(tf.matmul(_t_context,_attn), shape = [_batch_size, -1, _token_dim])
+        return _output_tensor
+
+
+    # def _cs_general_att_mech(self):
+    #     with tf.name_scope("attention_mechanism/cs_general"):
+    #
+    #         _raw_key = self._key
+    #         _attention_depth = self.attention_mechanism.attention_depth
+    #         _n_hidden = (self.attention_mechanism.att_hidden_dim//2)*2
+    #         _max_of_context_tokens = self.attention_mechanism.max_of_context_tokens
+    #         _token_dim = self.attention_mechanism.token_dim
+    #         _key_dim = self.attention_mechanism.key_dim
+    #         _context = self._emb_context
+    #
+    #         _context_dim = tf.shape(_context)
+    #         _batch_size = _context_dim[0]
+    #         _r_context = tf.reshape(_context, shape = [-1, _max_of_context_tokens, _token_dim])
+    #         assert _attention_depth is not None
+    #
+    #
+    #         _lstm_fw_cell = tf.nn.rnn_cell.LSTMCell(_n_hidden//2)
+    #         _lstm_bw_cell = tf.nn.rnn_cell.LSTMCell(_n_hidden//2)
+    #         (_output_fw, _output_bw), _states = \
+    #                 tf.nn.bidirectional_dynamic_rnn(cell_fw=_lstm_fw_cell,
+    #                                                 cell_bw=_lstm_bw_cell,
+    #                                                 inputs=_r_context,
+    #                                                 dtype=tf.float32)
+    #         _bilstm_output = tf.concat([_output_fw, _output_bw],-1) # [-1,self.max_of_context_tokens,_n_hidden])
+    #
+    #         _key = tf.reshape(_raw_key, [-1, _key_dim])
+    #         _final_sketch = csoftmax_attention.attention_block(_bilstm_output, _raw_key, _attention_depth)
+    #
+    #         _output_tensor = tf.reshape(_final_sketch, shape = [_batch_size, -1, _attention_depth * _n_hidden])
+    #     return _output_tensor
 
 
     def _cs_general_att_mech(self):
@@ -337,8 +431,18 @@ class GoalOrientedBotNetwork(TFModel):
             _context_dim = tf.shape(_context)
             _batch_size = _context_dim[0]
             _r_context = tf.reshape(_context, shape = [-1, _max_of_context_tokens, _token_dim])
-            assert _attention_depth is not None
+            _r_context = tf.layers.dense(_r_context, _token_dim,
+            kernel_initializer=xavier_initializer(), name = 'r_context')
 
+            _projected_key = \
+                    tf.layers.dense(_raw_key,
+                                _n_hidden,
+                                kernel_initializer=xavier_initializer(), name = 'projected_key') # [None, None, _n_hidden]
+
+            _projected_key_dim = tf.shape(_projected_key)
+            _r_projected_key = tf.tile(tf.reshape(_projected_key, shape = [-1,1, _n_hidden]), [1,_max_of_context_tokens,1])
+
+            assert _attention_depth is not None
 
             _lstm_fw_cell = tf.nn.rnn_cell.LSTMCell(_n_hidden//2)
             _lstm_bw_cell = tf.nn.rnn_cell.LSTMCell(_n_hidden//2)
@@ -347,12 +451,69 @@ class GoalOrientedBotNetwork(TFModel):
                                                     cell_bw=_lstm_bw_cell,
                                                     inputs=_r_context,
                                                     dtype=tf.float32)
-            _bilstm_output = tf.concat([_output_fw, _output_bw],-1) # [-1,self.max_of_context_tokens,_n_hidden])
+            _bilstm_output = tf.concat([_output_fw, _output_bw],-1)
+            _hidden_for_sketch = tf.concat([_r_projected_key,_output_fw, _output_bw], -1)
 
-            _key = tf.reshape(_raw_key, [-1, _key_dim])
-            _final_sketch = csoftmax_attention.attention_block(_bilstm_output, _raw_key, _attention_depth)
+            if self.projected_attn_alignment:
+                log.info("Using projected attnention alignment")
+                _hidden_for_attn_alignment = _bilstm_output
+                _aligned_hidden = csoftmax_attention.attention_gen_block(_hidden_for_sketch, _hidden_for_attn_alignment, _attention_depth)
+                _output_tensor = tf.reshape(_aligned_hidden, shape = [_batch_size, -1, _attention_depth * _n_hidden])
+            else:
+                log.info("Using without projected attnention alignment")
+                _hidden_for_attn_alignment = _r_context
+                _aligned_hidden = csoftmax_attention.attention_gen_block(_hidden_for_sketch, _hidden_for_attn_alignment, _attention_depth)
+                _output_tensor = tf.reshape(_aligned_hidden, shape = [_batch_size, -1, _attention_depth * _token_dim])
+        return _output_tensor
 
-            _output_tensor = tf.reshape(_final_sketch, shape = [_batch_size, -1, _attention_depth * _n_hidden])
+
+    def _cs_bah_att_mech(self):
+        with tf.name_scope("attention_mechanism/cs_bahdanau"):
+
+            _raw_key = self._key
+            _attention_depth = self.attention_mechanism.attention_depth
+            _n_hidden = (self.attention_mechanism.att_hidden_dim//2)*2
+            _max_of_context_tokens = self.attention_mechanism.max_of_context_tokens
+            _token_dim = self.attention_mechanism.token_dim
+            _key_dim = self.attention_mechanism.key_dim
+            _context = self._emb_context
+
+            _context_dim = tf.shape(_context)
+            _batch_size = _context_dim[0]
+            _r_context = tf.reshape(_context, shape = [-1, _max_of_context_tokens, _token_dim])
+            _r_context = tf.layers.dense(_r_context, _token_dim,
+            kernel_initializer=xavier_initializer(), name = 'r_context')
+
+            _projected_key = \
+                    tf.layers.dense(_raw_key,
+                                _n_hidden,
+                                kernel_initializer=xavier_initializer(), name = 'projected_key') # [None, None, _n_hidden]
+
+            _projected_key_dim = tf.shape(_projected_key)
+            _r_projected_key = tf.tile(tf.reshape(_projected_key, shape = [-1,1, _n_hidden]), [1,_max_of_context_tokens,1])
+
+            assert _attention_depth is not None
+
+            _lstm_fw_cell = tf.nn.rnn_cell.LSTMCell(_n_hidden//2)
+            _lstm_bw_cell = tf.nn.rnn_cell.LSTMCell(_n_hidden//2)
+            (_output_fw, _output_bw), _states = \
+                    tf.nn.bidirectional_dynamic_rnn(cell_fw=_lstm_fw_cell,
+                                                    cell_bw=_lstm_bw_cell,
+                                                    inputs=_r_context,
+                                                    dtype=tf.float32)
+            _bilstm_output = tf.concat([_output_fw, _output_bw],-1)
+            _hidden_for_sketch = tf.concat([_r_projected_key,_output_fw, _output_bw], -1)
+
+            if self.projected_attn_alignment:
+                log.info("Using projected attnention alignment")
+                _hidden_for_attn_alignment = _bilstm_output
+                _aligned_hidden = csoftmax_attention.attention_bah_block(_hidden_for_sketch, _hidden_for_attn_alignment, _attention_depth)
+                _output_tensor = tf.reshape(_aligned_hidden, shape = [_batch_size, -1, _attention_depth * _n_hidden])
+            else:
+                log.info("Using without projected attnention alignment")
+                _hidden_for_attn_alignment = _r_context
+                _aligned_hidden = csoftmax_attention.attention_bah_block(_hidden_for_sketch, _hidden_for_attn_alignment, _attention_depth)
+                _output_tensor = tf.reshape(_aligned_hidden, shape = [_batch_size, -1, _attention_depth * _token_dim])
         return _output_tensor
 
     def reset_state(self):
@@ -365,7 +526,7 @@ class GoalOrientedBotNetwork(TFModel):
         if self.attention_mechanism:
             _, loss_value, prediction = \
                 self.sess.run(
-                    [ self._train_op, self._loss, self._prediction ],
+                    [ self._train_op, self._loss, self._prediction],
                     feed_dict={
                         self._dropout: self.dropout_rate,
                         self._utterance_mask: utter_mask,
@@ -378,6 +539,23 @@ class GoalOrientedBotNetwork(TFModel):
                         self._action_mask: action_mask
                     }
                 )
+            # _, loss_value, prediction, db_pipe = \
+            #     self.sess.run(
+            #         [ self._train_op, self._loss, self._prediction , self.debug_pipe],
+            #         feed_dict={
+            #             self._dropout: self.dropout_rate,
+            #             self._utterance_mask: utter_mask,
+            #             self._initial_state: (np.tile(self.state_c, [batch_size, 1]),
+            #                                   np.tile(self.state_h, [batch_size, 1])),
+            #             self._features: features,
+            #             self._emb_context: emb_context,
+            #             self._key: key,
+            #             self._action: action,
+            #             self._action_mask: action_mask
+            #         }
+            #     )
+            # print("db_pipe")
+            # print(db_pipe)
         else:
             _, loss_value, prediction = \
                 self.sess.run(

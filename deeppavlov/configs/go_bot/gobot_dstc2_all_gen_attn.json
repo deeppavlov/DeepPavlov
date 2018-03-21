@@ -74,6 +74,7 @@
             "att_hidden_dim": 32,
             "max_of_context_tokens": 100,
             "obs_size_correction": 530,
+            "projected_attn_alignment": false,
             "token_dim": 300,
             "key_dim": 45
           }
