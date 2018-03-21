@@ -24,3 +24,7 @@ class Estimator(Component, Serializable):
     @abstractmethod
     def fit(self, *args, **kwargs):
         pass
+
+    @abstractmethod
+    def fit_batch(self, *args, **kwargs):
+        pass
