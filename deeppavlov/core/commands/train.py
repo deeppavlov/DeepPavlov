@@ -18,7 +18,7 @@ import datetime
 import json
 import time
 from collections import OrderedDict
-from typing import List, Callable, Tuple
+from typing import List, Callable, Tuple, Union
 
 from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root
 from deeppavlov.core.commands.infer import build_model_from_config
@@ -28,7 +28,8 @@ from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import model as get_model
 from deeppavlov.core.common.metrics_registry import get_metrics_by_names
 from deeppavlov.core.common.params import from_params
-from deeppavlov.core.data.dataset_iterator import BasicDatasetIterator
+from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
+from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.nn_model import NNModel
@@ -38,14 +39,20 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-def _fit(model: Estimator, dataset: BasicDatasetIterator, train_config={}):
-    x, y = dataset.iter_all('train')
+def _fit(model: Estimator, iterator: DataLearningIterator, train_config={}):
+    x, y = iterator.get_instances('train')
     model.fit(x, y)
     model.save()
     return model
 
 
-def fit_chainer(config: dict, dataset: BasicDatasetIterator):
+def _fit_batches(model: Estimator, iterator: DataFittingIterator):
+    model.fit_batch(iterator)
+    model.save()
+    return model
+
+
+def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingIterator]):
 
     chainer_config: dict = config['chainer']
     chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
@@ -54,7 +61,7 @@ def fit_chainer(config: dict, dataset: BasicDatasetIterator):
         if 'fit_on' in component_config:
             component: Estimator
 
-            preprocessed = chainer(*dataset.iter_all('train'), to_return=component_config['fit_on'])
+            preprocessed = chainer(*iterator.get_instances('train'), to_return=component_config['fit_on'])
             if len(component_config['fit_on']) == 1:
                 preprocessed = [preprocessed]
             component.fit(*preprocessed)
@@ -99,15 +106,16 @@ def train_model_from_config(config_path: str):
         log.warning("No dataset reader is provided in the JSON config.")
 
     iterator_config = config['dataset_iterator']
-    dataset: BasicDatasetIterator = from_params(iterator_config, data=data)
+    iterator: Union[DataLearningIterator, DataFittingIterator] = from_params(iterator_config,
+                                                                             data=data)
 
     if 'chainer' in config:
-        model = fit_chainer(config, dataset)
+        model = fit_chainer(config, iterator)
     else:
         vocabs = {}
         for vocab_param_name, vocab_config in config.get('vocabs', {}).items():
             v: Estimator = from_params(vocab_config, mode='train')
-            vocabs[vocab_param_name] = _fit(v, dataset)
+            vocabs[vocab_param_name] = _fit(v, iterator)
 
         model_config = config['model']
         model = from_params(model_config, vocabs=vocabs, mode='train')
@@ -127,9 +135,11 @@ def train_model_from_config(config_path: str):
     metrics_functions = list(zip(train_config['metrics'], get_metrics_by_names(train_config['metrics'])))
 
     if callable(getattr(model, 'train_on_batch', None)):
-        _train_batches(model, dataset, train_config, metrics_functions)
+        _train_batches(model, iterator, train_config, metrics_functions)
+    elif callable(getattr(model, 'fit_batch', None)):
+        _fit_batches(model, iterator)
     elif callable(getattr(model, 'fit', None)):
-        _fit(model, dataset, train_config)
+        _fit(model, iterator, train_config)
     elif not isinstance(model, Chainer):
         log.warning('Nothing to train')
 
@@ -143,27 +153,29 @@ def train_model_from_config(config_path: str):
 
         if train_config['validate_best']:
             report = {
-                'valid': _test_model(model, metrics_functions, dataset, train_config.get('batch_size', -1), 'valid')
+                'valid': _test_model(model, metrics_functions, iterator,
+                                     train_config.get('batch_size', -1), 'valid')
             }
 
             print(json.dumps(report, ensure_ascii=False))
 
         if train_config['test_best']:
             report = {
-                'test': _test_model(model, metrics_functions, dataset, train_config.get('batch_size', -1), 'test')
+                'test': _test_model(model, metrics_functions, iterator,
+                                    train_config.get('batch_size', -1), 'test')
             }
 
             print(json.dumps(report, ensure_ascii=False))
 
 
 def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
-                dataset: BasicDatasetIterator, batch_size=-1, data_type='valid', start_time=None):
+                dataset: DataLearningIterator, batch_size=-1, data_type='valid', start_time=None):
     if start_time is None:
         start_time = time.time()
 
     val_y_true = []
     val_y_predicted = []
-    for x, y_true in dataset.batch_generator(batch_size, data_type, shuffle=False):
+    for x, y_true in dataset.gen_batch(batch_size, data_type, shuffle=False):
         y_predicted = list(model(list(x)))
         val_y_true += y_true
         val_y_predicted += y_predicted
@@ -178,7 +190,7 @@ def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
     return report
 
 
-def _train_batches(model: NNModel, dataset: BasicDatasetIterator, train_config: dict,
+def _train_batches(model: NNModel, dataset: DataLearningIterator, train_config: dict,
                    metrics_functions: List[Tuple[str, Callable]]):
 
     default_train_config = {
@@ -222,7 +234,7 @@ def _train_batches(model: NNModel, dataset: BasicDatasetIterator, train_config: 
     start_time = time.time()
     try:
         while True:
-            for x, y_true in dataset.batch_generator(train_config['batch_size']):
+            for x, y_true in dataset.gen_batch(train_config['batch_size']):
                 if log_on:
                     y_predicted = list(model(list(x)))
                     train_y_true += y_true
