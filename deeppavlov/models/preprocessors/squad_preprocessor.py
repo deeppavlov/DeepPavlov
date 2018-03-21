@@ -159,8 +159,7 @@ class SquadVocabEmbedder(Estimator):
         self.NULL = "<NULL>"
         self.OOV = "<OOV>"
 
-        if not self.emb_folder.exists():
-            self.emb_folder.mkdir(parents=True)
+        self.emb_folder.mkdir(parents=True, exist_ok=True)
 
         if not (self.emb_folder / self.emb_file_name).exists():
             download(self.emb_folder / self.emb_file_name, self.emb_url)
@@ -240,6 +239,7 @@ class SquadVocabEmbedder(Estimator):
 
     def save(self, *args, **kwargs):
         logger.info('SquadVocabEmbedder: saving {}s vocab to {}'.format(self.level, self.save_path))
+        self.save_path.parent.mkdir(parents=True, exist_ok=True)
         pickle.dump((self.emb_dim, self.emb_mat, self.token2idx_dict), self.save_path.open('wb'))
 
     def _get_idx(self, el):
