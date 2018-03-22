@@ -15,4 +15,4 @@ script:
   then git checkout ${TRAVIS_PULL_REQUEST_BRANCH};
   else git checkout ${TRAVIS_BRANCH};
   fi
-- pytest -v
+- pytest -v -m "not gpu_only and not slow"
