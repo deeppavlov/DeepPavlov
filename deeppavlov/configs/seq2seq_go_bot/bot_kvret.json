@@ -4,12 +4,13 @@
     "data_path": "kvret"
   },
   "dataset_iterator": {
-    "name": "kvret_dialog_iterator"
+    "name": "kvret_dialog_iterator",
+    "shuffle": false
   },
   "chainer": {
     "in": ["x_text", "dialog_id", "kb_columns", "kb_items"],
     "in_y": ["y_text", "y_domain"],
-    "out": ["prediction_tokens"],
+    "out": ["prediction_text"],
     "pipe": [
       {
         "name": "stream_spacy_tokenizer",
@@ -27,24 +28,19 @@
         "id": "kb",
         "name": "knowledge_base",
         "fit_on": ["dialog_id", "kb_columns", "kb_items"],
-        "save_path": "kb/kb_items.dict",
-        "load_path": "kb/kb_items.dict"
+        "tokenizer": { "name": "stream_spacy_tokenizer" },
+        "save_path": "kb/kvret.json",
+        "load_path": "kb/kvret.json"
       },
       {
         "name": "knowledge_base_entity_normalizer",
         "kb": "#kb",
-        "in": ["x_tokens"],
-        "out": ["x_norm_tokens"]
-      },
-      {
-        "name": "knowledge_base_entity_normalizer",
-        "kb": "#kb",
-        "in": ["y_tokens"],
+        "in": ["dialog_id", "y_tokens", "kb_columns", "kb_items"],
         "out": ["y_norm_tokens"]
       },
       {
         "id": "src_token_vocab",
-        "fit_on": ["x_norm_tokens"],
+        "fit_on": ["x_tokens"],
         "name": "default_vocab",
         "level": "token",
         "special_tokens": ["<SOS>"],
@@ -62,7 +58,7 @@
         "load_path": "vocabs/tgt_tokens.dict"
       },
       {
-        "in": ["x_norm_tokens", "dialog_id"],
+        "in": ["x_tokens", "dialog_id"],
         "in_y": ["y_norm_tokens"],
         "out": ["prediction_norm_tokens"],
         "main": true,
@@ -92,8 +88,13 @@
         "name": "knowledge_base_entity_normalizer",
         "kb": "#kb",
         "denormalize": true,
-        "in": ["prediction_norm_tokens"],
+        "in": ["dialog_id", "prediction_norm_tokens"],
         "out": ["prediction_tokens"]
+      },
+      {
+        "name": "stream_spacy_tokenizer",
+        "in": ["prediction_tokens"],
+        "out": ["prediction_text"]
       }
     ]
   },

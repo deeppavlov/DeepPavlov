@@ -53,8 +53,7 @@ class KvretDialogDatasetIterator(BasicDatasetIterator):
                 task = y['task']
             history.append((x, y))
             x['history'] = history[:-1]
-            x_tuple = (x['text'], x['dialog_id'], x.get('kb_columns'),
-                       x.get('kb_items'))
+            x_tuple = (x['text'], x['dialog_id'], x.get('kb_columns'), x.get('kb_items'))
             y_tuple = (y['text'], task)
             utters.append((x_tuple, y_tuple))
         return utters

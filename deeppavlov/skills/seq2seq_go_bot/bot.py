@@ -119,7 +119,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
             b_enc_ins[i].extend([self.src_vocab[self.eos_token]] * src_padd_len)
 
         pred_idxs = self.network(b_enc_ins, b_src_lens)
-        preds = [' '.join(_filter(self.tgt_vocab(utter_idxs)))\
+        preds = [list(_filter(self.tgt_vocab(utter_idxs)))\
                  for utter_idxs in pred_idxs]
         if self.debug:
             print("Dialog prediction = \"{}\"".format(preds[-1]))
