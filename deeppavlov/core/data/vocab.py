@@ -51,17 +51,18 @@ class DefaultVocabulary(Estimator):
     @staticmethod
     def _build_preprocess_fn(level, tokenizer=None):
         def iter_level(utter):
-            if isinstance(utter, list) and isinstance(utter[0], dict):
-                utter = ' '.join(u['text'] for u in utter)
+            if isinstance(utter, list) and utter and isinstance(utter[0], dict):
+                tokens = (u['text'] for u in utter)
             elif isinstance(utter, dict):
-                utter = utter['text']
-            elif isinstance(utter, list) and isinstance(utter[0], str):
-                utter = ' '.join(u for u in utter)
+                tokens = [utter['text']]
+            elif isinstance(utter, list) and (not utter or isinstance(utter[0], str)):
+                tokens = utter
+            else:
+                tokens = [utter]
 
             if tokenizer is not None:
-                tokens = tokenizer([utter])[0]
-            else:
-                tokens = utter.split()
+                tokens = tokenizer([' '.join(tokens)])[0]
+            tokens = filter(None, tokens)
 
             if level == 'token':
                 yield from tokens
