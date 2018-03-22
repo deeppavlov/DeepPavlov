@@ -51,9 +51,8 @@ def setup_module():
                 config = json.load(fin)
             if config.get("train"):
                 config["train"]["epochs"] = 1
-                pytest_max_batches = config["train"].get("pytest_max_batches")
-                if pytest_max_batches:
-                    config["train"]["max_batches"] = pytest_max_batches
+                for pytest_key in [k for k in config["train"] if k.startswith('pytest_')]:
+                    config["train"][pytest_key[len('pytest_'):]] = config["train"].pop(pytest_key)
             config["deeppavlov_root"] = str(download_path)
             with (tests_dir / conf_file).open("w") as fout:
                 json.dump(config, fout)
