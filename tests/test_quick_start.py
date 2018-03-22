@@ -36,6 +36,18 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
           "squad": {("configs/squad/squad.json", "squad_model", True): []}
           }
 
+MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
+
+TEST_GRID = []
+for model in PARAMS.keys():
+    for conf_file, model_dir, ispretrained in PARAMS[model].keys():
+        marks = []
+        for mark in MARKS.keys():
+            if model in MARKS[mark]:
+                marks.append(eval("pytest.mark." + mark))
+        grid_unit = pytest.param(model, conf_file, model_dir, ispretrained, marks=marks)
+        TEST_GRID.append(grid_unit)
+
 
 def setup_module():
     src_dir = tests_dir.parent / "deeppavlov"
@@ -71,7 +83,7 @@ def download(full=None):
     pexpect.run(cmd, timeout=None)
 
 
-@pytest.mark.parametrize("model,conf_file,model_dir,d", [(m, c, md, d) for m in PARAMS.keys() for c, md, d in PARAMS[m].keys()])
+@pytest.mark.parametrize("model,conf_file,model_dir,ispretrained", TEST_GRID)
 class TestQuickStart(object):
 
     @staticmethod
@@ -89,17 +101,17 @@ class TestQuickStart(object):
         p.sendline("quit")
         assert p.expect(pexpect.EOF) == 0, f"Error in quitting from deep.py ({conf_file})"
 
-    def test_downloaded_model_existence(self, model, conf_file, model_dir, d):
-        if d:
-            if not download_path.exists():
-                download()
-            assert download_path.joinpath(model_dir).exists(), f"{model_dir} was not downloaded"
+    @pytest.mark.skipif("not ispretrained")
+    def test_downloaded_model_existence(self, model, conf_file, model_dir, ispretrained):
+        if not download_path.exists():
+            download()
+        assert download_path.joinpath(model_dir).exists(), f"{model_dir} was not downloaded"
 
-    def test_interacting_pretrained_model(self, model, conf_file, model_dir, d):
-        if d:
-            self.interact(tests_dir / conf_file, model_dir, PARAMS[model][(conf_file, model_dir, d)])
+    @pytest.mark.skipif("not ispretrained")
+    def test_interacting_pretrained_model(self, model, conf_file, model_dir, ispretrained):
+        self.interact(tests_dir / conf_file, model_dir, PARAMS[model][(conf_file, model_dir, ispretrained)])
 
-    def test_consecutive_training_and_interacting(self, model, conf_file, model_dir, d):
+    def test_consecutive_training_and_interacting(self, model, conf_file, model_dir, ispretrained):
         c = tests_dir / conf_file
         model_path = download_path / model_dir
         shutil.rmtree(str(model_path),  ignore_errors=True)
