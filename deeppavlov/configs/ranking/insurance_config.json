@@ -46,6 +46,7 @@
   "train": {
     "epochs": 150,
     "batch_size": 256,
+    "pytest_max_batches": 2,
     "metrics": ["r@1", "rank_response"],
     "validation_patience": 5,
     "val_every_n_epochs": 10

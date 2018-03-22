@@ -11,11 +11,13 @@ import deeppavlov.dataset_readers.dstc2_reader
 import deeppavlov.dataset_readers.conll2003_reader
 import deeppavlov.dataset_readers.typos_reader
 import deeppavlov.dataset_readers.basic_classification_reader
+import deeppavlov.dataset_readers.squad_dataset_reader
 import deeppavlov.dataset_iterators.dialog_iterator
 import deeppavlov.dataset_iterators.dstc2_ner_iterator
 import deeppavlov.dataset_iterators.dstc2_intents_iterator
 import deeppavlov.dataset_iterators.typos_iterator
 import deeppavlov.dataset_iterators.basic_classification_iterator
+import deeppavlov.dataset_iterators.squad_iterator
 import deeppavlov.models.classifiers.intents.intent_model
 import deeppavlov.models.commutators.random_commutator
 import deeppavlov.models.embedders.fasttext_embedder
@@ -26,8 +28,10 @@ import deeppavlov.models.spellers.error_model.error_model
 import deeppavlov.models.trackers.hcn_at
 import deeppavlov.models.trackers.hcn_et
 import deeppavlov.models.preprocessors.str_lower
+import deeppavlov.models.preprocessors.squad_preprocessor
 import deeppavlov.models.ner.ner
 import deeppavlov.models.tokenizers.spacy_tokenizer
+import deeppavlov.models.squad.squad
 import deeppavlov.skills.go_bot.go_bot
 import deeppavlov.skills.go_bot.network
 import deeppavlov.skills.go_bot.tracker
@@ -39,5 +43,6 @@ import deeppavlov.models.ranking.metrics
 
 import deeppavlov.metrics.accuracy
 import deeppavlov.metrics.fmeasure
+import deeppavlov.metrics.squad_metrics
 
 import deeppavlov.core.common.log

@@ -56,10 +56,10 @@ def fit_chainer(config: dict, iterator: BasicDatasetIterator) -> Chainer:
 
             preprocessed = chainer(*iterator.iter_all('train'), to_return=component_config['fit_on'])
             if len(component_config['fit_on']) == 1:
-                # preprocessed = [preprocessed]
-                component.fit(preprocessed)
+                preprocessed = [preprocessed]
             else:
-                component.fit(*preprocessed)
+                preprocessed = zip(*preprocessed)
+            component.fit(*preprocessed)
             component.save()
 
         if 'in' in component_config:
@@ -221,6 +221,7 @@ def _train_batches(model: NNModel, iterator: BasicDatasetIterator, train_config:
     train_y_true = []
     train_y_predicted = []
     start_time = time.time()
+    break_flag = False
     try:
         while True:
             for x, y_true in iterator.batch_generator(train_config['batch_size']):
@@ -247,7 +248,10 @@ def _train_batches(model: NNModel, iterator: BasicDatasetIterator, train_config:
                     train_y_predicted.clear()
 
                 if i >= train_config['max_batches'] > 0:
+                    break_flag = True
                     break
+            if break_flag:
+                break
 
             epochs += 1
 
