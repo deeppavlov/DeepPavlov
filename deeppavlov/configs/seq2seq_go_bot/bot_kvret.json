@@ -7,9 +7,9 @@
     "name": "kvret_dialog_iterator"
   },
   "chainer": {
-    "in": ["x_text", "x_meta"],
-    "in_y": ["y_text"],
-    "out": ["y_predicted"],
+    "in": ["x_text", "dialog_id", "kb_columns", "kb_items"],
+    "in_y": ["y_text", "y_domain"],
+    "out": ["prediction_tokens"],
     "pipe": [
       {
         "name": "stream_spacy_tokenizer",
@@ -24,30 +24,47 @@
         "out": ["y_tokens"]
       },
       {
+        "id": "kb",
+        "name": "knowledge_base",
+        "fit_on": ["dialog_id", "kb_columns", "kb_items"],
+        "save_path": "kb/kb_items.dict",
+        "load_path": "kb/kb_items.dict"
+      },
+      {
+        "name": "knowledge_base_entity_normalizer",
+        "kb": "#kb",
+        "in": ["x_tokens"],
+        "out": ["x_norm_tokens"]
+      },
+      {
+        "name": "knowledge_base_entity_normalizer",
+        "kb": "#kb",
+        "in": ["y_tokens"],
+        "out": ["y_norm_tokens"]
+      },
+      {
         "id": "src_token_vocab",
-        "fit_on": ["x_tokens"],
+        "fit_on": ["x_norm_tokens"],
         "name": "default_vocab",
         "level": "token",
-        "tokenizer": { "name": "split_tokenizer" },
         "special_tokens": ["<SOS>"],
         "save_path": "vocabs/src_tokens.dict",
         "load_path": "vocabs/src_tokens.dict"
       },
       {
         "id": "tgt_token_vocab",
-        "fit_on": ["y_tokens"],
+        "fit_on": ["y_norm_tokens"],
         "debug": true,
         "name": "default_vocab",
         "level": "token",
-        "tokenizer": { "name": "split_tokenizer" },
         "special_tokens": ["<SOS>", "<EOS>"],
         "save_path": "vocabs/tgt_tokens.dict",
         "load_path": "vocabs/tgt_tokens.dict"
       },
       {
-        "in": ["x_tokens", "x_meta"],
-        "in_y": ["y_tokens"],
-        "out": ["y_predicted"],
+        "in": ["x_norm_tokens", "dialog_id"],
+        "in_y": ["y_norm_tokens"],
+        "out": ["prediction_norm_tokens"],
         "main": true,
         "name": "seq2seq_go_bot",
         "start_of_sequence_token": "<SOS>",
@@ -70,12 +87,19 @@
         "bow_encoder": {
           "name": "bow"
         }
+      },
+      {
+        "name": "knowledge_base_entity_normalizer",
+        "kb": "#kb",
+        "denormalize": true,
+        "in": ["prediction_norm_tokens"],
+        "out": ["prediction_tokens"]
       }
     ]
   },
   "train": {
     "epochs": 200,
-    "batch_size": 20,
+    "batch_size": 32,
 
     "metrics": ["per_item_bleu", "per_item_accuracy"],
     "validation_patience": 20,

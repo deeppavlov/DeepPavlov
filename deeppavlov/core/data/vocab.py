@@ -56,14 +56,17 @@ class DefaultVocabulary(Estimator):
             elif isinstance(utter, dict):
                 utter = utter['text']
             elif isinstance(utter, list) and isinstance(utter[0], str):
-                utter = ' '.join(utter) 
+                utter = ' '.join(u for u in utter)
 
             if tokenizer is not None:
-                utter = tokenizer([utter])[0]
+                tokens = tokenizer([utter])[0]
+            else:
+                tokens = utter.split()
+
             if level == 'token':
-                yield from utter
+                yield from tokens
             elif level == 'char':
-                for token in utter:
+                for token in tokens:
                     yield from token
             else:
                 raise ValueError("level argument is either equal to `token`"
@@ -136,8 +139,6 @@ class DefaultVocabulary(Estimator):
             self.freqs[token] += cnt
 
     def __call__(self, samples, **kwargs):
-        if isinstance(samples[0], list):
-            return [self.__call__(s) for s in samples]
         return [self[s] for s in samples]
 
     def save(self):

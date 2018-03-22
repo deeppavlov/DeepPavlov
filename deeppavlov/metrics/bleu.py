@@ -13,6 +13,8 @@ def bleu(y_true, y_predicted):
 
 @register_metric('per_item_bleu')
 def per_item_bleu(y_true, y_predicted):
+    if isinstance(y_true[0], (tuple, list)):
+        y_true = map(lambda y: y[0], y_true)
     y_true = list(itertools.chain(*y_true))
     y_predicted = itertools.chain(*y_predicted)
     examples_len = len(y_true)

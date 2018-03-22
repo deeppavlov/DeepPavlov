@@ -13,7 +13,6 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import copy
 from overrides import overrides
 
 from deeppavlov.core.common.registry import register
@@ -22,36 +21,42 @@ from deeppavlov.core.data.dataset_iterator import BasicDatasetIterator
 
 @register('kvret_dialog_iterator')
 class KvretDialogDatasetIterator(BasicDatasetIterator):
+# TODO: write custom batch_generator: order of utterances from one dialogue is presumed
     @staticmethod
     def _dialogs(data):
         dialogs = []
         history = []
+        task = None
         for x, y in data:
-            if x.get('episode_done') is not None:
+            if x.get('episode_done'):
                 history = []
-                dialogs.append((([], []), []))
-            history.append((copy.deepcopy(x), y))
+                dialogs.append((([], [], [], []), ([], [])))
+                task = y['task']
+            history.append((x, y))
             x['history'] = history[:-1]
-            dialogs[-1][0][0].append(x.pop('text'))
-            dialogs[-1][0][1].append(x)
-            #dialogs[-1][0].append(x)
-            dialogs[-1][1].append(y.pop('text'))
+            dialogs[-1][0][0].append(x['text'])
+            dialogs[-1][0][1].append(x['dialog_id'])
+            dialogs[-1][0][2].append(x.get('kb_columns', None))
+            dialogs[-1][0][3].append(x.get('kb_items', None))
+            dialogs[-1][1][0].append(y['text'])
+            dialogs[-1][1][1].append(task)
         return dialogs
 
     @staticmethod
     def _utterances(data):
-        #utters = (([], []), [])
         utters = []
         history = []
+        task = None
         for x, y in data:
             if x.get('episode_done'):
                 history = []
-            history.append((copy.deepcopy(x), y))
+                task = y['task']
+            history.append((x, y))
             x['history'] = history[:-1]
-            #utters[0][0].append(x.pop('text'))
-            #utters[0][1].append(x)
-            #utters[1].append(y.pop('text'))
-            utters.append(((x.pop('text'), x), y.pop('text')))
+            x_tuple = (x['text'], x['dialog_id'], x.get('kb_columns'),
+                       x.get('kb_items'))
+            y_tuple = (y['text'], task)
+            utters.append((x_tuple, y_tuple))
         return utters
 
     @overrides
