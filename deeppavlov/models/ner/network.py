@@ -84,7 +84,15 @@ class NerNetwork:
                 else:
                     emb = w_emb
         else:
-            emb = x_word
+            w_emb = x_word
+            if use_char_embeddins:
+                c_emb = character_embedding_network(x_char,
+                                                    n_characters=n_chars,
+                                                    char_embedding_dim=char_embeddings_dim,
+                                                    filter_width=char_filter_width)
+                emb = tf.concat([w_emb, c_emb], axis=-1)
+            else:
+                emb = w_emb
 
         # Dropout for embeddings
         if embeddings_dropout:
