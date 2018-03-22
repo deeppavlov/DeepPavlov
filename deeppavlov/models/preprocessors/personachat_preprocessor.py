@@ -160,3 +160,15 @@ class PersonachatEmbedder(Estimator):
             if e in self.token2idx_dict:
                 return self.token2idx_dict[e]
         return 1
+
+
+@register('personachat_postprocessor')
+class PersonaChatPostprocessor(Component):
+    def __init__(self, idx2token, NULL, *args, **kwargs):
+        self.idx2token = idx2token
+        self.NULL = NULL
+
+    def __call__(self, idxs, **kwargs):
+        """ Converts predicted tokens ids to tokens.
+        """
+        return [' '.join(list(filter(lambda x: x != self.NULL, map(lambda x: self.idx2token[x], utt)))) for utt in idxs]
