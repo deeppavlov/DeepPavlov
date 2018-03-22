@@ -11,7 +11,7 @@ test_configs_path = tests_dir / "configs"
 download_path = tests_dir / "download"
 
 
-# Mapping from model name to config-model_dir and corresponding query-response pairs.
+# Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "error_model", True):
                               [
                                   ("helllo", "hello"),
@@ -51,8 +51,8 @@ def setup_module():
                 config = json.load(fin)
             if config.get("train"):
                 config["train"]["epochs"] = 1
-                if config["train"].get("max_batches") == 0:
-                    config["train"]["max_batches"] = 2
+                for pytest_key in [k for k in config["train"] if k.startswith('pytest_')]:
+                    config["train"][pytest_key[len('pytest_'):]] = config["train"].pop(pytest_key)
             config["deeppavlov_root"] = str(download_path)
             with (tests_dir / conf_file).open("w") as fout:
                 json.dump(config, fout)
