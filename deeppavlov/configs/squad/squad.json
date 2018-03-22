@@ -96,6 +96,7 @@
     "log_every_n_batches": 250,
     "val_every_n_epochs": 1,
     "batch_size": 50,
+    "pytest_max_batches": 2,
     "metrics": ["squad_f1", "exact_match"]
   }
 }

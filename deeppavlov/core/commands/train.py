@@ -221,6 +221,7 @@ def _train_batches(model: NNModel, iterator: BasicDatasetIterator, train_config:
     train_y_true = []
     train_y_predicted = []
     start_time = time.time()
+    break_flag = False
     try:
         while True:
             for x, y_true in iterator.batch_generator(train_config['batch_size']):
@@ -247,7 +248,10 @@ def _train_batches(model: NNModel, iterator: BasicDatasetIterator, train_config:
                     train_y_predicted.clear()
 
                 if i >= train_config['max_batches'] > 0:
+                    break_flag = True
                     break
+            if break_flag:
+                break
 
             epochs += 1
 

@@ -63,7 +63,7 @@ def interact(model, params_names):
 
     prediction = model(model_args)
     result = prediction[0]
-    return jsonify(str(result)), 200
+    return jsonify(result), 200
 
 
 def start_model_server(model_config_path):
