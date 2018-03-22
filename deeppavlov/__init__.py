@@ -46,3 +46,7 @@ import deeppavlov.metrics.fmeasure
 import deeppavlov.metrics.squad_metrics
 
 import deeppavlov.core.common.log
+
+import deeppavlov.dataset_readers.personachat_dataset_reader
+import deeppavlov.dataset_iterators.personachat_iterator
+import deeppavlov.models.preprocessors.personachat_preprocessor
