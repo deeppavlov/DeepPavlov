@@ -70,8 +70,8 @@ def setup_module():
 
 
 def teardown_module():
-    shutil.rmtree(str(test_configs_path))
-    shutil.rmtree(str(download_path))
+    shutil.rmtree(str(test_configs_path), ignore_errors=True)
+    shutil.rmtree(str(download_path), ignore_errors=True)
 
 
 def download(full=None):
