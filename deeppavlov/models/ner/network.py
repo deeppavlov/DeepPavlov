@@ -47,13 +47,14 @@ class NerNetwork:
                  use_batch_norm=False,
                  logging=False,
                  use_crf=False,
-                 net_type='cnn',
+                 net_type='rnn',
                  char_filter_width=5,
                  verbose=False,
                  sess=None,
                  cell_type='lstm',
-                 embedder=None):
-
+                 embedder=None,
+                 use_capitalization=False):
+        tf.set_random_seed(SEED)
         n_tags = len(tag_vocab)
         n_tokens = len(word_vocab)
         n_chars = len(char_vocab)
@@ -64,7 +65,7 @@ class NerNetwork:
             x_word = tf.placeholder(dtype=tf.int32, shape=[None, None], name='x_word')
         x_char = tf.placeholder(dtype=tf.int32, shape=[None, None, None], name='x_char')
         y_true = tf.placeholder(dtype=tf.int32, shape=[None, None], name='y_tag')
-
+        x_cap = tf.placeholder(dtype=tf.float32, shape=[None, None], name='y_cap')
         # Auxiliary placeholders
         learning_rate_ph = tf.placeholder(dtype=tf.float32, shape=[], name='learning_rate')
         dropout_ph = tf.placeholder_with_default(1.0, shape=[])
@@ -84,15 +85,9 @@ class NerNetwork:
                 else:
                     emb = w_emb
         else:
-            w_emb = x_word
-            if use_char_embeddins:
-                c_emb = character_embedding_network(x_char,
-                                                    n_characters=n_chars,
-                                                    char_embedding_dim=char_embeddings_dim,
-                                                    filter_width=char_filter_width)
-                emb = tf.concat([w_emb, c_emb], axis=-1)
-            else:
-                emb = w_emb
+            emb = x_word
+        if use_capitalization:
+            emb = tf.concat([emb, tf.expand_dims(x_cap, 2)], 2)
 
         # Dropout for embeddings
         if embeddings_dropout:
@@ -120,6 +115,7 @@ class NerNetwork:
 
         # Classifier
         with tf.variable_scope('Classifier'):
+            units = tf.layers.dense(units, n_filters[-1], kernel_initializer=xavier_initializer())
             logits = tf.layers.dense(units, n_tags, kernel_initializer=xavier_initializer())
 
         # Loss with masking
@@ -154,6 +150,7 @@ class NerNetwork:
         self._x_c = x_char
         self._y_true = y_true
         self._y_pred = predictions
+        self._x_cap = x_cap
         if use_crf:
             self._logits = logits
             self._trainsition_params = trainsition_params
@@ -170,6 +167,7 @@ class NerNetwork:
         self._embedder = embedder
         self.verbose = verbose
         self._mask = mask_ph
+        self._use_capitalization = use_capitalization
         sess.run(tf.global_variables_initializer())
 
     def tokens_batch_to_numpy_batch(self, batch_x, batch_y=None):
@@ -180,7 +178,15 @@ class NerNetwork:
         if self._embedder is None:
             x_token = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_vocab['<PAD>']
         else:
-            x_token = self._embedder(batch_x)
+            batch_x_lower = [[token.lower() for token in utterance] for utterance in batch_x]
+            x_token = np.zeros([batch_size, max_utt_len, self._token_embeddings_dim], dtype=np.float32)
+            x_token_list = self._embedder(batch_x_lower)
+            for n in range(len(batch_x)):
+                x_token[n, :len(x_token_list[n])] = x_token_list[n]
+
+        # Capital letter binary features
+        x_cap = np.zeros([batch_size, max_utt_len], dtype=np.float32)
+
         x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * self.char_vocab['<PAD>']
         mask = np.zeros([batch_size, max_utt_len])
         if batch_y is not None:
@@ -191,6 +197,13 @@ class NerNetwork:
         # Prepare x batch
         for n, utterance in enumerate(batch_x):
             mask[n, :len(utterance)] = 1
+            capitalization_features = []
+            for tok in utterance:
+                if len(tok) > 0:
+                    capitalization_features.append(tok[0].isupper())
+                else:
+                    capitalization_features.append(False)
+            x_cap[n, :len(utterance)] = capitalization_features
             if self._embedder is None:
                 x_token[n, :len(utterance)] = self.token_vocab.toks2idxs(utterance)
             for k, token in enumerate(utterance):
@@ -201,7 +214,7 @@ class NerNetwork:
             for n, tags in enumerate(batch_y):
                 y[n, :len(tags)] = self.tag_vocab.toks2idxs(tags)
 
-        return (x_token, x_char, mask), y
+        return (x_token, x_char, mask, x_cap), y
 
     def eval_conll(self, data, print_results=True, short_report=True, data_type=None):
         y_true_list = []
@@ -223,22 +236,12 @@ class NerNetwork:
                                    print_results,
                                    short_report)
 
-    def train(self, data, batch_size=8, learning_rate=1e-3, dropout_rate=0.5):
-        total_loss = 0
-        total_count = 0
-        for batch in data.batch_generator(batch_size):
-            current_loss = self.train_on_batch(batch,
-                                               learning_rate=learning_rate,
-                                               dropout_rate=dropout_rate)
-            total_loss += current_loss
-            # Add len of x
-            total_count += len(batch[0])
-
     def train_on_batch(self, batch_x, batch_y, learning_rate=1e-3, dropout_rate=0.5):
-        (x_toks, x_char, mask), y_tags = self.tokens_batch_to_numpy_batch(batch_x, batch_y)
+        (x_toks, x_char, mask, x_cap), y_tags = self.tokens_batch_to_numpy_batch(batch_x, batch_y)
         feed_dict = self._fill_feed_dict(x_toks,
                                          x_char,
                                          mask,
+                                         x_cap,
                                          y_tags,
                                          learning_rate,
                                          dropout_rate=dropout_rate,
@@ -247,15 +250,15 @@ class NerNetwork:
         return loss
 
     def predict_on_batch(self, x_batch):
-        (x_toks, x_char, mask), _ = self.tokens_batch_to_numpy_batch(x_batch)
-        y_pred = self._predict(x_toks, x_char, mask)
+        (x_toks, x_char, mask, capitalization), _ = self.tokens_batch_to_numpy_batch(x_batch)
+        y_pred = self._predict(x_toks, x_char, mask, capitalization)
         # TODO: add padding filtering
         y_pred_tags = self.tag_vocab.batch_idxs2batch_toks(y_pred)
         return y_pred_tags
 
-    def _predict(self, x_word, x_char, mask=None):
+    def _predict(self, x_word, x_char, mask=None, capitalization=None):
 
-        feed_dict = self._fill_feed_dict(x_word, x_char, mask, training=False)
+        feed_dict = self._fill_feed_dict(x_word, x_char, mask, capitalization, training=False)
         if self._use_crf:
             y_pred = []
             logits, trans_params, sequence_lengths = self._sess.run([self._logits,
@@ -313,6 +316,7 @@ class NerNetwork:
                         x_w,
                         x_c,
                         mask=None,
+                        capitalization=None,
                         y_t=None,
                         learning_rate=None,
                         training=False,
@@ -321,6 +325,10 @@ class NerNetwork:
         feed_dict[self._x_w] = x_w
         feed_dict[self._x_c] = x_c
         feed_dict[self._training_ph] = training
+        if capitalization is None:
+            feed_dict[self._x_cap] = np.zeros(x_w.shape[:2])
+        else:
+            feed_dict[self._x_cap] = capitalization
         if mask is not None:
             feed_dict[self._mask] = mask
         else:
