@@ -21,6 +21,7 @@ import sys
 from tqdm import tqdm
 import tarfile
 import gzip
+import zipfile
 import re
 import zipfile
 

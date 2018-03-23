@@ -3,8 +3,8 @@ from deeppavlov.core.common.registry import register
 import numpy as np
 
 
-@register('insurance_dataset')
-class InsuranceDataset:
+@register('ranking_iterator')
+class RankingIterator:
 
     def __init__(self, data,
                  sample_candidates, sample_candidates_valid, sample_candidates_test,
@@ -40,7 +40,8 @@ class InsuranceDataset:
                 context = [el["context"] for el in context_response_data]
                 response = [el["response"] for el in context_response_data]
                 negative_response = self.create_neg_resp_rand(context_response_data, batch_size, data_type)
-                yield ([context, response, negative_response], y)
+                x = list(zip(context, response, negative_response))
+                yield (x, y)
         if data_type in ["valid", "test"]:
             for i in range(num_steps + 1):
                 if i < num_steps:
