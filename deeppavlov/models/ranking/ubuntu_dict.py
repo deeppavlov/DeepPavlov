@@ -31,7 +31,7 @@ class UbuntuDict(RankingDict):
         data[0]['c'], data[0]['r'], data[0]['y'] = zip(*a)
         data[0]['r'] = list(data[0]['r'])
         all_resps = data[0]['r'] + data[1]['r'] + data[2]['r']
-        all_resps = set([' '.join(map(str, el)) for el in all_resps])
+        all_resps = sorted(set([' '.join(map(str, el)) for el in all_resps]))
         vocab = {el[0]: el[1] for el in enumerate(all_resps)}
         self.response2toks_vocab = {el[0]: [self.int2tok_vocab[int(x)]
                                     for x in el[1].split(' ')] for el in vocab.items()}
@@ -44,7 +44,7 @@ class UbuntuDict(RankingDict):
         data[0]['c'], data[0]['r'], data[0]['y'] = zip(*a)
         data[0]['c'] = list(data[0]['c'])
         all_conts = data[0]['c'] + data[1]['c'] + data[2]['c']
-        all_conts = set([' '.join(map(str, el)) for el in all_conts])
+        all_conts = sorted(set([' '.join(map(str, el)) for el in all_conts]))
         vocab = {el[0]: el[1] for el in enumerate(all_conts)}
         self.context2toks_vocab = {el[0]: [self.int2tok_vocab[int(x)]
                                     for x in el[1].split(' ')] for el in vocab.items()}

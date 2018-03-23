@@ -32,9 +32,8 @@ class UbuntuReader(DatasetReader):
         data[0]['c'], data[0]['r'], data[0]['y'] = zip(*a)
         data[0]['r'] = list(data[0]['r'])
         all_resps = data[0]['r'] + data[1]['r'] + data[2]['r']
-        all_resps = set([' '.join(map(str, el)) for el in all_resps])
-        vocab = {el[1]:el[0] for el in enumerate(all_resps)}
-
+        all_resps = sorted(set([' '.join(map(str, el)) for el in all_resps]))
+        vocab = {el[1]: el[0] for el in enumerate(all_resps)}
         train_resps = [vocab[' '.join(map(str, el))] for el in data[0]['r']]
         train_data = [[el[0], el[1]] for el in zip(data[0]['c'], train_resps, data[0]['y']) if el[2] == '1']
         train_data = [{"context": el[0], "response": el[1],
