@@ -72,6 +72,7 @@
           "attention_mechanism": {
             "type":"cs_general",
             "att_hidden_dim": 32,
+            "attention_depth": 3,
             "max_of_context_tokens": 100,
             "obs_size_correction": 530,
             "projected_attn_alignment": true,
