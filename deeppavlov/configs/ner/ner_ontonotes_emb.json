@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "conll2003_reader",
-    "data_path": "conll2003/"
+    "data_path": "ontonotes/"
   },
   "dataset_iterator": {
     "name": "basic_dataset_iterator"
@@ -15,24 +15,24 @@
         "name": "default_vocab",
         "fit_on": ["x"],
 		"level": "token",
-        "save_path": "ner_conll2003/word.dict",
-        "load_path": "ner_conll2003/word.dict"
+        "save_path": "ner_ontonotes/word.dict",
+        "load_path": "ner_ontonotes/word.dict"
       },
       {
         "id": "tag_vocab",
         "name": "default_vocab",
         "fit_on": ["y"],
 		"level": "token",
-        "save_path": "ner_conll2003/tag.dict",
-        "load_path": "ner_conll2003/tag.dict"
+        "save_path": "ner_ontonotes/tag.dict",
+        "load_path": "ner_ontonotes/tag.dict"
       },
       {
         "id": "char_vocab",
         "name": "default_vocab",
         "fit_on": ["x"],
 		"level": "char",
-        "save_path": "ner_conll2003/char.dict",
-        "load_path": "ner_conll2003/char.dict"
+        "save_path": "ner_ontonotes/char.dict",
+        "load_path": "ner_ontonotes/char.dict"
       },
       {
         "id": "glove_emb",
@@ -46,26 +46,31 @@
         "out": ["y_predicted"],
         "name": "ner",
         "main": true,
-        "save_path": "ner_conll2003/ner_model",
-        "load_path": "ner_conll2003/ner_model",
+        "net_type": "rnn",
+        "cell_type": "lstm",
+        "embeddings_onethego": true,
+        "save_path": "ner_ontonotes/ner_model_emb",
+        "load_path": "ner_ontonotes/ner_model_emb",
         "word_vocab": "#word_vocab",
         "tag_vocab": "#tag_vocab",
         "char_vocab": "#char_vocab",
+        "embedder": "#glove_emb",
         "verbouse": true,
         "filter_width": 7,
         "embeddings_dropout": true,
         "n_filters": [
-          128,
-          128
+          192,
+          192
         ],
         "token_embeddings_dim": 100,
-        "char_embeddings_dim": 64,
+        "use_char_embeddins": true,
+        "char_embeddings_dim": 70,
         "use_batch_norm": true,
         "use_crf": true,
-        "learning_rate": 1e-3,
+        "learning_rate": 5e-3,
         "dropout_rate": 0.5,
-        "embedder": "#glove_emb",
-        "use_capitalization": true,
+        "learning_rate_decay": 0.88,
+	    "use_capitalization": true,
         "two_dense_layers": true
       }
     ],
@@ -77,7 +82,7 @@
 
     "metrics": ["ner_f1"],
     "validation_patience": 5,
-    "val_every_n_epochs": 5,
+    "val_every_n_epochs": 1,
     "pytest_max_batches": 1,
 
     "log_every_n_epochs": 1,

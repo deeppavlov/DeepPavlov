@@ -22,6 +22,7 @@ import deeppavlov.models.classifiers.intents.intent_model
 import deeppavlov.models.commutators.random_commutator
 import deeppavlov.models.embedders.fasttext_embedder
 import deeppavlov.models.embedders.dict_embedder
+import deeppavlov.models.embedders.glove_embedder
 import deeppavlov.models.encoders.bow
 import deeppavlov.models.ner.slotfill
 import deeppavlov.models.spellers.error_model.error_model
