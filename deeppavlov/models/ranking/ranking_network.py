@@ -7,9 +7,10 @@ from keras.initializers import glorot_uniform, Orthogonal
 from keras import backend as K
 import tensorflow as tf
 import numpy as np
+from deeppavlov.core.models.tf_backend import TfModelMeta
 
 
-class RankingNetwork(object):
+class RankingNetwork(metaclass=TfModelMeta):
 
     def __init__(self, toks_num, max_sequence_length, hidden_dim, learning_rate, margin,
                  embedding_dim, device_num=0, seed=None, type_of_weights="shared", max_pooling=True, reccurent="bilstm"):
