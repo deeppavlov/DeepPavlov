@@ -17,7 +17,7 @@ gpus[3]=6
 CUDA_VISIBLE_DEVICES=${gpus[$1]}
 for i in  ${model_set[$1]};
 do
-echo "Used model is $i "'#START_TOKEN ';;
+echo "Used model is $i "'#START_TOKEN ';
 python deep.py train configs/go_bot/dev/$i
 echo "Used model is $i "'#FIND_TOKEN ';
 done
