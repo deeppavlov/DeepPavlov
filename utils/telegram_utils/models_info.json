@@ -16,7 +16,7 @@
     "help_message": "Welcome to the UI of the Dialogue Manager for goal-oriented task. This model can handle a goal-oriented conversation in a restaurant advisory domain. Enter any phrase to start interacting with model."
   },
   "KerasIntentModel": {
-    "start_message": "Welcome to the UI for the user intent classification model, trained on DSTC 2 dataset [CITE]. You can enter enter a text string and get intents (classes which a request belongs with). Example:\n\nhey! I want cheap chinese restaurant\n\n['inform_food' 'inform_pricerange']",
-    "help_message": "Welcome to the UI for the user intent classification model, trained on DSTC 2 dataset [CITE]. You can enter enter a text string and get intents (classes which a request belongs with). Example:\n\nhey! I want cheap chinese restaurant\n\n['inform_food' 'inform_pricerange']"
+    "start_message": "Welcome to the UI for the user intent classification model. You can enter enter a text string and get intents (classes which a request belongs with).",
+    "help_message": "Welcome to the UI for the user intent classification model. You can enter enter a text string and get intents (classes which a request belongs with)."
   }
 }
