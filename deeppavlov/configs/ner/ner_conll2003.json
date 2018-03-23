@@ -35,6 +35,12 @@
         "load_path": "ner_conll2003/char.dict"
       },
       {
+        "id": "glove_emb",
+        "name": "glove",
+        "load_path": "embeddings/glove.6B.100d.txt",
+        "save_path": "embeddings/glove.6B.100d.txt"
+      },
+      {
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],
@@ -52,12 +58,14 @@
           128,
           128
         ],
-        "token_embeddings_dim": 64,
-        "char_embeddings_dim": 32,
+        "token_embeddings_dim": 100,
+        "char_embeddings_dim": 64,
         "use_batch_norm": true,
         "use_crf": true,
         "learning_rate": 1e-3,
-        "dropout_rate": 0.5
+        "dropout_rate": 0.5,
+        "embedder": "#glove_emb",
+        "use_capitalization": true
       }
     ],
     "out": ["y_predicted"]

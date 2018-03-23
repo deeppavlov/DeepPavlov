@@ -15,24 +15,24 @@
         "name": "default_vocab",
         "fit_on": ["x"],
 		"level": "token",
-        "save_path": "ner_conll2003/word.dict",
-        "load_path": "ner_conll2003/word.dict"
+        "save_path": "ner_ontonotes/word.dict",
+        "load_path": "ner_ontonotes/word.dict"
       },
       {
         "id": "tag_vocab",
         "name": "default_vocab",
         "fit_on": ["y"],
 		"level": "token",
-        "save_path": "ner_conll2003/tag.dict",
-        "load_path": "ner_conll2003/tag.dict"
+        "save_path": "ner_ontonotes/tag.dict",
+        "load_path": "ner_ontonotes/tag.dict"
       },
       {
         "id": "char_vocab",
         "name": "default_vocab",
         "fit_on": ["x"],
 		"level": "char",
-        "save_path": "ner_conll2003/char.dict",
-        "load_path": "ner_conll2003/char.dict"
+        "save_path": "ner_ontonotes/char.dict",
+        "load_path": "ner_ontonotes/char.dict"
       },
       {
         "id": "glove_emb",
@@ -46,6 +46,8 @@
         "out": ["y_predicted"],
         "name": "ner",
         "main": true,
+        "net_type": "rnn",
+        "cell_type": "lstm",
         "embeddings_onethego": true,
         "save_path": "ner_ontonotes/ner_model_emb",
         "load_path": "ner_ontonotes/ner_model_emb",
@@ -57,15 +59,18 @@
         "filter_width": 7,
         "embeddings_dropout": true,
         "n_filters": [
-          128,
-          128
+          192,
+          192
         ],
         "token_embeddings_dim": 100,
-        "char_embeddings_dim": 32,
+        "use_char_embeddins": true,
+        "char_embeddings_dim": 70,
         "use_batch_norm": true,
         "use_crf": true,
-        "learning_rate": 1e-3,
-        "dropout_rate": 0.5
+        "learning_rate": 5e-3,
+        "dropout_rate": 0.5,
+        "learning_rate_decay": 0.88,
+	    "use_capitalization": true
       }
     ],
     "out": ["y_predicted"]
@@ -76,7 +81,7 @@
 
     "metrics": ["ner_f1"],
     "validation_patience": 5,
-    "val_every_n_epochs": 5,
+    "val_every_n_epochs": 1,
 
     "log_every_n_epochs": 1,
     "show_examples": false
