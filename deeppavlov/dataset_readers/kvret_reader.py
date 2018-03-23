@@ -77,17 +77,16 @@ class KvretDatasetReader(DatasetReader):
     def _format_turn(turn):
         x = {'text': turn[0]['utterance'],
              'dialog_id': turn[0]['dialog_id'],
+             'kb_columns': turn[0]['kb_columns'],
+             'kb_items': turn[0]['kb_items'],
              'requested': turn[0].get('requested', {}),
              'slots': turn[0].get('slots', {})}
         if turn[0].get('episode_done') is not None:
             x['episode_done'] = turn[0]['episode_done']
         y = {'text': turn[1]['utterance'],
+             'task': turn[0]['task'],
              'requested': turn[1].get('requested', {}),
              'slots': turn[1].get('slots', {})}
-        if 'task' in turn[0]:
-            y['task'] = turn[0]['task']
-            x['kb_columns'] = turn[0]['kb_columns']
-            x['kb_items'] = turn[0]['kb_items']
         return (x, y)
 
     @staticmethod
@@ -139,11 +138,11 @@ class KvretDatasetReader(DatasetReader):
                 replica = turn['data']
                 if i == 0:
                     replica['episode_done'] = True
+                if turn['turn'] == 'driver':
                     replica['task'] = scenario['task']
+                    replica['dialog_id'] = scenario['uuid']
                     replica['kb_columns'] = scenario['kb']['column_names']
                     replica['kb_items'] = scenario['kb']['items']
-                if turn['turn'] == 'driver':
-                    replica['dialog_id'] = scenario['uuid']
                     utterances.append(replica)
                 else:
                     responses.append(replica)

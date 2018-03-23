@@ -46,15 +46,13 @@ class KvretDialogDatasetIterator(BasicDatasetIterator):
     def _utterances(data):
         utters = []
         history = []
-        task = None
         for x, y in data:
             if x.get('episode_done'):
                 history = []
-                task = y['task']
             history.append((x, y))
             x['history'] = history[:-1]
-            x_tuple = (x['text'], x['dialog_id'], x.get('kb_columns'), x.get('kb_items'))
-            y_tuple = (y['text'], task)
+            x_tuple = (x['text'], x['dialog_id'], x['kb_columns'], x['kb_items'])
+            y_tuple = (y['text'], y['task'])
             utters.append((x_tuple, y_tuple))
         return utters
 

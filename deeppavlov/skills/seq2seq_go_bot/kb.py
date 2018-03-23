@@ -45,7 +45,7 @@ class KnowledgeBase(Estimator):
 
     def _update(self, keys, kb_columns_list, kb_items_list):
         for key, cols, items in zip(keys, kb_columns_list, kb_items_list):
-            if None not in (key, items, cols):
+            if (None not in (key, items, cols)) and (key not in self.kb):
                 kv_entry_list = (self._key_value_entries(item, cols)\
                                  for item in items)
                 self.kb[key] = list(itertools.chain(*kv_entry_list))
