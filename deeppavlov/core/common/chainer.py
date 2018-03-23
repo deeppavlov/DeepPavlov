@@ -58,10 +58,7 @@ class Chainer(Component):
 
     def __call__(self, x, y=None, to_return=None):
         in_params = list(self.in_x)
-        if len(in_params) == 1:
-            args = [x]
-        else:
-            args = list(zip(*x))
+        mem = {}
 
         if to_return is None:
             to_return = self.out_params
@@ -71,18 +68,26 @@ class Chainer(Component):
             raise RuntimeError('Expected to return {} but only {} are set in memory'
                                .format(to_return, self.forward_map))
         elif self.train_map.issuperset(to_return):
-            pipe = self.train_pipe
-            if len(self.in_y) == 1:
-                args.append(y)
-            else:
-                args += list(zip(*y))
             in_params += self.in_y
+            pipe = self.train_pipe
+
+            if len(self.in_y) == 1:
+                y = [y]
+            else:
+                y = list(zip(*y))
+            for i, k in enumerate(self.in_y):
+                mem[k] = y[i]
         else:
             raise RuntimeError('Expected to return {} but only {} are set in memory'
                                .format(to_return, self.train_map))
+        if len(self.in_x) == 1:
+            x = [x]
+        else:
+            x = list(zip(*x))
+        for i, k in enumerate(self.in_x):
+            mem[k] = x[i]
 
-        mem = {k: args[i] for i, k in enumerate(in_params)}
-        del args, x, y
+        del x, y
 
         for in_params, out_params, component in pipe:
             res = component(*[mem[k] for k in in_params])
