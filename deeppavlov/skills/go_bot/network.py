@@ -434,13 +434,13 @@ class GoalOrientedBotNetwork(TFModel):
             _r_context = tf.layers.dense(_r_context, _token_dim,
             kernel_initializer=xavier_initializer(), name = 'r_context')
 
-            _projected_key = \
-                    tf.layers.dense(_raw_key,
-                                _n_hidden,
-                                kernel_initializer=xavier_initializer(), name = 'projected_key') # [None, None, _n_hidden]
-
-            _projected_key_dim = tf.shape(_projected_key)
-            _r_projected_key = tf.tile(tf.reshape(_projected_key, shape = [-1,1, _n_hidden]), [1,_max_of_context_tokens,1])
+            # _projected_key = \
+            #         tf.layers.dense(_raw_key,
+            #                     _n_hidden,
+            #                     kernel_initializer=xavier_initializer(), name = 'projected_key') # [None, None, _n_hidden]
+            #
+            # _projected_key_dim = tf.shape(_projected_key)
+            # _r_projected_key = tf.tile(tf.reshape(_projected_key, shape = [-1,1, _n_hidden]), [1,_max_of_context_tokens,1])
 
             assert _attention_depth is not None
 
@@ -452,17 +452,18 @@ class GoalOrientedBotNetwork(TFModel):
                                                     inputs=_r_context,
                                                     dtype=tf.float32)
             _bilstm_output = tf.concat([_output_fw, _output_bw],-1)
-            _hidden_for_sketch = tf.concat([_r_projected_key,_output_fw, _output_bw], -1)
+            _hidden_for_sketch = _bilstm_output
+            _key = _raw_key
 
             if self.projected_attn_alignment:
                 log.info("Using projected attnention alignment")
                 _hidden_for_attn_alignment = _bilstm_output
-                _aligned_hidden = csoftmax_attention.attention_gen_block(_hidden_for_sketch, _hidden_for_attn_alignment, _attention_depth)
+                _aligned_hidden = csoftmax_attention.attention_gen_block(_hidden_for_sketch, _hidden_for_attn_alignment, _key, _attention_depth)
                 _output_tensor = tf.reshape(_aligned_hidden, shape = [_batch_size, -1, _attention_depth * _n_hidden])
             else:
                 log.info("Using without projected attnention alignment")
                 _hidden_for_attn_alignment = _r_context
-                _aligned_hidden = csoftmax_attention.attention_gen_block(_hidden_for_sketch, _hidden_for_attn_alignment, _attention_depth)
+                _aligned_hidden = csoftmax_attention.attention_gen_block(_hidden_for_sketch, _hidden_for_attn_alignment, _key, _attention_depth)
                 _output_tensor = tf.reshape(_aligned_hidden, shape = [_batch_size, -1, _attention_depth * _token_dim])
         return _output_tensor
 

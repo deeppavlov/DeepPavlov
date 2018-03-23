@@ -127,7 +127,7 @@ def csoftmax(tensor, inv_cumulative_att):
 #     return final_sketch
 
 
-def attention_gen_step(hidden_for_sketch, hidden_for_attn_alignment, sketch, cum_att):
+def attention_gen_step(hidden_for_sketch, hidden_for_attn_alignment, sketch, key, cum_att):
     with tf.name_scope('attention_step'):
         sketch_dims = hidden_for_sketch.get_shape().as_list()
         batch_size = sketch_dims[0]
@@ -176,7 +176,7 @@ def attention_gen_block(hidden_for_sketch, hidden_for_attn_alignment, key, atten
         aligned_hiddens = []
         cum_att = tf.zeros(shape=[batch_size, num_tokens])  # cumulative attention
         for i in range(attention_depth):
-            sketch, cum_att_, aligned_hidden = attention_bah_step(hidden_for_sketch, hidden_for_attn_alignment, sketches[-1], key, cum_att)
+            sketch, cum_att_, aligned_hidden = attention_gen_step(hidden_for_sketch, hidden_for_attn_alignment, sketches[-1], key, cum_att)
             sketches.append(sketch) #sketch
             aligned_hiddens.append(aligned_hidden) #sketch
             cum_att += cum_att_
