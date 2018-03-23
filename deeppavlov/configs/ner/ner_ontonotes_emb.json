@@ -83,6 +83,7 @@
     "metrics": ["ner_f1"],
     "validation_patience": 5,
     "val_every_n_epochs": 1,
+    "pytest_max_batches": 1,
 
     "log_every_n_epochs": 1,
     "show_examples": false
