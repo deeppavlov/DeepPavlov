@@ -142,8 +142,8 @@ class GoalOrientedBotNetwork(TFModel):
         return _logits, _state
 
     def load(self, *args, **kwargs):
-        super().load(*args, **kwargs)
         self.load_params()
+        super().load(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
