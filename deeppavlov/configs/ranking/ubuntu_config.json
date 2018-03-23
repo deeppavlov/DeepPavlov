@@ -1,18 +1,18 @@
 {
   "dataset_reader": {
     "name": "ubuntu_reader",
-    "data_path": "./"
+    "data_path": "./ubuntu_data"
   },
   "dataset_iterator": {
     "name": "ranking_iterator",
     "seed": 243,
-    "len_vocab": 1061010,
+    "len_vocab": 1061009,
     "sample_candidates": "global",
     "sample_candidates_valid": "pool",
     "sample_candidates_test": "pool",
-    "num_negative_samples": 500,
-    "num_ranking_samples_valid": 500,
-    "num_ranking_samples_test": 500
+    "num_negative_samples": 9,
+    "num_ranking_samples_valid": 9,
+    "num_ranking_samples_test": 9
   },
   "chainer": {
     "in": ["x"],
@@ -25,31 +25,33 @@
         "name": "ranking_model",
         "device_num": 0,
         "train_now": true,
-        "vocabs_path": "insuranceQA-master/V1",
-        "download_url": "http://lnsigo.mipt.ru/export/embeddings/insurance_v1_word2vec",
-        "embeddings": "word2vec",
+        "vocab_name": "ubuntu",
+        "vocabs_path": "ubuntu_data/dataset_1MM",
+        "download_url": "http://lnsigo.mipt.ru/export/embeddings/W.pkl",
+        "embeddings": "ubuntu",
+        "embeddings_path": "ubuntu_embeddings",
         "embedding_dim": 100,
         "seed": 243,
-        "max_sequence_length": 200,
+        "max_sequence_length": 160,
         "reccurent": "bilstm",
         "max_pooling": true,
         "type_of_weights": "shared",
         "hidden_dim": 300,
         "learning_rate": 1e-3,
         "margin": 0.1,
-        "save_path": "ranking/model_weights.h5",
-        "load_path": "ranking/model_weights.h5",
+        "save_path": "ubuntu_ranking/model_weights.h5",
+        "load_path": "ubuntu_ranking/model_weights.h5",
         "interact_pred_num": 3
       }
     ],
     "out": ["y_predicted"]
   },
   "train": {
-    "epochs": 150,
+    "epochs": 10,
     "batch_size": 256,
-    "metrics": ["r@1", "rank_response"],
+    "metrics": ["r@1", "r@2", "r@5", "rank_response"],
     "validation_patience": 5,
-    "val_every_n_epochs": 10
+    "val_every_n_epochs": 1
   }
 
 }

@@ -2,7 +2,7 @@ from deeppavlov.core.data.dataset_reader import DatasetReader
 from pathlib import Path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import download_decompress, mark_done, is_done
-from deeppavlov.core.commands.utils import get_deeppavlov_root, expand_path
+from deeppavlov.core.commands.utils import expand_path
 import pickle
 import numpy as np
 
@@ -27,6 +27,10 @@ class UbuntuReader(DatasetReader):
 
         with open(fname, 'rb') as f:
             data = pickle.load(f)
+        a = list(zip(data[0]['c'], data[0]['r'], data[0]['y']))
+        a = list(filter(lambda x: len(x[1]) != 0, a))
+        data[0]['c'], data[0]['r'], data[0]['y'] = zip(*a)
+        data[0]['r'] = list(data[0]['r'])
         all_resps = data[0]['r'] + data[1]['r'] + data[2]['r']
         all_resps = set([' '.join(map(str, el)) for el in all_resps])
         vocab = {el[1]:el[0] for el in enumerate(all_resps)}
@@ -34,7 +38,7 @@ class UbuntuReader(DatasetReader):
         train_resps = [vocab[' '.join(map(str, el))] for el in data[0]['r']]
         train_data = [[el[0], el[1]] for el in zip(data[0]['c'], train_resps, data[0]['y']) if el[2] == '1']
         train_data = [{"context": el[0], "response": el[1],
-                       "pos_pool": el[1], "neg_pool": None}
+                       "pos_pool": [el[1]], "neg_pool": None}
                       for el in train_data]
         contexts = []
         val_resps = [vocab[' '.join(map(str, el))] for el in data[1]['r']]
@@ -57,7 +61,7 @@ class UbuntuReader(DatasetReader):
         neg_resps.append(neg_resp)
         val_data = list(zip(contexts, pos_resps, neg_resps))
         val_data = [{"context": el[0], "response": el[1],
-                     "pos_pool": el[1], "neg_pool": el[2]} for el in val_data]
+                     "pos_pool": [el[1]], "neg_pool": el[2]} for el in val_data]
 
         contexts = []
         test_resps = [vocab[' '.join(map(str, el))] for el in data[2]['r']]
@@ -76,6 +80,6 @@ class UbuntuReader(DatasetReader):
         neg_resps.append(neg_resp)
         test_data = list(zip(contexts, pos_resps, neg_resps))
         test_data = [{"context": el[0], "response": el[1],
-                     "pos_pool": el[1], "neg_pool": el[2]} for el in test_data]
+                     "pos_pool": [el[1]], "neg_pool": el[2]} for el in test_data]
 
         return {'train': train_data, 'valid': val_data, 'test': test_data}

@@ -1,7 +1,6 @@
 from overrides import overrides
 from copy import deepcopy
 import inspect
-import sys
 from functools import reduce
 import operator
 import numpy as np
@@ -13,6 +12,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.ranking.ranking_network import RankingNetwork
 from deeppavlov.models.ranking.insurance_dict import InsuranceDict
+from deeppavlov.models.ranking.ubuntu_dict import UbuntuDict
 from deeppavlov.models.ranking.emb_dict import Embeddings
 from deeppavlov.core.commands.utils import get_deeppavlov_root
 from deeppavlov.core.common.log import get_logger
@@ -52,12 +52,19 @@ class RankingModel(NNModel):
         self.interact_pred_num = opt['interact_pred_num']
         self.vocabs = opt.get('vocabs', None)
 
-        dict_parameter_names = list(inspect.signature(InsuranceDict.__init__).parameters)
-        dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
+        if self.opt["vocab_name"] == "insurance":
+            dict_parameter_names = list(inspect.signature(InsuranceDict.__init__).parameters)
+            dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
+            self.dict = InsuranceDict(**dict_parameters)
+        elif self.opt["vocab_name"] == "ubuntu":
+            dict_parameter_names = list(inspect.signature(UbuntuDict.__init__).parameters)
+            dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
+            self.dict = UbuntuDict(**dict_parameters)
+
+        # self.dict: DictInterface = kwargs['vocab']
+
         network_parameter_names = list(inspect.signature(RankingNetwork.__init__).parameters)
         self.network_parameters = {par: opt[par] for par in network_parameter_names if par in opt}
-
-        self.dict = InsuranceDict(**dict_parameters)
 
         self.load()
 
@@ -171,7 +178,6 @@ class RankingModel(NNModel):
         if self.dict.context2emb_vocab[0] is not None:
             for i in range(len(self.dict.context2emb_vocab)):
                 self.dict.context2emb_vocab[i] = None
-
 
     def shutdown(self):
         pass
