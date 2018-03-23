@@ -70,7 +70,8 @@
         "learning_rate": 5e-3,
         "dropout_rate": 0.5,
         "learning_rate_decay": 0.88,
-	    "use_capitalization": true
+	    "use_capitalization": true,
+        "two_dense_layers": true
       }
     ],
     "out": ["y_predicted"]
