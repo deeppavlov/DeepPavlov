@@ -99,7 +99,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
     def __call__(self, *batch):
         return self._infer_on_batch(*batch)
 
-    def _infer_on_batch(self, *batch):
+    def _infer_on_batch(self, utters, dialog_ids=itertools.repeat(None)):
         def _filter(tokens):
             for t in tokens:
                 if t == self.eos_token:
@@ -107,7 +107,9 @@ class Seq2SeqGoalOrientedBot(NNModel):
                 yield t
 # TODO: history as input
         b_enc_ins, b_src_lens = [], []
-        for utter, dialog_id in zip(*batch):
+        if (len(utters) == 1) and not utters[0]:
+            utters = [['hi']]
+        for utter, dialog_id in zip(utters, dialog_ids):
             enc_in = self._encode_context(utter, dialog_id)
             b_enc_ins.append(enc_in)
             b_src_lens.append(len(enc_in))
