@@ -25,10 +25,5 @@ class StrLower(Component):
     def __init__(self, *args, **kwargs):
         pass
 
-    def __call__(self, lines: List, **kwargs):
-        if isinstance(lines[0], list) and isinstance(lines[0][0], dict):
-            for i in range(len(lines)):
-                for j, line in enumerate(lines[i]):
-                    lines[i][j]['text'] = line['text'].lower()
-            return lines
+    def __call__(self, lines: List[str], **kwargs):
         return [line.lower() for line in lines]
