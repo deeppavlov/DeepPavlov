@@ -61,11 +61,9 @@ class GloVeEmbedder(Component, Serializable):
         """
         Embed data
         """
-        max_len_tokens = max(len(sample) for sample in batch)
-        batch_size = len(batch)
-        embedded = np.zeros([batch_size, max_len_tokens, self.dim], dtype=np.float32)
+        embedded = []
         for n, sample in enumerate(batch):
-            embedded[n, :len(sample), :] = self._encode(sample)
+            embedded.append(self._encode(sample))
         return embedded
 
     def _encode(self, tokens: List[str]):
