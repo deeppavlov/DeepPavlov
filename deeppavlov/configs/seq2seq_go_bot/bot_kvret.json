@@ -29,8 +29,8 @@
         "name": "knowledge_base",
         "fit_on": ["dialog_id", "kb_columns", "kb_items"],
         "tokenizer": { "name": "stream_spacy_tokenizer" },
-        "save_path": "kb/kvret.json",
-        "load_path": "kb/kvret.json"
+        "save_path": "seq2seq_go_bot/kvret_kb.json",
+        "load_path": "seq2seq_go_bot/kvret_kb.json"
       },
       {
         "name": "knowledge_base_entity_normalizer",
