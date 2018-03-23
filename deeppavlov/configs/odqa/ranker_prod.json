@@ -1,0 +1,21 @@
+{
+  "dataset_iterator": {
+    "name": "sqlite_iterator",
+    "data_path": "odqa",
+    "batch_size": 10000,
+    "data_url": "http://lnsigo.mipt.ru/export/datasets/wikipedia/wiki_full.db"
+  },
+  "model": {
+    "name": "tfidf_ranker",
+    "vectorizer": {
+      "name": "hashing_tfidf_vectorizer",
+      "save_path": "odqa/wiki_tfidf_matrix.npz",
+      "load_path": "odqa/wiki_tfidf_matrix.npz",
+      "tokenizer": {
+        "name": "stream_spacy_tokenizer",
+        "lemmas": true,
+        "ngram_range": [1, 2]
+      }
+    }
+  }
+}

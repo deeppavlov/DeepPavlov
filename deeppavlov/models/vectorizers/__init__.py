@@ -13,18 +13,3 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from abc import abstractmethod
-
-from .component import Component
-from .serializable import Serializable
-
-
-class Estimator(Component, Serializable):
-
-    @abstractmethod
-    def fit(self, *args, **kwargs):
-        pass
-
-    @abstractmethod
-    def fit_batch(self, *args, **kwargs):
-        pass

@@ -213,7 +213,7 @@ class NerNetwork:
     def train(self, data, batch_size=8, learning_rate=1e-3, dropout_rate=0.5):
         total_loss = 0
         total_count = 0
-        for batch in data.batch_generator(batch_size):
+        for batch in data.gen_batch(batch_size):
             current_loss = self.train_on_batch(batch,
                                                learning_rate=learning_rate,
                                                dropout_rate=dropout_rate)
@@ -266,7 +266,7 @@ class NerNetwork:
             if self.verbose:
                 log.info('Epoch {}'.format(epoch))
             if batch_gen is None:
-                batch_generator = self.corpus.batch_generator(batch_size, dataset_type='train')
+                batch_generator = self.corpus.gen_batch(batch_size, dataset_type='train')
             for (x_word, x_char), y_tag in batch_generator:
 
                 feed_dict = self._fill_feed_dict(x_word,

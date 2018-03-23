@@ -19,6 +19,7 @@ from typing import List, Generator, Any, Tuple
 
 import spacy
 from spacy.lang.en import English
+from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
@@ -36,28 +37,30 @@ class StreamSpacyTokenizer(Component):
     Works only for English language.
     """
 
-    def __init__(self, disable: list = None, stopwords: list = None, batch_size: int = None,
-                 ngram_range: Tuple[int, int] = None, lemmas=False, n_threads: int = None,
-                 lowercase: bool = None, **kwargs):
+    def __init__(self, disable: list = None, stopwords: list = ENGLISH_STOP_WORDS,
+                 batch_size: int = None, ngram_range: List[int] = None, lemmas=False,
+                 n_threads: int = None, lowercase: bool = None, **kwargs):
         """
         :param disable: pipeline processors to omit; if nothing should be disabled,
          pass an empty list
         :param stopwords: a set of words to skip
         :param batch_size: a batch size for internal spaCy multi-threading
         :param ngram_range: range for producing ngrams, ex. for unigrams + bigrams should be set to
-        (1, 2), for bigrams only should be set to (2, 2)
+        [1, 2], for bigrams only should be set to [2, 2]
         :param lemmas: weather to perform lemmatizing or not while tokenizing, currently works only
         for the English language
         :param n_threads: a number of threads for internal spaCy multi-threading
         """
         if disable is None:
             disable = ['parser', 'ner']
+        if ngram_range is None:
+            ngram_range = [1, 1]
         self.stopwords = stopwords or []
         self.model = spacy.load('en', disable=disable)
         self.model.add_pipe(self.model.create_pipe('sentencizer'))
         self.tokenizer = English().Defaults.create_tokenizer(self.model)
         self.batch_size = batch_size
-        self.ngram_range = ngram_range
+        self.ngram_range = tuple(ngram_range)  # cast JSON array to tuple
         self.lemmas = lemmas
         self.n_threads = n_threads
         self.lowercase = lowercase
