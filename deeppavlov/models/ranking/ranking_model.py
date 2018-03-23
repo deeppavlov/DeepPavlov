@@ -93,7 +93,9 @@ class RankingModel(NNModel):
     @check_attr_true('train_now')
     def train_on_batch(self, x, y):
         self.reset_embeddings()
-        context, response, negative_response = x
+        context = [el[0] for el in x]
+        response = [el[1] for el in x]
+        negative_response = [el[2] for el in x]
         c = self.dict.make_toks(context, type="context")
         c = self.dict.make_ints(c)
         rp = self.dict.make_toks(response, type="response")
