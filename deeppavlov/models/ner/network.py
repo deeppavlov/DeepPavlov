@@ -47,13 +47,14 @@ class NerNetwork:
                  use_batch_norm=False,
                  logging=False,
                  use_crf=False,
-                 net_type='rnn',
+                 net_type='cnn',
                  char_filter_width=5,
                  verbose=False,
                  sess=None,
                  cell_type='lstm',
                  embedder=None,
-                 use_capitalization=False):
+                 use_capitalization=False,
+                 two_dense_layers=False):
         tf.set_random_seed(SEED)
         n_tags = len(tag_vocab)
         n_tokens = len(word_vocab)
@@ -115,7 +116,8 @@ class NerNetwork:
 
         # Classifier
         with tf.variable_scope('Classifier'):
-            units = tf.layers.dense(units, n_filters[-1], kernel_initializer=xavier_initializer())
+            if two_dense_layers:
+                units = tf.layers.dense(units, n_filters[-1], kernel_initializer=xavier_initializer())
             logits = tf.layers.dense(units, n_tags, kernel_initializer=xavier_initializer())
 
         # Loss with masking
