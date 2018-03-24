@@ -2,20 +2,19 @@
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 
 # <center>DeepPavlov</center>
+
 ### *We are in a really early Alpha release. You should be ready for hard adventures.*
 ### *If you have updated to version 0.0.2 - please re-download all pre-trained models*
+
 DeepPavlov is an open-source conversational AI library built on TensorFlow and Keras. It is designed for
+ * development of production ready chat-bots and complex conversational systems
  * NLP and dialog systems research
- * implementation and evaluation of complex conversational systems
  
-Our goal is to provide researchers with:
- * a framework for implementing and testing their own dialog models
+Our goal is to enable AI-application developers researchers with:
  * set of pre-trained NLP models, pre-defined dialog system components (ML/DL/Rule-based) and pipeline templates
- * benchmarking environment for conversational models and uniform access to relevant datasets
- 
-and AI-application developers with:
- * a framework for building conversational software
+ * a framework for implementing and testing their own dialog models 
  * tools for application integration with adjacent infrastructure (messengers, helpdesk software etc.)
+ * benchmarking environment for conversational models and uniform access to relevant datasets 
 
 ## Features
 
