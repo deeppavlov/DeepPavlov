@@ -33,6 +33,8 @@ def init_bot_for_model(token, model):
 
     model_name = type(model.get_main_component()).__name__
     model_info = models_info[model_name] if model_name in models_info else models_info['@default']
+    buffer = {}
+    expect = []
 
     @bot.message_handler(commands=['start'])
     def send_start_message(message):
@@ -41,6 +43,10 @@ def init_bot_for_model(token, model):
         if hasattr(model, 'reset'):
             model.reset()
         bot.send_message(chat_id, out_message)
+        if len(model.in_x) > 1:
+            buffer[chat_id] = []
+            expect[:] = list(model.in_x)
+            bot.send_message(chat_id, f'Please, send {expect.pop(0)}')
 
     @bot.message_handler(commands=['help'])
     def send_help_message(message):
@@ -53,9 +59,22 @@ def init_bot_for_model(token, model):
         chat_id = message.chat.id
         context = message.text
 
-        pred = model([context])
-        reply_message = str(pred[0])
-        bot.send_message(chat_id, reply_message)
+        if len(model.in_x) > 1:
+            buffer[chat_id].append(context)
+            if expect:
+                bot.send_message(chat_id, f'Please, send {expect.pop(0)}')
+            else:
+                pred = model([tuple(buffer[chat_id])])
+                reply_message = str(pred[0])
+                bot.send_message(chat_id, reply_message)
+
+                buffer[chat_id] = []
+                expect[:] = list(model.in_x)
+                bot.send_message(chat_id, f'Please, send {expect.pop(0)}')
+        else:
+            pred = model([context])
+            reply_message = str(pred[0])
+            bot.send_message(chat_id, reply_message)
 
     bot.polling()
 

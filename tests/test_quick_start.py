@@ -24,6 +24,7 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
                     ("configs/intents/intents_sample_json.json", "intents", False): []},
           "ner": {("configs/ner/ner_conll2003.json", "ner_conll2003", True): [],
                   ("configs/ner/ner_dstc2.json", "ner", True): [],
+                  ("configs/ner/ner_ontonotes_emb.json", "ner_ontonotes", True): [],
                   ("configs/ner/slotfill_dstc2.json", "ner", True):
                       [
                           ("chinese food", "{'food': 'chinese'}"),
@@ -71,8 +72,8 @@ def setup_module():
 
 
 def teardown_module():
-    shutil.rmtree(str(test_configs_path))
-    shutil.rmtree(str(download_path))
+    shutil.rmtree(str(test_configs_path), ignore_errors=True)
+    shutil.rmtree(str(download_path), ignore_errors=True)
 
 
 def download(full=None):
