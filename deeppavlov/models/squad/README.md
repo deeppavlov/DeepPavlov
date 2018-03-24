@@ -20,7 +20,7 @@ Datasets, which follow this task format:
 * [SDSJ Task B](https://www.sdsj.ru/ru/contest.html) (RU)
 
 ## Model
-Question Answering Model is based on R-Net, proposed by Microsoft Research Asia (["R-NET: Machine Reading Comprehension with Self-matching Networks"](https://www.microsoft.com/en-us/research/publication/mrc/)) and its [realization](https://github.com/HKUST-KnowComp/R-Net) by Wenxuan Zhou.
+Question Answering Model is based on R-Net, proposed by Microsoft Research Asia (["R-NET: Machine Reading Comprehension with Self-matching Networks"](https://www.microsoft.com/en-us/research/publication/mrc/)) and its [implementation](https://github.com/HKUST-KnowComp/R-Net) by Wenxuan Zhou.
   
 ## Configuration
 Default config could be found at `deeppavlov/configs/squad/squad.json`
