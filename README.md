@@ -55,19 +55,19 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
 
 ### Principles
 The library is designed according to the following principles:
- * end-to-end deep learning architecture as a long-term goal
  * hybrid ML/DL/Rule-based architecture as a current approach
- * modular dialog system architecture
+ * support of modular dialog system design
+ * end-to-end deep learning architecture as a long-term goal
  * component-based software engineering, maximization of reusability
+ * multiple alternative solutions for the same NLP task to enable flexible data-driven configuration
  * easy extension and benchmarking
- * multiple solutions for one NLP task for flexible data-driven configuration
-
+ 
 ### Target Architecture
 Target architecture of our library:
 <p align="left">
-<img src="http://lnsigo.mipt.ru/export/images/deeppavlov_architecture.png" width="50%" height="50%"/>
+<img src="http://lnsigo.mipt.ru/export/images/deeppavlov_architecture.png"/>
 </p>
-DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). Other external libraries can be used to build basic components.
+DeepPavlov is built on top of machine learning frameworks [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). Other external libraries can be used to build basic components.
 
 ### Key Concepts
  * `Agent` - a conversational agent communicating with users in natural language (text)
