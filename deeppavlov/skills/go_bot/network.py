@@ -19,6 +19,7 @@ import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer
 
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.core.common.log import get_logger
 
@@ -41,7 +42,6 @@ class GoalOrientedBotNetwork(TFModel):
 
         super().__init__(**params)
         if tf.train.checkpoint_exists(str(self.save_path.resolve())):
-        #TODO: save/load params to json, here check compatability
             log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
             self.load()
         else:
@@ -142,8 +142,8 @@ class GoalOrientedBotNetwork(TFModel):
         return _logits, _state
 
     def load(self, *args, **kwargs):
-        super().load(*args, **kwargs)
         self.load_params()
+        super().load(*args, **kwargs)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -162,9 +162,9 @@ class GoalOrientedBotNetwork(TFModel):
             params = json.load(fp)
         for p in self.GRAPH_PARAMS:
             if self.opt[p] != params[p]:
-                raise ValueError("`{}` parameter must be equal to "
-                                 "saved model parameter value `{}`"\
-                                 .format(p, params[p]))
+                raise ConfigError("`{}` parameter must be equal to "
+                                  "saved model parameter value `{}`"\
+                                  .format(p, params[p]))
 
     def reset_state(self):
         # set zero state

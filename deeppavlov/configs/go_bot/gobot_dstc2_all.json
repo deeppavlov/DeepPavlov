@@ -16,7 +16,7 @@
         "fit_on": ["x"],
         "name": "default_vocab",
         "level": "token",
-        "tokenize": true,
+        "tokenizer": { "name": "split_tokenizer" },
         "save_path": "vocabs/token.dict",
         "load_path": "vocabs/token.dict"
       },

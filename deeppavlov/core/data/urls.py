@@ -28,7 +28,7 @@ REQ_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/dstc2_fastText_model.bin',
     'http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model.tar.gz',
-    'http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/seq2seq_go_bot.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes.tar.gz',
 }
 

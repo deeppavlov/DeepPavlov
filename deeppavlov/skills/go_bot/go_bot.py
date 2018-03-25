@@ -32,7 +32,6 @@ from deeppavlov.models.tokenizers.spacy_tokenizer import StreamSpacyTokenizer
 from deeppavlov.models.trackers.default_tracker import DefaultTracker
 from deeppavlov.skills.go_bot.network import GoalOrientedBotNetwork
 from deeppavlov.skills.go_bot.templates import Templates, DualTemplate
-from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.log import get_logger
 
 

@@ -33,7 +33,8 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
                       ]
                   },
           "ranking": {("configs/ranking/insurance_config.json", "ranking", True): []},
-          "squad": {("configs/squad/squad.json", "squad_model", True): []}
+          "squad": {("configs/squad/squad.json", "squad_model", True): []},
+          "seq2seq_go_bot": {("configs/seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", True): []}
           }
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini

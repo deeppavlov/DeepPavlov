@@ -38,7 +38,7 @@ class StreamSpacyTokenizer(Component):
 
     def __init__(self, disable: list = None, stopwords: list = None, batch_size: int = None,
                  ngram_range: Tuple[int, int] = None, lemmas=False, n_threads: int = None,
-                 lowercase: bool = None, **kwargs):
+                 lowercase: bool = None, alphas_only = False, **kwargs):
         """
         :param disable: pipeline processors to omit; if nothing should be disabled,
          pass an empty list
@@ -61,6 +61,7 @@ class StreamSpacyTokenizer(Component):
         self.lemmas = lemmas
         self.n_threads = n_threads
         self.lowercase = lowercase
+        self.alphas_only = alphas_only
 
     def __call__(self, batch):
         if isinstance(batch[0], str):
@@ -144,8 +145,11 @@ class StreamSpacyTokenizer(Component):
         :param items: list of tokens, lemmas or other strings to form ngrams
         :return: filtered list of tokens/lemmas
         """
-        filtered = list(filter(lambda x: x.isalpha() and x not in self.stopwords, items))
-        return filtered
+        if self.alphas_only:
+            filter_fn = lambda x: x.isalpha() and x not in self.stopwords
+        else:
+            filter_fn = lambda x: not x.isspace() and x not in self.stopwords
+        return list(filter(filter_fn, items))
 
     def set_stopwords(self, stopwords):
         self.stopwords = stopwords
