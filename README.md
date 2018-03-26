@@ -157,13 +157,19 @@ For 'riseapi' mode you should specify api settings (host, port, etc.) in [*utils
 
 Available model configs are:
 
-*deeppavlov/configs/go_bot/gobot_dstc2.json*
+- ```deeppavlov/configs/go_bot/*.json```
 
-*deeppavlov/configs/intents/intents_dstc2.json*
+- ```deeppavlov/configs/seq2seq_go_bot/*.json```
 
-*deeppavlov/configs/ner/slotfill_dstc2.json*
+- ```deeppavlov/configs/squad/*.json```
 
-*deeppavlov/configs/error_model/brillmoore_wikitypos_en.json*
+- ```deeppavlov/configs/intents/*.json```
+
+- ```deeppavlov/configs/ner/*.json```
+
+- ```deeppavlov/configs/rankinf/*.json```
+
+- ```deeppavlov/configs/error_model/*.json```
 
 ---
 
