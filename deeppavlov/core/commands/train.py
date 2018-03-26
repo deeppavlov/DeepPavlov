@@ -63,9 +63,10 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
 
             preprocessed = chainer(*iterator.get_instances('train'), to_return=component_config['fit_on'])
             if len(component_config['fit_on']) == 1:
-                component.fit(preprocessed)
+                preprocessed = [preprocessed]
             else:
-                component.fit(*preprocessed)
+                preprocessed = zip(*preprocessed)
+            component.fit(*preprocessed)
             component.save()
 
         if 'in' in component_config:
