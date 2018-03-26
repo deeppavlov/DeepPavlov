@@ -157,7 +157,7 @@
   },
   "train": {
     "epochs": 200,
-    "batch_size": 1,
+    "batch_size": 2,
 
     "metrics": ["per_item_dialog_accuracy"],
     "validation_patience": 20,
