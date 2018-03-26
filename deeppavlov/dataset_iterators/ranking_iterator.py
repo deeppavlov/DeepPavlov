@@ -30,7 +30,7 @@ class RankingIterator:
         }
 
     def batch_generator(self, batch_size, data_type="train", shuffle=True):
-        y = np.zeros(batch_size)
+        y = batch_size * [np.ones(2)]
         data = self.data[data_type]
         num_steps = len(data) // batch_size
         if data_type == "train":
@@ -41,7 +41,8 @@ class RankingIterator:
                 context = [el["context"] for el in context_response_data]
                 response = [el["response"] for el in context_response_data]
                 negative_response = self.create_neg_resp_rand(context_response_data, batch_size, data_type)
-                yield ([context, response, negative_response], y)
+                x = [[context[i], [response[i]]+[negative_response[i]]] for i in range(len(context_response_data))]
+                yield (x, y)
         if data_type in ["valid", "test"]:
             for i in range(num_steps + 1):
                 if i < num_steps:
