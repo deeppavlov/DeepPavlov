@@ -18,16 +18,17 @@ REQ_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/go_bot.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/intents.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ner.tar.gz',
-    'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_conll2003.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_conll2003_emb.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/error_model.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ranking.tar.gz',
     'http://lnsigo.mipt.ru/export/embeddings/insurance_v1_word2vec',
+    'http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/slots.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/dstc2_fastText_model.bin',
     'http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz',
-    'http://lnsigo.mipt.ru/export/deeppavlov_data/odqa/wiki_tfidf_matrix.npz'
     'http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes.tar.gz',
 }
 
 OPT_URLS = {
