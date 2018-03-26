@@ -3,7 +3,7 @@
 
 # <center>DeepPavlov</center>
 ### *We are in a really early Alpha release. You should be ready for hard adventures.*
-### *If you have updated to version 0.0.2 - please re-download all pre-trained models*
+### *If you have updated to version 0.0.2 or greater - please re-download all pre-trained models*
 DeepPavlov is an open-source conversational AI library built on TensorFlow and Keras. It is designed for
  * NLP and dialog systems research
  * implementation and evaluation of complex conversational systems
@@ -214,7 +214,7 @@ Available model configs are:
 
 An NLP pipeline config is a JSON file that contains one required element `chainer`:
 
-```json
+```
 {
   "chainer": {
     "in": ["x"],
@@ -301,7 +301,7 @@ An NNModel should have the `in_y` parameter which contains a list of ground trut
 
 The config for training the pipeline should have three additional elements: `dataset_reader`, `dataset` and `train`:
 
-```json
+```
 {
   "dataset_reader": {
     "name": ...,
