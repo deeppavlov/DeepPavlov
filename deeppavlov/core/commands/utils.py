@@ -48,7 +48,4 @@ def is_empty(d: Path) -> bool:
     """
     Check if directory is empty.
     """
-    for x in d.iterdir():
-        if x.is_file():
-            return True
-    return False
+    return not bool(list(d.iterdir()))
