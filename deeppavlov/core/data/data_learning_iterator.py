@@ -55,8 +55,8 @@ class DataLearningIterator:
             'all': self.train + self.test + self.valid
         }
 
-    def gen_batch(self, batch_size: int, data_type: str = 'train',
-                  shuffle: bool = None) -> Generator:
+    def gen_batches(self, batch_size: int, data_type: str = 'train',
+                    shuffle: bool = None) -> Generator:
         """Return a generator, which serves for generation of raw (no preprocessing such as tokenization)
         batches
         Args:

@@ -179,7 +179,7 @@ def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
 
     val_y_true = []
     val_y_predicted = []
-    for x, y_true in dataset.gen_batch(batch_size, data_type, shuffle=False):
+    for x, y_true in dataset.gen_batches(batch_size, data_type, shuffle=False):
         y_predicted = list(model(list(x)))
         val_y_true += y_true
         val_y_predicted += y_predicted
@@ -240,7 +240,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
     break_flag = False
     try:
         while True:
-            for x, y_true in iterator.gen_batch(train_config['batch_size']):
+            for x, y_true in iterator.gen_batches(train_config['batch_size']):
                 if log_on:
                     y_predicted = list(model(list(x)))
                     train_y_true += y_true
