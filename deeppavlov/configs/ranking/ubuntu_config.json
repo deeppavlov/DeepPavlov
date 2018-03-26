@@ -10,9 +10,9 @@
     "sample_candidates": "global",
     "sample_candidates_valid": "pool",
     "sample_candidates_test": "pool",
-    "num_negative_samples": 9,
-    "num_ranking_samples_valid": 9,
-    "num_ranking_samples_test": 9
+    "num_negative_samples": 10,
+    "num_ranking_samples_valid": 10,
+    "num_ranking_samples_test": 10
   },
   "chainer": {
     "in": ["x"],
@@ -51,7 +51,8 @@
     "batch_size": 256,
     "metrics": ["r@1", "r@2", "r@5", "rank_response"],
     "validation_patience": 5,
-    "val_every_n_epochs": 1
+    "val_every_n_epochs": 1,
+    "log_every_n_batches": 1
   }
 
 }
