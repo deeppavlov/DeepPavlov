@@ -299,7 +299,7 @@ An NNModel should have the `in_y` parameter which contains a list of ground trut
 ]
 ```
 
-The config for training the pipeline should have three additional elements: `dataset_reader`, `dataset` and `train`:
+The config for training the pipeline should have three additional elements: `dataset_reader`, `dataset_iterator` and `train`:
 
 ```
 {
@@ -307,7 +307,7 @@ The config for training the pipeline should have three additional elements: `dat
     "name": ...,
     ...
   }
-  "dataset": {
+  "dataset_iterator": {
     "name": ...,
     ...
   },
@@ -345,12 +345,12 @@ from deeppavlov.core.data.dataset_reader import DatasetReader
 class DSTC2DatasetReader(DatasetReader):
 ```
 
-### Dataset
+### DatasetIterator
 
-`Dataset` forms the sets of data ('train', 'valid', 'test') needed for training/inference and divides it into batches.
-A concrete `Dataset` class should be registered and can be inherited from
-`deeppavlov.data.dataset_reader.Dataset` class. `deeppavlov.data.dataset_reader.Dataset`
-is not an abstract class and can be used as a `Dataset` as well.
+`DatasetIterator` forms the sets of data ('train', 'valid', 'test') needed for training/inference and divides it into batches.
+A concrete `DatasetIterator` class should be registered and can be inherited from
+`deeppavlov.data.dataset_iterator.BasicDatasetIterator` class. `deeppavlov.data.dataset_iterator.BasicDatasetIterator`
+is not an abstract class and can be used as a `DatasetIterator` as well.
 
 ### Inference
 
