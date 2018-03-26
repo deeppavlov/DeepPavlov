@@ -130,8 +130,6 @@ class RankingModel(NNModel):
             for i in range(ranking_length):
                 r_emb = [self.dict.response2emb_vocab[el] for el in response[i]]
                 r_emb = np.vstack(r_emb)
-                assert((np.linalg.norm(c_emb, axis=1)).any() != 0.0)
-                assert((np.linalg.norm(r_emb, axis=1)).any() != 0.0)
                 yp = np.sum(c_emb * r_emb, axis=1) / np.linalg.norm(c_emb, axis=1) / np.linalg.norm(r_emb, axis=1)
                 y_pred.append(np.expand_dims(yp, axis=1))
             y_pred = np.hstack(y_pred)
