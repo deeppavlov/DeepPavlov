@@ -25,7 +25,7 @@
         "device_num": 0,
         "train_now": true,
         "vocabs_path": "insuranceQA-master/V1",
-        "download_url": "http://lnsigo.mipt.ru/export/embeddings/GoogleNews-vectors-negative300.bin.gz",
+        "download_url": "http://lnsigo.mipt.ru/export/embeddings/GoogleNews-vectors-negative300.bin",
         "embeddings": "word2vec",
         "embedding_dim": 100,
         "seed": 243,

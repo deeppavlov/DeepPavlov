@@ -1,7 +1,6 @@
 import numpy as np
 from gensim.models.wrappers import FastText
-from gensim.models import Word2Vec
-from keras.preprocessing.sequence import pad_sequences
+from gensim.models import KeyedVectors
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.data.utils import download
 
@@ -27,7 +26,8 @@ class Embeddings(object):
         if self.embeddings == "fasttext":
             self.embeddings_model = FastText.load_fasttext_format(str(self.emb_model_file))
         elif self.embeddings == "word2vec":
-            self.embeddings_model = Word2Vec.load(str(self.emb_model_file))
+            self.embeddings_model = KeyedVectors.load_word2vec_format(str(self.emb_model_file),
+                                                                      binary=True)
 
         self.create_emb_matrix(tok2int_vocab)
 
