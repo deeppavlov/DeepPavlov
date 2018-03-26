@@ -1,12 +1,9 @@
 """
 Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
     http://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,7 +24,6 @@ def read_requirements():
     # # parses requirements from requirements.txt
     reqs_path = os.path.join(__location__, 'requirements.txt')
     install_reqs = parse_requirements(reqs_path, session=PipSession())
-
     reqs = []
     for ir in install_reqs:
         pip.main(['install', str(ir.req or ir.link)])
@@ -37,8 +33,8 @@ def read_requirements():
 
 
 setup(license='Apache License, Version 2.0',
-      packages=find_packages(exclude=('tests')),
-      version='0.0.2',
+      packages=find_packages(exclude=('tests',)),
+      version='0.0.3',
       include_package_data=True,
       install_requires=read_requirements(),
       name='deeppavlov'

@@ -1,10 +1,13 @@
 {
   "dataset_reader": {
-    "name": "classification_datasetreader",
-    "data_path": "snips"
+    "name": "basic_classification_reader",
+    "x": "text",
+    "y": "intents",
+    "data_path": "snips",
+    "url": "http://lnsigo.mipt.ru/export/datasets/snips_intents/train.csv"
   },
-  "dataset": {
-    "name": "classification_dataset",
+  "dataset_iterator": {
+    "name": "basic_classification_iterator",
     "seed": 42,
     "field_to_split": "train",
     "split_fields": [
@@ -34,8 +37,8 @@
         "out": ["y_predicted"],
         "main": true,
         "name": "intent_model",
-        "save_path": "intents/intent_cnn_snips",
-        "load_path": "intents/intent_cnn_snips",
+        "save_path": "intents/intent_cnn_snips_v2",
+        "load_path": "intents/intent_cnn_snips_v2",
         "classes": "#classes_vocab.keys()",
         "opt": {
           "kernel_sizes_cnn": [
@@ -63,8 +66,8 @@
         },
         "embedder": {
           "name": "fasttext",
-          "save_path": "embeddings/dstc2_fasttext_model_100.bin",
-          "load_path": "embeddings/dstc2_fasttext_model_100.bin",
+          "save_path": "embeddings/dstc2_fastText_model.bin",
+          "load_path": "embeddings/dstc2_fastText_model.bin",
           "emb_module": "fasttext",
           "dim": 100
         },

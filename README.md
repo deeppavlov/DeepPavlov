@@ -4,7 +4,7 @@
 # <center>DeepPavlov</center>
 
 ### *We are in a really early Alpha release. You should be ready for hard adventures.*
-### *If you have updated to version 0.0.2 - please re-download all pre-trained models*
+### *If you have updated to version 0.0.2 or greater - please re-download all pre-trained models*
 
 DeepPavlov is an open-source conversational AI library built on TensorFlow and Keras. It is designed for
  * development of production ready chat-bots and complex conversational systems
@@ -24,8 +24,11 @@ Our goal is to enable AI-application developers researchers with:
 | [Slot filling and NER components](deeppavlov/models/ner/README.md) | Based on neural Named Entity Recognition network and fuzzy Levenshtein search to extract normalized slot values from text. The NER component reproduces architecture from the paper [Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition](https://arxiv.org/pdf/1709.09686.pdf) which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf. |
 | [Intent classification component](deeppavlov/models/classifiers/intents/README.md) | Based on shallow-and-wide Convolutional Neural Network architecture from [Kim Y. Convolutional neural networks for sentence classification – 2014](https://arxiv.org/pdf/1408.5882). The model allows multilabel classification of sentences. |
 | [Automatic spelling correction component](deeppavlov/models/spellers/error_model/README.md) | Based on [An Improved Error Model for Noisy Channel Spelling Correction by Eric Brill and Robert C. Moore](http://www.aclweb.org/anthology/P00-1037) and uses statistics based error model, a static dictionary and an ARPA language model to correct spelling errors. |
-| **Skill** |  |
-| [Goal-oriented bot](deeppavlov/skills/go_bot/README.md) | Based on Hybrid Code Networks (HCNs) architecture from [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017](https://arxiv.org/abs/1702.03274). It allows to predict responses in goal-oriented dialog. The model is customizable: embeddings, slot filler and intent classifier can switched on and off on demand. |
+| [Ranking component](deeppavlov/models/ranking/README.md) |  Based on [LSTM-based deep learning models for non-factoid answer selection](https://arxiv.org/abs/1511.04108). The model performs ranking of responses or contexts from some database by their relevance for the given context. |
+| [Question Answering component](deeppavlov/models/squad/README.md) | Based on [R-NET: Machine Reading Comprehension with Self-matching Networks](https://www.microsoft.com/en-us/research/publication/mrc/). The model solves the task of looking for an answer on a question in a given context ([SQuAD](https://rajpurkar.github.io/SQuAD-explorer/) task format). |
+| **Skills** |  |
+| [Goal-oriented bot](deeppavlov/skills/go_bot/README.md) | Based on Hybrid Code Networks (HCNs) architecture from [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017](https://arxiv.org/abs/1702.03274). It allows to predict responses in goal-oriented dialog. The model is customizable: embeddings, slot filler and intent classifier can switched on and off on demand.  |
+| [Seq2seq goal-oriented bot](deeppavlov/skills/seq2seq_go_bot/README.md) | Dialogue agent predicts responses in a goal-oriented dialog and is able to handle multiple domains (pretrained bot allows calendar scheduling, weather information retrieval, and point-of-interest navigation). The model is end-to-end differentiable and does not need to explicitly model dialogue state or belief trackers. |
 | **Embeddings** |  |
 | [Pre-trained embeddings for the Russian language](pretrained-vectors.md) | Word vectors for the Russian language trained on joint [Russian Wikipedia](https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0) and [Lenta.ru](https://lenta.ru/) corpora. |
 
@@ -43,13 +46,21 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
  ```
  python -m deeppavlov.deep interact deeppavlov/configs/go_bot/gobot_dstc2.json
  ```
- * Run slot-filling model with Telegram interface:
+  * Run goal-oriented bot with REST API:
+ ```
+ python -m deeppavlov.deep riseapi deeppavlov/configs/go_bot/gobot_dstc2.json
+ ``` 
+  * Run slot-filling model with Telegram interface:
  ```
  python -m deeppavlov.deep interactbot deeppavlov/configs/ner/slotfill_dstc2.json -t <TELEGRAM_TOKEN>
  ```
  * Run slot-filling model with console interface:
  ```
  python -m deeppavlov.deep interact deeppavlov/configs/ner/slotfill_dstc2.json
+ ```
+ * Run slot-filling model with REST API:
+ ```
+ python -m deeppavlov.deep riseapi deeppavlov/configs/ner/slotfill_dstc2.json
  ```
 ## Conceptual overview
 
@@ -91,8 +102,8 @@ DeepPavlov is built on top of machine learning frameworks [TensorFlow](https://w
     * [Train config](#train-config)
     * [Train parameters](#train-parameters)
     * [DatasetReader](#datasetreader)
-    * [Dataset](#dataset)
-    * [Inferring](#inferring)
+    * [DatasetIterator](#datasetiterator)
+    * [Inference](#inference)
  * [License](#license)
  * [Support and collaboration](#support-and-collaboration)
  * [The Team](#the-team)
@@ -138,21 +149,28 @@ Then you can interact with the models or train them with the following command:
 python -m deeppavlov.deep <mode> <path_to_config>
 ```
 
-* `<mode>` can be 'train', 'interact' or 'interactbot'
+* `<mode>` can be 'train', 'interact', 'interactbot' or 'riseapi'
 * `<path_to_config>` should be a path to an NLP pipeline json config
 
 For 'interactbot' mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable.
 
+For 'riseapi' mode you should specify api settings (host, port, etc.) in [*utils/server_utils/server_config.json*](utils/server_utils/server_config.json) configuration file. If provided, values from *model_defaults* section override values for the same parameters from *common_defaults* section. Model names in *model_defaults* section should be similar to the class names of the models main component.
 
 Available model configs are:
 
-*deeppavlov/configs/go_bot/gobot_dstc2.json*
+- ```deeppavlov/configs/go_bot/*.json```
 
-*deeppavlov/configs/intents/intents_dstc2.json*
+- ```deeppavlov/configs/seq2seq_go_bot/*.json```
 
-*deeppavlov/configs/ner/slotfill_dstc2.json*
+- ```deeppavlov/configs/squad/*.json```
 
-*deeppavlov/configs/error_model/brillmoore_wikitypos_en.json*
+- ```deeppavlov/configs/intents/*.json```
+
+- ```deeppavlov/configs/ner/*.json```
+
+- ```deeppavlov/configs/rankinf/*.json```
+
+- ```deeppavlov/configs/error_model/*.json```
 
 ---
 
@@ -171,7 +189,11 @@ Available model configs are:
 </tr>
 <tr>
     <td><b> deeppavlov.core.data </b></td>
-    <td> basic <b><i>Dataset</i></b>, <b><i>DatasetReader</i></b> and <b><i>Vocab</i></b> classes </td>
+    <td> basic <b><i>DatasetIterator</i></b>, <b><i>DatasetReader</i></b> and <b><i>Vocab</i></b> classes </td>
+</tr>
+<tr>
+    <td><b> deeppavlov.core.layers </b></td>
+    <td> collection of commonly used <b><i>Layers</i></b> for TF models </td>
 </tr>
 <tr>
     <td><b> deeppavlov.core.models </b></td>
@@ -182,8 +204,12 @@ Available model configs are:
     <td> concrete <b><i>DatasetReader</i></b> classes </td>
 </tr>
 <tr>
-    <td><b> deeppavlov.datasets </b></td>
-    <td> concrete <b><i>Dataset</i></b> classes </td>
+    <td><b> deeppavlov.dataset_iterators </b></td>
+    <td> concrete <b><i>DatasetIterators</i></b> classes </td>
+</tr>
+<tr>
+    <td><b> deeppavlov.metrics </b></td>
+    <td> different <b><i>Metric</i></b> functions </td>
 </tr>
 <tr>
     <td><b> deeppavlov.models </b></td>
@@ -203,7 +229,7 @@ Available model configs are:
 
 An NLP pipeline config is a JSON file that contains one required element `chainer`:
 
-```json
+```
 {
   "chainer": {
     "in": ["x"],
@@ -288,15 +314,15 @@ An NNModel should have the `in_y` parameter which contains a list of ground trut
 ]
 ```
 
-The config for training the pipeline should have three additional elements: `dataset_reader`, `dataset` and `train`:
+The config for training the pipeline should have three additional elements: `dataset_reader`, `dataset_iterator` and `train`:
 
-```json
+```
 {
   "dataset_reader": {
     "name": ...,
     ...
   }
-  "dataset": {
+  "dataset_iterator": {
     "name": ...,
     ...
   },
@@ -308,6 +334,10 @@ The config for training the pipeline should have three additional elements: `dat
   }
 }
 ```
+
+Simplified version of trainig pipeline contains two elemens: `dataset` and `train`. The `dataset` element currently 
+can be used for train from classification data in `csv` and `json` formats. You can find complete examples of how to use simplified training pipeline in [intents_sample_csv.json](deeppavlov/configs/intents/intents_sample_csv.json) and [intents_sample_json.json](deeppavlov/configs/intents/intents_sample_json.json) config files.
+
 
 ### Train Parameters
 * `epochs` — maximum number of epochs to train NNModel, defaults to `-1` (infinite)
@@ -334,12 +364,12 @@ from deeppavlov.core.data.dataset_reader import DatasetReader
 class DSTC2DatasetReader(DatasetReader):
 ```
 
-### Dataset
+### DatasetIterator
 
-`Dataset` forms the sets of data ('train', 'valid', 'test') needed for training/inference and divides it into batches.
-A concrete `Dataset` class should be registered and can be inherited from
-`deeppavlov.data.dataset_reader.Dataset` class. `deeppavlov.data.dataset_reader.Dataset`
-is not an abstract class and can be used as a `Dataset` as well.
+`DatasetIterator` forms the sets of data ('train', 'valid', 'test') needed for training/inference and divides it into batches.
+A concrete `DatasetIterator` class should be registered and can be inherited from
+`deeppavlov.data.dataset_iterator.BasicDatasetIterator` class. `deeppavlov.data.dataset_iterator.BasicDatasetIterator`
+is not an abstract class and can be used as a `DatasetIterator` as well.
 
 ### Inference
 
@@ -359,7 +389,7 @@ If you have any questions, bug reports or feature requests, please feel free to 
 
 ## The Team
 
-DeepPavlov is built and maintained by [Neural Networks and Deep Learning Lab](https://mipt.ru/english/research/labs/neural-networks-and-deep-learning-lab) at [MIPT](https://mipt.ru/english/).
+DeepPavlov is built and maintained by [Neural Networks and Deep Learning Lab](https://mipt.ru/english/research/labs/neural-networks-and-deep-learning-lab) at [MIPT](https://mipt.ru/english/) within [iPavlov](http://ipavlov.ai/) project (part of [National Technology Initiative](https://asi.ru/eng/nti/)) and in partnership with [Sberbank](http://www.sberbank.com/).
 
 <p align="center">
 <img src="http://ipavlov.ai/img/ipavlov_footer.png" width="50%" height="50%"/>
