@@ -92,8 +92,9 @@ class GoalOrientedBotNetwork(TFModel):
         _logits, self._state = self._build_body()
 
         # probabilities normalization : elemwise multiply with action mask
-        self._probs = tf.multiply(_logits, self._action_mask)
-        self._probs = tf.squeeze(tf.nn.softmax(self._probs), name='probs')
+        _logits_exp = tf.multiply(tf.exp(_logits), self._action_mask)
+        _logits_exp_sum = tf.expand_dims(tf.reduce_sum(_logits_exp, -1), -1)
+        self._probs = tf.squeeze(_logits_exp / _logits_exp_sum, name='probs')
 
         # loss, train and predict operations
         self._prediction = tf.argmax(self._probs, axis=-1, name='prediction')
