@@ -36,7 +36,7 @@ OPT_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin',
     'http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M.vec',
     'http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M-char.vec',
-    'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/GoogleNews-vectors-negative300.bin'
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/GoogleNews-vectors-negative300.bin.gz'
 }
 
 ALL_URLS = REQ_URLS.union(OPT_URLS)
@@ -49,7 +49,7 @@ EMBEDDING_URLS = {
     'http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M.vec',
     'http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M-char.vec',
     'http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt',
-    'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/GoogleNews-vectors-negative300.bin'
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/GoogleNews-vectors-negative300.bin.gz'
 }
 
 DATA_URLS = {
