@@ -131,12 +131,12 @@ class GoalOrientedBotNetwork(TFModel):
         self._utterance_mask = tf.placeholder(tf.float32,
                                               shape=[None, None],
                                               name='utterance_mask')
-        _initial_state_c = \
-            tf.placeholder_with_default(np.zeros([1, self.hidden_size], np.float32),
-                                        shape=[None, self.hidden_size])
-        _initial_state_h = \
-            tf.placeholder_with_default(np.zeros([1, self.hidden_size], np.float32),
-                                        shape=[None, self.hidden_size])
+        _batch_size = tf.shape(self._features)[0]
+        zero_state = tf.zeros([_batch_size, self.hidden_size], dtype=tf.float32)
+        _initial_state_c = tf.placeholder_with_default(zero_state,
+                                                       shape=[None, self.hidden_size])
+        _initial_state_h = tf.placeholder_with_default(zero_state,
+                                                       shape=[None, self.hidden_size])
         self._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c,
                                                             _initial_state_h)
 
@@ -197,8 +197,6 @@ class GoalOrientedBotNetwork(TFModel):
                 feed_dict={
                     self._dropout: self.dropout_rate,
                     self._utterance_mask: utter_mask,
-                    self._initial_state: (np.tile(self.state_c, [batch_size, 1]),
-                                          np.tile(self.state_h, [batch_size, 1])),
                     self._features: features,
                     self._action: action,
                     self._action_mask: action_mask
