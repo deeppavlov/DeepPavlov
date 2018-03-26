@@ -36,6 +36,7 @@ OPT_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin',
     'http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M.vec',
     'http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M-char.vec',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/GoogleNews-vectors-negative300.bin'
 }
 
 ALL_URLS = REQ_URLS.union(OPT_URLS)
@@ -47,10 +48,11 @@ EMBEDDING_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/dstc2_fastText_model.bin',
     'http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M.vec',
     'http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M-char.vec',
-    'http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt'
+    'http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/GoogleNews-vectors-negative300.bin'
 }
 
 DATA_URLS = {
     'http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz',
-    'http://lnsigo.mipt.ru/export/datasets/insuranceQA-master.zip'
+    'http://lnsigo.mipt.ru/export/datasets/insuranceQA-master.zip',
 }
