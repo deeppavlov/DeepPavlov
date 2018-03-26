@@ -37,6 +37,7 @@ parser.add_argument("mode", help="select a mode, train or interact", type=str,
                     choices={'train', 'interact', 'interactbot', 'riseapi'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 parser.add_argument("-t", "--token", help="telegram bot token", type=str)
+parser.add_argument("-n", "--name", help="model name", type=str)
 
 
 def main():
@@ -44,6 +45,7 @@ def main():
     pipeline_config_path = args.config_path
 
     token = args.token or os.getenv('TELEGRAM_TOKEN')
+    name = args.name
 
     if args.mode == 'train':
         train_model_from_config(pipeline_config_path)
@@ -51,9 +53,9 @@ def main():
         interact_model(pipeline_config_path)
     elif args.mode == 'interactbot':
         if not token:
-            log.error('Token required: initiate -t parm or TELEGRAM_BOT env var with Telegram bot token')
+            log.error('Token required: initiate -t param or TELEGRAM_BOT env var with Telegram bot token')
         else:
-            interact_model_by_telegram(pipeline_config_path, token)
+            interact_model_by_telegram(pipeline_config_path, token, name)
     elif args.mode == 'riseapi':
         start_model_server(pipeline_config_path)
 

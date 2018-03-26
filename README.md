@@ -39,7 +39,7 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
           
  * Run goal-oriented bot with Telegram interface:
  ```
- python -m deeppavlov.deep interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -t <TELEGRAM_TOKEN>
+ python -m deeppavlov.deep interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -n GoalOrientedBot -t <TELEGRAM_TOKEN>
  ```
  * Run goal-oriented bot with console interface:
  ```
@@ -51,7 +51,7 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
  ``` 
   * Run slot-filling model with Telegram interface:
  ```
- python -m deeppavlov.deep interactbot deeppavlov/configs/ner/slotfill_dstc2.json -t <TELEGRAM_TOKEN>
+ python -m deeppavlov.deep interactbot deeppavlov/configs/ner/slotfill_dstc2.json -n DstcSlotFillingNetwork -t <TELEGRAM_TOKEN>
  ```
  * Run slot-filling model with console interface:
  ```
@@ -151,7 +151,7 @@ python -m deeppavlov.deep <mode> <path_to_config>
 * `<mode>` can be 'train', 'interact', 'interactbot' or 'riseapi'
 * `<path_to_config>` should be a path to an NLP pipeline json config
 
-For 'interactbot' mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable.
+For 'interactbot' mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable. Also you can specify model name `-n` parameter referencing to the appropriate section of `utils/telegram_utils/model_info.json` to get custom `/start` and `/help` Telegram messages for the running model.
 
 For 'riseapi' mode you should specify api settings (host, port, etc.) in [*utils/server_utils/server_config.json*](utils/server_utils/server_config.json) configuration file. If provided, values from *model_defaults* section override values for the same parameters from *common_defaults* section. Model names in *model_defaults* section should be similar to the class names of the models main component.
 

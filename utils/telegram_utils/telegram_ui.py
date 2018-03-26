@@ -19,20 +19,32 @@ import telebot
 
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.commands.infer import build_model_from_config
+from deeppavlov.core.common.log import get_logger
 
 
 TELEGRAM_UI_CONFIG_FILENAME = 'models_info.json'
 
+log = get_logger(__name__)
 
-def init_bot_for_model(token, model):
+
+def init_bot_for_model(token, model, model_name):
     bot = telebot.TeleBot(token)
 
     config_dir = Path(__file__).resolve().parent
     config_path = Path(config_dir, TELEGRAM_UI_CONFIG_FILENAME).resolve()
     models_info = read_json(str(config_path))
 
-    model_name = type(model.get_main_component()).__name__
-    model_info = models_info[model_name] if model_name in models_info else models_info['@default']
+    if model_name in models_info:
+        model_info = models_info[model_name]
+    else:
+        if not model_name:
+            log.warn('Model name was not provided, '
+                     'using default Telegram params from telegram_utils/models_info.json')
+        else:
+            log.warn(f'Model name "{model_name}" was not found in telegram_utils/models_info.json, '
+                     'using default Telegram params')
+        model_info = models_info['@default']
+
     buffer = {}
     expect = []
 
@@ -79,7 +91,7 @@ def init_bot_for_model(token, model):
     bot.polling()
 
 
-def interact_model_by_telegram(config_path, token):
+def interact_model_by_telegram(config_path, token, model_name):
     config = read_json(config_path)
     model = build_model_from_config(config)
-    init_bot_for_model(token, model)
+    init_bot_for_model(token, model, model_name)
