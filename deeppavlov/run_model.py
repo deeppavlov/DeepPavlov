@@ -23,13 +23,14 @@ from deeppavlov.core.commands.infer import interact_model
 # PIPELINE_CONFIG_PATH = 'configs/ner/ner_dstc2.json'
 # PIPELINE_CONFIG_PATH = 'configs/ner/ner_conll2003.json'
 # PIPELINE_CONFIG_PATH = 'configs/ner/slotfill_dstc2.json'
+# PIPELINE_CONFIG_PATH = 'configs/ner/ner_ontonotes_emb.json'
 # PIPELINE_CONFIG_PATH = 'configs/error_model/brillmoore_wikitypos_en.json'
 # PIPELINE_CONFIG_PATH = 'configs/error_model/brillmoore_kartaslov_ru.json'
 # PIPELINE_CONFIG_PATH = 'configs/go_bot/gobot_dstc2.json'
 # PIPELINE_CONFIG_PATH = 'configs/go_bot/gobot_dstc2_all.json'
 # PIPELINE_CONFIG_PATH = 'configs/go_bot/gobot_dstc2_minimal.json'
 # PIPELINE_CONFIG_PATH = 'configs/squad/squad.json'
-PIPELINE_CONFIG_PATH = 'configs/ranking/insurance_config.json'
+PIPELINE_CONFIG_PATH = 'configs/squad/squad.json'
 
-train_model_from_config(PIPELINE_CONFIG_PATH)
+# train_model_from_config(PIPELINE_CONFIG_PATH)
 interact_model(PIPELINE_CONFIG_PATH)
