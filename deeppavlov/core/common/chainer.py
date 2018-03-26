@@ -41,7 +41,7 @@ class Chainer(Component):
                 preprocessor.append(t_in_x, t_out, t_component)
 
             def train_on_batch(*args, **kwargs):
-                preprocessed = preprocessor(*args, **kwargs)
+                preprocessed = zip(*preprocessor(*args, **kwargs))
                 return component.train_on_batch(*preprocessed)
 
             self.train_on_batch = train_on_batch
@@ -95,10 +95,10 @@ class Chainer(Component):
         res = [mem[k] for k in to_return]
         if len(res) == 1:
             return res[0]
-        return res
+        return list(zip(*res))
 
     def get_main_component(self):
-        return self.main or self.pipe[-1]
+        return self.main or self.pipe[-1][-1]
 
     def save(self):
         self.get_main_component().save()

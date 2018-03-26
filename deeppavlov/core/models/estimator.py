@@ -22,5 +22,5 @@ from .serializable import Serializable
 class Estimator(Component, Serializable):
 
     @abstractmethod
-    def fit(self, x: list, y: list):
+    def fit(self, *args, **kwargs):
         pass

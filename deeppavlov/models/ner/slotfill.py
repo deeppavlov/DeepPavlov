@@ -29,12 +29,25 @@ from deeppavlov.models.ner.network import NerNetwork
 from deeppavlov.core.data.utils import tokenize_reg, download, download_decompress
 from deeppavlov.core.common.log import get_logger
 
-
 log = get_logger(__name__)
 
 
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(TFModel):
+    GRAPH_PARAMS = ["n_filters",
+                    "filter_width",
+                    "token_embeddings_dim",
+                    "char_embeddings_dim",
+                    "use_char_embeddings",
+                    "use_batch_norm",
+                    "use_crf",
+                    "net_type",
+                    "char_filter_width",
+                    "cell_type"]
+    VOCABS = ['word_vocab',
+              'char_vocab',
+              'tag_vocab']
+
     def __init__(self, **kwargs):
         self.opt = deepcopy(kwargs)
         vocabs = self.opt.pop('vocabs')
@@ -158,3 +171,38 @@ class DstcSlotFillingNetwork(TFModel):
     def _download_slot_vals(self):
         url = 'http://lnsigo.mipt.ru/export/datasets/dstc_slot_vals.json'
         download(self.save_path.parent / 'slot_vals.json', url)
+
+    def load(self, *args, **kwargs):
+        self.load_params()
+        super().load(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.save_params()
+
+    def save_params(self):
+        params_to_save = {param: self.opt.get(param, None) for param in self.GRAPH_PARAMS}
+        for vocab in self.VOCABS:
+            params_to_save[vocab] = [self.opt[vocab][i] for i in range(len(self.opt[vocab]))]
+        path = str(self.save_path.with_suffix('.json').resolve())
+        log.info('[saving parameters to {}]'.format(path))
+        with open(path, 'w') as fp:
+            json.dump(params_to_save, fp, indent=4)
+
+    def load_params(self):
+        path = self.load_path.with_suffix('.json').resolve()
+        if not path.exists():
+            return
+        log.info('[loading parameters from {}]'.format(path))
+        with open(path, 'r') as fp:
+            params = json.load(fp)
+        for p in self.GRAPH_PARAMS:
+            if self.opt.get(p, None) != params[p]:
+                raise ValueError("`{}` parameter must be equal to "
+                                 "saved model parameter value `{}`" \
+                                 .format(p, params[p]))
+        for vocab_name in self.VOCABS:
+            vocab = [self.opt[vocab_name][i] for i in range(len(self.opt[vocab_name]))]
+            if vocab != params[vocab_name]:
+                raise ValueError("`{}` vocabulary must be equal in created and "
+                                 "saved model".format(vocab_name))

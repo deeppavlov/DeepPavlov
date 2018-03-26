@@ -13,11 +13,13 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import json
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer
 
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.core.common.log import get_logger
 
@@ -27,11 +29,10 @@ log = get_logger(__name__)
 
 @register('go_bot_rnn')
 class GoalOrientedBotNetwork(TFModel):
+    GRAPH_PARAMS = ["hidden_size", "action_size", "dense_size", "obs_size"]
     def __init__(self, **params):
-        self.opt = params
-
         # initialize parameters
-        self._init_params()
+        self._init_params(params)
         # build computational graph
         self._build_graph()
         # initialize session
@@ -41,7 +42,6 @@ class GoalOrientedBotNetwork(TFModel):
 
         super().__init__(**params)
         if tf.train.checkpoint_exists(str(self.save_path.resolve())):
-        #TODO: save/load params to json, here check compatability
             log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
             self.load()
         else:
@@ -51,8 +51,6 @@ class GoalOrientedBotNetwork(TFModel):
 
     def __call__(self, features, action_mask, prob=False):
         # TODO: make input list
-        # TODO: batch_size != 1
-        #batch_size = len(features)
         probs, prediction, state = \
             self.sess.run(
                 [self._probs, self._prediction, self._state],
@@ -74,14 +72,17 @@ class GoalOrientedBotNetwork(TFModel):
         action = y
         self._train_step(features, utter_mask, action_mask, action)
 
-    def _init_params(self, params=None):
-        params = params or self.opt
-        self.learning_rate = params['learning_rate']
-        self.dropout_rate = params.get('dropout_rate', 1.)
-        self.n_hidden = params['hidden_dim']
-        self.n_actions = params['action_size']
-        self.obs_size = params['obs_size']
-        self.dense_size = params.get('dense_size', params['hidden_dim'])
+    def _init_params(self, params):
+        self.opt = params
+        self.opt['dropout_rate'] = params.get('dropout_rate', 1.)
+        self.opt['dense_size'] = params.get('dense_size', self.opt['hidden_size'])
+
+        self.learning_rate = self.opt['learning_rate']
+        self.dropout_rate = self.opt['dropout_rate']
+        self.hidden_size = self.opt['hidden_size']
+        self.action_size = self.opt['action_size']
+        self.obs_size = self.opt['obs_size']
+        self.dense_size = self.opt['dense_size']
 
     def _build_graph(self):
 
@@ -99,7 +100,7 @@ class GoalOrientedBotNetwork(TFModel):
 
         _weights = tf.expand_dims(self._utterance_mask, -1)
         # TODO: try multiplying logits to action_mask
-        #onehots = tf.one_hot(self._action, self.n_actions)
+        #onehots = tf.one_hot(self._action, self.action_size)
         #_loss_tensor = \
             #tf.losses.softmax_cross_entropy(logits=_logits, onehot_labels=onehots,
             #                                weights=_weights,
@@ -124,17 +125,17 @@ class GoalOrientedBotNetwork(TFModel):
                                       [None, None],
                                       name='ground_truth_action')
         self._action_mask = tf.placeholder(tf.float32,
-                                           [None, None, self.n_actions],
+                                           [None, None, self.action_size],
                                            name='action_mask')
         self._utterance_mask = tf.placeholder(tf.float32,
                                               shape=[None, None],
                                               name='utterance_mask')
         _initial_state_c = \
-            tf.placeholder_with_default(np.zeros([1, self.n_hidden], np.float32),
-                                        shape=[None, self.n_hidden])
+            tf.placeholder_with_default(np.zeros([1, self.hidden_size], np.float32),
+                                        shape=[None, self.hidden_size])
         _initial_state_h = \
-            tf.placeholder_with_default(np.zeros([1, self.n_hidden], np.float32),
-                                        shape=[None, self.n_hidden])
+            tf.placeholder_with_default(np.zeros([1, self.hidden_size], np.float32),
+                                        shape=[None, self.hidden_size])
         self._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c,
                                                             _initial_state_h)
 
@@ -146,21 +147,46 @@ class GoalOrientedBotNetwork(TFModel):
                                  kernel_initializer=xavier_initializer())
 
         # recurrent network unit
-        _lstm_cell = tf.nn.rnn_cell.LSTMCell(self.n_hidden)
+        _lstm_cell = tf.nn.rnn_cell.LSTMCell(self.hidden_size)
         _output, _state = tf.nn.dynamic_rnn(_lstm_cell,
                                             _units,
                                             initial_state=self._initial_state)
  
         # output projection
         _logits = tf.layers.dense(_output,
-                                  self.n_actions,
+                                  self.action_size,
                                   kernel_initializer=xavier_initializer())
         return _logits, _state
 
+    def load(self, *args, **kwargs):
+        self.load_params()
+        super().load(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.save_params()
+
+    def save_params(self):
+        path = str(self.save_path.with_suffix('.json').resolve())
+        log.info('[saving parameters to {}]'.format(path))
+        with open(path, 'w') as fp:
+            json.dump(self.opt, fp)
+
+    def load_params(self):
+        path = str(self.load_path.with_suffix('.json').resolve())
+        log.info('[loading parameters from {}]'.format(path))
+        with open(path, 'r') as fp:
+            params = json.load(fp)
+        for p in self.GRAPH_PARAMS:
+            if self.opt[p] != params[p]:
+                raise ConfigError("`{}` parameter must be equal to "
+                                  "saved model parameter value `{}`"\
+                                  .format(p, params[p]))
+
     def reset_state(self):
         # set zero state
-        self.state_c = np.zeros([1, self.n_hidden], dtype=np.float32)
-        self.state_h = np.zeros([1, self.n_hidden], dtype=np.float32)
+        self.state_c = np.zeros([1, self.hidden_size], dtype=np.float32)
+        self.state_h = np.zeros([1, self.hidden_size], dtype=np.float32)
 
     def _train_step(self, features, utter_mask, action_mask, action):
         batch_size = len(features)
