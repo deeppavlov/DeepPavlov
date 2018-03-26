@@ -28,7 +28,7 @@ class RankingIterator:
             'all': self.train + self.test + self.valid
         }
 
-    def batch_generator(self, batch_size, data_type="train", shuffle=True):
+    def gen_batches(self, batch_size, data_type="train", shuffle=True):
         y = np.zeros(batch_size)
         data = self.data[data_type]
         num_steps = len(data) // batch_size
