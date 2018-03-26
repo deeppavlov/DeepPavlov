@@ -49,9 +49,10 @@
   "train": {
     "epochs": 150,
     "batch_size": 256,
-    "metrics": ["r@1", "rank_response"],
+    "metrics": ["r@1", "rank_response", "loss"],
     "validation_patience": 5,
-    "val_every_n_epochs": 10
+    "val_every_n_epochs": 10,
+    "log_every_n_batches": 10
   }
 
 }

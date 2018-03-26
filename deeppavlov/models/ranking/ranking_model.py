@@ -110,7 +110,7 @@ class RankingModel(NNModel):
         rp = self.dict.make_ints(rp)
         rn = self.dict.make_toks(negative_response, type="response")
         rn = self.dict.make_ints(rn)
-        b = [c, rp, rn], y
+        b = [c, rp, rn], np.asarray(y)
         self._net.train_on_batch(b)
 
     @overrides

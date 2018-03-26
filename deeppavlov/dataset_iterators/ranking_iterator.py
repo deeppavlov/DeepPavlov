@@ -87,6 +87,8 @@ class RankingIterator:
             response_data = []
             for i in range(len(context_response_data)):
                 pos_pool = context_response_data[i]["pos_pool"]
+                resp = context_response_data[i]["response"]
+                pos_pool.insert(0, pos_pool.pop(pos_pool.index(resp)))
                 neg_pool = context_response_data[i]["neg_pool"]
                 response = pos_pool + neg_pool
                 response_data.append(response[:ranking_length])
@@ -97,6 +99,8 @@ class RankingIterator:
             response_data = []
             for i in range(len(context_response_data)):
                 pos_pool = context_response_data[i]["pos_pool"]
+                resp = context_response_data[i]["response"]
+                pos_pool.insert(0, pos_pool.pop(pos_pool.index(resp)))
                 neg_pool = context_response_data[i]["neg_pool"]
                 response = pos_pool + neg_pool
                 response_data.append(response[:ranking_length])
