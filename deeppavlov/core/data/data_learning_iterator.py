@@ -37,7 +37,7 @@ class DataLearningIterator:
         Args:
             data: list of (x, y) pairs. Each pair is a sample from the dataset. x as well as y
             can be a tuple of different input features.
-            seed (int): random random for data shuffling. Defaults to None
+            seed (int): random seed for data shuffling. Defaults to None
             shuffle: whether to shuffle data when batching (from config)
         """
         self.shuffle = shuffle
