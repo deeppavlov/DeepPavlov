@@ -149,9 +149,11 @@ class GoalOrientedBotNetwork(TFModel):
 
         # recurrent network unit
         _lstm_cell = tf.nn.rnn_cell.LSTMCell(self.hidden_size)
+        _utter_lengths = tf.to_int32(tf.reduce_sum(self._utterance_mask, axis=-1))
         _output, _state = tf.nn.dynamic_rnn(_lstm_cell,
                                             _units,
-                                            initial_state=self._initial_state)
+                                            initial_state=self._initial_state,
+                                            sequence_length=_utter_lengths)
  
         # output projection
         _logits = tf.layers.dense(_output,
@@ -190,7 +192,6 @@ class GoalOrientedBotNetwork(TFModel):
         self.state_h = np.zeros([1, self.hidden_size], dtype=np.float32)
 
     def _train_step(self, features, utter_mask, action_mask, action):
-        batch_size = len(features)
         _, loss_value, prediction = \
             self.sess.run(
                 [ self._train_op, self._loss, self._prediction ],
