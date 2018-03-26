@@ -31,9 +31,9 @@ log = get_logger(__name__)
 
 @register('default_vocab')
 class DefaultVocabulary(Estimator):
-    def __init__(self, save_path, load_path, inputs=None, level='token',
+    def __init__(self, save_path, load_path, level='token',
                  special_tokens=tuple(), default_token=None,
-                 tokenize=False, *args, **kwargs):
+                 tokenizer=None, *args, **kwargs):
 
         super().__init__(load_path=load_path,
                          save_path=save_path,
@@ -41,51 +41,51 @@ class DefaultVocabulary(Estimator):
 
         self.special_tokens = special_tokens
         self.default_token = default_token
-        self.preprocess_fn = self._build_preprocess_fn(inputs, level, tokenize)
+        self.preprocess_fn = self._build_preprocess_fn(level, tokenizer)
 
         # TODO check via decorator
         self.reset()
-        self.load()
+        if self.load_path:
+            self.load()
 
     @staticmethod
-    def _build_preprocess_fn(inputs, level, tokenize):
+    def _build_preprocess_fn(level, tokenizer=None):
         def iter_level(utter):
-            if isinstance(utter, list) and isinstance(utter[0], dict):
-                utter = ' '.join(u['text'] for u in utter)
+            if isinstance(utter, list) and utter and isinstance(utter[0], dict):
+                tokens = (u['text'] for u in utter)
             elif isinstance(utter, dict):
-                utter = utter['text']
+                tokens = [utter['text']]
+            elif isinstance(utter, list) and (not utter or isinstance(utter[0], str)):
+                tokens = utter
+            else:
+                tokens = [utter]
 
-            if tokenize:
-                utter = utter.split()
+            if tokenizer is not None:
+                tokens = tokenizer([' '.join(tokens)])[0]
+            tokens = filter(None, tokens)
+
             if level == 'token':
-                yield from utter
+                yield from tokens
             elif level == 'char':
-                for token in utter:
+                for token in tokens:
                     yield from token
             else:
                 raise ValueError("level argument is either equal to `token`"
                                  " or to `char`")
 
         def preprocess_fn(data):
-            if inputs is not None:
-                for f in inputs:
-                    if f == 'x':
-                        yield from iter_level(data[0])
-                    elif f == 'y':
-                        yield from iter_level(data[1])
-            else:
-                for d in data:
-                    yield from iter_level(d)
+            for d in data:
+                yield from iter_level(d)
 
         return preprocess_fn
 
     def __getitem__(self, key):
-        if isinstance(key, int):
+        if isinstance(key, (int, np.integer)):
             return self._i2t[key]
         elif isinstance(key, str):
             return self._t2i[key]
         else:
-            return NotImplemented("not implemented for type `{}`".format(type(key)))
+            raise NotImplementedError("not implemented for type `{}`".format(type(key)))
 
     def __contains__(self, item):
         return item in self._t2i
@@ -178,10 +178,6 @@ class DefaultVocabulary(Estimator):
             if not filter_paddings or idx != self.tok2idx('<PAD>'):
                 toks.append(self._i2t[idx])
         return toks
-
-    def iter_all(self):
-        for token in self.frequencies:
-            yield token
 
     def tok2idx(self, tok):
         return self._t2i[tok]

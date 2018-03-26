@@ -39,7 +39,7 @@ class StreamSpacyTokenizer(Component):
 
     def __init__(self, disable: list = None, stopwords: list = ENGLISH_STOP_WORDS,
                  batch_size: int = None, ngram_range: List[int] = None, lemmas=False,
-                 n_threads: int = None, lowercase: bool = None, **kwargs):
+                 n_threads: int = None, lowercase: bool = None, alphas_only: bool = None, **kwargs):
         """
         :param disable: pipeline processors to omit; if nothing should be disabled,
          pass an empty list
@@ -64,6 +64,7 @@ class StreamSpacyTokenizer(Component):
         self.lemmas = lemmas
         self.n_threads = n_threads
         self.lowercase = lowercase
+        self.alphas_only = alphas_only
 
     def __call__(self, batch):
         if isinstance(batch[0], str):
@@ -141,14 +142,21 @@ class StreamSpacyTokenizer(Component):
             processed_doc = ngramize(filtered, ngram_range=_ngram_range)
             yield from processed_doc
 
-    def _filter(self, items):
+    def _filter(self, items, alphas_only=True):
         """
         Make ngrams from a list of tokens/lemmas
         :param items: list of tokens, lemmas or other strings to form ngrams
+        :param alphas_only: should filter numeric and alpha-numeric types or not
         :return: filtered list of tokens/lemmas
         """
-        filtered = list(filter(lambda x: x.isalpha() and x not in self.stopwords, items))
-        return filtered
+        _alphas_only = self.alphas_only or alphas_only
+
+        if self._alphas_only:
+            filter_fn = lambda x: x.isalpha() and x not in self.stopwords
+        else:
+            filter_fn = lambda x: x not in self.stopwords
+
+        return list(filter(filter_fn, items))
 
     def set_stopwords(self, stopwords):
         self.stopwords = stopwords

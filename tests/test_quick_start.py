@@ -24,6 +24,7 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
                     ("configs/intents/intents_sample_json.json", "intents", False): []},
           "ner": {("configs/ner/ner_conll2003.json", "ner_conll2003", True): [],
                   ("configs/ner/ner_dstc2.json", "ner", True): [],
+                  ("configs/ner/ner_ontonotes_emb.json", "ner_ontonotes", True): [],
                   ("configs/ner/slotfill_dstc2.json", "ner", True):
                       [
                           ("chinese food", "{'food': 'chinese'}"),
@@ -32,7 +33,8 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
                       ]
                   },
           "ranking": {("configs/ranking/insurance_config.json", "ranking", True): []},
-          "squad": {("configs/squad/squad.json", "squad_model", True): []}
+          "squad": {("configs/squad/squad.json", "squad_model", True): []},
+          "seq2seq_go_bot": {("configs/seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", True): []}
           }
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
@@ -70,8 +72,8 @@ def setup_module():
 
 
 def teardown_module():
-    shutil.rmtree(str(test_configs_path))
-    shutil.rmtree(str(download_path))
+    shutil.rmtree(str(test_configs_path), ignore_errors=True)
+    shutil.rmtree(str(download_path), ignore_errors=True)
 
 
 def download(full=None):
