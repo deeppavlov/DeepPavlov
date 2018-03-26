@@ -151,7 +151,7 @@ class StreamSpacyTokenizer(Component):
         """
         _alphas_only = self.alphas_only or alphas_only
 
-        if self._alphas_only:
+        if self.alphas_only:
             filter_fn = lambda x: x.isalpha() and x not in self.stopwords
         else:
             filter_fn = lambda x: x not in self.stopwords
