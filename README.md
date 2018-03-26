@@ -101,8 +101,8 @@ DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). O
     * [Train config](#train-config)
     * [Train parameters](#train-parameters)
     * [DatasetReader](#datasetreader)
-    * [Dataset](#dataset)
-    * [Inferring](#inferring)
+    * [DatasetIterator](#datasetiterator)
+    * [Inference](#inference)
  * [License](#license)
  * [Support and collaboration](#support-and-collaboration)
  * [The Team](#the-team)
@@ -188,7 +188,11 @@ Available model configs are:
 </tr>
 <tr>
     <td><b> deeppavlov.core.data </b></td>
-    <td> basic <b><i>Dataset</i></b>, <b><i>DatasetReader</i></b> and <b><i>Vocab</i></b> classes </td>
+    <td> basic <b><i>DatasetIterator</i></b>, <b><i>DatasetReader</i></b> and <b><i>Vocab</i></b> classes </td>
+</tr>
+<tr>
+    <td><b> deeppavlov.core.layers </b></td>
+    <td> collection of commonly used <b><i>Layers</i></b> for TF models </td>
 </tr>
 <tr>
     <td><b> deeppavlov.core.models </b></td>
@@ -199,8 +203,12 @@ Available model configs are:
     <td> concrete <b><i>DatasetReader</i></b> classes </td>
 </tr>
 <tr>
-    <td><b> deeppavlov.datasets </b></td>
-    <td> concrete <b><i>Dataset</i></b> classes </td>
+    <td><b> deeppavlov.dataset_iterators </b></td>
+    <td> concrete <b><i>DatasetIterators</i></b> classes </td>
+</tr>
+<tr>
+    <td><b> deeppavlov.metrics </b></td>
+    <td> different <b><i>Metric</i></b> functions </td>
 </tr>
 <tr>
     <td><b> deeppavlov.models </b></td>
