@@ -28,6 +28,12 @@ logger = get_logger(__name__)
 
 @register("tfidf_ranker")
 class TfidfRanker(Component):
+    """
+    temporary stub to run REST API
+     """
+
+    def get_main_component(self):
+        return self
 
     def __init__(self, vectorizer: Type = HashingTfIdfVectorizer, **kwargs):
         self.vectorizer = vectorizer
