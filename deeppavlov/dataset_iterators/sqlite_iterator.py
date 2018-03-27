@@ -45,8 +45,18 @@ class SQLiteDataIterator(DataFittingIterator):
         download_path = expand_path(data_path)
         if not download_path.exists() or is_empty(download_path):
             logger.info('[downloading wiki.db from {} to {}]'.format(data_url, download_path))
-            download_path = download_path.joinpath(data_url.split("/")[-1].split(".")[0])
+            download_path = download_path / data_url.split('/')[-1]
             download(download_path, data_url)
+        else:
+            for x in download_path.iterdir():
+                x = str(x)
+                if x.endswith('.db'):
+                    download_path = download_path / x.split('/')[-1]
+                    break
+            else:
+                err = IOError('Corrupted database file.')
+                logger.exception(err)
+                raise err
 
         self.load_path = download_path
         self.connect = sqlite3.connect(str(self.load_path), check_same_thread=False)
