@@ -156,9 +156,13 @@ class GoalOrientedBot(NNModel):
                                                         len(self.prev_action))
 
             log.debug(debug_msg)
+        if self.network.attention_mechanism and self.network.attention_mechanism.intent_dim:
+            attn_key = np.hstack((self.prev_action, intent_features))
+        else:
+            attn_key = np.array(self.prev_action)
 
         return np.hstack((bow_features, emb_features, intent_features,
-                          state_features, context_features, self.prev_action)), emb_context, self.prev_action
+                          state_features, context_features, self.prev_action)), emb_context, attn_key
 
 
     def _encode_response(self, act):

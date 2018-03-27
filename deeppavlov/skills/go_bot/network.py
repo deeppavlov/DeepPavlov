@@ -54,9 +54,6 @@ class GoalOrientedBotNetwork(TFModel):
         self.reset_state()
 
     def __call__(self, features, emb_context, key, action_mask, prob=False):
-        # TODO: make input list
-        # TODO: batch_size != 1
-        #batch_size = len(features)
         if self.attention_mechanism:
             probs, prediction, state = \
                 self.sess.run(
@@ -100,13 +97,19 @@ class GoalOrientedBotNetwork(TFModel):
         self.n_hidden = params['hidden_dim']
         self.n_actions = params['action_size']
         self.obs_size = params['obs_size']
+
         attention_mechanism = params.get('attention_mechanism')
-        self.attention_mechanism = attention_mechanism and \
-                            collections.namedtuple('attention_mechanism',
-                            attention_mechanism.keys())(**attention_mechanism)
-        if self.attention_mechanism:
+        if attention_mechanism:
+            # attention_mechanism['intent_dim'] = attention_mechanism.get('intent_dim',0)
+            attention_mechanism['intent_dim'] = attention_mechanism.get('intent_dim',28) # DEBUG: Delete after debuging.
+            attention_mechanism['key_dim'] = attention_mechanism['intent_dim'] + attention_mechanism['key_dim']
+            self.attention_mechanism = collections.namedtuple('attention_mechanism',
+            attention_mechanism.keys())(**attention_mechanism)
             self.obs_size = self.attention_mechanism.obs_size_correction
-            self.projected_attn_alignment = self.attention_mechanism.projected_attn_alignment
+        else:
+            self.attention_mechanism = None
+
+
         self.dense_size = params.get('dense_size', params['hidden_dim'])
 
     def _build_graph(self):
@@ -220,6 +223,7 @@ class GoalOrientedBotNetwork(TFModel):
             _max_of_context_tokens = self.attention_mechanism.max_of_context_tokens
             _token_dim = self.attention_mechanism.token_dim
             _context = self._emb_context
+            _projected_attn_alignment = self.attention_mechanism.projected_attn_alignment
 
             _context_dim = tf.shape(_context)
             _batch_size = _context_dim[0]
@@ -243,7 +247,7 @@ class GoalOrientedBotNetwork(TFModel):
 
             _attn = tf.nn.softmax(tf.matmul(_bilstm_output,_r_projected_key), dim=1)
 
-            if self.projected_attn_alignment:
+            if _projected_attn_alignment:
                 log.info("Using projected attnention alignment")
                 _t_context = tf.transpose(_bilstm_output, [0, 2, 1])
                 _output_tensor = tf.reshape(tf.matmul(_t_context,_attn), shape = [_batch_size, -1, _n_hidden])
@@ -261,6 +265,7 @@ class GoalOrientedBotNetwork(TFModel):
             _max_of_context_tokens = self.attention_mechanism.max_of_context_tokens
             _token_dim = self.attention_mechanism.token_dim
             _context = self._emb_context
+            _projected_attn_alignment = self.attention_mechanism.projected_attn_alignment
 
             _context_dim = tf.shape(_context)
             _batch_size = _context_dim[0]
@@ -292,6 +297,7 @@ class GoalOrientedBotNetwork(TFModel):
             _max_of_context_tokens = self.attention_mechanism.max_of_context_tokens
             _token_dim = self.attention_mechanism.token_dim
             _context = self._emb_context
+            _projected_attn_alignment = self.attention_mechanism.projected_attn_alignment
 
             _context_dim = tf.shape(_context)
             _batch_size = _context_dim[0]
@@ -321,7 +327,7 @@ class GoalOrientedBotNetwork(TFModel):
 
             _attn = tf.nn.softmax(_score, dim = 1)
             # self.debug_pipe = {'_attn':_attn,'_score':_score}
-            if self.projected_attn_alignment:
+            if _projected_attn_alignment:
                 log.info("Using projected attnention alignment")
                 _t_context = tf.transpose(_projected_context, [0, 2, 1])
                 _output_tensor = tf.reshape(tf.matmul(_t_context,_attn), shape = [_batch_size, -1, _n_hidden])
@@ -339,6 +345,7 @@ class GoalOrientedBotNetwork(TFModel):
             _max_of_context_tokens = self.attention_mechanism.max_of_context_tokens
             _token_dim = self.attention_mechanism.token_dim
             _context = self._emb_context
+            _projected_attn_alignment = self.attention_mechanism.projected_attn_alignment
 
             _context_dim = tf.shape(_context)
             _batch_size = _context_dim[0]
@@ -373,7 +380,7 @@ class GoalOrientedBotNetwork(TFModel):
             # _t_bilstm_output = tf.transpose(_bilstm_output, [0, 2, 1])
             # _output_tensor = tf.reshape(tf.matmul(_t_bilstm_output,_attn), shape = [_batch_size, -1, _n_hidden])
 
-            if self.projected_attn_alignment:
+            if _projected_attn_alignment:
                 log.info("Using projected attnention alignment")
                 _t_context = tf.transpose(_bilstm_output, [0, 2, 1])
                 _output_tensor = tf.reshape(tf.matmul(_t_context,_attn), shape = [_batch_size, -1, _n_hidden])
@@ -382,39 +389,6 @@ class GoalOrientedBotNetwork(TFModel):
                 _t_context = tf.transpose(_r_context, [0, 2, 1])
                 _output_tensor = tf.reshape(tf.matmul(_t_context,_attn), shape = [_batch_size, -1, _token_dim])
         return _output_tensor
-
-
-    # def _cs_general_att_mech(self):
-    #     with tf.name_scope("attention_mechanism/cs_general"):
-    #
-    #         _raw_key = self._key
-    #         _attention_depth = self.attention_mechanism.attention_depth
-    #         _n_hidden = (self.attention_mechanism.att_hidden_dim//2)*2
-    #         _max_of_context_tokens = self.attention_mechanism.max_of_context_tokens
-    #         _token_dim = self.attention_mechanism.token_dim
-    #         _key_dim = self.attention_mechanism.key_dim
-    #         _context = self._emb_context
-    #
-    #         _context_dim = tf.shape(_context)
-    #         _batch_size = _context_dim[0]
-    #         _r_context = tf.reshape(_context, shape = [-1, _max_of_context_tokens, _token_dim])
-    #         assert _attention_depth is not None
-    #
-    #
-    #         _lstm_fw_cell = tf.nn.rnn_cell.LSTMCell(_n_hidden//2)
-    #         _lstm_bw_cell = tf.nn.rnn_cell.LSTMCell(_n_hidden//2)
-    #         (_output_fw, _output_bw), _states = \
-    #                 tf.nn.bidirectional_dynamic_rnn(cell_fw=_lstm_fw_cell,
-    #                                                 cell_bw=_lstm_bw_cell,
-    #                                                 inputs=_r_context,
-    #                                                 dtype=tf.float32)
-    #         _bilstm_output = tf.concat([_output_fw, _output_bw],-1) # [-1,self.max_of_context_tokens,_n_hidden])
-    #
-    #         _key = tf.reshape(_raw_key, [-1, _key_dim])
-    #         _final_sketch = csoftmax_attention.attention_block(_bilstm_output, _raw_key, _attention_depth)
-    #
-    #         _output_tensor = tf.reshape(_final_sketch, shape = [_batch_size, -1, _attention_depth * _n_hidden])
-    #     return _output_tensor
 
 
     def _cs_general_att_mech(self):
@@ -427,6 +401,7 @@ class GoalOrientedBotNetwork(TFModel):
             _token_dim = self.attention_mechanism.token_dim
             _key_dim = self.attention_mechanism.key_dim
             _context = self._emb_context
+            _projected_attn_alignment = self.attention_mechanism.projected_attn_alignment
 
             _context_dim = tf.shape(_context)
             _batch_size = _context_dim[0]
@@ -455,7 +430,7 @@ class GoalOrientedBotNetwork(TFModel):
             _hidden_for_sketch = _bilstm_output
             _key = _raw_key
 
-            if self.projected_attn_alignment:
+            if _projected_attn_alignment:
                 log.info("Using projected attnention alignment")
                 _hidden_for_attn_alignment = _bilstm_output
                 _aligned_hidden = csoftmax_attention.attention_gen_block(_hidden_for_sketch, _hidden_for_attn_alignment, _key, _attention_depth)
@@ -478,6 +453,7 @@ class GoalOrientedBotNetwork(TFModel):
             _token_dim = self.attention_mechanism.token_dim
             _key_dim = self.attention_mechanism.key_dim
             _context = self._emb_context
+            _projected_attn_alignment = self.attention_mechanism.projected_attn_alignment
 
             _context_dim = tf.shape(_context)
             _batch_size = _context_dim[0]
@@ -505,7 +481,7 @@ class GoalOrientedBotNetwork(TFModel):
             _bilstm_output = tf.concat([_output_fw, _output_bw],-1)
             _hidden_for_sketch = tf.concat([_r_projected_key,_output_fw, _output_bw], -1)
 
-            if self.projected_attn_alignment:
+            if _projected_attn_alignment:
                 log.info("Using projected attnention alignment")
                 _hidden_for_attn_alignment = _bilstm_output
                 _aligned_hidden = csoftmax_attention.attention_bah_block(_hidden_for_sketch, _hidden_for_attn_alignment, _attention_depth)
