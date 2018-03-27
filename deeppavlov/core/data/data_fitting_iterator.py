@@ -43,8 +43,7 @@ class DataFittingIterator:
         self.data = data
 
     def get_doc_ids(self):
-        ids = [i for i in range(len(self.data))]
-        return ids
+        return list(range(len(self.data)))
 
     def gen_batch(self, batch_size=1000, shuffle=False) -> Generator[Tuple[List[list],
                                                                            List[int]], Any, None]:
