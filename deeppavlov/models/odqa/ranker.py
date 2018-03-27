@@ -78,11 +78,11 @@ class TfidfRanker(Component):
 
         doc_scores = scores.data[o_sort]
         doc_ids = [self.index2doc[i] for i in scores.indices[o_sort]]
-        return doc_ids, doc_scores
+        return [doc_ids], doc_scores
 
     def fit_batch(self, iterator):
         self.vectorizer.doc2index = iterator.doc2index
-        for x, y in iterator.gen_batches():
+        for x, y in iterator.gen_batch():
             self.vectorizer.fit_batch(x, y)
 
     def save(self):
