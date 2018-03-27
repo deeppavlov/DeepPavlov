@@ -2,82 +2,93 @@
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 
 # <center>DeepPavlov</center>
-### *We are in a really early Alpha release. You have to be ready for hard adventures.*
-An open-source conversational AI library, built on TensorFlow and Keras, and designed for
+
+### *We are in a really early Alpha release. You should be ready for hard adventures.*
+### *If you have updated to version 0.0.2 or greater - please re-download all pre-trained models*
+
+DeepPavlov is an open-source conversational AI library built on TensorFlow and Keras. It is designed for
+ * development of production ready chat-bots and complex conversational systems
  * NLP and dialog systems research
- * implementation and evaluation of complex conversational systems
  
-Our goal is to provide researchers with:
- * a framework for implementing and testing their own dialog models with subsequent sharing of that models
- * set of predefined NLP models / dialog system components (ML/DL/Rule-based) and pipeline templates
- * benchmarking environment for conversational models and systematized access to relevant datasets
- 
-and AI-application developers with:
- * framework for building conversational software
+Our goal is to enable AI-application developers researchers with:
+ * set of pre-trained NLP models, pre-defined dialog system components (ML/DL/Rule-based) and pipeline templates
+ * a framework for implementing and testing their own dialog models 
  * tools for application integration with adjacent infrastructure (messengers, helpdesk software etc.)
+ * benchmarking environment for conversational models and uniform access to relevant datasets 
 
 ## Features
 
 
 | Component | Description |
 | --------- | ----------- |
-| [Slot filling component](deeppavlov/models/ner/README.md) | is based on neural Named Entity Recognition network and fuzzy Levenshtein search to extract normalized slot values from the text. The NER network component reproduces architecture from the paper [Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition](https://arxiv.org/pdf/1709.09686.pdf), which is inspired by LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf. |
+| [Slot filling and NER components](deeppavlov/models/ner/README.md) | Based on neural Named Entity Recognition network and fuzzy Levenshtein search to extract normalized slot values from text. The NER component reproduces architecture from the paper [Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition](https://arxiv.org/pdf/1709.09686.pdf) which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf. |
 | [Intent classification component](deeppavlov/models/classifiers/intents/README.md) | Based on shallow-and-wide Convolutional Neural Network architecture from [Kim Y. Convolutional neural networks for sentence classification – 2014](https://arxiv.org/pdf/1408.5882). The model allows multilabel classification of sentences. |
 | [Automatic spelling correction component](deeppavlov/models/spellers/error_model/README.md) | Based on [An Improved Error Model for Noisy Channel Spelling Correction by Eric Brill and Robert C. Moore](http://www.aclweb.org/anthology/P00-1037) and uses statistics based error model, a static dictionary and an ARPA language model to correct spelling errors. |
-| **Skill** |  |
-| [Goal-oriented bot](deeppavlov/skills/go_bot/README.md) | Based on Hybrid Code Networks (HCNs) architecture from [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017](https://arxiv.org/abs/1702.03274). It allows to predict responses in the goal-oriented task dialogue. The model is quite customizable: embeddings, slot filler and intent classifier can be used or not on demand. |
+| [Ranking component](deeppavlov/models/ranking/README.md) |  Based on [LSTM-based deep learning models for non-factoid answer selection](https://arxiv.org/abs/1511.04108). The model performs ranking of responses or contexts from some database by their relevance for the given context. |
+| [Question Answering component](deeppavlov/models/squad/README.md) | Based on [R-NET: Machine Reading Comprehension with Self-matching Networks](https://www.microsoft.com/en-us/research/publication/mrc/). The model solves the task of looking for an answer on a question in a given context ([SQuAD](https://rajpurkar.github.io/SQuAD-explorer/) task format). |
+| **Skills** |  |
+| [Goal-oriented bot](deeppavlov/skills/go_bot/README.md) | Based on Hybrid Code Networks (HCNs) architecture from [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017](https://arxiv.org/abs/1702.03274). It allows to predict responses in goal-oriented dialog. The model is customizable: embeddings, slot filler and intent classifier can switched on and off on demand.  |
+| [Seq2seq goal-oriented bot](deeppavlov/skills/seq2seq_go_bot/README.md) | Dialogue agent predicts responses in a goal-oriented dialog and is able to handle multiple domains (pretrained bot allows calendar scheduling, weather information retrieval, and point-of-interest navigation). The model is end-to-end differentiable and does not need to explicitly model dialogue state or belief trackers. |
 | **Embeddings** |  |
-| [Pre-trained embeddings for Russian language](pretrained-vectors.md) | Pre-trained on joint [Russian Wikipedia](https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0) and [Lenta.ru](https://lenta.ru/) corpora word vectors for Russian language. |
+| [Pre-trained embeddings for the Russian language](pretrained-vectors.md) | Word vectors for the Russian language trained on joint [Russian Wikipedia](https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0) and [Lenta.ru](https://lenta.ru/) corpora. |
 
 ## Basic examples
 
-View video demo of deploy goal-oriented bot and slot-filling model with Telegram UI
+View video demo of deployment of a goal-oriented bot and a slot-filling model with Telegram UI
 
 [![Alt text for your video](https://img.youtube.com/vi/yzoiCa_sMuY/0.jpg)](https://youtu.be/yzoiCa_sMuY)
           
  * Run goal-oriented bot with Telegram interface:
  ```
- python deep.py interactbot configs/go_bot/config.json -t <TELEGRAM_TOKEN>
+ python -m deeppavlov.deep interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -t <TELEGRAM_TOKEN>
  ```
  * Run goal-oriented bot with console interface:
  ```
- python deep.py interact configs/go_bot/config.json
+ python -m deeppavlov.deep interact deeppavlov/configs/go_bot/gobot_dstc2.json
  ```
- * Run slot-filling model with Telegram interface
+  * Run goal-oriented bot with REST API:
  ```
- python deep.py interactbot configs/ner/config.json -t <TELEGRAM_TOKEN>
+ python -m deeppavlov.deep riseapi deeppavlov/configs/go_bot/gobot_dstc2.json
+ ``` 
+  * Run slot-filling model with Telegram interface:
  ```
- * Run slot-filling model with console interface
+ python -m deeppavlov.deep interactbot deeppavlov/configs/ner/slotfill_dstc2.json -t <TELEGRAM_TOKEN>
  ```
- python deep.py interact configs/ner/config.json
+ * Run slot-filling model with console interface:
+ ```
+ python -m deeppavlov.deep interact deeppavlov/configs/ner/slotfill_dstc2.json
+ ```
+ * Run slot-filling model with REST API:
+ ```
+ python -m deeppavlov.deep riseapi deeppavlov/configs/ner/slotfill_dstc2.json
  ```
 ## Conceptual overview
 
 ### Principles
-The library is designed following the principles:
- * end-to-end deep learning architecture as long-term goal
+The library is designed according to the following principles:
  * hybrid ML/DL/Rule-based architecture as a current approach
- * modular dialog system architecture
- * component-based software engineering, reusability maximization
- * easy to extend and benchmark
- * multiple components by one NLP task with data-driven selection of suitable components
-
+ * support of modular dialog system design
+ * end-to-end deep learning architecture as a long-term goal
+ * component-based software engineering, maximization of reusability
+ * multiple alternative solutions for the same NLP task to enable flexible data-driven configuration
+ * easy extension and benchmarking
+ 
 ### Target Architecture
 Target architecture of our library:
 <p align="left">
-<img src="http://lnsigo.mipt.ru/export/images/deeppavlov_architecture.png" width="50%" height="50%"/>
+<img src="http://lnsigo.mipt.ru/export/images/deeppavlov_architecture.png"/>
 </p>
-DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). Other external libraries can be used to build basic components.
+DeepPavlov is built on top of machine learning frameworks [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). Other external libraries can be used to build basic components.
 
 ### Key Concepts
- * `Agent` - conversational agent communicating with users in natural language (text)
- * `Skill` - unit of interaction that fulfills a user’s need. Typically, a user’s need is fulfilled by presenting information or completing a transaction (e.g. answer question by FAQ, booking tickets etc.); however, for some experiences success is defined as continued engagement (e.g. chit-chat)
+ * `Agent` - a conversational agent communicating with users in natural language (text)
+ * `Skill` - a unit of interaction that fulfills user’s needs. Typically, a user’s need is fulfilled by presenting information or completing a transaction (e.g. answer question by FAQ, booking tickets etc.); however, for some tasks success is defined as continuous engagement (e.g. chit-chat)
  * `Components` - atomic functionality blocks
-   * `Rule-based Components` - can not be trained
+   * `Rule-based Components` - cannot be trained
    * `Machine Learning Components` - can be trained only separately
    * `Deep Learning Components` - can be trained separately and in end-to-end mode being joined in chain
- * `Switcher` - mechanism by which agent ranks and selects the final response shown to the user
- * `Components Chainer` - tool for agents/components pipeline building from heterogeneous components (rule-based/ml/dl), which allow to train and inference pipeline as a whole.
+ * `Switcher` - mechanism which is used by agent to rank and select the final response shown to user
+ * `Components Chainer` - tool for building an agent/component pipeline from heterogeneous components (rule-based/ml/dl). Allows to train and infer from pipeline as a whole.
 
 
 ### Contents
@@ -87,18 +98,20 @@ DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). O
  * [Technical overview](#technical-overview)
     * [Project modules](#project-modules)
     * [Config](#config)
-    * [DatasetReader](#datasetreader)
-    * [Dataset](#dataset)
-    * [Vocab](#vocab)
-    * [Model](#model)
     * [Training](#training)
-    * [Inferring](#inferring)
+    * [Train config](#train-config)
+    * [Train parameters](#train-parameters)
+    * [DatasetReader](#datasetreader)
+    * [DatasetIterator](#datasetiterator)
+    * [Inference](#inference)
  * [License](#license)
  * [Support and collaboration](#support-and-collaboration)
  * [The Team](#the-team)
  
 
 ## Installation
+0. Currently we support only `Linux` platform and `Python 3.6` (**`Python 3.5` is not supported!**)
+
 1. Create a virtual environment with `Python 3.6`
     ```
     virtualenv env
@@ -123,34 +136,41 @@ DeepPavlov is built on top of machine learning frameworks (TensorFlow, Keras). O
 
 ## Quick start
 
-To interact with our pre-trained models, they should be downloaded first:
+To use our pre-trained models, you should first download them:
 ```
-python download.py [-all] 
+python -m deeppavlov.download [-all] 
 ```
-* `[-all]` option is not required for basic examples; it will download **all** our pre-trained models.
+* running this command without options will download basic examples, `[-all]` option will download **all** our pre-trained models.
 * Warning! `[-all]` requires about 10 GB of free space on disk.
     
-Then models can be interacted or trained with the following command:
+Then you can interact with the models or train them with the following command:
 
 ```
-python deep.py <mode> <path_to_config>
+python -m deeppavlov.deep <mode> <path_to_config>
 ```
 
-* `<mode>` can be 'train', 'interact' or 'interactbot'
+* `<mode>` can be 'train', 'interact', 'interactbot' or 'riseapi'
 * `<path_to_config>` should be a path to an NLP pipeline json config
 
 For 'interactbot' mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable.
 
+For 'riseapi' mode you should specify api settings (host, port, etc.) in [*utils/server_utils/server_config.json*](utils/server_utils/server_config.json) configuration file. If provided, values from *model_defaults* section override values for the same parameters from *common_defaults* section. Model names in *model_defaults* section should be similar to the class names of the models main component.
 
 Available model configs are:
 
-*configs/go_bot/config.json*
+- ```deeppavlov/configs/go_bot/*.json```
 
-*configs/intents/config_dstc2.json*
+- ```deeppavlov/configs/seq2seq_go_bot/*.json```
 
-*configs/ner/config.json*
+- ```deeppavlov/configs/squad/*.json```
 
-*configs/error_model/config_en.json*
+- ```deeppavlov/configs/intents/*.json```
+
+- ```deeppavlov/configs/ner/*.json```
+
+- ```deeppavlov/configs/rankinf/*.json```
+
+- ```deeppavlov/configs/error_model/*.json```
 
 ---
 
@@ -161,7 +181,7 @@ Available model configs are:
 <table>
 <tr>
     <td><b> deeppavlov.core.commands </b></td>
-    <td> basic training and inferring functions  </td>
+    <td> basic training and inference functions  </td>
 </tr>
 <tr>
     <td><b> deeppavlov.core.common </b></td>
@@ -169,7 +189,11 @@ Available model configs are:
 </tr>
 <tr>
     <td><b> deeppavlov.core.data </b></td>
-    <td> basic <b><i>Dataset</i></b>, <b><i>DatasetReader</i></b> and <b><i>Vocab</i></b> classes </td>
+    <td> basic <b><i>DatasetIterator</i></b>, <b><i>DatasetReader</i></b> and <b><i>Vocab</i></b> classes </td>
+</tr>
+<tr>
+    <td><b> deeppavlov.core.layers </b></td>
+    <td> collection of commonly used <b><i>Layers</i></b> for TF models </td>
 </tr>
 <tr>
     <td><b> deeppavlov.core.models </b></td>
@@ -180,8 +204,12 @@ Available model configs are:
     <td> concrete <b><i>DatasetReader</i></b> classes </td>
 </tr>
 <tr>
-    <td><b> deeppavlov.datasets </b></td>
-    <td> concrete <b><i>Dataset</i></b> classes </td>
+    <td><b> deeppavlov.dataset_iterators </b></td>
+    <td> concrete <b><i>DatasetIterators</i></b> classes </td>
+</tr>
+<tr>
+    <td><b> deeppavlov.metrics </b></td>
+    <td> different <b><i>Metric</i></b> functions </td>
 </tr>
 <tr>
     <td><b> deeppavlov.models </b></td>
@@ -199,153 +227,157 @@ Available model configs are:
 
 ### Config
 
-An NLP pipeline config is a JSON file, which consists of four required elements:
+An NLP pipeline config is a JSON file that contains one required element `chainer`:
 
-```javascript
+```
 {
-  "dataset_reader": {
-  },
-  "dataset": {
-  },
-  "vocabs": {
-  },
-  "model": {
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      ...
+    ],
+    "out": ["y_predicted"]
   }
 }
 ```
 
-Each class in the config has `name` parameter, which is its registered codename
- and can have any other parameters, repeating its `__init__()` method arguments.
- Default values of `__init__()` arguments will be overridden with the config values
- during class instance initialization.
+Chainer is a core concept of DeepPavlov library: chainer builds a pipeline from heterogeneous components
+(rule-based/ml/dl) and allows to train or infer from pipeline as a whole. Each component in the pipeline specifies
+its inputs and outputs as arrays of names, for example: `"in": ["tokens", "features"]` and `"out": ["token_embeddings", "features_embeddings"]` and you can chain outputs of one components with inputs of other components:
+```json
+{
+  "name": "str_lower",
+  "in": ["x"],
+  "out": ["x_lower"]
+},
+{
+  "name": "nltk_tokenizer",
+  "in": ["x_lower"],
+  "out": ["x_tokens"]
+},
+```
+Each [Component](deeppavlov/core/models/component.py) in the pipeline must implement method `__call__` and has `name` parameter, which is its registered codename. It can also have any other parameters which repeat its `__init__()` method arguments.
+ Default values of `__init__()` arguments will be overridden with the config values during the initialization of a class instance.
+ 
+You can reuse components in the pipeline to process different parts of data with the help of `id` and `ref` parameters:
+```json
+{
+  "name": "nltk_tokenizer",
+  "id": "tokenizer",
+  "in": ["x_lower"],
+  "out": ["x_tokens"]
+},
+{
+  "ref": "tokenizer",
+  "in": ["y"],
+  "out": ["y_tokens"]
+},
+```
+ 
+### Training
+
+There are two abstract classes for trainable components: **Estimator** and **NNModel**.  
+[**Estimators**](deeppavlov/core/models/estimator.py) are fit once on any data with no batching or early stopping,
+so it can be safely done at the time of pipeline initialization. `fit` method has to be implemented for each Estimator. An example of Estimator is [Vocab](deeppavlov/core/data/vocab.py).
+[**NNModel**](deeppavlov/core/models/nn_model.py) requires more complex training. It can only be trained in a supervised mode (as opposed to **Estimator** which can be trained in both supervised and unsupervised settings). This process takes multiple epochs with periodic validation and logging.
+`train_on_batch` method has to be implemented for each NNModel.
+
+Training is triggered by `deeppavlov.core.commands.train.train_model_from_config()` function.
+
+### Train config
+
+Estimators that are trained should also have `fit_on` parameter which contains a list of input parameter names.
+An NNModel should have the `in_y` parameter which contains a list of ground truth answer names. For example:
+
+```json
+[
+  {
+    "id": "classes_vocab",
+    "name": "default_vocab",
+    "fit_on": ["y"],
+    "level": "token",
+    "save_path": "vocabs/classes.dict",
+    "load_path": "vocabs/classes.dict"
+  },
+  {
+    "in": ["x"],
+    "in_y": ["y"],
+    "out": ["y_predicted"],
+    "name": "intent_model",
+    "save_path": "intents/intent_cnn",
+    "load_path": "intents/intent_cnn",
+    "classes_vocab": {
+      "ref": "classes_vocab"
+    }
+  }
+]
+```
+
+The config for training the pipeline should have three additional elements: `dataset_reader`, `dataset_iterator` and `train`:
+
+```
+{
+  "dataset_reader": {
+    "name": ...,
+    ...
+  }
+  "dataset_iterator": {
+    "name": ...,
+    ...
+  },
+  "chainer": {
+    ...
+  }
+  "train": {
+    ...
+  }
+}
+```
+
+Simplified version of trainig pipeline contains two elemens: `dataset` and `train`. The `dataset` element currently 
+can be used for train from classification data in `csv` and `json` formats. You can find complete examples of how to use simplified training pipeline in [intents_sample_csv.json](deeppavlov/configs/intents/intents_sample_csv.json) and [intents_sample_json.json](deeppavlov/configs/intents/intents_sample_json.json) config files.
+
+
+### Train Parameters
+* `epochs` — maximum number of epochs to train NNModel, defaults to `-1` (infinite)
+* `batch_size`,
+* `metrics` — list of names of [registered metrics](deeppavlov/metrics) to evaluate the model. The first metric in the list
+is used for early stopping
+* `metric_optimization` — `maximize` or `minimize` a metric, defaults to `maximize`
+* `validation_patience` — how many times in a row the validation metric has to not improve for early stopping, defaults to `5`
+* `val_every_n_epochs` — how often to validate the pipe, defaults to `-1` (never)
+* `log_every_n_batches`, `log_every_n_epochs` — how often to calculate metrics for train data, defaults to `-1` (never)
+* `validate_best`, `test_best` flags to infer the best saved model on valid and test data, defaults to `true`
 
 ### DatasetReader
 
 `DatasetReader` class reads data and returns it in a specified format.
-A concrete `DatasetReader` class should be inherited from base
+A concrete `DatasetReader` class should be inherited from the base
 `deeppavlov.data.dataset_reader.DatasetReader` class and registered with a codename:
 
 ```python
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.dataset_reader import DatasetReader
+
 @register('dstc2_datasetreader')
 class DSTC2DatasetReader(DatasetReader):
 ```
 
-### Dataset
+### DatasetIterator
 
-`Dataset` forms needed sets of data ('train', 'valid', 'test') and forms data batches.
-A concrete `Dataset` class should be registered and can be inherited from
-`deeppavlov.data.dataset_reader.Dataset` class. `deeppavlov.data.dataset_reader.Dataset`
-is not an abstract class and can be used as `Dataset` as well.
+`DatasetIterator` forms the sets of data ('train', 'valid', 'test') needed for training/inference and divides it into batches.
+A concrete `DatasetIterator` class should be registered and can be inherited from
+`deeppavlov.data.dataset_iterator.BasicDatasetIterator` class. `deeppavlov.data.dataset_iterator.BasicDatasetIterator`
+is not an abstract class and can be used as a `DatasetIterator` as well.
 
-### Vocab
+### Inference
 
-`Vocab` is a trainable class, which forms and serialize vocabs. Vocabs index any data.
-For example, tokens to indices and backwards, chars to indices, classes to indices, etc.
-It can index X (features) and y (answers) types of data. A concrete `Vocab` class
-should be registered and can be inherited from `deeppavlov.data.vocab.DefaultVocabulary` class.
-`deeppavlov.data.vocab.DefaultVocabulary` is not an abstract class and can be used as `Vocab` as well.
+All components inherited from `deeppavlov.core.models.component.Component` abstract class can be used for inference. The `__call__()` method should return standard output of a component. For example, a *tokenizer* should return
+*tokens*, a *NER recognizer* should return *recognized entities*, a *bot* should return an *utterance*.
+A particular format of returned data should be defined in `__call__()`.
 
-### Model
-
-`Model` is the main class which rules the training/inferring process and feature generation.
-If a model requires other models to produce features, they need to be passed in its constructor
-and config. All models can be nested as much as needed. For example, a skeleton of
-`deeppavlov.skills.go_bot.go_bot.GoalOrientedBot` consists of 11 separate model classes,
-3 of which are neural networks:
-
-```json
-{
-  "model": {
-    "name": "go_bot",
-    "network": {
-      "name": "go_bot_rnn"
-    },
-    "slot_filler": {
-      "name": "dstc_slotfilling",
-      "ner_network": {
-         "name": "ner_tagging_network",
-      }
-    },
-    "intent_classifier": {
-      "name": "intent_model",
-      "embedder": {
-        "name": "fasttext"
-      },
-      "tokenizer": {
-        "name": "nltk_tokenizer"
-      }
-    },
-    "embedder": {
-      "name": "fasttext"
-    },
-    "bow_encoder": {
-      "name": "bow"
-    },
-    "tokenizer": {
-      "name": "spacy_tokenizer"
-    },
-    "tracker": {
-      "name": "featurized_tracker"
-    }
-  }
-}
-```
-
-All models should be registered and inherited from `deeppavlov.core.models.inferable.Inferable`
-or from both `Inferable` and `deeppavlov.core.models.trainable.Trainable` interfaces.
-Models inherited from `Trainable` interface can be trained. Models inherited from `Inferable`
-interface can be only inferred. Usually `Inferable` models are rule-based models or
-pre-trained models that we import from third-party libraries (like `NLTK`, `Spacy`, etc.).
-
-### Training
-
-All models inherited from `deeppavlov.core.models.trainable.Trainable` interface can be trained.
-The training process should be described in `train()` method:
-
- ```python
- @register("my_model")
- class MyModel(Inferable, Trainable):
-
-    def train_on_batch(self, batch: Tuple[list, list]):
-        """
-        Implement training here.
-        """
- ```
-
-All parameters for training which can be changed during experiments (like *num of epochs*,
-*batch size*, *patience*, *learning rate*, *optimizer*) should be passed to a model's
-`__init__()`. The default parameters values from `__init__()` are overridden with JSON config values.
-To change these values, there is no need to rewrite the code, only the config should be changed.
-
-The training process is managed by `train_now` attribute. If `train_now` is *True*,
-a model is being trained. This parameter is useful when using `Vocab`, because in a single
-model run some vocabs can be trained, while some only inferred by other models in pipeline.
-The training parameters in JSON config can look like this:
-
-```json
-{
-  "model": {
-    "name": "my_model",
-    "train_now": true,
-    "optimizer": "Adam",
-    "learning_rate": 0.2,
-    "num_epochs": 1000
-  }
-}
-```
-
-Training is triggered by `deeppavlov.core.commands.train.train_model_from_config()` function.
-
-### Inferring
-
-All models inherited from `deeppavlov.core.models.inferable.Inferable` interface can be inferred.
-The `infer()` method should return what a model can do. For example, a *tokenizer* should return
-*tokens*, a *NER recognizer* should return *recognized entities*, a *bot* should return a *replica*.
-A particular format of returned data should be defined in `infer()`.
-
-Inferring is triggered by `deeppavlov.core.commands.train.infer_model_from_config()` function.
-There is no need in s separate JSON for inferring. `train_now` parameter is ignored during
-inferring.
+Inference is triggered by `deeppavlov.core.commands.infer.interact_model()` function. There is no need in a separate JSON for inference. 
 
 ## License
 
@@ -353,7 +385,7 @@ DeepPavlov is Apache 2.0 - licensed.
 
 ## Support and collaboration
 
-If you have any questions, bug reports or feature requests, please feel free to post on our [Github Issues](https://github.com/deepmipt/DeepPavlov/issues) page. Please tag your issue with 'bug', 'feature request', or 'question'.  Also we’ll be glad to see your pull-requests to add new datasets, models, embeddings and etc.
+If you have any questions, bug reports or feature requests, please feel free to post on our [Github Issues](https://github.com/deepmipt/DeepPavlov/issues) page. Please tag your issue with 'bug', 'feature request', or 'question'.  Also we’ll be glad to see your pull requests to add new datasets, models, embeddings, etc.
 
 ## The Team
 

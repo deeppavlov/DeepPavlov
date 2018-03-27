@@ -52,7 +52,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
         saver.save(self.sess, path)
 
     def _get_trainable_variables(self, exclude_scopes=[]):
-        all_vars = tf.trainable_variables()
+        all_vars = tf.global_variables()
         vars_to_train = [var for var in all_vars if all(sc not in var.name for sc in exclude_scopes)]
         return vars_to_train
 
@@ -81,11 +81,11 @@ class TFModel(NNModel, metaclass=TfModelMeta):
             opt_scope = tf.variable_scope(optimizer_scope_name)
         with opt_scope:
             if learnable_scopes is None:
-                variables_to_train = tf.trainable_variables()
+                variables_to_train = tf.global_variables()
             else:
                 variables_to_train = []
                 for scope_name in learnable_scopes:
-                    for var in tf.trainable_variables():
+                    for var in tf.global_variables():
                         if scope_name in var.name:
                             variables_to_train.append(var)
 

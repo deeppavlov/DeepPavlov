@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import json
 import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer
@@ -21,6 +22,7 @@ import collections
 
 from deeppavlov.skills.go_bot import csoftmax_attention
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.core.common.log import get_logger
 
@@ -30,12 +32,11 @@ log = get_logger(__name__)
 
 @register('go_bot_rnn')
 class GoalOrientedBotNetwork(TFModel):
+    GRAPH_PARAMS = ["hidden_size", "action_size", "dense_size", "obs_size"]
     def __init__(self, **params):
-        self.opt = params
         self.debug_pipe = None
-
         # initialize parameters
-        self._init_params()
+        self._init_params(params)
         # build computational graph
         self._build_graph()
         # initialize session
@@ -45,7 +46,6 @@ class GoalOrientedBotNetwork(TFModel):
 
         super().__init__(**params)
         if tf.train.checkpoint_exists(str(self.save_path.resolve())):
-        #TODO: save/load params to json, here check compatability
             log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
             self.load()
         else:
@@ -59,13 +59,13 @@ class GoalOrientedBotNetwork(TFModel):
                 self.sess.run(
                     [self._probs, self._prediction, self._state],
                     feed_dict={
-                        self._features: [[features]],
-                        self._emb_context: [[emb_context]],
-                        self._key: [[key]],
+                        self._features: features,
+                        self._emb_context: emb_context,
+                        self._key: key,
                         self._dropout: 1.,
                         self._utterance_mask: [[1.]],
                         self._initial_state: (self.state_c, self.state_h),
-                        self._action_mask: [[action_mask]]
+                        self._action_mask: action_mask
                     }
                 )
         else:
@@ -73,11 +73,11 @@ class GoalOrientedBotNetwork(TFModel):
             self.sess.run(
             [self._probs, self._prediction, self._state],
             feed_dict={
-            self._features: [[features]],
-            self._dropout: 1.,
-            self._utterance_mask: [[1.]],
-            self._initial_state: (self.state_c, self.state_h),
-            self._action_mask: [[action_mask]]
+                self._features: features,
+                self._dropout: 1.,
+                self._utterance_mask: [[1.]],
+                self._initial_state: (self.state_c, self.state_h),
+                self._action_mask: action_mask
             }
             )
         self.state_c, self._state_h = state
@@ -90,13 +90,17 @@ class GoalOrientedBotNetwork(TFModel):
         action = y
         self._train_step(features, emb_context, key, utter_mask, action, action_mask)
 
-    def _init_params(self, params=None):
-        params = params or self.opt
-        self.learning_rate = params['learning_rate']
-        self.dropout_rate = params.get('dropout_rate', 1.)
-        self.n_hidden = params['hidden_dim']
-        self.n_actions = params['action_size']
-        self.obs_size = params['obs_size']
+    def _init_params(self, params):
+        self.opt = params
+        self.opt['dropout_rate'] = params.get('dropout_rate', 1.)
+        self.opt['dense_size'] = params.get('dense_size', self.opt['hidden_size'])
+
+        self.learning_rate = self.opt['learning_rate']
+        self.dropout_rate = self.opt['dropout_rate']
+        self.hidden_size = self.opt['hidden_size']
+        self.action_size = self.opt['action_size']
+        self.obs_size = self.opt['obs_size']
+        self.dense_size = self.opt['dense_size']
 
         attention_mechanism = params.get('attention_mechanism')
         if attention_mechanism:
@@ -109,9 +113,6 @@ class GoalOrientedBotNetwork(TFModel):
         else:
             self.attention_mechanism = None
 
-
-        self.dense_size = params.get('dense_size', params['hidden_dim'])
-
     def _build_graph(self):
 
         self._add_placeholders()
@@ -120,15 +121,16 @@ class GoalOrientedBotNetwork(TFModel):
         _logits, self._state = self._build_body()
 
         # probabilities normalization : elemwise multiply with action mask
-        self._probs = tf.multiply(_logits, self._action_mask)
-        self._probs = tf.squeeze(tf.nn.softmax(self._probs), name='probs')
+        _logits_exp = tf.multiply(tf.exp(_logits), self._action_mask)
+        _logits_exp_sum = tf.expand_dims(tf.reduce_sum(_logits_exp, -1), -1)
+        self._probs = tf.squeeze(_logits_exp / _logits_exp_sum, name='probs')
 
         # loss, train and predict operations
         self._prediction = tf.argmax(self._probs, axis=-1, name='prediction')
 
         _weights = tf.expand_dims(self._utterance_mask, -1)
         # TODO: try multiplying logits to action_mask
-        #onehots = tf.one_hot(self._action, self.n_actions)
+        #onehots = tf.one_hot(self._action, self.action_size)
         #_loss_tensor = \
             #tf.losses.softmax_cross_entropy(logits=_logits, onehot_labels=onehots,
             #                                weights=_weights,
@@ -153,17 +155,17 @@ class GoalOrientedBotNetwork(TFModel):
                                       [None, None],
                                       name='ground_truth_action')
         self._action_mask = tf.placeholder(tf.float32,
-                                           [None, None, self.n_actions],
+                                           [None, None, self.action_size],
                                            name='action_mask')
         self._utterance_mask = tf.placeholder(tf.float32,
                                               shape=[None, None],
                                               name='utterance_mask')
-        _initial_state_c = \
-            tf.placeholder_with_default(np.zeros([1, self.n_hidden], np.float32),
-                                        shape=[None, self.n_hidden])
-        _initial_state_h = \
-            tf.placeholder_with_default(np.zeros([1, self.n_hidden], np.float32),
-                                        shape=[None, self.n_hidden])
+        _batch_size = tf.shape(self._features)[0]
+        zero_state = tf.zeros([_batch_size, self.hidden_size], dtype=tf.float32)
+        _initial_state_c = tf.placeholder_with_default(zero_state,
+                                                       shape=[None, self.hidden_size])
+        _initial_state_h = tf.placeholder_with_default(zero_state,
+                                                       shape=[None, self.hidden_size])
         self._initial_state = tf.nn.rnn_cell.LSTMStateTuple(_initial_state_c,
                                                             _initial_state_h)
         if self.attention_mechanism:
@@ -172,10 +174,6 @@ class GoalOrientedBotNetwork(TFModel):
                                     name='emb_context')
             self._key = tf.placeholder(tf.float32, [None, None, self.attention_mechanism.key_dim],
                                             name='key')
-        self._action = tf.placeholder(tf.int32, [None, None],
-                                      name='ground_truth_action')
-        self._action_mask = tf.placeholder(tf.float32, [None, None, self.n_actions],
-                                           name='action_mask')
 
     def _build_body(self):
         # input projection
@@ -204,14 +202,16 @@ class GoalOrientedBotNetwork(TFModel):
 
 
         # recurrent network unit
-        _lstm_cell = tf.nn.rnn_cell.LSTMCell(self.n_hidden)
+        _lstm_cell = tf.nn.rnn_cell.LSTMCell(self.hidden_size)
+        _utter_lengths = tf.to_int32(tf.reduce_sum(self._utterance_mask, axis=-1))
         _output, _state = tf.nn.dynamic_rnn(_lstm_cell,
                                             _concatenated_features,
-                                            initial_state=self._initial_state)
+                                            initial_state=self._initial_state,
+                                            sequence_length=_utter_lengths)
 
         # output projection
         _logits = tf.layers.dense(_output,
-                                  self.n_actions,
+                                  self.action_size,
                                   kernel_initializer=xavier_initializer(), name='logits')
         return _logits, _state
 
@@ -493,13 +493,37 @@ class GoalOrientedBotNetwork(TFModel):
                 _output_tensor = tf.reshape(_aligned_hidden, shape = [_batch_size, -1, _attention_depth * _token_dim])
         return _output_tensor
 
+    def load(self, *args, **kwargs):
+        self.load_params()
+        super().load(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.save_params()
+
+    def save_params(self):
+        path = str(self.save_path.with_suffix('.json').resolve())
+        log.info('[saving parameters to {}]'.format(path))
+        with open(path, 'w') as fp:
+            json.dump(self.opt, fp)
+
+    def load_params(self):
+        path = str(self.load_path.with_suffix('.json').resolve())
+        log.info('[loading parameters from {}]'.format(path))
+        with open(path, 'r') as fp:
+            params = json.load(fp)
+        for p in self.GRAPH_PARAMS:
+            if self.opt[p] != params[p]:
+                raise ConfigError("`{}` parameter must be equal to "
+                                  "saved model parameter value `{}`"\
+                                  .format(p, params[p]))
+
     def reset_state(self):
         # set zero state
-        self.state_c = np.zeros([1, self.n_hidden], dtype=np.float32)
-        self.state_h = np.zeros([1, self.n_hidden], dtype=np.float32)
+        self.state_c = np.zeros([1, self.hidden_size], dtype=np.float32)
+        self.state_h = np.zeros([1, self.hidden_size], dtype=np.float32)
 
     def _train_step(self, features, emb_context, key, utter_mask, action, action_mask):
-        batch_size = len(features)
         if self.attention_mechanism:
             _, loss_value, prediction = \
                 self.sess.run(
@@ -507,8 +531,6 @@ class GoalOrientedBotNetwork(TFModel):
                     feed_dict={
                         self._dropout: self.dropout_rate,
                         self._utterance_mask: utter_mask,
-                        self._initial_state: (np.tile(self.state_c, [batch_size, 1]),
-                                              np.tile(self.state_h, [batch_size, 1])),
                         self._features: features,
                         self._emb_context: emb_context,
                         self._key: key,
@@ -516,23 +538,6 @@ class GoalOrientedBotNetwork(TFModel):
                         self._action_mask: action_mask
                     }
                 )
-            # _, loss_value, prediction, db_pipe = \
-            #     self.sess.run(
-            #         [ self._train_op, self._loss, self._prediction , self.debug_pipe],
-            #         feed_dict={
-            #             self._dropout: self.dropout_rate,
-            #             self._utterance_mask: utter_mask,
-            #             self._initial_state: (np.tile(self.state_c, [batch_size, 1]),
-            #                                   np.tile(self.state_h, [batch_size, 1])),
-            #             self._features: features,
-            #             self._emb_context: emb_context,
-            #             self._key: key,
-            #             self._action: action,
-            #             self._action_mask: action_mask
-            #         }
-            #     )
-            # print("db_pipe")
-            # print(db_pipe)
         else:
             _, loss_value, prediction = \
                 self.sess.run(
@@ -540,8 +545,6 @@ class GoalOrientedBotNetwork(TFModel):
                     feed_dict={
                         self._dropout: self.dropout_rate,
                         self._utterance_mask: utter_mask,
-                        self._initial_state: (np.tile(self.state_c, [batch_size, 1]),
-                                              np.tile(self.state_h, [batch_size, 1])),
                         self._features: features,
                         self._action: action,
                         self._action_mask: action_mask

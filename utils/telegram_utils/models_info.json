@@ -1,0 +1,26 @@
+{
+  "@default": {
+    "start_message": "Welcome to DeepPavlov inference bot!",
+    "help_message": "Welcome to DeepPavlov inference bot!"
+  },
+  "DstcSlotFillingNetwork": {
+    "start_message": "Welcome to the UI of the DSTC slot filling model. You can enter a text string and get identified slots with values. Example:\n\nFrench cusine\n\n{'food': 'french'}",
+    "help_message": "Welcome to the UI of the DSTC slot filling model. You can enter a text string and get identified slots with values. Example:\n\nFrench cusine\n\n{'food': 'french'}"
+  },
+  "ErrorModel": {
+    "start_message": "Welcome to the automatic spelling correction component. You can enter a phrase with typos and get it back corrected. Example:\n\nhelllo\n\nhello",
+    "help_message": "Welcome to the automatic spelling correction component. You can enter a phrase with typos and get it back corrected. Example:\n\nhelllo\n\nhello"
+  },
+  "GoalOrientedBot": {
+    "start_message": "Welcome to the UI of the Dialogue Manager for goal-oriented task. This model can handle a goal-oriented conversation in a restaurant advisory domain. Enter any phrase to start interacting with model.",
+    "help_message": "Welcome to the UI of the Dialogue Manager for goal-oriented task. This model can handle a goal-oriented conversation in a restaurant advisory domain. Enter any phrase to start interacting with model."
+  },
+  "Seq2SeqGoalOrientedBot": {
+    "start_message": "Welcome to the UI of the Dialogue Manager for goal-oriented task. This model can handle a goal-oriented conversation in three domains: calendar scheduling, weather information retrieval, and point-of-interest navigation. Enter any phrase to start interacting with model. Example:\n\nWhere's the nearest parking garage?\n\nthe nearest is dish parking at dish_parking_address. is that okay?\n\nYes, please set directions via a route that avoids all heavy traffic if possible.\n\nit looks like there is a road block being reported on the route but i will still find the quickest route to dish_parking_address.\n\nThanks so much for your help.\n\nyou're welcome. have a good day. end_of_dialogue",
+    "help_message": "Welcome to the UI of the Dialogue Manager for goal-oriented task. This model can handle a goal-oriented conversation in three domains: calendar scheduling, weather information retrieval, and point-of-interest navigation. Enter any phrase to start interacting with model. Example:\n\nWhere's the nearest parking garage?\n\nthe nearest is dish parking at dish_parking_address. is that okay?\n\nYes, please set directions via a route that avoids all heavy traffic if possible.\n\nit looks like there is a road block being reported on the route but i will still find the quickest route to dish_parking_address.\n\nThanks so much for your help.\n\nyou're welcome. have a good day. end_of_dialogue"
+  },
+  "KerasIntentModel": {
+    "start_message": "Welcome to the UI for the user intent classification model. You can enter enter a text string and get intents (classes which a request belongs with).",
+    "help_message": "Welcome to the UI for the user intent classification model. You can enter enter a text string and get intents (classes which a request belongs with)."
+  }
+}

@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "name": "dstc2_datasetreader",
+    "name": "dstc2_reader",
     "data_path": "dstc2"
   },
-  "dataset": {
-    "name": "dialog_dataset"
+  "dataset_iterator": {
+    "name": "dialog_iterator"
   },
   "chainer": {
     "in": ["x"],
@@ -16,7 +16,7 @@
         "fit_on": ["x"],
         "name": "default_vocab",
         "level": "token",
-        "tokenize": true,
+        "tokenizer": { "name": "split_tokenizer" },
         "save_path": "vocabs/token.dict",
         "load_path": "vocabs/token.dict"
       },
@@ -36,7 +36,7 @@
           "save_path": "go_bot_minimal/model",
           "learning_rate": 0.01,
           "dropout_rate": 0.9,
-          "hidden_dim": 128,
+          "hidden_size": 128,
           "dense_size": 64,
           "obs_size": 502,
           "action_size": 45
@@ -48,7 +48,8 @@
           "name": "bow"
         },
         "tokenizer": {
-          "name": "spacy_tokenizer"
+          "name": "stream_spacy_tokenizer",
+          "lowercase": false
         },
         "tracker": {
           "name": "featurized_tracker",
@@ -77,4 +78,3 @@
 	"show_examples": false
   }
 }
-
