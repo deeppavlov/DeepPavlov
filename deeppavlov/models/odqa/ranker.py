@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from typing import Type
+from typing import Type, List
 
 import numpy as np
 
@@ -56,29 +56,32 @@ class TfidfRanker(Component):
     def get_index2doc(self):
         return dict(zip(self.doc2index.values(), self.doc2index.keys()))
 
-    def __call__(self, question, n=5):
+    def __call__(self, questions: List[str], n=5):
         """
         Rank documents and return top k documents with scores.
-        :param question: a query to search an answer for
+        :param questions: queries to search an answer for
         :param n: a number of documents to return
         :return: document ids, document scores
         """
-        if isinstance(question, list):
-            question = question[0]
+        batch_doc_ids = []
+        batch_docs_scores = []
 
-        q_tfidf = self.vectorizer(question)
+        for question in questions:
+            q_tfidf = self.vectorizer(question)
 
-        scores = q_tfidf * self.tfidf_matrix
+            scores = q_tfidf * self.tfidf_matrix
 
-        if len(scores.data) <= n:
-            o_sort = np.argsort(-scores.data)
-        else:
-            o = np.argpartition(-scores.data, n)[0:n]
-            o_sort = o[np.argsort(-scores.data[o])]
+            if len(scores.data) <= n:
+                o_sort = np.argsort(-scores.data)
+            else:
+                o = np.argpartition(-scores.data, n)[0:n]
+                o_sort = o[np.argsort(-scores.data[o])]
 
-        doc_scores = scores.data[o_sort]
-        doc_ids = [self.index2doc[i] for i in scores.indices[o_sort]]
-        return [doc_ids], doc_scores
+            doc_scores = scores.data[o_sort]
+            doc_ids = [self.index2doc[i] for i in scores.indices[o_sort]]
+            batch_doc_ids.append(doc_ids)
+            batch_docs_scores.append(doc_scores)
+        return batch_doc_ids, batch_docs_scores
 
     def fit_batch(self, iterator):
         self.vectorizer.doc2index = iterator.doc2index
