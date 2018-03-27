@@ -61,12 +61,18 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
         if 'fit_on' in component_config:
             component: Estimator
 
+            # TODO no method get_instances, no "train" set - should train on batches
             preprocessed = chainer(*iterator.get_instances('train'), to_return=component_config['fit_on'])
             if len(component_config['fit_on']) == 1:
                 preprocessed = [preprocessed]
             else:
                 preprocessed = zip(*preprocessed)
             component.fit(*preprocessed)
+            component.save()
+
+        if 'fit_on_batch' in component_config:
+            component: Estimator
+            component.fit_batch(iterator)
             component.save()
 
         if 'in' in component_config:
