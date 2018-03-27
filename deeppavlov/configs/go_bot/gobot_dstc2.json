@@ -166,5 +166,10 @@
     "log_every_n_batches": -1,
     "log_every_n_epochs": 1,
     "show_examples": false
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "GoalOrientedBot"
+    }
   }
 }

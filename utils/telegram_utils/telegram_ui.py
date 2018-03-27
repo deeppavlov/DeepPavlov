@@ -27,19 +27,17 @@ TELEGRAM_UI_CONFIG_FILENAME = 'models_info.json'
 log = get_logger(__name__)
 
 
-def init_bot_for_model(token, model, model_name):
+def init_bot_for_model(token, model, model_config_key):
     bot = telebot.TeleBot(token)
 
     config_dir = Path(__file__).resolve().parent
-    config_path = Path(config_dir, TELEGRAM_UI_CONFIG_FILENAME).resolve()
-    models_info = read_json(str(config_path))
+    tg_config_path = Path(config_dir, TELEGRAM_UI_CONFIG_FILENAME).resolve()
+    models_info = read_json(str(tg_config_path))
 
-    if not model_name:
-        model_name = type(model.get_main_component()).__name__
-    if model_name in models_info:
-        model_info = models_info[model_name]
+    if model_config_key in models_info:
+        model_info = models_info[model_config_key]
     else:
-        log.warn(f'Model name "{model_name}" was not found in telegram_utils/models_info.json, '
+        log.warn(f'Model config key "{model_config_key}" was not found in telegram_utils/models_info.json, '
                  'using default Telegram utils params')
         model_info = models_info['@default']
 
@@ -89,7 +87,8 @@ def init_bot_for_model(token, model, model_name):
     bot.polling()
 
 
-def interact_model_by_telegram(config_path, token, model_name):
-    config = read_json(config_path)
-    model = build_model_from_config(config)
-    init_bot_for_model(token, model, model_name)
+def interact_model_by_telegram(model_config_path, token):
+    model_config = read_json(model_config_path)
+    model_config_key = model_config['metadata']['labels']['telegram_utils']
+    model = build_model_from_config(model_config)
+    init_bot_for_model(token, model, model_config_key)
