@@ -10,7 +10,7 @@ DeepPavlov is an open-source conversational AI library built on TensorFlow and K
  * development of production ready chat-bots and complex conversational systems
  * NLP and dialog systems research
  
-Our goal is to enable AI-application developers researchers with:
+Our goal is to enable AI-application developers and researchers with:
  * set of pre-trained NLP models, pre-defined dialog system components (ML/DL/Rule-based) and pipeline templates
  * a framework for implementing and testing their own dialog models 
  * tools for application integration with adjacent infrastructure (messengers, helpdesk software etc.)
