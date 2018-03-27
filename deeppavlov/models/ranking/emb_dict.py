@@ -15,8 +15,9 @@ class Embeddings(object):
         fasttext_model_file: a file containing fasttext binary model
     """
 
-    def __init__(self, tok2int_vocab, embedding_dim, download_url=None, embeddings="word2vec"):
+    def __init__(self, tok2int_vocab, embedding_dim, download_url=None, embeddings="word2vec", seed=None):
         """Initialize the class according to given parameters."""
+        np.random.seed(seed)
         self.embeddings = embeddings
         self.embedding_dim = embedding_dim
         self.emb_model_file = expand_path("pre-trained_embeddings")
