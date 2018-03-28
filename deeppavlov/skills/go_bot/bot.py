@@ -52,6 +52,7 @@ class GoalOrientedBot(NNModel):
                  slot_filler=None,
                  intent_classifier=None,
                  use_action_mask=False,
+                 db_result_during_interaction=None,
                  debug=False,
                  save_path=None,
                  word_vocab=None,
@@ -71,6 +72,7 @@ class GoalOrientedBot(NNModel):
         self.tracker = tracker
         self.network = network
         self.word_vocab = word_vocab or vocabs['word_vocab']
+        self.interact_db_result = db_result_during_interaction
 
         template_path = expand_path(template_path)
         log.info("[loading templates from {}]".format(template_path))
@@ -275,6 +277,7 @@ class GoalOrientedBot(NNModel):
 
     def __call__(self, batch):
         if isinstance(batch[0], str):
+            self.db_result = self.interact_db_result
             return [self._infer(x) for x in batch]
         return [self._infer_dialog(x) for x in batch]
 
