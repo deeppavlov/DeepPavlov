@@ -20,5 +20,3 @@ def check_gpu_existance():
     r"""Return True if at least one GPU available"""
     device_list = device_lib.list_local_devices()
     return any(device.device_type == 'GPU' for device in device_list)
-
-
