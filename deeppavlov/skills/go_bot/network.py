@@ -101,7 +101,7 @@ class GoalOrientedBotNetwork(TFModel):
         attention_mechanism = params.get('attention_mechanism')
         if attention_mechanism:
             # attention_mechanism['intent_dim'] = attention_mechanism.get('intent_dim',0)
-            attention_mechanism['intent_dim'] = attention_mechanism.get('intent_dim',28) # DEBUG: Delete after debuging.
+            attention_mechanism['intent_dim'] = attention_mechanism.get('intent_dim',0) # DEBUG: Delete after debuging.
             attention_mechanism['key_dim'] = attention_mechanism['intent_dim'] + attention_mechanism['key_dim']
             self.attention_mechanism = collections.namedtuple('attention_mechanism',
             attention_mechanism.keys())(**attention_mechanism)
