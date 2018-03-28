@@ -27,8 +27,8 @@
         "train_now": true,
         "vocab_name": "ubuntu",
         "vocabs_path": "ubuntu_data/dataset_1MM",
-        "download_url": "http://lnsigo.mipt.ru/export/embeddings/W.pkl",
-        "embeddings": "ubuntu",
+        "download_url": "http://lnsigo.mipt.ru/export/embeddings/GoogleNews-vectors-negative300.bin",
+        "embeddings": "word2vec",
         "embeddings_path": "ubuntu_embeddings",
         "embedding_dim": 100,
         "seed": 243,
@@ -47,7 +47,7 @@
     "out": ["y_predicted"]
   },
   "train": {
-    "epochs": 10,
+    "epochs": 20,
     "batch_size": 256,
     "metrics": ["r@1", "r@2", "r@5", "rank_response", "loss"],
     "validation_patience": 5,

@@ -27,7 +27,7 @@
         "train_now": true,
         "vocab_name": "insurance",
         "vocabs_path": "insurance_data/insuranceQA-master/V1",
-        "download_url": "http://lnsigo.mipt.ru/export/embeddings/insurance_v1_word2vec",
+        "download_url": "http://lnsigo.mipt.ru/export/embeddings/GoogleNews-vectors-negative300.bin",
         "embeddings": "word2vec",
         "embeddings_path": "insurance_embeddings",
         "embedding_dim": 100,
