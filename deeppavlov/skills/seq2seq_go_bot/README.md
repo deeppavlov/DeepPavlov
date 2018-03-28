@@ -47,8 +47,22 @@ is recommended to be used in train mode
 #### Config parameters:
 
 * `name` always equals to `"seq2seq_go_bot"`
-
-TODO: add config parameter description
+* `source_vocab` — vocabulary of tokens from context (source) utterances
+* `target_vocab` — vocabulary of tokens from response (target) utterances
+* `start_of_sequence_token` — token corresponding to the start of sequence during decoding
+* `end_of_sequence_token` — token corresponding to the end of sequence during decoding
+* `bow_encoder` — one of bag-of-words encoders from [`deeppavlov.models.encoders.bow`](../../models/encoders/bow.py) module
+   * `name` — encoder name
+   * other arguments specific to your encoder
+* `debug` — whether to display debug output (defaults to `false`) _(optional)_
+* `network` — reccurent network that handles encoder-decoder mechanism
+   * `name` equals to `"seq2seq_go_bot_nn"`
+   * `learning_rate` — learning rate during training
+   * `target_start_of_sequence_index` — index of `start_of_sequence_token` in decoder vocabulary
+   * `target_end_of_sequence_index` — index of `end_of_sequence_token` in decoder vocabulary
+   * `source_vocab_size` — size of encoder token vocabulary (size of `source_vocab` is recommended)
+   * `target_vocab_size` — size of decoder token vocabulary (size of `target_vocab` is recommended)
+   * `hidden_size` — LSTM hidden state size equal for encoder and decoder
 
 #### Usage example
 * To infer from a pretrained model with config path equal to `path/to/config.json`:
