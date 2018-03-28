@@ -55,7 +55,7 @@ class StreamSpacyTokenizer(Component):
             disable = ['parser', 'ner']
         if ngram_range is None:
             ngram_range = [1, 1]
-        self.stopwords = stopwords or []
+        self._stopwords = stopwords or []
         self.model = spacy.load('en', disable=disable)
         self.model.add_pipe(self.model.create_pipe('sentencizer'))
         self.tokenizer = English().Defaults.create_tokenizer(self.model)
@@ -76,6 +76,14 @@ class StreamSpacyTokenizer(Component):
             return [detokenize(doc) for doc in batch]
         raise TypeError(
             "StreamSpacyTokenizer.__call__() is not implemented for `{}`".format(type(batch[0])))
+
+    @property
+    def stopwords(self):
+        return self._stopwords
+
+    @stopwords.setter
+    def stopwords(self, stopwords: List[str]):
+        self._stopwords = stopwords
 
     def _tokenize(self, data: List[str], ngram_range=(1, 1), batch_size=10000, n_threads=1,
                   lowercase=True) -> Generator[List[str], Any, None]:
@@ -157,6 +165,3 @@ class StreamSpacyTokenizer(Component):
             filter_fn = lambda x: x not in self.stopwords
 
         return list(filter(filter_fn, items))
-
-    def set_stopwords(self, stopwords):
-        self.stopwords = stopwords
