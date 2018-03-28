@@ -36,7 +36,7 @@ class Proxy(Component):
             try:
                 r = requests.get(url)
                 if r.status_code == 200:
-                    res.append(self._add_base_url(r.text, url))
+                    res.append(self._add_base_url(r.text, r.url))
                     errors.append(False)
                     continue
 
