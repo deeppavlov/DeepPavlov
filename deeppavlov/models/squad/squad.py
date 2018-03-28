@@ -30,7 +30,7 @@ class SquadModel(TFModel):
 
         # check gpu
         if not check_gpu_existance():
-            raise Exception('SquadModel requires GPU')
+            raise RuntimeError('SquadModel requires GPU')
 
         self.opt = deepcopy(kwargs)
         self.init_word_emb = self.opt['word_emb']
