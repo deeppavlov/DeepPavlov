@@ -92,6 +92,7 @@ class GoalOrientedBotNetwork(TFModel):
                           feed_dict=feed_dict)
         return loss_value, prediction
 
+
     def _init_params(self, params):
         self.opt = params
         self.opt['dropout_rate'] = params.get('dropout_rate', 1.)
@@ -106,9 +107,7 @@ class GoalOrientedBotNetwork(TFModel):
 
         attn = params.get('attention_mechanism')
         if attn:
-            # attn['intent_dim'] = attn.get('intent_dim',0)
-            # DEBUG: Delete after debuging.
-            attn['intent_dim'] = attn.get('intent_dim', 28)
+            attn['intent_dim'] = attn.get('intent_dim', 0)
             attn['key_dim'] = attn['intent_dim'] + attn['key_dim']
             self.attn = \
                 collections.namedtuple('attention_mechanism', attn.keys())(**attn)
