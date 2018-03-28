@@ -1,0 +1,72 @@
+{
+  "dataset_reader": {
+    "name": "conll2003_reader",
+    "data_path": "ontonotes/"
+  },
+  "dataset_iterator": {
+    "name": "basic_dataset_iterator"
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "id": "pos_vocab",
+        "name": "default_vocab",
+        "fit_on": ["x"],
+        "level": "token",
+        "save_path": "ner_onto/pos.dict",
+        "load_path": "ner_onto/pos.dict"
+      },
+      {
+        "id": "tag_vocab",
+        "name": "default_vocab",
+        "fit_on": ["y"],
+        "level": "token",
+        "save_path": "ner_onto/tag.dict",
+        "load_path": "ner_onto/tag.dict"
+      },
+      {
+        "id": "ner_vocab",
+        "name": "default_vocab",
+        "fit_on": ["x"],
+        "level": "char",
+        "save_path": "ner_onto/ner.dict",
+        "load_path": "ner_onto/ner.dict"
+      },
+      {
+        "id": "glove_emb",
+        "name": "glove",
+        "load_path": "embeddings/glove.6B.100d.txt",
+        "save_path": "embeddings/glove.6B.100d.txt"
+      },
+      {
+        "in": ["x"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "name": "ner_ontonotes",
+        "main": true,
+        "save_path": "ner_onto/model.ckpt",
+        "load_path": "ner_onto/model.ckpt",
+        "ner_vocab": "#ner_vocab",
+        "tag_vocab": "#tag_vocab",
+        "pos_vocab": "#pos_vocab",
+        "embedder": "#glove_emb"
+      }
+    ],
+    "out": ["y_predicted"]
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 64,
+
+    "metrics": ["ner_f1"],
+    "validation_patience": 5,
+    "val_every_n_epochs": 1,
+    "pytest_max_batches": 1,
+
+    "log_every_n_epochs": 1,
+    "show_examples": false
+  }
+}
+
