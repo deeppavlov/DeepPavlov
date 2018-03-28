@@ -1,7 +1,7 @@
 import numpy as np
 import pickle
 from gensim.models.wrappers import FastText
-from gensim.models import Word2Vec
+from gensim.models import KeyedVectors
 from deeppavlov.core.commands.utils import expand_path
 from pathlib import Path
 from deeppavlov.core.data.utils import download
@@ -18,8 +18,9 @@ class Embeddings(object):
     """
 
     def __init__(self, tok2int_vocab, embedding_dim, download_url,
-                 embeddings_path, embeddings="word2vec"):
+                 embeddings_path, embeddings="word2vec", seed=None):
         """Initialize the class according to given parameters."""
+        np.random.seed(seed)
         self.embeddings = embeddings
         self.embedding_dim = embedding_dim
         self.emb_model_file = expand_path(embeddings_path) / Path(download_url).parts[-1]
@@ -29,13 +30,15 @@ class Embeddings(object):
         if self.embeddings == "fasttext":
             self.embeddings_model = FastText.load_fasttext_format(str(self.emb_model_file))
         elif self.embeddings == "word2vec":
-            self.embeddings_model = Word2Vec.load(str(self.emb_model_file))
+            self.embeddings_model = KeyedVectors.load_word2vec_format(str(self.emb_model_file),
+                                                                      binary=True)
         elif self.embeddings == "ubuntu":
             with open(self.emb_model_file, 'rb') as f:
                 W_data = pickle.load(f, encoding='bytes')
             bwords = [el[0] for el in W_data[1].items()]
             words = ['<UNK>'] + [el.decode("utf-8") for el in bwords]
             self.embeddings_model = {el[0]: el[1] for el in zip(words, W_data[0])}
+
 
         self.create_emb_matrix(tok2int_vocab)
 
