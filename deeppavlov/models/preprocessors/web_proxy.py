@@ -34,6 +34,9 @@ class Proxy(Component):
             if url.find('://') == -1:
                 url = 'http://' + url
             try:
+                r = requests.head(url, allow_redirects=True)
+                if 'text/html' not in r.headers['content-type']:
+                    raise RuntimeError(f'`{url}` is not an html page')
                 r = requests.get(url)
                 if r.status_code == 200:
                     res.append(self._add_base_url(r.text, r.url))
