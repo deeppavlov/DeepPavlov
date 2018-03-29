@@ -78,7 +78,7 @@ Configuration of the model can be performed in code or in JSON configuration fil
 the model you need to specify four groups of parameters:
 
 - **`dataset_reader`**
-- **`dataset`**
+- **`dataset_iterator`**
 - **`chainer`**
 - **`train`**
 
@@ -89,7 +89,7 @@ In the subsequent text we show the parameter specification in config file. Howev
 The dataset reader is a class which reads and parses the data. It returns a dictionary with 
 three fields: "train", "test", and "valid". The basic dataset reader is "ner_dataset_reader." 
 The dataset reader config part with "ner_dataset_reader" should look like:
-```json
+```
 "dataset_reader": {
     "name": "ner_dataset_reader",
     "data_path": "/home/user/Data/conll2003/"
@@ -102,13 +102,13 @@ contain data in the format presented in *Training data* section. Each line in th
 may contain additional information such as POS tags. However, the token must be the first in 
 line and NER tag must be the last.
 
-### Dataset
+### Dataset Iterator
 
-For simple batching and shuffling you can use "basic_dataset". The part of the 
+For simple batching and shuffling you can use "basic_dataset_iterator". The part of the 
 configuration file for the dataset looks like:
- ```json
-"dataset": {
-    "name": "basic_dataset"
+ ```
+"dataset_iterator": {
+    "name": "basic_dataset_iterator"
 }
 ```
 
@@ -119,7 +119,7 @@ There is no additional parameters in this part.
 The chainer part of the configuration file contains the specification of the neural network 
 model and supplementary things such as vocabularies. Chainer should be defined as follows:
 
-```json
+```
 "chainer": {
     "in": ["x"],
     "in_y": ["y"],
@@ -137,7 +137,7 @@ predictions.
 The major part of "chainer" is "pipe". The "pipe" contains network and vocabularies. Firstly 
 we define vocabularies needed to build the neural network:
 
-```json
+```
 "pipe": [
     {
         "id": "word_vocab",
@@ -255,7 +255,7 @@ works well in most of the cases
 
 After the "chainer" part you should specify the "train" part:
 
-```json
+```
 "train": {
     "epochs": 100,
     "batch_size": 64,
@@ -280,14 +280,14 @@ training parameters are:
 
 
 And now all parts together:
-```json
+```
 {
   "dataset_reader": {
     "name": "ner_dataset_reader",
     "data_path": "conll2003/"
   },
-  "dataset": {
-    "name": "basic_dataset"
+  "dataset_iterator": {
+    "name": "basic_dataset_iterator"
   },
   "chainer": {
     "in": ["x"],
