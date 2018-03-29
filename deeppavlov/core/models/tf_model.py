@@ -95,10 +95,16 @@ class TFModel(NNModel, metaclass=TfModelMeta):
             # For batch norm it is necessary to update running averages
             extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
             with tf.control_dependencies(extra_update_ops):
+                
+                def clip_if_not_none(grad):
+                    if grad is None:
+                        return grad
+                    return tf.clip_by_norm(grad, clip_norm)
+
                 opt = optimizer(learning_rate)
                 grads_and_vars = opt.compute_gradients(loss, var_list=variables_to_train)
                 if clip_norm is not None:
-                    grads_and_vars = [(tf.clip_by_norm(grad, clip_norm), var)
+                    grads_and_vars = [(clip_if_not_none(grad), var)
                                       for grad, var in grads_and_vars]
                 train_op = opt.apply_gradients(grads_and_vars)
         return train_op
