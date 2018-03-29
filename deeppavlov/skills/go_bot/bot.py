@@ -148,10 +148,11 @@ class GoalOrientedBot(NNModel):
         state_features = self.tracker()
 
         # Other features
-        context_features = np.array([bool(db_result) * 1.,
-                                     bool(self.db_result) * 1.,
-                                     (db_result == {}) * 1.,
-                                     (self.db_result == {}) * 1.],
+        new_db_result = db_result if db_result is not None else self.db_result
+        context_features = np.array([bool(self.db_result) * 1.,
+                                     bool(new_db_result) * 1.,
+                                     (self.db_result == {}) * 1.,
+                                     (new_db_result == {}) * 1.],
                                     dtype=np.float32)
 
         if self.debug:
@@ -277,7 +278,8 @@ class GoalOrientedBot(NNModel):
 
     def __call__(self, batch):
         if isinstance(batch[0], str):
-            self.db_result = self.interact_db_result
+            if self.tracker.get_state():
+                self.db_result = self.interact_db_result
             return [self._infer(x) for x in batch]
         return [self._infer_dialog(x) for x in batch]
 

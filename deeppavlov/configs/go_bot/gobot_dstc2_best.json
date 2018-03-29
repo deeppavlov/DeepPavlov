@@ -68,10 +68,10 @@
         },
         "network": {
           "name": "go_bot_rnn",
-          "load_path": "gobot_best_wo_bow/model",
-          "save_path": "gobot_best_wo_bow/model",
+          "load_path": "gobot_best_wo_bow_new_feats3/model",
+          "save_path": "gobot_best_wo_bow_new_feats3/model",
           "learning_rate": 0.001,
-          "dropout_rate": 0.8,
+          "dropout_rate": 0.9,
           "hidden_size": 128,
           "dense_size": 64,
           "obs_size": 363,
