@@ -55,13 +55,14 @@ class Seq2SeqGoalOrientedBot(NNModel):
         self.debug = debug
 
     def train_on_batch(self, *batch):
-        b_enc_ins, b_src_lens = [], []
+        b_enc_ins, b_src_lens, b_kb_items = [], [], []
         b_dec_ins, b_dec_outs, b_tgt_lens, b_tgt_weights = [], [], [], []
-        for x_tokens, dialog_id, y_tokens in zip(*batch):
+        for x_tokens, dialog_id, kb_items, y_tokens in zip(*batch):
 
-            enc_in = self._encode_context(x_tokens, dialog_id)
+            enc_in = self._encode_context(x_tokens)
             b_enc_ins.append(enc_in)
             b_src_lens.append(len(enc_in))
+            b_kb_items.append([i[0] for i in kb_items])
 
             dec_in, dec_out = self._encode_response(y_tokens)
             b_dec_ins.append(dec_in)
@@ -81,9 +82,9 @@ class Seq2SeqGoalOrientedBot(NNModel):
             b_tgt_weights[i].extend([0] * tgt_padd_len)
 
         self.network.train_on_batch(b_enc_ins, b_dec_ins, b_dec_outs,
-                                    b_src_lens, b_tgt_lens, b_tgt_weights)
+                                    b_src_lens, b_tgt_lens, b_tgt_weights, b_kb_items)
 
-    def _encode_context(self, tokens, dialog_id=None):
+    def _encode_context(self, tokens):
         if self.debug:
             log.debug("Context tokens = \"{}\"".format(tokens))
         token_idxs = self.src_vocab(tokens)
@@ -99,20 +100,23 @@ class Seq2SeqGoalOrientedBot(NNModel):
     def __call__(self, *batch):
         return self._infer_on_batch(*batch)
 
-    def _infer_on_batch(self, utters, dialog_ids=itertools.repeat(None)):
+    def _infer_on_batch(self, utters, dialog_ids=itertools.repeat(None),
+                        kb_entry_list=itertools.repeat([])):
         def _filter(tokens):
             for t in tokens:
                 if t == self.eos_token:
                     break
                 yield t
 # TODO: history as input
-        b_enc_ins, b_src_lens = [], []
+        b_enc_ins, b_src_lens, b_kb_items = [], [], []
         if (len(utters) == 1) and not utters[0]:
             utters = [['hi']]
-        for utter, dialog_id in zip(utters, dialog_ids):
-            enc_in = self._encode_context(utter, dialog_id)
+        for utter, dialog_id, kb_entries in zip(utters, dialog_ids, kb_entry_list):
+            enc_in = self._encode_context(utter)
             b_enc_ins.append(enc_in)
             b_src_lens.append(len(enc_in))
+            b_kb_items.append([i[0] for i in kb_entries])
+            #b_kb_items.append(list(map(lambda x: x[0], filter(None, kb_items or [()]))))
 
         # Sequence padding
         max_src_len = max(b_src_lens)
@@ -120,7 +124,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
             src_padd_len = max_src_len - src_len
             b_enc_ins[i].extend([self.src_vocab[self.eos_token]] * src_padd_len)
 
-        pred_idxs = self.network(b_enc_ins, b_src_lens)
+        pred_idxs = self.network(b_enc_ins, b_src_lens, b_kb_items)
         preds = [list(_filter(self.tgt_vocab(utter_idxs)))\
                  for utter_idxs in pred_idxs]
         if self.debug:

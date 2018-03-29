@@ -15,7 +15,9 @@ limitations under the License.
 """
 
 import json
+import copy
 import tensorflow as tf
+import numpy as np
 from tensorflow.contrib.layers import xavier_initializer
 
 from deeppavlov.core.common.registry import register
@@ -30,13 +32,11 @@ log = get_logger(__name__)
 @register("seq2seq_go_bot_nn")
 class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
-    GRAPH_PARAMS = ['source_vocab_size', 'target_vocab_size', 'hidden_size']
+    GRAPH_PARAMS = ['knowledge_base_keys', 'source_vocab_size', 
+                    'target_vocab_size', 'hidden_size', 'embedder_load_path']
     
-    def __init__(self,
-                 #embedder=None,
-                 **params):
+    def __init__(self, **params):
         # initialize parameters
-        #self.embedder = embedder
         self._init_params(params)
         # build computational graph
         self._build_graph()
@@ -54,14 +54,20 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             log.info("[initializing `{}` from scratch]".format(self.__class__.__name__))
 
     def _init_params(self, params):
-        self.opt = params
+        self.opt = {k: v for k, v in params.items() if k not in ('embedder')}
+
+        self.kb_keys = params['knowledge_base_keys']
+
+        self.opt['embedder_load_path'] = str(params['embedder'].load_path)
+        self.embedder = params['embedder']
+        self.opt['embedding_size'] = params.get('embedding_size', self.embedder.dim)
         
         self.learning_rate = self.opt['learning_rate']
         self.tgt_sos_id = self.opt['target_start_of_sequence_index']
         self.tgt_eos_id = self.opt['target_end_of_sequence_index']
         self.src_vocab_size = self.opt['source_vocab_size']
         self.tgt_vocab_size = self.opt['target_vocab_size']
-        #self.embedding_size = self.opt['embedding_size']
+        self.embedding_size = self.opt['embedding_size']
         self.hidden_size = self.opt['hidden_size']
 
     def _build_graph(self):
@@ -78,26 +84,38 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                                                    reduction=tf.losses.Reduction.NONE)
         # normalize loss by batch_size
         self._loss = tf.reduce_sum(_loss_tensor) / tf.cast(self._batch_size, tf.float32)
-        #self._loss = tf.reduce_mean(_loss_tensor, name='loss')
+        # self._loss = tf.reduce_mean(_loss_tensor, name='loss')
 # TODO: tune clip_norm
         self._train_op = \
             self.get_train_op(self._loss, self.learning_rate, clip_norm=10.) 
 
     def _add_placeholders(self):
         # _encoder_inputs: [batch_size, max_input_time]
-        self._encoder_inputs = tf.placeholder(tf.int32, 
+        self._encoder_inputs = tf.placeholder(tf.int32,
                                               [None, None],
                                               name='encoder_inputs')
         self._batch_size = tf.shape(self._encoder_inputs)[0]
         # _decoder_inputs: [batch_size, max_output_time]
-        self._decoder_inputs = tf.placeholder(tf.int32, 
+        self._decoder_inputs = tf.placeholder(tf.int32,
                                               [None, None],
                                               name='decoder_inputs')
         # _decoder_outputs: [batch_size, max_output_time]
-        self._decoder_outputs = tf.placeholder(tf.int32, 
+        self._decoder_outputs = tf.placeholder(tf.int32,
                                                [None, None],
                                                name='decoder_inputs')
-#TODO: compute sequence lengths on the go
+        # _kb_embeddings: [kb_size, embedding_dim]
+# TODO: try training embeddings
+        kb_W = np.array([self._embed_kb_key(val) for val in self.kb_keys],
+                        dtype=np.float32)
+        log.debug("Embedding Matrix shape = {}".format(kb_W.shape))
+        self._kb_embeddings = tf.get_variable("kb_embeddings",
+                                              shape=(kb_W.shape[0], kb_W.shape[1]),
+                                              dtype=tf.float32,
+                                              initializer=tf.constant_initializer(kb_W),
+                                              trainable=False)
+        print(self._kb_embeddings)
+
+# TODO: compute sequence lengths on the go
         # _src_sequence_lengths, _tgt_sequence_lengths: [batch_size]
         self._src_sequence_lengths = tf.placeholder(tf.int32,
                                                    [None],
@@ -109,6 +127,11 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         self._tgt_weights = tf.placeholder(tf.int32,
                                            [None, None],
                                            name='target_weights')
+
+    def _embed_kb_key(self, key):
+        #log.debug("Embedding `{}` kb_key".format(key))
+# TODO: fasttext_embedder to work with tokens
+        return self.embedder([key.replace('_', ' ')], mean=True)[0][:self.embedding_size]
 
     def _build_body(self):
 #TODO: try learning embeddings
@@ -155,6 +178,9 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                                                             output_time_major=False)
             _logits = _outputs.rnn_output
 
+        #with tf.variable_scope("AttentionOverKB"):
+
+
         with tf.variable_scope("DecoderOnInfer"):
             _maximum_iterations = \
                 tf.round(tf.reduce_max(self._src_sequence_lengths) * 2)
@@ -173,7 +199,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             _predictions = _outputs_infer.sample_id
         return _logits, _predictions
 
-    def __call__(self, enc_inputs, src_seq_lengths, prob=False):
+    def __call__(self, enc_inputs, src_seq_lengths, kb_items, prob=False):
         predictions = self.sess.run(
             self._predictions,
             feed_dict={
@@ -202,7 +228,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         return loss_value"""
 
     def train_on_batch(self, enc_inputs, dec_inputs, dec_outputs, 
-                       src_seq_lengths, tgt_seq_lengths, tgt_weights):
+                       src_seq_lengths, tgt_seq_lengths, tgt_weights, kb_items):
         _, loss_value = self.sess.run(
             [ self._train_op, self._loss ],
             feed_dict={

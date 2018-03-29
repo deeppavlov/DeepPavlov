@@ -36,6 +36,7 @@ class KnowledgeBase(Estimator):
                          *args, **kwargs)
         self.tokenizer = tokenizer
         self.kb = defaultdict(lambda: [])
+        self.primary_keys = set()
         if self.load_path and self.load_path.is_file():
             self.load()
 
@@ -49,13 +50,18 @@ class KnowledgeBase(Estimator):
                 kv_entry_list = (self._key_value_entries(item, cols)\
                                  for item in items)
                 self.kb[key] = list(itertools.chain(*kv_entry_list))
+    
+    def get_primary_keys(self):
+        return list(self.primary_keys)
 
     def _key_value_entries(self, kb_item, kb_columns):
-        first_key = re.sub('\s+', '_', kb_item[kb_columns[0]].lower().strip())
+        def _format(s):
+            return re.sub('\s+', '_', s.lower().strip())
+        first_key = _format(kb_item[kb_columns[0]])
         for col in kb_columns[1:]:
+            key = first_key + '_' + _format(col)
+            self.primary_keys.add(key)
             if col in kb_item:
-                second_key = re.sub('\s+', '_', col.lower().strip())
-                key = first_key + '_' + second_key
                 if self.tokenizer is not None:
                     yield (key, self.tokenizer([kb_item[col]])[0])
                 else:
@@ -73,6 +79,7 @@ class KnowledgeBase(Estimator):
 
     def reset(self):
         self.kb = defaultdict(lambda: [])
+        self.primary_keys = set()
 
     def save(self):
         log.info("[saving knowledge base to {}]".format(self.save_path))
