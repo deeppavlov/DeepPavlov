@@ -31,31 +31,53 @@ class DataFittingIterator:
     Generate batches (for large datasets).
     """
 
-    def __init__(self, data: List[str], doc_ids: List[Any]=None,
-                 seed: int = None, shuffle: bool = None, batch_size: int = None,
+    def __init__(self, data: List[str], doc_ids: List[Any] = None,
+                 seed: int = None, shuffle: bool = False, batch_size: int = 1000,
                  *args, **kwargs) -> None:
 
-        self.batch_size = batch_size
-        self.shuffle = shuffle
-        self.random = Random(seed)
+        self._batch_size = batch_size
+        self._shuffle = shuffle
+        self._random = Random(seed)
         self.data = data
         self.doc_index = doc_ids or self.get_doc_ids()
         self.data = data
 
+    @property
+    def shuffle(self):
+        return self._shuffle
+
+    @shuffle.setter
+    def shuffle(self, shuffle: bool):
+        self._shuffle = shuffle
+
+    @property
+    def random(self):
+        return self._random
+
+    @random.setter
+    def random(self, seed: int):
+        self._random = Random(seed)
+
+    @property
+    def batch_size(self):
+        return self._batch_size
+
+    @batch_size.setter
+    def batch_size(self, batch_size):
+        if batch_size < 0:
+            raise ValueError("Batch size should be a positive number!")
+        self._batch_size = batch_size
+
     def get_doc_ids(self):
-        ids = [i for i in range(len(self.data))]
-        return ids
+        return list(range(len(self.data)))
 
-    def gen_batch(self, batch_size=1000, shuffle=False) -> Generator[Tuple[List[list],
-                                                                           List[int]], Any, None]:
-        _batch_size = self.batch_size or batch_size
-        _shuffle = self.shuffle or shuffle
+    def gen_batches(self) -> Generator[Tuple[List[list], List[int]], Any, None]:
 
-        if _shuffle:
+        if self._shuffle:
             self.random.shuffle(self.doc_index)
 
-        batches = [self.doc_index[i:i + _batch_size] for i in
-                   range(0, len(self.doc_index), _batch_size)]
+        batches = [self.doc_index[i:i + self._batch_size] for i in
+                   range(0, len(self.doc_index), self._batch_size)]
 
         # DEBUG
         # len_batches = len(batches)
@@ -64,5 +86,5 @@ class DataFittingIterator:
             # DEBUG
             # logger.info(
             #     "Processing batch # {} of {} ({} documents)".format(i, len_batches, len(doc_ids)))
-            docs = [self.data[i] for i in doc_ids]
+            docs = [self.data[j] for j in doc_ids]
             yield docs, doc_ids

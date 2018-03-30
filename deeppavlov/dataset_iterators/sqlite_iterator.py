@@ -89,7 +89,7 @@ class SQLiteDataIterator(DataFittingIterator):
         return result if result is None else result[0]
 
     @overrides
-    def gen_batch(self, batch_size=1000, shuffle=False) -> Generator[Tuple[List[str], list], Any, None]:
+    def gen_batches(self, batch_size=1000, shuffle=False) -> Generator[Tuple[List[str], list], Any, None]:
         _batch_size = self.batch_size or batch_size
         _shuffle = self.shuffle or shuffle
 
