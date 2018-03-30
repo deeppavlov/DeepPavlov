@@ -32,7 +32,7 @@ logger = get_logger(__name__)
 @register('stream_spacy_tokenizer')
 class StreamSpacyTokenizer(Component):
     """
-    Tokenize or lemmatize a list of documents.
+    Tokenize or tokenize a list of documents.
     Return list of tokens or lemmas, without sentencizing.
     Works only for English language.
     """
@@ -50,6 +50,8 @@ class StreamSpacyTokenizer(Component):
         :param lemmas: weather to perform lemmatizing or not while tokenizing, currently works only
         for the English language
         :param n_threads: a number of threads for internal spaCy multi-threading
+        :param lowercase: whether to perform lowercasing or not
+        :param alphas_only: should filter numeric and alpha-numeric types or not
         """
         if disable is None:
             disable = ['parser', 'ner']
