@@ -44,6 +44,10 @@ def init_bot_for_model(token, model, model_config_key):
     buffer = {}
     expect = []
 
+    def init_multiarg_infer(chat_id):
+        buffer[chat_id] = []
+        expect[:] = list(model.in_x)
+
     @bot.message_handler(commands=['start'])
     def send_start_message(message):
         chat_id = message.chat.id
@@ -52,8 +56,7 @@ def init_bot_for_model(token, model, model_config_key):
             model.reset()
         bot.send_message(chat_id, out_message)
         if len(model.in_x) > 1:
-            buffer[chat_id] = []
-            expect[:] = list(model.in_x)
+            init_multiarg_infer(chat_id)
             bot.send_message(chat_id, f'Please, send {expect.pop(0)}')
 
     @bot.message_handler(commands=['help'])
@@ -68,7 +71,11 @@ def init_bot_for_model(token, model, model_config_key):
         context = message.text
 
         if len(model.in_x) > 1:
+            if chat_id not in buffer:
+                init_multiarg_infer(chat_id)
+
             buffer[chat_id].append(context)
+
             if expect:
                 bot.send_message(chat_id, f'Please, send {expect.pop(0)}')
             else:
