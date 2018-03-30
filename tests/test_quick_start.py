@@ -32,7 +32,9 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
                           ("moderate price range", "{'pricerange': 'moderate'}")
                       ]
                   },
-          "ranking": {("configs/ranking/insurance_config.json", "ranking", True): []},
+          "ranking": {("configs/ranking/insurance_config.json", "ranking", True): [],
+                      ("configs/ranking/ubuntu_config.json", "ranking", True): []
+                      },
           "squad": {("configs/squad/squad.json", "squad_model", True): []},
           "seq2seq_go_bot": {("configs/seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", True): []}
           }
