@@ -46,16 +46,12 @@ class RankingDict(metaclass=ABCMeta):
         self.load_int2tok()
         self.build_tok2int_vocab()
         self.load_context2toks()
-        self.load_cont()
         self.load_response2toks()
-        self.load_resp()
 
     def save(self):
         self.save_int2tok()
         self.save_context2toks()
-        self.save_cont()
         self.save_response2toks()
-        self.save_resp()
 
     @abstractmethod
     def build_int2tok_vocab(self):
@@ -143,27 +139,27 @@ class RankingDict(metaclass=ABCMeta):
             data = f.readlines()
         self.response2toks_vocab = {int(el.split('\t')[0]): el.split('\t')[1][:-1].split(' ') for el in data}
 
-    def save_cont(self):
-        context_embeddings = []
-        for i in range(len(self.context2emb_vocab)):
-            context_embeddings.append(self.context2emb_vocab[i])
-        context_embeddings = np.vstack(context_embeddings)
-        np.save(self.cemb_save_path, context_embeddings)
-
-    def load_cont(self):
-        context_embeddings_arr = np.load(self.cemb_load_path)
-        for i in range(context_embeddings_arr.shape[0]):
-            self.context2emb_vocab[i] = context_embeddings_arr[i]
-
-    def save_resp(self):
-        response_embeddings = []
-        for i in range(len(self.response2emb_vocab)):
-            response_embeddings.append(self.response2emb_vocab[i])
-        response_embeddings = np.vstack(response_embeddings)
-        np.save(self.remb_save_path, response_embeddings)
-
-    def load_resp(self):
-        response_embeddings_arr = np.load(self.remb_load_path)
-        for i in range(response_embeddings_arr.shape[0]):
-            self.response2emb_vocab[i] = response_embeddings_arr[i]
+    # def save_cont(self):
+    #     context_embeddings = []
+    #     for i in range(len(self.context2emb_vocab)):
+    #         context_embeddings.append(self.context2emb_vocab[i])
+    #     context_embeddings = np.vstack(context_embeddings)
+    #     np.save(self.cemb_save_path, context_embeddings)
+    #
+    # def load_cont(self):
+    #     context_embeddings_arr = np.load(self.cemb_load_path)
+    #     for i in range(context_embeddings_arr.shape[0]):
+    #         self.context2emb_vocab[i] = context_embeddings_arr[i]
+    #
+    # def save_resp(self):
+    #     response_embeddings = []
+    #     for i in range(len(self.response2emb_vocab)):
+    #         response_embeddings.append(self.response2emb_vocab[i])
+    #     response_embeddings = np.vstack(response_embeddings)
+    #     np.save(self.remb_save_path, response_embeddings)
+    #
+    # def load_resp(self):
+    #     response_embeddings_arr = np.load(self.remb_load_path)
+    #     for i in range(response_embeddings_arr.shape[0]):
+    #         self.response2emb_vocab[i] = response_embeddings_arr[i]
 
