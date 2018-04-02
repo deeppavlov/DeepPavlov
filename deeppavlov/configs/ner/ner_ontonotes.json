@@ -12,20 +12,20 @@
       {
         "id": "pos_vocab",
         "name": "default_vocab",
-        "load_path": "ner_onto/pos.dict",
-        "save_path": "ner_onto/pos.dict"
+        "load_path": "ner_ontonotes_senna/pos.dict",
+        "save_path": "ner_ontonotes_senna/pos.dict"
       },
       {
         "id": "tag_vocab",
         "name": "default_vocab",
-        "load_path": "ner_onto/tag.dict",
-        "save_path": "ner_onto/tag.dict"
+        "load_path": "ner_ontonotes_senna/tag.dict",
+        "save_path": "ner_ontonotes_senna/tag.dict"
       },
       {
         "id": "ner_vocab",
         "name": "default_vocab",
-        "load_path": "ner_onto/ner.dict",
-        "save_path": "ner_onto/ner.dict"
+        "load_path": "ner_ontonotes_senna/ner.dict",
+        "save_path": "ner_ontonotes_senna/ner.dict"
       },
       {
         "id": "glove_emb",
@@ -38,8 +38,8 @@
         "out": ["y_predicted"],
         "name": "ner_ontonotes",
         "main": true,
-        "save_path": "ner_onto/model.ckpt",
-        "load_path": "ner_onto/model.ckpt",
+        "save_path": "ner_ontonotes_senna/model.ckpt",
+        "load_path": "ner_ontonotes_senna/model.ckpt",
         "ner_vocab": "#ner_vocab",
         "tag_vocab": "#tag_vocab",
         "pos_vocab": "#pos_vocab",
