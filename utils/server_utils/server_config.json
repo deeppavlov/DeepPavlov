@@ -35,6 +35,12 @@
       "port": "",
       "model_endpoint": "/ner",
       "model_args_names": ""
+    },
+    "Proxy": {
+      "host": "",
+      "port": "",
+      "model_endpoint": "/proxy",
+      "model_args_names": ["text1"]
     }
   }
 }
