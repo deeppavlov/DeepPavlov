@@ -78,7 +78,7 @@ Configuration of the model can be performed in code or in JSON configuration fil
 the model you need to specify four groups of parameters:
 
 - **`dataset_reader`**
-- **`dataset_iterator`**
+- **`dataset`**
 - **`chainer`**
 - **`train`**
 
@@ -89,7 +89,7 @@ In the subsequent text we show the parameter specification in config file. Howev
 The dataset reader is a class which reads and parses the data. It returns a dictionary with 
 three fields: "train", "test", and "valid". The basic dataset reader is "ner_dataset_reader." 
 The dataset reader config part with "ner_dataset_reader" should look like:
-```
+```json
 "dataset_reader": {
     "name": "ner_dataset_reader",
     "data_path": "/home/user/Data/conll2003/"
@@ -102,13 +102,13 @@ contain data in the format presented in *Training data* section. Each line in th
 may contain additional information such as POS tags. However, the token must be the first in 
 line and NER tag must be the last.
 
-### Dataset Iterator
+### Dataset
 
-For simple batching and shuffling you can use "basic_dataset_iterator". The part of the 
+For simple batching and shuffling you can use "basic_dataset". The part of the 
 configuration file for the dataset looks like:
- ```
-"dataset_iterator": {
-    "name": "basic_dataset_iterator"
+ ```json
+"dataset": {
+    "name": "basic_dataset"
 }
 ```
 
@@ -119,7 +119,7 @@ There is no additional parameters in this part.
 The chainer part of the configuration file contains the specification of the neural network 
 model and supplementary things such as vocabularies. Chainer should be defined as follows:
 
-```
+```json
 "chainer": {
     "in": ["x"],
     "in_y": ["y"],
@@ -137,7 +137,7 @@ predictions.
 The major part of "chainer" is "pipe". The "pipe" contains network and vocabularies. Firstly 
 we define vocabularies needed to build the neural network:
 
-```
+```json
 "pipe": [
     {
         "id": "word_vocab",
@@ -255,7 +255,7 @@ works well in most of the cases
 
 After the "chainer" part you should specify the "train" part:
 
-```
+```json
 "train": {
     "epochs": 100,
     "batch_size": 64,
@@ -280,14 +280,14 @@ training parameters are:
 
 
 And now all parts together:
-```
+```json
 {
   "dataset_reader": {
     "name": "ner_dataset_reader",
     "data_path": "conll2003/"
   },
-  "dataset_iterator": {
-    "name": "basic_dataset_iterator"
+  "dataset": {
+    "name": "basic_dataset"
   },
   "chainer": {
     "in": ["x"],
@@ -372,102 +372,43 @@ interact_model(PIPELINE_CONFIG_PATH)
 This example assumes that the working directory is deeppavlov.
 
 
-## OntoNotes NER
-
-A pre-trained model for solving OntoNotes task can be used as following:
-```python
-from deeppavlov.core.commands.infer import interact_model
-interact_model('deeppavlov/configs/ner/ner_ontonotes.json')
-```
-Or from command line:
-
-```bash
-python deeppavlov/deep.py interact deeppavlov/configs/ner/ner_ontonotes.json
-```
-
-Since the model is built with cuDNN version of LSTM, the GPU along with installed cuDNN library needed to run this model.
-The F1 scores of this model on test part of OntoNotes is presented in table below.
-
-| Model                      | F1 score         |
-|----------------------------|:----------------:|
-|DeepPavlov                  |**87.07** ± 0.21  |
-|Strubell at al. (2017)   [1]|86.84 ± 0.19      |
-|Chiu and Nichols (2016)  [2]|86.19 ± 0.25      |
-|Spacy                       |85.85             |
-|Durrett and Klein (2014) [3]|84.04             |
-|Ratinov and Roth (2009)  [4]|83.45             |
-
-Scores by entity type are presented in the table below:
-
-|Tag     |F1 score|
-|------  |:------:|
-|TOTAL | 87.07 |
-|CARDINAL	|82.80|
-|DATE	|84.87|
-|EVENT	|68.39    |
-|FAC	|68.07|
-|GPE	|94.61|
-|LANGUAGE	|62.91|
-|LAW	|48.27|
-|LOC	|72.39|
-|MONEY	|87.79|
-|NORP	|94.27|
-|ORDINAL	|79.53|
-|ORG	|85.59|
-|PERCENT	|89.41|
-|PERSON	|91.67|
-|PRODUCT	|58.90|
-|QUANTITY	|77.93|
-|TIME	|62.50|
-|WORK_OF_ART	|53.17|
-
-
 ## Results
 
 The NER network component reproduces the architecture from the paper "_Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition_" https://arxiv.org/pdf/1709.09686.pdf, which is inspired by LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf.
 
 Bi-LSTM architecture of NER network was tested on three datasets:
-- Gareev corpus [5] (obtainable by request to authors)
-- FactRuEval 2016 [6]
-- Persons-1000 [7]
+- Gareev corpus [1] (obtainable by request to authors)
+- FactRuEval 2016 [2]
+- Persons-1000 [3]
 
 The F1 measure for our model along with the results of other published solutions are provided in the table below:
 
 | Models                | Gareev’s dataset | Persons-1000 | FactRuEval 2016 |
 |---------------------- |:----------------:|:------------:|:---------------:|
-| Gareev et al. [5]     | 75.05            |              |                 |
-| Malykh et al. [8]     | 62.49            |              |                 |
-| Trofimov  [13]        |                  | 95.57        |                 |
-| Rubaylo et al. [9]    |                  |              | 78.13           |
-| Sysoev et al. [10]    |                  |              | 74.67           |
-| Ivanitsky et al.  [11]|                  |              | **87.88**       |
-| Mozharova et al.  [12]|                  | 97.21        |                 |
+| Gareev et al. [1]     | 75.05            |              |                 |
+| Malykh et al. [4]     | 62.49            |              |                 |
+| Trofimov  [5]         |                  | 95.57        |                 |
+| Rubaylo et al. [6]    |                  |              | 78.13           |
+| Sysoev et al. [7]     |                  |              | 74.67           |
+| Ivanitsky et al.  [7] |                  |              | **87.88**       |
+| Mozharova et al.  [8] |                  | 97.21        |                 |
 | Our (Bi-LSTM+CRF)     | **87.17**        | **99.26**    | 82.10           ||
 
 ## Literature
-[1] - Strubell at al. (2017) Strubell, Emma, et al. "Fast and accurate entity recognition with iterated dilated convolutions." Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing. 2017.
 
-[2] - Jason PC Chiu and Eric Nichols. 2016. Named entity recognition with bidirectional lstm-cnns. Transactions of the Association for Computational Linguistics, 4:357–370.
+[1] - Rinat Gareev, Maksim Tkachenko, Valery Solovyev, Andrey Simanovsky, Vladimir Ivanov: Introducing Baselines for Russian Named Entity Recognition. Computational Linguistics and Intelligent Text Processing, 329 -- 342 (2013).
 
-[3] - Greg Durrett and Dan Klein. 2014. A joint model for entity analysis: Coreference, typing and linking. Transactions of the Association for Computational Linguistics, 2:477–490.
+[2] - https://github.com/dialogue-evaluation/factRuEval-2016
 
-[4] - Lev Ratinov and Dan Roth. 2009. Design challenges and misconceptions in named entity recognition. In Proceedings of the Thirteenth Conference on Computational Natural Language Learning, pages 147–155. Association for Computational Linguistics.
+[3] - http://ai-center.botik.ru/Airec/index.php/ru/collections/28-persons-1000
 
-[5] - Rinat Gareev, Maksim Tkachenko, Valery Solovyev, Andrey Simanovsky, Vladimir Ivanov: Introducing Baselines for Russian Named Entity Recognition. Computational Linguistics and Intelligent Text Processing, 329 -- 342 (2013).
+[4] -  Reproducing Russian NER Baseline Quality without Additional Data. In proceedings of the 3rd International Workshop on ConceptDiscovery in Unstructured Data, Moscow, Russia, 54 – 59 (2016)
 
-[6] - https://github.com/dialogue-evaluation/factRuEval-2016
-
-[7] - http://ai-center.botik.ru/Airec/index.php/ru/collections/28-persons-1000
-
-[8] - Malykh, Valentin, and Alexey Ozerin. "Reproducing Russian NER Baseline Quality without Additional Data." CDUD@ CLA. 2016.
-
-[9] - Rubaylo A. V., Kosenko M. Y.: Software utilities for natural language information
+[5] - Rubaylo A. V., Kosenko M. Y.: Software utilities for natural language information
 retrievial. Almanac of modern science and education, Volume 12 (114), 87 – 92.(2016)
 
-[10] - Sysoev A. A., Andrianov I. A.: Named Entity Recognition in Russian: the Power of Wiki-Based Approach. dialog-21.ru
+[6] - Sysoev A. A., Andrianov I. A.: Named Entity Recognition in Russian: the Power of Wiki-Based Approach. dialog-21.ru
 
-[11] - Ivanitskiy Roman, Alexander Shipilo, Liubov Kovriguina: Russian Named Entities Recognition and Classification Using Distributed Word and Phrase Representations. In SIMBig, 150 – 156. (2016).
+[7] - Ivanitskiy Roman, Alexander Shipilo, Liubov Kovriguina: Russian Named Entities Recognition and Classification Using Distributed Word and Phrase Representations. In SIMBig, 150 – 156. (2016).
 
-[12] - Mozharova V., Loukachevitch N.: Two-stage approach in Russian named entity recognition. In Intelligence, Social Media and Web (ISMW FRUCT), 2016 International FRUCT Conference, 1 – 6 (2016)
-
-[13] - Trofimov, I.V.: Person name recognition in news articles based on the persons- 1000/1111-F collections. In: 16th All-Russian Scientific C onference Digital Libraries: Advanced Methods and Technologies, Digital Collections, RCDL 2014,pp. 217 – 221 (2014).
+[8] - Mozharova V., Loukachevitch N.: Two-stage approach in Russian named entity recognition. In Intelligence, Social Media and Web (ISMW FRUCT), 2016 International FRUCT Conference, 1 – 6 (2016)
