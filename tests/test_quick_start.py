@@ -9,42 +9,39 @@ tests_dir = Path(__file__, '..').resolve()
 test_configs_path = tests_dir / "configs"
 download_path = tests_dir / "download"
 
-TEST_MODES = ['I',  # Interact
-              'IP',  # test_interacting_pretrained_model
+TEST_MODES = ['IP',  # test_interacting_pretrained_model
               'TI',  # test_consecutive_training_and_interacting
               'DE'  # test_downloaded_model_existence
               ]
 
-
-
-
-
+ALL_MODES = ('DE', 'IP', 'TI')
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
-PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "error_model", ('I', 'IP', 'TI', 'DE')):
+PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
                               [
                                   ("helllo", "hello"),
                                   ("datha", "data")
                               ],
-                          ("configs/error_model/brillmoore_kartaslov_ru.json", "error_model", ('I', 'IP', 'TI', 'DE')): []},
-          "go_bot": {("configs/go_bot/gobot_dstc2.json", "go_bot", ('I', 'IP', 'TI', 'DE')): []},
-          "intents": {("configs/intents/intents_dstc2.json", "intents", ('I', 'IP', 'TI', 'DE')):  []},
-          "snips": {("configs/intents/intents_snips.json", "intents", ('I', 'TI')): []},
-          "sample": {("configs/intents/intents_sample_csv.json", "intents", ('I', 'TI')): [],
-                    ("configs/intents/intents_sample_json.json", "intents", ('I', 'TI')): []},
-          "ner": {("configs/ner/ner_conll2003.json", "ner_conll2003", ('I', 'IP', 'TI', 'DE')): [],
-                  ("configs/ner/ner_dstc2.json", "ner", ('I', 'IP', 'TI', 'DE')): [],
-                  ("configs/ner/ner_ontonotes_emb.json", "ner_ontonotes", ('I', 'IP', 'TI', 'DE')): [],
-                  ("configs/ner/slotfill_dstc2.json", "ner", ('I', 'IP', 'TI', 'DE')):
+                          ("configs/error_model/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES): []},
+          "go_bot": {("configs/go_bot/gobot_dstc2.json", "go_bot", ALL_MODES): []},
+          "intents": {("configs/intents/intents_dstc2.json", "intents", ALL_MODES):  []},
+          "snips": {("configs/intents/intents_snips.json", "intents", ('TI',)): []},
+          "sample": {("configs/intents/intents_sample_csv.json", "intents", ('TI',)): [],
+                    ("configs/intents/intents_sample_json.json", "intents", ('TI',)): []},
+          "ner": {("configs/ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [],
+                  ("configs/ner/ner_dstc2.json", "ner", ALL_MODES): [],
+                  ("configs/ner/ner_ontonotes_emb.json", "ner_ontonotes", ALL_MODES): [],
+                  ("configs/ner/ner_ontonotes.json", "ner_ontonotes", ('DE', 'IP')): [],
+                  ("configs/ner/slotfill_dstc2.json", "ner", ALL_MODES):
                       [
                           ("chinese food", "{'food': 'chinese'}"),
                           ("in the west part", "{'area': 'west'}"),
                           ("moderate price range", "{'pricerange': 'moderate'}")
                       ]
                   },
-          "ranking": {("configs/ranking/insurance_config.json", "ranking", ('I', 'IP', 'TI', 'DE')): []},
-          "squad": {("configs/squad/squad.json", "squad_model", ('I', 'IP', 'TI', 'DE')): []},
-          "seq2seq_go_bot": {("configs/seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ('I', 'IP', 'TI', 'DE')): []}
+          "ranking": {("configs/ranking/insurance_config.json", "ranking", ALL_MODES): []},
+          "squad": {("configs/squad/squad.json", "squad_model", ALL_MODES): []},
+          "seq2seq_go_bot": {("configs/seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): []}
           }
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
@@ -96,7 +93,7 @@ def download(full=None):
 @pytest.mark.parametrize("model,conf_file,model_dir,mode", TEST_GRID)
 class TestQuickStart(object):
 
-    @pytest.mark.skipif("'I' not in mode")
+    @staticmethod
     def interact(conf_file, model_dir, qr_list=None):
         qr_list = qr_list or []
         p = pexpect.spawn("python3", ["-m", "deeppavlov.deep", "interact", str(conf_file)], timeout=None)
