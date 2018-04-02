@@ -109,21 +109,27 @@ class TestQuickStart(object):
         p.sendline("quit")
         assert p.expect(pexpect.EOF) == 0, f"Error in quitting from deep.py ({conf_file})"
 
-    @pytest.mark.skipif("'DE' not in mode")
     def test_downloaded_model_existence(self, model, conf_file, model_dir, mode):
-        if not download_path.exists():
-            download()
-        assert download_path.joinpath(model_dir).exists(), f"{model_dir} was not downloaded"
+        if 'DE' in mode:
+            if not download_path.exists():
+                download()
+            assert download_path.joinpath(model_dir).exists(), f"{model_dir} was not downloaded"
+        else:
+            pytest.skip("Unsupported mode: {}".format(mode))
 
-    @pytest.mark.skipif("'IP' not in mode")
     def test_interacting_pretrained_model(self, model, conf_file, model_dir, mode):
-        self.interact(tests_dir / conf_file, model_dir, PARAMS[model][(conf_file, model_dir, mode)])
+        if 'IP' in mode:
+            self.interact(tests_dir / conf_file, model_dir, PARAMS[model][(conf_file, model_dir, mode)])
+        else:
+            pytest.skip("Unsupported mode: {}".format(mode))
 
-    @pytest.mark.skipif("'TI' not in mode")
     def test_consecutive_training_and_interacting(self, model, conf_file, model_dir, mode):
-        c = tests_dir / conf_file
-        model_path = download_path / model_dir
-        shutil.rmtree(str(model_path),  ignore_errors=True)
-        _, exitstatus = pexpect.run("python3 -m deeppavlov.deep train " + str(c), timeout=None, withexitstatus=True)
-        assert exitstatus == 0, f"Training process of {model_dir} returned non-zero exit code"
-        self.interact(c, model_dir)
+        if 'TI' in mode:
+            c = tests_dir / conf_file
+            model_path = download_path / model_dir
+            shutil.rmtree(str(model_path),  ignore_errors=True)
+            _, exitstatus = pexpect.run("python3 -m deeppavlov.deep train " + str(c), timeout=None, withexitstatus=True)
+            assert exitstatus == 0, f"Training process of {model_dir} returned non-zero exit code"
+            self.interact(c, model_dir)
+        else:
+            pytest.skip("Unsupported mode: {}".format(mode))
