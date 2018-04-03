@@ -21,11 +21,17 @@ import tensorflow as tf
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.models.squad.utils import CudnnGRU, dot_attention, simple_attention, PtrNet
+from deeppavlov.core.common.utils import check_gpu_existance
 
 
 @register('squad_model')
 class SquadModel(TFModel):
     def __init__(self, **kwargs):
+
+        # check gpu
+        if not check_gpu_existance():
+            raise RuntimeError('SquadModel requires GPU')
+
         self.opt = deepcopy(kwargs)
         self.init_word_emb = self.opt['word_emb']
         self.init_char_emb = self.opt['char_emb']

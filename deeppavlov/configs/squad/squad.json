@@ -98,6 +98,11 @@
     "batch_size": 50,
     "pytest_max_batches": 2,
     "metrics": ["squad_f1", "exact_match"]
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "SquadModel"
+    }
   }
 }
 
