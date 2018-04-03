@@ -76,15 +76,22 @@ class RankingModel(NNModel):
         if not self.load_path.exists():
             log.info("[initializing new `{}`]".format(self.__class__.__name__))
             self.dict.init_from_scratch()
-            self._net = RankingNetwork(len(self.dict.tok2int_vocab), **self.network_parameters)
             embdict_parameter_names = list(inspect.signature(Embeddings.__init__).parameters)
             embdict_parameters = {par: self.opt[par] for par in embdict_parameter_names if par in self.opt}
             embdict= Embeddings(self.dict.tok2int_vocab, **embdict_parameters)
+            self._net = RankingNetwork(toks_num=len(self.dict.tok2int_vocab),
+                                       emb_dict=embdict,
+                                       **self.network_parameters)
             self._net.set_emb_matrix(embdict.emb_matrix)
         else:
             log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
             self.dict.load()
-            self._net = RankingNetwork(len(self.dict.tok2int_vocab), **self.network_parameters)
+            embdict_parameter_names = list(inspect.signature(Embeddings.__init__).parameters)
+            embdict_parameters = {par: self.opt[par] for par in embdict_parameter_names if par in self.opt}
+            embdict= Embeddings(self.dict.tok2int_vocab, **embdict_parameters)
+            self._net = RankingNetwork(toks_num=len(self.dict.tok2int_vocab),
+                                       emb_dict=embdict,
+                                       **self.network_parameters)
             self._net.load(self.load_path)
 
     @overrides
@@ -120,7 +127,7 @@ class RankingModel(NNModel):
             context = [el[0] for el in batch]
             c = self.dict.make_toks(context, type="context")
             c = self.dict.make_ints(c)
-            c_emb = self._net.predict_context_emb([c, c, c], bs=len(batch))
+            c_emb = self._net.predict_context_on_batch([c, c, c])
             response = [el[1] for el in batch]
             batch_size = len(response)
             ranking_length = len(response[0])
@@ -138,7 +145,7 @@ class RankingModel(NNModel):
         elif type(batch[0]) == str:
             c_input = tokenize(batch)
             c_input = self.dict.make_ints(c_input)
-            c_input_emb = self._net.predict_context_emb([c_input, c_input, c_input], bs=1)
+            c_input_emb = self._net.predict_context_on_batch([c_input, c_input, c_input])
 
             c_emb = [self.dict.context2emb_vocab[i] for i in range(len(self.dict.context2emb_vocab))]
             c_emb = np.vstack(c_emb)
@@ -162,7 +169,7 @@ class RankingModel(NNModel):
             for i in range(len(self.dict.response2toks_vocab)):
                 r.append(self.dict.response2toks_vocab[i])
             r = self.dict.make_ints(r)
-            response_embeddings = self._net.predict_response_emb([r, r, r], 512)
+            response_embeddings = self._net.predict_response([r, r, r], 512)
             for i in range(len(self.dict.response2toks_vocab)):
                 self.dict.response2emb_vocab[i] = response_embeddings[i]
         if self.dict.context2emb_vocab[0] is None:
@@ -170,7 +177,7 @@ class RankingModel(NNModel):
             for i in range(len(self.dict.context2toks_vocab)):
                 contexts.append(self.dict.context2toks_vocab[i])
             contexts = self.dict.make_ints(contexts)
-            context_embeddings = self._net.predict_context_emb([contexts, contexts, contexts], 512)
+            context_embeddings = self._net.predict_context([contexts, contexts, contexts], 512)
             for i in range(len(self.dict.context2toks_vocab)):
                 self.dict.context2emb_vocab[i] = context_embeddings[i]
 
