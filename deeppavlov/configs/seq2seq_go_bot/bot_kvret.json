@@ -78,7 +78,6 @@
         },
         "source_vocab": "#src_token_vocab",
         "target_vocab": "#tgt_token_vocab",
-        "debug": true,
         "debug": false,
         "bow_encoder": {
           "name": "bow"
@@ -109,5 +108,10 @@
     "log_every_n_batches": -1,
     "log_every_n_epochs": 1,
     "show_examples": false
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "Seq2SeqGoalOrientedBot"
+    }
   }
 }

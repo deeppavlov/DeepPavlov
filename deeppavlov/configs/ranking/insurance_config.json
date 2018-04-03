@@ -50,6 +50,10 @@
     "metrics": ["r@1", "rank_response"],
     "validation_patience": 5,
     "val_every_n_epochs": 10
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "RankingModel"
+    }
   }
-
 }
