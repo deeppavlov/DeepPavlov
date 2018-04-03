@@ -97,10 +97,10 @@ class StreamSpacyTokenizer(Component):
         _ngram_range = self.ngram_range or ngram_range
         _n_threads = self.n_threads or n_threads
 
-        if self.lowercase is None:
-            _lowercase = lowercase
-        else:
+        if self.lowercase:
             _lowercase = self.lowercase
+        else:
+            _lowercase = lowercase
 
         for i, doc in enumerate(
                 self.tokenizer.pipe(data, batch_size=_batch_size, n_threads=_n_threads)):
@@ -149,9 +149,12 @@ class StreamSpacyTokenizer(Component):
         :param alphas_only: should filter numeric and alpha-numeric types or not
         :return: filtered list of tokens/lemmas
         """
-        _alphas_only = self.alphas_only or alphas_only
-
         if self.alphas_only:
+            _alphas_only = self.alphas_only
+        else:
+            _alphas_only = alphas_only
+
+        if _alphas_only:
             filter_fn = lambda x: x.isalpha() and x not in self.stopwords
         else:
             filter_fn = lambda x: x not in self.stopwords
