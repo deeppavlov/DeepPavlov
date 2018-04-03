@@ -27,6 +27,7 @@ import deeppavlov.models.embedders.dict_embedder
 import deeppavlov.models.embedders.glove_embedder
 import deeppavlov.models.encoders.bow
 import deeppavlov.models.ner.slotfill
+import deeppavlov.models.my_slot_filler.slotfill
 import deeppavlov.models.spellers.error_model.error_model
 import deeppavlov.models.trackers.hcn_at
 import deeppavlov.models.trackers.hcn_et
