@@ -33,7 +33,6 @@ import deeppavlov.models.spellers.error_model.error_model
 import deeppavlov.models.trackers.hcn_at
 import deeppavlov.models.trackers.hcn_et
 import deeppavlov.models.preprocessors.str_lower
-import deeppavlov.models.preprocessors.web_proxy
 import deeppavlov.models.preprocessors.squad_preprocessor
 import deeppavlov.models.ner.ner
 import deeppavlov.models.tokenizers.spacy_tokenizer
