@@ -30,6 +30,8 @@ REQ_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/seq2seq_go_bot.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes_senna.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/senna.tar.gz'
 }
 
 OPT_URLS = {
