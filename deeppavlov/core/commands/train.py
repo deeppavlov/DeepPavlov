@@ -39,15 +39,15 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-def _fit(model: Estimator, iterator: DataLearningIterator, train_config={}) -> Estimator:
+def _fit(model: Estimator, iterator: DataLearningIterator, train_config) -> Estimator:
     x, y = iterator.get_instances('train')
     model.fit(x, y)
     model.save()
     return model
 
 
-def _fit_batches(model: Estimator, iterator: DataFittingIterator):
-    model.fit_batch(iterator)
+def _fit_batches(model: Estimator, iterator: DataFittingIterator, train_config) -> Estimator:
+    model.fit_batches(iterator, batch_size=train_config['batch_size'])
     model.save()
     return model
 
@@ -67,6 +67,11 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
             else:
                 preprocessed = zip(*preprocessed)
             component.fit(*preprocessed)
+            component.save()
+
+        if 'fit_on_batch' in component_config:
+            component: Estimator
+            component.fit_batches(iterator, config['train']['batch_size'])
             component.save()
 
         if 'in' in component_config:
@@ -139,8 +144,8 @@ def train_model_from_config(config_path: str) -> None:
 
     if callable(getattr(model, 'train_on_batch', None)):
         _train_batches(model, iterator, train_config, metrics_functions)
-    elif callable(getattr(model, 'fit_batch', None)):
-        _fit_batches(model, iterator)
+    elif callable(getattr(model, 'fit_batches', None)):
+        _fit_batches(model, iterator, train_config)
     elif callable(getattr(model, 'fit', None)):
         _fit(model, iterator, train_config)
     elif not isinstance(model, Chainer):
@@ -172,14 +177,14 @@ def train_model_from_config(config_path: str) -> None:
 
 
 def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
-                dataset: DataLearningIterator, batch_size=-1, data_type='valid',
+                iterator: DataLearningIterator, batch_size=-1, data_type='valid',
                 start_time: float=None) -> Dict[str, Union[int, OrderedDict, str]]:
     if start_time is None:
         start_time = time.time()
 
     val_y_true = []
     val_y_predicted = []
-    for x, y_true in dataset.gen_batches(batch_size, data_type, shuffle=False):
+    for x, y_true in iterator.gen_batches(batch_size, data_type, shuffle=False):
         y_predicted = list(model(list(x)))
         val_y_true += y_true
         val_y_predicted += y_predicted

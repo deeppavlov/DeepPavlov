@@ -36,20 +36,19 @@ class SQLiteDataIterator(DataFittingIterator):
     """
     Load a SQLite database, read data batches and get docs content.
     """
-    def __init__(self, data_path: str='', data_url: str=DB_URL, batch_size: int=None,
+    def __init__(self, data_dir: str= '', data_url: str=DB_URL, batch_size: int=None,
                  shuffle: bool = None, seed: int = None, **kwargs):
         """
         :param load_path: a path to a SQLite database
         :param batch_size: a batch size for reading from the database
         """
-        download_path = expand_path(data_path)
-        if not download_path.exists() or is_empty(download_path):
+        download_dir = expand_path(data_dir)
+        download_path = download_dir.joinpath(data_url.split("/")[-1])
+        if not download_dir.exists() or is_empty(download_dir):
             logger.info('[downloading wiki.db from {} to {}]'.format(data_url, download_path))
-            download_path = download_path.joinpath(data_url.split("/")[-1].split(".")[0])
             download(download_path, data_url)
 
-        self.load_path = download_path
-        self.connect = sqlite3.connect(str(self.load_path), check_same_thread=False)
+        self.connect = sqlite3.connect(str(download_path), check_same_thread=False)
         self.db_name = self.get_db_name()
         self.doc_ids = self.get_doc_ids()
         self.doc2index = self.map_doc2idx()
