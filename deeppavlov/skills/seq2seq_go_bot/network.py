@@ -24,6 +24,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.core.common.log import get_logger
+#from deeppavlov.skills.seq2seq_go_bot.kb_attn_layer import KBAttention
 
 
 log = get_logger(__name__)
@@ -33,7 +34,8 @@ log = get_logger(__name__)
 class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
     GRAPH_PARAMS = ['knowledge_base_keys', 'source_vocab_size', 
-                    'target_vocab_size', 'hidden_size', 'embedder_load_path']
+                    'target_vocab_size', 'hidden_size', 'embedder_load_path',
+                    'kb_attention_hidden_sizes']
     
     def __init__(self, **params):
         # initialize parameters
@@ -69,6 +71,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         self.tgt_vocab_size = self.opt['target_vocab_size']
         self.embedding_size = self.opt['embedding_size']
         self.hidden_size = self.opt['hidden_size']
+        self.kb_attn_hidden_sizes = self.opt['kb_attention_hidden_sizes']
 
     def _build_graph(self):
 
@@ -102,7 +105,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         # _decoder_outputs: [batch_size, max_output_time]
         self._decoder_outputs = tf.placeholder(tf.int32,
                                                [None, None],
-                                               name='decoder_inputs')
+                                               name='decoder_outputs')
         # _kb_embeddings: [kb_size, embedding_dim]
 # TODO: try training embeddings
         kb_W = np.array([self._embed_kb_key(val) for val in self.kb_keys],
@@ -161,43 +164,61 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
         with tf.variable_scope("Decoder"):
             _decoder_cell = tf.nn.rnn_cell.BasicLSTMCell(self.hidden_size)
-            # Helper
+            # Train Helper
             _helper = tf.contrib.seq2seq.TrainingHelper(
                 _decoder_emb_inp, self._tgt_sequence_lengths, time_major=False)
-            # Output dense layer
-            _projection_layer = \
-                tf.layers.Dense(self.tgt_vocab_size, use_bias=False)
-            # Decoder
-            _decoder = tf.contrib.seq2seq.BasicDecoder(
-                _decoder_cell, _helper, _encoder_state,
-                output_layer=_projection_layer)
-            # Dynamic decoding
-# NOTE: pass extra arguments to dynamic_decode?
-# TRY: impute_finished = True,
-            _outputs, _, _ = tf.contrib.seq2seq.dynamic_decode(_decoder,
-                                                            output_time_major=False)
-            _logits = _outputs.rnn_output
-
-        #with tf.variable_scope("AttentionOverKB"):
-
-
-        with tf.variable_scope("DecoderOnInfer"):
-            _maximum_iterations = \
-                tf.round(tf.reduce_max(self._src_sequence_lengths) * 2)
-            # Helper
+            # Infer Helper
+            _max_iters = tf.round(tf.reduce_max(self._src_sequence_lengths) * 2)
             _helper_infer = tf.contrib.seq2seq.GreedyEmbeddingHelper(
                 lambda d: tf.one_hot(d, self.tgt_vocab_size),
                 tf.fill([self._batch_size], self.tgt_sos_id), self.tgt_eos_id)
 
-            # Decoder
-            _decoder_infer = tf.contrib.seq2seq.BasicDecoder(
-                _decoder_cell, _helper_infer, _encoder_state,
-                output_layer=_projection_layer)
-            # Dynamic decoding
-            _outputs_infer, _, _ = tf.contrib.seq2seq.dynamic_decode(
-                _decoder_infer, maximum_iterations=_maximum_iterations)
-            _predictions = _outputs_infer.sample_id
+            def decode(helper, scope, max_iters=None, reuse=None):
+                with tf.variable_scope(scope, reuse=reuse):
+                    #with tf.variable_scope("AttentionOverKB", reuse=reuse):
+                    #    _kb_attn_layer = KBAttention(self.kb_attn_hidden_sizes + [1],
+                    #                                 self._kb_embeddings,
+                    #                                 actication=tf.layers.relu,
+                    #                                 use_bias=False,
+                    #                                 reuse=reuse)
+# TODO: rm output dense layer
+                    # Output dense layer
+                    _projection_layer = \
+                        tf.layers.Dense(self.tgt_vocab_size, use_bias=False, _reuse=reuse)
+                    # Decoder
+                    _decoder = \
+                        tf.contrib.seq2seq.BasicDecoder(_decoder_cell, helper,
+                                                        initial_state=_encoder_state,
+                                                        output_layer=_projection_layer)
+                    # Dynamic decoding
+# TRY: impute_finished = True,
+                    _outputs, _, _ = \
+                        tf.contrib.seq2seq.dynamic_decode(_decoder,
+                                                          impute_finished=True,
+                                                          maximum_iterations=max_iters,
+                                                          output_time_major=False)
+                    return _outputs
+
+            _logits = decode(_helper, "decode").rnn_output
+            _predictions = \
+                decode(_helper_infer, "decode", _max_iters, reuse=True).sample_id
+
         return _logits, _predictions
+
+    def _multilayer_perceptron(units, hidden_dims=[], use_bias=True):
+        # Hidden fully connected layers with relu activation
+        for i, h in enumerate(hidden_dims):
+# TODO: check stddev
+            _W_init = tf.truncated_normal([units.shape[-1], h],
+                                          stddev=1,)
+            _W = tf.Variable(_W_init, name="W_{}".format(i))
+            units = tf.matmul(units, _W)
+            if use_bias:
+                _b_init = tf.truncated_normal([h])
+                _b = tf.Variable(_b_init, name="b_{}".format(i))
+                units = tf.add(units, _b)
+            units = tf.relu(units)
+        return units
 
     def __call__(self, enc_inputs, src_seq_lengths, kb_items, prob=False):
         predictions = self.sess.run(
