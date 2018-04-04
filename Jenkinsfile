@@ -1,4 +1,4 @@
-node('DGX1') {
+node('dgx') {
     try {
         /*stage('Clean') {
             sh """
@@ -13,7 +13,7 @@ node('DGX1') {
             sh """
                 virtualenv --python=python3 ".venv-$BUILD_NUMBER"
                 . .venv-$BUILD_NUMBER/bin/activate
-                pip3 install pip==9.0.3
+                pip install pip==9.0.3
                 python setup.py develop
                 python -m spacy download en
                 pip3 install -r requirements-dev.txt
