@@ -44,20 +44,20 @@ class KnowledgeBase(Estimator):
         self.reset()
         self._update(*args)
 
-    def _update(self, keys, kb_columns_list, kb_items_list):
+    def _update(self, keys, kb_columns_list, kb_items_list, primary_keys=True):
         for key, cols, items in zip(keys, kb_columns_list, kb_items_list):
             if (None not in (key, items, cols)) and (key not in self.kb):
-                kv_entry_list = (self._key_value_entries(item, cols)\
+                kv_entry_list = (self._key_value_entries(item, cols, update=primary_keys)\
                                  for item in items)
                 self.kb[key] = list(itertools.chain(*kv_entry_list))
     
-    def _key_value_entries(self, kb_item, kb_columns):
+    def _key_value_entries(self, kb_item, kb_columns, update=True):
         def _format(s):
             return re.sub('\s+', '_', s.lower().strip())
         first_key = _format(kb_item[kb_columns[0]])
         for col in kb_columns[1:]:
             key = first_key + '_' + _format(col)
-            if key not in self.primary_keys:
+            if update and (key not in self.primary_keys):
                 self.primary_keys.append(key)
             if col in kb_item:
                 if self.tokenizer is not None:
@@ -66,8 +66,14 @@ class KnowledgeBase(Estimator):
                     yield (key, kb_item[col])
 
     def __call__(self, keys):
-# TODO: check if during validation kv is updated
-        return [self.kb[key] for key in keys]
+        res = []
+        for key in keys:
+            res.append(self.kb[key])
+            for k, value in res[-1]:
+                if k not in self.primary_keys:
+                    raise ValueError("Primary key `{}` is not present in knowledge base"\
+                                     .format(k))
+        return res
 
     def __len__(self):
         return len(self.kb)
@@ -86,7 +92,7 @@ class KnowledgeBase(Estimator):
 
     def load(self):
         log.info("[loading knowledge base from {}]".format(self.load_path))
-        self.kb.update(json.load(self.load_path.open('rt')))
+        self.kb.update(json.load(self.load_path.open('rt')), primary_keys=False)
         self.primary_keys = json.load(self.load_path.with_suffix('.keys.json').open('rt'))
 
 
@@ -112,7 +118,7 @@ class KnowledgeBaseEntityNormalizer(Component):
 
     def __call__(self, keys, values, kb_columns_list=None, kb_items_list=None):
         if None not in (kb_columns_list, kb_items_list):
-            self.kb._update(keys, kb_columns_list, kb_items_list)
+            self.kb._update(keys, kb_columns_list, kb_items_list, primary_keys=False)
         if self.denormalize_flag:
             return [self.denormalize(key, val) for key, val in zip(keys, values)]
         return [self.normalize(key, val) for key, val in zip(keys, values)]
