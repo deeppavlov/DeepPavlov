@@ -36,7 +36,8 @@ class SQLiteDataIterator(DataFittingIterator):
     """
     Load a SQLite database, read data batches and get docs content.
     """
-    def __init__(self, data_dir: str= '', data_url: str=DB_URL, batch_size: int=None,
+
+    def __init__(self, data_dir: str = '', data_url: str = DB_URL, batch_size: int = None,
                  shuffle: bool = None, seed: int = None, **kwargs):
         """
         :param load_path: a path to a SQLite database
@@ -68,15 +69,17 @@ class SQLiteDataIterator(DataFittingIterator):
         cursor = self.connect.cursor()
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
         assert cursor.arraysize == 1
-        name = cursor.fetchmany(0)[0][0]
+        name = cursor.fetchone()[0]
         cursor.close()
         return name
 
     def map_doc2idx(self) -> Dict[int, Any]:
         doc2idx = {doc_id: i for i, doc_id in enumerate(self.doc_ids)}
-        print("SQLite iterator: The size of the database is {} documents".format(len(doc2idx)))
+        logger.info(
+            "SQLite iterator: The size of the database is {} documents".format(len(doc2idx)))
         return doc2idx
 
+    @overrides
     def get_doc_content(self, doc_id: Any) -> Optional[str]:
         cursor = self.connect.cursor()
         cursor.execute(
@@ -86,23 +89,3 @@ class SQLiteDataIterator(DataFittingIterator):
         result = cursor.fetchone()
         cursor.close()
         return result if result is None else result[0]
-
-    @overrides
-    def gen_batches(self, batch_size=1000, shuffle=False) -> Generator[Tuple[List[str], list], Any, None]:
-        _batch_size = self.batch_size or batch_size
-        _shuffle = self.shuffle or shuffle
-
-        if _shuffle:
-            self.random.shuffle(self.doc_ids)
-
-        batches = [self.doc_ids[i:i + _batch_size] for i in
-                   range(0, len(self.doc_ids), _batch_size)]
-        # DEBUG
-        # len_batches = len(batches)
-
-        for i, doc_ids in enumerate(batches):
-            # DEBUG
-            # logger.info(
-            #     "Processing batch # {} of {} ({} documents)".format(i, len_batches, len(doc_ids)))
-            docs = [self.get_doc_content(doc_id) for doc_id in doc_ids]
-            yield docs, doc_ids

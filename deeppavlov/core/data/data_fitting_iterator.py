@@ -15,7 +15,7 @@ limitations under the License.
 """
 
 from random import Random
-from typing import List, Generator, Tuple, Any
+from typing import List, Generator, Tuple, Any, Optional
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
@@ -38,11 +38,13 @@ class DataFittingIterator:
         self.shuffle = shuffle
         self.random = Random(seed)
         self.data = data
-        self.doc_index = doc_ids or self.get_doc_ids()
-        self.data = data
+        self.doc_ids = doc_ids or self.get_doc_ids()
 
     def get_doc_ids(self):
         return list(range(len(self.data)))
+
+    def get_doc_content(self, doc_id: Any) -> Optional[str]:
+        return self.data[doc_id]
 
     def gen_batches(self, batch_size: int, shuffle: bool = None)\
             -> Generator[Tuple[List[list], List[int]], Any, None]:
@@ -51,10 +53,12 @@ class DataFittingIterator:
             shuffle = self.shuffle
 
         if shuffle:
-            self.random.shuffle(self.data)
+            _doc_ids = self.random.sample(self.doc_ids, len(self.doc_ids))
+        else:
+            _doc_ids = self.doc_ids
 
-        batches = [self.doc_index[i:i + batch_size] for i in
-                   range(0, len(self.doc_index), batch_size)]
+        batches = [_doc_ids[i:i + batch_size] for i in
+                   range(0, len(_doc_ids), batch_size)]
 
         # DEBUG
         # len_batches = len(batches)
@@ -63,5 +67,5 @@ class DataFittingIterator:
             # DEBUG
             # logger.info(
             #     "Processing batch # {} of {} ({} documents)".format(i, len_batches, len(doc_ids)))
-            docs = [self.data[j] for j in doc_ids]
+            docs = [self.get_doc_content(doc_id) for doc_id in doc_ids]
             yield docs, doc_ids
