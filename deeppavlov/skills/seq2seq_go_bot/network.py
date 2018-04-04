@@ -115,7 +115,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                                               dtype=tf.float32,
                                               initializer=tf.constant_initializer(kb_W),
                                               trainable=False)
-        #self._kb_mask
+        # _kb_mask: [batch_size, kb_size]
+        self._kb_mask = tf.placeholder(tf.float32, [None, None], name='kb_mask')
 
 # TODO: compute sequence lengths on the go
         # _src_sequence_lengths, _tgt_sequence_lengths: [batch_size]
@@ -178,6 +179,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                         _kb_attn_layer = KBAttention(self.tgt_vocab_size,
                                                      self.kb_attn_hidden_sizes + [1],
                                                      self._kb_embeddings,
+                                                     self._kb_mask,
                                                      activation=tf.nn.relu,
                                                      use_bias=False,
                                                      reuse=reuse)
@@ -220,12 +222,13 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             units = tf.nn.relu(units)
         return units
 
-    def __call__(self, enc_inputs, src_seq_lengths, kb_items, prob=False):
+    def __call__(self, enc_inputs, src_seq_lengths, kb_masks, prob=False):
         predictions = self.sess.run(
             self._predictions,
             feed_dict={
                 self._encoder_inputs: enc_inputs,
-                self._src_sequence_lengths: src_seq_lengths
+                self._src_sequence_lengths: src_seq_lengths,
+                self._kb_mask: kb_masks
             }
         )
 # TODO: implement infer probabilities
@@ -249,7 +252,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         return loss_value"""
 
     def train_on_batch(self, enc_inputs, dec_inputs, dec_outputs, 
-                       src_seq_lengths, tgt_seq_lengths, tgt_weights, kb_items):
+                       src_seq_lengths, tgt_seq_lengths, tgt_weights, kb_masks):
         _, loss_value = self.sess.run(
             [ self._train_op, self._loss ],
             feed_dict={
@@ -258,7 +261,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                 self._decoder_outputs: dec_outputs,
                 self._src_sequence_lengths: src_seq_lengths,
                 self._tgt_sequence_lengths: tgt_seq_lengths,
-                self._tgt_weights: tgt_weights
+                self._tgt_weights: tgt_weights,
+                self._kb_mask: kb_masks
             }
         )
         return loss_value

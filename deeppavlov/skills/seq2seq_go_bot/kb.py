@@ -73,6 +73,7 @@ class KnowledgeBase(Estimator):
                 if k not in self.primary_keys:
                     raise ValueError("Primary key `{}` is not present in knowledge base"\
                                      .format(k))
+            print("kb.__call__: key = {}, entries = {}".format(key, res[-1]))
         return res
 
     def __len__(self):
@@ -117,6 +118,9 @@ class KnowledgeBaseEntityNormalizer(Component):
         return tokens
 
     def __call__(self, keys, values, kb_columns_list=None, kb_items_list=None):
+        if not self.denormalize_flag:
+            print("kb_normalizer.__call__: keys = {}, values = {}, kb_columns_list = {}"
+                  ", kb_items_list = {}".format(keys, values, kb_columns_list, kb_items_list))
         if None not in (kb_columns_list, kb_items_list):
             self.kb._update(keys, kb_columns_list, kb_items_list, primary_keys=False)
         if self.denormalize_flag:

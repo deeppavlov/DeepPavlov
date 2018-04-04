@@ -39,6 +39,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
                  source_vocab: Type = DefaultVocabulary,
                  target_vocab: Type = DefaultVocabulary,
                  bow_encoder: Type = BoWEncoder,
+                 knowledge_base_keys: Type = list,
                  debug=False,
                  save_path=None,
                  **kwargs):
@@ -51,18 +52,20 @@ class Seq2SeqGoalOrientedBot(NNModel):
         self.src_vocab = source_vocab
         self.tgt_vocab = target_vocab
         self.bow_encoder = bow_encoder
+        self.kb_keys = knowledge_base_keys
+        self.kb_size = len(self.kb_keys)
         #self.embedder = embedder
         self.debug = debug
 
     def train_on_batch(self, *batch):
-        b_enc_ins, b_src_lens, b_kb_items = [], [], []
+        b_enc_ins, b_src_lens, b_kb_masks = [], [], []
         b_dec_ins, b_dec_outs, b_tgt_lens, b_tgt_weights = [], [], [], []
-        for x_tokens, dialog_id, kb_items, y_tokens in zip(*batch):
+        for x_tokens, dialog_id, kb_entries, y_tokens in zip(*batch):
 
             enc_in = self._encode_context(x_tokens)
             b_enc_ins.append(enc_in)
             b_src_lens.append(len(enc_in))
-            b_kb_items.append([i[0] for i in kb_items])
+            b_kb_masks.append(self._kb_mask(kb_entries))
 
             dec_in, dec_out = self._encode_response(y_tokens)
             b_dec_ins.append(dec_in)
@@ -82,13 +85,20 @@ class Seq2SeqGoalOrientedBot(NNModel):
             b_tgt_weights[i].extend([0] * tgt_padd_len)
 
         self.network.train_on_batch(b_enc_ins, b_dec_ins, b_dec_outs,
-                                    b_src_lens, b_tgt_lens, b_tgt_weights, b_kb_items)
+                                    b_src_lens, b_tgt_lens, b_tgt_weights, b_kb_masks)
 
     def _encode_context(self, tokens):
         if self.debug:
             log.debug("Context tokens = \"{}\"".format(tokens))
         token_idxs = self.src_vocab(tokens)
         return token_idxs
+
+    def _kb_mask(self, entries):
+        mask = np.zeros(self.kb_size, dtype=np.float32)
+        for k, v in entries:
+            mask[self.kb_keys.index(k)] = 1.
+        print("For {} entries {} nonzeros in mask".format(len(entries), np.sum(mask)))
+        return mask
 
     def _encode_response(self, tokens):
         if self.debug:
@@ -100,23 +110,24 @@ class Seq2SeqGoalOrientedBot(NNModel):
     def __call__(self, *batch):
         return self._infer_on_batch(*batch)
 
-    def _infer_on_batch(self, utters, dialog_ids=itertools.repeat(None),
-                        kb_entry_list=itertools.repeat([])):
+    #def _infer_on_batch(self, utters, dialog_ids=itertools.repeat(None),
+    #                    kb_entry_list=itertools.repeat([])):
+    def _infer_on_batch(self, utters, dialog_ids, kb_entry_list):
         def _filter(tokens):
             for t in tokens:
                 if t == self.eos_token:
                     break
                 yield t
 # TODO: history as input
-        b_enc_ins, b_src_lens, b_kb_items = [], [], []
+        b_enc_ins, b_src_lens, b_kb_masks = [], [], []
         if (len(utters) == 1) and not utters[0]:
             utters = [['hi']]
         for utter, dialog_id, kb_entries in zip(utters, dialog_ids, kb_entry_list):
+            print("infer: kb_entries =", kb_entries)
             enc_in = self._encode_context(utter)
             b_enc_ins.append(enc_in)
             b_src_lens.append(len(enc_in))
-            b_kb_items.append([i[0] for i in kb_entries])
-            #b_kb_items.append(list(map(lambda x: x[0], filter(None, kb_items or [()]))))
+            b_kb_masks.append(self._kb_mask(kb_entries))
 
         # Sequence padding
         max_src_len = max(b_src_lens)
@@ -124,7 +135,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
             src_padd_len = max_src_len - src_len
             b_enc_ins[i].extend([self.src_vocab[self.eos_token]] * src_padd_len)
 
-        pred_idxs = self.network(b_enc_ins, b_src_lens, b_kb_items)
+        pred_idxs = self.network(b_enc_ins, b_src_lens, b_kb_masks)
         preds = [list(_filter(self.tgt_vocab(utter_idxs)))\
                  for utter_idxs in pred_idxs]
         if self.debug:

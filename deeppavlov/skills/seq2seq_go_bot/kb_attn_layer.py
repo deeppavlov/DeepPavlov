@@ -65,6 +65,7 @@ class KBAttention(base.Layer):
 
     def __init__(self, units, hidden_sizes,
                  kb_inputs,
+                 kb_mask,
                  activation=None,
                  use_bias=True,
                  kernel_initializer=None,
@@ -84,6 +85,7 @@ class KBAttention(base.Layer):
         self.units = units
         self.hidden_sizes = hidden_sizes
         self.kb_inputs = kb_inputs
+        self.kb_mask = kb_mask
         self.kb_input_shape = kb_inputs.get_shape().as_list()
         self.dense_name = name or "mlp"
         self.dense_params = {
@@ -137,6 +139,7 @@ class KBAttention(base.Layer):
         cell_inputs = tf.tile(tf.expand_dims(inputs, 1), [1, kb_size, 1])
 
         outputs = tf.concat([kb_inputs, cell_inputs], -1) 
+        outputs = tf.multiply(outputs, tf.expand_dims(self.kb_mask, -1))
         for layer in self.layers:
             outputs = layer.call(outputs)
 
