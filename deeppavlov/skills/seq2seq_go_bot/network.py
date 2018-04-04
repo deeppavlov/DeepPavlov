@@ -24,7 +24,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.core.common.log import get_logger
-#from deeppavlov.skills.seq2seq_go_bot.kb_attn_layer import KBAttention
+from deeppavlov.skills.seq2seq_go_bot.kb_attn_layer import KBAttention
 
 
 log = get_logger(__name__)
@@ -110,13 +110,12 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 # TODO: try training embeddings
         kb_W = np.array([self._embed_kb_key(val) for val in self.kb_keys],
                         dtype=np.float32)
-        log.debug("Embedding Matrix shape = {}".format(kb_W.shape))
         self._kb_embeddings = tf.get_variable("kb_embeddings",
                                               shape=(kb_W.shape[0], kb_W.shape[1]),
                                               dtype=tf.float32,
                                               initializer=tf.constant_initializer(kb_W),
                                               trainable=False)
-        print(self._kb_embeddings)
+        #self._kb_mask
 
 # TODO: compute sequence lengths on the go
         # _src_sequence_lengths, _tgt_sequence_lengths: [batch_size]
@@ -175,21 +174,22 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
             def decode(helper, scope, max_iters=None, reuse=None):
                 with tf.variable_scope(scope, reuse=reuse):
-                    #with tf.variable_scope("AttentionOverKB", reuse=reuse):
-                    #    _kb_attn_layer = KBAttention(self.kb_attn_hidden_sizes + [1],
-                    #                                 self._kb_embeddings,
-                    #                                 actication=tf.layers.relu,
-                    #                                 use_bias=False,
-                    #                                 reuse=reuse)
+                    with tf.variable_scope("AttentionOverKB", reuse=reuse):
+                        _kb_attn_layer = KBAttention(self.tgt_vocab_size,
+                                                     self.kb_attn_hidden_sizes + [1],
+                                                     self._kb_embeddings,
+                                                     activation=tf.nn.relu,
+                                                     use_bias=False,
+                                                     reuse=reuse)
 # TODO: rm output dense layer
                     # Output dense layer
-                    _projection_layer = \
-                        tf.layers.Dense(self.tgt_vocab_size, use_bias=False, _reuse=reuse)
+                    #_projection_layer = \
+                    #    tf.layers.Dense(self.tgt_vocab_size, use_bias=False, _reuse=reuse)
                     # Decoder
                     _decoder = \
                         tf.contrib.seq2seq.BasicDecoder(_decoder_cell, helper,
                                                         initial_state=_encoder_state,
-                                                        output_layer=_projection_layer)
+                                                        output_layer=_kb_attn_layer)
                     # Dynamic decoding
 # TRY: impute_finished = True,
                     _outputs, _, _ = \
@@ -217,7 +217,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                 _b_init = tf.truncated_normal([h])
                 _b = tf.Variable(_b_init, name="b_{}".format(i))
                 units = tf.add(units, _b)
-            units = tf.relu(units)
+            units = tf.nn.relu(units)
         return units
 
     def __call__(self, enc_inputs, src_seq_lengths, kb_items, prob=False):
