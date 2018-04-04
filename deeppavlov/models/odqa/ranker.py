@@ -43,10 +43,10 @@ class TfidfRanker(Component):
             self.ngram_range = opts['ngram_rage']
             self.hash_size = opts['hash_size']
             self.term_freqs = opts['term_freqs'].squeeze()
-            self.doc2index = opts['doc2index']
+            self.doc_index = opts['doc_index']
 
-            self.vectorizer.doc2index = self.doc2index
-            self.vectorizer.freqs = self.term_freqs
+            self.vectorizer.doc_index = self.doc_index
+            self.vectorizer.term_freqs = self.term_freqs
             self.vectorizer.hash_size = self.hash_size
 
             self.index2doc = self.get_index2doc()
@@ -54,7 +54,7 @@ class TfidfRanker(Component):
             logger.warning("TfidfRanker wasn't initialized, is waiting for training.")
 
     def get_index2doc(self):
-        return dict(zip(self.doc2index.values(), self.doc2index.keys()))
+        return dict(zip(self.doc_index.values(), self.doc_index.keys()))
 
     def __call__(self, questions: List[str], n=5):
         """
@@ -84,7 +84,7 @@ class TfidfRanker(Component):
         return batch_doc_ids, batch_docs_scores
 
     def fit_batches(self, iterator, batch_size: int):
-        self.vectorizer.doc2index = iterator.doc2index
+        self.vectorizer.doc_index = iterator.doc2index
         for x, y in iterator.gen_batches(batch_size):
             self.vectorizer.fit_batch(x, y)
 

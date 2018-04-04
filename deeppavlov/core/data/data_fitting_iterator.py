@@ -66,6 +66,6 @@ class DataFittingIterator:
         for i, doc_ids in enumerate(batches):
             # DEBUG
             # logger.info(
-            #     "Processing batch # {} of {} ({} documents)".format(i, len_batches, len(doc_ids)))
+            #     "Processing batch # {} of {} ({} documents)".format(i, len_batches, len(doc_index)))
             docs = [self.get_doc_content(doc_id) for doc_id in doc_ids]
             yield docs, doc_ids

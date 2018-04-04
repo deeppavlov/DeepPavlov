@@ -23,8 +23,7 @@ import numpy as np
 from sklearn.utils import murmurhash3_32
 
 from deeppavlov.models.tokenizers.spacy_tokenizer import StreamSpacyTokenizer
-from deeppavlov.core.models.component import Component
-from deeppavlov.core.models.serializable import Serializable
+from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 
@@ -37,12 +36,12 @@ def hash_(token, hash_size):
 
 
 @register('hashing_tfidf_vectorizer')
-class HashingTfIdfVectorizer(Component, Serializable):
+class HashingTfIdfVectorizer(Estimator):
     """
     Create a tfidf matrix from collection of documents.
     """
 
-    def __init__(self, hash_size=2 ** 24, tokenizer: Type = StreamSpacyTokenizer, doc_index=None,
+    def __init__(self, hash_size=2 ** 24, tokenizer: Type = StreamSpacyTokenizer, doc_index: dict =None,
                  save_path: str = None, load_path: str = None, **kwargs):
         """
 
@@ -53,8 +52,8 @@ class HashingTfIdfVectorizer(Component, Serializable):
 
         self.hash_size = hash_size
         self.tokenizer = tokenizer
-        self.freqs = None
-        self.doc2index = doc_index
+        self.term_freqs = None
+        self.doc_index = doc_index
 
         global TOKENIZER
         TOKENIZER = self.tokenizer
@@ -75,8 +74,8 @@ class HashingTfIdfVectorizer(Component, Serializable):
         if len(q_hashes) == 0:
             return sp.sparse.csr_matrix((1, self.hash_size))
 
-        size = len(self.doc2index)
-        Ns = self.freqs[hashes_unique]
+        size = len(self.doc_index)
+        Ns = self.term_freqs[hashes_unique]
         idfs = np.log((size - Ns + 0.5) / (Ns + 0.5))
         idfs[idfs < 0] = 0
 
@@ -99,7 +98,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
             counts = Counter([hash_(gram, self.hash_size) for gram in ngrams])
             hashes = counts.keys()
             values = counts.values()
-            _id = self.doc2index[next(doc_id)]
+            _id = self.doc_index[next(doc_id)]
             if values:
                 col_id = [_id] * len(values)
             else:
@@ -126,6 +125,9 @@ class HashingTfIdfVectorizer(Component, Serializable):
         tfidfs = idfs.dot(tfs)
         return tfidfs, term_freqs
 
+    def fit(self):
+        pass
+
     def fit_batch(self, docs, doc_ids) -> None:
 
         for batch_rows, batch_data, batch_cols in self.get_counts(docs, doc_ids):
@@ -136,14 +138,14 @@ class HashingTfIdfVectorizer(Component, Serializable):
     def save(self) -> None:
         logger.info("Saving tfidf matrix to {}".format(self.save_path))
         count_matrix = self.get_count_matrix(self.rows, self.cols, self.data,
-                                             size=len(self.doc2index))
+                                             size=len(self.doc_index))
         tfidf_matrix, term_freqs = self.get_tfidf_matrix(count_matrix)
-        self.freqs = term_freqs
+        self.term_freqs = term_freqs
 
         opts = {'hash_size': self.hash_size,
                 'ngram_rage': self.tokenizer.ngram_range,
-                'doc2index': self.doc2index,
-                'term_freqs': self.freqs}
+                'doc_index': self.doc_index,
+                'term_freqs': self.term_freqs}
 
         data = {
             'data': tfidf_matrix.data,
