@@ -15,6 +15,10 @@ Our goal is to enable AI-application developers and researchers with:
  * a framework for implementing and testing their own dialog models 
  * tools for application integration with adjacent infrastructure (messengers, helpdesk software etc.)
  * benchmarking environment for conversational models and uniform access to relevant datasets 
+ 
+## Demo 
+
+Demo of selected features is available at [demo.ipavlov.ai](http://demo.ipavlov.ai/)
 
 ## Features
 
