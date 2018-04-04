@@ -22,6 +22,7 @@ from tqdm import tqdm
 import tarfile
 import gzip
 import zipfile
+import numpy as np
 import re
 import zipfile
 
@@ -147,3 +148,14 @@ def is_done(path):
 def tokenize_reg(s):
     pattern = "[\w]+|[‑–—“”€№…’\"#$%&\'()+,-./:;<>?]"
     return re.findall(re.compile(pattern), s)
+
+
+def zero_pad(batch, dtype=np.float32):
+    batch_size = len(batch)
+    max_len = max(len(utterance) for utterance in batch)
+    n_features = len(batch[0][0])
+    padded_batch = np.zeros([batch_size, max_len, n_features], dtype=dtype)
+    for n, utterance in enumerate(batch):
+        for k, token_features in enumerate(utterance):
+            padded_batch[n, k] = token_features
+    return padded_batch

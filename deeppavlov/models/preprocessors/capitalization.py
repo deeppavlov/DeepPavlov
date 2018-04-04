@@ -1,4 +1,5 @@
 from deeppavlov.core.models.component import Component
+from deeppavlov.core.data.utils import zero_pad
 import numpy as np
 
 
@@ -19,7 +20,6 @@ class CapitalizationPreprocessor(Component):
 
     def __call__(self, tokens_batch, **kwargs):
         cap_batch = []
-        batch_size = len(tokens_batch)
         max_batch_len = 0
         for utterance in tokens_batch:
             cap_list = []
@@ -40,10 +40,6 @@ class CapitalizationPreprocessor(Component):
                 cap_list.append(cap)
             cap_batch.append(cap)
         if self.pad_zeros:
-            cap_batch_padded = np.zeros([batch_size, max_batch_len, self.n_features], np.float32)
-            for n, utterance_cap in cap_batch:
-                for k, token_cap in utterance_cap:
-                    cap_batch_padded[n, k] = token_cap
-            return cap_batch_padded
+            return zero_pad(cap_batch)
         else:
             return cap_batch
