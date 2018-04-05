@@ -39,13 +39,13 @@
         "use_action_mask": false,
         "network": {
           "name": "go_bot_rnn",
-          "load_path": "go_bot/model_my",
-          "save_path": "go_bot/model_my",
+          "load_path": "go_bot/model_my3",
+          "save_path": "go_bot/model_my3",
           "learning_rate": 0.002,
           "dropout_rate": 0.8,
           "hidden_size": 128,
           "dense_size": 64,
-          "obs_size": 530,
+          "obs_size": 830,
           "action_size": 45
         },
         "slot_filler": {
@@ -56,8 +56,8 @@
         },
         "intent_classifier": {
           "name": "intent_model",
-          "save_path": "intents/intent_cnn_v3",
-          "load_path": "intents/intent_cnn_v3",
+          "save_path": "intents/intent_cnn_v2",
+          "load_path": "intents/intent_cnn_v2",
           "classes": "#classes_vocab.keys()",
           "opt": {
             "train_now": true,
@@ -90,17 +90,23 @@
           },
           "embedder": {
             "name": "fasttext",
-            "save_path": "embeddings/wiki.simple.bin",
-            "load_path": "embeddings/wiki.simple.bin",
+            "save_path": "embeddings/dstc2_fastText_model.bin",
+            "load_path": "embeddings/dstc2_fastText_model.bin",
             "emb_module": "fasttext",
-            "dim": 300
+            "dim": 100
           },
           "tokenizer": {
             "name": "nltk_tokenizer",
             "tokenizer": "wordpunct_tokenize"
           }
         },
-        "embedder": null,
+        "embedder": {
+          "name": "fasttext",
+            "save_path": "embeddings/wiki.simple.bin",
+            "load_path": "embeddings/wiki.simple.bin",
+            "emb_module": "fasttext",
+            "dim": 300
+        },
         "bow_encoder": {
           "name": "bow"
         },
