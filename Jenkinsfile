@@ -17,7 +17,7 @@ node('gpu') {
         stage('Tests') {
             sh """
                 . .venv-$BUILD_NUMBER/bin/activate
-                pytest -v -m "ner"
+                pytest -v -m "intents"
             """
         }
     } catch (e) {
