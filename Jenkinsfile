@@ -1,13 +1,8 @@
 node('dgx') {
     try {
-        /*stage('Clean') {
-            sh """
-                rm -rf .[^.] .??* *
-            """
-        }*/
-        stage('Checkout') {
+        /*stage('Checkout') {
             git branch: 'dev', url: 'https://github.com/deepmipt/deeppavlov.git'
-        }
+        }*/
         stage('Setup') {
             env.CUDA_VISIBLE_DEVICES=0
             sh """
@@ -16,19 +11,24 @@ node('dgx') {
                 pip install pip==9.0.3
                 python setup.py develop
                 python -m spacy download en
-                pip3 install -r requirements-dev.txt
+                pip install -r requirements-dev.txt
             """
         }
         stage('Tests') {
             sh """
                 . .venv-$BUILD_NUMBER/bin/activate
-                cd tests
-                pytest -v
+                pytest -v -m "ner"
             """
         }
     } catch (e) {
-        emailext attachLog: true, subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - FAILED!'
+        emailext recipientProviders: [upstreamDevelopers()],
+            subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - FAILED!',
+            body: '${BRANCH_NAME} - ${BUILD_URL}',
+            attachLog: true
         throw e
     }
-    emailext attachLog: true, subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!'
+    emailext recipientProviders: [upstreamDevelopers()],
+        subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!',
+        body: '${BRANCH_NAME} - ${BUILD_URL}',
+        attachLog: true
 }
