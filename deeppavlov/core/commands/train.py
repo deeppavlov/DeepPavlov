@@ -122,7 +122,7 @@ def train_model_from_config(config_path: str) -> None:
         vocabs = config.get('vocabs', {})
         for vocab_param_name, vocab_config in vocabs.items():
             v: Estimator = from_params(vocab_config, mode='train')
-            vocabs[vocab_param_name] = _fit(v, iterator)
+            vocabs[vocab_param_name] = _fit(v, iterator, None)
 
         model_config = config['model']
         model = from_params(model_config, vocabs=vocabs, mode='train')
