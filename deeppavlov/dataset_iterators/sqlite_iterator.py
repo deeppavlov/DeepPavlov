@@ -83,7 +83,7 @@ class SQLiteDataIterator(DataFittingIterator):
     def get_doc_content(self, doc_id: Any) -> Optional[str]:
         cursor = self.connect.cursor()
         cursor.execute(
-            "SELECT text FROM documents WHERE id = ?",
+            "SELECT text FROM {} WHERE id = ?".format(self.db_name),
             (doc_id,)
         )
         result = cursor.fetchone()
