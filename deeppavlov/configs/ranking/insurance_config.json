@@ -31,7 +31,7 @@
         "embeddings": "word2vec",
         "embeddings_path": "insurance_embeddings",
         "embedding_dim": 300,
-        "use_matrix": true,
+        "use_matrix": false,
         "seed": 243,
         "max_sequence_length": 200,
         "reccurent": "bilstm",
