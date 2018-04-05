@@ -21,13 +21,13 @@ node('gpu') {
             """
         }
     } catch (e) {
-        emailext to: '${DEFAULT_RECIPIENTS},{GIT_AUTHOR_EMAIL},${GIT_COMMITTER_EMAIL}',
+        emailext to: '${DEFAULT_RECIPIENTS},${GIT_AUTHOR_EMAIL},${GIT_COMMITTER_EMAIL}',
             subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - FAILED!',
             body: '${BRANCH_NAME} - ${BUILD_URL}',
             attachLog: true
         throw e
     }
-    emailext to: '${DEFAULT_RECIPIENTS},{GIT_AUTHOR_EMAIL},${GIT_COMMITTER_EMAIL}',
+    emailext to: '${DEFAULT_RECIPIENTS},${GIT_AUTHOR_EMAIL},${GIT_COMMITTER_EMAIL}',
         subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!',
         body: '${BRANCH_NAME} - ${BUILD_URL}',
         attachLog: true
