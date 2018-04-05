@@ -97,7 +97,6 @@ class Seq2SeqGoalOrientedBot(NNModel):
         mask = np.zeros(self.kb_size, dtype=np.float32)
         for k, v in entries:
             mask[self.kb_keys.index(k)] = 1.
-        print("For {} entries {} nonzeros in mask".format(len(entries), np.sum(mask)))
         return mask
 
     def _encode_response(self, tokens):
@@ -123,7 +122,8 @@ class Seq2SeqGoalOrientedBot(NNModel):
         if (len(utters) == 1) and not utters[0]:
             utters = [['hi']]
         for utter, dialog_id, kb_entries in zip(utters, dialog_ids, kb_entry_list):
-            print("infer: kb_entries =", kb_entries)
+            if self.debug:
+                log.debug("infer: kb_entries = {}".format(kb_entries))
             enc_in = self._encode_context(utter)
             b_enc_ins.append(enc_in)
             b_src_lens.append(len(enc_in))
@@ -139,7 +139,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
         preds = [list(_filter(self.tgt_vocab(utter_idxs)))\
                  for utter_idxs in pred_idxs]
         if self.debug:
-            print("Dialog prediction = \"{}\"".format(preds[-1]))
+            log.debug("Dialog prediction = \"{}\"".format(preds[-1]))
         return preds
 
     def save(self):
