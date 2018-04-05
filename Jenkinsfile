@@ -27,7 +27,7 @@ node('gpu') {
             attachLog: true
         throw e
     }
-    emailext recipientProviders: [upstreamDevelopers()],
+    emailext to: '{GIT_AUTHOR_EMAIL},${GIT_COMMITTER_EMAIL},
         subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!',
         body: '${BRANCH_NAME} - ${BUILD_URL}',
         attachLog: true
