@@ -37,7 +37,7 @@ class StreamSpacyTokenizer(Component):
     Works only for English language.
     """
 
-    def __init__(self, disable: list = None, stopwords: list = ENGLISH_STOP_WORDS,
+    def __init__(self, disable: list = None, stopwords: list = None,
                  batch_size: int = None, ngram_range: List[int] = None, lemmas=False,
                  n_threads: int = None, lowercase: bool = None, alphas_only: bool = None, **kwargs):
         """
@@ -97,10 +97,12 @@ class StreamSpacyTokenizer(Component):
         _ngram_range = self.ngram_range or ngram_range
         _n_threads = self.n_threads or n_threads
 
-        if self.lowercase:
-            _lowercase = self.lowercase
-        else:
+        if self.lowercase is None:
             _lowercase = lowercase
+        else:
+            _lowercase = self.lowercase
+
+        # print(_lowercase)
 
         for i, doc in enumerate(
                 self.tokenizer.pipe(data, batch_size=_batch_size, n_threads=_n_threads)):
@@ -149,15 +151,15 @@ class StreamSpacyTokenizer(Component):
         :param alphas_only: should filter numeric and alpha-numeric types or not
         :return: filtered list of tokens/lemmas
         """
-        if self.alphas_only:
-            _alphas_only = self.alphas_only
-        else:
+        if self.alphas_only is None:
             _alphas_only = alphas_only
+        else:
+            _alphas_only = self.alphas_only
 
         if _alphas_only:
-            filter_fn = lambda x: x.isalpha() and x not in self.stopwords
+            filter_fn = lambda x: x.isalpha() and not x.isspace() and x not in self.stopwords
         else:
-            filter_fn = lambda x: x not in self.stopwords
+            filter_fn = lambda x: not x.isspace() and x not in self.stopwords
 
         return list(filter(filter_fn, items))
 

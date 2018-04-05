@@ -13,14 +13,14 @@
     "out": ["prediction_text"],
     "pipe": [
       {
+        "id": "stream_spacy",
         "name": "stream_spacy_tokenizer",
-        "lowercase": "true",
+        "alphas_only": false,
         "in": ["x_text"],
         "out": ["x_tokens"]
       },
       {
-        "name": "stream_spacy_tokenizer",
-        "lowercase": "true",
+        "ref": "stream_spacy",
         "in": ["y_text"],
         "out": ["y_tokens"]
       },
@@ -28,7 +28,7 @@
         "id": "kb",
         "name": "knowledge_base",
         "fit_on": ["dialog_id", "kb_columns", "kb_items"],
-        "tokenizer": { "name": "stream_spacy_tokenizer" },
+        "tokenizer": "#stream_spacy",
         "save_path": "seq2seq_go_bot/kvret_kb.json",
         "load_path": "seq2seq_go_bot/kvret_kb.json"
       },
@@ -91,7 +91,7 @@
         "out": ["prediction_tokens"]
       },
       {
-        "name": "stream_spacy_tokenizer",
+        "ref": "stream_spacy",
         "in": ["prediction_tokens"],
         "out": ["prediction_text"]
       }
