@@ -1,4 +1,4 @@
-node('dgx') {
+node('gpu') {
     try {
         /*stage('Checkout') {
             git branch: 'dev', url: 'https://github.com/deepmipt/deeppavlov.git'
