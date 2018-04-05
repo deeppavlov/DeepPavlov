@@ -20,14 +20,14 @@ import numpy as np
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.models.component import Component
+from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.models.vectorizers.hashing_tfidf_vectorizer import HashingTfIdfVectorizer
 
 logger = get_logger(__name__)
 
 
 @register("tfidf_ranker")
-class TfidfRanker(Component):
+class TfidfRanker(Estimator):
     """
     temporary stub to run REST API
      """
@@ -40,7 +40,7 @@ class TfidfRanker(Component):
 
         if self.vectorizer.load_path.exists():
             self.tfidf_matrix, opts = self.vectorizer.load()
-            self.ngram_range = opts['ngram_rage']
+            self.ngram_range = opts['ngram_range']
             self.hash_size = opts['hash_size']
             self.term_freqs = opts['term_freqs'].squeeze()
             self.doc_index = opts['doc_index']
@@ -65,10 +65,9 @@ class TfidfRanker(Component):
         """
         batch_doc_ids, batch_docs_scores = [], []
 
-        for question in questions:
-            q_tfidf = self.vectorizer(question)
+        q_tfidfs = self.vectorizer(questions)
 
-            # TODO bug here, len(scores) == 1
+        for q_tfidf in q_tfidfs:
             scores = q_tfidf * self.tfidf_matrix
 
             if len(scores.data) <= n:
@@ -81,6 +80,7 @@ class TfidfRanker(Component):
             doc_ids = [self.index2doc[i] for i in scores.indices[o_sort]]
             batch_doc_ids.append(doc_ids)
             batch_docs_scores.append(doc_scores)
+
         return batch_doc_ids, batch_docs_scores
 
     def fit_batches(self, iterator, batch_size: int):
@@ -88,7 +88,13 @@ class TfidfRanker(Component):
         for x, y in iterator.gen_batches(batch_size):
             self.vectorizer.fit_batch(x, y)
 
+    def fit(self):
+        pass
+
     def save(self):
         self.vectorizer.save()
+
+    def load(self):
+        self.vectorizer.load()
 
 
