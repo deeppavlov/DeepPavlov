@@ -23,7 +23,8 @@ import numpy as np
 from sklearn.utils import murmurhash3_32
 
 from deeppavlov.models.tokenizers.spacy_tokenizer import StreamSpacyTokenizer
-from deeppavlov.core.models.estimator import Estimator
+from deeppavlov.core.models.component import Component
+from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 
@@ -36,7 +37,7 @@ def hash_(token, hash_size):
 
 
 @register('hashing_tfidf_vectorizer')
-class HashingTfIdfVectorizer(Estimator):
+class HashingTfIdfVectorizer(Component, Serializable):
     """
     Create a tfidf matrix from collection of documents.
     """
@@ -62,31 +63,37 @@ class HashingTfIdfVectorizer(Estimator):
         self.cols = []
         self.data = []
 
-    def __call__(self, question: str) -> sp.sparse.csr_matrix:
-        ngrams = list(self.tokenizer([question]))
-        hashes = [hash_(ngram, self.hash_size) for ngram in ngrams[0]]
+    def __call__(self, questions: List[str]) -> sp.sparse.csr_matrix:
 
-        hashes_unique, q_hashes = np.unique(hashes, return_counts=True)
-        tfs = np.log1p(q_hashes)
+        sp_tfidfs = []
 
-        # TODO revise policy if len(q_hashes) == 0
+        for question in questions:
+            ngrams = list(self.tokenizer([question]))
+            hashes = [hash_(ngram, self.hash_size) for ngram in ngrams[0]]
 
-        if len(q_hashes) == 0:
-            return sp.sparse.csr_matrix((1, self.hash_size))
+            hashes_unique, q_hashes = np.unique(hashes, return_counts=True)
+            tfs = np.log1p(q_hashes)
 
-        size = len(self.doc_index)
-        Ns = self.term_freqs[hashes_unique]
-        idfs = np.log((size - Ns + 0.5) / (Ns + 0.5))
-        idfs[idfs < 0] = 0
+            # TODO revise policy if len(q_hashes) == 0
 
-        tfidf = np.multiply(tfs, idfs)
+            if len(q_hashes) == 0:
+                return sp.sparse.csr_matrix((1, self.hash_size))
 
-        indptr = np.array([0, len(hashes_unique)])
-        sp_tfidf = sp.sparse.csr_matrix(
-            (tfidf, hashes_unique, indptr), shape=(1, self.hash_size)
-        )
+            size = len(self.doc_index)
+            Ns = self.term_freqs[hashes_unique]
+            idfs = np.log((size - Ns + 0.5) / (Ns + 0.5))
+            idfs[idfs < 0] = 0
 
-        return sp_tfidf
+            tfidf = np.multiply(tfs, idfs)
+
+            indptr = np.array([0, len(hashes_unique)])
+            sp_tfidf = sp.sparse.csr_matrix(
+                (tfidf, hashes_unique, indptr), shape=(1, self.hash_size)
+            )
+            sp_tfidfs.append(sp_tfidf)
+
+        transformed = sp.sparse.vstack(sp_tfidfs)
+        return transformed
 
     def get_counts(self, docs: List[str], doc_ids: List[Any]) \
             -> Generator[Tuple[KeysView, ValuesView, List[int]], Any, None]:
@@ -125,9 +132,6 @@ class HashingTfIdfVectorizer(Estimator):
         tfidfs = idfs.dot(tfs)
         return tfidfs, term_freqs
 
-    def fit(self):
-        pass
-
     def fit_batch(self, docs, doc_ids) -> None:
 
         for batch_rows, batch_data, batch_cols in self.get_counts(docs, doc_ids):
@@ -143,7 +147,7 @@ class HashingTfIdfVectorizer(Estimator):
         self.term_freqs = term_freqs
 
         opts = {'hash_size': self.hash_size,
-                'ngram_rage': self.tokenizer.ngram_range,
+                'ngram_range': self.tokenizer.ngram_range,
                 'doc_index': self.doc_index,
                 'term_freqs': self.term_freqs}
 
