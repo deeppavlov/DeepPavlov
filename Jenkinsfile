@@ -1,8 +1,8 @@
 node('gpu') {
     try {
-        /*stage('Checkout') {
-            git branch: 'dev', url: 'https://github.com/deepmipt/deeppavlov.git'
-        }*/
+        stage('Checkout') {
+            git branch: '${GIT_COMMIT}', url: 'https://github.com/deepmipt/deeppavlov.git'
+        }
         stage('Setup') {
             env.CUDA_VISIBLE_DEVICES=0
             sh """
