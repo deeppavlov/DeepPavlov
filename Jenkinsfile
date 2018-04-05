@@ -1,8 +1,8 @@
 node('gpu') {
     try {
-        stage('Checkout') {
+        /*stage('Checkout') {
             git branch: '${GIT_COMMIT}', url: 'https://github.com/deepmipt/deeppavlov.git'
-        }
+        }*/
         stage('Setup') {
             env.CUDA_VISIBLE_DEVICES=0
             sh """
@@ -21,13 +21,13 @@ node('gpu') {
             """
         }
     } catch (e) {
-        emailext recipientProviders: [upstreamDevelopers()],
+        emailext to: '${DEFAULT_RECIPIENTS},{GIT_AUTHOR_EMAIL},${GIT_COMMITTER_EMAIL}',
             subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - FAILED!',
             body: '${BRANCH_NAME} - ${BUILD_URL}',
             attachLog: true
         throw e
     }
-    emailext to: '{GIT_AUTHOR_EMAIL},${GIT_COMMITTER_EMAIL}',
+    emailext to: '${DEFAULT_RECIPIENTS},{GIT_AUTHOR_EMAIL},${GIT_COMMITTER_EMAIL}',
         subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!',
         body: '${BRANCH_NAME} - ${BUILD_URL}',
         attachLog: true
