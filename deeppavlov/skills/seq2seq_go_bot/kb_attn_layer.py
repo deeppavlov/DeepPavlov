@@ -143,7 +143,7 @@ class KBAttention(base.Layer):
         for layer in self.layers:
             outputs = layer.call(outputs)
 
-        outputs = tf.concat([inputs, tf.squeeze(outputs)], -1)
+        outputs = tf.concat([inputs, tf.squeeze(outputs, [-1])], -1)
         outputs = self.output_layer(outputs)
         return outputs
 
