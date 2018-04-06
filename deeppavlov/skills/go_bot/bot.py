@@ -28,11 +28,10 @@ from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.encoders.bow import BoWEncoder
 from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel
 from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
-from deeppavlov.models.tokenizers.spacy_tokenizer import SpacyTokenizer
+from deeppavlov.models.tokenizers.spacy_tokenizer import StreamSpacyTokenizer
 from deeppavlov.models.trackers.default_tracker import DefaultTracker
 from deeppavlov.skills.go_bot.network import GoalOrientedBotNetwork
 from deeppavlov.skills.go_bot.templates import Templates, DualTemplate
-from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.log import get_logger
 
 
@@ -44,7 +43,7 @@ class GoalOrientedBot(NNModel):
     def __init__(self, template_path,
                  template_type: Type = DualTemplate,
                  bow_encoder: Type = BoWEncoder,
-                 tokenizer: Type = SpacyTokenizer,
+                 tokenizer: Type = StreamSpacyTokenizer,
                  tracker: Type = DefaultTracker,
                  network: Type = GoalOrientedBotNetwork,
                  embedder=None,
@@ -77,12 +76,11 @@ class GoalOrientedBot(NNModel):
         log.info("{} templates loaded".format(len(self.templates)))
 
         # intialize parameters
-        self.db_result = None
         self.n_actions = len(self.templates)
         self.n_intents = 0
         if hasattr(self.intent_classifier, 'n_classes'):
             self.n_intents = self.intent_classifier.n_classes
-        self.prev_action = np.zeros(self.n_actions, dtype=np.float32)
+        self.reset()
 
         # opt = {
         #    'action_size': self.n_actions,
@@ -93,18 +91,24 @@ class GoalOrientedBot(NNModel):
 
     def _encode_context(self, context, db_result=None):
         # tokenize input
-        tokenized = ' '.join(self.tokenizer([context])[0]).strip()
+        tokenized = ' '.join(self.tokenizer([context])[0]).lower().strip()
         if self.debug:
             log.debug("Text tokens = `{}`".format(tokenized))
 
         # Bag of words features
-        bow_features = self.bow_encoder([tokenized], self.word_vocab)[0]
-        bow_features = bow_features.astype(np.float32)
+        bow_features = []
+        if callable(self.bow_encoder):
+            bow_features = self.bow_encoder([tokenized], self.word_vocab)[0]
+            bow_features = bow_features.astype(np.float32)
 
         # Embeddings
         emb_features = []
         if callable(self.embedder):
             emb_features = self.embedder([tokenized], mean=True)[0]
+            # random embedding instead of zeros
+            if np.all(emb_features < 1e-20):
+                emb_dim = self.embedder.dim
+                emb_features = np.fabs(np.random.normal(0, 1/emb_dim, emb_dim))
 
         # Intent features
         intent_features = []
@@ -174,10 +178,12 @@ class GoalOrientedBot(NNModel):
         return action_mask
 
     def train_on_batch(self, x, y):
-        for contexts, responses in zip(x, y):
+        b_features, b_u_masks, b_a_masks, b_actions = [], [], [], []
+        max_num_utter = max(len(d_contexts) for d_contexts in x)
+        for d_contexts, d_responses in zip(x, y):
             self.reset()
-            d_features, d_actions, d_masks = [], [], []
-            for context, response in zip(contexts, responses):
+            d_features, d_a_masks, d_actions = [], [], []
+            for context, response in zip(d_contexts, d_responses):
                 features = self._encode_context(context['text'],
                                                 context.get('db_result'))
                 if context.get('db_result') is not None:
@@ -190,16 +196,27 @@ class GoalOrientedBot(NNModel):
                 self.prev_action[action_id] = 1.
                 d_actions.append(action_id)
 
-                d_masks.append(self._action_mask())
+                d_a_masks.append(self._action_mask())
+    
+            # padding to max_num_utter
+            num_padds = max_num_utter - len(d_contexts)
+            d_features.extend([np.zeros_like(d_features[0])] * num_padds)
+            d_u_mask = [1] * len(d_contexts) + [0] * num_padds
+            d_a_masks.extend([np.zeros_like(d_a_masks[0])] * num_padds)
+            d_actions.extend([0] * num_padds)
 
-            # self.network.train(d_features, d_actions, d_masks)
-            self.network.train_on_batch([d_features, d_masks], d_actions)
+            b_features.append(d_features) 
+            b_u_masks.append(d_u_mask)
+            b_a_masks.append(d_a_masks)
+            b_actions.append(d_actions) 
+        # self.network.train(b_features, b_actions, b_masks)
+        self.network.train_on_batch([b_features, b_u_masks, b_a_masks], b_actions)
 
     def _infer(self, context, db_result=None, prob=False):
         # TODO: check if prob=True works better
         probs = self.network(
-            self._encode_context(context, db_result),
-            self._action_mask(),
+            [[self._encode_context(context, db_result)]],
+            [[self._action_mask()]],
             prob=True
         )
         pred_id = np.argmax(probs)

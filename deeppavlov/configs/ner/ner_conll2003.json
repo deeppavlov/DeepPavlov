@@ -15,24 +15,30 @@
         "name": "default_vocab",
         "fit_on": ["x"],
 		"level": "token",
-        "save_path": "ner_conll2003_model/word.dict",
-        "load_path": "ner_conll2003_model/word.dict"
+        "save_path": "ner_conll2003/word.dict",
+        "load_path": "ner_conll2003/word.dict"
       },
       {
         "id": "tag_vocab",
         "name": "default_vocab",
         "fit_on": ["y"],
 		"level": "token",
-        "save_path": "ner_conll2003_model/tag.dict",
-        "load_path": "ner_conll2003_model/tag.dict"
+        "save_path": "ner_conll2003/tag.dict",
+        "load_path": "ner_conll2003/tag.dict"
       },
       {
         "id": "char_vocab",
         "name": "default_vocab",
         "fit_on": ["x"],
 		"level": "char",
-        "save_path": "ner_conll2003_model/char.dict",
-        "load_path": "ner_conll2003_model/char.dict"
+        "save_path": "ner_conll2003/char.dict",
+        "load_path": "ner_conll2003/char.dict"
+      },
+      {
+        "id": "glove_emb",
+        "name": "glove",
+        "load_path": "embeddings/glove.6B.100d.txt",
+        "save_path": "embeddings/glove.6B.100d.txt"
       },
       {
         "in": ["x"],
@@ -40,8 +46,8 @@
         "out": ["y_predicted"],
         "name": "ner",
         "main": true,
-        "save_path": "ner_conll2003_model/ner_model",
-        "load_path": "ner_conll2003_model/ner_model",
+        "save_path": "ner_conll2003/ner_model",
+        "load_path": "ner_conll2003/ner_model",
         "word_vocab": "#word_vocab",
         "tag_vocab": "#tag_vocab",
         "char_vocab": "#char_vocab",
@@ -52,12 +58,15 @@
           128,
           128
         ],
-        "token_embeddings_dim": 64,
-        "char_embeddings_dim": 32,
+        "token_embeddings_dim": 100,
+        "char_embeddings_dim": 64,
         "use_batch_norm": true,
         "use_crf": true,
         "learning_rate": 1e-3,
-        "dropout_rate": 0.5
+        "dropout_rate": 0.5,
+        "embedder": "#glove_emb",
+        "use_capitalization": true,
+        "two_dense_layers": true
       }
     ],
     "out": ["y_predicted"]
@@ -69,9 +78,15 @@
     "metrics": ["ner_f1"],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
+    "pytest_max_batches": 1,
 
     "log_every_n_epochs": 1,
     "show_examples": false
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "NERModel"
+    }
   }
 }
 

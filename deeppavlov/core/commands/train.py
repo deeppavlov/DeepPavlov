@@ -18,7 +18,7 @@ import datetime
 import json
 import time
 from collections import OrderedDict
-from typing import List, Callable, Tuple
+from typing import List, Callable, Tuple, Dict, Union
 
 from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root
 from deeppavlov.core.commands.infer import build_model_from_config
@@ -38,14 +38,14 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-def _fit(model: Estimator, dataset: BasicDatasetIterator, train_config={}):
-    x, y = dataset.iter_all('train')
+def _fit(model: Estimator, iterator: BasicDatasetIterator, train_config={}) -> Estimator:
+    x, y = iterator.iter_all('train')
     model.fit(x, y)
     model.save()
     return model
 
 
-def fit_chainer(config: dict, dataset: BasicDatasetIterator):
+def fit_chainer(config: dict, iterator: BasicDatasetIterator) -> Chainer:
 
     chainer_config: dict = config['chainer']
     chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
@@ -54,9 +54,11 @@ def fit_chainer(config: dict, dataset: BasicDatasetIterator):
         if 'fit_on' in component_config:
             component: Estimator
 
-            preprocessed = chainer(*dataset.iter_all('train'), to_return=component_config['fit_on'])
+            preprocessed = chainer(*iterator.iter_all('train'), to_return=component_config['fit_on'])
             if len(component_config['fit_on']) == 1:
                 preprocessed = [preprocessed]
+            else:
+                preprocessed = zip(*preprocessed)
             component.fit(*preprocessed)
             component.save()
 
@@ -69,28 +71,39 @@ def fit_chainer(config: dict, dataset: BasicDatasetIterator):
     return chainer
 
 
-def train_model_from_config(config_path: str):
+def train_model_from_config(config_path: str) -> None:
     config = read_json(config_path)
     set_deeppavlov_root(config)
+
+    dataset_config = config.get('dataset', None)
+
+    if dataset_config:
+        config.pop('dataset')
+        ds_type = dataset_config['type']
+        if ds_type == 'classification':
+            reader = {'name': 'basic_classification_reader'}
+            iterator = {'name': 'basic_classification_iterator'}
+            config['dataset_reader'] = {**dataset_config, **reader}
+            config['dataset_iterator'] = {**dataset_config, **iterator}
+        else:
+            raise Exception("Unsupported dataset type: {}".format(ds_type))
 
     reader_config = config['dataset_reader']
     reader = get_model(reader_config['name'])()
     data_path = expand_path(reader_config.get('data_path', ''))
-    kwargs = reader_config.copy()
-    if "name" in kwargs: del kwargs["name"]
-    if "data_path" in kwargs: del kwargs["data_path"]
+    kwargs = {k: v for k, v in reader_config.items() if k not in ['name', 'data_path']}
     data = reader.read(data_path, **kwargs)
 
-    dataset_config = config['dataset_iterator']
-    dataset: BasicDatasetIterator = from_params(dataset_config, data=data)
+    iterator_config = config['dataset_iterator']
+    iterator: BasicDatasetIterator = from_params(iterator_config, data=data)
 
     if 'chainer' in config:
-        model = fit_chainer(config, dataset)
+        model = fit_chainer(config, iterator)
     else:
-        vocabs = {}
-        for vocab_param_name, vocab_config in config.get('vocabs', {}).items():
+        vocabs = config.get('vocabs', {})
+        for vocab_param_name, vocab_config in vocabs.items():
             v: Estimator = from_params(vocab_config, mode='train')
-            vocabs[vocab_param_name] = _fit(v, dataset)
+            vocabs[vocab_param_name] = _fit(v, iterator)
 
         model_config = config['model']
         model = from_params(model_config, vocabs=vocabs, mode='train')
@@ -107,12 +120,13 @@ def train_model_from_config(config_path: str):
     except KeyError:
         log.warning('Train config is missing. Populating with default values')
 
-    metrics_functions = list(zip(train_config['metrics'], get_metrics_by_names(train_config['metrics'])))
+    metrics_functions = list(zip(train_config['metrics'],
+                                 get_metrics_by_names(train_config['metrics'])))
 
     if callable(getattr(model, 'train_on_batch', None)):
-        _train_batches(model, dataset, train_config, metrics_functions)
+        _train_batches(model, iterator, train_config, metrics_functions)
     elif callable(getattr(model, 'fit', None)):
-        _fit(model, dataset, train_config)
+        _fit(model, iterator, train_config)
     elif not isinstance(model, Chainer):
         log.warning('Nothing to train')
 
@@ -126,27 +140,30 @@ def train_model_from_config(config_path: str):
 
         if train_config['validate_best']:
             report = {
-                'valid': _test_model(model, metrics_functions, dataset, train_config.get('batch_size', -1), 'valid')
+                'valid': _test_model(model, metrics_functions, iterator,
+                                     train_config.get('batch_size', -1), 'valid')
             }
 
             print(json.dumps(report, ensure_ascii=False))
 
         if train_config['test_best']:
             report = {
-                'test': _test_model(model, metrics_functions, dataset, train_config.get('batch_size', -1), 'test')
+                'test': _test_model(model, metrics_functions, iterator,
+                                    train_config.get('batch_size', -1), 'test')
             }
 
             print(json.dumps(report, ensure_ascii=False))
 
 
 def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
-                dataset: BasicDatasetIterator, batch_size=-1, data_type='valid', start_time=None):
+                iterator: BasicDatasetIterator, batch_size=-1, data_type='valid',
+                start_time: float=None) -> Dict[str, Union[int, OrderedDict, str]]:
     if start_time is None:
         start_time = time.time()
 
     val_y_true = []
     val_y_predicted = []
-    for x, y_true in dataset.batch_generator(batch_size, data_type, shuffle=False):
+    for x, y_true in iterator.batch_generator(batch_size, data_type, shuffle=False):
         y_predicted = list(model(list(x)))
         val_y_true += y_true
         val_y_predicted += y_predicted
@@ -156,16 +173,17 @@ def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
     report = {
         'examples_seen': len(val_y_true),
         'metrics': OrderedDict(metrics),
-        'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
+        'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
     }
     return report
 
 
-def _train_batches(model: NNModel, dataset: BasicDatasetIterator, train_config: dict,
-                   metrics_functions: List[Tuple[str, Callable]]):
+def _train_batches(model: NNModel, iterator: BasicDatasetIterator, train_config: dict,
+                   metrics_functions: List[Tuple[str, Callable]]) -> NNModel:
 
     default_train_config = {
         'epochs': 0,
+        'max_batches': 0,
         'batch_size': 1,
 
         'metric_optimization': 'maximize',
@@ -181,7 +199,7 @@ def _train_batches(model: NNModel, dataset: BasicDatasetIterator, train_config: 
         'test_best': True
     }
 
-    train_config = dict(default_train_config, ** train_config)
+    train_config = dict(default_train_config, **train_config)
 
     if train_config['metric_optimization'] == 'maximize':
         def improved(score, best):
@@ -203,9 +221,10 @@ def _train_batches(model: NNModel, dataset: BasicDatasetIterator, train_config: 
     train_y_true = []
     train_y_predicted = []
     start_time = time.time()
+    break_flag = False
     try:
         while True:
-            for x, y_true in dataset.batch_generator(train_config['batch_size']):
+            for x, y_true in iterator.batch_generator(train_config['batch_size']):
                 if log_on:
                     y_predicted = list(model(list(x)))
                     train_y_true += y_true
@@ -221,12 +240,18 @@ def _train_batches(model: NNModel, dataset: BasicDatasetIterator, train_config: 
                         'batches_seen': i,
                         'examples_seen': examples,
                         'metrics': dict(metrics),
-                        'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
+                        'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                     }
                     report = {'train': report}
                     print(json.dumps(report, ensure_ascii=False))
-                    train_y_true = []
-                    train_y_predicted = []
+                    train_y_true.clear()
+                    train_y_predicted.clear()
+
+                if i >= train_config['max_batches'] > 0:
+                    break_flag = True
+                    break
+            if break_flag:
+                break
 
             epochs += 1
 
@@ -238,15 +263,16 @@ def _train_batches(model: NNModel, dataset: BasicDatasetIterator, train_config: 
                     'batches_seen': i,
                     'examples_seen': examples,
                     'metrics': dict(metrics),
-                    'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
+                    'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                 }
                 report = {'train': report}
                 print(json.dumps(report, ensure_ascii=False))
-                train_y_true = []
-                train_y_predicted = []
+                train_y_true.clear()
+                train_y_predicted.clear()
 
             if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
-                report = _test_model(model, metrics_functions, dataset, train_config['batch_size'], 'valid', start_time)
+                report = _test_model(model, metrics_functions, iterator,
+                                     train_config['batch_size'], 'valid', start_time)
 
                 metrics = list(report['metrics'].items())
 

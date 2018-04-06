@@ -45,5 +45,10 @@
   "train": {
     "validate_best": false,
     "test_best": true
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "ErrorModel"
+    }
   }
 }

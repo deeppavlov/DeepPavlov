@@ -16,7 +16,7 @@
         "fit_on": ["x"],
         "name": "default_vocab",
         "level": "token",
-        "tokenize": true,
+        "tokenizer": { "name": "split_tokenizer" },
         "save_path": "vocabs/token.dict",
         "load_path": "vocabs/token.dict"
       },
@@ -64,7 +64,7 @@
           "save_path": "go_bot/model",
           "learning_rate": 0.002,
           "dropout_rate": 0.8,
-          "hidden_dim": 128,
+          "hidden_size": 128,
           "dense_size": 64,
           "obs_size": 530,
           "action_size": 45
@@ -138,7 +138,8 @@
           "name": "bow"
         },
         "tokenizer": {
-          "name": "spacy_tokenizer"
+          "name": "stream_spacy_tokenizer",
+          "lowercase": false
         },
         "tracker": {
           "name": "featurized_tracker",
@@ -156,7 +157,7 @@
   },
   "train": {
     "epochs": 200,
-    "batch_size": 1,
+    "batch_size": 2,
 
     "metrics": ["per_item_dialog_accuracy"],
     "validation_patience": 20,
@@ -165,6 +166,10 @@
     "log_every_n_batches": -1,
     "log_every_n_epochs": 1,
     "show_examples": false
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "GoalOrientedBot"
+    }
   }
 }
-
