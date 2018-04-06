@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from typing import Dict
+
 import numpy as np
 from keras.layers import Dense, Input, concatenate, Activation
 from keras.layers.convolutional import Conv1D
@@ -24,7 +24,6 @@ from keras.models import Model
 from keras.regularizers import l2
 
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.keras_model import KerasModel
 from deeppavlov.models.classifiers.intents import metrics as metrics_file
@@ -44,11 +43,10 @@ class KerasIntentModel(KerasModel):
     Class implements keras model for intent recognition task for multi-class multi-label data
     """
     def __init__(self,
-                 opt: Dict,
-                 embedder: FasttextEmbedder,
-                 tokenizer: NLTKTokenizer,
-                 classes=None,
-                 vocabs=None,
+                 # embedder: FasttextEmbedder,
+                 # tokenizer: NLTKTokenizer,
+                 # classes=None,
+                 # vocabs=None,
                  **kwargs):
         """
         Initialize and train vocabularies, initializes embedder, tokenizer,
@@ -67,70 +65,33 @@ class KerasIntentModel(KerasModel):
             tokenizer: instance of NLTKTokenizer class
             **kwargs:
         """
-        super().__init__(opt, **kwargs)
+        super().__init__(**kwargs) # self.opt initialized in here
 
         # Tokenizer and vocabulary of classes
-        self.tokenizer = tokenizer
-        if classes:
-            self.classes = np.sort(np.array(list(classes)))
+        self.tokenizer = self.opt.get('tokenizer')
+        if self.opt.get('classes'):
+            self.classes = np.sort(np.array(list(self.opt.get('classes'))))
         else:
-            self.classes = np.sort(np.array(list(vocabs["classes_vocab"].keys())))
+            self.classes = np.sort(np.array(list(self.opt.get('vocabs')["classes_vocab"].keys())))
         self.n_classes = self.classes.shape[0]
         if self.n_classes == 0:
             ConfigError("Please, provide vocabulary with considered intents.")
 
-        if 'add_metrics' in self.opt.keys():
-            self.add_metrics = self.opt['add_metrics']
-        else:
-            self.add_metrics = None
-
-        self.fasttext_model = embedder
+        self.fasttext_model = self.opt.get('embedder')
         self.opt['embedding_size'] = self.fasttext_model.dim
 
         if self.fasttext_model.load_path:
             current_fasttext_md5 = md5_hashsum([self.fasttext_model.load_path])
 
-        self.confident_threshold = self.opt['confident_threshold']
-
-        # List of parameters that could be changed
-        # when the model is initialized from saved and is going to be trained further
-        changeable_params = {"lear_metrics": ["binary_accuracy"],
-                             "confident_threshold": 0.5,
-                             "optimizer": "Adam",
-                             "lear_rate": 0.1,
-                             "lear_rate_decay": 0.1,
-                             "loss": "binary_crossentropy",
-                             "coef_reg_cnn": 1e-4,
-                             "coef_reg_den": 1e-4,
-                             "dropout_rate": 0.5,
-                             "epochs": 1,
-                             "batch_size": 64,
-                             "val_every_n_epochs": 1,
-                             "verbose": True,
-                             "val_patience": 5}
-
-        # Reinitializing of parameters
-        for param in changeable_params.keys():
-            if param in opt.keys():
-                self.opt[param] = opt[param]
-            else:
-                self.opt[param] = changeable_params[param]
-
         # Parameters required to init model
-        params = {"model_name": self.opt['model_name'] if 'model_name' in self.opt.keys() else None,
-                  "optimizer_name": self.opt['optimizer'],
-                  "lr": self.opt['lear_rate'],
-                  "decay": self.opt['lear_rate_decay'],
-                  "loss_name": self.opt['loss'],
-                  "metrics_names": self.opt['lear_metrics'],
-                  "add_metrics_file": metrics_file}
+        params = {"model_name": self.opt.get('model_name'),
+                  "optimizer_name": self.opt.get('optimizer'),
+                  "loss_name": self.opt.get('loss'),
+                  "lear_rate": self.opt.get('lear_rate'),
+                  "lear_rate_decay": self.opt.get('lear_rate_decay')}
 
         self.model = self.load(**params)
-
-        # Reinitializing of parameters
-        for param in changeable_params.keys():
-            if param in opt.keys():
-                self.opt[param] = opt[param]
+        self._init_params(self)
 
         # Check if md5 hash sum of current loaded fasttext model
         # is equal to saved
@@ -145,6 +106,23 @@ class KerasIntentModel(KerasModel):
 
         # Considered metrics including loss
         self.metrics_names = self.model.metrics_names
+
+    def _init_params(self):
+
+        # list of changeable params
+        changeable_params = {"confident_threshold": 0.5,
+                             "optimizer": "Adam",
+                             "lear_rate": 1e-2,
+                             "lear_rate_decay": 0.,
+                             "loss": "binary_crossentropy",
+                             "coef_reg_cnn": 0.,
+                             "coef_reg_den": 0.,
+                             "dropout_rate": 0.}
+
+        for param in changeable_params.keys():
+            self.opt[param] = self.opt.get(param, default=changeable_params[param])
+
+        return
 
     def texts2vec(self, sentences):
         """
@@ -218,7 +196,7 @@ class KerasIntentModel(KerasModel):
         if predict_proba:
             return preds
         else:
-            return proba2labels(preds, confident_threshold=self.confident_threshold, classes=self.classes)
+            return proba2labels(preds, confident_threshold=self.opt['confident_threshold'], classes=self.classes)
 
     def cnn_model(self, params):
         """
