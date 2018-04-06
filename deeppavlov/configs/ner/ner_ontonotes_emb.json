@@ -87,11 +87,6 @@
 
     "log_every_n_epochs": 1,
     "show_examples": false
-  },
-  "metadata": {
-    "labels": {
-      "telegram_utils": "NERModel"
-    }
   }
 }
 
