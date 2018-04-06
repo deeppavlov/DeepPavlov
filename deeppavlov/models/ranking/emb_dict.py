@@ -1,6 +1,6 @@
 import numpy as np
 import pickle
-from gensim.models.wrappers import FastText
+import fastText
 from gensim.models import KeyedVectors
 from deeppavlov.core.commands.utils import expand_path
 from pathlib import Path
@@ -42,7 +42,7 @@ class Embeddings(object):
             download(source_url=self.download_url, dest_file_path=self.emb_model_file)
 
         if self.embeddings == "fasttext":
-            self.embeddings_model = FastText.load_fasttext_format(str(self.emb_model_file))
+            self.embeddings_model = fastText.load_model(str(self.emb_model_file))
         elif self.embeddings == "word2vec":
             self.embeddings_model = KeyedVectors.load_word2vec_format(str(self.emb_model_file),
                                                                       binary=True)
@@ -85,7 +85,7 @@ class Embeddings(object):
                 self.emb_matrix[i] = np.random.uniform(-0.6, 0.6, self.embedding_dim)
             else:
                 try:
-                    self.emb_matrix[i] = self.embeddings_model[tok]
+                    self.emb_matrix[i] = self.embeddings_model.get_word_vector(tok)
                 except:
                     self.emb_matrix[i] = np.random.uniform(-0.6, 0.6, self.embedding_dim)
 
@@ -95,7 +95,7 @@ class Embeddings(object):
                 self.int2emb_vocab[i] = np.random.uniform(-0.6, 0.6, self.embedding_dim)
             else:
                 try:
-                    self.int2emb_vocab[i] = self.embeddings_model[tok]
+                    self.int2emb_vocab[i] = self.embeddings_model.get_word_vector(tok)
                 except:
                     self.int2emb_vocab[i] = np.random.uniform(-0.6, 0.6, self.embedding_dim)
 
