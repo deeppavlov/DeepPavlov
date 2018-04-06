@@ -1,10 +1,10 @@
 node('gpu') {
     try {
         stage('Checkout') {
-            git 'https://github.com/deepmipt/deeppavlov.git'
+            git branch: '${GITHUB_PR_SOURCE_BRANCH}', url: 'https://github.com/deepmipt/deeppavlov.git'
             if (${GITHUB_PR_NUMBER} > 0) {
                 sh """
-                    git checkout ${GITHUB_PR_SOURCE_BRANCH}
+                    echo 'I am here!'
                     git checkout ${GITHUB_PR_TARGET_BRANCH}
                     git merge ${GITHUB_PR_SOURCE_BRANCH}
                 """
