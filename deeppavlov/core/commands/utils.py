@@ -42,3 +42,10 @@ def get_deeppavlov_root() -> Path:
 
 def expand_path(path: Union[str, Path]) -> Path:
     return get_deeppavlov_root() / Path(path).expanduser()
+
+
+def is_empty(d: Path) -> bool:
+    """
+    Check if directory is empty.
+    """
+    return not bool(list(d.iterdir()))

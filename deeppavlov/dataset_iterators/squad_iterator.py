@@ -15,11 +15,11 @@ limitations under the License.
 """
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.dataset_iterator import BasicDatasetIterator
+from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 
 @register('squad_iterator')
-class SquadIterator(BasicDatasetIterator):
+class SquadIterator(DataLearningIterator):
     def split(self, *args, **kwargs):
         for dt in ['train', 'valid', 'test']:
             setattr(self, dt, SquadIterator._extract_cqas(getattr(self, dt)))

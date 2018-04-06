@@ -17,7 +17,7 @@ limitations under the License.
 from sklearn.model_selection import train_test_split
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.dataset_iterator import BasicDatasetIterator
+from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.common.log import get_logger
 
 
@@ -25,7 +25,7 @@ log = get_logger(__name__)
 
 
 @register('dstc2_intents_iterator')
-class Dstc2IntentsDatasetIterator(BasicDatasetIterator):
+class Dstc2IntentsDatasetIterator(DataLearningIterator):
     """
     Class gets data dictionary from DSTC2DatasetReader instance,
     construct intents from act and slots,
@@ -42,7 +42,7 @@ class Dstc2IntentsDatasetIterator(BasicDatasetIterator):
         merge and split fields according to the given parameters
         Args:
             data: dictionary of data with fields "train", "valid" and "test" (or some of them)
-            seed: random seed
+            seed: random random
             fields_to_merge: list of fields to merge
             merged_field: name of field to which save merged fields
             field_to_split: name of field to split
