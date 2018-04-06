@@ -70,10 +70,10 @@ class KerasIntentModel(KerasModel):
         # Tokenizer and vocabulary of classes
         self.tokenizer = self.opt.get('tokenizer')
         if self.opt.get('classes'):
-            self.classes = np.sort(np.array(list(self.opt.get('classes'))))
+            self.classes = list(np.sort(np.array(list(self.opt.get('classes')))))
         else:
-            self.classes = np.sort(np.array(list(self.opt.get('vocabs')["classes_vocab"].keys())))
-        self.n_classes = self.classes.shape[0]
+            self.classes = list(np.sort(np.array(list(self.opt.get('vocabs')["classes_vocab"].keys()))))
+        self.n_classes = len(self.classes)
         if self.n_classes == 0:
             ConfigError("Please, provide vocabulary with considered intents.")
 
@@ -91,7 +91,7 @@ class KerasIntentModel(KerasModel):
                   "lear_rate_decay": self.opt.get('lear_rate_decay')}
 
         self.model = self.load(**params)
-        self._init_params(self)
+        self._init_params()
 
         # Check if md5 hash sum of current loaded fasttext model
         # is equal to saved
@@ -103,9 +103,6 @@ class KerasIntentModel(KerasModel):
             if self.opt['fasttext_md5'] != current_fasttext_md5:
                 raise ConfigError(
                     "Given fasttext model does NOT match fasttext model used previously to train loaded model")
-
-        # Considered metrics including loss
-        self.metrics_names = self.model.metrics_names
 
     def _init_params(self):
 
@@ -120,7 +117,7 @@ class KerasIntentModel(KerasModel):
                              "dropout_rate": 0.}
 
         for param in changeable_params.keys():
-            self.opt[param] = self.opt.get(param, default=changeable_params[param])
+            self.opt[param] = self.opt.get(param, changeable_params[param])
 
         return
 

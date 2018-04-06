@@ -16,7 +16,7 @@ limitations under the License.
 
 from abc import abstractmethod
 from pathlib import Path
-from copy import deepcopy
+from copy import deepcopy, copy
 
 import tensorflow as tf
 import keras.metrics
@@ -50,8 +50,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
             *args:
             **kwargs:
         """
-        print(type(kwargs))
-        self.opt = deepcopy(kwargs)
+        self.opt = copy(kwargs)
         save_path = self.opt.get('save_path', None)
         load_path = self.opt.get('load_path', None)
         url = self.opt.get('url', None)
@@ -181,10 +180,10 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
                               loss=loss)
                 return model
             else:
-                return self.init_model_from_scratch(model_name, optimizer_name, loss_name, lr, decay)
+                return self.init_model_from_scratch(model_name, optimizer_name, loss_name, lear_rate, lear_rate_decay)
         else:
             log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
-            return self.init_model_from_scratch(model_name, optimizer_name, loss_name, lr, decay)
+            return self.init_model_from_scratch(model_name, optimizer_name, loss_name, lear_rate, lear_rate_decay)
 
     @overrides
     def save(self, fname=None):
