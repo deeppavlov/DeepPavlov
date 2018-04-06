@@ -62,6 +62,7 @@ class RankingNetwork(metaclass=TfModelMeta):
         self.obj_model.load_weights(path)
 
     def save(self, path):
+        log.info("[saving `{}`]".format(self.__class__.__name__))
         self.obj_model.save_weights(path)
 
     def init_from_scratch(self, emb_matrix):

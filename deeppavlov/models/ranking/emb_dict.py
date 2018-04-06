@@ -70,6 +70,7 @@ class Embeddings(object):
                     self.int2emb_vocab[index] = coefs
 
     def save(self):
+        log.info("[saving `{}`]".format(self.__class__.__name__))
         """Save the dictionary tok2emb to the file."""
         if not self.int2emb_save_path.is_file():
             with open(self.int2emb_save_path, 'w') as f:

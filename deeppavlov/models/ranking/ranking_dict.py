@@ -56,8 +56,8 @@ class RankingDict(metaclass=ABCMeta):
         self.load_response2toks()
         self.build_response2emb_vocabulary()
 
-
     def save(self):
+        log.info("[saving `{}`]".format(self.__class__.__name__))
         self.save_int2tok()
         self.save_context2toks()
         self.save_response2toks()
