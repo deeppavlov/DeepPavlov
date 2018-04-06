@@ -1,8 +1,8 @@
 node('gpu') {
     try {
-        stage('Checkout') {
-            sh "cd ${pwd()}@script"
-        }
+        /*stage('Checkout') {
+            sh "cp ${pwd()}@script"
+        }*/
         stage('Setup') {
             env.CUDA_VISIBLE_DEVICES=0
             sh """
@@ -17,7 +17,7 @@ node('gpu') {
         stage('Tests') {
             sh """
                 . .venv-$BUILD_NUMBER/bin/activate
-                pytest -v -m "ner"
+                pytest -v -k "ner"
             """
         }
     } catch (e) {
