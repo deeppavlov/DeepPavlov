@@ -5,6 +5,10 @@ from gensim.models import KeyedVectors
 from deeppavlov.core.commands.utils import expand_path
 from pathlib import Path
 from deeppavlov.core.data.utils import download
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 class Embeddings(object):
@@ -17,14 +21,22 @@ class Embeddings(object):
         fasttext_model_file: a file containing fasttext binary model
     """
 
-    def __init__(self, tok2int_vocab, embedding_dim, max_sequence_length, download_url,
-                 embeddings_path, embeddings="word2vec", seed=None):
+    def __init__(self, embedding_dim, max_sequence_length, download_url,
+                 embeddings_path, save_path, load_path, embeddings="word2vec", seed=None):
         """Initialize the class according to given parameters."""
         np.random.seed(seed)
+        save_path = expand_path(save_path).resolve().parent
+        load_path = expand_path(load_path).resolve().parent
+        self.int2emb_save_path = save_path / "int2emb.dict"
+        self.int2emb_load_path = load_path / "int2emb.dict"
         self.embeddings = embeddings
         self.embedding_dim = embedding_dim
         self.max_sequence_length = max_sequence_length
         self.emb_model_file = expand_path(embeddings_path) / Path(download_url).parts[-1]
+
+        self.int2emb_vocab = {}
+
+    def init_from_scratch(self, tok2int_vocab):
         if not self.emb_model_file.is_file():
             download(source_url=download_url, dest_file_path=self.emb_model_file)
 
@@ -40,9 +52,29 @@ class Embeddings(object):
             words = ['<UNK>'] + [el.decode("utf-8") for el in bwords]
             self.embeddings_model = {el[0]: el[1] for el in zip(words, W_data[0])}
 
-        self.int2emb_vocab = {}
-        self.build_seq_embs(tok2int_vocab)
+        log.info("[initializing new `{}`]".format(self.__class__.__name__))
+        self.build_int2emb_vocab(tok2int_vocab)
         self.build_emb_matrix(tok2int_vocab)
+
+    def load(self):
+        """Initialize embeddings from the file."""
+        log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
+        if self.int2emb_load_path.is_file():
+            with open(self.int2emb_load_path, 'r') as f:
+                for line in f:
+                    values = line.rsplit(sep=' ', maxsplit=self.embedding_dim)
+                    assert(len(values) == self.embedding_dim + 1)
+                    index = int(values[0])
+                    coefs = np.asarray(values[1:], dtype='float32')
+                    self.int2emb_vocab[index] = coefs
+
+    def save(self):
+        """Save the dictionary tok2emb to the file."""
+        if not self.int2emb_save_path.is_file():
+            with open(self.int2emb_save_path, 'w') as f:
+                data = '\n'.join([str(el[0]) + ' ' +
+                                 ' '.join(list(map(str, el[1]))) for el in self.int2emb_vocab.items()])
+                f.write(data)
 
     def build_emb_matrix(self, tok2int_vocab):
         self.emb_matrix = np.zeros((len(tok2int_vocab), self.embedding_dim))
@@ -55,7 +87,7 @@ class Embeddings(object):
                 except:
                     self.emb_matrix[i] = np.random.uniform(-0.6, 0.6, self.embedding_dim)
 
-    def build_seq_embs(self, tok2int_vocab):
+    def build_int2emb_vocab(self, tok2int_vocab):
         for tok, i in tok2int_vocab.items():
             if tok == '<UNK>':
                 self.int2emb_vocab[i] = np.random.uniform(-0.6, 0.6, self.embedding_dim)
@@ -75,6 +107,6 @@ class Embeddings(object):
             emb = np.vstack(emb)
             embs.append(emb)
         embs = [np.reshape(el, (1, self.max_sequence_length, self.embedding_dim)) for el in embs]
-        # assert len(embs) > 1
         embs = np.vstack(embs)
         return embs
+

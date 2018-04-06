@@ -59,7 +59,7 @@ class RankingNetwork(metaclass=TfModelMeta):
     def save(self, path):
         self.obj_model.save_weights(path)
 
-    def set_emb_matrix(self, emb_matrix):
+    def init_from_scratch(self, emb_matrix):
         if self.use_matrix:
             if self.type_of_weights == "shared":
                 self.obj_model.get_layer(name="embedding").set_weights([emb_matrix])

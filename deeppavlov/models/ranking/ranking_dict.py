@@ -2,6 +2,10 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 from deeppavlov.core.commands.utils import expand_path
 from keras.preprocessing.sequence import pad_sequences
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 class RankingDict(metaclass=ABCMeta):
@@ -35,6 +39,7 @@ class RankingDict(metaclass=ABCMeta):
         self.context2emb_vocab = {}
 
     def init_from_scratch(self):
+        log.info("[initializing new `{}`]".format(self.__class__.__name__))
         self.build_int2tok_vocab()
         self.build_tok2int_vocab()
         self.build_context2toks_vocabulary()
@@ -43,6 +48,7 @@ class RankingDict(metaclass=ABCMeta):
         self.build_response2emb_vocabulary()
 
     def load(self):
+        log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
         self.load_int2tok()
         self.build_tok2int_vocab()
         self.load_context2toks()

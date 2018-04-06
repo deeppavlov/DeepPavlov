@@ -61,6 +61,11 @@ class RankingModel(NNModel):
             dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
             self.dict = UbuntuDict(**dict_parameters)
 
+        embdict_parameter_names = list(inspect.signature(Embeddings.__init__).parameters)
+        embdict_parameters = {par: self.opt[par] for par in embdict_parameter_names if par in self.opt}
+        self.embdict= Embeddings(**embdict_parameters)
+
+
         # self.dict: DictInterface = kwargs['vocab']
 
         network_parameter_names = list(inspect.signature(RankingNetwork.__init__).parameters)
@@ -76,21 +81,17 @@ class RankingModel(NNModel):
         if not self.load_path.exists():
             log.info("[initializing new `{}`]".format(self.__class__.__name__))
             self.dict.init_from_scratch()
-            embdict_parameter_names = list(inspect.signature(Embeddings.__init__).parameters)
-            embdict_parameters = {par: self.opt[par] for par in embdict_parameter_names if par in self.opt}
-            embdict= Embeddings(self.dict.tok2int_vocab, **embdict_parameters)
+            self.embdict.init_from_scratch(self.dict.tok2int_vocab)
             self._net = RankingNetwork(toks_num=len(self.dict.tok2int_vocab),
-                                       emb_dict=embdict,
+                                       emb_dict=self.embdict,
                                        **self.network_parameters)
-            self._net.set_emb_matrix(embdict.emb_matrix)
+            self._net.init_from_scratch(self.embdict.emb_matrix)
         else:
             log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
             self.dict.load()
-            embdict_parameter_names = list(inspect.signature(Embeddings.__init__).parameters)
-            embdict_parameters = {par: self.opt[par] for par in embdict_parameter_names if par in self.opt}
-            embdict= Embeddings(self.dict.tok2int_vocab, **embdict_parameters)
+            self.embdict.load()
             self._net = RankingNetwork(toks_num=len(self.dict.tok2int_vocab),
-                                       emb_dict=embdict,
+                                       emb_dict=self.embdict,
                                        **self.network_parameters)
             self._net.load(self.load_path)
 
@@ -102,6 +103,7 @@ class RankingModel(NNModel):
         self._net.save(self.save_path)
         self.set_embeddings()
         self.dict.save()
+        self.embdict.save()
 
 
     @check_attr_true('train_now')
