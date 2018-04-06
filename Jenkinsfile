@@ -1,7 +1,7 @@
 node('gpu') {
     try {
         stage('Checkout') {
-            sh "echo 'Hello!"
+            sh "echo Hello"
         }
         stage('Setup') {
             env.CUDA_VISIBLE_DEVICES=0
