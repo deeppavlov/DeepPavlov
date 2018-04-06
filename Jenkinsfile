@@ -1,13 +1,9 @@
 node('gpu') {
     try {
         stage('Checkout') {
-            git branch: '${GITHUB_PR_SOURCE_BRANCH}', url: 'https://github.com/deepmipt/deeppavlov.git'
-            if (${GITHUB_PR_NUMBER} > 0) {
-                sh """
-                    echo 'I am here!'
-                    git checkout ${GITHUB_PR_TARGET_BRANCH}
-                    git merge ${GITHUB_PR_SOURCE_BRANCH}
-                """
+            sh """
+                cd $(pwd)@script
+            """
             }
         }
         stage('Setup') {
@@ -28,13 +24,13 @@ node('gpu') {
             """
         }
     } catch (e) {
-        emailext to: '${DEFAULT_RECIPIENTS},${GITHUB_PR_AUTHOR_EMAIL}',
+        emailext to: '${DEFAULT_RECIPIENTS}',
             subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - FAILED!',
             body: '${BRANCH_NAME} - ${BUILD_URL}',
             attachLog: true
         throw e
     }
-    emailext to: '${DEFAULT_RECIPIENTS},${GITHUB_PR_AUTHOR_EMAIL}',
+    emailext to: '${DEFAULT_RECIPIENTS}',
         subject: '$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!',
         body: '${BRANCH_NAME} - ${BUILD_URL}',
         attachLog: true
