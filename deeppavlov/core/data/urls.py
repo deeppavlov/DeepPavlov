@@ -30,13 +30,14 @@ REQ_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/seq2seq_go_bot.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/odqa.tar.gz'
 }
 
 OPT_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin',
     'http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M.vec',
     'http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M-char.vec',
-    'http://lnsigo.mipt.ru/export/deeppavlov_data/odqa/wiki_tfidf_matrix.npz'
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/odqa.tar.gz'
 }
 
 ALL_URLS = REQ_URLS.union(OPT_URLS)
@@ -50,8 +51,9 @@ EMBEDDING_URLS = {
     'http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt'
 }
 
+# put there urls that do not require decompression:
 BINARY_URLS = {
-   'http://lnsigo.mipt.ru/export/deeppavlov_data/odqa/wiki_tfidf_matrix.npz'
+   # 'http://lnsigo.mipt.ru/export/deeppavlov_data/odqa/wiki_tfidf_matrix.npz'
 }
 
 DATA_URLS = {
