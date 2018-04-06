@@ -1,8 +1,15 @@
 node('gpu') {
     try {
-        /*stage('Checkout') {
-            git branch: '${GIT_COMMIT}', url: 'https://github.com/deepmipt/deeppavlov.git'
-        }*/
+        stage('Checkout') {
+            git 'https://github.com/deepmipt/deeppavlov.git'
+            if (${GITHUB_PR_NUMBER} > 0) {
+                sh """
+                    git checkout ${GITHUB_PR_SOURCE_BRANCH}
+                    git checkout ${GITHUB_PR_TARGET_BRANCH}
+                    git merge ${GITHUB_PR_SOURCE_BRANCH}
+                """
+            }
+        }
         stage('Setup') {
             env.CUDA_VISIBLE_DEVICES=0
             sh """
