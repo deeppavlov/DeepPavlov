@@ -25,6 +25,7 @@ class Embeddings(object):
                  embeddings_path, save_path, load_path, embeddings="word2vec", seed=None):
         """Initialize the class according to given parameters."""
         np.random.seed(seed)
+        self.download_url = download_url
         save_path = expand_path(save_path).resolve().parent
         load_path = expand_path(load_path).resolve().parent
         self.int2emb_save_path = save_path / "int2emb.dict"
@@ -38,7 +39,7 @@ class Embeddings(object):
 
     def init_from_scratch(self, tok2int_vocab):
         if not self.emb_model_file.is_file():
-            download(source_url=download_url, dest_file_path=self.emb_model_file)
+            download(source_url=self.download_url, dest_file_path=self.emb_model_file)
 
         if self.embeddings == "fasttext":
             self.embeddings_model = FastText.load_fasttext_format(str(self.emb_model_file))
