@@ -1,9 +1,7 @@
 node('gpu') {
     try {
         stage('Checkout') {
-            sh """
-                cd $(pwd)@script
-            """
+            sh "cd ${pwd()}@script"
             }
         }
         stage('Setup') {
