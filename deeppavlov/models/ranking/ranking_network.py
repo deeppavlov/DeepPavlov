@@ -8,6 +8,10 @@ from keras import backend as K
 import tensorflow as tf
 import numpy as np
 from deeppavlov.core.models.tf_backend import TfModelMeta
+from deeppavlov.core.common.log import get_logger
+
+
+log = get_logger(__name__)
 
 
 class RankingNetwork(metaclass=TfModelMeta):
@@ -54,12 +58,14 @@ class RankingNetwork(metaclass=TfModelMeta):
         return tf.Session(config=config)
 
     def load(self, path):
+        log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
         self.obj_model.load_weights(path)
 
     def save(self, path):
         self.obj_model.save_weights(path)
 
     def init_from_scratch(self, emb_matrix):
+        log.info("[initializing new `{}`]".format(self.__class__.__name__))
         if self.use_matrix:
             if self.type_of_weights == "shared":
                 self.obj_model.get_layer(name="embedding").set_weights([emb_matrix])
