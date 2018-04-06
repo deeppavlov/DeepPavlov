@@ -38,20 +38,21 @@ class TfidfRanker(Estimator):
     def __init__(self, vectorizer: Type = HashingTfIdfVectorizer, **kwargs):
         self.vectorizer = vectorizer
 
-        if self.vectorizer.load_path.exists():
-            self.tfidf_matrix, opts = self.vectorizer.load()
-            self.ngram_range = opts['ngram_range']
-            self.hash_size = opts['hash_size']
-            self.term_freqs = opts['term_freqs'].squeeze()
-            self.doc_index = opts['doc_index']
+        if kwargs['mode'] != 'train':
+            if self.vectorizer.load_path.exists():
+                self.tfidf_matrix, opts = self.vectorizer.load()
+                self.ngram_range = opts['ngram_range']
+                self.hash_size = opts['hash_size']
+                self.term_freqs = opts['term_freqs'].squeeze()
+                self.doc_index = opts['doc_index']
 
-            self.vectorizer.doc_index = self.doc_index
-            self.vectorizer.term_freqs = self.term_freqs
-            self.vectorizer.hash_size = self.hash_size
+                self.vectorizer.doc_index = self.doc_index
+                self.vectorizer.term_freqs = self.term_freqs
+                self.vectorizer.hash_size = self.hash_size
 
-            self.index2doc = self.get_index2doc()
-        else:
-            logger.warning("TfidfRanker wasn't initialized, is waiting for training.")
+                self.index2doc = self.get_index2doc()
+            else:
+                logger.warning("TfidfRanker load_path doesn't exist, is waiting for training.")
 
     def get_index2doc(self):
         return dict(zip(self.doc_index.values(), self.doc_index.keys()))
