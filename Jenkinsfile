@@ -1,8 +1,8 @@
 node('gpu') {
     try {
-        /*stage('Checkout') {
-            sh "cp ${pwd()}@script"
-        }*/
+        stage('Checkout') {
+            sh "echo 'Hello!"
+        }
         stage('Setup') {
             env.CUDA_VISIBLE_DEVICES=0
             sh """
