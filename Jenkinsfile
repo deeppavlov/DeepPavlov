@@ -2,7 +2,6 @@ node('gpu') {
     try {
         stage('Checkout') {
             sh "cd ${pwd()}@script"
-            }
         }
         stage('Setup') {
             env.CUDA_VISIBLE_DEVICES=0
