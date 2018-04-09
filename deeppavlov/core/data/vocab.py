@@ -196,3 +196,4 @@ class DefaultVocabulary(Estimator):
 
     def batch_idxs2batch_toks(self, b_idxs, filter_paddings=False):
         return [self.idxs2toks(idxs, filter_paddings) for idxs in b_idxs]
+
