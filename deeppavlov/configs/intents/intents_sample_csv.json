@@ -50,10 +50,6 @@
             3
           ],
           "filters_cnn": 256,
-          "lear_metrics": [
-            "binary_accuracy",
-            "fmeasure"
-          ],
           "confident_threshold": 0.5,
           "optimizer": "Adam",
           "lear_rate": 0.01,
@@ -63,7 +59,6 @@
           "coef_reg_cnn": 1e-4,
           "coef_reg_den": 1e-4,
           "dropout_rate": 0.5,
-          "epochs": 1000,
           "dense_size": 100,
           "model_name": "cnn_model"
         },

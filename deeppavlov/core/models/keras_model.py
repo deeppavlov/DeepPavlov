@@ -89,7 +89,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
             compiled model with given network and learning parameters
         """
         log.info("[initializing `{}` from scratch]".format(self.__class__.__name__))
-
+        print(model_name)
         model_func = getattr(self, model_name, None)
         if callable(model_func):
             model = model_func(params=self.opt)
@@ -205,6 +205,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
             weights_path = "{}.h5".format(str(self.save_path.resolve()))
             log.info("[saving model to {}]".format(opt_path))
             self.model.save_weights(weights_path)
+
 
         save_json(self.opt, opt_path)
         return True
