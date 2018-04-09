@@ -101,25 +101,24 @@ class KnowledgeBase(Estimator):
 @register("knowledge_base_entity_normalizer")
 class KnowledgeBaseEntityNormalizer(Component):
 
-    def __init__(self, kb, denormalize=False, *args, **kwargs):
-        self.kb = kb
+    def __init__(self, denormalize=False, *args, **kwargs):
         self.denormalize_flag = denormalize
 
-    def normalize(self, key, tokens):
+    def normalize(self, tokens, entries):
         utter = ' '.join(tokens)
-        for entity, value in self.kb([key])[0]:
+        for entity, value in entries:
             utter = utter.replace(' '.join(value), entity)
         return utter.split()
 
-    def denormalize(self, key, tokens):
-        for entity, value in self.kb([key])[0]:
+    def denormalize(self, tokens, entries):
+        for entity, value in entries:
             if entity in tokens:
                 entity_pos = tokens.index(entity)
                 tokens = tokens[:entity_pos] + value + tokens[entity_pos + 1:] 
         return tokens
 
-    def __call__(self, keys, values):
+    def __call__(self, tokens_list, entries_list):
         if self.denormalize_flag:
-            return [self.denormalize(key, val) for key, val in zip(keys, values)]
-        return [self.normalize(key, val) for key, val in zip(keys, values)]
+            return [self.denormalize(t, e) for t, e in zip(tokens_list, entries_list)]
+        return [self.normalize(t, e) for t, e in zip(tokens_list, entries_list)]
 

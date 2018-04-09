@@ -36,9 +36,14 @@
       },
       {
         "name": "knowledge_base_entity_normalizer",
-        "kb": "#kb",
-        "in": ["dialog_id", "y_tokens"],
+        "in": ["y_tokens", "kb_entries"],
         "out": ["y_norm_tokens"]
+      },
+      {
+        "name": "knowledge_base_entity_normalizer",
+        "remove": true,
+        "in": ["y_tokens", "kb_entries"],
+        "out": ["y_without_entities_tokens"]
       },
       {
         "id": "src_token_vocab",
@@ -67,18 +72,19 @@
         "load_path": "embeddings/wiki.en.bin"
       },
       {
-        "in": ["x_tokens", "dialog_id", "kb_entries"],
+        "in": ["x_tokens", "kb_entries"],
         "in_y": ["y_norm_tokens"],
         "out": ["prediction_norm_tokens"],
         "main": true,
         "name": "seq2seq_go_bot",
         "start_of_sequence_token": "<SOS>",
         "end_of_sequence_token": "<EOS>",
+        "embedder": "#token_embedder",
         "network": {
           "name": "seq2seq_go_bot_nn",
           "load_path": "seq2seq_go_bot/model",
           "save_path": "seq2seq_go_bot/model",
-          "learning_rate": 0.001,
+          "learning_rate": 0.0009,
           "embedder": "#token_embedder",
           "knowledge_base_keys": "#kb.primary_keys",
           "target_start_of_sequence_index": "#tgt_token_vocab.__getitem__('SOS')",
@@ -99,9 +105,8 @@
       },
       {
         "name": "knowledge_base_entity_normalizer",
-        "kb": "#kb",
         "denormalize": true,
-        "in": ["dialog_id", "prediction_norm_tokens"],
+        "in": ["prediction_norm_tokens", "kb_entries"],
         "out": ["prediction_tokens"]
       },
       {
