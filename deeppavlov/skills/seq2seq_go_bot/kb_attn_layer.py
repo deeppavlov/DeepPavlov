@@ -21,6 +21,7 @@ from tensorflow.python.framework import tensor_shape
 
 
 class KBAttention(base.Layer):
+# TODO: update class doc
     """Densely-connected layer class.
     Arguments:
         units: Integer or Long, dimensionality of the output space.
@@ -123,15 +124,14 @@ class KBAttention(base.Layer):
 
         print("input_shape =", input_shape)
         print("last in_shape =", in_shape)
-        in_shape = in_shape[:-2].concatenate(in_shape[-2] + input_shape[-1])
-        print("last in_shape =", in_shape)
+        #in_shape = in_shape[:-2].concatenate(in_shape[-2] + input_shape[-1])
+        #print("last in_shape =", in_shape)
         self.output_layer = tf.layers.Dense(self.units, **self.dense_params)
-        self.output_layer.build(in_shape)
+        self.output_layer.build(input_shape)
         self.built = True
       
     def call(self, inputs):
 # TODO: check input dtype
-
         batch_size = tf.shape(inputs)[0]
         kb_inputs = tf.tile(tf.expand_dims(self.kb_inputs, 0), [batch_size, 1, 1])
 
@@ -142,9 +142,11 @@ class KBAttention(base.Layer):
         outputs = tf.multiply(outputs, tf.expand_dims(self.kb_mask, -1))
         for layer in self.layers:
             outputs = layer.call(outputs)
-
-        outputs = tf.concat([inputs, tf.squeeze(outputs, [-1])], -1)
-        outputs = self.output_layer(outputs)
+        #outputs = tf.Print(outputs, [outputs], "KB attention pre-last layer output =")
+        outputs = tf.squeeze(outputs, [-1])
+        print("inputs shape =", inputs.shape)
+        print("outputs shape =", outputs.shape)
+        outputs = tf.concat([self.output_layer(inputs), outputs], -1)
         return outputs
 
     def _compute_output_shape(self, input_shape):
@@ -154,7 +156,7 @@ class KBAttention(base.Layer):
             raise ValueError(
                 'The innermost dimension of input_shape must be defined, but saw: %s'
                 % input_shape)
-        return input_shape[:-1].concatenate(self.units)
+        return input_shape[:-1].concatenate(self.units + self.kb_input_shape[0])
 
     def compute_output_shape(self, input_shape):
         return _compute_output_shape(self, input_shape)

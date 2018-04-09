@@ -44,6 +44,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         self._build_graph()
         # initialize session
         self.sess = tf.Session()
+        #from tensorflow.python import debug as tf_debug
+        #self.sess = tf_debug.TensorBoardDebugWrapperSession(self.sess, "vimary-pc:7019")
 
         self.sess.run(tf.global_variables_initializer())
 
@@ -57,13 +59,14 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
     def _init_params(self, params):
         self.opt = {k: v for k, v in params.items() if k not in ('embedder')}
-
-        self.kb_keys = params['knowledge_base_keys']
+        self.opt['knowledge_base_size'] = len(self.opt['knowledge_base_keys'])
 
         self.opt['embedder_load_path'] = str(params['embedder'].load_path)
         self.embedder = params['embedder']
         self.opt['embedding_size'] = params.get('embedding_size', self.embedder.dim)
         
+        self.kb_keys = self.opt['knowledge_base_keys']
+        self.kb_size = self.opt['knowledge_base_size']
         self.learning_rate = self.opt['learning_rate']
         self.tgt_sos_id = self.opt['target_start_of_sequence_index']
         self.tgt_eos_id = self.opt['target_end_of_sequence_index']
@@ -86,6 +89,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                                                    weights=_weights,
                                                    reduction=tf.losses.Reduction.NONE)
         # normalize loss by batch_size
+        _loss_tensor = \
+            tf.verify_tensor_all_finite(_loss_tensor, "Non finite values in loss tensor.")
         self._loss = tf.reduce_sum(_loss_tensor) / tf.cast(self._batch_size, tf.float32)
         # self._loss = tf.reduce_mean(_loss_tensor, name='loss')
 # TODO: tune clip_norm
@@ -150,7 +155,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         #    "decoder_embedding", [self.tgt_vocab_size, self.embedding_size])
         #_decoder_emb_inp = tf.nn.embedding_lookup(_decoder_embedding,
         #                                          self._decoder_inputs)
-        _decoder_emb_inp = tf.one_hot(self._decoder_inputs, self.tgt_vocab_size)
+        _decoder_emb_inp = tf.one_hot(self._decoder_inputs,
+                                      self.tgt_vocab_size + self.kb_size)
 
         with tf.variable_scope("Encoder"):
             _encoder_cell = tf.nn.rnn_cell.BasicLSTMCell(self.hidden_size)
@@ -170,7 +176,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             # Infer Helper
             _max_iters = tf.round(tf.reduce_max(self._src_sequence_lengths) * 2)
             _helper_infer = tf.contrib.seq2seq.GreedyEmbeddingHelper(
-                lambda d: tf.one_hot(d, self.tgt_vocab_size),
+                lambda d: tf.one_hot(d, self.tgt_vocab_size + self.kb_size),
                 tf.fill([self._batch_size], self.tgt_sos_id), self.tgt_eos_id)
 
             def decode(helper, scope, max_iters=None, reuse=None):

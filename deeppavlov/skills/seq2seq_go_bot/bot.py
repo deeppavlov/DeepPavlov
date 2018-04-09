@@ -51,6 +51,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
         self.network = network
         self.src_vocab = source_vocab
         self.tgt_vocab = target_vocab
+        self.tgt_vocab_size = len(target_vocab)
         self.bow_encoder = bow_encoder
         self.kb_keys = knowledge_base_keys
         self.kb_size = len(self.kb_keys)
@@ -65,6 +66,9 @@ class Seq2SeqGoalOrientedBot(NNModel):
             enc_in = self._encode_context(x_tokens)
             b_enc_ins.append(enc_in)
             b_src_lens.append(len(enc_in))
+            if self.debug:
+                if len(kb_entries) != len(set([e[0] for e in kb_entries])):
+                    print("Duplicates in kb_entries = {}".format(kb_entries))
             b_kb_masks.append(self._kb_mask(kb_entries))
 
             dec_in, dec_out = self._encode_response(y_tokens)
@@ -102,20 +106,35 @@ class Seq2SeqGoalOrientedBot(NNModel):
     def _encode_response(self, tokens):
         if self.debug:
             log.debug("Response tokens = \"{}\"".format(y_tokens))
-        token_idxs = self.tgt_vocab(tokens)
+        token_idxs = []
+        for token in tokens:
+            if token in self.tgt_vocab:
+                token_idxs.append(self.tgt_vocab[token])
+            else:
+                if token not in self.kb_keys:
+                    print("token = {}, tokens = {}".format(token, tokens))
+                token_idxs.append(self.tgt_vocab_size + self.kb_keys.index(token))
+        # token_idxs = self.tgt_vocab(tokens)
         return ([self.tgt_vocab[self.sos_token]] + token_idxs,
                 token_idxs + [self.tgt_vocab[self.eos_token]])
+
+    def _decode_response(self, token_idxs):
+        def _idx2token(idxs):
+            for idx in idxs:
+                if idx < self.tgt_vocab_size:
+                    token = self.tgt_vocab([idx])[0]
+                    if token == self.eos_token:
+                        break
+                    yield token
+                else:
+                    yield self.kb_keys[idx - self.tgt_vocab_size]
+        return [list(_idx2token(utter_idxs)) for utter_idxs in token_idxs]
 
     def __call__(self, *batch):
         return self._infer_on_batch(*batch)
 
     #def _infer_on_batch(self, utters, kb_entry_list=itertools.repeat([])):
     def _infer_on_batch(self, utters, kb_entry_list):
-        def _filter(tokens):
-            for t in tokens:
-                if t == self.eos_token:
-                    break
-                yield t
 # TODO: history as input
         b_enc_ins, b_src_lens, b_kb_masks = [], [], []
         if (len(utters) == 1) and not utters[0]:
@@ -135,8 +154,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
             b_enc_ins[i].extend([self.src_vocab[self.eos_token]] * src_padd_len)
 
         pred_idxs = self.network(b_enc_ins, b_src_lens, b_kb_masks)
-        preds = [list(_filter(self.tgt_vocab(utter_idxs)))\
-                 for utter_idxs in pred_idxs]
+        preds = self._decode_response(pred_idxs)
         if self.debug:
             log.debug("Dialog prediction = \"{}\"".format(preds[-1]))
         return preds

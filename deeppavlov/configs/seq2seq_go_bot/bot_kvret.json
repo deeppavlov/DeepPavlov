@@ -56,7 +56,7 @@
       },
       {
         "id": "tgt_token_vocab",
-        "fit_on": ["y_norm_tokens"],
+        "fit_on": ["y_without_entities_tokens"],
         "debug": true,
         "name": "default_vocab",
         "level": "token",

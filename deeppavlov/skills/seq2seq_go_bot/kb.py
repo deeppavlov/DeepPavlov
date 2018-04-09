@@ -44,10 +44,11 @@ class KnowledgeBase(Estimator):
         self.reset()
         self._update(*args)
 
-    def _update(self, keys, kb_columns_list, kb_items_list, primary_keys=True):
+    def _update(self, keys, kb_columns_list, kb_items_list, update_primary_keys=True):
         for key, cols, items in zip(keys, kb_columns_list, kb_items_list):
             if (None not in (key, items, cols)) and (key not in self.kb):
-                kv_entry_list = (self._key_value_entries(item, cols, update=primary_keys)\
+                kv_entry_list = (self._key_value_entries(item, cols,
+                                                         update=update_primary_keys)\
                                  for item in items)
                 self.kb[key] = list(itertools.chain(*kv_entry_list))
     
@@ -67,7 +68,7 @@ class KnowledgeBase(Estimator):
 
     def __call__(self, keys, kb_columns_list=None, kb_items_list=None):
         if None not in (kb_columns_list, kb_items_list):
-            self._update(keys, kb_columns_list, kb_items_list, primary_keys=False)
+            self._update(keys, kb_columns_list, kb_items_list, update_primary_keys=False)
         res = []
         for key in keys:
             res.append(self.kb[key])
@@ -101,20 +102,27 @@ class KnowledgeBase(Estimator):
 @register("knowledge_base_entity_normalizer")
 class KnowledgeBaseEntityNormalizer(Component):
 
-    def __init__(self, denormalize=False, *args, **kwargs):
+    def __init__(self, remove=False, denormalize=False, *args, **kwargs):
         self.denormalize_flag = denormalize
+        self.remove = remove
 
     def normalize(self, tokens, entries):
-        utter = ' '.join(tokens)
-        for entity, value in entries:
-            utter = utter.replace(' '.join(value), entity)
-        return utter.split()
+        for entity, value_tokens in sorted(entries, key=lambda e: -len(e[1])):
+            value_len = len(value_tokens)
+            if ' '.join(value_tokens).strip():
+                for i in range(len(tokens)):
+                    if tokens[i:i+value_len] == value_tokens:
+                        if self.remove:
+                            tokens = tokens[:i] + tokens[i+value_len:]
+                        else:
+                            tokens = tokens[:i] + [entity] + tokens[i+value_len:]
+        return tokens
 
     def denormalize(self, tokens, entries):
         for entity, value in entries:
             if entity in tokens:
                 entity_pos = tokens.index(entity)
-                tokens = tokens[:entity_pos] + value + tokens[entity_pos + 1:] 
+                tokens = tokens[:entity_pos] + value + tokens[entity_pos+1:] 
         return tokens
 
     def __call__(self, tokens_list, entries_list):
