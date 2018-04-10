@@ -42,7 +42,8 @@ class NerNetwork(TFModel):
                  clip_grad_norm=5.0,
                  gpu=None):
         self._build_training_placeholders()
-        self._xs_and_y_placeholders = []
+        self._xs_placeholders = []
+        self._y_ph = tf.placeholder(tf.int32, [None, None], name='y_ph')
         self._input_features = []
 
         # ================ Building input features =================
@@ -103,12 +104,12 @@ class NerNetwork(TFModel):
         emb = embedding_layer(token_indices_ph, token_emb_mat)
         if embeddings_dropout:
             emb = tf.layers.dropout(emb, self._dropout_ph, noise_shape=[tf.shape(emb)[0], 1, tf.shape(emb)[2]])
-        self._xs_and_y_placeholders.append(token_indices_ph)
+        self._xs_placeholders.append(token_indices_ph)
         self._input_features.append(emb)
 
     def _build_mask(self):
         mask_ph = tf.placeholder(tf.float32, [None, None], name='Mask_ph')
-        self._xs_and_y_placeholders.append(mask_ph)
+        self._xs_placeholders.append(mask_ph)
         return mask_ph
 
     def _build_char_embeddings(self, char_emb_mat, embeddings_dropout):
@@ -117,12 +118,12 @@ class NerNetwork(TFModel):
 
     def _build_capitalization(self, capitalization_dim):
         capitalization_ph = tf.placeholder(tf.int32, [None, None, capitalization_dim], name='Capitalization_ph')
-        self._xs_and_y_placeholders.append(capitalization_ph)
+        self._xs_placeholders.append(capitalization_ph)
         self._input_features.append(capitalization_ph)
 
     def _build_pos(self, pos_features_dim):
         pos_ph = tf.placeholder(tf.int32, [None, None, pos_features_dim], name='POS_ph')
-        self._xs_and_y_placeholders.append(pos_ph)
+        self._xs_placeholders.append(pos_ph)
         self._input_features.append(pos_ph)
 
     def _build_cudnn_rnn(self, units, n_hidden_list, cell_type, intra_layer_dropout):
@@ -167,20 +168,18 @@ class NerNetwork(TFModel):
         return logits
 
     def _build_train_predict(self, logits, mask, n_tags, use_crf, clip_grad_norm, l2_reg):
-        y_ph = tf.placeholder(tf.int32, [None, None], name='y_ph')
-        self._xs_and_y_placeholders.append(y_ph)
-        # self.train_op, self.loss, predict_method = self._build_train_predict(logits, use_crf)
         if use_crf:
             sequence_lengths = tf.reduce_sum(mask, axis=1)
-            log_likelihood,  trainsition_params= tf.contrib.crf.crf_log_likelihood(logits,
-                                                                                   y_ph,
-                                                                                   sequence_lengths)
+            log_likelihood, transition_params = tf.contrib.crf.crf_log_likelihood(logits, self._y_ph, sequence_lengths)
             loss_tensor = -log_likelihood
         else:
-            ground_truth_labels = tf.one_hot(y_ph, n_tags)
+            ground_truth_labels = tf.one_hot(self._y_ph, n_tags)
             loss_tensor = tf.nn.softmax_cross_entropy_with_logits(labels=ground_truth_labels, logits=logits)
             loss_tensor = loss_tensor * mask
+
         loss = tf.reduce_mean(loss_tensor)
+
+        # L2 regularization
         if l2_reg > 0:
             total_loss = loss + l2_reg * tf.reduce_mean(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
         else:
@@ -190,16 +189,14 @@ class NerNetwork(TFModel):
 
         return train_op, loss,
 
-    def predict_no_crf(self):
-        feed_dict = self._fill_feed_dict(x_word, x_char, mask, capitalization, training=False)
+    def predict_no_crf(self, *args):
+        feed_dict = {ph: val for ph, val in zip(self._xs_placeholders, args)}
         if self._use_crf:
             y_pred = []
             logits, trans_params, sequence_lengths = self._sess.run([self._logits,
-                                                                     self._trainsition_params,
-                                                                     self._sequence_lengths
-                                                                     ],
+                                                                     self._transition_params,
+                                                                     self._sequence_lengths],
                                                                     feed_dict=feed_dict)
-
             # iterate over the sentences because no batching in viterbi_decode
             for logit, sequence_length in zip(logits, sequence_lengths):
                 logit = logit[:int(sequence_length)]  # keep only the valid steps
@@ -207,6 +204,9 @@ class NerNetwork(TFModel):
                 y_pred += [viterbi_seq]
         else:
             y_pred = self._sess.run(self._y_pred, feed_dict=feed_dict)
+        return y_pred
+
+    def _fill_feed_dict(self, *args):
 
     def __call__(self, *args, **kwargs):
         pass
