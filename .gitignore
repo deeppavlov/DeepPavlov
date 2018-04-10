@@ -111,6 +111,7 @@ download/
 
 #project test
 /test/
+.pytest_cache
 
 # project data
 /data/

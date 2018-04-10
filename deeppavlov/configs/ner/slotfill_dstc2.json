@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "name": "dstc2_datasetreader",
+    "name": "dstc2_reader",
     "data_path": "dstc2"
   },
-  "dataset": {
-    "name": "dstc2_ner_dataset",
+  "dataset_iterator": {
+    "name": "dstc2_ner_iterator",
     "dataset_path": "dstc2"
   },
   "chainer": {
@@ -72,5 +72,10 @@
 
     "log_every_n_epochs": 1,
     "show_examples": false
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "DstcSlotFillingNetwork"
+    }
   }
 }

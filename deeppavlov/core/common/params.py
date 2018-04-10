@@ -55,10 +55,9 @@ def from_params(params: Dict, **kwargs) -> Component:
             log.exception(e)
             raise e
 
-    try:
-        cls_name = config_params.pop('name')
-    except KeyError:
-        e = ConfigError('Component config has neither `name` nor `ref` fields')
+    cls_name = config_params.pop('name', None)
+    if not cls_name:
+        e = ConfigError('Component config has no `name` nor `ref` fields')
         log.exception(e)
         raise e
     try:

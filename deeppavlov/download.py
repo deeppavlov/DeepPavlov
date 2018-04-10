@@ -22,7 +22,7 @@ root_path = (Path(__file__) / ".." / "..").resolve()
 sys.path.append(str(root_path))
 
 from deeppavlov.core.data.utils import download, download_decompress
-from deeppavlov.core.data.urls import REQ_URLS, ALL_URLS, EMBEDDING_URLS, DATA_URLS
+from deeppavlov.core.data.urls import REQ_URLS, ALL_URLS, EMBEDDING_URLS, DATA_URLS, BINARY_URLS
 from deeppavlov.core.common.log import get_logger
 
 
@@ -33,6 +33,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-all', action='store_true',
                     help="Download everything. Warning! There should be at least 10 GB space"
                          " available on disk.")
+parser.add_argument('-test', action='store_true',
+                    help="Turn test mode")
 
 
 def download_resources(args):
@@ -41,17 +43,28 @@ def download_resources(args):
     else:
         urls = REQ_URLS
 
-    for url in urls:
+    if args.test:
+        download_path = root_path / 'tests' / 'download'
+    else:
         download_path = root_path / 'download'
-        download_path.mkdir(exist_ok=True)
-        dest_path = download_path
+    download_path.mkdir(exist_ok=True)
 
-        embeddings_path = download_path.joinpath('embeddings')
+    embeddings_path = download_path.joinpath('embeddings')
+
+    for url in urls:
+
+        dest_path = download_path
 
         if url in EMBEDDING_URLS:
             embeddings_path.mkdir(exist_ok=True)
             dest_path = embeddings_path.joinpath(url.split("/")[-1])
             download(dest_path, url)
+
+        elif url in BINARY_URLS:
+            dest_folder = download_path.joinpath(url.split("/")[-2])
+            dest_file = dest_folder.joinpath(url.split("/")[-1])
+            dest_path.mkdir(exist_ok=True)
+            download(dest_file, url)
 
         elif url in DATA_URLS:
             dest_path = download_path.joinpath(url.split("/")[-1].split(".")[0])

@@ -2,8 +2,8 @@
   "dataset_reader": {
     "name": "typos_wikipedia_reader"
   },
-  "dataset": {
-    "name": "typos_dataset",
+  "dataset_iterator": {
+    "name": "typos_iterator",
     "test_ratio": 0.05
   },
   "chainer":{
@@ -44,5 +44,10 @@
   "train": {
     "validate_best": false,
     "test_best": true
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "ErrorModel"
+    }
   }
 }

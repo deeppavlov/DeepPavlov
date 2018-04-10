@@ -2,8 +2,8 @@
   "dataset_reader": {
     "name": "typos_kartaslov_reader"
   },
-  "dataset": {
-    "name": "typos_dataset",
+  "dataset_iterator": {
+    "name": "typos_iterator",
     "test_ratio": 0.02
   },
   "chainer":{
@@ -45,5 +45,10 @@
   "train": {
     "validate_best": false,
     "test_best": true
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "ErrorModel"
+    }
   }
 }
