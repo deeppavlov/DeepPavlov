@@ -51,18 +51,18 @@
         "name": "go_bot",
         "debug": false,
         "word_vocab": "#token_vocab",
-        "template_path": "dstc2/dstc2-templates.txt",
+        "template_path": "pharma/pharma-templates.txt",
         "use_action_mask": false,
         "network": {
           "name": "go_bot_rnn",
-          "load_path": "go_bot/model_simple",
-          "save_path": "go_bot/model_simple",
+          "load_path": "go_bot/model_pharma1",
+          "save_path": "go_bot/model_pharma1",
           "learning_rate": 0.002,
           "dropout_rate": 0.8,
           "hidden_size": 128,
           "dense_size": 64,
-          "obs_size": 802,
-          "action_size": 45
+          "obs_size": 1981,
+          "action_size": 18
         },
         "slot_filler": {
           "name": "simple_slotfilling",
@@ -88,15 +88,13 @@
         "tracker": {
           "name": "featurized_tracker",
           "slot_names": [
-            "age_groups",
-            "conditions",
-            "symptoms",
-            "severities",
-            "delivery_methods",
-            "periods",
-            "strengths",
-            "units",
-            "drugs"
+            "<age_group>",
+            "<condition>",
+            "<delivery>",
+            "<drug_name>",
+            "<strength>",
+            "<symptom>",
+            "<units>"
           ]
         }
       }

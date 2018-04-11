@@ -102,6 +102,7 @@ class PharmaDatasetReader(DatasetReader):
         for turn in data:
             if not turn:
                 if num_dialog_utter != num_dialog_resp:
+                    print(f"num_dialog_utter, {num_dialog_utter}, num_dialog_resp, {num_dialog_resp}")
                     raise RuntimeError("Datafile in the wrong format.")
                 episode_done = True
                 n += num_dialog_utter

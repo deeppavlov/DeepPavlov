@@ -8,6 +8,7 @@ import deeppavlov.core.data.dataset_iterator
 import deeppavlov.core.data.vocab
 import deeppavlov.dataset_readers.babi_reader
 import deeppavlov.dataset_readers.dstc2_reader
+import deeppavlov.dataset_readers.pharma_reader
 import deeppavlov.dataset_readers.kvret_reader
 import deeppavlov.dataset_readers.conll2003_reader
 import deeppavlov.dataset_readers.typos_reader
