@@ -5,10 +5,12 @@ from deeppavlov.core.layers.tf_layers import embedding_layer, character_embeddin
 from deeppavlov.core.layers.tf_layers import cudnn_bi_lstm, cudnn_bi_gru, bi_rnn, stacked_cnn
 from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.core.common.utils import check_gpu_existance
+from deeppavlov.core.common.registry import register
 
 INITIALIZER = tf.orthogonal_initializer
 
 
+@register('ner_ref')  # TODO: rename
 class NerNetwork(TFModel):
     GRAPH_PARAMS = ["n_filters",  # TODO: add check
                     "filter_width",
@@ -45,7 +47,6 @@ class NerNetwork(TFModel):
                  learning_rate=3e-3,
                  gpu=None,
                  **kwargs):
-        super().__init__(**kwargs)
         self._add_training_placeholders(dropout_keep_prob, learning_rate)
         self._xs_ph_list = []
         self._y_ph = tf.placeholder(tf.int32, [None, None], name='y_ph')
@@ -71,7 +72,7 @@ class NerNetwork(TFModel):
         if pos_features_dim is not None:
             self._add_pos(pos_features_dim)
 
-        features = tf.concat(self._input_features)
+        features = tf.concat(self._input_features, axis=2)
 
         # ================== Building the network ==================
 
@@ -96,8 +97,11 @@ class NerNetwork(TFModel):
         sess_config.gpu_options.allow_growth = True
         if gpu is not None:
             sess_config.gpu_options.visible_device_list = str(gpu)
+        print(tf.trainable_variables())
+        self.sess = tf.Session()   # TODO: add sess_config
+        self.sess.run(tf.global_variables_initializer())
 
-        self.sess = tf.Session(sess_config)
+        super().__init__(**kwargs)
 
     def _add_training_placeholders(self, dropout_keep_prob, learning_rate):
         self.learning_rate_ph = tf.placeholder_with_default(learning_rate, shape=[], name='learning_rate')
@@ -105,7 +109,7 @@ class NerNetwork(TFModel):
         self.training_ph = tf.placeholder_with_default(False, shape=[], name='is_training')
 
     def _add_word_embeddings(self, token_emb_mat, embeddings_dropout):
-        token_indices_ph = tf.placeholder(tf.int32, [None, None])
+        token_indices_ph = tf.placeholder(tf.int32, [None, None], name='token_indices')
         emb = embedding_layer(token_indices_ph, token_emb_mat)
         if embeddings_dropout:
             emb = tf.layers.dropout(emb, self._dropout_ph, noise_shape=[tf.shape(emb)[0], 1, tf.shape(emb)[2]])
@@ -197,7 +201,14 @@ class NerNetwork(TFModel):
 
     def predict_no_crf(self, xs):
         feed_dict = self._fill_feed_dict(xs)
-        return self.sess.run(self._y_pred, feed_dict)
+        pred_idxs, mask = self.sess.run([self._y_pred, self.mask_ph], feed_dict)
+
+        # Filter by sequece length
+        sequence_lengths = np.sum(mask, axis=1).astype(np.int32)
+        pred = []
+        for utt, l in zip(pred_idxs, sequence_lengths):
+            pred.append(utt[:l])
+        return pred
 
     def predict_crf(self, xs):
         feed_dict = self._fill_feed_dict(xs)
@@ -229,19 +240,10 @@ class NerNetwork(TFModel):
         return feed_dict
 
     def __call__(self, *args, **kwargs):
-        self.predict(args)
+        return self.predict(args)
 
     def train_on_batch(self, *args):
         *xs, y = args
         feed_dict = self._fill_feed_dict(xs, y, train=True)
         self.sess.run(self.train_op, feed_dict)
 
-    def save(self):
-        save_path = str(self.save_path.resolve())
-        saver = tf.train.Saver()
-        saver.save(self.sess, save_path)
-
-    def load(self):
-        load_path = str(self.load_path.resolve())
-        saver = tf.train.Saver()
-        saver.save(self.sess, load_path)
