@@ -8,6 +8,7 @@ from deeppavlov.core.common.utils import check_gpu_existance
 
 INITIALIZER = tf.orthogonal_initializer
 
+
 class NerNetwork(TFModel):
     GRAPH_PARAMS = ["n_filters",  # TODO: add check
                     "filter_width",
@@ -35,36 +36,40 @@ class NerNetwork(TFModel):
                  token_emb_mat=None,
                  char_emb_mat=None,
                  use_batch_norm=False,  # Regularization
+                 dropout_keep_prob=0.5,
                  embeddings_dropout=False,
                  top_dropout=False,
                  intra_layer_dropout=False,
                  l2_reg=0.0,
                  clip_grad_norm=5.0,
-                 gpu=None):
-        self._build_training_placeholders()
-        self._xs_placeholders = []
+                 learning_rate=3e-3,
+                 gpu=None,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self._add_training_placeholders(dropout_keep_prob, learning_rate)
+        self._xs_ph_list = []
         self._y_ph = tf.placeholder(tf.int32, [None, None], name='y_ph')
         self._input_features = []
 
         # ================ Building input features =================
 
         # Token embeddings
-        self._build_word_embeddings(token_emb_mat, embeddings_dropout)
+        self._add_word_embeddings(token_emb_mat, embeddings_dropout)
 
         # Masks for different lengths utterances
-        mask_ph = self._build_mask()
+        self.mask_ph = self._add_mask()
 
         # Char embeddings using highway CNN with max pooling
         if char_emb_dim is not None:
-            self._build_char_embeddings(char_emb_mat, embeddings_dropout)
+            self._add_char_embeddings(char_emb_mat, embeddings_dropout)
 
         # Capitalization features
         if capitalization_dim is not None:
-            self._build_capitalization(capitalization_dim)
+            self._add_capitalization(capitalization_dim)
 
         # Part of speech features
         if pos_features_dim is not None:
-            self._build_pos(pos_features_dim)
+            self._add_pos(pos_features_dim)
 
         features = tf.concat(self._input_features)
 
@@ -79,11 +84,11 @@ class NerNetwork(TFModel):
                 units = self._build_rnn(features, n_hidden_list, cell_type, intra_layer_dropout)
         elif net_type == 'cnn':
             units = self._build_cnn(features, n_hidden_list, cnn_filter_width, use_batch_norm)
-        logits = self._build_top(units, n_tags, n_hidden_list[-1], top_dropout, two_dense_on_top)
+        self.logits = self._build_top(units, n_tags, n_hidden_list[-1], top_dropout, two_dense_on_top)
 
-        self.train_op, self.loss, predict_method = self._build_train_predict(logits, mask_ph, n_tags, use_crf,
-                                                                             clip_grad_norm, l2_reg)
-        self.predict = predict_method
+        self.train_op, self.loss = self._build_train_predict(self.logits, self.mask_ph, n_tags,
+                                                             use_crf, clip_grad_norm, l2_reg)
+        self.predict = self.predict_crf if use_crf else self.predict_no_crf
 
         # ================= Initialize the session =================
 
@@ -94,36 +99,36 @@ class NerNetwork(TFModel):
 
         self.sess = tf.Session(sess_config)
 
-    def _build_training_placeholders(self):
-        self.learning_rate_ph = tf.placeholder(dtype=tf.float32, shape=[], name='learning_rate')
-        self._dropout_ph = tf.placeholder_with_default(1.0, shape=[], name='dropout')
+    def _add_training_placeholders(self, dropout_keep_prob, learning_rate):
+        self.learning_rate_ph = tf.placeholder_with_default(learning_rate, shape=[], name='learning_rate')
+        self._dropout_ph = tf.placeholder_with_default(dropout_keep_prob, shape=[], name='dropout')
         self.training_ph = tf.placeholder_with_default(False, shape=[], name='is_training')
 
-    def _build_word_embeddings(self, token_emb_mat, embeddings_dropout):
+    def _add_word_embeddings(self, token_emb_mat, embeddings_dropout):
         token_indices_ph = tf.placeholder(tf.int32, [None, None])
         emb = embedding_layer(token_indices_ph, token_emb_mat)
         if embeddings_dropout:
             emb = tf.layers.dropout(emb, self._dropout_ph, noise_shape=[tf.shape(emb)[0], 1, tf.shape(emb)[2]])
-        self._xs_placeholders.append(token_indices_ph)
+        self._xs_ph_list.append(token_indices_ph)
         self._input_features.append(emb)
 
-    def _build_mask(self):
+    def _add_mask(self):
         mask_ph = tf.placeholder(tf.float32, [None, None], name='Mask_ph')
-        self._xs_placeholders.append(mask_ph)
+        self._xs_ph_list.append(mask_ph)
         return mask_ph
 
-    def _build_char_embeddings(self, char_emb_mat, embeddings_dropout):
+    def _add_char_embeddings(self, char_emb_mat, embeddings_dropout):
         character_indices_ph = tf.placeholder(tf.int32, [None, None, None], name='Char_ph')
         character_embedding_network()
 
-    def _build_capitalization(self, capitalization_dim):
+    def _add_capitalization(self, capitalization_dim):
         capitalization_ph = tf.placeholder(tf.int32, [None, None, capitalization_dim], name='Capitalization_ph')
-        self._xs_placeholders.append(capitalization_ph)
+        self._xs_ph_list.append(capitalization_ph)
         self._input_features.append(capitalization_ph)
 
-    def _build_pos(self, pos_features_dim):
+    def _add_pos(self, pos_features_dim):
         pos_ph = tf.placeholder(tf.int32, [None, None, pos_features_dim], name='POS_ph')
-        self._xs_placeholders.append(pos_ph)
+        self._xs_ph_list.append(pos_ph)
         self._input_features.append(pos_ph)
 
     def _build_cudnn_rnn(self, units, n_hidden_list, cell_type, intra_layer_dropout):
@@ -172,10 +177,12 @@ class NerNetwork(TFModel):
             sequence_lengths = tf.reduce_sum(mask, axis=1)
             log_likelihood, transition_params = tf.contrib.crf.crf_log_likelihood(logits, self._y_ph, sequence_lengths)
             loss_tensor = -log_likelihood
+            self._transition_params = transition_params
         else:
             ground_truth_labels = tf.one_hot(self._y_ph, n_tags)
             loss_tensor = tf.nn.softmax_cross_entropy_with_logits(labels=ground_truth_labels, logits=logits)
             loss_tensor = loss_tensor * mask
+            self._y_pred = tf.argmax(logits, axis=-1)
 
         loss = tf.reduce_mean(loss_tensor)
 
@@ -186,36 +193,55 @@ class NerNetwork(TFModel):
             total_loss = loss
 
         train_op = self.get_train_op(total_loss, self.learning_rate_ph, clip_norm=clip_grad_norm)
+        return train_op, loss
 
-        return train_op, loss,
+    def predict_no_crf(self, xs):
+        feed_dict = self._fill_feed_dict(xs)
+        return self.sess.run(self._y_pred, feed_dict)
 
-    def predict_no_crf(self, *args):
-        feed_dict = {ph: val for ph, val in zip(self._xs_placeholders, args)}
+    def predict_crf(self, xs):
+        feed_dict = self._fill_feed_dict(xs)
         if self._use_crf:
-            y_pred = []
-            logits, trans_params, sequence_lengths = self._sess.run([self._logits,
-                                                                     self._transition_params,
-                                                                     self._sequence_lengths],
-                                                                    feed_dict=feed_dict)
+            logits, trans_params, mask = self.sess.run([self._logits,
+                                                        self._transition_params,
+                                                        self.mask_ph],
+                                                       feed_dict=feed_dict)
+            sequence_lengths = np.sum(mask, axis=1).astype(np.int32)
             # iterate over the sentences because no batching in viterbi_decode
+            y_pred = []
             for logit, sequence_length in zip(logits, sequence_lengths):
                 logit = logit[:int(sequence_length)]  # keep only the valid steps
                 viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(logit, trans_params)
                 y_pred += [viterbi_seq]
-        else:
-            y_pred = self._sess.run(self._y_pred, feed_dict=feed_dict)
+
         return y_pred
 
-    def _fill_feed_dict(self, *args):
+    def _fill_feed_dict(self, xs, y=None, learning_rate=None, train=False):
+        assert len(xs) == len(self._xs_ph_list)
+        feed_dict = {ph: x for ph, x in zip(self._xs_ph_list, xs)}
+        if y is not None:
+            feed_dict[self._y_ph] = y
+        if learning_rate is not None:
+            feed_dict[self.learning_rate_ph] = learning_rate
+        feed_dict[self.training_ph] = train
+        if not train:
+            feed_dict[self._dropout_ph] = 1.0
+        return feed_dict
 
     def __call__(self, *args, **kwargs):
-        pass
+        self.predict(args)
 
-    def train_on_batch(self, x: list, y: list):
-        pass
+    def train_on_batch(self, *args):
+        *xs, y = args
+        feed_dict = self._fill_feed_dict(xs, y, train=True)
+        self.sess.run(self.train_op, feed_dict)
 
-    def save(self, *args, **kwargs):
-        pass
+    def save(self):
+        save_path = str(self.save_path.resolve())
+        saver = tf.train.Saver()
+        saver.save(self.sess, save_path)
 
-    def load(self, *args, **kwargs):
-        pass
+    def load(self):
+        load_path = str(self.load_path.resolve())
+        saver = tf.train.Saver()
+        saver.save(self.sess, load_path)
