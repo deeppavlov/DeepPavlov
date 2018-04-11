@@ -111,17 +111,17 @@ class GoalOrientedBot(NNModel):
         if callable(self.embedder):
             if self.network.attn:
                 if tokenized:
-                    pad = np.zeros((self.network.attn.max_of_context_tokens,
-                                    self.embedder.dim),
+                    pad = np.zeros((self.network.attn.max_num_tokens,
+                                    self.network.attn.token_size),
                                    dtype=np.float32)
                     sen = np.array(self.embedder([tokenized])[0])
                     # TODO : Unsupport of batch_size more than 1
                     emb_context = np.concatenate((pad, sen))
-                    emb_context = emb_context[-self.network.attn.max_of_context_tokens:]
+                    emb_context = emb_context[-self.network.attn.max_num_tokens:]
                 else:
                     emb_context = \
-                        np.zeros((self.network.attn.max_of_context_tokens,
-                                  self.network.attn.token_dim),
+                        np.zeros((self.network.attn.max_num_tokens,
+                                  self.network.attn.token_size),
                                  dtype=np.float32)
             else:
                 emb_features = self.embedder([tokenized], mean=True)[0]
@@ -164,7 +164,7 @@ class GoalOrientedBot(NNModel):
                         "prev_action shape = {}".format(len(self.prev_action))
             log.debug(debug_msg)
 
-        if self.network.attn and self.network.attn.intent_dim:
+        if self.network.attn and self.network.attn.intent_size:
             attn_key = np.hstack((self.prev_action, intent_features))
         else:
             attn_key = np.array(self.prev_action)

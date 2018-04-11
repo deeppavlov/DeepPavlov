@@ -68,8 +68,8 @@
         },
         "network": {
           "name": "go_bot_rnn",
-          "load_path": "gobot_best_wo_bow_new_feats3/model",
-          "save_path": "gobot_best_wo_bow_new_feats3/model",
+          "load_path": "gobot_best_wo_bow_new_feats_rfct/model",
+          "save_path": "gobot_best_wo_bow_new_feats_rfct/model",
           "learning_rate": 0.001,
           "dropout_rate": 0.9,
           "hidden_size": 128,
@@ -78,14 +78,13 @@
           "use_action_mask": false,
           "action_size": 45,
           "attention_mechanism": {
-            "type":"cs_bahdanau",
-            "att_hidden_dim": 32,
-            "attention_depth": 3,
-            "max_of_context_tokens": 100,
-            "obs_size_correction": 63,
-            "projected_attn_alignment": false,
-            "token_dim": 300,
-            "key_dim": 45
+            "type": "cs_bahdanau",
+            "hidden_size": 32,
+            "depth": 3,
+            "max_num_tokens": 100,
+            "projected_align": false,
+            "token_size": 300,
+            "key_size": 45
           }
         },
         "slot_filler": {
