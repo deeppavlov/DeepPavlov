@@ -4,8 +4,6 @@ assert sys.hexversion >= 0x3060000, 'Does not work in python3.5 or lower'
 
 
 import deeppavlov.core.models.keras_model
-# import deeppavlov.core.data.data_fitting_iterator
-# import deeppavlov.core.data.data_learning_iterator
 import deeppavlov.core.data.vocab
 import deeppavlov.dataset_readers.babi_reader
 import deeppavlov.dataset_readers.dstc2_reader
@@ -46,12 +44,13 @@ import deeppavlov.skills.go_bot.tracker
 import deeppavlov.skills.seq2seq_go_bot.bot
 import deeppavlov.skills.seq2seq_go_bot.network
 import deeppavlov.skills.seq2seq_go_bot.kb
+import deeppavlov.skills.odqa.ranker
 import deeppavlov.vocabs.typos
+import deeppavlov.vocabs.wiki_sqlite
 import deeppavlov.dataset_readers.insurance_reader
 import deeppavlov.dataset_iterators.ranking_iterator
 import deeppavlov.models.ranking.ranking_model
 import deeppavlov.models.ranking.metrics
-import deeppavlov.models.odqa.ranker
 
 import deeppavlov.metrics.accuracy
 import deeppavlov.metrics.fmeasure
