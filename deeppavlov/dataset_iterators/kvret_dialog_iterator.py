@@ -29,15 +29,19 @@ class KvretDialogDatasetIterator(BasicDatasetIterator):
         task = None
         for x, y in data:
             if x.get('episode_done'):
-                history = []
-                dialogs.append((([], [], [], []), ([], [])))
+                #history = []
+                history = ""
+                dialogs.append((([], [], [], [], []), ([], [])))
                 task = y['task']
-            history.append((x, y))
-            x['history'] = history[:-1]
+            #history.append((x, y))
+            history = history + ' ' + x['text'] + ' ' + y['text']
+            #x['history'] = history[:-1]
+            x['history'] = history[:-len(x['text'])-len(y['text'])-2]
             dialogs[-1][0][0].append(x['text'])
             dialogs[-1][0][1].append(x['dialog_id'])
-            dialogs[-1][0][2].append(x.get('kb_columns', None))
-            dialogs[-1][0][3].append(x.get('kb_items', None))
+            dialogs[-1][0][2].append(x['history'])
+            dialogs[-1][0][3].append(x.get('kb_columns', None))
+            dialogs[-1][0][4].append(x.get('kb_items', None))
             dialogs[-1][1][0].append(y['text'])
             dialogs[-1][1][1].append(task)
         return dialogs
@@ -48,10 +52,14 @@ class KvretDialogDatasetIterator(BasicDatasetIterator):
         history = []
         for x, y in data:
             if x.get('episode_done'):
-                history = []
-            history.append((x, y))
-            x['history'] = history[:-1]
-            x_tuple = (x['text'], x['dialog_id'], x['kb_columns'], x['kb_items'])
+                #history = []
+                history = ""
+            #history.append((x, y))
+            history = history + ' ' + x['text'] + ' ' + y['text']
+            #x['history'] = history[:-1]
+            x['history'] = history[:-len(x['text'])-len(y['text'])-2]
+            x_tuple = (x['text'], x['dialog_id'], x['history'], x['kb_columns'],
+                       x['kb_items'])
             y_tuple = (y['text'], y['task'])
             utters.append((x_tuple, y_tuple))
         return utters

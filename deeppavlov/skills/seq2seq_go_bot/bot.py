@@ -61,8 +61,9 @@ class Seq2SeqGoalOrientedBot(NNModel):
     def train_on_batch(self, *batch):
         b_enc_ins, b_src_lens, b_kb_masks = [], [], []
         b_dec_ins, b_dec_outs, b_tgt_lens, b_tgt_weights = [], [], [], []
-        for x_tokens, kb_entries, y_tokens in zip(*batch):
+        for x_tokens, history, kb_entries, y_tokens in zip(*batch):
 
+            x_tokens = history + x_tokens
             enc_in = self._encode_context(x_tokens)
             b_enc_ins.append(enc_in)
             b_src_lens.append(len(enc_in))
@@ -134,14 +135,15 @@ class Seq2SeqGoalOrientedBot(NNModel):
         return self._infer_on_batch(*batch)
 
     #def _infer_on_batch(self, utters, kb_entry_list=itertools.repeat([])):
-    def _infer_on_batch(self, utters, kb_entry_list):
+    def _infer_on_batch(self, utters, history_list, kb_entry_list):
 # TODO: history as input
         b_enc_ins, b_src_lens, b_kb_masks = [], [], []
         if (len(utters) == 1) and not utters[0]:
             utters = [['hi']]
-        for utter, kb_entries in zip(utters, kb_entry_list):
+        for utter, history, kb_entries in zip(utters, history_list, kb_entry_list):
             if self.debug:
                 log.debug("infer: kb_entries = {}".format(kb_entries))
+            utter = history + utter
             enc_in = self._encode_context(utter)
             b_enc_ins.append(enc_in)
             b_src_lens.append(len(enc_in))
