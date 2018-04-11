@@ -153,9 +153,15 @@ def tokenize_reg(s):
 def zero_pad(batch, dtype=np.float32):
     batch_size = len(batch)
     max_len = max(len(utterance) for utterance in batch)
-    n_features = len(batch[0][0])
-    padded_batch = np.zeros([batch_size, max_len, n_features], dtype=dtype)
-    for n, utterance in enumerate(batch):
-        for k, token_features in enumerate(utterance):
-            padded_batch[n, k] = token_features
+    if isinstance(batch[0][0], int):
+        dtype = np.int32
+        padded_batch = np.zeros([batch_size, max_len], dtype=dtype)
+        for n, utterance in enumerate(batch):
+            padded_batch[n, :len(utterance)] = utterance
+    else:
+        n_features = len(batch[0][0])
+        padded_batch = np.zeros([batch_size, max_len, n_features], dtype=dtype)
+        for n, utterance in enumerate(batch):
+            for k, token_features in enumerate(utterance):
+                padded_batch[n, k] = token_features
     return padded_batch
