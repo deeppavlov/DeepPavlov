@@ -168,7 +168,8 @@ def bi_rnn(units: tf.Tensor,
                                             sequence_length=seq_lengths,
                                             initial_state_fw=initial_state_fw,
                                             initial_state_bw=initial_state_bw)
-    kernels = [var for var in forward_cell.trainable_variables + backward_cell if 'kernel' in var.name]
+    kernels = [var for var in forward_cell.trainable_variables +
+               backward_cell.trainable_variables if 'kernel' in var.name]
     for kernel in kernels:
         tf.add_to_collection(tf.GraphKeys.REGULARIZATION_LOSSES, tf.nn.l2_loss(kernel))
     return (rnn_output_fw, rnn_output_bw), (fw, bw)
