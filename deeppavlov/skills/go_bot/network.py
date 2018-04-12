@@ -266,7 +266,7 @@ class GoalOrientedBotNetwork(TFModel):
         with open(path, 'r') as fp:
             params = json.load(fp)
         for p in self.GRAPH_PARAMS:
-            if self.opt[p] != params[p]:
+            if self.opt.get(p) != params.get(p):
                 raise ConfigError("`{}` parameter must be equal to "
                                   "saved model parameter value `{}`"
                                   .format(p, params[p]))

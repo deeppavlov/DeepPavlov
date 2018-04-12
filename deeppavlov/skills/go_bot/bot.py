@@ -42,12 +42,11 @@ log = get_logger(__name__)
 class GoalOrientedBot(NNModel):
     def __init__(self,
                  template_path,
-                 network_parameters: Type = dict,
+                 network_parameters,
                  template_type: Type = DualTemplate,
                  bow_encoder: Type = BoWEncoder,
                  tokenizer: Type = StreamSpacyTokenizer,
                  tracker: Type = DefaultTracker,
-                 network: Type = GoalOrientedBotNetwork,
                  embedder=None,
                  slot_filler=None,
                  intent_classifier=None,
@@ -70,7 +69,6 @@ class GoalOrientedBot(NNModel):
         self.embedder = embedder
         self.tokenizer = tokenizer
         self.tracker = tracker
-        self.network = network
         self.word_vocab = word_vocab or vocabs['word_vocab']
         self.interact_db_result = db_result_during_interaction
 
