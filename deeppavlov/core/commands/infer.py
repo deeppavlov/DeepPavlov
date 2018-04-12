@@ -117,3 +117,39 @@ def interact_model(config_path):
             pred = model([args])
 
         print('>>', *pred)
+
+
+def predict_on_stream(config_path, batch_size=1, file_path=None):
+    import sys
+    import json
+    from itertools import islice
+
+    if file_path is None or file_path == '-':
+        if sys.stdin.isatty():
+            raise RuntimeError('To process data from terminal please use interact mode')
+        f = sys.stdin
+    else:
+        f = open(file_path)
+
+    config = read_json(config_path)
+    model: Chainer = build_model_from_config(config)
+
+    args_count = len(model.in_x)
+    while True:
+        batch = (l.strip() for l in islice(f, batch_size*args_count))
+        if args_count > 1:
+            batch = zip(*[batch]*args_count)
+        batch = list(batch)
+
+        if not batch:
+            break
+
+        for res in model(batch):
+            if type(res).__module__ == 'numpy':
+                res = res.tolist()
+            if not isinstance(res, str):
+                res = json.dumps(res, ensure_ascii=False)
+            print(res, flush=True)
+
+    if f is not sys.stdin:
+        f.close()
