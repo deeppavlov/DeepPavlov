@@ -19,12 +19,17 @@ import numpy as np
 from typing import List
 
 
+INITIALIZER = tf.orthogonal_initializer
+# INITIALIZER = xavier_initializer
+
+
 def stacked_cnn(units: tf.Tensor,
                 n_hidden_list: List,
                 filter_width=3,
                 use_batch_norm=False,
                 use_dilation=False,
-                training_ph=None):
+                training_ph=None,
+                add_l2_losses=False):
     """ Number of convolutional layers stacked on top of each other
 
     Args:
@@ -50,7 +55,8 @@ def stacked_cnn(units: tf.Tensor,
                                  filter_width,
                                  padding='same',
                                  dilation_rate=dilation_rate,
-                                 kernel_initializer=xavier_initializer())
+                                 kernel_initializer=INITIALIZER(),
+                                 kernel_regularizer=tf.nn.l2_loss)
         if use_batch_norm:
             assert training_ph is not None
             units = tf.layers.batch_normalization(units, training=training_ph)
@@ -92,7 +98,7 @@ def dense_convolutional_network(units: tf.Tensor,
                                  filter_width,
                                  dilation_rate=dilation_rate,
                                  padding='same',
-                                 kernel_initializer=xavier_initializer())
+                                 kernel_initializer=INITIALIZER())
         if use_batch_norm:
             units = tf.layers.batch_normalization(units, training=training_ph)
         units = tf.nn.relu(units)
@@ -100,13 +106,14 @@ def dense_convolutional_network(units: tf.Tensor,
     return units
 
 
-def stacked_bi_rnn(units: tf.Tensor,
-                   n_hidden_list: List,
-                   cell_type='gru',
-                   seq_lengths=None,
-                   use_peepholes=False,
-                   name='RNN_layer'):
-    """ Stackted recurrent neural networks GRU or LSTM
+def bi_rnn(units: tf.Tensor,
+           n_hidden: List,
+           cell_type='gru',
+           seq_lengths=None,
+           trainable_initial_states=False,
+           use_peepholes=False,
+           name='Bi-'):
+    """ Bi directional recurrent neural network. GRU or LSTM
 
         Args:
             units: a tensorflow tensor with dimensionality [None, n_tokens, n_features]
@@ -114,8 +121,12 @@ def stacked_bi_rnn(units: tf.Tensor,
             seq_lengths: length of sequences for different length sequences in batch
                 can be None for maximum length as a length for every sample in the batch
             cell_type: 'lstm' or 'gru'
+            trainable_initial_states: whether to create a special trainable variable
+                to initialize the hidden states of the network or use just zeros
             use_peepholes: whether to use peephole connections (only 'lstm' case affected)
             name: what variable_scope to use for the network parameters
+            add_l2_losses: whether to add l2 losses on network kernels to
+                tf.GraphKeys.REGULARIZATION_LOSSES or not
         Returns:
             units: tensor at the output of the last recurrent layer
                 with dimensionality [None, n_tokens, n_hidden_list[-1]]
@@ -125,32 +136,43 @@ def stacked_bi_rnn(units: tf.Tensor,
                 similar and equal to [B x 2 * H], where B - batch
                 size and H is number of hidden units
     """
-    for n, n_hidden in enumerate(n_hidden_list):
-        with tf.variable_scope(name + '_' + str(n)):
-            if cell_type == 'gru':
-                forward_cell = tf.nn.rnn_cell.GRUCell(n_hidden)
-                backward_cell = tf.nn.rnn_cell.GRUCell(n_hidden)
-            elif cell_type == 'lstm':
-                forward_cell = tf.nn.rnn_cell.LSTMCell(n_hidden, use_peepholes=use_peepholes)
-                backward_cell = tf.nn.rnn_cell.LSTMCell(n_hidden, use_peepholes=use_peepholes)
-            else:
-                raise RuntimeError('cell_type must be either gru or lstm')
 
-            (rnn_output_fw, rnn_output_bw), (fw, bw) = \
-                tf.nn.bidirectional_dynamic_rnn(forward_cell,
-                                                backward_cell,
-                                                units,
-                                                dtype=tf.float32,
-                                                sequence_length=seq_lengths)
-            units = tf.concat([rnn_output_fw, rnn_output_bw], axis=2)
-            if cell_type == 'gru':
-                last_units = tf.concat([fw, bw], axis=1)
+    with tf.variable_scope(name + '_' + cell_type.upper()):
+        if cell_type == 'gru':
+            forward_cell = tf.nn.rnn_cell.GRUCell(n_hidden, kernel_initializer=INITIALIZER)
+            backward_cell = tf.nn.rnn_cell.GRUCell(n_hidden, kernel_initializer=INITIALIZER)
+            if trainable_initial_states:
+                initial_state_fw = tf.tile(tf.get_variable('init_fw_h', [1, n_hidden]), (tf.shape(units)[0], 1))
+                initial_state_bw = tf.tile(tf.get_variable('init_bw_h', [1, n_hidden]), (tf.shape(units)[0], 1))
             else:
-                (c_fw, h_fw), (c_bw, h_bw) = fw, bw
-                c = tf.concat([c_fw, c_bw], axis=1)
-                h = tf.concat([h_fw, h_bw], axis=1)
-                last_units = (h, c)
-    return units, last_units
+                initial_state_fw = initial_state_bw = None
+        elif cell_type == 'lstm':
+            forward_cell = tf.nn.rnn_cell.LSTMCell(n_hidden, use_peepholes=use_peepholes, initializer=INITIALIZER)
+            backward_cell = tf.nn.rnn_cell.LSTMCell(n_hidden, use_peepholes=use_peepholes, initializer=INITIALIZER)
+            if trainable_initial_states:
+                initial_state_fw = tf.nn.rnn_cell.LSTMStateTuple(
+                    tf.tile(tf.get_variable('init_fw_c', [1, n_hidden]), (tf.shape(units)[0], 1)),
+                    tf.tile(tf.get_variable('init_fw_h', [1, n_hidden]), (tf.shape(units)[0], 1)))
+                initial_state_bw = tf.nn.rnn_cell.LSTMStateTuple(
+                    tf.tile(tf.get_variable('init_bw_c', [1, n_hidden]), (tf.shape(units)[0], 1)),
+                    tf.tile(tf.get_variable('init_bw_h', [1, n_hidden]), (tf.shape(units)[0], 1)))
+            else:
+                initial_state_fw = initial_state_bw = None
+        else:
+            raise RuntimeError('cell_type must be either "gru" or "lstm"s')
+        (rnn_output_fw, rnn_output_bw), (fw, bw) = \
+            tf.nn.bidirectional_dynamic_rnn(forward_cell,
+                                            backward_cell,
+                                            units,
+                                            dtype=tf.float32,
+                                            sequence_length=seq_lengths,
+                                            initial_state_fw=initial_state_fw,
+                                            initial_state_bw=initial_state_bw)
+    kernels = [var for var in forward_cell.trainable_variables +
+               backward_cell.trainable_variables if 'kernel' in var.name]
+    for kernel in kernels:
+        tf.add_to_collection(tf.GraphKeys.REGULARIZATION_LOSSES, tf.nn.l2_loss(kernel))
+    return (rnn_output_fw, rnn_output_bw), (fw, bw)
 
 
 def u_shape(units: tf.Tensor,
@@ -241,10 +263,10 @@ def stacked_highway_cnn(units: tf.Tensor,
                                  filter_width,
                                  padding='same',
                                  dilation_rate=dilation_rate,
-                                 kernel_initializer=xavier_initializer())
+                                 kernel_initializer=INITIALIZER)
         if use_batch_norm:
             units = tf.layers.batch_normalization(units, training=training_ph)
-        sigmoid_gate = tf.layers.dense(input_units, 1, activation=tf.sigmoid, kernel_initializer=xavier_initializer())
+        sigmoid_gate = tf.layers.dense(input_units, 1, activation=tf.sigmoid, kernel_initializer=INITIALIZER)
         input_units = sigmoid_gate * input_units + (1 - sigmoid_gate) * units
         input_units = tf.nn.relu(input_units)
     units = input_units
@@ -316,7 +338,8 @@ def character_embedding_network(char_placeholder: tf.Tensor,
         c_emb = tf.nn.embedding_lookup(char_emb_var, char_placeholder)
 
         # Character embedding network
-        char_conv = tf.layers.conv2d(c_emb, char_embedding_dim, (1, filter_width), padding='same', name='char_conv')
+        char_conv = tf.layers.conv2d(c_emb, char_embedding_dim, (1, filter_width), padding='same', name='char_conv',
+                                     kernel_initializer=INITIALIZER)
         embeddings = tf.reduce_max(char_conv, axis=2)
     return embeddings
 
@@ -356,10 +379,10 @@ def additive_self_attention(units, n_hidden=None, n_output_features=None, activa
     if n_output_features is None:
         n_output_features = n_input_features
     units_pairs = tf.concat([expand_tile(units, 1), expand_tile(units, 2)], 3)
-    query = tf.layers.dense(units_pairs, n_hidden, activation=tf.tanh)
+    query = tf.layers.dense(units_pairs, n_hidden, activation=tf.tanh, kernel_initializer=INITIALIZER)
     attention = tf.nn.softmax(tf.layers.dense(query, 1), dim=2)
     attended_units = tf.reduce_sum(attention * expand_tile(units, 1), axis=2)
-    output = tf.layers.dense(attended_units, n_output_features, activation)
+    output = tf.layers.dense(attended_units, n_output_features, activation, kernel_initializer=INITIALIZER)
     return output
 
 
@@ -383,16 +406,17 @@ def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, 
         n_hidden = n_input_features
     if n_output_features is None:
         n_output_features = n_input_features
-    queries = tf.layers.dense(expand_tile(units, 1), n_hidden)
-    keys = tf.layers.dense(expand_tile(units, 2), n_hidden)
+    queries = tf.layers.dense(expand_tile(units, 1), n_hidden, kernel_initializer=INITIALIZER)
+    keys = tf.layers.dense(expand_tile(units, 2), n_hidden, kernel_initializer=INITIALIZER)
     scores = tf.reduce_sum(queries * keys, axis=3, keep_dims=True)
     attention = tf.nn.softmax(scores, dim=2)
     attended_units = tf.reduce_sum(attention * expand_tile(units, 1), axis=2)
-    output = tf.layers.dense(attended_units, n_output_features, activation)
+    output = tf.layers.dense(attended_units, n_output_features, activation, kernel_initializer=INITIALIZER)
     return output
 
 
-def cudnn_gru(units, n_hidden, n_layers=1):
+def cudnn_gru(units, n_hidden, n_layers=1, trainable_initial_states=False,
+              input_initial_h=None, name='cudnn_gru', reuse=False):
     """ Fast CuDNN GRU implementation
 
     Args:
@@ -401,26 +425,40 @@ def cudnn_gru(units, n_hidden, n_layers=1):
             T - number of tokens
             F - features
         n_hidden: dimensionality of hidden state
+        trainable_initial_states: whether to create a special trainable variable
+            to initialize the hidden states of the network or use just zeros
         n_layers: number of layers
+        input_initial_h: initial hidden state, tensor
+        name: name of the variable scope to use
+        reuse:whether to reuse already initialized variable
 
     Returns:
         h - all hidden states along T dimension,
             tf.Tensor with dimensionality [B x T x F]
         h_last - last hidden state, tf.Tensor with dimensionality [B x H]
     """
-    gru = tf.contrib.cudnn_rnn.CudnnGRU(num_layers=n_layers,
-                                        num_units=n_hidden,
-                                        input_size=units.get_shape().as_list()[-1])
-    param = tf.Variable(tf.random_uniform(
-        [gru.params_size()], -0.1, 0.1), validate_shape=False)
-    init_h = tf.zeros([1, tf.shape(units)[0], n_hidden])
-    h, h_last = gru(tf.transpose(units, (1, 0, 2)), init_h, param)
-    h = tf.transpose(h, (1, 0, 2))
-    h_last = tf.squeeze(h_last, 0)
-    return h, h_last
+    with tf.variable_scope(name, reuse=reuse):
+        gru = tf.contrib.cudnn_rnn.CudnnGRU(num_layers=n_layers,
+                                            num_units=n_hidden,
+                                            input_size=units.get_shape().as_list()[-1])
+        param = tf.get_variable('gru_params', initializer=tf.random_uniform(
+            [gru.params_size()], -0.1, 0.1), validate_shape=False)
+
+        if trainable_initial_states:
+            init_h = tf.get_variable('init_h', [1, 1, n_hidden])
+        else:
+            init_h = tf.zeros([1, 1, n_hidden])
+
+        initial_h = input_initial_h or init_h
+
+        h, h_last = gru(tf.transpose(units, (1, 0, 2)), initial_h, param)
+        h = tf.transpose(h, (1, 0, 2))
+        h_last = tf.squeeze(h_last, 0)
+        return h, h_last
 
 
-def cudnn_lstm(units, n_hidden, n_layers=1):
+def cudnn_lstm(units, n_hidden, n_layers=1, trainable_initial_states=None, initial_h=None, initial_c=None,
+               name='cudnn_lstm', reuse=False):
     """ Fast CuDNN LSTM implementation
 
         Args:
@@ -429,7 +467,15 @@ def cudnn_lstm(units, n_hidden, n_layers=1):
                 T - number of tokens
                 F - features
             n_hidden: dimensionality of hidden state
-            n_layers: number of layers
+            trainable_initial_states: whether to create a special trainable variable
+                to initialize the hidden states of the network or use just zeros
+            initial_h: optional initial hidden state, masks trainable_initial_states
+                if provided
+            initial_c: optional initial cell state, masks trainable_initial_states
+                if provided
+            name: name of the variable scope to use
+            reuse:whether to reuse already initialized variable
+
 
         Returns:
             h - all hidden states along T dimension,
@@ -439,21 +485,36 @@ def cudnn_lstm(units, n_hidden, n_layers=1):
             c_last - last cell state, tf.Tensor with dimensionality [B x H]
                 where H - number of hidden units
         """
-    lstm = tf.contrib.cudnn_rnn.CudnnLSTM(num_layers=n_layers,
-                                          num_units=n_hidden,
-                                          input_size=units.get_shape().as_list()[-1])
-    param = tf.Variable(tf.random_uniform(
-        [lstm.params_size()], -0.1, 0.1), validate_shape=False)
-    init_h = tf.zeros([1, tf.shape(units)[0], n_hidden])
-    init_c = tf.zeros([1, tf.shape(units)[0], n_hidden])
-    h, h_last, c_last = lstm(tf.transpose(units, (1, 0, 2)), init_h, init_c, param)
-    h = tf.transpose(h, (1, 0, 2))
-    h_last = tf.squeeze(h_last, 0)
-    c_last = tf.squeeze(c_last, 0)
-    return h, (h_last, c_last)
+    with tf.variable_scope(name, reuse=reuse):
+        lstm = tf.contrib.cudnn_rnn.CudnnLSTM(num_layers=n_layers,
+                                              num_units=n_hidden,
+                                              input_size=units.get_shape().as_list()[-1])
+        param = tf.get_variable('lstm_params',
+                                initializer=tf.random_uniform([lstm.params_size()], -0.1, 0.1),
+                                validate_shape=False)
+
+        if trainable_initial_states:
+            init_h = tf.get_variable('init_h', [1, 1, n_hidden])
+            init_c = tf.get_variable('init_с', [1, 1, n_hidden])
+        else:
+            init_h = init_c = tf.zeros([1, 1, n_hidden])
+
+        initial_h = initial_h or init_h
+        initial_c = initial_c or init_c
+        h, h_last, c_last = lstm(tf.transpose(units, (1, 0, 2)), initial_h, initial_c, param)
+        h = tf.transpose(h, (1, 0, 2))
+        h_last = tf.squeeze(h_last, 0)
+        c_last = tf.squeeze(c_last, 0)
+        return h, (h_last, c_last)
 
 
-def cudnn_bi_gru(units, n_hidden, seq_lengths=None, n_layers=1):
+def cudnn_bi_gru(units,
+                 n_hidden,
+                 seq_lengths=None,
+                 n_layers=1,
+                 trainable_initial_states=False,
+                 name='cudnn_bi_gru',
+                 reuse=False):
     """ Fast CuDNN Bi-GRU implementation
 
     Args:
@@ -464,6 +525,11 @@ def cudnn_bi_gru(units, n_hidden, seq_lengths=None, n_layers=1):
         n_hidden: dimensionality of hidden state
         seq_lengths: number of tokens in each sample in the batch
         n_layers: number of layers
+        trainable_initial_states: whether to create a special trainable variable
+                to initialize the hidden states of the network or use just zeros
+        name: name of the variable scope to use
+        reuse:whether to reuse already initialized variable
+
 
     Returns:
         h - all hidden states along T dimension,
@@ -471,34 +537,36 @@ def cudnn_bi_gru(units, n_hidden, seq_lengths=None, n_layers=1):
         h_last - last hidden state, tf.Tensor with dimensionality [B x H * 2]
             where H - number of hidden units
     """
-    gru_fw = tf.contrib.cudnn_rnn.CudnnGRU(num_layers=n_layers,
-                                           num_units=n_hidden,
-                                           input_size=units.get_shape().as_list()[-1])
-    gru_bw = tf.contrib.cudnn_rnn.CudnnGRU(num_layers=n_layers,
-                                           num_units=n_hidden,
-                                           input_size=units.get_shape().as_list()[-1])
+    with tf.variable_scope(name, reuse=reuse):
+        with tf.variable_scope('Forward'):
+            h_fw, h_last_fw = cudnn_gru(units,
+                                        n_hidden,
+                                        n_layers=n_layers,
+                                        trainable_initial_states=trainable_initial_states,
+                                        reuse=reuse)
 
-    param_fw = tf.Variable(tf.random_uniform(
-        [gru_fw.params_size()], -0.1, 0.1), validate_shape=False)
-    param_bw = tf.Variable(tf.random_uniform(
-        [gru_bw.params_size()], -0.1, 0.1), validate_shape=False)
+        with tf.variable_scope('Backward'):
+            reversed_units = tf.reverse_sequence(units, seq_lengths=seq_lengths, seq_dim=1, batch_dim=0)
+            h_bw, h_last_bw = cudnn_gru(reversed_units,
+                                        n_hidden,
+                                        n_layers=n_layers,
+                                        trainable_initial_states=trainable_initial_states,
+                                        reuse=reuse)
+            h_bw = tf.reverse_sequence(h_bw, seq_lengths=seq_lengths, seq_dim=1, batch_dim=0)
 
-    init_h_fw = tf.zeros([1, tf.shape(units)[0], n_hidden])
-    init_h_bw = tf.zeros([1, tf.shape(units)[0], n_hidden])
+        h_fw = tf.transpose(h_fw, (1, 0, 2))
+        h_bw = tf.transpose(h_bw, (1, 0, 2))
 
-    h_fw, h_last_fw = gru_fw(tf.transpose(units, (1, 0, 2)), init_h_fw, param_fw)
-    reversed_units = tf.reverse_sequence(units, seq_lengths=seq_lengths, seq_dim=1, batch_dim=0)
-    h_bw, h_last_bw = gru_bw(tf.transpose(reversed_units, (1, 0, 2)), init_h_bw, param_bw)
-    h_bw = tf.reverse_sequence(h_bw, seq_lengths=seq_lengths, seq_dim=0, batch_dim=1)
-
-    h = tf.concat([h_fw, h_bw], axis=2)
-    h_last = tf.concat([h_last_fw, h_last_bw], axis=2)
-    h = tf.transpose(h, (1, 0, 2))
-    h_last = tf.squeeze(h_last, 0)
-    return h, h_last
+    return (h_fw, h_bw), (h_last_fw, h_last_bw)
 
 
-def cudnn_bi_lstm(units, n_hidden, seq_lengths, n_layers=1):
+def cudnn_bi_lstm(units,
+                  n_hidden,
+                  seq_lengths=None,
+                  n_layers=1,
+                  trainable_initial_states=False,
+                  name='cudnn_bi_gru',
+                  reuse=False):
     """ Fast CuDNN Bi-LSTM implementation
 
         Args:
@@ -507,7 +575,12 @@ def cudnn_bi_lstm(units, n_hidden, seq_lengths, n_layers=1):
                 T - number of tokens
                 F - features
             n_hidden: dimensionality of hidden state
+            seq_lengths: number of tokens in each sample in the batch
             n_layers: number of layers
+            trainable_initial_states: whether to create a special trainable variable
+                to initialize the hidden states of the network or use just zeros
+            name: name of the variable scope to use
+            reuse:whether to reuse already initialized variable
 
         Returns:
             h - all hidden states along T dimension,
@@ -517,33 +590,29 @@ def cudnn_bi_lstm(units, n_hidden, seq_lengths, n_layers=1):
             c_last - last cell state, tf.Tensor with dimensionality [B x H * 2]
                 where H - number of hidden units
         """
-    lstm_fw = tf.contrib.cudnn_rnn.CudnnLSTM(num_layers=n_layers,
-                                             num_units=n_hidden,
-                                             input_size=units.get_shape().as_list()[-1])
-    lstm_bw = tf.contrib.cudnn_rnn.CudnnLSTM(num_layers=n_layers,
-                                             num_units=n_hidden,
-                                             input_size=units.get_shape().as_list()[-1])
+    with tf.variable_scope(name, reuse=reuse):
+        if seq_lengths is None:
+            seq_lengths = tf.ones([tf.shape(units)[0]], dtype=tf.int32) * tf.shape(units)[1]
+        with tf.variable_scope('Forward'):
+            h_fw, (h_fw_last, c_fw_last) = cudnn_lstm(units,
+                                                      n_hidden,
+                                                      n_layers=n_layers,
+                                                      trainable_initial_states=trainable_initial_states)
 
-    param_fw = tf.Variable(tf.random_uniform(
-        [lstm_fw.params_size()], -0.1, 0.1), validate_shape=False)
-    param_bw = tf.Variable(tf.random_uniform(
-        [lstm_bw.params_size()], -0.1, 0.1), validate_shape=False)
+        with tf.variable_scope('Backward'):
+            reversed_units = tf.reverse_sequence(units, seq_lengths=seq_lengths, seq_dim=1, batch_dim=0)
+            h_bw, (h_bw_last, c_bw_last) = cudnn_lstm(reversed_units,
+                                                      n_hidden,
+                                                      n_layers=n_layers,
+                                                      trainable_initial_states=trainable_initial_states)
 
-    init_h_fw = tf.zeros([1, tf.shape(units)[0], n_hidden])
-    init_h_bw = tf.zeros([1, tf.shape(units)[0], n_hidden])
+            h_bw = tf.reverse_sequence(h_bw, seq_lengths=seq_lengths, seq_dim=1, batch_dim=0)
+        return (h_fw, h_bw), ((h_fw_last, c_fw_last), (h_bw_last, c_bw_last))
 
-    init_c_fw = tf.zeros([1, tf.shape(units)[0], n_hidden])
-    init_c_bw = tf.zeros([1, tf.shape(units)[0], n_hidden])
 
-    h_fw, h_last_fw, c_last_fw = lstm_fw(tf.transpose(units, (1, 0, 2)), init_h_fw, init_c_fw, param_fw)
-    reversed_units = tf.reverse_sequence(units, seq_lengths=seq_lengths, seq_dim=1, batch_dim=0)
-    h_bw, h_last_bw, c_last_bw = lstm_bw(tf.transpose(reversed_units, (1, 0, 2)), init_h_bw, init_c_bw, param_bw)
-    h_bw = tf.reverse_sequence(h_bw, seq_lengths=seq_lengths, seq_dim=0, batch_dim=1)
-
-    h = tf.concat([h_fw, h_bw], axis=2)
-    h_last = tf.concat([h_last_fw, h_last_bw], axis=2)
-    c_last = tf.concat([c_last_fw, c_last_bw], axis=2)
-
-    h = tf.transpose(h, (1, 0, 2))
-    h_last = tf.squeeze(h_last, 0)
-    return h, (h_last, c_last)
+def variational_dropout(units, keep_prob, fixed_mask_dims=(1,)):
+    units_shape = tf.shape(units)
+    noise_shape = [units_shape[n] for n in range(len(units.shape))]
+    for dim in fixed_mask_dims:
+        noise_shape[dim] = 1
+    return tf.nn.dropout(units, keep_prob, noise_shape)
