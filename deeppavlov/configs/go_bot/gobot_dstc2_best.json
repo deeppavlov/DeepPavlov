@@ -67,17 +67,18 @@
           "pricerange": "cheap"
         },
         "network_parameters": {
-          "load_path": "gobot_best_wo_bow_new_feats_rfct/model",
-          "save_path": "gobot_best_wo_bow_new_feats_rfct/model",
+          "load_path": "gobot_dstc2_best/model",
+          "save_path": "gobot_dstc2_best/model",
           "learning_rate": 0.0009,
           "dropout_rate": 0.9,
           "hidden_size": 128,
           "dense_size": 64,
           "use_action_mask": false,
           "attention_mechanism": {
-            "type": "general",
+            "type": "cs_bahdanau",
             "hidden_size": 32,
             "depth": 3,
+            "action_as_key": true,
             "max_num_tokens": 40,
             "projected_align": false
           }
