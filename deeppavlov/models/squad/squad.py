@@ -22,13 +22,15 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.models.squad.utils import CudnnGRU, dot_attention, simple_attention, PtrNet
 from deeppavlov.core.common.utils import check_gpu_existance
+from deeppavlov.core.common.log import get_logger
+
+logger = get_logger(__name__)
 
 
 @register('squad_model')
 class SquadModel(TFModel):
     def __init__(self, **kwargs):
 
-        # check gpu
         if not check_gpu_existance():
             raise RuntimeError('SquadModel requires GPU')
 
@@ -43,9 +45,14 @@ class SquadModel(TFModel):
         self.attention_hidden_size = self.opt['attention_hidden_size']
         self.keep_prob = self.opt['keep_prob']
         self.learning_rate = self.opt['learning_rate']
+        self.min_learning_rate = self.opt['min_learning_rate']
+        self.learning_rate_patience = self.opt['learning_rate_patience']
         self.grad_clip = self.opt['grad_clip']
         self.word_emb_dim = self.init_word_emb.shape[1]
         self.char_emb_dim = self.init_char_emb.shape[1]
+
+        self.last_impatience = 0
+        self.lr_impatience = 0
 
         self.sess_config = tf.ConfigProto(allow_soft_placement=True)
         self.sess_config.gpu_options.allow_growth = True
@@ -210,6 +217,18 @@ class SquadModel(TFModel):
         feed_dict = self._build_feed_dict(c_tokens, c_chars, q_tokens, q_chars)
         yp1, yp2 = self.sess.run([self.yp1, self.yp2], feed_dict=feed_dict)
         return yp1, yp2
+
+    def process_event(self, event_name, data):
+        if event_name == "after_validation":
+            if data['impatience'] > self.last_impatience:
+                self.lr_impatience += 1
+                self.last_impatience = data['impatience']
+            else:
+                self.lr_impatience = 0
+            if self.lr_impatience >= self.learning_rate_patience:
+                self.lr_impatience = 0
+                self.learning_rate = max(self.learning_rate / 2, self.min_learning_rate)
+                logger.info('SQuAD model: learning rate changed to {}'.format(self.learning_rate))
 
     def shutdown(self):
         pass
