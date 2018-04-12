@@ -416,7 +416,7 @@ def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, 
 
 
 def cudnn_gru(units, n_hidden, n_layers=1, trainable_initial_states=False,
-              input_initial_h=None, name='cudnn_gru', reuse=False):
+              seq_lengths=None, input_initial_h=None, name='cudnn_gru', reuse=False):
     """ Fast CuDNN GRU implementation
 
     Args:
@@ -427,6 +427,7 @@ def cudnn_gru(units, n_hidden, n_layers=1, trainable_initial_states=False,
         n_hidden: dimensionality of hidden state
         trainable_initial_states: whether to create a special trainable variable
             to initialize the hidden states of the network or use just zeros
+        seq_lengths: tensor of sequence lengths with dimension [B]
         n_layers: number of layers
         input_initial_h: initial hidden state, tensor
         name: name of the variable scope to use
@@ -446,18 +447,24 @@ def cudnn_gru(units, n_hidden, n_layers=1, trainable_initial_states=False,
 
         if trainable_initial_states:
             init_h = tf.get_variable('init_h', [1, 1, n_hidden])
+            init_h = tf.tile(init_h, (1, tf.shape(units)[0], 1))
         else:
-            init_h = tf.zeros([1, 1, n_hidden])
+            init_h = tf.zeros([1, tf.shape(units)[0], n_hidden])
 
         initial_h = input_initial_h or init_h
 
         h, h_last = gru(tf.transpose(units, (1, 0, 2)), initial_h, param)
         h = tf.transpose(h, (1, 0, 2))
-        h_last = tf.squeeze(h_last, 0)
+        # Extract last states if they are provided
+        if seq_lengths is not None:
+            indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths], axis=1)
+            h_last = tf.gather_nd(h, indices)
+        else:
+            h_last = tf.squeeze(h_last, 0)
         return h, h_last
 
 
-def cudnn_lstm(units, n_hidden, n_layers=1, trainable_initial_states=None, initial_h=None, initial_c=None,
+def cudnn_lstm(units, n_hidden, n_layers=1, trainable_initial_states=None, seq_lengths=None, initial_h=None, initial_c=None,
                name='cudnn_lstm', reuse=False):
     """ Fast CuDNN LSTM implementation
 
@@ -469,6 +476,7 @@ def cudnn_lstm(units, n_hidden, n_layers=1, trainable_initial_states=None, initi
             n_hidden: dimensionality of hidden state
             trainable_initial_states: whether to create a special trainable variable
                 to initialize the hidden states of the network or use just zeros
+            seq_lengths: tensor of sequence lengths with dimension [B]
             initial_h: optional initial hidden state, masks trainable_initial_states
                 if provided
             initial_c: optional initial cell state, masks trainable_initial_states
@@ -495,15 +503,23 @@ def cudnn_lstm(units, n_hidden, n_layers=1, trainable_initial_states=None, initi
 
         if trainable_initial_states:
             init_h = tf.get_variable('init_h', [1, 1, n_hidden])
+            init_h = tf.tile(init_h, (1, tf.shape(units)[0], 1))
             init_c = tf.get_variable('init_с', [1, 1, n_hidden])
+            init_c = tf.tile(init_c, (1, tf.shape(units)[0], 1))
         else:
-            init_h = init_c = tf.zeros([1, 1, n_hidden])
+            init_h = init_c = tf.zeros([1, tf.shape(units)[0], n_hidden])
 
         initial_h = initial_h or init_h
         initial_c = initial_c or init_c
         h, h_last, c_last = lstm(tf.transpose(units, (1, 0, 2)), initial_h, initial_c, param)
         h = tf.transpose(h, (1, 0, 2))
-        h_last = tf.squeeze(h_last, 0)
+
+        # Extract last states if they are provided
+        if seq_lengths is not None:
+            indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths], axis=1)
+            h_last = tf.gather_nd(h, indices)
+        else:
+            h_last = tf.squeeze(h_last, 0)
         c_last = tf.squeeze(c_last, 0)
         return h, (h_last, c_last)
 
@@ -546,6 +562,7 @@ def cudnn_bi_gru(units,
                                         n_hidden,
                                         n_layers=n_layers,
                                         trainable_initial_states=trainable_initial_states,
+                                        seq_lengths=seq_lengths,
                                         reuse=reuse)
 
         with tf.variable_scope('Backward'):
@@ -554,6 +571,7 @@ def cudnn_bi_gru(units,
                                         n_hidden,
                                         n_layers=n_layers,
                                         trainable_initial_states=trainable_initial_states,
+                                        seq_lengths=seq_lengths,
                                         reuse=reuse)
             h_bw = tf.reverse_sequence(h_bw, seq_lengths=seq_lengths, seq_dim=1, batch_dim=0)
 
@@ -597,14 +615,16 @@ def cudnn_bi_lstm(units,
             h_fw, (h_fw_last, c_fw_last) = cudnn_lstm(units,
                                                       n_hidden,
                                                       n_layers=n_layers,
-                                                      trainable_initial_states=trainable_initial_states)
+                                                      trainable_initial_states=trainable_initial_states,
+                                                      seq_lengths=seq_lengths)
 
         with tf.variable_scope('Backward'):
             reversed_units = tf.reverse_sequence(units, seq_lengths=seq_lengths, seq_dim=1, batch_dim=0)
             h_bw, (h_bw_last, c_bw_last) = cudnn_lstm(reversed_units,
                                                       n_hidden,
                                                       n_layers=n_layers,
-                                                      trainable_initial_states=trainable_initial_states)
+                                                      trainable_initial_states=trainable_initial_states,
+                                                      seq_lengths=seq_lengths)
 
             h_bw = tf.reverse_sequence(h_bw, seq_lengths=seq_lengths, seq_dim=1, batch_dim=0)
         return (h_fw, h_bw), ((h_fw_last, c_fw_last), (h_bw_last, c_bw_last))
