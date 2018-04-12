@@ -192,7 +192,8 @@ class GoalOrientedBot(NNModel):
                 attn_key = np.hstack((attn_key, self.prev_action))
             if self.network.attn.intent_as_key:
                 attn_key = np.hstack((attn_key, intent_features))
-            attn_key = attn_key or np.array([1], dtype=np.float32)
+            if len(attn_key) == 0:
+                attn_key = np.array([1], dtype=np.float32)
 
         concat_feats = np.hstack((bow_features, emb_features, intent_features,
                                   state_features, context_features, self.prev_action))
