@@ -590,7 +590,10 @@ def cudnn_bi_gru(units,
         h_last - last hidden state, tf.Tensor with dimensionality [B x H * 2]
             where H - number of hidden units
     """
+
     with tf.variable_scope(name, reuse=reuse):
+        if seq_lengths is None:
+            seq_lengths = tf.ones([tf.shape(units)[0]], dtype=tf.int32) * tf.shape(units)[1]
         with tf.variable_scope('Forward'):
             h_fw, h_last_fw = cudnn_gru(units,
                                         n_hidden,
@@ -606,9 +609,6 @@ def cudnn_bi_gru(units,
                                         trainable_initial_states=trainable_initial_states,
                                         reuse=reuse)
             h_bw = tf.reverse_sequence(h_bw, seq_lengths=seq_lengths, seq_dim=1, batch_dim=0)
-
-        h_fw = tf.transpose(h_fw, (1, 0, 2))
-        h_bw = tf.transpose(h_bw, (1, 0, 2))
 
     return (h_fw, h_bw), (h_last_fw, h_last_bw)
 
