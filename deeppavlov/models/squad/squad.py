@@ -109,15 +109,10 @@ class SquadModel(TFModel):
                 cc_emb = variational_dropout(cc_emb, keep_prob=self.keep_prob_ph)
                 qc_emb = variational_dropout(qc_emb, keep_prob=self.keep_prob_ph)
 
-                cell_fw = tf.contrib.rnn.GRUCell(self.char_hidden_size)
-                cell_bw = tf.contrib.rnn.GRUCell(self.char_hidden_size)
-
-                _, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(
-                    cell_fw, cell_bw, cc_emb, self.cc_len, dtype=tf.float32)
+                _, (state_fw, state_bw) = cudnn_bi_gru(cc_emb, self.char_hidden_size, seq_lengths=self.cc_len)
                 cc_emb = tf.concat([state_fw, state_bw], axis=1)
 
-                _, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(
-                    cell_fw, cell_bw, qc_emb, self.qc_len, dtype=tf.float32)
+                _, (state_fw, state_bw) = cudnn_bi_gru(qc_emb, self.char_hidden_size, seq_lengths=self.qc_len, reuse=True)
                 qc_emb = tf.concat([state_fw, state_bw], axis=1)
 
                 cc_emb = tf.reshape(cc_emb, [bs, self.c_maxlen, 2 * self.char_hidden_size])
