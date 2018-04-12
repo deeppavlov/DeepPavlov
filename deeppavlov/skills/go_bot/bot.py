@@ -37,12 +37,12 @@ from deeppavlov.core.common.log import get_logger
 
 log = get_logger(__name__)
 
-DEBUG = True
-
 
 @register("go_bot")
 class GoalOrientedBot(NNModel):
-    def __init__(self, template_path,
+    def __init__(self,
+                 template_path,
+                 network_parameters: Type = dict,
                  template_type: Type = DualTemplate,
                  bow_encoder: Type = BoWEncoder,
                  tokenizer: Type = StreamSpacyTokenizer,
@@ -77,21 +77,45 @@ class GoalOrientedBot(NNModel):
         template_path = expand_path(template_path)
         log.info("[loading templates from {}]".format(template_path))
         self.templates = Templates(template_type).load(template_path)
-        log.info("{} templates loaded".format(len(self.templates)))
-
-        # intialize parameters
         self.n_actions = len(self.templates)
-        self.n_intents = 0
-        if hasattr(self.intent_classifier, 'n_classes'):
-            self.n_intents = self.intent_classifier.n_classes
+        log.info("{} templates loaded".format(self.n_actions))
+
+        self.network = self._init_network(network_parameters)
+
         self.reset()
 
-        # opt = {
-        #    'action_size': self.n_actions,
-        #    'obs_size': 4 + len(self.word_vocab) + self.embedder.dim +\
-        #    self.tracker.num_features + self.n_actions + self.n_intents
-        # }
-        # self.network = GoalOrientedBotNetwork(opt)
+    def _init_network(self, params):
+        # initialize network
+        obs_size = 4 + self.tracker.num_features + self.n_actions
+        if callable(self.bow_encoder):
+            obs_size += len(self.word_vocab)
+        if callable(self.embedder):
+            obs_size += self.embedder.dim
+        if callable(self.intent_classifier):
+            obs_size += self.intent_classifier.n_classes
+        log.info("Calculated input size for `GoalOrientedBotNetwork` is {}"
+                 .format(obs_size))
+        if 'obs_size' not in params:
+            params['obs_size'] = obs_size
+        if 'action_size' not in params:
+            params['action_size'] = self.n_actions
+
+        attn = params.get('attention_mechanism')
+        if attn:
+            attn['token_size'] = attn.get('token_size') or self.embedder.dim
+            attn['action_as_key'] = attn.get('action_as_key', False)
+            attn['intent_as_key'] = attn.get('intent_as_key', False)
+
+            key_size = 0
+            if attn['action_as_key']:
+                key_size += self.n_actions
+            if attn['intent_as_key'] and callable(self.intent_classifier):
+                key_size += self.intent_classifier.n_classes
+            key_size = key_size or 1
+            attn['key_size'] = attn.get('key_size') or key_size
+
+            params['attention_mechanism'] = attn
+        return GoalOrientedBotNetwork(**params)
 
     def _encode_context(self, context, db_result=None):
         # tokenize input
@@ -164,10 +188,13 @@ class GoalOrientedBot(NNModel):
                         "prev_action shape = {}".format(len(self.prev_action))
             log.debug(debug_msg)
 
-        if self.network.attn and self.network.attn.intent_size:
-            attn_key = np.hstack((self.prev_action, intent_features))
-        else:
-            attn_key = np.array(self.prev_action)
+        attn_key = np.array([], dtype=np.float32)
+        if self.network.attn:
+            if self.network.attn.action_as_key:
+                attn_key = np.hstack((attn_key, self.prev_action))
+            if self.network.attn.intent_as_key:
+                attn_key = np.hstack((attn_key, intent_features))
+            attn_key = attn_key or np.array([1], dtype=np.float32)
 
         concat_feats = np.hstack((bow_features, emb_features, intent_features,
                                   state_features, context_features, self.prev_action))

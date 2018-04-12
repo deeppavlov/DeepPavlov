@@ -33,7 +33,8 @@ log = get_logger(__name__)
 
 @register('go_bot_rnn')
 class GoalOrientedBotNetwork(TFModel):
-    GRAPH_PARAMS = ["hidden_size", "action_size", "dense_size", "obs_size"]
+    GRAPH_PARAMS = ["hidden_size", "action_size", "dense_size", "obs_size",
+                    "attention_mechanism"]
 
     def __init__(self, **params):
         self.debug_pipe = None
@@ -108,9 +109,6 @@ class GoalOrientedBotNetwork(TFModel):
 
         attn = params.get('attention_mechanism')
         if attn:
-            attn['intent_size'] = attn.get('intent_size', 0)
-            attn['key_size'] = attn['key_size'] + attn['intent_size']
-
             self.opt['attention_mechanism'] = attn
 
             self.attn = \

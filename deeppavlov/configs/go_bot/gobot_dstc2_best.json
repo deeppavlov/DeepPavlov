@@ -66,25 +66,20 @@
           "postcode": "141700",
           "pricerange": "cheap"
         },
-        "network": {
-          "name": "go_bot_rnn",
+        "network_parameters": {
           "load_path": "gobot_best_wo_bow_new_feats_rfct/model",
           "save_path": "gobot_best_wo_bow_new_feats_rfct/model",
-          "learning_rate": 0.001,
+          "learning_rate": 0.0009,
           "dropout_rate": 0.9,
           "hidden_size": 128,
           "dense_size": 64,
-          "obs_size": 363,
           "use_action_mask": false,
-          "action_size": 45,
           "attention_mechanism": {
-            "type": "cs_bahdanau",
+            "type": "general",
             "hidden_size": 32,
             "depth": 3,
-            "max_num_tokens": 100,
-            "projected_align": false,
-            "token_size": 300,
-            "key_size": 45
+            "max_num_tokens": 40,
+            "projected_align": false
           }
         },
         "slot_filler": {
