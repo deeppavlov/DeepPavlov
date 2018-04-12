@@ -16,6 +16,7 @@ limitations under the License.
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
+from deeppavlov.core.models.nn_model import NNModel
 
 
 class Chainer(Component):
@@ -33,6 +34,7 @@ class Chainer(Component):
 
     def append(self, in_x, out_params, component, in_y=None, main=False):
         if in_y is not None:
+            component: NNModel
             main = True
             assert self.train_map.issuperset(in_x+in_y), ('Arguments {} are expected but only {} are set'
                                                           .format(in_x+in_y, self.train_map))
@@ -45,6 +47,7 @@ class Chainer(Component):
                 return component.train_on_batch(*preprocessed)
 
             self.train_on_batch = train_on_batch
+            self.process_event = component.process_event
         if main:
             self.main = component
         if self.forward_map.issuperset(in_x):
