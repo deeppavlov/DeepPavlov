@@ -17,7 +17,8 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
                                   ("datha", "data")
                               ],
                           ("configs/error_model/brillmoore_kartaslov_ru.json", "error_model", True): []},
-          "go_bot": {("configs/go_bot/gobot_dstc2.json", "go_bot", True): []},
+          "go_bot": {("configs/go_bot/gobot_dstc2.json", "gobot_dstc2", True): [],
+                     ("configs/go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", True): []},
           "intents": {("configs/intents/intents_dstc2.json", "intents", True):  []},
           "snips": {("configs/intents/intents_snips.json", "intents", False): []},
           "sample": {("configs/intents/intents_sample_csv.json", "intents", False): [],
@@ -38,7 +39,7 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
           "odqa": {("configs/odqa/ranker_test.json", "odqa", True): []}
           }
 
-MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
+MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "gobot", "gobot_best", "squad"]}  # marks defined in pytest.ini
 
 TEST_GRID = []
 for model in PARAMS.keys():
