@@ -1,8 +1,10 @@
-import pytest
-from pathlib import Path
-import pexpect
+import io
 import json
+from pathlib import Path
 import shutil
+
+import pytest
+import pexpect
 
 
 tests_dir = Path(__file__, '..').resolve()
@@ -97,18 +99,28 @@ class TestQuickStart(object):
     @staticmethod
     def interact(conf_file, model_dir, qr_list=None):
         qr_list = qr_list or []
-        p = pexpect.spawn("python3", ["-m", "deeppavlov.deep", "interact", str(conf_file)], timeout=None)
-        for *query, expected_response in qr_list:  # works until the first failed query
-            for q in query:
-                p.expect("::")
-                p.sendline(q)
+        logfile = io.BytesIO(b'')
+        p = pexpect.spawn("python3", ["-m", "deeppavlov.deep", "interact", str(conf_file)], timeout=None,
+                          logfile=logfile)
+        try:
+            for *query, expected_response in qr_list:  # works until the first failed query
+                for q in query:
+                    p.expect("::")
+                    p.sendline(q)
 
-            p.expect(">> ")
-            actual_response = p.readline().decode().strip()
-            assert expected_response == actual_response, f"Error in interacting with {model_dir} ({conf_file}): {query}"
-        p.expect("::")
-        p.sendline("quit")
-        assert p.expect(pexpect.EOF) == 0, f"Error in quitting from deep.py ({conf_file})"
+                p.expect(">> ")
+                actual_response = p.readline().decode().strip()
+                assert expected_response == actual_response, f"Error in interacting with {model_dir} ({conf_file}): {query}"
+            p.expect("::")
+            p.sendline("quit")
+            if p.expect(pexpect.EOF) != 0:
+                logfile.seek(0)
+                raise RuntimeError('Error in quitting from deep.py: \n{}'
+                                   .format(''.join((line.decode() for line in logfile.readlines()))))
+        except pexpect.exceptions.EOF:
+            logfile.seek(0)
+            raise RuntimeError('Got unexpected EOF: \n{}'
+                               .format(''.join((line.decode() for line in logfile.readlines()))))
 
     def test_downloaded_model_existence(self, model, conf_file, model_dir, mode):
         if 'DE' in mode:
