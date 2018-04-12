@@ -65,22 +65,6 @@ def download(dest_file_path, source_url, file_exists=True):
     else:
         log.info('File already exists in {}'.format(dest_file_path))
 
-    dest_file_path = Path(dest_file_path).absolute()
-    dest_file_path.parent.mkdir(parents=True, exist_ok=True)
-
-    r = requests.get(source_url, stream=True)
-    total_length = int(r.headers.get('content-length', 0))
-
-    with dest_file_path.open('wb') as f:
-        log.info('Downloading from {} to {}'.format(source_url, dest_file_path))
-
-        pbar = tqdm(total=total_length, unit='B', unit_scale=True)
-        for chunk in r.iter_content(chunk_size=CHUNK):
-            if chunk:  # filter out keep-alive new chunks
-                pbar.update(len(chunk))
-                f.write(chunk)
-        f.close()
-
 
 def untar(file_path, extract_folder=None):
     """Simple tar archive extractor
