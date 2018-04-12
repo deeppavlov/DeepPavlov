@@ -175,6 +175,59 @@ def bi_rnn(units: tf.Tensor,
     return (rnn_output_fw, rnn_output_bw), (fw, bw)
 
 
+def stacked_bi_rnn(units: tf.Tensor,
+                   n_hidden_list: List,
+                   cell_type='gru',
+                   seq_lengths=None,
+                   use_peepholes=False,
+                   name='RNN_layer'):
+    """ Stackted recurrent neural networks GRU or LSTM
+
+        Args:
+            units: a tensorflow tensor with dimensionality [None, n_tokens, n_features]
+            n_hidden_list: list with number of hidden units at the ouput of each layer
+            seq_lengths: length of sequences for different length sequences in batch
+                can be None for maximum length as a length for every sample in the batch
+            cell_type: 'lstm' or 'gru'
+            use_peepholes: whether to use peephole connections (only 'lstm' case affected)
+            name: what variable_scope to use for the network parameters
+        Returns:
+            units: tensor at the output of the last recurrent layer
+                with dimensionality [None, n_tokens, n_hidden_list[-1]]
+            last_units: tensor of last hidden states for GRU and tuple
+                of last hidden stated and last cell states for LSTM
+                dimensionality of cell states and hidden states are
+                similar and equal to [B x 2 * H], where B - batch
+                size and H is number of hidden units
+    """
+    for n, n_hidden in enumerate(n_hidden_list):
+        with tf.variable_scope(name + '_' + str(n)):
+            if cell_type == 'gru':
+                forward_cell = tf.nn.rnn_cell.GRUCell(n_hidden)
+                backward_cell = tf.nn.rnn_cell.GRUCell(n_hidden)
+            elif cell_type == 'lstm':
+                forward_cell = tf.nn.rnn_cell.LSTMCell(n_hidden, use_peepholes=use_peepholes)
+                backward_cell = tf.nn.rnn_cell.LSTMCell(n_hidden, use_peepholes=use_peepholes)
+            else:
+                raise RuntimeError('cell_type must be either gru or lstm')
+
+            (rnn_output_fw, rnn_output_bw), (fw, bw) = \
+                tf.nn.bidirectional_dynamic_rnn(forward_cell,
+                                                backward_cell,
+                                                units,
+                                                dtype=tf.float32,
+                                                sequence_length=seq_lengths)
+            units = tf.concat([rnn_output_fw, rnn_output_bw], axis=2)
+            if cell_type == 'gru':
+                last_units = tf.concat([fw, bw], axis=1)
+            else:
+                (c_fw, h_fw), (c_bw, h_bw) = fw, bw
+                c = tf.concat([c_fw, c_bw], axis=1)
+                h = tf.concat([h_fw, h_bw], axis=1)
+                last_units = (h, c)
+    return units, last_units
+
+
 def u_shape(units: tf.Tensor,
             n_hidden_list: List,
             filter_width=7,

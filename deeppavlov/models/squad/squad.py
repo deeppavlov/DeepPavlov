@@ -22,6 +22,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.models.squad.utils import CudnnGRU, dot_attention, simple_attention, PtrNet
 from deeppavlov.core.common.utils import check_gpu_existance
+from deeppavlov.core.layers.tf_layers import cudnn_bi_gru, variational_dropout
 from deeppavlov.core.common.log import get_logger
 
 logger = get_logger(__name__)
@@ -104,19 +105,21 @@ class SquadModel(TFModel):
                                     [bs * self.c_maxlen, self.char_limit, self.char_emb_dim])
                 qc_emb = tf.reshape(tf.nn.embedding_lookup(self.char_emb, self.qc),
                                     [bs * self.q_maxlen, self.char_limit, self.char_emb_dim])
-                cc_emb = tf.nn.dropout(cc_emb, keep_prob=self.keep_prob_ph,
-                                       noise_shape=[bs * self.c_maxlen, 1, self.char_emb_dim])
-                qc_emb = tf.nn.dropout(qc_emb, keep_prob=self.keep_prob_ph,
-                                       noise_shape=[bs * self.q_maxlen, 1, self.char_emb_dim])
+
+                cc_emb = variational_dropout(cc_emb, keep_prob=self.keep_prob_ph)
+                qc_emb = variational_dropout(qc_emb, keep_prob=self.keep_prob_ph)
 
                 cell_fw = tf.contrib.rnn.GRUCell(self.char_hidden_size)
                 cell_bw = tf.contrib.rnn.GRUCell(self.char_hidden_size)
+
                 _, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(
                     cell_fw, cell_bw, cc_emb, self.cc_len, dtype=tf.float32)
                 cc_emb = tf.concat([state_fw, state_bw], axis=1)
+
                 _, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(
                     cell_fw, cell_bw, qc_emb, self.qc_len, dtype=tf.float32)
                 qc_emb = tf.concat([state_fw, state_bw], axis=1)
+
                 cc_emb = tf.reshape(cc_emb, [bs, self.c_maxlen, 2 * self.char_hidden_size])
                 qc_emb = tf.reshape(qc_emb, [bs, self.q_maxlen, 2 * self.char_hidden_size])
 
