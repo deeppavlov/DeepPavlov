@@ -68,7 +68,7 @@
         "context_limit": "#squad_prepr.context_limit",
         "question_limit": "#squad_prepr.question_limit",
         "char_limit": "#squad_prepr.char_limit",
-        "train_char_emb": false,
+        "train_char_emb": true,
         "char_hidden_size": 100,
         "encoder_hidden_size": 75,
         "attention_hidden_size": 75,
