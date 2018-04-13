@@ -67,8 +67,8 @@
           "pricerange": "cheap"
         },
         "network_parameters": {
-          "load_path": "gobot_dstc2_best4/model",
-          "save_path": "gobot_dstc2_best4/model",
+          "load_path": "gobot_dstc2_best/model",
+          "save_path": "gobot_dstc2_best/model",
           "learning_rate": 0.0008,
           "dropout_rate": 0.85,
           "hidden_size": 128,
