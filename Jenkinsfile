@@ -15,6 +15,8 @@ node('gpu') {
                 python setup.py develop
                 python -m spacy download en
                 pip install -r requirements-dev.txt
+                pip uninstall -yq tensorflow
+                pip install -q tensorflow-gpu==1.4.0
             """
         }
         stage('Tests') {
