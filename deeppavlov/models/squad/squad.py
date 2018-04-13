@@ -226,7 +226,8 @@ class SquadModel(TFModel):
             if self.lr_impatience >= self.learning_rate_patience:
                 self.lr_impatience = 0
                 self.learning_rate = max(self.learning_rate / 2, self.min_learning_rate)
-                logger.info('SQuAD model: learning rate changed to {}'.format(self.learning_rate))
+                logger.info('SQuAD model: learning_rate changed to {}'.format(self.learning_rate))
+            logger.info('SQuAD model: lr_impatience: {}, learning_rate: {}'.format(self.lr_impatience, self.learning_rate))
 
     def shutdown(self):
         pass
