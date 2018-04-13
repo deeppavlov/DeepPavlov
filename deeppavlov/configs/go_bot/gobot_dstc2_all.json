@@ -146,7 +146,7 @@
           "emb_module": "fasttext",
           "dim": 300
         },
-        "bow_encoder": {
+        "bow_embedder": {
           "name": "bow"
         },
         "tokenizer": {

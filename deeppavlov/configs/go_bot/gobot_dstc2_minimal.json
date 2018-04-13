@@ -49,7 +49,7 @@
         "slot_filler": null,
         "intent_classifier": null,
         "embedder": null,
-        "bow_encoder": {
+        "bow_embedder": {
           "name": "bow"
         },
         "tokenizer": {
