@@ -44,27 +44,6 @@ def get_binary_mask_from_digraph(nodes, directed_graph):
     for edge in directed_graph.edges():
         binary_mask[edge[0], edge[1]] = 1
     return binary_mask
-#
-#
-# def check_binary_mask(nodes, binary_mask):
-#     directed_graph = get_digraph_from_binary_mask(nodes, binary_mask)
-#     sources, sinks = find_sources_and_sinks(directed_graph)
-#
-#     while not nx.is_directed_acyclic_graph(directed_graph):
-#         cycles = list(nx.simple_cycles(directed_graph))
-#         print("Cycles: {}".format(cycles))
-#         for cycle_ in cycles:
-#             cycle = copy.deepcopy(cycle_) + [cycle_[0]]
-#             for i in range(len(cycle_)):
-#                 new_directed_graph = copy.deepcopy(directed_graph)
-#                 new_directed_graph.remove_edge(cycle[i], cycle[i+1])
-#                 new_sources, new_sinks = find_sources_and_sinks(new_directed_graph)
-#                 if nx.is_directed_acyclic_graph(new_directed_graph):
-#                     if set(new_sources) == set(sources) and set(new_sinks) == set(sinks):
-#                         directed_graph.remove_edge(cycle[i], cycle[i+1])
-#                         continue
-#     binary_mask = get_binary_mask_from_digraph(nodes, directed_graph)
-#     return True, binary_mask
 
 
 def check_and_correct_binary_mask(nodes, binary_mask):
@@ -101,4 +80,27 @@ def check_and_correct_binary_mask(nodes, binary_mask):
         directed_graph = best_cand
 
     binary_mask = get_binary_mask_from_digraph(nodes, directed_graph)
-    return True, binary_mask
+    return binary_mask
+
+# def get_graph_and_plot(nodes, binary_mask, n_types):
+#     import matplotlib.pyplot as plt
+#
+#     total_nodes = len(nodes)
+#     dg = nx.DiGraph()
+#
+#     for i in range(total_nodes):
+#         dg.add_node(i)
+#
+#     pos = {}
+#
+#     for i in range(total_nodes):
+#         for j in range(total_nodes):
+#             if binary_mask[i,j] == 1:
+#                 dg.add_edge(i, j)
+#         pos[i] = np.array(number_to_type_layer(i, n_types))[::-1]
+#
+#     plt.figure(figsize=(6, 6))
+#     nx.draw(dg, pos, node_color='b', node_size=5000, alpha=0.3)
+#
+#     nx.draw_networkx_labels(dg, pos, nodes, font_size=18)
+#     plt.show()
