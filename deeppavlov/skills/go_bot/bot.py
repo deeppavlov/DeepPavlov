@@ -21,13 +21,8 @@ from typing import Type
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
-from deeppavlov.models.encoders.bow import BoWEncoder
-from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel
-from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
 from deeppavlov.models.tokenizers.spacy_tokenizer import StreamSpacyTokenizer
 from deeppavlov.models.trackers.default_tracker import DefaultTracker
 from deeppavlov.skills.go_bot.network import GoalOrientedBotNetwork
@@ -44,9 +39,9 @@ class GoalOrientedBot(NNModel):
                  template_path,
                  network_parameters,
                  template_type: Type = DualTemplate,
-                 bow_encoder: Type = BoWEncoder,
                  tokenizer: Type = StreamSpacyTokenizer,
                  tracker: Type = DefaultTracker,
+                 bow_embedder=None,
                  embedder=None,
                  slot_filler=None,
                  intent_classifier=None,
@@ -65,7 +60,7 @@ class GoalOrientedBot(NNModel):
         self.debug = debug
         self.slot_filler = slot_filler
         self.intent_classifier = intent_classifier
-        self.bow_encoder = bow_encoder
+        self.bow_embedder = bow_embedder
         self.embedder = embedder
         self.tokenizer = tokenizer
         self.tracker = tracker
@@ -85,7 +80,7 @@ class GoalOrientedBot(NNModel):
     def _init_network(self, params):
         # initialize network
         obs_size = 4 + self.tracker.num_features + self.n_actions
-        if callable(self.bow_encoder):
+        if callable(self.bow_embedder):
             obs_size += len(self.word_vocab)
         if callable(self.embedder):
             obs_size += self.embedder.dim
@@ -117,14 +112,15 @@ class GoalOrientedBot(NNModel):
 
     def _encode_context(self, context, db_result=None):
         # tokenize input
-        tokenized = ' '.join(self.tokenizer([context])[0]).lower().strip()
+        tokens = self.tokenizer([context.lower().strip()])[0]
+        tokenized = ' '.join(tokens)
         if self.debug:
-            log.debug("Text tokens = `{}`".format(tokenized))
+            log.debug("Text tokens = `{}`".format(tokens))
 
         # Bag of words features
         bow_features = []
-        if callable(self.bow_encoder):
-            bow_features = self.bow_encoder([tokenized], self.word_vocab)[0]
+        if callable(self.bow_embedder):
+            bow_features = self.bow_embedder([tokens], self.word_vocab)[0]
             bow_features = bow_features.astype(np.float32)
 
         # Embeddings
@@ -132,11 +128,11 @@ class GoalOrientedBot(NNModel):
         emb_context = np.array([], dtype=np.float32)
         if callable(self.embedder):
             if self.network.attn:
-                if tokenized:
+                if tokens:
                     pad = np.zeros((self.network.attn.max_num_tokens,
                                     self.network.attn.token_size),
                                    dtype=np.float32)
-                    sen = np.array(self.embedder([tokenized])[0])
+                    sen = np.array(self.embedder([tokens])[0])
                     # TODO : Unsupport of batch_size more than 1
                     emb_context = np.concatenate((pad, sen))
                     emb_context = emb_context[-self.network.attn.max_num_tokens:]
@@ -146,7 +142,7 @@ class GoalOrientedBot(NNModel):
                                   self.network.attn.token_size),
                                  dtype=np.float32)
             else:
-                emb_features = self.embedder([tokenized], mean=True)[0]
+                emb_features = self.embedder([tokens], mean=True)[0]
                 # random embedding instead of zeros
                 if np.all(emb_features < 1e-20):
                     emb_dim = self.embedder.dim
