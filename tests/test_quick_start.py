@@ -48,7 +48,7 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
           "odqa": {("configs/odqa/ranker_test.json", "odqa", ALL_MODES): []}
           }
 
-MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "gobot", "gobot_best", "squad"]}  # marks defined in pytest.ini
+MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
 
 TEST_GRID = []
 for model in PARAMS.keys():

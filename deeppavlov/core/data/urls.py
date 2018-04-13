@@ -17,6 +17,7 @@ limitations under the License.
 REQ_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/gobot_dstc2_v2.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/gobot_dstc2_best_v1.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/intents.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ner.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_conll2003_emb.tar.gz',
@@ -37,7 +38,6 @@ REQ_URLS = {
 }
 
 OPT_URLS = {
-    'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin',
     'http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M.vec',
     'http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M-char.vec',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/odqa.tar.gz'
