@@ -67,13 +67,14 @@ def get_binary_mask_from_digraph(nodes, directed_graph):
 #     return True, binary_mask
 
 
-def check_binary_mask(nodes, binary_mask):
+def check_and_correct_binary_mask(nodes, binary_mask):
     directed_graph = get_digraph_from_binary_mask(nodes, binary_mask)
     sources, sinks = find_sources_and_sinks(directed_graph)
 
     while not nx.is_directed_acyclic_graph(directed_graph):
         candidates = []
         cycles = list(nx.simple_cycles(directed_graph))
+        n_cycles = len(cycles)
         print("Cycles: {}".format(cycles))
         # number of candidates to be the best new graph
         cycles_len = np.array([len(cycle) for cycle in cycles])
@@ -81,18 +82,23 @@ def check_binary_mask(nodes, binary_mask):
 
         for i in range(n_candidates):
             new_directed_graph = copy.deepcopy(directed_graph)
+            for j in range(n_cycles):
+                node_id = (i // np.prod(cycles_len[:j])) % cycles_len[j]
+                new_directed_graph.remove_edge(cycles[j][node_id], cycles[j][(node_id + 1) % cycles_len[j]])
             candidates.append(new_directed_graph)
 
-        for j, cycle_ in enumerate(cycles):
-            cycle = copy.deepcopy(cycle_) + [cycle_[0]]
-            for i in range(len(cycle_)):
-                candidates[].remove_edge(cycle[i], cycle[i + 1])
-                new_sources, new_sinks = find_sources_and_sinks(new_directed_graph)
-                if set(new_sources).issuperset(set(sources)) and set(new_sinks).issuperset(set(sinks)):
-                    directed_graph.remove_edge(cycle[i], cycle[i + 1])
-                    continue
-                else:
-                    new_directed_graph.add_edge(cycle[i], cycle[i + 1])
+        best_cand = None
+        best_diff = 10e10
+        for i in range(n_candidates):
+            new_sources, new_sinks = find_sources_and_sinks(candidates[i])
+            if set(new_sources) == set(sources) and set(new_sinks) == set(sinks):
+                best_cand = candidates[i]
+            elif (len(set(new_sources).difference(set(sources))) +
+                  len(set(new_sinks).difference(set(sinks))) < best_diff):
+                best_cand = candidates[i]
+                best_diff = len(set(new_sources).difference(set(sources))) + len(set(new_sinks).difference(set(sinks)))
+
+        directed_graph = best_cand
 
     binary_mask = get_binary_mask_from_digraph(nodes, directed_graph)
     return True, binary_mask
