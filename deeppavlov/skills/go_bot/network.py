@@ -267,9 +267,9 @@ class GoalOrientedBotNetwork(TFModel):
             params = json.load(fp)
         for p in self.GRAPH_PARAMS:
             if self.opt.get(p) != params.get(p):
-                raise ConfigError("`{}` parameter must be equal to "
-                                  "saved model parameter value `{}`"
-                                  .format(p, params[p]))
+                raise ConfigError("`{}` parameter must be equal to saved model "
+                                  "parameter value `{}`, but is equal to `{}`"
+                                  .format(p, params.get(p), self.opt.get(p)))
 
     def reset_state(self):
         # set zero state
