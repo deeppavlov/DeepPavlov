@@ -57,7 +57,7 @@ class Evolution:
                         or (type(self.params[param_name]) is list)):
                     params[param_name] = deepcopy(self.params[param_name])
                 else:
-                    if "choice" in self.params[param_name].keys():
+                    if self.params[param_name].get("choice"):
                         params_for_search[param_name] = list(self.params[param_name]["values"])
                     else:
                         params_for_search[param_name] = deepcopy(self.params[param_name])
@@ -200,7 +200,7 @@ class Evolution:
                             val = min(max(self.params[param]["range"][0], val),
                                       self.params[param]["range"][1])
                             mutated_individuum[param] = val
-                        elif "choice" in self.params[param].keys():
+                        elif self.params[param].get("choice"):
                             mutated_individuum[param] = individuum[param]
                     else:
                         mutated_individuum[param] = individuum[param]

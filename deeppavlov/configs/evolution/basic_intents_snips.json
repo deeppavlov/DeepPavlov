@@ -1,0 +1,202 @@
+{
+  "dataset_reader": {
+    "name": "basic_classification_reader",
+    "x": "text",
+    "y": "intents",
+    "data_path": "snips",
+    "url": "http://lnsigo.mipt.ru/export/datasets/snips_intents/train.csv"
+  },
+  "dataset_iterator": {
+    "name": "basic_classification_iterator",
+    "seed": 42,
+    "field_to_split": "train",
+    "split_fields": [
+      "train",
+      "valid"
+    ],
+    "split_proportions": [
+      0.9,
+      0.1
+    ]
+  },
+  "chainer": {
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
+    "pipe": [
+      {
+        "id": "classes_vocab",
+        "name": "default_vocab",
+        "fit_on": [
+          "y"
+        ],
+        "level": "token",
+        "save_path": "vocabs/snips_classes.dict",
+        "load_path": "vocabs/snips_classes.dict"
+      },
+      {
+        "in": [
+          "x"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_predicted"
+        ],
+        "main": true,
+        "name": "intent_model",
+        "save_path": "intents/intent_cnn_snips_v3",
+        "load_path": "intents/intent_cnn_snips_v3",
+        "classes": "#classes_vocab.keys()",
+        "layers": {
+          "Dense": {
+            "units": {
+              "range": [
+                50,
+                200
+              ],
+              "discrete": true
+            },
+            "activation": {
+              "values": [
+                "softmax",
+                "sigmoid",
+                "relu"
+              ],
+              "choice": true
+            }
+          },
+          "Conv1D": {
+            "filters": {
+              "range": [
+                50,
+                500
+              ],
+              "discrete": true
+            },
+            "kernel_size": {
+              "range": [
+                2,
+                7
+              ],
+              "discrete": true
+            }
+          },
+          "LSTM": {
+            "units": {
+              "range": [
+                50,
+                200
+              ],
+              "discrete": true
+            },
+            "activation": {
+              "values": [
+                "softmax",
+                "sigmoid",
+                "relu"
+              ],
+              "choice": true
+            },
+            "dropout": {
+              "range": [
+                1e-2,
+                7e-1
+              ]
+            },
+            "recurrent_dropout": {
+              "range": [
+                1e-2,
+                7e-1
+              ]
+            }
+          },
+          "BiLSTM": {
+            "units": {
+              "range": [
+                50,
+                200
+              ],
+              "discrete": true
+            },
+            "activation": {
+              "values": [
+                "softmax",
+                "sigmoid",
+                "relu"
+              ],
+              "choice": true
+            },
+            "dropout": {
+              "range": [
+                1e-2,
+                7e-1
+              ]
+            },
+            "recurrent_dropout": {
+              "range": [
+                1e-2,
+                7e-1
+              ]
+            }
+          },
+          "GlobalMaxPooling1D": {
+          },
+          "MaxPooling1D": {
+            "pool_size": {
+              "range": [
+                2,
+                5
+              ],
+              "discrete": true
+            }
+          },
+          "Attention": {
+          }
+        },
+        "confident_threshold": 0.5,
+        "optimizer": "Adam",
+        "lear_rate": 0.01,
+        "lear_rate_decay": 0.1,
+        "loss": "binary_crossentropy",
+        "text_size": 15,
+        "model_name": "cnn_model",
+        "embedder": {
+          "name": "fasttext",
+          "save_path": "embeddings/dstc2_fastText_model.bin",
+          "load_path": "embeddings/dstc2_fastText_model.bin",
+          "dim": 100
+        },
+        "tokenizer": {
+          "name": "nltk_tokenizer",
+          "tokenizer": "wordpunct_tokenize"
+        }
+      }
+    ],
+    "out": [
+      "y_predicted"
+    ]
+  },
+  "train": {
+    "epochs": 1000,
+    "batch_size": 64,
+    "metrics": [
+      "sets_accuracy"
+    ],
+    "validation_patience": 5,
+    "val_every_n_epochs": 5,
+    "log_every_n_epochs": 5,
+    "show_examples": false,
+    "validate_best": true,
+    "test_best": false
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "IntentModel"
+    }
+  }
+}
