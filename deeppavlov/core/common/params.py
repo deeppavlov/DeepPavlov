@@ -16,6 +16,8 @@ limitations under the License.
 
 from typing import Dict, Type
 
+from deeppavlov.core.commands.utils import expand_path, get_deeppavlov_root, set_deeppavlov_root
+from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import REGISTRY
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.log import get_logger
@@ -55,6 +57,14 @@ def from_params(params: Dict, **kwargs) -> Component:
             log.exception(e)
             raise e
 
+    if 'config_path' in config_params:
+        from deeppavlov.core.commands.infer import build_model_from_config
+        deeppavlov_root = get_deeppavlov_root()
+        config = read_json(expand_path(config_params['config_path']))
+        model = build_model_from_config(config, as_component=True)
+        set_deeppavlov_root({'deeppavlov_root': deeppavlov_root})
+        return model
+
     cls_name = config_params.pop('name', None)
     if not cls_name:
         e = ConfigError('Component config has no `name` nor `ref` fields')
@@ -70,7 +80,7 @@ def from_params(params: Dict, **kwargs) -> Component:
     # find the submodels params recursively
     for param_name, subcls_params in config_params.items():
         if isinstance(subcls_params, dict):
-            if 'name' not in subcls_params and 'ref' not in subcls_params:
+            if 'name' not in subcls_params and 'ref' not in subcls_params and 'config_path' not in subcls_params:
                 "This parameter is passed as dict to the class constructor."
                 " The user didn't intent it to be a component."
                 for k, v in subcls_params.items():

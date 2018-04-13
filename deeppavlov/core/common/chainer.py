@@ -20,7 +20,7 @@ from deeppavlov.core.models.nn_model import NNModel
 
 
 class Chainer(Component):
-    def __init__(self, in_x, out_params, in_y=None, *args, **kwargs):
+    def __init__(self, in_x, out_params, in_y=None, *args, as_component=False, **kwargs):
         self.pipe = []
         self.train_pipe = []
         self.in_x = in_x
@@ -31,6 +31,9 @@ class Chainer(Component):
         self.train_map = self.forward_map.union(self.in_y)
 
         self.main = None
+
+        if as_component:
+            self.__call__ = self._predict
 
     def append(self, in_x, out_params, component, in_y=None, main=False):
         if in_y is not None:
@@ -84,7 +87,7 @@ class Chainer(Component):
             raise RuntimeError('Expected to return {} but only {} are set in memory'
                                .format(to_return, self.train_map))
 
-        mem = {k: args[i] for i, k in enumerate(in_params)}
+        mem = dict(zip(in_params, args))
         del args, x, y
 
         for in_params, out_params, component in pipe:
@@ -92,13 +95,27 @@ class Chainer(Component):
             if len(out_params) == 1:
                 mem[out_params[0]] = res
             else:
-                for k, v in zip(out_params, res):
-                    mem[k] = v
+                mem.update(zip(out_params, res))
 
         res = [mem[k] for k in to_return]
         if len(res) == 1:
             return res[0]
         return list(zip(*res))
+
+    def _predict(self, *args):
+        mem = dict(zip(self.in_x, args))
+
+        for in_params, out_params, component in self.pipe:
+            res = component(*[mem[k] for k in in_params])
+            if len(out_params) == 1:
+                mem[out_params[0]] = res
+            else:
+                mem.update(zip(out_params, res))
+
+        res = [mem[k] for k in self.out_params]
+        if len(res) == 1:
+            res = res[0]
+        return res
 
     def get_main_component(self):
         return self.main or self.pipe[-1][-1]
