@@ -39,6 +39,7 @@ import deeppavlov.models.tokenizers.spacy_tokenizer
 import deeppavlov.models.tokenizers.split_tokenizer
 import deeppavlov.models.squad.squad
 import deeppavlov.skills.go_bot.bot
+import deeppavlov.skills.go_bot.bot_sql
 import deeppavlov.skills.go_bot.network
 import deeppavlov.skills.go_bot.tracker
 import deeppavlov.skills.seq2seq_go_bot.bot

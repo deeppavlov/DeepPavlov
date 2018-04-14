@@ -17,6 +17,7 @@ limitations under the License.
 import copy
 import re
 from abc import ABCMeta, abstractmethod
+from deeppavlov.skills.go_bot.sql_database import DataBase
 
 
 class Template(metaclass=ABCMeta):
@@ -62,6 +63,43 @@ class BaseTemplate(Template):
         if t:
             t = t[0].upper() + t[1:]
         return t
+
+
+class SQLTemplate(Template):
+
+    def __init__(self, action: str, answer: str, db=None):
+        self.action = action
+        self.answer = answer
+        self.db = db
+
+    @classmethod
+    def from_str(cls, s):
+        return cls(*s.split('\t', 1))
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return (self.action == other.action)\
+                    and (self.answer == other.answer)
+        return False
+
+    def __hash__(self):
+        """Override the default hash behavior (that returns the id)"""
+        return hash(self.__str__())
+
+    def __str__(self):
+        return self.action + '\t' + self.answer
+
+    def set_db(self, db):
+        self.db = db
+
+    def generate_text(self, slots=[]):
+        if not isinstance(slots, dict):
+            temp_slots = {}
+            for slot, value in slots:
+                temp_slots[slot] = value
+            slots = temp_slots
+        # print(slots)
+        return self.db.query(self.action, self.answer, slots)
 
 
 class DualTemplate(Template):
@@ -121,12 +159,14 @@ class DualTemplate(Template):
 
 class Templates:
 
-    def __init__(self, ttype):
+    def __init__(self, ttype, database=None, req_sub_dict=None):
         self.ttype = ttype
         self.act2templ = {}
         self.templ2act = {}
         self._actions = []
         self._templates = []
+        if self.ttype == SQLTemplate:
+            self.db = DataBase(database, req_sub_dict)
 
     def __contains__(self, key):
         """If key is an str, returns whether the key is in the actions.
@@ -157,6 +197,8 @@ class Templates:
         """If the key is not in  the dictionary, add it."""
         key = str(key)
         if key not in self.act2templ:
+            if self.ttype == SQLTemplate:
+                value.set_db(self.db)
             self.act2templ[key] = value
             self.templ2act[value] = key
             self._actions = []
@@ -177,6 +219,7 @@ class Templates:
     def load(self, filename):
         for ln in open(filename, 'r'):
             act, template = ln.strip('\n').split('\t', 1)
+            print(template)
             self.__setitem__(act, self.ttype.from_str(template))
         return self
 

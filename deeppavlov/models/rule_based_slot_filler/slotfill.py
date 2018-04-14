@@ -92,7 +92,7 @@ def get_candidate(input_text, tag_dict, score_function):
     candidate = ""
     for entity_name, entity_list in tag_dict.items():
         for entity in entity_list:
-            ratio = score_function(entity, input_text)
+            ratio = score_function(entity.lower(), input_text.lower())
             if ratio < r:
                 continue
             if ratio > r:
