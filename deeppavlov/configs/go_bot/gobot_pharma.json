@@ -57,8 +57,8 @@
         "use_action_mask": false,
         "network": {
           "name": "go_bot_rnn",
-          "load_path": "go_bot/model_pharma2",
-          "save_path": "go_bot/model_pharma2",
+          "load_path": "go_bot/model_pharma1",
+          "save_path": "go_bot/model_pharma1",
           "learning_rate": 0.002,
           "dropout_rate": 0.8,
           "hidden_size": 128,
@@ -103,7 +103,7 @@
     ]
   },
   "train": {
-    "epochs": 50,
+    "epochs": 200,
     "batch_size": 2,
 
     "metrics": ["per_item_dialog_accuracy"],
