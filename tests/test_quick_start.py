@@ -42,7 +42,7 @@ PARAMS = {"error_model": {("error_model/brillmoore_wikitypos_en.json", "error_mo
                       ]
                   },
           "ranking": {("ranking/insurance_config.json", "insurance_ranking", ALL_MODES): [],
-                      ("ranking/ubuntu_config.json", "ubuntu_ranking", ALL_MODES): []
+                      ("ranking/ubuntu_config.json", "ubuntu_ranking", ('DE', 'IP')): []
                       },
           "squad": {("squad/squad.json", "squad_model", ALL_MODES): []},
           "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): []},
