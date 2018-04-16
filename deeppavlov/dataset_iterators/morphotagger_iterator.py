@@ -18,7 +18,7 @@ import random
 import numpy as np
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.dataset import Dataset
+from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 
 def process_word(word, to_lower=False, append_case=None):
@@ -56,15 +56,16 @@ def preprocess_data(data, to_lower=True, append_case="first"):
 
 
 @register('morphotagger_dataset')
-class MorphoTaggerDataset(Dataset):
+class MorphoTaggerDatasetIterator(DataLearningIterator):
 
     def __init__(self, data, seed=None, shuffle=True,
                  validation_split=0.2, bucket=True,
                  to_lower=True, append_case="first"):
 
-        processed_data = {mode: preprocess_data(sample, to_lower=to_lower,
-                                                append_case=append_case)
-                          for mode, sample in data.items()}
+        # processed_data = {mode: preprocess_data(sample, to_lower=to_lower,
+        #                                         append_case=append_case)
+        #                   for mode, sample in data.items()}
+        processed_data = data
         self.bucket = bucket
         self.validation_split = validation_split
         super().__init__(processed_data, seed, shuffle)
@@ -77,8 +78,8 @@ class MorphoTaggerDataset(Dataset):
             self.train, self.valid = self.train[:L], self.valid[L:]
         return
 
-    def batch_generator(self, batch_size: int, data_type: str = 'train',
-                        shuffle: bool = None, return_indexes: bool = False):
+    def gen_batches(self, batch_size: int, data_type: str = 'train',
+                    shuffle: bool = None, return_indexes: bool = False):
         if shuffle is None:
             shuffle = self.shuffle
         data = self.data[data_type]
