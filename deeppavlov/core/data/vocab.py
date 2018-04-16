@@ -56,14 +56,14 @@ class DefaultVocabulary(Estimator):
                 tokens = (u['text'] for u in utter)
             elif isinstance(utter, dict):
                 tokens = [utter['text']]
-            elif isinstance(utter, list) and (not utter or isinstance(utter[0], str)):
+            elif isinstance(utter, list) and (not utter or isinstance(utter[0], str) or isinstance(utter[0], tuple)):
                 tokens = utter
             else:
                 tokens = [utter]
 
             if tokenizer is not None:
                 tokens = tokenizer([' '.join(tokens)])[0]
-            tokens = filter(None, tokens)
+            # tokens = filter(None, tokens)
 
             if level == 'token':
                 yield from tokens
