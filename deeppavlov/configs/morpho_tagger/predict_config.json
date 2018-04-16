@@ -2,11 +2,9 @@
   "dataset_reader": {
     "name": "morphotagger_dataset_reader",
     "data_path": "UD2.0_source",
-    "read_params": {
-      "language": "hu", "data_types": ["test"]
-    }
+    "language": "hu", "data_types": ["test"]
   },
-  "dataset": {
+  "dataset_iterator": {
     "name": "morphotagger_dataset"
   },
   "chainer": {
@@ -14,12 +12,18 @@
     "in_y": ["y"],
     "pipe": [
       {
+        "id": "lowercase_preprocessor",
+        "name": "lowercase_preprocessor",
+        "in": ["x"],
+        "out": ["x_processed"]
+      },
+      {
         "id": "tag_vocab",
         "name": "default_vocab",
         "level": "token",
         "special_tokens": ["PAD", "BEGIN", "END"],
-        "save_path": "morpho_tagger/tag.dict",
-        "load_path": "morpho_tagger/tag.dict"
+        "load_path": "morpho_tagger/tag.dict",
+        "save_path": "morpho_tagger/tag_2.dict"
       },
       {
         "id": "char_vocab",
@@ -27,11 +31,11 @@
         "min_freq": 3,
         "special_tokens": ["PAD", "BEGIN", "END"],
 		"level": "char",
-        "save_path": "morpho_tagger/char.dict",
-        "load_path": "morpho_tagger/char.dict"
+        "load_path": "morpho_tagger/char.dict",
+        "save_path": "morpho_tagger/char_2.dict"
       },
       {
-        "in": ["x"],
+        "in": ["x_processed"],
         "in_y": ["y"],
         "out": ["y_predicted"],
         "name": "morpho_tagger",
@@ -46,9 +50,15 @@
         "char_highway_layers": 1, "highway_dropout": 0.0, "word_lstm_layers": 1,
         "char_filter_multiple": 50, "intermediate_dropout": 0.0,
         "word_dropout": 0.3, "lstm_dropout": 0.3, "regularizer": 0.001
+      },
+      {
+        "in": ["x", "y_predicted"],
+        "out": ["y_prettified"],
+        "name": "tag_output_prettifier",
+        "end": "\n"
       }
     ],
-    "out": ["y_predicted"]
+    "out": ["y_prettified"]
   },
   "predict": {
     "batch_size": 32,

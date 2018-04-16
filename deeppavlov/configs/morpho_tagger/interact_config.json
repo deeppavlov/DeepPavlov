@@ -1,12 +1,4 @@
 {
-  "dataset_reader": {
-    "name": "morphotagger_dataset_reader",
-    "data_path": "UD2.0_source",
-    "language": "hu"
-  },
-  "dataset_iterator": {
-    "name": "morphotagger_dataset"
-  },
   "chainer": {
     "in": ["x"],
     "in_y": ["y"],
@@ -20,21 +12,19 @@
       {
         "id": "tag_vocab",
         "name": "default_vocab",
-        "fit_on": ["y"],
-		"level": "token",
+        "level": "token",
         "special_tokens": ["PAD", "BEGIN", "END"],
-        "save_path": "morpho_tagger/tag_1.dict",
-        "load_path": "morpho_tagger/tag_1.dict"
+        "load_path": "morpho_tagger/tag.dict",
+        "save_path": "morpho_tagger/tag_2.dict"
       },
       {
         "id": "char_vocab",
         "name": "default_vocab",
         "min_freq": 3,
-        "fit_on": ["x_processed"],
         "special_tokens": ["PAD", "BEGIN", "END"],
 		"level": "char",
-        "save_path": "morpho_tagger/char_1.dict",
-        "load_path": "morpho_tagger/char_1.dict"
+        "load_path": "morpho_tagger/char.dict",
+        "save_path": "morpho_tagger/char_2.dict"
       },
       {
         "in": ["x_processed"],
@@ -42,8 +32,8 @@
         "out": ["y_predicted"],
         "name": "morpho_tagger",
         "main": true,
-        "save_path": "morpho_tagger/UD2.0/ud_hungarian_1.hdf5",
-        "load_path": "morpho_tagger/UD2.0/ud_hungarian_1.hdf5",
+        "save_path": "morpho_tagger/UD2.0/ud_hungarian.hdf5",
+        "load_path": "morpho_tagger/UD2.0/ud_hungarian.hdf5",
         "tags": "#tag_vocab",
         "symbols": "#char_vocab",
         "verbose": 1,
@@ -52,17 +42,14 @@
         "char_highway_layers": 1, "highway_dropout": 0.0, "word_lstm_layers": 1,
         "char_filter_multiple": 50, "intermediate_dropout": 0.0,
         "word_dropout": 0.3, "lstm_dropout": 0.3, "regularizer": 0.001
+      },
+      {
+        "in": ["x", "y_predicted"],
+        "out": ["y_prettified"],
+        "name": "tag_output_prettifier",
+        "end": "\n"
       }
     ],
-    "out": ["y_predicted"]
-  },
-  "train": {
-    "epochs": 20,
-    "batch_size": 16,
-
-    "metrics": ["per_token_accuracy"],
-    "validation_patience": 10,
-    "val_every_n_epochs": 1,
-    "log_every_n_epochs": 1
+    "out": ["y_prettified"]
   }
 }
