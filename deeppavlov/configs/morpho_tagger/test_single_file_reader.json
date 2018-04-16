@@ -1,7 +1,0 @@
-{
-  "dataset_reader": {
-    "name": "morphotagger_dataset_reader",
-    "data_path": ["data/UD2.0_source/hu-ud-train.conllu", "data/UD2.0_source/hu-ud-dev.conllu"],
-    "read_params": {"data_types": ["train", "dev"]}
-  }
-}
