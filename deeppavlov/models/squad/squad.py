@@ -70,7 +70,8 @@ class SquadModel(TFModel):
         # Try to load the model (if there are some model files the model will be loaded from them)
         if self.load_path is not None:
             self.load()
-            self.sess.run(self.assign_vars)
+            if self.weight_decay < 1.0:
+                 self.sess.run(self.assign_vars)
 
     def _init_graph(self):
         self._init_placeholders()
@@ -163,21 +164,22 @@ class SquadModel(TFModel):
             loss_2 = tf.nn.softmax_cross_entropy_with_logits(logits=logits2, labels=self.y2)
             self.loss = tf.reduce_mean(loss_1 + loss_2)
 
-        self.var_ema = tf.train.ExponentialMovingAverage(self.weight_decay)
-        ema_op = self.var_ema.apply(tf.trainable_variables())
-        with tf.control_dependencies([ema_op]):
-            self.loss = tf.identity(self.loss)
+        if self.weight_decay < 1.0:
+            self.var_ema = tf.train.ExponentialMovingAverage(self.weight_decay)
+            ema_op = self.var_ema.apply(tf.trainable_variables())
+            with tf.control_dependencies([ema_op]):
+                self.loss = tf.identity(self.loss)
 
-            self.shadow_vars = []
-            self.global_vars = []
-            for var in tf.global_variables():
-                v = self.var_ema.average(var)
-                if v:
-                    self.shadow_vars.append(v)
-                    self.global_vars.append(var)
-            self.assign_vars = []
-            for g, v in zip(self.global_vars, self.shadow_vars):
-                self.assign_vars.append(tf.assign(g, v))
+                self.shadow_vars = []
+                self.global_vars = []
+                for var in tf.global_variables():
+                    v = self.var_ema.average(var)
+                    if v:
+                        self.shadow_vars.append(v)
+                        self.global_vars.append(var)
+                self.assign_vars = []
+                for g, v in zip(self.global_vars, self.shadow_vars):
+                    self.assign_vars.append(tf.assign(g, v))
 
     def _init_placeholders(self):
         self.c_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='c_ph')
@@ -238,9 +240,11 @@ class SquadModel(TFModel):
         if event_name == "after_validation":
             if data['impatience'] > self.last_impatience:
                 self.lr_impatience += 1
-                self.last_impatience = data['impatience']
             else:
                 self.lr_impatience = 0
+
+            self.last_impatience = data['impatience']
+
             if self.lr_impatience >= self.learning_rate_patience:
                 self.lr_impatience = 0
                 self.learning_rate = max(self.learning_rate / 2, self.min_learning_rate)
