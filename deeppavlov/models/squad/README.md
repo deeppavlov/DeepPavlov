@@ -85,8 +85,11 @@ Default config could be found at `deeppavlov/configs/squad/squad.json`
   * encoder_hidden_size - hidden size of encoder cells 
   * attention_hidden_size - hidden size to use to compute attention
   * learning_rate
+  * min_learning_rate - minimal lr for lr decay
+  * learning_rate_patience - patience for lr decay
   * keep_prob - dropout keep probability
   * grad_clip - gradient clipping value
+  * weight_decay - weight_decay rate for exponential moving average
   * save_path
   * load_path
 * squad_ans_postprocessor - extracts predicted answer from context
@@ -112,14 +115,12 @@ python -m deeppavlov.deep interact deeppavlov/configs/squad/squad.json
 ```
 Model will ask you to type in context and question.
 
-## Pretrained model on SQuAD
-Pretrained model is available and can be downloaded: [http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model.tar.gz](http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model.tar.gz)
+## Pretrained models:
+### SQuAD
+Pretrained model is available and can be downloaded: [http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_1.1.tar.gz](http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_1.1.tar.gz)
 
-It achieves ~79 F-1 score and ~70 EM on dev set. Results of the most recent solutions could be found on [SQuAD Leadearboad](https://rajpurkar.github.io/SQuAD-explorer/). 
+It achieves ~80 F-1 score and ~71 EM on dev set. Results of the most recent solutions could be found on [SQuAD Leadearboad](https://rajpurkar.github.io/SQuAD-explorer/).
+### SDSJ Task B
+Pretrained model is available and can be downloaded: [http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_ru.tar.gz](http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_ru.tar.gz)
 
-## Training on SDSJ Task B
-If you want to train this model on SDSJ Task B then you should follow these steps:
-* Convert data to SQuAD format
-  * Change **data_path** argument in **dataset_reader** in config file.
-* Use Russian [word](http://lnsigo.mipt.ru/export/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.vec) and [character](http://lnsigo.mipt.ru/export/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize-char.vec) embeddings
-  * Change urls to Russian embeddings in config file.
+It achieves ~80 F-1 score and ~60 EM on dev set.
