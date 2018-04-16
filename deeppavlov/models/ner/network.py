@@ -284,7 +284,7 @@ class NerNetwork:
             if self.verbose:
                 log.info('Epoch {}'.format(epoch))
             if batch_gen is None:
-                batch_generator = self.corpus.batch_generator(batch_size, dataset_type='train')
+                batch_generator = self.corpus.gen_batches(batch_size, dataset_type='train')
             for (x_word, x_char), y_tag in batch_generator:
 
                 feed_dict = self._fill_feed_dict(x_word,

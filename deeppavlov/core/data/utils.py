@@ -22,6 +22,7 @@ from tqdm import tqdm
 import tarfile
 import gzip
 import zipfile
+import numpy as np
 import re
 import zipfile
 
@@ -35,36 +36,15 @@ _MARK_DONE = '.done'
 tqdm.monitor_interval = 0
 
 
-def download(dest_file_path, source_url, file_exists=True):
+def download(dest_file_path, source_url):
     """Download a file from URL
 
     Args:
         dest_file_path: path to the file destination file (including file name)
         source_url: the source URL
-        file_exists: download file if it already exists, or not
 
     """
-    CHUNK = 2 ** 14
-    dest_file_path = Path(dest_file_path).absolute()
-
-    if file_exists or not dest_file_path.exists():
-        dest_file_path.parent.mkdir(parents=True, exist_ok=True)
-
-        r = requests.get(source_url, stream=True)
-        total_length = int(r.headers.get('content-length', 0))
-
-        with dest_file_path.open('wb') as f:
-            log.info('Downloading from {} to {}'.format(source_url, dest_file_path))
-
-            pbar = tqdm(total=total_length, unit='B', unit_scale=True)
-            for chunk in r.iter_content(chunk_size=CHUNK):
-                if chunk:  # filter out keep-alive new chunks
-                    pbar.update(len(chunk))
-                    f.write(chunk)
-            f.close()
-    else:
-        log.info('File already exists in {}'.format(dest_file_path))
-
+    CHUNK = 16 * 1024
     dest_file_path = Path(dest_file_path).absolute()
     dest_file_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -168,3 +148,14 @@ def is_done(path):
 def tokenize_reg(s):
     pattern = "[\w]+|[‑–—“”€№…’\"#$%&\'()+,-./:;<>?]"
     return re.findall(re.compile(pattern), s)
+
+
+def zero_pad(batch, dtype=np.float32):
+    batch_size = len(batch)
+    max_len = max(len(utterance) for utterance in batch)
+    n_features = len(batch[0][0])
+    padded_batch = np.zeros([batch_size, max_len, n_features], dtype=dtype)
+    for n, utterance in enumerate(batch):
+        for k, token_features in enumerate(utterance):
+            padded_batch[n, k] = token_features
+    return padded_batch
