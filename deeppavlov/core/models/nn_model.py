@@ -24,3 +24,6 @@ class NNModel(Component, Serializable):
     @abstractmethod
     def train_on_batch(self, x: list, y: list):
         pass
+
+    def process_event(self, event_name, data):
+        pass
