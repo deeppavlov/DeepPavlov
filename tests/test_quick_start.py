@@ -42,12 +42,13 @@ PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "
                       ]
                   },
           "ranking": {("configs/ranking/insurance_config.json", "ranking", ALL_MODES): []},
-          "squad": {("configs/squad/squad.json", "squad_model", ALL_MODES): []},
+          "squad": {("configs/squad/squad.json", "squad_model", ALL_MODES): [],
+                    ("configs/squad/squad_ru.json", "squad_model_ru", ALL_MODES): []},
           "seq2seq_go_bot": {("configs/seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): []},
           "odqa": {("configs/odqa/ranker_test.json", "odqa", ALL_MODES): []}
           }
 
-MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
+MARKS = {"gpu_only": ["squad_en", "squad_ru"], "slow": ["error_model", "go_bot", "squad_en", "squad_ru"]}  # marks defined in pytest.ini
 
 TEST_GRID = []
 for model in PARAMS.keys():
