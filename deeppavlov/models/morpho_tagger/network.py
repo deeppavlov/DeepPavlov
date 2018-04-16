@@ -24,7 +24,7 @@ import keras.regularizers as kreg
 from keras import Model
 
 from deeppavlov.core.data.vocab import DefaultVocabulary
-from .common import *
+from .common_tagger import *
 from .cells import Highway
 
 
