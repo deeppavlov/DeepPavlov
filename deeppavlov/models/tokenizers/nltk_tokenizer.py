@@ -22,12 +22,17 @@ from deeppavlov.core.common.registry import register
 @register("nltk_tokenizer")
 class NLTKTokenizer(Component):
 
-    def __init__(self, download=False, tokenizer="wordpunct_tokenize", *args, **kwargs):
+    def __init__(self, download=False, tokenizer="wordpunct_tokenize",
+                 return_joint=True, *args, **kwargs):
         if download:
             nltk.download()
         self.tokenizer = getattr(nltk.tokenize, tokenizer, None)
+        self.return_joint = return_joint
         if not callable(self.tokenizer):
             raise AttributeError("Tokenizer {} is not defined in nltk.tokenizer".format(tokenizer))
 
     def __call__(self, batch, *args, **kwargs):
-        return [" ".join(self.tokenizer(sent)) for sent in batch]
+        answer = [self.tokenizer(sent) for sent in batch]
+        if self.return_joint:
+            return " ".join(answer)
+        return answer
