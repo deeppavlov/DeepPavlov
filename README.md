@@ -10,7 +10,7 @@ DeepPavlov is an open-source conversational AI library built on TensorFlow and K
  * development of production ready chat-bots and complex conversational systems
  * NLP and dialog systems research
  
-Our goal is to enable AI-application developers researchers with:
+Our goal is to enable AI-application developers and researchers with:
  * set of pre-trained NLP models, pre-defined dialog system components (ML/DL/Rule-based) and pipeline templates
  * a framework for implementing and testing their own dialog models 
  * tools for application integration with adjacent infrastructure (messengers, helpdesk software etc.)
@@ -152,7 +152,9 @@ python -m deeppavlov.deep <mode> <path_to_config>
 * `<mode>` can be 'train', 'interact', 'interactbot' or 'riseapi'
 * `<path_to_config>` should be a path to an NLP pipeline json config
 
-For 'interactbot' mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable.
+For the 'interactbot' mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable. Also if you want to get custom `/start` and `/help` Telegram messages for the running model you should:
+* Add section to `utils/telegram_utils/model_info.json` with your custom Telegram messages
+* In model config file specify `metadata.labels.telegram_utils` parameter with name which refers to the added section of `utils/telegram_utils/model_info.json`
 
 For 'riseapi' mode you should specify api settings (host, port, etc.) in [*utils/server_utils/server_config.json*](utils/server_utils/server_config.json) configuration file. If provided, values from *model_defaults* section override values for the same parameters from *common_defaults* section. Model names in *model_defaults* section should be similar to the class names of the models main component.
 

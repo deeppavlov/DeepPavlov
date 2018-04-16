@@ -26,12 +26,12 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-def build_model_from_config(config, mode='infer', load_trained=False):
+def build_model_from_config(config, mode='infer', load_trained=False, as_component=False):
     set_deeppavlov_root(config)
     if 'chainer' in config:
         model_config = config['chainer']
 
-        model = Chainer(model_config['in'], model_config['out'], model_config.get('in_y'))
+        model = Chainer(model_config['in'], model_config['out'], model_config.get('in_y'), as_component=as_component)
 
         for component_config in model_config['pipe']:
             if load_trained and ('fit_on' in component_config or 'in_y' in component_config):

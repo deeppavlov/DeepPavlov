@@ -55,6 +55,11 @@
     "validation_patience": 5,
     "val_every_n_epochs": 10,
     "log_every_n_batches": 10
+    "val_every_n_epochs": 10
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "RankingModel"
+    }
   }
-
 }
