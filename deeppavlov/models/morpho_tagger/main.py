@@ -1,7 +1,7 @@
 import sys
 import getopt
 
-from deeppavlov.core.commands.train import train_model_from_config
+from deeppavlov.core.commands.train import train_evaluate_model_from_config
 
 from deeppavlov.models.morpho_tagger.common import predict_with_model
 
@@ -21,6 +21,6 @@ if __name__ == "__main__":
     if mode == "predict":
         predict_with_model(config_path)
     elif mode == "test":
-        train_model_from_config(config_path, is_trained=True)
+        train_evaluate_model_from_config(config_path, is_trained=True)
     elif mode == "train":
-        train_model_from_config(config_path, is_trained=False)
+        train_evaluate_model_from_config(config_path, is_trained=False)
