@@ -18,7 +18,11 @@ import numpy as np
 import sys
 import hashlib
 
+from keras.engine.topology import Layer
 from deeppavlov.core.common.log import get_logger
+from keras import initializers, regularizers, constraints
+from keras import backend as K
+from keras.layers import concatenate, multiply
 
 
 log = get_logger(__name__)
@@ -128,4 +132,57 @@ def md5_hashsum(file_names):
     return hash_md5.hexdigest()
 
 
-def Attention():
+class Attention(Layer):
+    def __init__(self, context_length=None,
+                 W_regularizer=None, b_regularizer=None,
+                 W_constraint=None, b_constraint=None,
+                 use_bias=True, **kwargs):
+        self.supports_masking = True
+        self.init = initializers.get('glorot_uniform')
+        self.W_regularizer = regularizers.get(W_regularizer)
+        self.b_regularizer = regularizers.get(b_regularizer)
+        self.W_constraint = constraints.get(W_constraint)
+        self.b_constraint = constraints.get(b_constraint)
+        self.use_bias = use_bias
+        self.context_length = context_length
+
+        super(Attention, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        assert len(input_shape) == 3
+
+        if self.context_length is None:
+            self.context_length = input_shape[-1]
+
+        self.context = self.add_weight(tuple(input_shape[:-1] + (self.context_length,)),
+                                       initializer=self.init)
+
+        self.W = self.add_weight((input_shape[-1] + self.context_length, input_shape[-1], ),
+                                 initializer=self.init,
+                                 regularizer=self.W_regularizer,
+                                 constraint=self.W_constraint)
+
+        if self.use_bias:
+            self.b = self.add_weight((input_shape[-1], ),
+                                     initializer='zero',
+                                     regularizer=self.b_regularizer,
+                                     constraint=self.b_constraint)
+        else:
+            self.b = None
+
+        self.built = True
+
+    def call(self, x, mask=None):
+        x_full = concatenate(inputs=[x, self.context], axis=-1)
+
+        out = K.dot(x_full, self.W)
+        if self.use_bias:
+            out = K.bias_add(out, self.b)
+
+        out = K.softmax(out)
+        out = multiply(inputs=[out, x])
+
+        return out
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
