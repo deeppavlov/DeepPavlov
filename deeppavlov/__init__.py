@@ -48,6 +48,7 @@ import deeppavlov.skills.seq2seq_go_bot.network
 import deeppavlov.skills.seq2seq_go_bot.kb
 import deeppavlov.vocabs.typos
 import deeppavlov.dataset_readers.insurance_reader
+import deeppavlov.dataset_readers.ubuntu_reader
 import deeppavlov.dataset_iterators.ranking_iterator
 import deeppavlov.models.ranking.ranking_model
 import deeppavlov.models.ranking.metrics

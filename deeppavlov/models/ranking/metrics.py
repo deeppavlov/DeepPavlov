@@ -42,3 +42,12 @@ def rank_response(y_true, y_pred):
                 ranks.append(j)
                 break
     return np.mean(np.asarray(ranks).astype(float))
+
+
+@register_metric('loss')
+def triplet_loss(y_true, y_pred):
+    margin = 0.1
+    predictions = np.array(y_pred)
+    pos_scores = predictions[:, 0]
+    neg_scores = predictions[:, -1]
+    return np.mean(np.maximum(margin - pos_scores + neg_scores, np.zeros(len(y_pred))), axis=-1)
