@@ -38,6 +38,18 @@
         "load_path": "vocabs/snips_classes.dict"
       },
       {
+        "id": "fasttext_embedder",
+        "name": "fasttext",
+        "save_path": "embeddings/dstc2_fastText_model.bin",
+        "load_path": "embeddings/dstc2_fastText_model.bin",
+        "dim": 100
+      },
+      {
+        "id": "nltk_tokenizer",
+        "name": "nltk_tokenizer",
+        "tokenizer": "wordpunct_tokenize"
+      },
+      {
         "in": [
           "x"
         ],
@@ -49,10 +61,11 @@
         ],
         "main": true,
         "name": "intent_model",
-        "save_path": "intents/intent_cnn_snips_v3",
-        "load_path": "intents/intent_cnn_snips_v3",
+        "save_path": "evolution/intents_snips",
+        "load_path": "evolution/intents_snips",
         "classes": "#classes_vocab.keys()",
-        "layers": {
+        "to_evolve": true,
+        "basic_layers_params": {
           "Dense": {
             "units": {
               "range": [
@@ -156,25 +169,39 @@
             }
           },
           "Attention": {
+            "context_length": {
+              "range": [
+                50,
+                200
+              ],
+              "discrete": true
+            }
           }
         },
-        "confident_threshold": 0.5,
+        "confident_threshold": {
+          "range": [
+            0.3,
+            0.7
+          ]
+        },
         "optimizer": "Adam",
-        "lear_rate": 0.01,
-        "lear_rate_decay": 0.1,
+        "lear_rate": {
+          "range": [
+            0.001,
+            0.1
+          ]
+        },
+        "lear_rate_decay": {
+          "range": [
+            0.00001,
+            0.1
+          ]
+        },
         "loss": "binary_crossentropy",
         "text_size": 15,
         "model_name": "cnn_model",
-        "embedder": {
-          "name": "fasttext",
-          "save_path": "embeddings/dstc2_fastText_model.bin",
-          "load_path": "embeddings/dstc2_fastText_model.bin",
-          "dim": 100
-        },
-        "tokenizer": {
-          "name": "nltk_tokenizer",
-          "tokenizer": "wordpunct_tokenize"
-        }
+        "embedder": "#fasttext_embedder",
+        "tokenizer": "#nltk_tokenizer"
       }
     ],
     "out": [
@@ -182,8 +209,20 @@
     ]
   },
   "train": {
-    "epochs": 1000,
-    "batch_size": 64,
+    "epochs": {
+      "range": [
+        10,
+        1000
+      ],
+      "discrete": true
+    },
+    "batch_size": {
+      "range": [
+        50,
+        200
+      ],
+      "discrete": true
+    },
     "metrics": [
       "sets_accuracy"
     ],
