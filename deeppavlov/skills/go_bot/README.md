@@ -86,14 +86,14 @@ To use a go_bot model you should have:
    * `dense_size` — LSTM input size
    * `obs_size` — input features size (must be set to number of `bow_embedder` features, `embedder` features, `intent_classifier` features, context features(=2) plus `tracker` state size plus action size), will be calculated automatically if not set _(optional)_
    * `action_size` — output action size, will be calculated automatically if not set _(optional)_
-   * `attention_mechanism` – dict (or `null`) that describes attention applied to network inputs
-       * `type` – type of attention mechanism, one of (`"general"`, `"bahdanau"`, `"light_general"`, `"light_bahdanau"`, `"cs_general"`, `"cs_bahdanau"`)
-       * `hidden_size` – attention hidden state size
-       * `max_num_tokens` – maximum number of input tokens used in attentio
-       * `depth` – number of averages used in constrained attentions (`"cs_bahdanau"` or `"cs_general"`)
-       * `action_as_key` – whether to use action from previous timestep as key to attention (defaults to `false`) _(optional)_
-       * `intent_as_key` – whether to use utterance intents as key to attention (defaults to `false`) _(optional)_
-       * `projected_align` – whether to use output projection (defaults to `false`) _(optional)_
+   * `attention_mechanism` – dict (or `null`) that describes attention applied to network inputs:
+   * `attention_mechanism.type` – type of attention mechanism, one of (`"general"`, `"bahdanau"`, `"light_general"`, `"light_bahdanau"`, `"cs_general"`, `"cs_bahdanau"`)
+   * `attention_mechanism.hidden_size` – attention hidden state size
+   * `attention_mechanism.max_num_tokens` – maximum number of input tokens used in attentio
+   * `attention_mechanism.depth` – number of averages used in constrained attentions (`"cs_bahdanau"` or `"cs_general"`)
+   * `attention_mechanism.action_as_key` – whether to use action from previous timestep as key to attention (defaults to `false`) _(optional)_
+   * `attention_mechanism.intent_as_key` – whether to use utterance intents as key to attention (defaults to `false`) _(optional)_
+   * `attention_mechanism.projected_align` – whether to use output projection (defaults to `false`) _(optional)_
 * `slot_filler` — model that predicts slot values for a given utterance
    * `name` — slot filler name (`"dstc_slotfilling"` recommended, for implementation see [`deeppavlov.models.ner`](../../models/ner))
    * other slot filler arguments
