@@ -11,7 +11,6 @@ node('gpu') {
             sh """
                 virtualenv --python=python3 ".venv-$BUILD_NUMBER"
                 . .venv-$BUILD_NUMBER/bin/activate
-                pip install pip==9.0.3
                 python setup.py develop
                 python -m spacy download en
                 pip install -r requirements-dev.txt
