@@ -11,6 +11,7 @@ node('gpu') {
             sh """
                 virtualenv --python=python3 ".venv-$BUILD_NUMBER"
                 . .venv-$BUILD_NUMBER/bin/activate
+                pip install pip==9.0.3
                 sed -ri 's/^ *tensorflow *(=|<|>|$)/tensorflow-gpu\1/g' requirements.txt
                 python setup.py develop
                 pip install http://lnsigo.mipt.ru/export/en_core_web_sm-2.0.0.tar.gz
