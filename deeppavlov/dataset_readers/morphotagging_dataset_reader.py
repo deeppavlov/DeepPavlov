@@ -61,16 +61,14 @@ class MorphotaggerDatasetReader(DatasetReader):
     Class to read training datasets in UD format
     """
 
-    def read(self, data_path, language=None, data_types=None,
-             is_filepath=False, **kwargs):
+    def read(self, data_path, language=None, data_types=None, **kwargs):
         """
         Reads UD dataset from data_path.
 
         data_path: str or list, can be either
             1. a directory containing files. The file for data_type 'mode'
             is then data_path / {language}-ud-{mode}.conllu
-            2. a single file. Set is_filepath=True in this case.
-            3. a list of files, containing the same number of items as data_types
+            2. a list of files, containing the same number of items as data_types
         """
         if data_types is None:
             data_types = ["train", "dev"]
@@ -83,7 +81,7 @@ class MorphotaggerDatasetReader(DatasetReader):
         if isinstance(data_path, str):
             data_path = Path(data_path)
         if isinstance(data_path, Path):
-            if is_filepath:
+            if data_path.is_file():
                 # path to a single file
                 data_path = [data_path]
             else:
