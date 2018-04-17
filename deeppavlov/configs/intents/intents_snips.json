@@ -20,21 +20,45 @@
     ]
   },
   "chainer": {
-    "in": ["x"],
-    "in_y": ["y"],
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
     "pipe": [
       {
         "id": "classes_vocab",
         "name": "default_vocab",
-        "fit_on": ["y"],
+        "fit_on": [
+          "y"
+        ],
         "level": "token",
         "save_path": "vocabs/snips_classes.dict",
         "load_path": "vocabs/snips_classes.dict"
       },
       {
-        "in": ["x"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
+        "id": "fasttext_embedder",
+        "name": "fasttext",
+        "save_path": "embeddings/dstc2_fastText_model.bin",
+        "load_path": "embeddings/dstc2_fastText_model.bin",
+        "dim": 100
+      },
+      {
+        "id": "nltk_tokenizer",
+        "name": "nltk_tokenizer",
+        "tokenizer": "wordpunct_tokenize"
+      },
+      {
+        "in": [
+          "x"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_predicted"
+        ],
         "main": true,
         "name": "intent_model",
         "save_path": "intents/intent_cnn_snips_v3",
@@ -57,19 +81,13 @@
         "dropout_rate": 0.5,
         "dense_size": 100,
         "model_name": "cnn_model",
-        "embedder": {
-          "name": "fasttext",
-          "save_path": "embeddings/dstc2_fastText_model.bin",
-          "load_path": "embeddings/dstc2_fastText_model.bin",
-          "dim": 100
-        },
-        "tokenizer": {
-          "name": "nltk_tokenizer",
-          "tokenizer": "wordpunct_tokenize"
-        }
+        "embedder": "#fasttext_embedder",
+        "tokenizer": "#nltk_tokenizer"
       }
     ],
-    "out": ["y_predicted"]
+    "out": [
+      "y_predicted"
+    ]
   },
   "train": {
     "epochs": 1000,
