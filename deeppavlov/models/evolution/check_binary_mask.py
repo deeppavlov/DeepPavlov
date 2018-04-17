@@ -1,6 +1,6 @@
 import numpy as np
 import networkx as nx
-import copy
+from copy import copy, deepcopy
 
 
 def number_to_type_layer(node_id, n_types):
@@ -46,7 +46,9 @@ def get_binary_mask_from_digraph(nodes, directed_graph):
     return binary_mask
 
 
-def check_and_correct_binary_mask(nodes, binary_mask):
+def check_and_correct_binary_mask(nodes, binary_mask_):
+    binary_mask = deepcopy(binary_mask_)
+    binary_mask = np.array(binary_mask)
     directed_graph = get_digraph_from_binary_mask(nodes, binary_mask)
     sources, sinks = find_sources_and_sinks(directed_graph)
 
@@ -54,7 +56,7 @@ def check_and_correct_binary_mask(nodes, binary_mask):
         candidates = []
         cycles = list(nx.simple_cycles(directed_graph))
         n_cycles = len(cycles)
-        print("Cycles: {}".format(cycles))
+        # print("Cycles: {}".format(cycles))
         # number of candidates to be the best new graph
         cycles_len = np.array([len(cycle) for cycle in cycles])
         n_candidates = np.prod(cycles_len)

@@ -4,9 +4,9 @@ import numpy as np
 
 from deeppavlov.models.evolution.neuroevolution_param_generator import NetworkAndParamsEvolution
 
-n_layers = 2
+n_layers = 3
 n_types = 3
-population_size = 3
+population_size = 2
 config_path = "../../configs/evolution/basic_intents_snips.json"
 
 with open(config_path) as fin:
