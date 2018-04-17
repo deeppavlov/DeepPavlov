@@ -14,51 +14,50 @@ import deeppavlov.dataset_readers.basic_classification_reader
 import deeppavlov.dataset_readers.squad_dataset_reader
 import deeppavlov.dataset_readers.morphotagging_dataset_reader
 
-# import deeppavlov.dataset_iterators.dialog_iterator
-# import deeppavlov.dataset_iterators.kvret_dialog_iterator
-# import deeppavlov.dataset_iterators.dstc2_ner_iterator
-# import deeppavlov.dataset_iterators.dstc2_intents_iterator
-# import deeppavlov.dataset_iterators.typos_iterator
-# import deeppavlov.dataset_iterators.basic_classification_iterator
-# import deeppavlov.dataset_iterators.squad_iterator
-# import deeppavlov.dataset_iterators.sqlite_iterator
+import deeppavlov.dataset_iterators.dialog_iterator
+import deeppavlov.dataset_iterators.kvret_dialog_iterator
+import deeppavlov.dataset_iterators.dstc2_ner_iterator
+import deeppavlov.dataset_iterators.dstc2_intents_iterator
+import deeppavlov.dataset_iterators.typos_iterator
+import deeppavlov.dataset_iterators.basic_classification_iterator
+import deeppavlov.dataset_iterators.squad_iterator
+import deeppavlov.dataset_iterators.sqlite_iterator
 import deeppavlov.dataset_iterators.morphotagger_iterator
 
+import deeppavlov.models.classifiers.intents.intent_model
+import deeppavlov.models.commutators.random_commutator
+import deeppavlov.models.embedders.fasttext_embedder
+import deeppavlov.models.embedders.dict_embedder
+import deeppavlov.models.embedders.glove_embedder
+import deeppavlov.models.encoders.bow
+import deeppavlov.models.ner.slotfill
+import deeppavlov.models.ner.ner
+import deeppavlov.models.ner.ner_ontonotes
+import deeppavlov.models.spellers.error_model.error_model
+import deeppavlov.models.trackers.hcn_at
+import deeppavlov.models.trackers.hcn_et
+import deeppavlov.models.preprocessors.str_lower
+import deeppavlov.models.preprocessors.squad_preprocessor
 import deeppavlov.models.preprocessors.capitalization
-
-
-# import deeppavlov.models.classifiers.intents.intent_model
-# import deeppavlov.models.commutators.random_commutator
-# import deeppavlov.models.embedders.fasttext_embedder
-# import deeppavlov.models.embedders.dict_embedder
-# import deeppavlov.models.embedders.glove_embedder
-# import deeppavlov.models.encoders.bow
-# import deeppavlov.models.ner.slotfill
-# import deeppavlov.models.ner.ner
-# import deeppavlov.models.ner.ner_ontonotes
-# import deeppavlov.models.spellers.error_model.error_model
-# import deeppavlov.models.trackers.hcn_at
-# import deeppavlov.models.trackers.hcn_et
-# import deeppavlov.models.preprocessors.str_lower
-# import deeppavlov.models.preprocessors.squad_preprocessor
-# import deeppavlov.models.ner.ner
-# import deeppavlov.models.tokenizers.spacy_tokenizer
-# import deeppavlov.models.tokenizers.split_tokenizer
-# import deeppavlov.models.squad.squad
+import deeppavlov.models.ner.ner
+import deeppavlov.models.tokenizers.spacy_tokenizer
+import deeppavlov.models.tokenizers.split_tokenizer
+import deeppavlov.models.squad.squad
 import deeppavlov.models.morpho_tagger.tagger
 import deeppavlov.models.morpho_tagger.common
-# import deeppavlov.skills.go_bot.bot
-# import deeppavlov.skills.go_bot.network
-# import deeppavlov.skills.go_bot.tracker
-# import deeppavlov.skills.seq2seq_go_bot.bot
-# import deeppavlov.skills.seq2seq_go_bot.network
-# import deeppavlov.skills.seq2seq_go_bot.kb
-# import deeppavlov.vocabs.typos
-# import deeppavlov.dataset_readers.insurance_reader
-# import deeppavlov.dataset_iterators.ranking_iterator
-# import deeppavlov.models.ranking.ranking_model
-# import deeppavlov.models.ranking.metrics
-# import deeppavlov.models.odqa.ranker
+
+import deeppavlov.skills.go_bot.bot
+import deeppavlov.skills.go_bot.network
+import deeppavlov.skills.go_bot.tracker
+import deeppavlov.skills.seq2seq_go_bot.bot
+import deeppavlov.skills.seq2seq_go_bot.network
+import deeppavlov.skills.seq2seq_go_bot.kb
+import deeppavlov.vocabs.typos
+import deeppavlov.dataset_readers.insurance_reader
+import deeppavlov.dataset_iterators.ranking_iterator
+import deeppavlov.models.ranking.ranking_model
+import deeppavlov.models.ranking.metrics
+import deeppavlov.models.odqa.ranker
 
 import deeppavlov.metrics.accuracy
 import deeppavlov.metrics.fmeasure

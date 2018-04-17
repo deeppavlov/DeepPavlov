@@ -148,7 +148,7 @@ def train_evaluate_model_from_config(config_path: str, is_trained=False) -> None
             model = fit_chainer(config, iterator)
         else:
             vocabs = config.get('vocabs', {})
-            for vocab_param_name, vocab_config in config.get('vocabs', {}).items():
+            for vocab_param_name, vocab_config in vocabs.items():
                 v: Estimator = from_params(vocab_config, mode='train')
                 vocabs[vocab_param_name] = _fit(v, iterator, None)
 
@@ -205,9 +205,9 @@ def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
     metrics = [(s, f(val_y_true, val_y_predicted)) for s, f in metrics_functions]
 
     report = {
-        'examples_seen': len(val_y_true),
+        'eval_examples_count': len(val_y_true),
         'metrics': OrderedDict(prettify_metrics(metrics)),
-        'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
+        'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
     }
     return report
 
@@ -274,7 +274,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                         'batches_seen': i,
                         'examples_seen': examples,
                         'metrics': prettify_metrics(metrics),
-                        'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time)))
+                        'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                     }
                     report = {'train': report}
                     print(json.dumps(report, ensure_ascii=False))
@@ -284,10 +284,26 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                 if i >= train_config['max_batches'] > 0:
                     break_flag = True
                     break
+
+                report = {
+                    'epochs_done': epochs,
+                    'batches_seen': i,
+                    'train_examples_seen': examples,
+                    'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
+                }
+                model.process_event(event_name='after_batch', data=report)
             if break_flag:
                 break
 
             epochs += 1
+
+            report = {
+                'epochs_done': epochs,
+                'batches_seen': i,
+                'train_examples_seen': examples,
+                'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
+            }
+            model.process_event(event_name='after_epoch', data=report)
 
             if train_config['log_every_n_epochs'] > 0 and epochs % train_config['log_every_n_epochs'] == 0\
                     and train_y_true:
@@ -295,7 +311,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                 report = {
                     'epochs_done': epochs,
                     'batches_seen': i,
-                    'examples_seen': examples,
+                    'train_examples_seen': examples,
                     'metrics': prettify_metrics(metrics),
                     'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                 }
