@@ -2,7 +2,7 @@ Cython==0.27.1
 lxml==4.1.1
 tqdm==4.19.5
 requests==2.18.4
-tensorflow-gpu==1.4.0
+tensorflow==1.4.0
 overrides==1.9
 kenlm==0.0.0
 h5py==2.7.1

@@ -299,6 +299,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                     'metrics': prettify_metrics(metrics),
                     'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                 }
+                model.process_event(event_name='after_train_log', data=report)
                 report = {'train': report}
                 print(json.dumps(report, ensure_ascii=False))
                 train_y_true.clear()
@@ -307,6 +308,9 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
             if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
                 report = _test_model(model, metrics_functions, iterator,
                                      train_config['batch_size'], 'valid', start_time)
+                report['epochs_done'] = epochs
+                report['batches_seen'] = i
+                report['train_examples_seen'] = examples
 
                 metrics = list(report['metrics'].items())
 
@@ -326,6 +330,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                 if train_config['validation_patience'] > 0:
                     report['patience_limit'] = train_config['validation_patience']
 
+                model.process_event(event_name='after_validation', data=report)
                 report = {'valid': report}
                 print(json.dumps(report, ensure_ascii=False))
 
