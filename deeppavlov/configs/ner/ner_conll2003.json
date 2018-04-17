@@ -4,7 +4,7 @@
     "data_path": "conll2003/"
   },
   "dataset_iterator": {
-    "name": "basic_dataset_iterator"
+    "name": "data_learning_iterator"
   },
   "chainer": {
     "in": ["x"],
@@ -15,24 +15,24 @@
         "name": "default_vocab",
         "fit_on": ["x"],
 		"level": "token",
-        "save_path": "ner_conll2003/word.dict",
-        "load_path": "ner_conll2003/word.dict"
+        "save_path": "ner_conll2003/word_1.dict",
+        "load_path": "ner_conll2003/word_1.dict"
       },
       {
         "id": "tag_vocab",
         "name": "default_vocab",
         "fit_on": ["y"],
 		"level": "token",
-        "save_path": "ner_conll2003/tag.dict",
-        "load_path": "ner_conll2003/tag.dict"
+        "save_path": "ner_conll2003/tag_1.dict",
+        "load_path": "ner_conll2003/tag_1.dict"
       },
       {
         "id": "char_vocab",
         "name": "default_vocab",
         "fit_on": ["x"],
 		"level": "char",
-        "save_path": "ner_conll2003/char.dict",
-        "load_path": "ner_conll2003/char.dict"
+        "save_path": "ner_conll2003/char_1.dict",
+        "load_path": "ner_conll2003/char_1.dict"
       },
       {
         "id": "glove_emb",
@@ -46,8 +46,8 @@
         "out": ["y_predicted"],
         "name": "ner",
         "main": true,
-        "save_path": "ner_conll2003/ner_model",
-        "load_path": "ner_conll2003/ner_model",
+        "save_path": "ner_conll2003/ner_model_1",
+        "load_path": "ner_conll2003/ner_model_1",
         "word_vocab": "#word_vocab",
         "tag_vocab": "#tag_vocab",
         "char_vocab": "#char_vocab",
@@ -72,7 +72,7 @@
     "out": ["y_predicted"]
   },
   "train": {
-    "epochs": 100,
+    "epochs": 1,
     "batch_size": 64,
 
     "metrics": ["ner_f1"],

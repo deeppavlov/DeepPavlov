@@ -33,7 +33,7 @@ log = get_logger(__name__)
 class DefaultVocabulary(Estimator):
     def __init__(self, save_path, load_path, level='token',
                  special_tokens=tuple(), default_token=None,
-                 tokenizer=None, min_freq=1, **kwargs):
+                 tokenizer=None, min_freq=0, **kwargs):
 
         super().__init__(load_path=load_path,
                          save_path=save_path,
@@ -63,7 +63,7 @@ class DefaultVocabulary(Estimator):
 
             if tokenizer is not None:
                 tokens = tokenizer([' '.join(tokens)])[0]
-            # tokens = filter(None, tokens)
+            tokens = filter(None, tokens)
 
             if level == 'token':
                 yield from tokens
@@ -179,8 +179,8 @@ class DefaultVocabulary(Estimator):
     def idxs2toks(self, idxs, filter_paddings=False):
         toks = []
         for idx in idxs:
-            if not filter_paddings or idx != self.tok2idx('<PAD>'):
-                toks.append(self._i2t[idx])
+            # if not filter_paddings or idx != self.tok2idx('<PAD>'):
+            toks.append(self._i2t[idx])
         return toks
 
     def tok2idx(self, tok):
@@ -192,7 +192,8 @@ class DefaultVocabulary(Estimator):
     def batch_toks2batch_idxs(self, b_toks):
         max_len = max(len(toks) for toks in b_toks)
         # Create array filled with paddings
-        batch = np.ones([len(b_toks), max_len]) * self.tok2idx('<PAD>')
+        # batch = np.ones([len(b_toks), max_len]) * self.tok2idx('<PAD>')
+        batch = np.zeros([len(b_toks), max_len])
         for n, tokens in enumerate(b_toks):
             idxs = self.toks2idxs(tokens)
             batch[n, :len(idxs)] = idxs

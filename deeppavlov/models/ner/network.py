@@ -178,7 +178,8 @@ class NerNetwork:
         max_utt_len = max([len(utt) for utt in batch_x] + [2])
         max_token_len = max([len(token) for utt in batch_x for token in utt])
         if self._embedder is None:
-            x_token = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_vocab['<PAD>']
+            # x_token = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_vocab['<PAD>']
+            x_token = np.zeros([batch_size, max_utt_len], dtype=np.int32)
         else:
             batch_x_lower = [[token.lower() for token in utterance] for utterance in batch_x]
             x_token = np.zeros([batch_size, max_utt_len, self._token_embeddings_dim], dtype=np.float32)
@@ -189,10 +190,12 @@ class NerNetwork:
         # Capital letter binary features
         x_cap = np.zeros([batch_size, max_utt_len], dtype=np.float32)
 
-        x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * self.char_vocab['<PAD>']
+        # x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * self.char_vocab['<PAD>']
+        x_char = np.zeros([batch_size, max_utt_len, max_token_len], dtype=np.int32)
         mask = np.zeros([batch_size, max_utt_len])
         if batch_y is not None:
-            y = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.tag_vocab['<PAD>']
+            # y = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.tag_vocab['<PAD>']
+            y = np.zeros([batch_size, max_utt_len], dtype=np.int32)
         else:
             y = None
 
@@ -373,8 +376,10 @@ class NerNetwork:
         max_utt_len = max([len(utt) for utt in tokens_batch])
         max_token_len = max([len(token) for utt in tokens_batch for token in utt])
         # Prepare numpy arrays
-        x_token = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_vocab['<PAD>']
-        x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * self.char_vocab['<PAD>']
+        # x_token = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_vocab['<PAD>']
+        # x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * self.char_vocab['<PAD>']
+        x_token = np.zeros([batch_size, max_utt_len], dtype=np.int32)
+        x_char = np.zeros([batch_size, max_utt_len, max_token_len], dtype=np.int32)
         mask = np.zeros([batch_size, max_utt_len], dtype=np.int32)
         # Prepare x batch
         for n, utterance in enumerate(tokens_batch):

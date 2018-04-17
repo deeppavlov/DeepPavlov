@@ -22,7 +22,7 @@ import os
 p = (Path(__file__) / ".." / "..").resolve()
 sys.path.append(str(p))
 
-from deeppavlov.core.commands.train import train_model_from_config
+from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.commands.infer import interact_model
 from deeppavlov.core.common.log import get_logger
 from utils.telegram_utils.telegram_ui import interact_model_by_telegram
@@ -46,7 +46,7 @@ def main():
     token = args.token or os.getenv('TELEGRAM_TOKEN')
 
     if args.mode == 'train':
-        train_model_from_config(pipeline_config_path)
+        train_evaluate_model_from_config(pipeline_config_path)
     elif args.mode == 'interact':
         interact_model(pipeline_config_path)
     elif args.mode == 'interactbot':
