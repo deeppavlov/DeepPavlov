@@ -142,8 +142,6 @@
           "name": "fasttext",
           "save_path": "embeddings/wiki.en.bin",
           "load_path": "embeddings/wiki.en.bin",
-          "mean": true,
-          "emb_module": "fasttext",
           "dim": 300
         },
         "bow_embedder": {
