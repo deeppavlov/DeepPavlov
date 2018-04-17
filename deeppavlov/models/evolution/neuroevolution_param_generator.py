@@ -1,9 +1,18 @@
 import numpy as np
 from copy import deepcopy
 from pathlib import Path
+import json
 
+from deeppavlov.models.evolution.check_binary_mask import check_and_correct_binary_mask, number_to_type_layer
+from deeppavlov.core.common.file import save_json, read_json
 
-class Evolution:
+# TODO:
+# if structure of config has been changed,
+# please, make sure that
+# `config["chainer"]["pipe"]` is a list of models one of which is a model to be evolved,
+# otherwise, in the whole class change `config["chainer"]["pipe"]` to new path
+
+class NetworkAndParamsEvolution:
     """
     Class performs full evolutionary process (task scores -> max):
     1. initializes random population
@@ -15,28 +24,131 @@ class Evolution:
             (current mutation power is randomly from -sigma to sigma)
     """
 
-    def __init__(self, population_size,
+    def __init__(self, n_layers, n_types,
+                 population_size,
                  p_crossover=0.5, crossover_power=0.5,
                  p_mutation=0.5, mutation_power=0.1,
+                 key_model_to_evolve="to_evolve",
+                 key_basic_layers="basic_layers_params",
+                 seed=None,
                  **kwargs):
         """
         Initialize evolution with random population
         Args:
-            population_size: numer of individuums per generation
+            n_layers: number of available layers of each type
+            n_types: number of different types of network layers
+            population_size: number of individuums per generation
             p_crossover: probability to cross over for current replacement
-            crossover_power: part of parents parameters to exchange for offsprings
+            crossover_power: part of EVOLVING parents parameters to exchange for offsprings
             p_mutation: probability of mutation for current replacement
             mutation_power: allowed percentage of mutation
             **kwargs: basic config with parameters
         """
-        self.params = deepcopy(kwargs)
+        self.n_types = n_types
+        self.n_layers = n_layers
+        self.total_nodes = self.n_types * self.n_layers
+        self.binary_mask_template = np.zeros((self.total_nodes, self.total_nodes))
+
+        self.basic_config = deepcopy(kwargs)
+        self.model_to_evolve_index = self._find_model_to_evolve_index_in_pipe(self.basic_config["chainer"]["pipe"],
+                                                                              key_model_to_evolve)
+
+        self.params = deepcopy(self.basic_config.get("chainer").get("pipe")[self.model_to_evolve_index])
+        self.train_params = deepcopy(self.basic_config.get("train"))
+        self.basic_layers_params = self.params.pop(key_basic_layers, None)
+        self.node_types = list(self.basic_layers_params.keys())
+
+        print("___Basic config___: {}".format(self.basic_config))
+        print("___Model to evolve index in pipe___: {}".format(self.model_to_evolve_index))
+        print("___Model params___: {}".format(self.params))
+        print("___Train params___: {}".format(self.train_params))
+        print("___Basic layers params___: {}".format(self.basic_layers_params))
+
+        if self.basic_layers_params is None:
+            print("\n\n___PARAMS EVOLUTION is being started___")
+            print("___For network evolution one has to provide config file with `basic_layers_params` key___\n\n")
+        else:
+            print("\n\n___NETWORK AND PARAMS EVOLUTION is being started___\n\n")
+
         self.population_size = population_size
         self.p_crossover = p_crossover
         self.p_mutation = p_mutation
-        self.params_names = np.array(list(self.params.keys()))
-        self.n_params = len(self.params)
         self.mutation_power = mutation_power
         self.crossover_power = crossover_power
+        self.evolving_params = []
+        self.n_evolving_params = None
+        self.evolving_train_params = []
+        self.n_evolving_train_params = None
+
+        if seed is None:
+            pass
+        else:
+            np.random.seed(seed)
+
+    def _find_model_to_evolve_index_in_pipe(self, pipe, key):
+        for element_id, element in enumerate(pipe):
+            if self._check_if_model_to_evolve(element, key):
+                return element_id
+
+    def _check_if_model_to_evolve(self, model, key):
+        if key in model.keys():
+            return True
+        else:
+            return False
+
+    def _insert_dict_into_model_params(self, params, model_index, dict_to_insert):
+        params_copy = deepcopy(params)
+        params_copy["chainer"]["pipe"].insert(model_index, dict_to_insert)
+        return params_copy
+
+    def print_dict(self, dict, string=None):
+        if string is None:
+            print(json.dumps(dict, indent=2))
+        else:
+            print(string)
+            print(json.dumps(dict, indent=2))
+        return
+
+    def initialize_params_in_config(self, basic_params):
+        params = {}
+        params_for_search = {}
+        evolving_params = []
+
+        for param_name in basic_params.keys():
+            if type(basic_params[param_name]) is dict:
+                if basic_params[param_name].get("choice"):
+                    params_for_search[param_name] = list(basic_params[param_name]["values"])
+                    evolving_params.append(param_name)
+                elif basic_params[param_name].get("range"):
+                    params_for_search[param_name] = deepcopy(basic_params[param_name])
+                    evolving_params.append(param_name)
+                else:
+                    # NOT evolving params
+                    params[param_name] = deepcopy(basic_params[param_name])
+            else:
+                # NOT evolving params
+                params[param_name] = deepcopy(basic_params[param_name])
+
+        params_for_search = deepcopy(self.sample_params(**params_for_search))
+
+        return params, params_for_search, evolving_params
+
+    def initialize_layers_params(self):
+        all_layers_params = {}
+
+        for node_id in range(self.total_nodes):
+            node_layer, node_type = number_to_type_layer(node_id, self.n_types)
+            node_key = "node_{}_{}".format(node_layer, node_type)
+            layers_params, layers_params_for_search, _ = self.initialize_params_in_config(
+                self.basic_layers_params[self.node_types[node_type]])
+
+            all_layers_params[node_key] = {"node_name": self.node_types[node_type],
+                                            "node_type": node_type,
+                                            "node_layer": node_layer,
+                                            **layers_params,
+                                            **layers_params_for_search
+                                            }
+        return all_layers_params
 
     def first_generation(self, iter=0):
         """
@@ -46,31 +158,41 @@ class Evolution:
         """
         population = []
         for i in range(self.population_size):
-            params = {}
-            params_for_search = {}
+            population.append(deepcopy(self.basic_config))
 
-            for param_name in self.params.keys():
-                if ((type(self.params[param_name]) is str)
-                        or (type(self.params[param_name]) is int)
-                        or (type(self.params[param_name]) is float)
-                        or (type(self.params[param_name]) is bool)
-                        or (type(self.params[param_name]) is list)):
-                    params[param_name] = deepcopy(self.params[param_name])
-                else:
-                    if self.params[param_name].get("choice"):
-                        params_for_search[param_name] = list(self.params[param_name]["values"])
-                    else:
-                        params_for_search[param_name] = deepcopy(self.params[param_name])
+            # intitializing parameters for model
+            params, params_for_search, evolving_params = self.initialize_params_in_config(self.params)
+            self.evolving_params.extend(evolving_params)
+            # initializing parameters for train
+            train_params, train_params_for_search, evolving_params = self.initialize_params_in_config(self.train_params)
+            self.evolving_train_params.extend(evolving_params)
 
-            params_for_search = deepcopy(self.sample_params(**params_for_search))
+            # intitializing path to save model
             if "model_name" in params_for_search.keys():
-                params["model_path"] = str(Path(self.params["model_path"]).joinpath(
+                params["save_path"] = str(Path(self.params["save_path"]).joinpath(
                     "population_" + str(iter)).joinpath(params_for_search["model_name"] + "_" + str(i)))
             else:
-                params["model_path"] = str(Path(self.params["model_path"]).joinpath(
+                params["save_path"] = str(Path(self.params["save_path"]).joinpath(
                     "population_" + str(iter)).joinpath(self.params["model_name"] + "_" + str(i)))
 
-            population.append({**params, **params_for_search})
+            layers_params = self.initialize_layers_params()
+
+            # exchange model and layers params from basic config to sampled model params
+            population[-1]["chainer"]["pipe"][self.model_to_evolve_index] = {**params,
+                                                                             **params_for_search,
+                                                                             **layers_params}
+            # add binary_mask intialization
+            population[-1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = self.sample_binary_mask()
+            # exchange train params from basic config to sampled train params
+            population[-1]["train"] = {**train_params,
+                                       **train_params_for_search}
+
+        self.evolving_params = list(set(self.evolving_params))
+        self.evolving_train_params = list(set(self.evolving_train_params))
+
+        self.n_evolving_params = len(self.evolving_params)
+        self.n_evolving_train_params = len(self.evolving_train_params)
+
         return population
 
     def next_generation(self, generation, scores, iter,
@@ -138,7 +260,7 @@ class Evolution:
         Args:
             population: self.population_size individuums
             p_crossover: probability to cross over for current replacement
-            crossover_power: part of parents parameters to exchange for offsprings
+            crossover_power: part of EVOLVING parents parameters to exchange for offsprings
 
         Returns:
             self.population_size offsprings
@@ -148,19 +270,69 @@ class Evolution:
         for i in range(self.population_size // 2):
             parents = population[perm[2 * i]], population[perm[2 * i + 1]]
             if self.decision(p_crossover):
-                params_perm = np.random.permutation(self.n_params)
-                curr_offsprings = [{}, {}]
-                part = int(crossover_power * self.n_params)
-                for j in range(self.n_params - part):
-                    curr_offsprings[0][self.params_names[params_perm[j]]] = parents[0][
-                        self.params_names[params_perm[j]]]
-                    curr_offsprings[1][self.params_names[params_perm[j]]] = parents[1][
-                        self.params_names[params_perm[j]]]
-                for j in range(self.n_params - part, self.n_params):
-                    curr_offsprings[0][self.params_names[params_perm[j]]] = parents[1][
-                        self.params_names[params_perm[j]]]
-                    curr_offsprings[1][self.params_names[params_perm[j]]] = parents[0][
-                        self.params_names[params_perm[j]]]
+                params_perm = np.random.permutation(self.n_evolving_params)
+                train_params_perm = np.random.permutation(self.n_evolving_train_params)
+                nodes_perm = np.random.permutation(self.total_nodes)
+
+                curr_offsprings = [deepcopy(parents[0]),
+                                   deepcopy(parents[1])]
+
+                part = int(crossover_power * self.n_evolving_params)
+                train_part = int(crossover_power * self.n_evolving_params)
+                nodes_part = int(crossover_power * self.total_nodes)
+
+                # exchange of model params (not layers params)
+                for j in range(self.n_evolving_params - part):
+                    curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][
+                        self.evolving_params[params_perm[j]]] = parents[0][
+                        "chainer"]["pipe"][self.model_to_evolve_index][
+                        self.evolving_params[params_perm[j]]]
+                    curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][
+                        self.evolving_params[params_perm[j]]] = parents[1][
+                        "chainer"]["pipe"][self.model_to_evolve_index][
+                        self.evolving_params[params_perm[j]]]
+                for j in range(self.n_evolving_params - part, self.n_evolving_params):
+                    curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][
+                        self.evolving_params[params_perm[j]]] = parents[1][
+                        "chainer"]["pipe"][self.model_to_evolve_index][
+                        self.evolving_params[params_perm[j]]]
+                    curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][
+                        self.evolving_params[params_perm[j]]] = parents[0][
+                        "chainer"]["pipe"][self.model_to_evolve_index][
+                        self.evolving_params[params_perm[j]]]
+
+                # exchange of train params
+                for j in range(self.n_evolving_train_params - train_part):
+                    curr_offsprings[0]["train"][
+                        self.evolving_train_params[train_params_perm[j]]] = parents[0]["train"][
+                        self.evolving_train_params[train_params_perm[j]]]
+                    curr_offsprings[1]["train"][
+                        self.evolving_train_params[train_params_perm[j]]] = parents[1]["train"][
+                        self.evolving_train_params[train_params_perm[j]]]
+                for j in range(self.n_evolving_train_params - train_part, self.n_evolving_train_params):
+                    curr_offsprings[0]["train"][
+                        self.evolving_train_params[train_params_perm[j]]] = parents[1]["train"][
+                        self.evolving_train_params[train_params_perm[j]]]
+                    curr_offsprings[1]["train"][
+                        self.evolving_train_params[train_params_perm[j]]] = parents[0]["train"][
+                        self.evolving_train_params[train_params_perm[j]]]
+
+                # exchange of nodes (each of which is dict -> deepcopy)
+                for j in range(self.total_nodes - nodes_part):
+                    node_layer, node_type = number_to_type_layer(nodes_perm[j], self.n_types)
+                    node_key = "node_{}_{}".format(node_layer, node_type)
+                    curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][node_key] = deepcopy(
+                        parents[0]["chainer"]["pipe"][self.model_to_evolve_index][node_key])
+                    curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][node_key] = deepcopy(
+                        parents[1]["chainer"]["pipe"][self.model_to_evolve_index][node_key])
+                for j in range(self.total_nodes - nodes_part, self.total_nodes):
+                    node_layer, node_type = number_to_type_layer(nodes_perm[j], self.n_types)
+                    node_key = "node_{}_{}".format(node_layer, node_type)
+                    curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][node_key] = deepcopy(
+                        parents[1]["chainer"]["pipe"][self.model_to_evolve_index][node_key])
+                    curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][node_key] = deepcopy(
+                        parents[0]["chainer"]["pipe"][self.model_to_evolve_index][node_key])
+
                 offsprings.extend(curr_offsprings)
             else:
                 offsprings.extend(parents)
@@ -258,4 +430,7 @@ class Evolution:
     def _sample_log(from_, to_):
         sample = np.exp(np.random.uniform(np.log(from_), np.log(to_)))
         return float(sample)
+
+    def sample_binary_mask(self):
+        return np.random.randint(0, high=2, size=self.binary_mask_template.shape)
 
