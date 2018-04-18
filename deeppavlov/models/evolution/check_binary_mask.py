@@ -123,3 +123,4 @@ def get_graph_and_plot(nodes, binary_mask, n_types, path=None):
     curr_time = datetime.datetime.now().strftime("%Hh%Mm%Ss_%dd%mm%Yy")
     plt.savefig(Path(path).joinpath("pic_" + curr_time + ".png"))
     # time.sleep(1)
+    return None

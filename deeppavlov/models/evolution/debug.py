@@ -6,7 +6,7 @@ from deeppavlov.models.evolution.neuroevolution_param_generator import NetworkAn
 
 n_layers = 5
 n_types = 7
-population_size = 2
+population_size = 10
 config_path = "../../configs/evolution/basic_intents_snips.json"
 
 with open(config_path) as fin:
@@ -25,6 +25,13 @@ population[0]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"]
     evolution.model_to_evolve_index]["binary_mask"].tolist()
 print(population)
 
-evolution.crossover(population, p_crossover=0.9, crossover_power=0.5)
+population = evolution.crossover(population, p_crossover=0.9, crossover_power=0.5)
 print(population)
 
+# print(population[0]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"])
+mutated = evolution.mutation(population, p_mutation=0.5, mutation_power=.5)
+
+for i in range(population_size):
+    if (mutated[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"] !=
+        population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"]).any():
+        print("{} mask mutated".format(i))
