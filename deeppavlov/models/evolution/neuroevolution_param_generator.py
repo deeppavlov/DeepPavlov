@@ -3,7 +3,8 @@ from copy import deepcopy
 from pathlib import Path
 import json
 
-from deeppavlov.models.evolution.check_binary_mask import check_and_correct_binary_mask, number_to_type_layer
+from deeppavlov.models.evolution.check_binary_mask import check_and_correct_binary_mask, \
+    number_to_type_layer, get_graph_and_plot
 from deeppavlov.core.common.file import save_json, read_json
 
 # TODO:
@@ -57,7 +58,11 @@ class NetworkAndParamsEvolution:
         self.train_params = deepcopy(self.basic_config.get("train"))
         self.basic_layers_params = self.params.pop(key_basic_layers, None)
         self.node_types = list(self.basic_layers_params.keys())
-        self.nodes = np.arange(self.total_nodes)
+
+        self.nodes = {}
+        for i in range(self.total_nodes):
+            l, t = number_to_type_layer(i, self.n_types)
+            self.nodes[i] = "{}_{}_{}".format(l, t, i)
 
         print("___Basic config___: {}".format(self.basic_config))
         print("___Model to evolve index in pipe___: {}".format(self.model_to_evolve_index))
@@ -144,11 +149,11 @@ class NetworkAndParamsEvolution:
                 self.basic_layers_params[self.node_types[node_type]])
 
             all_layers_params[node_key] = {"node_name": self.node_types[node_type],
-                                            "node_type": node_type,
-                                            "node_layer": node_layer,
-                                            **layers_params,
-                                            **layers_params_for_search
-                                            }
+                                           "node_type": node_type,
+                                           "node_layer": node_layer,
+                                           **layers_params,
+                                           **layers_params_for_search
+                                           }
         return all_layers_params
 
     def first_generation(self, iter=0):
@@ -183,11 +188,10 @@ class NetworkAndParamsEvolution:
                                                                              **params_for_search,
                                                                              **layers_params}
             # add binary_mask intialization
-            print(self.sample_binary_mask())
-            print(check_and_correct_binary_mask(self.nodes, self.sample_binary_mask()))
-
             population[-1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
                 check_and_correct_binary_mask(self.nodes, self.sample_binary_mask())
+            get_graph_and_plot(self.nodes, population[-1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"],
+                               self.n_types, path=None)
             # exchange train params from basic config to sampled train params
             population[-1]["train"] = {**train_params,
                                        **train_params_for_search}
@@ -278,7 +282,7 @@ class NetworkAndParamsEvolution:
                 params_perm = np.random.permutation(self.n_evolving_params)
                 train_params_perm = np.random.permutation(self.n_evolving_train_params)
                 nodes_perm = np.random.permutation(self.total_nodes)
-                binary_mask_perm = np.random_permutation(self.total_nodes * self.total_nodes)
+                binary_mask_perm = np.random.permutation(self.total_nodes * self.total_nodes)
 
                 curr_offsprings = [deepcopy(parents[0]),
                                    deepcopy(parents[1])]
@@ -467,5 +471,10 @@ class NetworkAndParamsEvolution:
         return float(sample)
 
     def sample_binary_mask(self):
-        return np.random.randint(0, high=2, size=self.binary_mask_template.shape).tolist()
-
+        # return np.random.randint(0, high=2, size=self.binary_mask_template.shape).tolist()
+        # return (1 * (np.log(np.random.random(size=self.binary_mask_template.shape)) > -0.2)).tolist()
+        ones = np.random.choice(self.total_nodes * self.total_nodes,
+                                size=max(1, int(np.random.random() * self.total_nodes)))
+        mask = np.zeros((self.total_nodes * self.total_nodes))
+        mask[ones] = 1
+        return mask.reshape((self.total_nodes, self.total_nodes))
