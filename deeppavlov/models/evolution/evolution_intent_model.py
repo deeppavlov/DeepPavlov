@@ -61,10 +61,16 @@ class KerasEvolutionIntentModel(KerasIntentModel):
                     inp_list.append(K.expand_dims(edges_outputs[input_node], axis=1))
                 else:
                     raise ValueError("All the layers should take in and take out 2 and 3 dimensional tensors!")
-            inp = Concatenate()(inp_list)
+            if len(input_nodes) > 1:
+                inp = Concatenate()(inp_list)
+            else:
+                inp = inp_list[0]
 
-        node_func = getattr(globals(), params[params["nodes"][node_id]]["node_name"], None)
-        node_params = deepcopy(params[params["nodes"][node_id]])
+        print(params[params["nodes"][str(node_id)]]["node_name"])
+        print(globals())
+        # node_func = getattr(globals(), params[params["nodes"][str(node_id)]]["node_name"], None)
+        node_func = globals().get(params[params["nodes"][str(node_id)]]["node_name"], None)
+        node_params = deepcopy(params[params["nodes"][str(node_id)]])
         node_params.pop("node_name")
         node_params.pop("node_type")
         node_params.pop("node_layer")
@@ -87,7 +93,7 @@ class KerasEvolutionIntentModel(KerasIntentModel):
 
         inp = Input(shape=(params['text_size'], params['embedding_size']))
 
-        dg = get_digraph_from_binary_mask(params["nodes"], params["binary_mask"])
+        dg = get_digraph_from_binary_mask(params["nodes"], np.array(params["binary_mask"]))
         sources, sinks = find_sources_and_sinks(dg)
 
         edges_outputs = {}

@@ -56,6 +56,9 @@ population = evolution.mutation(population, p_mutation=0.5, mutation_power=.5)
 #         print("{} mask mutated".format(i))
 # population[0]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"] = population[0]["chainer"]["pipe"][
 #     evolution.model_to_evolve_index]["binary_mask"].tolist()
+population[0]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"] = population[0]["chainer"]["pipe"][
+    evolution.model_to_evolve_index]["binary_mask"].tolist()
+
 
 config_path = "./config_mutated.json"
 full_config = deepcopy(population[0])
