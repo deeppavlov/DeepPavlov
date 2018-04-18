@@ -90,6 +90,7 @@ class NetworkAndParamsEvolution:
             pass
         else:
             np.random.seed(seed)
+        return None
 
     def _find_model_to_evolve_index_in_pipe(self, pipe, key):
         for element_id, element in enumerate(pipe):
@@ -113,7 +114,7 @@ class NetworkAndParamsEvolution:
         else:
             print(string)
             print(json.dumps(dict, indent=2))
-        return
+        return None
 
     def initialize_params_in_config(self, basic_params):
         params = {}
@@ -190,8 +191,9 @@ class NetworkAndParamsEvolution:
             # add binary_mask intialization
             population[-1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
                 check_and_correct_binary_mask(self.nodes, self.sample_binary_mask())
-            get_graph_and_plot(self.nodes, population[-1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"],
-                               self.n_types, path=None)
+            # get_graph_and_plot(self.nodes, population[-1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"],
+            #                    self.n_types, path=None)
+
             # exchange train params from basic config to sampled train params
             population[-1]["train"] = {**train_params,
                                        **train_params_for_search}
