@@ -121,22 +121,23 @@ class NetworkAndParamsEvolution:
         params_for_search = {}
         evolving_params = []
 
-        for param_name in basic_params.keys():
-            if type(basic_params[param_name]) is dict:
-                if basic_params[param_name].get("choice"):
-                    params_for_search[param_name] = list(basic_params[param_name]["values"])
-                    evolving_params.append(param_name)
-                elif basic_params[param_name].get("range"):
-                    params_for_search[param_name] = deepcopy(basic_params[param_name])
-                    evolving_params.append(param_name)
+        for param_name in list(basic_params.keys()):
+            if basic_params[param_name]:
+                if type(basic_params[param_name]) is dict:
+                    if basic_params[param_name].get("choice"):
+                        params_for_search[param_name] = list(basic_params[param_name]["values"])
+                        evolving_params.append(param_name)
+                    elif basic_params[param_name].get("range"):
+                        params_for_search[param_name] = deepcopy(basic_params[param_name])
+                        evolving_params.append(param_name)
+                    else:
+                        # NOT evolving params
+                        params[param_name] = deepcopy(basic_params[param_name])
                 else:
                     # NOT evolving params
                     params[param_name] = deepcopy(basic_params[param_name])
-            else:
-                # NOT evolving params
-                params[param_name] = deepcopy(basic_params[param_name])
-
-        params_for_search = deepcopy(self.sample_params(**params_for_search))
+        if basic_params:
+            params_for_search = deepcopy(self.sample_params(**params_for_search))
 
         return params, params_for_search, evolving_params
 

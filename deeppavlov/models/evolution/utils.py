@@ -22,7 +22,7 @@ from keras.engine.topology import Layer
 from deeppavlov.core.common.log import get_logger
 from keras import initializers, regularizers, constraints
 from keras import backend as K
-from keras.layers import concatenate, multiply
+from keras.layers import concatenate, multiply, Reshape
 
 
 log = get_logger(__name__)
@@ -186,3 +186,20 @@ class Attention(Layer):
 
     def compute_output_shape(self, input_shape):
         return input_shape
+
+def expand_tile(units, axis):
+    """Expand and tile tensor along given axis
+    Args:
+        units: tf tensor with dimensions [batch_size, time_steps, n_input_features]
+        axis: axis along which expand and tile. Must be 1 or 2
+
+    """
+    assert axis in (1, 2)
+    n_time_steps = K.int_shape(units)[1]
+    repetitions = [1, 1, 1, 1]
+    repetitions[axis] = n_time_steps
+    if axis == 1:
+        expanded = Reshape(target_shape=( (1,) + K.int_shape(units)[1:] ))(units)
+    else: # axis=2
+        expanded = Reshape(target_shape=(K.int_shape(units)[1:2] + (1,) + K.int_shape(units)[2:]))(units)
+    return K.tile(expanded, repetitions)
