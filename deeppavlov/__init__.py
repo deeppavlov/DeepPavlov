@@ -23,6 +23,7 @@ import deeppavlov.dataset_iterators.basic_classification_iterator
 import deeppavlov.dataset_iterators.squad_iterator
 import deeppavlov.dataset_iterators.sqlite_iterator
 import deeppavlov.models.classifiers.intents.intent_model
+import deeppavlov.models.evolution.evolution_intent_model
 import deeppavlov.models.commutators.random_commutator
 import deeppavlov.models.embedders.fasttext_embedder
 import deeppavlov.models.embedders.dict_embedder
