@@ -139,16 +139,16 @@ def bi_rnn(units: tf.Tensor,
 
     with tf.variable_scope(name + '_' + cell_type.upper()):
         if cell_type == 'gru':
-            forward_cell = tf.nn.rnn_cell.GRUCell(n_hidden, kernel_initializer=INITIALIZER)
-            backward_cell = tf.nn.rnn_cell.GRUCell(n_hidden, kernel_initializer=INITIALIZER)
+            forward_cell = tf.nn.rnn_cell.GRUCell(n_hidden, kernel_initializer=INITIALIZER())
+            backward_cell = tf.nn.rnn_cell.GRUCell(n_hidden, kernel_initializer=INITIALIZER())
             if trainable_initial_states:
                 initial_state_fw = tf.tile(tf.get_variable('init_fw_h', [1, n_hidden]), (tf.shape(units)[0], 1))
                 initial_state_bw = tf.tile(tf.get_variable('init_bw_h', [1, n_hidden]), (tf.shape(units)[0], 1))
             else:
                 initial_state_fw = initial_state_bw = None
         elif cell_type == 'lstm':
-            forward_cell = tf.nn.rnn_cell.LSTMCell(n_hidden, use_peepholes=use_peepholes, initializer=INITIALIZER)
-            backward_cell = tf.nn.rnn_cell.LSTMCell(n_hidden, use_peepholes=use_peepholes, initializer=INITIALIZER)
+            forward_cell = tf.nn.rnn_cell.LSTMCell(n_hidden, use_peepholes=use_peepholes, initializer=INITIALIZER())
+            backward_cell = tf.nn.rnn_cell.LSTMCell(n_hidden, use_peepholes=use_peepholes, initializer=INITIALIZER())
             if trainable_initial_states:
                 initial_state_fw = tf.nn.rnn_cell.LSTMStateTuple(
                     tf.tile(tf.get_variable('init_fw_c', [1, n_hidden]), (tf.shape(units)[0], 1)),
@@ -316,10 +316,10 @@ def stacked_highway_cnn(units: tf.Tensor,
                                  filter_width,
                                  padding='same',
                                  dilation_rate=dilation_rate,
-                                 kernel_initializer=INITIALIZER)
+                                 kernel_initializer=INITIALIZER())
         if use_batch_norm:
             units = tf.layers.batch_normalization(units, training=training_ph)
-        sigmoid_gate = tf.layers.dense(input_units, 1, activation=tf.sigmoid, kernel_initializer=INITIALIZER)
+        sigmoid_gate = tf.layers.dense(input_units, 1, activation=tf.sigmoid, kernel_initializer=INITIALIZER())
         input_units = sigmoid_gate * input_units + (1 - sigmoid_gate) * units
         input_units = tf.nn.relu(input_units)
     units = input_units
@@ -392,7 +392,7 @@ def character_embedding_network(char_placeholder: tf.Tensor,
 
         # Character embedding network
         char_conv = tf.layers.conv2d(c_emb, char_embedding_dim, (1, filter_width), padding='same', name='char_conv',
-                                     kernel_initializer=INITIALIZER)
+                                     kernel_initializer=INITIALIZER())
         embeddings = tf.reduce_max(char_conv, axis=2)
     return embeddings
 
@@ -432,10 +432,10 @@ def additive_self_attention(units, n_hidden=None, n_output_features=None, activa
     if n_output_features is None:
         n_output_features = n_input_features
     units_pairs = tf.concat([expand_tile(units, 1), expand_tile(units, 2)], 3)
-    query = tf.layers.dense(units_pairs, n_hidden, activation=tf.tanh, kernel_initializer=INITIALIZER)
+    query = tf.layers.dense(units_pairs, n_hidden, activation=tf.tanh, kernel_initializer=INITIALIZER())
     attention = tf.nn.softmax(tf.layers.dense(query, 1), dim=2)
     attended_units = tf.reduce_sum(attention * expand_tile(units, 1), axis=2)
-    output = tf.layers.dense(attended_units, n_output_features, activation, kernel_initializer=INITIALIZER)
+    output = tf.layers.dense(attended_units, n_output_features, activation, kernel_initializer=INITIALIZER())
     return output
 
 
@@ -459,12 +459,12 @@ def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, 
         n_hidden = n_input_features
     if n_output_features is None:
         n_output_features = n_input_features
-    queries = tf.layers.dense(expand_tile(units, 1), n_hidden, kernel_initializer=INITIALIZER)
-    keys = tf.layers.dense(expand_tile(units, 2), n_hidden, kernel_initializer=INITIALIZER)
+    queries = tf.layers.dense(expand_tile(units, 1), n_hidden, kernel_initializer=INITIALIZER())
+    keys = tf.layers.dense(expand_tile(units, 2), n_hidden, kernel_initializer=INITIALIZER())
     scores = tf.reduce_sum(queries * keys, axis=3, keep_dims=True)
     attention = tf.nn.softmax(scores, dim=2)
     attended_units = tf.reduce_sum(attention * expand_tile(units, 1), axis=2)
-    output = tf.layers.dense(attended_units, n_output_features, activation, kernel_initializer=INITIALIZER)
+    output = tf.layers.dense(attended_units, n_output_features, activation, kernel_initializer=INITIALIZER())
     return output
 
 
@@ -477,6 +477,7 @@ def cudnn_gru(units, n_hidden, n_layers=1, trainable_initial_states=False,
             B - batch size
             T - number of tokens
             F - features
+
         n_hidden: dimensionality of hidden state
         trainable_initial_states: whether to create a special trainable variable
             to initialize the hidden states of the network or use just zeros
