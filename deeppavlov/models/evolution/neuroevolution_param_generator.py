@@ -145,7 +145,7 @@ class NetworkAndParamsEvolution:
 
         for node_id in range(self.total_nodes):
             node_layer, node_type = number_to_type_layer(node_id, self.n_types)
-            node_key = "node_{}_{}".format(node_layer, node_type)
+            node_key = self.nodes[node_id]
             layers_params, layers_params_for_search, _ = self.initialize_params_in_config(
                 self.basic_layers_params[self.node_types[node_type]])
 
@@ -333,7 +333,7 @@ class NetworkAndParamsEvolution:
                 # exchange of nodes
                 for j in range(self.total_nodes - nodes_part):
                     node_layer, node_type = number_to_type_layer(nodes_perm[j], self.n_types)
-                    node_key = "node_{}_{}".format(node_layer, node_type)
+                    node_key = self.nodes[nodes_perm[j]]
 
                     curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][node_key] = deepcopy(
                         parents[0]["chainer"]["pipe"][self.model_to_evolve_index][node_key])
@@ -341,7 +341,7 @@ class NetworkAndParamsEvolution:
                         parents[1]["chainer"]["pipe"][self.model_to_evolve_index][node_key])
                 for j in range(self.total_nodes - nodes_part, self.total_nodes):
                     node_layer, node_type = number_to_type_layer(nodes_perm[j], self.n_types)
-                    node_key = "node_{}_{}".format(node_layer, node_type)
+                    node_key = self.nodes[nodes_perm[j]]
 
                     curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][node_key] = deepcopy(
                         parents[1]["chainer"]["pipe"][self.model_to_evolve_index][node_key])
@@ -394,33 +394,75 @@ class NetworkAndParamsEvolution:
             mutated population
         """
         mutated = []
+
         for individuum in population:
-            mutated_individuum = {}
-            for param in self.params_names:
-                if self.decision(p_mutation):
-                    if type(self.params[param]) is dict:
-                        if self.params[param].get('discrete', False):
-                            val = round(individuum[param] +
-                                        ((2 * np.random.random() - 1.) * mutation_power
-                                         * self.sample_params(**{param: self.params[param]})[param]))
-                            val = min(max(self.params[param]["range"][0], val),
-                                      self.params[param]["range"][1])
-                            mutated_individuum[param] = val
-                        elif 'range' in self.params[param].keys():
-                            val = individuum[param] + \
-                                  ((2 * np.random.random() - 1.) * mutation_power
-                                   * self.sample_params(**{param: self.params[param]})[param])
-                            val = min(max(self.params[param]["range"][0], val),
-                                      self.params[param]["range"][1])
-                            mutated_individuum[param] = val
-                        elif self.params[param].get("choice"):
-                            mutated_individuum[param] = individuum[param]
-                    else:
-                        mutated_individuum[param] = individuum[param]
-                else:
-                    mutated_individuum[param] = individuum[param]
+            mutated_individuum = deepcopy(individuum)
+
+            # mutation of other model params
+            for param in self.params.keys():
+                mutated_individuum["chainer"]["pipe"][self.model_to_evolve_index][param] = \
+                    self.mutation_of_param(param, self.params,
+                                           individuum["chainer"]["pipe"][self.model_to_evolve_index][param],
+                                           p_mutation, mutation_power)
+
+            # mutation of train params
+            for param in self.train_params.keys():
+                mutated_individuum["train"][param] = \
+                    self.mutation_of_param(param, self.train_params,
+                                           individuum["train"][param],
+                                           p_mutation, mutation_power)
+
+            # mutation of binary mask
+            if self.decision(p_mutation):
+                mutated_individuum["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
+                    check_and_correct_binary_mask(self.nodes,
+                        np.minimum(1,
+                                   np.maximum(0,
+                                              individuum["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] +
+                                              np.round((2 * np.random.random() - 1.) * self.sample_binary_mask()))))
+
+            # mutation of each node params
+            for node_id in range(self.total_nodes):
+                node_layer, node_type = number_to_type_layer(node_id, self.n_types)
+                for param in self.basic_layers_params[self.node_types[node_type]]:
+                    mutated_individuum["chainer"]["pipe"][self.model_to_evolve_index][self.nodes[node_id]][param] =\
+                        self.mutation_of_param(param, self.basic_layers_params[self.node_types[node_type]],
+                                               individuum["chainer"]["pipe"][self.model_to_evolve_index][
+                                                   self.nodes[node_id]][param],
+                                               p_mutation, mutation_power)
             mutated.append(mutated_individuum)
+
         return mutated
+
+    def mutation_of_param(self, param, params_dict, param_value, p_mutation, mutation_power):
+        new_mutated_value = deepcopy(param_value)
+
+        if self.decision(p_mutation):
+            if type(params_dict[param]) is dict:
+                if params_dict[param].get('discrete', False):
+                    val = round(param_value +
+                                ((2 * np.random.random() - 1.) * mutation_power
+                                 * self.sample_params(**{param: params_dict[param]})[param]))
+                    val = min(max(params_dict[param]["range"][0], val),
+                              params_dict[param]["range"][1])
+                    new_mutated_value = val
+                elif 'range' in params_dict[param].keys():
+                    val = param_value + \
+                          ((2 * np.random.random() - 1.) * mutation_power
+                           * self.sample_params(**{param: params_dict[param]})[param])
+                    val = min(max(params_dict[param]["range"][0], val),
+                              params_dict[param]["range"][1])
+                    new_mutated_value = val
+                elif params_dict[param].get("choice"):
+                    new_mutated_value = param_value
+                else:
+                    new_mutated_value = param_value
+            else:
+                new_mutated_value = param_value
+        else:
+            new_mutated_value = param_value
+
+        return new_mutated_value
 
     def decision(self, probability):
         """
