@@ -73,7 +73,6 @@
           "dropout_rate": 0.85,
           "hidden_size": 128,
           "dense_size": 64,
-          "use_action_mask": false,
           "attention_mechanism": {
             "type": "cs_bahdanau",
             "hidden_size": 32,
