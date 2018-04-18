@@ -1,6 +1,10 @@
 import numpy as np
 import networkx as nx
 from copy import copy, deepcopy
+import datetime
+import time
+from pathlib import Path
+import matplotlib.pyplot as plt
 
 
 def number_to_type_layer(node_id, n_types):
@@ -59,19 +63,24 @@ def check_and_correct_binary_mask(nodes, binary_mask_):
         # print("Cycles: {}".format(cycles))
         # number of candidates to be the best new graph
         cycles_len = np.array([len(cycle) for cycle in cycles])
-        n_candidates = np.prod(cycles_len)
+        n_candidates = int(np.prod(cycles_len))
 
         for i in range(n_candidates):
-            new_directed_graph = copy.deepcopy(directed_graph)
+            new_directed_graph = deepcopy(directed_graph)
             for j in range(n_cycles):
                 node_id = (i // np.prod(cycles_len[:j])) % cycles_len[j]
-                new_directed_graph.remove_edge(cycles[j][node_id], cycles[j][(node_id + 1) % cycles_len[j]])
+                try:
+                    new_directed_graph.remove_edge(cycles[j][node_id], cycles[j][(node_id + 1) % cycles_len[j]])
+                except:
+                    continue
             candidates.append(new_directed_graph)
 
+        n_candidates = len(candidates)
         best_cand = None
         best_diff = 10e10
         for i in range(n_candidates):
             new_sources, new_sinks = find_sources_and_sinks(candidates[i])
+
             if set(new_sources) == set(sources) and set(new_sinks) == set(sinks):
                 best_cand = candidates[i]
             elif (len(set(new_sources).difference(set(sources))) +
@@ -84,25 +93,29 @@ def check_and_correct_binary_mask(nodes, binary_mask_):
     binary_mask = get_binary_mask_from_digraph(nodes, directed_graph)
     return binary_mask
 
-# def get_graph_and_plot(nodes, binary_mask, n_types):
-#     import matplotlib.pyplot as plt
-#
-#     total_nodes = len(nodes)
-#     dg = nx.DiGraph()
-#
-#     for i in range(total_nodes):
-#         dg.add_node(i)
-#
-#     pos = {}
-#
-#     for i in range(total_nodes):
-#         for j in range(total_nodes):
-#             if binary_mask[i,j] == 1:
-#                 dg.add_edge(i, j)
-#         pos[i] = np.array(number_to_type_layer(i, n_types))[::-1]
-#
-#     plt.figure(figsize=(6, 6))
-#     nx.draw(dg, pos, node_color='b', node_size=5000, alpha=0.3)
-#
-#     nx.draw_networkx_labels(dg, pos, nodes, font_size=18)
-#     plt.show()
+
+def get_graph_and_plot(nodes, binary_mask, n_types, path=None):
+    total_nodes = len(nodes)
+    dg = nx.DiGraph()
+
+    for i in range(total_nodes):
+        dg.add_node(i)
+
+    pos = {}
+
+    for i in range(total_nodes):
+        for j in range(total_nodes):
+            if binary_mask[i, j] == 1:
+                dg.add_edge(i, j)
+        pos[i] = 2. * np.array(number_to_type_layer(i, n_types))[::-1]
+
+    plt.figure(figsize=(12, 12))
+    nx.draw(dg, pos, node_color='b', node_size=7000, alpha=0.3)
+
+    nx.draw_networkx_labels(dg, pos, nodes, font_size=18)
+    # plt.show()
+    if path is None:
+        path = "./"
+    curr_time = datetime.datetime.now().strftime("%Hh%Mm%Ss_%dd%mm%Yy")
+    plt.savefig(Path(path).joinpath("pic_" + curr_time + ".png"))
+    # time.sleep(1)

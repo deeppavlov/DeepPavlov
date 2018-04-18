@@ -4,8 +4,8 @@ import numpy as np
 
 from deeppavlov.models.evolution.neuroevolution_param_generator import NetworkAndParamsEvolution
 
-n_layers = 3
-n_types = 3
+n_layers = 5
+n_types = 7
 population_size = 2
 config_path = "../../configs/evolution/basic_intents_snips.json"
 
@@ -16,6 +16,7 @@ evolution = NetworkAndParamsEvolution(n_layers, n_types,
                                       population_size,
                                       key_model_to_evolve="to_evolve",
                                       key_basic_layers="basic_layers_params",
+                                      seed=42,
                                       **config)
 
 population = evolution.first_generation()
@@ -26,3 +27,4 @@ print(population)
 
 evolution.crossover(population, p_crossover=0.9, crossover_power=0.5)
 print(population)
+
