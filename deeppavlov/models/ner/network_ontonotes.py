@@ -14,7 +14,6 @@ import numpy as np
 import tensorflow as tf
 
 from deeppavlov.core.common.utils import check_gpu_existance
-from deeppavlov.core.layers.tf_layers import cudnn_bi_lstm
 from tensorflow.contrib.layers import xavier_initializer
 from nltk.tag import SennaNERTagger, SennaChunkTagger
 
@@ -191,3 +190,54 @@ class NerNetwork:
 
         feed_dict[self._x_capi] = x['capitalization']
         return feed_dict
+
+
+def cudnn_bi_lstm(units, n_hidden, seq_lengths, n_layers=1):
+    """ Fast CuDNN Bi-LSTM implementation
+
+        Args:
+            units: tf.Tensor with dimensions [B x T x F], where
+                B - batch size
+                T - number of tokens
+                F - features
+            n_hidden: dimensionality of hidden state
+            n_layers: number of layers
+
+        Returns:
+            h - all hidden states along T dimension,
+                tf.Tensor with dimensionality [B x T x F]
+            h_last - last hidden state, tf.Tensor with dimensionality [B x H * 2]
+                where H - number of hidden units
+            c_last - last cell state, tf.Tensor with dimensionality [B x H * 2]
+                where H - number of hidden units
+        """
+    lstm_fw = tf.contrib.cudnn_rnn.CudnnLSTM(num_layers=n_layers,
+                                             num_units=n_hidden,
+                                             input_size=units.get_shape().as_list()[-1])
+    lstm_bw = tf.contrib.cudnn_rnn.CudnnLSTM(num_layers=n_layers,
+                                             num_units=n_hidden,
+                                             input_size=units.get_shape().as_list()[-1])
+
+    param_fw = tf.Variable(tf.random_uniform(
+        [lstm_fw.params_size()], -0.1, 0.1), validate_shape=False)
+    param_bw = tf.Variable(tf.random_uniform(
+        [lstm_bw.params_size()], -0.1, 0.1), validate_shape=False)
+
+    init_h_fw = tf.zeros([1, tf.shape(units)[0], n_hidden])
+    init_h_bw = tf.zeros([1, tf.shape(units)[0], n_hidden])
+
+    init_c_fw = tf.zeros([1, tf.shape(units)[0], n_hidden])
+    init_c_bw = tf.zeros([1, tf.shape(units)[0], n_hidden])
+
+    h_fw, h_last_fw, c_last_fw = lstm_fw(tf.transpose(units, (1, 0, 2)), init_h_fw, init_c_fw, param_fw)
+    reversed_units = tf.reverse_sequence(units, seq_lengths=seq_lengths, seq_dim=1, batch_dim=0)
+    h_bw, h_last_bw, c_last_bw = lstm_bw(tf.transpose(reversed_units, (1, 0, 2)), init_h_bw, init_c_bw, param_bw)
+    h_bw = tf.reverse_sequence(h_bw, seq_lengths=seq_lengths, seq_dim=0, batch_dim=1)
+
+    h = tf.concat([h_fw, h_bw], axis=2)
+    h_last = tf.concat([h_last_fw, h_last_bw], axis=2)
+    c_last = tf.concat([c_last_fw, c_last_bw], axis=2)
+
+    h = tf.transpose(h, (1, 0, 2))
+    h_last = tf.squeeze(h_last, 0)
+    return h, (h_last, c_last)
