@@ -8,8 +8,7 @@
       "ans_raw_start"
     ],
     "out": [
-      "ans_predicted",
-      "ans_start_predicted"
+      "ans_predicted"
     ],
     "pipe": [
       {
