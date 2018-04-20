@@ -60,7 +60,7 @@
           "y_predicted"
         ],
         "main": true,
-        "name": "evolution_intent_model",
+        "name": "evolution_classification_model",
         "save_path": "evolution/intents_snips",
         "load_path": "evolution/intents_snips",
         "classes": "#classes_vocab.keys()",
@@ -97,9 +97,10 @@
                 7
               ],
               "discrete": true
-            }
+            },
+            "padding": "same"
           },
-          "LSTM": {
+          "CuDNNLSTM": {
             "units": {
               "range": [
                 50,
@@ -107,28 +108,11 @@
               ],
               "discrete": true
             },
-            "activation": {
-              "values": [
-                "softmax",
-                "sigmoid",
-                "relu"
-              ],
-              "choice": true
-            },
-            "dropout": {
-              "range": [
-                1e-2,
-                7e-1
-              ]
-            },
-            "recurrent_dropout": {
-              "range": [
-                1e-2,
-                7e-1
-              ]
+            "return_sequences": {
+              "bool": true
             }
           },
-          "BiLSTM": {
+          "BiCuDNNLSTM": {
             "units": {
               "range": [
                 50,
@@ -136,25 +120,8 @@
               ],
               "discrete": true
             },
-            "activation": {
-              "values": [
-                "softmax",
-                "sigmoid",
-                "relu"
-              ],
-              "choice": true
-            },
-            "dropout": {
-              "range": [
-                1e-2,
-                7e-1
-              ]
-            },
-            "recurrent_dropout": {
-              "range": [
-                1e-2,
-                7e-1
-              ]
+            "return_sequences": {
+              "bool": true
             }
           },
           "GlobalMaxPooling1D": {
@@ -166,7 +133,8 @@
                 5
               ],
               "discrete": true
-            }
+            },
+            "padding": "same"
           },
           "Attention": {
             "context_length": {
@@ -199,7 +167,7 @@
         },
         "loss": "binary_crossentropy",
         "text_size": 15,
-        "model_name": "evolution_model",
+        "model_name": "evolution_classification_model",
         "embedder": "#fasttext_embedder",
         "tokenizer": "#nltk_tokenizer"
       }

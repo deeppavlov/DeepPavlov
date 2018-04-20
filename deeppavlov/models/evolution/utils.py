@@ -22,7 +22,7 @@ from keras.engine.topology import Layer
 from deeppavlov.core.common.log import get_logger
 from keras import initializers, regularizers, constraints
 from keras import backend as K
-from keras.layers import concatenate, multiply, Reshape
+from keras.layers import concatenate, multiply, Reshape, Lambda
 
 
 log = get_logger(__name__)
@@ -154,16 +154,19 @@ class Attention(Layer):
         if self.context_length is None:
             self.context_length = input_shape[-1]
 
-        self.context = self.add_weight(tuple(input_shape[:-1] + (self.context_length,)),
+        self.context = self.add_weight(tuple((self.context_length, input_shape[-1])),
+                                       name="context",
                                        initializer=self.init)
 
-        self.W = self.add_weight((input_shape[-1] + self.context_length, input_shape[-1], ),
+        self.W = self.add_weight((2 * input_shape[-1], 1,),
+                                 name="w",
                                  initializer=self.init,
                                  regularizer=self.W_regularizer,
                                  constraint=self.W_constraint)
 
         if self.use_bias:
-            self.b = self.add_weight((input_shape[-1], ),
+            self.b = self.add_weight((1, ),
+                                     name="b",
                                      initializer='zero',
                                      regularizer=self.b_regularizer,
                                      constraint=self.b_constraint)
@@ -173,21 +176,29 @@ class Attention(Layer):
         self.built = True
 
     def call(self, x, mask=None):
-        x_full = concatenate(inputs=[x, self.context], axis=-1)
+
+        expanded_context_3d = expand_tile_batch_size(memory=x, context=self.context)
+        expanded_context_4d = expand_tile(expanded_context_3d, axis=1, n_repetitions=K.int_shape(x)[1])
+        expanded_x = expand_tile(x, axis=2, n_repetitions=K.int_shape(expanded_context_3d)[1])
+
+        # now expanded_context_4d and expanded_x are of
+        # shape (bs, time_steps, context_size, n_features)
+        x_full = concatenate(inputs=[expanded_x, expanded_context_4d], axis=-1)
 
         out = K.dot(x_full, self.W)
         if self.use_bias:
             out = K.bias_add(out, self.b)
 
         out = K.softmax(out)
-        out = multiply(inputs=[out, x])
+        out = multiply(inputs=[out, expanded_x])
 
+        out = Lambda(lambda x: K.sum(x, axis=1))(out)
         return out
 
     def compute_output_shape(self, input_shape):
         return input_shape
 
-def expand_tile(units, axis):
+def expand_tile(units, axis, n_repetitions=None):
     """Expand and tile tensor along given axis
     Args:
         units: tf tensor with dimensions [batch_size, time_steps, n_input_features]
@@ -195,11 +206,32 @@ def expand_tile(units, axis):
 
     """
     assert axis in (1, 2)
-    n_time_steps = K.int_shape(units)[1]
-    repetitions = [1, 1, 1, 1]
-    repetitions[axis] = n_time_steps
+    repetitions = [1] * (len(K.int_shape(units)) + 1)
+
+    if n_repetitions is None:
+        repetitions[axis] = K.int_shape(units)[1]
+    else:
+        repetitions[axis] = n_repetitions
+
     if axis == 1:
         expanded = Reshape(target_shape=( (1,) + K.int_shape(units)[1:] ))(units)
     else: # axis=2
         expanded = Reshape(target_shape=(K.int_shape(units)[1:2] + (1,) + K.int_shape(units)[2:]))(units)
+    return K.tile(expanded, repetitions)
+
+
+def expand_tile_batch_size(memory, context):
+    """Expand and tile tensor context along 0 axis up to 0-shape of memory
+    Args:
+        memory: tf tensor with dimensions [batch_size, time_steps, n_input_features]
+        context: tf tensor with dimensions [new_time_steps, n_input_features]
+
+    """
+    axis = 0
+    # batch_size = K.int_shape(memory)[0]
+    batch_size = K.shape(memory)[0]
+    repetitions = [1] * len(K.int_shape(memory))
+    repetitions[axis] = batch_size
+    if axis == 0:
+        expanded = K.reshape(context, shape=((1,) + K.int_shape(context)))
     return K.tile(expanded, repetitions)
