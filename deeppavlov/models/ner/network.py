@@ -21,9 +21,9 @@ from tensorflow.contrib.layers import xavier_initializer
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.layers.tf_layers import character_embedding_network
 from deeppavlov.core.layers.tf_layers import embedding_layer
+from deeppavlov.core.layers.tf_layers import stacked_bi_rnn
 from deeppavlov.core.layers.tf_layers import stacked_cnn
 from deeppavlov.core.layers.tf_layers import stacked_highway_cnn
-from deeppavlov.core.layers.tf_layers import stacked_bi_rnn
 from deeppavlov.models.ner.evaluation import precision_recall_f1
 
 SEED = 42
