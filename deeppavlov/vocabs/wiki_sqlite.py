@@ -22,7 +22,7 @@ class WikiSQLiteVocab(Component):
         """
         download_dir = expand_path(data_dir)
         download_path = download_dir.joinpath(data_url.split("/")[-1])
-        download(download_path, data_url, file_exists=False)
+        download(download_path, data_url, force_download=False)
 
         self.connect = sqlite3.connect(str(download_path), check_same_thread=False)
         self.db_name = self.get_db_name()

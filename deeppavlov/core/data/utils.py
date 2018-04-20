@@ -17,11 +17,9 @@ limitations under the License.
 from pathlib import Path
 
 import requests
-import sys
 from tqdm import tqdm
 import tarfile
 import gzip
-import zipfile
 import re
 import zipfile
 
@@ -35,19 +33,19 @@ _MARK_DONE = '.done'
 tqdm.monitor_interval = 0
 
 
-def download(dest_file_path, source_url, file_exists=True):
+def download(dest_file_path, source_url, force_download=True):
     """Download a file from URL
 
     Args:
         dest_file_path: path to the file destination file (including file name)
         source_url: the source URL
-        file_exists: download file if it already exists, or not
+        force_download: download file if it already exists, or not
 
     """
-    CHUNK = 2 ** 14
+    CHUNK = 16 * 1024
     dest_file_path = Path(dest_file_path).absolute()
 
-    if file_exists or not dest_file_path.exists():
+    if force_download or not dest_file_path.exists():
         dest_file_path.parent.mkdir(parents=True, exist_ok=True)
 
         r = requests.get(source_url, stream=True)
@@ -91,7 +89,7 @@ def ungzip(file_path, extract_folder=None):
             extract_folder: folder to which the files will be extracted
 
         """
-    CHUNK = 2 ** 14
+    CHUNK = 16 * 1024
     file_path = Path(file_path)
     extract_path = file_path.with_suffix('')
     if extract_folder is not None:
