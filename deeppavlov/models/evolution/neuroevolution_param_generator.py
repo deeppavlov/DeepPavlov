@@ -43,6 +43,12 @@ class NetworkAndParamsEvolution:
             crossover_power: part of EVOLVING parents parameters to exchange for offsprings
             p_mutation: probability of mutation for current replacement
             mutation_power: allowed percentage of mutation
+            key_model_to_evolve: binary flag that should be inserted into the dictionary
+                            with evolving model in the basic config
+            key_basic_layers: key value of dictionary in basic_config
+                            that contains considered layers with their evolving parameters
+            seed: random seed for initialization
+            seed: random seed for initialization
             **kwargs: basic config with parameters
         """
         self.n_types = n_types
@@ -127,6 +133,9 @@ class NetworkAndParamsEvolution:
                     params_for_search[param_name] = list(basic_params[param_name]["values"])
                     evolving_params.append(param_name)
                 elif basic_params[param_name].get("range"):
+                    params_for_search[param_name] = deepcopy(basic_params[param_name])
+                    evolving_params.append(param_name)
+                elif basic_params[param_name].get("bool"):
                     params_for_search[param_name] = deepcopy(basic_params[param_name])
                     evolving_params.append(param_name)
                 else:
@@ -521,4 +530,5 @@ class NetworkAndParamsEvolution:
                                 size=max(1, int(np.random.random() * self.total_nodes)))
         mask = np.zeros((self.total_nodes * self.total_nodes))
         mask[ones] = 1
+        # returns NUMPY 2D ARRAY!
         return mask.reshape((self.total_nodes, self.total_nodes))

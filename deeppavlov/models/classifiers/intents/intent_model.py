@@ -105,6 +105,8 @@ class KerasIntentModel(KerasModel):
                 raise ConfigError(
                     "Given fasttext model does NOT match fasttext model used previously to train loaded model")
 
+        print(self.model.summary())
+
     def _init_params(self):
 
         # list of changeable params

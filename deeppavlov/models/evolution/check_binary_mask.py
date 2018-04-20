@@ -19,6 +19,7 @@ def type_layer_to_number(node_layer, node_type, n_types):
 def find_sources_and_sinks(directed_graph):
     sources = []
     sinks = []
+    isolates = nx.isolates(directed_graph)
 
     for i in directed_graph.nodes():
         if directed_graph.in_degree(i) == 0 and directed_graph.out_degree(i) > 0:
@@ -26,7 +27,7 @@ def find_sources_and_sinks(directed_graph):
         if directed_graph.in_degree(i) > 0 and directed_graph.out_degree(i) == 0:
             sinks.append(i)
 
-    return sources, sinks
+    return sources, sinks, isolates
 
 
 def get_digraph_from_binary_mask(nodes, binary_mask):
@@ -52,9 +53,8 @@ def get_binary_mask_from_digraph(nodes, directed_graph):
 
 def check_and_correct_binary_mask(nodes, binary_mask_):
     binary_mask = deepcopy(binary_mask_)
-    binary_mask = np.array(binary_mask)
     directed_graph = get_digraph_from_binary_mask(nodes, binary_mask)
-    sources, sinks = find_sources_and_sinks(directed_graph)
+    sources, sinks, _ = find_sources_and_sinks(directed_graph)
 
     while not nx.is_directed_acyclic_graph(directed_graph):
         candidates = []
@@ -79,7 +79,7 @@ def check_and_correct_binary_mask(nodes, binary_mask_):
         best_cand = None
         best_diff = 10e10
         for i in range(n_candidates):
-            new_sources, new_sinks = find_sources_and_sinks(candidates[i])
+            new_sources, new_sinks, _ = find_sources_and_sinks(candidates[i])
 
             if set(new_sources) == set(sources) and set(new_sinks) == set(sinks):
                 best_cand = candidates[i]
@@ -100,7 +100,7 @@ def get_graph_and_plot(nodes, binary_mask, n_types, path=None):
 
     pos = {}
     val_map = {}
-    sources, sinks = find_sources_and_sinks(dg)
+    sources, sinks, _ = find_sources_and_sinks(dg)
 
     for i in range(total_nodes):
         pos[i] = 2. * np.array(number_to_type_layer(i, n_types))[::-1]
