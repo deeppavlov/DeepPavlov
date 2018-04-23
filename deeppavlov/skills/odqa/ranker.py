@@ -36,6 +36,7 @@ class TfidfRanker(Estimator):
         return self
 
     def __init__(self, vectorizer: Type = HashingTfIdfVectorizer, **kwargs):
+
         self.vectorizer = vectorizer
 
         if kwargs['mode'] != 'train':
@@ -52,6 +53,7 @@ class TfidfRanker(Estimator):
 
                 self.index2doc = self.get_index2doc()
             else:
+                self.iterator = None
                 logger.warning("TfidfRanker load_path doesn't exist, is waiting for training.")
 
     def get_index2doc(self):
@@ -59,7 +61,7 @@ class TfidfRanker(Estimator):
 
     def __call__(self, questions: List[str], n=5):
         """
-        Rank documents and return top k documents with scores.
+        Rank documents and return top n document titles with scores.
         :param questions: queries to search an answer for
         :param n: a number of documents to return
         :return: document ids, document scores

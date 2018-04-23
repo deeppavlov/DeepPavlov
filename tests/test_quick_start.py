@@ -45,7 +45,8 @@ PARAMS = {"error_model": {("error_model/brillmoore_wikitypos_en.json", "error_mo
           "squad": {("squad/squad.json", "squad_model", ALL_MODES): [],
                     ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): []},
           "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): []},
-          "odqa": {("odqa/ranker_test.json", "odqa", ALL_MODES): []}
+          "odqa": {("odqa/ranker_test.json", "odqa", ALL_MODES): [],
+                   ("odqa/odqa_infer_test.json", "odqa", ('DE', 'IP')): []}
           }
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
