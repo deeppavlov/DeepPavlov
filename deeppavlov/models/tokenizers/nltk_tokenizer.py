@@ -34,5 +34,5 @@ class NLTKTokenizer(Component):
     def __call__(self, batch, *args, **kwargs):
         answer = [self.tokenizer(sent) for sent in batch]
         if self.return_joint:
-            return " ".join(answer)
+            return [" ".join(x) for x in answer]
         return answer
