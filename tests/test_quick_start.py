@@ -8,7 +8,7 @@ import pexpect
 
 
 tests_dir = Path(__file__, '..').resolve()
-test_configs_path = tests_dir / "configs"
+test_configs_path = tests_dir / "deeppavlov" / "configs"
 download_path = tests_dir / "download"
 
 TEST_MODES = ['IP',  # test_interacting_pretrained_model
@@ -19,32 +19,33 @@ TEST_MODES = ['IP',  # test_interacting_pretrained_model
 ALL_MODES = ('DE', 'IP', 'TI')
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
-PARAMS = {"error_model": {("configs/error_model/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
+PARAMS = {"error_model": {("error_model/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
                               [
                                   ("helllo", "hello"),
                                   ("datha", "data")
                               ],
-                          ("configs/error_model/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES): []},
-          "go_bot": {("configs/go_bot/gobot_dstc2.json", "go_bot", ALL_MODES): []},
-          "intents": {("configs/intents/intents_dstc2.json", "intents", ALL_MODES):  []},
-          "snips": {("configs/intents/intents_snips.json", "intents", ('TI',)): []},
-          "sample": {("configs/intents/intents_sample_csv.json", "intents", ('TI',)): [],
-                    ("configs/intents/intents_sample_json.json", "intents", ('TI',)): []},
-          "ner": {("configs/ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [],
-                  ("configs/ner/ner_dstc2.json", "ner", ALL_MODES): [],
-                  ("configs/ner/ner_ontonotes_emb.json", "ner_ontonotes", ALL_MODES): [],
-                  ("configs/ner/ner_ontonotes.json", "ner_ontonotes", ('DE', 'IP')): [],
-                  ("configs/ner/slotfill_dstc2.json", "ner", ALL_MODES):
+                          ("error_model/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES): []},
+          "go_bot": {("go_bot/gobot_dstc2.json", "go_bot", ALL_MODES): []},
+          "intents": {("intents/intents_dstc2.json", "intents", ALL_MODES):  []},
+          "snips": {("intents/intents_snips.json", "intents", ('TI',)): []},
+          "sample": {("intents/intents_sample_csv.json", "intents", ('TI',)): [],
+                    ("intents/intents_sample_json.json", "intents", ('TI',)): []},
+          "ner": {("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [],
+                  ("ner/ner_dstc2.json", "ner", ALL_MODES): [],
+                  ("ner/ner_ontonotes_emb.json", "ner_ontonotes", ALL_MODES): [],
+                  ("ner/ner_ontonotes.json", "ner_ontonotes", ('DE', 'IP')): [],
+                  ("ner/slotfill_dstc2.json", "ner", ALL_MODES):
                       [
                           ("chinese food", "{'food': 'chinese'}"),
                           ("in the west part", "{'area': 'west'}"),
                           ("moderate price range", "{'pricerange': 'moderate'}")
                       ]
                   },
-          "ranking": {("configs/ranking/insurance_config.json", "ranking", ALL_MODES): []},
-          "squad": {("configs/squad/squad.json", "squad_model", ALL_MODES): []},
-          "seq2seq_go_bot": {("configs/seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): []},
-          "odqa": {("configs/odqa/ranker_test.json", "odqa", ALL_MODES): []}
+          "ranking": {("ranking/insurance_config.json", "ranking", ALL_MODES): []},
+          "squad": {("squad/squad.json", "squad_model", ALL_MODES): [],
+                    ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): []},
+          "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): []},
+          "odqa": {("odqa/ranker_test.json", "odqa", ALL_MODES): []}
           }
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
@@ -61,11 +62,11 @@ for model in PARAMS.keys():
 
 
 def setup_module():
-    src_dir = tests_dir.parent / "deeppavlov"
+    src_dir = tests_dir.parent / "deeppavlov" / "configs"
 
     shutil.rmtree(str(test_configs_path), ignore_errors=True)
     shutil.rmtree(str(download_path), ignore_errors=True)
-    test_configs_path.mkdir()
+    test_configs_path.mkdir(parents=True)
 
     for m_name, conf_dict in PARAMS.items():
         test_configs_path.joinpath(m_name).mkdir()
@@ -77,12 +78,12 @@ def setup_module():
                 for pytest_key in [k for k in config["train"] if k.startswith('pytest_')]:
                     config["train"][pytest_key[len('pytest_'):]] = config["train"].pop(pytest_key)
             config["deeppavlov_root"] = str(download_path)
-            with (tests_dir / conf_file).open("w") as fout:
+            with (test_configs_path / conf_file).open("w") as fout:
                 json.dump(config, fout)
 
 
 def teardown_module():
-    shutil.rmtree(str(test_configs_path), ignore_errors=True)
+    shutil.rmtree(str(test_configs_path.parent), ignore_errors=True)
     shutil.rmtree(str(download_path), ignore_errors=True)
 
 
@@ -132,13 +133,13 @@ class TestQuickStart(object):
 
     def test_interacting_pretrained_model(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
-            self.interact(tests_dir / conf_file, model_dir, PARAMS[model][(conf_file, model_dir, mode)])
+            self.interact(test_configs_path / conf_file, model_dir, PARAMS[model][(conf_file, model_dir, mode)])
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
 
     def test_consecutive_training_and_interacting(self, model, conf_file, model_dir, mode):
         if 'TI' in mode:
-            c = tests_dir / conf_file
+            c = test_configs_path / conf_file
             model_path = download_path / model_dir
             shutil.rmtree(str(model_path),  ignore_errors=True)
             _, exitstatus = pexpect.run("python3 -m deeppavlov.deep train " + str(c), timeout=None, withexitstatus=True)
