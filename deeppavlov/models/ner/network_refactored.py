@@ -28,6 +28,7 @@ class NerNetwork(TFModel):
                  char_emb_dim=None,
                  capitalization_dim=None,
                  pos_features_dim=None,
+                 additional_features=None,
                  net_type='rnn',  # Net architecture
                  cell_type='lstm',
                  use_cudnn_rnn=False,
@@ -71,6 +72,9 @@ class NerNetwork(TFModel):
         # Part of speech features
         if pos_features_dim is not None:
             self._add_pos(pos_features_dim)
+
+        if additional_features is not None:
+            self._add_additional_features(additional_features)
 
         features = tf.concat(self._input_features, axis=2)
 
@@ -137,6 +141,12 @@ class NerNetwork(TFModel):
         pos_ph = tf.placeholder(tf.int32, [None, None, pos_features_dim], name='POS_ph')
         self._xs_ph_list.append(pos_ph)
         self._input_features.append(pos_ph)
+
+    def _add_additional_features(self, features_list):
+        for feature, dim in features_list:
+            feat_ph = tf.placeholder(tf.int32, [None, None, dim], name=feature + '_ph')
+            self._xs_ph_list.append(feat_ph)
+            self._input_features.append(feat_ph)
 
     def _build_cudnn_rnn(self, units, n_hidden_list, cell_type, intra_layer_dropout):
         if not check_gpu_existance():
@@ -227,7 +237,6 @@ class NerNetwork(TFModel):
                 logit = logit[:int(sequence_length)]  # keep only the valid steps
                 viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(logit, trans_params)
                 y_pred += [viterbi_seq]
-
         return y_pred
 
     def _fill_feed_dict(self, xs, y=None, learning_rate=None, train=False):
