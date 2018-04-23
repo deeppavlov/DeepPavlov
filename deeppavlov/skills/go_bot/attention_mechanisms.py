@@ -25,6 +25,19 @@ log = get_logger(__name__)
 
 
 def general_attention(key, context, hidden_size, projected_align=False):
+    """ It is a implementation of the Luong et al. attention mechanism with general score. Based on the paper:
+        https://arxiv.org/abs/1508.04025 "Effective Approaches to Attention-based Neural Machine Translation"
+    Args:
+        key: A tensorflow tensor with dimensionality [None, None, key_size]
+        context: A tensorflow tensor with dimensionality [None, None, max_num_tokens, token_size]
+        hidden_size: Number of units in hidden representation
+        projected_align: Using bidirectional lstm for hidden representation of context.
+        If true, beetween input and attention mechanism insert layer of bidirectional lstm with dimensionality [hidden_size].
+        If false, bidirectional lstm is not used.
+    Returns:
+        output: Tensor at the output with dimensionality [None, None, hidden_size]
+    """
+
     if hidden_size % 2 != 0:
         raise ValueError("hidden size must be dividable by two")
     batch_size = tf.shape(context)[0]
@@ -62,6 +75,18 @@ def general_attention(key, context, hidden_size, projected_align=False):
 
 
 def light_general_attention(key, context, hidden_size, projected_align=False):
+    """ It is a implementation of the Luong et al. attention mechanism with general score. Based on the paper:
+        https://arxiv.org/abs/1508.04025 "Effective Approaches to Attention-based Neural Machine Translation"
+    Args:
+        key: A tensorflow tensor with dimensionality [None, None, key_size]
+        context: A tensorflow tensor with dimensionality [None, None, max_num_tokens, token_size]
+        hidden_size: Number of units in hidden representation
+        projected_align: Using dense layer for hidden representation of context.
+        If true, between input and attention mechanism insert a dense layer with dimensionality [hidden_size].
+        If false, a dense layer is not used.
+    Returns:
+        output: Tensor at the output with dimensionality [None, None, hidden_size]
+    """
     batch_size = tf.shape(context)[0]
     max_num_tokens, token_size = context.get_shape().as_list()[-2:]
     r_context = tf.reshape(context, shape=[-1, max_num_tokens, token_size])
@@ -90,6 +115,21 @@ def light_general_attention(key, context, hidden_size, projected_align=False):
 
 
 def cs_general_attention(key, context, hidden_size, depth, projected_align=False):
+    """ It is a implementation of the Luong et al. attention mechanism with general score and the constrained softmax (csoftmax).
+        Based on the papers:
+        https://arxiv.org/abs/1508.04025 "Effective Approaches to Attention-based Neural Machine Translation"
+        https://andre-martins.github.io/docs/emnlp2017_final.pdf "Learning What's Easy: Fully Differentiable Neural Easy-First Taggers"
+    Args:
+        key: A tensorflow tensor with dimensionality [None, None, key_size]
+        context: A tensorflow tensor with dimensionality [None, None, max_num_tokens, token_size]
+        hidden_size: Number of units in hidden representation
+        depth: Number of csoftmax usages
+        projected_align: Using bidirectional lstm for hidden representation of context.
+        If true, beetween input and attention mechanism insert layer of bidirectional lstm with dimensionality [hidden_size].
+        If false, bidirectional lstm is not used.
+    Returns:
+        output: Tensor at the output with dimensionality [None, None, depth * hidden_size]
+    """
     if hidden_size % 2 != 0:
         raise ValueError("hidden size must be dividable by two")
     key_size = tf.shape(key)[-1]
@@ -130,6 +170,18 @@ def cs_general_attention(key, context, hidden_size, depth, projected_align=False
 
 
 def bahdanau_attention(key, context, hidden_size, projected_align=False):
+    """ It is a implementation of the Bahdanau et al. attention mechanism. Based on the paper:
+        https://arxiv.org/abs/1409.0473 "Neural Machine Translation by Jointly Learning to Align and Translate"
+    Args:
+        key: A tensorflow tensor with dimensionality [None, None, key_size]
+        context: A tensorflow tensor with dimensionality [None, None, max_num_tokens, token_size]
+        hidden_size: Number of units in hidden representation
+        projected_align: Using bidirectional lstm for hidden representation of context.
+        If true, beetween input and attention mechanism insert layer of bidirectional lstm with dimensionality [hidden_size].
+        If false, bidirectional lstm is not used.
+    Returns:
+        output: Tensor at the output with dimensionality [None, None, hidden_size]
+    """
     if hidden_size % 2 != 0:
         raise ValueError("hidden size must be dividable by two")
     batch_size = tf.shape(context)[0]
@@ -176,6 +228,18 @@ def bahdanau_attention(key, context, hidden_size, projected_align=False):
 
 
 def light_bahdanau_attention(key, context, hidden_size, projected_align=False):
+    """ It is a implementation of the Bahdanau et al. attention mechanism. Based on the paper:
+        https://arxiv.org/abs/1409.0473 "Neural Machine Translation by Jointly Learning to Align and Translate"
+    Args:
+        key: A tensorflow tensor with dimensionality [None, None, key_size]
+        context: A tensorflow tensor with dimensionality [None, None, max_num_tokens, token_size]
+        hidden_size: Number of units in hidden representation
+        projected_align: Using dense layer for hidden representation of context.
+        If true, between input and attention mechanism insert a dense layer with dimensionality [hidden_size].
+        If false, a dense layer is not used.
+    Returns:
+        output: Tensor at the output with dimensionality [None, None, hidden_size]
+    """
     batch_size = tf.shape(context)[0]
     max_num_tokens, token_size = context.get_shape().as_list()[-2:]
     r_context = tf.reshape(context, shape=[-1, max_num_tokens, token_size])
@@ -214,6 +278,20 @@ def light_bahdanau_attention(key, context, hidden_size, projected_align=False):
 
 
 def cs_bahdanau_attention(key, context, hidden_size, depth, projected_align=False):
+    """ It is a implementation of the Bahdanau et al. attention mechanism. Based on the papers:
+        https://arxiv.org/abs/1409.0473 "Neural Machine Translation by Jointly Learning to Align and Translate"
+        https://andre-martins.github.io/docs/emnlp2017_final.pdf "Learning What's Easy: Fully Differentiable Neural Easy-First Taggers"
+    Args:
+        key: A tensorflow tensor with dimensionality [None, None, key_size]
+        context: A tensorflow tensor with dimensionality [None, None, max_num_tokens, token_size]
+        hidden_size: Number of units in hidden representation
+        depth: Number of csoftmax usages
+        projected_align: Using bidirectional lstm for hidden representation of context.
+        If true, beetween input and attention mechanism insert layer of bidirectional lstm with dimensionality [hidden_size].
+        If false, bidirectional lstm is not used.
+    Returns:
+        output: Tensor at the output with dimensionality [None, None, depth * hidden_size]
+    """
     if hidden_size % 2 != 0:
         raise ValueError("hidden size must be dividable by two")
     batch_size = tf.shape(context)[0]
@@ -259,4 +337,3 @@ def cs_bahdanau_attention(key, context, hidden_size, depth, projected_align=Fals
         output = \
             tf.reshape(aligned_h_state, shape=[batch_size, -1, depth * token_size])
     return output
-
