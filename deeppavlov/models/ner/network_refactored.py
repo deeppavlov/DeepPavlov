@@ -37,8 +37,8 @@ class NerNetwork(TFModel):
                  use_crf=False,
                  token_emb_mat=None,
                  char_emb_mat=None,
-                 use_batch_norm=False,  # Regularization
-                 dropout_keep_prob=0.5,
+                 use_batch_norm=False,
+                 dropout_keep_prob=0.5,  # Regularization
                  embeddings_dropout=False,
                  top_dropout=False,
                  intra_layer_dropout=False,
@@ -61,7 +61,7 @@ class NerNetwork(TFModel):
         self.mask_ph = self._add_mask()
 
         # Char embeddings using highway CNN with max pooling
-        if char_emb_dim is not None:
+        if char_emb_mat is not None and char_emb_dim is not None:
             self._add_char_embeddings(char_emb_mat, embeddings_dropout)
 
         # Capitalization features
@@ -123,7 +123,10 @@ class NerNetwork(TFModel):
 
     def _add_char_embeddings(self, char_emb_mat, embeddings_dropout):
         character_indices_ph = tf.placeholder(tf.int32, [None, None, None], name='Char_ph')
-        character_embedding_network()
+        char_embs = character_embedding_network(character_indices_ph, char_emb_mat)
+        char_embs = variational_dropout(char_embs, embeddings_dropout)
+        self._xs_ph_list.append(character_indices_ph)
+        self._input_features.append(char_embs)
 
     def _add_capitalization(self, capitalization_dim):
         capitalization_ph = tf.placeholder(tf.int32, [None, None, capitalization_dim], name='Capitalization_ph')
