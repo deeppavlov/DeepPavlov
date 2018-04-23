@@ -17,8 +17,8 @@ limitations under the License.
 from typing import List, Generator, Any
 
 from nltk.tokenize.toktok import ToktokTokenizer
-from nltk.corpus import stopwords
-STOPWORDS = stopwords.words('russian')
+# from nltk.corpus import stopwords
+# STOPWORDS = stopwords.words('russian')
 import pymorphy2
 
 from deeppavlov.core.models.component import Component
