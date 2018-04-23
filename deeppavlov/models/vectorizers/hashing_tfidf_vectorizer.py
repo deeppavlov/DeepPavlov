@@ -22,7 +22,7 @@ from scipy import sparse
 import numpy as np
 from sklearn.utils import murmurhash3_32
 
-from deeppavlov.models.tokenizers.spacy_tokenizer import StreamSpacyTokenizer
+from deeppavlov.models.tokenizers.stream_spacy_tokenizer import StreamSpacyTokenizer
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.log import get_logger
