@@ -34,11 +34,11 @@
       {
         "in": ["x"],
         "in_y": ["y"],
-        "out": ["y_predicted"],
+        "out": ["y_labels", "y_proba"],
         "main": true,
         "name": "intent_model",
-        "save_path": "intents/intent_cnn_snips_v3",
-        "load_path": "intents/intent_cnn_snips_v3",
+        "save_path": "intents/intent_cnn_snips_v4",
+        "load_path": "intents/intent_cnn_snips_v4",
         "classes": "#classes_vocab.keys()",
         "kernel_sizes_cnn": [
           1,
@@ -69,13 +69,13 @@
         }
       }
     ],
-    "out": ["y_predicted"]
+    "out": ["y_labels", "y_proba"]
   },
   "train": {
     "epochs": 1000,
     "batch_size": 64,
     "metrics": [
-      "sets_accuracy"
+      "classification_accuracy"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
