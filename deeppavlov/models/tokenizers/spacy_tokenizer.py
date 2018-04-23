@@ -145,11 +145,14 @@ class SpacyTokenizer(Component):
         :param alphas_only: should filter numeric and alpha-numeric types or not
         :return: filtered list of tokens/lemmas
         """
-        _alphas_only = self.alphas_only or alphas_only
+        if self.alphas_only is None:
+            _alphas_only = alphas_only
+        else:
+            _alphas_only = self.alphas_only
 
         if _alphas_only:
-            filter_fn = lambda x: x.isalpha() and x not in self._stopwords
+            filter_fn = lambda x: x.isalpha() and not x.isspace() and x not in self.stopwords
         else:
-            filter_fn = lambda x: x not in self._stopwords
+            filter_fn = lambda x: not x.isspace() and x not in self.stopwords
 
         return list(filter(filter_fn, items))
