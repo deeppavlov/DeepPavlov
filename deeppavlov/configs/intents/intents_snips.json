@@ -34,7 +34,7 @@
       {
         "in": ["x"],
         "in_y": ["y"],
-        "out": ["y_labels", "y_proba"],
+        "out": ["y_labels", "y_probas", "y_classes"],
         "main": true,
         "name": "intent_model",
         "save_path": "intents/intent_cnn_snips_v4",
@@ -69,7 +69,7 @@
         }
       }
     ],
-    "out": ["y_labels", "y_proba"]
+    "out": ["y_labels", "y_probas", "y_classes"]
   },
   "train": {
     "epochs": 1000,

@@ -194,7 +194,7 @@ class KerasIntentModel(KerasModel):
             return preds
         else:
             labels = proba2labels(preds, confident_threshold=self.opt['confident_threshold'], classes=self.classes)
-            return labels, preds
+            return labels, preds, [self.classes for _ in range(len(preds))]
 
     def cnn_model(self, params):
         """

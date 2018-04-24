@@ -21,6 +21,7 @@ import tensorflow as tf
 from keras import backend as K
 
 from deeppavlov.core.common.metrics_registry import register_metric
+from deeppavlov.models.classifiers.intents.utils import labels2onehot
 
 
 def roc_auc_score_np(y_true, y_pred):
@@ -71,11 +72,14 @@ def binary_PTA(y_true, y_pred, threshold=K.variable(value=0.5)):
 
 @register_metric('classification_roc_auc')
 def roc_auc_score(y_true, y_predicted):
-    y_pred_labels = [y_predicted[i][0] for i in range(len(y_predicted))]
+    classes = y_predicted[0][2]
+    y_true_one_hot = labels2onehot(y_true, classes)
+    y_pred_probas = [y_predicted[i][1] for i in range(len(y_predicted))]
+
     try:
-        _ = K.is_keras_tensor(y_pred_labels)
-        auc_score = auc(y_true, y_pred_labels)
+        _ = K.is_keras_tensor(y_pred_probas)
+        auc_score = auc(y_true_one_hot, y_pred_probas)
         auc_score = tf.where(tf.is_nan(auc_score), 0., auc_score)
     except ValueError:
-        auc_score = roc_auc_score_np(y_true, y_pred_labels)
+        auc_score = roc_auc_score_np(y_true_one_hot, y_pred_probas)
     return auc_score

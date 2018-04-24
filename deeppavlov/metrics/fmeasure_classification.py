@@ -19,6 +19,7 @@ import numpy as np
 from keras import backend as K
 
 from deeppavlov.core.common.metrics_registry import register_metric
+from deeppavlov.models.classifiers.intents.utils import labels2onehot
 
 
 def precision_K(y_true, y_pred):
@@ -86,9 +87,14 @@ def fbeta_score_np(y_true, y_pred, beta=1):
 
 @register_metric('classification_f1')
 def fmeasure(y_true, y_predicted):
+    classes = y_predicted[0][2]
+    y_true_one_hot = labels2onehot(y_true, classes)
     y_pred_labels = [y_predicted[i][0] for i in range(len(y_predicted))]
+    y_pred_one_hot = labels2onehot(y_pred_labels, classes)
+
+    print()
     try:
-        _ = K.is_keras_tensor(y_pred_labels)
-        return fbeta_score_K(y_true, y_pred_labels, beta=1)
+        _ = K.is_keras_tensor(y_pred_one_hot)
+        return fbeta_score_K(y_true_one_hot, y_pred_one_hot, beta=1)
     except ValueError:
-        return fbeta_score_np(y_true, y_pred_labels, beta=1)
+        return fbeta_score_np(y_true_one_hot, y_pred_one_hot, beta=1)
