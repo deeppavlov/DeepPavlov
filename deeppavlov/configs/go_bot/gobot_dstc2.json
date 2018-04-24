@@ -97,6 +97,9 @@
             "tokenizer": "wordpunct_tokenize"
           }
         },
+        "intent_classifier": {
+          "config_path": "../deeppavlov/configs/intents/intents_dstc2.json"
+        },
         "embedder": null,
         "bow_embedder": {
           "name": "bow"

@@ -73,6 +73,13 @@ class GoalOrientedBot(NNModel):
         self.n_actions = len(self.templates)
         log.info("{} templates loaded".format(self.n_actions))
 
+        self.n_classes = 0
+        if callable(self.intent_classifier):
+            # intent_classifier returns y_labels, y_probs, y_classes
+            print("intents result = {}".format(self.intent_classifier(["hi", "test"])))
+
+            self.n_classes = len(self.intent_classifier(["hi"])[2][0])
+
         self.network = self._init_network(network_parameters)
 
         self.reset()
@@ -85,7 +92,7 @@ class GoalOrientedBot(NNModel):
         if callable(self.embedder):
             obs_size += self.embedder.dim
         if callable(self.intent_classifier):
-            obs_size += self.intent_classifier.n_classes
+            obs_size += self.n_classes
         log.info("Calculated input size for `GoalOrientedBotNetwork` is {}"
                  .format(obs_size))
         if 'obs_size' not in params:
@@ -103,7 +110,7 @@ class GoalOrientedBot(NNModel):
             if attn['action_as_key']:
                 key_size += self.n_actions
             if attn['intent_as_key'] and callable(self.intent_classifier):
-                key_size += self.intent_classifier.n_classes
+                obs_size += self.n_classes
             key_size = key_size or 1
             attn['key_size'] = attn.get('key_size') or key_size
 
@@ -151,11 +158,10 @@ class GoalOrientedBot(NNModel):
         # Intent features
         intent_features = []
         if callable(self.intent_classifier):
-            intent_features = \
-                self.intent_classifier([tokenized], predict_proba=True).ravel()
+            intent_features = self.intent_classifier([tokenized])[1][0].ravel()
             if self.debug:
                 log.debug("Predicted intent = `{}`"
-                          .format(self.intent_classifier([tokenized])))
+                          .format(self.intent_classifier([tokenized])[1][0]))
 
         # Text entity features
         if callable(self.slot_filler):
