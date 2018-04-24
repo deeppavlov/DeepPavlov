@@ -45,6 +45,14 @@ class GloVeEmbedder(Component, Serializable):
         Load dict of embeddings from file
         """
 
+        # Check that header with n_words emb_dim present
+        with open(self.load_path) as f:
+            header = f.readline()
+            if len(header.split()) != 2:
+                raise RuntimeError('The GloVe file must start with number_of_words embeddings_dim line! '
+                                   'For example "40000 100" for 40000 words vocabulary and 100 embeddings '
+                                   'dimension.')
+
         if self.load_path and self.load_path.is_file():
             log.info("[loading embeddings from `{}`]".format(self.load_path))
             model_file = str(self.load_path)
