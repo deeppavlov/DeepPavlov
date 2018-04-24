@@ -7,17 +7,7 @@
     "url": "http://lnsigo.mipt.ru/export/datasets/snips_intents/train.csv"
   },
   "dataset_iterator": {
-    "name": "basic_classification_iterator",
-    "seed": 42,
-    "field_to_split": "train",
-    "split_fields": [
-      "train",
-      "valid"
-    ],
-    "split_proportions": [
-      0.9,
-      0.1
-    ]
+    "name": "basic_classification_iterator"
   },
   "chainer": {
     "in": [
@@ -61,8 +51,8 @@
         ],
         "main": true,
         "name": "evolution_classification_model",
-        "save_path": "evolution/intents_snips",
-        "load_path": "evolution/intents_snips",
+        "save_path": "/home/dilyara/data/models/deeppavlov_evolution/classification/intents_snips",
+        "load_path": "/home/dilyara/data/models/deeppavlov_evolution/classification/intents_snips",
         "classes": "#classes_vocab.keys()",
         "to_evolve": true,
         "basic_layers_params": {
@@ -180,7 +170,7 @@
     "epochs": {
       "range": [
         10,
-        1000
+        11
       ],
       "discrete": true
     },
@@ -192,7 +182,9 @@
       "discrete": true
     },
     "metrics": [
-      "sets_accuracy"
+      "sets_accuracy",
+      "roc_auc_score",
+      "f1_classification"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,

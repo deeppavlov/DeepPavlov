@@ -55,13 +55,7 @@ population[0]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"]
     evolution.model_to_evolve_index]["binary_mask"])
 
 population = evolution.mutation(population, p_mutation=0.5, mutation_power=.5)
-#
-# for i in range(population_size):
-#     if (mutated[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"] !=
-#         population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"]).any():
-#         print("{} mask mutated".format(i))
-# population[0]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"] = population[0]["chainer"]["pipe"][
-#     evolution.model_to_evolve_index]["binary_mask"].tolist()
+
 population[0]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"] = population[0]["chainer"]["pipe"][
     evolution.model_to_evolve_index]["binary_mask"].tolist()
 

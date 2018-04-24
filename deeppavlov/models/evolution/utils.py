@@ -22,8 +22,8 @@ from keras.engine.topology import Layer
 from deeppavlov.core.common.log import get_logger
 from keras import initializers, regularizers, constraints
 from keras import backend as K
-from keras.layers import concatenate, multiply, Reshape, Lambda
-
+from keras.layers import Reshape, Lambda, Dense, Flatten
+from keras.layers import Concatenate, Multiply, Activation, Dot
 
 log = get_logger(__name__)
 
@@ -158,7 +158,7 @@ class Attention(Layer):
                                        name="context",
                                        initializer=self.init)
 
-        self.W = self.add_weight((2 * input_shape[-1], 1,),
+        self.W = self.add_weight((2 * input_shape[-1], 1, ),
                                  name="w",
                                  initializer=self.init,
                                  regularizer=self.W_regularizer,
@@ -183,14 +183,15 @@ class Attention(Layer):
 
         # now expanded_context_4d and expanded_x are of
         # shape (bs, time_steps, context_size, n_features)
-        x_full = concatenate(inputs=[expanded_x, expanded_context_4d], axis=-1)
+
+        x_full = Concatenate(axis=-1)([expanded_x, expanded_context_4d])
 
         out = K.dot(x_full, self.W)
         if self.use_bias:
             out = K.bias_add(out, self.b)
 
-        out = K.softmax(out)
-        out = multiply(inputs=[out, expanded_x])
+        out = Activation('softmax')(out)
+        out = Multiply()([out, expanded_x])
 
         out = Lambda(lambda x: K.sum(x, axis=1))(out)
         return out
