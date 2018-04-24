@@ -5,7 +5,7 @@ import pymorphy2
 
 @register('pymorphy_russian_lemmatizer')
 class PymorphyRussianLemmatizer(Component):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self.lemmatizer = pymorphy2.MorphAnalyzer()
 
     def __call__(self, tokens_batch, **kwargs):

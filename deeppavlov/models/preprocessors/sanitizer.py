@@ -7,7 +7,7 @@ from deeppavlov.core.common.registry import register
 
 @register('sanitizer')
 class Sanitizer(Component):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         """Remove all combining characters like diacritical marks from tokens"""
         self.combining_characters = dict.fromkeys([c for c in range(sys.maxunicode)
                                                    if unicodedata.combining(chr(c))])
