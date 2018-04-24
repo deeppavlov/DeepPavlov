@@ -1,8 +1,10 @@
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.data.utils import zero_pad
+from deeppavlov.core.common.registry import register
 import numpy as np
 
 
+@register('capitalization_featurizer')
 class CapitalizationPreprocessor(Component):
     """ Patterns:
         - no capitals
@@ -10,12 +12,12 @@ class CapitalizationPreprocessor(Component):
         - single capital multiple characters
         - all capitals multiple characters
     """
-    def __init__(self, pad_zeros=True):
+    def __init__(self, pad_zeros=True, *args, **kwargs):
         self.pad_zeros = pad_zeros
         self._num_of_features = 4
 
     @property
-    def n_features(self):
+    def dim(self):
         return self._num_of_features
 
     def __call__(self, tokens_batch, **kwargs):
@@ -36,8 +38,6 @@ class CapitalizationPreprocessor(Component):
                         cap[2] = 1
                     elif all(ch.isupper() for ch in token):
                         cap[3] = 1
-                    else:
-                        raise RuntimeError('Unknown capitalization of token {}!'.format(token))
                 cap_list.append(cap)
             cap_batch.append(cap_list)
         if self.pad_zeros:
