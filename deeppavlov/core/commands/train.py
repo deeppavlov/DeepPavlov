@@ -166,6 +166,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
             log.warning('Nothing to train')
 
     if train_config['validate_best'] or train_config['test_best']:
+        all_reports = []
         # try:
         #     model_config['load_path'] = model_config['save_path']
         # except KeyError:
@@ -180,6 +181,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
             }
 
             print(json.dumps(report, ensure_ascii=False))
+            all_reports.append(report)
 
         if train_config['test_best']:
             report = {
@@ -188,6 +190,9 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
             }
 
             print(json.dumps(report, ensure_ascii=False))
+            all_reports.append(report)
+
+    return all_reports
 
 
 def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
