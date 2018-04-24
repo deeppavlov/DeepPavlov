@@ -499,7 +499,7 @@ class NetworkAndParamsEvolution:
                 params_sample[param] = np.random.choice(param_val)
             elif isinstance(param_val, dict):
                 if 'bool' in param_val and param_val['bool']:
-                    sample = np.random.choice([True, False])
+                    sample = bool(np.random.choice([True, False]))
                 elif 'range' in param_val:
                     sample = self._sample_from_ranges(param_val)
                 params_sample[param] = sample
