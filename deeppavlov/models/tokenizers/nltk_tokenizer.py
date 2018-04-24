@@ -16,14 +16,20 @@ limitations under the License.
 
 import nltk
 
+from deeppavlov.core.common.prints import RedirectedPrints
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
+
+
+with RedirectedPrints():
+    nltk.download('punkt')
+    nltk.download('stopwords')
 
 
 @register("nltk_tokenizer")
 class NLTKTokenizer(Component):
 
-    def __init__(self, download=False, tokenizer="wordpunct_tokenize", *args, **kwargs):
+    def __init__(self, tokenizer="wordpunct_tokenize", download=False, *args, **kwargs):
         if download:
             nltk.download()
         self.tokenizer = getattr(nltk.tokenize, tokenizer, None)
