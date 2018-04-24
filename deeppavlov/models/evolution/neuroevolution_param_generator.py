@@ -6,12 +6,13 @@ import json
 from deeppavlov.models.evolution.check_binary_mask import check_and_correct_binary_mask, \
     number_to_type_layer, get_graph_and_plot
 from deeppavlov.core.common.file import save_json, read_json
+from deeppavlov.models.evolution.utils import find_index_of_dict_with_key_in_pipe
 
-# TODO:
-# if structure of config has been changed,
+
 # please, make sure that
 # `config["chainer"]["pipe"]` is a list of models one of which is a model to be evolved,
 # otherwise, in the whole class change `config["chainer"]["pipe"]` to new path
+
 
 class NetworkAndParamsEvolution:
     """
@@ -32,6 +33,7 @@ class NetworkAndParamsEvolution:
                  key_model_to_evolve="to_evolve",
                  key_basic_layers="basic_layers_params",
                  seed=None,
+                 start_with_one_neuron=False,
                  **kwargs):
         """
         Initialize evolution with random population
@@ -55,10 +57,11 @@ class NetworkAndParamsEvolution:
         self.n_layers = n_layers
         self.total_nodes = self.n_types * self.n_layers
         self.binary_mask_template = np.zeros((self.total_nodes, self.total_nodes))
+        self.start_with_one_neuron = start_with_one_neuron
 
         self.basic_config = deepcopy(kwargs)
-        self.model_to_evolve_index = self._find_model_to_evolve_index_in_pipe(self.basic_config["chainer"]["pipe"],
-                                                                              key_model_to_evolve)
+        self.model_to_evolve_index = find_index_of_dict_with_key_in_pipe(self.basic_config["chainer"]["pipe"],
+                                                                         key_model_to_evolve)
 
         self.params = deepcopy(self.basic_config.get("chainer").get("pipe")[self.model_to_evolve_index])
         self.train_params = deepcopy(self.basic_config.get("train"))
@@ -97,17 +100,6 @@ class NetworkAndParamsEvolution:
         else:
             np.random.seed(seed)
         return None
-
-    def _find_model_to_evolve_index_in_pipe(self, pipe, key):
-        for element_id, element in enumerate(pipe):
-            if self._check_if_model_to_evolve(element, key):
-                return element_id
-
-    def _check_if_model_to_evolve(self, model, key):
-        if key in model.keys():
-            return True
-        else:
-            return False
 
     def _insert_dict_into_model_params(self, params, model_index, dict_to_insert):
         params_copy = deepcopy(params)
@@ -198,10 +190,12 @@ class NetworkAndParamsEvolution:
                                                                              **params_for_search,
                                                                              **layers_params}
             # add binary_mask intialization
-            population[-1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
-                check_and_correct_binary_mask(self.nodes, self.sample_binary_mask())
-            # get_graph_and_plot(self.nodes, population[-1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"],
-            #                    self.n_types, path=None)
+            if self.start_with_one_neuron:
+                population[-1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
+                    check_and_correct_binary_mask(self.nodes, self.sample_one_neuron_binary_mask())
+            else:
+                population[-1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
+                    check_and_correct_binary_mask(self.nodes, self.sample_binary_mask())
 
             # exchange train params from basic config to sampled train params
             population[-1]["train"] = {**train_params,
@@ -244,8 +238,12 @@ class NetworkAndParamsEvolution:
         offsprings = self.crossover(selected_individuals, p_crossover=p_crossover, crossover_power=crossover_power)
         next = self.mutation(offsprings, p_mutation=p_mutation, mutation_power=mutation_power)
         for i in range(self.population_size):
-            next[i]["model_path"] = str(Path(self.params["model_path"]).joinpath(
-                "population_" + str(iter)).joinpath(next[i]["model_name"] + "_" + str(i)))
+            next[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
+                str(Path(self.params["save_path"]).joinpath("population_" + str(iter)).joinpath(
+                    self.params["model_name"] + "_" + str(i)))
+            next[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"] = \
+                str(Path(self.params["load_path"]).joinpath("population_" + str(iter)).joinpath(
+                    self.params["model_name"] + "_" + str(i)))
 
         return next
 
@@ -361,19 +359,19 @@ class NetworkAndParamsEvolution:
                 for j in range(self.total_nodes * self.total_nodes - binary_mask_part):
                     node_x, node_y = binary_mask_perm[j] // self.total_nodes, binary_mask_perm[j] % self.total_nodes
 
-                    curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x][node_y] =\
-                        parents[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x][node_y]
-                    curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x][node_y] =\
-                        parents[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x][node_y]
+                    curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y] =\
+                        parents[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y]
+                    curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y] =\
+                        parents[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y]
 
                 for j in range(self.total_nodes * self.total_nodes - binary_mask_part,
                                self.total_nodes * self.total_nodes):
                     node_x, node_y = binary_mask_perm[j] // self.total_nodes, binary_mask_perm[j] % self.total_nodes
 
-                    curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x][node_y] =\
-                        parents[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x][node_y]
-                    curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x][node_y] =\
-                        parents[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x][node_y]
+                    curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y] =\
+                        parents[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y]
+                    curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y] =\
+                        parents[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y]
 
                 curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
                     check_and_correct_binary_mask(self.nodes,
@@ -424,7 +422,8 @@ class NetworkAndParamsEvolution:
             # mutation of binary mask
             if self.decision(p_mutation):
                 mutated_individuum["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
-                    check_and_correct_binary_mask(self.nodes,
+                    check_and_correct_binary_mask(
+                        self.nodes,
                         np.minimum(1,
                                    np.maximum(0,
                                               individuum["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] +
@@ -531,4 +530,10 @@ class NetworkAndParamsEvolution:
         mask = np.zeros((self.total_nodes * self.total_nodes))
         mask[ones] = 1
         # returns NUMPY 2D ARRAY!
+        return mask.reshape((self.total_nodes, self.total_nodes))
+
+    def sample_one_neuron_binary_mask(self):
+        mask = np.zeros((self.total_nodes * self.total_nodes))
+        mask[0] = 1  # make sure that Dense is the first in the config
+
         return mask.reshape((self.total_nodes, self.total_nodes))

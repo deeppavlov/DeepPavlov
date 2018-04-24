@@ -15,23 +15,25 @@ limitations under the License.
 """
 import numpy as np
 import sys
+from pathlib import Path
 
-from deeppavlov.core.commands.train import train_model_from_config, train_evaluate_model_from_config
+from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.common.file import read_json, save_json
+from deeppavlov.models.evolution.utils import find_index_of_dict_with_key_in_pipe
+
 
 config_path = sys.argv[1]
 
 print("TRAIN PHENOTYPE")
-report = train_model_from_config(config_path, is_trained=False)
+reports = train_model_from_config(config_path)
+print(reports)
 
-# train_model_from_config(config_path)
+metrics = dict(reports[0]["valid"]["metrics"])
+val_metrics_values = np.array(list(metrics.values())).reshape(-1)
 
-# config = read_json(config_path)
-#
-# model = build_model_from_config(config, mode='infer', load_trained=True)
-#
-# test_model_on_data(config_path, data)
-#
-# val_metrics_values = np.mean(np.array(val_metrics_values), axis=0)
-#
-# np.savetxt(fname=Path(path_to_models).joinpath("valid_results.txt"), X=val_metrics_values)
+config = read_json(config_path)
+model_index = find_index_of_dict_with_key_in_pipe(pipe=config["chainer"]["pipe"],
+                                                  key="to_evolve")
+np.savetxt(fname=str(Path(config["chainer"]["pipe"][model_index][
+                              "save_path"]).parent.joinpath("valid_results.txt")),
+           X=val_metrics_values)

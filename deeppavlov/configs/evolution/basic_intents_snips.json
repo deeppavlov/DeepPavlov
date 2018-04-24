@@ -28,14 +28,14 @@
         "load_path": "vocabs/snips_classes.dict"
       },
       {
-        "id": "fasttext_embedder",
+        "id": "my_embedder",
         "name": "fasttext",
         "save_path": "embeddings/dstc2_fastText_model.bin",
         "load_path": "embeddings/dstc2_fastText_model.bin",
         "dim": 100
       },
       {
-        "id": "nltk_tokenizer",
+        "id": "my_tokenizer",
         "name": "nltk_tokenizer",
         "tokenizer": "wordpunct_tokenize"
       },
@@ -47,7 +47,9 @@
           "y"
         ],
         "out": [
-          "y_predicted"
+          "y_labels",
+          "y_probas",
+          "y_classes"
         ],
         "main": true,
         "name": "evolution_classification_model",
@@ -158,19 +160,21 @@
         "loss": "binary_crossentropy",
         "text_size": 15,
         "model_name": "evolution_classification_model",
-        "embedder": "#fasttext_embedder",
-        "tokenizer": "#nltk_tokenizer"
+        "embedder": "#my_embedder",
+        "tokenizer": "#my_tokenizer"
       }
     ],
     "out": [
-      "y_predicted"
+      "y_labels",
+      "y_probas",
+      "y_classes"
     ]
   },
   "train": {
     "epochs": {
       "range": [
-        10,
-        11
+        5,
+        6
       ],
       "discrete": true
     },
@@ -181,10 +185,12 @@
       ],
       "discrete": true
     },
+    "metric_optimization": "minimize",
     "metrics": [
-      "sets_accuracy",
-      "roc_auc_score",
-      "f1_classification"
+      "classification_log_loss",
+      "classification_accuracy",
+      "classification_f1",
+      "classification_roc_auc"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
