@@ -84,7 +84,7 @@ def fbeta_score_np(y_true, y_pred, beta=1):
     return fbeta_score
 
 
-@register_metric('f1_classification')
+@register_metric('classification_f1')
 def fmeasure(y_true, y_predicted):
     y_pred_labels = [y_predicted[i][0] for i in range(len(y_predicted))]
     try:

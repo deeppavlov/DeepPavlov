@@ -69,7 +69,7 @@ def binary_PTA(y_true, y_pred, threshold=K.variable(value=0.5)):
     return TP/P
 
 
-@register_metric('roc_auc_score')
+@register_metric('classification_roc_auc')
 def roc_auc_score(y_true, y_predicted):
     y_pred_labels = [y_predicted[i][0] for i in range(len(y_predicted))]
     try:
