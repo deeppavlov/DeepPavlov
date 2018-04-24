@@ -24,7 +24,6 @@ sys.path.append(str(root_path))
 
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.data.utils import download, download_decompress
-from deeppavlov.core.data.urls import REQ_URLS, ALL_URLS, EMBEDDING_URLS, DATA_URLS, BINARY_URLS
 from deeppavlov.core.common.log import get_logger
 
 
@@ -39,27 +38,30 @@ parser.add_argument('-all', action='store_true',
 parser.add_argument('-test', action='store_true',
                     help="Turn test mode")
 parser.add_argument('-force', action='store_true',
-                    help="Overwrite all existing files")
+                    help="Overwrite existing downloaded files")
 
 
 def get_config_downloads(config_path):
-    downloads = {}
+    config_downloads = {}
     config = read_json(config_path)
 
     if 'metadata' in config and 'download' in config['metadata']:
-        for download in config['metadata']['download']:
-            url = download['url']
-            downloads[url] = {'compressed': False, 'subdir': []}
+        for resource in config['metadata']['download']:
+            config_downloads = {
+                'url': resource['url'],
+                'compressed': False,
+                'subdir': []
+            }
 
-            if 'compressed' in download:
-                downloads[url]['compressed'] = bool(download['compressed'])
+            if 'compressed' in resource:
+                config_downloads['compressed'] = bool(resource['compressed'])
 
-            if 'subdir' in download:
-                downloads[url]['subdir'].append(download['subdir'])
+            if 'subdir' in resource:
+                config_downloads['subdir'].append(resource['subdir'])
             else:
-                downloads[url]['subdir'].append('')
+                config_downloads['subdir'].append('')
 
-    return downloads
+    return config_downloads
 
 
 def get_all_configs_downloads():
@@ -71,13 +73,59 @@ def get_all_configs_downloads():
         downloads = get_config_downloads(config_path)
         for url in downloads:
             if url in all_downloads:
-                all_downloads[url]['compressed'] = downloads[url]['compressed']
+                all_downloads[url]['compressed'] = downloads['compressed']
                 all_downloads[url]['subdir'] = list(set(all_downloads[url]['subdir'] +
-                                                        downloads[url]['subdir']))
+                                                        downloads['subdir']))
             else:
-                all_downloads[url] = downloads[url]
+                all_downloads[url] = downloads
 
-    return all_downloads
+    return all_downloads.items()
+
+
+def get_destination_paths(url, download_path, sub_dir, compressed=False):
+    sub_path = download_path.joinpath(sub_dir)
+    sub_path.mkdir(exist_ok=True)
+
+    if compressed:
+        dest_path = sub_path.joinpath(url.split('/')[-1].split('.')[0])
+        dest_paths = (dest_path, )
+    else:
+        dest_path = sub_path.joinpath(url.split('/')[-2])
+        dest_file = sub_path.joinpath(url.split('/')[-1])
+        dest_paths = (dest_path, dest_file)
+
+    return dest_paths
+
+
+def download_resource(resource, download_path, force_donwload=False):
+    url = resource['url']
+    compressed = resource['compressed']
+    first_sub_dir = resource['subdir'].pop
+
+    first_dest_paths = get_destination_paths(url, download_path, first_sub_dir, compressed)
+    first_dest_dir = first_dest_paths[0]
+    if len(first_dest_paths) > 1:
+        first_dest_file = first_dest_paths[1]
+
+
+    if force_donwload or not first_dest_dir.exists():
+        if first_dest_dir.exists():
+            shutil.rmtree(str(first_dest_dir), ignore_errors=True)
+
+        if compressed:
+            download_decompress(url, first_dest_dir)
+        else:
+            first_dest_dir.mkdir()
+            download(first_dest_file, url)
+
+    for sub_dir in resource['subdir']:
+        dest_paths = get_destination_paths(url, download_path, sub_dir, compressed)
+        dest_dir = dest_paths[0]
+
+        if force_donwload or not dest_dir.exists():
+            if dest_dir.exists():
+                shutil.rmtree(str(dest_dir), ignore_errors=True)
+            shutil.copy(str(first_dest_dir), str(dest_dir))
 
 
 def download_resources(args):
@@ -93,55 +141,13 @@ def download_resources(args):
         downloads = get_all_configs_downloads()
     else:
         config_path = Path(args.config_path).resolve()
-        downloads = get_config_downloads(config_path)
+        downloads = [get_config_downloads(config_path)]
 
     download_path.mkdir(exist_ok=True)
 
-    #embeddings_path = download_path.joinpath('embeddings')
-
-    for url in downloads:
-        download = downloads[url]
-        first_subdir = download['subdir'].pop()
-        sub_path = download_path.joinpath(first_subdir)
-        sub_path.mkdir(exist_ok=True)
-
-        if download['compressed']:
-            dest_path = sub_path.joinpath(url.split('/')[-1].split('.')[0])
-            download_decompress(url, dest_path)
-
-            for subdir in download['subdir']:
-                sub_path = download_path.joinpath(subdir)
-                sub_path.mkdir(exist_ok=True)
-                dest_path = sub_path.joinpath(url.split('/')[-1].split('.')[0])
-
-                if dest_path.exists():
-                    dest_path.
-
-
-        else:
-            dest_folder = sub_path.joinpath(url.split('/')[-2])
-            dest_file = dest_folder.joinpath(url.split('/')[-1])
-            download(dest_file, url)
-
-        #dest_path = download_path
-        #
-        #if url in EMBEDDING_URLS:
-        #    embeddings_path.mkdir(exist_ok=True)
-        #    dest_path = embeddings_path.joinpath(url.split("/")[-1])
-        #    download(dest_path, url)
-        #
-        #elif url in BINARY_URLS:
-        #    dest_folder = download_path.joinpath(url.split("/")[-2])
-        #    dest_file = dest_folder.joinpath(url.split("/")[-1])
-        #    dest_path.mkdir(exist_ok=True)
-        #    download(dest_file, url)
-        #
-        #elif url in DATA_URLS:
-        #    dest_path = download_path.joinpath(url.split("/")[-1].split(".")[0])
-        #    download_decompress(url, dest_path)
-        #
-        #else:
-        #    download_decompress(url, dest_path)
+    force_download = args.force
+    for resource in downloads:
+        download_resource(resource, download_path, force_donwload=force_download)
 
 
 def main():
