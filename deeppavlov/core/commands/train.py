@@ -83,7 +83,7 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
     return chainer
 
 
-def train_model_from_config(config_path: str) -> None:
+def train_model_from_config(config_path: str):
     config = read_json(config_path)
     set_deeppavlov_root(config)
 
@@ -129,7 +129,6 @@ def train_model_from_config(config_path: str) -> None:
 
     train_config = {
         'metrics': ['accuracy'],
-
         'validate_best': True,
         'test_best': True
     }
@@ -177,8 +176,9 @@ def train_model_from_config(config_path: str) -> None:
 
             print(json.dumps(report, ensure_ascii=False))
             all_reports.append(report)
+        return all_reports
 
-    return all_reports
+    return None
 
 
 def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
