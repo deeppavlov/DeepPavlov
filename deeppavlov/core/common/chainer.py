@@ -33,7 +33,7 @@ class Chainer(Component):
         self.main = None
 
         if as_component:
-            self.__call__ = self._predict
+            self._predict = self._predict_as_component
 
     def append(self, in_x, out_params, component, in_y=None, main=False):
         if in_y is not None:
@@ -62,7 +62,10 @@ class Chainer(Component):
         else:
             raise ConfigError('Arguments {} are expected but only {} are set'.format(in_x, self.train_map))
 
-    def __call__(self, x, y=None, to_return=None):
+    def __call__(self, *args, **kwargs):
+        return self._predict(*args, **kwargs)
+
+    def _predict(self, x, y=None, to_return=None):
         in_params = list(self.in_x)
         if len(in_params) == 1:
             args = [x]
@@ -102,7 +105,7 @@ class Chainer(Component):
             return res[0]
         return list(zip(*res))
 
-    def _predict(self, *args):
+    def _predict_as_component(self, *args):
         mem = dict(zip(self.in_x, args))
 
         for in_params, out_params, component in self.pipe:
