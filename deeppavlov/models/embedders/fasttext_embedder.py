@@ -16,6 +16,7 @@ limitations under the License.
 
 import sys
 from overrides import overrides
+from typing import List
 
 import numpy as np
 import fastText as Fasttext
@@ -60,17 +61,16 @@ class FasttextEmbedder(Component, Serializable):
         """
         Embed data
         """
-        return [self._encode(sentence, mean) for sentence in batch]
+        return [self._encode(sample, mean) for sample in batch]
 
-    def _encode(self, sentence: str, mean):
-        tokens = sentence.split()
+    def _encode(self, tokens: List[str], mean: bool):
         embedded_tokens = []
         for t in tokens:
             try:
                 emb = self.tok2emb[t]
             except KeyError:
                 try:
-                    emb = self.model.get_word_vector(t)
+                    emb = self.model.get_word_vector(t)[:self.dim]
                 except KeyError:
                     emb = np.zeros(self.dim, dtype=np.float32)
                 self.tok2emb[t] = emb

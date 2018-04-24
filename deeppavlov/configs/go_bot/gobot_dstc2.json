@@ -44,16 +44,21 @@
         "word_vocab": "#token_vocab",
         "template_path": "dstc2/dstc2-templates.txt",
         "use_action_mask": false,
-        "network": {
-          "name": "go_bot_rnn",
-          "load_path": "go_bot/model",
-          "save_path": "go_bot/model",
+        "db_result_during_interaction": {
+          "addr": "Sobina Square, 1/4",
+          "area": "north",
+          "food": "russian",
+          "phone": "+7(965)173-37-33",
+          "postcode": "141700",
+          "pricerange": "cheap"
+        },
+        "network_parameters": {
+          "load_path": "gobot_dstc2/model",
+          "save_path": "gobot_dstc2/model",
           "learning_rate": 0.002,
           "dropout_rate": 0.8,
           "hidden_size": 128,
-          "dense_size": 64,
-          "obs_size": 530,
-          "action_size": 45
+          "dense_size": 64
         },
         "slot_filler": {
           "config_path": "../deeppavlov/configs/ner/slotfill_dstc2.json"
@@ -105,7 +110,7 @@
           }
         },
         "embedder": null,
-        "bow_encoder": {
+        "bow_embedder": {
           "name": "bow"
         },
         "tokenizer": {
@@ -114,14 +119,7 @@
         },
         "tracker": {
           "name": "featurized_tracker",
-          "slot_names": [
-            "pricerange",
-            "this",
-            "area",
-            "slot",
-            "food",
-            "name"
-          ]
+          "slot_names": ["pricerange", "this", "area", "slot", "food", "name"]
         }
       }
     ]
