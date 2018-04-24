@@ -105,6 +105,7 @@ class DSTC2DatasetReader(DatasetReader):
         n = 0
         num_dialog_utter, num_dialog_resp = 0, 0
         episode_done = True
+        speaker1_turn = True
         for turn in data:
             if not turn:
                 if num_dialog_utter != num_dialog_resp:
@@ -116,9 +117,11 @@ class DSTC2DatasetReader(DatasetReader):
                     'end': n,
                 })
                 num_dialog_utter, num_dialog_resp = 0, 0
+                speaker1_turn = True
             else:
                 replica = _filter(turn)
-                if 'goals' in replica:
+                if speaker1_turn:
+                #if 'goals' in replica:
                     if episode_done:
                         replica['episode_done'] = True
                     utterances.append(replica)
@@ -127,6 +130,7 @@ class DSTC2DatasetReader(DatasetReader):
                     responses.append(replica)
                     num_dialog_resp += 1
                 episode_done = False
+                speaker1_turn = not speaker1_turn
 
         if with_indices:
             return utterances, responses, dialog_indices
