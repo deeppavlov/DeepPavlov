@@ -36,8 +36,6 @@ def score_population(population, population_size, result_file):
             population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"].tolist()
         with open(f_name, 'w') as outfile:
             json.dump(population[i], outfile)
-        population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"] = \
-            np.array(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"])
 
         procs.append(Popen("CUDA_VISIBLE_DEVICES={} python ./models/evolution/train_phenotype.py {}"
                      " 1>{}/out.txt 2>{}/err.txt".format(gpus[i],
@@ -64,6 +62,9 @@ def score_population(population, population_size, result_file):
         population_accuracies.append(val_results[1])
         population_fmeasures.append(val_results[2])
         population_roc_auc_scores.append(val_results[3])
+
+        population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"] = \
+            np.array(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"])
 
     return population_roc_auc_scores
 
