@@ -17,7 +17,7 @@ limitations under the License.
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer as xav
 
-from deeppavlov.skills.go_bot import csoftmax_attention
+from deeppavlov.core.layers import tf_csoftmax_attention as csoftmax_attention
 from deeppavlov.core.common.log import get_logger
 
 

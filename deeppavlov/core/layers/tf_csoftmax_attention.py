@@ -13,12 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import numpy as np
 import tensorflow as tf
-from deeppavlov.core.common.log import get_logger
-
-
-log = get_logger(__name__)
 
 
 def csoftmax_for_slice(input):
