@@ -36,6 +36,8 @@ def score_population(population, population_size, result_file):
             population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"].tolist()
         with open(f_name, 'w') as outfile:
             json.dump(population[i], outfile)
+        population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"] = \
+            np.array(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"])
 
         procs.append(Popen("CUDA_VISIBLE_DEVICES={} python ./models/evolution/train_phenotype.py {}"
                      " 1>{}/out.txt 2>{}/err.txt".format(gpus[i],
@@ -51,11 +53,11 @@ def score_population(population, population_size, result_file):
 
     for i in range(population_size):
         val_results = np.loadtxt(fname=str(Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index][
-                                                    "save_path"]).joinpath("valid_results.txt")))
-        result_table = pd.DataFrame({"loss": [val_results[0]],
-                                     "accuracy": [val_results[1]],
-                                     "fmeasure": [val_results[2]],
-                                     "roc_auc_score": [val_results[3]],
+                                                    "save_path"]).parent.joinpath("valid_results.txt")))
+        result_table = pd.DataFrame({"classification_log_loss": [val_results[0]],
+                                     "classification_accuracy": [val_results[1]],
+                                     "classification_f1": [val_results[2]],
+                                     "classification_roc_auc": [val_results[3]],
                                      "params": [population[i]]})
         result_table.loc[:, order].to_csv(result_file, index=False, sep='\t', mode='a', header=None)
         population_losses.append(val_results[0])
@@ -74,6 +76,7 @@ parser.add_argument('--p_size', help='Please, enter population size', type=int, 
 parser.add_argument('--gpus', help='Please, enter the list of visible GPUs', default=0)
 parser.add_argument('--n_layers', help='Please, enter number of each layer type in network', default=2)
 parser.add_argument('--n_types', help='Please, enter number of types of layers', default=1)
+parser.add_argument('--one_neuron_init', help='Please, enter number of types of layers', default=0)
 
 args = parser.parse_args()
 
@@ -83,32 +86,37 @@ GPU_NUMBER = len(args.gpus)
 gpus = [int(gpu) for gpu in args.gpus.split(",")]
 N_LAYERS = int(args.n_layers)
 N_TYPES = int(args.n_types)
+ONE_NEURON_INIT = bool(int(args.one_neuron_init))
 
 with open(CONFIG_FILE, "r") as f:
     basic_params = json.load(f)
 
 print("Given basic params: {}\n".format(basic_params))
 
-try:
-    print(basic_params["chainer"]["pipe"][3])
-    Path(basic_params["chainer"]["pipe"][3]["save_path"]).mkdir(parents=True)
-except FileExistsError:
-    pass
+Path(basic_params["chainer"]["pipe"][3]["save_path"]).mkdir(parents=True, exist_ok=True)
+
 
 # Result table
-order = ["loss", "accuracy", "fmeasure", "roc_auc_score", "params"]
+order = ["classification_log_loss", "classification_accuracy",
+         "classification_f1", "classification_roc_auc", "params"]
 result_file = Path(basic_params["chainer"]["pipe"][3]["save_path"]).joinpath("result_table.csv")
-result_table = pd.DataFrame({"loss": [], "accuracy": [], "fmeasure": [], "roc_auc_score": [], "params": []})
+result_table = pd.DataFrame({"loss": [],
+                             "classification_accuracy": [],
+                             "classification_f1": [],
+                             "classification_roc_auc": [],
+                             "params": []})
 result_table.loc[:, order].to_csv(result_file, index=False, sep='\t')
 
 # EVOLUTION starts here!
 evolution = NetworkAndParamsEvolution(n_layers=N_LAYERS, n_types=N_TYPES,
                                       population_size=POPULATION_SIZE,
-                                      p_crossover=0.1, crossover_power=0.5,
+                                      p_crossover=1., crossover_power=0.5,
                                       p_mutation=0.5, mutation_power=0.1,
                                       key_model_to_evolve="to_evolve",
                                       key_basic_layers="basic_layers_params",
-                                      seed=None, **basic_params)
+                                      seed=None,
+                                      start_with_one_neuron=ONE_NEURON_INIT,
+                                      **basic_params)
 
 print("\nIteration #{} starts\n".format(0))
 population = evolution.first_generation()

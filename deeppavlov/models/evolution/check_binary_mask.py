@@ -53,6 +53,11 @@ def get_binary_mask_from_digraph(nodes, directed_graph):
 
 def check_and_correct_binary_mask(nodes, binary_mask_):
     binary_mask = deepcopy(binary_mask_)
+
+    # if binary mask if empty, add one dense layer
+    if np.sum(binary_mask) == 0:
+        binary_mask[0, 0] = 1
+
     directed_graph = get_digraph_from_binary_mask(nodes, binary_mask)
     sources, sinks, _ = find_sources_and_sinks(directed_graph)
 
