@@ -6,7 +6,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.data.utils import download
 
-DB_URL = 'http://lnsigo.mipt.ru/export/datasets/wikipedia/wiki_full.db'
+DB_URL = 'http://lnsigo.mipt.ru/export/datasets/wikipedia/enwiki.db'
 
 
 @register('wiki_sqlite_vocab')
