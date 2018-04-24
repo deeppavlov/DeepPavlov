@@ -22,13 +22,16 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.models.squad.utils import CudnnGRU, dot_attention, simple_attention, PtrNet
 from deeppavlov.core.common.utils import check_gpu_existance
+from deeppavlov.core.layers.tf_layers import cudnn_bi_gru, variational_dropout
+from deeppavlov.core.common.log import get_logger
+
+logger = get_logger(__name__)
 
 
 @register('squad_model')
 class SquadModel(TFModel):
     def __init__(self, **kwargs):
 
-        # check gpu
         if not check_gpu_existance():
             raise RuntimeError('SquadModel requires GPU')
 
@@ -43,9 +46,15 @@ class SquadModel(TFModel):
         self.attention_hidden_size = self.opt['attention_hidden_size']
         self.keep_prob = self.opt['keep_prob']
         self.learning_rate = self.opt['learning_rate']
+        self.min_learning_rate = self.opt['min_learning_rate']
+        self.learning_rate_patience = self.opt['learning_rate_patience']
         self.grad_clip = self.opt['grad_clip']
+        self.weight_decay = self.opt['weight_decay']
         self.word_emb_dim = self.init_word_emb.shape[1]
         self.char_emb_dim = self.init_char_emb.shape[1]
+
+        self.last_impatience = 0
+        self.lr_impatience = 0
 
         self.sess_config = tf.ConfigProto(allow_soft_placement=True)
         self.sess_config.gpu_options.allow_growth = True
@@ -61,6 +70,8 @@ class SquadModel(TFModel):
         # Try to load the model (if there are some model files the model will be loaded from them)
         if self.load_path is not None:
             self.load()
+            if self.weight_decay < 1.0:
+                 self.sess.run(self.assign_vars)
 
     def _init_graph(self):
         self._init_placeholders()
@@ -97,19 +108,16 @@ class SquadModel(TFModel):
                                     [bs * self.c_maxlen, self.char_limit, self.char_emb_dim])
                 qc_emb = tf.reshape(tf.nn.embedding_lookup(self.char_emb, self.qc),
                                     [bs * self.q_maxlen, self.char_limit, self.char_emb_dim])
-                cc_emb = tf.nn.dropout(cc_emb, keep_prob=self.keep_prob_ph,
-                                       noise_shape=[bs * self.c_maxlen, 1, self.char_emb_dim])
-                qc_emb = tf.nn.dropout(qc_emb, keep_prob=self.keep_prob_ph,
-                                       noise_shape=[bs * self.q_maxlen, 1, self.char_emb_dim])
 
-                cell_fw = tf.contrib.rnn.GRUCell(self.char_hidden_size)
-                cell_bw = tf.contrib.rnn.GRUCell(self.char_hidden_size)
-                _, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(
-                    cell_fw, cell_bw, cc_emb, self.cc_len, dtype=tf.float32)
+                cc_emb = variational_dropout(cc_emb, keep_prob=self.keep_prob_ph)
+                qc_emb = variational_dropout(qc_emb, keep_prob=self.keep_prob_ph)
+
+                _, (state_fw, state_bw) = cudnn_bi_gru(cc_emb, self.char_hidden_size, seq_lengths=self.cc_len)
                 cc_emb = tf.concat([state_fw, state_bw], axis=1)
-                _, (state_fw, state_bw) = tf.nn.bidirectional_dynamic_rnn(
-                    cell_fw, cell_bw, qc_emb, self.qc_len, dtype=tf.float32)
+
+                _, (state_fw, state_bw) = cudnn_bi_gru(qc_emb, self.char_hidden_size, seq_lengths=self.qc_len, reuse=True)
                 qc_emb = tf.concat([state_fw, state_bw], axis=1)
+
                 cc_emb = tf.reshape(cc_emb, [bs, self.c_maxlen, 2 * self.char_hidden_size])
                 qc_emb = tf.reshape(qc_emb, [bs, self.q_maxlen, 2 * self.char_hidden_size])
 
@@ -155,6 +163,23 @@ class SquadModel(TFModel):
             loss_1 = tf.nn.softmax_cross_entropy_with_logits(logits=logits1, labels=self.y1)
             loss_2 = tf.nn.softmax_cross_entropy_with_logits(logits=logits2, labels=self.y2)
             self.loss = tf.reduce_mean(loss_1 + loss_2)
+
+        if self.weight_decay < 1.0:
+            self.var_ema = tf.train.ExponentialMovingAverage(self.weight_decay)
+            ema_op = self.var_ema.apply(tf.trainable_variables())
+            with tf.control_dependencies([ema_op]):
+                self.loss = tf.identity(self.loss)
+
+                self.shadow_vars = []
+                self.global_vars = []
+                for var in tf.global_variables():
+                    v = self.var_ema.average(var)
+                    if v:
+                        self.shadow_vars.append(v)
+                        self.global_vars.append(var)
+                self.assign_vars = []
+                for g, v in zip(self.global_vars, self.shadow_vars):
+                    self.assign_vars.append(tf.assign(g, v))
 
     def _init_placeholders(self):
         self.c_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='c_ph')
@@ -210,6 +235,21 @@ class SquadModel(TFModel):
         feed_dict = self._build_feed_dict(c_tokens, c_chars, q_tokens, q_chars)
         yp1, yp2 = self.sess.run([self.yp1, self.yp2], feed_dict=feed_dict)
         return yp1, yp2
+
+    def process_event(self, event_name, data):
+        if event_name == "after_validation":
+            if data['impatience'] > self.last_impatience:
+                self.lr_impatience += 1
+            else:
+                self.lr_impatience = 0
+
+            self.last_impatience = data['impatience']
+
+            if self.lr_impatience >= self.learning_rate_patience:
+                self.lr_impatience = 0
+                self.learning_rate = max(self.learning_rate / 2, self.min_learning_rate)
+                logger.info('SQuAD model: learning_rate changed to {}'.format(self.learning_rate))
+            logger.info('SQuAD model: lr_impatience: {}, learning_rate: {}'.format(self.lr_impatience, self.learning_rate))
 
     def shutdown(self):
         pass

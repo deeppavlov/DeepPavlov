@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import collections
 import json
 import numpy as np
 import tensorflow as tf
@@ -20,8 +21,7 @@ from tensorflow.contrib.layers import xavier_initializer as xav
 
 import collections
 
-from deeppavlov.skills.go_bot import csoftmax_attention
-from deeppavlov.skills.go_bot import attention_mechanisms as am
+from deeppavlov.core.layers import tf_attention_mechanisms as am
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.tf_model import TFModel

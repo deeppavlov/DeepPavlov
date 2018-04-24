@@ -40,12 +40,13 @@ class SQLiteDataIterator(DataFittingIterator):
     def __init__(self, data_dir: str = '', data_url: str = DB_URL, batch_size: int = None,
                  shuffle: bool = None, seed: int = None, **kwargs):
         """
-        :param load_path: a path to a SQLite database
+        :param data_dir: a directory name where DB is located
+        :param data_url: an URL to SQLite DB
         :param batch_size: a batch size for reading from the database
         """
         download_dir = expand_path(data_dir)
         download_path = download_dir.joinpath(data_url.split("/")[-1])
-        download(download_path, data_url, file_exists=False)
+        download(download_path, data_url, force_download=False)
 
         # if not download_dir.exists() or is_empty(download_dir):
         #     logger.info('[downloading wiki.db from {} to {}]'.format(data_url, download_path))
