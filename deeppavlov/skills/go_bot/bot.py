@@ -28,7 +28,7 @@ from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.encoders.bow import BoWEncoder
 from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel
 from deeppavlov.models.ner.slotfill import DstcSlotFillingNetwork
-from deeppavlov.models.tokenizers.spacy_tokenizer import StreamSpacyTokenizer
+from deeppavlov.models.tokenizers.stream_spacy_tokenizer import StreamSpacyTokenizer
 from deeppavlov.models.trackers.default_tracker import DefaultTracker
 from deeppavlov.skills.go_bot.network import GoalOrientedBotNetwork
 from deeppavlov.skills.go_bot.templates import Templates, DualTemplate

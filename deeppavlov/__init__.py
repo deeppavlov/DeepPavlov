@@ -35,7 +35,7 @@ import deeppavlov.models.trackers.hcn_et
 import deeppavlov.models.preprocessors.str_lower
 import deeppavlov.models.preprocessors.squad_preprocessor
 import deeppavlov.models.ner.ner
-import deeppavlov.models.tokenizers.spacy_tokenizer
+import deeppavlov.models.tokenizers.stream_spacy_tokenizer
 import deeppavlov.models.tokenizers.split_tokenizer
 import deeppavlov.models.squad.squad
 import deeppavlov.skills.go_bot.bot
