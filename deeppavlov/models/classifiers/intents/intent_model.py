@@ -125,14 +125,14 @@ class KerasIntentModel(KerasModel):
         """
         Convert texts to vector representations using embedder and padding up to self.opt["text_size"] tokens
         Args:
-            sentences: list of texts
+            sentences: list of lists of tokens
 
         Returns:
             array of embedded texts
         """
         pad = np.zeros(self.opt['embedding_size'])
 
-        embeddings_batch = self.fasttext_model([sen.split()[:self.opt['text_size']] for sen in sentences])
+        embeddings_batch = self.fasttext_model([sen[:self.opt['text_size']] for sen in sentences])
         embeddings_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + tokens for tokens in embeddings_batch]
 
         embeddings_batch = np.asarray(embeddings_batch)
@@ -142,29 +142,32 @@ class KerasIntentModel(KerasModel):
         """
         Train the model on the given batch
         Args:
-            batch - list of data where batch[0] is list of texts and batch[1] is list of labels
+            texts - list of texts (or list of lists of text tokens)
+            labels - list of labels
 
         Returns:
             loss and metrics values on the given batch
         """
-        texts = self.tokenizer(list(texts))
+        if isinstance(texts[0], str):
+            texts = self.tokenizer(list(texts))
         features = self.texts2vec(texts)
         onehot_labels = labels2onehot(labels, classes=self.classes)
         metrics_values = self.model.train_on_batch(features, onehot_labels)
         return metrics_values
 
-    def infer_on_batch(self, batch, labels=None):
+    def infer_on_batch(self, texts, labels=None):
         """
         Infer the model on the given batch
         Args:
-            batch - list of texts
+            texts - list of texts (or list of lists of text tokens)
             labels - list of labels
 
         Returns:
             loss and metrics values on the given batch, if labels are given
             predictions, otherwise
         """
-        texts = self.tokenizer(batch)
+        if isinstance(texts[0], str):
+            texts = self.tokenizer(list(texts))
         if labels:
             features = self.texts2vec(texts)
             onehot_labels = labels2onehot(labels, classes=self.classes)
@@ -175,7 +178,7 @@ class KerasIntentModel(KerasModel):
             predictions = self.model.predict(features)
             return predictions
 
-    def __call__(self, data, predict_proba=False, *args):
+    def __call__(self, data, *args):
         """
         Infer on the given data
         Args:
@@ -190,11 +193,8 @@ class KerasIntentModel(KerasModel):
         """
         preds = np.array(self.infer_on_batch(data))
 
-        if predict_proba:
-            return preds
-        else:
-            labels = proba2labels(preds, confident_threshold=self.opt['confident_threshold'], classes=self.classes)
-            return labels, preds, [self.classes for _ in range(len(preds))]
+        labels = proba2labels(preds, confident_threshold=self.opt['confident_threshold'], classes=self.classes)
+        return labels, preds, [self.classes for _ in range(len(preds))]
 
     def cnn_model(self, params):
         """
