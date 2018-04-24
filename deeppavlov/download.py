@@ -31,7 +31,8 @@ log = get_logger(__name__)
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("config_path", help="path to a pipeline json config", type=str)
+parser.add_argument('--config', '-c', help="path to a pipeline json config", type=str,
+                    default=None)
 parser.add_argument('-all', action='store_true',
                     help="Download everything. Warning! There should be at least 10 GB space"
                          " available on disk.")
@@ -100,13 +101,12 @@ def get_destination_paths(url, download_path, sub_dir, compressed=False):
 def download_resource(resource, download_path, force_donwload=False):
     url = resource['url']
     compressed = resource['compressed']
-    first_sub_dir = resource['subdir'].pop
+    first_sub_dir = resource['subdir'].pop()
 
     first_dest_paths = get_destination_paths(url, download_path, first_sub_dir, compressed)
     first_dest_dir = first_dest_paths[0]
     if len(first_dest_paths) > 1:
         first_dest_file = first_dest_paths[1]
-
 
     if force_donwload or not first_dest_dir.exists():
         if first_dest_dir.exists():
@@ -134,13 +134,13 @@ def download_resources(args):
     else:
         download_path = root_path / 'download'
 
-    if not args.all and not args.config_path:
+    if not args.all and not args.config:
         log.error('You should provide either skill config path or -all flag')
         sys.exit(1)
     elif args.all:
         downloads = get_all_configs_downloads()
     else:
-        config_path = Path(args.config_path).resolve()
+        config_path = Path(args.config).resolve()
         downloads = [get_config_downloads(config_path)]
 
     download_path.mkdir(exist_ok=True)
