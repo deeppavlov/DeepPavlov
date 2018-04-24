@@ -91,8 +91,8 @@ def teardown_module():
     shutil.rmtree(str(download_path), ignore_errors=True)
 
 
-def download(full=None):
-    cmd = "python3 -m deeppavlov.download -test"
+def download(full=True):
+    cmd = "python3 -m deeppavlov.download -test -force"
     if full:
         cmd += " -all"
     pexpect.run(cmd, timeout=None)
