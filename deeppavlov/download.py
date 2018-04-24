@@ -48,51 +48,58 @@ def get_config_downloads(config_path):
 
     if 'metadata' in config and 'download' in config['metadata']:
         for resource in config['metadata']['download']:
-            config_downloads = {
-                'url': resource['url'],
+            url = resource['url']
+
+            resource_info = {
+                'url': url,
                 'compressed': False,
                 'subdir': []
             }
 
             if 'compressed' in resource:
-                config_downloads['compressed'] = bool(resource['compressed'])
+                resource_info['compressed'] = bool(resource['compressed'])
 
             if 'subdir' in resource:
-                config_downloads['subdir'].append(resource['subdir'])
+                resource_info['subdir'].append(resource['subdir'])
             else:
-                config_downloads['subdir'].append('')
+                resource_info['subdir'].append('')
+
+            config_downloads[url] = resource_info
 
     return config_downloads
 
 
-def get_all_configs_downloads():
+def get_configs_downloads(config_path=None):
     all_downloads = {}
-    configs_path = root_path / 'deeppavlov' / 'configs'
-    configs = list(configs_path.glob('**/*.json'))
+
+    if config_path:
+        configs = [config_path]
+    else:
+        configs_path = root_path / 'deeppavlov' / 'configs'
+        configs = list(configs_path.glob('**/*.json'))
 
     for config_path in configs:
-        downloads = get_config_downloads(config_path)
-        for url in downloads:
+        config_downloads = get_config_downloads(config_path)
+        for url in config_downloads:
             if url in all_downloads:
-                all_downloads[url]['compressed'] = downloads['compressed']
+                all_downloads[url]['compressed'] = config_downloads['compressed']
                 all_downloads[url]['subdir'] = list(set(all_downloads[url]['subdir'] +
-                                                        downloads['subdir']))
+                                                        config_downloads['subdir']))
             else:
-                all_downloads[url] = downloads
+                all_downloads[url] = config_downloads[url]
 
-    return all_downloads.items()
+    return all_downloads
 
 
 def get_destination_paths(url, download_path, sub_dir, compressed=False):
     sub_path = download_path.joinpath(sub_dir)
-    sub_path.mkdir(exist_ok=True)
 
     if compressed:
         dest_path = sub_path.joinpath(url.split('/')[-1].split('.')[0])
         dest_paths = (dest_path, )
     else:
-        dest_path = sub_path.joinpath(url.split('/')[-2])
-        dest_file = sub_path.joinpath(url.split('/')[-1])
+        dest_path = sub_path
+        dest_file = dest_path.joinpath(url.split('/')[-1])
         dest_paths = (dest_path, dest_file)
 
     return dest_paths
@@ -108,7 +115,7 @@ def download_resource(resource, download_path, force_donwload=False):
     if len(first_dest_paths) > 1:
         first_dest_file = first_dest_paths[1]
 
-    if force_donwload or not first_dest_dir.exists():
+    if force_donwload or (not first_dest_dir.exists()):
         if first_dest_dir.exists():
             shutil.rmtree(str(first_dest_dir), ignore_errors=True)
 
@@ -138,15 +145,16 @@ def download_resources(args):
         log.error('You should provide either skill config path or -all flag')
         sys.exit(1)
     elif args.all:
-        downloads = get_all_configs_downloads()
+        downloads = get_configs_downloads()
     else:
         config_path = Path(args.config).resolve()
-        downloads = [get_config_downloads(config_path)]
+        downloads = get_configs_downloads(config_path)
 
     download_path.mkdir(exist_ok=True)
 
     force_download = args.force
-    for resource in downloads:
+    for url in downloads:
+        resource = downloads[url]
         download_resource(resource, download_path, force_donwload=force_download)
 
 
