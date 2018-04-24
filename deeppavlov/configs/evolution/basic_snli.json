@@ -1,9 +1,9 @@
 {
   "dataset_reader": {
     "name": "basic_classification_reader",
-    "x": "text",
-    "y": "intents",
-    "data_path": "/home/dilyara.baymurzina/evolution_data/snips_data"
+    "x": "sentence1",
+    "y": "gold_label",
+    "data_path": "/home/dilyara.baymurzina/evolution_data/snli_data"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator"
@@ -23,8 +23,8 @@
           "y"
         ],
         "level": "token",
-        "save_path": "/home/dilyara.baymurzina/evolution_data/snips_data/snips_classes.dict",
-        "load_path": "/home/dilyara.baymurzina/evolution_data/snips_data/snips_classes.dict"
+        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_data/snli_classes.dict",
+        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_data/snli_classes.dict"
       },
       {
         "id": "my_embedder",
@@ -52,8 +52,8 @@
         ],
         "main": true,
         "name": "evolution_classification_model",
-        "save_path": "/home/dilyara.baymurzina/evolution_data/snips_classification/start_with_one_neuron",
-        "load_path": "/home/dilyara.baymurzina/evolution_data/snips_classification/start_with_one_neuron",
+        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/start_with_one_neuron",
+        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/start_with_one_neuron",
         "classes": "#classes_vocab.keys()",
         "to_evolve": true,
         "basic_layers_params": {
