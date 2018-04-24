@@ -95,7 +95,8 @@ with open(CONFIG_FILE, "r") as f:
 print("Given basic params: {}\n".format(basic_params))
 
 Path(basic_params["chainer"]["pipe"][3]["save_path"]).mkdir(parents=True, exist_ok=True)
-
+basic_params["chainer"]["pipe"][3]["n_types"] = N_TYPES
+basic_params["chainer"]["pipe"][3]["n_layers"] = N_LAYERS
 
 # Result table
 order = ["classification_log_loss", "classification_accuracy",

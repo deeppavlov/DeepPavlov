@@ -41,7 +41,7 @@ from deeppavlov.models.classifiers.intents.utils import md5_hashsum
 from deeppavlov.models.tokenizers.nltk_tokenizer import NLTKTokenizer
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.models.evolution.check_binary_mask import number_to_type_layer, \
-    find_sources_and_sinks, get_digraph_from_binary_mask
+    find_sources_and_sinks, get_digraph_from_binary_mask, get_graph_and_plot
 from deeppavlov.models.evolution.utils import Attention, expand_tile
 from deeppavlov.core.common.file import save_json, read_json
 
@@ -55,6 +55,7 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.opt["binary_mask"] = np.array(self.opt["binary_mask"])
+        get_graph_and_plot(self.opt["nodes"], self.opt["binary_mask"], self.opt["n_types"], path=str(self.save_path.resolve()))
 
     def get_node_output(self, node_id, dg, params, edges_outputs=None, inp=None):
         if inp is None:
