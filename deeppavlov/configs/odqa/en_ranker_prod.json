@@ -3,7 +3,7 @@
     "name": "sqlite_iterator",
     "data_dir": "odqa",
     "shuffle": false,
-    "data_url": "http://lnsigo.mipt.ru/export/datasets/wikipedia/wiki_full.db"
+    "data_url": "http://lnsigo.mipt.ru/export/datasets/wikipedia/enwiki.db"
   },
   "chainer": {
     "in": [
@@ -30,8 +30,8 @@
           "fit_on_batch": [
             "x"
           ],
-          "save_path": "odqa/wiki_tfidf_matrix.npz",
-          "load_path": "odqa/wiki_tfidf_matrix.npz",
+          "save_path": "odqa/enwiki_tfidf_matrix.npz",
+          "load_path": "odqa/enwiki_tfidf_matrix.npz",
           "tokenizer": {
             "name": "stream_spacy_tokenizer",
             "lemmas": true,
