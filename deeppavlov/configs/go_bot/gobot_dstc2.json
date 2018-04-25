@@ -141,10 +141,13 @@
       "telegram_utils": "GoalOrientedBot"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz",
       "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
       "http://lnsigo.mipt.ru/export/deeppavlov_data/go_bot.tar.gz",
       "http://lnsigo.mipt.ru/export/deeppavlov_data/intents.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz",
+        "subdir": "dstc2"
+      },
       {
         "url": "http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/dstc2_fastText_model.bin",
         "subdir": "embeddings"
