@@ -4,8 +4,10 @@ from copy import copy, deepcopy
 import datetime
 import time
 from pathlib import Path
-import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
 
+import matplotlib.pyplot as plt
 
 def number_to_type_layer(node_id, n_types):
     # return node_layer, node_type
@@ -100,6 +102,10 @@ def check_and_correct_binary_mask(nodes, binary_mask_):
 
 
 def get_graph_and_plot(nodes, binary_mask, n_types, path=None):
+    nodes_int = {}
+    for i in range(len(nodes)):
+        nodes_int[i] = nodes[str(i)]
+        
     total_nodes = len(nodes)
     dg = get_digraph_from_binary_mask(nodes, binary_mask)
 
@@ -117,11 +123,11 @@ def get_graph_and_plot(nodes, binary_mask, n_types, path=None):
             val_map[i] = 0.
 
     plt.figure(figsize=(12, 12))
-    values = [val_map.get(node, 0.25) for node in nodes]
+    values = [val_map.get(node, 0.25) for node in nodes_int]
 
     nx.draw(dg, pos, cmap=plt.get_cmap('jet'), node_color=values, node_size=7000, alpha=0.3)
 
-    nx.draw_networkx_labels(dg, pos, nodes, font_size=18)
+    nx.draw_networkx_labels(dg, pos, nodes_int, font_size=18)
 
     if path is None:
         path = "./"
