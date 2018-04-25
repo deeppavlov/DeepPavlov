@@ -51,7 +51,7 @@ def main():
         interact_model(pipeline_config_path)
     elif args.mode == 'interactbot':
         if not token:
-            log.error('Token required: initiate -t parm or TELEGRAM_BOT env var with Telegram bot token')
+            log.error('Token required: initiate -t param or TELEGRAM_BOT env var with Telegram bot token')
         else:
             interact_model_by_telegram(pipeline_config_path, token)
     elif args.mode == 'riseapi':

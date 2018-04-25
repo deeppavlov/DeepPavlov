@@ -34,6 +34,7 @@ class FasttextEmbedder(Component, Serializable):
         super().__init__(save_path=save_path, load_path=load_path)
         self.tok2emb = {}
         self.dim = dim
+
         self.model = self.load()
 
     def save(self, *args, **kwargs):

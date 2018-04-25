@@ -35,15 +35,36 @@ _MARK_DONE = '.done'
 tqdm.monitor_interval = 0
 
 
-def download(dest_file_path, source_url):
+def download(dest_file_path, source_url, file_exists=True):
     """Download a file from URL
 
     Args:
         dest_file_path: path to the file destination file (including file name)
         source_url: the source URL
+        file_exists: download file if it already exists, or not
 
     """
-    CHUNK = 16 * 1024
+    CHUNK = 2 ** 14
+    dest_file_path = Path(dest_file_path).absolute()
+
+    if file_exists or not dest_file_path.exists():
+        dest_file_path.parent.mkdir(parents=True, exist_ok=True)
+
+        r = requests.get(source_url, stream=True)
+        total_length = int(r.headers.get('content-length', 0))
+
+        with dest_file_path.open('wb') as f:
+            log.info('Downloading from {} to {}'.format(source_url, dest_file_path))
+
+            pbar = tqdm(total=total_length, unit='B', unit_scale=True)
+            for chunk in r.iter_content(chunk_size=CHUNK):
+                if chunk:  # filter out keep-alive new chunks
+                    pbar.update(len(chunk))
+                    f.write(chunk)
+            f.close()
+    else:
+        log.info('File already exists in {}'.format(dest_file_path))
+
     dest_file_path = Path(dest_file_path).absolute()
     dest_file_path.parent.mkdir(parents=True, exist_ok=True)
 
