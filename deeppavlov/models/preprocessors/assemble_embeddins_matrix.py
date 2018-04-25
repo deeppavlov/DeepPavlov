@@ -45,3 +45,9 @@ class EmbeddingsMatrixAssembler:
     @property
     def dim(self):
         return self.emb_mat.shape[1]
+
+
+@register('random_emb_mat')
+class RandomEmbeddingsMatrix:
+    def __init__(self, vocab_len, emb_dim, *args, **kwargs):
+        self.emb_mat = np.random.randn(vocab_len, emb_dim).astype(np.float32) / np.sqrt(emb_dim)

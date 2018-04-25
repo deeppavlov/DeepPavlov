@@ -13,20 +13,23 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
-from typing import List, Union
+from overrides import overrides
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
+from deeppavlov.core.common.log import get_logger
+
+log = get_logger(__name__)
 
 
-@register('str_lower')
-class StrLower(Component):
-    def __init__(self, *args, **kwargs):
+@register('char_splitter')
+class CharSplitter(Component):
+    def __init__(self, **kwargs):
         pass
 
-    def __call__(self, batch: Union[List[str], List[List[str]]], **kwargs):
-        if isinstance(batch, (list, tuple)):
-            return [self(line) for line in batch]
-        else:
-            return batch.lower()
+    @overrides
+    def __call__(self, batch, *args, **kwargs):
+        char_batch = []
+        for tokens_sequence in batch:
+            char_batch.append([list(tok) for tok in tokens_sequence])
+        return char_batch

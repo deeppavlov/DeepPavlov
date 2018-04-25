@@ -14,19 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from typing import List, Union
+from typing import List, Dict, Union, Tuple
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
 
-@register('str_lower')
-class StrLower(Component):
-    def __init__(self, *args, **kwargs):
-        pass
+@register('item_getter')
+class ItemGetter(Component):
+    def __init__(self, field, *args, **kwargs):
+        self.field = field
 
-    def __call__(self, batch: Union[List[str], List[List[str]]], **kwargs):
+    def __call__(self, batch: Union[List[Dict], Tuple[Dict]], **kwargs):
         if isinstance(batch, (list, tuple)):
-            return [self(line) for line in batch]
+            return [self(item) for item in batch]
         else:
-            return batch.lower()
+            return batch[self.field]
+
+
