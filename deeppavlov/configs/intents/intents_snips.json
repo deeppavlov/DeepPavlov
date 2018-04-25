@@ -20,21 +20,33 @@
     ]
   },
   "chainer": {
-    "in": ["x"],
-    "in_y": ["y"],
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
     "pipe": [
       {
         "id": "classes_vocab",
         "name": "default_vocab",
-        "fit_on": ["y"],
+        "fit_on": [
+          "y"
+        ],
         "level": "token",
         "save_path": "vocabs/snips_classes.dict",
         "load_path": "vocabs/snips_classes.dict"
       },
       {
-        "in": ["x"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
+        "in": [
+          "x"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_predicted"
+        ],
         "main": true,
         "name": "intent_model",
         "save_path": "intents/intent_cnn_snips_v2",
@@ -77,7 +89,9 @@
         }
       }
     ],
-    "out": ["y_predicted"]
+    "out": [
+      "y_predicted"
+    ]
   },
   "train": {
     "epochs": 100,
@@ -95,6 +109,13 @@
   "metadata": {
     "labels": {
       "telegram_utils": "IntentModel"
-    }
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/intents.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/dstc2_fastText_model.bin",
+        "subdir": "embeddings"
+      }
+    ]
   }
 }

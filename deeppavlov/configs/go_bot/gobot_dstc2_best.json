@@ -83,22 +83,7 @@
           }
         },
         "slot_filler": {
-          "name": "dstc_slotfilling",
-          "save_path": "ner/dstc_ner_model",
-          "load_path": "ner/dstc_ner_model",
-          "word_vocab": "#word_vocab",
-          "tag_vocab": "#tag_vocab",
-          "char_vocab": "#char_vocab",
-          "filter_width": 7,
-          "embeddings_dropout": true,
-          "n_filters": [
-            64,
-            64
-          ],
-          "token_embeddings_dim": 64,
-          "char_embeddings_dim": 32,
-          "use_batch_norm": true,
-          "use_crf": true
+          "config_path": "../deeppavlov/configs/ner/slotfill_dstc2.json"
         },
         "intent_classifier": null,
         "embedder": {
@@ -130,5 +115,19 @@
     "log_every_n_batches": -1,
     "log_every_n_epochs": 1,
     "show_examples": false
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "GoalOrientedBot"
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/gobot_dstc2_best_v1.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin",
+        "subdir": "embeddings"
+      }
+    ]
   }
 }
