@@ -92,7 +92,7 @@ def teardown_module():
 
 
 def download(full=True):
-    cmd = "python3 -m deeppavlov.download -test -force"
+    cmd = "python3 -m deeppavlov.download -test"
     if full:
         cmd += " -all"
     pexpect.run(cmd, timeout=None)
