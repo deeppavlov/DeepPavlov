@@ -1,11 +1,12 @@
 {
   "dataset_reader": {
     "name": "morphotagger_dataset_reader",
-    "data_path": "morpho_tagger/UD2.0_source",
-    "language": "ru_syntagrus", "data_types": ["test"]
+    "data_path": "morpho_tagger/UD2.0_source/ru_syntagrus-ud-dev.conllu",
+    "data_types": ["train"]
   },
   "dataset_iterator": {
-    "name": "morphotagger_dataset"
+    "name": "morphotagger_dataset",
+    "validation_split": 0.2
   },
   "chainer": {
     "in": ["x"],
@@ -20,18 +21,21 @@
       {
         "id": "tag_vocab",
         "name": "default_vocab",
-        "level": "token",
+        "fit_on": ["y"],
+		"level": "token",
         "special_tokens": ["PAD", "BEGIN", "END"],
-        "load_path": "morpho_tagger/UD2.0/tag_ru_syntagrus.dict",
-        "save_path": "morpho_tagger/UD2.0/tag_ru_syntagrus.dict"
+        "save_path": "morpho_tagger/UD2.0/tag_ru_syntagrus_1.dict",
+        "load_path": "morpho_tagger/UD2.0/tag_ru_syntagrus_1.dict"
       },
       {
         "id": "char_vocab",
         "name": "default_vocab",
         "min_freq": 3,
+        "fit_on": ["x_processed"],
         "special_tokens": ["PAD", "BEGIN", "END"],
-		"load_path": "morpho_tagger/UD2.0/char_ru_syntagrus.dict",
-        "save_path": "morpho_tagger/UD2.0/char_ru_syntagrus.dict"
+		"level": "char",
+        "save_path": "morpho_tagger/UD2.0/char_ru_syntagrus_1.dict",
+        "load_path": "morpho_tagger/UD2.0/char_ru_syntagrus_1.dict"
       },
       {
         "in": ["x_processed"],
@@ -39,28 +43,27 @@
         "out": ["y_predicted"],
         "name": "morpho_tagger",
         "main": true,
-        "save_path": "morpho_tagger/UD2.0/ud_ru_syntagrus.hdf5",
-        "load_path": "morpho_tagger/UD2.0/ud_ru_syntagrus.hdf5",
+        "save_path": "morpho_tagger/UD2.0/ud_ru_syntagrus_1.hdf5",
+        "load_path": "morpho_tagger/UD2.0/ud_ru_syntagrus_1.hdf5",
         "tags": "#tag_vocab",
         "symbols": "#char_vocab",
         "verbose": 1,
         "char_embeddings_size": 32, "char_window_size": [1, 2, 3, 4, 5, 6, 7],
         "word_lstm_units": 128, "conv_dropout": 0.0, "char_conv_layers": 1,
         "char_highway_layers": 1, "highway_dropout": 0.0, "word_lstm_layers": 1,
-        "char_filter_multiple": 50, "intermediate_dropout": 0.0,
-        "word_dropout": 0.2, "lstm_dropout": 0.2, "regularizer": 0.01
-      },
-      {
-        "in": ["x", "y_predicted"],
-        "out": ["y_prettified"],
-        "name": "tag_output_prettifier",
-        "end": "\n"
+        "char_filter_multiple": 50, "intermediate_dropout": 0.0, "word_dropout": 0.2,
+        "lstm_dropout": 0.2, "regularizer": 0.01, "lm_dropout": 0.2
       }
     ],
-    "out": ["y_prettified"]
+    "out": ["y_predicted"]
   },
-  "predict": {
+  "train": {
+    "epochs": 1,
     "batch_size": 32,
-    "outfile": "results/ud_ru_syntagrus_test.res"
+
+    "metrics": ["per_token_accuracy"],
+    "validation_patience": 10,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1
   }
 }
