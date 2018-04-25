@@ -58,3 +58,5 @@ import deeppavlov.metrics.bleu
 import deeppavlov.metrics.squad_metrics
 
 import deeppavlov.core.common.log
+
+import deeppavlov.download
