@@ -157,7 +157,7 @@ class KerasIntentModel(KerasModel):
         """
         pad = np.zeros(self.opt['embedding_size'])
 
-        embeddings_batch = self.fasttext_model([' '.join(sen.split()[:self.opt['text_size']]) for sen in sentences])
+        embeddings_batch = self.fasttext_model([sen.split()[:self.opt['text_size']] for sen in sentences])
         embeddings_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + tokens for tokens in embeddings_batch]
 
         embeddings_batch = np.asarray(embeddings_batch)

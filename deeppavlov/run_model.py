@@ -33,6 +33,7 @@ from deeppavlov.core.commands.infer import interact_model
 # PIPELINE_CONFIG_PATH = 'configs/odqa/ranker_prod.json'
 # PIPELINE_CONFIG_PATH = 'configs/seq2seq_go_bot/bot_kvret.json'
 # PIPELINE_CONFIG_PATH = 'configs/odqa/ranker_prod.json'
+# PIPELINE_CONFIG_PATH = 'configs/odqa/odqa_infer_prod.json'
 PIPELINE_CONFIG_PATH = 'configs/odqa/ranker_test.json'
 
 train_model_from_config(PIPELINE_CONFIG_PATH)
