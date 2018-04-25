@@ -16,7 +16,6 @@ limitations under the License.
 
 import argparse
 from pathlib import Path
-import shutil
 import sys
 
 root_path = (Path(__file__) / ".." / "..").resolve()
@@ -40,29 +39,42 @@ parser.add_argument('-test', action='store_true',
                     help="Turn test mode")
 
 
-def get_config_downloads(config_path):
-    config_downloads = {}
+def get_all_elems_from_dict(search_dict, search_key):
+    result = []
+    if isinstance(search_dict, dict):
+        for key in search_dict:
+            if key == search_key:
+                result.append(search_dict[key])
+            if isinstance(search_dict[key], dict):
+                result.extend(get_all_elems_from_dict(search_dict[key], search_key))
+    return result
+
+
+def get_config_downloads(config_path, config_downloads=None):
     config = read_json(config_path)
+
+    if config_downloads is None:
+        config_downloads = {}
 
     if 'metadata' in config and 'download' in config['metadata']:
         for resource in config['metadata']['download']:
-            resource_info = {}
-
             if isinstance(resource, str):
                 url = resource
-                resource_info['url'] = url
-                resource_info['subdir'] = ['']
-
-            elif isinstance(resource_info, dict):
+                sub_dir = ''
+            elif isinstance(resource, dict):
                 url = resource['url']
-                resource_info['url'] = url
+                sub_dir = resource['subdir'] if 'subdir' in resource else ''
 
-                if 'subdir' in resource:
-                    resource_info['subdir'] = [resource['subdir']]
-                else:
-                    resource_info['subdir'] = ['']
+            if url in config_downloads:
+                config_downloads[url]['subdir'] = list(set(config_downloads[url]['subdir'] +
+                                                           [sub_dir]))
+            else:
+                config_downloads[url] = {'url': url, 'subdir': [sub_dir]}
 
-            config_downloads[url] = resource_info
+    config_references = get_all_elems_from_dict(config, 'config_path')
+
+    for reference in config_references:
+        config_downloads = get_config_downloads(reference, config_downloads)
 
     return config_downloads
 
@@ -106,27 +118,28 @@ def download_resource(resource, download_path):
         download(dest_files, url)
 
 
-def download_resources(args):
-    if args.test:
-        download_path = root_path / 'tests' / 'download'
-    else:
-        download_path = root_path / 'download'
+def download_resources(config_path, args=None):
+    download_path = root_path / 'download'
 
-    if not args.all and not args.config:
-        log.error('You should provide either skill config path or -all flag')
-        sys.exit(1)
-    elif args.all:
-        downloads = get_configs_downloads()
-    else:
-        config_path = Path(args.config).resolve()
+    if args:
+        if args.test:
+            download_path = root_path / 'tests' / 'download'
+
+        if not args.all and not args.config:
+            log.error('You should provide either skill config path or -all flag')
+            sys.exit(1)
+        elif args.all:
+            downloads = get_configs_downloads()
+        else:
+            config_path = Path(args.config).resolve()
+            downloads = get_configs_downloads(config_path)
+    elif config_path:
+        config_path = Path(config_path).resolve()
         downloads = get_configs_downloads(config_path)
 
     download_path.mkdir(exist_ok=True)
 
     for url in downloads:
-        import pprint
-        pprint.pprint(downloads)
-
         resource = downloads[url]
         download_resource(resource, download_path)
 
@@ -134,7 +147,7 @@ def download_resources(args):
 def main():
     args = parser.parse_args()
     log.info("Downloading...")
-    download_resources(args)
+    download_resources(None, args)
     log.info("\nDownload successful!")
 
 
