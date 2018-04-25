@@ -82,9 +82,13 @@ def get_configs_downloads(config_path=None):
         config_downloads = get_config_downloads(config_path)
         for url in config_downloads:
             if url in all_downloads:
-                all_downloads[url]['compressed'] = config_downloads['compressed']
+
+                import pprint
+                pprint.pprint(config_downloads)
+
+                all_downloads[url]['compressed'] = config_downloads[url]['compressed']
                 all_downloads[url]['subdir'] = list(set(all_downloads[url]['subdir'] +
-                                                        config_downloads['subdir']))
+                                                        config_downloads[url]['subdir']))
             else:
                 all_downloads[url] = config_downloads[url]
 
