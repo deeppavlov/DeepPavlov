@@ -1,8 +1,8 @@
 {
   "dataset_reader": {
     "name": "morphotagger_dataset_reader",
-    "data_path": "morpho_tagger/UD2.0_source/ru_syntagrus-ud-test.conllu",
-    "data_types": ["test"]
+    "data_path": "UD2.0_source",
+    "language": "ru_syntagrus", "data_types": ["test"]
   },
   "dataset_iterator": {
     "name": "morphotagger_dataset"
@@ -22,8 +22,8 @@
         "name": "default_vocab",
         "level": "token",
         "special_tokens": ["PAD", "BEGIN", "END"],
-        "load_path": "morpho_tagger/UD2.0/tag_ru_syntagrus.dict",
-        "save_path": "morpho_tagger/UD2.0/tag_ru_syntagrus.dict"
+        "load_path": "morpho_tagger/UD2.0/hu/tag.dict",
+        "save_path": "morpho_tagger/UD2.0/hu/tag.dict"
       },
       {
         "id": "char_vocab",
@@ -31,8 +31,8 @@
         "min_freq": 3,
         "special_tokens": ["PAD", "BEGIN", "END"],
 		"level": "char",
-        "load_path": "morpho_tagger/UD2.0/char_ru_syntagrus.dict",
-        "save_path": "morpho_tagger/UD2.0/char_ru_syntagrus.dict"
+        "load_path": "morpho_tagger/UD2.0/hu/char.dict",
+        "save_path": "morpho_tagger/UD2.0/hu/char.dict"
       },
       {
         "in": ["x_processed"],
@@ -40,8 +40,8 @@
         "out": ["y_predicted"],
         "name": "morpho_tagger",
         "main": true,
-        "save_path": "morpho_tagger/UD2.0/ud_ru_syntagrus.hdf5",
-        "load_path": "morpho_tagger/UD2.0/ud_ru_syntagrus.hdf5",
+        "load_path": "morpho_tagger/UD2.0/hu/model.hdf5",
+        "save_path": "morpho_tagger/UD2.0/hu/model.hdf5",
         "tags": "#tag_vocab",
         "symbols": "#char_vocab",
         "verbose": 1,
@@ -50,13 +50,18 @@
         "char_highway_layers": 1, "highway_dropout": 0.0, "word_lstm_layers": 1,
         "char_filter_multiple": 50, "intermediate_dropout": 0.0,
         "word_dropout": 0.2, "lstm_dropout": 0.2, "regularizer": 0.01
+      },
+      {
+        "in": ["x", "y_predicted"],
+        "out": ["y_prettified"],
+        "name": "tag_output_prettifier",
+        "end": "\n"
       }
     ],
-    "out": ["y_predicted"]
+    "out": ["y_prettified"]
   },
-  "train": {
-    "test_best": true,
-    "batch_size": 16,
-    "metrics": ["per_token_accuracy"]
+  "predict": {
+    "batch_size": 32,
+    "outfile": "results/ud_hu_test.res"
   }
 }
