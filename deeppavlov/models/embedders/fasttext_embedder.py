@@ -62,6 +62,9 @@ class FasttextEmbedder(Component, Serializable):
         """
         return [self._encode(sentence, mean) for sentence in batch]
 
+    def __iter__(self):
+        yield from self.model.get_words()
+
     def _encode(self, sentence: str, mean):
         tokens = sentence.split()
         embedded_tokens = []

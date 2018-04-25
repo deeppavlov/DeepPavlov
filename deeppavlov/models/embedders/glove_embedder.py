@@ -53,8 +53,10 @@ class GloVeEmbedder(Component, Serializable):
             log.error('No pretrained GloVe model provided or provided load_path "{}" is incorrect.'
                       .format(self.load_path))
             sys.exit(1)
-
         return model
+
+    def __iter__(self):
+        yield from self.model.vocab
 
     @overrides
     def __call__(self, batch, *args, **kwargs):
