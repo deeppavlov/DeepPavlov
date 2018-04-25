@@ -86,6 +86,7 @@
       "telegram_utils": "Seq2SeqGoalOrientedBot"
     },
     "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
       "http://lnsigo.mipt.ru/export/deeppavlov_data/seq2seq_go_bot.tar.gz"
     ]
   }
