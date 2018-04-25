@@ -49,6 +49,12 @@ import deeppavlov.dataset_readers.insurance_reader
 import deeppavlov.dataset_iterators.ranking_iterator
 import deeppavlov.models.ranking.ranking_model
 import deeppavlov.models.ranking.metrics
+import deeppavlov.models.preprocessors.char_splitter
+import deeppavlov.models.preprocessors.mask
+import deeppavlov.models.preprocessors.assemble_embeddins_matrix
+import deeppavlov.models.preprocessors.capitalization
+import deeppavlov.models.ner.network_refactored
+import deeppavlov.models.preprocessors.item_getter
 
 import deeppavlov.metrics.accuracy
 import deeppavlov.metrics.fmeasure
