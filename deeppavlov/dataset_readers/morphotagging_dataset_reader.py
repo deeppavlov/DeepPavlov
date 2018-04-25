@@ -27,6 +27,11 @@ WORD_COLUMN, POS_COLUMN, TAG_COLUMN = 1, 3, 5
 
 log = get_logger(__name__)
 
+def get_language(filepath):
+    """
+    Extracts language from typical UD filename
+    """
+    return filepath.split("-")[0]
 
 def read_infile(infile, word_column=WORD_COLUMN, pos_column=POS_COLUMN,
                 tag_column=TAG_COLUMN, max_sents=-1, read_only_words=False):
@@ -67,7 +72,7 @@ class MorphotaggerDatasetReader(DatasetReader):
     Class to read training datasets in UD format
     """
 
-    URL = 'http://lnsigo.mipt.ru/export/datasets/ru_syntagrus-ud.tar.gz'
+    URL = 'http://lnsigo.mipt.ru/export/datasets/UD2.0_source/'
 
     def read(self, data_path, language=None, data_types=None, **kwargs):
         """
@@ -95,29 +100,39 @@ class MorphotaggerDatasetReader(DatasetReader):
                 is_file = (len(data_types) == 1)
             if is_file:
                 # path to a single file
-                data_path = [data_path]
+                data_path, reserve_data_path = [data_path], None
             else:
                 # path to data directory
                 if language is None:
                     raise ValueError("You must implicitly provide language "
                                      "when providing data directory as source")
+                reserve_data_path = data_path
                 data_path = [data_path / "{}-ud-{}.conllu".format(language, mode)
                              for mode in data_types]
+                reserve_data_path = [
+                    reserve_data_path / language / "{}-ud-{}.conllu".format(language, mode)
+                    for mode in data_types]
         else:
             data_path = [Path(data_path) for data_path in data_path]
+            reserve_data_path = None
         if len(data_path) != len(data_types):
             print(str(data_path))
             print(data_types)
             raise ValueError("The number of input files in data_path and data types "
                              "in data_types must be equal")
         has_missing_files = any(not filepath.exists() for filepath in data_path)
+        if has_missing_files and reserve_data_path is not None:
+            has_missing_files = any(not filepath.exists() for filepath in reserve_data_path)
+            if not has_missing_files:
+                data_path = reserve_data_path
         if has_missing_files:
             # Files are downloaded from the Web repository
-            # TO DO: loading UD datasets for several languages, how to set dir_path
             dir_path = data_path[0].parent
-            log.info('[downloading ru_syntagrus from {} to {}]'.format(self.URL, dir_path))
+            language = language or get_language(data_path[0].parts[-1])
+            url = self.URL + "{}.tar.gz".format(language)
+            log.info('[downloading data from {} to {}]'.format(url, dir_path))
             dir_path.mkdir(exist_ok=True, parents=True)
-            download_decompress(self.URL, dir_path)
+            download_decompress(url, dir_path)
             mark_done(dir_path)
         for filepath in data_path:
             if not filepath.exists():
