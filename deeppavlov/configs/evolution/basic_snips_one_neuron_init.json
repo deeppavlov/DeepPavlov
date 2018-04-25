@@ -52,8 +52,8 @@
         ],
         "main": true,
         "name": "evolution_classification_model",
-        "save_path": "/home/dilyara.baymurzina/evolution_data/snips_classification/start_with_one_neuron",
-        "load_path": "/home/dilyara.baymurzina/evolution_data/snips_classification/start_with_one_neuron",
+        "save_path": "/home/dilyara.baymurzina/evolution_data/snips_classification/one_neuron_init",
+        "load_path": "/home/dilyara.baymurzina/evolution_data/snips_classification/one_neuron_init",
         "classes": "#classes_vocab.keys()",
         "to_evolve": true,
         "basic_layers_params": {
@@ -126,15 +126,6 @@
               "discrete": true
             },
             "padding": "same"
-          },
-          "Attention": {
-            "context_length": {
-              "range": [
-                50,
-                200
-              ],
-              "discrete": true
-            }
           }
         },
         "confident_threshold": {
@@ -172,8 +163,8 @@
   "train": {
     "epochs": {
       "range": [
-        5,
-        6
+        100,
+        1000
       ],
       "discrete": true
     },

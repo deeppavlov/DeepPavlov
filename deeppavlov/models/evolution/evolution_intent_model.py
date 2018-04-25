@@ -55,7 +55,8 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.opt["binary_mask"] = np.array(self.opt["binary_mask"])
-        get_graph_and_plot(self.opt["nodes"], self.opt["binary_mask"], self.opt["n_types"], path=str(self.save_path.resolve()))
+        get_graph_and_plot(self.opt["nodes"], self.opt["binary_mask"], self.opt["n_types"], 
+            path=str(self.save_path.resolve().parent))
 
     def get_node_output(self, node_id, dg, params, edges_outputs=None, inp=None):
         if inp is None:
@@ -115,6 +116,14 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
             Un-compiled model
         """
         inp = Input(shape=(params['text_size'], params['embedding_size']))
+
+        if np.sum(params["binary_mask"]) == 0:
+            output = Dense(1, activation=None)(inp)
+            output = GlobalMaxPooling1D()(output)
+            output = Dense(self.n_classes, activation=None)(output)
+            act_output = Activation('sigmoid')(output)
+            model = Model(inputs=inp, outputs=act_output)
+            return model
 
         dg = get_digraph_from_binary_mask(params["nodes"], np.array(params["binary_mask"]))
         sources, sinks, isolates = find_sources_and_sinks(dg)

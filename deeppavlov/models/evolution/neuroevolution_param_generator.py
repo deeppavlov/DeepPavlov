@@ -534,6 +534,6 @@ class NetworkAndParamsEvolution:
 
     def sample_one_neuron_binary_mask(self):
         mask = np.zeros((self.total_nodes * self.total_nodes))
-        mask[0] = 1  # make sure that Dense is the first in the config
+        # mask[0] = 1  # make sure that Dense is the first in the config
 
         return mask.reshape((self.total_nodes, self.total_nodes))
