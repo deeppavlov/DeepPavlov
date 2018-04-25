@@ -20,3 +20,5 @@ flask==0.12.2
 flasgger==0.6.6
 flask_cors==3.0.3
 scipy==1.0.0
+pymorphy2==0.8
+https://files.pythonhosted.org/packages/7c/9b/358faaff410f65a4ad159275e897b5956dcb20576c5b8e764b971c1634d7/pymorphy2_dicts_ru-2.4.404381.4453942-py2.py3-none-any.whl
