@@ -35,7 +35,7 @@ tqdm.monitor_interval = 0
 
 
 def download(dest_file_paths, source_url, force_download=True):
-    """Download a file from URL
+    """Download a file from URL to one or several target locations
 
     Args:
         dest_file_paths: path or list of paths to the file destination files (including file name)
@@ -77,7 +77,7 @@ def download(dest_file_paths, source_url, force_download=True):
     while len(dest_file_paths) > 0:
         dest_file_path = dest_file_paths.pop()
 
-        if force_download or dest_file_path.exists():
+        if force_download or not dest_file_path.exists():
             dest_file_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(str(first_dest_file_path), str(dest_file_path))
         else:
@@ -124,7 +124,8 @@ def ungzip(file_path, extract_folder=None):
 
 
 def download_decompress(url, download_path, extract_paths=None):
-    """Download and extract .tar.gz or .gz file. The archive is deleted after extraction.
+    """Download and extract .tar.gz or .gz file to one or several target locations.
+    The archive is deleted if extraction was successful.
 
     Args:
         url: URL for file downloading
