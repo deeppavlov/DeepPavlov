@@ -26,12 +26,12 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-def build_model_from_config(config, mode='infer', load_trained=False):
+def build_model_from_config(config, mode='infer', load_trained=False, as_component=False):
     set_deeppavlov_root(config)
     if 'chainer' in config:
         model_config = config['chainer']
 
-        model = Chainer(model_config['in'], model_config['out'], model_config.get('in_y'))
+        model = Chainer(model_config['in'], model_config['out'], model_config.get('in_y'), as_component=as_component)
 
         for component_config in model_config['pipe']:
             if load_trained and ('fit_on' in component_config or 'in_y' in component_config):
@@ -117,3 +117,39 @@ def interact_model(config_path):
             pred = model([args])
 
         print('>>', *pred)
+
+
+def predict_on_stream(config_path, batch_size=1, file_path=None):
+    import sys
+    import json
+    from itertools import islice
+
+    if file_path is None or file_path == '-':
+        if sys.stdin.isatty():
+            raise RuntimeError('To process data from terminal please use interact mode')
+        f = sys.stdin
+    else:
+        f = open(file_path)
+
+    config = read_json(config_path)
+    model: Chainer = build_model_from_config(config)
+
+    args_count = len(model.in_x)
+    while True:
+        batch = (l.strip() for l in islice(f, batch_size*args_count))
+        if args_count > 1:
+            batch = zip(*[batch]*args_count)
+        batch = list(batch)
+
+        if not batch:
+            break
+
+        for res in model(batch):
+            if type(res).__module__ == 'numpy':
+                res = res.tolist()
+            if not isinstance(res, str):
+                res = json.dumps(res, ensure_ascii=False)
+            print(res, flush=True)
+
+    if f is not sys.stdin:
+        f.close()
