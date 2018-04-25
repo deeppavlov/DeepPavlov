@@ -45,7 +45,7 @@ PARAMS = {# "error_model": {("error_model/brillmoore_wikitypos_en.json", "error_
           # "squad": {("squad/squad.json", "squad_model", ALL_MODES): []},
           # "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): []},
           # "odqa": {("odqa/ranker_test.json", "odqa", ALL_MODES): []}
-          "morpho_tagger": {("morpho_tagger/train_config.json", "morpho_tagger", ALL_MODES): []}
+          "morpho_tagger/UD2.0/hu": {("morpho_tagger/UD2.0/hu/train_config.json", "morpho_tagger", ALL_MODES): []}
           }
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
@@ -69,7 +69,7 @@ def setup_module():
     test_configs_path.mkdir(parents=True)
 
     for m_name, conf_dict in PARAMS.items():
-        test_configs_path.joinpath(m_name).mkdir()
+        test_configs_path.joinpath(m_name).mkdir(parents=True)
         for (conf_file, _, _), _ in conf_dict.items():
             with (src_dir / conf_file).open() as fin:
                 config = json.load(fin)
