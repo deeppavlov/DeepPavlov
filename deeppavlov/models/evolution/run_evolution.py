@@ -112,7 +112,7 @@ result_table.loc[:, order].to_csv(result_file, index=False, sep='\t')
 # EVOLUTION starts here!
 evolution = NetworkAndParamsEvolution(n_layers=N_LAYERS, n_types=N_TYPES,
                                       population_size=POPULATION_SIZE,
-                                      p_crossover=1., crossover_power=0.5,
+                                      p_crossover=0.1, crossover_power=0.5,
                                       p_mutation=0.5, mutation_power=0.1,
                                       key_model_to_evolve="to_evolve",
                                       key_basic_layers="basic_layers_params",

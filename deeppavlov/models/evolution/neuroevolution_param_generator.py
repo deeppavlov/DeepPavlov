@@ -526,7 +526,7 @@ class NetworkAndParamsEvolution:
         # return np.random.randint(0, high=2, size=self.binary_mask_template.shape).tolist()
         # return (1 * (np.log(np.random.random(size=self.binary_mask_template.shape)) > -0.2)).tolist()
         ones = np.random.choice(self.total_nodes * self.total_nodes,
-                                size=max(1, int(np.random.random() * self.total_nodes)))
+                                size=max(1, int(0.5 * np.random.random() * self.total_nodes)))
         mask = np.zeros((self.total_nodes * self.total_nodes))
         mask[ones] = 1
         # returns NUMPY 2D ARRAY!
