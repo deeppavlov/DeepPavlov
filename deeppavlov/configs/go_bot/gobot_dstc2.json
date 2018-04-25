@@ -21,20 +21,6 @@
         "load_path": "vocabs/token.dict"
       },
       {
-        "id": "word_vocab",
-        "name": "default_vocab",
-        "level": "token",
-        "save_path": "vocabs/word.dict",
-        "load_path": "vocabs/word.dict"
-      },
-      {
-        "id": "classes_vocab",
-        "name": "default_vocab",
-        "level": "token",
-        "save_path": "vocabs/classes.dict",
-        "load_path": "vocabs/classes.dict"
-      },
-      {
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],
@@ -55,7 +41,7 @@
         "network_parameters": {
           "load_path": "gobot_dstc2/model",
           "save_path": "gobot_dstc2/model",
-          "learning_rate": 0.002,
+          "learning_rate": 0.003,
           "dropout_rate": 0.8,
           "hidden_size": 128,
           "dense_size": 64

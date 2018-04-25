@@ -21,34 +21,6 @@
         "load_path": "vocabs/token.dict"
       },
       {
-        "id": "word_vocab",
-        "name": "default_vocab",
-        "level": "token",
-        "save_path": "vocabs/word.dict",
-        "load_path": "vocabs/word.dict"
-      },
-      {
-        "id": "tag_vocab",
-        "name": "default_vocab",
-        "level": "token",
-        "save_path": "vocabs/tag.dict",
-        "load_path": "vocabs/tag.dict"
-      },
-      {
-        "id": "char_vocab",
-        "name": "default_vocab",
-        "level": "char",
-        "save_path": "vocabs/char.dict",
-        "load_path": "vocabs/char.dict"
-      },
-      {
-        "id": "classes_vocab",
-        "name": "default_vocab",
-        "level": "token",
-        "save_path": "vocabs/classes.dict",
-        "load_path": "vocabs/classes.dict"
-      },
-      {
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],
