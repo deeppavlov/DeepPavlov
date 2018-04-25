@@ -76,8 +76,6 @@ class GoalOrientedBot(NNModel):
         self.n_classes = 0
         if callable(self.intent_classifier):
             # intent_classifier returns y_labels, y_probs, y_classes
-            print("intents result = {}".format(self.intent_classifier(["hi", "test"])))
-
             self.n_classes = len(self.intent_classifier(["hi"])[2][0])
 
         self.network = self._init_network(network_parameters)
