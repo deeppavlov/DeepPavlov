@@ -16,10 +16,16 @@ limitations under the License.
 
 from pathlib import Path
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.utils import download_decompress, mark_done
+from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.data.dataset_reader import DatasetReader
 
+import sys
 
 WORD_COLUMN, POS_COLUMN, TAG_COLUMN = 1, 3, 5
+
+
+log = get_logger(__name__)
 
 
 def read_infile(infile, word_column=WORD_COLUMN, pos_column=POS_COLUMN,
@@ -61,6 +67,8 @@ class MorphotaggerDatasetReader(DatasetReader):
     Class to read training datasets in UD format
     """
 
+    URL = 'http://lnsigo.mipt.ru/export/datasets/ru_syntagrus-ud.tar.gz'
+
     def read(self, data_path, language=None, data_types=None, **kwargs):
         """
         Reads UD dataset from data_path.
@@ -81,7 +89,11 @@ class MorphotaggerDatasetReader(DatasetReader):
         if isinstance(data_path, str):
             data_path = Path(data_path)
         if isinstance(data_path, Path):
-            if data_path.is_file():
+            if data_path.exists:
+                is_file = data_path.is_file()
+            else:
+                is_file = (len(data_types) == 1)
+            if is_file:
                 # path to a single file
                 data_path = [data_path]
             else:
@@ -94,8 +106,19 @@ class MorphotaggerDatasetReader(DatasetReader):
         else:
             data_path = [Path(data_path) for data_path in data_path]
         if len(data_path) != len(data_types):
+            print(str(data_path))
+            print(data_types)
             raise ValueError("The number of input files in data_path and data types "
                              "in data_types must be equal")
+        has_missing_files = any(not filepath.exists() for filepath in data_path)
+        if has_missing_files:
+            # Files are downloaded from the Web repository
+            # TO DO: loading UD datasets for several languages, how to set dir_path
+            dir_path = data_path[0].parent
+            log.info('[downloading ru_syntagrus from {} to {}]'.format(self.URL, dir_path))
+            dir_path.mkdir(exist_ok=True, parents=True)
+            download_decompress(self.URL, dir_path)
+            mark_done(dir_path)
         for filepath in data_path:
             if not filepath.exists():
                 raise ValueError("No file {} exists".format(filepath))
