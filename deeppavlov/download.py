@@ -38,8 +38,6 @@ parser.add_argument('-all', action='store_true',
                          " available on disk.")
 parser.add_argument('-test', action='store_true',
                     help="Turn test mode")
-parser.add_argument('-force', action='store_true',
-                    help="Overwrite existing downloaded files")
 
 
 def get_config_downloads(config_path):
@@ -48,21 +46,21 @@ def get_config_downloads(config_path):
 
     if 'metadata' in config and 'download' in config['metadata']:
         for resource in config['metadata']['download']:
-            url = resource['url']
+            resource_info = {}
 
-            resource_info = {
-                'url': url,
-                'compressed': False,
-                'subdir': []
-            }
+            if isinstance(resource, str):
+                url = resource
+                resource_info['url'] = url
+                resource_info['subdir'] = ['']
 
-            if 'compressed' in resource:
-                resource_info['compressed'] = bool(resource['compressed'])
+            elif isinstance(resource_info, dict):
+                url = resource['url']
+                resource_info['url'] = url
 
-            if 'subdir' in resource:
-                resource_info['subdir'].append(resource['subdir'])
-            else:
-                resource_info['subdir'].append('')
+                if 'subdir' in resource:
+                    resource_info['subdir'] = [resource['subdir']]
+                else:
+                    resource_info['subdir'] = ['']
 
             config_downloads[url] = resource_info
 
@@ -82,11 +80,6 @@ def get_configs_downloads(config_path=None):
         config_downloads = get_config_downloads(config_path)
         for url in config_downloads:
             if url in all_downloads:
-
-                import pprint
-                pprint.pprint(config_downloads)
-
-                all_downloads[url]['compressed'] = config_downloads[url]['compressed']
                 all_downloads[url]['subdir'] = list(set(all_downloads[url]['subdir'] +
                                                         config_downloads[url]['subdir']))
             else:
@@ -95,48 +88,22 @@ def get_configs_downloads(config_path=None):
     return all_downloads
 
 
-def get_destination_paths(url, download_path, sub_dir, compressed=False):
-    sub_path = download_path.joinpath(sub_dir)
-
-    if compressed:
-        dest_path = sub_path.joinpath(url.split('/')[-1].split('.')[0])
-        dest_paths = (dest_path, )
-    else:
-        dest_path = sub_path
-        dest_file = dest_path.joinpath(url.split('/')[-1])
-        dest_paths = (dest_path, dest_file)
-
-    return dest_paths
-
-
-def download_resource(resource, download_path, force_donwload=False):
+def download_resource(resource, download_path):
     url = resource['url']
-    compressed = resource['compressed']
-    first_sub_dir = resource['subdir'].pop()
+    sub_dirs = resource['subdir']
+    dest_paths = []
 
-    first_dest_paths = get_destination_paths(url, download_path, first_sub_dir, compressed)
-    first_dest_dir = first_dest_paths[0]
-    if len(first_dest_paths) > 1:
-        first_dest_file = first_dest_paths[1]
+    for sub_dir in sub_dirs:
+        dest_path = download_path.joinpath(sub_dir)
+        dest_paths.append(dest_path)
 
-    if force_donwload or (not first_dest_dir.exists()):
-        if first_dest_dir.exists():
-            shutil.rmtree(str(first_dest_dir), ignore_errors=True)
-
-        if compressed:
-            download_decompress(url, first_dest_dir)
-        else:
-            first_dest_dir.mkdir()
-            download(first_dest_file, url)
-
-    for sub_dir in resource['subdir']:
-        dest_paths = get_destination_paths(url, download_path, sub_dir, compressed)
-        dest_dir = dest_paths[0]
-
-        if force_donwload or not dest_dir.exists():
-            if dest_dir.exists():
-                shutil.rmtree(str(dest_dir), ignore_errors=True)
-            shutil.copy(str(first_dest_dir), str(dest_dir))
+    if url.endswith(('.tar.gz', '.gz', '.zip')):
+        download_path = dest_paths[0].parent
+        download_decompress(url, download_path, dest_paths)
+    else:
+        file_name = url.split('/')[-1]
+        dest_files = [dest_path / file_name for dest_path in dest_paths]
+        download(dest_files, url)
 
 
 def download_resources(args):
@@ -156,10 +123,12 @@ def download_resources(args):
 
     download_path.mkdir(exist_ok=True)
 
-    force_download = args.force
     for url in downloads:
+        import pprint
+        pprint.pprint(downloads)
+
         resource = downloads[url]
-        download_resource(resource, download_path, force_donwload=force_download)
+        download_resource(resource, download_path)
 
 
 def main():
