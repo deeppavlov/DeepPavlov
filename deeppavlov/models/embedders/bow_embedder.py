@@ -21,18 +21,18 @@ from deeppavlov.core.models.component import Component
 
 
 @register('bow')
-class BoWEncoder(Component):
+class BoWEmbedder(Component):
 
     def __init__(self, *args, **kwargs):
         pass
 
-    def _encode(self, utterance, vocab):
+    def _encode(self, tokens, vocab):
         bow = np.zeros([len(vocab)], dtype=np.int32)
-        for word in utterance.split(' '):
-            if word in vocab:
-                idx = vocab[word]
+        for token in tokens:
+            if token in vocab:
+                idx = vocab[token]
                 bow[idx] += 1
         return bow
 
     def __call__(self, batch, vocab, *args):
-        return [self._encode(utterance, vocab) for utterance in batch]
+        return [self._encode(sample, vocab) for sample in batch]

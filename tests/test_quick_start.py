@@ -25,7 +25,10 @@ PARAMS = {"error_model": {("error_model/brillmoore_wikitypos_en.json", "error_mo
                                   ("datha", "data")
                               ],
                           ("error_model/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES): []},
-          "go_bot": {("go_bot/gobot_dstc2.json", "go_bot", ALL_MODES): []},
+          "go_bot": {("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [],
+                     ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [],
+                     ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [],
+                     ("go_bot/gobot_dstc2_all.json", "gobot_dstc2_all", ('TI',)): []},
           "intents": {("intents/intents_dstc2.json", "intents", ALL_MODES):  []},
           "snips": {("intents/intents_snips.json", "intents", ('TI',)): []},
           "sample": {("intents/intents_sample_csv.json", "intents", ('TI',)): [],
