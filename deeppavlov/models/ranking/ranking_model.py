@@ -1,11 +1,25 @@
+"""
+Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 from overrides import overrides
 from copy import deepcopy
 import inspect
-import sys
 from functools import reduce
 import operator
 import numpy as np
-import nltk
 from nltk.tokenize import sent_tokenize, word_tokenize
 
 from deeppavlov.core.common.attributes import check_attr_true
@@ -14,7 +28,6 @@ from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.ranking.ranking_network import RankingNetwork
 from deeppavlov.models.ranking.dict import InsuranceDict
 from deeppavlov.models.ranking.emb_dict import Embeddings
-from deeppavlov.core.commands.utils import get_deeppavlov_root
 from deeppavlov.core.common.log import get_logger
 
 
@@ -43,8 +56,6 @@ class RankingModel(NNModel):
         # if it doesn't exist
         super().__init__(save_path=save_path, load_path=load_path,
                          train_now=train_now, mode=mode)
-
-        nltk.download('punkt', download_dir=str(get_deeppavlov_root().resolve()))
 
         opt = deepcopy(kwargs)
         self.train_now = opt['train_now']
@@ -88,7 +99,6 @@ class RankingModel(NNModel):
         self._net.save(self.save_path)
         self.set_embeddings()
         self.dict.save()
-
 
     @check_attr_true('train_now')
     def train_on_batch(self, x, y):
@@ -173,7 +183,6 @@ class RankingModel(NNModel):
         if self.dict.context2emb_vocab[0] is not None:
             for i in range(len(self.dict.context2emb_vocab)):
                 self.dict.context2emb_vocab[i] = None
-
 
     def shutdown(self):
         pass
