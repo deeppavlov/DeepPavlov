@@ -30,7 +30,7 @@ PARAMS = {# "error_model": {("error_model/brillmoore_wikitypos_en.json", "error_
 #           "snips": {("intents/intents_snips.json", "intents", ('TI',)): []},
 #           "sample": {("intents/intents_sample_csv.json", "intents", ('TI',)): [],
 #                     ("intents/intents_sample_json.json", "intents", ('TI',)): []},
-          "ner": {("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [],
+#           "ner": {("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [],
                   # ("ner/ner_dstc2.json", "ner", ALL_MODES): [],
                   # ("ner/ner_ontonotes_emb.json", "ner_ontonotes", ALL_MODES): [],
                   # ("ner/ner_ontonotes.json", "ner_ontonotes", ('DE', 'IP')): [],
@@ -40,11 +40,12 @@ PARAMS = {# "error_model": {("error_model/brillmoore_wikitypos_en.json", "error_
                   #         ("in the west part", "{'area': 'west'}"),
                   #         ("moderate price range", "{'pricerange': 'moderate'}")
                   #     ]
-                  },
+              #    },
           # "ranking": {("ranking/insurance_config.json", "ranking", ALL_MODES): []},
           # "squad": {("squad/squad.json", "squad_model", ALL_MODES): []},
           # "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): []},
           # "odqa": {("odqa/ranker_test.json", "odqa", ALL_MODES): []}
+          "morpho_tagger": {("morpho_tagger/train_config.json", "morpho_tagger", ALL_MODES): []}
           }
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
@@ -142,7 +143,7 @@ class TestQuickStart(object):
             model_path = download_path / model_dir
             shutil.rmtree(str(model_path),  ignore_errors=True)
             s, exitstatus = pexpect.run("python3 -m deeppavlov.deep train " + str(c), timeout=None, withexitstatus=True)
-            assert exitstatus == 0, f"Training process of {model_dir} returned non-zero exit code\n" + str(s).splitlines()
+            assert exitstatus == 0, f"Training process of {model_dir} returned non-zero exit code\n" + s.decode("utf8")
             self.interact(c, model_dir)
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
