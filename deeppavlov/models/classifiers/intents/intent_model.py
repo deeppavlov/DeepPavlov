@@ -26,8 +26,7 @@ from keras.regularizers import l2
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.keras_model import KerasModel
-from deeppavlov.models.classifiers.intents import metrics as metrics_file
-from deeppavlov.models.classifiers.intents.utils import labels2onehot, log_metrics, proba2labels
+from deeppavlov.models.classifiers.intents.utils import labels2onehot, proba2labels
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.classifiers.intents.utils import md5_hashsum
 from deeppavlov.models.tokenizers.nltk_tokenizer import NLTKTokenizer
@@ -194,7 +193,9 @@ class KerasIntentModel(KerasModel):
             return preds
         else:
             labels = proba2labels(preds, confident_threshold=self.opt['confident_threshold'], classes=self.classes)
-            return labels, preds, [self.classes for _ in range(len(preds))]
+            # return labels, preds, [self.classes for _ in range(len(preds))]
+            return labels, [dict(zip(self.classes, preds[i]))
+                            for i in range(preds.shape[0])]
 
     def cnn_model(self, params):
         """
