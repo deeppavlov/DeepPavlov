@@ -59,8 +59,7 @@
         ],
         "out": [
           "y_labels",
-          "y_probas",
-          "y_classes"
+          "y_probas_dict"
         ],
         "main": true,
         "name": "intent_model",
@@ -90,15 +89,16 @@
     ],
     "out": [
       "y_labels",
-      "y_probas",
-      "y_classes"
+      "y_probas_dict"
     ]
   },
   "train": {
     "epochs": 100,
     "batch_size": 64,
     "metrics": [
-      "sets_accuracy"
+      "classification_accuracy",
+      "classification_f1",
+      "classification_roc_auc"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,

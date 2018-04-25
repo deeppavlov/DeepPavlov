@@ -60,8 +60,7 @@
         ],
         "out": [
           "y_labels",
-          "y_probas",
-          "y_classes"
+          "y_probas_dict"
         ],
         "main": true,
         "name": "intent_model",
@@ -91,8 +90,7 @@
     ],
     "out": [
       "y_labels",
-      "y_probas",
-      "y_classes"
+      "y_probas_dict"
     ]
   },
   "train": {
