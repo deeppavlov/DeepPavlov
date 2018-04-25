@@ -20,8 +20,8 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
 
-@register('item_getter')
-class ItemGetter(Component):
+@register('field_getter')
+class FieldGetter(Component):
     def __init__(self, field, *args, **kwargs):
         self.field = field
 

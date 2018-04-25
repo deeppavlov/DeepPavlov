@@ -14,15 +14,19 @@
       {
         "in": ["x"],
         "field": "text",
-        "name": "item_getter",
+        "name": "field_getter",
         "out": ["x_text"]
       },
       {
+        "in": ["x_text"],
+        "name": "split_tokenizer",
+        "out": ["x_text_tokens"]
+      },
+      {
         "id": "token_vocab",
-        "fit_on": ["x_text"],
-        "name": "default_vocab",
+        "fit_on": ["x_text_tokens"],
+        "name": "dialog_vocab",
         "level": "token",
-        "tokenizer": { "name": "split_tokenizer" },
         "save_path": "vocabs/token.dict",
         "load_path": "vocabs/token.dict"
       },

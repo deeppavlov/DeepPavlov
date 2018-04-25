@@ -54,7 +54,7 @@ import deeppavlov.models.preprocessors.mask
 import deeppavlov.models.preprocessors.assemble_embeddins_matrix
 import deeppavlov.models.preprocessors.capitalization
 import deeppavlov.models.ner.network_refactored
-import deeppavlov.models.preprocessors.item_getter
+import deeppavlov.models.preprocessors.field_getter
 
 import deeppavlov.metrics.accuracy
 import deeppavlov.metrics.fmeasure
