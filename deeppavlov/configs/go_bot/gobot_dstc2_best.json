@@ -21,34 +21,6 @@
         "load_path": "vocabs/token.dict"
       },
       {
-        "id": "word_vocab",
-        "name": "default_vocab",
-        "level": "token",
-        "save_path": "vocabs/word.dict",
-        "load_path": "vocabs/word.dict"
-      },
-      {
-        "id": "tag_vocab",
-        "name": "default_vocab",
-        "level": "token",
-        "save_path": "vocabs/tag.dict",
-        "load_path": "vocabs/tag.dict"
-      },
-      {
-        "id": "char_vocab",
-        "name": "default_vocab",
-        "level": "char",
-        "save_path": "vocabs/char.dict",
-        "load_path": "vocabs/char.dict"
-      },
-      {
-        "id": "classes_vocab",
-        "name": "default_vocab",
-        "level": "token",
-        "save_path": "vocabs/classes.dict",
-        "load_path": "vocabs/classes.dict"
-      },
-      {
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],
@@ -83,22 +55,7 @@
           }
         },
         "slot_filler": {
-          "name": "dstc_slotfilling",
-          "save_path": "ner/dstc_ner_model",
-          "load_path": "ner/dstc_ner_model",
-          "word_vocab": "#word_vocab",
-          "tag_vocab": "#tag_vocab",
-          "char_vocab": "#char_vocab",
-          "filter_width": 7,
-          "embeddings_dropout": true,
-          "n_filters": [
-            64,
-            64
-          ],
-          "token_embeddings_dim": 64,
-          "char_embeddings_dim": 32,
-          "use_batch_norm": true,
-          "use_crf": true
+          "config_path": "../deeppavlov/configs/ner/slotfill_dstc2.json"
         },
         "intent_classifier": null,
         "embedder": {

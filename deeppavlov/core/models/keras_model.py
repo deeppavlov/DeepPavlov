@@ -16,6 +16,7 @@ limitations under the License.
 
 from abc import abstractmethod
 from pathlib import Path
+from copy import deepcopy, copy
 
 import tensorflow as tf
 import keras.metrics
@@ -41,7 +42,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
     Class builds keras model with tensorflow backend
     """
 
-    def __init__(self, opt: Dict, **kwargs):
+    def __init__(self, **kwargs):
         """
         Initialize model using parameters from opt
         Args:
@@ -49,10 +50,11 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
             *args:
             **kwargs:
         """
-        self.opt = opt
-        save_path = kwargs.get('save_path', None)
-        load_path = kwargs.get('load_path', None)
+        self.opt = copy(kwargs)
+        save_path = self.opt.get('save_path', None)
+        load_path = self.opt.get('load_path', None)
         url = self.opt.get('url', None)
+        self.model = None
 
         super().__init__(save_path=save_path,
                          load_path=load_path,
@@ -73,11 +75,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         config.gpu_options.visible_device_list = '0'
         return tf.Session(config=config)
 
-    def init_model_from_scratch(self, model_name, optimizer_name,
-                                lr, decay, loss_name, metrics_names=None, add_metrics_file=None,
-                                loss_weights=None,
-                                sample_weight_mode=None, weighted_metrics=None,
-                                target_tensors=None):
+    def init_model_from_scratch(self, model_name, optimizer_name, loss_name, lear_rate=None, lear_rate_decay=None):
         """
         Initialize model from scratch with given params
         Args:
@@ -86,18 +84,12 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
             lr: learning rate
             decay: learning rate decay
             loss_name: loss function name (from keras.losses)
-            metrics_names: names of metrics (from keras.metrics) as one string
-            add_metrics_file: file with additional metrics functions
-            loss_weights: optional parameter as in keras.model.compile
-            sample_weight_mode: optional parameter as in keras.model.compile
-            weighted_metrics: optional parameter as in keras.model.compile
-            target_tensors: optional parameter as in keras.model.compile
 
         Returns:
             compiled model with given network and learning parameters
         """
         log.info("[initializing `{}` from scratch]".format(self.__class__.__name__))
-
+        print(model_name)
         model_func = getattr(self, model_name, None)
         if callable(model_func):
             model = model_func(params=self.opt)
@@ -106,41 +98,29 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
 
         optimizer_func = getattr(keras.optimizers, optimizer_name, None)
         if callable(optimizer_func):
-            optimizer_ = optimizer_func(lr=lr, decay=decay)
+            if not(lear_rate is None):
+                if not(lear_rate_decay is None):
+                    optimizer_ = optimizer_func(lr=lear_rate, decay=lear_rate_decay)
+                else:
+                    optimizer_ = optimizer_func(lr=lear_rate)
+            elif not(lear_rate_decay is None):
+                optimizer_ = optimizer_func(decay=lear_rate_decay)
+            else:
+                optimizer_ = optimizer_func()
         else:
-            raise AttributeError("Optimizer {} is not callable".format(optimizer_name))
+            raise AttributeError("Optimizer {} is not defined in `keras.optimizers`".format(optimizer_name))
 
         loss_func = getattr(keras.losses, loss_name, None)
         if callable(loss_func):
             loss = loss_func
         else:
-            raise AttributeError("Loss {} is not defined".format(loss_name))
+            raise AttributeError("Loss {} is not defined in `keras.losses`".format(loss_name))
 
-        metrics_funcs = []
-        for i in range(len(metrics_names)):
-            metrics_func = getattr(keras.metrics, metrics_names[i], None)
-            if callable(metrics_func):
-                metrics_funcs.append(metrics_func)
-            else:
-                metrics_func = getattr(add_metrics_file, metrics_names[i], None)
-                if callable(metrics_func):
-                    metrics_funcs.append(metrics_func)
-                else:
-                    raise AttributeError("Metric {} is not defined".format(metrics_names[i]))
-
-        model.compile(optimizer=optimizer_,
-                      loss=loss,
-                      metrics=metrics_funcs,
-                      loss_weights=loss_weights,  # None
-                      sample_weight_mode=sample_weight_mode,  # None
-                      weighted_metrics=weighted_metrics,  # None
-                      target_tensors=target_tensors)  # None
+        model.compile(optimizer=optimizer_, loss=loss)
         return model
 
     @overrides
-    def load(self, model_name, optimizer_name,
-             lr, decay, loss_name, metrics_names=None, add_metrics_file=None, loss_weights=None,
-             sample_weight_mode=None, weighted_metrics=None, target_tensors=None):
+    def load(self, model_name, optimizer_name, loss_name, lear_rate=None, lear_rate_decay=None):
         """
         Initialize model from saved params and weights
         Args:
@@ -149,12 +129,6 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
             lr: learning rate
             decay: learning rate decay
             loss_name: loss function name (from keras.losses)
-            metrics_names: names of metrics (from keras.metrics) as one string
-            add_metrics_file: file with additional metrics functions
-            loss_weights: optional parameter as in keras.model.compile
-            sample_weight_mode: optional parameter as in keras.model.compile
-            weighted_metrics: optional parameter as in keras.model.compile
-            target_tensors: optional parameter as in keras.model.compile
 
         Returns:
             model with loaded weights and network parameters from files
@@ -184,9 +158,17 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
 
                 optimizer_func = getattr(keras.optimizers, optimizer_name, None)
                 if callable(optimizer_func):
-                    optimizer_ = optimizer_func(lr=lr, decay=decay)
+                    if not (lear_rate is None):
+                        if not (lear_rate_decay is None):
+                            optimizer_ = optimizer_func(lr=lear_rate, decay=lear_rate_decay)
+                        else:
+                            optimizer_ = optimizer_func(lr=lear_rate)
+                    elif not (lear_rate_decay is None):
+                        optimizer_ = optimizer_func(decay=lear_rate_decay)
+                    else:
+                        optimizer_ = optimizer_func()
                 else:
-                    raise AttributeError("Optimizer {} is not callable".format(optimizer_name))
+                    raise AttributeError("Optimizer {} is not defined in `keras.optimizers`".format(optimizer_name))
 
                 loss_func = getattr(keras.losses, loss_name, None)
                 if callable(loss_func):
@@ -194,45 +176,14 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
                 else:
                     raise AttributeError("Loss {} is not defined".format(loss_name))
 
-                metrics_funcs = []
-                for i in range(len(metrics_names)):
-                    metrics_func = getattr(keras.metrics, metrics_names[i], None)
-                    if callable(metrics_func):
-                        metrics_funcs.append(metrics_func)
-                    else:
-                        metrics_func = getattr(add_metrics_file, metrics_names[i], None)
-                        if callable(metrics_func):
-                            metrics_funcs.append(metrics_func)
-                        else:
-                            raise AttributeError(
-                                "Metric {} is not defined".format(metrics_names[i]))
-
                 model.compile(optimizer=optimizer_,
-                              loss=loss,
-                              metrics=metrics_funcs,
-                              loss_weights=loss_weights,
-                              sample_weight_mode=sample_weight_mode,
-                              weighted_metrics=weighted_metrics,
-                              target_tensors=target_tensors)
+                              loss=loss)
                 return model
             else:
-                return self.init_model_from_scratch(model_name, optimizer_name,
-                                                    lr, decay, loss_name,
-                                                    metrics_names=metrics_names,
-                                                    add_metrics_file=add_metrics_file,
-                                                    loss_weights=loss_weights,
-                                                    sample_weight_mode=sample_weight_mode,
-                                                    weighted_metrics=weighted_metrics,
-                                                    target_tensors=target_tensors)
+                return self.init_model_from_scratch(model_name, optimizer_name, loss_name, lear_rate, lear_rate_decay)
         else:
             log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
-            return self.init_model_from_scratch(model_name, optimizer_name,
-                                                lr, decay, loss_name, metrics_names=metrics_names,
-                                                add_metrics_file=add_metrics_file,
-                                                loss_weights=loss_weights,
-                                                sample_weight_mode=sample_weight_mode,
-                                                weighted_metrics=weighted_metrics,
-                                                target_tensors=target_tensors)
+            return self.init_model_from_scratch(model_name, optimizer_name, loss_name, lear_rate, lear_rate_decay)
 
     @overrides
     def save(self, fname=None):
@@ -255,8 +206,8 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
             log.info("[saving model to {}]".format(opt_path))
             self.model.save_weights(weights_path)
 
-        save_json(self.opt, opt_path)
 
+        save_json(self.opt, opt_path)
         return True
 
     def mlp(self, opt):
@@ -274,6 +225,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         for i in range(opt['n_layers']):
             output = Dense(opt['layer_size'], activation='relu')(output)
         output = Dense(1, activation='softmax')(output)
+
         model = Model(inputs=inp, outputs=output)
         return model
 
