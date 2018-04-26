@@ -84,13 +84,17 @@ def get_config_downloads(config_path, config_downloads=None):
     return config_downloads
 
 
-def get_configs_downloads(config_path=None):
+def get_configs_downloads(config_path=None, test=None):
     all_downloads = {}
+
+    if test:
+        configs_path = root_path / 'tests' / 'deeppavlov' / 'configs'
+    else:
+        configs_path = root_path / 'deeppavlov' / 'configs'
 
     if config_path:
         configs = [config_path]
     else:
-        configs_path = root_path / 'deeppavlov' / 'configs'
         configs = list(configs_path.glob('**/*.json'))
 
     for config_path in configs:
@@ -129,18 +133,21 @@ def download_resources(config_path, args=None):
     if args:
         if args.test:
             download_path = root_path / 'tests' / 'download'
+            test = True
+        else:
+            test = False
 
         if not args.all and not args.config:
             log.error('You should provide either skill config path or -all flag')
             sys.exit(1)
         elif args.all:
-            downloads = get_configs_downloads()
+            downloads = get_configs_downloads(test=test)
         else:
             config_path = Path(args.config).resolve()
-            downloads = get_configs_downloads(config_path)
+            downloads = get_configs_downloads(config_path=config_path)
     elif config_path:
         config_path = Path(config_path).resolve()
-        downloads = get_configs_downloads(config_path)
+        downloads = get_configs_downloads(config_path=config_path)
 
     download_path.mkdir(exist_ok=True)
 
