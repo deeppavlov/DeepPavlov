@@ -30,7 +30,7 @@ log = get_logger(__name__)
 
 
 @register('simple_vocab')
-class DefaultVocabulary(Estimator):
+class SimpleVocabulary(Estimator):
     def __init__(self,
                  special_tokens=tuple(),
                  max_tokens=2**30,
@@ -70,6 +70,7 @@ class DefaultVocabulary(Estimator):
                 self.count += 1
 
     def __call__(self, batch, **kwargs):
+        print(batch)
         indices_batch = []
         for sample in batch:
             indices_batch.append([self[token] for token in sample])
@@ -148,7 +149,7 @@ class DefaultVocabulary(Estimator):
 
 
 @register('char_vocab')
-class CharacterVocab(DefaultVocabulary):
+class CharacterVocab(SimpleVocabulary):
     def fit(self, tokens):
         chars = chain(*tokens)
         super().fit(chars)
@@ -166,7 +167,7 @@ class CharacterVocab(DefaultVocabulary):
 
 
 @register('dialog_vocab')
-class DialogVocab(DefaultVocabulary):
+class DialogVocab(SimpleVocabulary):
     def fit(self, tokens):
         chars = chain(*tokens)
         super().fit(chars)
