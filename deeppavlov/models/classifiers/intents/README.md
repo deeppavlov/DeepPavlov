@@ -37,7 +37,7 @@ In the original dataset this user reply has characteristics
 ```
 This message contains two intents `(thankyou, bye)`.
 
-## Downloading pre-trained model
+## Download pre-trained model
 
 To download pre-trained models, vocabs, embeddings on DSTC 2 and SNIPS datasets one should run the following command:
 ```
@@ -173,7 +173,7 @@ Training data file `train.csv` (and `valid.csv`, if exists) should be in the fol
 | text_0       | intent_0     |
 | text_1       | intent_0     |
 | text_2       | intent_1,intent_2     |
-| text_3       | intent_1,intent_0    | 
+| text_3       | intent_1,intent_0,intent_2    | 
 | ...          | ...   ||
 
 
@@ -190,8 +190,8 @@ python deep.py train configs/intents/intents_snips.json
 **The current version of `intents_snips.json` contains parameters for intent recognition for SNIPS benchmark dataset [2] 
 that was restored in `.csv` format and will be downloaded automatically.**
 
-**Important: we do not provide any special embedding binary file and pre-trained model files for SNIPS dataset.
-In order to train the model one should provide one own embedding binary file, because embedding file trained on DSTC-2 dataset is not the best choice for this task.**
+**Important: we do not provide any special embedding binary file for SNIPS dataset.
+In order to train the model one should provide own embedding binary file, because embedding file trained on DSTC-2 dataset is not the best choice for this task.**
 
 ## Comparison
 
