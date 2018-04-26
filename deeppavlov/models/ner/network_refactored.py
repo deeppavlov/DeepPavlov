@@ -5,7 +5,7 @@ from functools import partial
 from deeppavlov.core.layers.tf_layers import embedding_layer, character_embedding_network, variational_dropout
 from deeppavlov.core.layers.tf_layers import cudnn_bi_lstm, cudnn_bi_gru, bi_rnn, stacked_cnn
 from deeppavlov.core.models.tf_model import TFModel
-from deeppavlov.core.common.utils import check_gpu_existance
+from deeppavlov.core.common.check_gpu import check_gpu_existance
 from deeppavlov.core.common.registry import register
 
 INITIALIZER = tf.orthogonal_initializer
