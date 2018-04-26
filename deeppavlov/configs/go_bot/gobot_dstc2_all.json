@@ -87,9 +87,9 @@
   "metadata": {
     "labels": {
       "telegram_utils": "GoalOrientedBot"
-    }
-    "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
+      },
+      "download": [
+        "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz",
         "subdir": "dstc2"

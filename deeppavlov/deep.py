@@ -35,7 +35,7 @@ log = get_logger(__name__)
 parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
-                    choices={'train', 'interact', 'predict', 'interactbot', 'riseapi'})
+                    choices={'train', 'interact', 'predict', 'interactbot', 'riseapi', 'download'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 parser.add_argument("-t", "--token", help="telegram bot token", type=str)
 parser.add_argument("-b", "--batch-size", dest="batch_size", default=1, help="inference batch size", type=int)
@@ -49,7 +49,7 @@ def main():
 
     token = args.token or os.getenv('TELEGRAM_TOKEN')
 
-    if args.download:
+    if args.download or args.mode == 'download':
         download_resources(Path(pipeline_config_path).resolve())
 
     if args.mode == 'train':
