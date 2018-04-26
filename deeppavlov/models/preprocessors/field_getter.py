@@ -26,9 +26,4 @@ class FieldGetter(Component):
         self.field = field
 
     def __call__(self, batch: Union[List[Dict], Tuple[Dict]], **kwargs):
-        if isinstance(batch, (list, tuple)):
-            return [self(item) for item in batch]
-        else:
-            return batch[self.field]
-
-
+        return [self(item) for item in batch]
