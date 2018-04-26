@@ -13,7 +13,7 @@ limitations under the License.
 import numpy as np
 import tensorflow as tf
 
-from deeppavlov.core.common.utils import check_gpu_existance
+from deeppavlov.core.common.check_gpu import check_gpu_existance
 from tensorflow.contrib.layers import xavier_initializer
 from nltk.tag import SennaNERTagger, SennaChunkTagger
 

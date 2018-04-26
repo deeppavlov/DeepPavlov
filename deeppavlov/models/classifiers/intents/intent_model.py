@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from typing import Dict
+
 import numpy as np
 from keras.layers import Dense, Input, concatenate, Activation
 from keras.layers.convolutional import Conv1D
@@ -24,11 +24,9 @@ from keras.models import Model
 from keras.regularizers import l2
 
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.keras_model import KerasModel
-from deeppavlov.models.classifiers.intents import metrics as metrics_file
-from deeppavlov.models.classifiers.intents.utils import labels2onehot, log_metrics, proba2labels
+from deeppavlov.models.classifiers.intents.utils import labels2onehot, proba2labels
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.classifiers.intents.utils import md5_hashsum
 from deeppavlov.models.tokenizers.nltk_tokenizer import NLTKTokenizer
@@ -43,13 +41,7 @@ class KerasIntentModel(KerasModel):
     """
     Class implements keras model for intent recognition task for multi-class multi-label data
     """
-    def __init__(self,
-                 opt: Dict,
-                 embedder: FasttextEmbedder,
-                 tokenizer: NLTKTokenizer,
-                 classes=None,
-                 vocabs=None,
-                 **kwargs):
+    def __init__(self, **kwargs):
         """
         Initialize and train vocabularies, initializes embedder, tokenizer,
         and then initialize model using parameters from opt dictionary (from config),
@@ -67,70 +59,39 @@ class KerasIntentModel(KerasModel):
             tokenizer: instance of NLTKTokenizer class
             **kwargs:
         """
-        super().__init__(opt, **kwargs)
+        super().__init__(**kwargs) # self.opt initialized in here
 
-        # Tokenizer and vocabulary of classes
-        self.tokenizer = tokenizer
-        if classes:
-            self.classes = np.sort(np.array(list(classes)))
+        self.tokenizer = self.opt.get('tokenizer')
+        self.fasttext_model = self.opt.get('embedder')
+        self.opt.pop("vocabs")
+        self.opt.pop("embedder")
+        self.opt.pop("tokenizer")
+
+        if self.opt.get('classes'):
+            self.classes = list(np.sort(np.array(list(self.opt.get('classes')))))
+            self.opt['classes'] = self.classes
         else:
-            self.classes = np.sort(np.array(list(vocabs["classes_vocab"].keys())))
-        self.n_classes = self.classes.shape[0]
+            # self.classes = list(np.sort(np.array(list(self.opt.get('vocabs')["classes_vocab"].keys()))))
+            self.classes = list(self.opt.get('vocabs')["classes_vocab"].keys())
+            self.opt['classes'] = self.classes
+        self.n_classes = len(self.classes)
         if self.n_classes == 0:
             ConfigError("Please, provide vocabulary with considered intents.")
 
-        if 'add_metrics' in self.opt.keys():
-            self.add_metrics = self.opt['add_metrics']
-        else:
-            self.add_metrics = None
-
-        self.fasttext_model = embedder
         self.opt['embedding_size'] = self.fasttext_model.dim
 
         if self.fasttext_model.load_path:
             current_fasttext_md5 = md5_hashsum([self.fasttext_model.load_path])
 
-        self.confident_threshold = self.opt['confident_threshold']
-
-        # List of parameters that could be changed
-        # when the model is initialized from saved and is going to be trained further
-        changeable_params = {"lear_metrics": ["binary_accuracy"],
-                             "confident_threshold": 0.5,
-                             "optimizer": "Adam",
-                             "lear_rate": 0.1,
-                             "lear_rate_decay": 0.1,
-                             "loss": "binary_crossentropy",
-                             "coef_reg_cnn": 1e-4,
-                             "coef_reg_den": 1e-4,
-                             "dropout_rate": 0.5,
-                             "epochs": 1,
-                             "batch_size": 64,
-                             "val_every_n_epochs": 1,
-                             "verbose": True,
-                             "val_patience": 5}
-
-        # Reinitializing of parameters
-        for param in changeable_params.keys():
-            if param in opt.keys():
-                self.opt[param] = opt[param]
-            else:
-                self.opt[param] = changeable_params[param]
-
         # Parameters required to init model
-        params = {"model_name": self.opt['model_name'] if 'model_name' in self.opt.keys() else None,
-                  "optimizer_name": self.opt['optimizer'],
-                  "lr": self.opt['lear_rate'],
-                  "decay": self.opt['lear_rate_decay'],
-                  "loss_name": self.opt['loss'],
-                  "metrics_names": self.opt['lear_metrics'],
-                  "add_metrics_file": metrics_file}
+        params = {"model_name": self.opt.get('model_name'),
+                  "optimizer_name": self.opt.get('optimizer'),
+                  "loss_name": self.opt.get('loss'),
+                  "lear_rate": self.opt.get('lear_rate'),
+                  "lear_rate_decay": self.opt.get('lear_rate_decay')}
 
         self.model = self.load(**params)
-
-        # Reinitializing of parameters
-        for param in changeable_params.keys():
-            if param in opt.keys():
-                self.opt[param] = opt[param]
+        self._init_params()
 
         # Check if md5 hash sum of current loaded fasttext model
         # is equal to saved
@@ -143,21 +104,34 @@ class KerasIntentModel(KerasModel):
                 raise ConfigError(
                     "Given fasttext model does NOT match fasttext model used previously to train loaded model")
 
-        # Considered metrics including loss
-        self.metrics_names = self.model.metrics_names
+    def _init_params(self):
+
+        # list of changeable params
+        changeable_params = {"confident_threshold": 0.5,
+                             "optimizer": "Adam",
+                             "lear_rate": 1e-2,
+                             "lear_rate_decay": 0.,
+                             "loss": "binary_crossentropy",
+                             "coef_reg_cnn": 0.,
+                             "coef_reg_den": 0.,
+                             "dropout_rate": 0.}
+
+        for param in changeable_params.keys():
+            self.opt[param] = self.opt.get(param, changeable_params[param])
+        return
 
     def texts2vec(self, sentences):
         """
         Convert texts to vector representations using embedder and padding up to self.opt["text_size"] tokens
         Args:
-            sentences: list of texts
+            sentences: list of lists of tokens
 
         Returns:
             array of embedded texts
         """
         pad = np.zeros(self.opt['embedding_size'])
 
-        embeddings_batch = self.fasttext_model([sen.split()[:self.opt['text_size']] for sen in sentences])
+        embeddings_batch = self.fasttext_model([sen[:self.opt['text_size']] for sen in sentences])
         embeddings_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + tokens for tokens in embeddings_batch]
 
         embeddings_batch = np.asarray(embeddings_batch)
@@ -167,29 +141,32 @@ class KerasIntentModel(KerasModel):
         """
         Train the model on the given batch
         Args:
-            batch - list of data where batch[0] is list of texts and batch[1] is list of labels
+            texts - list of texts (or list of lists of text tokens)
+            labels - list of labels
 
         Returns:
             loss and metrics values on the given batch
         """
-        texts = self.tokenizer(list(texts))
+        if isinstance(texts[0], str):
+            texts = self.tokenizer(list(texts))
         features = self.texts2vec(texts)
         onehot_labels = labels2onehot(labels, classes=self.classes)
         metrics_values = self.model.train_on_batch(features, onehot_labels)
         return metrics_values
 
-    def infer_on_batch(self, batch, labels=None):
+    def infer_on_batch(self, texts, labels=None):
         """
         Infer the model on the given batch
         Args:
-            batch - list of texts
+            texts - list of texts (or list of lists of text tokens)
             labels - list of labels
 
         Returns:
             loss and metrics values on the given batch, if labels are given
             predictions, otherwise
         """
-        texts = self.tokenizer(batch)
+        if isinstance(texts[0], str):
+            texts = self.tokenizer(list(texts))
         if labels:
             features = self.texts2vec(texts)
             onehot_labels = labels2onehot(labels, classes=self.classes)
@@ -200,12 +177,11 @@ class KerasIntentModel(KerasModel):
             predictions = self.model.predict(features)
             return predictions
 
-    def __call__(self, data, predict_proba=False, *args):
+    def __call__(self, data, *args):
         """
         Infer on the given data
         Args:
             data: [list of sentences]
-            predict_proba: whether to return probabilities distribution or only labels-predictions
             *args:
 
         Returns:
@@ -215,10 +191,8 @@ class KerasIntentModel(KerasModel):
         """
         preds = np.array(self.infer_on_batch(data))
 
-        if predict_proba:
-            return preds
-        else:
-            return proba2labels(preds, confident_threshold=self.confident_threshold, classes=self.classes)
+        labels = proba2labels(preds, confident_threshold=self.opt['confident_threshold'], classes=self.classes)
+        return labels, [dict(zip(self.classes, preds[i])) for i in range(preds.shape[0])]
 
     def cnn_model(self, params):
         """
