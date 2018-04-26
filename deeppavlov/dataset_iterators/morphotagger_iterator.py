@@ -59,8 +59,7 @@ def preprocess_data(data, to_lower=True, append_case="first"):
 class MorphoTaggerDatasetIterator(DataLearningIterator):
 
     def __init__(self, data, seed=None, shuffle=True,
-                 validation_split=0.2, bucket=True,
-                 to_lower=True, append_case="first"):
+                 validation_split=0.2, bucket=True):
 
         # processed_data = {mode: preprocess_data(sample, to_lower=to_lower,
         #                                         append_case=append_case)
