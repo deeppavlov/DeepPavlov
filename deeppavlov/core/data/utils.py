@@ -154,7 +154,7 @@ def tokenize_reg(s):
 
 
 def zero_pad(batch, dtype=np.float32):
-    if len(batch) == 0:
+    if len(batch) == 1 and len(batch[0]) == 0:
         return np.array([], dtype=dtype)
     batch_size = len(batch)
     max_len = max(len(utterance) for utterance in batch)
@@ -172,7 +172,7 @@ def zero_pad(batch, dtype=np.float32):
 
 
 def zero_pad_char(batch, dtype=np.float32):
-    if len(batch) == 0:
+    if len(batch) == 1 and len(batch[0]) == 0:
         return np.array([], dtype=dtype)
     batch_size = len(batch)
     max_len = max(len(utterance) for utterance in batch)

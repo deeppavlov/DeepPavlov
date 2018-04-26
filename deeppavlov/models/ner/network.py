@@ -237,7 +237,7 @@ class NerNetwork(TFModel):
                                                     self._transition_params,
                                                     self.mask_ph],
                                                    feed_dict=feed_dict)
-        sequence_lengths = np.sum(mask, axis=1).astype(np.int32)
+        sequence_lengths = np.max(np.sum(mask, axis=1).astype(np.int32), 1)
         # iterate over the sentences because no batching in viterbi_decode
         y_pred = []
         for logit, sequence_length in zip(logits, sequence_lengths):
@@ -261,7 +261,7 @@ class NerNetwork(TFModel):
         return feed_dict
 
     def __call__(self, *args, **kwargs):
-        if len(args[0]) == 0:
+        if len(args[0]) == 1 and len(args[0][0]) == 0:
             return []
         return self.predict(args)
 
