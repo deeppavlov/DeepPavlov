@@ -139,3 +139,119 @@ are in the same file, you may specify validation split here:
     "validation_split": 0.2
 }
 ```
+#### Chainer
+
+The chainer part of the configuration file contains the specification of the neural network 
+model and supplementary things such as vocabularies. Chainer should be defined as follows:
+
+```
+"chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      ...
+    ],
+    "out": ["y_predicted"]
+  }
+```
+The inputs and outputs must be specified in the pipe. "in" means regular input that is used 
+for inference and train mode. "in_y" is used for training and usually contains ground truth answers. 
+"out" field stands for model prediction. The model inside the pipe must have output variable with 
+name "y_predicted" so that "out" knows where to get 
+predictions.
+
+The major part of "chainer" is "pipe". The "pipe" contains vocabularies and the network itself as well
+as some pre- and post- processors. The first part lowercases the input and normalizes it (see 
+[../../models/preprocessors/capitalization.py]()).
+
+```
+"pipe": [
+      {
+        "id": "lowercase_preprocessor",
+        "name": "lowercase_preprocessor",
+        "in": ["x"],
+        "out": ["x_processed"]
+      },
+```
+
+The second part is the tag vocabulary which transforms tag labels the model should predict to tag indexes.
+
+```
+    {
+        "id": "tag_vocab",
+        "name": "default_vocab",
+        "fit_on": ["y"],
+		"level": "token",
+        "special_tokens": ["PAD", "BEGIN", "END"],
+        "save_path": "morpho_tagger/UD2.0/tag_hu.dict",
+        "load_path": "morpho_tagger/UD2.0/tag_hu.dict"
+      },
+ ```
+ 
+ The third part is the character vocabulary used to represent words as sequences of indexes. Only the
+ symbols which occur at least "min_freq" times in the training set are kept.
+ 
+ ```
+     {
+        "id": "char_vocab",
+        "name": "default_vocab",
+        "min_freq": 3,
+        "fit_on": ["x_processed"],
+        "special_tokens": ["PAD", "BEGIN", "END"],
+        "level": "char",
+        "save_path": "morpho_tagger/UD2.0/char_hu.dict",
+        "load_path": "morpho_tagger/UD2.0/char_hu.dict"
+      },
+  ```
+  
+  The next part performs the tagging itself. Together with general parameters it describes 
+  the input parameters of [CharacterTagger](../../models/morpho_tagger/network.py#L33) class.
+  ```
+    {
+        "in": ["x_processed"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "name": "morpho_tagger",
+        "main": true,
+        "save_path": "morpho_tagger/UD2.0/ud_hu.hdf5",
+        "load_path": "morpho_tagger/UD2.0/ud_hu.hdf5",
+        "tags": "#tag_vocab",
+        "symbols": "#char_vocab",
+        "verbose": 1,
+        "char_embeddings_size": 32, "char_window_size": [1, 2, 3, 4, 5, 6, 7],
+        "word_lstm_units": 128, "conv_dropout": 0.0, "char_conv_layers": 1,
+        "char_highway_layers": 1, "highway_dropout": 0.0, "word_lstm_layers": 1,
+        "char_filter_multiple": 50, "intermediate_dropout": 0.0, "word_dropout": 0.2,
+        "lstm_dropout": 0.3, "regularizer": 0.01, "lm_dropout": 0.3
+    }
+ ```
+ 
+General parameters are:
+- **`in`** - data to be used during training. "x_processed" means
+that network obtains the output of the lowercase_preprocessor as its input.
+- **`in_y`** - the target to be used as gold labels during training.
+- **`out`** - the name of the model output.
+- **`name`** - registered name of the class [CharacterTagger](../../models/morpho_tagger/network.py#L33).
+- **`main`** - (reserved for future use) a boolean parameter defining whether this is the main model. 
+- **`save_path`** - where the model is saved after training.
+- **`load_path`** - from where the pretrained model can be loaded if it exists.
+
+Model parameters are:
+- **`tags`** - tag vocabulary. `#tag_vocab` refers to an already defined model with "id" = "tag_vocab".
+- **`symbols`** - character vocabulary. `#char_vocab` refers to an already defined model with "id" = "char_vocab".
+- **`char_embeddings_size`** - the dimensionality of character embeddings
+- **`embeddings_dropout`** - boolean, whether to use dropout on embeddings or not
+- **`n_filters`** - a list of output feature dimensionality for each layer. A value `[100, 200]`
+means that there will be two layers with 100 and 200 units, respectively. 
+- **`token_embeddings_dim`** - dimensionality of token embeddings. If embeddings are trained on
+the go, this parameter determines dimensionality of the embedding matrix. If the pre-trained 
+embeddings this argument must agree with the dimensionality of pre-trained embeddings
+- **`char_embeddings_dim`** - character embeddings dimensionality, typical values are 25 - 100
+- **`use_crf`** - boolean, whether to use Conditional Random Fields on top of the network (recommended)
+- **`use_batch_norm`** - boolean, whether to use Batch Normalization or not. Affects only CNN networks
+- **`use_capitalization`** - boolean, whether to include capitalization binary features to the input 
+of the network. If True, a binary feature indicating whether the word starts with a capital 
+letter will be concatenated to the word embeddings.
+- **`dropout_rate`** - probability of dropping the hidden state, values from 0 to 1. 0.5 
+works well in most of the cases
+- **`learning_rate`**: learning rate to use during the training (usually from 0.01 to 0.0001)
