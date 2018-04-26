@@ -21,7 +21,6 @@ class EmbeddingsMatrixAssembler:
                                'dimension! model_dim = {embedder.dim}, requested_dim = {emb_dim}')
         else:
             pca = None
-
         for n, token in enumerate(vocab):
             if character_level:
                 char_in_word_bool = np.array([token in word for word in tokens_for_estimation], dtype=bool)
