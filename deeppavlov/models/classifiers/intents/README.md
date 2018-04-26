@@ -37,10 +37,17 @@ In the original dataset this user reply has characteristics
 ```
 This message contains two intents `(thankyou, bye)`.
 
+## Downloading pre-trained model
+
+To download pre-trained models, vocabs, embeddings on DSTC 2 and SNIPS datasets one should run the following command:
+```
+python deep.py -d interact configs/intents/intents_dstc2.json
+```
+The flag `-d` provides downloading all the required components.
 
 ## Infer from pre-trained model
 
-To use a pre-trained model for inference you should run the following command:
+To use a pre-trained model for inference one should run the following command:
 ```
 python deep.py interact configs/intents/intents_dstc2.json
 ```
@@ -48,12 +55,12 @@ or
 ```
 python deep.py interactbot configs/intents/intents_dstc2.json -t <TELEGRAM_TOKEN>
 ```
-For 'interactbot' mode you should specify a Telegram bot token in `-t` parameter or in the `TELEGRAM_TOKEN` 
+For 'interactbot' mode one should specify a Telegram bot token in `-t` parameter or in the `TELEGRAM_TOKEN` 
 environment variable.
 
 
 Now user can enter a text string and get output of two elements: the first one is an array of classes names (intents) which 
-the string belongs to and the second one is a dictionary with probability distribution among all the considered classes 
+the string belongs to, and the second one is a dictionary with probability distribution among all the considered classes 
 (take into account that as the task is a multi-class classification then sum of probabilities is not equal to 1). 
 
 For example,
@@ -64,7 +71,7 @@ For example,
 
 ## Train model
 
-You can find examples of config files [here](../../../configs/intents).
+One can find examples of config files [here](../../../configs/intents).
 
 Some clue parameters for [intents_dstc2.json](../../../configs/intents/intents_dstc2.json) config file are presented in the table below.
 
@@ -145,7 +152,7 @@ Some clue parameters for [intents_dstc2.json](../../../configs/intents/intents_d
 ### Train on DSTC-2
 
 To re-train a model or train it with different parameters on DSTC-2 dataset,
- you should set `save_path` to a directory where the trained model will be saved 
+ one should set `save_path` to a directory where the trained model will be saved 
  (pre-trained model will be loaded if `load_path` is provided and files exist, otherwise it will be created from scratch).
  All other parameters of the model as well as embedder and tokenizer could be changed. 
  Then training can be run in the following way:
@@ -170,7 +177,7 @@ Training data file `train.csv` (and `valid.csv`, if exists) should be in the fol
 | ...          | ...   ||
 
 
-To train model you should
+To train model one should
 * set `data_path` to the directory to which `train.csv` should be downloaded,
 * set `save_path` to the directory where the trained model should be saved, 
 * set all other parameters of model as well as embedder and tokenizer to desired ones.
@@ -184,7 +191,7 @@ python deep.py train configs/intents/intents_snips.json
 that was restored in `.csv` format and will be downloaded automatically.**
 
 **Important: we do not provide any special embedding binary file and pre-trained model files for SNIPS dataset.
-In order to train the model you should provide you own embedding binary file, because embedding file trained on DSTC-2 dataset is not the best choice for this task.**
+In order to train the model one should provide one own embedding binary file, because embedding file trained on DSTC-2 dataset is not the best choice for this task.**
 
 ## Comparison
 
@@ -208,7 +215,7 @@ The results were achieved with tuning of parameters.
 
 ## How to improve the performance
 
-* You can use FastText [4] to train embeddings that are better suited for considered datasets.
+* One can use FastText [4] to train embeddings that are better suited for considered datasets.
 * All the parameters should be tuned on the validation set.
 
 # References
