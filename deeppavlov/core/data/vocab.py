@@ -64,7 +64,7 @@ class DefaultVocabulary(Estimator):
         self.freqs = Counter()
         self.freqs.update(zip(tokens, freqs))
         for token, freq in zip(tokens, freqs):
-            if freq >= self._min_freq:
+            if freq >= self._min_freq or token in self.special_tokens:
                 self._t2i[token] = self.count
                 self._i2t.append(token)
                 self.count += 1
@@ -128,14 +128,14 @@ class DefaultVocabulary(Estimator):
         return item in self._t2i
 
     def __len__(self):
-        return len(self.freqs)
+        return len(self._i2t)
 
-    def is_str_batch(self, batch):
-        element = batch[0][0]
-        if isinstance(element, (int, np.integer)):
-            return False
-        elif isinstance(element, str):
+    @staticmethod
+    def is_str_batch(batch):
+        if isinstance(batch[0], str) or isinstance(batch[0][0], str):
             return True
+        elif isinstance(batch[0][0], (int, np.integer)):
+            return False
         else:
             raise RuntimeError(f'The elements passed to the vocab are not strings '
                                f'or integers! But they are {type(element)}')
@@ -163,3 +163,22 @@ class CharacterVocab(DefaultVocabulary):
         if self._pad_with_zeros:
             indices_batch = zero_pad_char(indices_batch)
         return indices_batch
+
+
+@register('dialog_vocab')
+class DialogVocab(DefaultVocabulary):
+    def fit(self, tokens):
+        chars = chain(*tokens)
+        super().fit(chars)
+
+    def __call__(self, batch, **kwargs):
+        indices_batch = []
+        for sample in batch:
+            tokens = []
+            for token in sample:
+                tokens.append([self[ch] for ch in token])
+            indices_batch.append(tokens)
+        if self._pad_with_zeros:
+            indices_batch = zero_pad_char(indices_batch)
+        return indices_batch
+

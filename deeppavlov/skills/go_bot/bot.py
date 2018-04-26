@@ -120,7 +120,7 @@ class GoalOrientedBot(NNModel):
 
         # Text entity features
         if callable(self.slot_filler):
-            self.tracker.update_state(self.slot_filler([tokenized])[0])
+            self.tracker.update_state(self.slot_filler([tokenized.split()])[0])
             if self.debug:
                 log.debug("Slot vals: {}".format(str(self.slot_filler(tokenized))))
 
