@@ -37,7 +37,7 @@
           "name": "wikitionary_100K_vocab"
         },
         "save_path": "error_model/error_model.tsv",
-        "lm_file": "lm_models/en_wiki_no_punkt.arpa.binary"
+        "lm_file": "error_model/en_wiki_no_punkt.arpa.binary"
       }
     ],
     "out": ["y_predicted"]
@@ -54,7 +54,7 @@
       "http://lnsigo.mipt.ru/export/deeppavlov_data/error_model.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/lang_models/en_wiki_no_punkt.arpa.binary.gz",
-        "subdir": "lm_models"
+        "subdir": "error_model"
       }
     ]
   }
