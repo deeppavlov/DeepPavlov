@@ -71,5 +71,7 @@ import deeppavlov.metrics.accuracy
 import deeppavlov.metrics.fmeasure
 import deeppavlov.metrics.bleu
 import deeppavlov.metrics.squad_metrics
+import deeppavlov.metrics.roc_auc_score
+import deeppavlov.metrics.fmeasure_classification
 
 import deeppavlov.core.common.log

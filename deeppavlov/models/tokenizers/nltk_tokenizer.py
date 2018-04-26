@@ -37,4 +37,4 @@ class NLTKTokenizer(Component):
             raise AttributeError("Tokenizer {} is not defined in nltk.tokenizer".format(tokenizer))
 
     def __call__(self, batch, *args, **kwargs):
-        return [" ".join(self.tokenizer(sent)) for sent in batch]
+        return [self.tokenizer(sent) for sent in batch]

@@ -19,6 +19,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer as xav
 
+import collections
+
 from deeppavlov.core.layers import tf_attention_mechanisms as am
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.errors import ConfigError

@@ -142,7 +142,7 @@ To be used for training, your config json file should include parameters:
    * `name` — `"your_reader_here"` for a custom dataset or `"dstc2_datasetreader"` to use DSTC2 (for implementation see [`deeppavlov.dataset_readers.dstc2_dataset_reader`](../../dataset_readers/dstc2_dataset_reader.py))
    * `data_path` — a path to a dataset file, which in case of `"dstc2_datasetreader"` will be automatically downloaded from 
    internet and placed to `data_path` directory
-* `dataset` — it should always be set to `{"name": "dialog_dataset"}` (for implementation see [`deeppavlov.datasets.dialog_dataset.py`](../../datasets/dialog_dataset.py))
+* `dataset_iterator` — it should always be set to `{"name": "dialog_iterator"}` (for implementation see [`deeppavlov.dataset_iterators.dialog_iterator.py`](../../dataset_iterators/dialog_iterator.py))
 
 See [`deeeppavlov/configs/go_bot/gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json) for details.
 
@@ -173,11 +173,11 @@ If your model uses DSTC2 and relies on `dstc2_datasetreader` [`DatasetReader`](.
 
 If your model needs to be trained on different data, you have several ways of achieving that (sorted by increase in the amount of code):
 
-1. Use `"dialog_dataset"` in dataset config section and `"dstc2_datasetreader"` in dataset reader config section (**the simplest, but not the best way**):
-    * set `dataset.data_path` to your data directory;
+1. Use `"dialog_iterator"` in dataset iterator config section and `"dstc2_datasetreader"` in dataset reader config section (**the simplest, but not the best way**):
+    * set `dataset_iterator.data_path` to your data directory;
     * your data files should have the same format as expected in [`deeppavlov.dataset_readers.dstc2_dataset_reader:DSTC2DatasetReader.read()`](../../dataset_readers/dstc2_dataset_reader.py) function.
 
-2. Use `"dialog_dataset"` in dataset config section and `"your_dataset_reader"` in dataset reader config section (**recommended**): 
+2. Use `"dialog_iterator"` in dataset iterator config section and `"your_dataset_reader"` in dataset reader config section (**recommended**): 
     * clone [`deeppavlov.dataset_readers.dstc2_dataset_reader:DSTC2DatasetReader`](../../dataset_readers/dstc2_dataset_reader.py) to `YourDatasetReader`;
     * register as `"your_dataset_reader"`;
     * rewrite so that it implements the same interface as the origin. Particularly, `YourDatasetReader.read()` must have the same output as `DSTC2DatasetReader.read()`:
@@ -195,8 +195,8 @@ If your model needs to be trained on different data, you have several ways of ac
       
 #TODO: change str `act` to a list of `acts`
 
-3. Use your own dataset and dataset reader (**if 2. doesn't work for you**):
-    * your `YourDataset.iter()` class method output should match the input format for [`HybridCodeNetworkBot.train()`](go_bot.py).
+3. Use your own dataset iterator and dataset reader (**if 2. doesn't work for you**):
+    * your `YourDatasetIterator.iter()` class method output should match the input format for chainer from [`configs/go_bot/gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json).
 
 ## Comparison
 As far as our dataset is a modified version of official DSTC2-dataset [[2]](#references), resulting metrics can't be compared with evaluations on the original dataset.
