@@ -38,5 +38,5 @@ PIPELINE_CONFIG_PATH = 'configs/intents/intents_dstc2.json'
 # PIPELINE_CONFIG_PATH = 'configs/odqa/ru_odqa_infer_prod.json'
 PIPELINE_CONFIG_PATH = 'configs/odqa/ranker_test.json'
 
-# train_model_from_config(PIPELINE_CONFIG_PATH)
+train_model_from_config(PIPELINE_CONFIG_PATH)
 interact_model(PIPELINE_CONFIG_PATH)
