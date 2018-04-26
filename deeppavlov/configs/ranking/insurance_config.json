@@ -56,10 +56,7 @@
       "telegram_utils": "RankingModel"
     },
     "download": [
-      {
-        "url": "http://lnsigo.mipt.ru/export/deeppavlov_data/ranking.tar.gz",
-        "compressed": 1
-      }
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ranking.tar.gz"
     ]
   }
 }
