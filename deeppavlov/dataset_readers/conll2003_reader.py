@@ -9,7 +9,7 @@ from deeppavlov.core.common.registry import register
 class Conll2003DatasetReader(DatasetReader):
 
     def download_conll(self, dir_path):
-        download_decompress('http://lnsigo.mipt.ru/export/datasets/conll2003_v2.tar.gz', dir_path)
+        download_decompress('http://lnsigo.mipt.ru/export/deeppavlov_data/conll2003_v2.tar.gz', dir_path)
 
     def read(self, dir_path: str, dataset_name='conll2003'):
         dir_path = Path(dir_path)
