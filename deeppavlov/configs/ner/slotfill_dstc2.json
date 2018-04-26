@@ -13,13 +13,18 @@
     "pipe": [
       {
         "in": ["x"],
+        "name": "lazy_tokenizer",
+        "out": ["x"]
+      },
+      {
+        "in": ["x"],
         "name": "str_lower",
         "out": ["x_lower"]
       },
       {
         "in": ["x_lower"],
         "id": "word_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["x"],
 		"level": "token",
@@ -36,7 +41,7 @@
       {
         "in": ["y"],
         "id": "tag_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["y"],
 		"level": "token",

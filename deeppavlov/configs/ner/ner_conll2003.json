@@ -12,6 +12,11 @@
     "pipe": [
       {
         "in": ["x"],
+        "name": "lazy_tokenizer",
+        "out": ["x"]
+      },
+      {
+        "in": ["x"],
         "name": "str_lower",
         "out": ["x_lower"]
       },
