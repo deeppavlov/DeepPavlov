@@ -166,12 +166,12 @@ class SquadModel(TFModel):
             loss_p2 = tf.nn.softmax_cross_entropy_with_logits(logits=logits2, labels=self.y2)
             squad_loss = loss_p1 + loss_p2
             if self.noans:
-                q_att = simple_attention(q, self.hidden_size, mask=self.q_mask, keep_prob=self.keep_prob, scope='q_att')
-                c_att = simple_attention(att, self.hidden_size, mask=self.c_mask, keep_prob=self.keep_prob, scope='c_att')
-                layer_1_logits = tf.layers.dense(tf.concat([q_att, c_att], -1),
+                q_att = simple_attention(q, self.hidden_size, mask=self.q_mask, keep_prob=self.keep_prob_ph, scope='q_att')
+                c_att = simple_attention(att, self.hidden_size, mask=self.c_mask, keep_prob=self.keep_prob_ph, scope='c_att')
+                layer_1_logits = tf.nn.dropout(tf.layers.dense(tf.concat([q_att, c_att], -1),
                                                  units=self.hidden_size,
                                                  activation=tf.tanh,
-                                                 name='noans_dense_1')
+                                                 name='noans_dense_1'), keep_prob=self.keep_prob_ph)
                 layer_2_logits = tf.layers.dense(layer_1_logits,
                                                  units=2,
                                                  activation=tf.tanh,
