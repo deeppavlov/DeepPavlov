@@ -71,8 +71,6 @@ def download(dest_file_path, source_url, force_download=True):
             f.close()
     else:
         log.info('File already exists in {}'.format(first_dest_path))
-        if len(dest_file_path) > 0:
-            download(dest_file_path, source_url, force_download)
 
     while len(dest_file_path) > 0:
         dest_path = dest_file_path.pop()
