@@ -77,7 +77,10 @@
   "metadata": {
     "labels": {
       "telegram_utils": "NERModel"
-    }
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner.tar.gz"
+    ]
   }
 }
 
