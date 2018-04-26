@@ -54,8 +54,8 @@ environment variable.
 
 Now user can enter a text string and get intents (classes which a request belongs to):
 ```
-:: hey! I want cheap chinese restaurant
->> ['inform_food' 'inform_pricerange']
+:: hey! I want cheap restaurant
+>> (array(['inform_pricerange'], dtype='<U18'), {'ack': 0.0037632342, 'affirm': 0.015555085, 'bye': 0.01632652, 'confirm_area': 0.0035079047, 'confirm_food': 0.008698707, 'confirm_pricerange': 0.0065926723, 'deny_food': 0.0033183943, 'deny_name': 0.0032175593, 'hello': 0.007443315, 'inform_area': 0.27942947, 'inform_food': 0.041211434, 'inform_name': 0.0039961785, 'inform_pricerange': 0.5754329, 'inform_this': 0.02203026, 'negate': 0.011796405, 'repeat': 0.0034341915, 'reqalts': 0.017215012, 'reqmore': 0.002996667, 'request_addr': 0.051311377, 'request_area': 0.013899523, 'request_food': 0.0136800865, 'request_phone': 0.055341706, 'request_postcode': 0.0116683375, 'request_pricerange': 0.015019255, 'request_signature': 0.0032681762, 'restart': 0.0035573517, 'thankyou': 0.02431963, 'unknown': 0.04280461})
 ```
 
 ## Train model
