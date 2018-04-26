@@ -60,10 +60,7 @@
         },
         "source_vocab": "#src_token_vocab",
         "target_vocab": "#tgt_token_vocab",
-        "debug": false,
-        "bow_encoder": {
-          "name": "bow"
-        }
+        "debug": false
       },
       {
         "ref": "stream_spacy",

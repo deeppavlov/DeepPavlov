@@ -57,36 +57,43 @@ To use a go_bot model you should have:
 #### Config parameters:
 * `name` always equals to `"go_bot"`
 * `template_path` — map from actions to text templates for response generation
-* `use_action_mask` — in case of true, action mask is applied to network output
+* `use_action_mask` — in case of true, action mask is applied to network output _(False, by default)_
+* `db_result_during_interaction` – dict (or `null`) that will be observation's `"db_result"` value during interaction (when database is not available) _(optional)_
 * `word_vocab` — vocabulary of tokens from context utterances
    * `name` — `"default_vocab"` (for vocabulary's implementation see [`deeppavlov.core.data.vocab`](../../core/data/vocab.py))
    * `level` — `"token"`,
-   * `tokenize` — `true`,
+   * `tokenizer` — `{ "name": "split_tokenizer" }`,
    * `save_path` — `"vocabs/token.dict"`
    * `load_path` — `"vocabs/token.dict"`
 * `tokenizer` — one of tokenizers from [`deeppavlov.models.tokenizers`](../../models/tokenizers) module
    * `name` — tokenizer name
    * other arguments specific to your tokenizer
-* `bow_encoder` — one of bag-of-words encoders from [`deeppavlov.models.encoders.bow`](../../models/encoders/bow.py) module
-   * `name` — encoder name
-   * other arguments specific to your encoder
-* `embedder` — one of embedders from [`deeppavlov.models.embedders`](../../models/embedders) module
+* `bow_embedder` — [`deeppavlov.models.embedders.bow_embedder`](../../models/embedders/bow_embedder.py) or `null` _(optional)_
+   * `name` — embedder name
+   * other arguments specific to your bag of words embedder
+* `embedder` — one of embedders from [`deeppavlov.models.embedders`](../../models/embedders) module _(optional)_
    * `name` — embedder name (`"fasttext"` recommended, see [`deeppavlov.models.embedders.fasttext_embedder`](../../models/embedders/fasttext_embedder.py))
-   * `mean` — must be set to `true`
    * other arguments specific to your embedder
 * `tracker` — dialogue state tracker from [`deeppavlov.models.trackers`](../../models/trackers)
    * `name` — tracker name (`"default_tracker"` or `"featurized_tracker"` recommended)
    * `slot_vals` — list of slots that should be tracked
-* `network` — reccurent network that handles dialogue policy management
-   * `name` — `"go_bot_rnn"`,
+* `network_parameters` — parameters for reccurent network that handles dialogue policy management
    * `save_path` — name of the file that the model will be saved to
    * `load_path` — name of the file that the model will be loaded from
    * `learning_rate` — learning rate during training
    * `dropout_rate` — rate for dropout layer applied to input features
    * `hidden_dim` — hidden state dimension
    * `dense_size` — LSTM input size
-   * `obs_size` — input features size (must be set to number of `bow_embedder` features, `embedder` features, `intent_classifier` features, context features(=2) plus `tracker` state size plus action size)
-   * `action_size` — output action size
+   * `obs_size` — input features size (must be set to number of `bow_embedder` features, `embedder` features, `intent_classifier` features, context features(=2) plus `tracker` state size plus action size), will be calculated automatically if not set _(optional)_
+   * `action_size` — output action size, will be calculated automatically if not set _(optional)_
+   * `attention_mechanism` – dict (or `null`) that describes attention applied to network inputs:
+   * `attention_mechanism.type` – type of attention mechanism, one of (`"general"`, `"bahdanau"`, `"light_general"`, `"light_bahdanau"`, `"cs_general"`, `"cs_bahdanau"`)
+   * `attention_mechanism.hidden_size` – attention hidden state size
+   * `attention_mechanism.max_num_tokens` – maximum number of input tokens used in attentio
+   * `attention_mechanism.depth` – number of averages used in constrained attentions (`"cs_bahdanau"` or `"cs_general"`)
+   * `attention_mechanism.action_as_key` – whether to use action from previous timestep as key to attention (defaults to `false`) _(optional)_
+   * `attention_mechanism.intent_as_key` – whether to use utterance intents as key to attention (defaults to `false`) _(optional)_
+   * `attention_mechanism.projected_align` – whether to use output projection (defaults to `false`) _(optional)_
 * `slot_filler` — model that predicts slot values for a given utterance
    * `name` — slot filler name (`"dstc_slotfilling"` recommended, for implementation see [`deeppavlov.models.ner`](../../models/ner))
    * other slot filler arguments
@@ -99,7 +106,9 @@ For a working exemplary config see [`deeeppavlov/configs/go_bot/gobot_dstc2.json
 
 A minimal model without `slot_filler`, `intent_classifier` and `embedder` is configured in [`deeeppavlov/configs/go_bot/gobot_dstc2_minimal.json`](../../configs/go_bot/gobot_dstc2_minimal.json).
 
-A full model (with fasttext embeddings) configuration is in [`deeeppavlov/configs/go_bot/gobot_dstc2_all.json`](../../configs/go_bot/gobot_dstc2_all.json)
+A full model (with fasttext embeddings) configuration is in [`deeeppavlov/configs/go_bot/gobot_dstc2_all.json`](../../configs/go_bot/gobot_dstc2_all.json).
+
+The best state-of-the-art model (with attention mechanism, relies on `embedder` and does not use bag-of-words) is configured in [`deeeppavlov/configs/go_bot/gobot_dstc2_best.json`](../../configs/go_bot/gobot_dstc2_best.json).
 
 #### Usage example
 * To infer from a pretrained model with config path equal to `path/to/config.json`:
@@ -198,8 +207,9 @@ But comparisons for bot model modifications trained on out DSTC2-dataset are pre
 |----------------------------------------------|-------------|-------------------------|----------------------|
 |basic bot			                               | [`gobot_dstc2_minimal.json`](../../configs/go_bot/gobot_dstc2_minimal.json) | 0.5271             |     0.4853           |
 |bot with slot filler & fasttext embeddings    |        |      0.5305             |     0.5147           |
-|bot with slot filler & intents                | [`gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json)                 |   **0.5436**         |     **0.5261**       |
+|bot with slot filler & intents                | [`gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json)                 |   0.5436         |     0.5261       |
 |bot with slot filler & intents & embeddings   | [`gobot_dstc2_all.json`](../../configs/go_bot/gobot_dstc2_all.json)         |      0.5307             |     0.5145           |
+|bot with slot filler & embeddings & attention   | [`gobot_dstc2_best.json`](../../configs/go_bot/gobot_dstc2_best.json)         |      **0.5921**             |     **0.5805**           |
 
 #TODO: add dialog accuracies
 

@@ -19,34 +19,39 @@ TEST_MODES = ['IP',  # test_interacting_pretrained_model
 ALL_MODES = ('DE', 'IP', 'TI')
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
-PARAMS = {# "error_model": {("error_model/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
-#                               [
-#                                   ("helllo", "hello"),
-#                                   ("datha", "data")
-#                               ],
-#                           ("error_model/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES): []},
-#           "go_bot": {("go_bot/gobot_dstc2.json", "go_bot", ALL_MODES): []},
-#           "intents": {("intents/intents_dstc2.json", "intents", ALL_MODES):  []},
-#           "snips": {("intents/intents_snips.json", "intents", ('TI',)): []},
-#           "sample": {("intents/intents_sample_csv.json", "intents", ('TI',)): [],
-#                     ("intents/intents_sample_json.json", "intents", ('TI',)): []},
-#           "ner": {("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [],
-                  # ("ner/ner_dstc2.json", "ner", ALL_MODES): [],
-                  # ("ner/ner_ontonotes_emb.json", "ner_ontonotes", ALL_MODES): [],
-                  # ("ner/ner_ontonotes.json", "ner_ontonotes", ('DE', 'IP')): [],
-                  # ("ner/slotfill_dstc2.json", "ner", ALL_MODES):
-                  #     [
-                  #         ("chinese food", "{'food': 'chinese'}"),
-                  #         ("in the west part", "{'area': 'west'}"),
-                  #         ("moderate price range", "{'pricerange': 'moderate'}")
-                  #     ]
-              #    },
-          # "ranking": {("ranking/insurance_config.json", "ranking", ALL_MODES): []},
-          # "squad": {("squad/squad.json", "squad_model", ALL_MODES): []},
-          # "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): []},
-          # "odqa": {("odqa/ranker_test.json", "odqa", ALL_MODES): []}
+PARAMS = {"error_model": {("error_model/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
+                              [
+                                  ("helllo", "hello"),
+                                  ("datha", "data")
+                              ],
+                          ("error_model/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES): []},
+          "go_bot": {("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [],
+                     ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [],
+                     ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [],
+                     ("go_bot/gobot_dstc2_all.json", "gobot_dstc2_all", ('TI',)): []},
+          "intents": {("intents/intents_dstc2.json", "intents", ALL_MODES):  []},
+          "snips": {("intents/intents_snips.json", "intents", ('TI',)): []},
+          "sample": {("intents/intents_sample_csv.json", "intents", ('TI',)): [],
+                    ("intents/intents_sample_json.json", "intents", ('TI',)): []},
+          "ner": {("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [],
+                  ("ner/ner_dstc2.json", "ner", ALL_MODES): [],
+                  ("ner/ner_ontonotes_emb.json", "ner_ontonotes", ALL_MODES): [],
+                  ("ner/ner_ontonotes.json", "ner_ontonotes", ('DE', 'IP')): [],
+                  ("ner/slotfill_dstc2.json", "ner", ALL_MODES):
+                      [
+                          ("chinese food", "{'food': 'chinese'}"),
+                          ("in the west part", "{'area': 'west'}"),
+                          ("moderate price range", "{'pricerange': 'moderate'}")
+                      ]
+                  },
+          "ranking": {("ranking/insurance_config.json", "ranking", ALL_MODES): []},
+          "squad": {("squad/squad.json", "squad_model", ALL_MODES): [],
+                    ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): []},
+          "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): []},
+          "odqa": {("odqa/ranker_test.json", "odqa", ALL_MODES): [],
+                   ("odqa/odqa_infer_test.json", "odqa", ('DE', 'IP')): []},
           "morpho_tagger/UD2.0/hu": {("morpho_tagger/UD2.0/hu/train_config.json", "morpho_tagger", ALL_MODES): []}
-          }
+}
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
 

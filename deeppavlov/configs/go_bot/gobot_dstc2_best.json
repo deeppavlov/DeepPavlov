@@ -67,12 +67,20 @@
           "pricerange": "cheap"
         },
         "network_parameters": {
-          "load_path": "gobot_dstc2_all/model",
-          "save_path": "gobot_dstc2_all/model",
-          "learning_rate": 0.0009,
-          "dropout_rate": 0.7,
+          "load_path": "gobot_dstc2_best/model",
+          "save_path": "gobot_dstc2_best/model",
+          "learning_rate": 0.0008,
+          "dropout_rate": 0.85,
           "hidden_size": 128,
-          "dense_size": 64
+          "dense_size": 64,
+          "attention_mechanism": {
+            "type": "cs_bahdanau",
+            "hidden_size": 32,
+            "depth": 3,
+            "action_as_key": true,
+            "max_num_tokens": 100,
+            "projected_align": false
+          }
         },
         "slot_filler": {
           "name": "dstc_slotfilling",
@@ -92,61 +100,14 @@
           "use_batch_norm": true,
           "use_crf": true
         },
-        "intent_classifier": {
-          "name": "intent_model",
-          "save_path": "intents/intent_cnn_v2",
-          "load_path": "intents/intent_cnn_v2",
-          "classes": "#classes_vocab.keys()",
-          "opt": {
-            "train_now": true,
-            "kernel_sizes_cnn": [
-              3,
-              3,
-              3
-            ],
-            "filters_cnn": 512,
-            "lear_metrics": [
-              "binary_accuracy",
-              "fmeasure"
-            ],
-            "confident_threshold": 0.5,
-            "optimizer": "Adam",
-            "lear_rate": 0.1,
-            "lear_rate_decay": 0.1,
-            "loss": "binary_crossentropy",
-            "text_size": 15,
-            "coef_reg_cnn": 1e-4,
-            "coef_reg_den": 1e-4,
-            "dropout_rate": 0.5,
-            "epochs": 1,
-            "dense_size": 100,
-            "model_name": "cnn_model",
-            "batch_size": 64,
-            "val_every_n_epochs": 5,
-            "verbose": true,
-            "val_patience": 5
-          },
-          "embedder": {
-            "name": "fasttext",
-            "save_path": "embeddings/dstc2_fastText_model.bin",
-            "load_path": "embeddings/dstc2_fastText_model.bin",
-            "emb_module": "fasttext",
-            "dim": 100
-          },
-          "tokenizer": {
-            "name": "nltk_tokenizer",
-            "tokenizer": "wordpunct_tokenize"
-          }
-        },
+        "intent_classifier": null,
         "embedder": {
           "name": "fasttext",
-          "save_path": "embeddings/wiki.en.bin",
           "load_path": "embeddings/wiki.en.bin",
+          "save_path": "embeddings/wiki.en.bin",
           "dim": 300
         },
-        "bow_embedder": {
-          "name": "bow"
-        },
+        "bow_embedder": null,
         "tokenizer": {
           "name": "stream_spacy_tokenizer",
           "lowercase": false
@@ -160,7 +121,7 @@
   },
   "train": {
     "epochs": 200,
-    "batch_size": 1,
+    "batch_size": 16,
 
     "metrics": ["per_item_dialog_accuracy"],
     "validation_patience": 30,
@@ -169,10 +130,5 @@
     "log_every_n_batches": -1,
     "log_every_n_epochs": 1,
     "show_examples": false
-  },
-  "metadata": {
-    "labels": {
-      "telegram_utils": "GoalOrientedBot"
-    }
   }
 }

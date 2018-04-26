@@ -30,8 +30,8 @@
           "fit_on_batch": [
             "x"
           ],
-          "save_path": "odqa/wiki_tfidf_matrix.npz",
-          "load_path": "odqa/wiki_tfidf_matrix.npz",
+          "save_path": "odqa/wiki_tfidf_matrix_test.npz",
+          "load_path": "odqa/wiki_tfidf_matrix_test.npz",
           "tokenizer": {
             "name": "stream_spacy_tokenizer",
             "lemmas": true,

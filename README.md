@@ -62,6 +62,10 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
  ```
  python -m deeppavlov.deep riseapi deeppavlov/configs/ner/slotfill_dstc2.json
  ```
+ * Predict intents on every line in a file:
+ ```
+ python -m deeppavlov.deep predict deeppavlov/configs/intents/intents_snips.json --batch-size 15 < /data/in.txt > /data/out.txt
+ ```
 ## Conceptual overview
 
 ### Principles
