@@ -130,21 +130,29 @@ class SimpleVocabulary(Estimator):
     def __len__(self):
         return len(self._i2t)
 
-    @staticmethod
-    def is_str_batch(batch):
-        if isinstance(batch[0], str) or isinstance(batch[0][0], str):
-            return True
-        elif isinstance(batch[0][0], (int, np.integer)):
-            return False
+    def is_str_batch(self, batch):
+        if not self.is_empty(batch):
+            non_empty = [item for item in batch if len(item) > 0]
+            if isinstance(non_empty[0], str) or isinstance(non_empty[0][0], str):
+                return True
+            elif isinstance(non_empty[0][0], (int, np.integer)):
+                return False
+            else:
+                raise RuntimeError(f'The elements passed to the vocab are not strings '
+                                   f'or integers! But they are {type(element)}')
         else:
-            raise RuntimeError(f'The elements passed to the vocab are not strings '
-                               f'or integers! But they are {type(element)}')
+            return False
 
     def reset(self):
         self.freqs = None
         self._t2i = defaultdict(int)
         self._i2t = []
         self.count = 0
+
+    @staticmethod
+    def is_empty(batch):
+        non_empty = [item for item in batch if len(item) > 0]
+        return len(non_empty) == 0
 
 
 @register('char_vocab')

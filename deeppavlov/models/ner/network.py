@@ -261,6 +261,8 @@ class NerNetwork(TFModel):
         return feed_dict
 
     def __call__(self, *args, **kwargs):
+        if len(args[0]) == 0:
+            return []
         return self.predict(args)
 
     def train_on_batch(self, *args):
