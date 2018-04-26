@@ -70,7 +70,6 @@ class SimpleVocabulary(Estimator):
                 self.count += 1
 
     def __call__(self, batch, **kwargs):
-        print(batch)
         indices_batch = []
         for sample in batch:
             indices_batch.append([self[token] for token in sample])
