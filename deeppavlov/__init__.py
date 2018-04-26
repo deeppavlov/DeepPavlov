@@ -63,13 +63,13 @@ import deeppavlov.vocabs.typos
 import deeppavlov.vocabs.wiki_sqlite
 import deeppavlov.dataset_readers.insurance_reader
 import deeppavlov.dataset_iterators.ranking_iterator
+import deeppavlov.models.ner.network
 import deeppavlov.models.ranking.ranking_model
 import deeppavlov.models.ranking.metrics
 import deeppavlov.models.preprocessors.char_splitter
 import deeppavlov.models.preprocessors.mask
 import deeppavlov.models.preprocessors.assemble_embeddins_matrix
 import deeppavlov.models.preprocessors.capitalization
-import deeppavlov.models.ner.network_refactored
 import deeppavlov.models.preprocessors.field_getter
 import deeppavlov.models.preprocessors.sanitizer
 import deeppavlov.models.preprocessors.lazy_tokenizer
