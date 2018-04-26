@@ -1,0 +1,52 @@
+{
+  "dataset_iterator": {
+    "name": "sqlite_iterator",
+    "data_dir": "odqa",
+    "shuffle": false,
+    "data_url": "http://lnsigo.mipt.ru/export/datasets/wikipedia/ruwiki.db"
+  },
+  "chainer": {
+    "in": [
+      "x"
+    ],
+    "out": [
+      "y"
+    ],
+    "pipe": [
+      {
+        "name": "tfidf_ranker",
+        "in": [
+          "x"
+        ],
+        "out": [
+          "y",
+          "score"
+        ],
+        "fit_on_batch": [
+          "x"
+        ],
+        "vectorizer": {
+          "name": "hashing_tfidf_vectorizer",
+          "fit_on_batch": [
+            "x"
+          ],
+          "save_path": "odqa/ruwiki_tfidf_matrix.npz",
+          "load_path": "odqa/ruwiki_tfidf_matrix.npz",
+          "tokenizer": {
+            "name": "ru_tokenizer",
+            "lemmas": true,
+            "ngram_range": [
+              1,
+              2
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "train": {
+    "validate_best": false,
+    "test_best": false,
+    "batch_size": 10000
+  }
+}
