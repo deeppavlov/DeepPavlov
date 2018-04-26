@@ -38,7 +38,7 @@ def exact_match(y_true, y_predicted):
     EM_total = 0
     count = 0
     for ground_truth, prediction in zip(y_true, y_predicted):
-        if len(ground_truth[0]) == 0:
+        if len(ground_truth[0][0]) == 0:
             # skip empty answers
             continue
         count += 1
@@ -64,7 +64,7 @@ def squad_f1(y_true, y_predicted):
     f1_total = 0.0
     count = 0
     for ground_truth, prediction in zip(y_true, y_predicted):
-        if len(ground_truth[0]) == 0:
+        if len(ground_truth[0][0]) == 0:
             continue
         count += 1
         ground_truth = ground_truth[0]
