@@ -78,7 +78,8 @@
       "telegram_utils": "DstcSlotFillingNetwork"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner.tar.gz"
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz"
     ]
   }
 }
