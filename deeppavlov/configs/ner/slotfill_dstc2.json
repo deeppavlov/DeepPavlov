@@ -58,7 +58,7 @@
         "in": ["x_tok_ind", "mask"],
         "in_y": ["y_ind"],
         "out": ["y_predicted"],
-        "name": "ner_ref",
+        "name": "ner",
         "main": true,
         "token_emb_mat": "#embeddings.emb_mat",
         "n_hidden_list": [64, 64],

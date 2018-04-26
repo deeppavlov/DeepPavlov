@@ -110,7 +110,7 @@
         "in": ["x_emb", "mask", "x_char_ind", "cap", "pos_ind"],
         "in_y": ["y_ind"],
         "out": ["y_predicted"],
-        "name": "ner_ref",
+        "name": "ner",
         "main": true,
         "token_emb_dim": "#glove_emb.dim",
         "n_hidden_list": [128],
