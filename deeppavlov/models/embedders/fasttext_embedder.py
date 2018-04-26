@@ -67,8 +67,7 @@ class FasttextEmbedder(Component, Serializable):
     def __iter__(self):
         yield from self.model.get_words()
 
-    def _encode(self, sentence: str, mean):
-        tokens = sentence.split()
+    def _encode(self, tokens: List[str], mean: bool):
         embedded_tokens = []
         for t in tokens:
             try:
