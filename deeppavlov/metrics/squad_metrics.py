@@ -36,12 +36,17 @@ def exact_match(y_true, y_predicted):
         exact match score : float
     """
     EM_total = 0
+    count = 0
     for ground_truth, prediction in zip(y_true, y_predicted):
+        if len(ground_truth[0]) == 0:
+            # skip empty answers
+            continue
+        count += 1
         ground_truth = ground_truth[0]
         prediction = prediction[0]
         EMs = [int(normalize_answer(gt) == normalize_answer(prediction)) for gt in ground_truth]
         EM_total += max(EMs)
-    return 100 * EM_total / len(y_true) if len(y_true) > 0 else 0
+    return 100 * EM_total / count if count > 0 else 0
 
 
 @register_metric('squad_f1')
@@ -57,7 +62,11 @@ def squad_f1(y_true, y_predicted):
         F-1 score : float
     """
     f1_total = 0.0
+    count = 0
     for ground_truth, prediction in zip(y_true, y_predicted):
+        if len(ground_truth[0]) == 0:
+            continue
+        count += 1
         ground_truth = ground_truth[0]
         prediction = prediction[0]
         prediction_tokens = normalize_answer(prediction).split()
@@ -74,7 +83,7 @@ def squad_f1(y_true, y_predicted):
             f1 = (2 * precision * recall) / (precision + recall)
             f1s.append(f1)
         f1_total += max(f1s)
-    return 100 * f1_total / len(y_true) if len(y_true) > 0 else 0
+    return 100 * f1_total / count if count > 0 else 0
 
 
 def normalize_answer(s):

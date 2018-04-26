@@ -179,7 +179,8 @@ class SquadModel(TFModel):
                 self.yp = tf.nn.softmax(layer_2_logits)[:, 1]
                 self.y = tf.one_hot(self.y_ph, depth=2)
                 noans_loss = tf.nn.softmax_cross_entropy_with_logits(logits=layer_2_logits, labels=self.y)
-                loss = self.squad_loss_weight * squad_loss + (1 - self.squad_loss_weight) * noans_loss
+                loss = self.squad_loss_weight * squad_loss * tf.cast(self.y_ph, tf.float32)\
+                       + (1 - self.squad_loss_weight) * noans_loss
             else:
                 loss = squad_loss
 
