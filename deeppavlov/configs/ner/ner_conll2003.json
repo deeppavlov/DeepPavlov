@@ -1,13 +1,14 @@
 {
   "dataset_reader": {
     "name": "conll2003_reader",
-    "data_path": "conll2003/"
+    "data_path": "conll2003/",
+    "provide_pos": false
   },
   "dataset_iterator": {
     "name": "data_learning_iterator"
   },
   "chainer": {
-    "in": ["x", "pos"],
+    "in": ["x"],
     "in_y": ["y"],
     "pipe": [
       {
@@ -36,16 +37,6 @@
         "save_path": "ner_conll2003/word.dict",
         "load_path": "ner_conll2003/word.dict",
         "out": ["x_tok_ind"]
-      },
-      {
-        "in": ["pos"],
-        "id": "pos_vocab",
-        "name": "simple_vocab",
-        "pad_with_zeros": true,
-        "fit_on": ["pos"],
-        "save_path": "ner_conll2003/pos.dict",
-        "load_path": "ner_conll2003/pos.dict",
-        "out": ["pos_ind"]
       },
       {
         "in": ["y"],
@@ -83,7 +74,6 @@
         "name": "glove",
         "pad_zero": true,
         "load_path": "embeddings/glove.6B.100d.txt",
-
         "out": ["x_emb"]
       },
       {
@@ -107,7 +97,7 @@
         "out": ["cap"]
       },
       {
-        "in": ["x_emb", "mask", "x_char_ind", "cap", "pos_ind"],
+        "in": ["x_emb", "mask", "x_char_ind", "cap"],
         "in_y": ["y_ind"],
         "out": ["y_predicted"],
         "name": "ner",
@@ -120,9 +110,8 @@
         "n_tags": "#tag_vocab.len",
         "capitalization_dim": "#capitalization.dim",
         "char_emb_dim": "#embeddings_char.dim",
-        "pos_features_dim": "#pos_vocab.len",
-        "save_path": "ner_conll2003/model",
-        "load_path": "ner_conll2003/model",
+        "save_path": "ner_conll2003/model_no_pos",
+        "load_path": "ner_conll2003/model_no_pos",
         "char_emb_mat": "#embeddings_char.emb_mat",
         "use_crf": true,
         "use_batch_norm": true,

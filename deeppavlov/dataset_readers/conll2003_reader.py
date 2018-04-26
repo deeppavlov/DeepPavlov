@@ -11,7 +11,8 @@ class Conll2003DatasetReader(DatasetReader):
     def download_conll(self, dir_path):
         download_decompress('http://lnsigo.mipt.ru/export/deeppavlov_data/conll2003_v2.tar.gz', dir_path)
 
-    def read(self, dir_path: str, dataset_name='conll2003'):
+    def read(self, dir_path: str, dataset_name='conll2003', provide_pos=False):
+        self.provide_pos = provide_pos
         dir_path = Path(dir_path)
         files = list(dir_path.glob('*.txt'))
         if 'train.txt' not in {file_path.name for file_path in files}:
@@ -27,8 +28,7 @@ class Conll2003DatasetReader(DatasetReader):
             dataset[name] = self.parse_ner_file(file_name)
         return dataset
 
-    @staticmethod
-    def parse_ner_file(file_name: Path):
+    def parse_ner_file(self, file_name: Path):
         samples = []
         with file_name.open() as f:
             tokens = ['<DOCSTART>']
@@ -38,13 +38,19 @@ class Conll2003DatasetReader(DatasetReader):
                 # Check end of the document
                 if 'DOCSTART' in line:
                     if len(tokens) > 1:
-                        samples.append(((tokens, pos_tags), tags, ))
+                        if self.provide_pos:
+                            samples.append(((tokens, pos_tags), tags, ))
+                        else:
+                            samples.append((tokens, tags,))
                         tokens = ['<DOCSTART>']
                         pos_tags = ['O']
                         tags = ['O']
                 elif len(line) < 2:
                     if len(tokens) > 0:
-                        samples.append(((tokens, pos_tags), tags, ))
+                        if self.provide_pos:
+                            samples.append(((tokens, pos_tags), tags, ))
+                        else:
+                            samples.append((tokens, tags,))
                         tokens = []
                         pos_tags = []
                         tags = []
