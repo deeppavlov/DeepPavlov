@@ -21,34 +21,6 @@
         "load_path": "vocabs/token.dict"
       },
       {
-        "id": "word_vocab",
-        "name": "default_vocab",
-        "level": "token",
-        "save_path": "vocabs/word.dict",
-        "load_path": "vocabs/word.dict"
-      },
-      {
-        "id": "tag_vocab",
-        "name": "default_vocab",
-        "level": "token",
-        "save_path": "vocabs/tag.dict",
-        "load_path": "vocabs/tag.dict"
-      },
-      {
-        "id": "char_vocab",
-        "name": "default_vocab",
-        "level": "char",
-        "save_path": "vocabs/char.dict",
-        "load_path": "vocabs/char.dict"
-      },
-      {
-        "id": "classes_vocab",
-        "name": "default_vocab",
-        "level": "token",
-        "save_path": "vocabs/classes.dict",
-        "load_path": "vocabs/classes.dict"
-      },
-      {
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],
@@ -58,78 +30,35 @@
         "word_vocab": "#token_vocab",
         "template_path": "dstc2/dstc2-templates.txt",
         "use_action_mask": false,
-        "network": {
-          "name": "go_bot_rnn",
-          "load_path": "go_bot_all/model",
-          "save_path": "go_bot_all/model",
+        "db_result_during_interaction": {
+          "addr": "Sobina Square, 1/4",
+          "area": "north",
+          "food": "russian",
+          "phone": "+7(965)173-37-33",
+          "postcode": "141700",
+          "pricerange": "cheap"
+        },
+        "network_parameters": {
+          "load_path": "gobot_dstc2_all/model",
+          "save_path": "gobot_dstc2_all/model",
           "learning_rate": 0.0009,
           "dropout_rate": 0.7,
           "hidden_size": 128,
-          "dense_size": 64,
-          "obs_size": 830,
-          "action_size": 45
+          "dense_size": 64
         },
         "slot_filler": {
-          "name": "dstc_slotfilling",
-          "save_path": "ner/dstc_ner_model",
-          "load_path": "ner/dstc_ner_model",
-          "word_vocab": "#word_vocab",
-          "tag_vocab": "#tag_vocab",
-          "char_vocab": "#char_vocab",
-          "filter_width": 7,
-          "embeddings_dropout": true,
-          "n_filters": [
-            64,
-            64
-          ],
-          "token_embeddings_dim": 64,
-          "char_embeddings_dim": 32,
-          "use_batch_norm": true,
-          "use_crf": true
+          "config_path": "../deeppavlov/configs/ner/slotfill_dstc2.json"
         },
         "intent_classifier": {
-          "name": "intent_model",
-          "save_path": "intents/intent_cnn_v3",
-          "load_path": "intents/intent_cnn_v3",
-          "classes": "#classes_vocab.keys()",
-          "train_now": true,
-          "kernel_sizes_cnn": [
-            1,
-            2,
-            3
-          ],
-          "filters_cnn": 512,
-          "confident_threshold": 0.5,
-          "optimizer": "Adam",
-          "lear_rate": 0.1,
-          "lear_rate_decay": 0.1,
-          "loss": "binary_crossentropy",
-          "text_size": 15,
-          "coef_reg_cnn": 1e-4,
-          "coef_reg_den": 1e-4,
-          "dropout_rate": 0.5,
-          "dense_size": 100,
-          "model_name": "cnn_model",
-          "embedder": {
-            "name": "fasttext",
-            "save_path": "embeddings/dstc2_fastText_model.bin",
-            "load_path": "embeddings/dstc2_fastText_model.bin",
-            "dim": 100
-          },
-          "tokenizer": {
-            "name": "nltk_tokenizer",
-            "tokenizer": "wordpunct_tokenize"
-          }
+          "config_path": "../deeppavlov/configs/intents/intents_dstc2.json"
         },
         "embedder": {
           "name": "fasttext",
           "save_path": "embeddings/wiki.en.bin",
           "load_path": "embeddings/wiki.en.bin",
-          "mean": true,
-          "emb_module": "fasttext",
           "dim": 300
         },
-        "bow_encoder": {
+        "bow_embedder": {
           "name": "bow"
         },
         "tokenizer": {
@@ -138,14 +67,7 @@
         },
         "tracker": {
           "name": "featurized_tracker",
-          "slot_names": [
-            "pricerange",
-            "this",
-            "area",
-            "slot",
-            "food",
-            "name"
-          ]
+          "slot_names": ["pricerange", "this", "area", "slot", "food", "name"]
         }
       }
     ]

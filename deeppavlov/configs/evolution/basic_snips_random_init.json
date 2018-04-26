@@ -126,6 +126,15 @@
               "discrete": true
             },
             "padding": "same"
+          },
+          "Attention": {
+            "context_length": {
+              "range": [
+                50,
+                200
+              ],
+              "discrete": true
+            }
           }
         },
         "confident_threshold": {

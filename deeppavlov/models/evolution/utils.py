@@ -174,9 +174,9 @@ class Attention(Layer):
             self.b = None
 
         self.built = True
+        super(Attention, self).build(input_shape)
 
     def call(self, x, mask=None):
-
         expanded_context_3d = expand_tile_batch_size(memory=x, context=self.context)
         expanded_context_4d = expand_tile(expanded_context_3d, axis=1, n_repetitions=K.int_shape(x)[1])
         expanded_x = expand_tile(x, axis=2, n_repetitions=K.int_shape(expanded_context_3d)[1])
@@ -184,20 +184,31 @@ class Attention(Layer):
         # now expanded_context_4d and expanded_x are of
         # shape (bs, time_steps, context_size, n_features)
 
+        print("attention")
         x_full = Concatenate(axis=-1)([expanded_x, expanded_context_4d])
 
+        print("attention", x_full.shape)
         out = K.dot(x_full, self.W)
+
+        print("attention", out.shape)
         if self.use_bias:
             out = K.bias_add(out, self.b)
 
+        print("attention", out.shape)
         out = Activation('softmax')(out)
+
+        print("attention", out.shape)
         out = Multiply()([out, expanded_x])
 
+        print("attention", out.shape)
         out = Lambda(lambda x: K.sum(x, axis=1))(out)
+
+        print("attention", out.shape)
         return out
 
     def compute_output_shape(self, input_shape):
-        return input_shape
+        return input_shape[0], self.context_length, input_shape[1]
+
 
 def expand_tile(units, axis, n_repetitions=None):
     """Expand and tile tensor along given axis

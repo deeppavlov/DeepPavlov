@@ -39,23 +39,32 @@
           "pricerange": "cheap"
         },
         "network_parameters": {
-          "load_path": "gobot_dstc2/model",
-          "save_path": "gobot_dstc2/model",
-          "learning_rate": 0.002,
-          "dropout_rate": 0.8,
+          "load_path": "gobot_dstc2_best/model",
+          "save_path": "gobot_dstc2_best/model",
+          "learning_rate": 0.0008,
+          "dropout_rate": 0.85,
           "hidden_size": 128,
-          "dense_size": 64
+          "dense_size": 64,
+          "attention_mechanism": {
+            "type": "cs_bahdanau",
+            "hidden_size": 32,
+            "depth": 3,
+            "action_as_key": true,
+            "max_num_tokens": 100,
+            "projected_align": false
+          }
         },
         "slot_filler": {
           "config_path": "../deeppavlov/configs/ner/slotfill_dstc2.json"
         },
-        "intent_classifier": {
-          "config_path": "../deeppavlov/configs/intents/intents_dstc2.json"
+        "intent_classifier": null,
+        "embedder": {
+          "name": "fasttext",
+          "load_path": "embeddings/wiki.en.bin",
+          "save_path": "embeddings/wiki.en.bin",
+          "dim": 300
         },
-        "embedder": null,
-        "bow_embedder": {
-          "name": "bow"
-        },
+        "bow_embedder": null,
         "tokenizer": {
           "name": "stream_spacy_tokenizer",
           "lowercase": false
@@ -69,19 +78,14 @@
   },
   "train": {
     "epochs": 200,
-    "batch_size": 2,
+    "batch_size": 16,
 
     "metrics": ["per_item_dialog_accuracy"],
-    "validation_patience": 20,
+    "validation_patience": 30,
     "val_every_n_epochs": 1,
 
     "log_every_n_batches": -1,
     "log_every_n_epochs": 1,
     "show_examples": false
-  },
-  "metadata": {
-    "labels": {
-      "telegram_utils": "GoalOrientedBot"
-    }
   }
 }

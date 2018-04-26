@@ -82,9 +82,13 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
                         time_steps.append(K.int_shape(inp_list[i])[1])
                         features.append(K.int_shape(inp_list[i])[2])
                     new_feature_shape = max(features)
+                    new_inp_list = []
                     for i in range(len(inp_list)):
-                        inp_list[i] = Dense(new_feature_shape)(inp_list[i])
-                    inp = Concatenate(axis=1)(inp_list)
+                        if K.int_shape(inp_list[i])[2] == new_feature_shape:
+                            new_inp_list.append(inp_list[i])
+                        else:
+                            new_inp_list.append(Dense(new_feature_shape)(inp_list[i]))
+                    inp = Concatenate(axis=1)(new_inp_list)
             else:
                 inp = inp_list[0]
 

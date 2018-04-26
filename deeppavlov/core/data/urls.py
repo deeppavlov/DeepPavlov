@@ -15,7 +15,9 @@ limitations under the License.
 """
 
 REQ_URLS = {
-    'http://lnsigo.mipt.ru/export/deeppavlov_data/go_bot.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/gobot_dstc2_v3.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/gobot_dstc2_best_v1.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/intents.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ner.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_conll2003_emb.tar.gz',
@@ -27,16 +29,20 @@ REQ_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/slots.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/dstc2_fastText_model.bin',
     'http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz',
-    'http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_1.1.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_ru.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/seq2seq_go_bot.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes.tar.gz',
-    'http://lnsigo.mipt.ru/export/deeppavlov_data/odqa.tar.gz'
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/odqa.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes_senna.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/senna.tar.gz'
 }
 
 OPT_URLS = {
-    'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin',
     'http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M.vec',
     'http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M-char.vec',
+    'http://lnsigo.mipt.ru/export/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize-char.vec',
+    'http://lnsigo.mipt.ru/export/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.vec',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/odqa.tar.gz'
 }
 
@@ -48,6 +54,7 @@ EMBEDDING_URLS = {
     'http://lnsigo.mipt.ru/export/embeddings/insurance_v1_word2vec'
     'http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M.vec',
     'http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M-char.vec',
+    'http://lnsigo.mipt.ru/export/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize-char.vec',
     'http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt'
 }
 

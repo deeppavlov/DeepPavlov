@@ -72,9 +72,9 @@ def binary_PTA(y_true, y_pred, threshold=K.variable(value=0.5)):
 
 @register_metric('classification_roc_auc')
 def roc_auc_score(y_true, y_predicted):
-    classes = y_predicted[0][2]
+    classes = np.array(list(y_predicted[0][1].keys()))
     y_true_one_hot = labels2onehot(y_true, classes)
-    y_pred_probas = [y_predicted[i][1] for i in range(len(y_predicted))]
+    y_pred_probas = [list(y_predicted[i][1].values()) for i in range(len(y_predicted))]
 
     try:
         _ = K.is_keras_tensor(y_pred_probas)

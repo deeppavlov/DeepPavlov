@@ -12,8 +12,10 @@ node('gpu') {
                 virtualenv --python=python3 ".venv-$BUILD_NUMBER"
                 . .venv-$BUILD_NUMBER/bin/activate
                 pip install pip==9.0.3
+                sed -ri 's/^ *tensorflow *(=|<|>|\$)/tensorflow-gpu\\1/g' requirements.txt
                 python setup.py develop
-                python -m spacy download en
+                pip install http://lnsigo.mipt.ru/export/en_core_web_sm-2.0.0.tar.gz
+                python -m spacy link en_core_web_sm en --force
                 pip install -r requirements-dev.txt
             """
         }
