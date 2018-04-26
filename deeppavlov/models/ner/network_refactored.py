@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+from functools import partial
 
 from deeppavlov.core.layers.tf_layers import embedding_layer, character_embedding_network, variational_dropout
 from deeppavlov.core.layers.tf_layers import cudnn_bi_lstm, cudnn_bi_gru, bi_rnn, stacked_cnn
@@ -25,6 +26,7 @@ class NerNetwork(TFModel):
 
     def __init__(self,
                  n_tags,  # Features dimensions
+                 token_emb_dim=None,
                  char_emb_dim=None,
                  capitalization_dim=None,
                  pos_features_dim=None,
@@ -56,7 +58,7 @@ class NerNetwork(TFModel):
         # ================ Building input features =================
 
         # Token embeddings
-        self._add_word_embeddings(token_emb_mat, embeddings_dropout)
+        self._add_word_embeddings(token_emb_mat, embeddings_dropout, token_emb_dim)
 
         # Masks for different lengths utterances
         self.mask_ph = self._add_mask()
@@ -112,12 +114,16 @@ class NerNetwork(TFModel):
         self._dropout_ph = tf.placeholder_with_default(dropout_keep_prob, shape=[], name='dropout')
         self.training_ph = tf.placeholder_with_default(False, shape=[], name='is_training')
 
-    def _add_word_embeddings(self, token_emb_mat, embeddings_dropout):
-        token_indices_ph = tf.placeholder(tf.int32, [None, None], name='token_indices')
-        emb = embedding_layer(token_indices_ph, token_emb_mat)
+    def _add_word_embeddings(self, token_emb_mat, embeddings_dropout, token_emb_dim=None):
+        if token_emb_mat is None:
+            token_ph = tf.placeholder(tf.float32, [None, None, token_emb_dim], name='Token_Ind_ph')
+            emb = token_ph
+        else:
+            token_ph = tf.placeholder(tf.int32, [None, None], name='Token_Ind_ph')
+            emb = embedding_layer(token_ph, token_emb_mat)
         if embeddings_dropout:
             emb = tf.layers.dropout(emb, self._dropout_ph, noise_shape=[tf.shape(emb)[0], 1, tf.shape(emb)[2]])
-        self._xs_ph_list.append(token_indices_ph)
+        self._xs_ph_list.append(token_ph)
         self._input_features.append(emb)
 
     def _add_mask(self):
@@ -138,9 +144,10 @@ class NerNetwork(TFModel):
         self._input_features.append(capitalization_ph)
 
     def _add_pos(self, pos_features_dim):
-        pos_ph = tf.placeholder(tf.int32, [None, None, pos_features_dim], name='POS_ph')
+        pos_ph = tf.placeholder(tf.int32, [None, None], name='POS_ph')
+        pos = tf.one_hot(pos_ph, pos_features_dim, dtype=tf.float32)
         self._xs_ph_list.append(pos_ph)
-        self._input_features.append(pos_ph)
+        self._input_features.append(pos)
 
     def _add_additional_features(self, features_list):
         for feature, dim in features_list:
@@ -208,8 +215,9 @@ class NerNetwork(TFModel):
             total_loss = loss + l2_reg * tf.reduce_mean(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
         else:
             total_loss = loss
-
-        train_op = self.get_train_op(total_loss, self.learning_rate_ph, clip_norm=clip_grad_norm)
+        optimizer = partial(tf.train.MomentumOptimizer, momentum=0.9, use_nesterov=True)
+        # optimizer = tf.train.AdamOptimizer
+        train_op = self.get_train_op(total_loss, self.learning_rate_ph, optimizer, clip_norm=clip_grad_norm)
         return train_op, loss
 
     def predict_no_crf(self, xs):
@@ -240,6 +248,8 @@ class NerNetwork(TFModel):
 
     def _fill_feed_dict(self, xs, y=None, learning_rate=None, train=False):
         assert len(xs) == len(self._xs_ph_list)
+        xs = list(xs)
+        xs[0] = np.array(xs[0])
         feed_dict = {ph: x for ph, x in zip(self._xs_ph_list, xs)}
         if y is not None:
             feed_dict[self._y_ph] = y
