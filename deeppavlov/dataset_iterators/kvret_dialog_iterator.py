@@ -16,11 +16,11 @@ limitations under the License.
 from overrides import overrides
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.dataset_iterator import BasicDatasetIterator
+from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 
 @register('kvret_dialog_iterator')
-class KvretDialogDatasetIterator(BasicDatasetIterator):
+class KvretDialogDatasetIterator(DataLearningIterator):
 # TODO: write custom batch_generator: order of utterances from one dialogue is presumed
     @staticmethod
     def _dialogs(data):

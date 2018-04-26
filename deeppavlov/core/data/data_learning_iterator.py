@@ -20,19 +20,23 @@ from typing import List, Dict, Generator, Tuple, Any
 from deeppavlov.core.common.registry import register
 
 
-@register('basic_dataset_iterator')
-class BasicDatasetIterator:
+@register('data_learning_iterator')
+class DataLearningIterator:
+    """
+    Dataset iterator for learning models, e. g. neural networks. Split data on 'train', 'valid',
+    'test' sets. Generate batches.
+    """
     def split(self, *args, **kwargs):
         pass
 
     def __init__(self, data: Dict[str, List[Tuple[Any, Any]]],
                  seed: int = None, shuffle: bool = True,
                  *args, **kwargs) -> None:
-        r""" Dataiterator takes a dict with fields 'train', 'test', 'valid'. A list of samples (pairs x, y) is stored
-        in each field.
+        """ Dataiterator takes a dict with fields 'train', 'test', 'valid'. A list of samples
+         (pairs x, y) is stored in each field.
         Args:
-            data: list of (x, y) pairs. Each pair is a sample from the dataset. x as well as y can be a tuple
-                of different input features.
+            data: list of (x, y) pairs. Each pair is a sample from the dataset. x as well as y
+            can be a tuple of different input features.
             seed (int): random seed for data shuffling. Defaults to None
             shuffle: whether to shuffle data when batching (from config)
         """
@@ -51,11 +55,10 @@ class BasicDatasetIterator:
             'all': self.train + self.test + self.valid
         }
 
-    def batch_generator(self, batch_size: int, data_type: str = 'train',
-                        shuffle: bool = None) -> Generator:
-        r"""This function returns a generator, which serves for generation of raw
-        (no preprocessing such as tokenization)
-         batches
+    def gen_batches(self, batch_size: int, data_type: str = 'train',
+                    shuffle: bool = None) -> Generator:
+        """Return a generator, which serves for generation of raw (no preprocessing such as tokenization)
+        batches
         Args:
             batch_size (int): number of samples in batch
             data_type (str): can be either 'train', 'test', or 'valid'
@@ -82,12 +85,13 @@ class BasicDatasetIterator:
         for i in range((data_len - 1) // batch_size + 1):
             yield tuple(zip(*[data[o] for o in order[i * batch_size:(i + 1) * batch_size]]))
 
-    def iter_all(self, data_type: str = 'train') -> tuple:
-        r"""Iterate through all data. It can be used for building dictionary or
+    def get_instances(self, data_type: str = 'train') -> tuple:
+        """
+        Reformat data to x, y pairs, where x, y is a single dataset instance.
         Args:
             data_type (str): can be either 'train', 'test', or 'valid'
         Returns:
-            samples_gen: a generator, that iterates through the all samples in the selected data type of the dataset
+            x, y pairs
         """
         data = self.data[data_type]
         return tuple(zip(*data))

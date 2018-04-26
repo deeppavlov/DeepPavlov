@@ -22,7 +22,6 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.data.vocab import DefaultVocabulary
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
-from deeppavlov.models.encoders.bow import BoWEncoder
 from deeppavlov.skills.seq2seq_go_bot.network import Seq2SeqGoalOrientedBotNetwork
 from deeppavlov.core.common.log import get_logger
 
@@ -38,7 +37,6 @@ class Seq2SeqGoalOrientedBot(NNModel):
                  network: Type = Seq2SeqGoalOrientedBotNetwork,
                  source_vocab: Type = DefaultVocabulary,
                  target_vocab: Type = DefaultVocabulary,
-                 bow_encoder: Type = BoWEncoder,
                  debug=False,
                  save_path=None,
                  **kwargs):
@@ -50,8 +48,6 @@ class Seq2SeqGoalOrientedBot(NNModel):
         self.network = network
         self.src_vocab = source_vocab
         self.tgt_vocab = target_vocab
-        self.bow_encoder = bow_encoder
-        #self.embedder = embedder
         self.debug = debug
 
     def train_on_batch(self, *batch):

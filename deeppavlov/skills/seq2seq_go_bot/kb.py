@@ -93,7 +93,12 @@ class KnowledgeBaseEntityNormalizer(Component):
     def normalize(self, key, tokens):
         utter = ' '.join(tokens)
         for entity, value in self.kb([key])[0]:
-            utter = utter.replace(' '.join(value), entity)
+            to_replace = ' '.join(value)
+            if to_replace:
+                utter = utter.replace(to_replace, entity)
+            else:
+                log.debug("Empty value for knowledge base entry with key = {}"\
+                          .format(key))
         return utter.split()
 
     def denormalize(self, key, tokens):

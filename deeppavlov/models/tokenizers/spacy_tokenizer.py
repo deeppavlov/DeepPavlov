@@ -19,6 +19,7 @@ from typing import List, Generator, Any, Tuple
 
 import spacy
 from spacy.lang.en import English
+from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
@@ -36,28 +37,30 @@ class StreamSpacyTokenizer(Component):
     Works only for English language.
     """
 
-    def __init__(self, disable: list = None, stopwords: list = None, batch_size: int = None,
-                 ngram_range: Tuple[int, int] = None, lemmas=False, n_threads: int = None,
-                 lowercase: bool = None, alphas_only = False, **kwargs):
+    def __init__(self, disable: list = None, stopwords: list = None,
+                 batch_size: int = None, ngram_range: List[int] = None, lemmas=False,
+                 n_threads: int = None, lowercase: bool = None, alphas_only: bool = None, **kwargs):
         """
         :param disable: pipeline processors to omit; if nothing should be disabled,
          pass an empty list
         :param stopwords: a set of words to skip
         :param batch_size: a batch size for internal spaCy multi-threading
         :param ngram_range: range for producing ngrams, ex. for unigrams + bigrams should be set to
-        (1, 2), for bigrams only should be set to (2, 2)
+        [1, 2], for bigrams only should be set to [2, 2]
         :param lemmas: weather to perform lemmatizing or not while tokenizing, currently works only
         for the English language
         :param n_threads: a number of threads for internal spaCy multi-threading
         """
         if disable is None:
             disable = ['parser', 'ner']
+        if ngram_range is None:
+            ngram_range = [1, 1]
         self.stopwords = stopwords or []
         self.model = spacy.load('en', disable=disable)
         self.model.add_pipe(self.model.create_pipe('sentencizer'))
         self.tokenizer = English().Defaults.create_tokenizer(self.model)
         self.batch_size = batch_size
-        self.ngram_range = ngram_range
+        self.ngram_range = tuple(ngram_range)  # cast JSON array to tuple
         self.lemmas = lemmas
         self.n_threads = n_threads
         self.lowercase = lowercase
@@ -99,6 +102,8 @@ class StreamSpacyTokenizer(Component):
         else:
             _lowercase = self.lowercase
 
+        # print(_lowercase)
+
         for i, doc in enumerate(
                 self.tokenizer.pipe(data, batch_size=_batch_size, n_threads=_n_threads)):
             # DEBUG
@@ -139,16 +144,23 @@ class StreamSpacyTokenizer(Component):
             processed_doc = ngramize(filtered, ngram_range=_ngram_range)
             yield from processed_doc
 
-    def _filter(self, items):
+    def _filter(self, items, alphas_only=True):
         """
         Make ngrams from a list of tokens/lemmas
         :param items: list of tokens, lemmas or other strings to form ngrams
+        :param alphas_only: should filter numeric and alpha-numeric types or not
         :return: filtered list of tokens/lemmas
         """
-        if self.alphas_only:
-            filter_fn = lambda x: x.isalpha() and x not in self.stopwords
+        if self.alphas_only is None:
+            _alphas_only = alphas_only
+        else:
+            _alphas_only = self.alphas_only
+
+        if _alphas_only:
+            filter_fn = lambda x: x.isalpha() and not x.isspace() and x not in self.stopwords
         else:
             filter_fn = lambda x: not x.isspace() and x not in self.stopwords
+
         return list(filter(filter_fn, items))
 
     def set_stopwords(self, stopwords):

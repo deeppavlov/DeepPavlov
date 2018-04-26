@@ -17,19 +17,12 @@ limitations under the License.
 import numpy as np
 
 from keras import backend as K
-import sklearn.metrics
+
+from deeppavlov.core.common.metrics_registry import register_metric
+from deeppavlov.models.classifiers.intents.utils import labels2onehot
 
 
 def precision_K(y_true, y_pred):
-    """
-    Calculate precision for keras tensors
-    Args:
-        y_true: true labels
-        y_pred: predicted labels
-
-    Returns:
-        precision
-    """
     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
     predicted_positives = K.sum(K.round(K.clip(y_pred, 0, 1)))
     precision = true_positives / (predicted_positives + K.epsilon())
@@ -37,15 +30,6 @@ def precision_K(y_true, y_pred):
 
 
 def recall_K(y_true, y_pred):
-    """
-    Calculate recall for keras tensors
-    Args:
-        y_true: true labels
-        y_pred: predicted labels
-
-    Returns:
-        recall
-    """
     true_positives = K.sum(K.round(K.clip(y_true * y_pred, 0, 1)))
     possible_positives = K.sum(K.round(K.clip(y_true, 0, 1)))
     recall = true_positives / (possible_positives + K.epsilon())
@@ -53,15 +37,6 @@ def recall_K(y_true, y_pred):
 
 
 def fbeta_score_K(y_true, y_pred, beta=1):
-    """
-    Calculate f-beta score for keras tensors
-    Args:
-        y_true: true labels
-        y_pred: predicted labels
-
-    Returns:
-        f-beta score
-    """
     if beta < 0:
         raise ValueError('The lowest choosable beta is zero (only precision).')
 
@@ -76,15 +51,6 @@ def fbeta_score_K(y_true, y_pred, beta=1):
 
 
 def precision_np(y_true, y_pred):
-    """
-    Calculate precision for numpy arrays
-    Args:
-        y_true: true labels
-        y_pred: predicted labels
-
-    Returns:
-        f-beta score
-    """
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
     true_positives = np.sum(np.round(np.clip(y_true * y_pred, 0, 1)))
@@ -94,15 +60,6 @@ def precision_np(y_true, y_pred):
 
 
 def recall_np(y_true, y_pred):
-    """
-    Calculate recall for numpy arrays
-    Args:
-        y_true: true labels
-        y_pred: predicted labels
-
-    Returns:
-        recall
-    """
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
     true_positives = np.sum(np.round(np.clip(y_true * y_pred, 0, 1)))
@@ -112,15 +69,6 @@ def recall_np(y_true, y_pred):
 
 
 def fbeta_score_np(y_true, y_pred, beta=1):
-    """
-    Calculate f-beta score for numpy arrays
-    Args:
-        y_true: true labels
-        y_pred: predicted labels
-
-    Returns:
-        f-beta score
-    """
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
     if beta < 0:
@@ -137,34 +85,15 @@ def fbeta_score_np(y_true, y_pred, beta=1):
     return fbeta_score
 
 
-def fmeasure(y_true, y_pred):
-    """
-    Calculate F1 score for given numpy arrays or keras tensors
-    Args:
-        y_true: true labels
-        y_pred: predicted labels
+@register_metric('classification_f1')
+def fmeasure(y_true, y_predicted):
+    classes = np.array(list(y_predicted[0][1].keys()))
+    y_true_one_hot = labels2onehot(y_true, classes)
+    y_pred_labels = [y_predicted[i][0] for i in range(len(y_predicted))]
+    y_pred_one_hot = labels2onehot(y_pred_labels, classes)
 
-    Returns:
-        F1 score
-    """
     try:
-        _ = K.is_keras_tensor(y_pred)
-        return fbeta_score_K(y_true, y_pred, beta=1)
+        _ = K.is_keras_tensor(y_pred_one_hot)
+        return fbeta_score_K(y_true_one_hot, y_pred_one_hot, beta=1)
     except ValueError:
-        return fbeta_score_np(y_true, y_pred, beta=1)
-
-
-def roc_auc_score(y_true, y_pred):
-    """
-    Compute Area Under the Curve (AUC) from prediction scores
-    Args:
-        y_true: true binary labels
-        y_pred: target scores, can either be probability estimates of the positive class
-
-    Returns:
-        Area Under the Curve (AUC) from prediction scores
-    """
-    try:
-        return sklearn.metrics.roc_auc_score(y_true.reshape(-1), y_pred.reshape(-1))
-    except ValueError:
-        return 0.
+        return fbeta_score_np(y_true_one_hot, y_pred_one_hot, beta=1)

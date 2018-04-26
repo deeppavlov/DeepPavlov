@@ -46,10 +46,10 @@ A working config could look like this:
       {
         "name": "nltk_tokenizer",
         "in": ["x_lower"],
-        "out": ["x_tokeninzed"]
+        "out": ["x_tokens"]
       },
       {
-        "in": ["x_tokeninzed"],
+        "in": ["x_tokens"],
         "out": ["y_predicted"],
         "name": "spelling_error_model",
         "window": 1,
@@ -138,7 +138,7 @@ A working training config could look something like:
         "name": "nltk_tokenizer",
         "id": "tokenizer",
         "in": ["x_lower"],
-        "out": ["x_tokenized"]
+        "out": ["x_tokens"]
       },
       {
         "ref": "lower",
@@ -148,11 +148,11 @@ A working training config could look something like:
       {
         "ref": "tokenizer",
         "in": ["y"],
-        "out": ["y_tokenized"]
+        "out": ["y_tokens"]
       },
       {
-        "fit_on": ["x_tokenized", "y_tokenized"],
-        "in": ["x_tokenized"],
+        "fit_on": ["x_tokens", "y_tokens"],
+        "in": ["x_tokens"],
         "out": ["y_predicted"],
         "name": "spelling_error_model",
         "window": 1,

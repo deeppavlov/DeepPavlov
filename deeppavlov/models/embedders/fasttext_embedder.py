@@ -16,6 +16,7 @@ limitations under the License.
 
 import sys
 from overrides import overrides
+from typing import List
 
 import numpy as np
 import fastText as Fasttext
@@ -34,6 +35,7 @@ class FasttextEmbedder(Component, Serializable):
         super().__init__(save_path=save_path, load_path=load_path)
         self.tok2emb = {}
         self.dim = dim
+
         self.model = self.load()
 
     def save(self, *args, **kwargs):
@@ -60,7 +62,7 @@ class FasttextEmbedder(Component, Serializable):
         """
         Embed data
         """
-        return [self._encode(sentence, mean) for sentence in batch]
+        return [self._encode(sample, mean) for sample in batch]
 
     def __iter__(self):
         yield from self.model.get_words()
@@ -73,7 +75,7 @@ class FasttextEmbedder(Component, Serializable):
                 emb = self.tok2emb[t]
             except KeyError:
                 try:
-                    emb = self.model.get_word_vector(t)
+                    emb = self.model.get_word_vector(t)[:self.dim]
                 except KeyError:
                     emb = np.zeros(self.dim, dtype=np.float32)
                 self.tok2emb[t] = emb

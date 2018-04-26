@@ -1,10 +1,24 @@
+"""
+Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 # check version
 import sys
 assert sys.hexversion >= 0x3060000, 'Does not work in python3.5 or lower'
 
-
 import deeppavlov.core.models.keras_model
-import deeppavlov.core.data.dataset_iterator
 import deeppavlov.core.data.vocab
 import deeppavlov.core.data.simple_vocab
 import deeppavlov.dataset_readers.babi_reader
@@ -21,12 +35,13 @@ import deeppavlov.dataset_iterators.dstc2_intents_iterator
 import deeppavlov.dataset_iterators.typos_iterator
 import deeppavlov.dataset_iterators.basic_classification_iterator
 import deeppavlov.dataset_iterators.squad_iterator
+import deeppavlov.dataset_iterators.sqlite_iterator
 import deeppavlov.models.classifiers.intents.intent_model
 import deeppavlov.models.commutators.random_commutator
 import deeppavlov.models.embedders.fasttext_embedder
 import deeppavlov.models.embedders.dict_embedder
 import deeppavlov.models.embedders.glove_embedder
-import deeppavlov.models.encoders.bow
+import deeppavlov.models.embedders.bow_embedder
 import deeppavlov.models.ner.slotfill
 import deeppavlov.models.ner.ner
 import deeppavlov.models.ner.ner_ontonotes
@@ -45,7 +60,9 @@ import deeppavlov.skills.go_bot.tracker
 import deeppavlov.skills.seq2seq_go_bot.bot
 import deeppavlov.skills.seq2seq_go_bot.network
 import deeppavlov.skills.seq2seq_go_bot.kb
+import deeppavlov.skills.odqa.ranker
 import deeppavlov.vocabs.typos
+import deeppavlov.vocabs.wiki_sqlite
 import deeppavlov.dataset_readers.insurance_reader
 import deeppavlov.dataset_iterators.ranking_iterator
 import deeppavlov.models.ranking.ranking_model
@@ -63,5 +80,7 @@ import deeppavlov.metrics.accuracy
 import deeppavlov.metrics.fmeasure
 import deeppavlov.metrics.bleu
 import deeppavlov.metrics.squad_metrics
+import deeppavlov.metrics.roc_auc_score
+import deeppavlov.metrics.fmeasure_classification
 
 import deeppavlov.core.common.log
