@@ -42,9 +42,9 @@ def labels2onehot(labels, classes):
         for intent in sample:
             if intent not in classes:
                 log.warning('Unknown intent {} detected'.format(intent))
-                curr += eye[np.where(classes == 'unknown')[0]].reshape(-1)
+                curr += eye[np.where(np.array(classes) == 'unknown')[0]].reshape(-1)
             else:
-                curr += eye[np.where(classes == intent)[0]].reshape(-1)
+                curr += eye[np.where(np.array(classes) == intent)[0]].reshape(-1)
         y.append(curr)
     y = np.asarray(y)
     return y
@@ -67,9 +67,9 @@ def proba2labels(proba, confident_threshold, classes):
     for sample in proba:
         to_add = np.where(sample > confident_threshold)[0]
         if len(to_add) > 0:
-            y.append(classes[to_add])
+            y.append(np.array(classes)[to_add])
         else:
-            y.append(np.array([classes[np.argmax(sample)]]))
+            y.append(np.array([np.array(classes)[np.argmax(sample)]]))
     y = np.asarray(y)
     return y
 

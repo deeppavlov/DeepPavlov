@@ -19,7 +19,6 @@ from pathlib import Path
 from typing import Union
 
 from deeppavlov.core.common import paths
-from deeppavlov.core.common.file import read_json
 
 
 def set_deeppavlov_root(config: dict):

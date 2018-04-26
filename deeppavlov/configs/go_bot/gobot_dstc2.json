@@ -21,20 +21,6 @@
         "load_path": "vocabs/token.dict"
       },
       {
-        "id": "word_vocab",
-        "name": "default_vocab",
-        "level": "token",
-        "save_path": "vocabs/word.dict",
-        "load_path": "vocabs/word.dict"
-      },
-      {
-        "id": "classes_vocab",
-        "name": "default_vocab",
-        "level": "token",
-        "save_path": "vocabs/classes.dict",
-        "load_path": "vocabs/classes.dict"
-      },
-      {
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],
@@ -64,50 +50,7 @@
           "config_path": "../deeppavlov/configs/ner/slotfill_dstc2.json"
         },
         "intent_classifier": {
-          "name": "intent_model",
-          "save_path": "intents/intent_cnn_v2",
-          "load_path": "intents/intent_cnn_v2",
-          "classes": "#classes_vocab.keys()",
-          "opt": {
-            "train_now": true,
-            "kernel_sizes_cnn": [
-              3,
-              3,
-              3
-            ],
-            "filters_cnn": 512,
-            "lear_metrics": [
-              "binary_accuracy",
-              "fmeasure"
-            ],
-            "confident_threshold": 0.5,
-            "optimizer": "Adam",
-            "lear_rate": 0.1,
-            "lear_rate_decay": 0.1,
-            "loss": "binary_crossentropy",
-            "text_size": 15,
-            "coef_reg_cnn": 1e-4,
-            "coef_reg_den": 1e-4,
-            "dropout_rate": 0.5,
-            "epochs": 1,
-            "dense_size": 100,
-            "model_name": "cnn_model",
-            "batch_size": 64,
-            "val_every_n_epochs": 5,
-            "verbose": true,
-            "val_patience": 5
-          },
-          "embedder": {
-            "name": "fasttext",
-            "save_path": "embeddings/dstc2_fastText_model.bin",
-            "load_path": "embeddings/dstc2_fastText_model.bin",
-            "emb_module": "fasttext",
-            "dim": 100
-          },
-          "tokenizer": {
-            "name": "nltk_tokenizer",
-            "tokenizer": "wordpunct_tokenize"
-          }
+          "config_path": "../deeppavlov/configs/intents/intents_dstc2.json"
         },
         "embedder": null,
         "bow_embedder": {
