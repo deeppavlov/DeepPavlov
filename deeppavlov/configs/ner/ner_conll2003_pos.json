@@ -153,6 +153,19 @@
 
     "log_every_n_epochs": 1,
     "show_examples": false
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "NERCoNLL2003Model"
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_conll2003_v2.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt",
+        "subdir": "embeddings"
+      }
+    ]
   }
+
 }
 
