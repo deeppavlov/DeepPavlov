@@ -20,7 +20,6 @@ import requests
 from tqdm import tqdm
 import tarfile
 import gzip
-import zipfile
 import numpy as np
 import re
 import zipfile
