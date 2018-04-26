@@ -39,14 +39,18 @@ parser.add_argument('-test', action='store_true',
                     help="Turn test mode")
 
 
-def get_all_elems_from_dict(search_dict, search_key):
+def get_all_elems_from_json(search_json, search_key):
     result = []
-    if isinstance(search_dict, dict):
-        for key in search_dict:
+    if isinstance(search_json, dict):
+        for key in search_json:
             if key == search_key:
-                result.append(search_dict[key])
-            if isinstance(search_dict[key], dict):
-                result.extend(get_all_elems_from_dict(search_dict[key], search_key))
+                result.append(search_json[key])
+            else:
+                result.extend(get_all_elems_from_json(search_json[key], search_key))
+    elif isinstance(search_json, list):
+        for item in search_json:
+            result.extend(get_all_elems_from_json(item, search_key))
+
     return result
 
 
@@ -71,10 +75,11 @@ def get_config_downloads(config_path, config_downloads=None):
             else:
                 config_downloads[url] = {'url': url, 'subdir': [sub_dir]}
 
-    config_references = get_all_elems_from_dict(config, 'config_path')
+    config_references = get_all_elems_from_json(config, 'config_path')
+    config_references = [root_path.joinpath(config_ref.split('../', 1)[1]) for config_ref in config_references]
 
-    for reference in config_references:
-        config_downloads = get_config_downloads(reference, config_downloads)
+    for config_ref in config_references:
+        config_downloads = get_config_downloads(config_ref, config_downloads)
 
     return config_downloads
 
