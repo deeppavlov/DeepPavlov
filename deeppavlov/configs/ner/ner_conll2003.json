@@ -24,7 +24,7 @@
       {
         "in": ["x_san"],
         "id": "word_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "pad_with_zeros": true,
         "special_tokens": ["<UNK>"],
         "fit_on": ["x_san"],
@@ -35,7 +35,7 @@
       {
         "in": ["pos"],
         "id": "pos_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["pos"],
         "save_path": "ner_conll2003/pos.dict",
@@ -45,7 +45,7 @@
       {
         "in": ["y"],
         "id": "tag_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["y"],
         "save_path": "ner_conll2003/tag.dict",
@@ -107,6 +107,7 @@
         "out": ["y_predicted"],
         "name": "ner_ref",
         "main": true,
+        "token_emb_dim": "#glove_emb.dim",
         "n_hidden_list": [128],
         "net_type": "rnn",
         "cell_type": "lstm",
@@ -117,7 +118,6 @@
         "pos_features_dim": "#pos_vocab.len",
         "save_path": "ner_conll2003/model",
         "load_path": "ner_conll2003/model",
-        "token_emb_mat": "#embeddings.emb_mat",
         "char_emb_mat": "#embeddings_char.emb_mat",
         "use_crf": true,
         "use_batch_norm": true,

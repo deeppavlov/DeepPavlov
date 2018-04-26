@@ -19,7 +19,7 @@
       {
         "in": ["x_lower"],
         "id": "word_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["x"],
         "save_path": "ner_conll2003/word.dict",
@@ -35,7 +35,7 @@
       {
         "in": ["y"],
         "id": "tag_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["y"],
         "save_path": "ner_conll2003/tag.dict",
