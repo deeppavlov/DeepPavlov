@@ -41,9 +41,9 @@ This message contains two intents `(thankyou, bye)`.
 
 To download pre-trained models, vocabs, embeddings on DSTC 2 and SNIPS datasets one should run the following command:
 ```
-python deep.py -d interact configs/intents/intents_dstc2.json
+python deep.py download configs/intents/intents_dstc2.json
 ```
-The flag `-d` provides downloading all the required components.
+or provide flag `-d` for commands like `interact`, `interactbot`, etc. The flag `-d` provides downloading all the required components.
 
 ## Infer from pre-trained model
 
