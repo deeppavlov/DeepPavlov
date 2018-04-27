@@ -43,7 +43,7 @@ from deeppavlov.models.evolution.check_binary_mask import number_to_type_layer, 
     find_sources_and_sinks, get_digraph_from_binary_mask, get_graph_and_plot
 from deeppavlov.models.evolution.utils import Attention, expand_tile
 from deeppavlov.core.common.file import save_json, read_json
-
+from deeppavlov.core.layers.keras_layers import multiplicative_self_attention, additive_self_attention
 
 log = get_logger(__name__)
 
@@ -57,9 +57,9 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
         get_graph_and_plot(self.opt["nodes"], self.opt["binary_mask"], self.opt["n_types"], 
             path=str(self.save_path.resolve().parent))
 
-    def get_node_output(self, node_id, dg, params, edges_outputs=None, inp=None):
+    def get_node_output(self, node_str_id, dg, params, edges_outputs=None, inp=None):
         if inp is None:
-            input_nodes = [edge[0] for edge in dg.in_edges(node_id)]
+            input_nodes = [edge[0] for edge in dg.in_edges(node_str_id)]
             inp_list = []
             for input_node in input_nodes:
                 if len(K.int_shape(edges_outputs[input_node])) == 3:
@@ -87,15 +87,21 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
             else:
                 inp = inp_list[0]
 
-        if params[params["nodes"][str(node_id)]]["node_name"] == "BiCuDNNLSTM":
-            node_params = deepcopy(params[params["nodes"][str(node_id)]])
+        if params[params["nodes"][node_str_id]]["node_name"] == "BiCuDNNLSTM":
+            node_params = deepcopy(params[params["nodes"][node_str_id]])
             node_params.pop("node_name")
             node_params.pop("node_type")
             node_params.pop("node_layer")
             output_of_node = Bidirectional(CuDNNLSTM(**node_params))(inp)
+        elif params[params["nodes"][node_str_id]]["node_name"] == "SelfMultiplicativeAttention":
+            node_params = deepcopy(params[params["nodes"][node_str_id]])
+            node_params.pop("node_name")
+            node_params.pop("node_type")
+            node_params.pop("node_layer")
+            output_of_node = multiplicative_self_attention(inp, **node_params)
         else:
-            node_func = globals().get(params[params["nodes"][str(node_id)]]["node_name"], None)
-            node_params = deepcopy(params[params["nodes"][str(node_id)]])
+            node_func = globals().get(params[params["nodes"][node_str_id]]["node_name"], None)
+            node_params = deepcopy(params[params["nodes"][node_str_id]])
             node_params.pop("node_name")
             node_params.pop("node_type")
             node_params.pop("node_layer")
@@ -136,8 +142,8 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
             if set(sinks).issubset(set(sum(sequence_of_nodes, []))):
                 break
             next_nodes = []
-            for node_id in sequence_of_nodes[-1]:
-                out_edges = dg.out_edges(node_id)
+            for node_str_id in sequence_of_nodes[-1]:
+                out_edges = dg.out_edges(node_str_id)
                 for edge in out_edges:
                     in_nodes_to_edge = [in_edge[0] for in_edge in dg.in_edges(edge[1])]
                     if set(in_nodes_to_edge).issubset(set(sum(sequence_of_nodes, []))):
@@ -146,13 +152,13 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
 
         sequence_of_nodes = sum(sequence_of_nodes, [])
 
-        for node_id in sequence_of_nodes:
-            if node_id in sources:
-                edges_outputs[node_id] = self.get_node_output(node_id, dg, params, inp=inp)
-            elif node_id in isolates:
+        for node_str_id in sequence_of_nodes:
+            if node_str_id in sources:
+                edges_outputs[node_str_id] = self.get_node_output(node_str_id, dg, params, inp=inp)
+            elif node_str_id in isolates:
                 pass
             else:
-                edges_outputs[node_id] = self.get_node_output(node_id, dg, params, edges_outputs=edges_outputs)
+                edges_outputs[node_str_id] = self.get_node_output(node_str_id, dg, params, edges_outputs=edges_outputs)
 
         if len(sinks) == 1:
             output = edges_outputs[sinks[0]]

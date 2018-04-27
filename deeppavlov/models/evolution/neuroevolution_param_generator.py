@@ -71,7 +71,7 @@ class NetworkAndParamsEvolution:
         self.nodes = {}
         for i in range(self.total_nodes):
             l, t = number_to_type_layer(i, self.n_types)
-            self.nodes[i] = "{}_{}_{}".format(l, t, i)
+            self.nodes[str(i)] = "{}_{}_{}".format(l, t, i)
 
         print("___Basic config___: {}".format(self.basic_config))
         print("___Model to evolve index in pipe___: {}".format(self.model_to_evolve_index))
@@ -146,7 +146,7 @@ class NetworkAndParamsEvolution:
 
         for node_id in range(self.total_nodes):
             node_layer, node_type = number_to_type_layer(node_id, self.n_types)
-            node_key = self.nodes[node_id]
+            node_key = self.nodes[str(node_id)]
             layers_params, layers_params_for_search, _ = self.initialize_params_in_config(
                 self.basic_layers_params[self.node_types[node_type]])
 
@@ -339,16 +339,14 @@ class NetworkAndParamsEvolution:
 
                 # exchange of nodes
                 for j in range(self.total_nodes - nodes_part):
-                    node_layer, node_type = number_to_type_layer(nodes_perm[j], self.n_types)
-                    node_key = self.nodes[nodes_perm[j]]
+                    node_key = self.nodes[str(nodes_perm[j])]
 
                     curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][node_key] = deepcopy(
                         parents[0]["chainer"]["pipe"][self.model_to_evolve_index][node_key])
                     curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][node_key] = deepcopy(
                         parents[1]["chainer"]["pipe"][self.model_to_evolve_index][node_key])
                 for j in range(self.total_nodes - nodes_part, self.total_nodes):
-                    node_layer, node_type = number_to_type_layer(nodes_perm[j], self.n_types)
-                    node_key = self.nodes[nodes_perm[j]]
+                    node_key = self.nodes[str(nodes_perm[j])]
 
                     curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][node_key] = deepcopy(
                         parents[1]["chainer"]["pipe"][self.model_to_evolve_index][node_key])
@@ -433,11 +431,11 @@ class NetworkAndParamsEvolution:
             for node_id in range(self.total_nodes):
                 node_layer, node_type = number_to_type_layer(node_id, self.n_types)
                 for param in self.basic_layers_params[self.node_types[node_type]]:
-                    mutated_individuum["chainer"]["pipe"][self.model_to_evolve_index][self.nodes[node_id]][param] =\
-                        self.mutation_of_param(param, self.basic_layers_params[self.node_types[node_type]],
-                                               individuum["chainer"]["pipe"][self.model_to_evolve_index][
-                                                   self.nodes[node_id]][param],
-                                               p_mutation, mutation_power)
+                    mutated_individuum["chainer"]["pipe"][self.model_to_evolve_index][self.nodes[str(node_id)]][param] \
+                        = self.mutation_of_param(param, self.basic_layers_params[self.node_types[node_type]],
+                                                 individuum["chainer"]["pipe"][self.model_to_evolve_index][
+                                                     self.nodes[str(node_id)]][param],
+                                                 p_mutation, mutation_power)
             mutated.append(mutated_individuum)
 
         return mutated
