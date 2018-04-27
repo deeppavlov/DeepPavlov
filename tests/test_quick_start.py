@@ -91,7 +91,7 @@ def teardown_module():
     shutil.rmtree(str(download_path), ignore_errors=True)
 
 
-def download(full=None):
+def download(full=True):
     cmd = "python3 -m deeppavlov.download -test"
     if full:
         cmd += " -all"
@@ -146,8 +146,13 @@ class TestQuickStart(object):
             c = test_configs_path / conf_file
             model_path = download_path / model_dir
             shutil.rmtree(str(model_path),  ignore_errors=True)
-            _, exitstatus = pexpect.run("python3 -m deeppavlov.deep train " + str(c), timeout=None, withexitstatus=True)
-            assert exitstatus == 0, f"Training process of {model_dir} returned non-zero exit code"
+            logfile = io.BytesIO(b'')
+            _, exitstatus = pexpect.run("python3 -m deeppavlov.deep train " + str(c), timeout=None, withexitstatus=True,
+                                        logfile = logfile)
+            if exitstatus != 0:
+                logfile.seek(0)
+                raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
+                                   .format(model_dir, ''.join((line.decode() for line in logfile.readlines()))))
             self.interact(c, model_dir)
         else:
             pytest.skip("Unsupported mode: {}".format(mode))

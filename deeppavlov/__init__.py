@@ -76,3 +76,5 @@ import deeppavlov.metrics.roc_auc_score
 import deeppavlov.metrics.fmeasure_classification
 
 import deeppavlov.core.common.log
+
+import deeppavlov.download

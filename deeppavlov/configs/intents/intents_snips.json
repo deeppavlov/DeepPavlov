@@ -3,8 +3,7 @@
     "name": "basic_classification_reader",
     "x": "text",
     "y": "intents",
-    "data_path": "snips",
-    "url": "http://lnsigo.mipt.ru/export/datasets/snips_intents/train.csv"
+    "data_path": "snips"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator",
@@ -109,6 +108,18 @@
   "metadata": {
     "labels": {
       "telegram_utils": "IntentModel"
-    }
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/intents.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/datasets/snips_intents/train.csv",
+        "subdir": "snips"
+      },
+      {
+        "url": "http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/dstc2_fastText_model.bin",
+        "subdir": "embeddings"
+      }
+    ]
   }
 }

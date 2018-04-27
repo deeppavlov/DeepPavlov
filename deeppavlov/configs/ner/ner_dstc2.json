@@ -16,24 +16,24 @@
         "name": "default_vocab",
         "fit_on": ["x"],
 		"level": "token",
-        "save_path": "ner_dstc2_model/word.dict",
-        "load_path": "ner_dstc2_model/word.dict"
+        "save_path": "ner/word.dict",
+        "load_path": "ner/word.dict"
       },
       {
         "id": "tag_vocab",
         "name": "default_vocab",
         "fit_on": ["y"],
 		"level": "token",
-        "save_path": "ner_dstc2_model/tag.dict",
-        "load_path": "ner_dstc2_model/tag.dict"
+        "save_path": "ner/tag.dict",
+        "load_path": "ner/tag.dict"
       },
       {
         "id": "char_vocab",
         "name": "default_vocab",
         "fit_on": ["x"],
 		"level": "char",
-        "save_path": "ner_dstc2_model/char.dict",
-        "load_path": "ner_dstc2_model/char.dict"
+        "save_path": "ner/char.dict",
+        "load_path": "ner/char.dict"
       },
       {
         "in": ["x"],
@@ -41,8 +41,8 @@
         "out": ["y_predicted"],
         "name": "ner",
         "main": true,
-        "save_path": "ner_dstc2_model/ner_model",
-        "load_path": "ner_dstc2_model/ner_model",
+        "save_path": "ner/ner_model",
+        "load_path": "ner/ner_model",
         "word_vocab": "#word_vocab",
         "tag_vocab": "#tag_vocab",
         "char_vocab": "#char_vocab",
@@ -77,7 +77,10 @@
   "metadata": {
     "labels": {
       "telegram_utils": "NERModel"
-    }
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_dstc2_v2.tar.gz"
+    ]
   }
 }
 
