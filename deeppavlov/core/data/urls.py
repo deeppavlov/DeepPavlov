@@ -43,7 +43,8 @@ OPT_URLS = {
     'http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M-char.vec',
     'http://lnsigo.mipt.ru/export/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize-char.vec',
     'http://lnsigo.mipt.ru/export/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.vec',
-    'http://lnsigo.mipt.ru/export/deeppavlov_data/odqa.tar.gz'
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/odqa.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_ru_noans.tar.gz',
 }
 
 ALL_URLS = REQ_URLS.union(OPT_URLS)
