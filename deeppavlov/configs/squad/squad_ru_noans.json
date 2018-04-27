@@ -7,6 +7,7 @@
   "dataset_iterator": {
     "name": "squad_noans_iterator",
     "seed": 1337,
+    "noans_rate": 0.3,
     "shuffle": true
   },
   "chainer": {
@@ -84,7 +85,7 @@
         "load_path": "squad_model_ru_noans/model",
         "in": ["context_tokens_idxs", "context_chars_idxs", "question_tokens_idxs", "question_chars_idxs"],
         "in_y": ["ans_start", "ans_end"],
-        "out": ["ans_start_predicted", "ans_end_predicted", "score"]
+        "out": ["ans_start_predicted", "ans_end_predicted", "score", "prob"]
       },
       {
         "name": "squad_ans_postprocessor",
@@ -93,7 +94,7 @@
         "out": ["ans_predicted", "ans_start_predicted", "ans_end_predicted"]
       }
     ],
-    "out": ["ans_predicted", "ans_start_predicted", "score"]
+    "out": ["ans_predicted", "ans_start_predicted", "score", "prob"]
   },
   "train": {
     "show_examples": false,

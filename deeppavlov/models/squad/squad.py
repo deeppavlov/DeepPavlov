@@ -162,6 +162,7 @@ class SquadModel(TFModel):
             outer = tf.matrix_band_part(outer, 0, tf.cast(tf.minimum(15, self.c_maxlen), tf.int64))
             self.yp1 = tf.argmax(tf.reduce_max(outer, axis=2), axis=1)
             self.yp2 = tf.argmax(tf.reduce_max(outer, axis=1), axis=1)
+            self.yp_prob = tf.reduce_max(tf.reduce_max(outer, axis=2), axis=1)
             loss_p1 = tf.nn.softmax_cross_entropy_with_logits(logits=logits1, labels=self.y1)
             loss_p2 = tf.nn.softmax_cross_entropy_with_logits(logits=logits2, labels=self.y2)
             squad_loss = loss_p1 + loss_p2
@@ -264,8 +265,8 @@ class SquadModel(TFModel):
 
     def __call__(self, c_tokens, c_chars, q_tokens, q_chars, *args, **kwargs):
         feed_dict = self._build_feed_dict(c_tokens, c_chars, q_tokens, q_chars)
-        yp1, yp2, score = self.sess.run([self.yp1, self.yp2, self.yp], feed_dict=feed_dict)
-        return yp1, yp2, score
+        yp1, yp2, score, prob = self.sess.run([self.yp1, self.yp2, self.yp, self.yp_prob], feed_dict=feed_dict)
+        return yp1, yp2, score, prob
 
     def process_event(self, event_name, data):
         if event_name == "after_validation":
