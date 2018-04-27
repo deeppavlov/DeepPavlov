@@ -121,7 +121,7 @@ def get_graph_and_plot(nodes, binary_mask, n_types, path=None):
 
     nx.draw(dg, pos, cmap=plt.get_cmap('jet'), node_color=values, node_size=7000, alpha=0.3)
 
-    nx.draw_networkx_labels(dg, pos, nodes_int, font_size=18)
+    nx.draw_networkx_labels(dg, pos, nodes, font_size=18)
 
     if path is None:
         path = "./"

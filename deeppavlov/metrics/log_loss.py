@@ -22,8 +22,8 @@ from deeppavlov.models.classifiers.intents.utils import labels2onehot
 
 @register_metric('classification_log_loss')
 def classification_log_loss(y_true, y_predicted):
-    classes = y_predicted[0][2]
+    classes = np.array(list(y_predicted[0][1].keys()))
     y_true_one_hot = labels2onehot(y_true, classes)
-    y_pred_probas = [y_predicted[i][1] for i in range(len(y_predicted))]
+    y_pred_probas = [list(y_predicted[i][1].values()) for i in range(len(y_predicted))]
 
     return log_loss(y_true_one_hot, y_pred_probas)
