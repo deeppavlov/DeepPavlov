@@ -62,7 +62,7 @@ class SimpleVocabulary(Estimator):
 
     def _add_tokens_with_freqs(self, tokens, freqs):
         self.freqs = Counter()
-        self.freqs.update(zip(tokens, freqs))
+        self.freqs.update(dict(zip(tokens, freqs)))
         for token, freq in zip(tokens, freqs):
             if freq >= self._min_freq or token in self.special_tokens:
                 self._t2i[token] = self.count
@@ -108,10 +108,10 @@ class SimpleVocabulary(Estimator):
         return len(self)
 
     def keys(self):
-        return (k for k, v in self.freqs.most_common())
+        return (self[n] for n in range(self.len))
 
     def values(self):
-        return (v for k, v in self.freqs.most_common())
+        return list(range(self.len))
 
     def items(self):
         return self.freqs.most_common()
@@ -175,16 +175,16 @@ class CharacterVocab(SimpleVocabulary):
 
 @register('dialog_vocab')
 class DialogVocab(SimpleVocabulary):
-    def fit(self, tokens):
-        chars = chain(*tokens)
-        super().fit(chars)
+    def fit(self, utterances):
+        tokens = chain(*utterances)
+        super().fit(tokens)
 
     def __call__(self, batch, **kwargs):
         indices_batch = []
-        for sample in batch:
+        for dialog in batch:
             tokens = []
-            for token in sample:
-                tokens.append([self[ch] for ch in token])
+            for utterance in dialog:
+                tokens.append([self[token] for token in utterance])
             indices_batch.append(tokens)
         if self._pad_with_zeros:
             indices_batch = zero_pad_char(indices_batch)
