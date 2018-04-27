@@ -49,7 +49,7 @@ def get_digraph_from_binary_mask(nodes, binary_mask):
 def get_binary_mask_from_digraph(nodes, directed_graph):
     binary_mask = np.zeros((len(nodes), len(nodes)))
     for edge in directed_graph.edges():
-        binary_mask[edge[0], edge[1]] = 1
+        binary_mask[int(edge[0]), int(edge[1])] = 1
     return binary_mask
 
 
