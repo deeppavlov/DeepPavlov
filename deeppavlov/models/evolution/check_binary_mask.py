@@ -23,11 +23,11 @@ def find_sources_and_sinks(directed_graph):
     sinks = []
     isolates = nx.isolates(directed_graph)
 
-    for i in directed_graph.nodes():
-        if directed_graph.in_degree(i) == 0 and directed_graph.out_degree(i) > 0:
-            sources.append(i)
-        if directed_graph.in_degree(i) > 0 and directed_graph.out_degree(i) == 0:
-            sinks.append(i)
+    for str_id in directed_graph.nodes():
+        if directed_graph.in_degree(str_id) == 0 and directed_graph.out_degree(str_id) > 0:
+            sources.append(str_id)
+        if directed_graph.in_degree(str_id) > 0 and directed_graph.out_degree(str_id) == 0:
+            sinks.append(str_id)
 
     return sources, sinks, isolates
 
@@ -37,12 +37,12 @@ def get_digraph_from_binary_mask(nodes, binary_mask):
     total_nodes = len(nodes)
 
     for i in range(total_nodes):
-        directed_graph.add_node(i)
+        directed_graph.add_node(str(i))
 
     for i in range(total_nodes):
         for j in range(total_nodes):
             if binary_mask[i, j] == 1:
-                directed_graph.add_edge(i, j)
+                directed_graph.add_edge(str(i), str(j))
     return directed_graph
 
 
@@ -56,10 +56,6 @@ def get_binary_mask_from_digraph(nodes, directed_graph):
 def check_and_correct_binary_mask(nodes, binary_mask_):
     binary_mask = deepcopy(binary_mask_)
 
-    # if binary mask if empty, add one dense layer
-    if np.sum(binary_mask) == 0:
-        binary_mask[0, 0] = 1
-
     directed_graph = get_digraph_from_binary_mask(nodes, binary_mask)
     sources, sinks, _ = find_sources_and_sinks(directed_graph)
 
@@ -67,8 +63,6 @@ def check_and_correct_binary_mask(nodes, binary_mask_):
         candidates = []
         cycles = list(nx.simple_cycles(directed_graph))
         n_cycles = len(cycles)
-        # print("Cycles: {}".format(cycles))
-        # number of candidates to be the best new graph
         cycles_len = np.array([len(cycle) for cycle in cycles])
         n_candidates = int(np.prod(cycles_len))
 
@@ -114,13 +108,13 @@ def get_graph_and_plot(nodes, binary_mask, n_types, path=None):
     sources, sinks, _ = find_sources_and_sinks(dg)
 
     for i in range(total_nodes):
-        pos[i] = 2. * np.array(number_to_type_layer(i, n_types))[::-1]
-        if i in sources:
-            val_map[i] = 1.
-        elif i in sinks:
-            val_map[i] = 0.5
+        pos[str(i)] = 2. * np.array(number_to_type_layer(i, n_types))[::-1]
+        if str(i) in sources:
+            val_map[str(i)] = 1.
+        elif str(i) in sinks:
+            val_map[str(i)] = 0.5
         else:
-            val_map[i] = 0.
+            val_map[str(i)] = 0.
 
     plt.figure(figsize=(12, 12))
     values = [val_map.get(node, 0.25) for node in nodes_int]

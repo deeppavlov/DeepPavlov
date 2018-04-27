@@ -17,7 +17,7 @@ from deeppavlov.models.evolution.check_binary_mask import get_digraph_from_binar
 n_layers = 2
 n_types = 7
 population_size = 1
-config_path = "../../configs/evolution/basic_intents_snips.json"
+config_path = "../../configs/evolution/basic_config_local.json"
 
 with open(config_path) as fin:
     config = json.load(fin)
@@ -27,6 +27,7 @@ evolution = NetworkAndParamsEvolution(n_layers, n_types,
                                       key_model_to_evolve="to_evolve",
                                       key_basic_layers="basic_layers_params",
                                       seed=42,
+                                      start_with_one_neuron=True,
                                       **config)
 
 population = evolution.first_generation()

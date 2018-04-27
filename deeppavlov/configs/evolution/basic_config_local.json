@@ -73,6 +73,59 @@
               "choice": true
             }
           },
+          "Conv1D": {
+            "filters": {
+              "range": [
+                50,
+                500
+              ],
+              "discrete": true
+            },
+            "kernel_size": {
+              "range": [
+                2,
+                7
+              ],
+              "discrete": true
+            },
+            "padding": "same"
+          },
+          "CuDNNLSTM": {
+            "units": {
+              "range": [
+                50,
+                200
+              ],
+              "discrete": true
+            },
+            "return_sequences": {
+              "bool": true
+            }
+          },
+          "BiCuDNNLSTM": {
+            "units": {
+              "range": [
+                50,
+                200
+              ],
+              "discrete": true
+            },
+            "return_sequences": {
+              "bool": true
+            }
+          },
+          "GlobalMaxPooling1D": {
+          },
+          "MaxPooling1D": {
+            "pool_size": {
+              "range": [
+                2,
+                5
+              ],
+              "discrete": true
+            },
+            "padding": "same"
+          },
           "Attention": {
             "context_length": {
               "range": [
