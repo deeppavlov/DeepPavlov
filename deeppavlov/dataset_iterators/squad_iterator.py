@@ -58,16 +58,16 @@ class SquadIterator(DataLearningIterator):
 class SquadNoAnsIterator(SquadIterator):
     def split(self, *args, **kwargs):
         squad_qas = {}
+        rate = kwargs.get('noans_rate', 0.3)
         for dt in ['train', 'valid', 'test']:
             squad_qas[dt] = self._extract_cqas(getattr(self, dt))
 
         squad_qas_noans = {}
         for dt in ['train', 'valid', 'test']:
-            squad_qas_noans[dt] = self._extract_cqas_noans(getattr(self, dt))
+            squad_qas_noans[dt] = self._extract_cqas_noans(getattr(self, dt), rate)
 
         for dt in ['train', 'valid', 'test']:
             setattr(self, dt, squad_qas[dt] + squad_qas_noans[dt])
-
 
     @staticmethod
     def _extract_cqas_noans(data, rate=0.3):
