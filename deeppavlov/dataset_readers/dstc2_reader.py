@@ -135,3 +135,107 @@ class DSTC2DatasetReader(DatasetReader):
         if with_indices:
             return utterances, responses, dialog_indices
         return utterances, responses
+
+
+@register('dstc2_v2_reader')
+class DSTC2Version2DatasetReader(DatasetReader):
+
+    url = 'http://lnsigo.mipt.ru/export/datasets/dstc2_v2.tar.gz'
+
+    @staticmethod
+    def _data_fname(datatype):
+        assert datatype in ('trn', 'val', 'tst'), "wrong datatype name"
+        return 'dstc2-{}.jsonlist'.format(datatype)
+
+    @overrides
+    def read(self, data_path, dialogs=False):
+        required_files = (self._data_fname(dt) for dt in ('trn', 'val', 'tst'))
+        if not all(Path(data_path, f).exists() for f in required_files):
+            log.info('[downloading data from {} to {}]'.format(self.url, data_path))
+            download_decompress(self.url, data_path)
+            mark_done(data_path)
+
+        data = {
+            'train': self._read_from_file(
+                Path(data_path, self._data_fname('trn')), dialogs),
+            'valid': self._read_from_file(
+                Path(data_path, self._data_fname('val')), dialogs),
+            'test': self._read_from_file(
+                Path(data_path, self._data_fname('tst')), dialogs)
+        }
+        return data
+
+    @classmethod
+    def _read_from_file(cls, file_path, dialogs=False):
+        """Returns data from single file"""
+        log.info("[loading dialogs from {}]".format(file_path))
+
+        utterances, responses, dialog_indices =\
+            cls._get_turns(cls._iter_file(file_path), with_indices=True)
+
+        data = list(map(cls._format_turn, zip(utterances, responses)))
+
+        if dialogs:
+            return [data[idx['start']:idx['end']] for idx in dialog_indices]
+        return data
+
+    @staticmethod
+    def _format_turn(turn):
+        x = {'text': turn[0]['text'],
+             'intents': turn[0]['dialog_acts']}
+        if turn[0].get('db_result') is not None:
+            x['db_result'] = turn[0]['db_result']
+        if turn[0].get('episode_done'):
+            x['episode_done'] = True
+        y = {'text': turn[1]['text'],
+             'act': turn[1]['dialog_acts'][0]['act']}
+        return (x, y)
+
+    @staticmethod
+    def _iter_file(file_path):
+        for ln in open(file_path, 'rt'):
+            if ln.strip():
+                yield json.loads(ln)
+            else:
+                yield {}
+
+    @staticmethod
+    def _get_turns(data, with_indices=False):
+        utterances = []
+        responses = []
+        dialog_indices = []
+        n = 0
+        num_dialog_utter, num_dialog_resp = 0, 0
+        episode_done = True
+        for turn in data:
+            if not turn:
+                if num_dialog_utter != num_dialog_resp:
+                    raise RuntimeError("Datafile in the wrong format.")
+                episode_done = True
+                n += num_dialog_utter
+                dialog_indices.append({
+                    'start': n - num_dialog_utter,
+                    'end': n,
+                })
+                num_dialog_utter, num_dialog_resp = 0, 0
+            else:
+                speaker = turn.pop('speaker')
+                if speaker == 1:
+                    if episode_done:
+                        turn['episode_done'] = True
+                    utterances.append(turn)
+                    num_dialog_utter += 1
+                else:
+                    responses.append(turn)
+                    num_dialog_resp += 1
+                    if num_dialog_utter < num_dialog_resp:
+                        if not utterances:
+                            utterances.append({"text": "", "dialog_acts": []})
+                        else:
+                            utterances.append(utterances[-1])
+                        num_dialog_utter += 1
+                episode_done = False
+
+        if with_indices:
+            return utterances, responses, dialog_indices
+        return utterances, responses
