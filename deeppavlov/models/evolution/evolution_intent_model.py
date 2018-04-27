@@ -34,7 +34,6 @@ from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.keras_model import KerasModel
 from deeppavlov.models.classifiers.intents.intent_model import KerasIntentModel
-from deeppavlov.models.classifiers.intents import metrics as metrics_file
 from deeppavlov.models.classifiers.intents.utils import labels2onehot, log_metrics, proba2labels
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.classifiers.intents.utils import md5_hashsum
