@@ -126,7 +126,7 @@
             },
             "padding": "same"
           },
-          "Attention": {
+          "SelfMultiplicativeAttention": {
             "n_hidden": {
               "range": [
                 50,
