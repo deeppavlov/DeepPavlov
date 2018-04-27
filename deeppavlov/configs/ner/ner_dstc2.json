@@ -26,7 +26,7 @@
         "id": "word_vocab",
         "name": "simple_vocab",
         "pad_with_zeros": true,
-        "fit_on": ["x"],
+        "fit_on": ["x_lower"],
         "save_path": "slotfill_dstc2/word.dict",
         "load_path": "slotfill_dstc2/word.dict",
         "out": ["x_tok_ind"]
