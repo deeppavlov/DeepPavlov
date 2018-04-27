@@ -8,6 +8,7 @@
     "train": "sample.json",
     "x": "text",
     "y": "intents",
+    "url": "http://lnsigo.mipt.ru/export/datasets/snips_intents/train.json",
     "seed": 42,
     "field_to_split": "train",
     "split_fields": [
@@ -114,8 +115,8 @@
       "http://lnsigo.mipt.ru/export/deeppavlov_data/intents.tar.gz",
       "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/datasets/snips_intents/train.csv",
-        "subdir": "snips"
+        "url": "http://lnsigo.mipt.ru/export/datasets/snips_intents/train.json",
+        "subdir": "sample"
       },
       {
         "url": "http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/dstc2_fastText_model.bin",

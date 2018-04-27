@@ -146,6 +146,7 @@ def download_decompress(url, download_path, extract_paths=None):
     if url.endswith(('.tar.gz', '.gz', '.zip')):
         for extract_path in extract_paths:
             log.info('Extracting {} archive into {}'.format(arch_file_path, extract_path))
+            extract_path.mkdir(parents=True, exist_ok=True)
 
             if url.endswith('.tar.gz'):
                 untar(arch_file_path, extract_path)

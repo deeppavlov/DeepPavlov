@@ -148,7 +148,7 @@ class TestQuickStart(object):
             shutil.rmtree(str(model_path),  ignore_errors=True)
             logfile = io.BytesIO(b'')
             _, exitstatus = pexpect.run("python3 -m deeppavlov.deep train " + str(c), timeout=None, withexitstatus=True,
-                                        logfile=logfile)
+                                        logfile = logfile)
             if exitstatus != 0:
                 logfile.seek(0)
                 raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
