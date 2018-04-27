@@ -4,8 +4,7 @@ from pathlib import Path
 import json
 
 from deeppavlov.models.evolution.check_binary_mask import check_and_correct_binary_mask, \
-    number_to_type_layer, get_graph_and_plot
-from deeppavlov.core.common.file import save_json, read_json
+    number_to_type_layer
 from deeppavlov.models.evolution.utils import find_index_of_dict_with_key_in_pipe
 
 

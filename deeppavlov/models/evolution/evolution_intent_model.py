@@ -43,7 +43,7 @@ from deeppavlov.models.evolution.check_binary_mask import number_to_type_layer, 
     find_sources_and_sinks, get_digraph_from_binary_mask, get_graph_and_plot
 from deeppavlov.models.evolution.utils import Attention, expand_tile
 from deeppavlov.core.common.file import save_json, read_json
-from deeppavlov.core.layers.keras_layers import multiplicative_self_attention, additive_self_attention
+from deeppavlov.core.layers.keras_layers import multiplicative_self_attention
 
 log = get_logger(__name__)
 
@@ -108,7 +108,7 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
             if callable(node_func):
                 output_of_node = node_func(**node_params)(inp)
             else:
-                raise AttributeError("Node {} is not defined correctly".format(node_id))
+                raise AttributeError("Node {} is not defined correctly".format(node_str_id))
         return output_of_node
 
     def evolution_classification_model(self, params):

@@ -125,6 +125,30 @@
               "discrete": true
             },
             "padding": "same"
+          },
+          "Attention": {
+            "n_hidden": {
+              "range": [
+                50,
+                200
+              ],
+              "discrete": true
+            },
+            "n_output_features": {
+              "range": [
+                50,
+                200
+              ],
+              "discrete": true
+            },
+            "activation": {
+              "values": [
+                "softmax",
+                "sigmoid",
+                "relu"
+              ],
+              "choice": true
+            }
           }
         },
         "confident_threshold": {
