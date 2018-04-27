@@ -34,6 +34,7 @@ class NetworkAndParamsEvolution:
                  key_basic_layers="basic_layers_params",
                  seed=None,
                  start_with_one_neuron=False,
+                 evolve_binary_mask=True,
                  **kwargs):
         """
         Initialize evolution with random population
@@ -94,6 +95,7 @@ class NetworkAndParamsEvolution:
         self.n_evolving_params = None
         self.evolving_train_params = []
         self.n_evolving_train_params = None
+        self.evolve_binary_mask = evolve_binary_mask
 
         if seed is None:
             pass
@@ -337,48 +339,49 @@ class NetworkAndParamsEvolution:
                         self.evolving_train_params[train_params_perm[j]]] = parents[0]["train"][
                         self.evolving_train_params[train_params_perm[j]]]
 
-                # exchange of nodes
-                for j in range(self.total_nodes - nodes_part):
-                    node_key = self.nodes[str(nodes_perm[j])]
+                if self.evolve_binary_mask:
+                    # exchange of nodes
+                    for j in range(self.total_nodes - nodes_part):
+                        node_key = self.nodes[str(nodes_perm[j])]
 
-                    curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][node_key] = deepcopy(
-                        parents[0]["chainer"]["pipe"][self.model_to_evolve_index][node_key])
-                    curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][node_key] = deepcopy(
-                        parents[1]["chainer"]["pipe"][self.model_to_evolve_index][node_key])
-                for j in range(self.total_nodes - nodes_part, self.total_nodes):
-                    node_key = self.nodes[str(nodes_perm[j])]
+                        curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][node_key] = deepcopy(
+                            parents[0]["chainer"]["pipe"][self.model_to_evolve_index][node_key])
+                        curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][node_key] = deepcopy(
+                            parents[1]["chainer"]["pipe"][self.model_to_evolve_index][node_key])
+                    for j in range(self.total_nodes - nodes_part, self.total_nodes):
+                        node_key = self.nodes[str(nodes_perm[j])]
 
-                    curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][node_key] = deepcopy(
-                        parents[1]["chainer"]["pipe"][self.model_to_evolve_index][node_key])
-                    curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][node_key] = deepcopy(
-                        parents[0]["chainer"]["pipe"][self.model_to_evolve_index][node_key])
+                        curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][node_key] = deepcopy(
+                            parents[1]["chainer"]["pipe"][self.model_to_evolve_index][node_key])
+                        curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][node_key] = deepcopy(
+                            parents[0]["chainer"]["pipe"][self.model_to_evolve_index][node_key])
 
-                # exchange of binary mask elements
-                for j in range(self.total_nodes * self.total_nodes - binary_mask_part):
-                    node_x, node_y = binary_mask_perm[j] // self.total_nodes, binary_mask_perm[j] % self.total_nodes
+                    # exchange of binary mask elements
+                    for j in range(self.total_nodes * self.total_nodes - binary_mask_part):
+                        node_x, node_y = binary_mask_perm[j] // self.total_nodes, binary_mask_perm[j] % self.total_nodes
 
-                    curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y] =\
-                        parents[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y]
-                    curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y] =\
-                        parents[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y]
+                        curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y] =\
+                            parents[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y]
+                        curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y] =\
+                            parents[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y]
 
-                for j in range(self.total_nodes * self.total_nodes - binary_mask_part,
-                               self.total_nodes * self.total_nodes):
-                    node_x, node_y = binary_mask_perm[j] // self.total_nodes, binary_mask_perm[j] % self.total_nodes
+                    for j in range(self.total_nodes * self.total_nodes - binary_mask_part,
+                                   self.total_nodes * self.total_nodes):
+                        node_x, node_y = binary_mask_perm[j] // self.total_nodes, binary_mask_perm[j] % self.total_nodes
 
-                    curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y] =\
-                        parents[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y]
-                    curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y] =\
-                        parents[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y]
+                        curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y] =\
+                            parents[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y]
+                        curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y] =\
+                            parents[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y]
 
-                curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
-                    check_and_correct_binary_mask(self.nodes,
-                                                  curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][
-                                                      "binary_mask"])
-                curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
-                    check_and_correct_binary_mask(self.nodes,
-                                                  curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][
-                                                      "binary_mask"])
+                    curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
+                        check_and_correct_binary_mask(self.nodes,
+                                                      curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][
+                                                          "binary_mask"])
+                    curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
+                        check_and_correct_binary_mask(self.nodes,
+                                                      curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][
+                                                          "binary_mask"])
                 offsprings.extend(curr_offsprings)
             else:
                 offsprings.extend(parents)
@@ -417,15 +420,16 @@ class NetworkAndParamsEvolution:
                                            individuum["train"][param],
                                            p_mutation, mutation_power)
 
-            # mutation of binary mask
-            if self.decision(p_mutation):
-                mutated_individuum["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
-                    check_and_correct_binary_mask(
-                        self.nodes,
-                        np.minimum(1,
-                                   np.maximum(0,
-                                              individuum["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] +
-                                              np.round((2 * np.random.random() - 1.) * self.sample_binary_mask()))))
+            if self.evolve_binary_mask:
+                # mutation of binary mask
+                if self.decision(p_mutation):
+                    mutated_individuum["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
+                        check_and_correct_binary_mask(
+                            self.nodes,
+                            np.minimum(1,
+                                       np.maximum(0,
+                                                  individuum["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] +
+                                                  np.round((2 * np.random.random() - 1.) * self.sample_binary_mask()))))
 
             # mutation of each node params
             for node_id in range(self.total_nodes):
@@ -524,7 +528,7 @@ class NetworkAndParamsEvolution:
         # return np.random.randint(0, high=2, size=self.binary_mask_template.shape).tolist()
         # return (1 * (np.log(np.random.random(size=self.binary_mask_template.shape)) > -0.2)).tolist()
         ones = np.random.choice(self.total_nodes * self.total_nodes,
-                                size=max(1, int(0.1 * np.random.random() * self.total_nodes)))
+                                size=min(max(1, int(0.1 * np.random.random() * self.total_nodes)), 5))
         mask = np.zeros((self.total_nodes * self.total_nodes))
         mask[ones] = 1
         # returns NUMPY 2D ARRAY!
