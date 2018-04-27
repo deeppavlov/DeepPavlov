@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import copy
 import json
 from pathlib import Path
 
@@ -225,16 +226,33 @@ class DSTC2Version2DatasetReader(DatasetReader):
                         turn['episode_done'] = True
                     utterances.append(turn)
                     num_dialog_utter += 1
-                else:
-                    responses.append(turn)
-                    num_dialog_resp += 1
-                    if num_dialog_utter < num_dialog_resp:
+                elif speaker == 2:
+                    if num_dialog_utter - 1 == num_dialog_resp:
+                        responses.append(turn)
+                    elif num_dialog_utter - 1 < num_dialog_resp:
                         if episode_done:
-                            utterances.append({"text": "", "dialog_acts": [], "episode_done": True})
+                            responses.append(turn)
+                            utterances.append({
+                                "text": "",
+                                "dialog_acts": [],
+                                "episode_done": True}
+                            )
                         else:
-                            utterances.append(utterances[-1])
+                            new_turn = copy.deepcopy(utterances[-1])
+                            if 'db_result' not in turn:
+                                raise RuntimeError("Every api_call action should have"
+                                                   " db_result, turn = {}".format(turn))
+                            new_turn['db_result'] = turn.pop('db_result')
+                            responses.append(turn)
+                            utterances.append(new_turn)
                         num_dialog_utter += 1
-                episode_done = False
+                    else:
+                        raise RuntimeError("there cannot be two successive turns of"
+                                           " speaker 1")
+                    num_dialog_resp += 1
+                else:
+                    raise RuntimeError("Only speakers 1 and 2 are supported")
+                    episode_done = False
 
         if with_indices:
             return utterances, responses, dialog_indices
