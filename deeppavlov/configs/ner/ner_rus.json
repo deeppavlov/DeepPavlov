@@ -1,0 +1,156 @@
+{
+  "dataset_reader": {
+    "name": "conll2003_reader",
+    "data_path": "total_rus/",
+    "provide_pos": false
+  },
+  "dataset_iterator": {
+    "name": "data_learning_iterator"
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "in": ["x"],
+        "name": "lazy_tokenizer",
+        "out": ["x"]
+      },
+      {
+        "in": ["x"],
+        "name": "str_lower",
+        "out": ["x_lower"]
+      },
+      {
+        "in": ["x_lower"],
+        "name": "sanitizer",
+        "nums": true,
+        "out": ["x_san"]
+      },
+      {
+        "in": ["x_san"],
+        "id": "word_vocab",
+        "name": "simple_vocab",
+        "pad_with_zeros": true,
+        "special_tokens": ["<UNK>"],
+        "fit_on": ["x_san"],
+        "save_path": "ner_rus/word.dict",
+        "load_path": "ner_rus/word.dict",
+        "out": ["x_tok_ind"]
+      },
+      {
+        "in": ["y"],
+        "id": "tag_vocab",
+        "name": "simple_vocab",
+        "pad_with_zeros": true,
+        "fit_on": ["y"],
+        "save_path": "ner_rus/tag.dict",
+        "load_path": "ner_rus/tag.dict",
+        "out": ["y_ind"]
+      },
+      {
+        "in": ["x"],
+        "name": "char_splitter",
+        "out": ["x_char"]
+      },
+      {
+        "in": ["x_char"],
+        "id": "char_vocab",
+        "name": "char_vocab",
+        "pad_with_zeros": true,
+        "fit_on": ["x_char"],
+        "save_path": "ner_rus/char.dict",
+        "load_path": "ner_rus/char.dict",
+        "out": ["x_char_ind"]
+      },
+      {
+        "in": ["x_san"],
+        "id": "embedder",
+        "name": "fasttext",
+        "pad_zero": true,
+        "load_path": "embeddings/lenta_lower_100.bin",
+        "out": ["x_emb"]
+      },
+      {
+        "in": ["x"],
+        "name": "mask",
+        "out": ["mask"]
+      },
+      {
+        "name": "random_emb_mat",
+        "id": "embeddings",
+        "vocab_len": "#word_vocab.len",
+        "emb_dim": 100
+      },
+      {
+        "name": "random_emb_mat",
+        "id": "embeddings_char",
+        "vocab_len": "#char_vocab.len",
+        "emb_dim": 100
+      },
+      {
+        "id": "capitalization",
+        "name": "capitalization_featurizer",
+        "in": ["x"],
+        "out": ["cap"]
+      },
+      {
+        "in": ["x_emb", "mask", "x_char_ind", "cap"],
+        "in_y": ["y_ind"],
+        "out": ["y_predicted"],
+        "name": "ner",
+        "main": true,
+        "n_hidden_list": [128],
+        "net_type": "rnn",
+        "cell_type": "lstm",
+        "use_cudnn_rnn": true,
+        "n_tags": "#tag_vocab.len",
+        "capitalization_dim": "#capitalization.dim",
+        "token_emb_dim": "#embedder.dim",
+        "char_emb_dim": 100,
+        "save_path": "ner_rus/model",
+        "load_path": "ner_rus/model",
+        "char_emb_mat": "#embeddings_char.emb_mat",
+        "use_crf": true,
+        "use_batch_norm": true,
+        "embeddings_dropout": true,
+        "top_dropout": true,
+        "intra_layer_dropout": true,
+        "l2_reg": 0,
+        "learning_rate": 1e-2,
+        "dropout_keep_prob": 0.7
+      },
+      {
+        "ref": "tag_vocab",
+        "in": ["y_predicted"],
+        "out": ["tags"]
+      }
+    ],
+
+    "out": ["tags"]
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 64,
+
+    "metrics": ["ner_f1"],
+    "validation_patience": 5,
+    "val_every_n_epochs": 1,
+
+    "log_every_n_epochs": 1,
+    "show_examples": false
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "NERCoNLL2003Model"
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_rus.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/embeddings/lenta_lower_100.bin",
+        "subdir": "embeddings"
+      }
+    ]
+  }
+}
+

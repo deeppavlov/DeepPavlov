@@ -25,6 +25,7 @@ REQ_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ranking.tar.gz',
     'http://lnsigo.mipt.ru/export/embeddings/insurance_v1_word2vec',
     'http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt',
+    'http://lnsigo.mipt.ru/export/embeddings/lenta_lower_100.bin',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/slots.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/dstc2_fastText_model.bin',
@@ -35,6 +36,8 @@ REQ_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/odqa.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes_senna.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/senna.tar.gz'
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_rus.tar.gz'
+
 }
 
 OPT_URLS = {
