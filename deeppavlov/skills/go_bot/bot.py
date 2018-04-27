@@ -225,6 +225,10 @@ class GoalOrientedBot(NNModel):
                 for entity in set(re.findall('#([A-Za-z]+)', tmpl)):
                     if entity not in known_entities:
                         action_mask[a_id] = 0
+        # forbid two api calls in a row
+        if self.templates.actions[np.argmax(self.prev_action)] == "api_call":
+            action_mask[np.argmax(self.prev_action)] = 0
+
         return action_mask
 
     def train_on_batch(self, x, y):
@@ -304,9 +308,18 @@ class GoalOrientedBot(NNModel):
 
     def __call__(self, batch):
         if isinstance(batch[0], str):
-            if self.tracker.get_state():
+            res = []
+            for x in batch:
+                pred = self._infer(x)
+                # if made api_call, then respond with next prediction
+                if self.templates.actions[np.argmax(self.prev_action)] == "api_call":
+                    log.info("Made {}".format(pred))
+                    res.append(self._infer(x, db_result=self.interact_db_result))
+                else:
+                    res.append(pred)
+            if ("api_call" not in self.templates.actions) and self.tracker.get_state():
                 self.db_result = self.interact_db_result
-            return [self._infer(x) for x in batch]
+            return res
         return [self._infer_dialog(x) for x in batch]
 
     def reset(self):
