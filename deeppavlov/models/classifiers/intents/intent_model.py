@@ -363,7 +363,7 @@ class KerasIntentModel(KerasModel):
 
         inp = Input(shape=(params['text_size'], params['embedding_size']))
 
-        output = Bidirectional(LSTM(params['units_lstm'], activation='tanh',
+        output = Bidirectional(LSTM(params['units_lstm_1'], activation='tanh',
                                     return_sequences=True,
                                     kernel_regularizer=l2(params['coef_reg_lstm']),
                                     dropout=params['dropout_rate'],
@@ -371,7 +371,7 @@ class KerasIntentModel(KerasModel):
 
         output = Dropout(rate=params['dropout_rate'])(output)
 
-        output = Bidirectional(LSTM(params['units_lstm'], activation='tanh',
+        output = Bidirectional(LSTM(params['units_lstm_2'], activation='tanh',
                                     return_sequences=True,
                                     kernel_regularizer=l2(params['coef_reg_lstm']),
                                     dropout=params['dropout_rate'],
