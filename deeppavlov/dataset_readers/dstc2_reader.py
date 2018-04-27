@@ -229,8 +229,8 @@ class DSTC2Version2DatasetReader(DatasetReader):
                     responses.append(turn)
                     num_dialog_resp += 1
                     if num_dialog_utter < num_dialog_resp:
-                        if not utterances:
-                            utterances.append({"text": "", "dialog_acts": []})
+                        if episode_done:
+                            utterances.append({"text": "", "dialog_acts": [], "episode_done": True})
                         else:
                             utterances.append(utterances[-1])
                         num_dialog_utter += 1
