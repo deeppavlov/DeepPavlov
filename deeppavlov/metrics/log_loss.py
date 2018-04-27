@@ -15,6 +15,7 @@ limitations under the License.
 """
 
 from sklearn.metrics import log_loss
+import numpy as np
 
 from deeppavlov.core.common.metrics_registry import register_metric
 from deeppavlov.models.classifiers.intents.utils import labels2onehot
