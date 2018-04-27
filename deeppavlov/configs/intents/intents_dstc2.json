@@ -109,6 +109,14 @@
   "metadata": {
     "labels": {
       "telegram_utils": "IntentModel"
-    }
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/intents.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/dstc2_fastText_model.bin",
+        "subdir": "embeddings"
+      }
+    ]
   }
 }

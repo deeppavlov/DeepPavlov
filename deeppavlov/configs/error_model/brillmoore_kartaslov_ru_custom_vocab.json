@@ -40,7 +40,7 @@
         },
         "save_path": "error_model/error_model_ru.tsv",
         "load_path": "error_model/error_model_ru.tsv",
-        "lm_file": "wiyalen_no_punkt.arpa.binary"
+        "lm_file": "language_models/ru_wiyalen_no_punkt.arpa.binary"
       }
     ],
     "out": ["y_predicted"]
@@ -52,6 +52,13 @@
   "metadata": {
     "labels": {
       "telegram_utils": "ErrorModel"
-    }
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/error_model.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/lang_models/ru_wiyalen_no_punkt.arpa.binary.gz",
+        "subdir": "language_models"
+      }
+    ]
   }
 }

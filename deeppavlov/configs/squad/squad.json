@@ -106,7 +106,10 @@
   "metadata": {
     "labels": {
       "telegram_utils": "SquadModel"
-    }
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_1.1.tar.gz"
+      ]
   }
 }
 

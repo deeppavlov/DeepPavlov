@@ -87,5 +87,22 @@
     "log_every_n_batches": -1,
     "log_every_n_epochs": 1,
     "show_examples": false
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "GoalOrientedBot"
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/gobot_dstc2_best_v1.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz",
+        "subdir": "dstc2"
+      },
+      {
+        "url": "http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin",
+        "subdir": "embeddings"
+      }
+    ]
   }
 }

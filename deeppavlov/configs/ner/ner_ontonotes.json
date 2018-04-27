@@ -47,6 +47,19 @@
       }
     ],
     "out": ["y_predicted"]
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "NEROntoNotesSenna"
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes_senna.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/senna.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt",
+        "subdir": "embeddings"
+      }
+    ]
   }
 }
 

@@ -70,8 +70,8 @@
           "load_path": "seq2seq_go_bot/model",
           "save_path": "seq2seq_go_bot/model",
           "learning_rate": 0.0009,
-          "target_start_of_sequence_index": "#tgt_token_vocab.__getitem__('SOS')",
-          "target_end_of_sequence_index": "#tgt_token_vocab.__getitem__('EOS')",
+          "target_start_of_sequence_index": "#tgt_token_vocab.__getitem__('<SOS>')",
+          "target_end_of_sequence_index": "#tgt_token_vocab.__getitem__('<EOS>')",
           "source_vocab_size": "#src_token_vocab.__len__()",
           "target_vocab_size": "#tgt_token_vocab.__len__()",
           "hidden_size": 256
@@ -109,6 +109,10 @@
   "metadata": {
     "labels": {
       "telegram_utils": "Seq2SeqGoalOrientedBot"
-    }
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/seq2seq_go_bot.tar.gz"
+    ]
   }
 }
