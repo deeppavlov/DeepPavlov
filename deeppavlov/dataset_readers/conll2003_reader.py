@@ -55,8 +55,12 @@ class Conll2003DatasetReader(DatasetReader):
                         pos_tags = []
                         tags = []
                 else:
-                    token, *_, pos, tag = line.split()
-                    tokens.append(token)
-                    pos_tags.append(pos)
+                    if self.provide_pos:
+                        token, *_, pos, tag = line.split()
+                        pos_tags.append(pos)
+                    else:
+                        token, *_, tag = line.split()
                     tags.append(tag)
+                    tokens.append(token)
+
         return samples
