@@ -35,8 +35,9 @@ class TfidfRanker(Estimator):
     def get_main_component(self):
         return self
 
-    def __init__(self, vectorizer: Type = HashingTfIdfVectorizer, **kwargs):
+    def __init__(self, vectorizer: Type = HashingTfIdfVectorizer, top_n=5, **kwargs):
 
+        self.top_n = top_n
         self.vectorizer = vectorizer
 
         if kwargs['mode'] != 'train':
@@ -59,7 +60,7 @@ class TfidfRanker(Estimator):
     def get_index2doc(self):
         return dict(zip(self.doc_index.values(), self.doc_index.keys()))
 
-    def __call__(self, questions: List[str], n=5):
+    def __call__(self, questions: List[str]):
         """
         Rank documents and return top n document titles with scores.
         :param questions: queries to search an answer for
@@ -73,10 +74,10 @@ class TfidfRanker(Estimator):
         for q_tfidf in q_tfidfs:
             scores = q_tfidf * self.tfidf_matrix
 
-            if len(scores.data) <= n:
+            if len(scores.data) <= self.top_n:
                 o_sort = np.argsort(-scores.data)
             else:
-                o = np.argpartition(-scores.data, n)[0:n]
+                o = np.argpartition(-scores.data, self.top_n)[0:self.top_n]
                 o_sort = o[np.argsort(-scores.data[o])]
 
             doc_scores = scores.data[o_sort]
