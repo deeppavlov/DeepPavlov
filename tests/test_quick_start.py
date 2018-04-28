@@ -34,10 +34,10 @@ PARAMS = {"error_model": {("error_model/brillmoore_wikitypos_en.json", "error_mo
           "sample": {("intents/intents_sample_csv.json", "intents", ('TI',)): [],
                     ("intents/intents_sample_json.json", "intents", ('TI',)): []},
           "ner": {("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [],
-                  ("ner/ner_dstc2.json", "ner", ALL_MODES): [],
-                  ("ner/ner_ontonotes_emb.json", "ner_ontonotes", ALL_MODES): [],
-                  ("ner/ner_ontonotes.json", "ner_ontonotes", ('DE', 'IP')): [],
-                  ("ner/slotfill_dstc2.json", "ner", ALL_MODES):
+                  ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [],
+                  ("ner/ner_ontonotes.json", "ner_ontonotes_senna", ('DE', 'IP')): [],
+                  ("ner/ner_rus.json", "ner_rus", ('DE', 'IP')): [],
+                  ("ner/slotfill_dstc2.json", "slotfill_dstc2", ALL_MODES):
                       [
                           ("chinese food", "{'food': 'chinese'}"),
                           ("in the west part", "{'area': 'west'}"),

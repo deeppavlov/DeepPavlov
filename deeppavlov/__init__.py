@@ -20,6 +20,7 @@ assert sys.hexversion >= 0x3060000, 'Does not work in python3.5 or lower'
 
 import deeppavlov.core.models.keras_model
 import deeppavlov.core.data.vocab
+import deeppavlov.core.data.simple_vocab
 import deeppavlov.dataset_readers.babi_reader
 import deeppavlov.dataset_readers.dstc2_reader
 import deeppavlov.dataset_readers.kvret_reader
@@ -42,14 +43,12 @@ import deeppavlov.models.embedders.dict_embedder
 import deeppavlov.models.embedders.glove_embedder
 import deeppavlov.models.embedders.bow_embedder
 import deeppavlov.models.ner.slotfill
-import deeppavlov.models.ner.ner
 import deeppavlov.models.ner.ner_ontonotes
 import deeppavlov.models.spellers.error_model.error_model
 import deeppavlov.models.trackers.hcn_at
 import deeppavlov.models.trackers.hcn_et
 import deeppavlov.models.preprocessors.str_lower
 import deeppavlov.models.preprocessors.squad_preprocessor
-import deeppavlov.models.ner.ner
 import deeppavlov.models.tokenizers.spacy_tokenizer
 import deeppavlov.models.tokenizers.split_tokenizer
 import deeppavlov.models.tokenizers.ru_tokenizer
@@ -65,8 +64,17 @@ import deeppavlov.vocabs.typos
 import deeppavlov.vocabs.wiki_sqlite
 import deeppavlov.dataset_readers.insurance_reader
 import deeppavlov.dataset_iterators.ranking_iterator
+import deeppavlov.models.ner.network
 import deeppavlov.models.ranking.ranking_model
 import deeppavlov.models.ranking.metrics
+import deeppavlov.models.preprocessors.char_splitter
+import deeppavlov.models.preprocessors.mask
+import deeppavlov.models.preprocessors.assemble_embeddins_matrix
+import deeppavlov.models.preprocessors.capitalization
+import deeppavlov.models.preprocessors.field_getter
+import deeppavlov.models.preprocessors.sanitizer
+import deeppavlov.models.preprocessors.lazy_tokenizer
+
 
 import deeppavlov.metrics.accuracy
 import deeppavlov.metrics.fmeasure

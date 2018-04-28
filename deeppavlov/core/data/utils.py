@@ -20,6 +20,7 @@ import requests
 from tqdm import tqdm
 import tarfile
 import gzip
+import numpy as np
 import re
 import zipfile
 import shutil
@@ -182,3 +183,42 @@ def is_done(path):
 def tokenize_reg(s):
     pattern = "[\w]+|[‑–—“”€№…’\"#$%&\'()+,-./:;<>?]"
     return re.findall(re.compile(pattern), s)
+
+
+def zero_pad(batch, dtype=np.float32):
+    if len(batch) == 1 and len(batch[0]) == 0:
+        return np.array([], dtype=dtype)
+    batch_size = len(batch)
+    max_len = max(len(utterance) for utterance in batch)
+    if isinstance(batch[0][0], (int, np.int)):
+        padded_batch = np.zeros([batch_size, max_len], dtype=np.int32)
+        for n, utterance in enumerate(batch):
+            padded_batch[n, :len(utterance)] = utterance
+    else:
+        n_features = len(batch[0][0])
+        padded_batch = np.zeros([batch_size, max_len, n_features], dtype=dtype)
+        for n, utterance in enumerate(batch):
+            for k, token_features in enumerate(utterance):
+                padded_batch[n, k] = token_features
+    return padded_batch
+
+
+def zero_pad_char(batch, dtype=np.float32):
+    if len(batch) == 1 and len(batch[0]) == 0:
+        return np.array([], dtype=dtype)
+    batch_size = len(batch)
+    max_len = max(len(utterance) for utterance in batch)
+    max_token_len = max(len(ch) for token in batch for ch in token)
+    if isinstance(batch[0][0][0], (int, np.int)):
+        padded_batch = np.zeros([batch_size, max_len, max_token_len], dtype=np.int32)
+        for n, utterance in enumerate(batch):
+            for k, token in enumerate(utterance):
+                padded_batch[n, k, :len(token)] = token
+    else:
+        n_features = len(batch[0][0][0])
+        padded_batch = np.zeros([batch_size, max_len, max_token_len, n_features], dtype=dtype)
+        for n, utterance in enumerate(batch):
+            for k, token in enumerate(utterance):
+                for q, char_features in enumerate(token):
+                    padded_batch[n, k, q] = char_features
+    return padded_batch

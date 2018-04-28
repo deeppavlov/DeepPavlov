@@ -14,18 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from deeppavlov.core.models.component import Component
+from typing import List, Dict, Union, Tuple
+
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 
 
-@register("split_tokenizer")
-class SplitTokenizer(Component):
+@register('field_getter')
+class FieldGetter(Component):
+    def __init__(self, field, *args, **kwargs):
+        self.field = field
 
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def __call__(self, batch, *args, **kwargs):
-        if isinstance(batch, (list, tuple)):
-            return [self(line) for line in batch]
-        else:
-            return batch.split()
+    def __call__(self, batch: Union[List[Dict], Tuple[Dict]], **kwargs):
+        return [self(item) for item in batch]

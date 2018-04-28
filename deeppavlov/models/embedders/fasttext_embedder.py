@@ -25,17 +25,18 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.serializable import Serializable
+from deeppavlov.core.data.utils import zero_pad
 
 log = get_logger(__name__)
 
 
 @register('fasttext')
 class FasttextEmbedder(Component, Serializable):
-    def __init__(self, load_path, save_path=None, dim=100, **kwargs):
+    def __init__(self, load_path, save_path=None, dim=100, pad_zero=False, **kwargs):
         super().__init__(save_path=save_path, load_path=load_path)
         self.tok2emb = {}
         self.dim = dim
-
+        self.pad_zero = pad_zero
         self.model = self.load()
 
     def save(self, *args, **kwargs):
@@ -62,7 +63,13 @@ class FasttextEmbedder(Component, Serializable):
         """
         Embed data
         """
-        return [self._encode(sample, mean) for sample in batch]
+        batch = [self._encode(sample, mean) for sample in batch]
+        if self.pad_zero:
+            batch = zero_pad(batch)
+        return batch
+
+    def __iter__(self):
+        yield from self.model.get_words()
 
     def _encode(self, tokens: List[str], mean: bool):
         embedded_tokens = []
