@@ -141,7 +141,7 @@ are in the same file, you may specify validation split here:
 ```
 #### Chainer
 
-The chainer part of the configuration file contains the specification of the neural network 
+The `''chainer''` part of the configuration file contains the specification of the neural network 
 model and supplementary things such as vocabularies. Chainer should be defined as follows:
 
 ```
@@ -239,19 +239,33 @@ that network obtains the output of the lowercase_preprocessor as its input.
 Model parameters are:
 - **`tags`** - tag vocabulary. `#tag_vocab` refers to an already defined model with "id" = "tag_vocab".
 - **`symbols`** - character vocabulary. `#char_vocab` refers to an already defined model with "id" = "char_vocab".
-- **`char_embeddings_size`** - the dimensionality of character embeddings
-- **`embeddings_dropout`** - boolean, whether to use dropout on embeddings or not
-- **`n_filters`** - a list of output feature dimensionality for each layer. A value `[100, 200]`
-means that there will be two layers with 100 and 200 units, respectively. 
-- **`token_embeddings_dim`** - dimensionality of token embeddings. If embeddings are trained on
-the go, this parameter determines dimensionality of the embedding matrix. If the pre-trained 
-embeddings this argument must agree with the dimensionality of pre-trained embeddings
-- **`char_embeddings_dim`** - character embeddings dimensionality, typical values are 25 - 100
-- **`use_crf`** - boolean, whether to use Conditional Random Fields on top of the network (recommended)
-- **`use_batch_norm`** - boolean, whether to use Batch Normalization or not. Affects only CNN networks
-- **`use_capitalization`** - boolean, whether to include capitalization binary features to the input 
-of the network. If True, a binary feature indicating whether the word starts with a capital 
-letter will be concatenated to the word embeddings.
-- **`dropout_rate`** - probability of dropping the hidden state, values from 0 to 1. 0.5 
-works well in most of the cases
-- **`learning_rate`**: learning rate to use during the training (usually from 0.01 to 0.0001)
+- **`char_embeddings_size`** - the dimensionality of character embeddings (default=16)
+- **`char_conv_layers`** - number of convolution layers applied to character embeddings (default=1)
+- **`char_window_size`** - width of convolution filters (default=5). It can be a list if several parallel filters 
+are applied, for example, [2, 3, 4, 5].
+- **`char_filters`** - number of convolution filters (default=**None**). It can be a number, a list (when
+there are several windows of different width on a single convolution layer), a list of lists, if there
+are more than 1 convolution layers, or **None**. If **None**, a layer with width *width* contains 
+min(self.char_filter_multiple * *width*, 200) filters.
+- **`char_filter_multiple`** - a coefficient used to calculate number of filters depending on window size. 
+- **`char_highway layer`** - number of highway layers on the top of convolutions (default=1).
+- **`conv_dropout`** - ratio of dropout between convolutional layers (default=0.0).
+- **`highway_dropout`** - ratio of dropout between highway layers (default=0.0).
+- **`intermediate_dropout`** - ratio of dropout between last convolutional and first highway layer (default=0.0).
+- **`lstm_dropout`** - ratio of dropout inside word-level LSTM (default=0.0).
+- **`word_lstm_layers`** - number of word-level LSTM layers (default=1).
+- **`word_lstm_units`** - number of units in word-level LSTM (default=128). It can be a list if there
+are multiple layers.
+- **`word_dropout`** - ratio of dropout before word-level LSTM (default=0.0).
+- **`regularizer`** - the weight of l2-regularizer for output probabilities (default=None). None means
+that no regularizer is applied.
+- **`verbose`** - the level of verbosity during training. If it is positive, prints model summary.
+
+The `''train''` section of `''chainer''` contains training parameters, such as number of epochs,
+batch_size and logging frequency, see [general README](../../../README.md) for more details.
+
+### Test configuration
+
+Test configuration file is almost the same as the train one, the only difference is
+that **dataset_reader** reads only test part of data. Also there are no logging parameters
+in the `''train''` subsection of **chainer**.
