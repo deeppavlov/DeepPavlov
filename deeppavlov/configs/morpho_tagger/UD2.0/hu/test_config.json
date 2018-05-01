@@ -22,8 +22,8 @@
         "name": "default_vocab",
         "level": "token",
         "special_tokens": ["PAD", "BEGIN", "END"],
-        "load_path": "morpho_tagger/UD2.0/hu/tag.dict",
-        "save_path": "morpho_tagger/UD2.0/hu/tag.dict"
+        "save_path": "morpho_tagger/UD2.0/tag_hu.dict",
+        "load_path": "morpho_tagger/UD2.0/tag_hu.dict"
       },
       {
         "id": "char_vocab",
@@ -31,8 +31,8 @@
         "min_freq": 3,
         "special_tokens": ["PAD", "BEGIN", "END"],
 		"level": "char",
-        "load_path": "morpho_tagger/UD2.0/hu/char.dict",
-        "save_path": "morpho_tagger/UD2.0/hu/char.dict"
+        "save_path": "morpho_tagger/UD2.0/char_hu.dict",
+        "load_path": "morpho_tagger/UD2.0/char_hu.dict"
       },
       {
         "in": ["x_processed"],
@@ -40,8 +40,8 @@
         "out": ["y_predicted"],
         "name": "morpho_tagger",
         "main": true,
-        "save_path": "morpho_tagger/UD2.0/hu/model.hdf5",
-        "load_path": "morpho_tagger/UD2.0/hu/model.hdf5",
+        "save_path": "morpho_tagger/UD2.0/ud_hu.hdf5",
+        "load_path": "morpho_tagger/UD2.0/ud_hu.hdf5",
         "tags": "#tag_vocab",
         "symbols": "#char_vocab",
         "verbose": 1,

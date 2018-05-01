@@ -64,5 +64,10 @@
     "validation_patience": 10,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1
+  },
+  "metadata": {
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/morpho_tagger.tar.gz"
+    ]
   }
 }
