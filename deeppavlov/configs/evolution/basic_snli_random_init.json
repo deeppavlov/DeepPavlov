@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "basic_classification_reader",
-    "x": "sentence1",
+    "x": "text",
     "y": "gold_label",
     "data_path": "/home/dilyara.baymurzina/evolution_data/snli_data"
   },
@@ -27,6 +27,15 @@
         "load_path": "/home/dilyara.baymurzina/evolution_data/snli_data/snli_classes.dict"
       },
       {
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_lower"
+        ],
+        "name": "str_lower"
+      },
+      {
         "id": "my_embedder",
         "name": "fasttext",
         "save_path": "/home/dilyara.baymurzina/embeddings/wordpunct_tok_reddit_comments_2017_11_100.bin",
@@ -40,7 +49,7 @@
       },
       {
         "in": [
-          "x"
+          "x_lower"
         ],
         "in_y": [
           "y"

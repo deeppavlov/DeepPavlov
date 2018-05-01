@@ -94,14 +94,14 @@ with open(CONFIG_FILE, "r") as f:
 
 print("Given basic params: {}\n".format(basic_params))
 
-Path(basic_params["chainer"]["pipe"][3]["save_path"]).mkdir(parents=True, exist_ok=True)
-basic_params["chainer"]["pipe"][3]["n_types"] = N_TYPES
-basic_params["chainer"]["pipe"][3]["n_layers"] = N_LAYERS
+Path(basic_params["chainer"]["pipe"][4]["save_path"]).mkdir(parents=True, exist_ok=True)
+basic_params["chainer"]["pipe"][4]["n_types"] = N_TYPES
+basic_params["chainer"]["pipe"][4]["n_layers"] = N_LAYERS
 
 # Result table
 order = ["classification_log_loss", "classification_accuracy",
          "classification_f1", "classification_roc_auc", "params"]
-result_file = Path(basic_params["chainer"]["pipe"][3]["save_path"]).joinpath("result_table.csv")
+result_file = Path(basic_params["chainer"]["pipe"][4]["save_path"]).joinpath("result_table.csv")
 result_table = pd.DataFrame({"loss": [],
                              "classification_accuracy": [],
                              "classification_f1": [],
