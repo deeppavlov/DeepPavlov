@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "conll2003_reader",
-    "data_path": "conll2003/",
+    "data_path": "total_rus/",
     "provide_pos": false
   },
   "dataset_iterator": {
@@ -34,8 +34,8 @@
         "pad_with_zeros": true,
         "special_tokens": ["<UNK>"],
         "fit_on": ["x_san"],
-        "save_path": "ner_conll2003/word.dict",
-        "load_path": "ner_conll2003/word.dict",
+        "save_path": "ner_rus/word.dict",
+        "load_path": "ner_rus/word.dict",
         "out": ["x_tok_ind"]
       },
       {
@@ -44,8 +44,8 @@
         "name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["y"],
-        "save_path": "ner_conll2003/tag.dict",
-        "load_path": "ner_conll2003/tag.dict",
+        "save_path": "ner_rus/tag.dict",
+        "load_path": "ner_rus/tag.dict",
         "out": ["y_ind"]
       },
       {
@@ -59,9 +59,17 @@
         "name": "char_vocab",
         "pad_with_zeros": true,
         "fit_on": ["x_char"],
-        "save_path": "ner_conll2003/char.dict",
-        "load_path": "ner_conll2003/char.dict",
+        "save_path": "ner_rus/char.dict",
+        "load_path": "ner_rus/char.dict",
         "out": ["x_char_ind"]
+      },
+      {
+        "in": ["x_san"],
+        "id": "embedder",
+        "name": "fasttext",
+        "pad_zero": true,
+        "load_path": "embeddings/lenta_lower_100.bin",
+        "out": ["x_emb"]
       },
       {
         "in": ["x"],
@@ -69,26 +77,16 @@
         "out": ["mask"]
       },
       {
-        "in": ["x_san"],
-        "id": "glove_emb",
-        "name": "glove",
-        "pad_zero": true,
-        "load_path": "embeddings/glove.6B.100d.txt",
-        "out": ["x_emb"]
-      },
-      {
+        "name": "random_emb_mat",
         "id": "embeddings",
-        "name": "emb_mat_assembler",
-        "embedder": "#glove_emb",
-        "vocab": "#word_vocab"
+        "vocab_len": "#word_vocab.len",
+        "emb_dim": 100
       },
       {
+        "name": "random_emb_mat",
         "id": "embeddings_char",
-        "name": "emb_mat_assembler",
-        "character_level": true,
-        "emb_dim": 32,
-        "embedder": "#glove_emb",
-        "vocab": "#char_vocab"
+        "vocab_len": "#char_vocab.len",
+        "emb_dim": 100
       },
       {
         "id": "capitalization",
@@ -102,16 +100,16 @@
         "out": ["y_predicted"],
         "name": "ner",
         "main": true,
-        "token_emb_dim": "#glove_emb.dim",
         "n_hidden_list": [128],
         "net_type": "rnn",
         "cell_type": "lstm",
         "use_cudnn_rnn": true,
         "n_tags": "#tag_vocab.len",
         "capitalization_dim": "#capitalization.dim",
-        "char_emb_dim": "#embeddings_char.dim",
-        "save_path": "ner_conll2003/model_no_pos",
-        "load_path": "ner_conll2003/model_no_pos",
+        "token_emb_dim": "#embedder.dim",
+        "char_emb_dim": 100,
+        "save_path": "ner_rus/model",
+        "load_path": "ner_rus/model",
         "char_emb_mat": "#embeddings_char.emb_mat",
         "use_crf": true,
         "use_batch_norm": true,
@@ -147,9 +145,9 @@
       "telegram_utils": "NERCoNLL2003Model"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_conll2003_v2.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_rus.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt",
+        "url": "http://lnsigo.mipt.ru/export/embeddings/lenta_lower_100.bin",
         "subdir": "embeddings"
       }
     ]
