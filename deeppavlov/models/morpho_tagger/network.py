@@ -42,9 +42,7 @@ class CharacterTagger:
                  conv_dropout=0.0, highway_dropout=0.0,
                  intermediate_dropout=0.0, lstm_dropout=0.0,
                  word_lstm_layers=1, word_lstm_units=128,
-                 word_dropout=0.0, regularizer=None,
-                 min_prob=0.01, max_diff=2.0,
-                 callbacks=None, verbose=1):
+                 word_dropout=0.0, regularizer=None, verbose=1):
         self.symbols = symbols
         self.tags = tags
         self.reverse = reverse
@@ -63,9 +61,6 @@ class CharacterTagger:
         self.lstm_dropout = lstm_dropout
         self.word_dropout = word_dropout
         self.regularizer = regularizer
-        self.min_prob = min_prob
-        self.max_diff = max_diff
-        self.callbacks = callbacks
         self.verbose = verbose
         self.initialize()
         print("{} symbols, {} tags".format(self.symbols_number_, self.tags_number_))
