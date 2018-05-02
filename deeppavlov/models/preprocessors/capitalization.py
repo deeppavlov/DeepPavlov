@@ -20,7 +20,7 @@ import re
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.data.utils import zero_pad
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.tokenizers import nltk_tokenizer
+# from deeppavlov.models.tokenizers import nltk_tokenizer
 
 
 @register('capitalization_featurizer')

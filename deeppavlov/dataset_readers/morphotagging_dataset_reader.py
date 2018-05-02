@@ -94,7 +94,7 @@ class MorphotaggerDatasetReader(DatasetReader):
         if isinstance(data_path, str):
             data_path = Path(data_path)
         if isinstance(data_path, Path):
-            if data_path.exists:
+            if data_path.exists():
                 is_file = data_path.is_file()
             else:
                 is_file = (len(data_types) == 1)
