@@ -13,21 +13,21 @@ Common output for morphological tagging looks as below. The examples are for Rus
 inventory of tags and features from [Universal Dependencies project](www.universaldependencies.org/guidelines.html).
 
 ```
-1	Это	PRON	Animacy=Inan|Case=Acc|Gender=Neut|Number=Sing
-2	чутко	ADV	Degree=Pos
-3	фиксируют	VERB	Aspect=Imp|Mood=Ind|Number=Plur|Person=3|Tense=Pres|VerbForm=Fin|Voice=Act
-4	энциклопедические	ADJ	Case=Nom|Degree=Pos|Number=Plur
-5	издания	NOUN	Animacy=Inan|Case=Nom|Gender=Neut|Number=Plur
-6	.	PUNCT	_
-
-1	Four	NUM	NumType=Card
-2	months	NOUN	Number=Plur
-3	later	ADV	_
-4	,	PUNCT	_
-5	we	PRON	Case=Nom|Number=Plur|Person=1|PronType=Prs
-6	were	AUX	Mood=Ind|Tense=Past|VerbForm=Fin
-7	married	VERB	Tense=Past|VerbForm=Part|Voice=Pass
-8	.	PUNCT	_
+1   Это PRON    Animacy=Inan|Case=Acc|Gender=Neut|Number=Sing
+2   чутко   ADV Degree=Pos
+3   фиксируют   VERB    Aspect=Imp|Mood=Ind|Number=Plur|Person=3|Tense=Pres|VerbForm=Fin|Voice=Act
+4   энциклопедические   ADJ Case=Nom|Degree=Pos|Number=Plur
+5   издания NOUN    Animacy=Inan|Case=Nom|Gender=Neut|Number=Plur
+6   .   PUNCT   _
+  
+1   Four    NUM NumType=Card
+2   months  NOUN    Number=Plur
+3   later   ADV _
+4   ,   PUNCT   _
+5   we  PRON    Case=Nom|Number=Plur|Person=1|PronType=Prs
+6   were    AUX Mood=Ind|Tense=Past|VerbForm=Fin
+7   married VERB    Tense=Past|VerbForm=Part|Voice=Pass
+8   .   PUNCT   _
 
 ```
 
@@ -38,14 +38,14 @@ The full UD format (see below) includes more columns including lemma and syntact
 Our tagger accepts the data in [CONLL-U format](http://universaldependencies.org/format.html):
 
 ```
-1	Four	four	NUM	CD	NumType=Card	2	nummod	_	_
-2	months	month	NOUN	NNS	Number=Plur	3	obl:npmod	_	_
-3	later	later	ADV	RB	_	7	advmod	_	SpaceAfter=No
-4	,	,	PUNCT	,	_	7	punct	_	_
-5	we	we	PRON	PRP	Case=Nom|Number=Plur|Person=1|PronType=Prs	7	nsubj:pass	_	_
-6	were	be	AUX	VBD	Mood=Ind|Tense=Past|VerbForm=Fin	7	aux:pass	_	_
-7	married	marry	VERB	VBN	Tense=Past|VerbForm=Part|Voice=Pass	0	root	_	SpaceAfter=No
-8	.	.	PUNCT	.	_	7	punct	_	_
+1   Four    four    NUM CD  NumType=Card    2   nummod  _   _
+2   months  month   NOUN    NNS Number=Plur 3   obl:npmod   _   _
+3   later   later   ADV RB  _   7   advmod  _   SpaceAfter=No
+4   ,   ,   PUNCT   ,   _   7   punct   _   _
+5   we  we  PRON    PRP Case=Nom|Number=Plur|Person=1|PronType=Prs  7   nsubj:pass  _   _
+6   were    be  AUX VBD Mood=Ind|Tense=Past|VerbForm=Fin    7   aux:pass    _   _
+7   married marry   VERB    VBN Tense=Past|VerbForm=Part|Voice=Pass 0   root    _   SpaceAfter=No
+8   .   .   PUNCT   .   _   7   punct   _   _
 ```
 
 It does not take into account the contents except the columns number 2, 4, 6 
@@ -269,3 +269,49 @@ batch_size and logging frequency, see [general README](../../../README.md) for m
 Test configuration file is almost the same as the train one, the only difference is
 that **dataset_reader** reads only test part of data. Also there are no logging parameters
 in the `''train''` subsection of **chainer**.
+
+### Predict configuration
+
+In prediction configuration **chainer** includes an additional subsection for the prettifier,
+which transforms the predictions of the tagger to a readable form. 
+```
+{
+    "in": ["x", "y_predicted"],
+    "out": ["y_prettified"],
+    "name": "tag_output_prettifier",
+    "end": "\n"
+}
+```
+
+It takes two inputs -- source sequence of words and predicted sequence of tags
+and produces the output of the format
+
+```
+1   Это PRON    Animacy=Inan|Case=Acc|Gender=Neut|Number=Sing
+2   чутко   ADV Degree=Pos
+3   фиксируют   VERB    Aspect=Imp|Mood=Ind|Number=Plur|Person=3|Tense=Pres|VerbForm=Fin|Voice=Act
+4   энциклопедические   ADJ Case=Nom|Degree=Pos|Number=Plur
+5   издания NOUN    Animacy=Inan|Case=Nom|Gender=Neut|Number=Plur
+6   .   PUNCT   _
+  
+1   Four    NUM NumType=Card
+2   months  NOUN    Number=Plur
+3   later   ADV _
+4   ,   PUNCT   _
+5   we  PRON    Case=Nom|Number=Plur|Person=1|PronType=Prs
+6   were    AUX Mood=Ind|Tense=Past|VerbForm=Fin
+7   married VERB    Tense=Past|VerbForm=Part|Voice=Pass
+8   .   PUNCT   _
+```
+
+The **train** section of the config is replaced by the **predict** section:
+```
+"predict": 
+  {
+    "batch_size": 32,
+    "outfile": "results/ud_ru_syntagrus_test.res"
+  }
+```
+
+
+
