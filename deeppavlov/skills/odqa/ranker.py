@@ -17,6 +17,7 @@ limitations under the License.
 from typing import Type, List
 
 import numpy as np
+from scipy.sparse import csr_matrix
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
@@ -35,7 +36,7 @@ class TfidfRanker(Estimator):
     def get_main_component(self):
         return self
 
-    def __init__(self, vectorizer: Type = HashingTfIdfVectorizer, top_n=5, **kwargs):
+    def __init__(self, vectorizer: HashingTfIdfVectorizer, top_n=5, **kwargs):
 
         self.top_n = top_n
         self.vectorizer = vectorizer
@@ -72,7 +73,7 @@ class TfidfRanker(Estimator):
         q_tfidfs = self.vectorizer(questions)
 
         for q_tfidf in q_tfidfs:
-            scores = q_tfidf * self.tfidf_matrix
+            scores: csr_matrix = q_tfidf * self.tfidf_matrix
 
             if len(scores.data) <= self.top_n:
                 o_sort = np.argsort(-scores.data)
@@ -80,8 +81,15 @@ class TfidfRanker(Estimator):
                 o = np.argpartition(-scores.data, self.top_n)[0:self.top_n]
                 o_sort = o[np.argsort(-scores.data[o])]
 
-            doc_scores = scores.data[o_sort]
-            doc_ids = [self.index2doc[i] for i in scores.indices[o_sort]]
+            o_sort = scores.indices[o_sort]
+            scores = np.squeeze(scores.toarray())
+
+            # for cases when o_sort is empty
+            if len(o_sort) < self.top_n:
+                o_sort = np.concatenate([o_sort, np.arange(self.top_n - len(o_sort))])
+
+            doc_scores = scores[o_sort]
+            doc_ids = [self.index2doc[i] for i in o_sort]
             batch_doc_ids.append(doc_ids)
             batch_docs_scores.append(doc_scores)
 
