@@ -17,7 +17,7 @@ import tensorflow as tf
 from tensorflow.python.client import device_lib
 
 
-def check_gpu_existance():
+def check_gpu_existence():
     r"""Return True if at least one GPU available"""
     sess_config = tf.ConfigProto()
     sess_config.gpu_options.allow_growth = True
