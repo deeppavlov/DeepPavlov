@@ -239,12 +239,13 @@ class DSTC2Version2DatasetReader(DatasetReader):
                             )
                         else:
                             new_turn = copy.deepcopy(utterances[-1])
-                            if 'db_result' not in turn:
+                            if 'db_result' not in responses[-1]:
                                 raise RuntimeError("Every api_call action should have"
-                                                   " db_result, turn = {}".format(turn))
-                            new_turn['db_result'] = turn.pop('db_result')
-                            responses.append(turn)
+                                                   " db_result, turn = {}"
+                                                   .format(responses[-1]))
+                            new_turn['db_result'] = responses[-1].pop('db_result')
                             utterances.append(new_turn)
+                            responses.append(turn)
                         num_dialog_utter += 1
                     else:
                         raise RuntimeError("there cannot be two successive turns of"
@@ -252,7 +253,7 @@ class DSTC2Version2DatasetReader(DatasetReader):
                     num_dialog_resp += 1
                 else:
                     raise RuntimeError("Only speakers 1 and 2 are supported")
-                    episode_done = False
+                episode_done = False
 
         if with_indices:
             return utterances, responses, dialog_indices

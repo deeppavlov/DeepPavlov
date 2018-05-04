@@ -27,6 +27,7 @@ class DialogDatasetIterator(DataLearningIterator):
         prev_resp_act = None
         for x, y in data:
             if x.get('episode_done'):
+                del x['episode_done']
                 prev_resp_act = None
                 dialogs.append(([], []))
             x['prev_resp_act'] = prev_resp_act
