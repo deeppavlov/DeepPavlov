@@ -1,0 +1,119 @@
+{
+  "dataset_reader": {
+    "name": "squad_dataset_reader",
+    "dataset": "SberSQuAD",
+    "data_path": "squad_ru/"
+  },
+  "dataset_iterator": {
+    "name": "squad_noans_iterator",
+    "seed": 1337,
+    "noans_rate": 0.3,
+    "shuffle": true
+  },
+  "chainer": {
+    "in": ["context_raw", "question_raw"],
+    "in_y": ["ans_raw", "ans_raw_start"],
+    "pipe": [
+      {
+        "name": "squad_preprocessor",
+        "id": "squad_prepr",
+        "context_limit": 400,
+        "question_limit": 50,
+        "char_limit": 16,
+        "in": ["context_raw", "question_raw"],
+        "out": ["context", "context_tokens", "context_chars",
+                "c_r2p", "c_p2r", "question",
+                "question_tokens", "question_chars", "spans"]
+      },
+      {
+        "name": "squad_ans_preprocessor",
+        "id": "squad_ans_prepr",
+        "in": ["ans_raw", "ans_raw_start", "c_r2p", "spans"],
+        "out": ["ans", "ans_start", "ans_end"]
+      },
+      {
+        "name": "squad_vocab_embedder",
+        "id": "vocab_embedder",
+        "level": "token",
+        "emb_folder": "embeddings/",
+        "emb_url": "http://lnsigo.mipt.ru/export/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.vec",
+        "save_path": "squad_model_ru_noans/emb/vocab_embedder.pckl",
+        "load_path": "squad_model_ru_noans/emb/vocab_embedder.pckl",
+        "context_limit": "#squad_prepr.context_limit",
+        "question_limit": "#squad_prepr.question_limit",
+        "char_limit": "#squad_prepr.context_limit",
+        "fit_lol": ["context_tokens", "question_tokens"],
+        "in": ["context_tokens", "question_tokens"],
+        "out": ["context_tokens_idxs", "question_tokens_idxs"]
+      },
+      {
+        "name": "squad_vocab_embedder",
+        "id": "char_vocab_embedder",
+        "level": "char",
+        "emb_folder": "embeddings/",
+        "emb_url": "http://lnsigo.mipt.ru/export/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize-char.vec",
+        "save_path": "squad_model_ru_noans/emb/char_vocab_embedder.pckl",
+        "load_path": "squad_model_ru_noans/emb/char_vocab_embedder.pckl",
+        "context_limit": "#squad_prepr.context_limit",
+        "question_limit": "#squad_prepr.question_limit",
+        "char_limit": "#squad_prepr.char_limit",
+        "fit_lol": ["context_chars", "question_chars"],
+        "in": ["context_chars", "question_chars"],
+        "out": ["context_chars_idxs", "question_chars_idxs"]
+      },
+      {
+        "name": "squad_model",
+        "id": "squad",
+        "word_emb": "#vocab_embedder.emb_mat",
+        "char_emb": "#char_vocab_embedder.emb_mat",
+        "context_limit": "#squad_prepr.context_limit",
+        "question_limit": "#squad_prepr.question_limit",
+        "char_limit": "#squad_prepr.char_limit",
+        "train_char_emb": true,
+        "char_hidden_size": 100,
+        "encoder_hidden_size": 75,
+        "attention_hidden_size": 75,
+        "learning_rate": 0.5,
+        "min_learning_rate": 0.0001,
+        "learning_rate_patience": 4,
+        "keep_prob": 0.6,
+        "grad_clip": 5.0,
+        "weight_decay": 0.999,
+        "noans": true,
+        "squad_loss_weight": 0.8,
+        "save_path": "squad_model_ru_noans/model",
+        "load_path": "squad_model_ru_noans/model",
+        "in": ["context_tokens_idxs", "context_chars_idxs", "question_tokens_idxs", "question_chars_idxs"],
+        "in_y": ["ans_start", "ans_end"],
+        "out": ["ans_start_predicted", "ans_end_predicted", "score", "prob"]
+      },
+      {
+        "name": "squad_ans_postprocessor",
+        "id": "squad_ans_postprepr",
+        "in": ["ans_start_predicted", "ans_end_predicted", "context_raw", "c_p2r", "spans"],
+        "out": ["ans_predicted", "ans_start_predicted", "ans_end_predicted"]
+      }
+    ],
+    "out": ["ans_predicted", "ans_start_predicted", "score", "prob"]
+  },
+  "train": {
+    "show_examples": false,
+    "test_best": false,
+    "validate_best": true,
+    "log_every_n_batches": 250,
+    "val_every_n_epochs": 1,
+    "batch_size": 50,
+    "pytest_max_batches": 2,
+    "validation_patience": 10,
+    "metrics": ["squad_f1", "exact_match", "squad_roc_auc", "squad_pr"]
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "SquadModel"
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_ru_noans.tar.gz"
+    ]
+  }
+}
+

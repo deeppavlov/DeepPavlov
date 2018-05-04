@@ -50,6 +50,8 @@ class SquadModel(TFModel):
         self.learning_rate_patience = self.opt['learning_rate_patience']
         self.grad_clip = self.opt['grad_clip']
         self.weight_decay = self.opt['weight_decay']
+        self.squad_loss_weight = self.opt.get('squad_loss_weight', 1.0)
+        self.noans = self.opt.get('noans', False)
         self.word_emb_dim = self.init_word_emb.shape[1]
         self.char_emb_dim = self.init_char_emb.shape[1]
 
@@ -160,9 +162,30 @@ class SquadModel(TFModel):
             outer = tf.matrix_band_part(outer, 0, tf.cast(tf.minimum(15, self.c_maxlen), tf.int64))
             self.yp1 = tf.argmax(tf.reduce_max(outer, axis=2), axis=1)
             self.yp2 = tf.argmax(tf.reduce_max(outer, axis=1), axis=1)
-            loss_1 = tf.nn.softmax_cross_entropy_with_logits(logits=logits1, labels=self.y1)
-            loss_2 = tf.nn.softmax_cross_entropy_with_logits(logits=logits2, labels=self.y2)
-            self.loss = tf.reduce_mean(loss_1 + loss_2)
+            self.yp_prob = tf.reduce_max(tf.reduce_max(outer, axis=2), axis=1)
+            loss_p1 = tf.nn.softmax_cross_entropy_with_logits(logits=logits1, labels=self.y1)
+            loss_p2 = tf.nn.softmax_cross_entropy_with_logits(logits=logits2, labels=self.y2)
+            squad_loss = loss_p1 + loss_p2
+            if self.noans:
+                q_att = simple_attention(q, self.hidden_size, mask=self.q_mask, keep_prob=self.keep_prob_ph, scope='q_att')
+                c_att = simple_attention(att, self.hidden_size, mask=self.c_mask, keep_prob=self.keep_prob_ph, scope='c_att')
+                layer_1_logits = tf.nn.dropout(tf.layers.dense(tf.concat([q_att, c_att], -1),
+                                                 units=self.hidden_size,
+                                                 activation=tf.tanh,
+                                                 name='noans_dense_1'), keep_prob=self.keep_prob_ph)
+                layer_2_logits = tf.layers.dense(layer_1_logits,
+                                                 units=2,
+                                                 activation=tf.tanh,
+                                                 name='noans_dense_2')
+                self.yp = tf.nn.softmax(layer_2_logits)[:, 1]
+                self.y = tf.one_hot(self.y_ph, depth=2)
+                noans_loss = tf.nn.softmax_cross_entropy_with_logits(logits=layer_2_logits, labels=self.y)
+                loss = self.squad_loss_weight * squad_loss * tf.cast(self.y_ph, tf.float32) \
+                       + (1 - self.squad_loss_weight) * noans_loss
+            else:
+                loss = squad_loss
+
+            self.loss = tf.reduce_mean(loss)
 
         if self.weight_decay < 1.0:
             self.var_ema = tf.train.ExponentialMovingAverage(self.weight_decay)
@@ -188,6 +211,8 @@ class SquadModel(TFModel):
         self.qc_ph = tf.placeholder(shape=(None, None, self.char_limit), dtype=tf.int32, name='qc_ph')
         self.y1_ph = tf.placeholder(shape=(None, ), dtype=tf.int32, name='y1_ph')
         self.y2_ph = tf.placeholder(shape=(None, ), dtype=tf.int32, name='y2_ph')
+        if self.noans:
+            self.y_ph = tf.placeholder(shape=(None,), dtype=tf.int32, name='y_ph')
 
         self.lr_ph = tf.placeholder(dtype=tf.float32, shape=[], name='lr_ph')
         self.keep_prob_ph = tf.placeholder_with_default(1.0, shape=[], name='keep_prob_ph')
@@ -204,7 +229,7 @@ class SquadModel(TFModel):
             capped_grads, _ = tf.clip_by_global_norm(gradients, self.grad_clip)
             self.train_op = self.opt.apply_gradients(zip(capped_grads, variables), global_step=self.global_step)
 
-    def _build_feed_dict(self, c_tokens, c_chars, q_tokens, q_chars, y1=None, y2=None):
+    def _build_feed_dict(self, c_tokens, c_chars, q_tokens, q_chars, y1=None, y2=None, y=None):
         feed_dict = {
             self.c_ph: c_tokens,
             self.cc_ph: c_chars,
@@ -219,22 +244,29 @@ class SquadModel(TFModel):
                 self.keep_prob_ph: self.keep_prob,
                 self.is_train_ph: True,
             })
+        if y is not None:
+            feed_dict.update({
+                self.y_ph: y,
+            })
 
         return feed_dict
 
     def train_on_batch(self, c_tokens, c_chars, q_tokens, q_chars, y1s, y2s):
         # TODO: filter examples in batches with answer position greater self.context_limit
         # select one answer from list of correct answers
+        # y1s, y2s are start and end positions of answer
         y1s = list(map(lambda x: x[0], y1s))
         y2s = list(map(lambda x: x[0], y2s))
-        feed_dict = self._build_feed_dict(c_tokens, c_chars, q_tokens, q_chars, y1s, y2s)
+        if self.noans:
+            y = [int(not (y1 == 0 and y2 == 0)) for y1, y2 in zip(y1s, y2s)]
+        feed_dict = self._build_feed_dict(c_tokens, c_chars, q_tokens, q_chars, y1s, y2s, y)
         loss, _ = self.sess.run([self.loss, self.train_op], feed_dict=feed_dict)
         return loss
 
     def __call__(self, c_tokens, c_chars, q_tokens, q_chars, *args, **kwargs):
         feed_dict = self._build_feed_dict(c_tokens, c_chars, q_tokens, q_chars)
-        yp1, yp2 = self.sess.run([self.yp1, self.yp2], feed_dict=feed_dict)
-        return yp1, yp2
+        yp1, yp2, score, prob = self.sess.run([self.yp1, self.yp2, self.yp, self.yp_prob], feed_dict=feed_dict)
+        return yp1, yp2, score, prob
 
     def process_event(self, event_name, data):
         if event_name == "after_validation":

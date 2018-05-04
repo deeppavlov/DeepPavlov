@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import random
+
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
@@ -49,4 +51,45 @@ class SquadIterator(DataLearningIterator):
                             ans_text.append(answer['text'])
                             ans_start.append(answer['answer_start'])
                         cqas.append(((context, q), (ans_text, ans_start)))
+        return cqas
+
+
+@register('squad_noans_iterator')
+class SquadNoAnsIterator(SquadIterator):
+    def split(self, *args, **kwargs):
+        squad_qas = {}
+        rate = kwargs.get('noans_rate', 0.3)
+        for dt in ['train', 'valid', 'test']:
+            squad_qas[dt] = self._extract_cqas(getattr(self, dt))
+
+        squad_qas_noans = {}
+        for dt in ['train', 'valid', 'test']:
+            squad_qas_noans[dt] = self._extract_cqas_noans(getattr(self, dt), rate)
+
+        for dt in ['train', 'valid', 'test']:
+            setattr(self, dt, squad_qas[dt] + squad_qas_noans[dt])
+
+    @staticmethod
+    def _extract_cqas_noans(data, rate=0.3):
+        """
+        Adds random questions with no answer to SQuAD.
+        """
+        cqas = []
+        questions = []
+        if data:
+            for article in data['data']:
+                for par in article['paragraphs']:
+                    for qa in par['qas']:
+                        questions.append(qa['question'])
+
+            for article in data['data']:
+                for par in article['paragraphs']:
+                    context = par['context']
+                    for qa in par['qas']:
+                        if random.random() < rate:
+                            q = random.sample(questions, k=1)[0]
+                            ans_text = ['']
+                            ans_start = [0]
+                            cqas.append(((context, q), (ans_text, ans_start)))
+
         return cqas
