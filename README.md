@@ -167,13 +167,15 @@ Available model configs are:
 
 - ```deeppavlov/configs/seq2seq_go_bot/*.json```
 
+- ```deeppavlov/configs/odqa/*.json```
+
 - ```deeppavlov/configs/squad/*.json```
 
 - ```deeppavlov/configs/intents/*.json```
 
 - ```deeppavlov/configs/ner/*.json```
 
-- ```deeppavlov/configs/rankinf/*.json```
+- ```deeppavlov/configs/ranking/*.json```
 
 - ```deeppavlov/configs/error_model/*.json```
 
