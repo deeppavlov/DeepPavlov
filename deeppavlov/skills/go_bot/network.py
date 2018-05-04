@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import copy
 import collections
 import json
 import numpy as np
@@ -55,11 +56,13 @@ class GoalOrientedBotNetwork(TFModel):
             log.info("[initializing `{}` from scratch]".format(self.__class__.__name__))
 
         self.reset_state()
+        self.global_step = 0
 
     def __call__(self, features, emb_context, key, action_mask, prob=False):
         feed_dict = {
             self._features: features,
             self._dropout: 1.,
+            self._learning_rate: 1.,
             self._utterance_mask: [[1.]],
             self._initial_state: (self.state_c, self.state_h),
             self._action_mask: action_mask
@@ -80,6 +83,7 @@ class GoalOrientedBotNetwork(TFModel):
     def train_on_batch(self, features, emb_context, key, utter_mask, action_mask, action):
         feed_dict = {
             self._dropout: self.dropout_rate,
+            self._learning_rate: self.get_learning_rate(), 
             self._utterance_mask: utter_mask,
             self._features: features,
             self._action: action,
@@ -94,13 +98,19 @@ class GoalOrientedBotNetwork(TFModel):
                           feed_dict=feed_dict)
         return loss_value, prediction
 
-
     def _init_params(self, params):
-        self.opt = params
+        self.opt = copy.deepcopy(params)
         self.opt['dropout_rate'] = params.get('dropout_rate', 1.)
         self.opt['dense_size'] = params.get('dense_size', self.opt['hidden_size'])
+        self.opt['end_learning_rate'] = params.get('end_learning_rate',
+                                                   params['learning_rate'])
+        self.opt['decay_steps'] = params.get('decay_steps', 1000)
+        self.opt['decay_power'] = params.get('decay_power', 1.)
 
         self.learning_rate = self.opt['learning_rate']
+        self.end_learning_rate = self.opt['end_learning_rate']
+        self.decay_steps = self.opt['decay_steps']
+        self.decay_power = self.opt['decay_power']
         self.dropout_rate = self.opt['dropout_rate']
         self.hidden_size = self.opt['hidden_size']
         self.action_size = self.opt['action_size']
@@ -147,11 +157,16 @@ class GoalOrientedBotNetwork(TFModel):
         # _loss_tensor = tf.multiply(_loss_tensor, self._utterance_mask)
         self._loss = tf.reduce_mean(_loss_tensor, name='loss')
         self._train_op = \
-            self.get_train_op(self._loss, self.learning_rate, clip_norm=2.)
+            self.get_train_op(self._loss, self._learning_rate, clip_norm=2.)
 
     def _add_placeholders(self):
         # TODO: make batch_size != 1
-        self._dropout = tf.placeholder_with_default(1.0, shape=[])
+        self._dropout = tf.placeholder_with_default(1.0,
+                                                    shape=[],
+                                                    name='dropout_rate')
+        self._learning_rate = tf.placeholder(tf.float32,
+                                             shape=[],
+                                             name='learning_rate')
         self._features = tf.placeholder(tf.float32,
                                         [None, None, self.obs_size],
                                         name='features')
@@ -184,7 +199,7 @@ class GoalOrientedBotNetwork(TFModel):
 
     def _build_body(self):
         # input projection
-        _units = tf.nn.dropout(self._features, self._dropout)
+        _units = tf.nn.dropout(self._features, keep_prob=self._dropout)
         _units = tf.layers.dense(_units, self.dense_size,
                                  kernel_initializer=xav(), name='units')
 
@@ -246,6 +261,15 @@ class GoalOrientedBotNetwork(TFModel):
                                   kernel_initializer=xav(), name='logits')
         return _logits, _state
 
+    def get_learning_rate(self):
+        # polynomial decay
+        global_step = min(self.global_step, self.decay_steps)
+        decayed_learning_rate = \
+            (self.learning_rate - self.end_learning_rate) *\
+            (1 - global_step / self.decay_steps) ** self.decay_power +\
+            self.end_learning_rate
+        return decayed_learning_rate
+
     def load(self, *args, **kwargs):
         self.load_params()
         super().load(*args, **kwargs)
@@ -271,10 +295,16 @@ class GoalOrientedBotNetwork(TFModel):
                                   "parameter value `{}`, but is equal to `{}`"
                                   .format(p, params.get(p), self.opt.get(p)))
 
+    def process_event(self, event_name, data):
+        if event_name == "after_epoch":
+            self.global_step += 1
+            log.info("Updated global step. New learning rate = {:.3f}"
+                     .format(self.get_learning_rate()))
+
     def reset_state(self):
         # set zero state
         self.state_c = np.zeros([1, self.hidden_size], dtype=np.float32)
         self.state_h = np.zeros([1, self.hidden_size], dtype=np.float32)
- 
+
     def shutdown(self):
         self.sess.close()
