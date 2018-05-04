@@ -119,7 +119,7 @@ class GoalOrientedBot(NNModel):
         # tokenize input
         tokens = self.tokenizer([context.lower().strip()])[0]
         if self.debug:
-            log.debug("Text tokens = `{}`".format(tokens))
+            log.debug("Tokenized text= `{}`".format(' '.join(tokens)))
 
         # Bag of words features
         bow_features = []
@@ -155,17 +155,17 @@ class GoalOrientedBot(NNModel):
         # Intent features
         intent_features = []
         if callable(self.intent_classifier):
-            intent_probs = self.intent_classifier([tokens])[1][0]
-            intent_features = np.array([intent_probs[i] for i in self.intents],
+            intent, intent_probs = self.intent_classifier([tokens])
+            intent_features = np.array([intent_probs[0][i] for i in self.intents],
                                        dtype=np.float32)
             if self.debug:
-                log.debug("Predicted intent = `{}`".format(intent_probs))
+                log.debug("Predicted intent = `{}`".format(intent[0]))
 
         # Text entity features
         if callable(self.slot_filler):
             self.tracker.update_state(self.slot_filler([tokens])[0])
             if self.debug:
-                log.debug("Slot vals: {}".format(self.slot_filler(tokens)))
+                log.debug("Slot vals: {}".format(self.slot_filler([tokens])))
 
         state_features = self.tracker()
 
@@ -178,13 +178,14 @@ class GoalOrientedBot(NNModel):
                                     dtype=np.float32)
 
         if self.debug:
+            log.debug("Context features = {}".format(context_features))
             debug_msg = "num bow features = {}, ".format(len(bow_features)) +\
                         "num emb features = {}, ".format(len(emb_features)) +\
                         "num intent features = {}, ".format(len(intent_features)) +\
                         "num state features = {}, ".format(len(state_features)) +\
                         "num context features = {}, ".format(len(context_features)) +\
                         "prev_action shape = {}".format(len(self.prev_action))
-            log.debug(debug_msg)
+            #log.debug(debug_msg)
 
         attn_key = np.array([], dtype=np.float32)
         if self.network.attn:
@@ -214,7 +215,13 @@ class GoalOrientedBot(NNModel):
             for k, v in self.db_result.items():
                 slots[k] = str(v)
 
-        return template.generate_text(slots)
+        resp = template.generate_text(slots)
+        # in api calls replace unknown slots to "dontcare"
+        if "api_call" in resp.lower():
+            resp = re.sub("#([A-Za-z]+)", "dontcare", resp).lower()
+        if self.debug:
+            log.debug("Pred response = {}".format(resp))
+        return resp
 
     def _action_mask(self):
         action_mask = np.ones(self.n_actions, dtype=np.float32)
@@ -237,6 +244,8 @@ class GoalOrientedBot(NNModel):
         max_num_utter = max(len(d_contexts) for d_contexts in x)
         for d_contexts, d_responses in zip(x, y):
             self.reset()
+            if self.debug:
+                preds = self._infer_dialog(d_contexts)
             d_features, d_a_masks, d_actions = [], [], []
             d_emb_context, d_key = [], []  # for attention
             for context, response in zip(d_contexts, d_responses):
@@ -248,6 +257,11 @@ class GoalOrientedBot(NNModel):
                 d_emb_context.append(emb_context)
                 d_key.append(key)
 
+                if self.debug:
+                    log.debug("True response = `{}`".format(response['text']))
+                    if preds[0].lower() != response['text'].lower():
+                        log.debug("Pred response = `{}`".format(preds[0]))
+                    preds = preds[1:]
                 action_id = self._encode_response(response['act'])
                 # previous action is teacher-forced here
                 self.prev_action *= 0.
@@ -315,6 +329,7 @@ class GoalOrientedBot(NNModel):
                 if self.templates.actions[np.argmax(self.prev_action)] == "api_call":
                     log.info("Made {}".format(pred))
                     res.append(self._infer(x, db_result=self.interact_db_result))
+                    self.db_result = self.interact_db_result
                 else:
                     res.append(pred)
             if ("api_call" not in self.templates.actions) and self.tracker.get_state():
@@ -327,6 +342,11 @@ class GoalOrientedBot(NNModel):
         self.db_result = None
         self.prev_action = np.zeros(self.n_actions, dtype=np.float32)
         self.network.reset_state()
+        if self.debug:
+            log.debug("Bot reset.")
+
+    def process_event(self, *args, **kwargs):
+        self.network.process_event(*args, **kwargs)
 
     def save(self):
         """Save the parameters of the model to a file."""
