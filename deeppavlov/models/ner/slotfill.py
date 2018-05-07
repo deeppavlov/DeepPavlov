@@ -51,7 +51,9 @@ class DstcSlotFillingNetwork(Component, Serializable):
         entities, slots = self._chunk_finder(tokens, tags)
         slot_values = {}
         for entity, slot in zip(entities, slots):
-            slot_values[slot] = self.ner2slot(entity, slot)
+            match, score = self.ner2slot(entity, slot)
+            if score >= 80:
+                slot_values[slot] = match
         return slot_values
 
     def ner2slot(self, input_entity, slot):
@@ -64,8 +66,8 @@ class DstcSlotFillingNetwork(Component, Serializable):
             for entity in self._slot_vals[slot][entity_name]:
                 entities.append(entity)
                 normalized_slot_vals.append(entity_name)
-        best_match = process.extract(input_entity, entities, limit=2 ** 20)[0][0]
-        return normalized_slot_vals[entities.index(best_match)]
+        best_match, score = process.extract(input_entity, entities, limit=2 ** 20)[0]
+        return normalized_slot_vals[entities.index(best_match)], score
 
     @staticmethod
     def _chunk_finder(tokens, tags):
