@@ -297,9 +297,9 @@ class GoalOrientedBotNetwork(TFModel):
 
     def process_event(self, event_name, data):
         if event_name == "after_epoch":
-            self.global_step += 1
-            log.info("Updated global step. New learning rate = {:.3f}"
+            log.info("Updating global step, learning rate = {:.6f}."
                      .format(self.get_learning_rate()))
+            self.global_step += 1
 
     def reset_state(self):
         # set zero state
