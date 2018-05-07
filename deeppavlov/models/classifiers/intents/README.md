@@ -138,12 +138,9 @@ Some clue parameters for [intents_dstc2.json](../../../configs/intents/intents_d
 | load_path           | path to file from which model files will be loaded    |
 | save_path           | path to file where model files will be saved    |
 | classes             | list of class names. In this case they could be simply obtained from vocab `classes_vocab.keys()` method. To make reference one has to set value to "#classes_vocab.keys()" |
-| model_name          | method of the class KerasIntentModel that corresponds to the model <br />*SetOfValues*: "cnn_model", "dcnn_model"   | 
+| model_name          | method of the class KerasIntentModel that corresponds to the model <br />*SetOfValues*: `cnn_model`, `dcnn_model`, `cnn_model_max_and_aver_pool`, `bilstm_model`, `bilstm_bilstm_model`, `bilstm_cnn_model`, `cnn_bilstm_model`, `bilstm_self_add_attention_model`, `bilstm_self_mult_attention_model`, `bigru_model`  | 
 | text_size           | length of each sample in words      | 
 | confident_threshold | probability threshold for an instance belonging to a class  <br />*SetOfValues*: \[0., 1.\]  | 
-| kernel_sizes_cnn    | kernel sizes for shallow-and-wide and deep CNN models        | 
-| filters_cnn         | number(-s) of filters for shallow-and-wide (deep) CNN   | 
-| dense_size          | size of dense layer that is followed by the classification dense layer    | 
 | lear_rate           | learning rate for training    | 
 | lear_rate_decay     | learning rate decay for training          | 
 | optimizer           | optimizer for training    <br />*SetOfValues*: any method from keras.optimizers |                     
