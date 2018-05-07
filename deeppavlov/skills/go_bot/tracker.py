@@ -33,7 +33,7 @@ class FeaturizedTracker(Component):
 
     @property
     def num_features(self):
-        return self.state_size * 2 + 2
+        return self.state_size * 3 + 3
 
     def reset_state(self):
         self.history = []
@@ -50,10 +50,13 @@ class FeaturizedTracker(Component):
                 self.history.append((slot, value))
         bin_feats = self._binary_features()
         diff_feats = self._diff_features(prev_state)
+        new_feats = self._new_features(prev_state)
         self.curr_feats = np.hstack((bin_feats,
                                      diff_feats,
+                                     new_feats,
                                      np.sum(bin_feats),
-                                     np.sum(diff_feats)))
+                                     np.sum(diff_feats),
+                                     np.sum(new_feats)))
         return self
 
     def get_state(self):
@@ -74,7 +77,16 @@ class FeaturizedTracker(Component):
         feats = np.zeros(self.state_size, dtype=np.float32)
         curr_state = self.get_state()
         for i, slot in enumerate(self.slot_names):
-            if curr_state.get(slot) != state.get(slot):
+            if (slot in curr_state) and (slot in state) and\
+                    (curr_state[slot] != state[slot]):
+                feats[i] = 1.
+        return feats
+
+    def _new_features(self, state):
+        feats = np.zeros(self.state_size, dtype=np.float32)
+        curr_state = self.get_state()
+        for i, slot in enumerate(self.slot_names):
+            if (slot in curr_state) and (slot not in state):
                 feats[i] = 1.
         return feats
 
