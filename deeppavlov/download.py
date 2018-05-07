@@ -156,8 +156,8 @@ def download_resources(config_path, args=None):
         download_resource(resource, download_path)
 
 
-def main():
-    args = parser.parse_args()
+def main(args=None):
+    args = parser.parse_args(args)
     log.info("Downloading...")
     download_resources(None, args)
     log.info("\nDownload successful!")
