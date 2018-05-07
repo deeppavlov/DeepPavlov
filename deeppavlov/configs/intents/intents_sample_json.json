@@ -92,10 +92,5 @@
     "show_examples": false,
     "validate_best": true,
     "test_best": false
-  },
-  "metadata": {
-    "labels": {
-      "telegram_utils": "IntentModel"
-    }
   }
 }

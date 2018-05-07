@@ -78,6 +78,7 @@
         },
         "source_vocab": "#src_token_vocab",
         "target_vocab": "#tgt_token_vocab",
+        "debug": true,
         "debug": false,
         "bow_encoder": {
           "name": "bow"
