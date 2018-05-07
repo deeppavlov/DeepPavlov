@@ -83,7 +83,7 @@ class GoalOrientedBot(NNModel):
 
     def _init_network(self, params):
         # initialize network
-        obs_size = 4 + self.tracker.num_features + self.n_actions
+        obs_size = 6 + self.tracker.num_features + self.n_actions
         if callable(self.bow_embedder):
             obs_size += len(self.word_vocab)
         if callable(self.embedder):
@@ -179,10 +179,17 @@ class GoalOrientedBot(NNModel):
 
         # Other features
         new_db_result = db_result if db_result is not None else self.db_result
-        context_features = np.array([bool(self.db_result) * 1.,
+        result_matches_state = 0.
+        if new_db_result is not None:
+            result_matches_state = all(v == new_db_result.get(s)
+                                       for s, v in self.tracker.get_state().items()
+                                       if v != 'dontcare') * 1.
+        context_features = np.array([bool(db_result) * 1.,
+                                     (db_result == {}) * 1.,
+                                     (new_db_result is None) * 1.,
                                      bool(new_db_result) * 1.,
-                                     (self.db_result == {}) * 1.,
-                                     (new_db_result == {}) * 1.],
+                                     (new_db_result == {}) * 1.,
+                                     result_matches_state],
                                     dtype=np.float32)
 
         if self.debug:
@@ -288,7 +295,7 @@ class GoalOrientedBot(NNModel):
         self.network.train_on_batch(b_features, b_emb_context, b_keys, b_u_masks,
                                     b_a_masks, b_actions)
 
-    def _infer(self, context, db_result=None, prob=True):
+    def _infer(self, context, db_result=None, prob=False):
         features, emb_context, key = self._encode_context(context, db_result)
         probs = self.network(
             [[features]], [[emb_context]], [[key]], [[self._action_mask()]], prob=True
@@ -324,7 +331,9 @@ class GoalOrientedBot(NNModel):
         if self.database is not None:
             # filter slot keys with value equal to 'dontcare' as
             # there is no such value in database records
-            db_slots = {s: v for s, v in slots.items() if v != 'dontcare'}
+            # and remove unknown slot keys (for example, 'this' in dstc2 tracker)
+            db_slots = {s: v for s, v in slots.items()
+                        if (v != 'dontcare') and (s in self.database.keys)}
             db_results = self.database([db_slots])[0]
         else:
             log.warn("No database specified.")
