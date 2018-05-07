@@ -71,11 +71,28 @@ For example,
 
 ## Train model
 
+### Available models
+
+DeepPavlov contains a number of different model configurations for classification task.
+Below the list of available models description is presented:
+* `cnn_model` -- Shallow-and-wide CNN with max pooling after convolution,
+* `dcnn_model` -- Deep CNN with number of layers determined by the given number of kernel sizes and filters,
+* `cnn_model_max_and_aver_pool` -- Shallow-and-wide CNN with max and average pooling concatenation after convolution,
+* `bilstm_model` -- Bidirectional LSTM,
+* `bilstm_bilstm_model` -- 2-layers bidirectional LSTM,
+* `bilstm_cnn_model` -- Bidirectional LSTM followed by shallow-and-wide CNN,
+* `cnn_bilstm_model` -- Shallow-and-wide CNN followed by bidirectional LSTM,
+* `bilstm_self_add_attention_model` -- Bidirectional LSTM followed by self additive attention layer,
+* `bilstm_self_mult_attention_model` -- Bidirectional LSTM followed by self multiplicative attention layer,
+* `bigru_model` -- Bidirectional GRU model.
+
+##### Please, pay attention that each model has its own parameters that should be specified in config.
+
+### Configuration parameters
+
 One can find examples of config files [here](../../../configs/intents).
 
 Some clue parameters for [intents_dstc2.json](../../../configs/intents/intents_dstc2.json) config file are presented in the table below.
-
-#### Configuration parameters:  
 
 |   Parameter         |  Description                                                      | 
 |---------------------|-------------------------------------------------------------------|
