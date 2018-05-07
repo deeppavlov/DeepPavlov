@@ -13,10 +13,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import tensorflow as tf
 from tensorflow.python.client import device_lib
 
 
-def check_gpu_existance():
+def check_gpu_existence():
     r"""Return True if at least one GPU available"""
-    device_list = device_lib.list_local_devices()
-    return any(device.device_type == 'GPU' for device in device_list)
+    sess_config = tf.ConfigProto()
+    sess_config.gpu_options.allow_growth = True
+    with tf.Session(config=sess_config):
+        device_list = device_lib.list_local_devices()
+        return any(device.device_type == 'GPU' for device in device_list)
