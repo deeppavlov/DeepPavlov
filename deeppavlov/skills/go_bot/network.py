@@ -106,6 +106,7 @@ class GoalOrientedBotNetwork(TFModel):
                                                    params['learning_rate'])
         self.opt['decay_steps'] = params.get('decay_steps', 1000)
         self.opt['decay_power'] = params.get('decay_power', 1.)
+        self.opt['l2_reg_coef'] = params.get('l2_reg_coef', 0.)
 
         self.learning_rate = self.opt['learning_rate']
         self.end_learning_rate = self.opt['end_learning_rate']
@@ -116,6 +117,7 @@ class GoalOrientedBotNetwork(TFModel):
         self.action_size = self.opt['action_size']
         self.obs_size = self.opt['obs_size']
         self.dense_size = self.opt['dense_size']
+        self.l2_reg = self.opt['l2_reg_coef']
 
         attn = params.get('attention_mechanism')
         if attn:
@@ -156,11 +158,11 @@ class GoalOrientedBotNetwork(TFModel):
         # multiply with batch utterance mask
         # _loss_tensor = tf.multiply(_loss_tensor, self._utterance_mask)
         self._loss = tf.reduce_mean(_loss_tensor, name='loss')
+        self._loss += self.l2_reg * tf.reduce_sum(tf.losses.get_regularization_loss())
         self._train_op = \
-            self.get_train_op(self._loss, self._learning_rate, clip_norm=2.)
+            self.get_train_op(self._loss, self._learning_rate, clip_norm=1.)
 
     def _add_placeholders(self):
-        # TODO: make batch_size != 1
         self._dropout = tf.placeholder_with_default(1.0,
                                                     shape=[],
                                                     name='dropout_rate')
@@ -201,6 +203,7 @@ class GoalOrientedBotNetwork(TFModel):
         # input projection
         _units = tf.nn.dropout(self._features, keep_prob=self._dropout)
         _units = tf.layers.dense(_units, self.dense_size,
+                                 kernel_regularizer=tf.nn.l2_loss,
                                  kernel_initializer=xav(), name='units')
 
         if self.attn:
@@ -258,6 +261,7 @@ class GoalOrientedBotNetwork(TFModel):
 
         # output projection
         _logits = tf.layers.dense(_output, self.action_size,
+                                  kernel_regularizer=tf.nn.l2_loss,
                                   kernel_initializer=xav(), name='logits')
         return _logits, _state
 
