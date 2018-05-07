@@ -53,13 +53,10 @@ def interact(model, params_names):
     model_args = []
 
     for param_name in params_names:
-        param_value = request.get_json().get(param_name) or ""
-        if param_value == "":
-            return jsonify({
-                "error": "request must contains non empty '{}' parameter".format(param_name)
-            }), 400
-        else:
-            model_args.append(param_value)
+        param_value = request.get_json().get(param_name)
+        model_args.append(param_value)
+    if len(params_names) > 1:
+        model_args = [model_args]
 
     prediction = model(model_args)
     result = prediction[0]

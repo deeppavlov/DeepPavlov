@@ -35,6 +35,12 @@
       "port": "",
       "model_endpoint": "/ner",
       "model_args_names": ""
+    },
+    "SquadModel": {
+      "host": "",
+      "port": "",
+      "model_endpoint": "/squad",
+      "model_args_names": ["context", "question"]
     }
   }
 }

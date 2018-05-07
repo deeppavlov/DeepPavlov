@@ -6,6 +6,8 @@ import shutil
 import pytest
 import pexpect
 
+from deeppavlov.download import main as deep_download
+
 tests_dir = Path(__file__, '..').resolve()
 test_configs_path = tests_dir / "deeppavlov" / "configs"
 download_path = tests_dir / "download"
@@ -108,10 +110,10 @@ def teardown_module():
 
 
 def download(full=True):
-    cmd = "python3 -m deeppavlov.download -test"
+    args = ['-test']
     if full:
-        cmd += " -all"
-    pexpect.run(cmd, timeout=None)
+        args.append('-all')
+    deep_download(args)
 
 
 @pytest.mark.parametrize("model,conf_file,model_dir,mode", TEST_GRID)
