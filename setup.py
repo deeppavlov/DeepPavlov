@@ -12,10 +12,15 @@ limitations under the License.
 """
 
 from setuptools import setup, find_packages
-from pip.req import parse_requirements
-from pip.download import PipSession
 import os
-import pip
+try:  # for pip>=10.0.0
+    from pip._internal.req import parse_requirements
+    from pip._internal.download import PipSession
+    from pip._internal import main as pip_main
+except ImportError:  # for pip<=9.0.3
+    from pip.req import parse_requirements
+    from pip.download import PipSession
+    from pip import main as pip_main
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -26,7 +31,7 @@ def read_requirements():
     install_reqs = parse_requirements(reqs_path, session=PipSession())
     reqs = []
     for ir in install_reqs:
-        pip.main(['install', str(ir.req or ir.link)])
+        pip_main(['install', str(ir.req or ir.link)])
         if ir.req:
             reqs.append(str(ir.req))
     return reqs

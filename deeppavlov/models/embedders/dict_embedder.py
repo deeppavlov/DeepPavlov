@@ -21,33 +21,37 @@ from overrides import overrides
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
-
+from deeppavlov.core.models.serializable import Serializable
+from typing import List
 
 log = get_logger(__name__)
 
 
 @register('dict_emb')
-class DictEmbedder(Component):
-    def __init__(self, ser_path, dim, **kwargs):
-        super().__init__(ser_path=ser_path)
+class DictEmbedder(Component, Serializable):
+    def __init__(self, load_path, save_path=None, dim=100, **kwargs):
+        super().__init__(save_path=save_path, load_path=load_path)
         self.tok2emb = {}
         self.dim = dim
 
         self.load()
+
+    def save(self, *args, **kwargs):
+        raise NotImplementedError
 
     def load(self):
         """
         Load dictionary of embeddings from file.
         """
 
-        if not Path(self.ser_path).exists():
+        if not Path(self.load_path).exists():
             raise FileNotFoundError(
                 'There is no dictionary of embeddings <<{}>> file provided.'.format(
-                    self.ser_path))
+                    self.load_path))
         else:
-            log.info('Loading existing dictionary of embeddings from {}'.format(self.ser_path))
+            log.info('Loading existing dictionary of embeddings from {}'.format(self.load_path))
 
-            with open(str(self.ser_path)) as fin:
+            with open(str(self.load_path)) as fin:
                 for line in fin:
                     values = line.rsplit(sep=' ', maxsplit=self.dim)
                     assert (len(values) == self.dim + 1)
@@ -56,13 +60,27 @@ class DictEmbedder(Component):
                     self.tok2emb[word] = coefs
 
     @overrides
-    def __call__(self, batch, *args, **kwargs) -> list:
+    def __call__(self, batch, mean=False, *args, **kwargs):
         """
-        Method returns embedded sentence
-        Args:
-            sentence: string (e.g. "I want some food")
+        Embed data
+        """
+        return [self._encode(sentence, mean) for sentence in batch]
 
-        Returns:
-            embedded sentence
-        """
-        return [[self.tok2emb[t] for t in sentence.split()] for sentence in batch]
+    def _encode(self, sentence: str, mean):
+        tokens = sentence.split()
+        embedded_tokens = []
+        for t in tokens:
+            try:
+                emb = self.tok2emb[t]
+            except KeyError:
+                emb = np.zeros(self.dim, dtype=np.float32)
+                self.tok2emb[t] = emb
+            embedded_tokens.append(emb)
+
+        if mean:
+            filtered = [et for et in embedded_tokens if np.any(et)]
+            if filtered:
+                return np.mean(filtered, axis=0)
+            return np.zeros(self.dim, dtype=np.float32)
+
+        return embedded_tokens

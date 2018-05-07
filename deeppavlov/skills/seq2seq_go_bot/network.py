@@ -226,11 +226,10 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         with open(path, 'r') as fp:
             params = json.load(fp)
         for p in self.GRAPH_PARAMS:
-            if self.opt[p] != params[p]:
-                raise ConfigError("`{}` parameter must be equal to"
-                                  " saved model parameter value `{}`,"
-                                  " not `{}`"\
-                                  .format(p, params[p], self.opt[p]))
+            if self.opt.get(p) != params.get(p):
+                raise ConfigError("`{}` parameter must be equal to saved model"
+                                  " parameter value `{}`, but is equal to `{}`"
+                                  .format(p, params.get(p), self.opt.get(p)))
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

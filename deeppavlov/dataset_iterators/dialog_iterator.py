@@ -16,11 +16,11 @@ limitations under the License.
 from overrides import overrides
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.dataset_iterator import BasicDatasetIterator
+from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 
 @register('dialog_iterator')
-class DialogDatasetIterator(BasicDatasetIterator):
+class DialogDatasetIterator(DataLearningIterator):
     @staticmethod
     def _dialogs(data):
         dialogs = []

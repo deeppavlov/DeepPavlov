@@ -39,11 +39,6 @@ class SquadPreprocessor(Component):
         self.context_limit = context_limit
         self.question_limit = question_limit
         self.char_limit = char_limit
-        try:
-            import nltk
-            nltk.data.find('tokenizers/punkt')
-        except LookupError:
-            nltk.download('punkt')
 
     def __call__(self, contexts_raw, questions_raw, **kwargs):
         contexts = []
