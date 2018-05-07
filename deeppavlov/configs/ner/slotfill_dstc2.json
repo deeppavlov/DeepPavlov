@@ -12,55 +12,81 @@
     "in_y": ["y"],
     "pipe": [
       {
-        "id": "word_vocab",
-        "name": "default_vocab",
-        "fit_on": ["x"],
-		"level": "token",
-        "save_path": "vocabs/word.dict",
-        "load_path": "vocabs/word.dict"
-      },
-      {
-        "id": "tag_vocab",
-        "name": "default_vocab",
-        "fit_on": ["y"],
-		"level": "token",
-        "save_path": "vocabs/tag.dict",
-        "load_path": "vocabs/tag.dict"
-      },
-      {
-        "id": "char_vocab",
-        "name": "default_vocab",
-        "fit_on": ["x"],
-		"level": "char",
-        "save_path": "vocabs/char.dict",
-        "load_path": "vocabs/char.dict"
+        "in": ["x"],
+        "name": "lazy_tokenizer",
+        "out": ["x"]
       },
       {
         "in": ["x"],
-        "in_y": ["y"],
+        "name": "str_lower",
+        "out": ["x_lower"]
+      },
+      {
+        "in": ["x_lower"],
+        "id": "word_vocab",
+        "name": "simple_vocab",
+        "pad_with_zeros": true,
+        "fit_on": ["x"],
+		"level": "token",
+        "save_path": "slotfill_dstc2/word.dict",
+        "load_path": "slotfill_dstc2/word.dict",
+        "out": ["x_tok_ind"]
+      },
+      {
+        "name": "random_emb_mat",
+        "id": "embeddings",
+        "vocab_len": "#word_vocab.len",
+        "emb_dim": 100
+      },
+      {
+        "in": ["y"],
+        "id": "tag_vocab",
+        "name": "simple_vocab",
+        "pad_with_zeros": true,
+        "fit_on": ["y"],
+		"level": "token",
+        "save_path": "slotfill_dstc2/tag.dict",
+        "load_path": "slotfill_dstc2/tag.dict",
+        "out": ["y_ind"]
+      },
+      {
+        "in": ["x"],
+        "name": "mask",
+        "out": ["mask"]
+      },
+      {
+        "in": ["x_tok_ind", "mask"],
+        "in_y": ["y_ind"],
         "out": ["y_predicted"],
+        "name": "ner",
         "main": true,
-        "name": "dstc_slotfilling",
-        "learning_rate": 1e-3,
-        "save_path": "ner/dstc_ner_model",
-        "load_path": "ner/dstc_ner_model",
-        "word_vocab": "#word_vocab",
-        "tag_vocab": "#tag_vocab",
-        "char_vocab": "#char_vocab",
-        "verbouse": true,
-        "filter_width": 7,
+        "token_emb_mat": "#embeddings.emb_mat",
+        "n_hidden_list": [64, 64],
+        "net_type": "cnn",
+        "n_tags": "#tag_vocab.len",
+        "save_path": "slotfill_dstc2/model",
+        "load_path": "slotfill_dstc2/model",
         "embeddings_dropout": true,
-        "n_filters": [
-          64,
-          64
-        ],
-        "token_embeddings_dim": 64,
-        "char_embeddings_dim": 32,
+        "top_dropout": true,
+        "intra_layer_dropout": false,
         "use_batch_norm": true,
-        "use_crf": true
+        "learning_rate": 1e-2,
+        "dropout_keep_prob": 0.5
+      },
+      {
+        "ref": "tag_vocab",
+        "in": ["y_predicted"],
+        "out": ["tags"]
+      },
+      {
+        "in": ["x_lower", "tags"],
+        "name": "dstc_slotfilling",
+        "save_path": "slotfill_dstc2/dstc_slot_vals.json",
+        "load_path": "slotfill_dstc2/dstc_slot_vals.json",
+        "out": ["slots"]
       }
     ],
-    "out": ["y_predicted"]
+    "out": ["slots"]
   },
   "train": {
     "epochs": 100,
@@ -75,7 +101,10 @@
   },
   "metadata": {
     "labels": {
-      "telegram_utils": "DstcSlotFillingNetwork"
-    }
+      "telegram_utils": "NERModel"
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/slotfill_dstc2.tar.gz"
+    ]
   }
 }

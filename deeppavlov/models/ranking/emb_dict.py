@@ -16,13 +16,11 @@ class Embeddings(object):
         fasttext_model_file: a file containing fasttext binary model
     """
 
-    def __init__(self, tok2int_vocab, embedding_dim, download_url=None, embeddings="word2vec"):
+    def __init__(self, tok2int_vocab, embedding_dim, embeddings="word2vec"):
         """Initialize the class according to given parameters."""
         self.embeddings = embeddings
         self.embedding_dim = embedding_dim
-        self.emb_model_file = expand_path("pre-trained_embeddings")
-        if not self.emb_model_file.is_file():
-            download(source_url=download_url, dest_file_path=self.emb_model_file)
+        self.emb_model_file = next(expand_path("insurance_embeddings").iterdir())
 
         if self.embeddings == "fasttext":
             self.embeddings_model = FastText.load_fasttext_format(str(self.emb_model_file))

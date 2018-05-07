@@ -25,16 +25,19 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.serializable import Serializable
+from deeppavlov.core.data.utils import zero_pad
+from typing import List
 
 log = get_logger(__name__)
 
 
 @register('glove')
 class GloVeEmbedder(Component, Serializable):
-    def __init__(self, load_path, save_path=None, dim=100, **kwargs):
+    def __init__(self, load_path, save_path=None, dim=100, pad_zero=False, **kwargs):
         super().__init__(save_path=save_path, load_path=load_path)
         self.tok2emb = {}
         self.dim = dim
+        self.pad_zero = pad_zero
         self.model = self.load()
 
     def save(self, *args, **kwargs):
@@ -64,6 +67,9 @@ class GloVeEmbedder(Component, Serializable):
 
         return model
 
+    def __iter__(self):
+        yield from self.model.vocab
+
     @overrides
     def __call__(self, batch, mean=False, *args, **kwargs):
         """
@@ -72,6 +78,8 @@ class GloVeEmbedder(Component, Serializable):
         embedded = []
         for n, sample in enumerate(batch):
             embedded.append(self._encode(sample, mean))
+        if self.pad_zero:
+            embedded = zero_pad(embedded)
         return embedded
 
     def _encode(self, tokens: List[str], mean: bool):

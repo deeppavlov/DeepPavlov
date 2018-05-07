@@ -25,7 +25,6 @@
         "device_num": 0,
         "train_now": true,
         "vocabs_path": "insuranceQA-master/V1",
-        "download_url": "http://lnsigo.mipt.ru/export/embeddings/insurance_v1_word2vec",
         "embeddings": "word2vec",
         "embedding_dim": 100,
         "seed": 243,
@@ -54,6 +53,17 @@
   "metadata": {
     "labels": {
       "telegram_utils": "RankingModel"
-    }
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ranking.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/datasets/insuranceQA-master.zip",
+        "subdir": "insurance_data"
+      },
+      {
+        "url": "http://lnsigo.mipt.ru/export/embeddings/insurance_v1_word2vec",
+        "subdir": "insurance_embeddings"
+      }
+    ]
   }
 }

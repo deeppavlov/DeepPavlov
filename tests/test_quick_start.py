@@ -6,7 +6,6 @@ import shutil
 import pytest
 import pexpect
 
-
 tests_dir = Path(__file__, '..').resolve()
 test_configs_path = tests_dir / "deeppavlov" / "configs"
 download_path = tests_dir / "download"
@@ -29,15 +28,25 @@ PARAMS = {"error_model": {("error_model/brillmoore_wikitypos_en.json", "error_mo
                      ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [],
                      ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [],
                      ("go_bot/gobot_dstc2_all.json", "gobot_dstc2_all", ('TI',)): []},
-          "intents": {("intents/intents_dstc2.json", "intents", ALL_MODES):  []},
+          "intents": {
+              ("intents/intents_dstc2.json", "intents", ALL_MODES):  [],
+              ("intents/intents_snips_bigru.json", "intents", ('TI')): [],
+              ("intents/intents_snips_bilstm.json", "intents", ('TI')): [],
+              ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI')): [],
+              ("intents/intents_snips_bilstm_cnn.json", "intents", ('TI')): [],
+              ("intents/intents_snips_bilstm_self_add_attention.json", "intents", ('TI')): [],
+              ("intents/intents_snips_bilstm_self_mult_attention.json", "intents", ('TI')): [],
+              ("intents/intents_snips_cnn_bilstm.json", "intents", ('TI')): []
+
+          },
           "snips": {("intents/intents_snips.json", "intents", ('TI',)): []},
           "sample": {("intents/intents_sample_csv.json", "intents", ('TI',)): [],
                     ("intents/intents_sample_json.json", "intents", ('TI',)): []},
           "ner": {("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [],
-                  ("ner/ner_dstc2.json", "ner", ALL_MODES): [],
-                  ("ner/ner_ontonotes_emb.json", "ner_ontonotes", ALL_MODES): [],
-                  ("ner/ner_ontonotes.json", "ner_ontonotes", ('DE', 'IP')): [],
-                  ("ner/slotfill_dstc2.json", "ner", ALL_MODES):
+                  ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [],
+                  ("ner/ner_ontonotes.json", "ner_ontonotes_senna", ('DE', 'IP')): [],
+                  ("ner/ner_rus.json", "ner_rus", ('DE', 'IP')): [],
+                  ("ner/slotfill_dstc2.json", "slotfill_dstc2", ALL_MODES):
                       [
                           ("chinese food", "{'food': 'chinese'}"),
                           ("in the west part", "{'area': 'west'}"),
@@ -67,7 +76,7 @@ for model in PARAMS.keys():
 
 def setup_module():
     src_dir = tests_dir.parent / "deeppavlov" / "configs"
-
+    test_src_dir = tests_dir / "test_configs"
     shutil.rmtree(str(test_configs_path), ignore_errors=True)
     shutil.rmtree(str(download_path), ignore_errors=True)
     test_configs_path.mkdir(parents=True)
@@ -75,7 +84,14 @@ def setup_module():
     for m_name, conf_dict in PARAMS.items():
         test_configs_path.joinpath(m_name).mkdir()
         for (conf_file, _, _), _ in conf_dict.items():
-            with (src_dir / conf_file).open() as fin:
+            src_file = src_dir / conf_file
+            if not src_file.is_file():
+                src_file = test_src_dir / conf_file
+
+            if not src_file.is_file():
+                raise RuntimeError('Unexisting config file {}'.format(conf_file))
+
+            with src_file.open() as fin:
                 config = json.load(fin)
             if config.get("train"):
                 config["train"]["epochs"] = 1
@@ -91,7 +107,7 @@ def teardown_module():
     shutil.rmtree(str(download_path), ignore_errors=True)
 
 
-def download(full=None):
+def download(full=True):
     cmd = "python3 -m deeppavlov.download -test"
     if full:
         cmd += " -all"
@@ -146,8 +162,13 @@ class TestQuickStart(object):
             c = test_configs_path / conf_file
             model_path = download_path / model_dir
             shutil.rmtree(str(model_path),  ignore_errors=True)
-            _, exitstatus = pexpect.run("python3 -m deeppavlov.deep train " + str(c), timeout=None, withexitstatus=True)
-            assert exitstatus == 0, f"Training process of {model_dir} returned non-zero exit code"
+            logfile = io.BytesIO(b'')
+            _, exitstatus = pexpect.run("python3 -m deeppavlov.deep train " + str(c), timeout=None, withexitstatus=True,
+                                        logfile = logfile)
+            if exitstatus != 0:
+                logfile.seek(0)
+                raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
+                                   .format(model_dir, ''.join((line.decode() for line in logfile.readlines()))))
             self.interact(c, model_dir)
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
