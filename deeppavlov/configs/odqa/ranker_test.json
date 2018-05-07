@@ -48,5 +48,10 @@
     "validate_best": false,
     "test_best": false,
     "batch_size": 2
+  },
+  "metadata": {
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/odqa.tar.gz"
+    ]
   }
 }

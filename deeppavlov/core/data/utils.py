@@ -20,8 +20,10 @@ import requests
 from tqdm import tqdm
 import tarfile
 import gzip
+import numpy as np
 import re
 import zipfile
+import shutil
 
 from deeppavlov.core.common.log import get_logger
 
@@ -34,25 +36,33 @@ tqdm.monitor_interval = 0
 
 
 def download(dest_file_path, source_url, force_download=True):
-    """Download a file from URL
+    """Download a file from URL to one or several target locations
 
     Args:
-        dest_file_path: path to the file destination file (including file name)
+        dest_file_path: path or list of paths to the file destination files (including file name)
         source_url: the source URL
         force_download: download file if it already exists, or not
 
     """
     CHUNK = 16 * 1024
-    dest_file_path = Path(dest_file_path).absolute()
 
-    if force_download or not dest_file_path.exists():
-        dest_file_path.parent.mkdir(parents=True, exist_ok=True)
+    if isinstance(dest_file_path, str):
+        dest_file_path = [Path(dest_file_path).absolute()]
+    elif isinstance(dest_file_path, Path):
+        dest_file_path = [dest_file_path.absolute()]
+    elif isinstance(dest_file_path, list):
+        dest_file_path = [Path(path) for path in dest_file_path]
+
+    first_dest_path = dest_file_path.pop()
+
+    if force_download or not first_dest_path.exists():
+        first_dest_path.parent.mkdir(parents=True, exist_ok=True)
 
         r = requests.get(source_url, stream=True)
         total_length = int(r.headers.get('content-length', 0))
 
-        with dest_file_path.open('wb') as f:
-            log.info('Downloading from {} to {}'.format(source_url, dest_file_path))
+        with first_dest_path.open('wb') as f:
+            log.info('Downloading from {} to {}'.format(source_url, first_dest_path))
 
             pbar = tqdm(total=total_length, unit='B', unit_scale=True)
             for chunk in r.iter_content(chunk_size=CHUNK):
@@ -61,7 +71,16 @@ def download(dest_file_path, source_url, force_download=True):
                     f.write(chunk)
             f.close()
     else:
-        log.info('File already exists in {}'.format(dest_file_path))
+        log.info('File already exists in {}'.format(first_dest_path))
+
+    while len(dest_file_path) > 0:
+        dest_path = dest_file_path.pop()
+
+        if force_download or not dest_path.exists():
+            dest_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(str(first_dest_path), str(dest_path))
+        else:
+            log.info('File already exists in {}'.format(dest_path))
 
 
 def untar(file_path, extract_folder=None):
@@ -103,32 +122,46 @@ def ungzip(file_path, extract_folder=None):
             fout.write(block)
 
 
-def download_decompress(url, download_path, extract_path=None):
-    """Download and extract .tar.gz or .gz file. The archive is deleted after extraction.
+def download_decompress(url, download_path, extract_paths=None):
+    """Download and extract .tar.gz or .gz file to one or several target locations.
+    The archive is deleted if extraction was successful.
 
     Args:
         url: URL for file downloading
         download_path: path to the directory where downloaded file will be stored
         until the end of extraction
-        extract_path: path where contents of archive will be extracted
+        extract_paths: path or list of paths where contents of archive will be extracted
     """
     file_name = url.split('/')[-1]
     download_path = Path(download_path)
-    if extract_path is None:
-        extract_path = download_path
-    extract_path = Path(extract_path)
     arch_file_path = download_path / file_name
-    log.info('Extracting {} archive into {}'.format(arch_file_path, extract_path))
     download(arch_file_path, url)
-    if url.endswith('.tar.gz'):
-        untar(arch_file_path, extract_path)
-    elif url.endswith('.gz'):
-        ungzip(arch_file_path, extract_path)
-    elif url.endswith('.zip'):
-        zip_ref = zipfile.ZipFile(arch_file_path, 'r')
-        zip_ref.extractall(extract_path)
-        zip_ref.close()
-    arch_file_path.unlink()
+
+    if extract_paths is None:
+        extract_paths = [download_path]
+    elif isinstance(extract_paths, str):
+        extract_paths = [Path(extract_paths)]
+    elif isinstance(extract_paths, list):
+        extract_paths = [Path(path) for path in extract_paths]
+
+    if url.endswith(('.tar.gz', '.gz', '.zip')):
+        for extract_path in extract_paths:
+            log.info('Extracting {} archive into {}'.format(arch_file_path, extract_path))
+            extract_path.mkdir(parents=True, exist_ok=True)
+
+            if url.endswith('.tar.gz'):
+                untar(arch_file_path, extract_path)
+            elif url.endswith('.gz'):
+                ungzip(arch_file_path, extract_path)
+            elif url.endswith('.zip'):
+                zip_ref = zipfile.ZipFile(arch_file_path, 'r')
+                zip_ref.extractall(extract_path)
+                zip_ref.close()
+
+        arch_file_path.unlink()
+    else:
+        log.error('File {} has unsupported format. '
+                  'Not extracted, downloaded to {}'.format(file_name, arch_file_path))
 
 
 def load_vocab(vocab_path):
@@ -150,3 +183,42 @@ def is_done(path):
 def tokenize_reg(s):
     pattern = "[\w]+|[‑–—“”€№…’\"#$%&\'()+,-./:;<>?]"
     return re.findall(re.compile(pattern), s)
+
+
+def zero_pad(batch, dtype=np.float32):
+    if len(batch) == 1 and len(batch[0]) == 0:
+        return np.array([], dtype=dtype)
+    batch_size = len(batch)
+    max_len = max(len(utterance) for utterance in batch)
+    if isinstance(batch[0][0], (int, np.int)):
+        padded_batch = np.zeros([batch_size, max_len], dtype=np.int32)
+        for n, utterance in enumerate(batch):
+            padded_batch[n, :len(utterance)] = utterance
+    else:
+        n_features = len(batch[0][0])
+        padded_batch = np.zeros([batch_size, max_len, n_features], dtype=dtype)
+        for n, utterance in enumerate(batch):
+            for k, token_features in enumerate(utterance):
+                padded_batch[n, k] = token_features
+    return padded_batch
+
+
+def zero_pad_char(batch, dtype=np.float32):
+    if len(batch) == 1 and len(batch[0]) == 0:
+        return np.array([], dtype=dtype)
+    batch_size = len(batch)
+    max_len = max(len(utterance) for utterance in batch)
+    max_token_len = max(len(ch) for token in batch for ch in token)
+    if isinstance(batch[0][0][0], (int, np.int)):
+        padded_batch = np.zeros([batch_size, max_len, max_token_len], dtype=np.int32)
+        for n, utterance in enumerate(batch):
+            for k, token in enumerate(utterance):
+                padded_batch[n, k, :len(token)] = token
+    else:
+        n_features = len(batch[0][0][0])
+        padded_batch = np.zeros([batch_size, max_len, max_token_len, n_features], dtype=dtype)
+        for n, utterance in enumerate(batch):
+            for k, token in enumerate(utterance):
+                for q, char_features in enumerate(token):
+                    padded_batch[n, k, q] = char_features
+    return padded_batch
