@@ -41,12 +41,12 @@ class GoalOrientedBot(NNModel):
                  template_type: Type = DualTemplate,
                  tokenizer: Type = StreamSpacyTokenizer,
                  tracker: Type = DefaultTracker,
+                 database=None,
                  bow_embedder=None,
                  embedder=None,
                  slot_filler=None,
                  intent_classifier=None,
                  use_action_mask=False,
-                 db_result_during_interaction=None,
                  debug=False,
                  save_path=None,
                  word_vocab=None,
@@ -55,17 +55,16 @@ class GoalOrientedBot(NNModel):
 
         super().__init__(save_path=save_path, mode=kwargs['mode'])
 
-        self.episode_done = True
-        self.use_action_mask = use_action_mask
-        self.debug = debug
-        self.slot_filler = slot_filler
-        self.intent_classifier = intent_classifier
-        self.bow_embedder = bow_embedder
-        self.embedder = embedder
         self.tokenizer = tokenizer
         self.tracker = tracker
+        self.database = database
+        self.bow_embedder = bow_embedder
+        self.embedder = embedder
+        self.slot_filler = slot_filler
+        self.intent_classifier = intent_classifier
+        self.use_action_mask = use_action_mask
+        self.debug = debug
         self.word_vocab = word_vocab or vocabs['word_vocab']
-        self.interact_db_result = db_result_during_interaction
 
         template_path = expand_path(template_path)
         log.info("[loading templates from {}]".format(template_path))
@@ -152,6 +151,15 @@ class GoalOrientedBot(NNModel):
                     emb_dim = self.embedder.dim
                     emb_features = np.fabs(np.random.normal(0, 1/emb_dim, emb_dim))
 
+        attn_key = np.array([], dtype=np.float32)
+        if self.network.attn:
+            if self.network.attn.action_as_key:
+                attn_key = np.hstack((attn_key, self.prev_action))
+            if self.network.attn.intent_as_key:
+                attn_key = np.hstack((attn_key, intent_features))
+            if len(attn_key) == 0:
+                attn_key = np.array([1], dtype=np.float32)
+
         # Intent features
         intent_features = []
         if callable(self.intent_classifier):
@@ -185,16 +193,7 @@ class GoalOrientedBot(NNModel):
                         "num state features = {}, ".format(len(state_features)) +\
                         "num context features = {}, ".format(len(context_features)) +\
                         "prev_action shape = {}".format(len(self.prev_action))
-            #log.debug(debug_msg)
-
-        attn_key = np.array([], dtype=np.float32)
-        if self.network.attn:
-            if self.network.attn.action_as_key:
-                attn_key = np.hstack((attn_key, self.prev_action))
-            if self.network.attn.intent_as_key:
-                attn_key = np.hstack((attn_key, intent_features))
-            if len(attn_key) == 0:
-                attn_key = np.array([1], dtype=np.float32)
+            log.debug(debug_msg)
 
         concat_feats = np.hstack((bow_features, emb_features, intent_features,
                                   state_features, context_features, self.prev_action))
@@ -286,7 +285,7 @@ class GoalOrientedBot(NNModel):
             b_a_masks.append(d_a_masks)
             b_actions.append(d_actions)
 
-        self.network.train_on_batch(b_features, b_emb_context, b_keys, b_u_masks, 
+        self.network.train_on_batch(b_features, b_emb_context, b_keys, b_u_masks,
                                     b_a_masks, b_actions)
 
     def _infer(self, context, db_result=None, prob=True):
@@ -320,6 +319,21 @@ class GoalOrientedBot(NNModel):
             res.append(self._infer(context['text'], context.get('db_result')))
         return res
 
+    def make_api_call(self, slots):
+        db_results = []
+        if self.database is not None:
+            # filter slot keys with value equal to 'dontcare' as
+            # there is no such value in database records
+            db_slots = {s: v for s, v in slots.items() if v != 'dontcare'}
+            db_results = self.database([db_slots])[0]
+        else:
+            log.warn("No database specified.")
+        log.info("Made api_call with {}, got {} results.".format(slots, len(db_results)))
+        # filter api results if there are more than one
+        if len(db_results) > 1:
+            db_results = [r for r in db_results if r != self.db_result]
+        return db_results[0] if db_results else {}
+
     def __call__(self, batch):
         if isinstance(batch[0], str):
             res = []
@@ -327,13 +341,11 @@ class GoalOrientedBot(NNModel):
                 pred = self._infer(x)
                 # if made api_call, then respond with next prediction
                 if self.templates.actions[np.argmax(self.prev_action)] == "api_call":
-                    log.info("Made {}".format(pred))
-                    res.append(self._infer(x, db_result=self.interact_db_result))
-                    self.db_result = self.interact_db_result
+                    db_result = self.make_api_call(self.tracker.get_state())
+                    res.append(self._infer(x, db_result=db_result))
+                    self.db_result = db_result
                 else:
                     res.append(pred)
-            if ("api_call" not in self.templates.actions) and self.tracker.get_state():
-                self.db_result = self.interact_db_result
             return res
         return [self._infer_dialog(x) for x in batch]
 
