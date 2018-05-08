@@ -94,21 +94,6 @@ with open(CONFIG_FILE, "r") as f:
 
 print("Given basic params: {}\n".format(basic_params))
 
-Path(basic_params["chainer"]["pipe"][4]["save_path"]).mkdir(parents=True, exist_ok=True)
-basic_params["chainer"]["pipe"][4]["n_types"] = N_TYPES
-basic_params["chainer"]["pipe"][4]["n_layers"] = N_LAYERS
-
-# Result table
-order = ["classification_log_loss", "classification_accuracy",
-         "classification_f1", "classification_roc_auc", "params"]
-result_file = Path(basic_params["chainer"]["pipe"][4]["save_path"]).joinpath("result_table.csv")
-result_table = pd.DataFrame({"loss": [],
-                             "classification_accuracy": [],
-                             "classification_f1": [],
-                             "classification_roc_auc": [],
-                             "params": []})
-result_table.loc[:, order].to_csv(result_file, index=False, sep='\t')
-
 # EVOLUTION starts here!
 evolution = NetworkAndParamsEvolution(n_layers=N_LAYERS, n_types=N_TYPES,
                                       population_size=POPULATION_SIZE,
@@ -119,6 +104,18 @@ evolution = NetworkAndParamsEvolution(n_layers=N_LAYERS, n_types=N_TYPES,
                                       seed=None,
                                       start_with_one_neuron=ONE_NEURON_INIT,
                                       **basic_params)
+
+# Result table
+order = ["classification_log_loss", "classification_accuracy",
+         "classification_f1", "classification_roc_auc", "params"]
+result_file = Path(basic_params["chainer"]["pipe"][
+                       evolution.model_to_evolve_index]["save_path"]).joinpath("result_table.csv")
+result_table = pd.DataFrame({"loss": [],
+                             "classification_accuracy": [],
+                             "classification_f1": [],
+                             "classification_roc_auc": [],
+                             "params": []})
+result_table.loc[:, order].to_csv(result_file, index=False, sep='\t')
 
 print("\nIteration #{} starts\n".format(0))
 population = evolution.first_generation()
