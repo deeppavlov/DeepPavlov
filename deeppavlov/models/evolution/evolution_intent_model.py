@@ -189,6 +189,91 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
         model = Model(inputs=inp, outputs=act_output)
         return model
 
+    def evolution_two_texts_classification_model(self, params):
+        """
+        Build un-compiled model of shallow-and-wide CNN
+        Args:
+            params: dictionary of parameters for NN
+
+        Returns:
+            Un-compiled model
+        """
+        inp1 = Input(shape=(params['text_size'], params['embedding_size']))
+        inp2 = Input(shape=(params['text_size'], params['embedding_size']))
+
+        full_outputs = []
+
+        for inp_id, inp in enumerate([inp1, inp2]):
+            if np.sum(params["binary_mask"]) == 0:
+                output = Dense(1, activation=None)(inp)
+                output = GlobalMaxPooling1D()(output)
+                output = Dense(self.n_classes, activation=None)(output)
+                act_output = Activation('sigmoid')(output)
+                model = Model(inputs=inp, outputs=act_output)
+                return model
+
+            dg = get_digraph_from_binary_mask(params["nodes"], np.array(params["binary_mask"]))
+            sources, sinks, isolates = find_sources_and_sinks(dg)
+
+            edges_outputs = {}
+
+            sequence_of_nodes = []
+            sequence_of_nodes.append(sources)
+
+            while True:
+                if set(sinks).issubset(set(sum(sequence_of_nodes, []))):
+                    break
+                next_nodes = []
+                for node_str_id in sequence_of_nodes[-1]:
+                    out_edges = dg.out_edges(node_str_id)
+                    for edge in out_edges:
+                        in_nodes_to_edge = [in_edge[0] for in_edge in dg.in_edges(edge[1])]
+                        if set(in_nodes_to_edge).issubset(set(sum(sequence_of_nodes, []))):
+                            next_nodes.append(edge[1])
+                sequence_of_nodes.append(next_nodes)
+
+            sequence_of_nodes = sum(sequence_of_nodes, [])
+
+            for node_str_id in sequence_of_nodes:
+                if node_str_id in sources:
+                    edges_outputs[node_str_id] = self.get_node_output(node_str_id, dg, params, inp=inp)
+                elif node_str_id in isolates:
+                    pass
+                else:
+                    edges_outputs[node_str_id] = self.get_node_output(node_str_id, dg, params, edges_outputs=edges_outputs)
+
+            if len(sinks) == 1:
+                output = edges_outputs[sinks[0]]
+            else:
+                outputs = []
+                for sink in sinks:
+                    outputs.append(edges_outputs[sink])
+                try:
+                    output = Concatenate()(outputs)
+                except ValueError:
+                    time_steps = []
+                    features = []
+                    for i in range(len(outputs)):
+                        if len(K.int_shape(outputs[i])) == 2:
+                            outputs[i] = Lambda(lambda x: expand_tile(x, axis=1))(outputs[i])
+                        time_steps.append(K.int_shape(outputs[i])[1])
+                        features.append(K.int_shape(outputs[i])[2])
+                    new_feature_shape = max(features)
+                    for i in range(len(outputs)):
+                        outputs[i] = Dense(new_feature_shape)(outputs[i])
+                    output = Concatenate(axis=1)(outputs)
+
+            if len(output.shape) == 3:
+                output = GlobalMaxPooling1D()(output)
+            full_outputs.append(output)
+
+        output = Concatenate()(full_outputs)
+        output = Dense(self.n_classes, activation=None)(output)
+        activation = params.get("last_layer_activation", "sigmoid")
+        act_output = Activation(activation)(output)
+        model = Model(inputs=[inp1, inp2], outputs=act_output)
+        return model
+
     @overrides
     def save(self, fname=None):
         """
