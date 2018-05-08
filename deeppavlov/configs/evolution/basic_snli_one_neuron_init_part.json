@@ -195,8 +195,8 @@
   "train": {
     "epochs": {
       "range": [
-        100,
-        1000
+        50,
+        100
       ],
       "discrete": true
     },
