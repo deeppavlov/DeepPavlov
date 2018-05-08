@@ -127,26 +127,22 @@ def download_resource(resource, download_path):
         download(dest_files, url)
 
 
-def download_resources(config_path, args=None):
+def download_resources(args):
     download_path = root_path / 'download'
 
-    if args:
-        if args.test:
-            download_path = root_path / 'tests' / 'download'
-            test = True
-        else:
-            test = False
+    if args.test:
+        download_path = root_path / 'tests' / 'download'
+        test = True
+    else:
+        test = False
 
-        if not args.all and not args.config:
-            log.error('You should provide either skill config path or -all flag')
-            sys.exit(1)
-        elif args.all:
-            downloads = get_configs_downloads(test=test)
-        else:
-            config_path = Path(args.config).resolve()
-            downloads = get_configs_downloads(config_path=config_path)
-    elif config_path:
-        config_path = Path(config_path).resolve()
+    if not args.all and not args.config:
+        log.error('You should provide either skill config path or -all flag')
+        sys.exit(1)
+    elif args.all:
+        downloads = get_configs_downloads(test=test)
+    else:
+        config_path = Path(args.config).resolve()
         downloads = get_configs_downloads(config_path=config_path)
 
     download_path.mkdir(exist_ok=True)
@@ -159,7 +155,7 @@ def download_resources(config_path, args=None):
 def main(args=None):
     args = parser.parse_args(args)
     log.info("Downloading...")
-    download_resources(None, args)
+    download_resources(args)
     log.info("\nDownload successful!")
 
 
