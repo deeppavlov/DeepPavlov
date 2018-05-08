@@ -54,6 +54,7 @@ class NetworkAndParamsEvolution:
         """
         self.n_types = n_types
         self.n_layers = n_layers
+
         self.total_nodes = self.n_types * self.n_layers
         self.binary_mask_template = np.zeros((self.total_nodes, self.total_nodes))
         self.start_with_one_neuron = start_with_one_neuron
@@ -61,6 +62,11 @@ class NetworkAndParamsEvolution:
         self.basic_config = deepcopy(kwargs)
         self.model_to_evolve_index = find_index_of_dict_with_key_in_pipe(self.basic_config["chainer"]["pipe"],
                                                                          key_model_to_evolve)
+
+        self.basic_config["chainer"]["pipe"][self.model_to_evolve_index]["n_types"] = self.n_types
+        self.basic_config["chainer"]["pipe"][self.model_to_evolve_index]["n_layers"] = self.n_layers
+        Path(self.basic_config["chainer"]["pipe"][self.model_to_evolve_index]["save_path"]).mkdir(parents=True,
+                                                                                                  exist_ok=True)
 
         self.params = deepcopy(self.basic_config.get("chainer").get("pipe")[self.model_to_evolve_index])
         self.train_params = deepcopy(self.basic_config.get("train"))
