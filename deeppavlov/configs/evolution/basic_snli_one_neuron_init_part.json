@@ -38,9 +38,9 @@
       {
         "id": "my_embedder",
         "name": "fasttext",
-        "save_path": "/home/dilyara.baymurzina/embeddings/wordpunct_tok_reddit_comments_2017_11_100.bin",
-        "load_path": "/home/dilyara.baymurzina/embeddings/wordpunct_tok_reddit_comments_2017_11_100.bin",
-        "dim": 100
+        "save_path": "/home/dilyara.baymurzina/embeddings/wiki.en.bin",
+        "load_path": "/home/dilyara.baymurzina/embeddings/wiki.en.bin",
+        "dim": 300
       },
       {
         "id": "my_tokenizer",
@@ -180,7 +180,7 @@
           ]
         },
         "loss": "binary_crossentropy",
-        "text_size": 15,
+        "text_size": 30,
         "model_name": "evolution_classification_model",
         "embedder": "#my_embedder",
         "tokenizer": "#my_tokenizer"
@@ -202,7 +202,7 @@
     "batch_size": {
       "range": [
         50,
-        200
+        70
       ],
       "discrete": true
     },
