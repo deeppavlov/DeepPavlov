@@ -181,6 +181,7 @@
         },
         "loss": "binary_crossentropy",
         "text_size": 30,
+        "last_layer_activation": "softmax",
         "model_name": "evolution_classification_model",
         "embedder": "#my_embedder",
         "tokenizer": "#my_tokenizer"

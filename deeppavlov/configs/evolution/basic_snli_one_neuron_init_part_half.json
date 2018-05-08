@@ -3,7 +3,7 @@
     "name": "basic_classification_reader",
     "x": "text",
     "y": "gold_label",
-    "data_path": "/home/dilyara.baymurzina/evolution_data/snli_data"
+    "data_path": "/home/dilyara.baymurzina/evolution_data/snli_data/part_half"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator"
@@ -38,9 +38,9 @@
       {
         "id": "my_embedder",
         "name": "fasttext",
-        "save_path": "/home/dilyara.baymurzina/embeddings/wordpunct_tok_reddit_comments_2017_11_100.bin",
-        "load_path": "/home/dilyara.baymurzina/embeddings/wordpunct_tok_reddit_comments_2017_11_100.bin",
-        "dim": 100
+        "save_path": "/home/dilyara.baymurzina/embeddings/wiki.en.bin",
+        "load_path": "/home/dilyara.baymurzina/embeddings/wiki.en.bin",
+        "dim": 300
       },
       {
         "id": "my_tokenizer",
@@ -60,8 +60,8 @@
         ],
         "main": true,
         "name": "evolution_classification_model",
-        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init",
-        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init",
+        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_half",
+        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_half",
         "classes": "#classes_vocab.keys()",
         "to_evolve": true,
         "basic_layers_params": {
@@ -180,7 +180,8 @@
           ]
         },
         "loss": "binary_crossentropy",
-        "text_size": 15,
+        "text_size": 30,
+        "last_layer_activation": "softmax",
         "model_name": "evolution_classification_model",
         "embedder": "#my_embedder",
         "tokenizer": "#my_tokenizer"
@@ -202,7 +203,7 @@
     "batch_size": {
       "range": [
         50,
-        200
+        70
       ],
       "discrete": true
     },
