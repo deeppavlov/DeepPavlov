@@ -126,7 +126,8 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
             output = Dense(1, activation=None)(inp)
             output = GlobalMaxPooling1D()(output)
             output = Dense(self.n_classes, activation=None)(output)
-            act_output = Activation('sigmoid')(output)
+            activation = params.get("last_layer_activation", "sigmoid")
+            act_output = Activation(activation)(output)
             model = Model(inputs=inp, outputs=act_output)
             return model
 
