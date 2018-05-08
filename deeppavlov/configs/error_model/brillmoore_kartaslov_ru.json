@@ -49,7 +49,8 @@
   },
   "metadata": {
     "labels": {
-      "telegram_utils": "ErrorModel"
+      "telegram_utils": "ErrorModel",
+      "server_utils": "ErrorModel"
     },
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/error_model.tar.gz",

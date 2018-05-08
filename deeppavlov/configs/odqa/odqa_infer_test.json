@@ -191,6 +191,9 @@
     ]
   },
   "metadata": {
+    "labels": {
+      "server_utils": "ODQA"
+    },
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/odqa.tar.gz",
       "http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_1.1.tar.gz"

@@ -107,7 +107,8 @@
   },
   "metadata": {
     "labels": {
-      "telegram_utils": "IntentModel"
+      "telegram_utils": "IntentModel",
+      "server_utils": "KerasIntentModel"
     },
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/intents.tar.gz",

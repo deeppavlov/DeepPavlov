@@ -50,7 +50,8 @@
   },
   "metadata": {
     "labels": {
-      "telegram_utils": "NEROntoNotesSenna"
+      "telegram_utils": "NEROntoNotesSenna",
+      "server_utils": "NER"
     },
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes_senna.tar.gz",

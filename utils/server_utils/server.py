@@ -19,21 +19,38 @@ Swagger(app)
 CORS(app)
 
 
+def check_nested_dict_keys(check_dict: dict, keys: list):
+    if isinstance(keys, list) and len(keys) > 0:
+        element = check_dict
+        for key in keys:
+            if isinstance(element, dict) and key in element.keys():
+                element = element[key]
+            else:
+                return False
+        return True
+    else:
+        return False
+
+
 def init_model(model_config_path):
-    config = read_json(model_config_path)
-    model = build_model_from_config(config)
-    model_name = type(model.get_main_component()).__name__
-    return model, model_name
+    model_config = read_json(model_config_path)
+    model = build_model_from_config(model_config)
+    return model
 
 
-def get_server_params(config, model_name):
-    server_params = config['common_defaults']
+def get_server_params(server_config_path, model_config_path):
+    server_config = read_json(server_config_path)
+    model_config = read_json(model_config_path)
 
-    if model_name in config['model_defaults']:
-        model_defaults = config['model_defaults'][model_name]
-        for param_name in model_defaults.keys():
-            if model_defaults[param_name]:
-                server_params[param_name] = model_defaults[param_name]
+    server_params = server_config['common_defaults']
+
+    if check_nested_dict_keys(model_config, ['metadata', 'labels', 'server_utils']):
+        model_tag = model_config['metadata']['labels']['server_utils']
+        if model_tag in server_config['model_defaults']:
+            model_defaults = server_config['model_defaults'][model_tag]
+            for param_name in model_defaults.keys():
+                if model_defaults[param_name]:
+                    server_params[param_name] = model_defaults[param_name]
 
     for param_name in server_params.keys():
         if not server_params[param_name]:
@@ -60,17 +77,17 @@ def interact(model, params_names):
 
     prediction = model(model_args)
     result = prediction[0]
+    print('PREDICTION::: {}'.format(str(result)))
     return jsonify(result), 200
 
 
 def start_model_server(model_config_path):
-    config_dir = Path(__file__).resolve().parent
-    config_path = Path(config_dir, SERVER_CONFIG_FILENAME).resolve()
-    config = read_json(config_path)
+    server_config_dir = Path(__file__).resolve().parent
+    server_config_path = Path(server_config_dir, SERVER_CONFIG_FILENAME).resolve()
 
-    model, model_name = init_model(model_config_path)
+    model = init_model(model_config_path)
 
-    server_params = get_server_params(config, model_name)
+    server_params = get_server_params(server_config_path, model_config_path)
     host = server_params['host']
     port = server_params['port']
     model_endpoint = server_params['model_endpoint']

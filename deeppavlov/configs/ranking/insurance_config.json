@@ -52,7 +52,8 @@
   },
   "metadata": {
     "labels": {
-      "telegram_utils": "RankingModel"
+      "telegram_utils": "RankingModel",
+      "server_utils": "Ranker"
     },
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/ranking.tar.gz",
