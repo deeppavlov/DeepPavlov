@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
-    "name": "dstc2_reader",
-    "data_path": "dstc2"
+    "name": "dstc2_v2_reader",
+    "data_path": "dstc2_v2"
   },
   "dataset_iterator": {
     "name": "dialog_iterator"
@@ -21,6 +21,13 @@
         "load_path": "vocabs/token.dict"
       },
       {
+        "id": "restaurant_database",
+        "name": "sql_database",
+        "table_name": "mytable",
+        "primary_keys": ["name"],
+        "save_path": "dstc2_v2/resto.sqlite"
+      },
+      {
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],
@@ -28,7 +35,8 @@
         "name": "go_bot",
         "debug": false,
         "word_vocab": "#token_vocab",
-        "template_path": "dstc2/dstc2-templates.txt",
+        "database": "#restaurant_database",
+        "template_path": "dstc2_v2/dstc2-templates.txt",
         "use_action_mask": false,
         "network_parameters": {
           "load_path": "gobot_dstc2_minimal/model",
@@ -57,7 +65,7 @@
   },
   "train": {
 	"epochs": 200,
-	"batch_size": 8,
+	"batch_size": 16,
 
 	"metrics": ["per_item_dialog_accuracy"],
 	"validation_patience": 20,
@@ -74,8 +82,8 @@
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz",
-        "subdir": "dstc2"
+        "url": "http://lnsigo.mipt.ru/export/datasets/dstc2_v2.tar.gz",
+        "subdir": "dstc2_v2"
       }
     ]
   }

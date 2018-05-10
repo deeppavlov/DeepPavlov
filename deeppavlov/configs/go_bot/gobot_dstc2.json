@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
-    "name": "dstc2_reader",
-    "data_path": "dstc2"
+    "name": "dstc2_v2_reader",
+    "data_path": "dstc2_v2"
   },
   "dataset_iterator": {
     "name": "dialog_iterator"
@@ -21,6 +21,13 @@
         "load_path": "vocabs/token.dict"
       },
       {
+        "id": "restaurant_database",
+        "name": "sql_database",
+        "table_name": "mytable",
+        "primary_keys": ["name"],
+        "save_path": "dstc2_v2/resto.sqlite"
+      },
+      {
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],
@@ -28,13 +35,17 @@
         "name": "go_bot",
         "debug": false,
         "word_vocab": "#token_vocab",
-        "template_path": "dstc2/dstc2-templates.txt",
+        "database": "#restaurant_database",
+        "template_path": "dstc2_v2/dstc2-templates.txt",
         "use_action_mask": false,
         "network_parameters": {
           "load_path": "gobot_dstc2/model",
           "save_path": "gobot_dstc2/model",
-          "learning_rate": 0.002,
+          "learning_rate": 0.05,
+          "end_learning_rate": 0.005,
+          "decay_steps": 40,
           "dropout_rate": 0.8,
+          "l2_reg_coef": 1e-3,
           "hidden_size": 128,
           "dense_size": 64
         },
@@ -42,7 +53,7 @@
           "config_path": "../deeppavlov/configs/ner/slotfill_dstc2.json"
         },
         "intent_classifier": {
-          "config_path": "../deeppavlov/configs/intents/intents_dstc2.json"
+          "config_path": "../deeppavlov/configs/intents/intents_dstc2_big.json"
         },
         "embedder": null,
         "bow_embedder": {
@@ -61,7 +72,7 @@
   },
   "train": {
     "epochs": 200,
-    "batch_size": 8,
+    "batch_size": 16,
 
     "metrics": ["per_item_dialog_accuracy"],
     "validation_patience": 20,
@@ -77,10 +88,10 @@
     },
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/gobot_dstc2_v2.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/gobot_dstc2_v4.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz",
-        "subdir": "dstc2"
+        "url": "http://lnsigo.mipt.ru/export/datasets/dstc2_v2.tar.gz",
+        "subdir": "dstc2_v2"
       }
     ]
   }
