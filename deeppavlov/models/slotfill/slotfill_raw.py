@@ -15,7 +15,6 @@ limitations under the License.
 """
 import json
 from math import exp
-from pathlib import Path
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register

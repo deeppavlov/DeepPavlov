@@ -16,7 +16,6 @@ limitations under the License.
 import json
 from fuzzywuzzy import process
 from overrides import overrides
-from pathlib import Path
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import download
