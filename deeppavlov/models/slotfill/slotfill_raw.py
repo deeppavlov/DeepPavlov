@@ -57,7 +57,7 @@ class SlotFillingComponent(Component, Serializable):
 
     def _predict_slots(self, tokens, threshold):
         # For utterance extract named entities and perform normalization for slot filling
-        entities, slots = _fuzzy_finder(self._slot_vals, tokens, threshold)
+        entities, slots = self._fuzzy_finder(self._slot_vals, tokens, threshold)
         slot_values = {}
         for entity, slot in zip(entities, slots):
             slot_values[slot] = entity
@@ -71,73 +71,70 @@ class SlotFillingComponent(Component, Serializable):
         with open(self.save_path, 'w') as f:
             json.dump(self._slot_vals, f)
 
+    def _fuzzy_finder(self, slot_dict, tokens, threshold):
+        global input_entity
+        if isinstance(tokens, list):
+            input_entity = ' '.join(tokens)
+        entities = []
+        slots = []
+        for slot, tag_dict in slot_dict.items():
+            r, candidate_entity = self.get_candidate(input_entity, tag_dict, self.get_ratio)
+            if r > threshold:
+                entities.append(candidate_entity)
+                slots.append(slot)
+        return entities, slots
 
-def _fuzzy_finder(slot_dict, tokens, threshold):
-    global input_entity
-    if isinstance(tokens, list):
-        input_entity = ' '.join(tokens)
-    entities = []
-    slots = []
-    for slot, tag_dict in slot_dict.items():
-        r, candidate_entity = get_candidate(input_entity, tag_dict, get_ratio)
-        if r > threshold:
-            entities.append(candidate_entity)
-            slots.append(slot)
-    return entities, slots
+    def get_candidate(self, input_text, tag_dict, score_function):
+        r = -1
+        candidate = ""
+        for entity_name, entity_list in tag_dict.items():
+            for entity in entity_list:
+                ratio = score_function(entity.lower(), input_text.lower())
+                if ratio < r:
+                    continue
+                if ratio > r:
+                    r = ratio
+                    candidate = entity_name
+        return r, candidate
 
+    def get_ratio(self, needle, haystack):
+        d = self.fuzzy_substring_distance(needle, haystack)
+        m = len(needle) - d
+        return exp(-d / 5) * (m / len(needle))
 
-def get_candidate(input_text, tag_dict, score_function):
-    r = -1
-    candidate = ""
-    for entity_name, entity_list in tag_dict.items():
-        for entity in entity_list:
-            ratio = score_function(entity.lower(), input_text.lower())
-            if ratio < r:
-                continue
-            if ratio > r:
-                r = ratio
-                candidate = entity_name
-    return r, candidate
+    @staticmethod
+    def fuzzy_substring_distance(needle, haystack):
+        """Calculates the fuzzy match of needle in haystack,
+        using a modified version of the Levenshtein distance
+        algorithm.
+        The function is modified from the Levenshtein function
+        in the bktree module by Adam Hupp
+        :type needle: string
+        :type haystack: string"""
+        m, n = len(needle), len(haystack)
 
+        # base cases
+        if m == 1:
+            return needle not in haystack
+        if not n:
+            return m
 
-def get_ratio(needle, haystack):
-    d = fuzzy_substring_distance(needle, haystack)
-    m = len(needle) - d
-    return exp(-d / 5) * (m / len(needle))
+        row1 = [0] * (n + 1)
+        for j in range(0, n + 1):
+            if j == 0 or not haystack[j - 1].isalnum():
+                row1[j] = 0
+            else:
+                row1[j] = row1[j - 1] + 1
 
+        for i in range(0, m):
+            row2 = [i + 1]
+            for j in range(0, n):
+                cost = (needle[i] != haystack[j])
+                row2.append(min(row1[j + 1] + 1, row2[j] + 1, row1[j] + cost))
+            row1 = row2
 
-def fuzzy_substring_distance(needle, haystack):
-    """Calculates the fuzzy match of needle in haystack,
-    using a modified version of the Levenshtein distance
-    algorithm.
-    The function is modified from the Levenshtein function
-    in the bktree module by Adam Hupp
-    :type needle: string
-    :type haystack: string"""
-    m, n = len(needle), len(haystack)
-
-    # base cases
-    if m == 1:
-        return needle not in haystack
-    if not n:
-        return m
-
-    row1 = [0] * (n + 1)
-    for j in range(0, n + 1):
-        if j == 0 or not haystack[j - 1].isalnum():
-            row1[j] = 0
-        else:
-            row1[j] = row1[j - 1] + 1
-
-    for i in range(0, m):
-        row2 = [i + 1]
-        for j in range(0, n):
-            cost = (needle[i] != haystack[j])
-            row2.append(min(row1[j + 1] + 1, row2[j] + 1, row1[j] + cost))
-        row1 = row2
-
-    d = n + m
-    for j in range(0, n + 1):
-        if j == 0 or j == n or not haystack[j].isalnum():
-            d = min(d, row1[j])
-    return d
+        d = n + m
+        for j in range(0, n + 1):
+            if j == 0 or j == n or not haystack[j].isalnum():
+                d = min(d, row1[j])
+        return d
