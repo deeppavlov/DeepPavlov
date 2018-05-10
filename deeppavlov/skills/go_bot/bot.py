@@ -178,17 +178,16 @@ class GoalOrientedBot(NNModel):
         state_features = self.tracker()
 
         # Other features
-        new_db_result = db_result if db_result is not None else self.db_result
         result_matches_state = 0.
-        if new_db_result is not None:
-            result_matches_state = all(v == new_db_result.get(s)
+        if self.db_result is not None:
+            result_matches_state = all(v == self.db_result.get(s)
                                        for s, v in self.tracker.get_state().items()
                                        if v != 'dontcare') * 1.
         context_features = np.array([bool(db_result) * 1.,
                                      (db_result == {}) * 1.,
-                                     (new_db_result is None) * 1.,
-                                     bool(new_db_result) * 1.,
-                                     (new_db_result == {}) * 1.,
+                                     (self.db_result is None) * 1.,
+                                     bool(self.db_result) * 1.,
+                                     (self.db_result == {}) * 1.,
                                      result_matches_state],
                                     dtype=np.float32)
 
@@ -229,20 +228,21 @@ class GoalOrientedBot(NNModel):
             log.debug("Pred response = {}".format(resp))
         return resp
 
-    def _action_mask(self):
-        action_mask = np.ones(self.n_actions, dtype=np.float32)
+    def _action_mask(self, previous_action):
+        mask = np.ones(self.n_actions, dtype=np.float32)
         if self.use_action_mask:
             known_entities = {**self.tracker.get_state(), **(self.db_result or {})}
             for a_id in range(self.n_actions):
                 tmpl = str(self.templates.templates[a_id])
                 for entity in set(re.findall('#([A-Za-z]+)', tmpl)):
                     if entity not in known_entities:
-                        action_mask[a_id] = 0
+                        mask[a_id] = 0.
         # forbid two api calls in a row
-        if self.templates.actions[np.argmax(self.prev_action)] == "api_call":
-            action_mask[np.argmax(self.prev_action)] = 0
-
-        return action_mask
+        if np.any(previous_action):
+            prev_act_id = np.argmax(previous_action)
+            if self.templates.actions[prev_act_id] == "api_call":
+                mask[prev_act_id] = 0.
+        return mask
 
     def train_on_batch(self, x, y):
         b_features, b_u_masks, b_a_masks, b_actions = [], [], [], []
@@ -255,26 +255,28 @@ class GoalOrientedBot(NNModel):
             d_features, d_a_masks, d_actions = [], [], []
             d_emb_context, d_key = [], []  # for attention
             for context, response in zip(d_contexts, d_responses):
-                features, emb_context, key = \
-                    self._encode_context(context['text'], context.get('db_result'))
                 if context.get('db_result') is not None:
                     self.db_result = context['db_result']
+                features, emb_context, key = \
+                    self._encode_context(context['text'], context.get('db_result'))
                 d_features.append(features)
                 d_emb_context.append(emb_context)
                 d_key.append(key)
+                d_a_masks.append(self._action_mask(self.prev_action))
+
+                action_id = self._encode_response(response['act'])
+                d_actions.append(action_id)
+                # previous action is teacher-forced here
+                self.prev_action *= 0.
+                self.prev_action[action_id] = 1.
 
                 if self.debug:
                     log.debug("True response = `{}`".format(response['text']))
                     if preds[0].lower() != response['text'].lower():
                         log.debug("Pred response = `{}`".format(preds[0]))
                     preds = preds[1:]
-                action_id = self._encode_response(response['act'])
-                # previous action is teacher-forced here
-                self.prev_action *= 0.
-                self.prev_action[action_id] = 1.
-                d_actions.append(action_id)
-
-                d_a_masks.append(self._action_mask())
+                    if d_a_masks[-1][action_id] != 1.:
+                        log.warn("True action forbidden by action mask.")
 
             # padding to max_num_utter
             num_padds = max_num_utter - len(d_contexts)
@@ -296,13 +298,14 @@ class GoalOrientedBot(NNModel):
                                     b_a_masks, b_actions)
 
     def _infer(self, context, db_result=None, prob=False):
-        features, emb_context, key = self._encode_context(context, db_result)
-        probs = self.network(
-            [[features]], [[emb_context]], [[key]], [[self._action_mask()]], prob=True
-        )
-        pred_id = np.argmax(probs)
         if db_result is not None:
             self.db_result = db_result
+        features, emb_context, key = self._encode_context(context, db_result)
+        action_mask = self._action_mask(self.prev_action)
+        probs = self.network(
+            [[features]], [[emb_context]], [[key]], [[action_mask]], prob=True
+        )
+        pred_id = np.argmax(probs)
 
         # one-hot encoding seems to work better then probabilities
         if prob:
@@ -352,7 +355,6 @@ class GoalOrientedBot(NNModel):
                 if self.templates.actions[np.argmax(self.prev_action)] == "api_call":
                     db_result = self.make_api_call(self.tracker.get_state())
                     res.append(self._infer(x, db_result=db_result))
-                    self.db_result = db_result
                 else:
                     res.append(pred)
             return res
