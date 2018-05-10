@@ -392,6 +392,22 @@ A particular format of returned data should be defined in `__call__()`.
 
 Inference is triggered by `deeppavlov.core.commands.infer.interact_model()` function. There is no need in a separate JSON for inference. 
 
+### Rest API
+
+Each library component or skill can be easily made available for inference as a REST web service. The general method is:
+
+`python -m deeppavlov.deep riseapi <config_path> [-d]`
+
+(optional `-d` key is for dependencies download before service start)
+
+Web service properties (host, port, model endpoint, GET request arguments) are provided in `utils/server_utils/server_config.json`.
+Properties from `common_defaults` section are used by default unless they are overridden by component-specific properties, provided in `model_defaults` section of the `server_config.json`.
+Component-specific properties are bound to the component by `server_utils` label in `metadata/labels` section of the component config. Value of `server_utils` label from component config should match with properties key from `model_defaults` section of `server_config.json`.
+
+For example, `metadata/labels/server_utils` tag from `go_bot/gobot_dstc2.json` references to the *GoalOrientedBot* section of `server_config.json`. Therefore, `model_endpoint` parameter in `common_defaults` will be will be overridden with the same parameter from `model_defaults/GoalOrientedBot`.
+
+Model argument names 
+
 ## License
 
 DeepPavlov is Apache 2.0 - licensed.
