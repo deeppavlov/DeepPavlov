@@ -23,6 +23,7 @@ from tensorflow.contrib.layers import xavier_initializer as xav
 import collections
 
 from deeppavlov.core.layers import tf_attention_mechanisms as am
+from deeppavlov.core.layers import tf_layers
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.tf_model import TFModel
@@ -158,9 +159,9 @@ class GoalOrientedBotNetwork(TFModel):
         # multiply with batch utterance mask
         # _loss_tensor = tf.multiply(_loss_tensor, self._utterance_mask)
         self._loss = tf.reduce_mean(_loss_tensor, name='loss')
-        self._loss += self.l2_reg * tf.reduce_sum(tf.losses.get_regularization_loss())
+        self._loss += self.l2_reg * tf.losses.get_regularization_loss()
         self._train_op = \
-            self.get_train_op(self._loss, self._learning_rate, clip_norm=1.)
+            self.get_train_op(self._loss, self._learning_rate, clip_norm=2.)
 
     def _add_placeholders(self):
         self._dropout = tf.placeholder_with_default(1.0,
@@ -201,7 +202,7 @@ class GoalOrientedBotNetwork(TFModel):
 
     def _build_body(self):
         # input projection
-        _units = tf.nn.dropout(self._features, keep_prob=self._dropout)
+        _units = tf_layers.variational_dropout(self._features, keep_prob=self._dropout)
         _units = tf.layers.dense(_units, self.dense_size,
                                  kernel_regularizer=tf.nn.l2_loss,
                                  kernel_initializer=xav(), name='units')
