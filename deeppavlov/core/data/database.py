@@ -33,7 +33,7 @@ class Sqlite3Database(Estimator):
                  keys: List[str] = None,
                  unknown_value: str = 'UNK',
                  *args, **kwargs) -> None:
-        super().__init__(save_path=save_path, load_path=save_path, *args, **kwargs)
+        super().__init__(save_path=save_path, *args, **kwargs)
 
         self.primary_keys = primary_keys
         if not self.primary_keys:
@@ -129,7 +129,7 @@ class Sqlite3Database(Estimator):
         to_update = {}
         for kv in filter(None, data):
             primary_values = tuple(kv[pk] for pk in self.primary_keys)
-            record = {k: kv.get(k, self.unknown_value) for k in self.keys}
+            record = tuple(kv.get(k, self.unknown_value) for k in self.keys)
             curr_record = self._get_record(primary_values)
             if curr_record:
                 if primary_values in to_update:
@@ -158,13 +158,15 @@ class Sqlite3Database(Estimator):
                                       " WHERE {}".format(where_expr)).fetchone()
         if not fetched:
             return None
-        return self._wrap_selection(fetched)
+        return fetched
 
     def _update_one(self, record):
         set_expr = ', '.join("{} = '{}'".format(k, v)
-                             for k, v in record.items() if k not in self.primary_keys)
-        where_expr = ' AND '.join("{} = '{}'".format(pk, record[pk])
-                                  for pk in self.primary_keys)
+                             for k, v in zip(self.keys, record)
+                             if k not in self.primary_keys)
+        where_expr = ' AND '.join("{} = '{}'".format(k, v)
+                                  for k, v in zip(self.keys, record)
+                                  if k in self.primary_keys)
         self.cursor.execute("UPDATE {}".format(self.tname) +
                             " SET {}".format(set_expr) +
                             " WHERE {}".format(where_expr))
