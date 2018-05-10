@@ -69,7 +69,7 @@
             "units": {
               "range": [
                 50,
-                100
+                200
               ],
               "discrete": true
             },
@@ -86,7 +86,7 @@
             "filters": {
               "range": [
                 50,
-                100
+                200
               ],
               "discrete": true
             },
@@ -103,25 +103,21 @@
             "units": {
               "range": [
                 50,
-                100
+                200
               ],
               "discrete": true
             },
-            "return_sequences": {
-              "bool": true
-            }
+            "return_sequences": true
           },
           "BiCuDNNLSTM": {
             "units": {
               "range": [
                 50,
-                100
+                200
               ],
               "discrete": true
             },
-            "return_sequences": {
-              "bool": true
-            }
+            "return_sequences": true
           },
           "MaxPooling1D": {
             "pool_size": {
@@ -137,14 +133,14 @@
             "n_hidden": {
               "range": [
                 50,
-                100
+                200
               ],
               "discrete": true
             },
             "n_output_features": {
               "range": [
                 50,
-                100
+                200
               ],
               "discrete": true
             },

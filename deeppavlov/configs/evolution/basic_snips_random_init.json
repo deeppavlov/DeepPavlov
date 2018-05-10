@@ -107,9 +107,7 @@
               ],
               "discrete": true
             },
-            "return_sequences": {
-              "bool": true
-            }
+            "return_sequences": true
           },
           "BiCuDNNLSTM": {
             "units": {
@@ -119,8 +117,7 @@
               ],
               "discrete": true
             },
-            "return_sequences": {
-              "bool": true
+            "return_sequences": trueool": true
             }
           },
           "MaxPooling1D": {

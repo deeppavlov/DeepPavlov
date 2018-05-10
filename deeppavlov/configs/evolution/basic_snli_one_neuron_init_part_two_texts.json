@@ -97,7 +97,7 @@
             "filters": {
               "range": [
                 50,
-                500
+                200
               ],
               "discrete": true
             },
@@ -118,9 +118,7 @@
               ],
               "discrete": true
             },
-            "return_sequences": {
-              "bool": true
-            }
+            "return_sequences": true
           },
           "BiCuDNNLSTM": {
             "units": {
@@ -130,11 +128,7 @@
               ],
               "discrete": true
             },
-            "return_sequences": {
-              "bool": true
-            }
-          },
-          "GlobalMaxPooling1D": {
+            "return_sequences": true
           },
           "MaxPooling1D": {
             "pool_size": {
@@ -206,8 +200,8 @@
   "train": {
     "epochs": {
       "range": [
-        100,
-        1000
+        50,
+        100
       ],
       "discrete": true
     },

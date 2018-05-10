@@ -1,16 +1,20 @@
 {
   "dataset_reader": {
     "name": "basic_classification_reader",
-    "x": "text",
-    "y": "intents",
-    "data_path": "/home/dilyara/data/data_files/snips/snips_dataset"
+    "x": [
+      "sentence1",
+      "sentence2"
+    ],
+    "y": "gold_label",
+    "data_path": "/home/dilyara/data/data_files/SNLI/snli_data/two_texts/part"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator"
   },
   "chainer": {
     "in": [
-      "x"
+      "sentence1",
+      "sentence2"
     ],
     "in_y": [
       "y"
@@ -23,8 +27,26 @@
           "y"
         ],
         "level": "token",
-        "save_path": "/home/dilyara/data/data_files/snips/snips_dataset/snips_classes.dict",
-        "load_path": "/home/dilyara/data/data_files/snips/snips_dataset/snips_classes.dict"
+        "save_path": "/home/dilyara/data/data_files/SNLI/snli_data/snli_classes.dict",
+        "load_path": "/home/dilyara/data/data_files/SNLI/snli_data/snli_classes.dict"
+      },
+      {
+        "in": [
+          "sentence1"
+        ],
+        "out": [
+          "sentence1_lower"
+        ],
+        "name": "str_lower"
+      },
+      {
+        "in": [
+          "sentence2"
+        ],
+        "out": [
+          "sentence2_lower"
+        ],
+        "name": "str_lower"
       },
       {
         "id": "my_embedder",
@@ -40,7 +62,8 @@
       },
       {
         "in": [
-          "x"
+          "sentence1_lower",
+          "sentence2_lower"
         ],
         "in_y": [
           "y"
@@ -50,9 +73,9 @@
           "y_probas_dict"
         ],
         "main": true,
-        "name": "evolution_classification_model",
-        "save_path": "/home/dilyara/data/models/evolution_data/snips_classification/start_with_random",
-        "load_path": "/home/dilyara/data/models/evolution_data/snips_classification/start_with_random",
+        "name": "evolution_classification_many_texts_model",
+        "save_path": "/home/dilyara/data/models/evolution_data/snli_classification/one_neuron_init_part_many_texts",
+        "load_path": "/home/dilyara/data/models/evolution_data/snli_classification/one_neuron_init_part_many_texts",
         "classes": "#classes_vocab.keys()",
         "to_evolve": true,
         "basic_layers_params": {
@@ -98,9 +121,7 @@
               ],
               "discrete": true
             },
-            "return_sequences": {
-              "bool": true
-            }
+            "return_sequences": true
           },
           "BiCuDNNLSTM": {
             "units": {
@@ -110,11 +131,7 @@
               ],
               "discrete": true
             },
-            "return_sequences": {
-              "bool": true
-            }
-          },
-          "GlobalMaxPooling1D": {
+            "return_sequences": true
           },
           "MaxPooling1D": {
             "pool_size": {
@@ -126,7 +143,7 @@
             },
             "padding": "same"
           },
-          "SelfMultiplicativeAttention": {
+          "Attention": {
             "n_hidden": {
               "range": [
                 50,
@@ -149,6 +166,7 @@
               ],
               "choice": true
             }
+          }
         },
         "confident_threshold": {
           "range": [
@@ -171,7 +189,8 @@
         },
         "loss": "binary_crossentropy",
         "text_size": 15,
-        "model_name": "evolution_classification_model",
+        "last_layer_activation": "softmax",
+        "model_name": "evolution_many_texts_classification_model",
         "embedder": "#my_embedder",
         "tokenizer": "#my_tokenizer"
       }
