@@ -50,7 +50,7 @@ from deeppavlov.core.layers.keras_layers import multiplicative_self_attention_in
 log = get_logger(__name__)
 
 
-@register('evolution_classification_many_texts_model')
+@register('evolution_many_inputs_classification_model')
 class KerasEvolutionClassificationManyInputsModel(KerasIntentModel):
 
     def __init__(self, **kwargs):
