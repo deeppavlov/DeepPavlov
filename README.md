@@ -44,31 +44,31 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
           
  * Run goal-oriented bot with Telegram interface:
  ```
- python -m deeppavlov.deep interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -t <TELEGRAM_TOKEN>
+ python -m deeppavlov.deep interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>
  ```
  * Run goal-oriented bot with console interface:
  ```
- python -m deeppavlov.deep interact deeppavlov/configs/go_bot/gobot_dstc2.json
+ python -m deeppavlov.deep interact deeppavlov/configs/go_bot/gobot_dstc2.json -d
  ```
   * Run goal-oriented bot with REST API:
  ```
- python -m deeppavlov.deep riseapi deeppavlov/configs/go_bot/gobot_dstc2.json
+ python -m deeppavlov.deep riseapi deeppavlov/configs/go_bot/gobot_dstc2.json -d
  ``` 
   * Run slot-filling model with Telegram interface:
  ```
- python -m deeppavlov.deep interactbot deeppavlov/configs/ner/slotfill_dstc2.json -t <TELEGRAM_TOKEN>
+ python -m deeppavlov.deep interactbot deeppavlov/configs/ner/slotfill_dstc2.json -d -t <TELEGRAM_TOKEN>
  ```
  * Run slot-filling model with console interface:
  ```
- python -m deeppavlov.deep interact deeppavlov/configs/ner/slotfill_dstc2.json
+ python -m deeppavlov.deep interact deeppavlov/configs/ner/slotfill_dstc2.json -d
  ```
  * Run slot-filling model with REST API:
  ```
- python -m deeppavlov.deep riseapi deeppavlov/configs/ner/slotfill_dstc2.json
+ python -m deeppavlov.deep riseapi deeppavlov/configs/ner/slotfill_dstc2.json -d
  ```
  * Predict intents on every line in a file:
  ```
- python -m deeppavlov.deep predict deeppavlov/configs/intents/intents_snips.json --batch-size 15 < /data/in.txt > /data/out.txt
+ python -m deeppavlov.deep predict deeppavlov/configs/intents/intents_snips.json -d --batch-size 15 < /data/in.txt > /data/out.txt
  ```
 ## Conceptual overview
 
@@ -146,23 +146,28 @@ DeepPavlov is built on top of machine learning frameworks [TensorFlow](https://w
 
 To use our pre-trained models, you should first download them:
 ```
-python -m deeppavlov.download [-all] 
+python -m deeppavlov.deep download <path_to_config>
 ```
-* running this command without options will download basic examples, `[-all]` option will download **all** our pre-trained models.
-* Warning! `[-all]` requires about 10 GB of free space on disk.
-    
+or you can use additional key `-d` to automatically download all required models and data with any command like `interact`, `riseapi`, etc.
+
 Then you can interact with the models or train them with the following command:
 
 ```
-python -m deeppavlov.deep <mode> <path_to_config>
+python -m deeppavlov.deep <mode> <path_to_config> [-d]
 ```
 
-* `<mode>` can be 'train', 'interact', 'interactbot' or 'riseapi'
+* `<mode>` can be 'train', 'predict', 'interact', 'interactbot' or 'riseapi'
 * `<path_to_config>` should be a path to an NLP pipeline json config
 
 For 'interactbot' mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable.
 
 For 'riseapi' mode you should specify api settings (host, port, etc.) in [*utils/server_utils/server_config.json*](utils/server_utils/server_config.json) configuration file. If provided, values from *model_defaults* section override values for the same parameters from *common_defaults* section. Model names in *model_defaults* section should be similar to the class names of the models main component.
+
+For 'predict' you can specify path to input file with `-f` or `--input-file` parameter, otherwise, data will be taken
+from stdin.  
+Every line of input text will be used as a pipeline input parameter, so one example will consist of as many lines,
+as many input parameters your pipeline expects.  
+You can also specify batch size with `-b` or `--batch-size` parameter.
 
 Available model configs are:
 
@@ -170,13 +175,15 @@ Available model configs are:
 
 - ```deeppavlov/configs/seq2seq_go_bot/*.json```
 
+- ```deeppavlov/configs/odqa/*.json```
+
 - ```deeppavlov/configs/squad/*.json```
 
 - ```deeppavlov/configs/intents/*.json```
 
 - ```deeppavlov/configs/ner/*.json```
 
-- ```deeppavlov/configs/rankinf/*.json```
+- ```deeppavlov/configs/ranking/*.json```
 
 - ```deeppavlov/configs/error_model/*.json```
 

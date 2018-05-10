@@ -21,8 +21,8 @@ import sys
 root_path = (Path(__file__) / ".." / "..").resolve()
 sys.path.append(str(root_path))
 
+from deeppavlov.core.common.file import read_json
 from deeppavlov.core.data.utils import download, download_decompress
-from deeppavlov.core.data.urls import REQ_URLS, ALL_URLS, EMBEDDING_URLS, DATA_URLS, BINARY_URLS
 from deeppavlov.core.common.log import get_logger
 
 
@@ -30,6 +30,8 @@ log = get_logger(__name__)
 
 parser = argparse.ArgumentParser()
 
+parser.add_argument('--config', '-c', help="path to a pipeline json config", type=str,
+                    default=None)
 parser.add_argument('-all', action='store_true',
                     help="Download everything. Warning! There should be at least 10 GB space"
                          " available on disk.")
@@ -37,49 +39,125 @@ parser.add_argument('-test', action='store_true',
                     help="Turn test mode")
 
 
-def download_resources(args):
-    if args.all:
-        urls = ALL_URLS
+def get_all_elems_from_json(search_json, search_key):
+    result = []
+    if isinstance(search_json, dict):
+        for key in search_json:
+            if key == search_key:
+                result.append(search_json[key])
+            else:
+                result.extend(get_all_elems_from_json(search_json[key], search_key))
+    elif isinstance(search_json, list):
+        for item in search_json:
+            result.extend(get_all_elems_from_json(item, search_key))
+
+    return result
+
+
+def get_config_downloads(config_path, config_downloads=None):
+    config = read_json(config_path)
+
+    if config_downloads is None:
+        config_downloads = {}
+
+    if 'metadata' in config and 'download' in config['metadata']:
+        for resource in config['metadata']['download']:
+            if isinstance(resource, str):
+                url = resource
+                sub_dir = ''
+            elif isinstance(resource, dict):
+                url = resource['url']
+                sub_dir = resource['subdir'] if 'subdir' in resource else ''
+
+            if url in config_downloads:
+                config_downloads[url]['subdir'] = list(set(config_downloads[url]['subdir'] +
+                                                           [sub_dir]))
+            else:
+                config_downloads[url] = {'url': url, 'subdir': [sub_dir]}
+
+    config_references = get_all_elems_from_json(config, 'config_path')
+    config_references = [root_path.joinpath(config_ref.split('../', 1)[1]) for config_ref in config_references]
+
+    for config_ref in config_references:
+        config_downloads = get_config_downloads(config_ref, config_downloads)
+
+    return config_downloads
+
+
+def get_configs_downloads(config_path=None, test=None):
+    all_downloads = {}
+
+    if test:
+        configs_path = root_path / 'tests' / 'deeppavlov' / 'configs'
     else:
-        urls = REQ_URLS
+        configs_path = root_path / 'deeppavlov' / 'configs'
+
+    if config_path:
+        configs = [config_path]
+    else:
+        configs = list(configs_path.glob('**/*.json'))
+
+    for config_path in configs:
+        config_downloads = get_config_downloads(config_path)
+        for url in config_downloads:
+            if url in all_downloads:
+                all_downloads[url]['subdir'] = list(set(all_downloads[url]['subdir'] +
+                                                        config_downloads[url]['subdir']))
+            else:
+                all_downloads[url] = config_downloads[url]
+
+    return all_downloads
+
+
+def download_resource(resource, download_path):
+    url = resource['url']
+    sub_dirs = resource['subdir']
+    dest_paths = []
+
+    for sub_dir in sub_dirs:
+        dest_path = download_path.joinpath(sub_dir)
+        dest_paths.append(dest_path)
+
+    if url.endswith(('.tar.gz', '.gz', '.zip')):
+        download_path = dest_paths[0].parent
+        download_decompress(url, download_path, dest_paths)
+    else:
+        file_name = url.split('/')[-1]
+        dest_files = [dest_path / file_name for dest_path in dest_paths]
+        download(dest_files, url)
+
+
+def download_resources(args):
+    download_path = root_path / 'download'
 
     if args.test:
         download_path = root_path / 'tests' / 'download'
+        test = True
     else:
-        download_path = root_path / 'download'
+        test = False
+
+    if not args.all and not args.config:
+        log.error('You should provide either skill config path or -all flag')
+        sys.exit(1)
+    elif args.all:
+        downloads = get_configs_downloads(test=test)
+    else:
+        config_path = Path(args.config).resolve()
+        downloads = get_configs_downloads(config_path=config_path)
+
     download_path.mkdir(exist_ok=True)
 
-    embeddings_path = download_path.joinpath('embeddings')
-
-    for url in urls:
-
-        dest_path = download_path
-
-        if url in EMBEDDING_URLS:
-            embeddings_path.mkdir(exist_ok=True)
-            dest_path = embeddings_path.joinpath(url.split("/")[-1])
-            download(dest_path, url)
-
-        elif url in BINARY_URLS:
-            dest_folder = download_path.joinpath(url.split("/")[-2])
-            dest_file = dest_folder.joinpath(url.split("/")[-1])
-            dest_path.mkdir(exist_ok=True)
-            download(dest_file, url)
-
-        elif url in DATA_URLS:
-            dest_path = download_path.joinpath(url.split("/")[-1].split(".")[0])
-            download_decompress(url, dest_path)
-
-        else:
-            download_decompress(url, dest_path)
+    for url in downloads:
+        resource = downloads[url]
+        download_resource(resource, download_path)
 
 
-def main():
-    args = parser.parse_args()
+def deep_download(args=None):
+    args = parser.parse_args(args)
     log.info("Downloading...")
     download_resources(args)
     log.info("\nDownload successful!")
 
 
 if __name__ == "__main__":
-    main()
+    deep_download()

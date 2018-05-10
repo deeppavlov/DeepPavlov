@@ -363,9 +363,11 @@ def embedding_layer(token_indices=None,
 
 
 def character_embedding_network(char_placeholder: tf.Tensor,
-                                n_characters: int,
-                                char_embedding_dim: int,
-                                filter_width=7):
+                                n_characters: int = None,
+                                emb_mat: np.array = None,
+                                char_embedding_dim: int = None,
+                                filter_widths=(3, 4, 5, 7),
+                                highway_on_top=False):
     """ Characters to vector. Every sequence of characters (token)
         is embedded to vector space with dimensionality char_embedding_dim
         Convolution plus max_pooling is used to obtain vector representations
@@ -377,24 +379,49 @@ def character_embedding_network(char_placeholder: tf.Tensor,
             T - Number of tokens (can be None)
             C - number of characters (can be None)
         n_characters: total number of unique characters
+        emb_mat: if n_characters is not provided the emb_mat should be provided
+            it is a numpy array with dimensions [V, E], where V - vocabulary size
+            and E - embeddings dimension
         char_embedding_dim: dimensionality of characters embeddings
-        filter_width: width of kernel in convolutional embedding network
+        filter_widths: array of width of kernel in convolutional embedding network
+            used in parallel
 
     Returns:
         embeddings: tf.Tensor with dimensionality [B, T, F],
             where F is dimensionality of embeddings
     """
-    char_emb_mat = np.random.randn(n_characters, char_embedding_dim).astype(np.float32) / np.sqrt(char_embedding_dim)
-    char_emb_var = tf.Variable(char_emb_mat, trainable=True)
+    if emb_mat is None:
+        emb_mat = np.random.randn(n_characters, char_embedding_dim).astype(np.float32) / np.sqrt(char_embedding_dim)
+    else:
+        char_embedding_dim = emb_mat.shape[1]
+    char_emb_var = tf.Variable(emb_mat, trainable=True)
     with tf.variable_scope('Char_Emb_Network'):
         # Character embedding layer
         c_emb = tf.nn.embedding_lookup(char_emb_var, char_placeholder)
 
         # Character embedding network
-        char_conv = tf.layers.conv2d(c_emb, char_embedding_dim, (1, filter_width), padding='same', name='char_conv',
-                                     kernel_initializer=INITIALIZER())
-        embeddings = tf.reduce_max(char_conv, axis=2)
-    return embeddings
+        conv_results_list = []
+        for filter_width in filter_widths:
+            conv_results_list.append(tf.layers.conv2d(c_emb,
+                                                      char_embedding_dim,
+                                                      (1, filter_width),
+                                                      padding='same',
+                                                      kernel_initializer=INITIALIZER))
+        units = tf.concat(conv_results_list, axis=3)
+        units = tf.reduce_max(units, axis=2)
+        if highway_on_top:
+            sigmoid_gate = tf.layers.dense(units,
+                                           1,
+                                           activation=tf.sigmoid,
+                                           kernel_initializer=INITIALIZER,
+                                           kernel_regularizer=tf.nn.l2_loss)
+            deeper_units = tf.layers.dense(units,
+                                           tf.shape(units)[-1],
+                                           kernel_initializer=INITIALIZER,
+                                           kernel_regularizer=tf.nn.l2_loss)
+            units = sigmoid_gate * units + (1 - sigmoid_gate) * deeper_units
+            units = tf.nn.relu(units)
+    return units
 
 
 def expand_tile(units, axis):

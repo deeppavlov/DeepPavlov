@@ -1,0 +1,171 @@
+{
+  "dataset_reader": {
+    "name": "conll2003_reader",
+    "data_path": "conll2003/",
+    "provide_pos": true
+  },
+  "dataset_iterator": {
+    "name": "data_learning_iterator"
+  },
+  "chainer": {
+    "in": ["x", "pos"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "in": ["x"],
+        "name": "lazy_tokenizer",
+        "out": ["x"]
+      },
+      {
+        "in": ["x"],
+        "name": "str_lower",
+        "out": ["x_lower"]
+      },
+      {
+        "in": ["x_lower"],
+        "name": "sanitizer",
+        "nums": true,
+        "out": ["x_san"]
+      },
+      {
+        "in": ["x_san"],
+        "id": "word_vocab",
+        "name": "simple_vocab",
+        "pad_with_zeros": true,
+        "special_tokens": ["<UNK>"],
+        "fit_on": ["x_san"],
+        "save_path": "ner_conll2003/word.dict",
+        "load_path": "ner_conll2003/word.dict",
+        "out": ["x_tok_ind"]
+      },
+      {
+        "in": ["pos"],
+        "id": "pos_vocab",
+        "name": "simple_vocab",
+        "pad_with_zeros": true,
+        "fit_on": ["pos"],
+        "save_path": "ner_conll2003/pos.dict",
+        "load_path": "ner_conll2003/pos.dict",
+        "out": ["pos_ind"]
+      },
+      {
+        "in": ["y"],
+        "id": "tag_vocab",
+        "name": "simple_vocab",
+        "pad_with_zeros": true,
+        "fit_on": ["y"],
+        "save_path": "ner_conll2003/tag.dict",
+        "load_path": "ner_conll2003/tag.dict",
+        "out": ["y_ind"]
+      },
+      {
+        "in": ["x"],
+        "name": "char_splitter",
+        "out": ["x_char"]
+      },
+      {
+        "in": ["x_char"],
+        "id": "char_vocab",
+        "name": "char_vocab",
+        "pad_with_zeros": true,
+        "fit_on": ["x_char"],
+        "save_path": "ner_conll2003/char.dict",
+        "load_path": "ner_conll2003/char.dict",
+        "out": ["x_char_ind"]
+      },
+      {
+        "in": ["x"],
+        "name": "mask",
+        "out": ["mask"]
+      },
+      {
+        "in": ["x_san"],
+        "id": "glove_emb",
+        "name": "glove",
+        "pad_zero": true,
+        "load_path": "embeddings/glove.6B.100d.txt",
+
+        "out": ["x_emb"]
+      },
+      {
+        "id": "embeddings",
+        "name": "emb_mat_assembler",
+        "embedder": "#glove_emb",
+        "vocab": "#word_vocab"
+      },
+      {
+        "id": "embeddings_char",
+        "name": "emb_mat_assembler",
+        "character_level": true,
+        "emb_dim": 32,
+        "embedder": "#glove_emb",
+        "vocab": "#char_vocab"
+      },
+      {
+        "id": "capitalization",
+        "name": "capitalization_featurizer",
+        "in": ["x"],
+        "out": ["cap"]
+      },
+      {
+        "in": ["x_emb", "mask", "x_char_ind", "cap", "pos_ind"],
+        "in_y": ["y_ind"],
+        "out": ["y_predicted"],
+        "name": "ner",
+        "main": true,
+        "token_emb_dim": "#glove_emb.dim",
+        "n_hidden_list": [128],
+        "net_type": "rnn",
+        "cell_type": "lstm",
+        "use_cudnn_rnn": true,
+        "n_tags": "#tag_vocab.len",
+        "capitalization_dim": "#capitalization.dim",
+        "char_emb_dim": "#embeddings_char.dim",
+        "pos_features_dim": "#pos_vocab.len",
+        "save_path": "ner_conll2003/model",
+        "load_path": "ner_conll2003/model",
+        "char_emb_mat": "#embeddings_char.emb_mat",
+        "use_crf": true,
+        "use_batch_norm": true,
+        "embeddings_dropout": true,
+        "top_dropout": true,
+        "intra_layer_dropout": true,
+        "l2_reg": 0,
+        "learning_rate": 1e-2,
+        "dropout_keep_prob": 0.7
+      },
+      {
+        "ref": "tag_vocab",
+        "in": ["y_predicted"],
+        "out": ["tags"]
+      }
+    ],
+
+    "out": ["tags"]
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 64,
+
+    "metrics": ["ner_f1"],
+    "validation_patience": 5,
+    "val_every_n_epochs": 1,
+
+    "log_every_n_epochs": 1,
+    "show_examples": false
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "NERCoNLL2003Model"
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_conll2003_v2.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt",
+        "subdir": "embeddings"
+      }
+    ]
+  }
+
+}
+

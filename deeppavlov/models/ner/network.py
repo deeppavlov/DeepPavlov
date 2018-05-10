@@ -1,441 +1,272 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
 import numpy as np
 import tensorflow as tf
-from tensorflow.contrib.layers import xavier_initializer
+from functools import partial
 
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.layers.tf_layers import character_embedding_network
-from deeppavlov.core.layers.tf_layers import embedding_layer
-from deeppavlov.core.layers.tf_layers import stacked_bi_rnn
-from deeppavlov.core.layers.tf_layers import stacked_cnn
-from deeppavlov.core.layers.tf_layers import stacked_highway_cnn
-from deeppavlov.models.ner.evaluation import precision_recall_f1
+from deeppavlov.core.layers.tf_layers import embedding_layer, character_embedding_network, variational_dropout
+from deeppavlov.core.layers.tf_layers import cudnn_bi_lstm, cudnn_bi_gru, bi_rnn, stacked_cnn
+from deeppavlov.core.models.tf_model import TFModel
+from deeppavlov.core.common.check_gpu import check_gpu_existence
+from deeppavlov.core.common.registry import register
 
-SEED = 42
-MODEL_FILE_NAME = 'ner_model'
-
-log = get_logger(__name__)
+INITIALIZER = tf.orthogonal_initializer
 
 
-class NerNetwork:
+@register('ner')
+class NerNetwork(TFModel):
+    GRAPH_PARAMS = ["n_tags",  # TODO: add check
+                    "char_emb_dim",
+                    "capitalization_dim",
+                    "additional_features",
+                    "use_char_embeddings",
+                    "additional_features",
+                    "net_type",
+                    "cell_type",
+                    "char_filter_width",
+                    "cell_type"]
+
     def __init__(self,
-                 word_vocab,
-                 char_vocab,
-                 tag_vocab,
-                 n_filters=(128, 256),
-                 filter_width=3,
-                 token_embeddings_dim=128,
-                 char_embeddings_dim=50,
-                 use_char_embeddins=True,
-                 embeddings_dropout=False,
-                 dense_dropout=False,
-                 use_batch_norm=False,
-                 logging=False,
-                 use_crf=False,
-                 net_type='cnn',
-                 char_filter_width=5,
-                 verbose=False,
-                 sess=None,
+                 n_tags,  # Features dimensions
+                 token_emb_dim=None,
+                 char_emb_dim=None,
+                 capitalization_dim=None,
+                 pos_features_dim=None,
+                 additional_features=None,
+                 net_type='rnn',  # Net architecture
                  cell_type='lstm',
-                 embedder=None,
-                 use_capitalization=False,
-                 two_dense_layers=False):
-        tf.set_random_seed(SEED)
-        n_tags = len(tag_vocab)
-        n_tokens = len(word_vocab)
-        n_chars = len(char_vocab)
-        # Create placeholders
-        if embedder is not None:
-            x_word = tf.placeholder(dtype=tf.float32, shape=[None, None, token_embeddings_dim], name='x_word')
-        else:
-            x_word = tf.placeholder(dtype=tf.int32, shape=[None, None], name='x_word')
-        x_char = tf.placeholder(dtype=tf.int32, shape=[None, None, None], name='x_char')
-        y_true = tf.placeholder(dtype=tf.int32, shape=[None, None], name='y_tag')
-        x_cap = tf.placeholder(dtype=tf.float32, shape=[None, None], name='y_cap')
-        # Auxiliary placeholders
-        learning_rate_ph = tf.placeholder(dtype=tf.float32, shape=[], name='learning_rate')
-        dropout_ph = tf.placeholder_with_default(1.0, shape=[])
-        training_ph = tf.placeholder_with_default(False, shape=[])
-        mask_ph = tf.placeholder(dtype=tf.float32, shape=[None, None])
+                 use_cudnn_rnn=False,
+                 two_dense_on_top=False,
+                 n_hidden_list=(128,),
+                 cnn_filter_width=7,
+                 use_crf=False,
+                 token_emb_mat=None,
+                 char_emb_mat=None,
+                 use_batch_norm=False,
+                 dropout_keep_prob=0.5,  # Regularization
+                 embeddings_dropout=False,
+                 top_dropout=False,
+                 intra_layer_dropout=False,
+                 l2_reg=0.0,
+                 clip_grad_norm=5.0,
+                 learning_rate=3e-3,
+                 gpu=None,
+                 **kwargs):
+        self._add_training_placeholders(dropout_keep_prob, learning_rate)
+        self._xs_ph_list = []
+        self._y_ph = tf.placeholder(tf.int32, [None, None], name='y_ph')
+        self._input_features = []
 
-        # Embeddings
-        if embedder is None:
-            with tf.variable_scope('Embeddings'):
-                w_emb = embedding_layer(x_word, n_tokens=n_tokens, token_embedding_dim=token_embeddings_dim)
-                if use_char_embeddins:
-                    c_emb = character_embedding_network(x_char,
-                                                        n_characters=n_chars,
-                                                        char_embedding_dim=char_embeddings_dim,
-                                                        filter_width=char_filter_width)
-                    emb = tf.concat([w_emb, c_emb], axis=-1)
-                else:
-                    emb = w_emb
-        else:
-            emb = x_word
-        if use_capitalization:
-            emb = tf.concat([emb, tf.expand_dims(x_cap, 2)], 2)
+        # ================ Building input features =================
 
-        # Dropout for embeddings
+        # Token embeddings
+        self._add_word_embeddings(token_emb_mat, embeddings_dropout, token_emb_dim)
+
+        # Masks for different lengths utterances
+        self.mask_ph = self._add_mask()
+
+        # Char embeddings using highway CNN with max pooling
+        if char_emb_mat is not None and char_emb_dim is not None:
+            self._add_char_embeddings(char_emb_mat, embeddings_dropout)
+
+        # Capitalization features
+        if capitalization_dim is not None:
+            self._add_capitalization(capitalization_dim)
+
+        # Part of speech features
+        if pos_features_dim is not None:
+            self._add_pos(pos_features_dim)
+
+        # Anything you want
+        if additional_features is not None:
+            self._add_additional_features(additional_features)
+
+        features = tf.concat(self._input_features, axis=2)
+
+        # ================== Building the network ==================
+
+        if net_type == 'rnn':
+            if use_cudnn_rnn:
+                if l2_reg > 0:
+                    raise Warning('cuDNN RNN are not l2 regularizable')
+                units = self._build_cudnn_rnn(features, n_hidden_list, cell_type, intra_layer_dropout)
+            else:
+                units = self._build_rnn(features, n_hidden_list, cell_type, intra_layer_dropout)
+        elif net_type == 'cnn':
+            units = self._build_cnn(features, n_hidden_list, cnn_filter_width, use_batch_norm)
+        self._logits = self._build_top(units, n_tags, n_hidden_list[-1], top_dropout, two_dense_on_top)
+
+        self.train_op, self.loss = self._build_train_predict(self._logits, self.mask_ph, n_tags,
+                                                             use_crf, clip_grad_norm, l2_reg)
+        self.predict = self.predict_crf if use_crf else self.predict_no_crf
+
+        # ================= Initialize the session =================
+
+        sess_config = tf.ConfigProto(allow_soft_placement=True)
+        sess_config.gpu_options.allow_growth = True
+        if gpu is not None:
+            sess_config.gpu_options.visible_device_list = str(gpu)
+        self.sess = tf.Session()   # TODO: add sess_config
+        self.sess.run(tf.global_variables_initializer())
+        super().__init__(**kwargs)
+        self.load()
+
+    def _add_training_placeholders(self, dropout_keep_prob, learning_rate):
+        self.learning_rate_ph = tf.placeholder_with_default(learning_rate, shape=[], name='learning_rate')
+        self._dropout_ph = tf.placeholder_with_default(dropout_keep_prob, shape=[], name='dropout')
+        self.training_ph = tf.placeholder_with_default(False, shape=[], name='is_training')
+
+    def _add_word_embeddings(self, token_emb_mat, embeddings_dropout, token_emb_dim=None):
+        if token_emb_mat is None:
+            token_ph = tf.placeholder(tf.float32, [None, None, token_emb_dim], name='Token_Ind_ph')
+            emb = token_ph
+        else:
+            token_ph = tf.placeholder(tf.int32, [None, None], name='Token_Ind_ph')
+            emb = embedding_layer(token_ph, token_emb_mat)
         if embeddings_dropout:
-            emb = tf.layers.dropout(emb, dropout_ph, training=training_ph)
+            emb = tf.layers.dropout(emb, self._dropout_ph, noise_shape=[tf.shape(emb)[0], 1, tf.shape(emb)[2]])
+        self._xs_ph_list.append(token_ph)
+        self._input_features.append(emb)
 
-        if 'cnn' in net_type.lower():
-            # Convolutional network
-            with tf.variable_scope('ConvNet'):
-                units = stacked_cnn(emb,
-                                    n_hidden_list=n_filters,
-                                    filter_width=filter_width,
-                                    use_batch_norm=use_batch_norm,
-                                    training_ph=training_ph)
-        elif 'rnn' in net_type.lower():
-            units, _ = stacked_bi_rnn(emb, n_filters, cell_type)
+    def _add_mask(self):
+        mask_ph = tf.placeholder(tf.float32, [None, None], name='Mask_ph')
+        self._xs_ph_list.append(mask_ph)
+        return mask_ph
 
-        elif 'cnn_highway' in net_type.lower():
-            units = stacked_highway_cnn(emb,
-                                        n_hidden_list=n_filters,
-                                        filter_width=filter_width,
-                                        use_batch_norm=use_batch_norm,
-                                        training_ph=training_ph)
-        else:
-            raise KeyError('There is no such type of network: {}'.format(net_type))
+    def _add_char_embeddings(self, char_emb_mat, embeddings_dropout):
+        character_indices_ph = tf.placeholder(tf.int32, [None, None, None], name='Char_ph')
+        char_embs = character_embedding_network(character_indices_ph, emb_mat=char_emb_mat)
+        char_embs = variational_dropout(char_embs, embeddings_dropout)
+        self._xs_ph_list.append(character_indices_ph)
+        self._input_features.append(char_embs)
 
-        # Classifier
-        with tf.variable_scope('Classifier'):
-            if two_dense_layers:
-                units = tf.layers.dense(units, n_filters[-1], kernel_initializer=xavier_initializer())
-            logits = tf.layers.dense(units, n_tags, kernel_initializer=xavier_initializer())
+    def _add_capitalization(self, capitalization_dim):
+        capitalization_ph = tf.placeholder(tf.float32, [None, None, capitalization_dim], name='Capitalization_ph')
+        self._xs_ph_list.append(capitalization_ph)
+        self._input_features.append(capitalization_ph)
 
-        # Loss with masking
+    def _add_pos(self, pos_features_dim):
+        pos_ph = tf.placeholder(tf.int32, [None, None], name='POS_ph')
+        pos = tf.one_hot(pos_ph, pos_features_dim, dtype=tf.float32)
+        self._xs_ph_list.append(pos_ph)
+        self._input_features.append(pos)
+
+    def _add_additional_features(self, features_list):
+        for feature, dim in features_list:
+            feat_ph = tf.placeholder(tf.int32, [None, None, dim], name=feature + '_ph')
+            self._xs_ph_list.append(feat_ph)
+            self._input_features.append(feat_ph)
+
+    def _build_cudnn_rnn(self, units, n_hidden_list, cell_type, intra_layer_dropout):
+        if not check_gpu_existence():
+            raise RuntimeError('Usage of cuDNN RNN layers require GPU along with cuDNN library')
+
+        for n, n_hidden in enumerate(n_hidden_list):
+            with tf.variable_scope(cell_type.upper() + '_' + str(n)):
+                if cell_type.lower() == 'lstm':
+                    units, _ = cudnn_bi_lstm(units, n_hidden)
+                elif cell_type.lower() == 'gru':
+                    units, _ = cudnn_bi_gru(units, n_hidden)
+                else:
+                    raise RuntimeError('Wrong cell type "{}"! Only "gru" and "lstm"!'.format(cell_type))
+                units = tf.concat(units, -1)
+                if intra_layer_dropout and n != len(n_hidden_list) - 1:
+                    units = variational_dropout(units, self._dropout_ph)
+            return units
+
+    def _build_rnn(self, units, n_hidden_list, cell_type, intra_layer_dropout):
+        for n, n_hidden in enumerate(n_hidden_list):
+            units, _ = bi_rnn(units, n_hidden, cell_type=cell_type, name='Layer_' + str(n))
+            units = tf.concat(units, -1)
+            if intra_layer_dropout and n != len(n_hidden_list) - 1:
+                units = variational_dropout(units, self._dropout_ph)
+        return units
+
+    def _build_cnn(self, units, n_hidden_list, cnn_filter_width, use_batch_norm):
+        units = stacked_cnn(units, n_hidden_list, cnn_filter_width, use_batch_norm, training_ph=self.training_ph)
+        return units
+
+    def _build_top(self, units, n_tags, n_hididden, top_dropout, two_dense_on_top):
+        if top_dropout:
+            units = variational_dropout(units, self._dropout_ph)
+        if two_dense_on_top:
+            units = tf.layers.dense(units, n_hididden, activation=tf.nn.relu,
+                                    kernel_initializer=INITIALIZER(),
+                                    kernel_regularizer=tf.nn.l2_loss)
+        logits = tf.layers.dense(units, n_tags, activation=None,
+                                 kernel_initializer=INITIALIZER(),
+                                 kernel_regularizer=tf.nn.l2_loss)
+        return logits
+
+    def _build_train_predict(self, logits, mask, n_tags, use_crf, clip_grad_norm, l2_reg):
         if use_crf:
-            sequence_lengths = tf.reduce_sum(mask_ph, axis=1)
-            log_likelihood, trainsition_params = tf.contrib.crf.crf_log_likelihood(logits,
-                                                                                   y_true,
-                                                                                   sequence_lengths)
+            sequence_lengths = tf.reduce_sum(mask, axis=1)
+            log_likelihood, transition_params = tf.contrib.crf.crf_log_likelihood(logits, self._y_ph, sequence_lengths)
             loss_tensor = -log_likelihood
-            predictions = None
+            self._transition_params = transition_params
         else:
-            ground_truth_labels = tf.one_hot(y_true, n_tags)
+            ground_truth_labels = tf.one_hot(self._y_ph, n_tags)
             loss_tensor = tf.nn.softmax_cross_entropy_with_logits(labels=ground_truth_labels, logits=logits)
-            loss_tensor = loss_tensor * mask_ph
-            predictions = tf.argmax(logits, axis=-1)
+            loss_tensor = loss_tensor * mask
+            self._y_pred = tf.argmax(logits, axis=-1)
 
         loss = tf.reduce_mean(loss_tensor)
 
-        # Initialize session
-        if sess is None:
-            sess = tf.Session()
-        if logging:
-            self.train_writer = tf.summary.FileWriter('summary', sess.graph)
-
-        self._token_embeddings_dim = token_embeddings_dim
-        self.token_vocab = word_vocab
-        self.tag_vocab = tag_vocab
-        self.char_vocab = char_vocab
-        self._use_crf = use_crf
-        self.summary = tf.summary.merge_all()
-        self._x_w = x_word
-        self._x_c = x_char
-        self._y_true = y_true
-        self._y_pred = predictions
-        self._x_cap = x_cap
-        if use_crf:
-            self._logits = logits
-            self._trainsition_params = trainsition_params
-            self._sequence_lengths = sequence_lengths
-        self._loss = loss
-        self._sess = sess
-        self._learning_rate_ph = learning_rate_ph
-        self._dropout = dropout_ph
-        self._loss_tensor = loss_tensor
-        self._use_dropout = True if embeddings_dropout or dense_dropout else None
-        self._training_ph = training_ph
-        self._logging = logging
-        self._train_op = self.get_train_op(loss, learning_rate_ph)
-        self._embedder = embedder
-        self.verbose = verbose
-        self._mask = mask_ph
-        self._use_capitalization = use_capitalization
-        sess.run(tf.global_variables_initializer())
-
-    def tokens_batch_to_numpy_batch(self, batch_x, batch_y=None):
-        # Determine dimensions
-        batch_size = len(batch_x)
-        max_utt_len = max([len(utt) for utt in batch_x] + [2])
-        max_token_len = max([len(token) for utt in batch_x for token in utt])
-        if self._embedder is None:
-            x_token = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_vocab['<PAD>']
+        # L2 regularization
+        if l2_reg > 0:
+            total_loss = loss + l2_reg * tf.reduce_mean(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
         else:
-            batch_x_lower = [[token.lower() for token in utterance] for utterance in batch_x]
-            x_token = np.zeros([batch_size, max_utt_len, self._token_embeddings_dim], dtype=np.float32)
-            x_token_list = self._embedder(batch_x_lower)
-            for n in range(len(batch_x)):
-                x_token[n, :len(x_token_list[n])] = x_token_list[n]
+            total_loss = loss
+        optimizer = partial(tf.train.MomentumOptimizer, momentum=0.9, use_nesterov=True)
+        # optimizer = tf.train.AdamOptimizer
+        train_op = self.get_train_op(total_loss, self.learning_rate_ph, optimizer, clip_norm=clip_grad_norm)
+        return train_op, loss
 
-        # Capital letter binary features
-        x_cap = np.zeros([batch_size, max_utt_len], dtype=np.float32)
+    def predict_no_crf(self, xs):
+        feed_dict = self._fill_feed_dict(xs)
+        pred_idxs, mask = self.sess.run([self._y_pred, self.mask_ph], feed_dict)
 
-        x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * self.char_vocab['<PAD>']
-        mask = np.zeros([batch_size, max_utt_len])
-        if batch_y is not None:
-            y = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.tag_vocab['<PAD>']
-        else:
-            y = None
+        # Filter by sequece length
+        sequence_lengths = np.sum(mask, axis=1).astype(np.int32)
+        pred = []
+        for utt, l in zip(pred_idxs, sequence_lengths):
+            pred.append(utt[:l])
+        return pred
 
-        # Prepare x batch
-        for n, utterance in enumerate(batch_x):
-            mask[n, :len(utterance)] = 1
-            capitalization_features = []
-            for tok in utterance:
-                if len(tok) > 0:
-                    capitalization_features.append(tok[0].isupper())
-                else:
-                    capitalization_features.append(False)
-            x_cap[n, :len(utterance)] = capitalization_features
-            if self._embedder is None:
-                x_token[n, :len(utterance)] = self.token_vocab.toks2idxs(utterance)
-            for k, token in enumerate(utterance):
-                x_char[n, k, :len(token)] = self.char_vocab.toks2idxs(token)
-
-        # Prepare y batch
-        if batch_y is not None:
-            for n, tags in enumerate(batch_y):
-                y[n, :len(tags)] = self.tag_vocab.toks2idxs(tags)
-
-        return (x_token, x_char, mask, x_cap), y
-
-    def eval_conll(self, data, print_results=True, short_report=True, data_type=None):
-        y_true_list = []
-        y_pred_list = []
-        if data_type is not None:
-            log.info('Eval on {}:'.format(data_type))
-        for x, y_gt in data:
-            (x_token, x_char, mask), y = self.tokens_batch_to_numpy_batch([x])
-            y_pred = self._predict(x_token, x_char, mask)
-            y_pred = self.tag_vocab.batch_idxs2batch_toks(y_pred)
-            for tags_pred, tags_gt in zip(y_pred, [y_gt]):
-                for tag_predicted, tag_ground_truth in zip(tags_pred, tags_gt):
-                    y_true_list.append(tag_ground_truth)
-                    y_pred_list.append(tag_predicted)
-                y_true_list.append('O')
-                y_pred_list.append('O')
-        return precision_recall_f1(y_true_list,
-                                   y_pred_list,
-                                   print_results,
-                                   short_report)
-
-    def train_on_batch(self, batch_x, batch_y, learning_rate=1e-3, dropout_rate=0.5):
-        (x_toks, x_char, mask, x_cap), y_tags = self.tokens_batch_to_numpy_batch(batch_x, batch_y)
-        feed_dict = self._fill_feed_dict(x_toks,
-                                         x_char,
-                                         mask,
-                                         x_cap,
-                                         y_tags,
-                                         learning_rate,
-                                         dropout_rate=dropout_rate,
-                                         training=True)
-        loss, _ = self._sess.run([self._loss, self._train_op], feed_dict=feed_dict)
-        return loss
-
-    def predict_on_batch(self, x_batch):
-        (x_toks, x_char, mask, capitalization), _ = self.tokens_batch_to_numpy_batch(x_batch)
-        y_pred = self._predict(x_toks, x_char, mask, capitalization)
-        # TODO: add padding filtering
-        y_pred_tags = self.tag_vocab.batch_idxs2batch_toks(y_pred)
-        return y_pred_tags
-
-    def _predict(self, x_word, x_char, mask=None, capitalization=None):
-
-        feed_dict = self._fill_feed_dict(x_word, x_char, mask, capitalization, training=False)
-        if self._use_crf:
-            y_pred = []
-            logits, trans_params, sequence_lengths = self._sess.run([self._logits,
-                                                                     self._trainsition_params,
-                                                                     self._sequence_lengths
-                                                                     ],
-                                                                    feed_dict=feed_dict)
-
-            # iterate over the sentences because no batching in viterbi_decode
-            for logit, sequence_length in zip(logits, sequence_lengths):
-                logit = logit[:int(sequence_length)]  # keep only the valid steps
-                viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(logit, trans_params)
-                y_pred += [viterbi_seq]
-        else:
-            y_pred = self._sess.run(self._y_pred, feed_dict=feed_dict)
+    def predict_crf(self, xs):
+        feed_dict = self._fill_feed_dict(xs)
+        logits, trans_params, mask = self.sess.run([self._logits,
+                                                    self._transition_params,
+                                                    self.mask_ph],
+                                                   feed_dict=feed_dict)
+        sequence_lengths = np.maximum(np.sum(mask, axis=1).astype(np.int32), 1)
+        # iterate over the sentences because no batching in viterbi_decode
+        y_pred = []
+        for logit, sequence_length in zip(logits, sequence_lengths):
+            logit = logit[:int(sequence_length)]  # keep only the valid steps
+            viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(logit, trans_params)
+            y_pred += [viterbi_seq]
         return y_pred
 
-    def fit(self, batch_gen=None, batch_size=32, learning_rate=1e-3, epochs=1, dropout_rate=0.5, learning_rate_decay=1):
-        for epoch in range(epochs):
-            count = 0
-            if self.verbose:
-                log.info('Epoch {}'.format(epoch))
-            if batch_gen is None:
-                batch_generator = self.corpus.batch_generator(batch_size, dataset_type='train')
-            for (x_word, x_char), y_tag in batch_generator:
-
-                feed_dict = self._fill_feed_dict(x_word,
-                                                 x_char,
-                                                 y_tag,
-                                                 learning_rate,
-                                                 dropout_rate=dropout_rate,
-                                                 training=True)
-                if self._logging:
-                    summary, _ = self._sess.run([self.summary, self._train_op], feed_dict=feed_dict)
-                    self.train_writer.add_summary(summary)
-
-                self._sess.run(self._train_op, feed_dict=feed_dict)
-                count += len(x_word)
-            if self.verbose:
-                self.eval_conll('valid', print_results=True)
-            self.save()
-
-        if self.verbose:
-            self.eval_conll(dataset_type='train', short_report=False)
-            self.eval_conll(dataset_type='valid', short_report=False)
-            results = self.eval_conll(dataset_type='test', short_report=False)
-        else:
-            results = self.eval_conll(dataset_type='test', short_report=True)
-        return results
-
-    def infer(self, instance, *args, **kwargs):
-        return self.predict_for_token_batch([instance])
-
-    def _fill_feed_dict(self,
-                        x_w,
-                        x_c,
-                        mask=None,
-                        capitalization=None,
-                        y_t=None,
-                        learning_rate=None,
-                        training=False,
-                        dropout_rate=1):
-        feed_dict = {}
-        feed_dict[self._x_w] = x_w
-        feed_dict[self._x_c] = x_c
-        feed_dict[self._training_ph] = training
-        if capitalization is None:
-            feed_dict[self._x_cap] = np.zeros(x_w.shape[:2])
-        else:
-            feed_dict[self._x_cap] = capitalization
-        if mask is not None:
-            feed_dict[self._mask] = mask
-        else:
-            feed_dict[self._mask] = np.ones(x_w.shape[:2])
-        if y_t is not None:
-            feed_dict[self._y_true] = y_t
+    def _fill_feed_dict(self, xs, y=None, learning_rate=None, train=False):
+        assert len(xs) == len(self._xs_ph_list)
+        xs = list(xs)
+        xs[0] = np.array(xs[0])
+        feed_dict = {ph: x for ph, x in zip(self._xs_ph_list, xs)}
+        if y is not None:
+            feed_dict[self._y_ph] = y
         if learning_rate is not None:
-            feed_dict[self._learning_rate_ph] = learning_rate
-        if self._use_dropout is not None and training:
-            feed_dict[self._dropout] = dropout_rate
-        else:
-            feed_dict[self._dropout] = 1.0
+            feed_dict[self.learning_rate_ph] = learning_rate
+        feed_dict[self.training_ph] = train
+        if not train:
+            feed_dict[self._dropout_ph] = 1.0
         return feed_dict
 
-    def eval_loss(self, data_generator):
-        num_tokens = 0
-        loss = 0
-        for (x_w, x_c), y_t in data_generator:
-            feed_dict = self._fill_feed_dict(x_w, x_c, y_t, training=False)
-            loss += np.sum(self._sess.run(self._loss_tensor, feed_dict=feed_dict))
-            num_tokens = np.sum(self._sess.run(self._sequence_lengths, feed_dict=feed_dict))
-        return loss / num_tokens
+    def __call__(self, *args, **kwargs):
+        if len(args[0]) == 0 or (len(args[0]) == 1 and len(args[0][0]) == 0):
+            return []
+        return self.predict(args)
 
-    @staticmethod
-    def get_trainable_variables(trainable_scope_names=None):
-        vars = tf.trainable_variables()
-        if trainable_scope_names is not None:
-            vars_to_train = []
-            for scope_name in trainable_scope_names:
-                for var in vars:
-                    if var.name.startswith(scope_name):
-                        vars_to_train.append(var)
-            return vars_to_train
-        else:
-            return vars
+    def train_on_batch(self, *args):
+        *xs, y = args
+        feed_dict = self._fill_feed_dict(xs, y, train=True)
+        self.sess.run(self.train_op, feed_dict)
 
-    def predict_for_token_batch(self, tokens_batch):
-        # Determine dimensions
-        batch_size = len(tokens_batch)
-        max_utt_len = max([len(utt) for utt in tokens_batch])
-        max_token_len = max([len(token) for utt in tokens_batch for token in utt])
-        # Prepare numpy arrays
-        x_token = np.ones([batch_size, max_utt_len], dtype=np.int32) * self.token_vocab['<PAD>']
-        x_char = np.ones([batch_size, max_utt_len, max_token_len], dtype=np.int32) * self.char_vocab['<PAD>']
-        mask = np.zeros([batch_size, max_utt_len], dtype=np.int32)
-        # Prepare x batch
-        for n, utterance in enumerate(tokens_batch):
-            mask[n, :len(utterance)] = 1
-            x_token[n, :len(utterance)] = self.token_vocab.toks2idxs(utterance)
-            for k, token in enumerate(utterance):
-                x_char[n, k, :len(token)] = self.char_vocab.toks2idxs(token)
-        feed_dict = self._fill_feed_dict(x_token, x_char, mask)
-        if self._use_crf:
-            y_pred = []
-            logits, trans_params, sequence_lengths = self._sess.run([self._logits,
-                                                                     self._trainsition_params,
-                                                                     self._sequence_lengths
-                                                                     ],
-                                                                    feed_dict=feed_dict)
-
-            # iterate over the sentences because no batching in viterbi_decode
-            for logit, sequence_length in zip(logits, sequence_lengths):
-                logit = logit[:int(sequence_length)]  # keep only the valid steps
-                viterbi_seq, viterbi_score = tf.contrib.crf.viterbi_decode(logit, trans_params)
-                y_pred += [viterbi_seq]
-        else:
-            y_pred = self._sess.run(self._y_pred, feed_dict)
-
-        return self.tag_vocab.batch_idxs2batch_toks(y_pred)
-
-    def shutdown(self):
-        self._sess.close()
-
-    def save(self, model_file_path):
-        """
-        Save model to model_file_path
-        """
-        saver = tf.train.Saver()
-        saver.save(self._sess, str(model_file_path))
-
-    def load(self, model_file_path):
-        """
-        Load model from the model_file_path
-        """
-        saver = tf.train.Saver()
-        saver.restore(self._sess, str(model_file_path))
-
-    def get_train_op(self, loss, learning_rate, learnable_scopes=None, optimizer=None):
-        """ Get train operation for given loss
-
-        Args:
-            loss: loss, tf tensor or scalar
-            learning_rate: scalar or placeholder
-            learnable_scopes: which scopes are trainable (None for all)
-            optimizer: instance of tf.train.Optimizer, default Adam
-
-        Returns:
-            train_op
-        """
-        variables = self.get_trainable_variables(learnable_scopes)
-        if optimizer is None:
-            optimizer = tf.train.AdamOptimizer
-
-        # For batch norm it is necessary to update running averages
-        extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        with tf.control_dependencies(extra_update_ops):
-            train_op = optimizer(learning_rate).minimize(loss, var_list=variables)
-        return train_op
