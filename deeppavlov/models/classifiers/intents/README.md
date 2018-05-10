@@ -39,15 +39,26 @@ This message contains two intents `(thankyou, bye)`.
 
 ## Download pre-trained model
 
+**DeepPavlov contains two pre-trained models for DSTC 2 dataset: one was trained using embeddings trained via fastText on DSTC 2 (800 Mb), and the other one was trained using embeddings trained on Wiki (https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md, 8.5 Gb).**
+
+**Two pre-trained models are presented to provide a choice for the user:**
+* **if one prefers to load pre-trained model only for ubderstanding the structure, one should use `configs/intents/intents_dstc2.json`,**
+* **if one prefers to load pre-trained model with significantly higher accuracy, one should be ready to download embedding file of 8.5 Gb and use `configs/intents/intents_dstc2_big.json`.**
+
 To download pre-trained models, vocabs, embeddings on DSTC 2 and SNIPS datasets one should run the following command:
 ```
 python deep.py download configs/intents/intents_dstc2.json
 ```
 or provide flag `-d` for commands like `interact`, `interactbot`, etc. The flag `-d` provides downloading all the required components.
 
+To download pre-trained models, vocabs, embeddings on Wiki and SNIPS datasets one should run the following command:
+```
+python deep.py download configs/intents/intents_dstc2_big.json
+```
+
 ## Infer from pre-trained model
 
-To use a pre-trained model for inference one should run the following command:
+To use a pre-trained model for inference one should run the following command (if one prefers model with bigger embedding file, one should use `configs/intents/intents_dstc2_big.json` instead of `configs/intents/intents_dstc2.json`):
 ```
 python deep.py interact configs/intents/intents_dstc2.json
 ```
@@ -58,15 +69,20 @@ python deep.py interactbot configs/intents/intents_dstc2.json -t <TELEGRAM_TOKEN
 For 'interactbot' mode one should specify a Telegram bot token in `-t` parameter or in the `TELEGRAM_TOKEN` 
 environment variable.
 
-
 Now user can enter a text string and get output of two elements: the first one is an array of classes names (intents) which 
 the string belongs to, and the second one is a dictionary with probability distribution among all the considered classes 
 (take into account that as the task is a multi-class classification then sum of probabilities is not equal to 1). 
 
-For example,
+An example of interacting the model from `configs/intents/intents_dstc2.json`
 ```
 :: hey! I want cheap restaurant
->> (array(['inform_pricerange'], dtype='<U18'), {'ack': 0.0037632342, 'affirm': 0.015555085, 'bye': 0.01632652, 'confirm_area': 0.0035079047, 'confirm_food': 0.008698707, 'confirm_pricerange': 0.0065926723, 'deny_food': 0.0033183943, 'deny_name': 0.0032175593, 'hello': 0.007443315, 'inform_area': 0.27942947, 'inform_food': 0.041211434, 'inform_name': 0.0039961785, 'inform_pricerange': 0.5754329, 'inform_this': 0.02203026, 'negate': 0.011796405, 'repeat': 0.0034341915, 'reqalts': 0.017215012, 'reqmore': 0.002996667, 'request_addr': 0.051311377, 'request_area': 0.013899523, 'request_food': 0.0136800865, 'request_phone': 0.055341706, 'request_postcode': 0.0116683375, 'request_pricerange': 0.015019255, 'request_signature': 0.0032681762, 'restart': 0.0035573517, 'thankyou': 0.02431963, 'unknown': 0.04280461})
+>> (array(['inform_pricerange'], dtype='<U17'), {'ack': 0.0040760376, 'affirm': 0.017633557, 'bye': 0.023906048, 'confirm_area': 0.0040424005, 'confirm_food': 0.012261569, 'confirm_pricerange': 0.007227284, 'deny_food': 0.003502861, 'deny_name': 0.003412795, 'hello': 0.0061915903, 'inform_area': 0.15999688, 'inform_food': 0.18303667, 'inform_name': 0.0042709936, 'inform_pricerange': 0.30197725, 'inform_this': 0.03864918, 'negate': 0.016452404, 'repeat': 0.003964727, 'reqalts': 0.026930325, 'reqmore': 0.0030793257, 'request_addr': 0.08075432, 'request_area': 0.018258458, 'request_food': 0.018060096, 'request_phone': 0.07433994, 'request_postcode': 0.012727374, 'request_pricerange': 0.024933394, 'request_signature': 0.0034591882, 'restart': 0.0038622846, 'thankyou': 0.036836267, 'unknown': 0.045310754})
+```
+and and example of interacting the model from `configs/intents/intents_dstc2_big.json`
+```
+::I want cheap chinese restaurant
+>> (array(['inform_food', 'inform_pricerange'], dtype='<U18'), {'ack': 0.008203662, 'affirm': 0.010941843, 'bye': 0.0058273915, 'confirm_area': 0.011861361, 'confirm_food': 0.017537124, 'confirm_pricerange': 0.012897875, 'deny_food': 0.009804511, 'deny_name': 0.008331243, 'hello': 0.009887574, 'inform_area': 0.009167877, 'inform_food': 0.9627541, 'inform_name': 0.008696462, 'inform_pricerange': 0.98613375, 'inform_this': 0.009358878, 'negate': 0.011380567, 'repeat': 0.00850759, 'reqalts': 0.012249454, 'reqmore': 0.008230184, 'request_addr': 0.006192594, 'request_area': 0.009336099, 'request_food': 0.008417402, 'request_phone': 0.004564096, 'request_postcode': 0.006752021, 'request_pricerange': 0.010917218, 'request_signature': 0.008601435, 'restart': 0.00838949, 'thankyou': 0.0060319724, 'unknown': 0.010502234})
+
 ```
 
 ## Train model
