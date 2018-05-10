@@ -123,8 +123,6 @@
               "bool": true
             }
           },
-          "GlobalMaxPooling1D": {
-          },
           "MaxPooling1D": {
             "pool_size": {
               "range": [
