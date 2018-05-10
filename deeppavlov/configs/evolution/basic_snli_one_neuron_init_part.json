@@ -69,7 +69,7 @@
             "units": {
               "range": [
                 50,
-                200
+                100
               ],
               "discrete": true
             },
@@ -86,7 +86,7 @@
             "filters": {
               "range": [
                 50,
-                500
+                100
               ],
               "discrete": true
             },
@@ -103,7 +103,7 @@
             "units": {
               "range": [
                 50,
-                200
+                100
               ],
               "discrete": true
             },
@@ -115,7 +115,7 @@
             "units": {
               "range": [
                 50,
-                200
+                100
               ],
               "discrete": true
             },
@@ -139,14 +139,14 @@
             "n_hidden": {
               "range": [
                 50,
-                200
+                100
               ],
               "discrete": true
             },
             "n_output_features": {
               "range": [
                 50,
-                200
+                100
               ],
               "discrete": true
             },
@@ -169,13 +169,13 @@
         "optimizer": "Adam",
         "lear_rate": {
           "range": [
-            0.001,
+            0.0001,
             0.1
           ]
         },
         "lear_rate_decay": {
           "range": [
-            0.00001,
+            0.000001,
             0.1
           ]
         },
@@ -202,8 +202,8 @@
     },
     "batch_size": {
       "range": [
-        50,
-        70
+        20,
+        50
       ],
       "discrete": true
     },
