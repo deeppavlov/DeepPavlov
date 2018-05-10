@@ -142,9 +142,8 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
         sequence_of_nodes = [sources]
 
         while True:
-            # unreal condition: if some sources are sinks
-            # if set(sinks).issubset(set(sum(sequence_of_nodes, []))):
-            #     break
+            if set(sinks).issubset(set(sum(sequence_of_nodes, []))):
+                break
             next_nodes = []
             # want to get list of nodes that can be initialized next
             for node_str_id in sequence_of_nodes[-1]:
@@ -207,7 +206,7 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
         # make it 2d using global max pooling
         if len(output.shape) == 3:
             output = GlobalMaxPooling1D()(output)
-        
+
         output = Dense(self.n_classes, activation=None)(output)
         activation = params.get("last_layer_activation", "sigmoid")
         act_output = Activation(activation)(output)
