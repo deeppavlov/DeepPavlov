@@ -18,32 +18,23 @@ from math import exp
 from pathlib import Path
 
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import tokenize_reg
 from deeppavlov.core.models.component import Component
+from deeppavlov.core.models.serializable import Serializable
 from overrides import overrides
 
 log = get_logger(__name__)
 
 
-@register('simple_slotfilling')
-class SlotFillingComponent(Component):
-    def __init__(self, **kwargs):
-        super().__init__()
-        self.threshold = kwargs.pop('threshold', 0.9)
-        save_path = kwargs.pop('save_path', "slots")
-        file_name = kwargs.pop('file_name', "slot_vals.json")
-        self.save_path = expand_path(save_path)
-        slot_vals_filepath = Path(self.save_path) / file_name
-
+@register('slotfill_raw')
+class SlotFillingComponent(Component, Serializable):
+    def __init__(self, threshold=0.7, **kwargs):
+        super().__init__(**kwargs)
+        self.threshold = threshold
         # self._slot_vals is the dictionary of slot values
-        try:
-            with open(slot_vals_filepath) as f:
-                self._slot_vals = json.load(f)
-        except IOError as ioe:
-            print(ioe)
-            self._slot_vals = {}
+        self._slot_vals = None
+        self.load()
 
     @overrides
     def __call__(self, batch, *args, **kwargs):
@@ -71,6 +62,14 @@ class SlotFillingComponent(Component):
         for entity, slot in zip(entities, slots):
             slot_values[slot] = entity
         return slot_values
+
+    def load(self, *args, **kwargs):
+        with open(self.load_path) as f:
+            self._slot_vals = json.load(f)
+
+    def save(self):
+        with open(self.save_path, 'w') as f:
+            json.dump(self._slot_vals, f)
 
 
 def _fuzzy_finder(slot_dict, tokens, threshold):

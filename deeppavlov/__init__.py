@@ -44,7 +44,6 @@ import deeppavlov.models.embedders.glove_embedder
 import deeppavlov.models.embedders.bow_embedder
 import deeppavlov.models.ner.slotfill
 import deeppavlov.models.ner.ner_ontonotes
-import deeppavlov.models.rule_based_slot_filler.slotfill
 import deeppavlov.models.spellers.error_model.error_model
 import deeppavlov.models.trackers.hcn_at
 import deeppavlov.models.trackers.hcn_et
@@ -75,6 +74,7 @@ import deeppavlov.models.preprocessors.capitalization
 import deeppavlov.models.preprocessors.field_getter
 import deeppavlov.models.preprocessors.sanitizer
 import deeppavlov.models.preprocessors.lazy_tokenizer
+import deeppavlov.models.slotfill.slotfill_raw
 
 
 import deeppavlov.metrics.accuracy
