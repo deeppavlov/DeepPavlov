@@ -71,8 +71,8 @@
         ],
         "main": true,
         "name": "evolution_classification_model",
-        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_two_texts",
-        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_two_texts",
+        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_many_inputs",
+        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_many_inputs",
         "classes": "#classes_vocab.keys()",
         "to_evolve": true,
         "basic_layers_params": {
@@ -187,7 +187,7 @@
         "loss": "binary_crossentropy",
         "text_size": 15,
         "last_layer_activation": "softmax",
-        "model_name": "evolution_two_texts_classification_model",
+        "model_name": "evolution_many_inputs_classification_model",
         "embedder": "#my_embedder",
         "tokenizer": "#my_tokenizer"
       }

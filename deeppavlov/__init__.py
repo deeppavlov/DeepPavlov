@@ -50,6 +50,7 @@ import deeppavlov.models.seq2seq_go_bot.network
 import deeppavlov.models.seq2seq_go_bot.kb
 import deeppavlov.models.classifiers.intents.intent_model
 import deeppavlov.models.evolution.evolution_intent_model
+import deeppavlov.models.evolution.evolution_many_inputs_model
 import deeppavlov.models.commutators.random_commutator
 import deeppavlov.models.embedders.fasttext_embedder
 import deeppavlov.models.embedders.dict_embedder
