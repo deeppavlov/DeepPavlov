@@ -140,54 +140,78 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
 
         edges_outputs = {}
 
-        sequence_of_nodes = []
-        sequence_of_nodes.append(sources)
+        # sequence_of_nodes is a list of lists.
+        # each element of sequence_of_nodes is a list that contains nodes (keras layers)
+        # that could be initialized when all nodes from previous lists are initialized
+        sequence_of_nodes = [sources]
 
         while True:
-            if set(sinks).issubset(set(sum(sequence_of_nodes, []))):
-                break
+            # unreal condition: if some sources are sinks
+            # if set(sinks).issubset(set(sum(sequence_of_nodes, []))):
+            #     break
             next_nodes = []
+            # want to get list of nodes that can be initialized next
             for node_str_id in sequence_of_nodes[-1]:
+                # for each node that were initialized on the previous step
+                # take output edges
                 out_edges = dg.out_edges(node_str_id)
                 for edge in out_edges:
+                    # for all output edge
+                    # collect nodes that are input nodes
+                    # for considered child of node_str_id (edge[1])
                     in_nodes_to_edge = [in_edge[0] for in_edge in dg.in_edges(edge[1])]
+                    # if for considered child all parents are already initialized
+                    # then add this node for initialization
                     if set(in_nodes_to_edge).issubset(set(sum(sequence_of_nodes, []))):
                         next_nodes.append(edge[1])
             sequence_of_nodes.append(next_nodes)
 
+        # make a list of ints from list of lists
         sequence_of_nodes = sum(sequence_of_nodes, [])
 
+        # now all nodes in sequence
+        # can be initialized consequently
         for node_str_id in sequence_of_nodes:
             if node_str_id in sources:
+                # if considered node is source,
+                # give embedded texts as input
                 edges_outputs[node_str_id] = self.get_node_output(node_str_id, dg, params, inp=inp)
             elif node_str_id in isolates:
+                # unreal condition
+                # if considered node is isolate,
+                # nothing to do
                 pass
             else:
+                # if considered node is not source and isolate,
+                # give all previous outputs as input
                 edges_outputs[node_str_id] = self.get_node_output(node_str_id, dg, params, edges_outputs=edges_outputs)
 
         if len(sinks) == 1:
+            # if the only sink,
+            # output is this sink's output
             output = edges_outputs[sinks[0]]
         else:
+            # if several sinks exist,
+            # outputs will be concatenated
             outputs = []
+            # collect outputs
             for sink in sinks:
                 outputs.append(edges_outputs[sink])
             try:
                 output = Concatenate()(outputs)
             except ValueError:
-                time_steps = []
-                features = []
+                # outputs are of 2d and 3d shapes
+                # make them all 2d and concatenate
                 for i in range(len(outputs)):
-                    if len(K.int_shape(outputs[i])) == 2:
-                        outputs[i] = Lambda(lambda x: expand_tile(x, axis=1))(outputs[i])
-                    time_steps.append(K.int_shape(outputs[i])[1])
-                    features.append(K.int_shape(outputs[i])[2])
-                new_feature_shape = max(features)
-                for i in range(len(outputs)):
-                    outputs[i] = Dense(new_feature_shape)(outputs[i])
+                    if len(K.int_shape(outputs[i])) == 3:
+                        outputs[i] = GlobalMaxPooling1D()(outputs[i])
                 output = Concatenate(axis=1)(outputs)
 
+        # if concatenated output is of 3d shape
+        # make it 2d using global max pooling
         if len(output.shape) == 3:
             output = GlobalMaxPooling1D()(output)
+        
         output = Dense(self.n_classes, activation=None)(output)
         activation = params.get("last_layer_activation", "sigmoid")
         act_output = Activation(activation)(output)
