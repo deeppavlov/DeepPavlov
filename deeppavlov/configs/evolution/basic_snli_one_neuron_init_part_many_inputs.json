@@ -70,7 +70,7 @@
           "y_probas_dict"
         ],
         "main": true,
-        "name": "evolution_classification_model",
+        "name": "evolution_many_inputs_classification_model",
         "save_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_many_inputs",
         "load_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_many_inputs",
         "classes": "#classes_vocab.keys()",
