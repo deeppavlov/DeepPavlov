@@ -99,3 +99,24 @@ def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, 
     attended_units = Lambda(lambda x: K.sum(x, axis=2))(mult)
     output = Dense(n_output_features, activation=activation)(attended_units)
     return output
+
+
+def multiplicative_self_attention_init(n_hidden, n_output_features, activation):
+    layers = {}
+    layers["queries"] = Dense(n_hidden)
+    layers["keys"] = Dense(n_hidden)
+    layers["output"] = Dense(n_output_features, activation=activation)
+    return layers
+
+
+def multiplicative_self_attention_get_output(units, layers):
+    exp1 = Lambda(lambda x: expand_tile(x, axis=1))(units)
+    exp2 = Lambda(lambda x: expand_tile(x, axis=2))(units)
+    queries = layers["queries"](exp1)
+    keys = layers["keys"](exp2)
+    scores = Lambda(lambda x: K.sum(queries * x, axis=3, keepdims=True))(keys)
+    attention = Lambda(lambda x: softvaxaxis2(x))(scores)
+    mult = Multiply()([attention, exp1])
+    attended_units = Lambda(lambda x: K.sum(x, axis=2))(mult)
+    output = layers["output"](attended_units)
+    return output
