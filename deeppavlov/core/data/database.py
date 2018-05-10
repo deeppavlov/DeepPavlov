@@ -45,9 +45,11 @@ class Sqlite3Database(Estimator):
         self.conn = sqlite3.connect(str(self.save_path))
         self.cursor = self.conn.cursor()
         if self._check_if_table_exists():
-            log.info("Loaded database from {}.".format(self.save_path))
+            log.info("Loading database from {}.".format(self.save_path))
+            if not self.keys:
+                self.keys = self._get_keys()
         else:
-            log.info("Initialized empty database from {}.".format(self.save_path))
+            log.info("Initializing empty database on {}.".format(self.save_path))
 
     def __call__(self, batch: List[Dict],
                  order_by: str = None,
