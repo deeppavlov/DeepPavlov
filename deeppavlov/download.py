@@ -152,7 +152,7 @@ def download_resources(args):
         download_resource(resource, download_path)
 
 
-def main(args=None):
+def deep_download(args=None):
     args = parser.parse_args(args)
     log.info("Downloading...")
     download_resources(args)
@@ -160,4 +160,4 @@ def main(args=None):
 
 
 if __name__ == "__main__":
-    main()
+    deep_download()

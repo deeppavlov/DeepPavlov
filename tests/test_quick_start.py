@@ -6,7 +6,7 @@ import shutil
 import pytest
 import pexpect
 
-from deeppavlov.download import main as deep_download
+from deeppavlov.download import deep_download
 
 tests_dir = Path(__file__, '..').resolve()
 test_configs_path = tests_dir / "deeppavlov" / "configs"

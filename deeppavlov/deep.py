@@ -25,7 +25,7 @@ sys.path.append(str(p))
 from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.infer import interact_model, predict_on_stream
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.download import main as deep_download
+from deeppavlov.download import deep_download
 from utils.telegram_utils.telegram_ui import interact_model_by_telegram
 from utils.server_utils.server import start_model_server
 
