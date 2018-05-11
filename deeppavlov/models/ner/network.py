@@ -49,7 +49,11 @@ class NerNetwork(TFModel):
                  clip_grad_norm=5.0,
                  learning_rate=3e-3,
                  gpu=None,
+                 seed=42,
                  **kwargs):
+        tf.set_random_seed(seed)
+        np.random.seed(seed)
+        self._learning_rate = learning_rate
         self._add_training_placeholders(dropout_keep_prob, learning_rate)
         self._xs_ph_list = []
         self._y_ph = tf.placeholder(tf.int32, [None, None], name='y_ph')
