@@ -61,7 +61,13 @@ Here is a simple example of interaction with a trained dialogue bot (can be down
 * `name` always equals to `"go_bot"`
 * `template_path` — map from actions to text templates for response generation
 * `use_action_mask` — in case of true, action mask is applied to network output _(False, by default)_
-* `db_result_during_interaction` – dict (or `null`) that will be observation's `"db_result"` value during interaction (when database is not available) _(optional)_
+* `database` –  database that will be used during model inference to make "api_call" action and get `db_result` _(optional)_
+   * `name` — `"sql_database"` from [`deeppavlov.core.data.database:Sqlite3Database`](../../core/data/database.py) or your implementation
+   * `table_name` – sqlite table name
+   * `primary_keys` – list of primary table keys' names
+   * `keys` – ordered list of tabke key names, if not set will be infered from loaded database automatically _(optional, reccomended not to be used)_
+   * `unknown_value` – value used to fill unknown column values (defaults to `"UNK"`) _(optional)_
+   * `save_path` – path to database filename (will load to it, and save to it)
 * `word_vocab` — vocabulary of tokens from context utterances
    * `name` — `"default_vocab"` (for vocabulary's implementation see [`deeppavlov.core.data.vocab`](../../core/data/vocab.py))
    * `level` — `"token"`,
@@ -83,8 +89,13 @@ Here is a simple example of interaction with a trained dialogue bot (can be down
 * `network_parameters` — parameters for reccurent network that handles dialogue policy management
    * `save_path` — name of the file that the model will be saved to
    * `load_path` — name of the file that the model will be loaded from
+   * `optimizer` – name of tf.train.Optimizer subclass, defaults to `"AdamOptimizer"` _(optional)_
    * `learning_rate` — learning rate during training
-   * `dropout_rate` — rate for dropout layer applied to input features
+   * `end_learning_rate` — if set, learning rate starts from `learning rate` value and decays polynomially to value of `end_learning_rate` _(optional)_
+   * `decay_steps` – number of steps for learning rate to decay, defaults to 1000 _(optional)_
+   * `decay_power` – power used to calculate learning rate decay for polynomial strategy, defaults to 1.0 _(optional)_
+   * `dropout_rate` — keep probability for dropout layer applied to input features, defaults to 1.0 _(optional)_
+   * `l2_reg_coef` – l2 regularization coeffitient (applied to input and output layer), defaults to 0.0 _(optional)_
    * `hidden_dim` — hidden state dimension
    * `dense_size` — LSTM input size
    * `obs_size` — input features size (must be set to number of `bow_embedder` features, `embedder` features, `intent_classifier` features, context features(=2) plus `tracker` state size plus action size), will be calculated automatically if not set _(optional)_
