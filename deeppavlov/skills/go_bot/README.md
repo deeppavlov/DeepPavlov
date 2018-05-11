@@ -44,7 +44,7 @@ Here is a simple example of interaction with a trained dialogue bot (can be down
 2. (_optional, but recommended_) pretrained intents classifier model 
    * config [`deeppavlov/configs/intents/intents_dstc2.json`](../../configs/intents/intents_dstc2.json) is recommended
 3. (_optional_) downloaded english fasttext embeddings trained on wiki ([https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip](https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip))
-   * fasttext embeddings can loaded via `python3 deeppavlov/download.py --all`
+   * fasttext embeddings can loaded via `python3 deeppavlov/download.py -all`
    * you can use any english embeddings of your choice, but edit go_bot config accordingly
    
 **TO INFER** from a go_bot model you should **additionaly** have:
@@ -125,7 +125,20 @@ A full model (with fasttext embeddings) configuration is in [`deeeppavlov/config
 The best state-of-the-art model (with attention mechanism, relies on `embedder` and does not use bag-of-words) is configured in [`deeeppavlov/configs/go_bot/gobot_dstc2_best.json`](../../configs/go_bot/gobot_dstc2_best.json).
 
 #### Usage example
-* To infer from a pretrained model with config path equal to `path/to/config.json`:
+
+Available **pretrained for DSTC2 dataset** models:
+
+  * model for [`deeppavlov/configs/go_bot/gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json)
+  * model for [`deeppavlov/configs/go_bot/gobot_dstc2_best.json`](../../configs/go_bot/gobot_dstc2_best.json)
+  
+To use pretrained model you should firstly **download it** (if you haven't done it already by `python3 deeppavlov/download.py -all`):
+
+```bash
+cd deeppavlov
+python3 deep.py interact path/to/config.json -d
+```
+
+To infer from a pretrained model with config path equal to `path/to/config.json`:
 
 ```python
 from deeppavlov.core.commands.infer import build_model_from_config
@@ -140,7 +153,7 @@ while utterance != 'exit':
     utterance = input(':: ')
 ```
 
-* To interact via command line use [`deeppavlov/deep.py`](../../deep.py) script:
+To interact via command line use [`deeppavlov/deep.py`](../../deep.py) script:
 
 ```bash
 cd deeppavlov
@@ -148,6 +161,15 @@ python3 deep.py interact path/to/config.json
 ```
 
 ## Training
+
+To train model with config path `path/to/config.json` you should firstly **download** all the needed data (if you haven't done it already by `python3 deeppavlov/download.py -all`):
+
+```bash
+cd deeppavlov
+python3 deep.py train path/to/config.json -d
+```
+
+The script will download needed data (dataset, embeddings) for the particular model.
 
 #### Config parameters
 To be used for training, your config json file should include parameters:
