@@ -38,7 +38,7 @@ Here is a simple example of interaction with a trained dialogue bot (can be down
 
 #### Requirements
 
-To use a go_bot model you should have:
+**TO TRAIN** a go_bot model you should have:
 1. (_optional, but recommended_) pretrained named entity recognition model (NER) 
    * config [`deeppavlov/configs/ner/ner_dstc2.json`](../../configs/ner/ner_dstc2.json) is recommended
 2. (_optional, but recommended_) pretrained intents classifier model 
@@ -46,9 +46,12 @@ To use a go_bot model you should have:
 3. (_optional_) downloaded english fasttext embeddings trained on wiki ([https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip](https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip))
    * fasttext embeddings can loaded via `python3 deeppavlov/download.py --all`
    * you can use any english embeddings of your choice, but edit go_bot config accordingly
+   
+**TO INFER** from a go_bot model you should **additionaly** have:
+
 4. pretrained vocabulary of dataset utterance tokens
-   * it can be trained alongside go_bot model
-4. pretrained goal-oriented bot model itself 
+   * it is trained in the same config as go_bot model
+5. pretrained goal-oriented bot model itself 
    * config [`deeppavlov/configs/go_bot/gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json) is recommended
    * `slot_filler` section of go_bot's config should match NER's configuration
    * `intent_classifier` section of go_bot's config should match classifier's configuration
@@ -91,9 +94,9 @@ To use a go_bot model you should have:
    * `attention_mechanism.hidden_size` – attention hidden state size
    * `attention_mechanism.max_num_tokens` – maximum number of input tokens used in attentio
    * `attention_mechanism.depth` – number of averages used in constrained attentions (`"cs_bahdanau"` or `"cs_general"`)
-   * `attention_mechanism.action_as_key` – whether to use action from previous timestep as key to attention (defaults to `false`) _(optional)_
-   * `attention_mechanism.intent_as_key` – whether to use utterance intents as key to attention (defaults to `false`) _(optional)_
-   * `attention_mechanism.projected_align` – whether to use output projection (defaults to `false`) _(optional)_
+   * `attention_mechanism.action_as_key` – whether to use action from previous timestep as key to attention (defaults to `false`) _(optional)_
+   * `attention_mechanism.intent_as_key` – whether to use utterance intents as key to attention (defaults to `false`) _(optional)_
+   * `attention_mechanism.projected_align` – whether to use output projection (defaults to `false`) _(optional)_
 * `slot_filler` — model that predicts slot values for a given utterance
    * `name` — slot filler name (`"dstc_slotfilling"` recommended, for implementation see [`deeppavlov.models.ner`](../../models/ner))
    * other slot filler arguments
@@ -139,8 +142,8 @@ python3 deep.py interact path/to/config.json
 To be used for training, your config json file should include parameters:
 
 * `dataset_reader`
-   * `name` — `"your_reader_here"` for a custom dataset or `"dstc2_datasetreader"` to use DSTC2 (for implementation see [`deeppavlov.dataset_readers.dstc2_dataset_reader`](../../dataset_readers/dstc2_dataset_reader.py))
-   * `data_path` — a path to a dataset file, which in case of `"dstc2_datasetreader"` will be automatically downloaded from 
+   * `name` — `"your_reader_here"` for a custom dataset or `"dstc2_reader"` to use DSTC2 (for implementation see [`deeppavlov.dataset_readers.dstc2_reader`](../../dataset_readers/dstc2_reader.py))
+   * `data_path` — a path to a dataset file, which in case of `"dstc2_reader"` will be automatically downloaded from 
    internet and placed to `data_path` directory
 * `dataset_iterator` — it should always be set to `{"name": "dialog_iterator"}` (for implementation see [`deeppavlov.dataset_iterators.dialog_iterator.py`](../../dataset_iterators/dialog_iterator.py))
 
@@ -169,20 +172,20 @@ The Hybrid Code Network model was trained and evaluated on a modification of a d
     * unified punctuation for bot responses'
 
 #### Your data
-If your model uses DSTC2 and relies on `dstc2_datasetreader` [`DatasetReader`](../../core/data/dataset_reader.py), all needed files, if not present in the `dataset_reader.data_path` directory, will be downloaded from internet.
+If your model uses DSTC2 and relies on `dstc2_reader` [`DSTC2DatasetReader`](../../dataset_readers/dstc2_reader.py), all needed files, if not present in the `dataset_reader.data_path` directory, will be downloaded from internet.
 
 If your model needs to be trained on different data, you have several ways of achieving that (sorted by increase in the amount of code):
 
-1. Use `"dialog_iterator"` in dataset iterator config section and `"dstc2_datasetreader"` in dataset reader config section (**the simplest, but not the best way**):
+1. Use `"dialog_iterator"` in dataset iterator config section and `"dstc2_reader"` in dataset reader config section (**the simplest, but not the best way**):
     * set `dataset_iterator.data_path` to your data directory;
-    * your data files should have the same format as expected in [`deeppavlov.dataset_readers.dstc2_dataset_reader:DSTC2DatasetReader.read()`](../../dataset_readers/dstc2_dataset_reader.py) function.
+    * your data files should have the same format as expected in [`deeppavlov.dataset_readers.dstc2_reader:DSTC2DatasetReader.read()`](../../dataset_readers/dstc2_reader.py) function.
 
 2. Use `"dialog_iterator"` in dataset iterator config section and `"your_dataset_reader"` in dataset reader config section (**recommended**): 
-    * clone [`deeppavlov.dataset_readers.dstc2_dataset_reader:DSTC2DatasetReader`](../../dataset_readers/dstc2_dataset_reader.py) to `YourDatasetReader`;
+    * clone [`deeppavlov.dataset_readers.dstc2_reader:DSTC2DatasetReader`](../../dataset_readers/dstc2_reader.py) to `YourDatasetReader`;
     * register as `"your_dataset_reader"`;
     * rewrite so that it implements the same interface as the origin. Particularly, `YourDatasetReader.read()` must have the same output as `DSTC2DatasetReader.read()`:
       * `train` — training dialog turns consisting of tuples:
-         * first tuple element contains first user's utterance info
+         * first tuple element contains first user's utterance info (as dict with the following fields):
             * `text` — utterance string
             * `intents` — list of string intents, associated with user's utterance
             * `db_result` — a database response _(optional)_
@@ -192,24 +195,22 @@ If your model needs to be trained on different data, you have several ways of ac
             * `act` — an act, associated with the user's utterance
       * `valid` — validation dialog turns in the same format
       * `test` — test dialog turns in the same format
-      
-#TODO: change str `act` to a list of `acts`
 
 3. Use your own dataset iterator and dataset reader (**if 2. doesn't work for you**):
-    * your `YourDatasetIterator.iter()` class method output should match the input format for chainer from [`configs/go_bot/gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json).
+    * your `YourDatasetIterator.gen_batches()` class method output should match the input format for chainer from [`configs/go_bot/gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json).
 
 ## Comparison
 As far as our dataset is a modified version of official DSTC2-dataset [[2]](#references), resulting metrics can't be compared with evaluations on the original dataset.
 
 But comparisons for bot model modifications trained on out DSTC2-dataset are presented:
 
-|                   Model                      | Config      |  Test action accuracy   |  Test turn accuracy  |
-|----------------------------------------------|-------------|-------------------------|----------------------|
-|basic bot			                               | [`gobot_dstc2_minimal.json`](../../configs/go_bot/gobot_dstc2_minimal.json) | 0.5271             |     0.4853           |
-|bot with slot filler & fasttext embeddings    |        |      0.5305             |     0.5147           |
-|bot with slot filler & intents                | [`gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json)                 |   0.5436         |     0.5261       |
-|bot with slot filler & intents & embeddings   | [`gobot_dstc2_all.json`](../../configs/go_bot/gobot_dstc2_all.json)         |      0.5307             |     0.5145           |
-|bot with slot filler & embeddings & attention   | [`gobot_dstc2_best.json`](../../configs/go_bot/gobot_dstc2_best.json)         |      **0.5921**             |     **0.5805**           |
+|                   Model                      | Config      |  Test turn textual accuracy  |
+|----------------------------------------------|-------------|----------------------|
+|basic bot			                               | [`gobot_dstc2_minimal.json`](../../configs/go_bot/gobot_dstc2_minimal.json) |   0.4853           |
+|bot with slot filler & fasttext embeddings    |        |    0.5147           |
+|bot with slot filler & intents                | [`gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json)                 |     0.5261       |
+|bot with slot filler & intents & embeddings   | [`gobot_dstc2_all.json`](../../configs/go_bot/gobot_dstc2_all.json)         |     0.5145           |
+|bot with slot filler & embeddings & attention   | [`gobot_dstc2_best.json`](../../configs/go_bot/gobot_dstc2_best.json)         |     **0.5805**           |
 
 #TODO: add dialog accuracies
 
