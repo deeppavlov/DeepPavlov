@@ -3,12 +3,14 @@ import tensorflow as tf
 from functools import partial
 
 from deeppavlov.core.layers.tf_layers import embedding_layer, character_embedding_network, variational_dropout
-from deeppavlov.core.layers.tf_layers import cudnn_bi_lstm, cudnn_bi_gru, bi_rnn, stacked_cnn
+from deeppavlov.core.layers.tf_layers import cudnn_bi_lstm, cudnn_bi_gru, bi_rnn, stacked_cnn, INITIALIZER
 from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.core.common.check_gpu import check_gpu_existance
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.common.log import get_logger
 
-INITIALIZER = tf.orthogonal_initializer
+
+log = get_logger(__name__)
 
 
 @register('ner')
