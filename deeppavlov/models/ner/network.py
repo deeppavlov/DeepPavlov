@@ -95,9 +95,9 @@ class NerNetwork(TFModel):
             if use_cudnn_rnn:
                 if l2_reg > 0:
                     raise Warning('cuDNN RNN are not l2 regularizable')
-                units = self._build_cudnn_rnn(features, n_hidden_list, cell_type, intra_layer_dropout)
+                units = self._build_cudnn_rnn(features, n_hidden_list, cell_type, intra_layer_dropout, self.mask_ph)
             else:
-                units = self._build_rnn(features, n_hidden_list, cell_type, intra_layer_dropout)
+                units = self._build_rnn(features, n_hidden_list, cell_type, intra_layer_dropout, self.mask_ph,)
         elif net_type == 'cnn':
             units = self._build_cnn(features, n_hidden_list, cnn_filter_width, use_batch_norm)
         self._logits = self._build_top(units, n_tags, n_hidden_list[-1], top_dropout, two_dense_on_top)
@@ -160,16 +160,16 @@ class NerNetwork(TFModel):
             self._xs_ph_list.append(feat_ph)
             self._input_features.append(feat_ph)
 
-    def _build_cudnn_rnn(self, units, n_hidden_list, cell_type, intra_layer_dropout):
+    def _build_cudnn_rnn(self, units, n_hidden_list, cell_type, intra_layer_dropout, mask):
         if not check_gpu_existance():
             raise RuntimeError('Usage of cuDNN RNN layers require GPU along with cuDNN library')
-
+        sequence_lengths = tf.to_int32(tf.reduce_sum(mask, axis=1))
         for n, n_hidden in enumerate(n_hidden_list):
             with tf.variable_scope(cell_type.upper() + '_' + str(n)):
                 if cell_type.lower() == 'lstm':
-                    units, _ = cudnn_bi_lstm(units, n_hidden)
+                    units, _ = cudnn_bi_lstm(units, n_hidden, sequence_lengths)
                 elif cell_type.lower() == 'gru':
-                    units, _ = cudnn_bi_gru(units, n_hidden)
+                    units, _ = cudnn_bi_gru(units, n_hidden, sequence_lengths)
                 else:
                     raise RuntimeError('Wrong cell type "{}"! Only "gru" and "lstm"!'.format(cell_type))
                 units = tf.concat(units, -1)
@@ -217,11 +217,11 @@ class NerNetwork(TFModel):
 
         # L2 regularization
         if l2_reg > 0:
-            total_loss = loss + l2_reg * tf.reduce_mean(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
+            total_loss = loss + l2_reg * tf.reduce_sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
         else:
             total_loss = loss
-        optimizer = partial(tf.train.MomentumOptimizer, momentum=0.9, use_nesterov=True)
-        # optimizer = tf.train.AdamOptimizer
+        # optimizer = partial(tf.train.MomentumOptimizer, momentum=0.9, use_nesterov=True)
+        optimizer = tf.train.AdamOptimizer
         train_op = self.get_train_op(total_loss, self.learning_rate_ph, optimizer, clip_norm=clip_grad_norm)
         return train_op, loss
 
