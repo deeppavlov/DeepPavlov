@@ -149,14 +149,13 @@ class NerNetwork(TFModel):
         self._input_features.append(capitalization_ph)
 
     def _add_pos(self, pos_features_dim):
-        pos_ph = tf.placeholder(tf.int32, [None, None], name='POS_ph')
-        pos = tf.one_hot(pos_ph, pos_features_dim, dtype=tf.float32)
+        pos_ph = tf.placeholder(tf.float32, [None, None, pos_features_dim], name='POS_ph')
         self._xs_ph_list.append(pos_ph)
-        self._input_features.append(pos)
+        self._input_features.append(pos_ph)
 
     def _add_additional_features(self, features_list):
         for feature, dim in features_list:
-            feat_ph = tf.placeholder(tf.int32, [None, None, dim], name=feature + '_ph')
+            feat_ph = tf.placeholder(tf.float32, [None, None, dim], name=feature + '_ph')
             self._xs_ph_list.append(feat_ph)
             self._input_features.append(feat_ph)
 
