@@ -271,6 +271,24 @@ class NerNetwork(TFModel):
 
     def train_on_batch(self, *args):
         *xs, y = args
-        feed_dict = self._fill_feed_dict(xs, y, train=True)
+        feed_dict = self._fill_feed_dict(xs, y, train=True, learning_rate=self._learning_rate)
         self.sess.run(self.train_op, feed_dict)
 
+    def process_event(self, event_name, data):
+        if event_name == 'after_validation':
+            if not hasattr(self, '_best_f1'):
+                self._best_f1 = 0
+            if not hasattr(self, '_impatience'):
+                self._impatience = 0
+            if data['metrics']['ner_f1'] > self._best_f1:
+                self._best_f1 = data['metrics']['ner_f1']
+                self._impatience = 0
+            else:
+                self._impatience += 1
+
+            if self._impatience > 4:
+                self._impatience = 0
+                log.info('Dropping learning rate from {:.1e} to {:.1e}'.format(self._learning_rate,
+                                                                               self._learning_rate / 10))
+                self.load()
+                self._learning_rate /= 10
