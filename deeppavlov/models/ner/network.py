@@ -62,14 +62,14 @@ class NerNetwork(TFModel):
         # ================ Building input features =================
 
         # Token embeddings
-        self._add_word_embeddings(token_emb_mat, embeddings_dropout, token_emb_dim)
+        self._add_word_embeddings(token_emb_mat, token_emb_dim)
 
         # Masks for different lengths utterances
         self.mask_ph = self._add_mask()
 
         # Char embeddings using highway CNN with max pooling
         if char_emb_mat is not None and char_emb_dim is not None:
-            self._add_char_embeddings(char_emb_mat, embeddings_dropout)
+            self._add_char_embeddings(char_emb_mat)
 
         # Capitalization features
         if capitalization_dim is not None:
@@ -84,6 +84,8 @@ class NerNetwork(TFModel):
             self._add_additional_features(additional_features)
 
         features = tf.concat(self._input_features, axis=2)
+        if embeddings_dropout:
+            features = variational_dropout(features, self._dropout_ph)
 
         # ================== Building the network ==================
 
@@ -118,15 +120,13 @@ class NerNetwork(TFModel):
         self._dropout_ph = tf.placeholder_with_default(dropout_keep_prob, shape=[], name='dropout')
         self.training_ph = tf.placeholder_with_default(False, shape=[], name='is_training')
 
-    def _add_word_embeddings(self, token_emb_mat, embeddings_dropout, token_emb_dim=None):
+    def _add_word_embeddings(self, token_emb_mat, token_emb_dim=None):
         if token_emb_mat is None:
             token_ph = tf.placeholder(tf.float32, [None, None, token_emb_dim], name='Token_Ind_ph')
             emb = token_ph
         else:
             token_ph = tf.placeholder(tf.int32, [None, None], name='Token_Ind_ph')
             emb = embedding_layer(token_ph, token_emb_mat)
-        if embeddings_dropout:
-            emb = tf.layers.dropout(emb, self._dropout_ph, noise_shape=[tf.shape(emb)[0], 1, tf.shape(emb)[2]])
         self._xs_ph_list.append(token_ph)
         self._input_features.append(emb)
 
@@ -135,10 +135,9 @@ class NerNetwork(TFModel):
         self._xs_ph_list.append(mask_ph)
         return mask_ph
 
-    def _add_char_embeddings(self, char_emb_mat, embeddings_dropout):
+    def _add_char_embeddings(self, char_emb_mat):
         character_indices_ph = tf.placeholder(tf.int32, [None, None, None], name='Char_ph')
         char_embs = character_embedding_network(character_indices_ph, emb_mat=char_emb_mat)
-        char_embs = variational_dropout(char_embs, embeddings_dropout)
         self._xs_ph_list.append(character_indices_ph)
         self._input_features.append(char_embs)
 
