@@ -25,9 +25,25 @@ from deeppavlov.core.common.registry import register
 class OntonotesReader(DatasetReader):
     URL = 'http://lnsigo.mipt.ru/export/datasets/ontonotes_senna.pckl'
 
-    def read(self, data_path, file_name: str='ontonotes_senna.pckl', provide_pos=True):
+    def read(self, data_path, file_name: str='ontonotes_senna.pckl', provide_senna_pos=False, provide_senna_ner=False):
         path = Path(data_path).resolve() / file_name
         if not path.exists():
             download_decompress(self.URL, str(path.parent))
         with open(path, 'rb') as f:
-            return pickle.load(f)
+            dataset = pickle.load(f)
+
+        dataset_filtered = {}
+        for key, data in dataset.items():
+            dataset_filtered[key] = []
+            for (toks, pos, ner), tags in data:
+                if not provide_senna_pos and not provide_senna_ner:
+                    dataset_filtered[key].append((toks, tags))
+                else:
+                    x = [toks]
+                    if provide_senna_pos:
+                        x.append(pos)
+                    if provide_senna_ner:
+                        x.append(ner)
+                    dataset_filtered[key].append((x, tags))
+
+        return dataset_filtered
