@@ -108,6 +108,7 @@ class GoalOrientedBotNetwork(TFModel):
         self.opt['decay_steps'] = params.get('decay_steps', 1000)
         self.opt['decay_power'] = params.get('decay_power', 1.)
         self.opt['l2_reg_coef'] = params.get('l2_reg_coef', 0.)
+        self.opt['optimizer'] = params.get('optimizer', 'AdamOptimizer')
 
         self.learning_rate = self.opt['learning_rate']
         self.end_learning_rate = self.opt['end_learning_rate']
@@ -119,6 +120,13 @@ class GoalOrientedBotNetwork(TFModel):
         self.obs_size = self.opt['obs_size']
         self.dense_size = self.opt['dense_size']
         self.l2_reg = self.opt['l2_reg_coef']
+
+        self._optimizer = None
+        if hasattr(tf.train, self.opt['optimizer']):
+            self._optimizer = getattr(tf.train, self.opt['optimizer'])
+        if not issubclass(self._optimizer, tf.train.Optimizer):
+            raise ConfigError("`optimizer` parameter should be a name of"
+                              " tf.train.Optimizer subclass")
 
         attn = params.get('attention_mechanism')
         if attn:
@@ -160,8 +168,10 @@ class GoalOrientedBotNetwork(TFModel):
         # _loss_tensor = tf.multiply(_loss_tensor, self._utterance_mask)
         self._loss = tf.reduce_mean(_loss_tensor, name='loss')
         self._loss += self.l2_reg * tf.losses.get_regularization_loss()
-        self._train_op = \
-            self.get_train_op(self._loss, self._learning_rate, clip_norm=2.)
+        self._train_op = self.get_train_op(self._loss,
+                                           learning_rate=self._learning_rate,
+                                           optimizer=self._optimizer,
+                                           clip_norm=2.)
 
     def _add_placeholders(self):
         self._dropout = tf.placeholder_with_default(1.0,
