@@ -216,12 +216,11 @@ class NerNetwork(TFModel):
 
         # L2 regularization
         if l2_reg > 0:
-            total_loss = loss + l2_reg * tf.reduce_sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
-        else:
-            total_loss = loss
+            loss += l2_reg * tf.reduce_sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
+
         # optimizer = partial(tf.train.MomentumOptimizer, momentum=0.9, use_nesterov=True)
         optimizer = tf.train.AdamOptimizer
-        train_op = self.get_train_op(total_loss, self.learning_rate_ph, optimizer, clip_norm=clip_grad_norm)
+        train_op = self.get_train_op(loss, self.learning_rate_ph, optimizer, clip_norm=clip_grad_norm)
         return train_op, loss
 
     def predict_no_crf(self, xs):
