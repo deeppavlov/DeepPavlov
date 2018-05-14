@@ -51,7 +51,7 @@ class NerNetwork(TFModel):
                  clip_grad_norm=5.0,
                  learning_rate=3e-3,
                  gpu=None,
-                 seed=42,
+                 seed=None,
                  **kwargs):
         tf.set_random_seed(seed)
         np.random.seed(seed)
