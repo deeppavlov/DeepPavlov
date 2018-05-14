@@ -26,6 +26,15 @@ log = get_logger(__name__)
 
 @register('sql_database')
 class Sqlite3Database(Estimator):
+    """
+    Loads and trains sqlite table of any items (with name `table_name`
+    on path `save_path`).
+
+    Primary (unique) keys must be specified, all other keys are infered from data.
+    Batch here is a list of dicts, where each dict corresponds to an item.
+    If an item doesn't contain values for all keys, then missing values will be stored
+    with `unknown_value`.
+    """
 
     def __init__(self, save_path: str,
                  primary_keys: List[str],
