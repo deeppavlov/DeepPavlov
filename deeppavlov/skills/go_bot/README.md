@@ -73,7 +73,8 @@ Here is a simple example of interaction with a trained dialogue bot (can be down
    * `keys` – ordered list of tabke key names, if not set will be infered from loaded database automatically _(optional, reccomended not to be used)_
    * `unknown_value` – value used to fill unknown column values (defaults to `"UNK"`) _(optional)_
    * `save_path` – path to database filename (will load to it, and save to it)
-* `api_call_action` – label of action that corresponds to database api call (the label that is used to represent actions in your `template_path` file), during interaction it will be used to get `db_result` from `database` _(optional)_ 
+* `api_call_action` – label of action that corresponds to database api call (the same label that is used to represent the 
+action in your `template_path` file), during interaction it will be used to get `db_result` from `database` _(optional)_ 
 * `use_action_mask` — in case of true, action mask is applied to network output _(False, by default)_
 * `tokenizer` — one of tokenizers from [`deeppavlov.models.tokenizers`](../../models/tokenizers) module
    * `name` — tokenizer name
@@ -197,7 +198,7 @@ python3 deep.py train path/to/config.json
 The Hybrid Code Network model was trained and evaluated on a modification of a dataset from Dialogue State Tracking Challenge 2 [[2]](#references). The modifications were as follows:
 
 * **new turns with api calls**
-    * api_calls to resturant database added (example: api_call area="south" food="dontcare" pricerange="cheap")
+    * added api_calls to restaurant database (example: `{"text": "api_call area=\"south\" food=\"dontcare\" pricerange=\"cheap\"", "dialog_acts": ["api_call"]}`)
 
 * **new actions**
     * bot dialog actions were concatenated into one action (example: `{"dialog_acts": ["ask", "request"]}` -> `{"dialog_acts": ["ask_request"]}`)
@@ -210,6 +211,9 @@ The Hybrid Code Network model was trained and evaluated on a modification of a d
     * unified punctuation for bot responses'
 
 #### Your data
+
+##### Dialogs
+
 If your model uses DSTC2 and relies on `dstc2_v2_reader` [`DSTC2Version2DatasetReader`](../../dataset_readers/dstc2_reader.py), all needed files, if not present in the `dataset_reader.data_path` directory, will be downloaded from internet.
 
 If your model needs to be trained on different data, you have several ways of achieving that (sorted by increase in the amount of code):
@@ -236,6 +240,37 @@ If your model needs to be trained on different data, you have several ways of ac
 
 3. Use your own dataset iterator and dataset reader (**if 2. doesn't work for you**):
     * your `YourDatasetIterator.gen_batches()` class method output should match the input format for chainer from [`configs/go_bot/gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json).
+    
+##### Templates
+
+You should provide a maping from actions to text templates in the following format (and set `template_type` to `"Template"`, DSTC2 uses an extention of templates –`"DualTemplate"`, you will probably not need them):
+  * `action\ttemplate`,
+  * where filled slots in templates should start with "#" and mustn't contain whitespaces.
+  
+For example,
+```txt
+bye You are welcome!
+canthear  Sorry, I can't hear you.
+expl-conf_area  Did you say you are looking for a restaurant in the #area of town?
+inform_area+inform_food+offer_name  #name is a nice place in the #area of town serving tasty #food food.
+```
+
+##### Database (optional)
+
+If your dataset doesn't imply any api calls to an external database, just do not set `database` and `api_call_action` parameters and skip the section below.
+
+Otherwise, you should specify them and
+  1. provide sql table with requested items
+or
+  2. construct such table from provided in train samples `db_result` items. This can be done with the following script:
+
+```bash
+cd deeppavlov
+python3 deep.py train configs/go_bot/database_yourdataset.json
+```
+
+where `configs/go_bot/database_yourdataset.json` is a copy of `configs/go_bot/database_dstc2.json` with configured `save_path`, `primary_keys` and `unknown_value`.
+
 
 ## Comparison
 Scores for different modifications of our bot model:
