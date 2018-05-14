@@ -5,8 +5,11 @@ import shutil
 
 import pytest
 import pexpect
+import requests
+from urllib.parse import urljoin
 
 from deeppavlov.download import deep_download
+from utils.server_utils.server import get_server_params, SERVER_CONFIG_FILENAME
 
 tests_dir = Path(__file__, '..').resolve()
 test_configs_path = tests_dir / "deeppavlov" / "configs"
@@ -20,16 +23,17 @@ TEST_MODES = ['IP',  # test_interacting_pretrained_model
 ALL_MODES = ('DE', 'IP', 'TI')
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
-PARAMS = {"error_model": {("error_model/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
-                              [
-                                  ("helllo", "hello"),
-                                  ("datha", "data")
-                              ],
-                          ("error_model/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES): []},
-          "go_bot": {("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [],
-                     ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [],
-                     ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [],
-                     ("go_bot/gobot_dstc2_all.json", "gobot_dstc2_all", ('TI',)): []},
+PARAMS = {
+    #"error_model": {("error_model/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
+    #                          [
+    #                              ("helllo", "hello"),
+    #                              ("datha", "data")
+    #                          ],
+    #                      ("error_model/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES): []},
+    #      "go_bot": {("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [],
+    #                 ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [],
+    #                 ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [],
+    #                 ("go_bot/gobot_dstc2_all.json", "gobot_dstc2_all", ('TI',)): []},
           "intents": {
               ("intents/intents_dstc2.json", "intents", ALL_MODES):  [],
               ("intents/intents_snips_bigru.json", "intents", ('TI')): [],
@@ -138,12 +142,44 @@ class TestQuickStart(object):
             raise RuntimeError('Got unexpected EOF: \n{}'
                                .format(''.join((line.decode() for line in logfile.readlines()))))
 
+    @staticmethod
+    def interact_api(conf_file):
+        server_conf_file = Path(tests_dir, "..").resolve() / "utils" / "server_utils" / SERVER_CONFIG_FILENAME
+
+        server_params = get_server_params(server_conf_file, conf_file)
+        model_args_names = server_params['model_args_names']
+
+        url_base = 'http://{}:{}/'.format(server_params['host'], server_params['port'])
+        url = urljoin(url_base, server_params['model_endpoint'])
+
+        post_headers = {'Accept': 'application/json'}
+
+        post_payload = {}
+        for arg_name in model_args_names:
+            arg_value = str(' '.join(['qwerty'] * 10))
+            post_payload[arg_name] = arg_value
+
+        logfile = io.BytesIO(b'')
+        p = pexpect.spawn("python3", ["-m", "deeppavlov.deep", "riseapi", str(conf_file)], timeout=None,
+                          logfile=logfile)
+        try:
+            p.expect(url_base)
+            post_response = requests.post(url, json=post_payload, headers=post_headers)
+            response_code = post_response.status_code
+            assert response_code == 200, f"POST request returned error code {response_code} with {conf_file}"
+            p.send(chr(3))
+        except pexpect.exceptions.EOF:
+            logfile.seek(0)
+            raise RuntimeError('Got unexpected EOF: \n{}'
+                               .format(''.join((line.decode() for line in logfile.readlines()))))
+
     def test_interacting_pretrained_model(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
             config_file_path = str(test_configs_path.joinpath(conf_file))
             deep_download(['-test', '-c', config_file_path])
 
             self.interact(test_configs_path / conf_file, model_dir, PARAMS[model][(conf_file, model_dir, mode)])
+            self.interact_api(test_configs_path / conf_file)
 
             if 'TI' not in mode:
                 shutil.rmtree(str(download_path), ignore_errors=True)
@@ -162,7 +198,7 @@ class TestQuickStart(object):
 
             logfile = io.BytesIO(b'')
             _, exitstatus = pexpect.run("python3 -m deeppavlov.deep train " + str(c), timeout=None, withexitstatus=True,
-                                        logfile = logfile)
+                                        logfile=logfile)
             if exitstatus != 0:
                 logfile.seek(0)
                 raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
