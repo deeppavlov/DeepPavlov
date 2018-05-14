@@ -77,7 +77,6 @@ def interact(model, params_names):
 
     prediction = model(model_args)
     result = prediction[0]
-    print('PREDICTION::: {}'.format(str(result)))
     return jsonify(result), 200
 
 
