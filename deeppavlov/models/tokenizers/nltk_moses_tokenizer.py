@@ -14,29 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import nltk
+from nltk.tokenize.moses import MosesDetokenizer, MosesTokenizer
 
-from deeppavlov.core.common.prints import RedirectedPrints
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
 
 
-with RedirectedPrints():
-    nltk.download('punkt')
-    nltk.download('stopwords')
-    nltk.download('perluniprops')
-    nltk.download('nonbreaking_prefixes')
-
-
-@register("nltk_tokenizer")
+@register("nltk_moses_tokenizer")
 class NLTKTokenizer(Component):
 
-    def __init__(self, tokenizer="wordpunct_tokenize", download=False, *args, **kwargs):
-        if download:
-            nltk.download()
-        self.tokenizer = getattr(nltk.tokenize, tokenizer, None)
-        if not callable(self.tokenizer):
-            raise AttributeError("Tokenizer {} is not defined in nltk.tokenizer".format(tokenizer))
+    def __init__(self, escape=False, *args, **kwargs):
+        self.escape = escape
+        self.tokenizer = MosesTokenizer()
+        self.detokenizer = MosesDetokenizer()
 
     def __call__(self, batch, *args, **kwargs):
-        return [self.tokenizer(sent) for sent in batch]
+        if isinstance(batch[0], str):
+            return [self.tokenizer.tokenize(line, escape=self.escape) for line in batch]
+        else:
+            return [self.detokenizer.detokenize(line, return_str=True, unescape=self.escape)
+                    for line in batch]
