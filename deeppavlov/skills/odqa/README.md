@@ -17,7 +17,7 @@ There are pretrained ODQA models for **English** and **Russian** languages in De
 
 ## Models
 
-The architecture of ODQA skill is modular and consists of two models, a ranker and a rader. The ranker is based on
+The architecture of ODQA skill is modular and consists of two models, a ranker and a reader. The ranker is based on
 DrQa proposed by Facebook Research ([Reading Wikipedia to Answer Open-Domain Questions](https://arxiv.org/abs/1704.00051))
 and the reader is based on R-Net proposed by Microsoft Research Asia (["R-NET: Machine Reading Comprehension with Self-matching Networks"](https://www.microsoft.com/en-us/research/publication/mrc/))
 and its [implementation](https://github.com/HKUST-KnowComp/R-Net) by Wenxuan Zhou.
@@ -86,7 +86,7 @@ The ranker config for **Russian** language can be found at `deeppavlov/configs/o
 
 Default ODQA config for **English** language is `deeppavlov/configs/odqa/en_odqa_infer_prod.json`
 
-Default ODQA config for **Russian** language is `deeppavlov/configs/odqa/en_odqa_infer_prod.json`
+Default ODQA config for **Russian** language is `deeppavlov/configs/odqa/ru_odqa_infer_prod.json`
 
 The components of ODQA config can be referred to [ranker config](#the-ranker-config)
 and [reader config](https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/models/squad#config-components) accordingly.
