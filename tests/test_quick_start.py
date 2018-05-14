@@ -22,6 +22,9 @@ TEST_MODES = ['IP',  # test_interacting_pretrained_model
 
 ALL_MODES = ('DE', 'IP', 'TI')
 
+ONE_ARGUMENT_INFER_CHECK = ('Dummy text', None)
+TWO_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', None)
+
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
     "error_model": {("error_model/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
@@ -29,29 +32,29 @@ PARAMS = {
                                   ("helllo", "hello"),
                                   ("datha", "data")
                               ],
-                          ("error_model/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES): []},
-          "go_bot": {("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [],
-                     ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [],
-                     ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [],
-                     ("go_bot/gobot_dstc2_all.json", "gobot_dstc2_all", ('TI',)): []},
+                          ("error_model/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
+          "go_bot": {("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+                     ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+                     ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                     ("go_bot/gobot_dstc2_all.json", "gobot_dstc2_all", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]},
           "intents": {
-              ("intents/intents_dstc2.json", "intents", ALL_MODES):  [],
-              ("intents/intents_snips_bigru.json", "intents", ('TI')): [],
-              ("intents/intents_snips_bilstm.json", "intents", ('TI')): [],
-              ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI')): [],
-              ("intents/intents_snips_bilstm_cnn.json", "intents", ('TI')): [],
-              ("intents/intents_snips_bilstm_self_add_attention.json", "intents", ('TI')): [],
-              ("intents/intents_snips_bilstm_self_mult_attention.json", "intents", ('TI')): [],
-              ("intents/intents_snips_cnn_bilstm.json", "intents", ('TI')): []
+              ("intents/intents_dstc2.json", "intents", ALL_MODES):  [ONE_ARGUMENT_INFER_CHECK],
+              ("intents/intents_snips_bigru.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+              ("intents/intents_snips_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+              ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+              ("intents/intents_snips_bilstm_cnn.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+              ("intents/intents_snips_bilstm_self_add_attention.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+              ("intents/intents_snips_bilstm_self_mult_attention.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+              ("intents/intents_snips_cnn_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK]
 
           },
-          "snips": {("intents/intents_snips.json", "intents", ('TI',)): []},
-          "sample": {("intents/intents_sample_csv.json", "intents", ('TI',)): [],
-                    ("intents/intents_sample_json.json", "intents", ('TI',)): []},
-          "ner": {("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [],
-                  ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [],
-                  ("ner/ner_ontonotes.json", "ner_ontonotes_senna", ('DE', 'IP')): [],
-                  ("ner/ner_rus.json", "ner_rus", ('DE', 'IP')): [],
+          "snips": {("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]},
+          "sample": {("intents/intents_sample_csv.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                    ("intents/intents_sample_json.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]},
+          "ner": {("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+                  ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+                  ("ner/ner_ontonotes.json", "ner_ontonotes_senna", ('DE', 'IP')): [ONE_ARGUMENT_INFER_CHECK],
+                  ("ner/ner_rus.json", "ner_rus", ('DE', 'IP')): [ONE_ARGUMENT_INFER_CHECK],
                   ("ner/slotfill_dstc2.json", "slotfill_dstc2", ALL_MODES):
                       [
                           ("chinese food", "{'food': 'chinese'}"),
@@ -59,12 +62,12 @@ PARAMS = {
                           ("moderate price range", "{'pricerange': 'moderate'}")
                       ]
                   },
-          "ranking": {("ranking/insurance_config.json", "ranking", ALL_MODES): []},
-          "squad": {("squad/squad.json", "squad_model", ALL_MODES): [],
-                    ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): []},
-          "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): []},
-          "odqa": {("odqa/ranker_test.json", "odqa", ALL_MODES): [],
-                   ("odqa/odqa_infer_test.json", "odqa", ('DE', 'IP')): []}
+          "ranking": {("ranking/insurance_config.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
+          "squad": {("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
+                    ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK]},
+          "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
+          "odqa": {("odqa/ranker_test.json", "odqa", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+                   ("odqa/odqa_infer_test.json", "odqa", ('DE', 'IP')): [ONE_ARGUMENT_INFER_CHECK]}
           }
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
@@ -129,8 +132,10 @@ class TestQuickStart(object):
                     p.sendline(q)
 
                 p.expect(">> ")
-                actual_response = p.readline().decode().strip()
-                assert expected_response == actual_response, f"Error in interacting with {model_dir} ({conf_file}): {query}"
+                if expected_response is not None:
+                    actual_response = p.readline().decode().strip()
+                    assert expected_response == actual_response, f"Error in interacting with {model_dir} ({conf_file}): {query}"
+
             p.expect("::")
             p.sendline("quit")
             if p.expect(pexpect.EOF) != 0:
