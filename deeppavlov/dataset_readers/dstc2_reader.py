@@ -29,9 +29,29 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-
 @register('dstc2_reader')
 class DSTC2DatasetReader(DatasetReader):
+    """
+    Contains labelled dialogs from Dialog State Tracking Challenge 2
+    http://camdial.org/~mh521/dstc/
+
+    There were made the following modifications:
+    1. new actions
+        - bot dialog actions were concatenated into one action
+        (example: {"dialog_acts": ["ask", "request"]} -> {"dialog_acts": ["ask_request"]})
+        - if a slot key was associated with the dialog action, the new act
+        was a concatenation of an act and a slot key
+        (example: {"dialog_acts": ["ask"], "slot_vals": ["area"]} ->
+        {"dialog_acts": ["ask_area"]})
+    2. new train/dev/test split
+        - original dstc2 consisted of three different MDP polices,
+        the original train and dev datasets (consisting of two polices) were
+        merged and randomly split into train/dev/test
+    3. minor fixes
+        - fixed several dialogs, where actions were wrongly annotated
+        - uppercased first letter of bot responses
+        - unified punctuation for bot responses'
+    """
 
     url = 'http://lnsigo.mipt.ru/export/datasets/dstc2.tar.gz'
 
@@ -42,7 +62,7 @@ class DSTC2DatasetReader(DatasetReader):
 
     @overrides
     def read(self, data_path, dialogs=False):
-    #TODO: mkdir if it doesn't exist
+    # TODO: mkdir if it doesn't exist
 
         required_files = (self._data_fname(dt) for dt in ('trn', 'val', 'tst'))
         if not all(Path(data_path, f).exists() for f in required_files):
@@ -66,7 +86,7 @@ class DSTC2DatasetReader(DatasetReader):
         log.info("[loading dialogs from {}]".format(file_path))
 
         utterances, responses, dialog_indices =\
-                cls._get_turns(cls._iter_file(file_path), with_indices=True)
+            cls._get_turns(cls._iter_file(file_path), with_indices=True)
 
         data = list(map(cls._format_turn, zip(utterances, responses)))
 
@@ -122,7 +142,6 @@ class DSTC2DatasetReader(DatasetReader):
             else:
                 replica = _filter(turn)
                 if speaker1_turn:
-                #if 'goals' in replica:
                     if episode_done:
                         replica['episode_done'] = True
                     utterances.append(replica)
@@ -140,6 +159,29 @@ class DSTC2DatasetReader(DatasetReader):
 
 @register('dstc2_v2_reader')
 class DSTC2Version2DatasetReader(DatasetReader):
+    """
+    Contains labelled dialogs from Dialog State Tracking Challenge 2
+    http://camdial.org/~mh521/dstc/
+
+    There were made the following modifications:
+    1. added api calls to restaurant database
+        - example: api_call area="south" food="dontcare" pricerange="cheap"
+    2. new actions
+        - bot dialog actions were concatenated into one action
+        (example: {"dialog_acts": ["ask", "request"]} -> {"dialog_acts": ["ask_request"]})
+        - if a slot key was associated with the dialog action, the new act
+        was a concatenation of an act and a slot key
+        (example: {"dialog_acts": ["ask"], "slot_vals": ["area"]} ->
+        {"dialog_acts": ["ask_area"]})
+    3. new train/dev/test split
+        - original dstc2 consisted of three different MDP polices,
+        the original train and dev datasets (consisting of two polices) were
+        merged and randomly split into train/dev/test
+    4. minor fixes
+        - fixed several dialogs, where actions were wrongly annotated
+        - uppercased first letter of bot responses
+        - unified punctuation for bot responses'
+    """
 
     url = 'http://lnsigo.mipt.ru/export/datasets/dstc2_v2.tar.gz'
 

@@ -42,7 +42,7 @@ Here is a simple example of interaction with a trained dialogue bot (can be down
 1. (_optional, but recommended_) pretrained named entity recognition model (NER) 
    * config [`deeppavlov/configs/ner/ner_dstc2.json`](../../configs/ner/ner_dstc2.json) is recommended
 2. (_optional, but recommended_) pretrained intents classifier model 
-   * config [`deeppavlov/configs/intents/intents_dstc2.json`](../../configs/intents/intents_dstc2.json) is recommended
+   * config [`deeppavlov/configs/intents/intents_dstc2_big.json`](../../configs/intents/intents_dstc2_big.json) is recommended
 3. (_optional_) downloaded english fasttext embeddings trained on wiki ([https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip](https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip))
    * fasttext embeddings can loaded via `python3 deeppavlov/download.py -all`
    * you can use any english embeddings of your choice, but edit go_bot config accordingly
@@ -194,6 +194,10 @@ python3 deep.py train path/to/config.json
 
 #### DSTC2
 The Hybrid Code Network model was trained and evaluated on a modification of a dataset from Dialogue State Tracking Challenge 2 [[2]](#references). The modifications were as follows:
+
+* **new turns with api calls**
+    * api_calls to resturant database added (example: api_call area="south" food="dontcare" pricerange="cheap")
+
 * **new actions**
     * bot dialog actions were concatenated into one action (example: `{"dialog_acts": ["ask", "request"]}` -> `{"dialog_acts": ["ask_request"]}`)
     * if a slot key was associated with the dialog action, the new act was a concatenation of an act and a slot key (example: `{"dialog_acts": ["ask"], "slot_vals": ["area"]}` -> `{"dialog_acts": ["ask_area"]}`)
@@ -205,16 +209,16 @@ The Hybrid Code Network model was trained and evaluated on a modification of a d
     * unified punctuation for bot responses'
 
 #### Your data
-If your model uses DSTC2 and relies on `dstc2_reader` [`DSTC2DatasetReader`](../../dataset_readers/dstc2_reader.py), all needed files, if not present in the `dataset_reader.data_path` directory, will be downloaded from internet.
+If your model uses DSTC2 and relies on `dstc2_v2_reader` [`DSTC2Version2DatasetReader`](../../dataset_readers/dstc2_reader.py), all needed files, if not present in the `dataset_reader.data_path` directory, will be downloaded from internet.
 
 If your model needs to be trained on different data, you have several ways of achieving that (sorted by increase in the amount of code):
 
-1. Use `"dialog_iterator"` in dataset iterator config section and `"dstc2_reader"` in dataset reader config section (**the simplest, but not the best way**):
+1. Use `"dialog_iterator"` in dataset iterator config section and `"dstc2_v2_reader"` in dataset reader config section (**the simplest, but not the best way**):
     * set `dataset_iterator.data_path` to your data directory;
-    * your data files should have the same format as expected in [`deeppavlov.dataset_readers.dstc2_reader:DSTC2DatasetReader.read()`](../../dataset_readers/dstc2_reader.py) function.
+    * your data files should have the same format as expected in [`deeppavlov.dataset_readers.dstc2_reader:DSTC2Version2DatasetReader.read()`](../../dataset_readers/dstc2_reader.py) function.
 
 2. Use `"dialog_iterator"` in dataset iterator config section and `"your_dataset_reader"` in dataset reader config section (**recommended**): 
-    * clone [`deeppavlov.dataset_readers.dstc2_reader:DSTC2DatasetReader`](../../dataset_readers/dstc2_reader.py) to `YourDatasetReader`;
+    * clone [`deeppavlov.dataset_readers.dstc2_reader:DSTC2Version2DatasetReader`](../../dataset_readers/dstc2_reader.py) to `YourDatasetReader`;
     * register as `"your_dataset_reader"`;
     * rewrite so that it implements the same interface as the origin. Particularly, `YourDatasetReader.read()` must have the same output as `DSTC2DatasetReader.read()`:
       * `train` — training dialog turns consisting of tuples:
