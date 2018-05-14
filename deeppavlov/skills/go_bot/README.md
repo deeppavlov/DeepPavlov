@@ -233,9 +233,7 @@ If your model needs to be trained on different data, you have several ways of ac
     * your `YourDatasetIterator.gen_batches()` class method output should match the input format for chainer from [`configs/go_bot/gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json).
 
 ## Comparison
-As far as our dataset is a modified version of official DSTC2-dataset [[2]](#references), resulting metrics can't be compared with evaluations on the original dataset.
-
-But comparisons for bot model modifications trained on out DSTC2-dataset are presented:
+Scores for different modifications of our bot model:
 
 |                   Model                      | Config      |  Test turn textual accuracy  |
 |----------------------------------------------|-------------|----------------------|
@@ -245,9 +243,28 @@ But comparisons for bot model modifications trained on out DSTC2-dataset are pre
 |bot with slot filler & intents & embeddings   | [`gobot_dstc2_all.json`](../../configs/go_bot/gobot_dstc2_all.json)         |     0.5145           |
 |bot with slot filler & embeddings & attention   | [`gobot_dstc2_best.json`](../../configs/go_bot/gobot_dstc2_best.json)         |     **0.5805**           |
 
+There is another modification of DSTC2 dataset called dialog babi Task6 [[3]](#references). It differs from ours in train/valid/test split and intent/action labeling. 
+
+These are the test scores provided by  Williams et al. (2017) [[1]](#references) (can't be directly compared with above):
+
+|                   Model                      | Test turn textual accuracy  |
+|----------------------------------------------|-----------------------------|
+|Bordes and Weston (2016) [[4]](#references)   |            0.411            |
+|Perez and Liu (2016) [[5]](#references)       |            0.487            |
+|Eric and Manning (2017) [[6]](#references)    |            0.480            |
+|Williams et al. (2017) [[1]](#references)     |            0.556            |
+
 #TODO: add dialog accuracies
 
 # References
-[1] [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017](https://arxiv.org/abs/1702.03274)
+[1] [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig "Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning" – 2017](https://arxiv.org/abs/1702.03274)
 
 [2] [Dialog State Tracking Challenge 2 dataset](http://camdial.org/~mh521/dstc/)
+
+[3] [The bAbI project](https://research.fb.com/downloads/babi/)
+
+[4] [Antoine Bordes, Y-Lan Boureau & Jason Weston "Learning end-to-end goal-oriented dialog" - 2017](https://arxiv.org/abs/1605.07683)
+
+[5] [Fei Liu, Julien Perez "Gated End-to-end Memory Networks" - 2016](https://arxiv.org/abs/1610.04211)
+
+[6] [Mihail Eric, Christopher D. Manning "A Copy-Augmented Sequence-to-Sequence Architecture Gives Good Performance on Task-Oriented Dialogue" - 2017](https://arxiv.org/abs/1701.04024)
