@@ -26,7 +26,7 @@ from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.models.tokenizers.spacy_tokenizer import StreamSpacyTokenizer
 from deeppavlov.models.trackers.default_tracker import DefaultTracker
 from deeppavlov.skills.go_bot.network import GoalOrientedBotNetwork
-from deeppavlov.skills.go_bot.templates import Templates, DualTemplate
+import deeppavlov.skills.go_bot.templates as templ
 from deeppavlov.core.common.log import get_logger
 
 
@@ -38,7 +38,7 @@ class GoalOrientedBot(NNModel):
     def __init__(self,
                  template_path,
                  network_parameters,
-                 template_type: Type = DualTemplate,
+                 template_type: str = "Template",
                  tokenizer: Type = StreamSpacyTokenizer,
                  tracker: Type = DefaultTracker,
                  database=None,
@@ -67,8 +67,9 @@ class GoalOrientedBot(NNModel):
         self.word_vocab = word_vocab or vocabs['word_vocab']
 
         template_path = expand_path(template_path)
+        template_type = getattr(templ, template_type)
         log.info("[loading templates from {}]".format(template_path))
-        self.templates = Templates(template_type).load(template_path)
+        self.templates = templ.Templates(template_type).load(template_path)
         self.n_actions = len(self.templates)
         log.info("{} templates loaded".format(self.n_actions))
 
@@ -225,7 +226,8 @@ class GoalOrientedBot(NNModel):
 
         resp = template.generate_text(slots)
         # in api calls replace unknown slots to "dontcare"
-        if (self.templates.ttype is DualTemplate) and (action_id == self.api_call_id):
+        if (self.templates.ttype is templ.DualTemplate) and\
+                (action_id == self.api_call_id):
             resp = re.sub("#([A-Za-z]+)", "dontcare", resp).lower()
         if self.debug:
             log.debug("Pred response = {}".format(resp))
