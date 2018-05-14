@@ -175,8 +175,8 @@ The script will download needed data (dataset, embeddings) for the particular mo
 To be used for training, your config json file should include parameters:
 
 * `dataset_reader`
-   * `name` — `"your_reader_here"` for a custom dataset or `"dstc2_reader"` to use DSTC2 (for implementation see [`deeppavlov.dataset_readers.dstc2_reader`](../../dataset_readers/dstc2_reader.py))
-   * `data_path` — a path to a dataset file, which in case of `"dstc2_reader"` will be automatically downloaded from 
+   * `name` — `"your_reader_here"` for a custom dataset or `"dstc2_v2_reader"` to use DSTC2 (for implementation see [`deeppavlov.dataset_readers.dstc2_reader`](../../dataset_readers/dstc2_reader.py))
+   * `data_path` — a path to a dataset file, which in case of `"dstc2_v2_reader"` will be automatically downloaded from 
    internet and placed to `data_path` directory
 * `dataset_iterator` — it should always be set to `{"name": "dialog_iterator"}` (for implementation see [`deeppavlov.dataset_iterators.dialog_iterator.py`](../../dataset_iterators/dialog_iterator.py))
 
