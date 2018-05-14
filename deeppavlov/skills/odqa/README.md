@@ -108,7 +108,7 @@ and is built by the following steps:
  (from 2018-02-11)
 2. Unpack and extract the articles with [WikiExtractor](https://github.com/attardi/wikiextractor)
  (with `--json`, `--no-templates`, `--filter_disambig_pages` options)
-3. Build a database.
+3. Build a database with the help of [DrQA script](https://github.com/facebookresearch/DrQA/blob/master/scripts/retriever/build_db.py).
 
 ### enwiki_tfidf_matrix.npz
 
@@ -124,7 +124,7 @@ and is built by the following steps:
 (from 2018-04-01)
 2. Unpack and extract the articles with [WikiExtractor](https://github.com/attardi/wikiextractor)
 (with `--json`, `--no-templates`, `--filter_disambig_pages` options)
-3. Build a database.
+3. Build a database with the help of [DrQA script](https://github.com/facebookresearch/DrQA/blob/master/scripts/retriever/build_db.py).
 
 ### ruwiki_tfidf_matrix.npz
 
