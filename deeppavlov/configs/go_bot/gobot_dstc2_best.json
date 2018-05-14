@@ -36,16 +36,19 @@
         "debug": false,
         "word_vocab": "#token_vocab",
         "template_path": "dstc2_v2/dstc2-templates.txt",
-        "use_action_mask": false,
+        "template_type": "DualTemplate",
         "database": "#restaurant_database",
+        "api_call_action": "api_call",
+        "use_action_mask": false,
         "network_parameters": {
           "load_path": "gobot_dstc2_best/model",
           "save_path": "gobot_dstc2_best/model",
           "learning_rate": 0.02,
           "end_learning_rate": 0.002,
           "decay_steps": 20,
+          "decay_power": 0.5,
           "dropout_rate": 0.7,
-          "l2_reg_coef": 1e-3,
+          "l2_reg_coef": 1e-4,
           "hidden_size": 128,
           "dense_size": 64,
           "attention_mechanism": {
@@ -81,7 +84,7 @@
   },
   "train": {
     "epochs": 200,
-    "batch_size": 16,
+    "batch_size": 4,
 
     "metrics": ["per_item_dialog_accuracy"],
     "validation_patience": 30,

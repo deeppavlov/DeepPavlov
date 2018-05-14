@@ -35,8 +35,10 @@
         "name": "go_bot",
         "debug": false,
         "word_vocab": "#token_vocab",
-        "database": "#restaurant_database",
         "template_path": "dstc2_v2/dstc2-templates.txt",
+        "template_type": "DualTemplate",
+        "database": "#restaurant_database",
+        "api_call_action": "api_call",
         "use_action_mask": false,
         "network_parameters": {
           "load_path": "gobot_dstc2_minimal/model",
@@ -65,7 +67,7 @@
   },
   "train": {
 	"epochs": 200,
-	"batch_size": 16,
+	"batch_size": 4,
 
 	"metrics": ["per_item_dialog_accuracy"],
 	"validation_patience": 20,
@@ -80,7 +82,6 @@
       "telegram_utils": "GoalOrientedBot"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/datasets/dstc2_v2.tar.gz",
         "subdir": "dstc2_v2"
