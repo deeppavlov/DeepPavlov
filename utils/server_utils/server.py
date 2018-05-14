@@ -7,6 +7,7 @@ from flask_cors import CORS
 
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.commands.infer import build_model_from_config
+from deeppavlov.core.data.utils import check_nested_dict_keys
 from deeppavlov.core.common.log import get_logger
 
 
@@ -17,19 +18,6 @@ log = get_logger(__name__)
 app = Flask(__name__)
 Swagger(app)
 CORS(app)
-
-
-def check_nested_dict_keys(check_dict: dict, keys: list):
-    if isinstance(keys, list) and len(keys) > 0:
-        element = check_dict
-        for key in keys:
-            if isinstance(element, dict) and key in element.keys():
-                element = element[key]
-            else:
-                return False
-        return True
-    else:
-        return False
 
 
 def init_model(model_config_path):

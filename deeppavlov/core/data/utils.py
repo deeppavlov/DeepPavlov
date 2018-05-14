@@ -222,3 +222,31 @@ def zero_pad_char(batch, dtype=np.float32):
                 for q, char_features in enumerate(token):
                     padded_batch[n, k, q] = char_features
     return padded_batch
+
+
+def get_all_elems_from_json(search_json, search_key):
+    result = []
+    if isinstance(search_json, dict):
+        for key in search_json:
+            if key == search_key:
+                result.append(search_json[key])
+            else:
+                result.extend(get_all_elems_from_json(search_json[key], search_key))
+    elif isinstance(search_json, list):
+        for item in search_json:
+            result.extend(get_all_elems_from_json(item, search_key))
+
+    return result
+
+
+def check_nested_dict_keys(check_dict: dict, keys: list):
+    if isinstance(keys, list) and len(keys) > 0:
+        element = check_dict
+        for key in keys:
+            if isinstance(element, dict) and key in element.keys():
+                element = element[key]
+            else:
+                return False
+        return True
+    else:
+        return False
