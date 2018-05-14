@@ -107,7 +107,7 @@ class GoalOrientedBot(NNModel):
             if attn['action_as_key']:
                 key_size += self.n_actions
             if attn['intent_as_key'] and callable(self.intent_classifier):
-                obs_size += len(self.intents)
+                key_size += len(self.intents)
             key_size = key_size or 1
             attn['key_size'] = attn.get('key_size') or key_size
 
@@ -151,15 +151,6 @@ class GoalOrientedBot(NNModel):
                     emb_dim = self.embedder.dim
                     emb_features = np.fabs(np.random.normal(0, 1/emb_dim, emb_dim))
 
-        attn_key = np.array([], dtype=np.float32)
-        if self.network.attn:
-            if self.network.attn.action_as_key:
-                attn_key = np.hstack((attn_key, self.prev_action))
-            if self.network.attn.intent_as_key:
-                attn_key = np.hstack((attn_key, intent_features))
-            if len(attn_key) == 0:
-                attn_key = np.array([1], dtype=np.float32)
-
         # Intent features
         intent_features = []
         if callable(self.intent_classifier):
@@ -168,6 +159,15 @@ class GoalOrientedBot(NNModel):
                                        dtype=np.float32)
             if self.debug:
                 log.debug("Predicted intent = `{}`".format(intent[0]))
+
+        attn_key = np.array([], dtype=np.float32)
+        if self.network.attn:
+            if self.network.attn.action_as_key:
+                attn_key = np.hstack((attn_key, self.prev_action))
+            if self.network.attn.intent_as_key:
+                attn_key = np.hstack((attn_key, intent_features))
+            if len(attn_key) == 0:
+                attn_key = np.array([1], dtype=np.float32)
 
         # Text entity features
         if callable(self.slot_filler):
