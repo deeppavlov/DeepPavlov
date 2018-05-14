@@ -16,7 +16,6 @@ limitations under the License.
 import json
 from fuzzywuzzy import process
 from overrides import overrides
-from pathlib import Path
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import download
@@ -29,8 +28,9 @@ log = get_logger(__name__)
 
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(Component, Serializable):
-    def __init__(self, **kwargs):
+    def __init__(self, threshold=0.8, **kwargs):
         super().__init__(**kwargs)
+        self.threshold = threshold
         # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
         self.load()
 
@@ -52,7 +52,7 @@ class DstcSlotFillingNetwork(Component, Serializable):
         slot_values = {}
         for entity, slot in zip(entities, slots):
             match, score = self.ner2slot(entity, slot)
-            if score >= 80:
+            if score >= self.threshold * 100:
                 slot_values[slot] = match
         return slot_values
 
