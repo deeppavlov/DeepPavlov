@@ -9,10 +9,14 @@ import requests
 from urllib.parse import urljoin
 
 from deeppavlov.download import deep_download
+from deeppavlov.core.data.utils import get_all_elems_from_json
 from utils.server_utils.server import get_server_params, SERVER_CONFIG_FILENAME
+
 
 tests_dir = Path(__file__, '..').resolve()
 test_configs_path = tests_dir / "deeppavlov" / "configs"
+src_dir = tests_dir.parent / "deeppavlov" / "configs"
+test_src_dir = tests_dir / "test_configs"
 download_path = tests_dir / "download"
 
 TEST_MODES = ['IP',  # test_interacting_pretrained_model
@@ -27,48 +31,58 @@ TWO_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', None)
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
-    "error_model": {("error_model/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
-                              [
-                                  ("helllo", "hello"),
-                                  ("datha", "data")
-                              ],
-                          ("error_model/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
-          "go_bot": {("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-                     ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-                     ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-                     ("go_bot/gobot_dstc2_all.json", "gobot_dstc2_all", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]},
-          "intents": {
-              ("intents/intents_dstc2.json", "intents", ALL_MODES):  [ONE_ARGUMENT_INFER_CHECK],
-              ("intents/intents_snips_bigru.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-              ("intents/intents_snips_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-              ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-              ("intents/intents_snips_bilstm_cnn.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-              ("intents/intents_snips_bilstm_self_add_attention.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-              ("intents/intents_snips_bilstm_self_mult_attention.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-              ("intents/intents_snips_cnn_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK]
-
-          },
-          "snips": {("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]},
-          "sample": {("intents/intents_sample_csv.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-                    ("intents/intents_sample_json.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]},
-          "ner": {("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-                  ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-                  ("ner/ner_ontonotes.json", "ner_ontonotes_senna", ('DE', 'IP')): [ONE_ARGUMENT_INFER_CHECK],
-                  ("ner/ner_rus.json", "ner_rus", ('DE', 'IP')): [ONE_ARGUMENT_INFER_CHECK],
-                  ("ner/slotfill_dstc2.json", "slotfill_dstc2", ALL_MODES):
-                      [
-                          ("chinese food", "{'food': 'chinese'}"),
-                          ("in the west part", "{'area': 'west'}"),
-                          ("moderate price range", "{'pricerange': 'moderate'}")
-                      ]
-                  },
-          "ranking": {("ranking/insurance_config.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
-          "squad": {("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
-                    ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK]},
-          "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
-          "odqa": {("odqa/ranker_test.json", "odqa", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-                   ("odqa/odqa_infer_test.json", "odqa", ('DE', 'IP')): [ONE_ARGUMENT_INFER_CHECK]}
-          }
+    #"error_model": {
+    #    ("error_model/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
+    #        [
+    #            ("helllo", "hello"),
+    #            ("datha", "data")
+    #        ],
+    #    ("error_model/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+    #},
+    "go_bot": {
+        ("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+    #    ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+    #    ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+    #    ("go_bot/gobot_dstc2_all.json", "gobot_dstc2_all", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "intents": {
+    #    ("intents/intents_dstc2.json", "intents", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+    #    ("intents/intents_snips_bigru.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+    #    ("intents/intents_snips_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+    #    ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+    #    ("intents/intents_snips_bilstm_cnn.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+    #    ("intents/intents_snips_bilstm_self_add_attention.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+    #    ("intents/intents_snips_bilstm_self_mult_attention.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+    #    ("intents/intents_snips_cnn_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK]
+    },
+    #"snips": {("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]},
+    #"sample": {
+    #    ("intents/intents_sample_csv.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+    #    ("intents/intents_sample_json.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+    #},
+    "ner": {
+    #    ("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+    #    ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+    #    ("ner/ner_ontonotes.json", "ner_ontonotes_senna", ('DE', 'IP')): [ONE_ARGUMENT_INFER_CHECK],
+    #    ("ner/ner_rus.json", "ner_rus", ('DE', 'IP')): [ONE_ARGUMENT_INFER_CHECK],
+    #    ("ner/slotfill_dstc2.json", "slotfill_dstc2", ALL_MODES):
+    #        [
+    #            ("chinese food", "{'food': 'chinese'}"),
+    #            ("in the west part", "{'area': 'west'}"),
+    #            ("moderate price range", "{'pricerange': 'moderate'}")
+    #        ]
+    },
+    #"ranking": {("ranking/insurance_config.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
+    #"squad": {
+    #    ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
+    #    ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK]
+    #},
+    #"seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
+    #"odqa": {
+    #    ("odqa/ranker_test.json", "odqa", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+    #    ("odqa/odqa_infer_test.json", "odqa", ('DE', 'IP')): [ONE_ARGUMENT_INFER_CHECK]
+    #}
+}
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
 
@@ -83,9 +97,45 @@ for model in PARAMS.keys():
         TEST_GRID.append(grid_unit)
 
 
+def download_config(conf_file):
+    src_file = src_dir / conf_file
+    if not src_file.is_file():
+        src_file = test_src_dir / conf_file
+
+    if not src_file.is_file():
+        raise RuntimeError('Unexisting config file {}'.format(conf_file))
+
+    with src_file.open() as fin:
+        config = json.load(fin)
+
+    if config.get("train"):
+        config["train"]["epochs"] = 1
+        for pytest_key in [k for k in config["train"] if k.startswith('pytest_')]:
+            config["train"][pytest_key[len('pytest_'):]] = config["train"].pop(pytest_key)
+
+    config["deeppavlov_root"] = str(download_path)
+
+    with (test_configs_path / conf_file).open("w") as fout:
+        json.dump(config, fout)
+
+    download_config_references(config)
+
+
+def download_config_references(config):
+    config_references = get_all_elems_from_json(config, 'config_path')
+    #config_references = [config_ref.split('/')[-2, -1] for config_ref in config_references]
+    for config_ref in config_references:
+        m_name = config_ref.split('/')[-2]
+        conf_file = '/'.join(config_ref.split('/')[-2:-1])
+        print("FILE::::::::::::: {}".format(conf_file))
+        if not test_configs_path.joinpath(m_name).exists():
+            test_configs_path.joinpath(m_name).mkdir()
+
+        if not test_configs_path.joinpath(conf_file).exists():
+            download_config(conf_file)
+
+
 def setup_module():
-    src_dir = tests_dir.parent / "deeppavlov" / "configs"
-    test_src_dir = tests_dir / "test_configs"
     shutil.rmtree(str(test_configs_path), ignore_errors=True)
     shutil.rmtree(str(download_path), ignore_errors=True)
     test_configs_path.mkdir(parents=True)
@@ -93,22 +143,7 @@ def setup_module():
     for m_name, conf_dict in PARAMS.items():
         test_configs_path.joinpath(m_name).mkdir()
         for (conf_file, _, _), _ in conf_dict.items():
-            src_file = src_dir / conf_file
-            if not src_file.is_file():
-                src_file = test_src_dir / conf_file
-
-            if not src_file.is_file():
-                raise RuntimeError('Unexisting config file {}'.format(conf_file))
-
-            with src_file.open() as fin:
-                config = json.load(fin)
-            if config.get("train"):
-                config["train"]["epochs"] = 1
-                for pytest_key in [k for k in config["train"] if k.startswith('pytest_')]:
-                    config["train"][pytest_key[len('pytest_'):]] = config["train"].pop(pytest_key)
-            config["deeppavlov_root"] = str(download_path)
-            with (test_configs_path / conf_file).open("w") as fout:
-                json.dump(config, fout)
+            download_config(conf_file)
 
 
 def teardown_module():
