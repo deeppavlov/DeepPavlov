@@ -25,6 +25,7 @@
       {
         "in": ["x", "tags"],
         "name": "dstc_slotfilling",
+        "threshold": 0.8,
         "save_path": "slotfill_dstc2/dstc_slot_vals.json",
         "load_path": "slotfill_dstc2/dstc_slot_vals.json",
         "out": ["slots"]

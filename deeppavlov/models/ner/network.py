@@ -5,7 +5,7 @@ from functools import partial
 from deeppavlov.core.layers.tf_layers import embedding_layer, character_embedding_network, variational_dropout
 from deeppavlov.core.layers.tf_layers import cudnn_bi_lstm, cudnn_bi_gru, bi_rnn, stacked_cnn
 from deeppavlov.core.models.tf_model import TFModel
-from deeppavlov.core.common.check_gpu import check_gpu_existance
+from deeppavlov.core.common.check_gpu import check_gpu_existence
 from deeppavlov.core.common.registry import register
 
 INITIALIZER = tf.orthogonal_initializer
@@ -156,7 +156,7 @@ class NerNetwork(TFModel):
             self._input_features.append(feat_ph)
 
     def _build_cudnn_rnn(self, units, n_hidden_list, cell_type, intra_layer_dropout):
-        if not check_gpu_existance():
+        if not check_gpu_existence():
             raise RuntimeError('Usage of cuDNN RNN layers require GPU along with cuDNN library')
 
         for n, n_hidden in enumerate(n_hidden_list):
