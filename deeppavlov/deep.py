@@ -25,7 +25,7 @@ sys.path.append(str(p))
 from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.infer import interact_model, predict_on_stream
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.download import download_resources
+from deeppavlov.download import deep_download
 from utils.telegram_utils.telegram_ui import interact_model_by_telegram
 from utils.server_utils.server import start_model_server
 
@@ -50,7 +50,7 @@ def main():
     token = args.token or os.getenv('TELEGRAM_TOKEN')
 
     if args.download or args.mode == 'download':
-        download_resources(Path(pipeline_config_path).resolve())
+        deep_download(['-c', pipeline_config_path])
 
     if args.mode == 'train':
         train_model_from_config(pipeline_config_path)

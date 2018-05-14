@@ -6,6 +6,8 @@ import shutil
 import pytest
 import pexpect
 
+from deeppavlov.download import deep_download
+
 tests_dir = Path(__file__, '..').resolve()
 test_configs_path = tests_dir / "deeppavlov" / "configs"
 download_path = tests_dir / "download"
@@ -107,14 +109,7 @@ def teardown_module():
     shutil.rmtree(str(download_path), ignore_errors=True)
 
 
-def download(full=True):
-    cmd = "python3 -m deeppavlov.download -test"
-    if full:
-        cmd += " -all"
-    pexpect.run(cmd, timeout=None)
-
-
-@pytest.mark.parametrize("model,conf_file,model_dir,mode", TEST_GRID)
+@pytest.mark.parametrize("model,conf_file,model_dir,mode", TEST_GRID, scope='class')
 class TestQuickStart(object):
 
     @staticmethod
@@ -143,17 +138,15 @@ class TestQuickStart(object):
             raise RuntimeError('Got unexpected EOF: \n{}'
                                .format(''.join((line.decode() for line in logfile.readlines()))))
 
-    def test_downloaded_model_existence(self, model, conf_file, model_dir, mode):
-        if 'DE' in mode:
-            if not download_path.exists():
-                download()
-            assert download_path.joinpath(model_dir).exists(), f"{model_dir} was not downloaded"
-        else:
-            pytest.skip("Unsupported mode: {}".format(mode))
-
     def test_interacting_pretrained_model(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
+            config_file_path = str(test_configs_path.joinpath(conf_file))
+            deep_download(['-test', '-c', config_file_path])
+
             self.interact(test_configs_path / conf_file, model_dir, PARAMS[model][(conf_file, model_dir, mode)])
+
+            if 'TI' not in mode:
+                shutil.rmtree(str(download_path), ignore_errors=True)
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
 
@@ -161,7 +154,12 @@ class TestQuickStart(object):
         if 'TI' in mode:
             c = test_configs_path / conf_file
             model_path = download_path / model_dir
+
+            if 'IP' not in mode:
+                config_path = str(test_configs_path.joinpath(conf_file))
+                deep_download(['-test', '-c', config_path])
             shutil.rmtree(str(model_path),  ignore_errors=True)
+
             logfile = io.BytesIO(b'')
             _, exitstatus = pexpect.run("python3 -m deeppavlov.deep train " + str(c), timeout=None, withexitstatus=True,
                                         logfile = logfile)
@@ -170,5 +168,7 @@ class TestQuickStart(object):
                 raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
                                    .format(model_dir, ''.join((line.decode() for line in logfile.readlines()))))
             self.interact(c, model_dir)
+
+            shutil.rmtree(str(download_path), ignore_errors=True)
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
