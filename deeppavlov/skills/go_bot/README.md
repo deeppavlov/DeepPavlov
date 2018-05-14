@@ -59,8 +59,13 @@ Here is a simple example of interaction with a trained dialogue bot (can be down
 
 #### Config parameters:
 * `name` always equals to `"go_bot"`
+* `word_vocab` — vocabulary of tokens from context utterances
+   * `name` — `"default_vocab"` (for vocabulary's implementation see [`deeppavlov.core.data.vocab`](../../core/data/vocab.py))
+   * `level` — `"token"`,
+   * `tokenizer` — `{ "name": "split_tokenizer" }`,
+   * `save_path` — `"vocabs/token.dict"`
+   * `load_path` — `"vocabs/token.dict"`
 * `template_path` — map from actions to text templates for response generation
-* `use_action_mask` — in case of true, action mask is applied to network output _(False, by default)_
 * `database` –  database that will be used during model inference to make "api_call" action and get `db_result` _(optional)_
    * `name` — `"sql_database"` from [`deeppavlov.core.data.database:Sqlite3Database`](../../core/data/database.py) or your implementation
    * `table_name` – sqlite table name
@@ -68,12 +73,8 @@ Here is a simple example of interaction with a trained dialogue bot (can be down
    * `keys` – ordered list of tabke key names, if not set will be infered from loaded database automatically _(optional, reccomended not to be used)_
    * `unknown_value` – value used to fill unknown column values (defaults to `"UNK"`) _(optional)_
    * `save_path` – path to database filename (will load to it, and save to it)
-* `word_vocab` — vocabulary of tokens from context utterances
-   * `name` — `"default_vocab"` (for vocabulary's implementation see [`deeppavlov.core.data.vocab`](../../core/data/vocab.py))
-   * `level` — `"token"`,
-   * `tokenizer` — `{ "name": "split_tokenizer" }`,
-   * `save_path` — `"vocabs/token.dict"`
-   * `load_path` — `"vocabs/token.dict"`
+* `api_call_action` – label of action that corresponds to database api call (the label that is used to represent actions in your `template_path` file), during interaction it will be used to get `db_result` from `database` _(optional)_ 
+* `use_action_mask` — in case of true, action mask is applied to network output _(False, by default)_
 * `tokenizer` — one of tokenizers from [`deeppavlov.models.tokenizers`](../../models/tokenizers) module
    * `name` — tokenizer name
    * other arguments specific to your tokenizer

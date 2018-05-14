@@ -42,6 +42,7 @@ class GoalOrientedBot(NNModel):
                  tokenizer: Type = StreamSpacyTokenizer,
                  tracker: Type = DefaultTracker,
                  database=None,
+                 api_call_action=None,
                  bow_embedder=None,
                  embedder=None,
                  slot_filler=None,
@@ -57,7 +58,6 @@ class GoalOrientedBot(NNModel):
 
         self.tokenizer = tokenizer
         self.tracker = tracker
-        self.database = database
         self.bow_embedder = bow_embedder
         self.embedder = embedder
         self.slot_filler = slot_filler
@@ -71,6 +71,9 @@ class GoalOrientedBot(NNModel):
         self.templates = Templates(template_type).load(template_path)
         self.n_actions = len(self.templates)
         log.info("{} templates loaded".format(self.n_actions))
+
+        self.database = database
+        self.api_call_id = self.templates.actions.index(api_call_action)
 
         self.intents = []
         if callable(self.intent_classifier):
@@ -222,7 +225,7 @@ class GoalOrientedBot(NNModel):
 
         resp = template.generate_text(slots)
         # in api calls replace unknown slots to "dontcare"
-        if "api_call" in resp.lower():
+        if (self.templates.ttype is DualTemplate) and (action_id == self.api_call_id):
             resp = re.sub("#([A-Za-z]+)", "dontcare", resp).lower()
         if self.debug:
             log.debug("Pred response = {}".format(resp))
@@ -240,7 +243,7 @@ class GoalOrientedBot(NNModel):
         # forbid two api calls in a row
         if np.any(previous_action):
             prev_act_id = np.argmax(previous_action)
-            if self.templates.actions[prev_act_id] == "api_call":
+            if prev_act_id == self.api_call_id:
                 mask[prev_act_id] = 0.
         return mask
 
@@ -352,7 +355,7 @@ class GoalOrientedBot(NNModel):
             for x in batch:
                 pred = self._infer(x)
                 # if made api_call, then respond with next prediction
-                if self.templates.actions[np.argmax(self.prev_action)] == "api_call":
+                if np.argmax(self.prev_action) == self.api_call_id:
                     db_result = self.make_api_call(self.tracker.get_state())
                     res.append(self._infer(x, db_result=db_result))
                 else:
