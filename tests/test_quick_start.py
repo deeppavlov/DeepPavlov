@@ -24,16 +24,16 @@ ALL_MODES = ('DE', 'IP', 'TI')
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
-    #"error_model": {("error_model/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
-    #                          [
-    #                              ("helllo", "hello"),
-    #                              ("datha", "data")
-    #                          ],
-    #                      ("error_model/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES): []},
-    #      "go_bot": {("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [],
-    #                 ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [],
-    #                 ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [],
-    #                 ("go_bot/gobot_dstc2_all.json", "gobot_dstc2_all", ('TI',)): []},
+    "error_model": {("error_model/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
+                              [
+                                  ("helllo", "hello"),
+                                  ("datha", "data")
+                              ],
+                          ("error_model/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES): []},
+          "go_bot": {("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [],
+                     ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [],
+                     ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [],
+                     ("go_bot/gobot_dstc2_all.json", "gobot_dstc2_all", ('TI',)): []},
           "intents": {
               ("intents/intents_dstc2.json", "intents", ALL_MODES):  [],
               ("intents/intents_snips_bigru.json", "intents", ('TI')): [],
@@ -167,11 +167,18 @@ class TestQuickStart(object):
             post_response = requests.post(url, json=post_payload, headers=post_headers)
             response_code = post_response.status_code
             assert response_code == 200, f"POST request returned error code {response_code} with {conf_file}"
-            p.send(chr(3))
+
         except pexpect.exceptions.EOF:
             logfile.seek(0)
             raise RuntimeError('Got unexpected EOF: \n{}'
                                .format(''.join((line.decode() for line in logfile.readlines()))))
+
+        finally:
+            p.send(chr(3))
+            if p.expect(pexpect.EOF) != 0:
+                logfile.seek(0)
+                raise RuntimeError('Error in shutting down API server: \n{}'
+                                   .format(''.join((line.decode() for line in logfile.readlines()))))
 
     def test_interacting_pretrained_model(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
@@ -179,6 +186,11 @@ class TestQuickStart(object):
             deep_download(['-test', '-c', config_file_path])
 
             self.interact(test_configs_path / conf_file, model_dir, PARAMS[model][(conf_file, model_dir, mode)])
+        else:
+            pytest.skip("Unsupported mode: {}".format(mode))
+
+    def test_interacting_pretrained_model_api(self, model, conf_file, model_dir, mode):
+        if 'IP' in mode:
             self.interact_api(test_configs_path / conf_file)
 
             if 'TI' not in mode:
