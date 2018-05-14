@@ -103,7 +103,7 @@ class RussianWordsVocab(StaticDictionary):
         log.info('Downloading russian vocab from https://github.com/danakt/russian-words/')
         url = 'https://github.com/danakt/russian-words/raw/master/russian.txt'
         page = requests.get(url)
-        return [word.strip() for word in page.content.decode('cp1251').split('\n')]
+        return [word.strip() for word in page.content.decode('cp1251').strip().split('\n')]
 
 
 @register('wikitionary_100K_vocab')
