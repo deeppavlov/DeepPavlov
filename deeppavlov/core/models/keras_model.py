@@ -196,14 +196,17 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         Returns:
             None
         """
-        if not self.save_path:
-            raise ConfigError("No `save_path` is provided for Keras model!")
-        elif isinstance(self.save_path, Path) and not self.save_path.parent.is_dir():
+        if not fname:
+            fname = self.save_path
+        else:
+            fname = Path(fname).resolve()
+
+        if not fname.parent.is_dir():
             raise ConfigError("Provided save path is incorrect!")
         else:
-            opt_path = "{}_opt.json".format(str(self.save_path.resolve()))
-            weights_path = "{}.h5".format(str(self.save_path.resolve()))
-            log.info("[saving model to {}]".format(opt_path))
+            opt_path = f"{fname}_opt.json"
+            weights_path = f"{fname}.h5"
+            log.info(f"[saving model to {opt_path}]")
             self.model.save_weights(weights_path)
 
 

@@ -80,7 +80,7 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
             c_out = component_config['out']
             in_y = component_config.get('in_y', None)
             main = component_config.get('main', False)
-            chainer.append(c_in, c_out, component, in_y, main)
+            chainer.append(component, c_in, c_out, in_y, main)
     return chainer
 
 
