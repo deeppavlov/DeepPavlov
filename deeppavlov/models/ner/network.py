@@ -3,12 +3,14 @@ import tensorflow as tf
 from functools import partial
 
 from deeppavlov.core.layers.tf_layers import embedding_layer, character_embedding_network, variational_dropout
-from deeppavlov.core.layers.tf_layers import cudnn_bi_lstm, cudnn_bi_gru, bi_rnn, stacked_cnn
+from deeppavlov.core.layers.tf_layers import cudnn_bi_lstm, cudnn_bi_gru, bi_rnn, stacked_cnn, INITIALIZER
 from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.core.common.check_gpu import check_gpu_existence
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.common.log import get_logger
 
-INITIALIZER = tf.orthogonal_initializer
+
+log = get_logger(__name__)
 
 
 @register('ner')
@@ -49,7 +51,15 @@ class NerNetwork(TFModel):
                  clip_grad_norm=5.0,
                  learning_rate=3e-3,
                  gpu=None,
+                 seed=None,
+                 lr_drop_patience=5,
+                 lr_drop_value=0.1,
                  **kwargs):
+        tf.set_random_seed(seed)
+        np.random.seed(seed)
+        self._learning_rate = learning_rate
+        self._lr_drop_patience = lr_drop_patience
+        self._lr_drop_value = lr_drop_value
         self._add_training_placeholders(dropout_keep_prob, learning_rate)
         self._xs_ph_list = []
         self._y_ph = tf.placeholder(tf.int32, [None, None], name='y_ph')
@@ -58,14 +68,14 @@ class NerNetwork(TFModel):
         # ================ Building input features =================
 
         # Token embeddings
-        self._add_word_embeddings(token_emb_mat, embeddings_dropout, token_emb_dim)
+        self._add_word_embeddings(token_emb_mat, token_emb_dim)
 
         # Masks for different lengths utterances
         self.mask_ph = self._add_mask()
 
         # Char embeddings using highway CNN with max pooling
         if char_emb_mat is not None and char_emb_dim is not None:
-            self._add_char_embeddings(char_emb_mat, embeddings_dropout)
+            self._add_char_embeddings(char_emb_mat)
 
         # Capitalization features
         if capitalization_dim is not None:
@@ -80,6 +90,8 @@ class NerNetwork(TFModel):
             self._add_additional_features(additional_features)
 
         features = tf.concat(self._input_features, axis=2)
+        if embeddings_dropout:
+            features = variational_dropout(features, self._dropout_ph)
 
         # ================== Building the network ==================
 
@@ -87,9 +99,9 @@ class NerNetwork(TFModel):
             if use_cudnn_rnn:
                 if l2_reg > 0:
                     raise Warning('cuDNN RNN are not l2 regularizable')
-                units = self._build_cudnn_rnn(features, n_hidden_list, cell_type, intra_layer_dropout)
+                units = self._build_cudnn_rnn(features, n_hidden_list, cell_type, intra_layer_dropout, self.mask_ph)
             else:
-                units = self._build_rnn(features, n_hidden_list, cell_type, intra_layer_dropout)
+                units = self._build_rnn(features, n_hidden_list, cell_type, intra_layer_dropout, self.mask_ph,)
         elif net_type == 'cnn':
             units = self._build_cnn(features, n_hidden_list, cnn_filter_width, use_batch_norm)
         self._logits = self._build_top(units, n_tags, n_hidden_list[-1], top_dropout, two_dense_on_top)
@@ -114,15 +126,13 @@ class NerNetwork(TFModel):
         self._dropout_ph = tf.placeholder_with_default(dropout_keep_prob, shape=[], name='dropout')
         self.training_ph = tf.placeholder_with_default(False, shape=[], name='is_training')
 
-    def _add_word_embeddings(self, token_emb_mat, embeddings_dropout, token_emb_dim=None):
+    def _add_word_embeddings(self, token_emb_mat, token_emb_dim=None):
         if token_emb_mat is None:
             token_ph = tf.placeholder(tf.float32, [None, None, token_emb_dim], name='Token_Ind_ph')
             emb = token_ph
         else:
             token_ph = tf.placeholder(tf.int32, [None, None], name='Token_Ind_ph')
             emb = embedding_layer(token_ph, token_emb_mat)
-        if embeddings_dropout:
-            emb = tf.layers.dropout(emb, self._dropout_ph, noise_shape=[tf.shape(emb)[0], 1, tf.shape(emb)[2]])
         self._xs_ph_list.append(token_ph)
         self._input_features.append(emb)
 
@@ -131,10 +141,9 @@ class NerNetwork(TFModel):
         self._xs_ph_list.append(mask_ph)
         return mask_ph
 
-    def _add_char_embeddings(self, char_emb_mat, embeddings_dropout):
+    def _add_char_embeddings(self, char_emb_mat):
         character_indices_ph = tf.placeholder(tf.int32, [None, None, None], name='Char_ph')
         char_embs = character_embedding_network(character_indices_ph, emb_mat=char_emb_mat)
-        char_embs = variational_dropout(char_embs, embeddings_dropout)
         self._xs_ph_list.append(character_indices_ph)
         self._input_features.append(char_embs)
 
@@ -144,27 +153,26 @@ class NerNetwork(TFModel):
         self._input_features.append(capitalization_ph)
 
     def _add_pos(self, pos_features_dim):
-        pos_ph = tf.placeholder(tf.int32, [None, None], name='POS_ph')
-        pos = tf.one_hot(pos_ph, pos_features_dim, dtype=tf.float32)
+        pos_ph = tf.placeholder(tf.float32, [None, None, pos_features_dim], name='POS_ph')
         self._xs_ph_list.append(pos_ph)
-        self._input_features.append(pos)
+        self._input_features.append(pos_ph)
 
     def _add_additional_features(self, features_list):
         for feature, dim in features_list:
-            feat_ph = tf.placeholder(tf.int32, [None, None, dim], name=feature + '_ph')
+            feat_ph = tf.placeholder(tf.float32, [None, None, dim], name=feature + '_ph')
             self._xs_ph_list.append(feat_ph)
             self._input_features.append(feat_ph)
 
-    def _build_cudnn_rnn(self, units, n_hidden_list, cell_type, intra_layer_dropout):
+    def _build_cudnn_rnn(self, units, n_hidden_list, cell_type, intra_layer_dropout, mask):
         if not check_gpu_existence():
             raise RuntimeError('Usage of cuDNN RNN layers require GPU along with cuDNN library')
-
+        sequence_lengths = tf.to_int32(tf.reduce_sum(mask, axis=1))
         for n, n_hidden in enumerate(n_hidden_list):
             with tf.variable_scope(cell_type.upper() + '_' + str(n)):
                 if cell_type.lower() == 'lstm':
-                    units, _ = cudnn_bi_lstm(units, n_hidden)
+                    units, _ = cudnn_bi_lstm(units, n_hidden, sequence_lengths)
                 elif cell_type.lower() == 'gru':
-                    units, _ = cudnn_bi_gru(units, n_hidden)
+                    units, _ = cudnn_bi_gru(units, n_hidden, sequence_lengths)
                 else:
                     raise RuntimeError('Wrong cell type "{}"! Only "gru" and "lstm"!'.format(cell_type))
                 units = tf.concat(units, -1)
@@ -212,12 +220,11 @@ class NerNetwork(TFModel):
 
         # L2 regularization
         if l2_reg > 0:
-            total_loss = loss + l2_reg * tf.reduce_mean(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
-        else:
-            total_loss = loss
-        optimizer = partial(tf.train.MomentumOptimizer, momentum=0.9, use_nesterov=True)
-        # optimizer = tf.train.AdamOptimizer
-        train_op = self.get_train_op(total_loss, self.learning_rate_ph, optimizer, clip_norm=clip_grad_norm)
+            loss += l2_reg * tf.reduce_sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
+
+        # optimizer = partial(tf.train.MomentumOptimizer, momentum=0.9, use_nesterov=True)
+        optimizer = tf.train.AdamOptimizer
+        train_op = self.get_train_op(loss, self.learning_rate_ph, optimizer, clip_norm=clip_grad_norm)
         return train_op, loss
 
     def predict_no_crf(self, xs):
@@ -267,6 +274,24 @@ class NerNetwork(TFModel):
 
     def train_on_batch(self, *args):
         *xs, y = args
-        feed_dict = self._fill_feed_dict(xs, y, train=True)
+        feed_dict = self._fill_feed_dict(xs, y, train=True, learning_rate=self._learning_rate)
         self.sess.run(self.train_op, feed_dict)
 
+    def process_event(self, event_name, data):
+        if event_name == 'after_validation':
+            if not hasattr(self, '_best_f1'):
+                self._best_f1 = 0
+            if not hasattr(self, '_impatience'):
+                self._impatience = 0
+            if data['metrics']['ner_f1'] > self._best_f1:
+                self._best_f1 = data['metrics']['ner_f1']
+                self._impatience = 0
+            else:
+                self._impatience += 1
+
+            if self._impatience >= self._lr_drop_patience:
+                self._impatience = 0
+                log.info('Dropping learning rate from {:.1e} to {:.1e}'.format(self._learning_rate,
+                                                                               self._learning_rate * self._lr_drop_value))
+                self.load()
+                self._learning_rate *= self._lr_drop_value

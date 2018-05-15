@@ -63,7 +63,7 @@ PARAMS = {
     "ner": {
         ("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_ontonotes.json", "ner_ontonotes_senna", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_ontonotes.json", "ner_ontonotes", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_rus.json", "ner_rus", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/slotfill_dstc2.json", "slotfill_dstc2", ALL_MODES):
             [
