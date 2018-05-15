@@ -20,11 +20,10 @@ test_src_dir = tests_dir / "test_configs"
 download_path = tests_dir / "download"
 
 TEST_MODES = ['IP',  # test_interacting_pretrained_model
-              'TI',  # test_consecutive_training_and_interacting
-              'DE'  # test_downloaded_model_existence
+              'TI'  # test_consecutive_training_and_interacting
               ]
 
-ALL_MODES = ('DE', 'IP', 'TI')
+ALL_MODES = ('IP', 'TI')
 
 ONE_ARGUMENT_INFER_CHECK = ('Dummy text', None)
 TWO_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', None)
@@ -63,8 +62,8 @@ PARAMS = {
     "ner": {
         ("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_ontonotes.json", "ner_ontonotes_senna", ('DE', 'IP')): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_rus.json", "ner_rus", ('DE', 'IP')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_ontonotes.json", "ner_ontonotes_senna", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_rus.json", "ner_rus", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/slotfill_dstc2.json", "slotfill_dstc2", ALL_MODES):
             [
                 ("chinese food", "{'food': 'chinese'}"),
@@ -80,7 +79,7 @@ PARAMS = {
     "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
     "odqa": {
         ("odqa/ranker_test.json", "odqa", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("odqa/odqa_infer_test.json", "odqa", ('DE', 'IP')): [ONE_ARGUMENT_INFER_CHECK]
+        ("odqa/odqa_infer_test.json", "odqa", ('IP')): [ONE_ARGUMENT_INFER_CHECK]
     }
 }
 
