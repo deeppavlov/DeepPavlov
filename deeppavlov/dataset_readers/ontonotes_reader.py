@@ -17,7 +17,7 @@ from pathlib import Path
 import pickle
 
 from deeppavlov.core.data.dataset_reader import DatasetReader
-from deeppavlov.core.data.utils import download_decompress
+from deeppavlov.core.data.utils import download
 from deeppavlov.core.common.registry import register
 
 
@@ -28,7 +28,7 @@ class OntonotesReader(DatasetReader):
     def read(self, data_path, file_name: str='ontonotes_senna.pckl', provide_senna_pos=False, provide_senna_ner=False):
         path = Path(data_path).resolve() / file_name
         if not path.exists():
-            download_decompress(self.URL, str(path.parent))
+            download(str(path), self.URL)
         with open(path, 'rb') as f:
             dataset = pickle.load(f)
 
