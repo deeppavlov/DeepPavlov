@@ -78,8 +78,8 @@ PARAMS = {
     },
     "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
     "odqa": {
-        ("odqa/ranker_test.json", "odqa", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("odqa/odqa_infer_test.json", "odqa", ('IP')): [ONE_ARGUMENT_INFER_CHECK]
+        ("odqa/ranker_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK],
+        ("odqa/odqa_infer_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK]
     }
 }
 
