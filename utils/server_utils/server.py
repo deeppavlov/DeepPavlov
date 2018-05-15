@@ -7,7 +7,7 @@ from flask_cors import CORS
 
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.commands.infer import build_model_from_config
-from deeppavlov.core.data.utils import check_nested_dict_keys
+from deeppavlov.core.data.utils import check_nested_dict_keys, jsonify_data
 from deeppavlov.core.common.log import get_logger
 
 
@@ -64,7 +64,7 @@ def interact(model, params_names):
         model_args = [model_args]
 
     prediction = model(model_args)
-    result = prediction[0]
+    result = jsonify_data(prediction[0])
     return jsonify(result), 200
 
 

@@ -250,3 +250,24 @@ def check_nested_dict_keys(check_dict: dict, keys: list):
         return True
     else:
         return False
+
+
+def jsonify_data(input):
+    if isinstance(input, list):
+        result = [jsonify_data(item) for item in input]
+    elif isinstance(input, tuple):
+        result = [jsonify_data(item) for item in input]
+    elif isinstance(input, dict):
+        result = {}
+        for key in input.keys():
+            result[key] = jsonify_data(input[key])
+    elif isinstance(input, np.ndarray):
+        result = input.tolist()
+    elif isinstance(input, (np.int_, np.intc, np.intp, np.int8, np.int16, np.int32,
+                            np.int64, np.uint8, np.uint16, np.uint32, np.uint64)):
+        result = int(input)
+    elif isinstance(input, (np.float_, np.float16, np.float32, np.float64)):
+        result = float(input)
+    else:
+        result = input
+    return result
