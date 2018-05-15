@@ -145,7 +145,8 @@
   },
   "metadata": {
     "labels": {
-      "telegram_utils": "NERCoNLL2003Model"
+      "telegram_utils": "NERCoNLL2003Model",
+      "server_utils": "NER"
     },
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_conll2003_v3.tar.gz",

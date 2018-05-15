@@ -92,7 +92,8 @@
   },
   "metadata": {
     "labels": {
-      "telegram_utils": "NERModel"
+      "telegram_utils": "NERModel",
+      "server_utils": "NER"
     },
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/slotfill_dstc2.tar.gz"

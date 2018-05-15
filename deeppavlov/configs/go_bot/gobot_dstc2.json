@@ -81,7 +81,8 @@
   },
   "metadata": {
     "labels": {
-      "telegram_utils": "GoalOrientedBot"
+      "telegram_utils": "GoalOrientedBot",
+      "server_utils": "GoalOrientedBot"
     },
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",

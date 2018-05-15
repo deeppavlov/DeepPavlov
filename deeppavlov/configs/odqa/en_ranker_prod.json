@@ -50,6 +50,9 @@
     "batch_size": 10000
   },
   "metadata": {
+    "labels": {
+      "server_utils": "Ranker"
+    },
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/odqa.tar.gz"
     ]
