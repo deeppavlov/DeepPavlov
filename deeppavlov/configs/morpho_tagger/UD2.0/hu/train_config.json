@@ -68,6 +68,7 @@
   "metadata": {
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/morpho_tagger.tar.gz"
-    ]
+    ],
+  "telegram_utils": "MorphoTaggerModel"
   }
 }

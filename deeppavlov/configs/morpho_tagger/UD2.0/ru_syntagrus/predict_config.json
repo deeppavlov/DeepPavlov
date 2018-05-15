@@ -62,6 +62,12 @@
   },
   "predict": {
     "batch_size": 32,
-    "outfile": "results/ud_hu_test.res"
+    "outfile": "results/ud_ru_syntagrus_test.res"
+  },
+  "metadata": {
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/morpho_tagger.tar.gz"
+    ],
+  "telegram_utils": "MorphoTaggerModel"
   }
 }

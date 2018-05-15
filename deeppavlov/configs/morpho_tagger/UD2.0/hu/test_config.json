@@ -58,5 +58,11 @@
     "test_best": true,
     "batch_size": 16,
     "metrics": ["per_token_accuracy"]
+  },
+  "metadata": {
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/morpho_tagger.tar.gz"
+    ],
+  "telegram_utils": "MorphoTaggerModel"
   }
 }
