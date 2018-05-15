@@ -20,8 +20,8 @@ assert sys.hexversion >= 0x3060000, 'Does not work in python3.5 or lower'
 
 import deeppavlov.core.models.keras_model
 import deeppavlov.core.data.vocab
-import deeppavlov.core.data.database
 import deeppavlov.core.data.simple_vocab
+import deeppavlov.core.data.sqlite_database
 import deeppavlov.dataset_readers.babi_reader
 import deeppavlov.dataset_readers.dstc2_reader
 import deeppavlov.dataset_readers.kvret_reader

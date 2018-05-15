@@ -24,7 +24,7 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-@register('sql_database')
+@register('sqlite_database')
 class Sqlite3Database(Estimator):
     """
     Loads and trains sqlite table of any items (with name `table_name`
@@ -149,9 +149,9 @@ class Sqlite3Database(Estimator):
                 to_insert[primary_values] = record
 
         if to_insert:
-            fformat = '(' + ','.join(['?'] * len(self.keys)) + ')'
+            fformat = ','.join(['?'] * len(self.keys))
             self.cursor.executemany("INSERT into {}".format(self.tname) +
-                                    " VALUES {}".format(fformat),
+                                    " VALUES ({})".format(fformat),
                                     to_insert.values())
         if to_update:
             for record in to_update.values():
