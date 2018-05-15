@@ -117,10 +117,7 @@ def download_config(conf_file):
     with (test_configs_path / conf_file).open("w") as fout:
         json.dump(config, fout)
 
-    download_config_references(config)
-
-
-def download_config_references(config):
+    # Download referenced config files
     config_references = get_all_elems_from_json(config, 'config_path')
     for config_ref in config_references:
         m_name = config_ref.split('/')[-2]
