@@ -16,15 +16,14 @@ limitations under the License.
 
 from deeppavlov.core.commands.train import train_model_from_config
 from deeppavlov.core.commands.infer import interact_model
-from deeppavlov.core.commands.utils import set_deeppavlov_root
 
 
-PIPELINE_CONFIG_PATH = 'configs/intents/intents_dstc2.json'
+# PIPELINE_CONFIG_PATH = 'configs/intents/intents_dstc2.json'
 # PIPELINE_CONFIG_PATH = 'configs/intents/intents_snips.json'
 # PIPELINE_CONFIG_PATH = 'configs/ner/ner_dstc2.json'
 # PIPELINE_CONFIG_PATH = 'configs/ner/ner_dstc2.json'
 # PIPELINE_CONFIG_PATH = 'configs/ner/slotfill_dstc2.json'
-# PIPELINE_CONFIG_PATH = 'configs/error_model/brillmoore_wikitypos_en.json'
+PIPELINE_CONFIG_PATH = 'configs/error_model/brillmoore_wikitypos_en.json'
 # PIPELINE_CONFIG_PATH = 'configs/error_model/brillmoore_kartaslov_ru.json'
 # PIPELINE_CONFIG_PATH = 'configs/go_bot/config.json'
 # PIPELINE_CONFIG_PATH = 'configs/go_bot/config_minimal.json'
@@ -36,7 +35,7 @@ PIPELINE_CONFIG_PATH = 'configs/intents/intents_dstc2.json'
 # PIPELINE_CONFIG_PATH = 'configs/odqa/ru_ranker_prod.json'
 # PIPELINE_CONFIG_PATH = 'configs/odqa/en_odqa_infer_prod.json'
 # PIPELINE_CONFIG_PATH = 'configs/odqa/ru_odqa_infer_prod.json'
-PIPELINE_CONFIG_PATH = 'configs/odqa/ranker_test.json'
+# PIPELINE_CONFIG_PATH = 'configs/odqa/ranker_test.json'
 
 train_model_from_config(PIPELINE_CONFIG_PATH)
 interact_model(PIPELINE_CONFIG_PATH)
