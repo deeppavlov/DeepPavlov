@@ -17,7 +17,6 @@ limitations under the License.
 import copy
 import re
 from abc import ABCMeta, abstractmethod
-from deeppavlov.skills.go_bot.sql_database_reader import DataBase
 
 
 class Template(metaclass=ABCMeta):

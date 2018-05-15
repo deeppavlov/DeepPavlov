@@ -23,8 +23,6 @@ from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.models.tokenizers.spacy_tokenizer import StreamSpacyTokenizer
-from deeppavlov.models.trackers.default_tracker import DefaultTracker
 from deeppavlov.skills.go_bot.network import GoalOrientedBotNetwork
 import deeppavlov.skills.go_bot.templates as templ
 from deeppavlov.core.common.log import get_logger
@@ -38,9 +36,9 @@ class GoalOrientedBot(NNModel):
     def __init__(self,
                  template_path,
                  network_parameters,
+                 tokenizer,
+                 tracker,
                  template_type: str = "BaseTemplate",
-                 tokenizer: Type = StreamSpacyTokenizer,
-                 tracker: Type = DefaultTracker,
                  database=None,
                  api_call_action=None,
                  bow_embedder=None,
