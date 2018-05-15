@@ -32,6 +32,7 @@ PARAMS = {"error_model": {("error_model/brillmoore_wikitypos_en.json", "error_mo
                      ("go_bot/gobot_dstc2_all.json", "gobot_dstc2_all", ('TI',)): []},
           "intents": {
               ("intents/intents_dstc2.json", "intents", ALL_MODES):  [],
+              ("intents/intents_dstc2_big.json", "intents", ('TI')): [],
               ("intents/intents_snips_bigru.json", "intents", ('TI')): [],
               ("intents/intents_snips_bilstm.json", "intents", ('TI')): [],
               ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI')): [],
