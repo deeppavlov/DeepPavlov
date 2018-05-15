@@ -47,7 +47,7 @@ def build_model_from_config(config, mode='infer', load_trained=False, as_compone
                 c_out = component_config['out']
                 in_y = component_config.get('in_y', None)
                 main = component_config.get('main', False)
-                model.append(c_in, c_out, component, in_y, main)
+                model.append(component, c_in, c_out, in_y, main)
 
         return model
 
