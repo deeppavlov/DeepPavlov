@@ -27,6 +27,7 @@ ALL_MODES = ('IP', 'TI')
 
 ONE_ARGUMENT_INFER_CHECK = ('Dummy text', None)
 TWO_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', None)
+FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_text', None)
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
@@ -76,7 +77,7 @@ PARAMS = {
         ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK]
     },
-    "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
+    "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): [FOUR_ARGUMENTS_INFER_CHECK]},
     "odqa": {
         ("odqa/ranker_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK],
         ("odqa/odqa_infer_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK]
