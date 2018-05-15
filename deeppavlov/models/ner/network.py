@@ -52,10 +52,14 @@ class NerNetwork(TFModel):
                  learning_rate=3e-3,
                  gpu=None,
                  seed=None,
+                 lr_drop_patience=5,
+                 lr_drop_value=0.1,
                  **kwargs):
         tf.set_random_seed(seed)
         np.random.seed(seed)
         self._learning_rate = learning_rate
+        self._lr_drop_patience = lr_drop_patience
+        self._lr_drop_value = lr_drop_value
         self._add_training_placeholders(dropout_keep_prob, learning_rate)
         self._xs_ph_list = []
         self._y_ph = tf.placeholder(tf.int32, [None, None], name='y_ph')
@@ -285,9 +289,9 @@ class NerNetwork(TFModel):
             else:
                 self._impatience += 1
 
-            if self._impatience > 4:
+            if self._impatience >= self._lr_drop_patience:
                 self._impatience = 0
                 log.info('Dropping learning rate from {:.1e} to {:.1e}'.format(self._learning_rate,
-                                                                               self._learning_rate / 10))
+                                                                               self._learning_rate * self._lr_drop_value))
                 self.load()
-                self._learning_rate /= 10
+                self._learning_rate *= self._lr_drop_value
