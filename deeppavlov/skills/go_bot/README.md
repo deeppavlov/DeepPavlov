@@ -66,7 +66,7 @@ Here is a simple example of interaction with a trained dialogue bot (can be down
    * `save_path` — `"vocabs/token.dict"`
    * `load_path` — `"vocabs/token.dict"`
 * `template_path` — map from actions to text templates for response generation
-* `template_type` — type of templates to use (`"Template"` by default) _(optional)_
+* `template_type` — type of templates to use (`"BaseTemplate"` by default) _(optional)_
 * `database` –  database that will be used during model inference to make "api_call" action and get `db_result` _(optional)_
    * `name` — `"sql_database"` from [`deeppavlov.core.data.database:Sqlite3Database`](../../core/data/database.py) or your implementation
    * `table_name` – sqlite table name
@@ -244,7 +244,7 @@ If your model needs to be trained on different data, you have several ways of ac
     
 ##### Templates
 
-You should provide a maping from actions to text templates in the following format (and set `template_type` to `"Template"`, DSTC2 uses an extention of templates –`"DualTemplate"`, you will probably not need them):
+You should provide a maping from actions to text templates in the following format (and set `template_type` to `"BaseTemplate"`, DSTC2 uses an extention of templates –`"DualTemplate"`, you will probably not need it):
   * `action\ttemplate`,
   * where filled slots in templates should start with "#" and mustn't contain whitespaces.
   

@@ -38,7 +38,7 @@ class GoalOrientedBot(NNModel):
     def __init__(self,
                  template_path,
                  network_parameters,
-                 template_type: str = "Template",
+                 template_type: str = "BaseTemplate",
                  tokenizer: Type = StreamSpacyTokenizer,
                  tracker: Type = DefaultTracker,
                  database=None,
