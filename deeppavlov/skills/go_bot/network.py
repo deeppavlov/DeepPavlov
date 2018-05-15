@@ -212,11 +212,7 @@ class GoalOrientedBotNetwork(TFModel):
         # input projection
         _units = tf.layers.dense(self._features, self.dense_size,
                                  kernel_regularizer=tf.nn.l2_loss,
-                                 kernel_initializer=xav(),
-                                 name='units')
-        _units = tf_layers.variational_dropout(_units,
-                                               keep_prob=self._dropout_keep_prob)
-
+                                 kernel_initializer=xav())
         if self.attn:
             attn_scope = "attention_mechanism/{}".format(self.attn.type)
             with tf.variable_scope(attn_scope):
@@ -261,6 +257,9 @@ class GoalOrientedBotNetwork(TFModel):
                 else:
                     raise ValueError("wrong value for attention mechanism type")
             _units = tf.concat([_units, _attn_output], -1)
+
+        _units = tf_layers.variational_dropout(_units,
+                                               keep_prob=self._dropout_keep_prob)
 
         # recurrent network unit
         _lstm_cell = tf.nn.rnn_cell.LSTMCell(self.hidden_size)
