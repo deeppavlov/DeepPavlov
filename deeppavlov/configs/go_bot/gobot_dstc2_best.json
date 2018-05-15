@@ -22,7 +22,7 @@
       },
       {
         "id": "restaurant_database",
-        "name": "sql_database",
+        "name": "sqlite_database",
         "table_name": "mytable",
         "primary_keys": ["name"],
         "save_path": "dstc2_v2/resto.sqlite"
@@ -47,7 +47,7 @@
           "end_learning_rate": 0.002,
           "decay_steps": 20,
           "decay_power": 0.5,
-          "dropout_rate": 0.7,
+          "dropout_rate": 0.3,
           "l2_reg_coef": 1e-4,
           "hidden_size": 128,
           "dense_size": 64,

@@ -22,7 +22,7 @@
       },
       {
         "id": "restaurant_database",
-        "name": "sql_database",
+        "name": "sqlite_database",
         "table_name": "mytable",
         "primary_keys": ["name"],
         "save_path": "dstc2_v2/resto.sqlite"
@@ -44,7 +44,7 @@
           "load_path": "gobot_dstc2_minimal/model",
           "save_path": "gobot_dstc2_minimal/model",
           "learning_rate": 0.01,
-          "dropout_rate": 0.9,
+          "dropout_rate": 0.1,
           "hidden_size": 128,
           "dense_size": 64
         },

@@ -20,8 +20,6 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer as xav
 
-import collections
-
 from deeppavlov.core.layers import tf_attention_mechanisms as am
 from deeppavlov.core.layers import tf_layers
 from deeppavlov.core.common.registry import register
@@ -62,7 +60,7 @@ class GoalOrientedBotNetwork(TFModel):
     def __call__(self, features, emb_context, key, action_mask, prob=False):
         feed_dict = {
             self._features: features,
-            self._dropout: 1.,
+            self._dropout_keep_prob: 1.,
             self._learning_rate: 1.,
             self._utterance_mask: [[1.]],
             self._initial_state: (self.state_c, self.state_h),
@@ -83,7 +81,7 @@ class GoalOrientedBotNetwork(TFModel):
 
     def train_on_batch(self, features, emb_context, key, utter_mask, action_mask, action):
         feed_dict = {
-            self._dropout: self.dropout_rate,
+            self._dropout_keep_prob: 1 - self.dropout_rate,
             self._learning_rate: self.get_learning_rate(), 
             self._utterance_mask: utter_mask,
             self._features: features,
@@ -101,7 +99,7 @@ class GoalOrientedBotNetwork(TFModel):
 
     def _init_params(self, params):
         self.opt = copy.deepcopy(params)
-        self.opt['dropout_rate'] = params.get('dropout_rate', 1.)
+        self.opt['dropout_rate'] = params.get('dropout_rate', 0.)
         self.opt['dense_size'] = params.get('dense_size', self.opt['hidden_size'])
         self.opt['end_learning_rate'] = params.get('end_learning_rate',
                                                    params['learning_rate'])
@@ -174,9 +172,9 @@ class GoalOrientedBotNetwork(TFModel):
                                            clip_norm=2.)
 
     def _add_placeholders(self):
-        self._dropout = tf.placeholder_with_default(1.0,
-                                                    shape=[],
-                                                    name='dropout_rate')
+        self._dropout_keep_prob = tf.placeholder_with_default(1.0,
+                                                              shape=[],
+                                                              name='dropout_prob')
         self._learning_rate = tf.placeholder(tf.float32,
                                              shape=[],
                                              name='learning_rate')
@@ -212,10 +210,12 @@ class GoalOrientedBotNetwork(TFModel):
 
     def _build_body(self):
         # input projection
-        _units = tf_layers.variational_dropout(self._features, keep_prob=self._dropout)
-        _units = tf.layers.dense(_units, self.dense_size,
+        _units = tf.layers.dense(self._features, self.dense_size,
                                  kernel_regularizer=tf.nn.l2_loss,
-                                 kernel_initializer=xav(), name='units')
+                                 kernel_initializer=xav(),
+                                 name='units')
+        _units = tf_layers.variational_dropout(_units,
+                                               keep_prob=self._dropout_keep_prob)
 
         if self.attn:
             attn_scope = "attention_mechanism/{}".format(self.attn.type)
