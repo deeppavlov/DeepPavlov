@@ -34,15 +34,7 @@
     "out": ["slots"]
   },
   "train": {
-    "epochs": 100,
-    "batch_size": 64,
-
-    "metrics": ["slots_accuracy"],
-    "validation_patience": 5,
-    "val_every_n_epochs": 5,
-
-    "log_every_n_epochs": 1,
-    "show_examples": false
+    "metrics": ["slots_accuracy"]
   },
   "metadata": {
     "labels": {
