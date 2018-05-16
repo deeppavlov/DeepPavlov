@@ -1,3 +1,5 @@
 include README.MD
 include LICENSE
 include requirements.txt
+recursive-include deeppavlov/configs *.json
+recursive-include utils *.json
