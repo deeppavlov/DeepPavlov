@@ -67,8 +67,6 @@ class Sqlite3Database(Estimator):
         if not self._check_if_table_exists():
             log.warn("Database is empty, call fit() before using.")
             return [[] for i in range(len(batch))]
-        elif not self.keys:
-            self.keys = self._get_keys()
         return [self._search(b, order_by=order_by, order=order) for b in batch]
 
     def _check_if_table_exists(self):
