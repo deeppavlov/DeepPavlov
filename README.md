@@ -261,7 +261,7 @@ Chainer is a core concept of DeepPavlov library: chainer builds a pipeline from 
 its inputs and outputs as arrays of names, for example: `"in": ["tokens", "features"]` and `"out": ["token_embeddings", "features_embeddings"]` and you can chain outputs of one components with inputs of other components:
 ```json
 {
-  "name": "str_lower",
+  "class": "deeppavlov.models.preproccessors.str_lower:StrLower",
   "in": ["x"],
   "out": ["x_lower"]
 },
@@ -271,8 +271,10 @@ its inputs and outputs as arrays of names, for example: `"in": ["tokens", "featu
   "out": ["x_tokens"]
 },
 ```
-Each [Component](deeppavlov/core/models/component.py) in the pipeline must implement method `__call__` and has `name` parameter, which is its registered codename. It can also have any other parameters which repeat its `__init__()` method arguments.
- Default values of `__init__()` arguments will be overridden with the config values during the initialization of a class instance.
+Each [Component](deeppavlov/core/models/component.py) in the pipeline must implement method `__call__` and has `name` parameter, which is its registered codename,
+ or `class` parameter in the form of `module_name:ClassName`.
+It can also have any other parameters which repeat its `__init__()` method arguments.
+Default values of `__init__()` arguments will be overridden with the config values during the initialization of a class instance.
  
 You can reuse components in the pipeline to process different parts of data with the help of `id` and `ref` parameters:
 ```json
@@ -288,7 +290,7 @@ You can reuse components in the pipeline to process different parts of data with
   "out": ["y_tokens"]
 },
 ```
- 
+
 ### Training
 
 There are two abstract classes for trainable components: **Estimator** and **NNModel**.  
