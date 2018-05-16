@@ -44,12 +44,10 @@
           "load_path": "gobot_dstc2/model",
           "save_path": "gobot_dstc2/model",
           "learning_rate": 0.004,
-          "end_learning_rate": 0.0007,
-          "decay_steps": 15,
           "dropout_rate": 0.85,
-          "l2_reg_coef": 2e-4,
+          "l2_reg_coef": 7e-4,
           "hidden_size": 128,
-          "dense_size": 128
+          "dense_size": 160
         },
         "slot_filler": {
           "config_path": "../deeppavlov/configs/ner/slotfill_dstc2.json"
