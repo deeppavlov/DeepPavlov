@@ -154,7 +154,8 @@ python -m deeppavlov.deep <mode> <path_to_config> [-d]
 ```
 
 * `<mode>` can be 'train', 'predict', 'interact', 'interactbot' or 'riseapi'
-* `<path_to_config>` should be a path to an NLP pipeline json config
+* `<path_to_config>` should be a path to an NLP pipeline json config (e.g. `deeppavlov/configs/ner/slotfill_dstc2.json`)
+or a name without the `.json` extension of one of the config files [provided](deeppavlov/configs) in this repository (e.g. `slotfill_dstc2`)
 
 For the 'interactbot' mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable. Also if you want to get custom `/start` and `/help` Telegram messages for the running model you should:
 * Add section to `utils/telegram_utils/model_info.json` with your custom Telegram messages
