@@ -10,28 +10,38 @@ The dialogue bot is based on [[1]](#references) which introduces Hybrid Code Net
 
 Here is a simple example of interaction with a trained dialogue bot (can be downloaded with [`deeppavlov/download.py`](../../download.py)):
 
-```
-:: 
->> Hello, welcome to the Phystech restaurant system. You can ask for restaurants by area, price range or food type. How may I help you?
-:: hi, i want some food
->> What part of town do you have in mind?
-:: north of Dolgoprudny
->> Would you like something in the cheap, moderate, or expensive price range?
-:: something chep, please
->> "Time to eat" is a nice place in the north of town and the prices are cheap.
-:: what kind of food does it serve? 
->> "Time to eat" serves russian food.
-:: i like that! give me their address then
->> Sure, "Time to eat" is on Sobina Square, 1/4.
-:: and phone number. In case i wanted anything for delivery.
->> The phone number of "Time to eat" is +7(965)173-37-33.
-:: I won't need that, but give me their post code too.
->> The post code of "Time to eat" is 141700.
-:: nice, thanks!
->> "Time to eat" is a nice place in the centre of town serving tasty creative food.
-:: good bye
+```x::
+>> Hello, welcome to the Cambridge restaurant system. You can ask for restaurants by area, price range or food type. How may I help you?
+x::hi, i want cheap food
+2018-05-16 12:28:48.459 INFO in 'deeppavlov.skills.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'cheap'}, got 22 results.
+>> The lucky star serves chinese food in the cheap price range.
+x::is there anything with french food?
+2018-05-16 12:29:02.795 INFO in 'deeppavlov.skills.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'cheap', 'food': 'french'}, got 0 results.
+>> Sorry there is no french restaurant in the cheap price range.
+x::ok, maybe there is something in expensive pricerange?
+2018-05-16 12:29:23.337 INFO in 'deeppavlov.skills.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'expensive', 'food': 'french'}, got 2 results.
+>> Cote serves french food in the expensive price range.
+x::in what part of town is it?
+2018-05-16 12:29:31.193 INFO in 'deeppavlov.skills.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'expensive', 'food': 'french'}, got 2 results.
+>> Restaurant two two is a nice place in the north of town serving tasty french food.
+x::ok, give me their phone number
+>> The phone number of restaurant two two is 01223 351880.
+x::address and post code too
+>> Restaurant two two is on 22 chesterton road chesterton, c.b 4, 3 a.x.
+x::ok, thank you!
+>> Restaurant two two serves french food in the expensive price range.
+x::and if i wanted an italian restuarant?
+2018-05-16 12:30:15.98 INFO in 'deeppavlov.skills.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'expensive', 'food': 'italian'}, got 4 results.
+>> Frankie and bennys serves italian food in the expensive price range.
+x::more cheaply priced?
+2018-05-16 12:30:36.560 INFO in 'deeppavlov.skills.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'cheap', 'food': 'italian'}, got 5 results.
+>> Da vinci pizzeria serves italian food in the cheap price range.
+x::ok, give me their phone number and address, please
+>> The phone number of da vinci pizzeria is 01223 351707 and it is on 20 milton road chesterton.
+x::thanks    
+>> Da vinci pizzeria serves italian food in the cheap price range.
+x::bye
 >> You are welcome!
-:: exit
 ```
 
 ## Usage
@@ -278,11 +288,11 @@ Scores for different modifications of our bot model:
 
 |                   Model                      | Config      |  Test turn textual accuracy  |
 |----------------------------------------------|-------------|----------------------|
-|basic bot			                               | [`gobot_dstc2_minimal.json`](../../configs/go_bot/gobot_dstc2_minimal.json) |   0.4853           |
-|bot with slot filler & fasttext embeddings    |        |    0.5147           |
-|bot with slot filler & intents                | [`gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json)                 |     0.5261       |
+|basic bot			                               | [`gobot_dstc2_minimal.json`](../../configs/go_bot/gobot_dstc2_minimal.json) |   0.3809           |
+|bot with slot filler & fasttext embeddings    |        |    0.5317           |
+|bot with slot filler & intents                | [`gobot_dstc2.json`](../../configs/go_bot/gobot_dstc2.json)                 |     0.5113      |
 |bot with slot filler & intents & embeddings   | [`gobot_dstc2_all.json`](../../configs/go_bot/gobot_dstc2_all.json)         |     0.5145           |
-|bot with slot filler & embeddings & attention   | [`gobot_dstc2_best.json`](../../configs/go_bot/gobot_dstc2_best.json)         |     **0.5805**           |
+|bot with slot filler & embeddings & attention   | [`gobot_dstc2_best.json`](../../configs/go_bot/gobot_dstc2_best.json)         |     **0.5525**           |
 
 There is another modification of DSTC2 dataset called dialog babi Task6 [[3]](#references). It differs from ours in train/valid/test split and intent/action labeling. 
 
