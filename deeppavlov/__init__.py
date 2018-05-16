@@ -76,6 +76,8 @@ import deeppavlov.models.preprocessors.sanitizer
 import deeppavlov.models.preprocessors.lazy_tokenizer
 import deeppavlov.models.slotfill.slotfill_raw
 import deeppavlov.models.slotfill.slotfill
+import deeppavlov.models.preprocessors.one_hotter
+import deeppavlov.dataset_readers.ontonotes_reader
 
 
 import deeppavlov.metrics.accuracy

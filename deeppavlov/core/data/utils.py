@@ -222,3 +222,52 @@ def zero_pad_char(batch, dtype=np.float32):
                 for q, char_features in enumerate(token):
                     padded_batch[n, k, q] = char_features
     return padded_batch
+
+
+def get_all_elems_from_json(search_json, search_key):
+    result = []
+    if isinstance(search_json, dict):
+        for key in search_json:
+            if key == search_key:
+                result.append(search_json[key])
+            else:
+                result.extend(get_all_elems_from_json(search_json[key], search_key))
+    elif isinstance(search_json, list):
+        for item in search_json:
+            result.extend(get_all_elems_from_json(item, search_key))
+
+    return result
+
+
+def check_nested_dict_keys(check_dict: dict, keys: list):
+    if isinstance(keys, list) and len(keys) > 0:
+        element = check_dict
+        for key in keys:
+            if isinstance(element, dict) and key in element.keys():
+                element = element[key]
+            else:
+                return False
+        return True
+    else:
+        return False
+
+
+def jsonify_data(input):
+    if isinstance(input, list):
+        result = [jsonify_data(item) for item in input]
+    elif isinstance(input, tuple):
+        result = [jsonify_data(item) for item in input]
+    elif isinstance(input, dict):
+        result = {}
+        for key in input.keys():
+            result[key] = jsonify_data(input[key])
+    elif isinstance(input, np.ndarray):
+        result = input.tolist()
+    elif isinstance(input, (np.int_, np.intc, np.intp, np.int8, np.int16, np.int32,
+                            np.int64, np.uint8, np.uint16, np.uint32, np.uint64)):
+        result = int(input)
+    elif isinstance(input, (np.float_, np.float16, np.float32, np.float64)):
+        result = float(input)
+    else:
+        result = input
+    return result

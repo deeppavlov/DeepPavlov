@@ -41,6 +41,18 @@
       "port": "",
       "model_endpoint": "/squad",
       "model_args_names": ["context", "question"]
+    },
+    "ODQA": {
+      "host": "",
+      "port": "",
+      "model_endpoint": "/odqa",
+      "model_args_names": ""
+    },
+    "Ranker": {
+      "host": "",
+      "port": "",
+      "model_endpoint": "/ranker",
+      "model_args_names": ""
     }
   }
 }

@@ -89,7 +89,8 @@
   },
   "metadata": {
     "labels": {
-      "telegram_utils": "GoalOrientedBot"
+      "telegram_utils": "GoalOrientedBot",
+      "server_utils": "GoalOrientedBot"
       },
       "download": [
       {

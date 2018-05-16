@@ -34,7 +34,7 @@ REQ_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_ru.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/seq2seq_go_bot.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/odqa.tar.gz',
-    'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes_senna.tar.gz',
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes_v2.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/senna.tar.gz'
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_rus.tar.gz'
 
