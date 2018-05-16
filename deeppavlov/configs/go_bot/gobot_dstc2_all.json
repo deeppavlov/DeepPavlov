@@ -43,9 +43,9 @@
         "network_parameters": {
           "load_path": "gobot_dstc2_all/model",
           "save_path": "gobot_dstc2_all/model",
-          "learning_rate": 0.02,
-          "dropout_rate": 0.3,
-          "l2_reg_coef": 1e-3,
+          "learning_rate": 0.006,
+          "dropout_rate": 0.35,
+          "l2_reg_coef": 5e-4,
           "hidden_size": 128,
           "dense_size": 64
         },
@@ -80,7 +80,7 @@
     "batch_size": 4,
 
     "metrics": ["per_item_dialog_accuracy"],
-    "validation_patience": 30,
+    "validation_patience": 20,
     "val_every_n_epochs": 1,
 
     "log_every_n_batches": -1,

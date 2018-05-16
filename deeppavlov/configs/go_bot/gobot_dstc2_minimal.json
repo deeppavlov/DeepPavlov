@@ -43,8 +43,9 @@
         "network_parameters": {
           "load_path": "gobot_dstc2_minimal/model",
           "save_path": "gobot_dstc2_minimal/model",
-          "learning_rate": 0.01,
+          "learning_rate": 0.005,
           "dropout_rate": 0.1,
+          "l2_reg_coef": 1e-4,
           "hidden_size": 128,
           "dense_size": 64
         },
