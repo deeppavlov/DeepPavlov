@@ -47,6 +47,7 @@ PARAMS = {
     },
     "intents": {
         ("intents/intents_dstc2.json", "intents", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("intents/intents_dstc2_big.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_snips_bigru.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_snips_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
@@ -65,7 +66,7 @@ PARAMS = {
         ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_ontonotes.json", "ner_ontonotes", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_rus.json", "ner_rus", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/slotfill_dstc2.json", "slotfill_dstc2", ALL_MODES):
+        ("ner/slotfill_dstc2.json", "slotfill_dstc2", ('IP',)):
             [
                 ("chinese food", "{'food': 'chinese'}"),
                 ("in the west part", "{'area': 'west'}"),

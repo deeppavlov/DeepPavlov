@@ -23,10 +23,8 @@ from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.models.tokenizers.spacy_tokenizer import StreamSpacyTokenizer
-from deeppavlov.models.trackers.default_tracker import DefaultTracker
 from deeppavlov.skills.go_bot.network import GoalOrientedBotNetwork
-from deeppavlov.skills.go_bot.templates import Templates, DualTemplate
+import deeppavlov.skills.go_bot.templates as templ
 from deeppavlov.core.common.log import get_logger
 
 
@@ -38,15 +36,16 @@ class GoalOrientedBot(NNModel):
     def __init__(self,
                  template_path,
                  network_parameters,
-                 template_type: Type = DualTemplate,
-                 tokenizer: Type = StreamSpacyTokenizer,
-                 tracker: Type = DefaultTracker,
+                 tokenizer,
+                 tracker,
+                 template_type: str = "BaseTemplate",
+                 database=None,
+                 api_call_action=None,
                  bow_embedder=None,
                  embedder=None,
                  slot_filler=None,
                  intent_classifier=None,
                  use_action_mask=False,
-                 db_result_during_interaction=None,
                  debug=False,
                  save_path=None,
                  word_vocab=None,
@@ -55,23 +54,25 @@ class GoalOrientedBot(NNModel):
 
         super().__init__(save_path=save_path, mode=kwargs['mode'])
 
-        self.episode_done = True
-        self.use_action_mask = use_action_mask
-        self.debug = debug
-        self.slot_filler = slot_filler
-        self.intent_classifier = intent_classifier
-        self.bow_embedder = bow_embedder
-        self.embedder = embedder
         self.tokenizer = tokenizer
         self.tracker = tracker
+        self.bow_embedder = bow_embedder
+        self.embedder = embedder
+        self.slot_filler = slot_filler
+        self.intent_classifier = intent_classifier
+        self.use_action_mask = use_action_mask
+        self.debug = debug
         self.word_vocab = word_vocab or vocabs['word_vocab']
-        self.interact_db_result = db_result_during_interaction
 
         template_path = expand_path(template_path)
+        template_type = getattr(templ, template_type)
         log.info("[loading templates from {}]".format(template_path))
-        self.templates = Templates(template_type).load(template_path)
+        self.templates = templ.Templates(template_type).load(template_path)
         self.n_actions = len(self.templates)
         log.info("{} templates loaded".format(self.n_actions))
+
+        self.database = database
+        self.api_call_id = self.templates.actions.index(api_call_action)
 
         self.intents = []
         if callable(self.intent_classifier):
@@ -84,7 +85,7 @@ class GoalOrientedBot(NNModel):
 
     def _init_network(self, params):
         # initialize network
-        obs_size = 4 + self.tracker.num_features + self.n_actions
+        obs_size = 6 + self.tracker.num_features + self.n_actions
         if callable(self.bow_embedder):
             obs_size += len(self.word_vocab)
         if callable(self.embedder):
@@ -108,7 +109,7 @@ class GoalOrientedBot(NNModel):
             if attn['action_as_key']:
                 key_size += self.n_actions
             if attn['intent_as_key'] and callable(self.intent_classifier):
-                obs_size += len(self.intents)
+                key_size += len(self.intents)
             key_size = key_size or 1
             attn['key_size'] = attn.get('key_size') or key_size
 
@@ -119,7 +120,7 @@ class GoalOrientedBot(NNModel):
         # tokenize input
         tokens = self.tokenizer([context.lower().strip()])[0]
         if self.debug:
-            log.debug("Text tokens = `{}`".format(tokens))
+            log.debug("Tokenized text= `{}`".format(' '.join(tokens)))
 
         # Bag of words features
         bow_features = []
@@ -155,36 +156,11 @@ class GoalOrientedBot(NNModel):
         # Intent features
         intent_features = []
         if callable(self.intent_classifier):
-            intent_probs = self.intent_classifier([tokens])[1][0]
-            intent_features = np.array([intent_probs[i] for i in self.intents],
+            intent, intent_probs = self.intent_classifier([tokens])
+            intent_features = np.array([intent_probs[0][i] for i in self.intents],
                                        dtype=np.float32)
             if self.debug:
-                log.debug("Predicted intent = `{}`".format(intent_probs))
-
-        # Text entity features
-        if callable(self.slot_filler):
-            self.tracker.update_state(self.slot_filler([tokens])[0])
-            if self.debug:
-                log.debug("Slot vals: {}".format(self.slot_filler(tokens)))
-
-        state_features = self.tracker()
-
-        # Other features
-        new_db_result = db_result if db_result is not None else self.db_result
-        context_features = np.array([bool(self.db_result) * 1.,
-                                     bool(new_db_result) * 1.,
-                                     (self.db_result == {}) * 1.,
-                                     (new_db_result == {}) * 1.],
-                                    dtype=np.float32)
-
-        if self.debug:
-            debug_msg = "num bow features = {}, ".format(len(bow_features)) +\
-                        "num emb features = {}, ".format(len(emb_features)) +\
-                        "num intent features = {}, ".format(len(intent_features)) +\
-                        "num state features = {}, ".format(len(state_features)) +\
-                        "num context features = {}, ".format(len(context_features)) +\
-                        "prev_action shape = {}".format(len(self.prev_action))
-            log.debug(debug_msg)
+                log.debug("Predicted intent = `{}`".format(intent[0]))
 
         attn_key = np.array([], dtype=np.float32)
         if self.network.attn:
@@ -194,6 +170,38 @@ class GoalOrientedBot(NNModel):
                 attn_key = np.hstack((attn_key, intent_features))
             if len(attn_key) == 0:
                 attn_key = np.array([1], dtype=np.float32)
+
+        # Text entity features
+        if callable(self.slot_filler):
+            self.tracker.update_state(self.slot_filler([tokens])[0])
+            if self.debug:
+                log.debug("Slot vals: {}".format(self.slot_filler([tokens])))
+
+        state_features = self.tracker()
+
+        # Other features
+        result_matches_state = 0.
+        if self.db_result is not None:
+            result_matches_state = all(v == self.db_result.get(s)
+                                       for s, v in self.tracker.get_state().items()
+                                       if v != 'dontcare') * 1.
+        context_features = np.array([bool(db_result) * 1.,
+                                     (db_result == {}) * 1.,
+                                     (self.db_result is None) * 1.,
+                                     bool(self.db_result) * 1.,
+                                     (self.db_result == {}) * 1.,
+                                     result_matches_state],
+                                    dtype=np.float32)
+
+        if self.debug:
+            log.debug("Context features = {}".format(context_features))
+            debug_msg = "num bow features = {}, ".format(len(bow_features)) +\
+                        "num emb features = {}, ".format(len(emb_features)) +\
+                        "num intent features = {}, ".format(len(intent_features)) +\
+                        "num state features = {}, ".format(len(state_features)) +\
+                        "num context features = {}, ".format(len(context_features)) +\
+                        "prev_action shape = {}".format(len(self.prev_action))
+            log.debug(debug_msg)
 
         concat_feats = np.hstack((bow_features, emb_features, intent_features,
                                   state_features, context_features, self.prev_action))
@@ -214,18 +222,30 @@ class GoalOrientedBot(NNModel):
             for k, v in self.db_result.items():
                 slots[k] = str(v)
 
-        return template.generate_text(slots)
+        resp = template.generate_text(slots)
+        # in api calls replace unknown slots to "dontcare"
+        if (self.templates.ttype is templ.DualTemplate) and\
+                (action_id == self.api_call_id):
+            resp = re.sub("#([A-Za-z]+)", "dontcare", resp).lower()
+        if self.debug:
+            log.debug("Pred response = {}".format(resp))
+        return resp
 
-    def _action_mask(self):
-        action_mask = np.ones(self.n_actions, dtype=np.float32)
+    def _action_mask(self, previous_action):
+        mask = np.ones(self.n_actions, dtype=np.float32)
         if self.use_action_mask:
             known_entities = {**self.tracker.get_state(), **(self.db_result or {})}
             for a_id in range(self.n_actions):
                 tmpl = str(self.templates.templates[a_id])
                 for entity in set(re.findall('#([A-Za-z]+)', tmpl)):
                     if entity not in known_entities:
-                        action_mask[a_id] = 0
-        return action_mask
+                        mask[a_id] = 0.
+        # forbid two api calls in a row
+        if np.any(previous_action):
+            prev_act_id = np.argmax(previous_action)
+            if prev_act_id == self.api_call_id:
+                mask[prev_act_id] = 0.
+        return mask
 
     def train_on_batch(self, x, y):
         b_features, b_u_masks, b_a_masks, b_actions = [], [], [], []
@@ -233,24 +253,33 @@ class GoalOrientedBot(NNModel):
         max_num_utter = max(len(d_contexts) for d_contexts in x)
         for d_contexts, d_responses in zip(x, y):
             self.reset()
+            if self.debug:
+                preds = self._infer_dialog(d_contexts)
             d_features, d_a_masks, d_actions = [], [], []
             d_emb_context, d_key = [], []  # for attention
             for context, response in zip(d_contexts, d_responses):
-                features, emb_context, key = \
-                    self._encode_context(context['text'], context.get('db_result'))
                 if context.get('db_result') is not None:
                     self.db_result = context['db_result']
+                features, emb_context, key = \
+                    self._encode_context(context['text'], context.get('db_result'))
                 d_features.append(features)
                 d_emb_context.append(emb_context)
                 d_key.append(key)
+                d_a_masks.append(self._action_mask(self.prev_action))
 
                 action_id = self._encode_response(response['act'])
+                d_actions.append(action_id)
                 # previous action is teacher-forced here
                 self.prev_action *= 0.
                 self.prev_action[action_id] = 1.
-                d_actions.append(action_id)
 
-                d_a_masks.append(self._action_mask())
+                if self.debug:
+                    log.debug("True response = `{}`".format(response['text']))
+                    if preds[0].lower() != response['text'].lower():
+                        log.debug("Pred response = `{}`".format(preds[0]))
+                    preds = preds[1:]
+                    if d_a_masks[-1][action_id] != 1.:
+                        log.warn("True action forbidden by action mask.")
 
             # padding to max_num_utter
             num_padds = max_num_utter - len(d_contexts)
@@ -268,17 +297,18 @@ class GoalOrientedBot(NNModel):
             b_a_masks.append(d_a_masks)
             b_actions.append(d_actions)
 
-        self.network.train_on_batch(b_features, b_emb_context, b_keys, b_u_masks, 
+        self.network.train_on_batch(b_features, b_emb_context, b_keys, b_u_masks,
                                     b_a_masks, b_actions)
 
-    def _infer(self, context, db_result=None, prob=True):
-        features, emb_context, key = self._encode_context(context, db_result)
-        probs = self.network(
-            [[features]], [[emb_context]], [[key]], [[self._action_mask()]], prob=True
-        )
-        pred_id = np.argmax(probs)
+    def _infer(self, context, db_result=None, prob=False):
         if db_result is not None:
             self.db_result = db_result
+        features, emb_context, key = self._encode_context(context, db_result)
+        action_mask = self._action_mask(self.prev_action)
+        probs = self.network(
+            [[features]], [[emb_context]], [[key]], [[action_mask]], prob=True
+        )
+        pred_id = np.argmax(probs)
 
         # one-hot encoding seems to work better then probabilities
         if prob:
@@ -302,11 +332,35 @@ class GoalOrientedBot(NNModel):
             res.append(self._infer(context['text'], context.get('db_result')))
         return res
 
+    def make_api_call(self, slots):
+        db_results = []
+        if self.database is not None:
+            # filter slot keys with value equal to 'dontcare' as
+            # there is no such value in database records
+            # and remove unknown slot keys (for example, 'this' in dstc2 tracker)
+            db_slots = {s: v for s, v in slots.items()
+                        if (v != 'dontcare') and (s in self.database.keys)}
+            db_results = self.database([db_slots])[0]
+        else:
+            log.warn("No database specified.")
+        log.info("Made api_call with {}, got {} results.".format(slots, len(db_results)))
+        # filter api results if there are more than one
+        if len(db_results) > 1:
+            db_results = [r for r in db_results if r != self.db_result]
+        return db_results[0] if db_results else {}
+
     def __call__(self, batch):
         if isinstance(batch[0], str):
-            if self.tracker.get_state():
-                self.db_result = self.interact_db_result
-            return [self._infer(x) for x in batch]
+            res = []
+            for x in batch:
+                pred = self._infer(x)
+                # if made api_call, then respond with next prediction
+                if np.argmax(self.prev_action) == self.api_call_id:
+                    db_result = self.make_api_call(self.tracker.get_state())
+                    res.append(self._infer(x, db_result=db_result))
+                else:
+                    res.append(pred)
+            return res
         return [self._infer_dialog(x) for x in batch]
 
     def reset(self):
@@ -314,6 +368,11 @@ class GoalOrientedBot(NNModel):
         self.db_result = None
         self.prev_action = np.zeros(self.n_actions, dtype=np.float32)
         self.network.reset_state()
+        if self.debug:
+            log.debug("Bot reset.")
+
+    def process_event(self, *args, **kwargs):
+        self.network.process_event(*args, **kwargs)
 
     def save(self):
         """Save the parameters of the model to a file."""
