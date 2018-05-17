@@ -1,9 +1,9 @@
 {
   "dataset_reader": {
-    "name": "typos_wikipedia_reader"
+    "class": "deeppavlov.dataset_readers.typos_reader:TyposWikipedia"
   },
   "dataset_iterator": {
-    "name": "typos_iterator",
+    "class": "deeppavlov.dataset_iterators.typos_iterator:TyposDatasetIterator",
     "test_ratio": 0.05
   },
   "chainer":{
@@ -34,9 +34,10 @@
         "name": "spelling_error_model",
         "window": 1,
         "dictionary": {
-          "name": "wikitionary_100K_vocab"
+          "class": "deeppavlov.vocabs.typos:Wiki100KDictionary"
         },
-        "save_path": "error_model/error_model.tsv"
+        "save_path": "error_model/error_model.tsv",
+        "lm_file": "language_models/en_wiki_no_punkt.arpa.binary"
       }
     ],
     "out": ["y_predicted"]
@@ -44,5 +45,18 @@
   "train": {
     "validate_best": false,
     "test_best": true
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "ErrorModel",
+      "server_utils": "ErrorModel"
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/error_model.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/lang_models/en_wiki_no_punkt.arpa.binary.gz",
+        "subdir": "language_models"
+      }
+    ]
   }
 }

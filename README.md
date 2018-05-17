@@ -15,10 +15,10 @@ Our goal is to enable AI-application developers and researchers with:
  * a framework for implementing and testing their own dialog models 
  * tools for application integration with adjacent infrastructure (messengers, helpdesk software etc.)
  * benchmarking environment for conversational models and uniform access to relevant datasets 
- 
+
 ## Demo 
 
-Demo of selected features is available at [demo.ipavlov.ai](http://demo.ipavlov.ai/)
+Demo of selected features is available at [demo.ipavlov.ai](https://demo.ipavlov.ai/)
 
 ## Features
 
@@ -33,6 +33,7 @@ Demo of selected features is available at [demo.ipavlov.ai](http://demo.ipavlov.
 | **Skills** |  |
 | [Goal-oriented bot](deeppavlov/skills/go_bot/README.md) | Based on Hybrid Code Networks (HCNs) architecture from [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017](https://arxiv.org/abs/1702.03274). It allows to predict responses in goal-oriented dialog. The model is customizable: embeddings, slot filler and intent classifier can switched on and off on demand.  |
 | [Seq2seq goal-oriented bot](deeppavlov/skills/seq2seq_go_bot/README.md) | Dialogue agent predicts responses in a goal-oriented dialog and is able to handle multiple domains (pretrained bot allows calendar scheduling, weather information retrieval, and point-of-interest navigation). The model is end-to-end differentiable and does not need to explicitly model dialogue state or belief trackers. |
+|[ODQA](deeppavlov/skills/odqa/README.md) | An open domain question answering skill. The skill accepts free-form questions about the world and outputs an answer based on its Wikipedia knowledge.|
 | **Embeddings** |  |
 | [Pre-trained embeddings for the Russian language](pretrained-vectors.md) | Word vectors for the Russian language trained on joint [Russian Wikipedia](https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0) and [Lenta.ru](https://lenta.ru/) corpora. |
 
@@ -44,27 +45,31 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
           
  * Run goal-oriented bot with Telegram interface:
  ```
- python -m deeppavlov.deep interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -t <TELEGRAM_TOKEN>
+ python -m deeppavlov.deep interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>
  ```
  * Run goal-oriented bot with console interface:
  ```
- python -m deeppavlov.deep interact deeppavlov/configs/go_bot/gobot_dstc2.json
+ python -m deeppavlov.deep interact deeppavlov/configs/go_bot/gobot_dstc2.json -d
  ```
   * Run goal-oriented bot with REST API:
  ```
- python -m deeppavlov.deep riseapi deeppavlov/configs/go_bot/gobot_dstc2.json
+ python -m deeppavlov.deep riseapi deeppavlov/configs/go_bot/gobot_dstc2.json -d
  ``` 
   * Run slot-filling model with Telegram interface:
  ```
- python -m deeppavlov.deep interactbot deeppavlov/configs/ner/slotfill_dstc2.json -t <TELEGRAM_TOKEN>
+ python -m deeppavlov.deep interactbot deeppavlov/configs/ner/slotfill_dstc2.json -d -t <TELEGRAM_TOKEN>
  ```
  * Run slot-filling model with console interface:
  ```
- python -m deeppavlov.deep interact deeppavlov/configs/ner/slotfill_dstc2.json
+ python -m deeppavlov.deep interact deeppavlov/configs/ner/slotfill_dstc2.json -d
  ```
  * Run slot-filling model with REST API:
  ```
- python -m deeppavlov.deep riseapi deeppavlov/configs/ner/slotfill_dstc2.json
+ python -m deeppavlov.deep riseapi deeppavlov/configs/ner/slotfill_dstc2.json -d
+ ```
+ * Predict intents on every line in a file:
+ ```
+ python -m deeppavlov.deep predict deeppavlov/configs/intents/intents_snips.json -d --batch-size 15 < /data/in.txt > /data/out.txt
  ```
 ## Conceptual overview
 
@@ -142,23 +147,31 @@ DeepPavlov is built on top of machine learning frameworks [TensorFlow](https://w
 
 To use our pre-trained models, you should first download them:
 ```
-python -m deeppavlov.download [-all] 
+python -m deeppavlov.deep download <path_to_config>
 ```
-* running this command without options will download basic examples, `[-all]` option will download **all** our pre-trained models.
-* Warning! `[-all]` requires about 10 GB of free space on disk.
-    
+or you can use additional key `-d` to automatically download all required models and data with any command like `interact`, `riseapi`, etc.
+
 Then you can interact with the models or train them with the following command:
 
 ```
-python -m deeppavlov.deep <mode> <path_to_config>
+python -m deeppavlov.deep <mode> <path_to_config> [-d]
 ```
 
-* `<mode>` can be 'train', 'interact', 'interactbot' or 'riseapi'
-* `<path_to_config>` should be a path to an NLP pipeline json config
+* `<mode>` can be 'train', 'predict', 'interact', 'interactbot' or 'riseapi'
+* `<path_to_config>` should be a path to an NLP pipeline json config (e.g. `deeppavlov/configs/ner/slotfill_dstc2.json`)
+or a name without the `.json` extension of one of the config files [provided](deeppavlov/configs) in this repository (e.g. `slotfill_dstc2`)
 
-For 'interactbot' mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable.
+For the 'interactbot' mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable. Also if you want to get custom `/start` and `/help` Telegram messages for the running model you should:
+* Add section to `utils/telegram_utils/model_info.json` with your custom Telegram messages
+* In model config file specify `metadata.labels.telegram_utils` parameter with name which refers to the added section of `utils/telegram_utils/model_info.json`
 
 For 'riseapi' mode you should specify api settings (host, port, etc.) in [*utils/server_utils/server_config.json*](utils/server_utils/server_config.json) configuration file. If provided, values from *model_defaults* section override values for the same parameters from *common_defaults* section. Model names in *model_defaults* section should be similar to the class names of the models main component.
+
+For 'predict' you can specify path to input file with `-f` or `--input-file` parameter, otherwise, data will be taken
+from stdin.  
+Every line of input text will be used as a pipeline input parameter, so one example will consist of as many lines,
+as many input parameters your pipeline expects.  
+You can also specify batch size with `-b` or `--batch-size` parameter.
 
 Available model configs are:
 
@@ -166,13 +179,15 @@ Available model configs are:
 
 - ```deeppavlov/configs/seq2seq_go_bot/*.json```
 
+- ```deeppavlov/configs/odqa/*.json```
+
 - ```deeppavlov/configs/squad/*.json```
 
 - ```deeppavlov/configs/intents/*.json```
 
 - ```deeppavlov/configs/ner/*.json```
 
-- ```deeppavlov/configs/rankinf/*.json```
+- ```deeppavlov/configs/ranking/*.json```
 
 - ```deeppavlov/configs/error_model/*.json```
 
@@ -251,7 +266,7 @@ Chainer is a core concept of DeepPavlov library: chainer builds a pipeline from 
 its inputs and outputs as arrays of names, for example: `"in": ["tokens", "features"]` and `"out": ["token_embeddings", "features_embeddings"]` and you can chain outputs of one components with inputs of other components:
 ```json
 {
-  "name": "str_lower",
+  "class": "deeppavlov.models.preproccessors.str_lower:StrLower",
   "in": ["x"],
   "out": ["x_lower"]
 },
@@ -261,8 +276,10 @@ its inputs and outputs as arrays of names, for example: `"in": ["tokens", "featu
   "out": ["x_tokens"]
 },
 ```
-Each [Component](deeppavlov/core/models/component.py) in the pipeline must implement method `__call__` and has `name` parameter, which is its registered codename. It can also have any other parameters which repeat its `__init__()` method arguments.
- Default values of `__init__()` arguments will be overridden with the config values during the initialization of a class instance.
+Each [Component](deeppavlov/core/models/component.py) in the pipeline must implement method `__call__` and has `name` parameter, which is its registered codename,
+ or `class` parameter in the form of `module_name:ClassName`.
+It can also have any other parameters which repeat its `__init__()` method arguments.
+Default values of `__init__()` arguments will be overridden with the config values during the initialization of a class instance.
  
 You can reuse components in the pipeline to process different parts of data with the help of `id` and `ref` parameters:
 ```json
@@ -278,7 +295,7 @@ You can reuse components in the pipeline to process different parts of data with
   "out": ["y_tokens"]
 },
 ```
- 
+
 ### Training
 
 There are two abstract classes for trainable components: **Estimator** and **NNModel**.  
@@ -382,6 +399,38 @@ All components inherited from `deeppavlov.core.models.component.Component` abstr
 A particular format of returned data should be defined in `__call__()`.
 
 Inference is triggered by `deeppavlov.core.commands.infer.interact_model()` function. There is no need in a separate JSON for inference. 
+
+### Rest API
+
+Each library component or skill can be easily made available for inference as a REST web service. The general method is:
+
+`python -m deeppavlov.deep riseapi <config_path> [-d]`
+
+(optional `-d` key is for dependencies download before service start)
+
+Web service properties (host, port, model endpoint, GET request arguments) are provided in `utils/server_utils/server_config.json`.
+Properties from `common_defaults` section are used by default unless they are overridden by component-specific properties, provided in `model_defaults` section of the `server_config.json`.
+Component-specific properties are bound to the component by `server_utils` label in `metadata/labels` section of the component config. Value of `server_utils` label from component config should match with properties key from `model_defaults` section of `server_config.json`.
+
+For example, `metadata/labels/server_utils` tag from `go_bot/gobot_dstc2.json` references to the *GoalOrientedBot* section of `server_config.json`. Therefore, `model_endpoint` parameter in `common_defaults` will be will be overridden with the same parameter from `model_defaults/GoalOrientedBot`.
+
+Model argument names are provided as list in `model_args_names` parameter, where arguments order corresponds to component API.
+When inferencing model via REST api, JSON payload keys should match component arguments names from `model_args_names`.
+Default argument name for one argument components is *"context"*. 
+Here are POST requests examples for some of the library components:
+
+| Component | POST request JSON payload example |
+| --------- | -------------------- |
+| **One argument components**      |
+| NER component | {"context":"Elon Musk launched his cherry Tesla roadster to the Mars orbit"} |
+| Intent classification component | {"context":"I would like to go to a restaurant with Asian cuisine this evening"} |
+| Automatic spelling correction component | {"context":"errror"} |
+| Ranking component | {"context":"What is the average cost of life insurance services?"} |
+| (Seq2seq) Goal-oriented bot | {"context":"Hello, can you help me to find and book a restaurant this evening?"} |
+| **Two arguments components**     |
+| Question Answering component | {"context":"After 1765, growing philosophical and political differences strained the relationship between Great Britain and its colonies.", "question":"What strained the relationship between Great Britain and its colonies?"} |
+
+Flasgger UI for API testing is provided on `<host>:<port>/apidocs` when running a component in `riseapi` mode.
 
 ## License
 

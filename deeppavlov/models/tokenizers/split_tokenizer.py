@@ -25,5 +25,7 @@ class SplitTokenizer(Component):
         pass
 
     def __call__(self, batch, *args, **kwargs):
-        return [utter.split() for utter in batch]
-
+        if isinstance(batch, (list, tuple)):
+            return [self(line) for line in batch]
+        else:
+            return batch.split()

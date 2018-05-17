@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
-    "name": "dstc2_reader",
-    "data_path": "dstc2"
+    "name": "dstc2_v2_reader",
+    "data_path": "dstc2_v2"
   },
   "dataset_iterator": {
     "name": "dialog_iterator"
@@ -21,6 +21,13 @@
         "load_path": "vocabs/token.dict"
       },
       {
+        "id": "restaurant_database",
+        "name": "sqlite_database",
+        "table_name": "mytable",
+        "primary_keys": ["name"],
+        "save_path": "dstc2_v2/resto.sqlite"
+      },
+      {
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],
@@ -28,23 +35,24 @@
         "name": "go_bot",
         "debug": false,
         "word_vocab": "#token_vocab",
-        "template_path": "dstc2/dstc2-templates.txt",
+        "template_path": "dstc2_v2/dstc2-templates.txt",
+        "template_type": "DualTemplate",
+        "database": "#restaurant_database",
+        "api_call_action": "api_call",
         "use_action_mask": false,
-        "network": {
-          "name": "go_bot_rnn",
-          "load_path": "go_bot_minimal/model",
-          "save_path": "go_bot_minimal/model",
-          "learning_rate": 0.01,
-          "dropout_rate": 0.9,
+        "network_parameters": {
+          "load_path": "gobot_dstc2_minimal/model",
+          "save_path": "gobot_dstc2_minimal/model",
+          "learning_rate": 0.005,
+          "dropout_rate": 0.1,
+          "l2_reg_coef": 1e-4,
           "hidden_size": 128,
-          "dense_size": 64,
-          "obs_size": 502,
-          "action_size": 45
+          "dense_size": 64
         },
         "slot_filler": null,
         "intent_classifier": null,
         "embedder": null,
-        "bow_encoder": {
+        "bow_embedder": {
           "name": "bow"
         },
         "tokenizer": {
@@ -53,21 +61,14 @@
         },
         "tracker": {
           "name": "featurized_tracker",
-          "slot_names": [
-            "pricerange",
-            "this",
-            "area",
-            "slot",
-            "food",
-            "name"
-          ]
+          "slot_names": ["pricerange", "this", "area", "food", "name"]
         }
       }
     ]
   },
   "train": {
 	"epochs": 200,
-	"batch_size": 1,
+	"batch_size": 4,
 
 	"metrics": ["per_item_dialog_accuracy"],
 	"validation_patience": 20,
@@ -76,5 +77,17 @@
 	"log_every_n_batches": -1,
 	"log_every_n_epochs": 1,
 	"show_examples": false
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "GoalOrientedBot",
+      "server_utils": "GoalOrientedBot"
+    },
+    "download": [
+      {
+        "url": "http://lnsigo.mipt.ru/export/datasets/dstc2_v2.tar.gz",
+        "subdir": "dstc2_v2"
+      }
+    ]
   }
 }

@@ -15,11 +15,11 @@ limitations under the License.
 """
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.dataset_iterator import BasicDatasetIterator
+from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 
 @register('typos_iterator')
-class TyposDatasetIterator(BasicDatasetIterator):
+class TyposDatasetIterator(DataLearningIterator):
     def split(self, test_ratio=0., *args, **kwargs):
         """Split all data into train and test
 

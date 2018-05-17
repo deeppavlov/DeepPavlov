@@ -14,25 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from deeppavlov.core.models.component import Component
+from deeppavlov.core.common.registry import register
 import numpy as np
 
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.component import Component
 
-
-@register('bow')
-class BoWEncoder(Component):
-
+@register('mask')
+class Mask(Component):
     def __init__(self, *args, **kwargs):
         pass
 
-    def _encode(self, utterance, vocab):
-        bow = np.zeros([len(vocab)], dtype=np.int32)
-        for word in utterance.split(' '):
-            if word in vocab:
-                idx = vocab[word]
-                bow[idx] += 1
-        return bow
+    @staticmethod
+    def __call__(tokens_batch, **kwargs):
+        """Takes batch of tokens and returns the masks of corresponding length"""
+        batch_size = len(tokens_batch)
+        max_len = max(len(utt) for utt in tokens_batch)
+        mask = np.zeros([batch_size, max_len], dtype=np.float32)
+        for n, utterance in enumerate(tokens_batch):
+            mask[n, :len(utterance)] = 1
 
-    def __call__(self, batch, vocab, *args):
-        return [self._encode(utterance, vocab) for utterance in batch]
+        return mask

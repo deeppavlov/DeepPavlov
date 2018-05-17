@@ -13,9 +13,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+import importlib
 from typing import Dict, Type
 
+from deeppavlov.core.commands.utils import expand_path, get_deeppavlov_root, set_deeppavlov_root
+from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import REGISTRY
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.log import get_logger
@@ -55,23 +57,41 @@ def from_params(params: Dict, **kwargs) -> Component:
             log.exception(e)
             raise e
 
-    try:
-        cls_name = config_params.pop('name')
-    except KeyError:
-        e = ConfigError('Component config has no `name` nor `ref` fields')
-        log.exception(e)
-        raise e
-    try:
-        cls = REGISTRY[cls_name]
-    except KeyError:
-        e = ConfigError('Class {} is not registered.'.format(cls_name))
-        log.exception(e)
-        raise e
+    elif 'config_path' in config_params:
+        from deeppavlov.core.commands.infer import build_model_from_config
+        deeppavlov_root = get_deeppavlov_root()
+        config = read_json(expand_path(config_params['config_path']))
+        model = build_model_from_config(config, as_component=True)
+        set_deeppavlov_root({'deeppavlov_root': deeppavlov_root})
+        return model
+
+    elif 'class' in config_params:
+        c = config_params.pop('class')
+        try:
+            module_name, cls_name = c.split(':')
+            cls = getattr(importlib.import_module(module_name), cls_name)
+        except ValueError:
+            e = ConfigError('Expected class description in a `module.submodules:ClassName` form, but got `{}`'
+                            .format(c))
+            log.exception(e)
+            raise e
+    else:
+        cls_name = config_params.pop('name', None)
+        if not cls_name:
+            e = ConfigError('Component config has no `name` nor `ref` or `class` fields')
+            log.exception(e)
+            raise e
+        try:
+            cls = REGISTRY[cls_name]
+        except KeyError:
+            e = ConfigError('Class {} is not registered.'.format(cls_name))
+            log.exception(e)
+            raise e
 
     # find the submodels params recursively
     for param_name, subcls_params in config_params.items():
         if isinstance(subcls_params, dict):
-            if 'name' not in subcls_params and 'ref' not in subcls_params:
+            if not {'ref', 'name', 'class', 'config_path'}.intersection(subcls_params):
                 "This parameter is passed as dict to the class constructor."
                 " The user didn't intent it to be a component."
                 for k, v in subcls_params.items():
