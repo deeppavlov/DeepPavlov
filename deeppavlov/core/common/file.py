@@ -25,7 +25,7 @@ def read_json(fpath):
 
 def save_json(data, fpath):
     with open(fpath, 'w') as fout:
-        return json.dump(data, fout)
+        return json.dump(data, fout, ensure_ascii=False, indent=2)
 
 
 def save_pickle(data, fpath):

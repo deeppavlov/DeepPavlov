@@ -1,0 +1,33 @@
+{
+  "chainer": {
+    "in": ["x"],
+    "pipe": [
+      {
+        "in": ["x"],
+        "name": "lazy_tokenizer",
+        "out": ["x"]
+      },
+      {
+        "in": ["x"],
+        "name": "str_lower",
+        "out": ["x_lower"]
+      },
+      {
+        "in": ["x_lower"],
+        "name": "slotfill_raw",
+        "save_path": "slotfill_dstc2/dstc_slot_vals.json",
+        "load_path": "slotfill_dstc2/dstc_slot_vals.json",
+        "out": ["slots"]
+      }
+    ],
+    "out": ["slots"]
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "NERModel"
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/slotfill_dstc2.tar.gz"
+    ]
+  }
+}

@@ -70,18 +70,15 @@
           "load_path": "seq2seq_go_bot/model",
           "save_path": "seq2seq_go_bot/model",
           "learning_rate": 0.0009,
-          "target_start_of_sequence_index": "#tgt_token_vocab.__getitem__('SOS')",
-          "target_end_of_sequence_index": "#tgt_token_vocab.__getitem__('EOS')",
+          "target_start_of_sequence_index": "#tgt_token_vocab.__getitem__('<SOS>')",
+          "target_end_of_sequence_index": "#tgt_token_vocab.__getitem__('<EOS>')",
           "source_vocab_size": "#src_token_vocab.__len__()",
           "target_vocab_size": "#tgt_token_vocab.__len__()",
           "hidden_size": 256
         },
         "source_vocab": "#src_token_vocab",
         "target_vocab": "#tgt_token_vocab",
-        "debug": false,
-        "bow_encoder": {
-          "name": "bow"
-        }
+        "debug": false
       },
       {
         "name": "knowledge_base_entity_normalizer",
@@ -111,7 +108,12 @@
   },
   "metadata": {
     "labels": {
-      "telegram_utils": "Seq2SeqGoalOrientedBot"
-    }
+      "telegram_utils": "Seq2SeqGoalOrientedBot",
+      "server_utils": "GoalOrientedBot"
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/seq2seq_go_bot.tar.gz"
+    ]
   }
 }

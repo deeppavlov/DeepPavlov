@@ -21,7 +21,7 @@ import tensorflow as tf
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.models.squad.utils import CudnnGRU, dot_attention, simple_attention, PtrNet
-from deeppavlov.core.common.utils import check_gpu_existance
+from deeppavlov.core.common.check_gpu import check_gpu_existence
 from deeppavlov.core.layers.tf_layers import cudnn_bi_gru, variational_dropout
 from deeppavlov.core.common.log import get_logger
 
@@ -32,7 +32,7 @@ logger = get_logger(__name__)
 class SquadModel(TFModel):
     def __init__(self, **kwargs):
 
-        if not check_gpu_existance():
+        if not check_gpu_existence():
             raise RuntimeError('SquadModel requires GPU')
 
         self.opt = deepcopy(kwargs)

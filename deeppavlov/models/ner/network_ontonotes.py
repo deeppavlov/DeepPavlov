@@ -13,7 +13,7 @@ limitations under the License.
 import numpy as np
 import tensorflow as tf
 
-from deeppavlov.core.common.utils import check_gpu_existance
+from deeppavlov.core.common.check_gpu import check_gpu_existence
 from tensorflow.contrib.layers import xavier_initializer
 from nltk.tag import SennaNERTagger, SennaChunkTagger
 
@@ -27,7 +27,7 @@ class NerNetwork:
                  sess=None):
 
         # check gpu
-        if not check_gpu_existance():
+        if not check_gpu_existence():
             raise RuntimeError('Ontonotes NER model requires GPU with cuDNN!')
 
         n_hidden=(256, 256, 256)
