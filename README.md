@@ -3,8 +3,8 @@
 
 # <center>DeepPavlov</center>
 
-### *We are in a really early Alpha release. You should be ready for hard adventures.*
-### *If you have updated to version 0.0.2 or greater - please re-download all pre-trained models*
+**We are in a really early Alpha release. You should be ready for hard adventures. 
+If you have updated to version 0.0.2 or greater - please re-download all pre-trained models**
 
 DeepPavlov is an open-source conversational AI library built on TensorFlow and Keras. It is designed for
  * development of production ready chat-bots and complex conversational systems
