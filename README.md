@@ -16,6 +16,10 @@ Our goal is to enable AI-application developers and researchers with:
  * tools for application integration with adjacent infrastructure (messengers, helpdesk software etc.)
  * benchmarking environment for conversational models and uniform access to relevant datasets 
 
+## Demo 
+
+Demo of selected features is available at [demo.ipavlov.ai](https://demo.ipavlov.ai/)
+
 ## Features
 
 
