@@ -32,13 +32,11 @@ The library is designed according to the following principles:
 <!-- ### Target Architecture
 Target architecture of our library: -->
 
-The smallest building block of the library is Model. Model stands for any kind of function in an NLP pipeline. It can be implemented as
-a neural network, a non-neural ML model or a rule-based system. Besides that, Model can have nested structure, i.e. a Model can include other Model(s). 
+The smallest building block of the library is `Model`. `Model` stands for any kind of function in an NLP pipeline. It can be implemented as a neural network, a non-neural ML model or a rule-based system. Besides that, `Model` can have nested structure, i.e. a `Model` can include other `Model`'(s). 
 
-Models can be joined into a Skill. Skill solves a larger NLP task compared to Model. However, in terms of implementation Skillsare
-not different from Models. The only restriction of Skills is that their input and output should both be strings. Therefore, Skills are usually associated with dialogue tasks. 
+`Model`s can be joined into a `Skill`. `Skill` solves a larger NLP task compared to `Model`. However, in terms of implementation `Skill`s are not different from `Model`s. The only restriction of `Skill`s is that their input and output should both be strings. Therefore, `Skill`s are usually associated with dialogue tasks. 
 
-Agent. Agentis supposed to be a multi-purpose dialogue system that comprises several Skills and can switch between them. It can be a dialogue system that contains a goal-oriented and chatbot skills and chooses which one to use for generating the answer depending on user input.
+`Agent` is supposed to be a multi-purpose dialogue system that comprises several `Skill`s and can switch between them. It can be a dialogue system that contains a goal-oriented and chatbot skills and chooses which one to use for generating the answer depending on user input.
 
 <p align="left">
 <img src="dp_agnt_diag.png"/>
