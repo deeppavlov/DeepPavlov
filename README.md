@@ -1,8 +1,6 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/deepmipt/DeepPavlov/blob/master/LICENSE)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 
-# <center>DeepPavlov</center>
-
 **We are in a really early Alpha release. You should be ready for hard adventures. 
 If you have updated to version 0.0.2 or greater - please re-download all pre-trained models**
 
@@ -16,13 +14,13 @@ Our goal is to enable AI-application developers and researchers with:
  * tools for application integration with adjacent infrastructure (messengers, helpdesk software etc.)
  * benchmarking environment for conversational models and uniform access to relevant datasets 
 
-## Demo 
+# Demo 
 
 Demo of selected features is available at [demo.ipavlov.ai](https://demo.ipavlov.ai/)
 
 
 
-## Conceptual overview
+# Conceptual overview
 
 <!-- ### Principles
 The library is designed according to the following principles:
@@ -48,7 +46,7 @@ Agent. Agentis supposed to be a multi-purpose dialogue system that comprises sev
 <img src="dp_agnt_diag.png"/>
 </p>
 
-### Key Concepts
+## Key Concepts
  * `Agent` - a conversational agent communicating with users in natural language (text)
  * `Skill` - a unit of interaction that fulfills user’s needs. Typically, a user’s need is fulfilled by presenting information or completing a transaction (e.g. answer question by FAQ, booking tickets etc.); however, for some tasks success is defined as continuous engagement (e.g. chit-chat)
  * `Models` - atomic functionality blocks
@@ -61,7 +59,7 @@ Agent. Agentis supposed to be a multi-purpose dialogue system that comprises sev
 
 DeepPavlov is built on top of machine learning frameworks [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). Other external libraries can be used to build basic components.
 
-## Installation
+# Installation
 0. Currently we support only `Linux` platform and `Python 3.6` (**`Python 3.5` is not supported!**)
 
 1. Create a virtual environment with `Python 3.6`
@@ -86,7 +84,7 @@ DeepPavlov is built on top of machine learning frameworks [TensorFlow](https://w
     python -m spacy download en
     ```
 
-## Quick start
+# Quick start
 
 To use our pre-trained models, you should first download them:
 ```
@@ -136,8 +134,7 @@ Available model configs are:
 
 ---
 
-
-## Features
+# Features
 
 | Component | Description |
 | --------- | ----------- |
@@ -153,7 +150,7 @@ Available model configs are:
 | **Embeddings** |  |
 | [Pre-trained embeddings for the Russian language](pretrained-vectors.md) | Word vectors for the Russian language trained on joint [Russian Wikipedia](https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0) and [Lenta.ru](https://lenta.ru/) corpora. |
 
-## Basic examples
+# Basic examples
 
 View video demo of deployment of a goal-oriented bot and a slot-filling model with Telegram UI
 
@@ -187,12 +184,9 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
  ```
  python -m deeppavlov.deep predict deeppavlov/configs/intents/intents_snips.json -d --batch-size 15 < /data/in.txt > /data/out.txt
  ```
- 
+# Technical overview
 
-
-## Technical overview
-
-### Project modules
+## Project modules
 
 <table>
 <tr>
@@ -241,7 +235,7 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
 </tr>
 </table>
 
-### Config
+## Config
 
 An NLP pipeline config is a JSON file that contains one required element `chainer`:
 
@@ -293,7 +287,7 @@ You can reuse components in the pipeline to process different parts of data with
 },
 ```
 
-### Training
+## Training
 
 There are two abstract classes for trainable components: **Estimator** and **NNModel**.  
 [**Estimators**](deeppavlov/core/models/estimator.py) are fit once on any data with no batching or early stopping,
@@ -303,7 +297,7 @@ so it can be safely done at the time of pipeline initialization. `fit` method ha
 
 Training is triggered by `deeppavlov.core.commands.train.train_model_from_config()` function.
 
-### Train config
+## Train config
 
 Estimators that are trained should also have `fit_on` parameter which contains a list of input parameter names.
 An NNModel should have the `in_y` parameter which contains a list of ground truth answer names. For example:
@@ -357,7 +351,7 @@ Simplified version of trainig pipeline contains two elemens: `dataset` and `trai
 can be used for train from classification data in `csv` and `json` formats. You can find complete examples of how to use simplified training pipeline in [intents_sample_csv.json](deeppavlov/configs/intents/intents_sample_csv.json) and [intents_sample_json.json](deeppavlov/configs/intents/intents_sample_json.json) config files.
 
 
-### Train Parameters
+## Train Parameters
 * `epochs` — maximum number of epochs to train NNModel, defaults to `-1` (infinite)
 * `batch_size`,
 * `metrics` — list of names of [registered metrics](deeppavlov/metrics) to evaluate the model. The first metric in the list
@@ -368,7 +362,7 @@ is used for early stopping
 * `log_every_n_batches`, `log_every_n_epochs` — how often to calculate metrics for train data, defaults to `-1` (never)
 * `validate_best`, `test_best` flags to infer the best saved model on valid and test data, defaults to `true`
 
-### DatasetReader
+## DatasetReader
 
 `DatasetReader` class reads data and returns it in a specified format.
 A concrete `DatasetReader` class should be inherited from the base
@@ -382,14 +376,14 @@ from deeppavlov.core.data.dataset_reader import DatasetReader
 class DSTC2DatasetReader(DatasetReader):
 ```
 
-### DatasetIterator
+## DatasetIterator
 
 `DatasetIterator` forms the sets of data ('train', 'valid', 'test') needed for training/inference and divides it into batches.
 A concrete `DatasetIterator` class should be registered and can be inherited from
 `deeppavlov.data.dataset_iterator.BasicDatasetIterator` class. `deeppavlov.data.dataset_iterator.BasicDatasetIterator`
 is not an abstract class and can be used as a `DatasetIterator` as well.
 
-### Inference
+## Inference
 
 All components inherited from `deeppavlov.core.models.component.Component` abstract class can be used for inference. The `__call__()` method should return standard output of a component. For example, a *tokenizer* should return
 *tokens*, a *NER recognizer* should return *recognized entities*, a *bot* should return an *utterance*.
@@ -397,7 +391,7 @@ A particular format of returned data should be defined in `__call__()`.
 
 Inference is triggered by `deeppavlov.core.commands.infer.interact_model()` function. There is no need in a separate JSON for inference. 
 
-### Rest API
+## Rest API
 
 Each library component or skill can be easily made available for inference as a REST web service. The general method is:
 
@@ -429,15 +423,15 @@ Here are POST requests examples for some of the library components:
 
 Flasgger UI for API testing is provided on `<host>:<port>/apidocs` when running a component in `riseapi` mode.
 
-## License
+# License
 
 DeepPavlov is Apache 2.0 - licensed.
 
-## Support and collaboration
+# Support and collaboration
 
 If you have any questions, bug reports or feature requests, please feel free to post on our [Github Issues](https://github.com/deepmipt/DeepPavlov/issues) page. Please tag your issue with 'bug', 'feature request', or 'question'.  Also we’ll be glad to see your pull requests to add new datasets, models, embeddings, etc.
 
-## The Team
+# The Team
 
 DeepPavlov is built and maintained by [Neural Networks and Deep Learning Lab](https://mipt.ru/english/research/labs/neural-networks-and-deep-learning-lab) at [MIPT](https://mipt.ru/english/) within [iPavlov](http://ipavlov.ai/) project (part of [National Technology Initiative](https://asi.ru/eng/nti/)) and in partnership with [Sberbank](http://www.sberbank.com/).
 
