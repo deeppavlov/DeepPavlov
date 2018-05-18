@@ -98,17 +98,17 @@ Then you can interact with the models or train them with the following command:
 python -m deeppavlov.deep <mode> <path_to_config> [-d]
 ```
 
-* `<mode>` can be 'train', 'predict', 'interact', 'interactbot' or 'riseapi'
+* `<mode>` can be `train`, `predict`, `interact`, `interactbot` or `riseapi`
 * `<path_to_config>` should be a path to an NLP pipeline json config (e.g. `deeppavlov/configs/ner/slotfill_dstc2.json`)
 or a name without the `.json` extension of one of the config files [provided](deeppavlov/configs) in this repository (e.g. `slotfill_dstc2`)
 
-For the 'interactbot' mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable. Also if you want to get custom `/start` and `/help` Telegram messages for the running model you should:
+For the `interactbot` mode you should specify Telegram bot token in `-t` parameter or in `TELEGRAM_TOKEN` environment variable. Also if you want to get custom `/start` and `/help` Telegram messages for the running model you should:
 * Add section to `utils/telegram_utils/model_info.json` with your custom Telegram messages
 * In model config file specify `metadata.labels.telegram_utils` parameter with name which refers to the added section of `utils/telegram_utils/model_info.json`
 
-For 'riseapi' mode you should specify api settings (host, port, etc.) in [*utils/server_utils/server_config.json*](utils/server_utils/server_config.json) configuration file. If provided, values from *model_defaults* section override values for the same parameters from *common_defaults* section. Model names in *model_defaults* section should be similar to the class names of the models main component.
+For `riseapi` mode you should specify api settings (host, port, etc.) in [*utils/server_utils/server_config.json*](utils/server_utils/server_config.json) configuration file. If provided, values from *model_defaults* section override values for the same parameters from *common_defaults* section. Model names in *model_defaults* section should be similar to the class names of the models main component.
 
-For 'predict' you can specify path to input file with `-f` or `--input-file` parameter, otherwise, data will be taken
+For `predict` you can specify path to input file with `-f` or `--input-file` parameter, otherwise, data will be taken
 from stdin.  
 Every line of input text will be used as a pipeline input parameter, so one example will consist of as many lines,
 as many input parameters your pipeline expects.  
