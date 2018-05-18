@@ -18,8 +18,6 @@ Our goal is to enable AI-application developers and researchers with:
 
 Demo of selected features is available at [demo.ipavlov.ai](https://demo.ipavlov.ai/)
 
-
-
 # Conceptual overview
 
 <!-- ### Principles
@@ -132,8 +130,6 @@ Available model configs are:
 
 - ```deeppavlov/configs/error_model/*.json```
 
----
-
 # Features
 
 | Component | Description |
@@ -184,6 +180,9 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
  ```
  python -m deeppavlov.deep predict deeppavlov/configs/intents/intents_snips.json -d --batch-size 15 < /data/in.txt > /data/out.txt
  ```
+
+---
+
 # Technical overview
 
 ## Project modules
