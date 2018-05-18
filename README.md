@@ -20,103 +20,46 @@ Our goal is to enable AI-application developers and researchers with:
 
 Demo of selected features is available at [demo.ipavlov.ai](https://demo.ipavlov.ai/)
 
-## Features
 
 
-| Component | Description |
-| --------- | ----------- |
-| [Slot filling and NER components](deeppavlov/models/ner/README.md) | Based on neural Named Entity Recognition network and fuzzy Levenshtein search to extract normalized slot values from text. The NER component reproduces architecture from the paper [Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition](https://arxiv.org/pdf/1709.09686.pdf) which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf. |
-| [Intent classification component](deeppavlov/models/classifiers/intents/README.md) | Based on shallow-and-wide Convolutional Neural Network architecture from [Kim Y. Convolutional neural networks for sentence classification – 2014](https://arxiv.org/pdf/1408.5882). The model allows multilabel classification of sentences. |
-| [Automatic spelling correction component](deeppavlov/models/spellers/error_model/README.md) | Based on [An Improved Error Model for Noisy Channel Spelling Correction by Eric Brill and Robert C. Moore](http://www.aclweb.org/anthology/P00-1037) and uses statistics based error model, a static dictionary and an ARPA language model to correct spelling errors. |
-| [Ranking component](deeppavlov/models/ranking/README.md) |  Based on [LSTM-based deep learning models for non-factoid answer selection](https://arxiv.org/abs/1511.04108). The model performs ranking of responses or contexts from some database by their relevance for the given context. |
-| [Question Answering component](deeppavlov/models/squad/README.md) | Based on [R-NET: Machine Reading Comprehension with Self-matching Networks](https://www.microsoft.com/en-us/research/publication/mrc/). The model solves the task of looking for an answer on a question in a given context ([SQuAD](https://rajpurkar.github.io/SQuAD-explorer/) task format). |
-| **Skills** |  |
-| [Goal-oriented bot](deeppavlov/skills/go_bot/README.md) | Based on Hybrid Code Networks (HCNs) architecture from [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017](https://arxiv.org/abs/1702.03274). It allows to predict responses in goal-oriented dialog. The model is customizable: embeddings, slot filler and intent classifier can switched on and off on demand.  |
-| [Seq2seq goal-oriented bot](deeppavlov/skills/seq2seq_go_bot/README.md) | Dialogue agent predicts responses in a goal-oriented dialog and is able to handle multiple domains (pretrained bot allows calendar scheduling, weather information retrieval, and point-of-interest navigation). The model is end-to-end differentiable and does not need to explicitly model dialogue state or belief trackers. |
-|[ODQA](deeppavlov/skills/odqa/README.md) | An open domain question answering skill. The skill accepts free-form questions about the world and outputs an answer based on its Wikipedia knowledge.|
-| **Embeddings** |  |
-| [Pre-trained embeddings for the Russian language](pretrained-vectors.md) | Word vectors for the Russian language trained on joint [Russian Wikipedia](https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0) and [Lenta.ru](https://lenta.ru/) corpora. |
-
-## Basic examples
-
-View video demo of deployment of a goal-oriented bot and a slot-filling model with Telegram UI
-
-[![Alt text for your video](https://img.youtube.com/vi/yzoiCa_sMuY/0.jpg)](https://youtu.be/yzoiCa_sMuY)
-          
- * Run goal-oriented bot with Telegram interface:
- ```
- python -m deeppavlov.deep interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>
- ```
- * Run goal-oriented bot with console interface:
- ```
- python -m deeppavlov.deep interact deeppavlov/configs/go_bot/gobot_dstc2.json -d
- ```
-  * Run goal-oriented bot with REST API:
- ```
- python -m deeppavlov.deep riseapi deeppavlov/configs/go_bot/gobot_dstc2.json -d
- ``` 
-  * Run slot-filling model with Telegram interface:
- ```
- python -m deeppavlov.deep interactbot deeppavlov/configs/ner/slotfill_dstc2.json -d -t <TELEGRAM_TOKEN>
- ```
- * Run slot-filling model with console interface:
- ```
- python -m deeppavlov.deep interact deeppavlov/configs/ner/slotfill_dstc2.json -d
- ```
- * Run slot-filling model with REST API:
- ```
- python -m deeppavlov.deep riseapi deeppavlov/configs/ner/slotfill_dstc2.json -d
- ```
- * Predict intents on every line in a file:
- ```
- python -m deeppavlov.deep predict deeppavlov/configs/intents/intents_snips.json -d --batch-size 15 < /data/in.txt > /data/out.txt
- ```
 ## Conceptual overview
 
-### Principles
+<!-- ### Principles
 The library is designed according to the following principles:
  * hybrid ML/DL/Rule-based architecture as a current approach
  * support of modular dialog system design
  * end-to-end deep learning architecture as a long-term goal
  * component-based software engineering, maximization of reusability
  * multiple alternative solutions for the same NLP task to enable flexible data-driven configuration
- * easy extension and benchmarking
+ * easy extension and benchmarking -->
  
-### Target Architecture
-Target architecture of our library:
+<!-- ### Target Architecture
+Target architecture of our library: -->
+
+The smallest building block of the library is Model. Model stands for any kind of function in an NLP pipeline. It can be implemented as
+a neural network, a non-neural ML model or a rule-based system. Besides that, Model can have nested structure, i.e. a Model can include other Model(s). 
+
+Models can be joined into a Skill. Skill solves a larger NLP task compared to Model. However, in terms of implementation Skillsare
+not different from Models. The only restriction of Skills is that their input and output should both be strings. Therefore, Skills are usually associated with dialogue tasks. 
+
+Agent. Agentis supposed to be a multi-purpose dialogue system that comprises several Skills and can switch between them. It can be a dialogue system that contains a goal-oriented and chatbot skills and chooses which one to use for generating the answer depending on user input.
+
 <p align="left">
-<img src="http://lnsigo.mipt.ru/export/images/deeppavlov_architecture.png"/>
+<img src="dp_agnt_diag.png"/>
 </p>
-DeepPavlov is built on top of machine learning frameworks [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). Other external libraries can be used to build basic components.
 
 ### Key Concepts
  * `Agent` - a conversational agent communicating with users in natural language (text)
  * `Skill` - a unit of interaction that fulfills user’s needs. Typically, a user’s need is fulfilled by presenting information or completing a transaction (e.g. answer question by FAQ, booking tickets etc.); however, for some tasks success is defined as continuous engagement (e.g. chit-chat)
- * `Components` - atomic functionality blocks
-   * `Rule-based Components` - cannot be trained
-   * `Machine Learning Components` - can be trained only separately
-   * `Deep Learning Components` - can be trained separately and in end-to-end mode being joined in chain
- * `Switcher` - mechanism which is used by agent to rank and select the final response shown to user
- * `Components Chainer` - tool for building an agent/component pipeline from heterogeneous components (rule-based/ml/dl). Allows to train and infer from pipeline as a whole.
+ * `Models` - atomic functionality blocks
+   * `Rule-based Models` - cannot be trained
+   * `Machine Learning Models` - can be trained only separately
+   * `Deep Learning Models` - can be trained separately and in end-to-end mode being joined in chain
+ * `Skill Manager` - mechanism which is used by agent to rank and select the final response shown to user
+ * ` Chainer` - tool for building an agent/component pipeline from heterogeneous components (rule-based/ml/dl). Allows to train and infer from pipeline as a whole.
 
 
-### Contents
-
- * [Installation](#installation)
- * [Quick start](#quick-start)
- * [Technical overview](#technical-overview)
-    * [Project modules](#project-modules)
-    * [Config](#config)
-    * [Training](#training)
-    * [Train config](#train-config)
-    * [Train parameters](#train-parameters)
-    * [DatasetReader](#datasetreader)
-    * [DatasetIterator](#datasetiterator)
-    * [Inference](#inference)
- * [License](#license)
- * [Support and collaboration](#support-and-collaboration)
- * [The Team](#the-team)
- 
+DeepPavlov is built on top of machine learning frameworks [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). Other external libraries can be used to build basic components.
 
 ## Installation
 0. Currently we support only `Linux` platform and `Python 3.6` (**`Python 3.5` is not supported!**)
@@ -192,6 +135,60 @@ Available model configs are:
 - ```deeppavlov/configs/error_model/*.json```
 
 ---
+
+
+## Features
+
+| Component | Description |
+| --------- | ----------- |
+| [Slot filling and NER components](deeppavlov/models/ner/README.md) | Based on neural Named Entity Recognition network and fuzzy Levenshtein search to extract normalized slot values from text. The NER component reproduces architecture from the paper [Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition](https://arxiv.org/pdf/1709.09686.pdf) which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf. |
+| [Intent classification component](deeppavlov/models/classifiers/intents/README.md) | Based on shallow-and-wide Convolutional Neural Network architecture from [Kim Y. Convolutional neural networks for sentence classification – 2014](https://arxiv.org/pdf/1408.5882). The model allows multilabel classification of sentences. |
+| [Automatic spelling correction component](deeppavlov/models/spellers/error_model/README.md) | Based on [An Improved Error Model for Noisy Channel Spelling Correction by Eric Brill and Robert C. Moore](http://www.aclweb.org/anthology/P00-1037) and uses statistics based error model, a static dictionary and an ARPA language model to correct spelling errors. |
+| [Ranking component](deeppavlov/models/ranking/README.md) |  Based on [LSTM-based deep learning models for non-factoid answer selection](https://arxiv.org/abs/1511.04108). The model performs ranking of responses or contexts from some database by their relevance for the given context. |
+| [Question Answering component](deeppavlov/models/squad/README.md) | Based on [R-NET: Machine Reading Comprehension with Self-matching Networks](https://www.microsoft.com/en-us/research/publication/mrc/). The model solves the task of looking for an answer on a question in a given context ([SQuAD](https://rajpurkar.github.io/SQuAD-explorer/) task format). |
+| **Skills** |  |
+| [Goal-oriented bot](deeppavlov/skills/go_bot/README.md) | Based on Hybrid Code Networks (HCNs) architecture from [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017](https://arxiv.org/abs/1702.03274). It allows to predict responses in goal-oriented dialog. The model is customizable: embeddings, slot filler and intent classifier can switched on and off on demand.  |
+| [Seq2seq goal-oriented bot](deeppavlov/skills/seq2seq_go_bot/README.md) | Dialogue agent predicts responses in a goal-oriented dialog and is able to handle multiple domains (pretrained bot allows calendar scheduling, weather information retrieval, and point-of-interest navigation). The model is end-to-end differentiable and does not need to explicitly model dialogue state or belief trackers. |
+|[ODQA](deeppavlov/skills/odqa/README.md) | An open domain question answering skill. The skill accepts free-form questions about the world and outputs an answer based on its Wikipedia knowledge.|
+| **Embeddings** |  |
+| [Pre-trained embeddings for the Russian language](pretrained-vectors.md) | Word vectors for the Russian language trained on joint [Russian Wikipedia](https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0) and [Lenta.ru](https://lenta.ru/) corpora. |
+
+## Basic examples
+
+View video demo of deployment of a goal-oriented bot and a slot-filling model with Telegram UI
+
+[![Alt text for your video](https://img.youtube.com/vi/yzoiCa_sMuY/0.jpg)](https://youtu.be/yzoiCa_sMuY)
+          
+ * Run goal-oriented bot with Telegram interface:
+ ```
+ python -m deeppavlov.deep interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>
+ ```
+ * Run goal-oriented bot with console interface:
+ ```
+ python -m deeppavlov.deep interact deeppavlov/configs/go_bot/gobot_dstc2.json -d
+ ```
+  * Run goal-oriented bot with REST API:
+ ```
+ python -m deeppavlov.deep riseapi deeppavlov/configs/go_bot/gobot_dstc2.json -d
+ ``` 
+  * Run slot-filling model with Telegram interface:
+ ```
+ python -m deeppavlov.deep interactbot deeppavlov/configs/ner/slotfill_dstc2.json -d -t <TELEGRAM_TOKEN>
+ ```
+ * Run slot-filling model with console interface:
+ ```
+ python -m deeppavlov.deep interact deeppavlov/configs/ner/slotfill_dstc2.json -d
+ ```
+ * Run slot-filling model with REST API:
+ ```
+ python -m deeppavlov.deep riseapi deeppavlov/configs/ner/slotfill_dstc2.json -d
+ ```
+ * Predict intents on every line in a file:
+ ```
+ python -m deeppavlov.deep predict deeppavlov/configs/intents/intents_snips.json -d --batch-size 15 < /data/in.txt > /data/out.txt
+ ```
+ 
+
 
 ## Technical overview
 
