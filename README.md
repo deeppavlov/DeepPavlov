@@ -32,26 +32,25 @@ The library is designed according to the following principles:
 <!-- ### Target Architecture
 Target architecture of our library: -->
 
-The smallest building block of the library is `Model`. `Model` stands for any kind of function in an NLP pipeline. It can be implemented as a neural network, a non-neural ML model or a rule-based system. Besides that, `Model` can have nested structure, i.e. a `Model` can include other `Model`'(s). 
-
-`Model`s can be joined into a `Skill`. `Skill` solves a larger NLP task compared to `Model`. However, in terms of implementation `Skill`s are not different from `Model`s. The only restriction of `Skill`s is that their input and output should both be strings. Therefore, `Skill`s are usually associated with dialogue tasks. 
-
-`Agent` is supposed to be a multi-purpose dialogue system that comprises several `Skill`s and can switch between them. It can be a dialogue system that contains a goal-oriented and chatbot skills and chooses which one to use for generating the answer depending on user input.
-
 <p align="left">
 <img src="dp_agnt_diag.png"/>
 </p>
 
 ## Key Concepts
- * `Agent` - a conversational agent communicating with users in natural language (text)
- * `Skill` - a unit of interaction that fulfills user’s needs. Typically, a user’s need is fulfilled by presenting information or completing a transaction (e.g. answer question by FAQ, booking tickets etc.); however, for some tasks success is defined as continuous engagement (e.g. chit-chat)
- * `Models` - atomic functionality blocks
-   * `Rule-based Models` - cannot be trained
-   * `Machine Learning Models` - can be trained only separately
-   * `Deep Learning Models` - can be trained separately and in end-to-end mode being joined in chain
- * `Skill Manager` - mechanism which is used by agent to rank and select the final response shown to user
- * ` Chainer` - tool for building an agent/component pipeline from heterogeneous components (rule-based/ml/dl). Allows to train and infer from pipeline as a whole.
+ * `Agent` is a conversational agent communicating with users in natural language (text).
+ * `Skill` fulfills user’s goal in some domain. Typically, this is accomplished by presenting information or completing transaction (e.g. answer question by FAQ, booking tickets etc.). However, for some tasks a success of interaction is defined as continuous engagement (e.g. chit-chat).
+ * `Model` is a reusable functional component of `Skill`.
+   * `Rule-based Models` cannot be trained.
+   * `Machine Learning Models` can be trained only stand alone.
+   * `Deep Learning Models` can be trained independently and in an end-to-end mode being joined in a chain.
+ * `Skill Manager` performs selection of the `Skill` to generate response.
+ * ` Chainer` builds an agent/component pipeline from heterogeneous components (rule-based/ml/dl). It allows to train and infer models in a pipeline as a whole.
 
+The smallest building block of the library is `Model`. `Model` stands for any kind of function in an NLP pipeline. It can be implemented as a neural network, a non-neural ML model or a rule-based system. Besides that, `Model` can have nested structure, i.e. a `Model` can include other `Model`'(s). 
+
+`Model`s can be joined into a `Skill`. `Skill` solves a larger NLP task compared to `Model`. However, in terms of implementation `Skill`s are not different from `Model`s. The only restriction of `Skill`s is that their input and output should both be strings. Therefore, `Skill`s are usually associated with dialogue tasks. 
+
+`Agent` is supposed to be a multi-purpose dialogue system that comprises several `Skill`s and can switch between them. It can be a dialogue system that contains a goal-oriented and chatbot skills and chooses which one to use for generating the answer depending on user input.
 
 DeepPavlov is built on top of machine learning frameworks [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). Other external libraries can be used to build basic components.
 
