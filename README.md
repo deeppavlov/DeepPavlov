@@ -54,6 +54,8 @@ The smallest building block of the library is `Model`. `Model` stands for any ki
 
 DeepPavlov is built on top of machine learning frameworks [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). Other external libraries can be used to build basic components.
 
+---
+
 # Installation
 0. Currently we support only `Linux` platform and `Python 3.6` (**`Python 3.5` is not supported!**)
 
