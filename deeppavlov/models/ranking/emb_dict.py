@@ -20,11 +20,10 @@ class Embeddings(object):
         fasttext_model_file: a file containing fasttext binary model
     """
 
-    def __init__(self, embedding_dim, max_sequence_length, download_url,
+    def __init__(self, embedding_dim, max_sequence_length,
                  embeddings_path, save_path, load_path, embeddings="word2vec", seed=None):
         """Initialize the class according to given parameters."""
         np.random.seed(seed)
-        self.download_url = download_url
         save_path = expand_path(save_path).resolve().parent
         load_path = expand_path(load_path).resolve().parent
         self.int2emb_save_path = save_path / "int2emb.dict"
@@ -32,7 +31,7 @@ class Embeddings(object):
         self.embeddings = embeddings
         self.embedding_dim = embedding_dim
         self.max_sequence_length = max_sequence_length
-        self.emb_model_file = expand_path(embeddings_path) / Path(download_url).parts[-1]
+        self.emb_model_file = expand_path(embeddings_path)
 
         self.int2emb_vocab = {}
 
