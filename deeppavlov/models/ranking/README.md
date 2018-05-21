@@ -8,9 +8,9 @@ suitable response to a given context from some context (response) database.
 The code in this repository uses a deep learning
 approach to address the question answer selection task. Currently, a basic
 model is implemented with bidirectional long short-term memory 
-(biLSTM), with max pooling and without attention. The model was trained on two datasets:
-[InsuranceQA V1](https://github.com/shuzi/insuranceQA) and [Ubuntu Dialogue Corpus V1](http://dataset.cs.mcgill.ca/ubuntu-corpus-1.0/).
- 
+(biLSTM), with max pooling and without attention. The model was trained on the dataset:
+[InsuranceQA V1](https://github.com/shuzi/insuranceQA)*[]:
+
 The distinguishing feature of the model is the use of triplet loss [1, 2].
 This loss has a margin hyperparameter, which usually ranges from 0.01 to 0.2.
 It is required to provide positive and negative response candidates for each context
@@ -60,10 +60,6 @@ To use the model pre-trained on the InsuranceQA V1 dataset for inference, one sh
 ```
 python -m deeppavlov.deep interact deeppavlov/configs/ranking/insurance_config.json
 ```
-To use the model pre-trained on the Ubuntu Dialogue Corpus V1 dataset for inference, one should run:
-```
-python -m deeppavlov.deep interact deeppavlov/configs/ranking/ubuntu_config.json
-```
 Now user can enter a text of context and get relevant contexts and responses:
 
 ```
@@ -78,8 +74,7 @@ To train the model on the InsuranceQA dataset one should run the command:
 python -m deeppavlov.deep interact deeppavlov/configs/ranking/insurance_config.json
 ```
 All parameters that can be set for the model (for example, see
-[insurance_config.json](../../configs/ranking/insurance_config.json) and
-[insurance_config.json](../../configs/ranking/ubuntu_config.json)) are:
+[insurance_config.json](../../configs/ranking/insurance_config.json)) are:
 
 #### Configuration parameters:  
 
@@ -147,19 +142,8 @@ The InsuranceQA V1 dataset:
 | QA-LSTM basic-model(max pooling) [2] | 64.3 | 63.1 |
 | Our model (biLSTM, max pooling) | **66.9** | **65.8** |
 
-Ubuntu Dialogue Corpus V1:
-
-| Model                | Test (Recall@1) | Test1 (Recall@2) | Test (Recall@5) |
-|---------------------- |:----------------:|:------------:|:------------:|
-| LSTM model [3] | **60.4** | **74.5** | 92.6 |
-| Our model (biLSTM, max pooling) | 52.5 | 70.2 | **92.8** |
-
-
-
 ## Literature
 
 [1] Feng, Minwei, et al. "Applying deep learning to answer selection: A study and an open task." Automatic Speech Recognition and Understanding (ASRU), 2015 IEEE Workshop on. IEEE, 2015.
 
 [2] Tan, Ming, et al. "LSTM-based deep learning models for non-factoid answer selection." arXiv preprint arXiv:1511.04108 (2015).
-
-[3] Lowe, Ryan, et al. "The ubuntu dialogue corpus: A large dataset for research in unstructured multi-turn dialogue systems." arXiv preprint arXiv:1506.08909 (2015).

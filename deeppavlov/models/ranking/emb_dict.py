@@ -46,13 +46,6 @@ class Embeddings(object):
         elif self.embeddings == "word2vec":
             self.embeddings_model = KeyedVectors.load_word2vec_format(str(self.emb_model_file),
                                                                       binary=True)
-        elif self.embeddings == "ubuntu":
-            with open(self.emb_model_file, 'rb') as f:
-                W_data = pickle.load(f, encoding='bytes')
-            bwords = [el[0] for el in W_data[1].items()]
-            words = ['<UNK>'] + [el.decode("utf-8") for el in bwords]
-            self.embeddings_model = {el[0]: el[1] for el in zip(words, W_data[0])}
-
         log.info("[initializing new `{}`]".format(self.__class__.__name__))
         self.build_int2emb_vocab(tok2int_vocab)
         self.build_emb_matrix(tok2int_vocab)

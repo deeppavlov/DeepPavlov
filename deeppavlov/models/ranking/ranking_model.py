@@ -12,7 +12,6 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.ranking.ranking_network import RankingNetwork
 from deeppavlov.models.ranking.insurance_dict import InsuranceDict
-from deeppavlov.models.ranking.ubuntu_dict import UbuntuDict
 from deeppavlov.models.ranking.emb_dict import Embeddings
 from deeppavlov.core.commands.utils import get_deeppavlov_root
 from deeppavlov.core.common.log import get_logger
@@ -56,10 +55,6 @@ class RankingModel(NNModel):
             dict_parameter_names = list(inspect.signature(InsuranceDict.__init__).parameters)
             dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
             self.dict = InsuranceDict(**dict_parameters)
-        elif self.opt["vocab_name"] == "ubuntu":
-            dict_parameter_names = list(inspect.signature(UbuntuDict.__init__).parameters)
-            dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
-            self.dict = UbuntuDict(**dict_parameters)
 
         embdict_parameter_names = list(inspect.signature(Embeddings.__init__).parameters)
         embdict_parameters = {par: self.opt[par] for par in embdict_parameter_names if par in self.opt}
