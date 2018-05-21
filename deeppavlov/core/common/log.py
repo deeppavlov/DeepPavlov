@@ -32,6 +32,12 @@ def get_logger(logger_name):
         with open(log_config_path) as log_config_json:
             log_config = json.load(log_config_json)
 
+        for handler in log_config['handlers'].keys():
+            if 'filename' in log_config['handlers'][handler].keys():
+                filename = log_config['handlers'][handler]['filename']
+                logfile_path = Path(filename).expanduser().resolve()
+                log_config['handlers'][handler]['filename'] = str(logfile_path)
+
         logging.config.dictConfig(log_config)
         logger = logging.getLogger(logger_name)
 
