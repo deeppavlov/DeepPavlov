@@ -15,8 +15,10 @@ limitations under the License.
 """
 
 import csv
+import requests
 from pathlib import Path
-import sys
+
+from lxml import html
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import is_done, download, mark_done
@@ -61,18 +63,16 @@ class TyposWikipedia(TyposCustom):
         if not is_done(data_path):
             url = 'https://en.wikipedia.org/wiki/Wikipedia:Lists_of_common_misspellings/For_machines'
 
-            download(fname, url)
+            page = requests.get(url)
+            tree = html.fromstring(page.content)
+            raw = tree.xpath('//pre/text()')[0].splitlines()
+            data = []
+            for pair in raw:
+                typo, corrects = pair.strip().split('->')
+                for correct in corrects.split(','):
+                    data.append([typo.strip(), correct.strip()])
 
-            with fname.open() as f:
-                data = []
-                for line in f:
-                    if line.strip().endswith('<pre>'):
-                        break
-                for line in f:
-                    if line.strip().startswith('</pre>'):
-                        break
-                    data.append(line.strip().split('-&gt;'))
-
+            fname.parent.mkdir(parents=True, exist_ok=True)
             with fname.open('w', newline='') as tsvfile:
                 writer = csv.writer(tsvfile, delimiter='\t')
                 for line in data:
