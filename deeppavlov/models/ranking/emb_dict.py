@@ -1,5 +1,4 @@
 import numpy as np
-import pickle
 from gensim.models.wrappers import FastText
 from gensim.models import KeyedVectors
 from deeppavlov.core.commands.utils import expand_path

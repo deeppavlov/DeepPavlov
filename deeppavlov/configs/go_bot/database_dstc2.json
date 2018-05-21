@@ -1,0 +1,34 @@
+{
+  "dataset_reader": {
+    "name": "dstc2_v2_reader",
+    "data_path": "dstc2_v2"
+  },
+  "dataset_iterator": {
+    "name": "dialog_db_result_iterator"
+  },
+  "chainer": {
+    "in": ["db_result"],
+    "in_y": [],
+    "out": [],
+    "pipe": [
+      {
+        "id": "restaurant_database",
+        "name": "sql_database",
+        "fit_on": ["db_result"],
+        "table_name": "mytable",
+        "primary_keys": ["name"],
+        "save_path": "dstc2_v2/resto.sqlite"
+      }
+    ]
+  },
+  "train": {
+  },
+  "metadata": {
+    "download": [
+      {
+        "url": "http://lnsigo.mipt.ru/export/datasets/dstc2_v2.tar.gz",
+        "subdir": "dstc2_v2"
+      }
+    ]
+  }
+}

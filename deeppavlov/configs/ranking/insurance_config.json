@@ -58,7 +58,19 @@
   },
   "metadata": {
     "labels": {
-      "telegram_utils": "RankingModel"
-    }
+      "telegram_utils": "RankingModel",
+      "server_utils": "Ranker"
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ranking.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/datasets/insuranceQA-master.zip",
+        "subdir": "insurance_data"
+      },
+      {
+        "url": "http://lnsigo.mipt.ru/export/embeddings/wiki.en.bin",
+        "subdir": "insurance_embeddings"
+      }
+    ]
   }
 }

@@ -27,11 +27,22 @@ class SquadDatasetReader(DatasetReader):
     """
     Stanford Question Answering Dataset
     https://rajpurkar.github.io/SQuAD-explorer/
+    and
+    Russian dataset from SDSJ
+    https://www.sdsj.ru/ru/contest.html
     """
 
-    url = 'http://lnsigo.mipt.ru/export/datasets/squad-v1.1.tar.gz'
+    url_squad = 'http://lnsigo.mipt.ru/export/datasets/squad-v1.1.tar.gz'
+    url_sber_squad = 'http://lnsigo.mipt.ru/export/datasets/sber_squad-v1.1.tar.gz'
 
-    def read(self, dir_path: str):
+    def read(self, dir_path: str, dataset='SQuAD'):
+        if dataset == 'SQuAD':
+            self.url = self.url_squad
+        elif dataset == 'SberSQuAD':
+            self.url = self.url_sber_squad
+        else:
+            raise RuntimeError('Dataset {} is unknown'.format(dataset))
+
         dir_path = Path(dir_path)
         required_files = ['{}-v1.1.json'.format(dt) for dt in ['train', 'dev']]
         if not dir_path.exists():
