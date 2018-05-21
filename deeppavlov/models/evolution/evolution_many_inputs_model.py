@@ -59,7 +59,7 @@ class KerasEvolutionClassificationManyInputsModel(KerasIntentModel):
         get_graph_and_plot(self.opt["nodes"], self.opt["binary_mask"], self.opt["n_types"],
                            path=str(self.save_path.resolve().parent))
 
-    def texts2vec(self, sentences):
+    def texts2vec(self, sentences, i):
         """
         Convert texts to vector representations using embedder and padding up to self.opt["text_size"] tokens
         Args:
@@ -69,9 +69,12 @@ class KerasEvolutionClassificationManyInputsModel(KerasIntentModel):
             array of embedded texts
         """
         pad = np.zeros(self.opt['embedding_size'])
-
-        embeddings_batch = self.fasttext_model([sen[:self.opt['text_size']] for sen in sentences])
-        embeddings_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + tokens for tokens in embeddings_batch]
+        if type(self.opt['text_size']) is list:
+            text_size = self.opt['text_size'][i]
+        else:
+            text_size = self.opt['text_size']
+        embeddings_batch = self.fasttext_model([sen[:text_size] for sen in sentences])
+        embeddings_batch = [[pad] * (text_size - len(tokens)) + tokens for tokens in embeddings_batch]
 
         embeddings_batch = np.asarray(embeddings_batch)
         return embeddings_batch
@@ -97,9 +100,9 @@ class KerasEvolutionClassificationManyInputsModel(KerasIntentModel):
         features = []
         for i in range(len(self.opt["in"])):
             if isinstance(texts[i][0], str):
-                features.append(self.texts2vec(self.tokenizer(list(texts[i]))))
+                features.append(self.texts2vec(self.tokenizer(list(texts[i])), i))
             else:
-                features.append(self.texts2vec(list(texts[i])))
+                features.append(self.texts2vec(list(texts[i]), i))
 
         onehot_labels = labels2onehot(labels, classes=self.classes)
         metrics_values = self.model.train_on_batch(features, onehot_labels)
@@ -129,9 +132,9 @@ class KerasEvolutionClassificationManyInputsModel(KerasIntentModel):
         features = []
         for i in range(len(self.opt["in"])):
             if isinstance(texts[i][0], str):
-                features.append(self.texts2vec(self.tokenizer(list(texts[i]))))
+                features.append(self.texts2vec(self.tokenizer(list(texts[i])), i))
             else:
-                features.append(self.texts2vec(list(texts[i])))
+                features.append(self.texts2vec(list(texts[i]), i))
 
         if labels:
             onehot_labels = labels2onehot(labels, classes=self.classes)
@@ -253,8 +256,12 @@ class KerasEvolutionClassificationManyInputsModel(KerasIntentModel):
             Un-compiled model
         """
         inputs = []
-        for i in range(len(params["in"])):
-            inputs.append(Input(shape=(params['text_size'], params['embedding_size'])))
+        if type(params['text_size']) is list:
+            for i in range(len(params["in"])):
+                inputs.append(Input(shape=(params['text_size'][i], params['embedding_size'])))
+        else:
+            for i in range(len(params["in"])):
+                inputs.append(Input(shape=(params['text_size'], params['embedding_size'])))
 
         full_outputs = []
 

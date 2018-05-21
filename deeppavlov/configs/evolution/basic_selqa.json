@@ -1,0 +1,240 @@
+{
+  "dataset_reader": {
+    "name": "basic_classification_reader",
+    "x": [
+      "question",
+      "answer"
+    ],
+    "y": "label",
+    "data_path": "/home/dilyara.baymurzina/evolution_data/selqa_data"
+  },
+  "dataset_iterator": {
+    "name": "basic_classification_iterator"
+  },
+  "chainer": {
+    "in": [
+      "question",
+      "answer"
+    ],
+    "in_y": [
+      "y"
+    ],
+    "pipe": [
+      {
+        "id": "classes_vocab",
+        "name": "default_vocab",
+        "fit_on": [
+          "y"
+        ],
+        "level": "token",
+        "save_path": "/home/dilyara.baymurzina/evolution_data/selqa_data/selqa_classes.dict",
+        "load_path": "/home/dilyara.baymurzina/evolution_data/selqa_data/selqa_classes.dict"
+      },
+      {
+        "in": [
+          "question"
+        ],
+        "out": [
+          "question_lower"
+        ],
+        "name": "str_lower"
+      },
+      {
+        "in": [
+          "answer"
+        ],
+        "out": [
+          "answer_lower"
+        ],
+        "name": "str_lower"
+      },
+      {
+        "id": "my_embedder",
+        "name": "fasttext",
+        "save_path": "/home/dilyara.baymurzina/embeddings/wiki.en.bin",
+        "load_path": "/home/dilyara.baymurzina/embeddings/wiki.en.bin",
+        "dim": 300
+      },
+      {
+        "id": "my_tokenizer",
+        "name": "nltk_tokenizer",
+        "tokenizer": "wordpunct_tokenize"
+      },
+      {
+        "in": [
+          "question_lower",
+          "answer_lower"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_labels",
+          "y_probas_dict"
+        ],
+        "main": true,
+        "name": "evolution_many_inputs_classification_model",
+        "save_path": "/home/dilyara.baymurzina/evolution_data/selqa_classification/one_neuron_init_part_many_inputs",
+        "load_path": "/home/dilyara.baymurzina/evolution_data/selqa_classification/one_neuron_init_part_many_inputs",
+        "classes": "#classes_vocab.keys()",
+        "to_evolve": true,
+        "basic_layers_params": {
+          "Dense": {
+            "units": {
+              "range": [
+                50,
+                200
+              ],
+              "discrete": true
+            },
+            "activation": {
+              "values": [
+                "softmax",
+                "sigmoid",
+                "relu"
+              ],
+              "choice": true
+            }
+          },
+          "Conv1D": {
+            "filters": {
+              "range": [
+                50,
+                200
+              ],
+              "discrete": true
+            },
+            "kernel_size": {
+              "range": [
+                2,
+                7
+              ],
+              "discrete": true
+            },
+            "padding": "same"
+          },
+          "CuDNNLSTM": {
+            "units": {
+              "range": [
+                50,
+                200
+              ],
+              "discrete": true
+            },
+            "return_sequences": true
+          },
+          "BiCuDNNLSTM": {
+            "units": {
+              "range": [
+                50,
+                200
+              ],
+              "discrete": true
+            },
+            "return_sequences": true
+          },
+          "MaxPooling1D": {
+            "pool_size": {
+              "range": [
+                2,
+                5
+              ],
+              "discrete": true
+            },
+            "padding": "same"
+          },
+          "SelfMultiplicativeAttention": {
+            "n_hidden": {
+              "range": [
+                50,
+                200
+              ],
+              "discrete": true
+            },
+            "n_output_features": {
+              "range": [
+                50,
+                200
+              ],
+              "discrete": true
+            },
+            "activation": {
+              "values": [
+                "softmax",
+                "sigmoid",
+                "relu"
+              ],
+              "choice": true
+            }
+          }
+        },
+        "confident_threshold": {
+          "range": [
+            0.3,
+            0.7
+          ]
+        },
+        "optimizer": "Adam",
+        "lear_rate": {
+          "range": [
+            0.001,
+            0.1
+          ]
+        },
+        "lear_rate_decay": {
+          "range": [
+            0.00001,
+            0.1
+          ]
+        },
+        "loss": "binary_crossentropy",
+        "text_size": [
+          20,
+          50
+        ],
+        "last_layer_activation": "softmax",
+        "model_name": "evolution_many_inputs_classification_model",
+        "embedder": "#my_embedder",
+        "tokenizer": "#my_tokenizer"
+      }
+    ],
+    "out": [
+      "y_labels",
+      "y_probas_dict"
+    ]
+  },
+  "train": {
+    "epochs": {
+      "range": [
+        50,
+        100
+      ],
+      "discrete": true
+    },
+    "batch_size": {
+      "range": [
+        50,
+        70
+      ],
+      "discrete": true
+    },
+    "metric_optimization": "minimize",
+    "metrics": [
+      "classification_log_loss",
+      "classification_accuracy",
+      "classification_f1",
+      "classification_roc_auc"
+    ],
+    "validation_patience": 5,
+    "val_every_n_epochs": 5,
+    "log_every_n_epochs": 5,
+    "show_examples": false,
+    "validate_best": true,
+    "test_best": false
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "IntentModel"
+    }
+  }
+}
