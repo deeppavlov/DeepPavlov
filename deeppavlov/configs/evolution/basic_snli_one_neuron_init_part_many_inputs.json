@@ -3,7 +3,10 @@
     "name": "basic_classification_reader",
     "x": ["sentence1", "sentence2"],
     "y": "gold_label",
-    "data_path": "/home/dilyara.baymurzina/evolution_data/snli_data/two_texts/part"
+    "data_path": "/home/dilyara.baymurzina/evolution_data/snli_data/cutted_many_inputs/parts",
+    "train": "train_0.csv",
+    "valid": "valid.csv",
+    "test": "test.csv"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator"
@@ -24,8 +27,8 @@
           "y"
         ],
         "level": "token",
-        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_data/snli_classes.dict",
-        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_data/snli_classes.dict"
+        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_data/cutted_many_inputs/snli_classes.dict",
+        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_data/cutted_many_inputs/snli_classes.dict"
       },
       {
         "in": [
@@ -71,8 +74,8 @@
         ],
         "main": true,
         "name": "evolution_many_inputs_classification_model",
-        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_many_inputs",
-        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_many_inputs",
+        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_many_inputs_1",
+        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_many_inputs_1",
         "classes": "#classes_vocab.keys()",
         "to_evolve": true,
         "basic_layers_params": {
@@ -180,7 +183,7 @@
           ]
         },
         "loss": "binary_crossentropy",
-        "text_size": 15,
+        "text_size": [30, 20],
         "last_layer_activation": "softmax",
         "model_name": "evolution_many_inputs_classification_model",
         "embedder": "#my_embedder",

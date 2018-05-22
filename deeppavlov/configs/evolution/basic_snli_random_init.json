@@ -3,7 +3,10 @@
     "name": "basic_classification_reader",
     "x": "text",
     "y": "gold_label",
-    "data_path": "/home/dilyara.baymurzina/evolution_data/snli_data"
+    "data_path": "/home/dilyara.baymurzina/evolution_data/snli_data/one_input",
+    "train": "train_0.csv",
+    "valid": "valid.csv",
+    "test": "test.csv"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator"
@@ -23,8 +26,8 @@
           "y"
         ],
         "level": "token",
-        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_data/snli_classes.dict",
-        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_data/snli_classes.dict"
+        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_data/one_input/snli_classes.dict",
+        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_data/one_input/snli_classes.dict"
       },
       {
         "in": [
@@ -60,8 +63,8 @@
         ],
         "main": true,
         "name": "evolution_classification_model",
-        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/start_with_random",
-        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/start_with_random",
+        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/start_with_random_1",
+        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/start_with_random_1",
         "classes": "#classes_vocab.keys()",
         "to_evolve": true,
         "basic_layers_params": {
@@ -169,7 +172,7 @@
           ]
         },
         "loss": "binary_crossentropy",
-        "text_size": 15,
+        "text_size": 51,
         "model_name": "evolution_classification_model",
         "embedder": "#my_embedder",
         "tokenizer": "#my_tokenizer"

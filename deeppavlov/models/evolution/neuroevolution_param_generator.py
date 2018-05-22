@@ -36,6 +36,7 @@ class NetworkAndParamsEvolution:
                  start_with_one_neuron=False,
                  evolve_binary_mask=True,
                  save_best_with_weights_portion=0,
+                 train_partition=1,
                  **kwargs):
         """
         Initialize evolution with random population
@@ -52,7 +53,10 @@ class NetworkAndParamsEvolution:
             key_basic_layers: key value of dictionary in basic_config
                             that contains considered layers with their evolving parameters
             seed: random seed for initialization
-            seed: random seed for initialization
+            start_with_one_neuron: whether to start with one neuron binary mask or random one
+            evolve_binary_mask: whether to evolve binary mask or evolve only hyper parameters
+            save_best_with_weights_portion: portion (from interval [0,1]) of population to save with weights
+            train_partition: integer number of train data parts
             **kwargs: basic config with parameters
         """
         self.n_types = n_types
@@ -104,12 +108,12 @@ class NetworkAndParamsEvolution:
         self.n_evolving_train_params = None
         self.evolve_binary_mask = evolve_binary_mask
         self.n_saved_best_with_weights = int(save_best_with_weights_portion * self.population_size)
+        self.train_partition = train_partition
 
         if seed is None:
             pass
         else:
             np.random.seed(seed)
-        return None
 
     def _insert_dict_into_model_params(self, params, model_index, dict_to_insert):
         params_copy = deepcopy(params)
@@ -259,12 +263,16 @@ class NetworkAndParamsEvolution:
         next = unchangable_individuals.extend(changable_next)
 
         for i in range(self.n_saved_best_with_weights):
+            next[i]["dataset_reader"]["train"] = str(Path(next[i]["dataset_reader"]["train"]).stem.split("_")[0] + "_" +
+                                                     str(iteration % self.train_partition))
             next[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
                 str(Path(self.params["save_path"]).joinpath("population_" + str(iteration)).joinpath(
                     self.params["model_name"] + "_" + str(i)))
             # load_path does not change to provide loading weights from saved model
 
         for i in range(self.n_saved_best_with_weights, self.population_size):
+            next[i]["dataset_reader"]["train"] = str(Path(next[i]["dataset_reader"]["train"]).stem.split("_")[0] + "_" +
+                                                     str(iteration % self.train_partition))
             next[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
                 str(Path(self.params["save_path"]).joinpath("population_" + str(iteration)).joinpath(
                     self.params["model_name"] + "_" + str(i)))
