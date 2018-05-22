@@ -82,8 +82,8 @@ parser.add_argument('--n_types', help='Please, enter number of types of layers',
 parser.add_argument('--one_neuron_init', help='Please, enter number of types of layers', default=0)
 parser.add_argument('--evolve_metric', help='Please, choose target metric out of ["classification_log_loss", '
                                             '"classification_accuracy",'
-                                            '      "classification_f1",'
-                                            '      "classification_roc_auc"]', default="classification_roc_auc")
+                                            '"classification_f1",'
+                                            '"classification_roc_auc"]', default="classification_roc_auc")
 parser.add_argument('--save_best_portion',
                     help='Please, enter portion of population to save for the next generation with weights', default=0.)
 
@@ -111,7 +111,7 @@ evolution = NetworkAndParamsEvolution(n_layers=N_LAYERS, n_types=N_TYPES,
                                       p_mutation=0.5, mutation_power=0.1,
                                       key_model_to_evolve="to_evolve",
                                       key_basic_layers="basic_layers_params",
-                                      seed=None,
+                                      seed=42,
                                       start_with_one_neuron=ONE_NEURON_INIT,
                                       save_best_with_weights_portion=SAVE_BEST_PORTION,
                                       **basic_params)
