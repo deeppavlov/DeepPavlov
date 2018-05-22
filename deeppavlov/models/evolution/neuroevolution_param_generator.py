@@ -2,6 +2,7 @@ import numpy as np
 from copy import deepcopy
 from pathlib import Path
 import json
+import shutil
 
 from deeppavlov.models.evolution.check_binary_mask import check_and_correct_binary_mask, \
     number_to_type_layer
@@ -34,6 +35,7 @@ class NetworkAndParamsEvolution:
                  seed=None,
                  start_with_one_neuron=False,
                  evolve_binary_mask=True,
+                 save_best_with_weights_portion=0,
                  **kwargs):
         """
         Initialize evolution with random population
@@ -101,6 +103,7 @@ class NetworkAndParamsEvolution:
         self.evolving_train_params = []
         self.n_evolving_train_params = None
         self.evolve_binary_mask = evolve_binary_mask
+        self.n_saved_best_with_weights = int(save_best_with_weights_portion * self.population_size)
 
         if seed is None:
             pass
@@ -216,7 +219,7 @@ class NetworkAndParamsEvolution:
 
         return population
 
-    def next_generation(self, generation, scores, iter,
+    def next_generation(self, generation, scores, iteration,
                         p_crossover=None, crossover_power=None,
                         p_mutation=None, mutation_power=None):
         """
@@ -242,14 +245,31 @@ class NetworkAndParamsEvolution:
             mutation_power = self.mutation_power
 
         selected_individuals = self.selection(generation, scores)
-        offsprings = self.crossover(selected_individuals, p_crossover=p_crossover, crossover_power=crossover_power)
-        next = self.mutation(offsprings, p_mutation=p_mutation, mutation_power=mutation_power)
-        for i in range(self.population_size):
+
+        unchangable_individuals = selected_individuals[:self.n_saved_best_with_weights]
+        changable_individuals = selected_individuals[self.n_saved_best_with_weights:]
+
+        changable_offsprings = self.crossover(changable_individuals,
+                                              p_crossover=p_crossover,
+                                              crossover_power=crossover_power)
+        changable_next = self.mutation(changable_offsprings,
+                                       p_mutation=p_mutation,
+                                       mutation_power=mutation_power)
+
+        next = unchangable_individuals.extend(changable_next)
+
+        for i in range(self.n_saved_best_with_weights):
             next[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
-                str(Path(self.params["save_path"]).joinpath("population_" + str(iter)).joinpath(
+                str(Path(self.params["save_path"]).joinpath("population_" + str(iteration)).joinpath(
+                    self.params["model_name"] + "_" + str(i)))
+            # load_path does not change to provide loading weights from saved model
+
+        for i in range(self.n_saved_best_with_weights, self.population_size):
+            next[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
+                str(Path(self.params["save_path"]).joinpath("population_" + str(iteration)).joinpath(
                     self.params["model_name"] + "_" + str(i)))
             next[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"] = \
-                str(Path(self.params["load_path"]).joinpath("population_" + str(iter)).joinpath(
+                str(Path(self.params["load_path"]).joinpath("population_" + str(iteration)).joinpath(
                     self.params["model_name"] + "_" + str(i)))
 
         return next
@@ -271,7 +291,13 @@ class NetworkAndParamsEvolution:
         probas_to_be_selected = scores / total
         intervals = np.array([np.sum(probas_to_be_selected[:i]) for i in range(self.population_size)])
         selected = []
-        for i in range(self.population_size):
+
+        for i in range(self.n_saved_best_with_weights):
+            ind_id = np.argsort(scores)[-(1+i)]
+            new = deepcopy(population[ind_id])
+            selected.append(new)
+
+        for i in range(self.n_saved_best_with_weights, self.population_size):
             r = np.random.random()
             individuum = population[np.where(r > intervals)[0][-1]]
             selected.append(individuum)
@@ -288,11 +314,12 @@ class NetworkAndParamsEvolution:
             crossover_power: part of EVOLVING parents parameters to exchange for offsprings
 
         Returns:
-            self.population_size offsprings
+            part_of_population offsprings
         """
-        perm = np.random.permutation(self.population_size)
+        part_of_population = len(population)
+        perm = np.random.permutation(part_of_population)
         offsprings = []
-        for i in range(self.population_size // 2):
+        for i in range(part_of_population // 2):
             parents = population[perm[2 * i]], population[perm[2 * i + 1]]
             if self.decision(p_crossover):
                 params_perm = np.random.permutation(self.n_evolving_params)
@@ -391,7 +418,7 @@ class NetworkAndParamsEvolution:
             else:
                 offsprings.extend(parents)
 
-        if self.population_size % 2 == 1:
+        if part_of_population % 2 == 1:
             offsprings.append(population[perm[-1]])
         return offsprings
 
