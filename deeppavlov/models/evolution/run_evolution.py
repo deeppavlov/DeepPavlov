@@ -84,6 +84,8 @@ parser.add_argument('--evolve_metric', help='Please, choose target metric out of
                                             '"classification_accuracy",'
                                             '      "classification_f1",'
                                             '      "classification_roc_auc"]', default="classification_roc_auc")
+parser.add_argument('--save_best_portion',
+                    help='Please, enter portion of population to save for the next generation with weights', default=0.)
 
 args = parser.parse_args()
 
@@ -95,6 +97,7 @@ N_LAYERS = int(args.n_layers)
 N_TYPES = int(args.n_types)
 ONE_NEURON_INIT = bool(int(args.one_neuron_init))
 EVOLVE_METRIC = args.evolve_metric
+SAVE_BEST_PORTION = float(args.save_best_portion)
 
 with open(CONFIG_FILE, "r") as f:
     basic_params = json.load(f)
@@ -110,6 +113,7 @@ evolution = NetworkAndParamsEvolution(n_layers=N_LAYERS, n_types=N_TYPES,
                                       key_basic_layers="basic_layers_params",
                                       seed=None,
                                       start_with_one_neuron=ONE_NEURON_INIT,
+                                      save_best_with_weights_portion=SAVE_BEST_PORTION,
                                       **basic_params)
 
 # Result table
