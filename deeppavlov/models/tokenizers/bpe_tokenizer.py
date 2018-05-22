@@ -150,7 +150,7 @@ class BPETokenizer(Estimator):
             else:
                 for s in batch:
                     encoded.append(self._encode(s))
-            return encoded
+            return encoded, [len(sent) for sent in encoded]
 
         elif isinstance(batch[0], list) and \
                 ((isinstance(batch[0][0], str) and not self.indexes_only)
@@ -158,7 +158,7 @@ class BPETokenizer(Estimator):
             decoded = []
             for s in batch:
                 decoded.append(self._decode(s))
-            return decoded
+            return decoded, [len(sent) for sent in decoded]
 
     def _preprocess(self, batch: List[str]):
         """
@@ -184,6 +184,4 @@ class BPETokenizer(Estimator):
 #     lol.fit("/home/fogside/Projects/CoVe/data_nmt/eval.ru")
 #     print(lol(["я хочу гулять"]))
 #     print(len(lol))
-#
-#     # lol = BPETokenizer()
 

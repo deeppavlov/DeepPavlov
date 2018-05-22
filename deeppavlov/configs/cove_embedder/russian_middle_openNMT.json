@@ -1,0 +1,38 @@
+// config to encode Russian sentences with OpenNMT encoder from trained NMTMedium model.
+// see https://github.com/OpenNMT/OpenNMT-tf/blob/master/opennmt/models/catalog.py for more details
+
+{
+  "chainer": {
+    "in": ["x"],
+    "pipe": [
+      {
+        "in": ["x"],
+        "name": "bpe_tokenizer",
+        "load_path": "need to define",
+        "indexes_only": false,
+        "preprocess_call": true,
+        "out": ["x", "lengths"]
+      },
+      {
+        "in": ["x", "lengths"],
+        "out": ["embedded"],
+        "name": "cove_embedder",
+        "vocab_file_path": "need to define",
+        "checkpoint_path": "need to define",
+        "residual_connections": false,
+        "dropout": 0.3,
+        "num_units": 256,
+        "num_layers":4,
+        "cell_class": "LSTMCell",
+        "reduce_method": "mean"
+      }
+    ],
+    "out": ["embedded"]
+  },
+  "metadata": {
+    "download": [
+      // specify path to download checkpoint, vocab and bpe model
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/slotfill_dstc2.tar.gz"
+    ]
+  }
+}

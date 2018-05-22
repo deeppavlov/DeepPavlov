@@ -13,10 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-# Using sentencepiece for bpe;
-# Create shared vocab by concatenation of target and source data;
 
-import sys
 from overrides import overrides
 
 import numpy as np
@@ -34,11 +31,15 @@ log = get_logger(__name__)
 
 @register('cove')
 class CoVeEmbedder(TFModel):
-    def __init__(self, dim, vocab_file_path, checkpoint_path, save_path=None, **kwargs):
-        super().__init__(save_path=save_path, **kwargs)
-        self.dim = dim
+    def __init__(self, vocab_file_path: str, checkpoint_path: str, num_layers: int, cell_class_name: str,
+                 num_units: int, dropout: int, residual_connections: bool, reduce_method: str, **kwargs):
+
+        super().__init__(save_path=None, load_path=None, **kwargs)
         self.vocab_file_path = vocab_file_path
         self.checkpoint_path = checkpoint_path
+
+        # TODO: reduce vectors (one vector per word in the input sentence) from encoder using this method
+        self.reduce_method = reduce_method
 
         vocab = tf.contrib.lookup.index_table_from_file(vocabulary_file=self.vocab_file_path)
         self.tokens = tf.placeholder(tf.string, shape=(None, None), name='tokens')
@@ -50,18 +51,17 @@ class CoVeEmbedder(TFModel):
                                  trainable=False, dtype=tf.float32, name='w_embs')
         inputs = tf.nn.embedding_lookup(params=embedd_mtx, ids=indexes)
 
-        num_layers = 4
-        num_units = 256
-        cell_class = tf.contrib.rnn.LSTMCell
-        dropout = 0.3
-        mode = tf.estimator.ModeKeys.PREDICT
-        residual_connections = False
+        if cell_class_name not in dir(tf.contrib.rnn):
+            log.error("Provided cell_class_name hasn't been find into tf.contrib.rnn, try another name")
+            exit(1)
+
+        cell_class = getattr(tf.contrib.rnn, cell_class_name)
 
         with tf.variable_scope('seq2seq/encoder', reuse=tf.AUTO_REUSE):
             cell_fw = build_cell(
                 num_layers,
                 num_units,
-                mode,
+                tf.estimator.ModeKeys.PREDICT,
                 dropout=dropout,
                 residual_connections=residual_connections,
                 cell_class=cell_class)
@@ -69,7 +69,7 @@ class CoVeEmbedder(TFModel):
             cell_bw = build_cell(
                 num_layers,
                 num_units,
-                mode,
+                tf.estimator.ModeKeys.PREDICT,
                 dropout=dropout,
                 residual_connections=residual_connections,
                 cell_class=cell_class)
@@ -125,16 +125,11 @@ class CoVeEmbedder(TFModel):
         return values
 
     @overrides
-    def __call__(self, batch, *args, **kwargs):
+    def __call__(self, batch, lengths, *args, **kwargs):
         """
         Embed data
         """
-        preprocessed_batch, lengths = self._preprocess(batch)
-        return self._encode(preprocessed_batch, lengths)
-
-    def _preprocess(self, batch):
-        # TODO: implement preprocessing with bpe
-        pass
+        return self._encode(batch, lengths)
 
     def _encode(self, tokens: List[str], lengths: List[int]):
 

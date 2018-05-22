@@ -43,6 +43,7 @@ import deeppavlov.models.embedders.fasttext_embedder
 import deeppavlov.models.embedders.dict_embedder
 import deeppavlov.models.embedders.glove_embedder
 import deeppavlov.models.embedders.bow_embedder
+import deeppavlov.models.embedders.cove_embedder
 import deeppavlov.models.ner.ner_ontonotes
 import deeppavlov.models.spellers.error_model.error_model
 import deeppavlov.models.trackers.hcn_at
@@ -52,6 +53,7 @@ import deeppavlov.models.preprocessors.squad_preprocessor
 import deeppavlov.models.tokenizers.spacy_tokenizer
 import deeppavlov.models.tokenizers.split_tokenizer
 import deeppavlov.models.tokenizers.ru_tokenizer
+import deeppavlov.models.tokenizers.bpe_tokenizer
 import deeppavlov.models.squad.squad
 import deeppavlov.skills.go_bot.bot
 import deeppavlov.skills.go_bot.network
