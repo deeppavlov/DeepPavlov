@@ -208,7 +208,7 @@
     "log_every_n_epochs": 5,
     "show_examples": false,
     "validate_best": true,
-    "test_best": false
+    "test_best": true
   },
   "metadata": {
     "labels": {
