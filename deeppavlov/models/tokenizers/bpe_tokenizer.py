@@ -15,7 +15,6 @@ limitations under the License.
 """
 from overrides import overrides
 
-import nltk
 import sys
 import os
 from deeppavlov.core.common.registry import register
@@ -23,6 +22,7 @@ from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.common.prints import RedirectedPrints
 import string
+from typing import List, Union
 import sentencepiece as spm
 
 log = get_logger(__name__)
@@ -32,14 +32,31 @@ log = get_logger(__name__)
 class BPETokenizer(Estimator):
     """
     Module uses sentencepiece to perform bpe tokenizing.
-    See for details: https://github.com/google/sentencepiece/blob/master/python/README.md
+    See for details: https://github.com/google/sentencepiece/
 
     """
 
-    def __init__(self, load_path, save_path=None, vocab_size=None, *args, **kwargs):
-        self.super().__init__(load_path, save_path=None, *args, **kwargs)
+    def __init__(self, load_path: str = None, save_path: str = None, vocab_size: int = None,
+                 indexes_only=False, preprocess_call=True, *args, **kwargs):
+        """
+        :param load_path: path to saved model to load it from; if provided model will be initialized from this save.
+        :param save_path: path for saving trained model if you would like to train a new one.
+        :param vocab_size: provide vocab_size if you would like to train BPE model;
+                           if you would like to load existing model you should't provide this parameter.
+        :param indexes_only: if True works like a vocab; encoding into a sequence of indices
+                             and decoding also from a sequence of indices.
+        :param preprocess_call: if True
+
+        """
+        super().__init__(load_path=load_path, save_path=save_path, *args, **kwargs)
+
+        self.indexes_only = indexes_only
+        self.preprocess_call = preprocess_call
+
         if self.load_path:
             self.model = self.load()
+            self._set_encoding_type()
+
         elif vocab_size is None:
             log.error('No load_path provided but vocab_size is not defined. Provide vocab_size or load_path.')
             sys.exit(1)
@@ -51,8 +68,25 @@ class BPETokenizer(Estimator):
                 try:
                     os.mkdir(self.save_path)
                 except OSError:
-                    log.error('save_path is already exists')
+                    log.warning('save_path: {} is already exists, using existing one.'.format(self.save_path))
         self._preprocess_table = str.maketrans({key: None for key in string.punctuation})
+
+    def _set_encoding_type(self):
+        if self.model:
+            if self.indexes_only:
+                log.info("Set encoding and decoding using indices only.")
+                self._encode = self.model.EncodeAsIds
+                self._decode = self.model.DecodeIds
+            else:
+                log.info("Set encoding and decoding using tokens only.")
+                self._encode = self.model.EncodeAsPieces
+                self._decode = self.model.DecodePieces
+        else:
+            log.error("Trying to use self.model which doesn't exist. Please, fit model before using.")
+            exit(1)
+
+    def __len__(self):
+        return self.vocab_size
 
     def save(self, *args, **kwargs):
         raise NotImplementedError
@@ -64,20 +98,20 @@ class BPETokenizer(Estimator):
         if self.load_path:
             log.info("Loading model {} from path: '{}'."
                      .format(self.__class__.__name__, self.load_path))
-            model_file = str(self.load_path)
+            model = spm.SentencePieceProcessor()
             try:
-                model = spm.SentencePieceProcessor()
-                model.Load(self.load_path)
+                model.Load(str(self.load_path))
             except Exception as e:
                 log.error(e.__repr__())
                 sys.exit(1)
+            self.vocab_size = len(model)
         else:
-            log.error('Provided load_path "{}" is incorrect.'
+            log.error('No load_path "{}" provided.'
                       .format(self.load_path))
             sys.exit(1)
         return model
 
-    def fit(self, train_file_path, *args, **kwargs):
+    def fit(self, train_file_path: str, *args, **kwargs):
         """
         Create vocab and model and save them on disk.
 
@@ -87,33 +121,69 @@ class BPETokenizer(Estimator):
         with RedirectedPrints():
             try:
                 spm.SentencePieceTrainer.Train('--input={} --model_prefix={}/bpe --vocab_size={}'.
-                                           format(train_file_path, self.save_path, self.vocab_size))
+                                               format(train_file_path, self.save_path, self.vocab_size))
             except Exception as e:
                 log.error(e.__repr__())
                 sys.exit(1)
 
-        self.load_path = self.save_path + 'bpe.model'
+        self.load_path = os.path.join(self.save_path, 'bpe.model')
         self.model = self.load()
+        self._set_encoding_type()
 
     @overrides
-    def __call__(self, batch, preprocess=True, *args, **kwargs):
+    def __call__(self, batch: Union[List[str], List[List[str]]], preprocess: bool = True, *args, **kwargs):
         """
-        tokenize batch
-        """
-        encoded = []
-        if preprocess:
-            for s in self._preprocess(batch):
-                encoded.append(self.model.EncodeAsPieces(s))
-        else:
-            for s in batch:
-                encoded.append(self.model.EncodeAsPieces(s))
-        return encoded
+        tokenize batch / or join list of tokens
+        if batch is List[str] -> tokenize each str
+        if batch is List[List[str]] -> join each List[str]
 
-    def _preprocess(self, batch):
+        """
+        if not self.model:
+            log.error("Trying to use self.model which doesn't exist. Please, fit model before using.")
+            exit(1)
+
+        if isinstance(batch[0], str):
+            encoded = []
+            if self.preprocess_call:
+                for s in self._preprocess(batch):
+                    encoded.append(self._encode(s))
+            else:
+                for s in batch:
+                    encoded.append(self._encode(s))
+            return encoded
+
+        elif isinstance(batch[0], list) and \
+                ((isinstance(batch[0][0], str) and not self.indexes_only)
+                 or (isinstance(batch[0][0], int) and self.indexes_only)):
+            decoded = []
+            for s in batch:
+                decoded.append(self._decode(s))
+            return decoded
+
+    def _preprocess(self, batch: List[str]):
         """
         turning strings into lowercase and remove punctuation
         :param batch: list of strings
         :yield: string
         """
         for s in batch:
-            yield s.lower().s.translate(self._preprocess_table)
+            yield s.lower().translate(self._preprocess_table)
+
+
+# if __name__ == '__main__':
+#     lol = BPETokenizer(load_path="/home/fogside/Projects/CoVe/data_nmt/bpe.model")
+#     print(lol(["я хочу гулять"]))
+#     print(lol([['▁я', '▁хочу', '▁гу', 'лять']]))
+#
+#     lol = BPETokenizer(load_path="/home/fogside/Projects/CoVe/data_nmt/bpe.model", indexes_only=True)
+#     print(lol(["я хочу гулять"]))
+#     print(lol([[256, 7844, 3232, 7805]]))
+#     print(len(lol))
+#
+#     lol = BPETokenizer(vocab_size=1000, indexes_only=False, preprocess_call=False)
+#     lol.fit("/home/fogside/Projects/CoVe/data_nmt/eval.ru")
+#     print(lol(["я хочу гулять"]))
+#     print(len(lol))
+#
+#     # lol = BPETokenizer()
+
