@@ -31,58 +31,58 @@ FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_t
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
-    "error_model": {
-        ("error_model/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
-            [
-                ("helllo", "hello"),
-                ("datha", "data")
-            ],
-        ("error_model/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
-    },
-    "go_bot": {
-        ("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("go_bot/gobot_dstc2_all.json", "gobot_dstc2_all", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
-    },
-    "intents": {
-        ("intents/intents_dstc2.json", "intents", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_dstc2_big.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bigru.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_cnn.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_self_add_attention.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_self_mult_attention.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_cnn_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK]
-    },
-    "snips": {("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]},
-    "sample": {
-        ("intents/intents_sample_csv.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_sample_json.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
-    },
-    "ner": {
-        ("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_ontonotes.json", "ner_ontonotes", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_rus.json", "ner_rus", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/slotfill_dstc2.json", "slotfill_dstc2", ('IP',)):
-            [
-                ("chinese food", "{'food': 'chinese'}"),
-                ("in the west part", "{'area': 'west'}"),
-                ("moderate price range", "{'pricerange': 'moderate'}")
-            ]
-    },
-    "ranking": {("ranking/insurance_config.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
-    "squad": {
-        ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK]
-    },
-    "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): [FOUR_ARGUMENTS_INFER_CHECK]},
-    "odqa": {
-        ("odqa/ranker_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK],
-        ("odqa/odqa_infer_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK]
-    },
+    # "error_model": {
+    #     ("error_model/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
+    #         [
+    #             ("helllo", "hello"),
+    #             ("datha", "data")
+    #         ],
+    #     ("error_model/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+    # },
+    # "go_bot": {
+    #     ("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+    #     ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+    #     ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+    #     ("go_bot/gobot_dstc2_all.json", "gobot_dstc2_all", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+    # },
+    # "intents": {
+    #     ("intents/intents_dstc2.json", "intents", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+    #     ("intents/intents_dstc2_big.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+    #     ("intents/intents_snips_bigru.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+    #     ("intents/intents_snips_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+    #     ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+    #     ("intents/intents_snips_bilstm_cnn.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+    #     ("intents/intents_snips_bilstm_self_add_attention.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+    #     ("intents/intents_snips_bilstm_self_mult_attention.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+    #     ("intents/intents_snips_cnn_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK]
+    # },
+    # "snips": {("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]},
+    # "sample": {
+    #     ("intents/intents_sample_csv.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+    #     ("intents/intents_sample_json.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+    # # },
+    # "ner": {
+    #     # ("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+    #     # ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+    #     # ("ner/ner_ontonotes.json", "ner_ontonotes", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+    #     # ("ner/ner_rus.json", "ner_rus", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
+    #     ("ner/slotfill_dstc2.json", "slotfill_dstc2", ('IP',)):
+    #         [
+    #             ("chinese food", "{'food': 'chinese'}"),
+    #             ("in the west part", "{'area': 'west'}"),
+    #             ("moderate price range", "{'pricerange': 'moderate'}")
+    #         ]
+    # },
+    # "ranking": {("ranking/insurance_config.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
+    # "squad": {
+    #     ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
+    #     ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK]
+    # },
+    # "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): [FOUR_ARGUMENTS_INFER_CHECK]},
+    # "odqa": {
+    #     ("odqa/ranker_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK],
+    #     ("odqa/odqa_infer_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK]
+    # },
     "morpho_tagger/UD2.0/hu": {("morpho_tagger/UD2.0/hu/train_config.json", "morpho_tagger", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]}
 }
 
@@ -137,7 +137,7 @@ def setup_module():
     test_configs_path.mkdir(parents=True)
 
     for m_name, conf_dict in PARAMS.items():
-        test_configs_path.joinpath(m_name).mkdir(exist_ok=True)
+        test_configs_path.joinpath(m_name).mkdir(exist_ok=True, parents=True)
         for (conf_file, _, _), _ in conf_dict.items():
             download_config(conf_file)
 
