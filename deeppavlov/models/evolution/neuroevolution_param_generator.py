@@ -250,13 +250,14 @@ class NetworkAndParamsEvolution:
 
         selected_individuals = self.selection(generation, scores)
 
-        unchangable_individuals = selected_individuals[:self.n_saved_best_with_weights]
-        changable_individuals = selected_individuals[self.n_saved_best_with_weights:]
+        offsprings = self.crossover(selected_individuals,
+                                    p_crossover=p_crossover,
+                                    crossover_power=crossover_power)
 
-        changable_offsprings = self.crossover(changable_individuals,
-                                              p_crossover=p_crossover,
-                                              crossover_power=crossover_power)
-        changable_next = self.mutation(changable_offsprings,
+        unchangable_individuals = offsprings[:self.n_saved_best_with_weights]
+        changable_individuals = offsprings[self.n_saved_best_with_weights:]
+
+        changable_next = self.mutation(changable_individuals,
                                        p_mutation=p_mutation,
                                        mutation_power=mutation_power)
 
@@ -324,10 +325,9 @@ class NetworkAndParamsEvolution:
         Returns:
             part_of_population offsprings
         """
-        part_of_population = len(population)
-        perm = np.random.permutation(part_of_population)
+        perm = np.random.permutation(self.population_size)
         offsprings = []
-        for i in range(part_of_population // 2):
+        for i in range(self.population_size // 2):
             parents = population[perm[2 * i]], population[perm[2 * i + 1]]
             if self.decision(p_crossover):
                 params_perm = np.random.permutation(self.n_evolving_params)
@@ -422,11 +422,16 @@ class NetworkAndParamsEvolution:
                         check_and_correct_binary_mask(self.nodes,
                                                       curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][
                                                           "binary_mask"])
+                # if parent is one of the best and will be saved with weights
+                if perm[2 * i] in range(self.n_saved_best_with_weights):
+                    curr_offsprings[0] = population[perm[2 * i]]
+                if perm[2 * i + 1] in range(self.n_saved_best_with_weights):
+                    curr_offsprings[1] = population[perm[2 * i + 1]]
                 offsprings.extend(curr_offsprings)
             else:
                 offsprings.extend(parents)
 
-        if part_of_population % 2 == 1:
+        if self.population_size % 2 == 1:
             offsprings.append(population[perm[-1]])
         return offsprings
 
