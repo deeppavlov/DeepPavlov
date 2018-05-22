@@ -106,6 +106,7 @@ import deeppavlov.metrics.squad_metrics
 import deeppavlov.metrics.roc_auc_score
 import deeppavlov.metrics.fmeasure_classification
 import deeppavlov.metrics.log_loss
+import deeppavlov.metrics.mrr_classification
 
 import deeppavlov.core.common.log
 
