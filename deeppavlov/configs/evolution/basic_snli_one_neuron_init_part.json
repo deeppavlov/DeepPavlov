@@ -154,12 +154,7 @@
             }
           }
         },
-        "confident_threshold": {
-          "range": [
-            0.3,
-            0.7
-          ]
-        },
+        "confident_threshold": 1,
         "optimizer": "Adam",
         "lear_rate": {
           "range": [
@@ -209,8 +204,8 @@
       "classification_roc_auc"
     ],
     "validation_patience": 5,
-    "val_every_n_epochs": 5,
-    "log_every_n_epochs": 5,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
     "show_examples": false,
     "validate_best": true,
     "test_best": false
