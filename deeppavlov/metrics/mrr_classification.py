@@ -38,7 +38,7 @@ def mrr_from_json(fname):
     for elem in data:
         cand = elem['candidates']
         results = elem['results']
-        cand_ranks = (len(results) - rankdata(results, method='max'))[cand] + 1
+        cand_ranks = (len(results) - rankdata(results, method='min'))[cand] + 1
         rank_i.append( min(cand_ranks))
     mrr = calc_mrr(rank_i)
     return mrr
@@ -49,7 +49,7 @@ def mrr_from_dict(data):
     for elem in data:
         cand = elem['candidates']
         results = elem['results']
-        cand_ranks = (len(results) - rankdata(results, method='max'))[cand] + 1
+        cand_ranks = (len(results) - rankdata(results, method='min'))[cand] + 1
         rank_i.append( min(cand_ranks))
     mrr = calc_mrr(rank_i)
     return mrr
