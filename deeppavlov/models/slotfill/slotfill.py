@@ -16,7 +16,6 @@ limitations under the License.
 import json
 from fuzzywuzzy import process
 from overrides import overrides
-from pathlib import Path
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import download
@@ -29,8 +28,9 @@ log = get_logger(__name__)
 
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(Component, Serializable):
-    def __init__(self, **kwargs):
+    def __init__(self, threshold=0.8, **kwargs):
         super().__init__(**kwargs)
+        self.threshold = threshold
         # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
         self.load()
 
@@ -51,7 +51,9 @@ class DstcSlotFillingNetwork(Component, Serializable):
         entities, slots = self._chunk_finder(tokens, tags)
         slot_values = {}
         for entity, slot in zip(entities, slots):
-            slot_values[slot] = self.ner2slot(entity, slot)
+            match, score = self.ner2slot(entity, slot)
+            if score >= self.threshold * 100:
+                slot_values[slot] = match
         return slot_values
 
     def ner2slot(self, input_entity, slot):
@@ -64,8 +66,8 @@ class DstcSlotFillingNetwork(Component, Serializable):
             for entity in self._slot_vals[slot][entity_name]:
                 entities.append(entity)
                 normalized_slot_vals.append(entity_name)
-        best_match = process.extract(input_entity, entities, limit=2 ** 20)[0][0]
-        return normalized_slot_vals[entities.index(best_match)]
+        best_match, score = process.extract(input_entity, entities, limit=2 ** 20)[0]
+        return normalized_slot_vals[entities.index(best_match)], score
 
     @staticmethod
     def _chunk_finder(tokens, tags):

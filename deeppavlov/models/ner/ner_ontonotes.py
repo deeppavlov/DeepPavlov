@@ -32,7 +32,7 @@ log = get_logger(__name__)
 class NER(TFModel):
     def __init__(self, **kwargs):
         self.opt = deepcopy(kwargs)
-        vocabs = self.opt.pop('vocabs')
+        vocabs = self.opt.pop('vocabs', {})
         self.opt.update(vocabs)
 
         # Find all input parameters of the network init

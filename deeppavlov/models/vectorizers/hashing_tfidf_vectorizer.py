@@ -49,7 +49,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
         :param hash_size: a size of hash, power of 2
         :param tokenizer: a tokenizer class
         """
-        super().__init__(save_path=save_path, load_path=load_path, mode=kwargs['mode'])
+        super().__init__(save_path=save_path, load_path=load_path, mode=kwargs.get('mode', 'infer'))
 
         self.hash_size = hash_size
         self.tokenizer = tokenizer

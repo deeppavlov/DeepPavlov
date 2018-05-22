@@ -49,6 +49,12 @@
         "out": ["pos_ind"]
       },
       {
+        "in": ["pos_ind"],
+        "name": "one_hotter",
+        "depth": "#pos_vocab.len",
+        "out": ["pos_one_hot"]
+      },
+      {
         "in": ["y"],
         "id": "tag_vocab",
         "name": "simple_vocab",
@@ -108,7 +114,7 @@
         "out": ["cap"]
       },
       {
-        "in": ["x_emb", "mask", "x_char_ind", "cap", "pos_ind"],
+        "in": ["x_emb", "mask", "x_char_ind", "cap", "pos_one_hot"],
         "in_y": ["y_ind"],
         "out": ["y_predicted"],
         "name": "ner",
@@ -125,6 +131,7 @@
         "save_path": "ner_conll2003/model",
         "load_path": "ner_conll2003/model",
         "char_emb_mat": "#embeddings_char.emb_mat",
+        "two_dense_on_top": true,
         "use_crf": true,
         "use_batch_norm": true,
         "embeddings_dropout": true,
@@ -148,7 +155,7 @@
     "batch_size": 64,
 
     "metrics": ["ner_f1"],
-    "validation_patience": 5,
+    "validation_patience": 7,
     "val_every_n_epochs": 1,
 
     "log_every_n_epochs": 1,
@@ -156,7 +163,8 @@
   },
   "metadata": {
     "labels": {
-      "telegram_utils": "NERCoNLL2003Model"
+      "telegram_utils": "NERCoNLL2003Model",
+      "server_utils": "NER"
     },
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_conll2003_v2.tar.gz",

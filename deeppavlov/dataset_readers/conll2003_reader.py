@@ -42,9 +42,9 @@ class Conll2003DatasetReader(DatasetReader):
                             samples.append(((tokens, pos_tags), tags, ))
                         else:
                             samples.append((tokens, tags,))
-                        tokens = ['<DOCSTART>']
-                        pos_tags = ['O']
-                        tags = ['O']
+                        tokens = []
+                        pos_tags = []
+                        tags = []
                 elif len(line) < 2:
                     if len(tokens) > 0:
                         if self.provide_pos:

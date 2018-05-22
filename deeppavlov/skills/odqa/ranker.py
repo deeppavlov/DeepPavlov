@@ -35,11 +35,11 @@ class TfidfRanker(Estimator):
     def get_main_component(self):
         return self
 
-    def __init__(self, vectorizer: Type = HashingTfIdfVectorizer, **kwargs):
+    def __init__(self, vectorizer: HashingTfIdfVectorizer, **kwargs):
 
         self.vectorizer = vectorizer
 
-        if kwargs['mode'] != 'train':
+        if kwargs.get('mode') != 'train':
             if self.vectorizer.load_path.exists():
                 self.tfidf_matrix, opts = self.vectorizer.load()
                 self.ngram_range = opts['ngram_range']

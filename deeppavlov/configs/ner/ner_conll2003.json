@@ -113,6 +113,7 @@
         "save_path": "ner_conll2003/model_no_pos",
         "load_path": "ner_conll2003/model_no_pos",
         "char_emb_mat": "#embeddings_char.emb_mat",
+        "two_dense_on_top": true,
         "use_crf": true,
         "use_batch_norm": true,
         "embeddings_dropout": true,
@@ -120,7 +121,7 @@
         "intra_layer_dropout": true,
         "l2_reg": 0,
         "learning_rate": 1e-2,
-        "dropout_keep_prob": 0.7
+        "dropout_keep_prob": 0.5
       },
       {
         "ref": "tag_vocab",
@@ -136,7 +137,7 @@
     "batch_size": 64,
 
     "metrics": ["ner_f1"],
-    "validation_patience": 5,
+    "validation_patience": 7,
     "val_every_n_epochs": 1,
 
     "log_every_n_epochs": 1,
@@ -144,10 +145,11 @@
   },
   "metadata": {
     "labels": {
-      "telegram_utils": "NERCoNLL2003Model"
+      "telegram_utils": "NERCoNLL2003Model",
+      "server_utils": "NER"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_conll2003_v2.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_conll2003_v3.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt",
         "subdir": "embeddings"

@@ -22,7 +22,7 @@ root_path = (Path(__file__) / ".." / "..").resolve()
 sys.path.append(str(root_path))
 
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.data.utils import download, download_decompress
+from deeppavlov.core.data.utils import download, download_decompress, get_all_elems_from_json
 from deeppavlov.core.common.log import get_logger
 
 
@@ -37,21 +37,6 @@ parser.add_argument('-all', action='store_true',
                          " available on disk.")
 parser.add_argument('-test', action='store_true',
                     help="Turn test mode")
-
-
-def get_all_elems_from_json(search_json, search_key):
-    result = []
-    if isinstance(search_json, dict):
-        for key in search_json:
-            if key == search_key:
-                result.append(search_json[key])
-            else:
-                result.extend(get_all_elems_from_json(search_json[key], search_key))
-    elif isinstance(search_json, list):
-        for item in search_json:
-            result.extend(get_all_elems_from_json(item, search_key))
-
-    return result
 
 
 def get_config_downloads(config_path, config_downloads=None):
@@ -127,26 +112,22 @@ def download_resource(resource, download_path):
         download(dest_files, url)
 
 
-def download_resources(config_path, args=None):
+def download_resources(args):
     download_path = root_path / 'download'
 
-    if args:
-        if args.test:
-            download_path = root_path / 'tests' / 'download'
-            test = True
-        else:
-            test = False
+    if args.test:
+        download_path = root_path / 'tests' / 'download'
+        test = True
+    else:
+        test = False
 
-        if not args.all and not args.config:
-            log.error('You should provide either skill config path or -all flag')
-            sys.exit(1)
-        elif args.all:
-            downloads = get_configs_downloads(test=test)
-        else:
-            config_path = Path(args.config).resolve()
-            downloads = get_configs_downloads(config_path=config_path)
-    elif config_path:
-        config_path = Path(config_path).resolve()
+    if not args.all and not args.config:
+        log.error('You should provide either skill config path or -all flag')
+        sys.exit(1)
+    elif args.all:
+        downloads = get_configs_downloads(test=test)
+    else:
+        config_path = Path(args.config).resolve()
         downloads = get_configs_downloads(config_path=config_path)
 
     download_path.mkdir(exist_ok=True)
@@ -156,12 +137,12 @@ def download_resources(config_path, args=None):
         download_resource(resource, download_path)
 
 
-def main():
-    args = parser.parse_args()
+def deep_download(args=None):
+    args = parser.parse_args(args)
     log.info("Downloading...")
-    download_resources(None, args)
+    download_resources(args)
     log.info("\nDownload successful!")
 
 
 if __name__ == "__main__":
-    main()
+    deep_download()

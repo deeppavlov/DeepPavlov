@@ -25,7 +25,7 @@ sys.path.append(str(p))
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.commands.infer import interact_model, predict_on_stream
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.download import download_resources
+from deeppavlov.download import deep_download
 from utils.telegram_utils.telegram_ui import interact_model_by_telegram
 from utils.server_utils.server import start_model_server
 
@@ -46,11 +46,17 @@ parser.add_argument("-d", "--download", action="store_true", help="download mode
 def main():
     args = parser.parse_args()
     pipeline_config_path = args.config_path
+    if not Path(pipeline_config_path).is_file():
+        configs = [c for c in Path(__file__).parent.glob(f'configs/**/{pipeline_config_path}.json')
+                   if str(c.with_suffix('')).endswith(pipeline_config_path)]  # a simple way to not allow * and ?
+        if configs:
+            log.info(f"Interpriting '{pipeline_config_path}' as '{configs[0]}'")
+            pipeline_config_path = str(configs[0])
 
     token = args.token or os.getenv('TELEGRAM_TOKEN')
 
     if args.download or args.mode == 'download':
-        download_resources(Path(pipeline_config_path).resolve())
+        deep_download(['-c', pipeline_config_path])
 
     if args.mode == 'train':
         train_evaluate_model_from_config(pipeline_config_path)
