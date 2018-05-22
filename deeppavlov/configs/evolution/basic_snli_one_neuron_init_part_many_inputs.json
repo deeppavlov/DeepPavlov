@@ -165,12 +165,7 @@
             }
           }
         },
-        "confident_threshold": {
-          "range": [
-            0.3,
-            0.7
-          ]
-        },
+        "confident_threshold": 1,
         "optimizer": "Adam",
         "lear_rate": {
           "range": [
