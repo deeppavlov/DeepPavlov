@@ -23,6 +23,7 @@ import gzip
 import numpy as np
 import re
 import zipfile
+import shutil
 
 from deeppavlov.core.common.log import get_logger
 
