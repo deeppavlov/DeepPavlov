@@ -142,7 +142,7 @@ iters = 1
 while True:
     print("\nIteration #{} starts\n".format(iters))
 
-    population = evolution.next_generation(population, population_scores, iter=iters)
+    population = evolution.next_generation(population, population_scores, iteration=iters)
     print("Considered population: {}\nScoring...\n".format(population))
     population_scores = score_population(population, POPULATION_SIZE, result_file)[EVOLVE_METRIC]
 

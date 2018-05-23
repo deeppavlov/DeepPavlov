@@ -163,7 +163,7 @@ class NetworkAndParamsEvolution:
                                            }
         return all_layers_params
 
-    def first_generation(self, iter=0):
+    def first_generation(self, iteration=0):
         """
         Initialize first generation randomly according to the given constraints is self.params
         Returns:
@@ -183,10 +183,10 @@ class NetworkAndParamsEvolution:
             # intitializing path to save model
             if "model_name" in params_for_search.keys():
                 params["save_path"] = str(Path(self.params["save_path"]).joinpath(
-                    "population_" + str(iter)).joinpath(params_for_search["model_name"] + "_" + str(i)))
+                    "population_" + str(iteration)).joinpath(params_for_search["model_name"] + "_" + str(i)))
             else:
                 params["save_path"] = str(Path(self.params["save_path"]).joinpath(
-                    "population_" + str(iter)).joinpath(self.params["model_name"] + "_" + str(i)))
+                    "population_" + str(iteration)).joinpath(self.params["model_name"] + "_" + str(i)))
 
             layers_params = self.initialize_layers_params()
 
