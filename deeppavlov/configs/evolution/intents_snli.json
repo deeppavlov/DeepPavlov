@@ -3,7 +3,10 @@
     "name": "basic_classification_reader",
     "x": "text",
     "y": "gold_label",
-    "data_path": "/home/dilyara/data/data_files/SNLI/snli_data"
+    "data_path": "/home/dilyara/data/data_files/SNLI/one_input",
+    "train": "train.csv",
+    "valid": "valid.csv",
+    "test": "test.csv"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator"
@@ -23,8 +26,8 @@
           "y"
         ],
         "level": "token",
-        "save_path": "/home/dilyara/data/data_files/SNLI/snli_data/snli_classes.dict",
-        "load_path": "/home/dilyara/data/data_files/SNLI/snli_data/snli_classes.dict"
+        "save_path": "/home/dilyara/data/data_files/SNLI/one_input/snli_classes.dict",
+        "load_path": "/home/dilyara/data/data_files/SNLI/one_input/snli_classes.dict"
       },
       {
         "in": [
@@ -74,7 +77,7 @@
         "lear_rate": 0.01,
         "lear_rate_decay": 0.1,
         "loss": "binary_crossentropy",
-        "text_size": 15,
+        "text_size": 51,
         "coef_reg_cnn": 1e-4,
         "coef_reg_den": 1e-4,
         "dropout_rate": 0.5,
@@ -98,11 +101,11 @@
       "classification_roc_auc"
     ],
     "validation_patience": 5,
-    "val_every_n_epochs": 5,
-    "log_every_n_epochs": 5,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
     "show_examples": false,
     "validate_best": true,
-    "test_best": false
+    "test_best": true
   },
   "metadata": {
     "labels": {
