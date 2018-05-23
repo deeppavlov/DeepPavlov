@@ -166,22 +166,8 @@ class BPETokenizer(Estimator):
         :param batch: list of strings
         :yield: string
         """
+        #TODO: remove symbols with hats
         for s in batch:
             yield s.lower().translate(self._preprocess_table)
 
-
-# if __name__ == '__main__':
-#     lol = BPETokenizer(load_path="/home/fogside/Projects/CoVe/data_nmt/bpe.model")
-#     print(lol(["я хочу гулять"]))
-#     print(lol([['▁я', '▁хочу', '▁гу', 'лять']]))
-#
-#     lol = BPETokenizer(load_path="/home/fogside/Projects/CoVe/data_nmt/bpe.model", indexes_only=True)
-#     print(lol(["я хочу гулять"]))
-#     print(lol([[256, 7844, 3232, 7805]]))
-#     print(len(lol))
-#
-#     lol = BPETokenizer(vocab_size=1000, indexes_only=False, preprocess_call=False)
-#     lol.fit("/home/fogside/Projects/CoVe/data_nmt/eval.ru")
-#     print(lol(["я хочу гулять"]))
-#     print(len(lol))
 

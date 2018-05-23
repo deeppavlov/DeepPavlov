@@ -20,25 +20,33 @@ import numpy as np
 import tensorflow as tf
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.tf_model import TFModel
+from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
 from opennmt.utils.cell import build_cell
 from opennmt.layers import ConcatReducer
+from deeppavlov.core.models.tf_backend import TfModelMeta
 from typing import List
 
 log = get_logger(__name__)
 
 
-@register('cove')
-class CoVeEmbedder(TFModel):
+@register('cove_embedder')
+class CoVeEmbedder(Component, metaclass=TfModelMeta):
     def __init__(self, vocab_file_path: str, checkpoint_path: str, num_layers: int, cell_class_name: str,
-                 num_units: int, dropout: int, residual_connections: bool, reduce_method: str, **kwargs):
+                 num_units: int, residual_connections: bool, reduce_method: str, **kwargs):
+        """
+        :param vocab_file_path:
+        :param checkpoint_path:
+        :param num_layers:
+        :param cell_class_name:
+        :param num_units:
+        :param residual_connections:
+        :param reduce_method: ['']
+        :param kwargs:
+        """
 
-        super().__init__(save_path=None, load_path=None, **kwargs)
         self.vocab_file_path = vocab_file_path
         self.checkpoint_path = checkpoint_path
-
-        # TODO: reduce vectors (one vector per word in the input sentence) from encoder using this method
         self.reduce_method = reduce_method
 
         vocab = tf.contrib.lookup.index_table_from_file(vocabulary_file=self.vocab_file_path)
@@ -62,7 +70,6 @@ class CoVeEmbedder(TFModel):
                 num_layers,
                 num_units,
                 tf.estimator.ModeKeys.PREDICT,
-                dropout=dropout,
                 residual_connections=residual_connections,
                 cell_class=cell_class)
 
@@ -70,7 +77,6 @@ class CoVeEmbedder(TFModel):
                 num_layers,
                 num_units,
                 tf.estimator.ModeKeys.PREDICT,
-                dropout=dropout,
                 residual_connections=residual_connections,
                 cell_class=cell_class)
 
@@ -88,12 +94,12 @@ class CoVeEmbedder(TFModel):
                 if 'bidirectional_rnn' in name:
                     tf_vars.append(tf.get_variable(name))
                     tf_names.append(name)
-                    print(name, tf.get_variable(name).shape, checkpoint_values[name].shape)
             placeholders = [tf.placeholder(v.dtype, shape=v.shape) for v in tf_vars]
             assign_ops = [tf.assign(v, p) for (v, p) in zip(tf_vars, placeholders)]
 
         reducer = ConcatReducer()
 
+        # merge (by concatenation) backward and forward rnn_cells' outputs/states
         self.encoder_outputs = reducer.zip_and_reduce(encoder_outputs_tup[0], encoder_outputs_tup[1])
         self.encoder_state = reducer.zip_and_reduce(encoder_state_tup[0], encoder_state_tup[1])
 
@@ -101,12 +107,6 @@ class CoVeEmbedder(TFModel):
         self.sess.run(tf.global_variables_initializer())
         self.sess.run(tf.tables_initializer())
         self.sess.run(assign_ops, {p: checkpoint_values[name] for p, name in zip(placeholders, tf_names)})
-
-    def save(self, *args, **kwargs):
-        raise NotImplementedError
-
-    def load(self, *args, **kwargs):
-        raise NotImplementedError
 
     def _load_checkpoint_values(self, *args, **kwargs):
         """
@@ -129,12 +129,25 @@ class CoVeEmbedder(TFModel):
         """
         Embed data
         """
-        return self._encode(batch, lengths)
+        outputs = self._encode(batch, lengths)
+
+        if self.reduce_method == 'mean':
+            encoded = np.mean(outputs, axis=1)
+            print(encoded.shape)
+        elif self.reduce_method == 'sum':
+            encoded = np.sum(outputs, axis=1)
+            print(encoded.shape)
+        elif self.reduce_method == 'max':
+            encoded = np.max(outputs, axis=1)
+            print(encoded.shape)
+        else:
+            log.warning("None of existing reducing methods has been applied; return encoder outputs without reducing.")
+            encoded = outputs
+        return encoded
 
     def _encode(self, tokens: List[str], lengths: List[int]):
 
         # TODO: add concatenation or smth like this
-        lengths = self.get_length
-        embedded_tokens = self.sess.run(self.encoder_state, {self.sequence_length: lengths, self.tokens: tokens})
+        embedded_tokens = self.sess.run(self.encoder_outputs, {self.sequence_length: lengths, self.tokens: tokens})
 
         return embedded_tokens
