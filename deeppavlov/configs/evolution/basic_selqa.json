@@ -218,7 +218,8 @@
       "classification_log_loss",
       "classification_accuracy",
       "classification_f1",
-      "classification_roc_auc"
+      "classification_roc_auc",
+      "classification_mrr"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
