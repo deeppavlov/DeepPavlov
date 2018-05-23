@@ -255,14 +255,14 @@ class NetworkAndParamsEvolution:
                                     p_crossover=p_crossover,
                                     crossover_power=crossover_power)
 
-        unchangable_individuals = offsprings[:self.n_saved_best_with_weights]
+        next = offsprings[:self.n_saved_best_with_weights]
         changable_individuals = offsprings[self.n_saved_best_with_weights:]
 
         changable_next = self.mutation(changable_individuals,
                                        p_mutation=p_mutation,
                                        mutation_power=mutation_power)
 
-        next = unchangable_individuals.extend(changable_next)
+        next.extend(changable_next)
 
         for i in range(self.n_saved_best_with_weights):
             if self.train_partition != 1:
