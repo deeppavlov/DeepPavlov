@@ -130,6 +130,7 @@ class CoVeEmbedder(Component, metaclass=TfModelMeta):
         Embed data
         """
         outputs = self._encode(batch, lengths)
+        encoded = None
 
         if self.reduce_method == 'mean':
             encoded = np.mean(outputs, axis=1)
@@ -140,9 +141,11 @@ class CoVeEmbedder(Component, metaclass=TfModelMeta):
         elif self.reduce_method == 'max':
             encoded = np.max(outputs, axis=1)
             print(encoded.shape)
-        else:
-            log.warning("None of existing reducing methods has been applied; return encoder outputs without reducing.")
+        elif self.reduce_method == 'none':
             encoded = outputs
+        else:
+            log.error("None of reducing methods has been defined")
+            exit(1)
         return encoded
 
     def _encode(self, tokens: List[str], lengths: List[int]):
