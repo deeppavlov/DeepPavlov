@@ -14,7 +14,10 @@ class InsuranceDict(RankingDict):
         vocabs_path = expand_path(vocabs_path)
         self.int2tok_fname = Path(vocabs_path) / 'vocabulary'
         self.response2ints_fname = Path(vocabs_path) / 'answers.label.token_idx'
-        self.context2ints_fname = Path(vocabs_path) / 'question.train.token_idx.label'
+        self.train_context2ints_fname = Path(vocabs_path) / 'question.train.token_idx.label'
+        self.val_context2ints_fname = Path(vocabs_path) / 'question.dev.label.token_idx.pool'
+        self.test_context2ints_fname = Path(vocabs_path) / 'question.test1.label.token_idx.pool'
+
 
     def build_int2tok_vocab(self):
         with open(self.int2tok_fname, 'r') as f:
@@ -32,12 +35,23 @@ class InsuranceDict(RankingDict):
 
     def build_context2toks_vocabulary(self):
         contexts = []
-        with open(self.context2ints_fname, 'r') as f:
+        with open(self.train_context2ints_fname, 'r') as f:
             data = f.readlines()
         for eli in data:
             eli = eli[:-1]
             c, _ = eli.split('\t')
             contexts.append(c.split(' '))
-
+        with open(self.val_context2ints_fname, 'r') as f:
+            data = f.readlines()
+        for eli in data:
+            eli = eli[:-1]
+            _, c, _ = eli.split('\t')
+            contexts.append(c.split(' '))
+        with open(self.test_context2ints_fname, 'r') as f:
+            data = f.readlines()
+        for eli in data:
+            eli = eli[:-1]
+            _, c, _ = eli.split('\t')
+            contexts.append(c.split(' '))
         self.context2toks_vocab = {el[0]: [self.int2tok_vocab[int(x.split('_')[1])]
                                    for x in el[1]] for el in enumerate(contexts)}

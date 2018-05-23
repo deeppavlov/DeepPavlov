@@ -85,11 +85,8 @@ class RankingDict(metaclass=ABCMeta):
         for i in range(len(self.context2toks_vocab)):
             self.context2emb_vocab[i] = None
 
-    def ints2toks(self, idxs_li):
-        toks_li = []
-        for el in idxs_li:
-            toks = [self.int2tok_vocab[int] for int in el]
-            toks_li.append(toks)
+    def conts2toks(self, conts_li):
+        toks_li = [self.context2toks_vocab[cont] for cont in conts_li]
         return toks_li
 
     def resps2toks(self, resps_li):
@@ -98,7 +95,7 @@ class RankingDict(metaclass=ABCMeta):
 
     def make_toks(self, items_li, type):
         if type == "context":
-            toks_li = self.ints2toks(items_li)
+            toks_li = self.conts2toks(items_li)
         elif type == "response":
             toks_li = self.resps2toks(items_li)
         return toks_li
