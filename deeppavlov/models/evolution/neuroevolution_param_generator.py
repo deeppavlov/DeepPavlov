@@ -198,6 +198,14 @@ class NetworkAndParamsEvolution:
                 params["save_path"] = str(Path(self.params["save_path"]).joinpath(
                     "population_" + str(iteration)).joinpath(self.params["model_name"] + "_" + str(i)))
 
+            # load_path =  population_iteration/model_name_i/
+            if "model_name" in params_for_search.keys():
+                params["load_path"] = str(Path(self.params["load_path"]).joinpath(
+                    "population_" + str(iteration)).joinpath(params_for_search["model_name"] + "_" + str(i)))
+            else:
+                params["load_path"] = str(Path(self.params["load_path"]).joinpath(
+                    "population_" + str(iteration)).joinpath(self.params["model_name"] + "_" + str(i)))
+
             layers_params = self.initialize_layers_params()
 
             # exchange model and layers params from basic config to sampled model params
@@ -271,6 +279,8 @@ class NetworkAndParamsEvolution:
             next[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
                 str(Path(self.params["save_path"]).joinpath("population_" + str(iteration)).joinpath(
                     self.params["model_name"] + "_" + str(i)))
+            next[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"] = \
+                str(next[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"].parent)
             # load_path does not change to provide loading weights from saved model
 
         for i in range(self.n_saved_best_with_weights, self.population_size):
