@@ -264,16 +264,16 @@ class NetworkAndParamsEvolution:
         next = unchangable_individuals.extend(changable_next)
 
         for i in range(self.n_saved_best_with_weights):
-            next[i]["dataset_reader"]["train"] = str(Path(next[i]["dataset_reader"]["train"]).stem.split("_")[0] + "_" +
-                                                     str(iteration % self.train_partition))
+            next[i]["dataset_reader"]["train"] = str(Path(next[i]["dataset_reader"]["train"]).stem.split("_")[0]) \
+                                                 + "_" + str(iteration % self.train_partition) + ".csv"
             next[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
                 str(Path(self.params["save_path"]).joinpath("population_" + str(iteration)).joinpath(
                     self.params["model_name"] + "_" + str(i)))
             # load_path does not change to provide loading weights from saved model
 
         for i in range(self.n_saved_best_with_weights, self.population_size):
-            next[i]["dataset_reader"]["train"] = str(Path(next[i]["dataset_reader"]["train"]).stem.split("_")[0] + "_" +
-                                                     str(iteration % self.train_partition))
+            next[i]["dataset_reader"]["train"] = str(Path(next[i]["dataset_reader"]["train"]).stem.split("_")[0]) \
+                                                 + "_" + str(iteration % self.train_partition) + ".csv"
             next[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
                 str(Path(self.params["save_path"]).joinpath("population_" + str(iteration)).joinpath(
                     self.params["model_name"] + "_" + str(i)))
