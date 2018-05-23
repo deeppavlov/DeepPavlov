@@ -181,6 +181,7 @@ class NetworkAndParamsEvolution:
             self.evolving_train_params.extend(evolving_params)
 
             # intitializing path to save model
+            # save_path =  population_iteration/model_name_i/
             if "model_name" in params_for_search.keys():
                 params["save_path"] = str(Path(self.params["save_path"]).joinpath(
                     "population_" + str(iteration)).joinpath(params_for_search["model_name"] + "_" + str(i)))
