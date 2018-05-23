@@ -63,6 +63,7 @@ import deeppavlov.skills.odqa.ranker
 import deeppavlov.vocabs.typos
 import deeppavlov.vocabs.wiki_sqlite
 import deeppavlov.dataset_readers.insurance_reader
+import deeppavlov.dataset_readers.sber_faq_reader
 import deeppavlov.dataset_iterators.ranking_iterator
 import deeppavlov.models.ner.network
 import deeppavlov.models.ranking.ranking_model

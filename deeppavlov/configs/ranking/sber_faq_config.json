@@ -1,18 +1,19 @@
 {
   "dataset_reader": {
-    "name": "insurance_reader",
-    "data_path": "./insurance_data"
+    "name": "sber_faq_reader",
+    "data_path": "./sber_faq_data"
   },
   "dataset_iterator": {
-    "name": "ranking_iterator",
+    "name": "sber_faq_ranking_iterator",
     "seed": 243,
-    "len_vocab": 24981,
-    "sample_candidates": "global",
+    "sample_candidates": "pool",
     "sample_candidates_valid": "pool",
     "sample_candidates_test": "pool",
-    "num_negative_samples": 500,
-    "num_ranking_samples_valid": 500,
-    "num_ranking_samples_test": 500
+    "num_negative_samples": 1000,
+    "num_ranking_samples_valid": 10,
+    "num_ranking_samples_test": 10,
+    "pos_pool_sample": true,
+    "pos_pool_rank": false
   },
   "chainer": {
     "in": ["x"],
@@ -25,8 +26,8 @@
         "name": "ranking_model",
         "device_num": 0,
         "train_now": true,
-        "vocab_name": "insurance",
-        "vocabs_path": "insurance_data/insuranceQA-master/V1",
+        "vocab_name": "sber_faq",
+        "vocabs_path": "sber_faq_data",
         "embeddings": "fasttext",
         "embeddings_path": "insurance_embeddings/wiki.en.bin",
         "embedding_dim": 300,
@@ -39,8 +40,8 @@
         "hidden_dim": 300,
         "learning_rate": 1e-3,
         "margin": 0.1,
-        "save_path": "insurance_ranking/model_weights.h5",
-        "load_path": "insurance_ranking/model_weights.h5",
+        "save_path": "sber_faq_ranking/model_weights.h5",
+        "load_path": "sber_faq_ranking/model_weights.h5",
         "interact_pred_num": 3
       }
     ],
@@ -50,7 +51,7 @@
     "epochs": 200,
     "batch_size": 256,
     "pytest_max_batches": 2,
-    "metrics": ["r@1", "rank_response", "loss"],
+    "metrics": ["r@1", "r@5", "r@10", "rank_response", "loss"],
     "validation_patience": 5,
     "val_every_n_epochs": 10,
     "log_every_n_batches": 10
@@ -61,14 +62,9 @@
       "server_utils": "Ranker"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/insurance_ranking.tar.gz",
-      {
-        "url": "http://lnsigo.mipt.ru/export/datasets/insuranceQA-master.zip",
-        "subdir": "insurance_data"
-      },
       {
         "url": "http://lnsigo.mipt.ru/export/embeddings/wiki.en.bin",
-        "subdir": "insurance_embeddings"
+        "subdir": "sber_faq_embeddings"
       }
     ]
   }

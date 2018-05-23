@@ -6,10 +6,12 @@ import numpy as np
 @register('ranking_iterator')
 class RankingIterator:
 
-    def __init__(self, data, len_vocab,
+    def __init__(self, data,
                  sample_candidates, sample_candidates_valid, sample_candidates_test,
                  num_negative_samples, num_ranking_samples_valid, num_ranking_samples_test,
-                 seed=None):
+                 seed=None, len_vocab=0, pos_pool_sample=False, pos_pool_rank=True):
+        self.pos_pool_sample = pos_pool_sample
+        self.pos_pool_rank = pos_pool_rank
         self.len_vocab = len_vocab
         self.sample_candidates = sample_candidates
         self.sample_candidates_valid = sample_candidates_valid
@@ -39,7 +41,10 @@ class RankingIterator:
             for i in range(num_steps):
                 context_response_data = data[i * batch_size:(i + 1) * batch_size]
                 context = [el["context"] for el in context_response_data]
-                response = [el["response"] for el in context_response_data]
+                if self.pos_pool_sample:
+                    response = [np.random.choice(el["pos_pool"]) for el in context_response_data]
+                else:
+                    response = [el["response"] for el in context_response_data]
                 negative_response = self.create_neg_resp_rand(context_response_data, batch_size, data_type)
                 x = [[context[i], [response[i]]+[negative_response[i]]] for i in range(len(context_response_data))]
                 yield (x, y)
@@ -82,25 +87,21 @@ class RankingIterator:
         elif data_type == "test":
             ranking_length = self.num_ranking_samples_test
             sample_candidates = self.sample_candidates_test
-        if sample_candidates == "pool":
-            y = [len(el["pos_pool"]) * np.ones(ranking_length) for el in context_response_data]
-            response_data = []
-            for i in range(len(context_response_data)):
-                pos_pool = context_response_data[i]["pos_pool"]
-                resp = context_response_data[i]["response"]
-                pos_pool.insert(0, pos_pool.pop(pos_pool.index(resp)))
-                neg_pool = context_response_data[i]["neg_pool"]
-                response = pos_pool + neg_pool
-                response_data.append(response[:ranking_length])
-
-        elif sample_candidates == "global" or sample_candidates is None:
+        if sample_candidates == "global":
             ranking_length = self.len_vocab
-            y = [len(el["pos_pool"]) * np.ones(ranking_length) for el in context_response_data]
+        if sample_candidates == "pool":
+            if self.pos_pool_rank:
+                y = [len(el["pos_pool"]) * np.ones(ranking_length) for el in context_response_data]
+            else:
+                y = [np.ones(ranking_length) for _ in context_response_data]
             response_data = []
             for i in range(len(context_response_data)):
                 pos_pool = context_response_data[i]["pos_pool"]
                 resp = context_response_data[i]["response"]
-                pos_pool.insert(0, pos_pool.pop(pos_pool.index(resp)))
+                if self.pos_pool_rank:
+                    pos_pool.insert(0, pos_pool.pop(pos_pool.index(resp)))
+                else:
+                    pos_pool = [resp]
                 neg_pool = context_response_data[i]["neg_pool"]
                 response = pos_pool + neg_pool
                 response_data.append(response[:ranking_length])
