@@ -82,7 +82,7 @@ class InsuranceReader(DatasetReader):
             pa, q, na = eli.split('\t')
             pa_list = [int(el) - 1 for el in pa.split(' ')]
             for elj in pa_list:
-                contexts.append([int(el.split('_')[1]) for el in q.split(' ')])
+                contexts.append(self.idxs2cont_vocab[q])
                 pos_responses.append(elj)
                 pos_responses_pool.append(pa_list)
                 nas = [int(el) - 1 for el in na.split(' ')]
