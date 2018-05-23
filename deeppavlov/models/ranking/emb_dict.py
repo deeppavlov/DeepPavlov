@@ -36,9 +36,6 @@ class Embeddings(object):
         self.int2emb_vocab = {}
 
     def init_from_scratch(self, tok2int_vocab):
-        if not self.emb_model_file.is_file():
-            download(source_url=self.download_url, dest_file_path=self.emb_model_file)
-
         if self.embeddings == "fasttext":
             self.embeddings_model = FastText.load_fasttext_format(str(self.emb_model_file))
         elif self.embeddings == "word2vec":
