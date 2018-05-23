@@ -6,6 +6,8 @@ from subprocess import Popen, PIPE
 import pandas as pd
 
 from deeppavlov.models.evolution.neuroevolution_param_generator import NetworkAndParamsEvolution
+from deeppavlov.core.common.file import save_json
+
 
 def score_population(population, population_size, result_file):
     global evolution
@@ -36,9 +38,7 @@ def score_population(population, population_size, result_file):
         f_name = f_name.joinpath("config.json")
         population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"] =\
             population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"].tolist()
-        with open(f_name, 'w') as outfile:
-            json.dump(population[i], outfile)
-
+        save_json(population[i], f_name)
         procs.append(Popen("CUDA_VISIBLE_DEVICES={} python ./models/evolution/train_phenotype.py {}"
                      " 1>{}/out.txt 2>{}/err.txt".format(gpus[i],
                                                          str(f_name),
