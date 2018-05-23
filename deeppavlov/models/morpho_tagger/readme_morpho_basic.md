@@ -84,7 +84,7 @@ any sufficient gain in performance and use shallow architecture therefore.
 We distribute pre-trained models for Russian (ru_syntagrus corpus) and Hungarian language.
 Configuration files for reproducible training are also available in a 
 [separate directory](../../configs/morpho_tagger/UD2.0), for example 
-[train_config.json](../../configs/morpho_tagger/UD2.0/hu/morpho_hu_train.json). 
+[morpho_hu_train.json](../../configs/morpho_tagger/UD2.0/hu/morpho_hu_train.json). 
 The configuration file consists of several parts:
 
 #### Dataset Reader
