@@ -21,29 +21,38 @@ def score_population(population, population_size, result_file):
     procs = []
 
     for i in range(population_size):
-        f_name = Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"])
-        model_name = population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["model_name"]
+        # f_name = Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"])
+        # model_name = population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["model_name"]
+        # population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"] = \
+        #     str(f_name.joinpath(model_name + "_" + str(i)))
+        # population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["load_path"] =\
+        #     population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"]
+
+        save_path = Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"])
+        load_path = Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["load_path"])
+
         population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"] = \
-            str(f_name.joinpath(model_name + "_" + str(i)))
-        population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["load_path"] =\
-            population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"]
+            str(save_path.joinpath("model"))
+        population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["load_path"] = \
+            str(load_path.joinpath("model"))
 
         population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["nodes"] = \
             evolution.nodes
         print(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"])
         try:
-            f_name.mkdir(parents=True)
+            save_path.mkdir(parents=True)
         except FileExistsError:
             pass
-        f_name = f_name.joinpath("config.json")
+
+        f_name = save_path.joinpath("config.json")
         population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"] =\
             population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"].tolist()
         save_json(population[i], f_name)
         procs.append(Popen("CUDA_VISIBLE_DEVICES={} python ./models/evolution/train_phenotype.py {}"
                      " 1>{}/out.txt 2>{}/err.txt".format(gpus[i],
                                                          str(f_name),
-                                                         str(Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"]).parent),
-                                                         str(Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"]).parent)
+                                                         str(save_path),
+                                                         str(save_path)
                                                          ),
                            shell=True, stdout=PIPE, stderr=PIPE))
 
@@ -142,7 +151,7 @@ iters = 1
 while True:
     print("\nIteration #{} starts\n".format(iters))
 
-    population = evolution.next_generation(population, population_scores, iteration=iters)
+    population = evolution.next_generation(population, population_scores, iters)
     print("Considered population: {}\nScoring...\n".format(population))
     population_scores = score_population(population, POPULATION_SIZE, result_file)[EVOLVE_METRIC]
 
