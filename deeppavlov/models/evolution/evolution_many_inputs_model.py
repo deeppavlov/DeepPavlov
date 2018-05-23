@@ -25,7 +25,7 @@ from keras.layers.recurrent import LSTM
 from keras.layers.wrappers import Bidirectional
 from keras.models import Model
 from keras.regularizers import l2
-from keras.layers import Concatenate, Reshape, CuDNNLSTM, Lambda
+from keras.layers import Concatenate, Reshape, CuDNNLSTM, Lambda, Add, Subtract, Multiply
 from keras import backend as K
 from overrides import overrides
 from pathlib import Path
@@ -272,6 +272,17 @@ class KerasEvolutionClassificationManyInputsModel(KerasIntentModel):
                 output = dense1(inp)
                 full_outputs.append(globalmaxpooling(output))
 
+            summ = Add()(full_outputs)
+            mult = Multiply()(full_outputs)
+
+            try:
+                subt = Subtract()(full_outputs)
+                full_outputs.append(subt)
+            except ValueError:
+                pass
+            full_outputs.append(summ)
+            full_outputs.append(mult)
+
             output = Concatenate()(full_outputs)
             output = Dense(self.n_classes, activation=None)(output)
             activation = params.get("last_layer_activation", "sigmoid")
@@ -358,6 +369,17 @@ class KerasEvolutionClassificationManyInputsModel(KerasIntentModel):
                 output = GlobalMaxPooling1D()(output)
             full_outputs.append(output)
 
+        summ = Add()(full_outputs)
+        mult = Multiply()(full_outputs)
+
+        try:
+            subt = Subtract()(full_outputs)
+            full_outputs.append(subt)
+        except ValueError:
+            pass
+        full_outputs.append(summ)
+        full_outputs.append(mult)
+        
         output = Concatenate()(full_outputs)
         output = Dense(self.n_classes, activation=None)(output)
         activation = params.get("last_layer_activation", "sigmoid")
