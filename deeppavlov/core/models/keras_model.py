@@ -136,7 +136,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         """
         if self.load_path:
             if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
-                raise ConfigError("Provided save path is incorrect!")
+                raise ConfigError("Provided load path is incorrect!")
 
             opt_path = Path("{}_opt.json".format(str(self.load_path.resolve())))
             weights_path = Path("{}.h5".format(str(self.load_path.resolve())))
