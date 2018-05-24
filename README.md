@@ -433,6 +433,6 @@ If you have any questions, bug reports or feature requests, please feel free to 
 DeepPavlov is built and maintained by [Neural Networks and Deep Learning Lab](https://mipt.ru/english/research/labs/neural-networks-and-deep-learning-lab) at [MIPT](https://mipt.ru/english/) within [iPavlov](http://ipavlov.ai/) project (part of [National Technology Initiative](https://asi.ru/eng/nti/)) and in partnership with [Sberbank](http://www.sberbank.com/).
 
 <p align="center">
-<img src="http://ipavlov.ai/img/ipavlov_footer.png" width="50%" height="50%"/>
+<img src="https://ipavlov.ai/img/ipavlov_footer.png" width="50%" height="50%"/>
 </p>
 
