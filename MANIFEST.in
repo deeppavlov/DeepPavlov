@@ -1,0 +1,6 @@
+include README.MD
+include LICENSE
+include requirements.txt
+recursive-include deeppavlov *.json
+recursive-include deeppavlov *.md
+recursive-include utils *.json

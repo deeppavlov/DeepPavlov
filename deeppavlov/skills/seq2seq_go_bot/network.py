@@ -185,22 +185,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         if prob:
             raise NotImplementedError("Probs not available for now.")
         return predictions
-
-    """def infer_on_batch(self, enc_inputs, dec_inputs, dec_outputs, 
-                       src_seq_lengths, tgt_seq_lengths, tgt_weights):
-        predictions = self.sess.run(
-            [ self._train_predictions ],
-            feed_dict={
-                self._encoder_inputs: enc_inputs,
-                self._decoder_inputs: dec_inputs,
-                self._decorder_outputs: dec_outputs,
-                self._src_sequence_lengths: src_seq_lengths,
-                self._tgt_sequence_lengths: tgt_seq_lengths,
-                self._tgt_weights: tgt_weights
-            }
-        )
-        return loss_value"""
-
+    
     def train_on_batch(self, enc_inputs, dec_inputs, dec_outputs, 
                        src_seq_lengths, tgt_seq_lengths, tgt_weights):
         _, loss_value = self.sess.run(

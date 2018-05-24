@@ -1,65 +1,145 @@
 {
   "dataset_reader": {
-    "name": "conll2003_reader",
-    "data_path": "ontonotes/"
+    "name": "ontonotes_reader",
+    "data_path": "ontonotes_senna"
   },
   "dataset_iterator": {
-    "name": "basic_dataset_iterator"
+    "name": "data_learning_iterator",
+    "seed": 42
   },
   "chainer": {
     "in": ["x"],
+    "in_y": ["y"],
     "pipe": [
       {
-        "id": "pos_vocab",
-        "name": "default_vocab",
-        "load_path": "ner_ontonotes_senna/pos.dict",
-        "save_path": "ner_ontonotes_senna/pos.dict"
-      },
-      {
-        "id": "tag_vocab",
-        "name": "default_vocab",
-        "load_path": "ner_ontonotes_senna/tag.dict",
-        "save_path": "ner_ontonotes_senna/tag.dict"
-      },
-      {
-        "id": "ner_vocab",
-        "name": "default_vocab",
-        "load_path": "ner_ontonotes_senna/ner.dict",
-        "save_path": "ner_ontonotes_senna/ner.dict"
-      },
-      {
-        "id": "glove_emb",
-        "name": "glove",
-        "load_path": "embeddings/glove.6B.100d.txt",
-        "save_path": "embeddings/glove.6B.100d.txt"
+        "in": ["x"],
+        "name": "lazy_tokenizer",
+        "out": ["x"]
       },
       {
         "in": ["x"],
+        "name": "str_lower",
+        "out": ["x_lower"]
+      },
+      {
+        "in": ["x_lower"],
+        "name": "sanitizer",
+        "nums": true,
+        "out": ["x_san"]
+      },
+      {
+        "in": ["y"],
+        "id": "tag_vocab",
+        "name": "simple_vocab",
+        "pad_with_zeros": true,
+        "fit_on": ["y"],
+        "save_path": "ner_ontonotes/tag.dict",
+        "load_path": "ner_ontonotes/tag.dict",
+        "out": ["y_ind"]
+      },
+      {
+        "in": ["x"],
+        "name": "char_splitter",
+        "out": ["x_char"]
+      },
+      {
+        "in": ["x_char"],
+        "id": "char_vocab",
+        "name": "char_vocab",
+        "pad_with_zeros": true,
+        "fit_on": ["x_char"],
+        "save_path": "ner_ontonotes/char.dict",
+        "load_path": "ner_ontonotes/char.dict",
+        "out": ["x_char_ind"]
+      },
+      {
+        "in": ["x"],
+        "name": "mask",
+        "out": ["mask"]
+      },
+      {
+        "in": ["x_san"],
+        "id": "glove_emb",
+        "name": "glove",
+        "pad_zero": true,
+        "load_path": "embeddings/glove.6B.100d.txt",
+
+        "out": ["x_emb"]
+      },
+      {
+        "id": "embeddings_char",
+        "name": "emb_mat_assembler",
+        "character_level": true,
+        "emb_dim": 32,
+        "embedder": "#glove_emb",
+        "vocab": "#char_vocab"
+      },
+      {
+        "id": "capitalization",
+        "name": "capitalization_featurizer",
+        "in": ["x"],
+        "out": ["cap"]
+      },
+      {
+        "in": ["x_emb", "mask", "x_char_ind", "cap"],
+        "in_y": ["y_ind"],
         "out": ["y_predicted"],
-        "name": "ner_ontonotes",
+        "name": "ner",
         "main": true,
-        "save_path": "ner_ontonotes_senna/model.ckpt",
-        "load_path": "ner_ontonotes_senna/model.ckpt",
-        "ner_vocab": "#ner_vocab",
-        "tag_vocab": "#tag_vocab",
-        "pos_vocab": "#pos_vocab",
-        "embedder": "#glove_emb"
+        "token_emb_dim": "#glove_emb.dim",
+        "n_hidden_list": [256, 256, 256],
+        "net_type": "rnn",
+        "cell_type": "lstm",
+        "use_cudnn_rnn": true,
+        "n_tags": "#tag_vocab.len",
+        "capitalization_dim": "#capitalization.dim",
+        "char_emb_dim": "#embeddings_char.dim",
+        "save_path": "ner_ontonotes/model",
+        "load_path": "ner_ontonotes/model",
+        "char_emb_mat": "#embeddings_char.emb_mat",
+        "two_dense_on_top": true,
+        "use_crf": true,
+        "use_batch_norm": true,
+        "embeddings_dropout": true,
+        "top_dropout": true,
+        "intra_layer_dropout": false,
+        "l2_reg": 0,
+        "learning_rate": 3e-3,
+        "dropout_keep_prob": 0.7
+      },
+      {
+        "ref": "tag_vocab",
+        "in": ["y_predicted"],
+        "out": ["tags"]
       }
     ],
-    "out": ["y_predicted"]
+
+    "out": ["tags"]
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 64,
+
+    "metrics": ["ner_f1"],
+    "validation_patience": 7,
+    "val_every_n_epochs": 1,
+
+    "log_every_n_epochs": -1,
+    "show_examples": false
   },
   "metadata": {
     "labels": {
-      "telegram_utils": "NEROntoNotesSenna"
+      "telegram_utils": "NERCoNLL2003Model",
+      "server_utils": "NER"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes_senna.tar.gz",
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/senna.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes_v2.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt",
         "subdir": "embeddings"
       }
     ]
   }
+
 }
 

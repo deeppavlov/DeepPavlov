@@ -37,10 +37,24 @@ def read_requirements():
     return reqs
 
 
-setup(license='Apache License, Version 2.0',
-      packages=find_packages(exclude=('tests',)),
-      version='0.0.3',
-      include_package_data=True,
-      install_requires=read_requirements(),
-      name='deeppavlov'
-      )
+def readme():
+    with open(os.path.join(__location__, 'README.md')) as f:
+        return f.read()
+
+
+setup(
+    name='deeppavlov',
+    packages=find_packages(exclude=('tests',)),
+    version='0.0.4',
+    description='An open source library for building end-to-end dialog systems and training chatbots.',
+    long_description=readme(),
+    long_description_content_type="text/markdown",
+    author='Neural Networks and Deep Learning lab, MIPT',
+    author_email='info@ipavlov.ai',
+    license='Apache License, Version 2.0',
+    url='https://github.com/deepmipt/DeepPavlov',
+    download_url='https://github.com/deepmipt/DeepPavlov/archive/0.0.4.tar.gz',
+    keywords=['NLP', 'NER', 'SQUAD', 'Intents', 'Chatbot'],
+    include_package_data=True,
+    install_requires=read_requirements()
+)

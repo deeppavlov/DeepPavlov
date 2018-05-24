@@ -21,6 +21,7 @@ assert sys.hexversion >= 0x3060000, 'Does not work in python3.5 or lower'
 import deeppavlov.core.models.keras_model
 import deeppavlov.core.data.vocab
 import deeppavlov.core.data.simple_vocab
+import deeppavlov.core.data.sqlite_database
 import deeppavlov.dataset_readers.babi_reader
 import deeppavlov.dataset_readers.dstc2_reader
 import deeppavlov.dataset_readers.kvret_reader
@@ -42,7 +43,6 @@ import deeppavlov.models.embedders.fasttext_embedder
 import deeppavlov.models.embedders.dict_embedder
 import deeppavlov.models.embedders.glove_embedder
 import deeppavlov.models.embedders.bow_embedder
-import deeppavlov.models.ner.slotfill
 import deeppavlov.models.ner.ner_ontonotes
 import deeppavlov.models.spellers.error_model.error_model
 import deeppavlov.models.trackers.hcn_at
@@ -74,6 +74,10 @@ import deeppavlov.models.preprocessors.capitalization
 import deeppavlov.models.preprocessors.field_getter
 import deeppavlov.models.preprocessors.sanitizer
 import deeppavlov.models.preprocessors.lazy_tokenizer
+import deeppavlov.models.slotfill.slotfill_raw
+import deeppavlov.models.slotfill.slotfill
+import deeppavlov.models.preprocessors.one_hotter
+import deeppavlov.dataset_readers.ontonotes_reader
 
 
 import deeppavlov.metrics.accuracy

@@ -21,7 +21,7 @@
       "class": "logging.FileHandler",
       "level": "DEBUG",
       "formatter": "default",
-      "filename": "../dp_lpg.log"
+      "filename": "~/.dp_lpg.log"
     },
     "stdout":
     {

@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import inspect
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
@@ -20,12 +21,18 @@ from deeppavlov.core.models.nn_model import NNModel
 
 
 class Chainer(Component):
-    def __init__(self, in_x, out_params, in_y=None, *args, as_component=False, **kwargs):
+    def __init__(self, in_x=None, out_params=None, in_y=None, *args, as_component=False, **kwargs):
         self.pipe = []
         self.train_pipe = []
-        self.in_x = in_x
-        self.in_y = in_y or []
-        self.out_params = out_params
+        if isinstance(in_x, str):
+            in_x = [in_x]
+        if isinstance(in_y, str):
+            in_y = [in_y]
+        if isinstance(out_params, str):
+            out_params = [out_params]
+        self.in_x = in_x or ['x']
+        self.in_y = in_y or ['y']
+        self.out_params = out_params or self.in_x
 
         self.forward_map = set(self.in_x)
         self.train_map = self.forward_map.union(self.in_y)
@@ -35,7 +42,15 @@ class Chainer(Component):
         if as_component:
             self._predict = self._predict_as_component
 
-    def append(self, in_x, out_params, component, in_y=None, main=False):
+    def append(self, component, in_x=None, out_params=None, in_y=None, main=False):
+        if isinstance(in_x, str):
+            in_x = [in_x]
+        if isinstance(in_y, str):
+            in_y = [in_y]
+        if isinstance(out_params, str):
+            out_params = [out_params]
+        in_x = in_x or self.in_x
+        out_params = out_params or in_x
         if in_y is not None:
             component: NNModel
             main = True
@@ -43,7 +58,7 @@ class Chainer(Component):
                                                           .format(in_x+in_y, self.train_map))
             preprocessor = Chainer(self.in_x, in_x+in_y, self.in_y)
             for t_in_x, t_out, t_component in self.train_pipe:
-                preprocessor.append(t_in_x, t_out, t_component)
+                preprocessor.append(t_component, t_in_x, t_out)
 
             def train_on_batch(*args, **kwargs):
                 preprocessed = zip(*preprocessor(*args, **kwargs))
@@ -125,3 +140,8 @@ class Chainer(Component):
 
     def save(self):
         self.get_main_component().save()
+
+    def load(self):
+        for component in self.pipe:
+            if inspect.ismethod(getattr(component, 'load', None)):
+                component.load()

@@ -1,13 +1,18 @@
+from abc import ABCMeta, abstractmethod
 import numpy as np
-from pathlib import Path
 from deeppavlov.core.commands.utils import expand_path
 from keras.preprocessing.sequence import pad_sequences
+from deeppavlov.core.common.log import get_logger
 
-class InsuranceDict(object):
 
-    def __init__(self, vocabs_path, save_path, load_path,
-                 max_sequence_length, padding="post", truncating="pre",
-                 ):
+log = get_logger(__name__)
+
+
+class RankingDict(metaclass=ABCMeta):
+
+    def __init__(self, save_path, load_path,
+                 max_sequence_length, padding, truncating):
+
         self.max_sequence_length = max_sequence_length
         self.padding = padding
         self.truncating = truncating
@@ -15,17 +20,16 @@ class InsuranceDict(object):
         save_path = expand_path(save_path).resolve().parent
         load_path = expand_path(load_path).resolve().parent
 
-        self.vocabs_path = expand_path(vocabs_path)
         self.tok_save_path = save_path / "tok2int.dict"
         self.tok_load_path = load_path / "tok2int.dict"
         self.cont_save_path = save_path / "cont2toks.dict"
         self.cont_load_path = load_path / "cont2toks.dict"
         self.resp_save_path = save_path / "resp2toks.dict"
         self.resp_load_path = load_path / "resp2toks.dict"
-        self.cemb_save_path =str(save_path / "context_embs.npy")
-        self.cemb_load_path =str(load_path / "context_embs.npy")
-        self.remb_save_path =str(save_path / "response_embs.npy")
-        self.remb_load_path =str(load_path / "response_embs.npy")
+        self.cemb_save_path = str(save_path / "context_embs.npy")
+        self.cemb_load_path = str(load_path / "context_embs.npy")
+        self.remb_save_path = str(save_path / "response_embs.npy")
+        self.remb_load_path = str(load_path / "response_embs.npy")
 
         self.int2tok_vocab = {}
         self.tok2int_vocab = {}
@@ -35,59 +39,43 @@ class InsuranceDict(object):
         self.context2emb_vocab = {}
 
     def init_from_scratch(self):
-        int2tok_fname = Path(self.vocabs_path) / 'vocabulary'
-        self.build_int2tok_vocab(int2tok_fname)
+        log.info("[initializing new `{}`]".format(self.__class__.__name__))
+        self.build_int2tok_vocab()
         self.build_tok2int_vocab()
-        response2ints_fname = Path(self.vocabs_path) / 'answers.label.token_idx'
-        self.build_response2toks_vocabulary(response2ints_fname)
-        self.build_response2emb_vocabulary()
-        context2ints_fname = Path(self.vocabs_path) / 'question.train.token_idx.label'
-        self.build_context2toks_vocabulary(context2ints_fname)
+        self.build_context2toks_vocabulary()
         self.build_context2emb_vocabulary()
+        self.build_response2toks_vocabulary()
+        self.build_response2emb_vocabulary()
 
     def load(self):
+        log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
         self.load_int2tok()
         self.build_tok2int_vocab()
         self.load_context2toks()
-        self.load_cont()
+        self.build_context2emb_vocabulary()
         self.load_response2toks()
-        self.load_resp()
+        self.build_response2emb_vocabulary()
 
     def save(self):
+        log.info("[saving `{}`]".format(self.__class__.__name__))
         self.save_int2tok()
         self.save_context2toks()
-        self.save_cont()
         self.save_response2toks()
-        self.save_resp()
 
-    def build_int2tok_vocab(self, fname):
-        with open(fname) as f:
-            data = f.readlines()
-        self.int2tok_vocab = {int(el.split('\t')[0].split('_')[1]): el.split('\t')[1][:-1] for el in data}
-        self.int2tok_vocab[0] = '<UNK>'
+    @abstractmethod
+    def build_int2tok_vocab(self):
+        pass
+
+    @abstractmethod
+    def build_response2toks_vocabulary(self):
+        pass
+
+    @abstractmethod
+    def build_context2toks_vocabulary(self):
+        pass
 
     def build_tok2int_vocab(self):
         self.tok2int_vocab = {el[1]: el[0] for el in self.int2tok_vocab.items()}
-
-    def build_response2toks_vocabulary(self, fname):
-        with open(fname, 'r') as f:
-            data = f.readlines()
-            response2idxs_vocab = {int(el.split('\t')[0]) - 1:
-                                   (el.split('\t')[1][:-1]).split(' ') for el in data}
-        self.response2toks_vocab = {el[0]: [self.int2tok_vocab[int(x.split('_')[1])]
-                                    for x in el[1]] for el in response2idxs_vocab.items()}
-
-    def build_context2toks_vocabulary(self, fname):
-        contexts = []
-        with open(fname, 'r') as f:
-            data = f.readlines()
-        for eli in data:
-            eli = eli[:-1]
-            c, _ = eli.split('\t')
-            contexts.append(c.split(' '))
-
-        self.context2toks_vocab = {el[0]: [self.int2tok_vocab[int(x.split('_')[1])]
-                                   for x in el[1]] for el in enumerate(contexts)}
 
     def build_response2emb_vocabulary(self):
         for i in range(len(self.response2toks_vocab)):
@@ -97,11 +85,8 @@ class InsuranceDict(object):
         for i in range(len(self.context2toks_vocab)):
             self.context2emb_vocab[i] = None
 
-    def ints2toks(self, idxs_li):
-        toks_li = []
-        for el in idxs_li:
-            toks = [self.int2tok_vocab[int] for int in el]
-            toks_li.append(toks)
+    def conts2toks(self, conts_li):
+        toks_li = [self.context2toks_vocab[cont] for cont in conts_li]
         return toks_li
 
     def resps2toks(self, resps_li):
@@ -110,7 +95,7 @@ class InsuranceDict(object):
 
     def make_toks(self, items_li, type):
         if type == "context":
-            toks_li = self.ints2toks(items_li)
+            toks_li = self.conts2toks(items_li)
         elif type == "response":
             toks_li = self.resps2toks(items_li)
         return toks_li
@@ -152,7 +137,8 @@ class InsuranceDict(object):
 
     def save_response2toks(self):
         with self.resp_save_path.open('w') as f:
-            f.write('\n'.join(['\t'.join([str(el[0]), ' '.join(el[1])]) for el in self.response2toks_vocab.items()]))
+            f.write(
+                '\n'.join(['\t'.join([str(el[0]), ' '.join(el[1])]) for el in self.response2toks_vocab.items()]))
 
     def load_response2toks(self):
         with self.resp_load_path.open('r') as f:

@@ -12,12 +12,14 @@ class InsuranceReader(DatasetReader):
         data_path = expand_path(data_path)
         self.download_data(data_path)
         dataset = {'train': None, 'valid': None, 'test': None}
-        train_fname = Path(data_path) / 'insurance_data/insuranceQA-master/V1/question.train.token_idx.label'
-        dataset["train"] = self.preprocess_data_train(train_fname)
-        valid_fname = Path(data_path) / 'insurance_data/insuranceQA-master/V1/question.dev.label.token_idx.pool'
+        train_fname = Path(data_path) / 'insuranceQA-master/V1/question.train.token_idx.label'
+        valid_fname = Path(data_path) / 'insuranceQA-master/V1/question.dev.label.token_idx.pool'
+        test_fname = Path(data_path) / 'insuranceQA-master/V1/question.test1.label.token_idx.pool'
+        self.idxs2cont_vocab = self._build_context2toks_vocabulary(train_fname, valid_fname, test_fname)
         dataset["valid"] = self.preprocess_data_valid_test(valid_fname)
-        test_fname = Path(data_path) / 'insurance_data/insuranceQA-master/V1/question.test1.label.token_idx.pool'
+        dataset["train"] = self.preprocess_data_train(train_fname)
         dataset["test"] = self.preprocess_data_valid_test(test_fname)
+
         return dataset
     
     def download_data(self, data_path):
@@ -25,6 +27,29 @@ class InsuranceReader(DatasetReader):
             download_decompress(url="http://lnsigo.mipt.ru/export/datasets/insuranceQA-master.zip",
                                 download_path=data_path)
             mark_done(data_path)
+
+    def _build_context2toks_vocabulary(self, train_f, val_f, test_f):
+        contexts = []
+        with open(train_f, 'r') as f:
+            data = f.readlines()
+        for eli in data:
+            eli = eli[:-1]
+            c, _ = eli.split('\t')
+            contexts.append(c)
+        with open(val_f, 'r') as f:
+            data = f.readlines()
+        for eli in data:
+            eli = eli[:-1]
+            _, c, _ = eli.split('\t')
+            contexts.append(c)
+        with open(test_f, 'r') as f:
+            data = f.readlines()
+        for eli in data:
+            eli = eli[:-1]
+            _, c, _ = eli.split('\t')
+            contexts.append(c)
+        idxs2cont_vocab = {el[1]: el[0] for el in enumerate(contexts)}
+        return idxs2cont_vocab
 
     def preprocess_data_train(self, fname):
         positive_responses_pool = []
@@ -37,7 +62,7 @@ class InsuranceReader(DatasetReader):
             q, pa = eli.split('\t')
             pa_list = [int(el) - 1 for el in pa.split(' ')]
             for elj in pa_list:
-                contexts.append([int(el.split('_')[1]) for el in q.split(' ')])
+                contexts.append(self.idxs2cont_vocab[q])
                 responses.append(elj)
                 positive_responses_pool.append(pa_list)
         train_data = [{"context": el[0], "response": el[1],
@@ -57,7 +82,7 @@ class InsuranceReader(DatasetReader):
             pa, q, na = eli.split('\t')
             pa_list = [int(el) - 1 for el in pa.split(' ')]
             for elj in pa_list:
-                contexts.append([int(el.split('_')[1]) for el in q.split(' ')])
+                contexts.append(self.idxs2cont_vocab[q])
                 pos_responses.append(elj)
                 pos_responses_pool.append(pa_list)
                 nas = [int(el) - 1 for el in na.split(' ')]
