@@ -4,7 +4,7 @@
     "data_path": "./sber_faq_data"
   },
   "dataset_iterator": {
-    "name": "sber_faq_ranking_iterator",
+    "name": "ranking_iterator",
     "seed": 243,
     "sample_candidates": "pool",
     "sample_candidates_valid": "pool",
@@ -29,11 +29,11 @@
         "vocab_name": "sber_faq",
         "vocabs_path": "sber_faq_data",
         "embeddings": "fasttext",
-        "embeddings_path": "insurance_embeddings/wiki.en.bin",
+        "embeddings_path": "insurance_embeddings/ft_sber_sg_300.bin",
         "embedding_dim": 300,
         "use_matrix": false,
         "seed": 243,
-        "max_sequence_length": 200,
+        "max_sequence_length": 80,
         "reccurent": "bilstm",
         "max_pooling": true,
         "type_of_weights": "shared",
