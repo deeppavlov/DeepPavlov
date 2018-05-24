@@ -140,7 +140,7 @@ The InsuranceQA V1 dataset:
 |---------------------- |:----------------:|:------------:|
 | Architecture II: (HL<sub>QA</sub>(200) CNN<sub>QA</sub>(4000) 1-MaxPooling Tanh) [1] | 61.8 | 62.8 |
 | QA-LSTM basic-model(max pooling) [2] | 64.3 | 63.1 |
-| Our model (biLSTM, max pooling) | **66.9** | **65.8** |
+| Our model (biLSTM, max pooling) | **67.6** | **67.6** |
 
 ## Literature
 
