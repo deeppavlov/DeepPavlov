@@ -45,6 +45,32 @@ class KerasIntentModel(KerasModel):
     """
     Class implements keras model for intent recognition task for multi-class multi-label data
     """
+    FIXED_PARAMS = [
+        "classes",
+        "model_name",
+        "embedding_size",
+        "fasttext_md5",
+        "kernel_sizes_cnn",
+        "filters_cnn",
+        "dense_size",
+        "units_lstm",
+        "units_lstm_1",
+        "units_lstm_2",
+        "self_att_hid",
+        "self_att_out"
+    ]
+
+    CHANGABLE_PARAMS = {"confident_threshold": 0.5,
+                        "optimizer": "Adam",
+                        "lear_rate": 1e-2,
+                        "lear_rate_decay": 0.,
+                        "loss": "binary_crossentropy",
+                        "coef_reg_cnn": 0.,
+                        "coef_reg_den": 0.,
+                        "coef_reg_lstm": 0.,
+                        "dropout_rate": 0.,
+                        "rec_dropout_rate": 0.}
+
     def __init__(self, **kwargs):
         """
         Initialize and train vocabularies, initializes embedder, tokenizer,
@@ -95,7 +121,8 @@ class KerasIntentModel(KerasModel):
                   "lear_rate_decay": self.opt.get('lear_rate_decay')}
 
         self.model = self.load(**params)
-        self._init_params()
+        self._init_missed_params()
+        self._change_not_fixed_params(**kwargs)
 
         # Check if md5 hash sum of current loaded fasttext model
         # is equal to saved
@@ -109,19 +136,15 @@ class KerasIntentModel(KerasModel):
                     "Given fasttext model does NOT match fasttext model used previously to train loaded model")
         print("Model was successfully initialized!\nModel summary:\n{}".format(self.model.summary()))
 
-    def _init_params(self):
-        # list of changeable params
-        changeable_params = {"confident_threshold": 0.5,
-                             "optimizer": "Adam",
-                             "lear_rate": 1e-2,
-                             "lear_rate_decay": 0.,
-                             "loss": "binary_crossentropy",
-                             "coef_reg_cnn": 0.,
-                             "coef_reg_den": 0.,
-                             "dropout_rate": 0.}
+    def _init_missed_params(self):
+        for param in list(self.CHANGABLE_PARAMS.keys()):
+            self.opt[param] = self.opt.get(param, self.CHANGABLE_PARAMS[param])
+        return
 
-        for param in changeable_params.keys():
-            self.opt[param] = self.opt.get(param, changeable_params[param])
+    def _change_not_fixed_params(self, **kwargs):
+        for param in self.opt.keys():
+            if param not in self.FIXED_PARAMS:
+                self.opt[param] = kwargs.get(param)
         return
 
     def texts2vec(self, sentences):

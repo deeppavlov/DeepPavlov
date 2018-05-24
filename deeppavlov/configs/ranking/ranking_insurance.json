@@ -1,11 +1,12 @@
 {
   "dataset_reader": {
     "name": "insurance_reader",
-    "data_path": "./"
+    "data_path": "./insurance_data"
   },
   "dataset_iterator": {
     "name": "ranking_iterator",
     "seed": 243,
+    "len_vocab": 24981,
     "sample_candidates": "global",
     "sample_candidates_valid": "pool",
     "sample_candidates_test": "pool",
@@ -24,9 +25,12 @@
         "name": "ranking_model",
         "device_num": 0,
         "train_now": true,
-        "vocabs_path": "insuranceQA-master/V1",
-        "embeddings": "word2vec",
-        "embedding_dim": 100,
+        "vocab_name": "insurance",
+        "vocabs_path": "insurance_data/insuranceQA-master/V1",
+        "embeddings": "fasttext",
+        "embeddings_path": "insurance_embeddings/wiki.en.bin",
+        "embedding_dim": 300,
+        "use_matrix": false,
         "seed": 243,
         "max_sequence_length": 200,
         "reccurent": "bilstm",
@@ -35,20 +39,21 @@
         "hidden_dim": 300,
         "learning_rate": 1e-3,
         "margin": 0.1,
-        "save_path": "ranking/model_weights.h5",
-        "load_path": "ranking/model_weights.h5",
+        "save_path": "insurance_ranking/model_weights.h5",
+        "load_path": "insurance_ranking/model_weights.h5",
         "interact_pred_num": 3
       }
     ],
     "out": ["y_predicted"]
   },
   "train": {
-    "epochs": 150,
+    "epochs": 200,
     "batch_size": 256,
     "pytest_max_batches": 2,
-    "metrics": ["r@1", "rank_response"],
+    "metrics": ["r@1", "rank_response", "loss"],
     "validation_patience": 5,
-    "val_every_n_epochs": 10
+    "val_every_n_epochs": 10,
+    "log_every_n_batches": 10
   },
   "metadata": {
     "labels": {
@@ -56,13 +61,13 @@
       "server_utils": "Ranker"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/ranking.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/insurance_ranking.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/datasets/insuranceQA-master.zip",
         "subdir": "insurance_data"
       },
       {
-        "url": "http://lnsigo.mipt.ru/export/embeddings/insurance_v1_word2vec",
+        "url": "http://lnsigo.mipt.ru/export/embeddings/wiki.en.bin",
         "subdir": "insurance_embeddings"
       }
     ]
