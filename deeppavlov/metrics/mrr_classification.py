@@ -91,7 +91,9 @@ def mrr_score(y_true, y_predicted):
     y_true_one_hot = labels2onehot(y_true, classes)
     y_pred_probas = [y_predicted[i][1]["correct"] for i in range(len(y_predicted))]
 
-    score = make_json_predictions("/home/dilyara.baymurzina/evolution_data/selqa_data/SelQA-ass-" + data_type + ".json",
-                                  y_pred_probas)
+    json_with_predictions = make_json_predictions("/home/dilyara.baymurzina/evolution_data/selqa_data/SelQA-ass-" +
+                                                  data_type + ".json",
+                                                  y_pred_probas)
 
+    score = mrr_from_dict(json_with_predictions)
     return score
