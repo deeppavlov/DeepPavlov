@@ -17,10 +17,13 @@ import sys
 import copy
 import inspect
 
-from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.morpho_tagger.network import CharacterTagger
+
+
+log = get_logger(__name__)
 
 
 @register("morpho_tagger")
@@ -79,17 +82,16 @@ class MorphoTaggerWrapper(NNModel):
         # to the file including extension of the file model)
         model_file_exist = self.load_path.exists()
         path = str(self.load_path.resolve())
-        print(model_file_exist, path)
         # Check presence of the model files
         if model_file_exist:
-            print('[loading model from {}]'.format(path), file=sys.stderr)
+            log.info('[loading model from {}]'.format(path))
             self._net.load(path)
 
     def save(self):
         """Save model to the save_path, provided in config. The directory is
         already created by super().__init__ part in called in __init__ of this class"""
         path = str(self.save_path.absolute())
-        print('[saving model to {}]'.format(path), file=sys.stderr)
+        log.info('[saving model to {}]'.format(path))
         self._net.save(path)
 
     def train_on_batch(self, x: list, y: list):

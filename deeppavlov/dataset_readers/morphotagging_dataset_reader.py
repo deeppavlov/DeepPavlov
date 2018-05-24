@@ -116,8 +116,6 @@ class MorphotaggerDatasetReader(DatasetReader):
             data_path = [Path(data_path) for data_path in data_path]
             reserve_data_path = None
         if len(data_path) != len(data_types):
-            print(str(data_path))
-            print(data_types)
             raise ValueError("The number of input files in data_path and data types "
                              "in data_types must be equal")
         has_missing_files = any(not filepath.exists() for filepath in data_path)

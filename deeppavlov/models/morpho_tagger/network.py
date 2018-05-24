@@ -23,12 +23,15 @@ import keras.optimizers as ko
 import keras.regularizers as kreg
 from keras import Model
 
+from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.data.vocab import DefaultVocabulary
 from .common_tagger import *
 from .cells import Highway
 
 
+log = get_logger(__name__)
 MAX_WORD_LENGTH = 30
+
 
 class CharacterTagger:
     """
@@ -63,7 +66,7 @@ class CharacterTagger:
         self.regularizer = regularizer
         self.verbose = verbose
         self.initialize()
-        print("{} symbols, {} tags".format(self.symbols_number_, self.tags_number_))
+        log.info("{} symbols, {} tags in CharacterTagger".format(self.symbols_number_, self.tags_number_))
         self.build()
 
     def initialize(self):
@@ -98,7 +101,7 @@ class CharacterTagger:
         self.model_ = Model(inputs, outputs)
         self.model_.compile(**compile_args)
         if self.verbose > 0:
-            print(self.model_.summary())
+            log.info(self.model_.summary())
         return self
 
     def build_word_cnn(self, inputs):
