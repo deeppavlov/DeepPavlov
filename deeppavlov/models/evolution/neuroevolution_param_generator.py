@@ -321,7 +321,7 @@ class NetworkAndParamsEvolution:
 
         for i in range(self.n_saved_best_with_weights, self.population_size):
             r = np.random.random()
-            individuum = population[np.where(r > intervals)[0][-1]]
+            individuum = deepcopy(population[np.where(r > intervals)[0][-1]])
             selected.append(individuum)
         return selected
 
@@ -437,15 +437,15 @@ class NetworkAndParamsEvolution:
                                                           "binary_mask"])
                 # if parent is one of the best and will be saved with weights
                 if perm[2 * i] in range(self.n_saved_best_with_weights):
-                    curr_offsprings[0] = population[perm[2 * i]]
+                    curr_offsprings[0] = deepcopy(parents[0])
                 if perm[2 * i + 1] in range(self.n_saved_best_with_weights):
-                    curr_offsprings[1] = population[perm[2 * i + 1]]
+                    curr_offsprings[1] = deepcopy(parents[1])
                 offsprings.extend(curr_offsprings)
             else:
-                offsprings.extend(parents)
+                offsprings.extend(deepcopy(parents))
 
         if self.population_size % 2 == 1:
-            offsprings.append(population[perm[-1]])
+            offsprings.append(deepcopy(population[perm[-1]]))
         return offsprings
 
     def mutation(self, population, p_mutation, mutation_power):
