@@ -387,7 +387,6 @@ class KerasEvolutionClassificationManyInputsModel(KerasIntentModel):
         model = Model(inputs=inputs, outputs=act_output)
         return model
 
-    @overrides
     def save(self, fname=None):
         """
         Save the model parameters into <<fname>>_opt.json (or <<ser_file>>_opt.json)
@@ -398,21 +397,10 @@ class KerasEvolutionClassificationManyInputsModel(KerasIntentModel):
         Returns:
             None
         """
-
-        if not self.save_path:
-            raise ConfigError("No `save_path` is provided for Keras model!")
-        elif isinstance(self.save_path, Path) and not self.save_path.parent.is_dir():
-            raise ConfigError("Provided save path is incorrect!")
-        else:
-            opt_path = "{}_opt.json".format(str(self.save_path.resolve()))
-            weights_path = "{}.h5".format(str(self.save_path.resolve()))
-            log.info("[saving model to {}]".format(opt_path))
-            self.model.save_weights(weights_path)
-
         if type(self.opt["binary_mask"]) is list:
             pass
         else:
             self.opt["binary_mask"] = self.opt["binary_mask"].tolist()
 
-        save_json(self.opt, opt_path)
+        super().save(fname)
         return True
