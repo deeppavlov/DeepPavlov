@@ -280,8 +280,7 @@ class NetworkAndParamsEvolution:
                 str(Path(self.params["save_path"]).joinpath("population_" + str(iteration)).joinpath(
                     self.params["model_name"] + "_" + str(i)))
             next[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"] = \
-                str(Path(next[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"]).parent)
-            # load_path does not change to provide loading weights from saved model
+                str(Path(next[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"]).parent)
 
         for i in range(self.n_saved_best_with_weights, self.population_size):
             if self.train_partition != 1:
