@@ -65,7 +65,7 @@ class RankingNetwork(metaclass=TfModelMeta):
     def save(self, path):
         log.info("[saving `{}`]".format(self.__class__.__name__))
         self.obj_model.save_weights(path)
-        self.context_embedding.save(str(Path(path).parent / 'sen_emb_model.hdf5'))
+        self.context_embedding.save(str(Path(path).parent / 'sen_emb_model.h5'))
 
     def init_from_scratch(self, emb_matrix):
         log.info("[initializing new `{}`]".format(self.__class__.__name__))
