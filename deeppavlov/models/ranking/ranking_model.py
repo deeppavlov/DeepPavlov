@@ -27,6 +27,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.ranking.ranking_network import RankingNetwork
 from deeppavlov.models.ranking.insurance_dict import InsuranceDict
+from deeppavlov.models.ranking.sber_faq_dict import SberFAQDict
 from deeppavlov.models.ranking.emb_dict import Embeddings
 from deeppavlov.core.common.log import get_logger
 
@@ -67,6 +68,10 @@ class RankingModel(NNModel):
             dict_parameter_names = list(inspect.signature(InsuranceDict.__init__).parameters)
             dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
             self.dict = InsuranceDict(**dict_parameters)
+        if self.opt["vocab_name"] == "sber_faq":
+            dict_parameter_names = list(inspect.signature(SberFAQDict.__init__).parameters)
+            dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
+            self.dict = SberFAQDict(**dict_parameters)
 
         embdict_parameter_names = list(inspect.signature(Embeddings.__init__).parameters)
         embdict_parameters = {par: self.opt[par] for par in embdict_parameter_names if par in self.opt}
@@ -136,10 +141,12 @@ class RankingModel(NNModel):
             c = self.dict.make_toks(context, type="context")
             c = self.dict.make_ints(c)
             c_emb = self._net.predict_context_on_batch([c, c, c])
-            response = [el[1] for el in batch]
+            # response = [el[1] for el in batch]
+            response = [list(el[1]) for el in batch]
             batch_size = len(response)
             ranking_length = len(response[0])
-            response = reduce(operator.concat, response)
+            # response = reduce(operator.concat, response)
+            response = [x for el in response for x in el]
             response = [response[i:batch_size*ranking_length:ranking_length] for i in range(ranking_length)]
             y_pred = []
             for i in range(ranking_length):

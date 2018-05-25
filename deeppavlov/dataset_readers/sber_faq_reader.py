@@ -14,10 +14,13 @@ class SberFAQReader(DatasetReader):
         self.download_data(data_path)
         dataset = {'train': None, 'valid': None, 'test': None}
         train_fname = Path(data_path) / 'sber_faq_train.csv'
-        dataset["train"] = self.preprocess_data(train_fname, num_neg=1000)
         valid_fname = Path(data_path) / 'sber_faq_val.csv'
-        dataset["valid"] = self.preprocess_data(valid_fname)
         test_fname = Path(data_path) / 'sber_faq_test.csv'
+        self.sen2int_vocab = {}
+        self.classes_vocab = {}
+        self._build_sen2int_classes_vocabs(train_fname, valid_fname, test_fname)
+        dataset["train"] = self.preprocess_data(train_fname, num_neg=1000)
+        dataset["valid"] = self.preprocess_data(valid_fname)
         dataset["test"] = self.preprocess_data(test_fname)
         return dataset
     
@@ -28,12 +31,34 @@ class SberFAQReader(DatasetReader):
                                 download_path=data_path)
             mark_done(data_path)
 
+    def _build_sen2int_classes_vocabs(self, train_fname, valid_fname, test_fname):
+        sen = []
+        label = []
+        with open(train_fname, 'r') as f:
+            reader = csv.reader(f, delimiter='\t')
+            for el in reader:
+                sen.append(el[0])
+                label.append(el[1])
+        with open(valid_fname, 'r') as f:
+            reader = csv.reader(f, delimiter='\t')
+            for el in reader:
+                sen.append(el[0])
+                label.append(el[1])
+        with open(test_fname, 'r') as f:
+            reader = csv.reader(f, delimiter='\t')
+            for el in reader:
+                sen.append(el[0])
+                label.append(el[1])
+        self.sen2int_vocab = {el[1]: el[0] for el in enumerate(sen)}
+        self.classes_vocab = {el: set() for el in set(label)}
+        for el in zip(label, sen):
+            self.classes_vocab[el[0]].add(self.sen2int_vocab[el[1]])
+
     def preprocess_data(self, fname, num_neg=9):
         contexts = []
         responses = []
         positive_responses_pool = []
         negative_responses_pool = []
-
         sen = []
         label = []
         with open(fname, 'r') as f:
@@ -41,13 +66,9 @@ class SberFAQReader(DatasetReader):
             for el in reader:
                 sen.append(el[0])
                 label.append(el[1])
-        sen_dict = {el[1]: el[0] for el in enumerate(set(sen))}
-        classes_dict = {el: set() for el in label}
-        for el in zip(label, sen):
-            classes_dict[el[0]].add(sen_dict[el[1]])
-        for k, v in classes_dict.items():
+        for k, v in self.classes_vocab.items():
             sen_li = list(v)
-            neg_resps = self._get_neg_resps(classes_dict, k)
+            neg_resps = self._get_neg_resps(self.classes_vocab, k)
             for s1 in sen_li:
                 contexts.append(s1)
                 s2 = np.random.choice(list(v - {s1}))
@@ -57,14 +78,14 @@ class SberFAQReader(DatasetReader):
                 negative_responses_pool.append(nr)
 
         data = [{"context": el[0], "response": el[1],
-                       "pos_pool": el[2], "neg_pool": el[3]}
-                      for el in zip(contexts, responses,
-                                    positive_responses_pool, negative_responses_pool)]
+                "pos_pool": el[2], "neg_pool": el[3]}
+                for el in zip(contexts, responses,
+                positive_responses_pool, negative_responses_pool)]
         return data
 
-    def _get_neg_resps(self, classes_dict, label, num_neg_resps=10):
+    def _get_neg_resps(self, classes_vocab, label, num_neg_resps=10):
         neg_resps = []
-        for k, v in classes_dict.items():
+        for k, v in classes_vocab.items():
             if k != label:
                 neg_resps.append(list(v))
         neg_resps = [x for el in neg_resps for x in el]
