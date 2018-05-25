@@ -53,7 +53,7 @@
     "pytest_max_batches": 2,
     "metrics": ["r@1", "r@5", "r@10", "rank_response", "loss"],
     "validation_patience": 5,
-    "val_every_n_epochs": 1
+    "val_every_n_epochs": 10
   },
   "metadata": {
     "labels": {
