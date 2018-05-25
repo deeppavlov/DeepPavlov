@@ -3,7 +3,10 @@
     "name": "basic_classification_reader",
     "x": "text",
     "y": "gold_label",
-    "data_path": "/home/dilyara.baymurzina/evolution_data/snli_data/part"
+    "data_path": "/home/dilyara.baymurzina/evolution_data/snli_data/one_input/parts",
+    "train": "train_0.csv",
+    "valid": "valid.csv",
+    "test": "test.csv"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator"
@@ -23,8 +26,8 @@
           "y"
         ],
         "level": "token",
-        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_data/snli_classes.dict",
-        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_data/snli_classes.dict"
+        "save_path": "/home/dilyara.baymurzina/evolution_data/ru_snli_data/one_input/ru_snli_classes.dict",
+        "load_path": "/home/dilyara.baymurzina/evolution_data/ru_snli_data/one_input/ru_snli_classes.dict"
       },
       {
         "in": [
@@ -38,8 +41,8 @@
       {
         "id": "my_embedder",
         "name": "fasttext",
-        "save_path": "/home/dilyara.baymurzina/embeddings/wiki.en.bin",
-        "load_path": "/home/dilyara.baymurzina/embeddings/wiki.en.bin",
+        "save_path": "/home/dilyara.baymurzina/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "load_path": "/home/dilyara.baymurzina/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
         "dim": 300
       },
       {
@@ -60,8 +63,8 @@
         ],
         "main": true,
         "name": "evolution_classification_model",
-        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part",
-        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part",
+        "save_path": "/home/dilyara.baymurzina/evolution_data/ru_snli_classification/one_neuron_init_part_2",
+        "load_path": "/home/dilyara.baymurzina/evolution_data/ru_snli_classification/one_neuron_init_part_2",
         "classes": "#classes_vocab.keys()",
         "to_evolve": true,
         "basic_layers_params": {
@@ -154,12 +157,7 @@
             }
           }
         },
-        "confident_threshold": {
-          "range": [
-            0.3,
-            0.7
-          ]
-        },
+        "confident_threshold": 1,
         "optimizer": "Adam",
         "lear_rate": {
           "range": [
@@ -174,7 +172,7 @@
           ]
         },
         "loss": "binary_crossentropy",
-        "text_size": 30,
+        "text_size": 51,
         "last_layer_activation": "softmax",
         "model_name": "evolution_classification_model",
         "embedder": "#my_embedder",
@@ -197,7 +195,7 @@
     "batch_size": {
       "range": [
         20,
-        50
+        70
       ],
       "discrete": true
     },
@@ -209,11 +207,11 @@
       "classification_roc_auc"
     ],
     "validation_patience": 5,
-    "val_every_n_epochs": 5,
-    "log_every_n_epochs": 5,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
     "show_examples": false,
     "validate_best": true,
-    "test_best": false
+    "test_best": true
   },
   "metadata": {
     "labels": {

@@ -1,16 +1,20 @@
 {
   "dataset_reader": {
     "name": "basic_classification_reader",
-    "x": "text",
+    "x": ["sentence1", "sentence2"],
     "y": "gold_label",
-    "data_path": "/home/dilyara.baymurzina/evolution_data/snli_data/part_half"
+    "data_path": "/home/dilyara.baymurzina/evolution_data/snli_data/cutted_many_inputs/parts",
+    "train": "train_0.csv",
+    "valid": "valid.csv",
+    "test": "test.csv"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator"
   },
   "chainer": {
     "in": [
-      "x"
+      "sentence1",
+      "sentence2"
     ],
     "in_y": [
       "y"
@@ -23,23 +27,32 @@
           "y"
         ],
         "level": "token",
-        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_data/snli_classes.dict",
-        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_data/snli_classes.dict"
+        "save_path": "/home/dilyara.baymurzina/evolution_data/ru_snli_data/cutted_many_inputs/ru_snli_classes.dict",
+        "load_path": "/home/dilyara.baymurzina/evolution_data/ru_snli_data/cutted_many_inputs/ru_snli_classes.dict"
       },
       {
         "in": [
-          "x"
+          "sentence1"
         ],
         "out": [
-          "x_lower"
+          "sentence1_lower"
+        ],
+        "name": "str_lower"
+      },
+      {
+        "in": [
+          "sentence2"
+        ],
+        "out": [
+          "sentence2_lower"
         ],
         "name": "str_lower"
       },
       {
         "id": "my_embedder",
         "name": "fasttext",
-        "save_path": "/home/dilyara.baymurzina/embeddings/wiki.en.bin",
-        "load_path": "/home/dilyara.baymurzina/embeddings/wiki.en.bin",
+        "save_path": "/home/dilyara.baymurzina/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "load_path": "/home/dilyara.baymurzina/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
         "dim": 300
       },
       {
@@ -49,7 +62,8 @@
       },
       {
         "in": [
-          "x_lower"
+          "sentence1_lower",
+          "sentence2_lower"
         ],
         "in_y": [
           "y"
@@ -59,9 +73,9 @@
           "y_probas_dict"
         ],
         "main": true,
-        "name": "evolution_classification_model",
-        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_half",
-        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_half",
+        "name": "evolution_many_inputs_classification_model",
+        "save_path": "/home/dilyara.baymurzina/evolution_data/ru_snli_classification/one_neuron_init_part_many_inputs_2",
+        "load_path": "/home/dilyara.baymurzina/evolution_data/ru_snli_classification/one_neuron_init_part_many_inputs_2",
         "classes": "#classes_vocab.keys()",
         "to_evolve": true,
         "basic_layers_params": {
@@ -158,20 +172,20 @@
         "optimizer": "Adam",
         "lear_rate": {
           "range": [
-            0.0001,
+            0.001,
             0.1
           ]
         },
         "lear_rate_decay": {
           "range": [
-            0.000001,
+            0.00001,
             0.1
           ]
         },
         "loss": "binary_crossentropy",
-        "text_size": 30,
+        "text_size": [30, 20],
         "last_layer_activation": "softmax",
-        "model_name": "evolution_classification_model",
+        "model_name": "evolution_many_inputs_classification_model",
         "embedder": "#my_embedder",
         "tokenizer": "#my_tokenizer"
       }
@@ -191,8 +205,8 @@
     },
     "batch_size": {
       "range": [
-        20,
-        50
+        50,
+        70
       ],
       "discrete": true
     },
