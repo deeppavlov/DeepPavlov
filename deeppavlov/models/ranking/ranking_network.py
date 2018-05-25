@@ -9,6 +9,7 @@ import tensorflow as tf
 import numpy as np
 from deeppavlov.core.models.tf_backend import TfModelMeta
 from deeppavlov.core.common.log import get_logger
+from pathlib import Path
 
 
 log = get_logger(__name__)
@@ -64,6 +65,7 @@ class RankingNetwork(metaclass=TfModelMeta):
     def save(self, path):
         log.info("[saving `{}`]".format(self.__class__.__name__))
         self.obj_model.save_weights(path)
+        self.context_embedding.save(str(Path(path).parent / 'sen_emb_model.hdf5'))
 
     def init_from_scratch(self, emb_matrix):
         log.info("[initializing new `{}`]".format(self.__class__.__name__))
