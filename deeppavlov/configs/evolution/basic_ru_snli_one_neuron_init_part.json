@@ -3,7 +3,7 @@
     "name": "basic_classification_reader",
     "x": "text",
     "y": "gold_label",
-    "data_path": "/home/dilyara.baymurzina/evolution_data/snli_data/one_input/parts",
+    "data_path": "/home/dilyara.baymurzina/evolution_data/ru_snli_data/one_input/parts",
     "train": "train_0.csv",
     "valid": "valid.csv",
     "test": "test.csv"

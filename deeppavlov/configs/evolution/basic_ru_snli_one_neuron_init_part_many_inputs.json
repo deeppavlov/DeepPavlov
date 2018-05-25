@@ -3,7 +3,7 @@
     "name": "basic_classification_reader",
     "x": ["sentence1", "sentence2"],
     "y": "gold_label",
-    "data_path": "/home/dilyara.baymurzina/evolution_data/snli_data/cutted_many_inputs/parts",
+    "data_path": "/home/dilyara.baymurzina/evolution_data/ru_snli_data/many_inputs/parts",
     "train": "train_0.csv",
     "valid": "valid.csv",
     "test": "test.csv"
@@ -27,8 +27,8 @@
           "y"
         ],
         "level": "token",
-        "save_path": "/home/dilyara.baymurzina/evolution_data/ru_snli_data/cutted_many_inputs/ru_snli_classes.dict",
-        "load_path": "/home/dilyara.baymurzina/evolution_data/ru_snli_data/cutted_many_inputs/ru_snli_classes.dict"
+        "save_path": "/home/dilyara.baymurzina/evolution_data/ru_snli_data/many_inputs/ru_snli_classes.dict",
+        "load_path": "/home/dilyara.baymurzina/evolution_data/ru_snli_data/many_inputs/ru_snli_classes.dict"
       },
       {
         "in": [
