@@ -3,7 +3,7 @@ from pathlib import Path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import download_decompress, mark_done, is_done
 from deeppavlov.core.commands.utils import get_deeppavlov_root, expand_path
-import numpy as np
+import random
 import csv
 
 @register('sber_faq_reader')
@@ -71,10 +71,11 @@ class SberFAQReader(DatasetReader):
             neg_resps = self._get_neg_resps(self.classes_vocab, k)
             for s1 in sen_li:
                 contexts.append(s1)
-                s2 = np.random.choice(list(v - {s1}))
+                s2 = random.choice(list(v - {s1}))
                 responses.append(s2)
                 positive_responses_pool.append(list(v - {s1}))
-                nr = np.random.choice(neg_resps, num_neg)
+
+                nr = random.choices(neg_resps, k=num_neg)
                 negative_responses_pool.append(nr)
 
         data = [{"context": el[0], "response": el[1],

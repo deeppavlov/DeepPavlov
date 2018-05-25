@@ -102,6 +102,6 @@ class RankingIterator:
             else:
                 pos_pool = [resp]
             neg_pool = context_response_data[i]["neg_pool"]
-            response = list(pos_pool) + list(neg_pool)
+            response = pos_pool + neg_pool
             response_data.append(response[:ranking_length])
         return response_data, y
