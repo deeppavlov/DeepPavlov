@@ -4,6 +4,7 @@ import argparse
 from pathlib import Path
 from subprocess import Popen, PIPE
 import pandas as pd
+from copy import deepcopy, copy
 
 from deeppavlov.models.evolution.neuroevolution_param_generator import NetworkAndParamsEvolution
 from deeppavlov.core.common.file import save_json
@@ -11,12 +12,10 @@ from deeppavlov.core.common.file import save_json
 
 def score_population(population, population_size, result_file):
     global evolution
+
     population_metrics = {}
-    for metric in ["classification_log_loss",
-                   "classification_accuracy",
-                   "classification_f1",
-                   "classification_roc_auc"]:
-        population_metrics[metric] = []
+    for m in CONSIDERED_METRICS:
+        population_metrics[m] = []
 
     procs = []
 
@@ -63,16 +62,18 @@ def score_population(population, population_size, result_file):
     for i in range(population_size):
         val_results = np.loadtxt(fname=str(Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index][
                                                     "save_path"]).parent.joinpath("valid_results.txt")))
-        result_table = pd.DataFrame({"classification_log_loss": [val_results[0]],
-                                     "classification_accuracy": [val_results[1]],
-                                     "classification_f1": [val_results[2]],
-                                     "classification_roc_auc": [val_results[3]],
-                                     "params": [population[i]]})
+        result_table_dict = {}
+        for el in order:
+            result_table_dict[el] = []
+        for m_id, m in enumerate(CONSIDERED_METRICS):
+            result_table_dict[m].append(val_results[m_id])
+        result_table_dict[order[-1]] = [population[i]]
+        result_table = pd.DataFrame(result_table_dict)
+
         result_table.loc[:, order].to_csv(result_file, index=False, sep='\t', mode='a', header=None)
-        population_metrics["classification_log_loss"].append(val_results[0])
-        population_metrics["classification_accuracy"].append(val_results[1])
-        population_metrics["classification_f1"].append(val_results[2])
-        population_metrics["classification_roc_auc"].append(val_results[3])
+
+        for m_id, m in enumerate(CONSIDERED_METRICS):
+            population_metrics[m].append(val_results[m_id])
 
         population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"] = \
             np.array(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"])
@@ -84,10 +85,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--config', help='Please, enter model path to config',
                     default='./configs/evolution/basic_intents_config.json')
-parser.add_argument('--evolve_metric', help='Please, choose target metric out of ["classification_log_loss", '
-                                            '"classification_accuracy",'
-                                            '"classification_f1",'
-                                            '"classification_roc_auc"]')
+parser.add_argument('--evolve_metric', help='Please, choose target metric out of given in your config.train.metrics')
 parser.add_argument('--p_size', help='Please, enter population size', type=int, default=10)
 parser.add_argument('--gpus', help='Please, enter the list of visible GPUs', default=0)
 parser.add_argument('--n_layers', help='Please, enter number of each layer type in network', default=2)
@@ -116,6 +114,9 @@ with open(CONFIG_FILE, "r") as f:
 
 print("Given basic params: {}\n".format(basic_params))
 
+# list of names of considered metrics
+CONSIDERED_METRICS = basic_params["train"]["metrics"]
+
 # EVOLUTION starts here!
 evolution = NetworkAndParamsEvolution(n_layers=N_LAYERS, n_types=N_TYPES,
                                       population_size=POPULATION_SIZE,
@@ -130,15 +131,15 @@ evolution = NetworkAndParamsEvolution(n_layers=N_LAYERS, n_types=N_TYPES,
                                       **basic_params)
 
 # Result table
-order = ["classification_log_loss", "classification_accuracy",
-         "classification_f1", "classification_roc_auc", "params"]
+order = deepcopy(CONSIDERED_METRICS)
+order.extend(["params"])
+result_table_dict = {}
+for el in order:
+    result_table_dict[el] = []
+
 result_file = Path(basic_params["chainer"]["pipe"][
                        evolution.model_to_evolve_index]["save_path"]).joinpath("result_table.csv")
-result_table = pd.DataFrame({"classification_log_loss": [],
-                             "classification_accuracy": [],
-                             "classification_f1": [],
-                             "classification_roc_auc": [],
-                             "params": []})
+result_table = pd.DataFrame(result_table_dict)
 result_table.loc[:, order].to_csv(result_file, index=False, sep='\t')
 
 print("\nIteration #{} starts\n".format(0))
