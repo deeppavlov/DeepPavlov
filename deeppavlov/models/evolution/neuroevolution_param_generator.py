@@ -276,11 +276,11 @@ class NetworkAndParamsEvolution:
             if self.train_partition != 1:
                 next[i]["dataset_reader"]["train"] = str(Path(next[i]["dataset_reader"]["train"]).stem.split("_")[0]) \
                                                      + "_" + str(iteration % self.train_partition) + ".csv"
+            next[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"] = \
+                str(Path(next[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"]))
             next[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
                 str(Path(self.params["save_path"]).joinpath("population_" + str(iteration)).joinpath(
                     self.params["model_name"] + "_" + str(i)))
-            next[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"] = \
-                str(Path(next[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"]).parent)
 
         for i in range(self.n_saved_best_with_weights, self.population_size):
             if self.train_partition != 1:
