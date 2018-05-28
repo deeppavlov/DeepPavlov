@@ -75,6 +75,7 @@
         "lear_rate": 0.01,
         "lear_rate_decay": 0.1,
         "loss": "binary_crossentropy",
+        "last_layer_activation": "softmax",
         "text_size": 100,
         "coef_reg_cnn": 1e-3,
         "coef_reg_den": 1e-2,

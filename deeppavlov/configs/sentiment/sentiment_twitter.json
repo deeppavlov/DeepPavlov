@@ -76,6 +76,7 @@
         "lear_rate_decay": 0.1,
         "loss": "binary_crossentropy",
         "text_size": 100,
+        "last_layer_activation": "softmax",
         "coef_reg_cnn": 1e-3,
         "coef_reg_den": 1e-2,
         "dropout_rate": 0.5,
@@ -94,9 +95,9 @@
     "epochs": 100,
     "batch_size": 64,
     "metrics": [
-      "classification_accuracy",
+      "classification_roc_auc",
       "classification_f1",
-      "classification_roc_auc"
+      "classification_accuracy"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,
