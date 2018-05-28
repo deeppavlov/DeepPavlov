@@ -257,7 +257,7 @@ class KerasIntentModel(KerasModel):
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
         output = BatchNormalization()(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
@@ -297,7 +297,7 @@ class KerasIntentModel(KerasModel):
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
         output = BatchNormalization()(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
@@ -339,7 +339,7 @@ class KerasIntentModel(KerasModel):
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
         output = BatchNormalization()(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
@@ -369,7 +369,7 @@ class KerasIntentModel(KerasModel):
         output = Dropout(rate=params['dropout_rate'])(output)
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
@@ -407,7 +407,7 @@ class KerasIntentModel(KerasModel):
         output = Dropout(rate=params['dropout_rate'])(output)
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
@@ -450,7 +450,7 @@ class KerasIntentModel(KerasModel):
         output = Dropout(rate=params['dropout_rate'])(output)
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
@@ -494,7 +494,7 @@ class KerasIntentModel(KerasModel):
         output = Dropout(rate=params['dropout_rate'])(output)
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
@@ -527,7 +527,7 @@ class KerasIntentModel(KerasModel):
         output = Dropout(rate=params['dropout_rate'])(output)
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
@@ -561,7 +561,7 @@ class KerasIntentModel(KerasModel):
         output = Dropout(rate=params['dropout_rate'])(output)
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
@@ -591,6 +591,6 @@ class KerasIntentModel(KerasModel):
         output = Dropout(rate=params['dropout_rate'])(output)
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
