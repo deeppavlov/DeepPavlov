@@ -115,15 +115,15 @@
       "http://lnsigo.mipt.ru/export/deeppavlov_data/sentiment.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/datasets/sentiment_twitter_data/train.csv",
-        "subdir": "insults_data"
+        "subdir": "sentiment_twitter_data"
       },
       {
         "url": "http://lnsigo.mipt.ru/export/datasets/sentiment_twitter_data/valid.csv",
-        "subdir": "insults_data"
+        "subdir": "sentiment_twitter_data"
       },
       {
         "url": "http://lnsigo.mipt.ru/export/datasets/sentiment_twitter_data/test.csv",
-        "subdir": "insults_data"
+        "subdir": "sentiment_twitter_data"
       },
       {
         "url": "http://lnsigo.mipt.ru/export/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
