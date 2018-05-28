@@ -199,14 +199,14 @@
       ],
       "discrete": true
     },
-    "metric_optimization": "minimize",
+    "metric_optimization": "maximize",
     "metrics": [
-      "classification_log_loss",
       "classification_accuracy",
+      "classification_log_loss",
       "classification_f1",
       "classification_roc_auc"
     ],
-    "validation_patience": 5,
+    "validation_patience": 2,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
     "show_examples": false,
