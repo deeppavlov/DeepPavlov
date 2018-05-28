@@ -263,37 +263,37 @@ class NetworkAndParamsEvolution:
                                     p_crossover=p_crossover,
                                     crossover_power=crossover_power)
 
-        next = offsprings[:self.n_saved_best_with_weights]
+        next_population = offsprings[:self.n_saved_best_with_weights]
         changable_individuals = offsprings[self.n_saved_best_with_weights:]
 
         changable_next = self.mutation(changable_individuals,
                                        p_mutation=p_mutation,
                                        mutation_power=mutation_power)
 
-        next.extend(changable_next)
+        next_population.extend(changable_next)
 
         for i in range(self.n_saved_best_with_weights):
             if self.train_partition != 1:
-                next[i]["dataset_reader"]["train"] = str(Path(next[i]["dataset_reader"]["train"]).stem.split("_")[0]) \
+                next_population[i]["dataset_reader"]["train"] = str(Path(next_population[i]["dataset_reader"]["train"]).stem.split("_")[0]) \
                                                      + "_" + str(iteration % self.train_partition) + ".csv"
-            next[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"] = \
-                str(Path(next[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"]).parent)
-            next[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
+            next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"] = \
+                str(Path(next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"]).parent)
+            next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
                 str(Path(self.params["save_path"]).joinpath("population_" + str(iteration)).joinpath(
                     self.params["model_name"] + "_" + str(i)))
 
         for i in range(self.n_saved_best_with_weights, self.population_size):
             if self.train_partition != 1:
-                next[i]["dataset_reader"]["train"] = str(Path(next[i]["dataset_reader"]["train"]).stem.split("_")[0]) \
+                next_population[i]["dataset_reader"]["train"] = str(Path(next_population[i]["dataset_reader"]["train"]).stem.split("_")[0]) \
                                                      + "_" + str(iteration % self.train_partition) + ".csv"
-            next[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
+            next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
                 str(Path(self.params["save_path"]).joinpath("population_" + str(iteration)).joinpath(
                     self.params["model_name"] + "_" + str(i)))
-            next[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"] = \
+            next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"] = \
                 str(Path(self.params["load_path"]).joinpath("population_" + str(iteration)).joinpath(
                     self.params["model_name"] + "_" + str(i)))
 
-        return next
+        return next_population
 
     def selection(self, population, scores):
         """
@@ -434,14 +434,14 @@ class NetworkAndParamsEvolution:
                         check_and_correct_binary_mask(self.nodes,
                                                       curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][
                                                           "binary_mask"])
+                
+                offsprings[perm[2 * i]] = deepcopy(curr_offsprings[0])
+                offsprings[perm[2 * i + 1]] = deepcopy(curr_offsprings[1])
                 # if parent is one of the best and will be saved with weights
                 if perm[2 * i] in range(self.n_saved_best_with_weights):
                     offsprings[perm[2 * i]] = deepcopy(population[perm[2 * i]])
                 if perm[2 * i + 1] in range(self.n_saved_best_with_weights):
                     offsprings[perm[2 * i + 1]] = deepcopy(population[perm[2 * i + 1]])
-
-                offsprings[perm[2 * i]] = deepcopy(curr_offsprings[0])
-                offsprings[perm[2 * i + 1]] = deepcopy(curr_offsprings[1])
             else:
                 pass
 
