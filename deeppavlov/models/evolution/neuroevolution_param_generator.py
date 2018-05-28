@@ -338,7 +338,7 @@ class NetworkAndParamsEvolution:
             part_of_population offsprings
         """
         perm = np.random.permutation(self.population_size)
-        offsprings = []
+        offsprings = deepcopy(population)
         for i in range(self.population_size // 2):
             parents = population[perm[2 * i]], population[perm[2 * i + 1]]
             if self.decision(p_crossover):
@@ -436,15 +436,17 @@ class NetworkAndParamsEvolution:
                                                           "binary_mask"])
                 # if parent is one of the best and will be saved with weights
                 if perm[2 * i] in range(self.n_saved_best_with_weights):
-                    curr_offsprings[0] = deepcopy(parents[0])
+                    offsprings[perm[2 * i]] = deepcopy(population[perm[2 * i]])
                 if perm[2 * i + 1] in range(self.n_saved_best_with_weights):
-                    curr_offsprings[1] = deepcopy(parents[1])
-                offsprings.extend(curr_offsprings)
+                    offsprings[perm[2 * i + 1]] = deepcopy(population[perm[2 * i + 1]])
+
+                offsprings[perm[2 * i]] = deepcopy(curr_offsprings[0])
+                offsprings[perm[2 * i + 1]] = deepcopy(curr_offsprings[1])
             else:
-                offsprings.extend(deepcopy(parents))
+                pass
 
         if self.population_size % 2 == 1:
-            offsprings.append(deepcopy(population[perm[-1]]))
+            offsprings[-1] = deepcopy(population[perm[-1]])
         return offsprings
 
     def mutation(self, population, p_mutation, mutation_power):
