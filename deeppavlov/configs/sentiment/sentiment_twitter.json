@@ -112,7 +112,7 @@
     },
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/sentement.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/sentiment.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/datasets/sentiment_twitter_data/train.csv",
         "subdir": "insults_data"
