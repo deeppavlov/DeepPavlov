@@ -172,7 +172,7 @@
         "optimizer": "Adam",
         "lear_rate": {
           "range": [
-            0.001,
+            0.0001,
             0.1
           ]
         },
@@ -198,8 +198,8 @@
   "train": {
     "epochs": {
       "range": [
-        50,
-        100
+        2,
+        10
       ],
       "discrete": true
     },
@@ -210,16 +210,16 @@
       ],
       "discrete": true
     },
-    "metric_optimization": "minimize",
+    "metric_optimization": "maximize",
     "metrics": [
-      "classification_log_loss",
       "classification_accuracy",
+      "classification_log_loss",
       "classification_f1",
       "classification_roc_auc"
     ],
-    "validation_patience": 5,
-    "val_every_n_epochs": 5,
-    "log_every_n_epochs": 5,
+    "validation_patience": 2,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
     "show_examples": false,
     "validate_best": true,
     "test_best": true
