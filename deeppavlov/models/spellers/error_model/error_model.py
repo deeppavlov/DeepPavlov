@@ -21,10 +21,8 @@ from collections import defaultdict, Counter
 from heapq import heappop, heappushpop, heappush
 from math import log, exp
 
-import kenlm
 from tqdm import tqdm
 
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.vocabs.typos import StaticDictionary
