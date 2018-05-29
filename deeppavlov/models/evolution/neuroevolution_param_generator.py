@@ -434,16 +434,15 @@ class NetworkAndParamsEvolution:
                         check_and_correct_binary_mask(self.nodes,
                                                       curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][
                                                           "binary_mask"])
-                
-                offsprings[perm[2 * i]] = deepcopy(curr_offsprings[0])
-                offsprings[perm[2 * i + 1]] = deepcopy(curr_offsprings[1])
-                # if parent is one of the best and will be saved with weights
+
                 if perm[2 * i] in range(self.n_saved_best_with_weights):
                     offsprings[perm[2 * i]] = deepcopy(population[perm[2 * i]])
+                else:
+                    offsprings[perm[2 * i]] = deepcopy(curr_offsprings[0])
                 if perm[2 * i + 1] in range(self.n_saved_best_with_weights):
                     offsprings[perm[2 * i + 1]] = deepcopy(population[perm[2 * i + 1]])
-            else:
-                pass
+                else:
+                    offsprings[perm[2 * i + 1]] = deepcopy(curr_offsprings[1])
 
         if self.population_size % 2 == 1:
             offsprings[-1] = deepcopy(population[perm[-1]])
