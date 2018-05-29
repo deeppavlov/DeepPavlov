@@ -83,18 +83,20 @@ def score_population(population, population_size, result_file):
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--config', help='Please, enter model path to config',
-                    default='./configs/evolution/basic_intents_config.json')
+parser.add_argument('--config', help='Please, enter model path to config')
 parser.add_argument('--evolve_metric', help='Please, choose target metric out of given in your config.train.metrics')
 parser.add_argument('--p_size', help='Please, enter population size', type=int, default=10)
 parser.add_argument('--gpus', help='Please, enter the list of visible GPUs', default=0)
 parser.add_argument('--n_layers', help='Please, enter number of each layer type in network', default=2)
 parser.add_argument('--n_types', help='Please, enter number of types of layers', default=1)
-parser.add_argument('--one_neuron_init', help='Please, enter number of types of layers', default=0)
+parser.add_argument('--one_neuron_init', help='whether to start with zero binary mask (one neuron network)', default=0)
+parser.add_argument('--given_mask_init', help='whether to start with given binary mask', default=0)
 parser.add_argument('--save_best_portion',
-                    help='Please, enter portion of population to save for the next generation with weights', default=0.)
+                    help='Please, enter portion of population to save for the next generation with weights',
+                    default=0.)
 parser.add_argument('--train_partition',
-                    help='Please, enter partition of splitted train', default=1)
+                    help='Please, enter partition of splitted train',
+                    default=1)
 
 args = parser.parse_args()
 
@@ -105,6 +107,7 @@ gpus = [int(gpu) for gpu in args.gpus.split(",")]
 N_LAYERS = int(args.n_layers)
 N_TYPES = int(args.n_types)
 ONE_NEURON_INIT = bool(int(args.one_neuron_init))
+GIVEN_MASK_INIT = bool(int(args.given_mask_init))
 EVOLVE_METRIC = args.evolve_metric
 SAVE_BEST_PORTION = float(args.save_best_portion)
 TRAIN_PARTITION = int(args.train_partition)
@@ -117,6 +120,14 @@ print("Given basic params: {}\n".format(basic_params))
 # list of names of considered metrics
 CONSIDERED_METRICS = basic_params["train"]["metrics"]
 
+if GIVEN_MASK_INIT:
+    # Embedding -> BiLSTM -> Dense -> Dense -> GlobalMaxPooling -> Dense(#classes)
+    INITIAL_BINARY_MASK = np.zeros((N_TYPES * N_LAYERS, N_TYPES * N_LAYERS))
+    INITIAL_BINARY_MASK[3, 0] = 1
+    INITIAL_BINARY_MASK[0, N_TYPES] = 1
+else:
+    INITIAL_BINARY_MASK = None
+
 # EVOLUTION starts here!
 evolution = NetworkAndParamsEvolution(n_layers=N_LAYERS, n_types=N_TYPES,
                                       population_size=POPULATION_SIZE,
@@ -128,6 +139,7 @@ evolution = NetworkAndParamsEvolution(n_layers=N_LAYERS, n_types=N_TYPES,
                                       start_with_one_neuron=ONE_NEURON_INIT,
                                       save_best_with_weights_portion=SAVE_BEST_PORTION,
                                       train_partition=TRAIN_PARTITION,
+                                      initial_binary_mask=INITIAL_BINARY_MASK,
                                       **basic_params)
 
 # Result table

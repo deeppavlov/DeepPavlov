@@ -37,6 +37,7 @@ class NetworkAndParamsEvolution:
                  evolve_binary_mask=True,
                  save_best_with_weights_portion=0,
                  train_partition=1,
+                 initial_binary_mask=None,
                  **kwargs):
         """
         Initialize evolution with random population
@@ -63,7 +64,7 @@ class NetworkAndParamsEvolution:
         self.n_layers = n_layers
 
         self.total_nodes = self.n_types * self.n_layers
-        self.binary_mask_template = np.zeros((self.total_nodes, self.total_nodes))
+        self.initial_binary_mask = initial_binary_mask
         self.start_with_one_neuron = start_with_one_neuron
 
         self.basic_config = deepcopy(kwargs)
@@ -216,6 +217,9 @@ class NetworkAndParamsEvolution:
             if self.start_with_one_neuron:
                 population[-1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
                     check_and_correct_binary_mask(self.nodes, self.sample_one_neuron_binary_mask())
+            elif self.initial_binary_mask:
+                population[-1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
+                    check_and_correct_binary_mask(self.nodes, self.sample_given_binary_mask(self.initial_binary_mask))
             else:
                 population[-1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
                     check_and_correct_binary_mask(self.nodes, self.sample_binary_mask())
@@ -594,6 +598,7 @@ class NetworkAndParamsEvolution:
 
     def sample_one_neuron_binary_mask(self):
         mask = np.zeros((self.total_nodes * self.total_nodes))
-        # mask[0] = 1  # make sure that Dense is the first in the config
-
         return mask.reshape((self.total_nodes, self.total_nodes))
+
+    def sample_given_binary_mask(self, mask):
+        return np.array(mask).reshape((self.total_nodes, self.total_nodes))
