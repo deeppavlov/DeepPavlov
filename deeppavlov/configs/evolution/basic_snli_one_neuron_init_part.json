@@ -63,8 +63,8 @@
         ],
         "main": true,
         "name": "evolution_classification_model",
-        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_2",
-        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_2",
+        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_3",
+        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_3",
         "classes": "#classes_vocab.keys()",
         "to_evolve": true,
         "basic_layers_params": {
@@ -187,8 +187,8 @@
   "train": {
     "epochs": {
       "range": [
-        50,
-        100
+        10,
+        50
       ],
       "discrete": true
     },
