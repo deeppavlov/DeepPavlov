@@ -49,6 +49,7 @@ import deeppavlov.models.trackers.hcn_at
 import deeppavlov.models.trackers.hcn_et
 import deeppavlov.models.preprocessors.str_lower
 import deeppavlov.models.preprocessors.squad_preprocessor
+import deeppavlov.models.preprocessors.dirty_comments_preprocessor
 import deeppavlov.models.tokenizers.spacy_tokenizer
 import deeppavlov.models.tokenizers.split_tokenizer
 import deeppavlov.models.tokenizers.ru_tokenizer

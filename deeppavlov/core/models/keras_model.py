@@ -209,7 +209,11 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
             log.info(f"[saving model to {opt_path}]")
             self.model.save_weights(weights_path)
 
-
+        # if model was loaded from one path and saved to another one
+        # then change load_path to save_path for config
+        if self.opt.get("load_path") and self.opt.get("save_path"):
+            if self.opt.get("save_path") != self.opt.get("load_path"):
+                self.opt["load_path"] = str(self.opt["save_path"])
         save_json(self.opt, opt_path)
         return True
 
