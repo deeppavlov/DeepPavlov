@@ -1,2 +1,5 @@
-pytest>=3.4.0
-pexpect>=4.4.0
+pytest
+pexpect
+sphinx
+sphinx-autobuild
+sphinx_rtd_theme

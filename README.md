@@ -212,7 +212,7 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
 </tr>
 <tr>
     <td><b> deeppavlov.dataset_iterators </b></td>
-    <td> concrete <b><i>DatasetIterators</i></b> classes </td>
+    <td> concrete <b><i>DatasetIterator</i></b> classes </td>
 </tr>
 <tr>
     <td><b> deeppavlov.metrics </b></td>

@@ -1,0 +1,4 @@
+DeepPavlov
+==========
+.. automodule:: deeppavlov
+   :members:
