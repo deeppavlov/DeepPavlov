@@ -114,18 +114,7 @@
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
       "http://lnsigo.mipt.ru/export/deeppavlov_data/sentiment.tar.gz",
-      {
-        "url": "http://lnsigo.mipt.ru/export/datasets/insults_data/train.csv",
-        "subdir": "insults_data"
-      },
-      {
-        "url": "http://lnsigo.mipt.ru/export/datasets/insults_data/valid.csv",
-        "subdir": "insults_data"
-      },
-      {
-        "url": "http://lnsigo.mipt.ru/export/datasets/insults_data/test.csv",
-        "subdir": "insults_data"
-      },
+      "http://lnsigo.mipt.ru/export/datasets/insults_data.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/embeddings/reddit_fastText/wordpunct_tok_reddit_comments_2017_11_300.bin",
         "subdir": "embeddings"
