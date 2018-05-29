@@ -25,14 +25,8 @@ class DirtyCommentsPreprocessor(Component):
     def __init__(self, *args, **kwargs):
         pass
 
-    def __call__(self, batch: Union[List[str], List[List[str]]], **kwargs):
-        if isinstance(batch, (list, tuple)):
-            return self.simple_prep(batch)
-        else:
-            return self([batch])[0]
-
-    def simple_prep(self, data):
-        f = [x.lower() for x in data]
+    def __call__(self, batch: List[str], **kwargs):
+        f = [x.lower() for x in batch]
 
         f = [x.replace("won't", "will not") for x in f]
         f = [x.replace("can't", "cannot") for x in f]
