@@ -55,7 +55,7 @@ Configuration of the model can be performed in code or in JSON configuration fil
 the model you need to specify four groups of parameters:
 
 - **`dataset_reader`**
-- **`dataset`**
+- **`dataset_iterator`**
 - **`chainer`**
 - **`train`**
 
@@ -82,7 +82,7 @@ folder with DSTC 2 dataset.
 For simple batching and shuffling you can use "dstc2_ner_iterator". The part of the 
 configuration file for the dataset iterator looks like:
  ```
-"dataset": {
+"dataset_iterator": {
     "name": "dstc2_ner_iterator"
 }
 ```

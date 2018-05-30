@@ -98,8 +98,8 @@ cat input.txt | python3 example.py > out.txt
 
 For the training phase config file needs to also include these parameters:
 
-* `dataset` — it should always be set like `"dataset": {"name": "typos_dataset"}`
-    * `name` always equals to `typos_dataset`
+* `dataset_iterator` — it should always be set like `"dataset_iterator": {"name": "typos_iterator"}`
+    * `name` always equals to `typos_iterator`
     * `test_ratio` — ratio of test data to train, from `0.` to `1.`, defaults to `0.`
 * `dataset_reader`
     * `name` — `typos_custom_reader` for a custom dataset or one of two provided:
@@ -120,8 +120,8 @@ A working training config could look something like:
   "dataset_reader": {
     "name": "typos_wikipedia_reader"
   },
-  "dataset": {
-    "name": "typos_dataset",
+  "dataset_iterator": {
+    "name": "typos_iterator",
     "test_ratio": 0.05
   },
   "chainer":{

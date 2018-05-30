@@ -47,7 +47,9 @@ PARAMS = {
     },
     "intents": {
         ("intents/intents_dstc2.json", "intents", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_dstc2_big.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("intents/intents_dstc2_big.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "snips": {("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_snips_bigru.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_snips_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
@@ -56,7 +58,10 @@ PARAMS = {
         ("intents/intents_snips_bilstm_self_mult_attention.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_snips_cnn_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK]
     },
-    "snips": {("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]},
+    "sentiment": {
+        ("sentiment/insults_kaggle.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("sentiment/sentiment_twitter.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+    },
     "sample": {
         ("intents/intents_sample_csv.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_sample_json.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
@@ -73,7 +78,7 @@ PARAMS = {
                 ("moderate price range", "{'pricerange': 'moderate'}")
             ]
     },
-    "ranking": {("ranking/insurance_config.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
+    "ranking": {("ranking/ranking_insurance.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
     "squad": {
         ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK]

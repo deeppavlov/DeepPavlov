@@ -6,10 +6,11 @@ import numpy as np
 @register('ranking_iterator')
 class RankingIterator:
 
-    def __init__(self, data,
+    def __init__(self, data, len_vocab,
                  sample_candidates, sample_candidates_valid, sample_candidates_test,
                  num_negative_samples, num_ranking_samples_valid, num_ranking_samples_test,
                  seed=None):
+        self.len_vocab = len_vocab
         self.sample_candidates = sample_candidates
         self.sample_candidates_valid = sample_candidates_valid
         self.sample_candidates_test = sample_candidates_test
@@ -29,7 +30,7 @@ class RankingIterator:
         }
 
     def gen_batches(self, batch_size, data_type="train", shuffle=True):
-        y = np.zeros(batch_size)
+        y = batch_size * [np.ones(2)]
         data = self.data[data_type]
         num_steps = len(data) // batch_size
         if data_type == "train":
@@ -40,7 +41,7 @@ class RankingIterator:
                 context = [el["context"] for el in context_response_data]
                 response = [el["response"] for el in context_response_data]
                 negative_response = self.create_neg_resp_rand(context_response_data, batch_size, data_type)
-                x = list(zip(context, response, negative_response))
+                x = [[context[i], [response[i]]+[negative_response[i]]] for i in range(len(context_response_data))]
                 yield (x, y)
         if data_type in ["valid", "test"]:
             for i in range(num_steps + 1):
@@ -67,9 +68,9 @@ class RankingIterator:
         elif sample_candidates == "global":
             candidates = []
             for i in range(batch_size):
-                candidate = np.random.randint(0, 24981, 1)[0]
+                candidate = np.random.randint(0, self.len_vocab, 1)[0]
                 while candidate in context_response_data[i]["pos_pool"]:
-                    candidate = np.random.randint(0, 24981, 1)[0]
+                    candidate = np.random.randint(0, self.len_vocab, 1)[0]
                 candidates.append(candidate)
             negative_response_data = candidates
         return negative_response_data
@@ -86,16 +87,20 @@ class RankingIterator:
             response_data = []
             for i in range(len(context_response_data)):
                 pos_pool = context_response_data[i]["pos_pool"]
+                resp = context_response_data[i]["response"]
+                pos_pool.insert(0, pos_pool.pop(pos_pool.index(resp)))
                 neg_pool = context_response_data[i]["neg_pool"]
                 response = pos_pool + neg_pool
                 response_data.append(response[:ranking_length])
 
         elif sample_candidates == "global" or sample_candidates is None:
-            ranking_length = 24981
+            ranking_length = self.len_vocab
             y = [len(el["pos_pool"]) * np.ones(ranking_length) for el in context_response_data]
             response_data = []
             for i in range(len(context_response_data)):
                 pos_pool = context_response_data[i]["pos_pool"]
+                resp = context_response_data[i]["response"]
+                pos_pool.insert(0, pos_pool.pop(pos_pool.index(resp)))
                 neg_pool = context_response_data[i]["neg_pool"]
                 response = pos_pool + neg_pool
                 response_data.append(response[:ranking_length])

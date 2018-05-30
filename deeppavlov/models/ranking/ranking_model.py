@@ -26,7 +26,7 @@ from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.ranking.ranking_network import RankingNetwork
-from deeppavlov.models.ranking.dict import InsuranceDict
+from deeppavlov.models.ranking.insurance_dict import InsuranceDict
 from deeppavlov.models.ranking.emb_dict import Embeddings
 from deeppavlov.core.common.log import get_logger
 
@@ -63,12 +63,20 @@ class RankingModel(NNModel):
         self.interact_pred_num = opt['interact_pred_num']
         self.vocabs = opt.get('vocabs', None)
 
-        dict_parameter_names = list(inspect.signature(InsuranceDict.__init__).parameters)
-        dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
+        if self.opt["vocab_name"] == "insurance":
+            dict_parameter_names = list(inspect.signature(InsuranceDict.__init__).parameters)
+            dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
+            self.dict = InsuranceDict(**dict_parameters)
+
+        embdict_parameter_names = list(inspect.signature(Embeddings.__init__).parameters)
+        embdict_parameters = {par: self.opt[par] for par in embdict_parameter_names if par in self.opt}
+        self.embdict= Embeddings(**embdict_parameters)
+
+
+        # self.dict: DictInterface = kwargs['vocab']
+
         network_parameter_names = list(inspect.signature(RankingNetwork.__init__).parameters)
         self.network_parameters = {par: opt[par] for par in network_parameter_names if par in opt}
-
-        self.dict = InsuranceDict(**dict_parameters)
 
         self.load()
 
@@ -80,15 +88,18 @@ class RankingModel(NNModel):
         if not self.load_path.exists():
             log.info("[initializing new `{}`]".format(self.__class__.__name__))
             self.dict.init_from_scratch()
-            self._net = RankingNetwork(len(self.dict.tok2int_vocab), **self.network_parameters)
-            embdict_parameter_names = list(inspect.signature(Embeddings.__init__).parameters)
-            embdict_parameters = {par: self.opt[par] for par in embdict_parameter_names if par in self.opt}
-            embdict= Embeddings(self.dict.tok2int_vocab, **embdict_parameters)
-            self._net.set_emb_matrix(embdict.emb_matrix)
+            self.embdict.init_from_scratch(self.dict.tok2int_vocab)
+            self._net = RankingNetwork(toks_num=len(self.dict.tok2int_vocab),
+                                       emb_dict=self.embdict,
+                                       **self.network_parameters)
+            self._net.init_from_scratch(self.embdict.emb_matrix)
         else:
             log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
             self.dict.load()
-            self._net = RankingNetwork(len(self.dict.tok2int_vocab), **self.network_parameters)
+            self.embdict.load()
+            self._net = RankingNetwork(toks_num=len(self.dict.tok2int_vocab),
+                                       emb_dict=self.embdict,
+                                       **self.network_parameters)
             self._net.load(self.load_path)
 
     @overrides
@@ -99,20 +110,22 @@ class RankingModel(NNModel):
         self._net.save(self.save_path)
         self.set_embeddings()
         self.dict.save()
+        self.embdict.save()
 
     @check_attr_true('train_now')
     def train_on_batch(self, x, y):
         self.reset_embeddings()
         context = [el[0] for el in x]
-        response = [el[1] for el in x]
-        negative_response = [el[2] for el in x]
+        pos_neg_response = [el[1] for el in x]
+        response = [el[0] for el in pos_neg_response]
+        negative_response = [el[1] for el in pos_neg_response]
         c = self.dict.make_toks(context, type="context")
         c = self.dict.make_ints(c)
         rp = self.dict.make_toks(response, type="response")
         rp = self.dict.make_ints(rp)
         rn = self.dict.make_toks(negative_response, type="response")
         rn = self.dict.make_ints(rn)
-        b = [c, rp, rn], y
+        b = [c, rp, rn], np.asarray(y)
         self._net.train_on_batch(b)
 
     @overrides
@@ -122,7 +135,7 @@ class RankingModel(NNModel):
             context = [el[0] for el in batch]
             c = self.dict.make_toks(context, type="context")
             c = self.dict.make_ints(c)
-            c_emb = self._net.predict_context_emb([c, c, c], bs=len(batch))
+            c_emb = self._net.predict_context_on_batch([c, c, c])
             response = [el[1] for el in batch]
             batch_size = len(response)
             ranking_length = len(response[0])
@@ -140,7 +153,7 @@ class RankingModel(NNModel):
         elif type(batch[0]) == str:
             c_input = tokenize(batch)
             c_input = self.dict.make_ints(c_input)
-            c_input_emb = self._net.predict_context_emb([c_input, c_input, c_input], bs=1)
+            c_input_emb = self._net.predict_context_on_batch([c_input, c_input, c_input])
 
             c_emb = [self.dict.context2emb_vocab[i] for i in range(len(self.dict.context2emb_vocab))]
             c_emb = np.vstack(c_emb)
@@ -164,7 +177,7 @@ class RankingModel(NNModel):
             for i in range(len(self.dict.response2toks_vocab)):
                 r.append(self.dict.response2toks_vocab[i])
             r = self.dict.make_ints(r)
-            response_embeddings = self._net.predict_response_emb([r, r, r], 512)
+            response_embeddings = self._net.predict_response([r, r, r], 512)
             for i in range(len(self.dict.response2toks_vocab)):
                 self.dict.response2emb_vocab[i] = response_embeddings[i]
         if self.dict.context2emb_vocab[0] is None:
@@ -172,7 +185,7 @@ class RankingModel(NNModel):
             for i in range(len(self.dict.context2toks_vocab)):
                 contexts.append(self.dict.context2toks_vocab[i])
             contexts = self.dict.make_ints(contexts)
-            context_embeddings = self._net.predict_context_emb([contexts, contexts, contexts], 512)
+            context_embeddings = self._net.predict_context([contexts, contexts, contexts], 512)
             for i in range(len(self.dict.context2toks_vocab)):
                 self.dict.context2emb_vocab[i] = context_embeddings[i]
 
