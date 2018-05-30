@@ -217,7 +217,7 @@ class NetworkAndParamsEvolution:
             if self.start_with_one_neuron:
                 population[-1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
                     check_and_correct_binary_mask(self.nodes, self.sample_one_neuron_binary_mask())
-            elif self.initial_binary_mask is None:
+            elif not(self.initial_binary_mask is None):
                 population[-1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
                     check_and_correct_binary_mask(self.nodes, self.sample_given_binary_mask(self.initial_binary_mask))
             else:
