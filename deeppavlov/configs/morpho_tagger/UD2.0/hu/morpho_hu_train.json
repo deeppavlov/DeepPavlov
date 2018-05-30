@@ -23,8 +23,8 @@
         "fit_on": ["y"],
 		"level": "token",
         "special_tokens": ["PAD", "BEGIN", "END"],
-        "save_path": "morpho_tagger/UD2.0/tag_hu.dict",
-        "load_path": "morpho_tagger/UD2.0/tag_hu.dict"
+        "save_path": "morpho_tagger/UD2.0/hu/tag.dict",
+        "load_path": "morpho_tagger/UD2.0/hu/tag.dict"
       },
       {
         "id": "char_vocab",
@@ -33,8 +33,8 @@
         "fit_on": ["x_processed"],
         "special_tokens": ["PAD", "BEGIN", "END"],
 		"level": "char",
-        "save_path": "morpho_tagger/UD2.0/char_hu.dict",
-        "load_path": "morpho_tagger/UD2.0/char_hu.dict"
+        "save_path": "morpho_tagger/UD2.0/hu/char.dict",
+        "load_path": "morpho_tagger/UD2.0/hu/char.dict"
       },
       {
         "in": ["x_processed"],
@@ -42,8 +42,8 @@
         "out": ["y_predicted"],
         "name": "morpho_tagger",
         "main": true,
-        "save_path": "morpho_tagger/UD2.0/ud_hu.hdf5",
-        "load_path": "morpho_tagger/UD2.0/ud_hu.hdf5",
+        "save_path": "morpho_tagger/UD2.0/hu/model.hdf5",
+        "load_path": "morpho_tagger/UD2.0/hu/model.hdf5",
         "tags": "#tag_vocab",
         "symbols": "#char_vocab",
         "verbose": 1,
@@ -67,7 +67,11 @@
   },
   "metadata": {
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/morpho_tagger.tar.gz"
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/morpho_tagger.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/datasets/UD2.0_source/hu.tar.gz",
+        "subdir": "UD2.0_source/hu"
+      }
     ],
   "telegram_utils": "MorphoTaggerModel"
   }
