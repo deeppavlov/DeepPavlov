@@ -91,7 +91,7 @@
     ]
   },
   "train": {
-    "epochs": 10,
+    "epochs": 100,
     "batch_size": 64,
     "metrics": [
       "classification_accuracy",
@@ -113,7 +113,7 @@
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/sentiment.tar.gz",
       "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/ag_news_data.tar.gz",
+      "http://lnsigo.mipt.ru/export/datasets/ag_news_data.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "embeddings"
