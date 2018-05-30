@@ -1,3 +1,6 @@
+[![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](/LICENSE.txt)
+![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
+
 # Morphological tagging
 
 ## Task description
@@ -261,14 +264,26 @@ are multiple layers.
 that no regularizer is applied.
 - **`verbose`** - the level of verbosity during training. If it is positive, prints model summary.
 
-The `''train''` section of `''chainer''` contains training parameters, such as number of epochs,
+The `"train"` section of `"chainer"` contains training parameters, such as number of epochs,
 batch_size and logging frequency, see [general README](../../../README.md) for more details.
 
-### Test configuration
+### Evaluate configuration
 
-Test configuration file is almost the same as the train one, the only difference is
+Evaluate configuration file is almost the same as the train one, the only difference is
 that **dataset_reader** reads only test part of data. Also there are no logging parameters
-in the `''train''` subsection of **chainer**.
+in the `''train''` subsection of **chainer**. Now it looks like
+
+```
+"train": {
+    "test_best": true,
+    "validate_best": false,
+    "train_model": false,
+    "batch_size": 16,
+    "metrics": ["per_token_accuracy"]
+  }
+```
+
+``validate_best`` and ``train_model`` are set to ``false`` since no training or validation is performed.
 
 ### Predict configuration
 
