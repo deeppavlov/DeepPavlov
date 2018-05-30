@@ -98,7 +98,7 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
     return chainer
 
 
-def train_evaluate_model_from_config(config_path: str, is_trained=False) -> None:
+def train_evaluate_model_from_config(config_path: str) -> None:
     config = read_json(config_path)
     set_deeppavlov_root(config)
 
@@ -143,7 +143,8 @@ def train_evaluate_model_from_config(config_path: str, is_trained=False) -> None
 
     train_config = {
         'metrics': ['accuracy'],
-        'validate_best': not (is_trained),
+        'train_model': True,
+        'validate_best': True,
         'test_best': True
     }
 
@@ -154,7 +155,7 @@ def train_evaluate_model_from_config(config_path: str, is_trained=False) -> None
 
     metrics_functions = list(zip(train_config['metrics'], get_metrics_by_names(train_config['metrics'])))
 
-    if not is_trained:
+    if train_config['train_model']:
         if 'chainer' in config:
             model = fit_chainer(config, iterator)
         else:
@@ -217,7 +218,7 @@ def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
 
     report = {
         'eval_examples_count': len(val_y_true),
-        'metrics': OrderedDict(prettify_metrics(metrics)),
+        'metrics': prettify_metrics(metrics),
         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
     }
     return report

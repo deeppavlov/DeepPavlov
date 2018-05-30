@@ -1,5 +1,5 @@
 import re
-from typing import Union
+from pathlib import Path
 
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.commands.utils import set_deeppavlov_root, expand_path
@@ -11,6 +11,7 @@ from deeppavlov.core.models.component import Component
 
 from deeppavlov.dataset_iterators.morphotagger_iterator import MorphoTaggerDatasetIterator
 from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag
+
 
 
 def predict_with_model(config_path):
@@ -37,12 +38,12 @@ def predict_with_model(config_path):
             answers[i] = elem
     outfile = config['predict'].get("outfile")
     if outfile is not None:
+        outfile = Path(outfile)
+        if not outfile.exists():
+            outfile.parent.mkdir(parents=True, exist_ok=True)
         with open(outfile, "w", encoding="utf8") as fout:
             for elem in answers:
                 fout.write(elem + "\n")
-            # for (sent, _), tags in zip(data['test'], answers):
-            #     fout.write(prettify(sent, tags, return_string=True,
-            #                         sep="\n", end="\n") + "\n")
     return answers
 
 

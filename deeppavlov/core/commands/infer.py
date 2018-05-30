@@ -22,6 +22,8 @@ from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.log import get_logger
 
+from pathlib import Path
+
 
 log = get_logger(__name__)
 
@@ -129,6 +131,10 @@ def predict_on_stream(config_path, batch_size=1, file_path=None):
             raise RuntimeError('To process data from terminal please use interact mode')
         f = sys.stdin
     else:
+        curr_dir = Path.cwd()
+        file_path = curr_dir / Path(file_path)
+        if not file_path.exists():
+            raise RuntimeError('No input file {} exists'.format(file_path))
         f = open(file_path)
 
     config = read_json(config_path)
