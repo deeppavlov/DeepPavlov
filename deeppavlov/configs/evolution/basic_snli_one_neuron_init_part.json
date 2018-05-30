@@ -63,8 +63,8 @@
         ],
         "main": true,
         "name": "evolution_classification_model",
-        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_3",
-        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_3",
+        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_4",
+        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/one_neuron_init_part_4",
         "classes": "#classes_vocab.keys()",
         "to_evolve": true,
         "basic_layers_params": {
@@ -72,7 +72,7 @@
             "units": {
               "range": [
                 50,
-                200
+                500
               ],
               "discrete": true
             },
@@ -89,7 +89,7 @@
             "filters": {
               "range": [
                 50,
-                200
+                500
               ],
               "discrete": true
             },
@@ -106,7 +106,7 @@
             "units": {
               "range": [
                 50,
-                200
+                500
               ],
               "discrete": true
             },
@@ -116,7 +116,7 @@
             "units": {
               "range": [
                 50,
-                200
+                500
               ],
               "discrete": true
             },
@@ -136,14 +136,14 @@
             "n_hidden": {
               "range": [
                 50,
-                200
+                500
               ],
               "discrete": true
             },
             "n_output_features": {
               "range": [
                 50,
-                200
+                500
               ],
               "discrete": true
             },
@@ -187,15 +187,15 @@
   "train": {
     "epochs": {
       "range": [
-        10,
-        50
+        50,
+        100
       ],
       "discrete": true
     },
     "batch_size": {
       "range": [
-        20,
-        70
+        50,
+        100
       ],
       "discrete": true
     },
@@ -206,7 +206,7 @@
       "classification_f1",
       "classification_roc_auc"
     ],
-    "validation_patience": 2,
+    "validation_patience": 5,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
     "show_examples": false,
