@@ -1,6 +1,3 @@
-"""
-Класс для поиска по расстоянию Левенштейна
-"""
 import itertools
 import copy
 import numpy as np
@@ -11,11 +8,11 @@ from .tabled_trie import Trie, make_trie
 
 
 class LevensteinSearcher:
-    '''
+    """
     Класс для поиска близких слов
     в соответствии с расстоянием Левенштейна
 
-    '''
+    """
     def __init__(self, alphabet, dictionary, operation_costs=None,
                  allow_spaces=False, euristics='none'):
         self.alphabet = alphabet
@@ -41,46 +38,7 @@ class LevensteinSearcher:
         self._precompute_euristics()
         self._define_h_function()
 
-    class agenda_key:
-        """
-        Key in HeapDict agenda for A-star search in trie
-        low : current lower part of transduction
-        pos : current position in string being transduced
-        index : index of current trie node
-        """
-        def __init__(self, low, pos, index):
-            self.low = low
-            self.pos = pos
-            self.index = index
-
-        def fields(self):
-            return (self.low, self.pos, self.index)
-
-        def __eq__(self, other):
-            return self.fields() == other.fields()
-
-        def __hash__(self):
-            return hash(self.fields())
-
-        def __repr__(self):
-            return "agenda_key({0}, {1}, {2})".format(*self.fields())
-
-    def make_transducer(self, operation_costs=None, allow_spaces=False):
-        """
-        Строит взвешенный трансдьюсер и помещает его в self.transducer
-
-        Аргументы:
-        ----------
-        operation_costs : dict or None, optional(default=None)
-        allow_spaces : bool, optional(default=False)
-            см. описание SegmentTransducer
-        """
-        self.transducer = SegmentTransducer(self.alphabet, operation_costs, allow_spaces)
-
     def __contains__(self, word):
-        """
-        Проверяет, содержится ли слово в словаре
-        """
         return word in self.dictionary
 
     def search(self, word, d, allow_spaces=True, return_cost=True):
@@ -93,12 +51,6 @@ class LevensteinSearcher:
             # raise ValueError("{0} contains an incorrect symbol".format(word))
         return self._trie_search(
             word, d, allow_spaces=allow_spaces, return_cost=return_cost)
-
-    def find_partitions(self, word, d=0):
-        """
-        находит все способы разбить слово word не более, чем d пробелами
-        """
-        return self.dictionary.find_partitions(word, d+1)
 
     def _trie_search(self, word, d, transducer=None,
                      allow_spaces=True, return_cost=True):

@@ -13,18 +13,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
-import csv
-from typing import List
-from collections import defaultdict, Counter
-from heapq import heappop, heappushpop, heappush
-from math import log, exp
-
-from tqdm import tqdm
+from math import log10
+from typing import Iterable
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.log import get_logger
 
 from .searcher.levenstein_searcher import LevensteinSearcher
@@ -35,11 +28,11 @@ logger = get_logger(__name__)
 
 @register('spelling_levenstein_searcher')
 class LeveSearcher(Component):
-    def __init__(self, words, allow_spaces=True, max_distance=1, error_probability=1e-4, *args, **kwargs):
-        words = list(words)
+    def __init__(self, words: Iterable[str], allow_spaces=True, max_distance=1, error_probability=1e-4, *args, **kwargs):
+        words = [word.strip().lower().replace('ё', 'е') for word in words]
         alphabet = sorted({letter for word in words for letter in word})
         self.max_distance = max_distance
-        self.error_probability = error_probability
+        self.error_probability = log10(error_probability)
         self.vocab_penalty = self.error_probability * 2
         self.searcher = LevensteinSearcher(alphabet, words, allow_spaces=allow_spaces, euristics=2)
 

@@ -47,17 +47,12 @@
         "load_path": "language_models/ru_wiyalen_no_punkt.arpa.binary"
       },
       {
-        "class": "deeppavlov.models.spellers.error_model.kenlm_elector:TopOneElector",
-        "in": ["tokens_candidates"],
-        "out": ["y_top1"]
-      },
-      {
         "ref": "tokenizer",
         "in": ["y_predicted_tokens"],
         "out": ["y_predicted"]
       }
     ],
-    "out": ["y_predicted", "y_top1"]
+    "out": ["y_predicted"]
   },
   "train": {
     "validate_best": false,

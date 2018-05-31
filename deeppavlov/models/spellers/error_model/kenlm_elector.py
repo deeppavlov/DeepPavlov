@@ -45,9 +45,14 @@ class KenlmElector(Component):
             new_beam = []
             for beam_score, beam_state, beam_words in beam:
                 for score, candidate in sublist:
-                    state = kenlm.State()
-                    c_score = self.lm.BaseScore(beam_state, candidate, state)
-                    new_beam.append((beam_score + score + c_score, state, beam_words + [candidate]))
+                    prev_state = beam_state
+                    c_score = 0
+                    cs = candidate.split()
+                    for candidate in cs:
+                        state = kenlm.State()
+                        c_score += self.lm.BaseScore(prev_state, candidate, state)
+                        prev_state = state
+                    new_beam.append((beam_score + score + c_score, state, beam_words + cs))
             new_beam.sort(reverse=True)
             beam = new_beam[:self.beam_size]
         score, state, words = beam[0]

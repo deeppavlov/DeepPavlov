@@ -1,4 +1,5 @@
 Cython==0.27.1
+numpy==1.14.3
 lxml==4.1.1
 tqdm==4.19.5
 requests==2.18.4

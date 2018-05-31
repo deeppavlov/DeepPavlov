@@ -5,7 +5,7 @@ import numpy as np
 
 
 class Trie:
-    '''
+    """
     Реализация префиксного бора (точнее, корневого направленного ациклического графа)
 
     Атрибуты
@@ -20,7 +20,7 @@ class Trie:
     data: array, type=object, shape=(число вершин), массив с данными, хранящямися в вершинах
     final: array, type=bool, shape=(число вершин), массив индикаторов
     final[i] = True <-> i --- финальная вершина
-    '''
+    """
     NO_NODE = -1
     SPACE_CODE = -1
 
@@ -303,9 +303,6 @@ class Trie:
 
 
 class TrieMinimizer:
-    '''
-    Класс для сжатия префиксного бора
-    '''
     def __init__(self):
         pass
 
@@ -402,6 +399,7 @@ class TrieMinimizer:
                 stack = stack[:-1]
         return order
 
+
 def load_trie(infile):
     with open(infile, "r", encoding="utf8") as fin:
         line = fin.readline().strip()
@@ -456,13 +454,11 @@ def make_trie(alphabet, words, compressed=True, is_numpied=False,
     trie = Trie(alphabet, is_numpied=is_numpied, to_make_cashed=make_cashed,
                 precompute_symbols=precompute_symbols, dict_storage=dict_storage)
     trie.fit(words)
-    # print(len(trie))
     if compressed:
         tm = TrieMinimizer()
         trie = tm.minimize(trie, dict_storage=dict_storage, make_cashed=make_cashed,
                            make_numpied=is_numpied, precompute_symbols=precompute_symbols,
                            allow_spaces=allow_spaces)
-        # print(len(trie))
     return trie
 
 
