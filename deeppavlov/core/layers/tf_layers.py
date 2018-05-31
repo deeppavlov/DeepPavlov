@@ -521,20 +521,17 @@ def cudnn_gru(units, n_hidden, n_layers=1, trainable_initial_states=False,
     """
     with tf.variable_scope(name, reuse=reuse):
         gru = tf.contrib.cudnn_rnn.CudnnGRU(num_layers=n_layers,
-                                            num_units=n_hidden,
-                                            input_size=units.get_shape().as_list()[-1])
-        param = tf.get_variable('gru_params', initializer=tf.random_uniform(
-            [gru.params_size()], -0.1, 0.1), validate_shape=False)
+                                            num_units=n_hidden)
 
         if trainable_initial_states:
-            init_h = tf.get_variable('init_h', [1, 1, n_hidden])
+            init_h = tf.get_variable('init_h', [n_layers, 1, n_hidden])
             init_h = tf.tile(init_h, (1, tf.shape(units)[0], 1))
         else:
-            init_h = tf.zeros([1, tf.shape(units)[0], n_hidden])
+            init_h = tf.zeros([n_layers, tf.shape(units)[0], n_hidden])
 
         initial_h = input_initial_h or init_h
 
-        h, h_last = gru(tf.transpose(units, (1, 0, 2)), initial_h, param)
+        h, h_last = gru(tf.transpose(units, (1, 0, 2)), (initial_h, ))
         h = tf.transpose(h, (1, 0, 2))
         # Extract last states if they are provided
         if seq_lengths is not None:
@@ -576,23 +573,18 @@ def cudnn_lstm(units, n_hidden, n_layers=1, trainable_initial_states=None, seq_l
         """
     with tf.variable_scope(name, reuse=reuse):
         lstm = tf.contrib.cudnn_rnn.CudnnLSTM(num_layers=n_layers,
-                                              num_units=n_hidden,
-                                              input_size=units.get_shape().as_list()[-1])
-        param = tf.get_variable('lstm_params',
-                                initializer=tf.random_uniform([lstm.params_size()], -0.1, 0.1),
-                                validate_shape=False)
-
+                                              num_units=n_hidden)
         if trainable_initial_states:
-            init_h = tf.get_variable('init_h', [1, 1, n_hidden])
+            init_h = tf.get_variable('init_h', [n_layers, 1, n_hidden])
             init_h = tf.tile(init_h, (1, tf.shape(units)[0], 1))
-            init_c = tf.get_variable('init_с', [1, 1, n_hidden])
+            init_c = tf.get_variable('init_с', [n_layers, 1, n_hidden])
             init_c = tf.tile(init_c, (1, tf.shape(units)[0], 1))
         else:
-            init_h = init_c = tf.zeros([1, tf.shape(units)[0], n_hidden])
+            init_h = init_c = tf.zeros([n_layers, tf.shape(units)[0], n_hidden])
 
         initial_h = initial_h or init_h
         initial_c = initial_c or init_c
-        h, h_last, c_last = lstm(tf.transpose(units, (1, 0, 2)), initial_h, initial_c, param)
+        h, (h_last, c_last) = lstm(tf.transpose(units, (1, 0, 2)), (initial_h, initial_c))
         h = tf.transpose(h, (1, 0, 2))
 
         # Extract last states if they are provided
