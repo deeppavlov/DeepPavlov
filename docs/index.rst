@@ -11,7 +11,7 @@ DeepPavlov documentation
 DeepPavlov is an open source library for building end-to-end dialog systems and training chatbots.
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Package Reference
 
    deeppavlov <deeppavlov>

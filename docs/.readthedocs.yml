@@ -3,6 +3,8 @@
 build:
   image: latest
 
+requirements_file: reqs.txt
+
 python:
   version: 3.6
   pip_install: true
