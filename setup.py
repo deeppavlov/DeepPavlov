@@ -59,7 +59,7 @@ setup(
     download_url='https://github.com/deepmipt/DeepPavlov/archive/0.0.4.tar.gz',
     keywords=['NLP', 'NER', 'SQUAD', 'Intents', 'Chatbot'],
     include_package_data=True,
-    install_requires=read_requirements(),
+    install_requires=read_requirements() if not os.getenv('READTHEDOCS') else [],
     extras_require={
         'tests': ['pytest', 'pexpect'],
         'docs': ['sphinx', 'sphinx_rtd_theme']

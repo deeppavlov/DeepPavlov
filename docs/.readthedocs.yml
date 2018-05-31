@@ -1,0 +1,9 @@
+# .readthedocs.yml
+
+requirements_file: requirements-docs.txt
+
+build:
+  image: latest
+
+python:
+  version: 3.6

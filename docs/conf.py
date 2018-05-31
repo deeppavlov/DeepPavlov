@@ -7,6 +7,7 @@
 # http://www.sphinx-doc.org/en/master/config
 
 import sphinx_rtd_theme
+from unittest.mock import MagicMock
 
 # -- Path setup --------------------------------------------------------------
 
@@ -17,6 +18,26 @@ import sphinx_rtd_theme
 import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
+
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+
+MOCK_MODULES = ['tensorflow', 'keras', 'keras.metrics', 'keras.optimizers', 'overrides', 'keras.models',
+                'keras.layers', 'numpy', 'tqdm', 'lxml', 'pandas', 'sklearn', 'sklearn.model_selection',
+                'keras.layers.wrappers', 'keras.layers.recurrent', 'keras.layers.convolutional', 'keras.layers.core',
+                'keras.layers.normalization', 'keras.layers.pooling', 'keras.regularizers', 'fastText', 'nltk',
+                'keras.activations', 'gensim', 'gensim.models', 'tensorflow.python', 'tensorflow.python.client',
+                'tensorflow.contrib', 'tensorflow.contrib.layers', 'nltk.tag', 'kenlm', 'spacy', 'spacy.lang',
+                'spacy.lang.en', 'sklearn.feature_extraction', 'sklearn.feature_extraction.stop_words',
+                'nltk.tokenize', 'nltk.tokenize.toktok', 'pymorphy2', 'scipy', 'sklearn.utils', 'keras.layers.merge',
+                'keras.initializers', 'keras.preprocessing', 'keras.preprocessing.sequence', 'gensim.models.wrappers',
+                'sklearn.decomposition', 'fuzzywuzzy', 'nltk.translate', 'nltk.translate.bleu_score', 'sklearn.metrics']
+
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 
 # -- Project information -----------------------------------------------------
