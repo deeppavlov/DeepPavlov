@@ -31,7 +31,10 @@ def read_requirements():
     install_reqs = parse_requirements(reqs_path, session=PipSession())
     reqs = []
     for ir in install_reqs:
-        pip_main(['install', str(ir.req or ir.link)])
+        if not os.getenv('READTHEDOCS'):
+            pip_main(['install', str(ir.req or ir.link)])
+        if ir.link and os.getenv('READTHEDOCS'):  # workaround for RTD
+            pip_main(['install', str(ir.link)])
         if ir.req:
             reqs.append(str(ir.req))
     return reqs
