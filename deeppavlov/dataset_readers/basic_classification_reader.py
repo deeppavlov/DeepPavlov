@@ -43,7 +43,6 @@ class BasicClassificationDatasetReader(DatasetReader):
         data_path will be read)
         Args:
             data_path: directory with files
-            data_types: types of considered data (possible: "train", "valid", "test")
             url: download data files if data_path not exists or empty
 
         Returns:
@@ -56,7 +55,7 @@ class BasicClassificationDatasetReader(DatasetReader):
 
         if not Path(data_path, train_file).exists():
             if url is None:
-                raise Exception("data path {} is not exists or empty and download url parameter not specified!".format(data_path))
+                raise Exception("data path {} does not exist or is empty, and download url parameter not specified!".format(data_path))
             log.info("Loading train data from {} to {}".format(url, data_path))
             download(source_url=url, dest_file_path=Path(data_path, train_file))
 
@@ -83,9 +82,9 @@ class BasicClassificationDatasetReader(DatasetReader):
                 y = kwargs.get('y', 'labels')
                 class_sep = kwargs.get('class_sep', ',')
                 if isinstance(x, list):
-                    data[data_type] = [([row[x_] for x_ in x], row[y].split(class_sep)) for _, row in df.iterrows()]
+                    data[data_type] = [([row[x_] for x_ in x], str(row[y]).split(class_sep)) for _, row in df.iterrows()]
                 else:
-                    data[data_type] = [(row[x], row[y].split(class_sep)) for _, row in df.iterrows()]
+                    data[data_type] = [(row[x], str(row[y]).split(class_sep)) for _, row in df.iterrows()]
             else:
                 log.warning("Cannot find {} file".format(file))
 

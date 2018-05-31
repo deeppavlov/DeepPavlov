@@ -54,7 +54,7 @@
       "server_utils": "Ranker"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/odqa.tar.gz"
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ru_odqa.tar.gz"
     ]
   }
 }
