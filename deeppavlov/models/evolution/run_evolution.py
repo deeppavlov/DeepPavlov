@@ -94,6 +94,10 @@ parser.add_argument('--given_mask_init', help='whether to start with given binar
 parser.add_argument('--save_best_portion',
                     help='Please, enter portion of population to save for the next generation with weights',
                     default=0.)
+parser.add_argument('--renovation_frequency',
+                    help='Please, enter frequency of renovation (how often in terms of generations '
+                         'to renovate the second best portion)',
+                    default=1)
 parser.add_argument('--train_partition',
                     help='Please, enter partition of splitted train',
                     default=1)
@@ -110,6 +114,7 @@ ONE_NEURON_INIT = bool(int(args.one_neuron_init))
 GIVEN_MASK_INIT = bool(int(args.given_mask_init))
 EVOLVE_METRIC = args.evolve_metric
 SAVE_BEST_PORTION = float(args.save_best_portion)
+RENOVATION_FREQUENCY = int(args.renovation_frequency)
 TRAIN_PARTITION = int(args.train_partition)
 
 with open(CONFIG_FILE, "r") as f:
@@ -138,6 +143,7 @@ evolution = NetworkAndParamsEvolution(n_layers=N_LAYERS, n_types=N_TYPES,
                                       seed=42,
                                       start_with_one_neuron=ONE_NEURON_INIT,
                                       save_best_with_weights_portion=SAVE_BEST_PORTION,
+                                      renovation_frequency=RENOVATION_FREQUENCY,
                                       train_partition=TRAIN_PARTITION,
                                       initial_binary_mask=INITIAL_BINARY_MASK,
                                       **basic_params)
