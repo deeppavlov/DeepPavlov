@@ -44,7 +44,7 @@ def readme():
 
 setup(
     name='deeppavlov',
-    packages=find_packages(exclude=('tests',)),
+    packages=find_packages(exclude=('tests', 'docs')),
     version='0.0.4',
     description='An open source library for building end-to-end dialog systems and training chatbots.',
     long_description=readme(),
@@ -56,5 +56,9 @@ setup(
     download_url='https://github.com/deepmipt/DeepPavlov/archive/0.0.4.tar.gz',
     keywords=['NLP', 'NER', 'SQUAD', 'Intents', 'Chatbot'],
     include_package_data=True,
-    install_requires=read_requirements()
+    install_requires=read_requirements(),
+    extras_require={
+        'tests': ['pytest', 'pexpect'],
+        'docs': ['sphinx', 'sphinx_rtd_theme']
+    }
 )
