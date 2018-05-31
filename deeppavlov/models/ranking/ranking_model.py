@@ -120,18 +120,64 @@ class RankingModel(NNModel):
     @check_attr_true('train_now')
     def train_on_batch(self, x, y):
         self.reset_embeddings()
-        context = [el[0] for el in x]
-        pos_neg_response = [el[1] for el in x]
-        response = [el[0] for el in pos_neg_response]
-        negative_response = [el[1] for el in pos_neg_response]
-        c = self.dict.make_toks(context, type="context")
-        c = self.dict.make_ints(c)
-        rp = self.dict.make_toks(response, type="response")
-        rp = self.dict.make_ints(rp)
-        rn = self.dict.make_toks(negative_response, type="response")
-        rn = self.dict.make_ints(rn)
-        b = [c, rp, rn], np.asarray(y)
+        if x[0][0] is None:
+            b = self.make_hard_triplets(x, self._net)
+        else:
+            context = [el[0] for el in x]
+            pos_neg_response = [el[1] for el in x]
+            response = [el[0] for el in pos_neg_response]
+            negative_response = [el[1] for el in pos_neg_response]
+            c = self.dict.make_toks(context, type="context")
+            c = self.dict.make_ints(c)
+            rp = self.dict.make_toks(response, type="response")
+            rp = self.dict.make_ints(rp)
+            rn = self.dict.make_toks(negative_response, type="response")
+            rn = self.dict.make_ints(rn)
+            b = [c, rp, rn], np.asarray(y)
         self._net.train_on_batch(b)
+
+    def make_hard_triplets(self, x, net):
+        samples = [el[1][1:] for el in x]
+        batch_size = len(samples)
+        num_samples = len(samples[0])
+        s = [y for el in samples for y in el]
+        s = self.dict.make_toks(s, type="context")
+        s = self.dict.make_ints(s)
+
+        embeddings = net.predict_context([s, s, s], 512)
+        dot_product = embeddings @ embeddings.T
+        square_norm = np.diag(dot_product)
+        distances = np.expand_dims(square_norm, 0) - 2.0 * dot_product + np.expand_dims(square_norm, 1)
+        distances = np.maximum(distances, 0.0)
+        distances = np.sqrt(distances)
+        labels = np.arange(batch_size)
+
+        # mask_anchor_positive = np.expand_dims(np.repeat(labels, num_samples), 0)
+        #  == np.expand_dims(np.repeat(labels, num_samples), 1)
+        # mask_anchor_positive = mask_anchor_positive.astype(float)
+        # anchor_positive_dist = mask_anchor_positive * distances
+
+        mask_anchor_negative = np.expand_dims(np.repeat(labels, num_samples), 0)\
+                               != np.expand_dims(np.repeat(labels, num_samples), 1)
+        mask_anchor_negative = mask_anchor_negative.astype(float)
+        max_anchor_negative_dist = np.max(distances, axis=1, keepdims=True)
+        anchor_negative_dist = distances + max_anchor_negative_dist * (1.0 - mask_anchor_negative)
+        #hardest_negative_dist = np.min(anchor_negative_dist, axis=1, keepdims=True)
+        hardest_negative_ind = np.argmin(anchor_negative_dist, axis=1)
+        c =[]
+        rp = []
+        rn = []
+        for i in range(batch_size):
+            for j in range(num_samples):
+                for k in range(j+1, num_samples):
+                    c.append(s[i*num_samples+j])
+                    c.append(s[i*num_samples+k])
+                    rp.append(s[i*num_samples+k])
+                    rp.append(s[i*num_samples+j])
+                    rn.append(s[hardest_negative_ind[i*num_samples+j]])
+                    rn.append(s[hardest_negative_ind[i*num_samples+k]])
+        y = np.ones(len(c))
+        return [c, rp, rn], y
 
     @overrides
     def __call__(self, batch):

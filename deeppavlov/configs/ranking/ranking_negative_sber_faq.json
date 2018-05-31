@@ -1,0 +1,73 @@
+{
+  "dataset_reader": {
+    "name": "sber_faq_reader",
+    "data_path": "./sber_faq_data"
+  },
+  "dataset_iterator": {
+    "name": "ranking_iterator",
+    "seed": 243,
+    "random_batches": true,
+    "sample_candidates": "negative",
+    "sample_candidates_valid": "pool",
+    "sample_candidates_test": "pool",
+    "num_positive_samples": 5,
+    "num_negative_samples": 1000,
+    "num_ranking_samples_valid": 10,
+    "num_ranking_samples_test": 10,
+    "pos_pool_sample": false,
+    "pos_pool_rank": false
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "in": ["x"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "name": "ranking_model",
+        "device_num": 0,
+        "train_now": true,
+        "vocab_name": "sber_faq",
+        "vocabs_path": "sber_faq_data",
+        "embeddings": "fasttext",
+        "embeddings_path": "sber_faq_embeddings/ft_sber_sg_300.bin",
+        "embedding_dim": 300,
+        "use_matrix": false,
+        "seed": 243,
+        "max_sequence_length": 80,
+        "reccurent": "bilstm",
+        "max_pooling": true,
+        "type_of_weights": "shared",
+        "hidden_dim": 300,
+        "learning_rate": 1e-3,
+        "distance": "euclidian",
+        "margin": 0.1,
+        "save_path": "sber_faq_ranking/model_weights.h5",
+        "load_path": "sber_faq_ranking/model_weights.h5",
+        "interact_pred_num": 3
+      }
+    ],
+    "out": ["y_predicted"]
+  },
+  "train": {
+    "epochs": 200,
+    "batch_size": 8,
+    "pytest_max_batches": 2,
+    "metrics": ["r@1", "r@5", "r@10", "rank_response", "loss"],
+    "validation_patience": 5,
+    "val_every_n_epochs": 1
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "RankingModel",
+      "server_utils": "Ranker"
+    },
+    "download": [
+      {
+        "url": "http://lnsigo.mipt.ru/export/embeddings/wiki.ru.bin",
+        "subdir": "sber_faq_embeddings"
+      }
+    ]
+  }
+}

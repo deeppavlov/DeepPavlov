@@ -21,9 +21,9 @@ class SberFAQReader(DatasetReader):
         self.classes_vocab_valid = {}
         self.classes_vocab_test = {}
         self._build_sen2int_classes_vocabs(train_fname, valid_fname, test_fname)
-        dataset["train"] = self.preprocess_data(train_fname, 'train', num_neg=1000)
-        dataset["valid"] = self.preprocess_data(valid_fname, 'valid')
-        dataset["test"] = self.preprocess_data(test_fname, 'test')
+        dataset["train"] = self.preprocess_data_train()
+        dataset["valid"] = self.preprocess_data_validation(valid_fname, 'valid')
+        dataset["test"] = self.preprocess_data_validation(test_fname, 'test')
         return dataset
     
     def download_data(self, data_path):
@@ -71,12 +71,21 @@ class SberFAQReader(DatasetReader):
         for el in zip(label_test, sen_test):
             self.classes_vocab_test[el[0]].add(self.sen2int_vocab[el[1]])
 
+    def preprocess_data_train(self):
 
-    def preprocess_data(self, fname, type, num_neg=9):
+        classes_vocab = self.classes_vocab_train
+        positive_responses_pool = []
+        for k, v in classes_vocab.items():
+            positive_responses_pool.append(list(v))
 
-        if type == 'train':
-            classes_vocab = self.classes_vocab_train
-        elif type == 'valid':
+        data = [{"context": None, "response": None,
+                "pos_pool": el, "neg_pool": None}
+                for el in positive_responses_pool]
+        return data
+
+    def preprocess_data_validation(self, fname, type, num_neg=9):
+
+        if type == 'valid':
             classes_vocab = self.classes_vocab_valid
         elif type == 'test':
             classes_vocab = self.classes_vocab_test

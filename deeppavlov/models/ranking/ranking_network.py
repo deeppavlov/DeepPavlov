@@ -1,5 +1,5 @@
-from keras.layers import Input, LSTM, Embedding, Subtract, GlobalMaxPooling1D
-from keras.layers.merge import Dot
+from keras.layers import Input, LSTM, Embedding, GlobalMaxPooling1D, Lambda, subtract, Subtract
+from keras.layers.merge import Dot, Subtract
 from keras.models import Model
 from keras.layers.wrappers import Bidirectional
 from keras.optimizers import Adam
@@ -17,8 +17,11 @@ log = get_logger(__name__)
 
 class RankingNetwork(metaclass=TfModelMeta):
 
-    def __init__(self, toks_num, emb_dict, use_matrix, max_sequence_length, hidden_dim, learning_rate, margin,
-                 embedding_dim, device_num=0, seed=None, type_of_weights="shared", max_pooling=True, reccurent="bilstm"):
+    def __init__(self, toks_num, emb_dict, use_matrix, max_sequence_length,
+                 hidden_dim, learning_rate, margin, embedding_dim,
+                 device_num=0, seed=None, type_of_weights="shared",
+                 max_pooling=True, reccurent="bilstm", distance="cos_similarity"):
+        self.distance = distance
         self.toks_num = toks_num
         self.emb_dict = emb_dict
         self.use_matrix = use_matrix
@@ -166,12 +169,39 @@ class RankingNetwork(metaclass=TfModelMeta):
             lstm_c = pooling_layer(lstm_c)
             lstm_rp = pooling_layer(lstm_rp)
             lstm_rn = pooling_layer(lstm_rn)
-        cosine_layer = Dot(normalize=True, axes=-1, name="score_model")
-        cosine_pos = cosine_layer([lstm_c, lstm_rp])
-        cosine_neg = cosine_layer([lstm_c, lstm_rn])
-        score_diff = Subtract()([cosine_pos, cosine_neg])
+        if self.distance == "euclidian":
+            # cosine_layer = Dot(normalize=False, axes=-1, name="score_model")
+            # dist_pos = Subtract([lstm_c, lstm_rp])
+            # dist_neg = Subtract([lstm_c, lstm_rn])
+            # cosine_pos = cosine_layer([dist_pos, dist_pos])
+            # cosine_neg = cosine_layer([dist_neg, dist_neg])
+            # score_diff = Subtract()([cosine_neg, cosine_pos])
+            dist_score = Lambda(self.euclidian_dist,
+                                output_shape=self.euclidian_dist_output_shape,
+                                name="score_model")
+            dist_pos = dist_score([lstm_c, lstm_rp])
+            dist_neg = dist_score([lstm_c, lstm_rn])
+            score_diff = Subtract()([dist_neg, dist_pos])
+        elif self.distance == "cos_similarity":
+            cosine_layer = Dot(normalize=True, axes=-1, name="score_model")
+            dist_pos = cosine_layer([lstm_c, lstm_rp])
+            dist_neg = cosine_layer([lstm_c, lstm_rn])
+            score_diff = Subtract()([dist_pos, dist_neg])
         model = Model([context, response_positive, response_negative], score_diff)
         return model
+
+    def euclidian_dist_output_shape(self, input_shape):
+        return (input_shape[0][0], 1)
+
+    def euclidian_dist(self, x_pair):
+        x1_norm = K.l2_normalize(x_pair[0], axis=1)
+        x2_norm = K.l2_normalize(x_pair[1], axis=1)
+        diff = subtract([x1_norm, x2_norm])
+        square = K.square(diff)
+        sum = K.sum(square, axis=1)
+        sum = K.clip(sum, min_value=1e-12, max_value=None)
+        dist = K.sqrt(sum)
+        return dist
 
     def triplet_loss(self, y_true, y_pred):
         """Triplet loss function"""
