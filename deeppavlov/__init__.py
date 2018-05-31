@@ -44,7 +44,10 @@ import deeppavlov.models.embedders.dict_embedder
 import deeppavlov.models.embedders.glove_embedder
 import deeppavlov.models.embedders.bow_embedder
 import deeppavlov.models.ner.ner_ontonotes
-import deeppavlov.models.spellers.error_model.error_model
+import deeppavlov.models.spelling_correction.brillmoore.error_model
+import deeppavlov.models.spelling_correction.levenstein.searcher_component
+import deeppavlov.models.spelling_correction.electors.kenlm_elector
+import deeppavlov.models.spelling_correction.electors.top1_elector
 import deeppavlov.models.trackers.hcn_at
 import deeppavlov.models.trackers.hcn_et
 import deeppavlov.models.preprocessors.str_lower

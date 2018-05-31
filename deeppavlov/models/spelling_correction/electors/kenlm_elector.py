@@ -27,7 +27,7 @@ from deeppavlov.core.common.log import get_logger
 logger = get_logger(__name__)
 
 
-@register('kenlm-elector')
+@register('kenlm_elector')
 class KenlmElector(Component):
     def __init__(self, load_path, beam_size=4, *args, **kwargs):
         self.lm = kenlm.Model(str(expand_path(load_path)))
@@ -57,12 +57,3 @@ class KenlmElector(Component):
             beam = new_beam[:self.beam_size]
         score, state, words = beam[0]
         return words[:-1]
-
-
-@register('top1-elector')
-class TopOneElector(Component):
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def __call__(self, batch: List[List[Tuple[float, str]]], *args, **kwargs):
-        return [[sorted(sublist, reverse=True)[0][1] for sublist in candidates] for candidates in batch]

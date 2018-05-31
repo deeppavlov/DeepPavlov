@@ -40,7 +40,7 @@
         "save_path": "error_model/error_model.tsv"
       },
       {
-        "class": "deeppavlov.models.spellers.error_model.kenlm_elector:KenlmElector",
+        "class": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
         "in": ["tokens_candidates"],
         "out": ["y_predicted_tokens"],
         "load_path": "language_models/en_wiki_no_punkt.arpa.binary"
