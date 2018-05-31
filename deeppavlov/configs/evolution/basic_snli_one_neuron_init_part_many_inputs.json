@@ -206,7 +206,7 @@
     "batch_size": {
       "range": [
         50,
-        70
+        100
       ],
       "discrete": true
     },
