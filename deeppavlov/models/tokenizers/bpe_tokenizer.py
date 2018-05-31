@@ -37,7 +37,7 @@ class BPETokenizer(Estimator):
     """
 
     def __init__(self, load_path: str = None, save_path: str = None, vocab_size: int = None,
-                 indexes_only=False, preprocess_call=True, *args, **kwargs):
+                 indexes_only=False, preprocess_call=True, pad_with_empty_str = False, *args, **kwargs):
         """
         :param load_path: path to saved model to load it from; if provided model will be initialized from this save.
         :param save_path: path for saving trained model if you would like to train a new one.
@@ -52,6 +52,7 @@ class BPETokenizer(Estimator):
 
         self.indexes_only = indexes_only
         self.preprocess_call = preprocess_call
+        self.padding = pad_with_empty_str
 
         if self.load_path:
             self.model = self.load()
@@ -150,7 +151,13 @@ class BPETokenizer(Estimator):
             else:
                 for s in batch:
                     encoded.append(self._encode(s))
-            return encoded, [len(sent) for sent in encoded]
+
+            lengths = [len(sent) for sent in encoded]
+            if self.padding:
+                max_len = max(lengths)
+                for i in range(len(encoded)):
+                    encoded[i].extend(['']*(max_len-lengths[i]))
+            return encoded, lengths
 
         elif isinstance(batch[0], list) and \
                 ((isinstance(batch[0][0], str) and not self.indexes_only)

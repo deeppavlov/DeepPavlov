@@ -125,7 +125,7 @@ class CoVeEmbedder(Component, metaclass=TfModelMeta):
         return values
 
     @overrides
-    def __call__(self, batch, lengths, *args, **kwargs):
+    def __call__(self, batch: List[List[str]], lengths: List[int], *args, **kwargs):
         """
         Embed data
         """
@@ -134,13 +134,10 @@ class CoVeEmbedder(Component, metaclass=TfModelMeta):
 
         if self.reduce_method == 'mean':
             encoded = np.mean(outputs, axis=1)
-            print(encoded.shape)
         elif self.reduce_method == 'sum':
             encoded = np.sum(outputs, axis=1)
-            print(encoded.shape)
         elif self.reduce_method == 'max':
             encoded = np.max(outputs, axis=1)
-            print(encoded.shape)
         elif self.reduce_method == 'none':
             encoded = outputs
         else:
@@ -148,9 +145,6 @@ class CoVeEmbedder(Component, metaclass=TfModelMeta):
             exit(1)
         return encoded
 
-    def _encode(self, tokens: List[str], lengths: List[int]):
+    def _encode(self, tokens: List[List[str]], lengths: List[int]):
 
-        # TODO: add concatenation or smth like this
-        embedded_tokens = self.sess.run(self.encoder_outputs, {self.sequence_length: lengths, self.tokens: tokens})
-
-        return embedded_tokens
+        return self.sess.run(self.encoder_outputs, {self.sequence_length: lengths, self.tokens: tokens})

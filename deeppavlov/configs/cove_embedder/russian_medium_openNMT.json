@@ -12,6 +12,7 @@
         "load_path": "./cove_embedder/bpe.model",
         "indexes_only": false,
         "preprocess_call": true,
+        "pad_with_empty_str": true,
         "out": [
           "x",
           "lengths"
@@ -26,8 +27,8 @@
           "embedded"
         ],
         "name": "cove_embedder",
-        "vocab_file_path": "download/cove_embedder/output.vocab",
-        "checkpoint_path": "download/cove_embedder/averaged_checkpoint/model.ckpt-326107",
+        "vocab_file_path": "cove_embedder/output.vocab",
+        "checkpoint_path": "cove_embedder/averaged_checkpoint/model.ckpt-326107",
         "cell_class_name": "LSTMCell",
         "residual_connections": false,
         "num_units": 256,
