@@ -12,33 +12,13 @@
     ],
     "pipe": [
       {
-        "name": "tfidf_ranker",
+        "config_path": "../deeppavlov/configs/odqa/ru_ranker_prod.json",
         "in": [
           "question_raw"
         ],
         "out": [
-          "doc_ids",
-          "doc_scores"
-        ],
-        "fit_on_batch": [
-          "questions_raw"
-        ],
-        "vectorizer": {
-          "name": "hashing_tfidf_vectorizer",
-          "fit_on_batch": [
-            "questions_raw"
-          ],
-          "save_path": "odqa/ruwiki_tfidf_matrix.npz",
-          "load_path": "odqa/ruwiki_tfidf_matrix.npz",
-          "tokenizer": {
-            "name": "ru_tokenizer",
-            "lemmas": true,
-            "ngram_range": [
-              1,
-              2
-            ]
-          }
-        }
+          "doc_ids"
+        ]
       },
       {
         "name": "wiki_sqlite_vocab",
