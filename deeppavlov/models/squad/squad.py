@@ -17,6 +17,7 @@ limitations under the License.
 from copy import deepcopy
 
 import tensorflow as tf
+import numpy as np
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import TFModel
@@ -243,6 +244,11 @@ class SquadModel(TFModel):
         return loss
 
     def __call__(self, c_tokens, c_chars, q_tokens, q_chars, *args, **kwargs):
+        if any(np.sum(c_tokens, axis=-1) == 0) or any(np.sum(q_tokens, axis=-1) == 0):
+            logger.info('SQuAD model: Warning! Empty question or context was found.')
+            noanswers = -np.ones(shape=(c_tokens.shape[0]), dtype=np.int32)
+            return noanswers, noanswers
+
         feed_dict = self._build_feed_dict(c_tokens, c_chars, q_tokens, q_chars)
         yp1, yp2 = self.sess.run([self.yp1, self.yp2], feed_dict=feed_dict)
         return yp1, yp2
