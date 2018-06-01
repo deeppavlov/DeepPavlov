@@ -28,8 +28,18 @@ with RedirectedPrints():
 
 @register("nltk_tokenizer")
 class NLTKTokenizer(Component):
-
+    """
+    Class split texts on tokens
+    """
     def __init__(self, tokenizer="wordpunct_tokenize", download=False, *args, **kwargs):
+        """
+        Initialize tokenizer with given parameters
+        Args:
+            tokenizer: tokenization mode for `nltk.tokenize`
+            download: whether to download nltk data
+            *args: arguments
+            **kwargs: arguments
+        """
         if download:
             nltk.download()
         self.tokenizer = getattr(nltk.tokenize, tokenizer, None)
@@ -37,4 +47,14 @@ class NLTKTokenizer(Component):
             raise AttributeError("Tokenizer {} is not defined in nltk.tokenizer".format(tokenizer))
 
     def __call__(self, batch, *args, **kwargs):
+        """
+        Tokenize given batch
+        Args:
+            batch: list of text samples
+            *args: arguments
+            **kwargs: arguments
+
+        Returns:
+            tokenized batch - list of lists of tokens
+        """
         return [self.tokenizer(sent) for sent in batch]
