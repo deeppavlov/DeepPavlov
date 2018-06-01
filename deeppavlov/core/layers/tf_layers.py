@@ -706,7 +706,6 @@ def cudnn_bi_lstm(units,
 def cudnn_stacked_bi_gru(units,
                          n_hidden,
                          seq_lengths=None,
-                         n_layers=1,
                          n_stacks=2,
                          keep_prob=1.0,
                          concat_stacked_outputs=False,
@@ -722,7 +721,6 @@ def cudnn_stacked_bi_gru(units,
             F - features
         n_hidden: dimensionality of hidden state
         seq_lengths: number of tokens in each sample in the batch
-        n_layers: number of layers in Bi-GRU
         n_stacks: number of stacked Bi-GRU
         keep_prob: dropout keep_prob between Bi-GRUs (intra-layer dropout)
         concat_stacked_outputs: return last Bi-GRU output or concat outputs from every Bi-GRU,
@@ -750,8 +748,10 @@ def cudnn_stacked_bi_gru(units,
                 inputs = variational_dropout(outputs[-1], keep_prob=keep_prob)
 
             (h_fw, h_bw), _ = cudnn_bi_gru(inputs, n_hidden, seq_lengths,
-                                           n_layers, trainable_initial_states,
-                                           name='{}_cudnn_bi_gru'.format(n), reuse=reuse)
+                                           n_layers=1,
+                                           trainable_initial_states=trainable_initial_states,
+                                           name='{}_cudnn_bi_gru'.format(n),
+                                           reuse=reuse)
 
             outputs.append(tf.concat([h_fw, h_bw], axis=2))
 
