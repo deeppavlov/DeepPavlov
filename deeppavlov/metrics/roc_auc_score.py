@@ -17,9 +17,6 @@ limitations under the License.
 import sklearn.metrics
 import numpy as np
 
-import tensorflow as tf
-from keras import backend as K
-
 from deeppavlov.core.common.metrics_registry import register_metric
 from deeppavlov.models.classifiers.intents.utils import labels2onehot
 
@@ -39,6 +36,7 @@ def roc_auc_score_np(y_true, y_pred):
     except ValueError:
         return 0.
 
+    
 @register_metric('classification_roc_auc')
 def roc_auc_score(y_true, y_predicted):
     """Compute Area Under the Curve (AUC) from prediction scores.
