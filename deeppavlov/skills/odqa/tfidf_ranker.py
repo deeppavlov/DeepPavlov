@@ -111,3 +111,5 @@ class TfidfRanker(Estimator):
 
     def load(self):
         self.vectorizer.load()
+
+
