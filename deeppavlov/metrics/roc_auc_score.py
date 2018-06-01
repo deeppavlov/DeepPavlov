@@ -28,8 +28,8 @@ def roc_auc_score_np(y_true, y_pred):
     """Compute Area Under the Curve (AUC) from prediction scores.
 
     Args:
-        y_true: true binary labels
-        y_pred: target scores, can either be probability estimates of the positive class
+        y_true: array of true binary labels
+        y_pred: array of target scores, can either be probability estimates of the positive class
 
     Returns:
         Area Under the Curve (AUC) from prediction scores
@@ -40,38 +40,70 @@ def roc_auc_score_np(y_true, y_pred):
         return 0.
 
 
-# AUC for a binary classifier
 def auc(y_true, y_pred):
-    ptas = tf.stack([binary_PTA(y_true,y_pred,k) for k in np.linspace(0, 1, 1000)], axis=0)
-    pfas = tf.stack([binary_PFA(y_true,y_pred,k) for k in np.linspace(0, 1, 1000)], axis=0)
+    """
+    Calculate area under roc-curve (AUC) for binary classifier
+    Args:
+        y_true: keras.tensor of true binary labels
+        y_pred: keras.tensor of target scores, can either be probability estimates of the positive class
+
+    Returns:
+        AUC value
+    """
+    ptas = tf.stack([binary_PTA(y_true, y_pred, k) for k in np.linspace(0, 1, 1000)], axis=0)
+    pfas = tf.stack([binary_PFA(y_true, y_pred, k) for k in np.linspace(0, 1, 1000)], axis=0)
     pfas = tf.concat([tf.ones((1,)), pfas], axis=0)
     binSizes = -(pfas[1:]-pfas[:-1])
     s = ptas*binSizes
     return K.sum(s, axis=0)
 
 
-# PFA, prob false alert for binary classifier
 def binary_PFA(y_true, y_pred, threshold=K.variable(value=0.5)):
+    """
+    Calculate probability of false alert (PFA) for binary classifier
+    Args:
+        y_true: keras.tensor of true binary labels
+        y_pred: keras.tensor of target scores, can either be probability estimates of the positive class
+        threshold: built-in classes boundary
+
+    Returns:
+        PFA
+    """
     y_pred = K.cast(y_pred >= threshold, 'float32')
-    # N = total number of negative labels
     N = K.sum(1 - y_true)
-    # FP = total number of false alerts, alerts from the negative class labels
     FP = K.sum(y_pred - y_pred * y_true)
     return FP/N
 
 
-# P_TA prob true alerts for binary classifier
 def binary_PTA(y_true, y_pred, threshold=K.variable(value=0.5)):
+    """
+    Calculate probability of true alert (PTA) for binary classifier
+    Args:
+        y_true: keras.tensor of true binary labels
+        y_pred: keras.tensor of target scores, can either be probability estimates of the positive class
+        threshold: built-in classes boundary
+
+    Returns:
+        PTA
+    """
     y_pred = K.cast(y_pred >= threshold, 'float32')
-    # P = total number of positive labels
     P = K.sum(y_true)
-    # TP = total number of correct alerts, alerts from the positive class labels
     TP = K.sum(y_pred * y_true)
     return TP/P
 
 
 @register_metric('classification_roc_auc')
 def roc_auc_score(y_true, y_predicted):
+    """Compute Area Under the Curve (AUC) from prediction scores.
+
+    Args:
+        y_true: true binary labels (numpy array or keras.tensor)
+        y_predicted: target scores, can either be probability
+                    estimates of the positive class (numpy array or keras.tensor)
+
+    Returns:
+        Area Under the Curve (AUC) from prediction scores
+    """
     classes = np.array(list(y_predicted[0][1].keys()))
     y_true_one_hot = labels2onehot(y_true, classes)
     y_pred_probas = [list(y_predicted[i][1].values()) for i in range(len(y_predicted))]
