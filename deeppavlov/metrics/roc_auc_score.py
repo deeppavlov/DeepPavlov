@@ -39,67 +39,16 @@ def roc_auc_score_np(y_true, y_pred):
     except ValueError:
         return 0.
 
-
-def auc(y_true, y_pred):
-    """
-    Calculate area under roc-curve (AUC) for binary classifier
-    Args:
-        y_true: keras.tensor of true binary labels
-        y_pred: keras.tensor of target scores, can either be probability estimates of the positive class
-
-    Returns:
-        AUC value
-    """
-    ptas = tf.stack([binary_PTA(y_true, y_pred, k) for k in np.linspace(0, 1, 1000)], axis=0)
-    pfas = tf.stack([binary_PFA(y_true, y_pred, k) for k in np.linspace(0, 1, 1000)], axis=0)
-    pfas = tf.concat([tf.ones((1,)), pfas], axis=0)
-    binSizes = -(pfas[1:]-pfas[:-1])
-    s = ptas*binSizes
-    return K.sum(s, axis=0)
-
-
-def binary_PFA(y_true, y_pred, threshold=K.variable(value=0.5)):
-    """
-    Calculate probability of false alert (PFA) for binary classifier
-    Args:
-        y_true: keras.tensor of true binary labels
-        y_pred: keras.tensor of target scores, can either be probability estimates of the positive class
-        threshold: built-in classes boundary
-
-    Returns:
-        PFA
-    """
-    y_pred = K.cast(y_pred >= threshold, 'float32')
-    N = K.sum(1 - y_true)
-    FP = K.sum(y_pred - y_pred * y_true)
-    return FP/N
-
-
-def binary_PTA(y_true, y_pred, threshold=K.variable(value=0.5)):
-    """
-    Calculate probability of true alert (PTA) for binary classifier
-    Args:
-        y_true: keras.tensor of true binary labels
-        y_pred: keras.tensor of target scores, can either be probability estimates of the positive class
-        threshold: built-in classes boundary
-
-    Returns:
-        PTA
-    """
-    y_pred = K.cast(y_pred >= threshold, 'float32')
-    P = K.sum(y_true)
-    TP = K.sum(y_pred * y_true)
-    return TP/P
-
-
 @register_metric('classification_roc_auc')
 def roc_auc_score(y_true, y_predicted):
     """Compute Area Under the Curve (AUC) from prediction scores.
 
     Args:
         y_true: true binary labels (numpy array or keras.tensor)
-        y_predicted: target scores, can either be probability
-                    estimates of the positive class (numpy array or keras.tensor)
+        y_predicted: list of predictions.
+                Each prediction is a tuple of two elements
+                (predicted_labels, dictionary like {"label_i": probability_i} )
+                where probability is float or keras.tensor
 
     Returns:
         Area Under the Curve (AUC) from prediction scores
@@ -108,10 +57,5 @@ def roc_auc_score(y_true, y_predicted):
     y_true_one_hot = labels2onehot(y_true, classes)
     y_pred_probas = [list(y_predicted[i][1].values()) for i in range(len(y_predicted))]
 
-    try:
-        _ = K.is_keras_tensor(y_pred_probas)
-        auc_score = auc(y_true_one_hot, y_pred_probas)
-        auc_score = tf.where(tf.is_nan(auc_score), 0., auc_score)
-    except ValueError:
-        auc_score = roc_auc_score_np(y_true_one_hot, y_pred_probas)
+    auc_score = roc_auc_score_np(y_true_one_hot, y_pred_probas)
     return auc_score
