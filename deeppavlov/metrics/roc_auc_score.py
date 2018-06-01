@@ -36,17 +36,16 @@ def roc_auc_score_np(y_true, y_pred):
     except ValueError:
         return 0.
 
-    
+
 @register_metric('classification_roc_auc')
 def roc_auc_score(y_true, y_predicted):
     """Compute Area Under the Curve (AUC) from prediction scores.
 
     Args:
-        y_true: true binary labels (numpy array or keras.tensor)
+        y_true: true binary labels
         y_predicted: list of predictions.
                 Each prediction is a tuple of two elements
                 (predicted_labels, dictionary like {"label_i": probability_i} )
-                where probability is float or keras.tensor
 
     Returns:
         Area Under the Curve (AUC) from prediction scores
