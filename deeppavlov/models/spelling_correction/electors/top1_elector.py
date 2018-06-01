@@ -30,4 +30,4 @@ class TopOneElector(Component):
         pass
 
     def __call__(self, batch: List[List[Tuple[float, str]]], *args, **kwargs):
-        return [[sorted(sublist, reverse=True)[0][1] for sublist in candidates] for candidates in batch]
+        return [[max(sublist)[1] for sublist in candidates] for candidates in batch]
