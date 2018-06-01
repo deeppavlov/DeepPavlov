@@ -20,7 +20,7 @@ import tensorflow as tf
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import TFModel
-from deeppavlov.models.squad.utils import CudnnStackedBiGRU, dot_attention, simple_attention, PtrNet
+from deeppavlov.models.squad.utils import dot_attention, simple_attention, PtrNet
 from deeppavlov.core.common.check_gpu import check_gpu_existence
 from deeppavlov.core.layers.tf_layers import cudnn_bi_gru, variational_dropout, cudnn_stacked_bi_gru
 from deeppavlov.core.common.log import get_logger
