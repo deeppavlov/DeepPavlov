@@ -49,7 +49,7 @@ author = 'Neural Networks and Deep Learning lab, MIPT'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.0.4'
+release = '0.0.5'
 
 
 # -- General configuration ---------------------------------------------------
@@ -119,11 +119,13 @@ html_logo = '_static/deeppavlov.png'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-# html_context = {
-#     'css_files': [
-#         '_static/deeppavlov.css'
-#     ],
-# }
+html_context = {
+    'css_files': [
+        'https://media.readthedocs.org/css/sphinx_rtd_theme.css',
+        'https://media.readthedocs.org/css/readthedocs-doc-embed.css',
+        '_static/deeppavlov.css'
+    ],
+}
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
