@@ -1,6 +1,6 @@
 # .readthedocs.yml
 
-requirements_file: ./docs/requirements-docs.txt
+requirements_file: requirements-docs.txt
 
 build:
   image: latest
