@@ -203,11 +203,11 @@ for the [SpellRuEval competition](http://www.dialog-21.ru/en/evaluation/2016/spe
 |--------------------------------------------|-----------|--------|-----------|---------------------|
 | Yandex.Speller                             | 83.09     | 59.86  | 69.59     | 5.                  |
 | **Damerau Levenstein 1 + lm**              | 53.26     | 53.74  | 53.50     | 29.3                |
-| **Brill Moore + lm**                       | 51.92     | 53.94  | 52.91     | 0.6                 |
-| **Brill Moore without lm**                 | 41.42     | 37.21  | 39.20     |                     |
+| **Brill Moore top 4 + lm**                 | 51.92     | 53.94  | 52.91     | 0.6                 |
 | Hunspell + lm                              | 41.03     | 48.89  | 44.61     | 2.1                 |
-| jamspell                                   | 44.57     | 35.69  | 39.64     | 136.2               |
-| Hunspell without lm                        | 30.30     | 34.02  | 32.06     | 20.3                |
+| Jamspell                                   | 44.57     | 35.69  | 39.64     | 136.2               |
+| **Brill Moore top 1**                      | 41.29     | 37.26  | 39.17     | 2.4                 |
+| Hunspell                                   | 30.30     | 34.02  | 32.06     | 20.3                |
 
 ## Ways to improve
 
