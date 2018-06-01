@@ -16,9 +16,10 @@ class WikiSQLiteVocab(SQLiteDataIterator):
 
     def __init__(self, data_url, data_dir: str = '', **kwargs):
         """
-        :param save_path: a directory name where DB is located
-        :param load_path: an URL to SQLite DB or local path to db file ('example.db')
+        :param data_url: an URL to SQLite DB
+        :param data_dir: a directory name where DB is located
         """
+
         super().__init__(data_dir=data_dir, data_url=data_url)
 
     def __call__(self, doc_ids: Optional[List[List[Any]]] = None, *args, **kwargs) -> List[str]:
