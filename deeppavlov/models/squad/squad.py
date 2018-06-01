@@ -20,9 +20,9 @@ import tensorflow as tf
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import TFModel
-from deeppavlov.models.squad.utils import CudnnGRU, dot_attention, simple_attention, PtrNet
+from deeppavlov.models.squad.utils import CudnnStackedBiGRU, dot_attention, simple_attention, PtrNet
 from deeppavlov.core.common.check_gpu import check_gpu_existence
-from deeppavlov.core.layers.tf_layers import cudnn_bi_gru, variational_dropout
+from deeppavlov.core.layers.tf_layers import cudnn_bi_gru, variational_dropout, cudnn_stacked_bi_gru
 from deeppavlov.core.common.log import get_logger
 
 logger = get_logger(__name__)
@@ -112,10 +112,13 @@ class SquadModel(TFModel):
                 cc_emb = variational_dropout(cc_emb, keep_prob=self.keep_prob_ph)
                 qc_emb = variational_dropout(qc_emb, keep_prob=self.keep_prob_ph)
 
-                _, (state_fw, state_bw) = cudnn_bi_gru(cc_emb, self.char_hidden_size, seq_lengths=self.cc_len)
+                _, (state_fw, state_bw) = cudnn_bi_gru(cc_emb, self.char_hidden_size, seq_lengths=self.cc_len,
+                                                       trainable_initial_states=True)
                 cc_emb = tf.concat([state_fw, state_bw], axis=1)
 
-                _, (state_fw, state_bw) = cudnn_bi_gru(qc_emb, self.char_hidden_size, seq_lengths=self.qc_len, reuse=True)
+                _, (state_fw, state_bw) = cudnn_bi_gru(qc_emb, self.char_hidden_size, seq_lengths=self.qc_len,
+                                                       trainable_initial_states=True,
+                                                       reuse=True)
                 qc_emb = tf.concat([state_fw, state_bw], axis=1)
 
                 cc_emb = tf.reshape(cc_emb, [bs, self.c_maxlen, 2 * self.char_hidden_size])
@@ -129,25 +132,33 @@ class SquadModel(TFModel):
             q_emb = tf.concat([q_emb, qc_emb], axis=2)
 
         with tf.variable_scope("encoding"):
-            rnn = CudnnGRU(num_layers=3, num_units=self.hidden_size, batch_size=bs,
-                           input_size=c_emb.get_shape().as_list()[-1],
-                           keep_prob=self.keep_prob_ph)
-            c = rnn(c_emb, seq_len=self.c_len)
-            q = rnn(q_emb, seq_len=self.q_len)
+            c_emb = variational_dropout(c_emb, keep_prob=self.keep_prob)
+            c = cudnn_stacked_bi_gru(c_emb, self.hidden_size, self.c_len, n_stacks=3, keep_prob=self.keep_prob_ph,
+                                     concat_stacked_outputs=True,
+                                     trainable_initial_states=True,
+                                     name='encoding_bigru')
+            q_emb = variational_dropout(q_emb, self.keep_prob)
+            q = cudnn_stacked_bi_gru(q_emb, self.hidden_size, self.q_len, n_stacks=3, keep_prob=self.keep_prob_ph,
+                                     concat_stacked_outputs=True,
+                                     trainable_initial_states=True,
+                                     name='encoding_bigru',
+                                     reuse=True)
 
         with tf.variable_scope("attention"):
             qc_att = dot_attention(c, q, mask=self.q_mask, att_size=self.attention_hidden_size,
                                    keep_prob=self.keep_prob_ph)
-            rnn = CudnnGRU(num_layers=1, num_units=self.hidden_size, batch_size=bs,
-                           input_size=qc_att.get_shape().as_list()[-1], keep_prob=self.keep_prob_ph)
-            att = rnn(qc_att, seq_len=self.c_len)
+            qc_att = variational_dropout(qc_att, keep_prob=self.keep_prob)
+            (att_fw, att_bw), _ = cudnn_bi_gru(qc_att, self.hidden_size, self.c_len,
+                                               trainable_initial_states=True)
+            att = tf.concat([att_fw, att_bw], axis=2)
 
         with tf.variable_scope("match"):
             self_att = dot_attention(att, att, mask=self.c_mask, att_size=self.attention_hidden_size,
                                      keep_prob=self.keep_prob_ph)
-            rnn = CudnnGRU(num_layers=1, num_units=self.hidden_size, batch_size=bs,
-                           input_size=self_att.get_shape().as_list()[-1], keep_prob=self.keep_prob_ph)
-            match = rnn(self_att, seq_len=self.c_len)
+            self_att = variational_dropout(self_att, keep_prob=self.keep_prob)
+            (match_fw, match_bw), _ = cudnn_bi_gru(self_att, self.hidden_size, self.c_len,
+                                                   trainable_initial_states=True)
+            match = tf.concat([match_fw, match_bw], axis=2)
 
         with tf.variable_scope("pointer"):
             init = simple_attention(q, self.hidden_size, mask=self.q_mask, keep_prob=self.keep_prob_ph)
@@ -160,7 +171,7 @@ class SquadModel(TFModel):
             outer = tf.matrix_band_part(outer, 0, tf.cast(tf.minimum(15, self.c_maxlen), tf.int64))
             self.yp1 = tf.argmax(tf.reduce_max(outer, axis=2), axis=1)
             self.yp2 = tf.argmax(tf.reduce_max(outer, axis=1), axis=1)
-            loss_1 = tf.nn.softmax_cross_entropy_with_logits(logits=logits1, labels=self.y1)
+            loss_1 = tf.nn.softmax_cross_entropy_with_logits(logits=logits1, labels=self.y1, )
             loss_2 = tf.nn.softmax_cross_entropy_with_logits(logits=logits2, labels=self.y2)
             self.loss = tf.reduce_mean(loss_1 + loss_2)
 

@@ -703,6 +703,64 @@ def cudnn_bi_lstm(units,
         return (h_fw, h_bw), ((h_fw_last, c_fw_last), (h_bw_last, c_bw_last))
 
 
+def cudnn_stacked_bi_gru(units,
+                         n_hidden,
+                         seq_lengths=None,
+                         n_layers=1,
+                         n_stacks=2,
+                         keep_prob=1.0,
+                         concat_stacked_outputs=False,
+                         trainable_initial_states=False,
+                         name='cudnn_stacked_bi_gru',
+                         reuse=False):
+    """ Fast CuDNN Stacked Bi-GRU implementation
+
+    Args:
+        units: tf.Tensor with dimensions [B x T x F], where
+            B - batch size
+            T - number of tokens
+            F - features
+        n_hidden: dimensionality of hidden state
+        seq_lengths: number of tokens in each sample in the batch
+        n_layers: number of layers in Bi-GRU
+        n_stacks: number of stacked Bi-GRU
+        keep_prob: dropout keep_prob between Bi-GRUs (intra-layer dropout)
+        concat_stacked_outputs: return last Bi-GRU output or concat outputs from every Bi-GRU,
+        trainable_initial_states: whether to create a special trainable variable
+                to initialize the hidden states of the network or use just zeros
+        name: name of the variable scope to use
+        reuse: whether to reuse already initialized variable
+
+
+    Returns:
+        h - all hidden states along T dimension,
+            tf.Tensor with dimensionality [B x T x ((n_hidden * 2) * n_stacks)]
+    """
+    if seq_lengths is None:
+        seq_lengths = tf.ones([tf.shape(units)[0]], dtype=tf.int32) * tf.shape(units)[1]
+
+    outputs = [units]
+
+    with tf.variable_scope(name, reuse=reuse):
+        for n in range(n_stacks):
+
+            if n == 0:
+                inputs = outputs[-1]
+            else:
+                inputs = variational_dropout(outputs[-1], keep_prob=keep_prob)
+
+            (h_fw, h_bw), _ = cudnn_bi_gru(inputs, n_hidden, seq_lengths,
+                                           n_layers, trainable_initial_states,
+                                           name='{}_cudnn_bi_gru'.format(n), reuse=reuse)
+
+            outputs.append(tf.concat([h_fw, h_bw], axis=2))
+
+    if concat_stacked_outputs:
+        return tf.concat(outputs[1:], axis=2)
+
+    return outputs[-1]
+
+
 def variational_dropout(units, keep_prob, fixed_mask_dims=(1,)):
     """ Dropout with the same drop mask for all fixed_mask_dims
 
