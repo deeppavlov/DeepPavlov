@@ -1,5 +1,5 @@
-deeppavlov.vocabs
-=================
+vocabs
+======
 Concrete Vocab classes.
 
 .. automodule:: deeppavlov.vocabs

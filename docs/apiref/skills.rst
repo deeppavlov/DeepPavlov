@@ -1,5 +1,5 @@
-deeppavlov.skills
-=================
+skills
+======
 Skill classes. Skills are dialog models.
 
 .. automodule:: deeppavlov.skills

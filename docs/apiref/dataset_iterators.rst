@@ -1,5 +1,5 @@
-deeppavlov.dataset_iterators
-============================
+dataset_iterators
+=================
 Concrete DatasetIterator classes.
 
 .. automodule:: deeppavlov.dataset_iterators

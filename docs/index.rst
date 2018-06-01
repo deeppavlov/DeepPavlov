@@ -10,22 +10,29 @@ DeepPavlov documentation
 
 DeepPavlov is an open source library for building end-to-end dialog systems and training chatbots.
 
+
 .. toctree::
-   :maxdepth: 2
+   :glob:
+   :maxdepth: 3
+   :caption: User Documentation
+
+   userdocs/*
+
+
+.. toctree::
+   :glob:
+   :maxdepth: 3
    :caption: Package Reference
 
-   deeppavlov <deeppavlov>
-   deeppavlov.core.commands <commands>
-   deeppavlov.core.common <common>
-   deeppavlov.core.data <data>
-   deeppavlov.core.layers <layers>
-   deeppavlov.core.models <core_models>
-   deeppavlov.dataset_readers <dataset_readers>
-   deeppavlov.dataset_iterators <dataset_iterators>
-   deeppavlov.metrics <metrics>
-   deeppavlov.models <models>
-   deeppavlov.skills <skills>
-   deeppavlov.vocabs <vocabs>
+   apiref/*
+
+
+.. toctree::
+   :glob:
+   :maxdepth: 3
+   :caption: Developer Guides
+
+   devguides/*
 
 
 Indices and tables

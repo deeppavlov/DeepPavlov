@@ -1,5 +1,5 @@
-deeppavlov.dataset_readers
-==========================
+dataset_readers
+===============
 Concrete DatasetReader classes.
 
 .. automodule:: deeppavlov.dataset_readers
