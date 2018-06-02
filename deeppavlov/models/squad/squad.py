@@ -133,12 +133,12 @@ class SquadModel(TFModel):
             q_emb = tf.concat([q_emb, qc_emb], axis=2)
 
         with tf.variable_scope("encoding"):
-            c_emb = variational_dropout(c_emb, keep_prob=self.keep_prob)
+            c_emb = variational_dropout(c_emb, keep_prob=self.keep_prob_ph)
             c = cudnn_stacked_bi_gru(c_emb, self.hidden_size, self.c_len, n_stacks=3, keep_prob=self.keep_prob_ph,
                                      concat_stacked_outputs=True,
                                      trainable_initial_states=True,
                                      name='encoding_bigru')
-            q_emb = variational_dropout(q_emb, self.keep_prob)
+            q_emb = variational_dropout(q_emb, self.keep_prob_ph)
             q = cudnn_stacked_bi_gru(q_emb, self.hidden_size, self.q_len, n_stacks=3, keep_prob=self.keep_prob_ph,
                                      concat_stacked_outputs=True,
                                      trainable_initial_states=True,
@@ -148,7 +148,7 @@ class SquadModel(TFModel):
         with tf.variable_scope("attention"):
             qc_att = dot_attention(c, q, mask=self.q_mask, att_size=self.attention_hidden_size,
                                    keep_prob=self.keep_prob_ph)
-            qc_att = variational_dropout(qc_att, keep_prob=self.keep_prob)
+            qc_att = variational_dropout(qc_att, keep_prob=self.keep_prob_ph)
             (att_fw, att_bw), _ = cudnn_bi_gru(qc_att, self.hidden_size, self.c_len,
                                                trainable_initial_states=True)
             att = tf.concat([att_fw, att_bw], axis=2)
@@ -156,7 +156,7 @@ class SquadModel(TFModel):
         with tf.variable_scope("match"):
             self_att = dot_attention(att, att, mask=self.c_mask, att_size=self.attention_hidden_size,
                                      keep_prob=self.keep_prob_ph)
-            self_att = variational_dropout(self_att, keep_prob=self.keep_prob)
+            self_att = variational_dropout(self_att, keep_prob=self.keep_prob_ph)
             (match_fw, match_bw), _ = cudnn_bi_gru(self_att, self.hidden_size, self.c_len,
                                                    trainable_initial_states=True)
             match = tf.concat([match_fw, match_bw], axis=2)
