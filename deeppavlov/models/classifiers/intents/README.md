@@ -108,6 +108,8 @@ Below the list of available models description is presented:
 
 One can find examples of config files [here](../../../configs/intents).
 
+**Detaied description of configuration file and specific parameters for all presented classification models can be found [here](../Config_description.ipynb).**
+
 Some clue parameters for [intents_dstc2.json](../../../configs/intents/intents_dstc2.json) config file are presented in the table below.
 
 |   Parameter         |  Description                                                      | 
