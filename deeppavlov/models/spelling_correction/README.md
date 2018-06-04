@@ -20,7 +20,26 @@ python -m deeppavlov.deep interact <path_to_config> [-d]
 where `<path_to_config>` is one of the [provided config files](/deeppavlov/configs/spelling_correction).  
 With the optional `-d` parameter all the data required to run selected pipeline will be downloaded, including
  an appropriate language model.
+ 
 
+After downloading the required files you can use these configs in your python code.
+ For example, this code will read lines from stdin and print corrected lines to stdout:
+
+```python
+import json
+import sys
+
+from deeppavlov.core.commands.infer import build_model_from_config
+
+CONFIG_PATH = 'deeppavlov/configs/spelling_correction/brillmoore_kartaslov_ru.json'
+
+with open(CONFIG_PATH) as config_file:
+    config = json.load(config_file)
+
+model = build_model_from_config(config)
+for line in sys.stdin:
+    print(model([line])[0], flush=True)
+```
 
 ## levenstein_corrector
 
