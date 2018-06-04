@@ -51,7 +51,7 @@ class Sqlite3Database(Estimator):
         self.keys = keys
         self.unknown_value = unknown_value
 
-        self.conn = sqlite3.connect(str(self.save_path))
+        self.conn = sqlite3.connect(str(self.save_path), check_same_thread=False)
         self.cursor = self.conn.cursor()
         if self._check_if_table_exists():
             log.info("Loading database from {}.".format(self.save_path))
