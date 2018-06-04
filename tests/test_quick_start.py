@@ -60,7 +60,8 @@ PARAMS = {
     },
     "sentiment": {
         ("sentiment/insults_kaggle.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("sentiment/sentiment_twitter.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+        ("sentiment/sentiment_twitter.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("sentiment/sentiment_ag_news.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
     },
     "sample": {
         ("intents/intents_sample_csv.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
