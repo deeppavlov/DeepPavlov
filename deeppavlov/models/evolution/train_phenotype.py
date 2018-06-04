@@ -28,12 +28,35 @@ print("TRAIN PHENOTYPE")
 reports = train_model_from_config(config_path)
 print(reports)
 
-metrics = dict(reports[0]["valid"]["metrics"])
-val_metrics_values = np.array(list(metrics.values())).reshape(-1)
+if len(reports) == 2:
+    # valid and test reports
+    val_metrics = dict(reports[0]["valid"]["metrics"])
+    val_metrics_values = np.array(list(val_metrics.values())).reshape(-1)
 
-config = read_json(config_path)
-model_index = find_index_of_dict_with_key_in_pipe(pipe=config["chainer"]["pipe"],
-                                                  key="to_evolve")
-np.savetxt(fname=str(Path(config["chainer"]["pipe"][model_index][
-                              "save_path"]).parent.joinpath("valid_results.txt")),
-           X=val_metrics_values)
+    config = read_json(config_path)
+    model_index = find_index_of_dict_with_key_in_pipe(pipe=config["chainer"]["pipe"],
+                                                      key="to_evolve")
+    np.savetxt(fname=str(Path(config["chainer"]["pipe"][model_index][
+                                  "save_path"]).parent.joinpath("valid_results.txt")),
+               X=val_metrics_values)
+
+    test_metrics = dict(reports[1]["test"]["metrics"])
+    test_metrics_values = np.array(list(test_metrics.values())).reshape(-1)
+
+    config = read_json(config_path)
+    model_index = find_index_of_dict_with_key_in_pipe(pipe=config["chainer"]["pipe"],
+                                                      key="to_evolve")
+    np.savetxt(fname=str(Path(config["chainer"]["pipe"][model_index][
+                                  "save_path"]).parent.joinpath("test_results.txt")),
+               X=test_metrics_values)
+else:
+    # valid report
+    val_metrics = dict(reports[0]["valid"]["metrics"])
+    val_metrics_values = np.array(list(val_metrics.values())).reshape(-1)
+
+    config = read_json(config_path)
+    model_index = find_index_of_dict_with_key_in_pipe(pipe=config["chainer"]["pipe"],
+                                                      key="to_evolve")
+    np.savetxt(fname=str(Path(config["chainer"]["pipe"][model_index][
+                                  "save_path"]).parent.joinpath("valid_results.txt")),
+               X=val_metrics_values)
