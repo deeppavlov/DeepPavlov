@@ -5,8 +5,9 @@ from deeppavlov.core.data.utils import download_decompress, mark_done, is_done
 from deeppavlov.core.commands.utils import get_deeppavlov_root, expand_path
 import random
 import csv
+import re
 
-@register('sber_faq_reader')
+@register('negative_sber_faq_reader')
 class SberFAQReader(DatasetReader):
     
     def read(self, data_path):
@@ -43,17 +44,17 @@ class SberFAQReader(DatasetReader):
         with open(train_fname, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
             for el in reader:
-                sen_train.append(el[0])
+                sen_train.append(self.clean_sen(el[0]))
                 label_train.append(el[1])
         with open(valid_fname, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
             for el in reader:
-                sen_valid.append(el[0])
+                sen_valid.append(self.clean_sen(el[0]))
                 label_valid.append(el[1])
         with open(test_fname, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
             for el in reader:
-                sen_test.append(el[0])
+                sen_test.append(self.clean_sen(el[0]))
                 label_test.append(el[1])
 
         sen = sen_train + sen_valid + sen_test
@@ -102,7 +103,7 @@ class SberFAQReader(DatasetReader):
         with open(fname, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
             for el in reader:
-                sen.append(el[0])
+                sen.append(self.clean_sen(el[0]))
                 label.append(el[1])
         for k, v in classes_vocab.items():
             sen_li = list(v)
@@ -121,6 +122,10 @@ class SberFAQReader(DatasetReader):
                 for el in zip(contexts, responses,
                 positive_responses_pool, negative_responses_pool)]
         return data
+
+    def clean_sen(self, sen):
+        return re.sub('\[Клиент:.*\]', '', sen).replace('&amp, laquo, ', '').replace('&amp, laquo, ', '').\
+            replace('&amp laquo ', '').replace('&amp quot ', '').replace('&amp quot ', '').strip()
 
     def _get_neg_resps(self, classes_vocab, label, num_neg_resps=10):
         neg_resps = []

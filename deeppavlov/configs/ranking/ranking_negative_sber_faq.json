@@ -1,13 +1,13 @@
 {
   "dataset_reader": {
-    "name": "sber_faq_reader",
+    "name": "negative_sber_faq_reader",
     "data_path": "./sber_faq_data"
   },
   "dataset_iterator": {
     "name": "ranking_iterator",
     "seed": 243,
     "random_batches": true,
-    "batches_per_epoch": 50,
+    "batches_per_epoch": 100,
     "sample_candidates": "no",
     "sample_candidates_valid": "pool",
     "sample_candidates_test": "pool",
@@ -55,7 +55,7 @@
   },
   "train": {
     "epochs": 200,
-    "batch_size": 32,
+    "batch_size": 8,
     "pytest_max_batches": 2,
     "metrics": ["r@1", "r@5", "r@10", "rank_response", "loss"],
     "validation_patience": 10,

@@ -39,6 +39,7 @@
         "type_of_weights": "shared",
         "hidden_dim": 300,
         "learning_rate": 1e-3,
+        "distance": "euclidian",
         "margin": 0.1,
         "save_path": "sber_faq_ranking/model_weights.h5",
         "load_path": "sber_faq_ranking/model_weights.h5",

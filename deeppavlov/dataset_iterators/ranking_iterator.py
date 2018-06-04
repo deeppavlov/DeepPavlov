@@ -10,9 +10,9 @@ class RankingIterator:
 
     def __init__(self, data,
                  sample_candidates, sample_candidates_valid, sample_candidates_test,
-                 num_negative_samples, num_positive_samples, num_ranking_samples_valid, num_ranking_samples_test,
+                 num_negative_samples, num_ranking_samples_valid, num_ranking_samples_test,
                  seed=None, len_vocab=0, pos_pool_sample=False, pos_pool_rank=True, random_batches=False,
-                 batches_per_epoch=None):
+                 batches_per_epoch=None, num_positive_samples=5):
 
         '''
         pos_pool_rank: whether to count samples from "pos_pool" as correct answers at test/validation
@@ -64,9 +64,7 @@ class RankingIterator:
                     response = [el["response"] for el in context_response_data]
                 if self.sample_candidates == "no":
                     x = [[el[0], [el[1]] + random.choices(el[2]["pos_pool"], k=self.num_positive_samples)]
-                         for el in zip(context, response,context_response_data)]
-                    num_samples = int(math.factorial(self.num_positive_samples) / \
-                                  math.factorial(self.num_positive_samples - 2))
+                         for el in zip(context, response, context_response_data)]
                     y = batch_size * [np.ones(self.num_positive_samples + 1)]
                 else:
                     negative_response = self.create_neg_resp_rand(context_response_data, batch_size, data_type)

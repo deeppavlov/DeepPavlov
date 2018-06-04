@@ -3,6 +3,7 @@ from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.models.ranking.ranking_dict import RankingDict
 from nltk import word_tokenize
 import csv
+import re
 
 class SberFAQDict(RankingDict):
 
@@ -22,11 +23,11 @@ class SberFAQDict(RankingDict):
         with open(self.train_fname, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
             for el in reader:
-                sen.append(el[0])
+                sen.append(self.clean_sen(el[0]))
         with open(self.val_fname, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
             for el in reader:
-                sen.append(el[0])
+                sen.append(self.clean_sen(el[0]))
         word_set = set()
         for el in sen:
             for x in word_tokenize(el):
@@ -45,14 +46,18 @@ class SberFAQDict(RankingDict):
         with open(self.train_fname, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
             for el in reader:
-                sen.append(el[0])
+                sen.append(self.clean_sen(el[0]))
         with open(self.val_fname, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
             for el in reader:
-                sen.append(el[0])
+                sen.append(self.clean_sen(el[0]))
         with open(self.test_fname, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
             for el in reader:
-                sen.append(el[0])
+                sen.append(self.clean_sen(el[0]))
         int2toks_vocab = {el[0]: word_tokenize(el[1]) for el in enumerate(sen)}
         return int2toks_vocab
+
+    def clean_sen(self, sen):
+        return re.sub('\[Клиент:.*\]', '', sen).replace('&amp, laquo, ', '').replace('&amp, laquo, ', '').\
+            replace('&amp laquo ', '').replace('&amp quot ', '').replace('&amp quot ', '').strip()
