@@ -172,7 +172,7 @@ class SquadModel(TFModel):
             outer = tf.matrix_band_part(outer, 0, tf.cast(tf.minimum(15, self.c_maxlen), tf.int64))
             self.yp1 = tf.argmax(tf.reduce_max(outer, axis=2), axis=1)
             self.yp2 = tf.argmax(tf.reduce_max(outer, axis=1), axis=1)
-            loss_1 = tf.nn.softmax_cross_entropy_with_logits(logits=logits1, labels=self.y1, )
+            loss_1 = tf.nn.softmax_cross_entropy_with_logits(logits=logits1, labels=self.y1)
             loss_2 = tf.nn.softmax_cross_entropy_with_logits(logits=logits2, labels=self.y2)
             self.loss = tf.reduce_mean(loss_1 + loss_2)
 
