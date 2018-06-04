@@ -161,9 +161,6 @@ Some clue parameters for [intents_dstc2.json](../../../configs/intents/intents_d
 | lear_rate_decay     | learning rate decay for training          | 
 | optimizer           | optimizer for training    <br />*SetOfValues*: any method from keras.optimizers |                     
 | loss                | loss for training       <br />*SetOfValues*: any method from keras.losses   |
-| coef_reg_cnn        | coefficient for kernel l2-regularizer for convolutional layers   |
-| coef_reg_den        | coefficient for kernel l2-regularizer for dense layers  |
-| dropout_rate        | dropout rate for training    |
 | embedder            | To make reference one has to set value to "#{id of embedder}", e.g. "#my_embedder" | 
 | tokenizer           | To make reference one has to set value to "#{id of tokenizer}", e.g. "#my_tokenizer" |
 | **train**           | **parameters for training** |
