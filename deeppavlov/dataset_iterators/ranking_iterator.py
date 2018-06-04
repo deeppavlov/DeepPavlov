@@ -2,6 +2,7 @@ from deeppavlov.core.common.registry import register
 
 import numpy as np
 import random
+import math
 
 
 @register('ranking_iterator')
@@ -10,13 +11,15 @@ class RankingIterator:
     def __init__(self, data,
                  sample_candidates, sample_candidates_valid, sample_candidates_test,
                  num_negative_samples, num_positive_samples, num_ranking_samples_valid, num_ranking_samples_test,
-                 seed=None, len_vocab=0, pos_pool_sample=False, pos_pool_rank=True, random_batches=False):
+                 seed=None, len_vocab=0, pos_pool_sample=False, pos_pool_rank=True, random_batches=False,
+                 batches_per_epoch=None):
 
         '''
         pos_pool_rank: whether to count samples from "pos_pool" as correct answers at test/validation
         (if the pos_pool is large this will lead to overestimation of metrics.)
         pos_pool_sample: whether to sample "response" from "pos_pool" each time when the batch is generated
         '''
+        self.batches_per_epoch = batches_per_epoch
         self.random_batches = random_batches
         self.pos_pool_sample = pos_pool_sample
         self.pos_pool_rank = pos_pool_rank
@@ -41,9 +44,11 @@ class RankingIterator:
         }
 
     def gen_batches(self, batch_size, data_type="train", shuffle=True):
-        y = batch_size * [np.ones(2)]
         data = self.data[data_type]
-        num_steps = len(data) // batch_size
+        if self.random_batches and self.batches_per_epoch is not None:
+            num_steps = self.batches_per_epoch
+        else:
+            num_steps = len(data) // batch_size
         if data_type == "train":
             if shuffle:
                 np.random.shuffle(data)
@@ -53,14 +58,19 @@ class RankingIterator:
                 else:
                     context_response_data = data[i * batch_size:(i + 1) * batch_size]
                 context = [el["context"] for el in context_response_data]
-                if self.sample_candidates == 'negative':
-                    x = [[None, [None] + random.choices(el["pos_pool"], k=self.num_positive_samples)] for el in context_response_data]
+                if self.pos_pool_sample:
+                    response = [random.choice(el["pos_pool"]) for el in context_response_data]
                 else:
-                    if self.pos_pool_sample:
-                        response = [random.choice(el["pos_pool"]) for el in context_response_data]
-                    else:
-                        response = [el["response"] for el in context_response_data]
+                    response = [el["response"] for el in context_response_data]
+                if self.sample_candidates == "no":
+                    x = [[el[0], [el[1]] + random.choices(el[2]["pos_pool"], k=self.num_positive_samples)]
+                         for el in zip(context, response,context_response_data)]
+                    num_samples = int(math.factorial(self.num_positive_samples) / \
+                                  math.factorial(self.num_positive_samples - 2))
+                    y = batch_size * [np.ones(self.num_positive_samples + 1)]
+                else:
                     negative_response = self.create_neg_resp_rand(context_response_data, batch_size, data_type)
+                    y = batch_size * [np.ones(2)]
                     x = [[context[i], [response[i]]+[negative_response[i]]] for i in range(len(context_response_data))]
                 yield (x, y)
         if data_type in ["valid", "test"]:

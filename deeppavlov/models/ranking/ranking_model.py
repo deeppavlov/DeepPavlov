@@ -60,6 +60,8 @@ class RankingModel(NNModel):
 
         opt = deepcopy(kwargs)
         self.train_now = opt['train_now']
+        self.hard_triplets = opt.get('hard_triplets')
+        self.update_embeddings = opt.get('update_embeddings', 'on_validation')
         self.opt = opt
         self.interact_pred_num = opt['interact_pred_num']
         self.vocabs = opt.get('vocabs', None)
@@ -113,15 +115,18 @@ class RankingModel(NNModel):
         already created by super().__init__ part in called in __init__ of this class"""
         log.info('[saving model to {}]'.format(self.save_path.resolve()))
         self._net.save(self.save_path)
-        self.set_embeddings()
+        if self.update_embeddings == 'on_validation':
+            self.set_embeddings()
         self.dict.save()
         self.embdict.save()
 
     @check_attr_true('train_now')
     def train_on_batch(self, x, y):
-        self.reset_embeddings()
-        if x[0][0] is None:
+        if self.update_embeddings == 'on_validation':
+            self.reset_embeddings()
+        if self.hard_triplets:
             b = self.make_hard_triplets(x, self._net)
+            self._net.train_on_batch(b)
         else:
             context = [el[0] for el in x]
             pos_neg_response = [el[1] for el in x]
@@ -134,7 +139,7 @@ class RankingModel(NNModel):
             rn = self.dict.make_toks(negative_response, type="response")
             rn = self.dict.make_ints(rn)
             b = [c, rp, rn], np.asarray(y)
-        self._net.train_on_batch(b)
+            self._net.train_on_batch(b)
 
     def make_hard_triplets(self, x, net):
         samples = [el[1][1:] for el in x]
@@ -176,28 +181,38 @@ class RankingModel(NNModel):
                     rp.append(s[i*num_samples+j])
                     rn.append(s[hardest_negative_ind[i*num_samples+j]])
                     rn.append(s[hardest_negative_ind[i*num_samples+k]])
-        y = np.ones(len(c))
+        y = np.ones((len(c), num_samples))
         return [c, rp, rn], y
 
     @overrides
     def __call__(self, batch):
-        self.set_embeddings()
+        if self.update_embeddings == 'on_validation':
+            self.set_embeddings()
         if type(batch[0]) == list:
             context = [el[0] for el in batch]
             c = self.dict.make_toks(context, type="context")
             c = self.dict.make_ints(c)
             c_emb = self._net.predict_context_on_batch([c, c, c])
+            if self.update_embeddings == 'online':
+                self.update_contexts(c_emb, context)
             # response = [el[1] for el in batch]
             response = [list(el[1]) for el in batch]
             batch_size = len(response)
             ranking_length = len(response[0])
             # response = reduce(operator.concat, response)
             response = [x for el in response for x in el]
-            response = [response[i:batch_size*ranking_length:ranking_length] for i in range(ranking_length)]
+            if self.update_embeddings == 'online':
+                r = self.dict.make_toks(response, type="response")
+                r = self.dict.make_ints(r)
+                r_embs = list(self._net.predict_response_on_batch([r, r, r]))
+            elif self.update_embeddings == 'on_validation':
+                r_embs = [self.dict.response2emb_vocab[el] for el in response]
+            self.update_responses(r_embs, response)
+            r_embs = [np.vstack(r_embs[i:batch_size*ranking_length:ranking_length])
+                        for i in range(ranking_length)]
             y_pred = []
             for i in range(ranking_length):
-                r_emb = [self.dict.response2emb_vocab[el] for el in response[i]]
-                r_emb = np.vstack(r_emb)
+                r_emb = r_embs[i]
                 yp = np.sum(c_emb * r_emb, axis=1) / np.linalg.norm(c_emb, axis=1) / np.linalg.norm(r_emb, axis=1)
                 y_pred.append(np.expand_dims(yp, axis=1))
             y_pred = np.hstack(y_pred)
@@ -223,6 +238,14 @@ class RankingModel(NNModel):
             pred_resp = [' '.join(self.dict.response2toks_vocab[el]) for el in pred_resp]
             y_pred = [{"contexts": pred_cont, "responses": pred_resp}]
             return y_pred
+
+    def update_contexts(self, c_pred, labels):
+        for i in range(len(labels)):
+            self.dict.context2emb_vocab[labels[i]] = c_pred[i]
+
+    def update_responses(self, r_pred, labels):
+        for i in range(len(labels)):
+            self.dict.response2emb_vocab[labels[i]] = r_pred[i]
 
     def set_embeddings(self):
         if self.dict.response2emb_vocab[0] is None:

@@ -74,13 +74,16 @@ class SberFAQReader(DatasetReader):
     def preprocess_data_train(self):
 
         classes_vocab = self.classes_vocab_train
+        contexts = []
+        responses = []
         positive_responses_pool = []
         for k, v in classes_vocab.items():
             positive_responses_pool.append(list(v))
-
-        data = [{"context": None, "response": None,
-                "pos_pool": el, "neg_pool": None}
-                for el in positive_responses_pool]
+            contexts.append(random.choice(list(v)))
+            responses.append(random.choice(list(v)))
+        data = [{"context": el[0], "response": el[1],
+                "pos_pool": el[2], "neg_pool": None}
+                for el in zip(contexts, responses, positive_responses_pool)]
         return data
 
     def preprocess_data_validation(self, fname, type, num_neg=9):

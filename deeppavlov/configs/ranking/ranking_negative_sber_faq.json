@@ -7,14 +7,15 @@
     "name": "ranking_iterator",
     "seed": 243,
     "random_batches": true,
-    "sample_candidates": "negative",
+    "batches_per_epoch": 50,
+    "sample_candidates": "no",
     "sample_candidates_valid": "pool",
     "sample_candidates_test": "pool",
     "num_positive_samples": 5,
     "num_negative_samples": 1000,
     "num_ranking_samples_valid": 10,
     "num_ranking_samples_test": 10,
-    "pos_pool_sample": false,
+    "pos_pool_sample": true,
     "pos_pool_rank": false
   },
   "chainer": {
@@ -28,6 +29,7 @@
         "name": "ranking_model",
         "device_num": 0,
         "train_now": true,
+        "hard_triplets": true,
         "vocab_name": "sber_faq",
         "vocabs_path": "sber_faq_data",
         "embeddings": "fasttext",
@@ -45,6 +47,7 @@
         "margin": 0.1,
         "save_path": "sber_faq_ranking/model_weights.h5",
         "load_path": "sber_faq_ranking/model_weights.h5",
+        "update_embeddings": "online",
         "interact_pred_num": 3
       }
     ],
@@ -52,11 +55,12 @@
   },
   "train": {
     "epochs": 200,
-    "batch_size": 8,
+    "batch_size": 32,
     "pytest_max_batches": 2,
     "metrics": ["r@1", "r@5", "r@10", "rank_response", "loss"],
-    "validation_patience": 5,
-    "val_every_n_epochs": 1
+    "validation_patience": 10,
+    "val_every_n_epochs": 1,
+    "log_every_n_batches": 10
   },
   "metadata": {
     "labels": {
