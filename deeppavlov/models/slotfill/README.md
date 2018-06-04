@@ -274,11 +274,9 @@ And now all parts together:
   "train": {
     "epochs": 100,
     "batch_size": 64,
-
     "metrics": ["ner_f1", "per_item_accuracy"],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
-
     "log_every_n_batches": 100,
     "show_examples": false
   },
@@ -293,19 +291,23 @@ And now all parts together:
 }
 ```
 
-## Train and use the model
+## Usage of the model
 
 Please see an example of training a Slot Filling model and using it for prediction:
 
 ```python
-from deeppavlov.core.commands.train import train_model_from_config
-from deeppavlov.core.commands.infer import interact_model
-PIPELINE_CONFIG_PATH = 'configs/ner/slotfill_dstc2.json'
-train_model_from_config(PIPELINE_CONFIG_PATH)
-interact_model(PIPELINE_CONFIG_PATH)
+from deeppavlov.core.commands.infer import build_model_from_config
+from deeppavlov.download import deep_download
+import json
+PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/slotfill_dstc2.json'
+with open(PIPELINE_CONFIG_PATH) as f:
+    config = json.load(f)
+deep_download(['-c', PIPELINE_CONFIG_PATH])
+slotfill_model = build_model_from_config(config)
+slotfill_model(['I would like some chinese food', 'The west part of the city would be nice'])
 ```
 
-This example assumes that the working directory is deeppavlov.
+This example assumes that the working directory is the root of the project.
 
 
 ## Slotfilling withot NER
@@ -320,7 +322,13 @@ utterances.
 Usage example:
 
 ```python
-from deeppavlov.core.commands.infer import interact_model
-PIPELINE_CONFIG_PATH = 'configs/ner/slotfill_dstc2_raw.json'
-interact_model(PIPELINE_CONFIG_PATH)
+from deeppavlov.core.commands.infer import build_model_from_config
+from deeppavlov.download import deep_download
+import json
+PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/slotfill_dstc2_raw.json'
+with open(PIPELINE_CONFIG_PATH) as f:
+    config = json.load(f)
+deep_download(['-c', PIPELINE_CONFIG_PATH])
+slotfill_model = build_model_from_config(config)
+slotfill_model(['I would like some chinese food', 'The west part of the city would be nice'])
 ```

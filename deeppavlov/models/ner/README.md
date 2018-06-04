@@ -514,11 +514,17 @@ And now all parts together:
 Please see an example of training a NER model and using it for prediction:
 
 ```python
+import json
+from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.commands.train import train_model_from_config
-from deeppavlov.core.commands.infer import interact_model
-PIPELINE_CONFIG_PATH = 'configs/ner/ner_conll2003.json'
+
+PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_ontonotes.json'
+with open(PIPELINE_CONFIG_PATH) as f:
+    config = json.load(f)
 train_model_from_config(PIPELINE_CONFIG_PATH)
-interact_model(PIPELINE_CONFIG_PATH)
+ner_model = build_model_from_config(config)
+ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates'])
+
 ```
 
 This example assumes that the working directory is deeppavlov.
@@ -528,8 +534,16 @@ This example assumes that the working directory is deeppavlov.
 
 A pre-trained model for solving OntoNotes task can be used as following:
 ```python
-from deeppavlov.core.commands.infer import interact_model
-interact_model('deeppavlov/configs/ner/ner_ontonotes.json')
+import json
+from deeppavlov.core.commands.infer import build_model_from_config
+from deeppavlov.core.commands.train import train_model_from_config
+
+PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_ontonotes.json'
+with open(PIPELINE_CONFIG_PATH) as f:
+    config = json.load(f)
+train_model_from_config(PIPELINE_CONFIG_PATH)
+ner_model = build_model_from_config(config)
+ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates'])
 ```
 Or from command line:
 
@@ -595,6 +609,19 @@ The F1 measure for our model along with the results of other published solutions
 | Ivanitsky et al.  [11]|                  |              | **87.88**       |
 | Mozharova et al.  [12]|                  | 97.21        |                 |
 | Our (Bi-LSTM+CRF)     | **87.17**        | **99.26**    | 82.10           ||
+
+To run Russian NER model use the following code:
+```python
+from deeppavlov.core.commands.infer import build_model_from_config
+from deeppavlov.download import deep_download
+import json
+PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_rus.json'
+with open(PIPELINE_CONFIG_PATH) as f:
+    config = json.load(f)
+deep_download(['-c', PIPELINE_CONFIG_PATH])
+slotfill_model = build_model_from_config(config)
+slotfill_model(['Попячьтесь Жвтоне ъчожа вздрыжни эффекте'])
+```
 
 ## Literature
 [1] - Strubell at al. (2017) Strubell, Emma, et al. "Fast and accurate entity recognition with iterated dilated convolutions." Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing. 2017.
