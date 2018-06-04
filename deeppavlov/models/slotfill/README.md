@@ -310,7 +310,7 @@ slotfill_model(['I would like some chinese food', 'The west part of the city wou
 This example assumes that the working directory is the root of the project.
 
 
-## Slotfilling withot NER
+## Slotfilling without NER
 
 An alternative approach to Slot Filling problem could be fuzzy search for each instance of each slot value inside the
  text. This approach is realized in `slotfill_raw` component. The component uses needle in haystack 

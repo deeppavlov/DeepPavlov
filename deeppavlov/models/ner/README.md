@@ -620,7 +620,7 @@ with open(PIPELINE_CONFIG_PATH) as f:
     config = json.load(f)
 deep_download(['-c', PIPELINE_CONFIG_PATH])
 slotfill_model = build_model_from_config(config)
-slotfill_model(['Попячьтесь Жвтоне ъчожа вздрыжни эффекте'])
+slotfill_model(['Компания « Андэк » , специализирующаяся на решениях для обеспечения безопасности бизнеса , сообщила о том , что Вячеслав Максимов , заместитель генерального директора компании , возглавил направление по оптимизации процессов управления информационной безопасностью '])
 ```
 
 ## Literature
