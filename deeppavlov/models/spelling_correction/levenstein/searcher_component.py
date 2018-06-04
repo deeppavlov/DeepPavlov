@@ -29,6 +29,12 @@ logger = get_logger(__name__)
 @register('spelling_levenstein')
 class LevensteinSearcherComponent(Component):
     def __init__(self, words: Iterable[str], max_distance=1, error_probability=1e-4, *args, **kwargs):
+        """
+
+        :param words: list of every correct word
+        :param max_distance: maximum allowed Damerau-Levenstein distance between source words and candidates
+        :param error_probability: assigned probability for every edit
+        """
         words = list({word.strip().lower().replace('ё', 'е') for word in words})
         alphabet = sorted({letter for word in words for letter in word})
         self.max_distance = max_distance
