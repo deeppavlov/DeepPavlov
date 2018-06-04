@@ -20,13 +20,6 @@ def score_population(population, population_size, result_file):
     procs = []
 
     for i in range(population_size):
-        # f_name = Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"])
-        # model_name = population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["model_name"]
-        # population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"] = \
-        #     str(f_name.joinpath(model_name + "_" + str(i)))
-        # population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["load_path"] =\
-        #     population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"]
-
         save_path = Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"])
         load_path = Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["load_path"])
 
@@ -62,11 +55,25 @@ def score_population(population, population_size, result_file):
     for i in range(population_size):
         val_results = np.loadtxt(fname=str(Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index][
                                                     "save_path"]).parent.joinpath("valid_results.txt")))
+        try:
+            test_results = np.loadtxt(fname=str(Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index][
+                                                        "save_path"]).parent.joinpath("test_results.txt")))
+        except FileNotFoundError:
+            pass
+
         result_table_dict = {}
         for el in order:
-            result_table_dict[el] = []
+            if el == "params":
+                result_table_dict[el] = []
+            else:
+                result_table_dict[el + "_valid"] = []
+                result_table_dict[el + "_test"] = []
         for m_id, m in enumerate(CONSIDERED_METRICS):
-            result_table_dict[m].append(val_results[m_id])
+            result_table_dict[m + "_valid"].append(val_results[m_id])
+            try:
+                result_table_dict[m + "_test"].append(test_results[m_id])
+            except NameError:
+                result_table_dict[m + "_test"].append(0.)
         result_table_dict[order[-1]] = [population[i]]
         result_table = pd.DataFrame(result_table_dict)
 
@@ -153,7 +160,11 @@ order = deepcopy(CONSIDERED_METRICS)
 order.extend(["params"])
 result_table_dict = {}
 for el in order:
-    result_table_dict[el] = []
+    if order == "params":
+        result_table_dict[el] = []
+    else:
+        result_table_dict[el + "_valid"] = []
+        result_table_dict[el + "_test"] = []
 
 result_file = Path(basic_params["chainer"]["pipe"][
                        evolution.model_to_evolve_index]["save_path"]).joinpath("result_table.csv")
