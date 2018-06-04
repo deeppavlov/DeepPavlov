@@ -1,7 +1,12 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](/LICENSE.txt)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 
-# Automatic spelling correction component
+# Automatic spelling correction pipelines
+
+Provided spelling correction pipelines consist ow two main component types:
+* **Candidates generator** — a component that generates candidate replacements for every token and provides scores
+ for every candidate in form of logarithmic probability
+* **Candidates elector** — a component that chooses the best candidate for every token 
 
 Automatic spelling correction component is based on
 [An Improved Error Model for Noisy Channel Spelling Correction](http://www.aclweb.org/anthology/P00-1037)
@@ -194,12 +199,15 @@ We compared this module with [Yandex.Speller](http://api.yandex.ru/speller/) and
 on the [test set](http://www.dialog-21.ru/media/3838/test_sample_testset.txt)
 for the [SpellRuEval competition](http://www.dialog-21.ru/en/evaluation/2016/spelling_correction/) on Automatic Spelling Correction for Russian:
 
-| Correction method                          | Precision | Recall | F-measure | 
-|--------------------------------------------|-----------|--------|-----------|
-| Yandex.Speller                             | 83.09     | 59.86  | 69.59     | 
-| Our model with the provided language model | 51.92     | 53.94  | 52.91     | 
-| Our model with no language model           | 41.42     | 37.21  | 39.20     | 
-| GNU Aspell, always first candidate         | 27.85     | 34.07  | 30.65     |
+| Correction method                          | Precision | Recall | F-measure | Speed (sentences/s) |
+|--------------------------------------------|-----------|--------|-----------|---------------------|
+| Yandex.Speller                             | 83.09     | 59.86  | 69.59     | 5.                  |
+| **Damerau Levenstein 1 + lm**              | 53.26     | 53.74  | 53.50     | 29.3                |
+| **Brill Moore top 4 + lm**                 | 51.92     | 53.94  | 52.91     | 0.6                 |
+| Hunspell + lm                              | 41.03     | 48.89  | 44.61     | 2.1                 |
+| Jamspell                                   | 44.57     | 35.69  | 39.64     | 136.2               |
+| **Brill Moore top 1**                      | 41.29     | 37.26  | 39.17     | 2.4                 |
+| Hunspell                                   | 30.30     | 34.02  | 32.06     | 20.3                |
 
 ## Ways to improve
 

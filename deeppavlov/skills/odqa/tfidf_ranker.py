@@ -1,12 +1,9 @@
 """
 Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
     http://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +11,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from typing import Type, List
+from typing import List
 
 import numpy as np
 
@@ -30,16 +27,23 @@ logger = get_logger(__name__)
 class TfidfRanker(Estimator):
     """
     temporary stub to run REST API
-     """
+    """
 
     def get_main_component(self):
         return self
 
-    def __init__(self, vectorizer: HashingTfIdfVectorizer, **kwargs):
+    def __init__(self, vectorizer: HashingTfIdfVectorizer, top_n=5, active: bool = True, **kwargs):
+        """
+        :param vectorizer: a tfidf vectorizer class
+        :param top_n: top n of document ids to return
+        :param active: when is not active, return all doc ids.
+        """
 
+        self.top_n = top_n
         self.vectorizer = vectorizer
+        self.active = active
 
-        if kwargs.get('mode') != 'train':
+        if kwargs['mode'] != 'train':
             if self.vectorizer.load_path.exists():
                 self.tfidf_matrix, opts = self.vectorizer.load()
                 self.ngram_range = opts['ngram_range']
@@ -59,28 +63,36 @@ class TfidfRanker(Estimator):
     def get_index2doc(self):
         return dict(zip(self.doc_index.values(), self.doc_index.keys()))
 
-    def __call__(self, questions: List[str], n=5):
+    def __call__(self, questions: List[str]):
         """
         Rank documents and return top n document titles with scores.
         :param questions: queries to search an answer for
         :param n: a number of documents to return
         :return: document ids, document scores
         """
+
         batch_doc_ids, batch_docs_scores = [], []
 
         q_tfidfs = self.vectorizer(questions)
 
         for q_tfidf in q_tfidfs:
             scores = q_tfidf * self.tfidf_matrix
+            scores = np.squeeze(
+                scores.toarray() + 0.0001)  # add a small value to eliminate zero scores
 
-            if len(scores.data) <= n:
-                o_sort = np.argsort(-scores.data)
+            if self.active:
+                thresh = self.top_n
             else:
-                o = np.argpartition(-scores.data, n)[0:n]
-                o_sort = o[np.argsort(-scores.data[o])]
+                thresh = len(self.doc_index)
 
-            doc_scores = scores.data[o_sort]
-            doc_ids = [self.index2doc[i] for i in scores.indices[o_sort]]
+            if thresh >= len(scores):
+                o = np.argpartition(-scores, len(scores) - 1)[0:thresh]
+            else:
+                o = np.argpartition(-scores, thresh)[0:thresh]
+            o_sort = o[np.argsort(-scores[o])]
+
+            doc_scores = scores[o_sort]
+            doc_ids = [self.index2doc[i] for i in o_sort]
             batch_doc_ids.append(doc_ids)
             batch_docs_scores.append(doc_scores)
 
