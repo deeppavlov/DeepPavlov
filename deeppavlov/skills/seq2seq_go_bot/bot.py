@@ -75,21 +75,32 @@ class Seq2SeqGoalOrientedBot(NNModel):
             b_dec_ins.append(dec_in)
             b_dec_outs.append(dec_out)
             b_tgt_lens.append(len(dec_out))
-            b_tgt_weights.append([1] * len(dec_out))
 
         # Sequence padding
+        batch_size = len(b_enc_ins)
         max_src_len = max(b_src_lens)
         max_tgt_len = max(b_tgt_lens)
+        b_enc_ins_np = np.ones((batch_size, max_src_len)) * self.src_vocab[self.sos_token]
+        b_dec_ins_np = np.ones((batch_size, max_tgt_len)) * self.tgt_vocab[self.eos_token]
+        b_dec_outs_np = np.ones((batch_size, max_tgt_len)) * self.tgt_vocab[self.eos_token]
+        b_tgt_weights_np = np.zeros((batch_size, max_tgt_len))
         for i, (src_len, tgt_len) in enumerate(zip(b_src_lens, b_tgt_lens)):
-            src_padd_len = max_src_len - src_len
-            tgt_padd_len = max_tgt_len - tgt_len
-            b_enc_ins[i].extend([self.src_vocab[self.sos_token]] * src_padd_len)
-            b_dec_ins[i].extend([self.tgt_vocab[self.eos_token]] * tgt_padd_len)
-            b_dec_outs[i].extend([self.tgt_vocab[self.eos_token]] * tgt_padd_len)
-            b_tgt_weights[i].extend([0] * tgt_padd_len)
 
-        self.network.train_on_batch(b_enc_ins, b_dec_ins, b_dec_outs,
-                                    b_src_lens, b_tgt_lens, b_tgt_weights, b_kb_masks)
+            b_enc_ins_np[i, :src_len] = b_enc_ins[i]
+            b_dec_ins_np[i, :tgt_len] = b_dec_ins[i]
+            b_dec_outs_np[i, :tgt_len] = b_dec_outs[i]
+            b_tgt_weights_np[i, :tgt_len] = 1
+
+        """if self.debug:
+            log.debug("b_enc_ins = {}".format(b_enc_ins))
+            log.debug("b_dec_ins = {}".format(b_dec_ins))
+            log.debug("b_dec_outs = {}".format(b_dec_outs))
+            log.debug("b_src_lens = {}".format(b_src_lens))
+            log.debug("b_tgt_lens = {}".format(b_tgt_lens))
+            log.debug("b_tgt_weights = {}".format(b_tgt_weights))"""
+
+        self.network.train_on_batch(b_enc_ins_np, b_dec_ins_np, b_dec_outs_np,
+                                    b_src_lens, b_tgt_lens, b_tgt_weights_np, b_db_masks)
 
     def _encode_context(self, tokens):
         if self.debug:
@@ -136,7 +147,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
     #def _infer_on_batch(self, utters, kb_entry_list=itertools.repeat([])):
     def _infer_on_batch(self, utters, history_list, kb_entry_list):
 # TODO: history as input
-        b_enc_ins, b_src_lens, b_kb_masks = [], [], []
+        b_enc_ins, b_src_lens = [], [], []
         if (len(utters) == 1) and not utters[0]:
             utters = [['hi']]
         for utter, history, kb_entries in zip(utters, history_list, kb_entry_list):
@@ -149,10 +160,11 @@ class Seq2SeqGoalOrientedBot(NNModel):
             b_kb_masks.append(self._kb_mask(kb_entries))
 
         # Sequence padding
+        batch_size = len(b_enc_ins)
         max_src_len = max(b_src_lens)
+        b_enc_ins_np = np.ones((batch_size, max_src_len)) * self.src_vocab[self.sos_token]
         for i, src_len in enumerate(b_src_lens):
-            src_padd_len = max_src_len - src_len
-            b_enc_ins[i].extend([self.src_vocab[self.eos_token]] * src_padd_len)
+            b_enc_ins_np[i, :src_len] = b_enc_ins[i]
 
         pred_idxs = self.network(b_enc_ins, b_src_lens, b_kb_masks)
         preds = self._decode_response(pred_idxs)
