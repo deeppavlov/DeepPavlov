@@ -77,7 +77,7 @@ def score_population(population, population_size, result_file):
         result_table_dict[order[-1]] = [population[i]]
         result_table = pd.DataFrame(result_table_dict)
 
-        result_table.loc[:, order].to_csv(result_file, index=False, sep='\t', mode='a', header=None)
+        result_table.loc[:, result_table_columns].to_csv(result_file, index=False, sep='\t', mode='a', header=None)
 
         for m_id, m in enumerate(CONSIDERED_METRICS):
             population_metrics[m].append(val_results[m_id])
@@ -158,18 +158,25 @@ evolution = NetworkAndParamsEvolution(n_layers=N_LAYERS, n_types=N_TYPES,
 # Result table
 order = deepcopy(CONSIDERED_METRICS)
 order.extend(["params"])
+
+result_table_columns = []
+
 result_table_dict = {}
 for el in order:
     if order == "params":
         result_table_dict[el] = []
+        result_table_columns.extend([el + "_valid"])
     else:
         result_table_dict[el + "_valid"] = []
         result_table_dict[el + "_test"] = []
+        result_table_columns.extend([el + "_valid", el + "_test"])
+
+result_table_columns.append("params")
 
 result_file = Path(basic_params["chainer"]["pipe"][
                        evolution.model_to_evolve_index]["save_path"]).joinpath("result_table.csv")
 result_table = pd.DataFrame(result_table_dict)
-result_table.loc[:, order].to_csv(result_file, index=False, sep='\t')
+result_table.loc[:, result_table_columns].to_csv(result_file, index=False, sep='\t')
 
 print("\nIteration #{} starts\n".format(0))
 population = evolution.first_generation()
