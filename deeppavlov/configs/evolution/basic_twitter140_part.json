@@ -2,7 +2,7 @@
   "dataset_reader": {
     "name": "basic_classification_reader",
     "x": "text",
-    "y": "label",
+    "y": "target",
     "data_path": "/home/dilyara.baymurzina/evolution_data/twitter140_data/parts",
     "train": "train_0.csv",
     "valid": "valid.csv",
