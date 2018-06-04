@@ -3,77 +3,27 @@
 
 # Automatic spelling correction pipelines
 
-Provided spelling correction pipelines consist ow two main component types:
-* **Candidates generator** — a component that generates candidate replacements for every token and provides scores
- for every candidate in form of logarithmic probability
-* **Candidates elector** — a component that chooses the best candidate for every token 
+We provide two types of pipelines for spelling correction: [levenstein_corrector](#levenstein_corrector)
+ uses simple Damerau-Levenstein distance to find correction candidates and [brillmoore](#brillmoore)
+ uses statistics based error model for it. In both cases correction candidates are chosen based on context
+ with the help of a [kenlm language model](#language-model).  
+You can find [the comparison](#comparison) of these and other approaches near the end of this readme.
 
-Automatic spelling correction component is based on
-[An Improved Error Model for Noisy Channel Spelling Correction](http://www.aclweb.org/anthology/P00-1037)
-by Eric Brill and Robert C. Moore and uses statistics based error model,
-a static dictionary and an ARPA language model to correct spelling errors.  
-We provide everything you need to build a spelling correction module for russian and english languages
-and some hints on how to collect appropriate datasets for other languages.
+## Quick start
 
-## Usage
+You can run the following command to try provided pipelines out:
 
-#### Component config parameters:  
-* `in` — list with one element: name of this component's input in chainer's shared memory
-* `out` — list with one element: name for this component's output in chainer's shared memory
-* `name` always equals to `"spelling_error_model"`
-* `save_path` — path where the model will be saved at after a training session
-* `load_path` — path to the pretrained model
-* `window` — window size for the error model from `0` to `4`, defaults to `1`
-* `lm_file` — path to the ARPA language model file. If omitted, all of the dictionary words will be handled as equally probable
-* `dictionary` — description of a static dictionary model, instance of (or inherited from) `deeppavlov.vocabs.static_dictionary.StaticDictionary`
-    * `name` — `"static_dictionary"` for a custom dictionary or one of two provided:
-        * `"russian_words_vocab"` to automatically download and use a list of russian words from [https://github.com/danakt/russian-words/](https://github.com/danakt/russian-words/)  
-        * `"wikitionary_100K_vocab"` to automatically download a list of most common words from Project Gutenberg from [Wiktionary](https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists#Project_Gutenberg)
-     
-    * `dictionary_name` — name of a directory where a dictionary will be built to and loaded from, defaults to `"dictionary"` for static_dictionary
-    * `raw_dictionary_path` — path to a file with a line-separated list of dictionary words, required for static_dictionary
-
-This module expects sentence strings with space-separated tokens in lowercase as its input, so it is advised to add
-appropriate preprocessing in chainer.
-
-A working config could look like this:
-
-```json
-{
-  "chainer":{
-    "in": ["x"],
-    "pipe": [
-      {
-        "name": "str_lower",
-        "in": ["x"],
-        "out": ["x_lower"]
-      },
-      {
-        "name": "nltk_tokenizer",
-        "in": ["x_lower"],
-        "out": ["x_tokens"]
-      },
-      {
-        "in": ["x_tokens"],
-        "out": ["y_predicted"],
-        "name": "spelling_error_model",
-        "window": 1,
-        "save_path": "error_model/error_model.tsv",
-        "load_path": "error_model/error_model.tsv",
-        "dictionary": {
-          "name": "wikitionary_100K_vocab"
-        },
-        "lm_file": "/data/data/enwiki_no_punkt.arpa.binary"
-      }
-    ],
-    "out": ["y_predicted"]
-  }
-}
+```
+python -m deeppavlov.deep interact <path_to_config> [-d]
 ```
 
-#### Usage example
-This model expects a sentence string with space-separated tokens in lowercase as its input and returns the same string with corrected words.
-Here's an example code that will read input data from stdin line by line and output resulting text into stdout:
+where `<path_to_config>` is one of the [provided config files](/deeppavlov/configs/spelling_correction).  
+With the optional `-d` parameter all the data required to run selected pipeline will be downloaded, including
+ an appropriate language model.
+ 
+
+After downloading the required files you can use these configs in your python code.
+ For example, this code will read lines from stdin and print corrected lines to stdout:
 
 ```python
 import json
@@ -81,7 +31,7 @@ import sys
 
 from deeppavlov.core.commands.infer import build_model_from_config
 
-CONFIG_PATH = 'configs/error_model/brillmoore_kartaslov_ru.json'
+CONFIG_PATH = 'deeppavlov/configs/spelling_correction/brillmoore_kartaslov_ru.json'
 
 with open(CONFIG_PATH) as config_file:
     config = json.load(config_file)
@@ -91,16 +41,47 @@ for line in sys.stdin:
     print(model([line])[0], flush=True)
 ```
 
-if we save it as `example.py` then it could be used like so:
+## levenstein_corrector
 
-```bash
-cat input.txt | python3 example.py > out.txt
-```
+[This component](levenstein/searcher_component.py) finds all the candidates in a static dictionary
+ on set Damerau-Levenstein distance.  
+It can separate one token into two but it will not work the other way around.
 
-## Training
+#### Component config parameters:
+* `in` — list with one element: name of this component's input in chainer's shared memory
+* `out` — list with one element: name for this component's output in chainer's shared memory
+* `name` always equals to `"spelling_levenstein"`. Optional if `class` attribute is present
+* `class` always equals to `deeppavlov.models.spelling_correction.levenstein.searcher_component:LevensteinSearcherComponent`. Optional if `name` attribute is present
+* `words` — list of all correct words (should be a reference)
+* `max_distance` — maximum allowed Damerau-Levenstein distance between source words and candidates
+* `error_probability` — assigned probability for every edit
 
-#### Error model
 
+## brillmoore
+
+[This component](brillmoore/error_model.py) is based on
+[An Improved Error Model for Noisy Channel Spelling Correction](http://www.aclweb.org/anthology/P00-1037)
+by Eric Brill and Robert C. Moore and uses statistics based error model to find best candidates in a static dictionary.
+
+#### Component config parameters:  
+* `in` — list with one element: name of this component's input in chainer's shared memory
+* `out` — list with one element: name for this component's output in chainer's shared memory
+* `name` always equals to `"spelling_error_model"`. Optional if `class` attribute is present
+* `class` always equals to `deeppavlov.models.spelling_correction.brillmoore.error_model:ErrorModel`. Optional if `name` attribute is present
+* `save_path` — path where the model will be saved at after a training session
+* `load_path` — path to the pretrained model
+* `window` — window size for the error model from `0` to `4`, defaults to `1`
+* `candidates_count` — maximum allowed count of candidates for every source token
+* `dictionary` — description of a static dictionary model, instance of (or inherited from) `deeppavlov.vocabs.static_dictionary.StaticDictionary`
+    * `name` — `"static_dictionary"` for a custom dictionary or one of two provided:
+        * `"russian_words_vocab"` to automatically download and use a list of russian words from [https://github.com/danakt/russian-words/](https://github.com/danakt/russian-words/)  
+        * `"wikitionary_100K_vocab"` to automatically download a list of most common words from Project Gutenberg from [Wiktionary](https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists#Project_Gutenberg)
+     
+    * `dictionary_name` — name of a directory where a dictionary will be built to and loaded from, defaults to `"dictionary"` for static_dictionary
+    * `raw_dictionary_path` — path to a file with a line-separated list of dictionary words, required for static_dictionary
+
+
+#### Training configuration
 For the training phase config file needs to also include these parameters:
 
 * `dataset_iterator` — it should always be set like `"dataset_iterator": {"name": "typos_iterator"}`
@@ -115,107 +96,30 @@ For the training phase config file needs to also include these parameters:
     * `data_path` — required for typos_custom_reader as a path to a dataset file,
      where each line contains a misspelling and a correct spelling of a word separated by a tab symbol
 
-Component's configuration also has to have as `fit_on` parameter — list of two elements: names of component's input
-and true output in chainer's shared memory
+Component's configuration for `spelling_error_model` also has to have as `fit_on` parameter — list of two elements:
+ names of component's input and true output in chainer's shared memory.
 
-A working training config could look something like:
 
-```json
-{
-  "dataset_reader": {
-    "name": "typos_wikipedia_reader"
-  },
-  "dataset_iterator": {
-    "name": "typos_iterator",
-    "test_ratio": 0.05
-  },
-  "chainer":{
-    "in": ["x"],
-    "in_y": ["y"],
-    "pipe": [
-      {
-        "name": "str_lower",
-        "id": "lower",
-        "in": ["x"],
-        "out": ["x_lower"]
-      },
-      {
-        "name": "nltk_tokenizer",
-        "id": "tokenizer",
-        "in": ["x_lower"],
-        "out": ["x_tokens"]
-      },
-      {
-        "ref": "lower",
-        "in": ["y"],
-        "out": ["y_lower"]
-      },
-      {
-        "ref": "tokenizer",
-        "in": ["y"],
-        "out": ["y_tokens"]
-      },
-      {
-        "fit_on": ["x_tokens", "y_tokens"],
-        "in": ["x_tokens"],
-        "out": ["y_predicted"],
-        "name": "spelling_error_model",
-        "window": 1,
-        "dictionary": {
-          "name": "wikitionary_100K_vocab"
-        },
-        "save_path": "error_model/error_model.tsv",
-        "load_path": "error_model/error_model.tsv"
-      }
-    ],
-    "out": ["y_predicted"]
-  },
-  "train": {
-    "validate_best": false,
-    "test_best": true
-  }
-}
-```
+## Language model
 
-And a script to use this config:
-
-```python
-from deeppavlov.core.commands.train import train_model_from_config
-
-MODEL_CONFIG_PATH = 'configs/error_model/brillmoore_wikitypos_en.json'
-train_model_from_config(MODEL_CONFIG_PATH)
-```
-
-#### Language model
-
-This model uses [KenLM](http://kheafield.com/code/kenlm/) to process language models, so if you want to build your own,
-we suggest you consult with its website. We do also provide our own language models for
+Provided pipelines use [KenLM](http://kheafield.com/code/kenlm/) to process language models, so if you want to build your own,
+we suggest you consult its website. We do also provide our own language models for
 [english](http://lnsigo.mipt.ru/export/lang_models/en_wiki_no_punkt.arpa.binary.gz) \(5.5GB\) and
 [russian](http://lnsigo.mipt.ru/export/lang_models/ru_wiyalen_no_punkt.arpa.binary.gz) \(3.1GB\) languages.
 
 ## Comparison
 
-We compared this module with [Yandex.Speller](http://api.yandex.ru/speller/) and [GNU Aspell](http://aspell.net/)
+We compared our pipelines with [Yandex.Speller](http://api.yandex.ru/speller/),
+[JamSpell](https://github.com/bakwc/JamSpell) that was trained on biggest part of our Russian texts corpus that JamSpell could handle and [PyHunSpell](https://github.com/blatinier/pyhunspell)
 on the [test set](http://www.dialog-21.ru/media/3838/test_sample_testset.txt)
 for the [SpellRuEval competition](http://www.dialog-21.ru/en/evaluation/2016/spelling_correction/) on Automatic Spelling Correction for Russian:
 
-| Correction method                          | Precision | Recall | F-measure | Speed (sentences/s) |
-|--------------------------------------------|-----------|--------|-----------|---------------------|
-| Yandex.Speller                             | 83.09     | 59.86  | 69.59     | 5.                  |
-| **Damerau Levenstein 1 + lm**              | 53.26     | 53.74  | 53.50     | 29.3                |
-| **Brill Moore top 4 + lm**                 | 51.92     | 53.94  | 52.91     | 0.6                 |
-| Hunspell + lm                              | 41.03     | 48.89  | 44.61     | 2.1                 |
-| Jamspell                                   | 44.57     | 35.69  | 39.64     | 136.2               |
-| **Brill Moore top 1**                      | 41.29     | 37.26  | 39.17     | 2.4                 |
-| Hunspell                                   | 30.30     | 34.02  | 32.06     | 20.3                |
-
-## Ways to improve
-
-* locate bottlenecks in code and rewrite them in Cython to improve performance
-* use multiprocessing or multithreading for batch elements
-* find a way to add skipped spaces and remove superfluous ones
-* find or learn a proper balance between an error model and a language model scores when ranking candidates
-* implement [Discriminative Reranking for Spelling Correction](http://www.aclweb.org/anthology/Y06-1009)
-by Yang Zhang, Pilian He, Wei Xiang and Mu Li
-* use a better dataset for getting misspellings statistics
-* add handcrafted features to use phonetic information
+| Correction method                                                                                | Precision | Recall | F-measure | Speed (sentences/s) |
+|--------------------------------------------------------------------------------------------------|-----------|--------|-----------|---------------------|
+| Yandex.Speller                                                                                   | 83.09     | 59.86  | 69.59     | 5.                  |
+| [Damerau Levenstein 1 + lm](/deeppavlov/configs/spelling_correction/levenstein_corrector_ru.json)| 53.26     | 53.74  | 53.50     | 29.3                |
+| [Brill Moore top 4 + lm](/deeppavlov/configs/spelling_correction/brillmoore_kartaslov_ru.json)   | 51.92     | 53.94  | 52.91     | 0.6                 |
+| Hunspell + lm                                                                                    | 41.03     | 48.89  | 44.61     | 2.1                 |
+| JamSpell                                                                                         | 44.57     | 35.69  | 39.64     | 136.2               |
+| [Brill Moore top 1](/deeppavlov/configs/spelling_correction/brillmoore_kartaslov_ru_nolm.json)   | 41.29     | 37.26  | 39.17     | 2.4                 |
+| Hunspell                                                                                         | 30.30     | 34.02  | 32.06     | 20.3                |
