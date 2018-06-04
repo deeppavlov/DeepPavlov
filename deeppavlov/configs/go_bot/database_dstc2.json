@@ -13,7 +13,7 @@
     "pipe": [
       {
         "id": "restaurant_database",
-        "name": "sql_database",
+        "name": "sqlite_database",
         "fit_on": ["db_result"],
         "table_name": "mytable",
         "primary_keys": ["name"],
