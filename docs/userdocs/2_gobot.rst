@@ -1,5 +1,3 @@
-|License Apache 2.0| |Python 3.6| |tensorflow 1.4|
-
 Dialogue Bot for goal-oriented task
 ===================================
 
@@ -13,7 +11,7 @@ modules that depend on a dataset and must be provided by software
 developer.
 
 Here is a simple example of interaction with a trained dialogue bot (can
-be downloaded with ```deeppavlov/download.py`` <../../download.py>`__):
+be downloaded with ``deeppavlov/download.py``):
 
 .. code::
 
@@ -56,11 +54,11 @@ Requirements
 ^^^^^^^^^^^^
 
 **TO TRAIN** a go\_bot model you should have: 1. (*optional, but
-recommended*) pretrained named entity recognition model (NER) \* config
-```deeppavlov/configs/ner/ner_dstc2.json`` <../../configs/ner/ner_dstc2.json>`__
+recommended*) pretrained named entity recognition model (NER)
+``deeppavlov/configs/ner/ner_dstc2.json``
 is recommended 2. (*optional, but recommended*) pretrained intents
-classifier model \* config
-```deeppavlov/configs/intents/intents_dstc2_big.json`` <../../configs/intents/intents_dstc2_big.json>`__
+classifier model
+``deeppavlov/configs/intents/intents_dstc2_big.json``
 is recommended 3. (*optional*) downloaded english fasttext embeddings
 trained on wiki
 (https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip) \*
@@ -77,7 +75,7 @@ embeddings of your choice, but edit go\_bot config accordingly
 5. pretrained goal-oriented bot model itself
 
 -  config
-   ```deeppavlov/configs/go_bot/gobot_dstc2.json`` <../../configs/go_bot/gobot_dstc2.json>`__
+   ``deeppavlov/configs/go_bot/gobot_dstc2.json``
    is recommended
 -  ``slot_filler`` section of go\_bot's config should match NER's
    configuration
@@ -104,12 +102,12 @@ Config parameters:
 -  ``database`` – database that will be used during model inference to
    make "api\_call" action and get ``db_result`` *(optional)*
 -  ``name`` — ``"sql_database"`` from
-   ```deeppavlov.core.data.database:Sqlite3Database`` <../../core/data/database.py>`__
+   ``deeppavlov.core.data.database:Sqlite3Database``
    or your implementation
 -  ``table_name`` – sqlite table name
 -  ``primary_keys`` – list of primary table keys' names
 -  ``keys`` – ordered list of tabke key names, if not set will be
-   infered from loaded database automatically *(optional, reccomended
+   infered from loaded database automatically *(optional, recommended
    not to be used)*
 -  ``unknown_value`` – value used to fill unknown column values
    (defaults to ``"UNK"``) *(optional)*
@@ -122,26 +120,26 @@ Config parameters:
 -  ``use_action_mask`` — in case of true, action mask is applied to
    network output *(False, by default)*
 -  ``tokenizer`` — one of tokenizers from
-   ```deeppavlov.models.tokenizers`` <../../models/tokenizers>`__ module
+   ```deeppavlov.models.tokenizers`` module
 -  ``name`` — tokenizer name
 -  other arguments specific to your tokenizer
 -  ``bow_embedder`` —
-   ```deeppavlov.models.embedders.bow_embedder`` <../../models/embedders/bow_embedder.py>`__
+   ``deeppavlov.models.embedders.bow_embedder``
    or ``null`` *(optional)*
 -  ``name`` — embedder name
 -  other arguments specific to your bag of words embedder
 -  ``embedder`` — one of embedders from
-   ```deeppavlov.models.embedders`` <../../models/embedders>`__ module
+   ```deeppavlov.models.embedders`` module
    *(optional)*
 -  ``name`` — embedder name (``"fasttext"`` recommended, see
-   ```deeppavlov.models.embedders.fasttext_embedder`` <../../models/embedders/fasttext_embedder.py>`__)
+   ```deeppavlov.models.embedders.fasttext_embedder``)
 -  other arguments specific to your embedder
 -  ``tracker`` — dialogue state tracker from
-   ```deeppavlov.models.trackers`` <../../models/trackers>`__
+   ```deeppavlov.models.trackers``
 -  ``name`` — tracker name (``"default_tracker"`` or
    ``"featurized_tracker"`` recommended)
 -  ``slot_vals`` — list of slots that should be tracked
--  ``network_parameters`` — parameters for reccurent network that
+-  ``network_parameters`` — parameters for recurrent network that
    handles dialogue policy management
 -  ``save_path`` — name of the file that the model will be saved to
 -  ``load_path`` — name of the file that the model will be loaded from
@@ -188,31 +186,31 @@ Config parameters:
 -  ``slot_filler`` — model that predicts slot values for a given
    utterance
 -  ``name`` — slot filler name (``"dstc_slotfilling"`` recommended, for
-   implementation see ```deeppavlov.models.ner`` <../../models/ner>`__)
+   implementation see ``deeppavlov.models.ner``)
 -  other slot filler arguments
 -  ``intent_classifier`` — model that outputs intents probability
    distribution for a given utterance
 -  ``name`` — intent classifier name (``"intent_model"`` recommended,
    for implementation see
-   ```deeppavlov.models.classifiers.intents`` <../../models/classifiers/intents>`__)
+   ```deeppavlov.models.classifiers.intents``)
 -  classifier's other arguments
 -  ``debug`` — whether to display debug output (defaults to ``false``)
    *(optional)*
 
 For a working exemplary config see
-```deeeppavlov/configs/go_bot/gobot_dstc2.json`` <../../configs/go_bot/gobot_dstc2.json>`__
+``deeeppavlov/configs/go_bot/gobot_dstc2.json``
 (model without embeddings).
 
 A minimal model without ``slot_filler``, ``intent_classifier`` and
 ``embedder`` is configured in
-```deeeppavlov/configs/go_bot/gobot_dstc2_minimal.json`` <../../configs/go_bot/gobot_dstc2_minimal.json>`__.
+```deeeppavlov/configs/go_bot/gobot_dstc2_minimal.json``.
 
 A full model (with fasttext embeddings) configuration is in
-```deeeppavlov/configs/go_bot/gobot_dstc2_all.json`` <../../configs/go_bot/gobot_dstc2_all.json>`__.
+``deeeppavlov/configs/go_bot/gobot_dstc2_all.json``.
 
 The best state-of-the-art model (with attention mechanism, relies on
 ``embedder`` and does not use bag-of-words) is configured in
-```deeeppavlov/configs/go_bot/gobot_dstc2_best.json`` <../../configs/go_bot/gobot_dstc2_best.json>`__.
+``deeeppavlov/configs/go_bot/gobot_dstc2_best.json``.
 
 Usage example
 ^^^^^^^^^^^^^
@@ -220,9 +218,9 @@ Usage example
 Available **pretrained for DSTC2 dataset** models:
 
 -  model for
-   ```deeppavlov/configs/go_bot/gobot_dstc2.json`` <../../configs/go_bot/gobot_dstc2.json>`__
+   ``deeppavlov/configs/go_bot/gobot_dstc2.json``
 -  model for
-   ```deeppavlov/configs/go_bot/gobot_dstc2_best.json`` <../../configs/go_bot/gobot_dstc2_best.json>`__
+   ``deeppavlov/configs/go_bot/gobot_dstc2_best.json``
 
 To use pretrained model you should firstly **download it** (if you
 haven't done it already by ``python3 deeppavlov/download.py -all``):
@@ -280,23 +278,23 @@ parameters:
 -  ``dataset_reader``
 -  ``name`` — ``"your_reader_here"`` for a custom dataset or
    ``"dstc2_v2_reader"`` to use DSTC2 (for implementation see
-   ```deeppavlov.dataset_readers.dstc2_reader`` <../../dataset_readers/dstc2_reader.py>`__)
+   ``deeppavlov.dataset_readers.dstc2_reader``)
 -  ``data_path`` — a path to a dataset file, which in case of
    ``"dstc2_v2_reader"`` will be automatically downloaded from internet
    and placed to ``data_path`` directory
 -  ``dataset_iterator`` — it should always be set to
    ``{"name": "dialog_iterator"}`` (for implementation see
-   ```deeppavlov.dataset_iterators.dialog_iterator.py`` <../../dataset_iterators/dialog_iterator.py>`__)
+   ``deeppavlov.dataset_iterators.dialog_iterator.py``)
 
 See
-```deeeppavlov/configs/go_bot/gobot_dstc2.json`` <../../configs/go_bot/gobot_dstc2.json>`__
+``deeeppavlov/configs/go_bot/gobot_dstc2.json``
 for details.
 
 Train run
 ^^^^^^^^^
 
 The easiest way to run the training is by using
-```deeppavlov/deep.py`` <../../deep.py>`__ script:
+```deeppavlov/deep.py`` script:
 
 .. code:: bash
 
@@ -347,7 +345,7 @@ Dialogs
 '''''''
 
 If your model uses DSTC2 and relies on ``dstc2_v2_reader``
-```DSTC2Version2DatasetReader`` <../../dataset_readers/dstc2_reader.py>`__,
+``DSTC2Version2DatasetReader``,
 all needed files, if not present in the ``dataset_reader.data_path``
 directory, will be downloaded from internet.
 
@@ -360,7 +358,7 @@ ways of achieving that (sorted by increase in the amount of code):
 
    -  set ``dataset_iterator.data_path`` to your data directory;
    -  your data files should have the same format as expected in
-      ```deeppavlov.dataset_readers.dstc2_reader:DSTC2Version2DatasetReader.read()`` <../../dataset_readers/dstc2_reader.py>`__
+      ``deeppavlov.dataset_readers.dstc2_reader:DSTC2Version2DatasetReader.read()``
       function.
 
 2. Use ``"dialog_iterator"`` in dataset iterator config section and
@@ -368,7 +366,7 @@ ways of achieving that (sorted by increase in the amount of code):
    (**recommended**):
 
    -  clone
-      ```deeppavlov.dataset_readers.dstc2_reader:DSTC2Version2DatasetReader`` <../../dataset_readers/dstc2_reader.py>`__
+      ``deeppavlov.dataset_readers.dstc2_reader:DSTC2Version2DatasetReader``
       to ``YourDatasetReader``;
    -  register as ``"your_dataset_reader"``;
    -  rewrite so that it implements the same interface as the origin.
@@ -400,14 +398,14 @@ ways of achieving that (sorted by increase in the amount of code):
 
    -  your ``YourDatasetIterator.gen_batches()`` class method output
       should match the input format for chainer from
-      ```configs/go_bot/gobot_dstc2.json`` <../../configs/go_bot/gobot_dstc2.json>`__.
+      ```configs/go_bot/gobot_dstc2.json``.
 
 Templates
 '''''''''
 
 You should provide a maping from actions to text templates in the
 following format (and set ``template_type`` to ``"BaseTemplate"``, DSTC2
-uses an extention of templates –``"DualTemplate"``, you will probably
+uses an extension of templates –``"DualTemplate"``, you will probably
 not need it): \* ``action\ttemplate``, \* where filled slots in
 templates should start with "#" and mustn't contain whitespaces.
 
@@ -448,15 +446,15 @@ Scores for different modifications of our bot model:
 +-------------------------------------------------+------------------------------------------------------------------------------------+------------------------------+
 | Model                                           | Config                                                                             | Test turn textual accuracy   |
 +=================================================+====================================================================================+==============================+
-| basic bot                                       | ```gobot_dstc2_minimal.json`` <../../configs/go_bot/gobot_dstc2_minimal.json>`__   | 0.3809                       |
+| basic bot                                       |  ``gobot_dstc2_minimal.json``                                                      | 0.3809                       |
 +-------------------------------------------------+------------------------------------------------------------------------------------+------------------------------+
 | bot with slot filler & fasttext embeddings      |                                                                                    | 0.5317                       |
 +-------------------------------------------------+------------------------------------------------------------------------------------+------------------------------+
-| bot with slot filler & intents                  | ```gobot_dstc2.json`` <../../configs/go_bot/gobot_dstc2.json>`__                   | 0.5113                       |
+| bot with slot filler & intents                  |  ``gobot_dstc2.json``                                                              | 0.5113                       |
 +-------------------------------------------------+------------------------------------------------------------------------------------+------------------------------+
-| bot with slot filler & intents & embeddings     | ```gobot_dstc2_all.json`` <../../configs/go_bot/gobot_dstc2_all.json>`__           | 0.5145                       |
+| bot with slot filler & intents & embeddings     |  ``gobot_dstc2_all.json``                                                          | 0.5145                       |
 +-------------------------------------------------+------------------------------------------------------------------------------------+------------------------------+
-| bot with slot filler & embeddings & attention   | ```gobot_dstc2_best.json`` <../../configs/go_bot/gobot_dstc2_best.json>`__         | **0.5525**                   |
+| bot with slot filler & embeddings & attention   |  ``gobot_dstc2_best.json``                                                         | **0.5525**                   |
 +-------------------------------------------------+------------------------------------------------------------------------------------+------------------------------+
 
 There is another modification of DSTC2 dataset called dialog babi Task6
@@ -483,28 +481,25 @@ TODO: add dialog accuracies
 References
 ----------
 
-[1] [Jason D. Williams, Kavosh Asadi, Geoffrey Zweig "Hybrid Code
+[1] `Jason D. Williams, Kavosh Asadi, Geoffrey Zweig "Hybrid Code
 Networks: practical and efficient end-to-end dialog control with
 supervised and reinforcement learning" –
-2017](https://arxiv.org/abs/1702.03274)
+2017 <https://arxiv.org/abs/1702.03274>`_
 
-[2] [Dialog State Tracking Challenge 2
-dataset](http://camdial.org/~mh521/dstc/)
+[2] `Dialog State Tracking Challenge 2
+dataset <http://camdial.org/~mh521/dstc/>`_
 
-[3] [The bAbI project](https://research.fb.com/downloads/babi/)
+[3] `The bAbI project <https://research.fb.com/downloads/babi/>`_
 
-[4] [Antoine Bordes, Y-Lan Boureau & Jason Weston "Learning end-to-end
-goal-oriented dialog" - 2017](https://arxiv.org/abs/1605.07683)
+[4] `Antoine Bordes, Y-Lan Boureau & Jason Weston "Learning end-to-end
+goal-oriented dialog" - 2017 <https://arxiv.org/abs/1605.07683>`_
 
-[5] [Fei Liu, Julien Perez "Gated End-to-end Memory Networks" -
-2016](https://arxiv.org/abs/1610.04211)
+[5] `Fei Liu, Julien Perez "Gated End-to-end Memory Networks" -
+2016 <https://arxiv.org/abs/1610.04211>`_
 
-[6] [Mihail Eric, Christopher D. Manning "A Copy-Augmented
+[6] `Mihail Eric, Christopher D. Manning "A Copy-Augmented
 Sequence-to-Sequence Architecture Gives Good Performance on
-Task-Oriented Dialogue" - 2017](https://arxiv.org/abs/1701.04024)
+Task-Oriented Dialogue" - 2017 <https://arxiv.org/abs/1701.04024>`_
 
-.. |License Apache 2.0| image:: https://img.shields.io/badge/license-Apache%202.0-blue.svg
-   :target: ../../LICENSE
-.. |Python 3.6| image:: https://img.shields.io/badge/python-3.6-green.svg
-.. |tensorflow 1.4| image:: https://img.shields.io/badge/tensorflow-1.4-green.svg
+
 .. |alt text| image:: ../_static/diagram.png
