@@ -39,6 +39,13 @@ This message contains two intents `(thankyou, bye)`.
 
 ## Download pre-trained model
 
+DeepPavlov provides the following **pre-trained models**:
+* `configs/intents/intents_dstc2.json` -- DSTC 2 - intent model for English language.
+* `configs/intents/intents_snips.json` -- SNIPS - intent model for English language.
+* `configs/sentiment/insults_kaggle.json` -- Insults from https://www.kaggle.com/c/detecting-insults-in-social-commentary - sentiment analysis for English language.
+* `configs/sentiment/sentiment_ag_news.json` -- AG News from https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html - sentiment analysis for English language.
+* `configs/sentiment/sentiment_twitter.json` -- Twitter Mokoron from http://study.mokoron.com/ [5] - sentiment analysis for **Russian** language.
+
 **DeepPavlov contains two pre-trained models for DSTC 2 dataset: one was trained using embeddings trained via fastText on DSTC 2 (800 Mb), and the other one was trained using embeddings trained on Wiki (https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md, 8.5 Gb).**
 
 **Two pre-trained models are presented to provide a choice for the user:**
@@ -108,7 +115,7 @@ Below the list of available models description is presented:
 
 One can find examples of config files [here](../../../configs/intents).
 
-**Detaied description of configuration file and specific parameters for all presented classification models can be found [here](../Config_description.ipynb).**
+### Detailed description of configuration file and specific parameters for all presented classification models can be found [here](../Config_description.ipynb).
 
 Some clue parameters for [intents_dstc2.json](../../../configs/intents/intents_dstc2.json) config file are presented in the table below.
 
@@ -256,3 +263,5 @@ The results were achieved with tuning of parameters.
 [3] https://www.slideshare.net/KonstantinSavenkov/nlu-intent-detection-benchmark-by-intento-august-2017
 
 [4] P. Bojanowski*, E. Grave*, A. Joulin, T. Mikolov, Enriching Word Vectors with Subword Information.
+
+[5] Ю. В. Рубцова. Построение корпуса текстов для настройки тонового классификатора // Программные продукты и системы, 2015, №1(109), –С.72-78
