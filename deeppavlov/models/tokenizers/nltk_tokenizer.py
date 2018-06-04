@@ -24,6 +24,8 @@ from deeppavlov.core.common.registry import register
 with RedirectedPrints():
     nltk.download('punkt')
     nltk.download('stopwords')
+    nltk.download('perluniprops')
+    nltk.download('nonbreaking_prefixes')
 
 
 @register("nltk_tokenizer")
