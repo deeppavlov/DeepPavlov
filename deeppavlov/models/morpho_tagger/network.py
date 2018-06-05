@@ -101,7 +101,7 @@ class CharacterTagger:
         self.model_ = Model(inputs, outputs)
         self.model_.compile(**compile_args)
         if self.verbose > 0:
-            log.info(self.model_.summary())
+            log.info(str(self.model_.summary()))
         return self
 
     def build_word_cnn(self, inputs):
