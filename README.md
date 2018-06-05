@@ -4,7 +4,7 @@
 **We are in a really early Alpha release. You should be ready for hard adventures. 
 If you have updated to version 0.0.2 or greater - please re-download all pre-trained models**
 
-DeepPavlov is built on top of machine learning frameworks [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). Other external libraries can be used to build basic components.
+DeepPavlov is an open-source conversational AI library built on [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). It is designed for
  * development of production ready chat-bots and complex conversational systems
  * NLP and dialog systems research
  
