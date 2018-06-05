@@ -23,7 +23,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.models.squad.utils import dot_attention, simple_attention, PtrNet, CudnnGRU
 from deeppavlov.core.common.check_gpu import check_gpu_existence
-from deeppavlov.core.layers.tf_layers import cudnn_bi_gru, variational_dropout, cudnn_stacked_bi_gru
+from deeppavlov.core.layers.tf_layers import cudnn_bi_gru, variational_dropout
 from deeppavlov.core.common.log import get_logger
 
 logger = get_logger(__name__)
@@ -133,19 +133,6 @@ class SquadModel(TFModel):
             q_emb = tf.concat([q_emb, qc_emb], axis=2)
 
         with tf.variable_scope("encoding"):
-            """
-            c_emb = variational_dropout(c_emb, keep_prob=self.keep_prob_ph)
-            c = cudnn_stacked_bi_gru(c_emb, self.hidden_size, self.c_len, n_stacks=3, keep_prob=self.keep_prob_ph,
-                                     concat_stacked_outputs=True,
-                                     trainable_initial_states=True,
-                                     name='encoding_bigru')
-            q_emb = variational_dropout(q_emb, self.keep_prob_ph)
-            q = cudnn_stacked_bi_gru(q_emb, self.hidden_size, self.q_len, n_stacks=3, keep_prob=self.keep_prob_ph,
-                                     concat_stacked_outputs=True,
-                                     trainable_initial_states=True,
-                                     name='encoding_bigru',
-                                     reuse=True)
-            """
             rnn = CudnnGRU(num_layers=3, num_units=self.hidden_size, batch_size=bs,
                            input_size=c_emb.get_shape().as_list()[-1],
                            keep_prob=self.keep_prob_ph)
