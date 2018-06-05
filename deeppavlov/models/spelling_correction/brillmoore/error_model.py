@@ -21,10 +21,8 @@ from collections import defaultdict, Counter
 from heapq import heappop, heappushpop, heappush
 from math import log, exp
 
-import kenlm
 from tqdm import tqdm
 
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.vocabs.typos import StaticDictionary
@@ -37,7 +35,7 @@ logger = get_logger(__name__)
 
 @register('spelling_error_model')
 class ErrorModel(Estimator):
-    def __init__(self, dictionary: StaticDictionary, window=1, lm_file=None, *args, **kwargs):
+    def __init__(self, dictionary: StaticDictionary, window=1, candidates_count=1, *args, **kwargs):
 
         super().__init__(*args, **kwargs)
         self.costs = defaultdict(itertools.repeat(float('-inf')).__next__)
@@ -56,17 +54,13 @@ class ErrorModel(Estimator):
         # if self.ser_path.is_file():
         self.load()
 
-        if lm_file:
-            self.lm = kenlm.Model(str(expand_path(lm_file)))
-            self.beam_size = 4
-            self.candidates_count = 4
-            self._infer_instance = self._infer_instance_lm
+        self.candidates_count = candidates_count
 
-    def _find_candidates_window_0(self, word, k=1, prop_threshold=1e-6):
+    def _find_candidates_window_0(self, word, prop_threshold=1e-6):
         threshold = log(prop_threshold)
         d = {}
         prefixes_heap = [(0, {''})]
-        candidates = [(float('-inf'), '') for _ in range(k)]
+        candidates = [(float('-inf'), '') for _ in range(self.candidates_count)]
         word = '⟬{}⟭'.format(word.lower().replace('ё', 'е'))
         word_len = len(word) + 1
         while prefixes_heap and -prefixes_heap[0][0] > candidates[0][0]:
@@ -91,7 +85,7 @@ class ErrorModel(Estimator):
         return [(w.strip('⟬⟭'), score) for score, w in sorted(candidates, reverse=True) if
                 score > threshold]
 
-    def _find_candidates_window_n(self, word, k=1, prop_threshold=1e-6):
+    def _find_candidates_window_n(self, word, prop_threshold=1e-6):
         threshold = log(prop_threshold)
         word = '⟬{}⟭'.format(word.lower().replace('ё', 'е'))
         word_len = len(word) + 1
@@ -99,7 +93,7 @@ class ErrorModel(Estimator):
         d = defaultdict(list)
         d[''] = [0.] + [inf] * (word_len - 1)
         prefixes_heap = [(0, self.dictionary.words_trie[''])]
-        candidates = [(inf, '')] * k
+        candidates = [(inf, '')] * self.candidates_count
         while prefixes_heap and -prefixes_heap[0][0] > candidates[0][0]:
             _, prefixes = heappop(prefixes_heap)
             for prefix in prefixes:
@@ -127,46 +121,19 @@ class ErrorModel(Estimator):
                 score > threshold]
 
     def _infer_instance(self, instance: List[str]):
-        corrected = []
-        for incorrect in instance:
-            if any([c not in self.dictionary.alphabet for c in incorrect]):
-                corrected.append(incorrect)
-            else:
-                res = self.find_candidates(incorrect, k=1, prop_threshold=1e-6)
-                corrected.append(res[0][0] if res else incorrect)
-        return ' '.join(corrected)
-
-    def _infer_instance_lm(self, instance: List[str], *args, **kwargs):
         candidates = []
         for incorrect in instance:
             if any([c not in self.dictionary.alphabet for c in incorrect]):
                 candidates.append([(0, incorrect)])
             else:
-                res = self.find_candidates(incorrect, k=self.candidates_count, prop_threshold=1e-6)
+                res = self.find_candidates(incorrect, prop_threshold=1e-6)
                 if res:
                     candidates.append([(score, candidate) for candidate, score in res])
                 else:
                     candidates.append([(0, incorrect)])
-        candidates.append([(0, '</s>')])
-
-        state = kenlm.State()
-        self.lm.BeginSentenceWrite(state)
-        beam = [(0, state, [])]
-        for sublist in candidates:
-            new_beam = []
-            for beam_score, beam_state, beam_words in beam:
-                for score, candidate in sublist:
-                    state = kenlm.State()
-                    c_score = self.lm.BaseScore(beam_state, candidate, state)
-                    new_beam.append((beam_score + score + c_score, state, beam_words + [candidate]))
-            new_beam.sort(reverse=True)
-            beam = new_beam[:self.beam_size]
-        score, state, words = beam[0]
-        return ' '.join(words[:-1])
+        return candidates
 
     def __call__(self, data, *args, **kwargs):
-        if isinstance(data[0], str):
-            return self._infer_instance(data)
         if len(data) > 1:
             data = tqdm(data, desc='Infering a batch with the error model', leave=False)
         return [self._infer_instance(instance) for instance in data]

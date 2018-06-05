@@ -22,10 +22,22 @@ from deeppavlov.core.models.component import Component
 
 @register('dirty_comments_preprocessor')
 class DirtyCommentsPreprocessor(Component):
+    """
+    Class implements preprocessing of english texts with low level of literacy such as comments
+    """
     def __init__(self, *args, **kwargs):
         pass
 
     def __call__(self, batch: List[str], **kwargs):
+        """
+        Preprocesses given batch
+        Args:
+            batch: list of text samples
+            **kwargs: additional arguments
+
+        Returns:
+            list of preprocessed text samples
+        """
         f = [x.lower() for x in batch]
 
         f = [x.replace("won't", "will not") for x in f]
