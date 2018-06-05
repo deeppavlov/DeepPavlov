@@ -61,6 +61,8 @@ class RankingModel(NNModel):
         opt = deepcopy(kwargs)
         self.train_now = opt['train_now']
         self.hard_triplets = opt.get('hard_triplets')
+        self.hardest_positives = opt.get('hardest_positives')
+        self.num_hardest_samples = opt.get('num_hardest_samples')
         self.update_embeddings = opt.get('update_embeddings', 'on_validation')
         self.opt = opt
         self.interact_pred_num = opt['interact_pred_num']
@@ -142,11 +144,11 @@ class RankingModel(NNModel):
             self._net.train_on_batch(b)
 
     def make_hard_triplets(self, x, net):
-        samples = [el[1][1:] for el in x]
+        samples = [el[2] for el in x]
         batch_size = len(samples)
         num_samples = len(samples[0])
-        s = [y for el in samples for y in el]
-        s = self.dict.make_toks(s, type="context")
+        samp = [y for el in samples for y in el]
+        s = self.dict.make_toks(samp, type="context")
         s = self.dict.make_ints(s)
 
         embeddings = net.predict_context([s, s, s], 512)
@@ -157,30 +159,55 @@ class RankingModel(NNModel):
         distances = np.sqrt(distances)
         labels = np.arange(batch_size)
 
-        # mask_anchor_positive = np.expand_dims(np.repeat(labels, num_samples), 0)
-        #  == np.expand_dims(np.repeat(labels, num_samples), 1)
-        # mask_anchor_positive = mask_anchor_positive.astype(float)
-        # anchor_positive_dist = mask_anchor_positive * distances
-
         mask_anchor_negative = np.expand_dims(np.repeat(labels, num_samples), 0)\
                                != np.expand_dims(np.repeat(labels, num_samples), 1)
         mask_anchor_negative = mask_anchor_negative.astype(float)
         max_anchor_negative_dist = np.max(distances, axis=1, keepdims=True)
         anchor_negative_dist = distances + max_anchor_negative_dist * (1.0 - mask_anchor_negative)
-        #hardest_negative_dist = np.min(anchor_negative_dist, axis=1, keepdims=True)
-        hardest_negative_ind = np.argmin(anchor_negative_dist, axis=1)
+        if self.num_hardest_samples is not None:
+            hard = np.argsort(anchor_negative_dist, axis=1)[:, :self.num_hardest_samples]
+            ind = np.random.randint(self.num_hardest_samples, size=batch_size * num_samples)
+            hardest_negative_ind = hard[batch_size * num_samples * [True], ind]
+        else:
+            hardest_negative_ind = np.argmin(anchor_negative_dist, axis=1)
+
         c =[]
         rp = []
         rn = []
-        for i in range(batch_size):
-            for j in range(num_samples):
-                for k in range(j+1, num_samples):
+
+        if self.hardest_positives:
+            mask_anchor_positive = np.expand_dims(np.repeat(labels, num_samples), 0)\
+             == np.expand_dims(np.repeat(labels, num_samples), 1)
+            mask_anchor_positive = mask_anchor_positive.astype(float)
+            anchor_positive_dist = mask_anchor_positive * distances
+            if self.num_hardest_samples is not None:
+                hard = np.argsort(anchor_positive_dist, axis=1)[:, -self.num_hardest_samples:]
+                ind = np.random.randint(self.num_hardest_samples, size=batch_size * num_samples)
+                hardest_positive_ind = hard[batch_size * num_samples * [True], ind]
+            else:
+                hardest_positive_ind = np.argmax(anchor_positive_dist, axis=1)
+
+            for i in range(batch_size):
+                for j in range(num_samples):
                     c.append(s[i*num_samples+j])
-                    c.append(s[i*num_samples+k])
-                    rp.append(s[i*num_samples+k])
-                    rp.append(s[i*num_samples+j])
+                    rp.append(s[hardest_positive_ind[i*num_samples+j]])
                     rn.append(s[hardest_negative_ind[i*num_samples+j]])
-                    rn.append(s[hardest_negative_ind[i*num_samples+k]])
+        else:
+            for i in range(batch_size):
+                for j in range(num_samples):
+                    for k in range(j+1, num_samples):
+                        c.append(s[i*num_samples+j])
+                        c.append(s[i*num_samples+k])
+                        rp.append(s[i*num_samples+k])
+                        rp.append(s[i*num_samples+j])
+                        rn.append(s[hardest_negative_ind[i*num_samples+j]])
+                        rn.append(s[hardest_negative_ind[i*num_samples+k]])
+
+        triplets = list(zip(c, rp, rn))
+        np.random.shuffle(triplets)
+        c = [el[0] for el in triplets]
+        rp = [el[1] for el in triplets]
+        rn = [el[2] for el in triplets]
         y = np.ones((len(c), num_samples))
         return [c, rp, rn], y
 

@@ -12,7 +12,7 @@ class RankingIterator:
                  sample_candidates, sample_candidates_valid, sample_candidates_test,
                  num_negative_samples, num_ranking_samples_valid, num_ranking_samples_test,
                  seed=None, len_vocab=0, pos_pool_sample=False, pos_pool_rank=True, random_batches=False,
-                 batches_per_epoch=None, num_positive_samples=5):
+                 batches_per_epoch=None, hard_triplets=False, num_positive_samples=5):
 
         '''
         pos_pool_rank: whether to count samples from "pos_pool" as correct answers at test/validation
@@ -28,6 +28,7 @@ class RankingIterator:
         self.sample_candidates_valid = sample_candidates_valid
         self.sample_candidates_test = sample_candidates_test
         self.num_negative_samples = num_negative_samples
+        self.hard_triplets = hard_triplets
         self.num_positive_samples = num_positive_samples
         self.num_ranking_samples_valid = num_ranking_samples_valid
         self.num_ranking_samples_test = num_ranking_samples_test
@@ -62,14 +63,15 @@ class RankingIterator:
                     response = [random.choice(el["pos_pool"]) for el in context_response_data]
                 else:
                     response = [el["response"] for el in context_response_data]
-                if self.sample_candidates == "no":
-                    x = [[el[0], [el[1]] + random.choices(el[2]["pos_pool"], k=self.num_positive_samples)]
-                         for el in zip(context, response, context_response_data)]
-                    y = batch_size * [np.ones(self.num_positive_samples + 1)]
+                negative_response = self.create_neg_resp_rand(context_response_data, batch_size, data_type)
+                if self.hard_triplets:
+                    positives = [random.choices(el["pos_pool"], k=self.num_positive_samples)
+                                 for el in context_response_data]
+                    x = [[context[i], [response[i]]+negative_response[i], positives[i]]
+                         for i in range(len(context_response_data))]
                 else:
-                    negative_response = self.create_neg_resp_rand(context_response_data, batch_size, data_type)
-                    y = batch_size * [np.ones(2)]
-                    x = [[context[i], [response[i]]+[negative_response[i]]] for i in range(len(context_response_data))]
+                    x = [[context[i], [response[i]]+negative_response[i]] for i in range(len(context_response_data))]
+                y = batch_size * [np.ones(self.num_negative_samples)]
                 yield (x, y)
         if data_type in ["valid", "test"]:
             for i in range(num_steps + 1):
@@ -83,16 +85,10 @@ class RankingIterator:
                 yield (x, y)
 
     def create_neg_resp_rand(self, context_response_data, batch_size, data_type):
-        if data_type == "train":
-            sample_candidates = self.sample_candidates
-        elif data_type == "valid":
-            sample_candidates = self.sample_candidates_valid
+        sample_candidates = self.sample_candidates
         if sample_candidates == "pool":
-            candidate_lists = [el["neg_pool"] for el in context_response_data]
-            candidate_indices = [np.random.randint(0, np.min([len(candidate_lists[i]),
-                                 self.num_negative_samples]), 1)[0]
-                                 for i in range(batch_size)]
-            negative_response_data = [candidate_lists[i][candidate_indices[i]] for i in range(batch_size)]
+            negative_response_data = [random.choices(el["neg_pool"], k=self.num_negative_samples-1)
+                                      for el in context_response_data]
         elif sample_candidates == "global":
             candidates = []
             for i in range(batch_size):

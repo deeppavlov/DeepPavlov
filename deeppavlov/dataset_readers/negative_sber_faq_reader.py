@@ -72,19 +72,23 @@ class SberFAQReader(DatasetReader):
         for el in zip(label_test, sen_test):
             self.classes_vocab_test[el[0]].add(self.sen2int_vocab[el[1]])
 
-    def preprocess_data_train(self):
+    def preprocess_data_train(self, num_neg=1000):
 
         classes_vocab = self.classes_vocab_train
         contexts = []
         responses = []
         positive_responses_pool = []
+        negative_responses_pool = []
         for k, v in classes_vocab.items():
             positive_responses_pool.append(list(v))
             contexts.append(random.choice(list(v)))
             responses.append(random.choice(list(v)))
+            nr = self._get_neg_resps(classes_vocab, k)
+            nr = random.choices(nr, k=num_neg)
+            negative_responses_pool.append(nr)
         data = [{"context": el[0], "response": el[1],
-                "pos_pool": el[2], "neg_pool": None}
-                for el in zip(contexts, responses, positive_responses_pool)]
+                "pos_pool": el[2], "neg_pool": el[3]}
+                for el in zip(contexts, responses, positive_responses_pool, negative_responses_pool)]
         return data
 
     def preprocess_data_validation(self, fname, type, num_neg=9):
@@ -124,10 +128,12 @@ class SberFAQReader(DatasetReader):
         return data
 
     def clean_sen(self, sen):
-        return re.sub('\[Клиент:.*\]', '', sen).replace('&amp, laquo, ', '').replace('&amp, laquo, ', '').\
-            replace('&amp laquo ', '').replace('&amp quot ', '').replace('&amp quot ', '').strip()
+        return re.sub('\[Клиент:.*\]', '', sen).\
+            replace('&amp, laquo, ', '').replace('&amp, raquo, ', '').\
+            replace('&amp laquo ', '').replace('&amp raquo ', '').\
+            replace('&amp quot ', '').replace('&amp, quot, ', '').strip()
 
-    def _get_neg_resps(self, classes_vocab, label, num_neg_resps=10):
+    def _get_neg_resps(self, classes_vocab, label):
         neg_resps = []
         for k, v in classes_vocab.items():
             if k != label:
