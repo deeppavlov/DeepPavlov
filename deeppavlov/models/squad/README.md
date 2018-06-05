@@ -104,14 +104,14 @@ Default config could be found at `deeppavlov/configs/squad/squad.json`
 ## Training
 **Warning**: training with default config requires about 9Gb on  GPU. Run following command to train the model:  
 ```bash
-python -m deeppavlov.deep train deeppavlov/configs/squad/squad.json
+python -m deeppavlov train deeppavlov/configs/squad/squad.json
 ```
 ## Interact mode
 Interact mode provides command line interface to already trained model.
 
 To run model in interact mode run the following command:
  ```bash
-python -m deeppavlov.deep interact deeppavlov/configs/squad/squad.json
+python -m deeppavlov interact deeppavlov/configs/squad/squad.json
 ```
 Model will ask you to type in context and question.
 
