@@ -132,9 +132,6 @@ class MorphotaggerDatasetReader(DatasetReader):
             dir_path.mkdir(exist_ok=True, parents=True)
             download_decompress(url, dir_path)
             mark_done(dir_path)
-        for filepath in data_path:
-            if not filepath.exists():
-                raise ValueError("No file {} exists".format(filepath))
         data = {}
         for mode, filepath in zip(data_types, data_path):
             if mode == "dev":

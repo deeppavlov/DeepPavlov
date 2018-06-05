@@ -16,7 +16,7 @@ To perform all downloads in runtime you can also run all subsequent commands wit
 from `deeppavlov` directory of the repository. A subdirectory``results`` will be created and predictions will be written to the file
 ``ud_ru_syntagrus_test.res`` in it.
 3. To evaluate ru_syntagrus model on ru_syntagrus test subset, run
-``python -m deeppavlov.deep train configs/UD2.0/morpho_tagger/ru_syntagrus/morpho_ru_syntagrus_evaluate.json``.
+``python -m deeppavlov.deep evaluate configs/UD2.0/morpho_tagger/ru_syntagrus/morpho_ru_syntagrus_train.json``.
 4. To retrain model on ru_syntagrus dataset, run
 ``python -m deeppavlov.deep train configs/UD2.0/morpho_tagger/ru_syntagrus/morpho_ru_syntagrus_train.json``.
 Be careful, one epoch takes 8-60 minutes depending on your GPU.

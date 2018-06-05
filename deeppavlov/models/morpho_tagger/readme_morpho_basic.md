@@ -276,8 +276,6 @@ in the `''train''` subsection of **chainer**. Now it looks like
 ```
 "train": {
     "test_best": true,
-    "validate_best": false,
-    "train_model": false,
     "batch_size": 16,
     "metrics": ["per_token_accuracy"]
   }

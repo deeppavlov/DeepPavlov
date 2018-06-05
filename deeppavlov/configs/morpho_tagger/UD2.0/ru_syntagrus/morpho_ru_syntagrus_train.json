@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "morphotagger_dataset_reader",
-    "data_path": "morpho_tagger/UD2.0_source",
+    "data_path": "UD2.0_source",
     "language": "ru_syntagrus", "data_types": ["train", "dev", "test"]
   },
   "dataset_iterator": {
