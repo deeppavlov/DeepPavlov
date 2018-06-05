@@ -31,7 +31,7 @@ and its [implementation](https://github.com/HKUST-KnowComp/R-Net) by Wenxuan Zho
 The ODQA ranker and ODQA reader should be trained separately.
 **Warning: training the ranker on English Wikipedia requires 16 GB RAM.** Run the following to fit the ranker:
 ```bash
-python -m deeppavlov.deep train deeppavlov/configs/odqa/en_ranker_prod.json
+python -m deeppavlov train deeppavlov/configs/odqa/en_ranker_prod.json
 ```
 Read about training the reader in our separate [reader tutorial](https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/models/squad).
 
@@ -40,11 +40,11 @@ Read about training the reader in our separate [reader tutorial](https://github.
 ODQA, reader and ranker can be interacted separately. **Warning: interacting the ranker and ODQA on English Wikipedia requires 16 GB RAM.**
 Run the following to interact ODQA:
 ```bash
-python -m deeppavlov.deep train deeppavlov/configs/odqa/en_odqa_infer_prod.json
+python -m deeppavlov train deeppavlov/configs/odqa/en_odqa_infer_prod.json
 ```
 Run the following to interact the ranker:
 ```bash
-python -m deeppavlov.deep interact deeppavlov/configs/odqa/en_ranker_prod.json
+python -m deeppavlov interact deeppavlov/configs/odqa/en_ranker_prod.json
 ```
 Read about interacting the reader in our separate [reader tutorial](https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/models/squad).
 

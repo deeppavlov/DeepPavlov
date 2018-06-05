@@ -42,14 +42,18 @@ def readme():
         return f.read()
 
 
+meta = {}
+with open('deeppavlov/package_meta.py') as f:
+    exec(f.read(), meta)
+
 setup(
     name='deeppavlov',
     packages=find_packages(exclude=('tests',)),
-    version='0.0.4',
+    version=meta['__version__'],
     description='An open source library for building end-to-end dialog systems and training chatbots.',
     long_description=readme(),
     long_description_content_type="text/markdown",
-    author='Neural Networks and Deep Learning lab, MIPT',
+    author=meta['__author__'],
     author_email='info@ipavlov.ai',
     license='Apache License, Version 2.0',
     url='https://github.com/deepmipt/DeepPavlov',

@@ -78,7 +78,7 @@ x::bye
 * `template_path` — map from actions to text templates for response generation
 * `template_type` — type of templates to use (`"BaseTemplate"` by default) _(optional)_
 * `database` –  database that will be used during model inference to make "api_call" action and get `db_result` _(optional)_
-   * `name` — `"sql_database"` from [`deeppavlov.core.data.database:Sqlite3Database`](../../core/data/database.py) or your implementation
+   * `name` — `"sqlite_database"` from [`deeppavlov.core.data.sqlite_database:Sqlite3Database`](../../core/data/sqlite_database.py) or your implementation
    * `table_name` – sqlite table name
    * `primary_keys` – list of primary table keys' names
    * `keys` – ordered list of tabke key names, if not set will be infered from loaded database automatically _(optional, reccomended not to be used)_
