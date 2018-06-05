@@ -15,6 +15,7 @@
     "pipe": [
       {
         "name": "tfidf_ranker",
+        "top_n": 5,
         "in": [
           "x"
         ],

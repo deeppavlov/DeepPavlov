@@ -32,7 +32,19 @@ log = get_logger(__name__)
 
 @register('fasttext')
 class FasttextEmbedder(Component, Serializable):
+    """
+    Class implements fastText embedding model
+    """
     def __init__(self, load_path, save_path=None, dim=100, pad_zero=False, **kwargs):
+        """
+        Initialize embedder with given parameters
+        Args:
+            load_path: path where to load pre-trained embedding model from
+            save_path: is not used because model is not trainable; therefore, it is unchangable
+            dim: dimensionality of fastText model
+            pad_zero: whether to pad samples or not
+            **kwargs: additional arguments
+        """
         super().__init__(save_path=save_path, load_path=load_path)
         self.tok2emb = {}
         self.dim = dim
@@ -44,7 +56,13 @@ class FasttextEmbedder(Component, Serializable):
 
     def load(self, *args, **kwargs):
         """
-        Load dict of embeddings from file
+        Load fastText binary model from self.load_path
+        Args:
+            *args: arguments
+            **kwargs: arguments
+
+        Returns:
+            fastText pre-trained model
         """
 
         if self.load_path and self.load_path.is_file():
@@ -61,7 +79,15 @@ class FasttextEmbedder(Component, Serializable):
     @overrides
     def __call__(self, batch, mean=False, *args, **kwargs):
         """
-        Embed data
+        Embed sentences from batch
+        Args:
+            batch: list of tokenized text samples
+            mean: whether to return mean embedding of tokens per sample
+            *args: arguments
+            **kwargs: arguments
+
+        Returns:
+            embedded batch
         """
         batch = [self._encode(sample, mean) for sample in batch]
         if self.pad_zero:
@@ -69,9 +95,23 @@ class FasttextEmbedder(Component, Serializable):
         return batch
 
     def __iter__(self):
+        """
+        Iterate over all words from fastText model vocabulary
+        Returns:
+            iterator
+        """
         yield from self.model.get_words()
 
     def _encode(self, tokens: List[str], mean: bool):
+        """
+        Embed one text sample
+        Args:
+            tokens: tokenized text sample
+            mean: whether to return mean embedding of tokens per sample
+
+        Returns:
+            list of embedded tokens
+        """
         embedded_tokens = []
         for t in tokens:
             try:
