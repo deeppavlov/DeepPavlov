@@ -10,8 +10,8 @@ def bleu(y_true, y_predicted):
     if isinstance(y_true[0], (tuple, list)):
         y_true = [y[0] for y in y_true]
     examples_len = len(y_true)
-    bleu_list = (sentence_bleu([y2.lower().split()], y1.lower().split())
-                 for y1, y2 in zip(y_true, y_predicted))
+    bleu_list = (sentence_bleu([y_t.lower().split()], y_p.lower().split())
+                 for y_t, y_p in zip(y_true, y_predicted))
     return sum(bleu_list) / examples_len if examples_len else 0.
 
 
@@ -19,8 +19,8 @@ def bleu(y_true, y_predicted):
 def google_bleu(y_true, y_predicted):
     if isinstance(y_true[0], (tuple, list)):
         y_true = (y[0] for y in y_true)
-    return compute_bleu(([y.lower().split()] for y in y_predicted),
-                        (y.lower().split() for y in y_true))[0]
+    return compute_bleu(([y_t.lower().split()] for y_t in y_true),
+                        (y_p.lower().split() for y_p in y_predicted))[0]
 
 
 @register_metric('per_item_bleu')
@@ -29,8 +29,8 @@ def per_item_bleu(y_true, y_predicted):
     if isinstance(y_true[0][0], (tuple, list)):
         y_true = [y[0] for y_list in y_true for y in y_list]
     examples_len = len(y_true)
-    bleu_list = (sentence_bleu([y2.lower().split()], y1.lower().split())
-                 for y1, y2 in zip(y_true, y_predicted))
+    bleu_list = (sentence_bleu([y_t.lower().split()], y_p.lower().split())
+                 for y_t, y_p in zip(y_true, y_predicted))
     return sum(bleu_list) / examples_len if examples_len else 0.
 
 
@@ -38,7 +38,7 @@ def per_item_bleu(y_true, y_predicted):
 def per_item_dialog_bleu(y_true, y_predicted):
     y_true = [y['text'] for dialog in y_true for y in dialog]
     examples_len = len(y_true)
-    bleu_list = (sentence_bleu([y2.lower().split()], y1.lower().split())
-                 for y1, y2 in zip(y_true, y_predicted))
+    bleu_list = (sentence_bleu([y_t.lower().split()], y_p.lower().split())
+                 for y_t, y_p in zip(y_true, y_predicted))
     return sum(bleu_list) / examples_len if examples_len else 0.
 
