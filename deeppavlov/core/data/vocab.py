@@ -37,7 +37,7 @@ class DefaultVocabulary(Estimator):
 
         super().__init__(load_path=load_path,
                          save_path=save_path,
-                         mode=kwargs['mode'])
+                         **kwargs)
 
         self.special_tokens = special_tokens
         self.default_token = default_token

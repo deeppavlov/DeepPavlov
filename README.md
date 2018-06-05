@@ -126,7 +126,7 @@ Available model configs are:
 
 - ```deeppavlov/configs/ranking/*.json```
 
-- ```deeppavlov/configs/error_model/*.json```
+- ```deeppavlov/configs/spelling_correction/*.json```
 
 # Features
 
