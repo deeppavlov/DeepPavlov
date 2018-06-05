@@ -2,7 +2,7 @@ Cython==0.27.1
 lxml==4.1.1
 tqdm==4.19.5
 requests==2.18.4
-tensorflow-gpu==1.4.0
+tensorflow==1.4.0
 overrides==1.9
 kenlm==0.0.0
 h5py==2.7.1
@@ -19,3 +19,6 @@ python-Levenshtein==0.12.0
 flask==0.12.2
 flasgger==0.6.6
 flask_cors==3.0.3
+scipy==1.0.0
+pymorphy2==0.8
+pymorphy2-dicts-ru

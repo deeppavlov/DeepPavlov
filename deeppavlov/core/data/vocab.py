@@ -37,7 +37,7 @@ class DefaultVocabulary(Estimator):
 
         super().__init__(load_path=load_path,
                          save_path=save_path,
-                         mode=kwargs['mode'])
+                         **kwargs)
 
         self.special_tokens = special_tokens
         self.default_token = default_token
@@ -196,3 +196,4 @@ class DefaultVocabulary(Estimator):
 
     def batch_idxs2batch_toks(self, b_idxs, filter_paddings=False):
         return [self.idxs2toks(idxs, filter_paddings) for idxs in b_idxs]
+

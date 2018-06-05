@@ -8,17 +8,18 @@ suitable response to a given context from some context (response) database.
 The code in this repository uses a deep learning
 approach to address the question answer selection task. Currently, a basic
 model is implemented with bidirectional long short-term memory 
-(biLSTM), with max pooling and without attention. The model is applied to the InsuranceQA dataset
- https://github.com/shuzi/insuranceQA .
- 
+(biLSTM), with max pooling and without attention. The model was trained on the dataset:
+[InsuranceQA V1](https://github.com/shuzi/insuranceQA)*[]:
+
 The distinguishing feature of the model is the use of triplet loss [1, 2].
 This loss has a margin hyperparameter, which usually ranges from 0.01 to 0.2.
-It is required to provide positive and negative response candidates for each context from the dataset to train the model.
-Sampling of negative candidates can be performed globaly from the whole response set
- or from the pools of responses predefined separatly for each context.
+It is required to provide positive and negative response candidates for each context
+ from the dataset to train the model.
+Sampling of negative candidates can be performed globally from the whole response set
+ or from pools of responses predefined separately for each context.
 The same is true for validation and test, i.e. validation and test
  can be carried out for the entire set of answers or
-  for the answers selected separately for each context.
+  for the answers pools selected separately for each context.
 There is a possibility in the model to encode contexts and responses with biLSTM layers
  having shared or separate weights.
 
@@ -27,19 +28,20 @@ Each train data sample for feeding the model is arranged as follows:
 ```
 {'context': [21507, 4696, 5843, 13035, 1628, 20923, 16083, 18690], 'response': 7009, 'pos_pool': [7009, 7010], 'neg_pool': None}
 ```
-The context has a key "context" in the data sample.
+The context has a "context" key in the data sample.
 It is represented by a list of integers which are keys
- that give the list of tokens using the dictionary "token–integer".
-The correct response has the key "response", its value is always a single integer.
+ that give the list of tokens using the dictionary "integer–token".
+The correct response has the "response"  key in the sample,
+ its value is always a single integer.
 The list of possible correct responses (there may be several) can be obtained
- with the key "pos_pool".
-The "response" value should be equal to one item from the list
- obtained using the key "pos_pool".
+ with the "pos_pool" key.
+The value of the "response" should be equal to the one item from the list
+ obtained using the "pos_pool" key.
 The list of possible negative responses (there can be a lot of them,
  100–10000) is represented by the key "neg_pool".
 Its value is None, when global sampling is used, or the list of fixed
  length, when sampling from predefined negative responses is used.
-It is important that values in "pos_pool" and "negative_pool" did
+It is important that values in "pos_pool" and "negative_pool" do
  not overlap.
 Single responses in "response", "pos_pool", "neg_pool" are represented
  by single integers that give lists of integers
@@ -47,19 +49,17 @@ Single responses in "response", "pos_pool", "neg_pool" are represented
 These lists of integers can be converted to lists of tokens with
  the same dictionary "integer–token" which is used for contexts.
 The additional "integer–list of integers" vocabulary is used
- to not store in the form of sequences
- all possible negative responses. 
- Validation and test data samples are almost the same as train samples.
-The difference is that candidates for ranking
- are taken from "neg_pool" list of the length 500.
- 
+ to not store all possible negative responses in the form of sequences.
+ Validation and test data samples representation are almost the same
+as the train samples one shown above.
+
 ## Infer from pre-trained model
 
-To use the pre-trained model for inference one should run the following command:
+To use the model pre-trained on the InsuranceQA V1 dataset for inference, one should run
+ the following command:
 ```
-python -m deeppavlov.deep interact deeppavlov/configs/ranking/insurance_config.json
+python -m deeppavlov.deep interact deeppavlov/configs/ranking/ranking_insurance.json
 ```
-
 Now user can enter a text of context and get relevant contexts and responses:
 
 ```
@@ -71,9 +71,10 @@ Now user can enter a text of context and get relevant contexts and responses:
 
 To train the model on the InsuranceQA dataset one should run the command:
 ```
-python -m deeppavlov.deep interact deeppavlov/configs/ranking/insurance_config.json
+python -m deeppavlov.deep interact deeppavlov/configs/ranking/ranking_insurance.json
 ```
-All parameters from [insurance_config.json](../../configs/ranking/insurance_config.json) config file are described in the table below.
+All parameters that can be set for the model (for example, see
+[ranking_insurance.json](../../configs/ranking/ranking_insurance.json)) are:
 
 #### Configuration parameters:  
 
@@ -85,6 +86,7 @@ All parameters from [insurance_config.json](../../configs/ranking/insurance_conf
 | **dataset_iterator** | **provides models with data.** |
 |   name              | str, a registered name of the dataset. | 
 |   seed              | int or None (default=None),  a seed for a batch generator. |
+| len_vocab | int, a size of "integer–list of integers" vocab with all possible responses |
 |   sample_candiates  | {"global", "pool"}, a method of negative sampling in train data. If "pool", negative candidates for each data sample should be provided. If "global", negative sampling over the whole data will be performed.|
 |   sample_candiates_valid  | {"global", "pool"}, a method of selecting_candidates for ranking in valid data. If "pool", candidates for ranking for each data sample should be provided. If "global",  all data samples will be taken as candidates for ranking.|
 |   sample_candiates_test  | {"global", "pool"}, a method of selecting_candidates for ranking in valid data. If "pool", candidates for ranking for each data sample should be provided. If "global",  all data samples will be taken as candidates for ranking.|
@@ -108,6 +110,8 @@ All parameters from [insurance_config.json](../../configs/ranking/insurance_conf
 | vocabs_path | str, a path to a directory with data files from where the model vocabularies will be built. |
 | download_url | str, a URL where a pre-trained model with word embeddings is stored.|
 | embeddings | {"wor2vec", "fasttext"}, a type of the pre-trained embeddings model.
+| embeddings_path | str, a path to a folder where to save downloaded embeddings. |
+| embedding_dim | int, a dimensionality of word embeddings vectors. |
 | seed | int or None (default=None), a seed to initialize the model weights. |
 | max_sequence_length | int, a maximum number of tokens in an input sequence. If the sequence is shorter than the "max_sequence_length" it will be padded with a default token, otherwise the sequence will be truncated.| 
 | padding | {"pre", "post"}, pad either before or after each sequence if it is shorter than "max_sequence_length". |
@@ -124,17 +128,19 @@ All parameters from [insurance_config.json](../../configs/ranking/insurance_conf
 | **train**           | **parameters for training** |
 | epochs              | int, a number of epochs for training. |
 | batch_size          | int, a batch size for training. |
-| metrics             | a list of metrics names , top-1 recall "r@1", "r@2", "r@5" and the average position of the correct response among all response candidates "rank_response" are available for the model. | 
+| pytest_max_batches | int, a number of batches for the model training while testing. |
+| metrics             | a list of metrics names , loss "loss", top-1 recall "r@1", "r@2", "r@5" and the average position of the correct response among all response candidates "rank_response" are available for the model. |
 | validation_patience | int, for how many epochs the training can continue without improvement of the metric value on the validation set.           | 
 | val_every_n_epochs  | int, a frequency of validation during training (validate every n epochs).       | 
 
 ## Comparison
+The InsuranceQA V1 dataset:
 
-| Model                | Validation | Test1 |
+| Model                | Validation (Recall@1) | Test1 (Recall@1) |
 |---------------------- |:----------------:|:------------:|
 | Architecture II: (HL<sub>QA</sub>(200) CNN<sub>QA</sub>(4000) 1-MaxPooling Tanh) [1] | 61.8 | 62.8 |
 | QA-LSTM basic-model(max pooling) [2] | 64.3 | 63.1 |
-| Our model (biLSTM, max pooling) | 63.5 | 62.2 |
+| Our model (biLSTM, max pooling) | **67.6** | **67.6** |
 
 ## Literature
 

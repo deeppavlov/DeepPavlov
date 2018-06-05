@@ -16,6 +16,7 @@ limitations under the License.
 
 import csv
 import itertools
+from typing import List
 from collections import defaultdict, Counter
 from heapq import heappop, heappushpop, heappush
 from math import log, exp
@@ -125,9 +126,9 @@ class ErrorModel(Estimator):
         return [(w.strip('⟬⟭'), score) for score, w in sorted(candidates, reverse=True) if
                 score > threshold]
 
-    def _infer_instance(self, instance: str):
+    def _infer_instance(self, instance: List[str]):
         corrected = []
-        for incorrect in instance.split():
+        for incorrect in instance:
             if any([c not in self.dictionary.alphabet for c in incorrect]):
                 corrected.append(incorrect)
             else:
@@ -135,9 +136,9 @@ class ErrorModel(Estimator):
                 corrected.append(res[0][0] if res else incorrect)
         return ' '.join(corrected)
 
-    def _infer_instance_lm(self, instance: str, *args, **kwargs):
+    def _infer_instance_lm(self, instance: List[str], *args, **kwargs):
         candidates = []
-        for incorrect in instance.split():
+        for incorrect in instance:
             if any([c not in self.dictionary.alphabet for c in incorrect]):
                 candidates.append([(0, incorrect)])
             else:
@@ -164,7 +165,7 @@ class ErrorModel(Estimator):
         return ' '.join(words[:-1])
 
     def __call__(self, data, *args, **kwargs):
-        if isinstance(data, str):
+        if isinstance(data[0], str):
             return self._infer_instance(data)
         if len(data) > 1:
             data = tqdm(data, desc='Infering a batch with the error model', leave=False)
@@ -200,8 +201,8 @@ class ErrorModel(Estimator):
         data = list(zip(x, y))
         window = 4
         for error, correct in tqdm(data, desc='Training the error model'):
-            correct = '⟬{}⟭'.format(correct)
-            error = '⟬{}⟭'.format(error)
+            correct = '⟬{}⟭'.format(' '.join(correct))
+            error = '⟬{}⟭'.format(' '.join(error))
             d, ops = self._distance_edits(correct, error)
             if d <= 2:
                 w_ops = set()
