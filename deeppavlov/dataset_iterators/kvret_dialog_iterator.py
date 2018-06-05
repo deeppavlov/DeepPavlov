@@ -52,15 +52,17 @@ class KvretDialogDatasetIterator(DataLearningIterator):
         history = []
         for x, y in data:
             if x.get('episode_done'):
-                #history = []
+                # x_hist, y_hist = [], []
                 history = ""
-            #history.append((x, y))
+            # x_hist.append(x['text'])
+            # y_hist.append(y['text'])
             history = history + ' ' + x['text'] + ' ' + y['text']
-            #x['history'] = history[:-1]
+            # x['x_hist'] = x_hist[:-1]
+            # x['y_hist'] = y_hist[:-1]
             x['history'] = history[:-len(x['text'])-len(y['text'])-2]
-            x_tuple = (x['text'], x['dialog_id'], x['history'], x['kb_columns'],
-                       x['kb_items'])
-            y_tuple = (y['text'], y['task'])
+            x_tuple = (x['text'], x['dialog_id'], x['history'],
+                       x['kb_columns'], x['kb_items'])
+            y_tuple = (y['text'], y['task']['intent'])
             utters.append((x_tuple, y_tuple))
         return utters
 

@@ -22,13 +22,13 @@
       },
       {
         "ref": "stream_spacy",
-        "in": ["history"],
-        "out": ["history_tokens"]
+        "in": ["y_text"],
+        "out": ["y_tokens"]
       },
       {
         "ref": "stream_spacy",
-        "in": ["y_text"],
-        "out": ["y_tokens"]
+        "in": ["history"],
+        "out": ["history_tokens"]
       },
       {
         "id": "kb",
@@ -47,18 +47,13 @@
       },
       {
         "name": "knowledge_base_entity_normalizer",
-        "in": ["history_tokens", "kb_entries"],
-        "out": ["history_norm_tokens"]
-      },
-      {
-        "name": "knowledge_base_entity_normalizer",
         "remove": true,
         "in": ["y_tokens", "kb_entries"],
         "out": ["y_without_entities_tokens"]
       },
       {
         "id": "src_token_vocab",
-        "fit_on": ["x_tokens"],
+        "fit_on": ["x_tokens", "history_tokens"],
         "name": "default_vocab",
         "level": "token",
         "special_tokens": ["<SOS>"],
@@ -83,7 +78,7 @@
         "load_path": "embeddings/wiki.en.bin"
       },
       {
-        "in": ["x_tokens", "history_norm_tokens", "kb_entries"],
+        "in": ["x_tokens", "history_tokens", "kb_entries"],
         "in_y": ["y_norm_tokens"],
         "out": ["prediction_norm_tokens"],
         "main": true,

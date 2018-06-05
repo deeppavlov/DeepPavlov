@@ -129,4 +129,3 @@ class KnowledgeBaseEntityNormalizer(Component):
         if self.denormalize_flag:
             return [self.denormalize(t, e) for t, e in zip(tokens_list, entries_list)]
         return [self.normalize(t, e) for t, e in zip(tokens_list, entries_list)]
-
