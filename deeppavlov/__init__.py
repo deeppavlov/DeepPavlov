@@ -43,7 +43,6 @@ import deeppavlov.models.embedders.fasttext_embedder
 import deeppavlov.models.embedders.dict_embedder
 import deeppavlov.models.embedders.glove_embedder
 import deeppavlov.models.embedders.bow_embedder
-import deeppavlov.models.ner.ner_ontonotes
 import deeppavlov.models.spelling_correction.brillmoore.error_model
 import deeppavlov.models.spelling_correction.levenstein.searcher_component
 import deeppavlov.models.spelling_correction.electors.kenlm_elector
