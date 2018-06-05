@@ -37,7 +37,6 @@ class Seq2SeqGoalOrientedBot(NNModel):
                  network: Type = Seq2SeqGoalOrientedBotNetwork,
                  source_vocab: Type = DefaultVocabulary,
                  target_vocab: Type = DefaultVocabulary,
-                 bow_encoder: Type = BoWEncoder,
                  knowledge_base_keys: Type = list,
                  debug=False,
                  save_path=None,
@@ -51,25 +50,19 @@ class Seq2SeqGoalOrientedBot(NNModel):
         self.src_vocab = source_vocab
         self.tgt_vocab = target_vocab
         self.tgt_vocab_size = len(target_vocab)
-        self.bow_encoder = bow_encoder
         self.kb_keys = knowledge_base_keys
         self.kb_size = len(self.kb_keys)
         #self.embedder = embedder
         self.debug = debug
 
-    def train_on_batch(self, *batch):
-        b_enc_ins, b_src_lens, b_kb_masks = [], [], []
+    def train_on_batch(self, utters, history_list, kb_entry_list, responses):
+        b_enc_ins, b_src_lens = [], []
         b_dec_ins, b_dec_outs, b_tgt_lens, b_tgt_weights = [], [], [], []
-        for x_tokens, history, kb_entries, y_tokens in zip(*batch):
-
+        for x_tokens, history, y_tokens in zip(utters, history_list, responses):
             x_tokens = history + x_tokens
             enc_in = self._encode_context(x_tokens)
             b_enc_ins.append(enc_in)
             b_src_lens.append(len(enc_in))
-            if self.debug:
-                if len(kb_entries) != len(set([e[0] for e in kb_entries])):
-                    print("Duplicates in kb_entries = {}".format(kb_entries))
-            b_kb_masks.append(self._kb_mask(kb_entries))
 
             dec_in, dec_out = self._encode_response(y_tokens)
             b_dec_ins.append(dec_in)
@@ -84,12 +77,18 @@ class Seq2SeqGoalOrientedBot(NNModel):
         b_dec_ins_np = np.ones((batch_size, max_tgt_len)) * self.tgt_vocab[self.eos_token]
         b_dec_outs_np = np.ones((batch_size, max_tgt_len)) * self.tgt_vocab[self.eos_token]
         b_tgt_weights_np = np.zeros((batch_size, max_tgt_len))
-        for i, (src_len, tgt_len) in enumerate(zip(b_src_lens, b_tgt_lens)):
-
+        b_kb_masks_np = np.zeros((batch_size, self.kb_size), np.float32)
+        for i, (src_len, tgt_len, kb_entries) in \
+                enumerate(zip(b_src_lens, b_tgt_lens, kb_entry_list)):
             b_enc_ins_np[i, :src_len] = b_enc_ins[i]
             b_dec_ins_np[i, :tgt_len] = b_dec_ins[i]
             b_dec_outs_np[i, :tgt_len] = b_dec_outs[i]
             b_tgt_weights_np[i, :tgt_len] = 1
+            if self.debug:
+                if len(kb_entries) != len(set([e[0] for e in kb_entries])):
+                    print("Duplicates in kb_entries = {}".format(kb_entries))
+            for k, v in kb_entries:
+                b_kb_masks_np[i, self.kb_keys.index(k)] = 1.
 
         """if self.debug:
             log.debug("b_enc_ins = {}".format(b_enc_ins))
@@ -100,19 +99,14 @@ class Seq2SeqGoalOrientedBot(NNModel):
             log.debug("b_tgt_weights = {}".format(b_tgt_weights))"""
 
         self.network.train_on_batch(b_enc_ins_np, b_dec_ins_np, b_dec_outs_np,
-                                    b_src_lens, b_tgt_lens, b_tgt_weights_np, b_db_masks)
+                                    b_src_lens, b_tgt_lens, b_tgt_weights_np,
+                                    b_kb_masks_np)
 
     def _encode_context(self, tokens):
         if self.debug:
             log.debug("Context tokens = \"{}\"".format(tokens))
         token_idxs = self.src_vocab(tokens)
         return token_idxs
-
-    def _kb_mask(self, entries):
-        mask = np.zeros(self.kb_size, dtype=np.float32)
-        for k, v in entries:
-            mask[self.kb_keys.index(k)] = 1.
-        return mask
 
     def _encode_response(self, tokens):
         if self.debug:
@@ -147,26 +141,29 @@ class Seq2SeqGoalOrientedBot(NNModel):
     #def _infer_on_batch(self, utters, kb_entry_list=itertools.repeat([])):
     def _infer_on_batch(self, utters, history_list, kb_entry_list):
 # TODO: history as input
-        b_enc_ins, b_src_lens = [], [], []
+        b_enc_ins, b_src_lens = [], []
         if (len(utters) == 1) and not utters[0]:
             utters = [['hi']]
-        for utter, history, kb_entries in zip(utters, history_list, kb_entry_list):
-            if self.debug:
-                log.debug("infer: kb_entries = {}".format(kb_entries))
+        for utter, history in zip(utters, history_list):
             utter = history + utter
             enc_in = self._encode_context(utter)
+
             b_enc_ins.append(enc_in)
             b_src_lens.append(len(enc_in))
-            b_kb_masks.append(self._kb_mask(kb_entries))
 
         # Sequence padding
         batch_size = len(b_enc_ins)
         max_src_len = max(b_src_lens)
         b_enc_ins_np = np.ones((batch_size, max_src_len)) * self.src_vocab[self.sos_token]
-        for i, src_len in enumerate(b_src_lens):
+        b_kb_masks_np = np.zeros((batch_size, self.kb_size), np.float32)
+        for i, (src_len, kb_entries) in enumerate(zip(b_src_lens, kb_entry_list)):
             b_enc_ins_np[i, :src_len] = b_enc_ins[i]
+            if self.debug:
+                log.debug("infer: kb_entries = {}".format(kb_entries))
+            for k, v in kb_entries:
+                b_kb_masks_np[i, self.kb_keys.index(k)] = 1.
 
-        pred_idxs = self.network(b_enc_ins, b_src_lens, b_kb_masks)
+        pred_idxs = self.network(b_enc_ins_np, b_src_lens, b_kb_masks_np)
         preds = self._decode_response(pred_idxs)
         if self.debug:
             log.debug("Dialog prediction = \"{}\"".format(preds[-1]))

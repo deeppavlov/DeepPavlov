@@ -118,7 +118,7 @@ class KBAttention(base.Layer):
                 name = name + '{:d}'.format(i)
             layer = tf.layers.Dense(size, name=name, _scope=name, **self.dense_params)
             layer.build(in_shape)
-            in_shape = layer._compute_output_shape(in_shape)
+            in_shape = layer.compute_output_shape(in_shape)
  
             self.layers.append(layer)
 
@@ -159,4 +159,4 @@ class KBAttention(base.Layer):
         return input_shape[:-1].concatenate(self.units + self.kb_input_shape[0])
 
     def compute_output_shape(self, input_shape):
-        return _compute_output_shape(self, input_shape)
+        return self._compute_output_shape(input_shape)
