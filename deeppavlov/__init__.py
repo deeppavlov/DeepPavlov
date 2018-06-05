@@ -97,4 +97,3 @@ import deeppavlov.metrics.fmeasure_classification
 import deeppavlov.core.common.log
 
 import deeppavlov.download
-
