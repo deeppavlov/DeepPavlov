@@ -46,10 +46,7 @@ def prettify_metrics(metrics, precision=4):
     """
     prettified_metrics = OrderedDict()
     for key, value in metrics:
-        if key.endswith("accuracy"):
-            value = round(100*value, precision)
-        else:
-            value = round(value, precision)
+        value = round(value, precision)
         prettified_metrics[key] = value
     return prettified_metrics
 
