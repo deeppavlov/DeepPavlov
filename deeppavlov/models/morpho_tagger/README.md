@@ -21,6 +21,6 @@ from `deeppavlov` directory of the repository. A subdirectory``results`` will be
 ``python -m deeppavlov.deep train configs/UD2.0/morpho_tagger/ru_syntagrus/morpho_ru_syntagrus_train.json``.
 Be careful, one epoch takes 8-60 minutes depending on your GPU.
 5. To tag Russian sentences from stdin, run
-``python -m deeppavlov.deep configs/morpho_tagger/UD2.0/morpho_tagger/ru_syntagrus/morpho_ru_syntagrus_interact.json``.
+``python -m deeppavlov.deep configs/morpho_tagger/UD2.0/morpho_tagger/ru_syntagrus/morpho_ru_syntagrus_predict.json``.
 
 Read [detailed readme](readme_morpho_basic.md) for advanced usage options.
