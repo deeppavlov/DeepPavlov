@@ -1,6 +1,5 @@
 import numpy as np
 import tensorflow as tf
-from functools import partial
 
 from deeppavlov.core.layers.tf_layers import embedding_layer, character_embedding_network, variational_dropout
 from deeppavlov.core.layers.tf_layers import cudnn_bi_lstm, cudnn_bi_gru, bi_rnn, stacked_cnn, INITIALIZER
@@ -9,12 +8,72 @@ from deeppavlov.core.common.check_gpu import check_gpu_existence
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 
-
 log = get_logger(__name__)
 
 
 @register('ner')
 class NerNetwork(TFModel):
+    """
+    The ``NerNetwork`` is for Neural Named Entity Recognition and Slot Filling.
+
+    Parameters
+    ----------
+    n_tags : ``int``, required
+        Number of tags in the tag vocabulary.
+    token_emb_dim : ``int`` (default = ``None``)
+        Dimensionality of token embeddings, needed if embedding matrix is not provided.
+    char_emb_dim : ``int`` (default = ``None``)
+        Dimensionality of token embeddings.
+    capitalization_dim : ``int`` (default = ``None``)
+        Dimensionality of capitalization features, if they are provided.
+    pos_features_dim : ``int`` (default = ``None``)
+        Dimensionality of POS features, if they are provided.
+    additional_features : ``int`` (default = ``None``)
+        Some other features.
+    net_type : ``str`` (default = ``'rnn'``)
+        Type of the network, either ``'rnn'`` or ``'cnn'``
+    cell_type : ``str`` (default = ``lstm``)
+        Type of the cell in RNN, either ``'lstm'`` or ``'gru'``
+    use_cudnn_rnn : ``bool`` (default = ``False``)
+        Whether to use CUDNN implementation of RNN.
+    two_dense_on_top : ``bool`` (default = ``False``)
+        Additional dense layer before predictions.
+    n_hidden_list : ``Tuple[int]`` (default = ``(100,)``)
+        A list of output feature dimensionality for each layer. A value (100, 200) means that there will be two layers
+        with 100 and 200 units, respectively.
+    cnn_filter_width : ``int`` (default = ``7``)
+        The width of the convolutional kernel for Convolutional Neural Networks.
+    use_crf : ``bool`` (default = ``False``)
+        Whether to use Conditional Random Fields on top of the network (recommended).
+    token_emb_mat : ``numpy.ndarray`` (default = ``None``)
+        Token embeddings matrix.
+    char_emb_mat : ``numpy.ndarray`` (default = ``None``)
+        Character embeddings matrix.
+    use_batch_norm : ``bool`` (default = ``False``)
+        Whether to use Batch Normalization or not. Affects only CNN networks.
+    dropout_keep_prob : ``float`` (default = ``0.5``)
+        Probability of keeping the hidden state, values from 0 to 1. 0.5 works well in most of the cases.
+    embeddings_dropout : ``bool`` (default = ``False``)
+        Whether to use dropout on embeddings or not.
+    top_dropout : ``bool`` (default = ``False``)
+        Whether to use dropout on output units of the network or not.
+    intra_layer_dropout : ``bool`` (default = ``False``)
+        Whether to use dropout between layers or not.
+    l2_reg :``float`` (default = ``0.0``)
+        L2 norm regularization for all kernels.
+    clip_grad_norm :``float`` (default = ``5.0``)
+        Clip the gradients by norm.
+    learning_rate : ``float`` (default = ``3e-3``)
+        Learning rate to use during the training (usually from 0.1 to 0.0001)
+    gpu : ``int`` (default = ``None``)
+        Number of gpu to use.
+    seed : ``int`` (default = ``None``)
+        Random seed.
+    lr_drop_patience : ``int`` (default = ``5``)
+        How many epochs to wait until drop the learning rate.
+    lr_drop_value : ``float`` (default = ``0.1``)
+        Amount of learning rate drop.
+    """
     GRAPH_PARAMS = ["n_tags",  # TODO: add check
                     "char_emb_dim",
                     "capitalization_dim",

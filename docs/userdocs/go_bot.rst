@@ -90,7 +90,7 @@ Config parameters:
 -  ``name`` always equals to ``"go_bot"``
 -  ``word_vocab`` — vocabulary of tokens from context utterances
 -  ``name`` — ``"default_vocab"`` (for vocabulary's implementation see
-   ```deeppavlov.core.data.vocab`` <../../core/data/vocab.py>`__)
+   ``deeppavlov.core.data.vocab``)
 -  ``level`` — ``"token"``,
 -  ``tokenizer`` — ``{ "name": "split_tokenizer" }``,
 -  ``save_path`` — ``"vocabs/token.dict"``
@@ -247,7 +247,7 @@ To infer from a pretrained model with config path equal to
         utterance = input(':: ')
 
 To interact via command line use
-```deeppavlov/deep.py`` <../../deep.py>`__ script:
+``deeppavlov/deep.py`` script:
 
 .. code:: bash
 
@@ -286,9 +286,7 @@ parameters:
    ``{"name": "dialog_iterator"}`` (for implementation see
    ``deeppavlov.dataset_iterators.dialog_iterator.py``)
 
-See
-``deeeppavlov/configs/go_bot/gobot_dstc2.json``
-for details.
+See ``deeeppavlov/configs/go_bot/gobot_dstc2.json`` for details.
 
 Train run
 ^^^^^^^^^

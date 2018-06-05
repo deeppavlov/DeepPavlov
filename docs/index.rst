@@ -13,10 +13,15 @@ DeepPavlov is an open source library for building end-to-end dialog systems and 
 
 .. toctree::
    :glob:
-   :maxdepth: 3
+   :maxdepth: 1
    :caption: User Documentation
 
-   userdocs/*
+   Installation <userdocs/installation>
+   Getting Started <userdocs/getting_started>
+   Intent classification <userdocs/intents>
+   Slot filling <userdocs/slot_filling>
+   Dialogue Bot for goal-oriented task <userdocs/go_bot>
+   Named Entity Recognition <userdocs/ner>
 
 
 .. toctree::
