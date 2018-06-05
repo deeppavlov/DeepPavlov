@@ -58,7 +58,7 @@ as the train samples one shown above.
 To use the model pre-trained on the InsuranceQA V1 dataset for inference, one should run
  the following command:
 ```
-python -m deeppavlov.deep interact deeppavlov/configs/ranking/ranking_insurance.json
+python -m deeppavlov interact deeppavlov/configs/ranking/ranking_insurance.json
 ```
 Now user can enter a text of context and get relevant contexts and responses:
 
@@ -71,7 +71,7 @@ Now user can enter a text of context and get relevant contexts and responses:
 
 To train the model on the InsuranceQA dataset one should run the command:
 ```
-python -m deeppavlov.deep interact deeppavlov/configs/ranking/ranking_insurance.json
+python -m deeppavlov interact deeppavlov/configs/ranking/ranking_insurance.json
 ```
 All parameters that can be set for the model (for example, see
 [ranking_insurance.json](../../configs/ranking/ranking_insurance.json)) are:
