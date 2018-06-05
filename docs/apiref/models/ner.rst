@@ -5,5 +5,4 @@ NER class.
 .. automodule:: deeppavlov.models.ner
    :members:
 
-.. automodule:: deeppavlov.models.ner.network
-   :members:
+.. autoclass:: deeppavlov.models.ner.network.NerNetwork

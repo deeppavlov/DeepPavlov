@@ -32,7 +32,7 @@ class NerNetwork(TFModel):
         Some other features.
     net_type : ``str`` (default = ``'rnn'``)
         Type of the network, either ``'rnn'`` or ``'cnn'``
-    cell_type : ``str`` (default = ``lstm``)
+    cell_type : ``str`` (default = ``'lstm'``)
         Type of the cell in RNN, either ``'lstm'`` or ``'gru'``
     use_cudnn_rnn : ``bool`` (default = ``False``)
         Whether to use CUDNN implementation of RNN.
