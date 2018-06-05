@@ -149,7 +149,7 @@
       "server_utils": "NER"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_conll2003_v3.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_conll2003_v4.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt",
         "subdir": "embeddings"
