@@ -31,13 +31,22 @@ FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_t
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
-    "error_model": {
-        ("error_model/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
+    "spelling_correction": {
+        ("spelling_correction/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
             [
                 ("helllo", "hello"),
                 ("datha", "data")
             ],
-        ("error_model/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+        ("spelling_correction/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES):
+            [
+                ("преведствую", "приветствую"),
+                ("я джва года дду эту игру", "я два года жду эту игру")
+            ],
+        ("spelling_correction/levenstein_corrector_ru.json", "error_model", ('IP',)):
+            [
+                ("преветствую", "приветствую"),
+                ("Я джва года хочу такую игру", "я два года хочу такую игру")
+            ]
     },
     "go_bot": {
         ("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
@@ -47,20 +56,21 @@ PARAMS = {
     },
     "intents": {
         ("intents/intents_dstc2.json", "intents", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_dstc2_big.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK]
+        ("intents/intents_dstc2_big.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "snips": {("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_snips_bigru.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_cnn.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_self_add_attention.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_self_mult_attention.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_cnn_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK]
+        ("intents/intents_snips_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("intents/intents_snips_bilstm_cnn.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("intents/intents_snips_bilstm_self_add_attention.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("intents/intents_snips_bilstm_self_mult_attention.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("intents/intents_snips_cnn_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "sentiment": {
         ("sentiment/insults_kaggle.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("sentiment/sentiment_twitter.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+        ("sentiment/sentiment_twitter.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("sentiment/sentiment_ag_news.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
     },
     "sample": {
         ("intents/intents_sample_csv.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],

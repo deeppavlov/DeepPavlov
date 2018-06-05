@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "name": "typos_kartaslov_reader"
+    "class": "deeppavlov.dataset_readers.typos_reader:TyposWikipedia"
   },
   "dataset_iterator": {
-    "name": "typos_iterator",
-    "test_ratio": 0.02
+    "class": "deeppavlov.dataset_iterators.typos_iterator:TyposDatasetIterator",
+    "test_ratio": 0.05
   },
   "chainer":{
     "in": ["x"],
@@ -17,7 +17,7 @@
         "out": ["x_lower"]
       },
       {
-        "name": "nltk_tokenizer",
+        "name": "nltk_moses_tokenizer",
         "id": "tokenizer",
         "in": ["x_lower"],
         "out": ["x_tokens"]
@@ -30,15 +30,25 @@
       {
         "fit_on": ["x_tokens", "y_tokens"],
         "in": ["x_tokens"],
-        "out": ["y_predicted"],
+        "out": ["tokens_candidates"],
         "name": "spelling_error_model",
         "window": 1,
+        "candidates_count": 4,
         "dictionary": {
-          "name": "russian_words_vocab"
+          "class": "deeppavlov.vocabs.typos:Wiki100KDictionary"
         },
-        "save_path": "error_model/error_model_ru.tsv",
-        "load_path": "error_model/error_model_ru.tsv",
-        "lm_file": "language_models/ru_wiyalen_no_punkt.arpa.binary"
+        "save_path": "error_model/error_model.tsv"
+      },
+      {
+        "class": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
+        "in": ["tokens_candidates"],
+        "out": ["y_predicted_tokens"],
+        "load_path": "language_models/en_wiki_no_punkt.arpa.binary"
+      },
+      {
+        "ref": "tokenizer",
+        "in": ["y_predicted_tokens"],
+        "out": ["y_predicted"]
       }
     ],
     "out": ["y_predicted"]
@@ -55,7 +65,7 @@
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/error_model.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/lang_models/ru_wiyalen_no_punkt.arpa.binary.gz",
+        "url": "http://lnsigo.mipt.ru/export/lang_models/en_wiki_no_punkt.arpa.binary.gz",
         "subdir": "language_models"
       }
     ]
