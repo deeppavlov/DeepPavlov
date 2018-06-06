@@ -46,19 +46,30 @@ This message contains two intents ``(thankyou, bye)``.
 Download pre-trained model
 --------------------------
 
+DeepPavlov provides the following **pre-trained models**:
+
+* ``configs/intents/intents_dstc2.json`` -- DSTC 2 - intent model for English language.
+* ``configs/intents/intents_snips.json`` -- SNIPS - intent model for English language.
+* ``configs/sentiment/insults_kaggle.json`` -- Insults from
+  https://www.kaggle.com/c/detecting-insults-in-social-commentary - sentiment analysis for English language.
+* ``configs/sentiment/sentiment_ag_news.json`` -- AG News from
+  https://www.di.unipi.it/~gulli/AG\_corpus\_of\_news\_articles.html - sentiment analysis for English language.
+* ``configs/sentiment/sentiment_twitter.json`` -- Twitter Mokoron from
+  http://study.mokoron.com/ [5] - sentiment analysis for **Russian** language.
+
 **DeepPavlov contains two pre-trained models for DSTC 2 dataset: one was
 trained using embeddings trained via fastText on DSTC 2 (800 Mb), and
 the other one was trained using embeddings trained on Wiki
 (https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md,
 8.5 Gb).**
 
-**Two pre-trained models are presented to provide a choice for the
-user:** \* **if one prefers to load pre-trained model only for
+Two pre-trained models are presented to provide a choice for the
+user: if one prefers to load pre-trained model only for
 ubderstanding the structure, one should use
-``configs/intents/intents_dstc2.json``,** \* **if one prefers to load
+``configs/intents/intents_dstc2.json``, if one prefers to load
 pre-trained model with significantly higher accuracy, one should be
 ready to download embedding file of 8.5 Gb and use
-``configs/intents/intents_dstc2_big.json``.**
+``configs/intents/intents_dstc2_big.json``.
 
 To download pre-trained models, vocabs, embeddings on DSTC 2 and SNIPS
 datasets one should run the following command:
@@ -105,8 +116,7 @@ distribution among all the considered classes (take into account that as
 the task is a multi-class classification then sum of probabilities is
 not equal to 1).
 
-An example of interacting the model from
-``configs/intents/intents_dstc2.json``
+An example of interacting the model from ``configs/intents/intents_dstc2.json``
 
 ::
 
@@ -129,19 +139,18 @@ Available models
 
 DeepPavlov contains a number of different model configurations for
 classification task. Below the list of available models description is
-presented: \* ``cnn_model`` -- Shallow-and-wide CNN with max pooling
-after convolution, \* ``dcnn_model`` -- Deep CNN with number of layers
-determined by the given number of kernel sizes and filters, \*
-``cnn_model_max_and_aver_pool`` -- Shallow-and-wide CNN with max and
-average pooling concatenation after convolution, \* ``bilstm_model`` --
-Bidirectional LSTM, \* ``bilstm_bilstm_model`` -- 2-layers bidirectional
-LSTM, \* ``bilstm_cnn_model`` -- Bidirectional LSTM followed by
-shallow-and-wide CNN, \* ``cnn_bilstm_model`` -- Shallow-and-wide CNN
-followed by bidirectional LSTM, \* ``bilstm_self_add_attention_model``
--- Bidirectional LSTM followed by self additive attention layer, \*
-``bilstm_self_mult_attention_model`` -- Bidirectional LSTM followed by
-self multiplicative attention layer, \* ``bigru_model`` -- Bidirectional
-GRU model.
+presented:
+
+* ``cnn_model`` -- Shallow-and-wide CNN with max pooling after convolution,
+* ``dcnn_model`` -- Deep CNN with number of layers determined by the given number of kernel sizes and filters,
+* ``cnn_model_max_and_aver_pool`` -- Shallow-and-wide CNN with max and average pooling concatenation after convolution,
+* ``bilstm_model`` -- Bidirectional LSTM,
+* ``bilstm_bilstm_model`` -- 2-layers bidirectional LSTM,
+* ``bilstm_cnn_model`` -- Bidirectional LSTM followed by shallow-and-wide CNN,
+* ``cnn_bilstm_model`` -- Shallow-and-wide CNN followed by bidirectional LSTM,
+* ``bilstm_self_add_attention_model`` -- Bidirectional LSTM followed by self additive attention layer,
+* ``bilstm_self_mult_attention_model`` -- Bidirectional LSTM followed by self multiplicative attention layer,
+* ``bigru_model`` -- Bidirectional GRU model.
 
 Please, pay attention that each model has its own parameters that should be specified in config.
 ''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
@@ -149,11 +158,13 @@ Please, pay attention that each model has its own parameters that should be spec
 Configuration parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-One can find examples of config files `here <../../../configs/intents>`__.
+One can find examples of config files in ``configs/intents``.
 
-Some clue parameters for
-`intents\_dstc2.json <../../../configs/intents/intents_dstc2.json>`__
-config file are presented in the table below.
+Detailed description of configuration file and specific parameters for all presented classification models can be found
+in `notebook <https://github.com/deepmipt/DeepPavlov/blob/dev/deeppavlov/models/classifiers/Config_description.ipynb>`_.
+
+
+Some clue parameters for ``intents_dstc2.json`` config file are presented in the table below.
 
 +--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Parameter                | Description                                                                                                                                                                                                                                                                                                                             |
@@ -256,12 +267,6 @@ config file are presented in the table below.
 +--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | loss                     | loss for training \ *SetOfValues*: any method from keras.losses                                                                                                                                                                                                                                                                         |
 +--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| coef\_reg\_cnn           | coefficient for kernel l2-regularizer for convolutional layers                                                                                                                                                                                                                                                                          |
-+--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| coef\_reg\_den           | coefficient for kernel l2-regularizer for dense layers                                                                                                                                                                                                                                                                                  |
-+--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| dropout\_rate            | dropout rate for training                                                                                                                                                                                                                                                                                                               |
-+--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | embedder                 | To make reference one has to set value to "#{id of embedder}", e.g. "#my\_embedder"                                                                                                                                                                                                                                                     |
 +--------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | tokenizer                | To make reference one has to set value to "#{id of tokenizer}", e.g. "#my\_tokenizer"                                                                                                                                                                                                                                                   |
@@ -331,10 +336,11 @@ be in the following format:
 | ...       | ...                             |
 +-----------+---------------------------------+
 
-To train model one should \* set ``data_path`` to the directory to which
-``train.csv`` should be downloaded, \* set ``save_path`` to the
-directory where the trained model should be saved, \* set all other
-parameters of model as well as embedder and tokenizer to desired ones.
+To train model one should
+
+* set ``data_path`` to the directory to which ``train.csv`` should be downloaded,
+* set ``save_path`` to the directory where the trained model should be saved,
+* set all other parameters of model as well as embedder and tokenizer to desired ones.
 
 Then the training can be run in the same way:
 
@@ -342,9 +348,9 @@ Then the training can be run in the same way:
 
     python deep.py train configs/intents/intents_snips.json
 
-**The current version of ``intents_snips.json`` contains parameters for
+The current version of ``intents_snips.json`` contains parameters for
 intent recognition for SNIPS benchmark dataset [2] that was restored in
-``.csv`` format and will be downloaded automatically.**
+``.csv`` format and will be downloaded automatically.
 
 **Important: we do not provide any special embedding binary file for
 SNIPS dataset. In order to train the model one should provide own
@@ -401,4 +407,8 @@ https://www.slideshare.net/KonstantinSavenkov/nlu-intent-detection-benchmark-by-
 
 [4] P. Bojanowski\ *, E. Grave*, A. Joulin, T. Mikolov, Enriching Word
 Vectors with Subword Information.
+
+[5] Ю. В. Рубцова. Построение корпуса текстов для настройки тонового
+классификатора // Программные продукты и системы, 2015, №1(109),
+–С.72-78
 
