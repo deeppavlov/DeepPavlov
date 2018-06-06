@@ -29,7 +29,10 @@ your training/inference script.
 
 from typing import Type, List
 
+from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.errors import ConfigError
+
+logger = get_logger(__name__)
 
 REGISTRY = {}
 
@@ -41,7 +44,7 @@ def register(name: str = None) -> Type:
         model_name = reg_name or short_name(model_cls)
         global REGISTRY
         if model_name in REGISTRY:
-            raise ConfigError('{} name is already registered'.format(model_name))
+            logger.warning('Registry name "{}" has been already registered and will be overwritten.'.format(model_name))
         REGISTRY[model_name] = model_cls
         return model_cls
 

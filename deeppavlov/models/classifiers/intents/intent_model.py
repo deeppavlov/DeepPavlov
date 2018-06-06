@@ -45,6 +45,32 @@ class KerasIntentModel(KerasModel):
     """
     Class implements keras model for intent recognition task for multi-class multi-label data
     """
+    FIXED_PARAMS = [
+        "classes",
+        "model_name",
+        "embedding_size",
+        "fasttext_md5",
+        "kernel_sizes_cnn",
+        "filters_cnn",
+        "dense_size",
+        "units_lstm",
+        "units_lstm_1",
+        "units_lstm_2",
+        "self_att_hid",
+        "self_att_out"
+    ]
+
+    CHANGABLE_PARAMS = {"confident_threshold": 0.5,
+                        "optimizer": "Adam",
+                        "lear_rate": 1e-2,
+                        "lear_rate_decay": 0.,
+                        "loss": "binary_crossentropy",
+                        "coef_reg_cnn": 0.,
+                        "coef_reg_den": 0.,
+                        "coef_reg_lstm": 0.,
+                        "dropout_rate": 0.,
+                        "rec_dropout_rate": 0.}
+
     def __init__(self, **kwargs):
         """
         Initialize and train vocabularies, initializes embedder, tokenizer,
@@ -53,7 +79,6 @@ class KerasIntentModel(KerasModel):
 
         Args:
             vocabs: dictionary of considered vocabularies
-            opt: model parameters for network and learning
             model_path: path to model serialization dir or file.
                             It is always an empty string and is ignored if it is not set in json config.
             model_dir: name of a serialization dir, can be default or set in json config
@@ -95,7 +120,8 @@ class KerasIntentModel(KerasModel):
                   "lear_rate_decay": self.opt.get('lear_rate_decay')}
 
         self.model = self.load(**params)
-        self._init_params()
+        self._init_missed_params()
+        self._change_not_fixed_params(**kwargs)
 
         # Check if md5 hash sum of current loaded fasttext model
         # is equal to saved
@@ -108,20 +134,28 @@ class KerasIntentModel(KerasModel):
                 raise ConfigError(
                     "Given fasttext model does NOT match fasttext model used previously to train loaded model")
 
-    def _init_params(self):
+    def _init_missed_params(self):
+        """
+        Initialize not given changable parameters with default values
+        Returns:
+            None
+        """
+        for param in list(self.CHANGABLE_PARAMS.keys()):
+            self.opt[param] = self.opt.get(param, self.CHANGABLE_PARAMS[param])
+        return
 
-        # list of changeable params
-        changeable_params = {"confident_threshold": 0.5,
-                             "optimizer": "Adam",
-                             "lear_rate": 1e-2,
-                             "lear_rate_decay": 0.,
-                             "loss": "binary_crossentropy",
-                             "coef_reg_cnn": 0.,
-                             "coef_reg_den": 0.,
-                             "dropout_rate": 0.}
+    def _change_not_fixed_params(self, **kwargs):
+        """
+        Change changable parameters from saved model to given ones.
+        Args:
+            **kwargs: dictionary of new parameters
 
-        for param in changeable_params.keys():
-            self.opt[param] = self.opt.get(param, changeable_params[param])
+        Returns:
+            None
+        """
+        for param in self.opt.keys():
+            if param not in self.FIXED_PARAMS:
+                self.opt[param] = kwargs.get(param)
         return
 
     def texts2vec(self, sentences):
@@ -149,7 +183,7 @@ class KerasIntentModel(KerasModel):
             labels - list of labels
 
         Returns:
-            loss and metrics values on the given batch
+            metrics values on the given batch
         """
         if isinstance(texts[0], str):
             texts = self.tokenizer(list(texts))
@@ -166,7 +200,7 @@ class KerasIntentModel(KerasModel):
             labels - list of labels
 
         Returns:
-            loss and metrics values on the given batch, if labels are given
+            metrics values on the given batch, if labels are given
             predictions, otherwise
         """
         if isinstance(texts[0], str):
@@ -235,7 +269,7 @@ class KerasIntentModel(KerasModel):
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
         output = BatchNormalization()(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
@@ -275,7 +309,7 @@ class KerasIntentModel(KerasModel):
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
         output = BatchNormalization()(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
@@ -317,7 +351,7 @@ class KerasIntentModel(KerasModel):
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
         output = BatchNormalization()(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
@@ -347,7 +381,7 @@ class KerasIntentModel(KerasModel):
         output = Dropout(rate=params['dropout_rate'])(output)
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
@@ -385,7 +419,7 @@ class KerasIntentModel(KerasModel):
         output = Dropout(rate=params['dropout_rate'])(output)
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
@@ -428,7 +462,7 @@ class KerasIntentModel(KerasModel):
         output = Dropout(rate=params['dropout_rate'])(output)
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
@@ -472,7 +506,7 @@ class KerasIntentModel(KerasModel):
         output = Dropout(rate=params['dropout_rate'])(output)
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
@@ -505,7 +539,7 @@ class KerasIntentModel(KerasModel):
         output = Dropout(rate=params['dropout_rate'])(output)
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
@@ -539,7 +573,7 @@ class KerasIntentModel(KerasModel):
         output = Dropout(rate=params['dropout_rate'])(output)
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
@@ -569,6 +603,6 @@ class KerasIntentModel(KerasModel):
         output = Dropout(rate=params['dropout_rate'])(output)
         output = Dense(self.n_classes, activation=None,
                        kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation('sigmoid')(output)
+        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model

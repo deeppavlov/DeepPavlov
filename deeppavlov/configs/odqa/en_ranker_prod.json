@@ -15,6 +15,7 @@
     "pipe": [
       {
         "name": "tfidf_ranker",
+        "top_n": 5,
         "in": [
           "x"
         ],
@@ -54,7 +55,7 @@
       "server_utils": "Ranker"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/odqa.tar.gz"
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/en_odqa.tar.gz"
     ]
   }
 }
