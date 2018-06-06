@@ -265,7 +265,7 @@ class NetworkAndParamsEvolution:
             selected self.population_size individuums with replacement
         """
         scores = np.array(scores, dtype='float')
-        scores = (scores - 1.1 * min(scores) + 0.1 * max(scores)) / max(scores)
+        scores = (scores - 1.1 * min(scores) + 0.1 * max(scores))
         total = np.sum(scores)
         probas_to_be_selected = scores / total
         intervals = np.array([np.sum(probas_to_be_selected[:i]) for i in range(self.population_size)])
