@@ -314,7 +314,7 @@ class NetworkAndParamsEvolution:
             next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"] = \
                 str(Path(self.params["load_path"]).joinpath("population_" + str(iteration)).joinpath(
                     self.params["model_name"] + "_" + str(i)))
-            
+
             next_population[i]["train"]["evolution_model_id"] = self.evolution_model_id
             self.evolution_model_id += 1
 

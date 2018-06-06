@@ -147,14 +147,14 @@
             "n_hidden": {
               "range": [
                 50,
-                200
+                500
               ],
               "discrete": true
             },
             "n_output_features": {
               "range": [
                 50,
-                200
+                500
               ],
               "discrete": true
             },
