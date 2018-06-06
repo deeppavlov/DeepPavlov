@@ -37,16 +37,14 @@
       },
       {
         "id": "src_token_vocab",
-        "name": "default_vocab",
-        "level": "token",
+        "name": "simple_vocab",
         "special_tokens": ["<SOS>"],
         "save_path": "vocabs/src_tokens.dict",
         "load_path": "vocabs/src_tokens.dict"
       },
       {
         "id": "tgt_token_vocab",
-        "name": "default_vocab",
-        "level": "token",
+        "name": "simple_vocab",
         "special_tokens": ["<SOS>", "<EOS>"],
         "save_path": "vocabs/tgt_tokens.dict",
         "load_path": "vocabs/tgt_tokens.dict"

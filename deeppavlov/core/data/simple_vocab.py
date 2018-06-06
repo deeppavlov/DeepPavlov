@@ -47,9 +47,10 @@ class SimpleVocabulary(Estimator):
         if self.load_path:
             self.load()
 
-    def fit(self, tokens):
+    def fit(self, *args):
         self.reset()
-        self.freqs = Counter(chain(*tokens))
+        tokens = chain(*args)
+        self.freqs = Counter(filter(None, chain(*tokens)))
         for special_token in self.special_tokens:
             self._t2i[special_token] = self.count
             self._i2t.append(special_token)
@@ -157,7 +158,8 @@ class SimpleVocabulary(Estimator):
 
 @register('char_vocab')
 class CharacterVocab(SimpleVocabulary):
-    def fit(self, tokens):
+    def fit(self, *args):
+        tokens = chain(*args)
         chars = chain(*tokens)
         super().fit(chars)
 
@@ -175,7 +177,8 @@ class CharacterVocab(SimpleVocabulary):
 
 @register('dialog_vocab')
 class DialogVocab(SimpleVocabulary):
-    def fit(self, utterances):
+    def fit(self, *args):
+        utterances = chain(*args)
         tokens = chain(*utterances)
         super().fit(tokens)
 

@@ -53,9 +53,9 @@
       },
       {
         "id": "src_token_vocab",
-        "fit_on": ["x_tokens", "history_tokens"],
-        "name": "default_vocab",
-        "level": "token",
+        "fit_on": ["x_tokens", "y_tokens"],
+        "name": "simple_vocab",
+        "min_freq": 3,
         "special_tokens": ["<SOS>"],
         "save_path": "vocabs/src_tokens.dict",
         "load_path": "vocabs/src_tokens.dict"
@@ -63,9 +63,8 @@
       {
         "id": "tgt_token_vocab",
         "fit_on": ["y_without_entities_tokens"],
-        "debug": true,
-        "name": "default_vocab",
-        "level": "token",
+        "name": "simple_vocab",
+        "min_freq": 2,
         "special_tokens": ["<SOS>", "<EOS>"],
         "save_path": "vocabs/tgt_tokens.dict",
         "load_path": "vocabs/tgt_tokens.dict"
