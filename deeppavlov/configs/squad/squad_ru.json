@@ -77,7 +77,7 @@
         "learning_rate_patience": 2,
         "keep_prob": 0.6,
         "grad_clip": 5.0,
-        "weight_decay": 0.999,
+        "weight_decay": 1.0,
         "save_path": "squad_model_ru/model",
         "load_path": "squad_model_ru/model",
         "in": ["context_tokens_idxs", "context_chars_idxs", "question_tokens_idxs", "question_chars_idxs"],
@@ -110,7 +110,15 @@
       "server_utils": "SquadModel"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_ru.tar.gz"
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_ru_1.2.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.vec",
+        "subdir": "embeddings"
+      },
+      {
+        "url": "http://lnsigo.mipt.ru/export/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize-char.vec",
+        "subdir": "embeddings"
+      }
       ]
   }
 }

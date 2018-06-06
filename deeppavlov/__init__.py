@@ -24,6 +24,7 @@ Our goal is to enable AI-application developers and researchers with:
 * tools for application integration with adjacent infrastructure (messengers, helpdesk software etc.);
 * benchmarking environment for conversational models and uniform access to relevant datasets.
 """
+from .package_meta import __version__, __author__
 
 # check version
 import sys
@@ -54,7 +55,6 @@ import deeppavlov.models.embedders.fasttext_embedder
 import deeppavlov.models.embedders.dict_embedder
 import deeppavlov.models.embedders.glove_embedder
 import deeppavlov.models.embedders.bow_embedder
-import deeppavlov.models.ner.ner_ontonotes
 import deeppavlov.models.spelling_correction.brillmoore.error_model
 import deeppavlov.models.spelling_correction.levenstein.searcher_component
 import deeppavlov.models.spelling_correction.electors.kenlm_elector
