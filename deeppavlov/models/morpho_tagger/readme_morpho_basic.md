@@ -271,7 +271,7 @@ batch_size and logging frequency, see [general README](../../../README.md) for m
 
 Evaluate configuration file is almost the same as the train one, the only difference is
 that **dataset_reader** reads only test part of data. Also there are no logging parameters
-in the `''train''` subsection of **chainer**. Now it looks like
+in the ``''train''`` subsection of **chainer**. Now it looks like
 
 ```
 "train": {
@@ -281,12 +281,11 @@ in the `''train''` subsection of **chainer**. Now it looks like
   }
 ```
 
-``validate_best`` and ``train_model`` are set to ``false`` since no training or validation is performed.
-
 ### Predict configuration
 
 In prediction configuration **chainer** includes an additional subsection for the prettifier,
 which transforms the predictions of the tagger to a readable form. 
+
 ```
 {
     "in": ["x", "y_predicted"],
