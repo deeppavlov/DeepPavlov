@@ -294,15 +294,14 @@ class NetworkAndParamsEvolution:
                                                      + "_" + str(iteration % self.train_partition) + ".csv"
             # re init learning rate with the final one
             next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["lear_rate"] = \
-                read_json(str(Path(next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"]).
-                              joinpath("model_opt.json")))["chainer"]["pipe"][self.model_to_evolve_index][
-                    "final_lear_rate"]
+                read_json(str(Path(next_population[i]["chainer"]["pipe"][self.model_to_evolve_index][
+                                       "save_path"]).parent.joinpath("model_opt.json")))["chainer"]["pipe"][
+                    self.model_to_evolve_index]["final_lear_rate"]
             next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"] = \
                 str(Path(next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"]).parent)
             next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
                 str(Path(self.params["save_path"]).joinpath("population_" + str(iteration)).joinpath(
                     self.params["model_name"] + "_" + str(i)))
-
 
         for i in range(self.n_saved_best_with_weights, self.population_size):
             if self.train_partition != 1:
