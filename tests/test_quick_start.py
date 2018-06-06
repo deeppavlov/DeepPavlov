@@ -97,7 +97,9 @@ PARAMS = {
     "odqa": {
         ("odqa/ranker_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK],
         ("odqa/odqa_infer_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK]
-    }
+    },
+    "morpho_tagger/UD2.0/hu":
+        {("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]}
 }
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
@@ -151,7 +153,7 @@ def setup_module():
     test_configs_path.mkdir(parents=True)
 
     for m_name, conf_dict in PARAMS.items():
-        test_configs_path.joinpath(m_name).mkdir(exist_ok=True)
+        test_configs_path.joinpath(m_name).mkdir(exist_ok=True, parents=True)
         for (conf_file, _, _), _ in conf_dict.items():
             download_config(conf_file)
 
