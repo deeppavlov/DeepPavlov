@@ -79,7 +79,6 @@ class KerasIntentModel(KerasModel):
 
         Args:
             vocabs: dictionary of considered vocabularies
-            opt: model parameters for network and learning
             model_path: path to model serialization dir or file.
                             It is always an empty string and is ignored if it is not set in json config.
             model_dir: name of a serialization dir, can be default or set in json config
@@ -137,11 +136,24 @@ class KerasIntentModel(KerasModel):
         print("Model was successfully initialized!\nModel summary:\n{}".format(self.model.summary()))
 
     def _init_missed_params(self):
+        """
+        Initialize not given changable parameters with default values
+        Returns:
+            None
+        """
         for param in list(self.CHANGABLE_PARAMS.keys()):
             self.opt[param] = self.opt.get(param, self.CHANGABLE_PARAMS[param])
         return
 
     def _change_not_fixed_params(self, **kwargs):
+        """
+        Change changable parameters from saved model to given ones.
+        Args:
+            **kwargs: dictionary of new parameters
+
+        Returns:
+            None
+        """
         for param in self.opt.keys():
             if param not in self.FIXED_PARAMS:
                 self.opt[param] = kwargs.get(param)
@@ -172,7 +184,7 @@ class KerasIntentModel(KerasModel):
             labels - list of labels
 
         Returns:
-            loss and metrics values on the given batch
+            metrics values on the given batch
         """
         if isinstance(texts[0], str):
             texts = self.tokenizer(list(texts))
@@ -189,7 +201,7 @@ class KerasIntentModel(KerasModel):
             labels - list of labels
 
         Returns:
-            loss and metrics values on the given batch, if labels are given
+            metrics values on the given batch, if labels are given
             predictions, otherwise
         """
         if isinstance(texts[0], str):

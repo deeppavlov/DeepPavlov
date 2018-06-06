@@ -1,13 +1,12 @@
 {
   "dataset_reader": {
     "name": "basic_classification_reader",
-    "x": "Twit",
-    "y": "Class",
-    "data_path": "sentiment_twitter_data"
+    "x": "text",
+    "y": "label",
+    "data_path": "ag_news_data"
   },
   "dataset_iterator": {
-    "name": "basic_classification_iterator",
-    "seed": 42
+    "name": "basic_classification_iterator"
   },
   "chainer": {
     "in": [
@@ -24,24 +23,15 @@
           "y"
         ],
         "level": "token",
-        "save_path": "vocabs/sentiment_twitter_classes.dict",
-        "load_path": "vocabs/sentiment_twitter_classes.dict"
-      },
-      {
-        "in": [
-          "x"
-        ],
-        "out": [
-          "x_prep"
-        ],
-        "name": "dirty_comments_preprocessor"
+        "save_path": "vocabs/ag_news_classes.dict",
+        "load_path": "vocabs/ag_news_classes.dict"
       },
       {
         "id": "my_embedder",
         "name": "fasttext",
-        "save_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
-        "load_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
-        "dim": 300
+        "save_path": "embeddings/wiki.en.bin",
+        "load_path": "embeddings/wiki.en.bin",
+        "dim": 100
       },
       {
         "id": "my_tokenizer",
@@ -50,7 +40,16 @@
       },
       {
         "in": [
-          "x_prep"
+          "x"
+        ],
+        "out": [
+          "x_lower"
+        ],
+        "name": "str_lower"
+      },
+      {
+        "in": [
+          "x_lower"
         ],
         "in_y": [
           "y"
@@ -61,8 +60,8 @@
         ],
         "main": true,
         "name": "intent_model",
-        "save_path": "sentiment/sentiment_twitter_v1",
-        "load_path": "sentiment/sentiment_twitter_v1",
+        "save_path": "sentiment/sentiment_ag_news_v0",
+        "load_path": "sentiment/sentiment_ag_news_v0",
         "classes": "#classes_vocab.keys()",
         "kernel_sizes_cnn": [
           1,
@@ -70,17 +69,17 @@
           3
         ],
         "filters_cnn": 256,
-        "confident_threshold": 0.5,
+        "confident_threshold": 1,
         "optimizer": "Adam",
         "lear_rate": 0.01,
         "lear_rate_decay": 0.1,
         "loss": "binary_crossentropy",
-        "text_size": 100,
-        "last_layer_activation": "softmax",
-        "coef_reg_cnn": 1e-3,
-        "coef_reg_den": 1e-2,
+        "text_size": 50,
+        "coef_reg_cnn": 1e-4,
+        "coef_reg_den": 1e-4,
         "dropout_rate": 0.5,
         "dense_size": 100,
+        "last_layer_activation": "softmax",
         "model_name": "cnn_model",
         "embedder": "#my_embedder",
         "tokenizer": "#my_tokenizer"
@@ -95,9 +94,9 @@
     "epochs": 100,
     "batch_size": 64,
     "metrics": [
-      "classification_roc_auc",
+      "classification_accuracy",
       "classification_f1",
-      "classification_accuracy"
+      "classification_roc_auc"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,
@@ -112,11 +111,11 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
       "http://lnsigo.mipt.ru/export/deeppavlov_data/sentiment.tar.gz",
-      "http://lnsigo.mipt.ru/export/datasets/sentiment_twitter_data.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
+      "http://lnsigo.mipt.ru/export/datasets/ag_news_data.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "url": "http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "embeddings"
       }
     ]

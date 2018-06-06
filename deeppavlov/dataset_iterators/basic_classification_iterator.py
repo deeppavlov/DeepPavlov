@@ -47,8 +47,8 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
             field_to_split: name of field to split
             split_fields: list of fields to which save splitted field
             split_proportions: list of corresponding proportions for splitting
-            *args:
-            **kwargs:
+            *args: arguments
+            **kwargs: arguments
         """
         super().__init__(data, seed=seed, shuffle=shuffle)
 

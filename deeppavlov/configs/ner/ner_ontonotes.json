@@ -133,7 +133,7 @@
       "server_utils": "NER"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes_v2.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes_v3.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt",
         "subdir": "embeddings"

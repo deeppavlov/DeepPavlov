@@ -134,7 +134,7 @@
     "batch_size": 64,
 
     "metrics": ["ner_f1"],
-    "validation_patience": 5,
+    "validation_patience": 7,
     "val_every_n_epochs": 1,
 
     "log_every_n_epochs": 1,
@@ -146,7 +146,7 @@
       "server_utils": "NER"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_rus.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_rus_v2.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/embeddings/lenta_lower_100.bin",
         "subdir": "embeddings"
