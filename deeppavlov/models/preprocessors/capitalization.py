@@ -14,10 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import numpy as np
+import re
+
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.data.utils import zero_pad
 from deeppavlov.core.common.registry import register
-import numpy as np
+# from deeppavlov.models.tokenizers import nltk_tokenizer
 
 
 @register('capitalization_featurizer')
@@ -60,3 +63,42 @@ class CapitalizationPreprocessor(Component):
             return zero_pad(cap_batch)
         else:
             return cap_batch
+
+
+def process_word(word, to_lower=False, append_case=None):
+    if all(x.isupper() for x in word) and len(word) > 1:
+        uppercase = "<ALL_UPPER>"
+    elif word[0].isupper():
+        uppercase = "<FIRST_UPPER>"
+    else:
+        uppercase = None
+    if to_lower:
+        word = word.lower()
+    if word.isdigit():
+        answer = ["<DIGIT>"]
+    elif word.startswith("http://") or word.startswith("www."):
+        answer = ["<HTTP>"]
+    else:
+        answer = list(word)
+    if to_lower and uppercase is not None:
+        if append_case == "first":
+            answer = [uppercase] + answer
+        elif append_case == "last":
+            answer = answer + [uppercase]
+    return tuple(answer)
+
+
+@register('lowercase_preprocessor')
+class LowercasePreprocessor(Component):
+
+    def __init__(self, to_lower=True, append_case="first", *args, **kwargs):
+        self.to_lower = to_lower
+        self.append_case = append_case
+
+    def __call__(self, tokens_batch, **kwargs):
+        answer = []
+        for elem in tokens_batch:
+            if isinstance(elem, str):
+                elem = [x for x in re.split("(\w+|[,.])", elem) if x.strip() != ""]
+            answer.append([process_word(x, self.to_lower, self.append_case) for x in elem])
+        return answer

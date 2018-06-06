@@ -31,13 +31,22 @@ FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_t
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
-    "error_model": {
-        ("error_model/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
+    "spelling_correction": {
+        ("spelling_correction/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
             [
                 ("helllo", "hello"),
                 ("datha", "data")
             ],
-        ("error_model/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+        ("spelling_correction/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES):
+            [
+                ("преведствую", "приветствую"),
+                ("я джва года дду эту игру", "я два года жду эту игру")
+            ],
+        ("spelling_correction/levenstein_corrector_ru.json", "error_model", ('IP',)):
+            [
+                ("преветствую", "приветствую"),
+                ("Я джва года хочу такую игру", "я два года хочу такую игру")
+            ]
     },
     "go_bot": {
         ("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
@@ -47,16 +56,22 @@ PARAMS = {
     },
     "intents": {
         ("intents/intents_dstc2.json", "intents", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_dstc2_big.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bigru.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_cnn.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_self_add_attention.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_self_mult_attention.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_cnn_bilstm.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK]
+        ("intents/intents_dstc2_big.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
-    "snips": {("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]},
+    "snips": {("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("intents/intents_snips_bigru.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("intents/intents_snips_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("intents/intents_snips_bilstm_cnn.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("intents/intents_snips_bilstm_self_add_attention.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("intents/intents_snips_bilstm_self_mult_attention.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("intents/intents_snips_cnn_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "sentiment": {
+        ("sentiment/insults_kaggle.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("sentiment/sentiment_twitter.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("sentiment/sentiment_ag_news.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+    },
     "sample": {
         ("intents/intents_sample_csv.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_sample_json.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
@@ -73,7 +88,7 @@ PARAMS = {
                 ("moderate price range", "{'pricerange': 'moderate'}")
             ]
     },
-    "ranking": {("ranking/insurance_config.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
+    "ranking": {("ranking/ranking_insurance.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
     "squad": {
         ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK]
@@ -82,7 +97,9 @@ PARAMS = {
     "odqa": {
         ("odqa/ranker_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK],
         ("odqa/odqa_infer_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK]
-    }
+    },
+    "morpho_tagger/UD2.0/hu":
+        {("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]}
 }
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
@@ -136,7 +153,7 @@ def setup_module():
     test_configs_path.mkdir(parents=True)
 
     for m_name, conf_dict in PARAMS.items():
-        test_configs_path.joinpath(m_name).mkdir(exist_ok=True)
+        test_configs_path.joinpath(m_name).mkdir(exist_ok=True, parents=True)
         for (conf_file, _, _), _ in conf_dict.items():
             download_config(conf_file)
 
@@ -153,7 +170,7 @@ class TestQuickStart(object):
     def interact(conf_file, model_dir, qr_list=None):
         qr_list = qr_list or []
         logfile = io.BytesIO(b'')
-        p = pexpect.spawn("python3", ["-m", "deeppavlov.deep", "interact", str(conf_file)], timeout=None,
+        p = pexpect.spawn("python3", ["-m", "deeppavlov", "interact", str(conf_file)], timeout=None,
                           logfile=logfile)
         try:
             for *query, expected_response in qr_list:  # works until the first failed query
@@ -195,7 +212,7 @@ class TestQuickStart(object):
             post_payload[arg_name] = arg_value
 
         logfile = io.BytesIO(b'')
-        p = pexpect.spawn("python3", ["-m", "deeppavlov.deep", "riseapi", str(conf_file)], timeout=None,
+        p = pexpect.spawn("python3", ["-m", "deeppavlov", "riseapi", str(conf_file)], timeout=None,
                           logfile=logfile)
         try:
             p.expect(url_base)
@@ -244,7 +261,7 @@ class TestQuickStart(object):
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
             logfile = io.BytesIO(b'')
-            _, exitstatus = pexpect.run("python3 -m deeppavlov.deep train " + str(c), timeout=None, withexitstatus=True,
+            _, exitstatus = pexpect.run("python3 -m deeppavlov train " + str(c), timeout=None, withexitstatus=True,
                                         logfile=logfile)
             if exitstatus != 0:
                 logfile.seek(0)
