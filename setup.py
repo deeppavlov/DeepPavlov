@@ -31,10 +31,7 @@ def read_requirements():
     install_reqs = parse_requirements(reqs_path, session=PipSession())
     reqs = []
     for ir in install_reqs:
-        if not os.getenv('READTHEDOCS'):
-            pip_main(['install', str(ir.req or ir.link)])
-        if ir.link and os.getenv('READTHEDOCS'):  # workaround for RTD
-            pip_main(['install', str(ir.link)])
+        pip_main(['install', str(ir.req or ir.link)])
         if ir.req:
             reqs.append(str(ir.req))
     return reqs
@@ -45,14 +42,18 @@ def readme():
         return f.read()
 
 
+meta = {}
+with open('deeppavlov/package_meta.py') as f:
+    exec(f.read(), meta)
+
 setup(
     name='deeppavlov',
     packages=find_packages(exclude=('tests', 'docs')),
-    version='0.0.4',
+    version=meta['__version__'],
     description='An open source library for building end-to-end dialog systems and training chatbots.',
     long_description=readme(),
     long_description_content_type="text/markdown",
-    author='Neural Networks and Deep Learning lab, MIPT',
+    author=meta['__author__'],
     author_email='info@ipavlov.ai',
     license='Apache License, Version 2.0',
     url='https://github.com/deepmipt/DeepPavlov',

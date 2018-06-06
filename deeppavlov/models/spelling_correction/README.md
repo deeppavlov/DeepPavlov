@@ -14,7 +14,7 @@ You can find [the comparison](#comparison) of these and other approaches near th
 You can run the following command to try provided pipelines out:
 
 ```
-python -m deeppavlov.deep interact <path_to_config> [-d]
+python -m deeppavlov interact <path_to_config> [-d]
 ```
 
 where `<path_to_config>` is one of the [provided config files](/deeppavlov/configs/spelling_correction).  
