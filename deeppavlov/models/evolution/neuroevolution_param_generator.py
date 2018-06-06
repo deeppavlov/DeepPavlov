@@ -114,6 +114,7 @@ class NetworkAndParamsEvolution:
         self.renovation_frequency = renovation_frequency
         self.train_partition = train_partition
         self.evolution_individuum_id = 0
+        self.evolution_model_id = 0
 
         if seed is None:
             pass
@@ -231,8 +232,8 @@ class NetworkAndParamsEvolution:
             # exchange train params from basic config to sampled train params
             population[-1]["train"] = {**train_params,
                                        **train_params_for_search}
-            # population[-1]["train"]["evolution_individuum_id"] = self.evolution_individuum_id
-            # self.evolution_individuum_id += 1
+            population[-1]["train"]["evolution_model_id"] = self.evolution_model_id
+            self.evolution_model_id += 1
 
         self.evolving_params = list(set(self.evolving_params))
         self.evolving_train_params = list(set(self.evolving_train_params))
@@ -314,6 +315,8 @@ class NetworkAndParamsEvolution:
             next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"] = \
                 str(Path(self.params["load_path"]).joinpath("population_" + str(iteration)).joinpath(
                     self.params["model_name"] + "_" + str(i)))
+            next_population[i]["train"]["evolution_model_id"] = self.evolution_model_id
+            self.evolution_model_id += 1
 
         return next_population
 
