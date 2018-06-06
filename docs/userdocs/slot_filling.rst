@@ -1,10 +1,9 @@
 Neural Named Entity Recognition and Slot Filling
 ================================================
 
-This component solves Named Entity Recognition (NER) and Slot-Filling
-task with different neural network architectures. This component serves for
-solving DSTC 2 Slot-Filling task. In most of the cases, NER task can be
-formulated as:
+This component solves Slot-Filling task using Levenshtein search and different neural network architectures for NER.
+To read about NER without slot filling please address  :doc:`NER documentation </userdocs/ner>`.
+This component serves for solving DSTC 2 Slot-Filling task. In most of the cases, NER task can be formulated as:
 
 *Given a sequence of tokens (words, and maybe punctuation symbols)
 provide a tag from a predefined set of tags for each token in the
@@ -40,7 +39,7 @@ In the example above, ``FOOD`` means food tag, ``LOC`` means location
 tag, and "B-" and "I-" are prefixes identifying beginnings and
 continuations of the entities.
 
-Slot Filling can be formulated as:
+Slot Filling is a typical step after the NER. It can be formulated as:
 
 *Given an entity of a certain type and a set of all possible values of
 this entity type provide a normalized form of the entity.*
@@ -126,8 +125,8 @@ variable with name "y\_predicted" so that "out" knows where to get
 predictions.
 
 The major part of "chainer" is "pipe". The "pipe" contains the
-pre-processing modules, vocabularies and model. Firstly we define
-pre-processing:
+pre-processing modules, vocabularies and model. However, we can use
+existing pipelines:
 
 ::
 
@@ -139,156 +138,18 @@ pre-processing:
           },
           {
             "in": ["x"],
-            "name": "str_lower",
-            "out": ["x_lower"]
-          },
-          {
-            "in": ["x"],
-            "name": "mask",
-            "out": ["mask"]
-          },
-    ]
-
-Module str\_lower performs lowercasing. Module lazy\_tokenizer performes
-tokenization if the elements of the batch are strings but not tokens.
-The mask module prepares masks for the network. It serves to cope with
-different lengths inputs inside the batch. The mask is a matrix filled
-with ones and zeros. For instance, for two sentences batch with lengths
-2 and 3 the mask will be [[1, 1, 0],[1, 1, 1]].
-
-Then vocabularies must be defined:
-
-::
-
-    "pipe": [
-          ...
-          {
-            "in": ["x_lower"],
-            "id": "word_vocab",
-            "name": "simple_vocab",
-            "pad_with_zeros": true,
-            "fit_on": ["x_lower"],
-            "save_path": "slotfill_dstc2/word.dict",
-            "load_path": "slotfill_dstc2/word.dict",
-            "out": ["x_tok_ind"]
-          },
-          {
-            "in": ["y"],
-            "id": "tag_vocab",
-            "name": "simple_vocab",
-            "pad_with_zeros": true,
-            "fit_on": ["y"],
-            "save_path": "slotfill_dstc2/tag.dict",
-            "load_path": "slotfill_dstc2/tag.dict",
-            "out": ["y_ind"]
-          },
-          ...
-    ]
-
-Parameters for vocabulary are:
-
--  ``id`` - the name of the vocabulary which will be used in other
-   models
--  ``name`` - always equal to ``"simple_vocab"``
--  ``fit_on`` - on which data part of the data the vocabulary should
-   be fitted (built), possible options are ["x"] or ["y"]
--  ``save_path`` - path to a new file to save the vocabulary
--  ``load_path`` - path to an existing vocabulary (ignored if there
-   is no files)
--  ``pad_with_zeros``: whether to pad the resulting index array with
-   zeros or not
-
-Vocabularies are used for holding sets of tokens, tags, or characters.
-They assign indices to elements of given sets an allow conversion from
-tokens to indices and vice versa. Conversion of such kind is needed to
-perform lookup in embeddings matrices and compute cross-entropy between
-predicted probabilities and target values. For each vocabulary
-"simple\_vocab" model is used. "fit\_on" parameter defines on which part
-of the data the vocabulary is built. ["x"] stands for the x part of the
-data (tokens) and ["y"] stands for the y part (tags).
-
-Then the embeddings matrix must be initialized:
-
-::
-
-    "pipe": [
-        ...
-        {
-          "name": "random_emb_mat",
-          "id": "embeddings",
-          "vocab_len": "#word_vocab.len",
-          "emb_dim": 100
-        },
-        ...
-    ]
-
-The component ``random_emb_mat`` creates a matrix of embeddings filled
-with scaled gaussian random variables. Scaling is similar to Xavier
-initialization.
-
-Then the network is defined by the following part of JSON config:
-
-::
-
-    "pipe": [
-        ...
-        {
-            "in": ["x_tok_ind", "mask"],
-            "in_y": ["y_ind"],
-            "out": ["y_predicted"],
-            "name": "ner",
-            "main": true,
-            "token_emb_mat": "#embeddings.emb_mat",
-            "n_hidden_list": [64, 64],
-            "net_type": "cnn",
-            "n_tags": "#tag_vocab.len",
-            "save_path": "slotfill_dstc2/model",
-            "load_path": "slotfill_dstc2/model",
-            "embeddings_dropout": true,
-            "top_dropout": true,
-            "intra_layer_dropout": true,
-            "use_batch_norm": true,
-            "learning_rate": 1e-2,
-            "dropout_keep_prob": 0.5
-        },
-        ...
-    ]
-
-
-All network parameters are:
-
--  ``in`` - inputs to be taken from the shared memory. Treated as x. They are used both during the training and inference.
--  ``in_y`` - the target or y input to be taken from shared memory. This input is used during the training.
--  ``name`` - the name of the model to be used. In this case we use 'ner' model originally imported from
-   ``deeppavlov.models.ner``. We use only 'ner' name relying on the @registry decorator.
--  ``main`` - (reserved for future use) a boolean parameter defining whether this is the main model.
--  ``save_path`` - path to the new file where the model will be saved
--  ``load_path`` - path to a pretrained model from where it will be loaded.
-
-Other parameters are described in :doc:`NerNetwork </apiref/models/ner>` class.
-
-The output of the network are indices of tags predicted by the network.
-They must be converted back to the tag strings. This operation is
-performed by already created vocabulary:
-
-::
-
-    "pipe": [
-        ...
-          {
-            "ref": "tag_vocab",
-            "in": ["y_predicted"],
+            "config_path": "../deeppavlov/configs/ner/ner_dstc2.json",
             "out": ["tags"]
-          }
-        ...
+          },
+          ...
+    ]
 
-In this part of config reusing pattern is used. The ``ref`` parameter
-serves to refer to already existing component via ``id``. This part also
-illustrate omidirectionality of the vocabulary. When strings are passed
-to the vocab, it convert them into indices. When the indices are passed
-to the vocab, they are converted to the tag strings.
+This part will initialize already existing pre-trained NER module. The
+only thing need to be specified is path to existing config. The
+preceding lazy tokenizer serves to extract tokens for raw string of
+text.
 
-The last component in the pipeline is the ``slotfiller``:
+The following component in the pipeline is the ``slotfiller``:
 
 ::
 
@@ -306,31 +167,29 @@ extracted entities. The normalization is performed via fuzzy Levenshtein
 search in dstc\_slot\_vals dictionary. The output of this component is
 dictionary of slot values found in the input utterances.
 
-After the "chainer" part you should specify the "train" part:
+The main part of the ``dstc_slotfilling`` componet is the slot values
+dictionary. The dicttionary has the following structure:
 
 ::
 
-    "train": {
-        "epochs": 100,
-        "batch_size": 64,
+    {
+        "entity_type_0": {
+            "entity_value_0": [
+                "entity_value_0_variation_0",
+                "entity_value_0_variation_1",
+                "entity_value_0_variation_2"
+            ],
+            "entity_value_1": [
+                "entity_value_1_variation_0"
+            ],
+            ...
+        }
+        "entity_type_1": {
+            ...
 
-        "metrics": ["ner_f1"],
-        "validation_patience": 5,
-        "val_every_n_epochs": 5,
-
-        "log_every_n_epochs": 1,
-        "show_examples": false
-    }
-
-Training parameters are:
--  ``epochs`` - number of epochs (usually 10 - 100)
--  ``batch_size`` - number of samples in a batch (usually 4 - 64)
--  ``metrics`` - metrics to validate the model. For NER task we recommend using ["ner\_f1"]
--  ``validation_patience`` - parameter of early stopping: for how many epochs the training can continue without
-   improvement of metric value on the validation set
--  ``val_every_n_epochs`` - how often the metrics should be computed on the validation set
--  ``log_every_n_epochs`` - how often the results should be logged
--  ``show_examples`` - whether to show results of the network predictions
+Slotfiller will perform fuzzy search through the all variations of all
+entity values of given entity type. The entity type is determined by the
+NER component.
 
 The last part of the config is metadata:
 
@@ -350,20 +209,50 @@ download pre-trained models.
 
 You can see all parts together in ``deeeppavlov/configs/ner/slotfill_dstc2.json``
 
+Usage of the model
+------------------
 
-Train and use the model
------------------------
-
-Please see an example of training a NER model and using it for
+Please see an example of training a Slot Filling model and using it for
 prediction:
 
 .. code:: python
 
-    from deeppavlov.core.commands.train import train_model_from_config
-    from deeppavlov.core.commands.infer import interact_model
-    PIPELINE_CONFIG_PATH = 'configs/ner/slotfill_dstc2.json'
-    train_model_from_config(PIPELINE_CONFIG_PATH)
-    interact_model(PIPELINE_CONFIG_PATH)
+    from deeppavlov.core.commands.infer import build_model_from_config
+    from deeppavlov.download import deep_download
+    import json
+    PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/slotfill_dstc2.json'
+    with open(PIPELINE_CONFIG_PATH) as f:
+        config = json.load(f)
+    deep_download(['-c', PIPELINE_CONFIG_PATH])
+    slotfill_model = build_model_from_config(config)
+    slotfill_model(['I would like some chinese food', 'The west part of the city would be nice'])
 
-This example assumes that the working directory is deeppavlov.
+This example assumes that the working directory is the root of the
+project.
 
+Slotfilling without NER
+-----------------------
+
+An alternative approach to Slot Filling problem could be fuzzy search
+for each instance of each slot value inside the text. This approach is
+realized in ``slotfill_raw`` component. The component uses needle in
+haystack
+
+The main advantage of this approach is elimination of a separate Named
+Entity Recognition module. However, absence of NER module make this
+model less robust to noise (words with similar spelling) especially for
+long utterances.
+
+Usage example:
+
+.. code:: python
+
+    from deeppavlov.core.commands.infer import build_model_from_config
+    from deeppavlov.download import deep_download
+    import json
+    PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/slotfill_dstc2_raw.json'
+    with open(PIPELINE_CONFIG_PATH) as f:
+        config = json.load(f)
+    deep_download(['-c', PIPELINE_CONFIG_PATH])
+    slotfill_model = build_model_from_config(config)
+    slotfill_model(['I would like some chinese food', 'The west part of the city would be nice'])
