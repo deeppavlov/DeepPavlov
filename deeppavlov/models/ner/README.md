@@ -597,6 +597,7 @@ Bi-LSTM architecture of NER network was tested on three datasets:
 - FactRuEval 2016 [6]
 - Persons-1000 [7]
 
+
 The F1 measure for our model along with the results of other published solutions are provided in the table below:
 
 | Models                | Gareev’s dataset | Persons-1000 | FactRuEval 2016 |
@@ -622,6 +623,8 @@ deep_download(['-c', PIPELINE_CONFIG_PATH])
 slotfill_model = build_model_from_config(config)
 slotfill_model(['Компания « Андэк » , специализирующаяся на решениях для обеспечения безопасности бизнеса , сообщила о том , что Вячеслав Максимов , заместитель генерального директора компании , возглавил направление по оптимизации процессов управления информационной безопасностью '])
 ```
+
+Since the model is built with cuDNN version of LSTM, the GPU along with installed cuDNN library needed to run this model.
 
 ## Literature
 [1] - Strubell at al. (2017) Strubell, Emma, et al. "Fast and accurate entity recognition with iterated dilated convolutions." Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing. 2017.
