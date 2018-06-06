@@ -17,7 +17,7 @@ To perform all downloads in runtime you can also run all subsequent commands wit
 ```
 python -m deeppavlov.models.morpho_tagger morpho_ru_syntagrus_predict
 ```
-from `deeppavlov` directory of the repository. A subdirectory `results` will be created and predictions will be written to the file ```ud_ru_syntagrus_test.res``` in it.
+A subdirectory ``results`` will be created in your current working directory and predictions will be written to the file ```ud_ru_syntagrus_test.res``` in it.
 3. To evaluate ru_syntagrus model on ru_syntagrus test subset, run
 ```
 python -m deeppavlov evaluate morpho_ru_syntagrus_train
