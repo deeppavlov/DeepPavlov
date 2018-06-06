@@ -296,7 +296,12 @@ class SquadAnsPostprocessor(Component):
         start = []
         end = []
         for a_st, a_end, c, p2r, span in zip(ans_start, ans_end, contexts, p2rs, spans):
-            start.append(p2r[span[a_st][0]])
-            end.append(p2r[span[a_end][1]])
-            answers.append(c[start[-1]:end[-1]])
+            if a_st == -1 or a_end == -1:
+                start.append(-1)
+                end.append(-1)
+                answers.append('')
+            else:
+                start.append(p2r[span[a_st][0]])
+                end.append(p2r[span[a_end][1]])
+                answers.append(c[start[-1]:end[-1]])
         return answers, start, end

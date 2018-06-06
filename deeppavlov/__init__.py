@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+from .package_meta import __version__, __author__
 
 # check version
 import sys
@@ -43,7 +44,6 @@ import deeppavlov.models.embedders.fasttext_embedder
 import deeppavlov.models.embedders.dict_embedder
 import deeppavlov.models.embedders.glove_embedder
 import deeppavlov.models.embedders.bow_embedder
-import deeppavlov.models.ner.ner_ontonotes
 import deeppavlov.models.spelling_correction.brillmoore.error_model
 import deeppavlov.models.spelling_correction.levenstein.searcher_component
 import deeppavlov.models.spelling_correction.electors.kenlm_elector
