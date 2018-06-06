@@ -55,8 +55,9 @@
         "id": "src_token_vocab",
         "fit_on": ["x_tokens", "y_tokens"],
         "name": "simple_vocab",
-        "min_freq": 3,
-        "special_tokens": ["<SOS>"],
+        "min_freq": 2,
+        "default_token": "<UNK>",
+        "special_tokens": ["<UNK>", "<SOS>"],
         "save_path": "vocabs/src_tokens.dict",
         "load_path": "vocabs/src_tokens.dict"
       },
@@ -64,8 +65,8 @@
         "id": "tgt_token_vocab",
         "fit_on": ["y_without_entities_tokens"],
         "name": "simple_vocab",
-        "min_freq": 2,
-        "special_tokens": ["<SOS>", "<EOS>"],
+        "default_token": "<UNK>",
+        "special_tokens": ["<UNK>", "<SOS>", "<EOS>"],
         "save_path": "vocabs/tgt_tokens.dict",
         "load_path": "vocabs/tgt_tokens.dict"
       },

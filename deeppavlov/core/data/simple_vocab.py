@@ -33,6 +33,7 @@ log = get_logger(__name__)
 class SimpleVocabulary(Estimator):
     def __init__(self,
                  special_tokens=tuple(),
+                 default_token=None,
                  max_tokens=2**30,
                  min_freq=1,
                  pad_with_zeros=False,
@@ -40,6 +41,7 @@ class SimpleVocabulary(Estimator):
                  **kwargs):
         super().__init__(**kwargs)
         self.special_tokens = special_tokens
+        self.default_token = default_token
         self._max_tokens = max_tokens
         self._min_freq = min_freq
         self._pad_with_zeros = pad_with_zeros
@@ -145,8 +147,13 @@ class SimpleVocabulary(Estimator):
             return False
 
     def reset(self):
+        # default index is the position of default_token
+        if self.default_token is not None:
+            default_ind = self.special_tokens.index(self.default_token)
+        else:
+            default_ind = 0
         self.freqs = None
-        self._t2i = defaultdict(int)
+        self._t2i = defaultdict(lambda: default_ind)
         self._i2t = []
         self.count = 0
 
