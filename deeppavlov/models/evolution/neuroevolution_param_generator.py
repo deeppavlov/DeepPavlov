@@ -296,8 +296,7 @@ class NetworkAndParamsEvolution:
             # re init learning rate with the final one
             next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["lear_rate"] = \
                 read_json(str(Path(next_population[i]["chainer"]["pipe"][self.model_to_evolve_index][
-                                       "save_path"]).parent.joinpath("model_opt.json")))["chainer"]["pipe"][
-                    self.model_to_evolve_index]["final_lear_rate"]
+                                       "save_path"]).parent.joinpath("model_opt.json")))["final_lear_rate"]
             next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"] = \
                 str(Path(next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"]).parent)
             next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
