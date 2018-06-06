@@ -9,19 +9,28 @@ We distribute the model trained on ru_syntagrus corpus of [Universal Dependencie
 If you want to use it from scratch, do the following:
 
 1. Download data
-```python -m deeppavlov download morpho_ru_syntagrus_train```
+```
+python -m deeppavlov download morpho_ru_syntagrus_train
+```
 To perform all downloads in runtime you can also run all subsequent commands with `-d` key, 
 2. To apply a pre-trained ru_syntagrus model to ru_syntagrus test data, run
-```python models/morpho_tagger/main.py morpho_ru_syntagrus_predict```.
-from ``deeppavlov`` directory of the repository. A subdirectory``results`` will be created and predictions will be written to the file
-```ud_ru_syntagrus_test.res``` in it.
+```
+python models/morpho_tagger/main.py morpho_ru_syntagrus_predict
+```
+from `deeppavlov` directory of the repository. A subdirectory `results` will be created and predictions will be written to the file ```ud_ru_syntagrus_test.res``` in it.
 3. To evaluate ru_syntagrus model on ru_syntagrus test subset, run
-```python -m deeppavlov evaluate morpho_ru_syntagrus_train```.
+```
+python -m deeppavlov evaluate morpho_ru_syntagrus_train
+```
 4. To retrain model on ru_syntagrus dataset, run
-```python -m deeppavlov train morpho_ru_syntagrus_train```.
+```
+python -m deeppavlov train morpho_ru_syntagrus_train
+```
 Be careful, one epoch takes 8-60 minutes depending on your GPU.
 5. To tag Russian sentences from stdin, run
-```python -m deeppavlov interact morpho_ru_syntagrus_predict```.
+```
+python -m deeppavlov interact morpho_ru_syntagrus_predict
+```
 
 Read the detailed readme below.
 
