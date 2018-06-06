@@ -27,8 +27,8 @@
           "embedded"
         ],
         "name": "cove_embedder",
-        "vocab_file_path": "cove_embedder/output.vocab",
-        "checkpoint_path": "cove_embedder/averaged_checkpoint/model.ckpt-326107",
+        "vocab_file_path": "./download/cove_embedder/output.vocab",
+        "checkpoint_path": "./download/cove_embedder/averaged_checkpoint/model.ckpt-326107",
         "cell_class_name": "LSTMCell",
         "residual_connections": false,
         "num_units": 256,

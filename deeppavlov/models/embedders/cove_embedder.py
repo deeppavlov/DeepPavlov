@@ -29,27 +29,35 @@ from typing import List
 
 log = get_logger(__name__)
 
-
 @register('cove_embedder')
 class CoVeEmbedder(Component, metaclass=TfModelMeta):
-    def __init__(self, vocab_file_path: str, checkpoint_path: str, num_layers: int, cell_class_name: str,
-                 num_units: int, residual_connections: bool, reduce_method: str, **kwargs):
+    def __init__(self, vocab_file_path: str, checkpoint_path: str, num_layers: int = 4, num_units: int = 256,
+                 cell_class_name: str = "LSTMCell", residual_connections: bool = False,
+                 reduce_method: str = 'max', **kwargs):
         """
-        :param vocab_file_path:
-        :param checkpoint_path:
-        :param num_layers:
-        :param cell_class_name:
-        :param num_units:
+        :param vocab_file_path: path to vocabulary
+        :param checkpoint_path: path to checkpoint
+        :param num_layers: number of recurrent layers
+        :param num_units:  number of units in rnn cell
+        :param cell_class_name: cell class name from tf.contrib.rnn;
+               default: 'LSTMCell'
         :param residual_connections:
-        :param reduce_method: ['']
-        :param kwargs:
+               default: False
+        :param reduce_method: 'max', 'mean', 'sum', None is available
+               default: 'max'
         """
+        reduce_methods_dict = {'max': lambda inputs: np.max(inputs, axis=1),
+                               'mean': lambda inputs: np.mean(inputs, axis=1),
+                               'sum': lambda inputs: np.sum(inputs, axis=1)}
+
+        self.reduce_method = reduce_methods_dict.get(reduce_method, None)
+        if self.reduce_method is None:
+            log.info('None of supported reducers has been provided, returning one vector per token;')
 
         self.vocab_file_path = vocab_file_path
-        self.checkpoint_path = checkpoint_path
-        self.reduce_method = reduce_method
-
         vocab = tf.contrib.lookup.index_table_from_file(vocabulary_file=self.vocab_file_path)
+
+        self.checkpoint_path = checkpoint_path
         self.tokens = tf.placeholder(tf.string, shape=(None, None), name='tokens')
         self.sequence_length = tf.placeholder(tf.int32, shape=[None, ], name='seq_length')
         indexes = vocab.lookup(self.tokens)
@@ -130,21 +138,8 @@ class CoVeEmbedder(Component, metaclass=TfModelMeta):
         Embed data
         """
         outputs = self._encode(batch, lengths)
-        encoded = None
-
-        if self.reduce_method == 'mean':
-            encoded = np.mean(outputs, axis=1)
-        elif self.reduce_method == 'sum':
-            encoded = np.sum(outputs, axis=1)
-        elif self.reduce_method == 'max':
-            encoded = np.max(outputs, axis=1)
-        elif self.reduce_method == 'none':
-            encoded = outputs
-        else:
-            log.error("None of reducing methods has been defined")
-            exit(1)
+        encoded = self.reduce_method(outputs)
         return encoded
 
     def _encode(self, tokens: List[List[str]], lengths: List[int]):
-
         return self.sess.run(self.encoder_outputs, {self.sequence_length: lengths, self.tokens: tokens})
