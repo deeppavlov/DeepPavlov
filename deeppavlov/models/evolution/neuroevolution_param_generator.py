@@ -2,11 +2,11 @@ import numpy as np
 from copy import deepcopy
 from pathlib import Path
 import json
-import shutil
 
 from deeppavlov.models.evolution.check_binary_mask import check_and_correct_binary_mask, \
     number_to_type_layer
 from deeppavlov.models.evolution.utils import find_index_of_dict_with_key_in_pipe
+from deeppavlov.core.common.file import read_json
 
 
 # please, make sure that
@@ -296,9 +296,10 @@ class NetworkAndParamsEvolution:
             next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
                 str(Path(self.params["save_path"]).joinpath("population_" + str(iteration)).joinpath(
                     self.params["model_name"] + "_" + str(i)))
-
+            # re init learning rate with the final one
             next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["lear_rate"] = \
-                str(Path(next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["final_lear_rate"]).parent)
+                read_json(str(Path(next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"]).
+                              joinpath("model_opt.json")))["chainer"]["pipe"][self.model_to_evolve_index]["final_lear_rate"]
 
         for i in range(self.n_saved_best_with_weights, self.population_size):
             if self.train_partition != 1:
