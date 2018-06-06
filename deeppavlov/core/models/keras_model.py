@@ -212,7 +212,8 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         # if model was loaded from one path and saved to another one
         # then change load_path to save_path for config
         self.opt["epochs_done"] = self.epochs_done
-        self.opt["final_lear_rate"] = self.optimizer.lr / (1. + self.optimizer.decay * self.batches_seen)
+        self.opt["final_lear_rate"] = K.eval(self.optimizer.lr) / (1. +
+                                                                   K.eval(self.optimizer.decay) * self.batches_seen)
 
         if self.opt.get("load_path") and self.opt.get("save_path"):
             if self.opt.get("save_path") != self.opt.get("load_path"):
