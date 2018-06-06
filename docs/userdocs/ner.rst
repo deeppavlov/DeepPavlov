@@ -12,9 +12,14 @@ formulated as:
 provide a tag from a predefined set of tags for each token in the
 sequence.*
 
-For NER task there are some common types of entities used as tags: -
-persons - locations - organizations - expressions of time - quantities -
-monetary values
+For NER task there are some common types of entities used as tags:
+
+- persons
+- locations
+- organizations
+- expressions of time
+- quantities
+- monetary values
 
 Furthermore, to distinguish adjacent entities with the same tag many
 applications use BIO tagging scheme. Here "B" denotes beginning of an

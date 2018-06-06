@@ -53,18 +53,15 @@ Usage
 Requirements
 ^^^^^^^^^^^^
 
-**TO TRAIN** a go\_bot model you should have: 1. (*optional, but
-recommended*) pretrained named entity recognition model (NER)
-``deeppavlov/configs/ner/ner_dstc2.json``
-is recommended 2. (*optional, but recommended*) pretrained intents
-classifier model
-``deeppavlov/configs/intents/intents_dstc2_big.json``
-is recommended 3. (*optional*) downloaded english fasttext embeddings
-trained on wiki
-(https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip) \*
-fasttext embeddings can loaded via
-``python3 deeppavlov/download.py -all`` \* you can use any english
-embeddings of your choice, but edit go\_bot config accordingly
+**TO TRAIN** a go\_bot model you should have:
+
+1. (*optional, but recommended*) pretrained named entity recognition model (NER)
+   ``deeppavlov/configs/ner/ner_dstc2.json`` is recommended
+2. (*optional, but recommended*) pretrained intents classifier model
+   ``deeppavlov/configs/intents/intents_dstc2_big.json`` is recommended
+3. (*optional*) downloaded english fasttext embeddings trained on wiki
+   (https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip)\: fasttext embeddings can be loaded via
+   ``python3 deeppavlov/download.py -all`` you can use any english embeddings, but edit go\_bot config accordingly.
 
 **TO INFER** from a go\_bot model you should **additionaly** have:
 
@@ -74,15 +71,10 @@ embeddings of your choice, but edit go\_bot config accordingly
 
 5. pretrained goal-oriented bot model itself
 
--  config
-   ``deeppavlov/configs/go_bot/gobot_dstc2.json``
-   is recommended
--  ``slot_filler`` section of go\_bot's config should match NER's
-   configuration
--  ``intent_classifier`` section of go\_bot's config should match
-   classifier's configuration
--  double-check that corresponding ``load_path``\ s point to NER and
-   intent classifier model files
+-  config ``deeppavlov/configs/go_bot/gobot_dstc2.json`` is recommended
+-  ``slot_filler`` section of go\_bot's config should match NER's configuration
+-  ``intent_classifier`` section of go\_bot's config should match classifier's configuration
+-  double-check that corresponding ``load_path`` point to NER and intent classifier model files
 
 Config parameters:
 ^^^^^^^^^^^^^^^^^^
@@ -91,10 +83,11 @@ Config parameters:
 -  ``word_vocab`` — vocabulary of tokens from context utterances
 
     +  ``name`` — ``"default_vocab"`` (for vocabulary's implementation see ``deeppavlov.core.data.vocab``)
-    +  ``level`` — ``"token"``,
-    +  ``tokenizer`` — ``{ "name": "split_tokenizer" }``,
+    +  ``level`` — ``"token"``
+    +  ``tokenizer`` — ``{ "name": "split_tokenizer" }``
     +  ``save_path`` — ``"vocabs/token.dict"``
     +  ``load_path`` — ``"vocabs/token.dict"``
+
 
 -  ``template_path`` — map from actions to text templates for response generation
 -  ``template_type`` — type of templates to use (``"BaseTemplate"`` by default) *(optional)*
@@ -110,29 +103,34 @@ Config parameters:
    +  ``unknown_value`` – value used to fill unknown column values (defaults to ``"UNK"``) *(optional)*
    +  ``save_path`` – path to database filename (will load to it, and save to it)
 
+
 -  ``api_call_action`` – label of action that corresponds to database api call (the same label that is used
    to represent the action in your ``template_path`` file), during interaction it will be used to get ``db_result``
    from ``database`` *(optional)*
 -  ``use_action_mask`` — if ``true``, action mask is applied to network output *(False, by default)*
--  ``tokenizer`` — one of tokenizers from ```deeppavlov.models.tokenizers`` module
+-  ``tokenizer`` — one of tokenizers from ``deeppavlov.models.tokenizers`` module
 
    +  ``name`` — tokenizer name
    +  other arguments specific to your tokenizer
+
 
 -  ``bow_embedder`` — ``deeppavlov.models.embedders.bow_embedder`` or ``null`` *(optional)*
 
    +  ``name`` — embedder name
    +  other arguments specific to your bag of words embedder
 
+
 -  ``embedder`` — one of embedders from ``deeppavlov.models.embedders`` module *(optional)*
 
    +  ``name`` — embedder name (``"fasttext"`` recommended, see ``deeppavlov.models.embedders.fasttext_embedder``)
    +  other arguments specific to your embedder
 
+
 -  ``tracker`` — dialogue state tracker from ``deeppavlov.models.trackers``
 
    +  ``name`` — tracker name (``"default_tracker"`` or ``"featurized_tracker"`` recommended)
    +  ``slot_vals`` — list of slots that should be tracked
+
 
 -  ``network parameters`` - see :doc:`GoalOrientedBotNetwork </apiref/skills/go_bot>` for details.
 -  ``slot_filler`` — model that predicts slot values for a given utterance
@@ -140,11 +138,13 @@ Config parameters:
    +  ``name`` — slot filler name (``"dstc_slotfilling"`` recommended, for implementation see ``deeppavlov.models.ner``)
    +  other slot filler arguments
 
+
 -  ``intent_classifier`` — model that outputs intents probability distribution for a given utterance
 
    +  ``name`` — intent classifier name (``"intent_model"`` recommended, for implementation
       see ``deeppavlov.models.classifiers.intents``)
    +  classifier's other arguments
+
 
 -  ``debug`` — whether to display debug output (defaults to ``false``) *(optional)*
 
@@ -267,7 +267,7 @@ Challenge 2 `[2] <#references>`__. The modifications were as follows:
 
    -  fixed several dialogs, where actions were wrongly annotated
    -  uppercased first letter of bot responses
-   -  unified punctuation for bot responses'
+   -  unified punctuation for bot responses
 
 Your data
 ^^^^^^^^^
@@ -326,7 +326,7 @@ Templates
 
 You should provide a maping from actions to text templates in the following format (and set ``template_type`` to
 ``"BaseTemplate"``, DSTC2 uses an extension of templates –``"DualTemplate"``, you will probably not need it):
-\* ``action\ttemplate``, \* where filled slots in templates should start with "#" and mustn't contain whitespaces.
+``action_template``, where filled slots in templates should start with "#" and mustn't contain whitespaces.
 
 For example,
 
@@ -343,8 +343,11 @@ Database (optional)
 If your dataset doesn't imply any api calls to an external database, just do not set ``database`` and
 ``api_call_action`` parameters and skip the section below.
 
-Otherwise, you should specify them and 1. provide sql table with requested items or 2. construct such table from
-provided in train samples ``db_result`` items. This can be done with the following script:
+Otherwise, you should specify them and
+
+1. provide sql table with requested items or
+2. construct such table from provided in train samples ``db_result`` items. This can be done with the following script:
+
 
 .. code:: bash
 

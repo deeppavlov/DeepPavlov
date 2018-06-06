@@ -9,11 +9,14 @@ This component serves for solving DSTC 2 Slot-Filling task. In most of the cases
 provide a tag from a predefined set of tags for each token in the
 sequence.*
 
-For NER task there are some common types of entities used as tags: -
-persons - locations - organizations - expressions of time - quantities -
-monetary values
+For NER task there are some common types of entities used as tags:
 
-In this component
+- persons
+- locations
+- organizations
+- expressions of time
+- quantities
+- monetary values
 
 Furthermore, to distinguish adjacent entities with the same tag many
 applications use BIO tagging scheme. Here "B" denotes beginning of an
@@ -45,9 +48,9 @@ Slot Filling is a typical step after the NER. It can be formulated as:
 this entity type provide a normalized form of the entity.*
 
 In this component, the Slot Filling task is solved by Levenshtein
-Distance search across all known entities of a given type. Example:
+Distance search across all known entities of a given type.
 
-There is an entity of "food" type:
+For example, there is an entity of "food" type:
 
 *chainese*
 
@@ -87,7 +90,7 @@ config part with "ner\_dataset\_reader" should look like:
         "data_path": "dstc2"
     } 
 
-where "name" refers to the basic ner dataset reader class and data\_path
+where ``name`` refers to the basic ner dataset reader class and ``data_path``
 is the path to the folder with DSTC 2 dataset.
 
 Dataset Iterator

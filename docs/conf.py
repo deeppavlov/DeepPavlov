@@ -36,7 +36,7 @@ MOCK_MODULES = ['tensorflow', 'keras', 'keras.metrics', 'keras.optimizers', 'ove
                 'nltk.tokenize', 'nltk.tokenize.toktok', 'pymorphy2', 'scipy', 'sklearn.utils', 'keras.layers.merge',
                 'keras.initializers', 'keras.preprocessing', 'keras.preprocessing.sequence', 'gensim.models.wrappers',
                 'sklearn.decomposition', 'fuzzywuzzy', 'nltk.translate', 'nltk.translate.bleu_score', 'sklearn.metrics',
-                'nltk.tokenize.moses']
+                'nltk.tokenize.moses', 'sortedcontainers']
 
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 

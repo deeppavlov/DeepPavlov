@@ -153,7 +153,6 @@ presented:
 * ``bigru_model`` -- Bidirectional GRU model.
 
 Please, pay attention that each model has its own parameters that should be specified in config.
-''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 
 Configuration parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~
