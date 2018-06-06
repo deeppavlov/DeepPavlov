@@ -33,10 +33,10 @@ log = get_logger(__name__)
 @register("seq2seq_go_bot_nn")
 class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
-    GRAPH_PARAMS = ['knowledge_base_keys', 'source_vocab_size', 
-                    'target_vocab_size', 'hidden_size', 'embedder_load_path',
+    GRAPH_PARAMS = ['knowledge_base_size', 'source_vocab_size',
+                    'target_vocab_size', 'hidden_size', 'embedding_size',
                     'kb_attention_hidden_sizes']
-    
+
     def __init__(self, **params):
         # initialize parameters
         self._init_params(params)
@@ -44,8 +44,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         self._build_graph()
         # initialize session
         self.sess = tf.Session()
-        #from tensorflow.python import debug as tf_debug
-        #self.sess = tf_debug.TensorBoardDebugWrapperSession(self.sess, "vimary-pc:7019")
+        # from tensorflow.python import debug as tf_debug
+        # self.sess = tf_debug.TensorBoardDebugWrapperSession(self.sess, "vimary-pc:7019")
 
         self.sess.run(tf.global_variables_initializer())
 
@@ -58,21 +58,22 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             log.info("[initializing `{}` from scratch]".format(self.__class__.__name__))
 
     def _init_params(self, params):
-        self.opt = {k: v for k, v in params.items() if k not in ('embedder')}
-        self.opt['knowledge_base_size'] = len(self.opt['knowledge_base_keys'])
+        self.opt = {k: v for k, v in params.items()
+                    if k not in ('knowledge_base_entry_embeddings')}
 
-        self.opt['embedder_load_path'] = str(params['embedder'].load_path)
-        self.embedder = params['embedder']
-        self.opt['embedding_size'] = params.get('embedding_size', self.embedder.dim)
-        
-        self.kb_keys = self.opt['knowledge_base_keys']
+        # self.opt['embedder_load_path'] = str(params['embedder'].load_path)
+        self.kb_embeddings = params['knowledge_base_entry_embeddings']
+        self.opt['knowledge_base_size'] = len(self.kb_embeddings)
+        if 'embedding_size' not in params:
+            self.opt['embedding_size'] = len(self.kb_embeddings[0])
+
         self.kb_size = self.opt['knowledge_base_size']
+        self.embedding_size = self.opt['embedding_size']
         self.learning_rate = self.opt['learning_rate']
         self.tgt_sos_id = self.opt['target_start_of_sequence_index']
         self.tgt_eos_id = self.opt['target_end_of_sequence_index']
         self.src_vocab_size = self.opt['source_vocab_size']
         self.tgt_vocab_size = self.opt['target_vocab_size']
-        self.embedding_size = self.opt['embedding_size']
         self.hidden_size = self.opt['hidden_size']
         self.kb_attn_hidden_sizes = self.opt['kb_attention_hidden_sizes']
 
@@ -81,7 +82,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         self._add_placeholders()
 
         _logits, self._predictions = self._build_body()
-       
+
         _weights = tf.expand_dims(self._tgt_weights, -1)
         _loss_tensor = \
             tf.losses.sparse_softmax_cross_entropy(logits=_logits,
@@ -95,7 +96,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         # self._loss = tf.reduce_mean(_loss_tensor, name='loss')
 # TODO: tune clip_norm
         self._train_op = \
-            self.get_train_op(self._loss, self.learning_rate, clip_norm=10.) 
+            self.get_train_op(self._loss, self.learning_rate, clip_norm=10.)
 
     def _add_placeholders(self):
         # _encoder_inputs: [batch_size, max_input_time]
@@ -113,8 +114,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                                                name='decoder_outputs')
         # _kb_embeddings: [kb_size, embedding_dim]
 # TODO: try training embeddings
-        kb_W = np.array([self._embed_kb_key(val) for val in self.kb_keys],
-                        dtype=np.float32)
+        kb_W = np.array(self.kb_embeddings)[:, :self.embedding_size]
         self._kb_embeddings = tf.get_variable("kb_embeddings",
                                               shape=(kb_W.shape[0], kb_W.shape[1]),
                                               dtype=tf.float32,
@@ -126,23 +126,17 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 # TODO: compute sequence lengths on the go
         # _src_sequence_lengths, _tgt_sequence_lengths: [batch_size]
         self._src_sequence_lengths = tf.placeholder(tf.int32,
-                                                   [None],
-                                                   name='input_sequence_lengths')
+                                                    [None],
+                                                    name='input_sequence_lengths')
         self._tgt_sequence_lengths = tf.placeholder(tf.int32,
-                                                   [None],
-                                                   name='output_sequence_lengths')
+                                                    [None],
+                                                    name='output_sequence_lengths')
         # _tgt_weights: [batch_size, max_output_time]
         self._tgt_weights = tf.placeholder(tf.int32,
                                            [None, None],
                                            name='target_weights')
 
-    def _embed_kb_key(self, key):
-        #log.debug("Embedding `{}` kb_key".format(key))
-# TODO: fasttext_embedder to work with tokens
-        return self.embedder([key.replace('_', ' ')], mean=True)[0][:self.embedding_size]
-
     def _build_body(self):
-#TODO: try learning embeddings
         # Encoder embedding
         #_encoder_embedding = tf.get_variable(
         #    "encoder_embedding", [self.src_vocab_size, self.embedding_size])
@@ -241,11 +235,11 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         if prob:
             raise NotImplementedError("Probs not available for now.")
         return predictions
-    
-    def train_on_batch(self, enc_inputs, dec_inputs, dec_outputs, 
+
+    def train_on_batch(self, enc_inputs, dec_inputs, dec_outputs,
                        src_seq_lengths, tgt_seq_lengths, tgt_weights, kb_masks):
         _, loss_value = self.sess.run(
-            [ self._train_op, self._loss ],
+            [self._train_op, self._loss],
             feed_dict={
                 self._encoder_inputs: enc_inputs,
                 self._decoder_inputs: dec_inputs,

@@ -35,7 +35,7 @@ class SimpleVocabulary(Estimator):
                  special_tokens=tuple(),
                  default_token=None,
                  max_tokens=2**30,
-                 min_freq=1,
+                 min_freq=0,
                  pad_with_zeros=False,
                  *args,
                  **kwargs):
@@ -52,6 +52,7 @@ class SimpleVocabulary(Estimator):
     def fit(self, *args):
         self.reset()
         tokens = chain(*args)
+        # filter(None, <>) -- to filter empty tokens
         self.freqs = Counter(filter(None, chain(*tokens)))
         for special_token in self.special_tokens:
             self._t2i[special_token] = self.count

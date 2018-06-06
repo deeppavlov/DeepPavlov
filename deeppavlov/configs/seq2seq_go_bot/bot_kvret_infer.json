@@ -38,14 +38,16 @@
       {
         "id": "src_token_vocab",
         "name": "simple_vocab",
-        "special_tokens": ["<SOS>"],
+        "default_token": "<UNK>",
+        "special_tokens": ["<UNK>", "<SOS>"],
         "save_path": "vocabs/src_tokens.dict",
         "load_path": "vocabs/src_tokens.dict"
       },
       {
         "id": "tgt_token_vocab",
         "name": "simple_vocab",
-        "special_tokens": ["<SOS>", "<EOS>"],
+        "default_token": "<UNK>",
+        "special_tokens": ["<UNK>", "<SOS>", "<EOS>"],
         "save_path": "vocabs/tgt_tokens.dict",
         "load_path": "vocabs/tgt_tokens.dict"
       },
@@ -64,13 +66,10 @@
         "start_of_sequence_token": "<SOS>",
         "end_of_sequence_token": "<EOS>",
         "embedder": "#token_embedder",
-        "network": {
-          "name": "seq2seq_go_bot_nn",
+        "network_parameters": {
           "load_path": "seq2seq_go_bot/model",
           "save_path": "seq2seq_go_bot/model",
           "learning_rate": 0.0009,
-          "embedder": "#token_embedder",
-          "knowledge_base_keys": "#kb.primary_keys",
           "target_start_of_sequence_index": "#tgt_token_vocab.__getitem__('<SOS>')",
           "target_end_of_sequence_index": "#tgt_token_vocab.__getitem__('<EOS>')",
           "source_vocab_size": "#src_token_vocab.__len__()",
