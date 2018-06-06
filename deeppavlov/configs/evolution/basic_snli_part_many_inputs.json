@@ -83,7 +83,7 @@
             "units": {
               "range": [
                 50,
-                200
+                500
               ],
               "discrete": true
             },
@@ -100,7 +100,7 @@
             "filters": {
               "range": [
                 50,
-                200
+                500
               ],
               "discrete": true
             },
@@ -117,7 +117,7 @@
             "units": {
               "range": [
                 50,
-                200
+                500
               ],
               "discrete": true
             },
@@ -127,7 +127,7 @@
             "units": {
               "range": [
                 50,
-                200
+                500
               ],
               "discrete": true
             },
@@ -206,7 +206,7 @@
     "batch_size": {
       "range": [
         50,
-        100
+        200
       ],
       "discrete": true
     },
@@ -217,7 +217,7 @@
       "classification_f1",
       "classification_roc_auc"
     ],
-    "validation_patience": 2,
+    "validation_patience": 5,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
     "show_examples": false,
