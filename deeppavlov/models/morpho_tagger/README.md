@@ -15,7 +15,7 @@ python -m deeppavlov download morpho_ru_syntagrus_train
 To perform all downloads in runtime you can also run all subsequent commands with `-d` key, 
 2. To apply a pre-trained ru_syntagrus model to ru_syntagrus test data, run
 ```
-python -m models/morpho_tagger morpho_ru_syntagrus_predict
+python -m deeppavlov.models.morpho_tagger morpho_ru_syntagrus_predict
 ```
 from `deeppavlov` directory of the repository. A subdirectory `results` will be created and predictions will be written to the file ```ud_ru_syntagrus_test.res``` in it.
 3. To evaluate ru_syntagrus model on ru_syntagrus test subset, run
