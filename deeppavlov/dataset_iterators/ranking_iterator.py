@@ -46,8 +46,9 @@ class RankingIterator:
 
     def gen_batches(self, batch_size, data_type="train", shuffle=True):
         data = self.data[data_type]
-        if self.random_batches and self.batches_per_epoch is not None:
+        if self.random_batches and self.batches_per_epoch is not None and data_type == "train":
             num_steps = self.batches_per_epoch
+            assert(batch_size < len(data))
         else:
             num_steps = len(data) // batch_size
         if data_type == "train":
@@ -55,7 +56,7 @@ class RankingIterator:
                 np.random.shuffle(data)
             for i in range(num_steps):
                 if self.random_batches:
-                    context_response_data = random.choices(data, k=batch_size)
+                    context_response_data = np.random.choice(data, size=batch_size, replace=False)
                 else:
                     context_response_data = data[i * batch_size:(i + 1) * batch_size]
                 context = [el["context"] for el in context_response_data]
@@ -67,7 +68,8 @@ class RankingIterator:
                 if self.hard_triplets:
                     positives = [random.choices(el["pos_pool"], k=self.num_positive_samples)
                                  for el in context_response_data]
-                    x = [[context[i], [response[i]]+negative_response[i], positives[i]]
+                    labels = [el["label"] for el in context_response_data]
+                    x = [[context[i], [response[i]]+negative_response[i], positives[i], labels[i]]
                          for i in range(len(context_response_data))]
                 else:
                     x = [[context[i], [response[i]]+negative_response[i]] for i in range(len(context_response_data))]

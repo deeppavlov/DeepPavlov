@@ -45,17 +45,17 @@ class SberFAQReader(DatasetReader):
             reader = csv.reader(f, delimiter='\t')
             for el in reader:
                 sen_train.append(self.clean_sen(el[0]))
-                label_train.append(el[1])
+                label_train.append(int(el[1]))
         with open(valid_fname, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
             for el in reader:
                 sen_valid.append(self.clean_sen(el[0]))
-                label_valid.append(el[1])
+                label_valid.append(int(el[1]))
         with open(test_fname, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
             for el in reader:
                 sen_test.append(self.clean_sen(el[0]))
-                label_test.append(el[1])
+                label_test.append(int(el[1]))
 
         sen = sen_train + sen_valid + sen_test
         self.sen2int_vocab = {el[1]: el[0] for el in enumerate(sen)}
@@ -79,6 +79,7 @@ class SberFAQReader(DatasetReader):
         responses = []
         positive_responses_pool = []
         negative_responses_pool = []
+        labels = []
         for k, v in classes_vocab.items():
             positive_responses_pool.append(list(v))
             contexts.append(random.choice(list(v)))
@@ -86,9 +87,10 @@ class SberFAQReader(DatasetReader):
             nr = self._get_neg_resps(classes_vocab, k)
             nr = random.choices(nr, k=num_neg)
             negative_responses_pool.append(nr)
+            labels.append(k)
         data = [{"context": el[0], "response": el[1],
-                "pos_pool": el[2], "neg_pool": el[3]}
-                for el in zip(contexts, responses, positive_responses_pool, negative_responses_pool)]
+                "pos_pool": el[2], "neg_pool": el[3], "label": el[4]}
+                for el in zip(contexts, responses, positive_responses_pool, negative_responses_pool, labels)]
         return data
 
     def preprocess_data_validation(self, fname, type, num_neg=9):

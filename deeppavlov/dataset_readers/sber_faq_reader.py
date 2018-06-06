@@ -13,9 +13,9 @@ class SberFAQReader(DatasetReader):
         # data_path = expand_path(data_path)
         # self.download_data(data_path)
         dataset = {'train': None, 'valid': None, 'test': None}
-        train_fname = Path(data_path) / 'sber_faq_train.csv'
-        valid_fname = Path(data_path) / 'sber_faq_val.csv'
-        test_fname = Path(data_path) / 'sber_faq_test.csv'
+        train_fname = Path(data_path) / 'sber_faq_train_50.csv'
+        valid_fname = Path(data_path) / 'sber_faq_val_50.csv'
+        test_fname = Path(data_path) / 'sber_faq_test_50.csv'
         self.sen2int_vocab = {}
         self.classes_vocab_train = {}
         self.classes_vocab_valid = {}
