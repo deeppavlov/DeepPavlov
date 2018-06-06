@@ -1,4 +1,3 @@
-import sys
 import argparse
 
 from deeppavlov.models.morpho_tagger.common import predict_with_model
