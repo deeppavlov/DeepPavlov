@@ -92,13 +92,13 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
             node_params.pop("node_name")
             node_params.pop("node_type")
             node_params.pop("node_layer")
-            output_of_node = Bidirectional(CuDNNLSTM(**node_params))(inp)
+            output_of_node = Dropout(rate=params['dropout_rate'])(Bidirectional(CuDNNLSTM(**node_params))(inp))
         elif params[params["nodes"][node_str_id]]["node_name"] == "SelfMultiplicativeAttention":
             node_params = deepcopy(params[params["nodes"][node_str_id]])
             node_params.pop("node_name")
             node_params.pop("node_type")
             node_params.pop("node_layer")
-            output_of_node = multiplicative_self_attention(inp, **node_params)
+            output_of_node = Dropout(rate=params['dropout_rate'])(multiplicative_self_attention(inp, **node_params))
         else:
             node_func = globals().get(params[params["nodes"][node_str_id]]["node_name"], None)
             node_params = deepcopy(params[params["nodes"][node_str_id]])
@@ -106,7 +106,7 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
             node_params.pop("node_type")
             node_params.pop("node_layer")
             if callable(node_func):
-                output_of_node = node_func(**node_params)(inp)
+                output_of_node = Dropout(rate=params['dropout_rate'])(node_func(**node_params)(inp))
             else:
                 raise AttributeError("Node {} is not defined correctly".format(node_str_id))
         return output_of_node
@@ -125,6 +125,7 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
         if np.sum(params["binary_mask"]) == 0:
             output = Dense(1, activation=None)(inp)
             output = GlobalMaxPooling1D()(output)
+            output = Dropout(rate=params['dropout_rate'])(output)
             output = Dense(self.n_classes, activation=None)(output)
             activation = params.get("last_layer_activation", "sigmoid")
             act_output = Activation(activation)(output)
