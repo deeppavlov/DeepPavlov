@@ -154,6 +154,7 @@ class RankingModel(NNModel):
         s = self.dict.make_ints(s)
 
         embeddings = net.predict_context([s, s, s], 512)
+        embeddings = embeddings / np.expand_dims(np.linalg.norm(embeddings, axis=1), axis=1)
         dot_product = embeddings @ embeddings.T
         square_norm = np.diag(dot_product)
         distances = np.expand_dims(square_norm, 0) - 2.0 * dot_product + np.expand_dims(square_norm, 1)
