@@ -48,15 +48,15 @@ class KnowledgeBase(Estimator):
         for key, cols, items in zip(keys, kb_columns_list, kb_items_list):
             if (None not in (key, items, cols)) and (key not in self.kb):
                 kv_entry_list = (self._key_value_entries(item, cols,
-                                                         update=update_primary_keys)\
+                                                         update=update_primary_keys)
                                  for item in items)
                 self.kb[key] = list(itertools.chain(*kv_entry_list))
-    
+
     def _key_value_entries(self, kb_item, kb_columns, update=True):
         def _format(s):
             return re.sub('\s+', '_', s.lower().strip())
         first_key = _format(kb_item[kb_columns[0]])
-        for col in kb_columns[1:]:
+        for col in kb_columns:
             key = first_key + '_' + _format(col)
             if update and (key not in self.primary_keys):
                 self.primary_keys.append(key)
@@ -120,7 +120,7 @@ class KnowledgeBaseEntityNormalizer(Component):
 
     def denormalize(self, tokens, entries):
         for entity, value in entries:
-            if entity in tokens:
+            while (entity in tokens):
                 entity_pos = tokens.index(entity)
                 tokens = tokens[:entity_pos] + value + tokens[entity_pos+1:] 
         return tokens
