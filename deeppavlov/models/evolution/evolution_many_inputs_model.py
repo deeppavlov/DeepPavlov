@@ -225,8 +225,10 @@ class KerasEvolutionClassificationManyInputsModel(KerasIntentModel):
                     node_params.pop("node_name")
                     node_params.pop("node_type")
                     node_params.pop("node_layer")
+                    l2_reg = node_params.get("coef_regul_l2")
+                    node_params.pop("l2_reg")
                     model_layers[params["nodes"][node_str_id]] = Dropout(rate=params['dropout_rate'])(
-                        Bidirectional(CuDNNLSTM(**node_params)))
+                        Bidirectional(CuDNNLSTM(**node_params, kernel_regularizer=l2(l2_reg))))
                 elif params[params["nodes"][node_str_id]]["node_name"] == "SelfMultiplicativeAttention":
                     node_params = deepcopy(params[params["nodes"][node_str_id]])
                     node_params.pop("node_name")
@@ -240,9 +242,15 @@ class KerasEvolutionClassificationManyInputsModel(KerasIntentModel):
                     node_params.pop("node_name")
                     node_params.pop("node_type")
                     node_params.pop("node_layer")
+                    l2_reg = node_params.get("coef_regul_l2")
                     if callable(node_func):
-                        model_layers[params["nodes"][node_str_id]] = Dropout(rate=params['dropout_rate'])(
-                            node_func(**node_params))
+                        if l2_reg is None:
+                            model_layers[params["nodes"][node_str_id]] = Dropout(rate=params['dropout_rate'])(
+                                node_func(**node_params))
+                        else:
+                            node_params.pop("l2_reg")
+                            model_layers[params["nodes"][node_str_id]] = Dropout(rate=params['dropout_rate'])(
+                                node_func(**node_params, kernel_regularizer=l2(l2_reg)))
                     else:
                         raise AttributeError("Node {} is not defined correctly".format(node_str_id))
 

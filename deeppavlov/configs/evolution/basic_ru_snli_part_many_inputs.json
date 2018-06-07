@@ -94,6 +94,12 @@
                 "relu"
               ],
               "choice": true
+            },
+            "coef_regul_l2": {
+              "range": [
+                0.000001,
+                0.001
+              ]
             }
           },
           "Conv1D": {
@@ -111,7 +117,13 @@
               ],
               "discrete": true
             },
-            "padding": "same"
+            "padding": "same",
+            "coef_regul_l2": {
+              "range": [
+                0.000001,
+                0.001
+              ]
+            }
           },
           "CuDNNLSTM": {
             "units": {
@@ -121,7 +133,13 @@
               ],
               "discrete": true
             },
-            "return_sequences": true
+            "return_sequences": true,
+            "coef_regul_l2": {
+              "range": [
+                0.000001,
+                0.001
+              ]
+            }
           },
           "BiCuDNNLSTM": {
             "units": {
@@ -131,7 +149,13 @@
               ],
               "discrete": true
             },
-            "return_sequences": true
+            "return_sequences": true,
+            "coef_regul_l2": {
+              "range": [
+                0.000001,
+                0.001
+              ]
+            }
           },
           "MaxPooling1D": {
             "pool_size": {
