@@ -93,7 +93,7 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
             node_params.pop("node_type")
             node_params.pop("node_layer")
             l2_reg = node_params.get("coef_regul_l2")
-            node_params.pop("l2_reg")
+            node_params.pop("coef_regul_l2")
             output_of_node = Dropout(rate=params['dropout_rate'])(
                 Bidirectional(CuDNNLSTM(**node_params,
                                         kernel_regularizer=l2(l2_reg)))(inp))
@@ -114,7 +114,7 @@ class KerasEvolutionClassificationModel(KerasIntentModel):
                 if l2_reg is None:
                     output_of_node = Dropout(rate=params['dropout_rate'])(node_func(**node_params)(inp))
                 else:
-                    node_params.pop("l2_reg")
+                    node_params.pop("coef_regul_l2")
                     output_of_node = Dropout(rate=params['dropout_rate'])(
                         node_func(**node_params, kernel_regularizer=l2(l2_reg))(inp))
             else:
