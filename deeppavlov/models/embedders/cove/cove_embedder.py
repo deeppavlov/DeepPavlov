@@ -29,6 +29,7 @@ from typing import List
 
 log = get_logger(__name__)
 
+
 @register('cove_embedder')
 class CoVeEmbedder(Component, metaclass=TfModelMeta):
     def __init__(self, vocab_file_path: str, checkpoint_path: str, num_layers: int = 4, num_units: int = 256,
@@ -43,16 +44,18 @@ class CoVeEmbedder(Component, metaclass=TfModelMeta):
                default: 'LSTMCell'
         :param residual_connections:
                default: False
-        :param reduce_method: 'max', 'mean', 'sum', None is available
+        :param reduce_method: 'max', 'mean', 'sum', 'none' is available
                default: 'max'
         """
         reduce_methods_dict = {'max': lambda inputs: np.max(inputs, axis=1),
                                'mean': lambda inputs: np.mean(inputs, axis=1),
-                               'sum': lambda inputs: np.sum(inputs, axis=1)}
+                               'sum': lambda inputs: np.sum(inputs, axis=1),
+                               'none': lambda inputs: inputs}
 
         self.reduce_method = reduce_methods_dict.get(reduce_method, None)
         if self.reduce_method is None:
-            log.info('None of supported reducers has been provided, returning one vector per token;')
+            log.error('None of supported reducers has been provided!')
+            exit(1)
 
         self.vocab_file_path = vocab_file_path
         vocab = tf.contrib.lookup.index_table_from_file(vocabulary_file=self.vocab_file_path)
@@ -68,7 +71,7 @@ class CoVeEmbedder(Component, metaclass=TfModelMeta):
         inputs = tf.nn.embedding_lookup(params=embedd_mtx, ids=indexes)
 
         if cell_class_name not in dir(tf.contrib.rnn):
-            log.error("Provided cell_class_name hasn't been find into tf.contrib.rnn, try another name")
+            log.error("Provided cell_class_name hasn't been found into tf.contrib.rnn, try another name")
             exit(1)
 
         cell_class = getattr(tf.contrib.rnn, cell_class_name)

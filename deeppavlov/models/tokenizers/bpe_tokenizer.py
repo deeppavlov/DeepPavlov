@@ -156,7 +156,7 @@ class BPETokenizer(Estimator):
             if self.padding:
                 max_len = max(lengths)
                 for i in range(len(encoded)):
-                    encoded[i].extend(['']*(max_len-lengths[i]))
+                    encoded[i].extend(['<blank>']*(max_len-lengths[i]))
             return encoded, lengths
 
         elif isinstance(batch[0], list) and \

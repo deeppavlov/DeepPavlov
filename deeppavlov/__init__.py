@@ -48,7 +48,7 @@ import deeppavlov.models.spelling_correction.brillmoore.error_model
 import deeppavlov.models.spelling_correction.levenstein.searcher_component
 import deeppavlov.models.spelling_correction.electors.kenlm_elector
 import deeppavlov.models.spelling_correction.electors.top1_elector
-import deeppavlov.models.embedders.cove_embedder
+import deeppavlov.models.embedders.cove.cove_embedder
 import deeppavlov.models.trackers.hcn_at
 import deeppavlov.models.trackers.hcn_et
 import deeppavlov.models.preprocessors.str_lower

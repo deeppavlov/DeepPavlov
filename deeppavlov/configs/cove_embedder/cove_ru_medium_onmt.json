@@ -33,7 +33,6 @@
         "residual_connections": false,
         "num_units": 256,
         "num_layers": 4,
-        "cell_class": "LSTMCell",
         "reduce_method": "mean"
       }
     ],
