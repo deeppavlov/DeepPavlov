@@ -35,7 +35,7 @@ In the original dataset this user reply has characteristics
 "db_result": null, 
 "dialog-acts": [{"slots": [], "act": "thankyou"}, {"slots": [], "act": "bye"}]}
 ```
-This message contains two intents `(thankyou, bye)`.
+This message contains two intents `(thankyou, bye)`. Train, valid and test division is the same as on web-site.
 
 
 **SNIPS** dataset (https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines) contains **intent classification** task for 7 intents (approximately 2.4 samples per intent):
@@ -47,13 +47,22 @@ This message contains two intents `(thankyou, bye)`.
 * SearchScreeningEvent
 * SearchCreativeWork
 
-Initially, intent model on SNIPS dataset was trained only as an example of usage that is why we provide pre-trained model for SNIPS with embeddings trained on DSTC-2 dataset that is not the best choice for this task.
+Initially, intent model on SNIPS dataset was trained only as an example of usage that is why we provide pre-trained model for SNIPS with embeddings trained on DSTC-2 dataset that is not the best choice for this task. Train set is divided to train and validation sets to illustrate `basic_classification_iterator` work.
 
-**AG News** dataset (https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html) contains **sentiment classification** task for 5 classes (range from 0 to 4 points scale).
+**AG News** dataset (https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html) contains **sentiment classification** task for 5 classes (range from 0 to 4 points scale). Test set is initial one from web-site, valid is a Stratified division 1/5 from the train set from web-site with 42 seed, and the train set is the rest.
 
-**Detecting Insults in Social Commentary** dataset (https://www.kaggle.com/c/detecting-insults-in-social-commentary) contains binary classification task for **detecting insults** for participants of conversation.
+**Detecting Insults in Social Commentary** dataset (https://www.kaggle.com/c/detecting-insults-in-social-commentary) contains binary classification task for **detecting insults** for participants of conversation. Train, valid and test division is the same as for the Kaggle challenge.
 
-**Twitter mokoron** dataset (http://study.mokoron.com/) contains **sentiment classification** of Russian twits for positive and negative replies [5].
+**Twitter mokoron** dataset (http://study.mokoron.com/) contains **sentiment classification** of Russian twits for positive and negative replies [5]. Train, valid and test division is made by hands (Stratified division: 1/5 from all dataset for test set with 42 seed, then 1/5 from the rest for validation set with 42 seed). Attention! The pre-trained model was trained on `sentiment_twitter_data/no_smiles_data` -- the same dataset but with removed "(" and ")".
+
+|   Model | Dataset | Valid accuracy | Test accuracy |
+|---------------------|-----------------|-----------------|----------------|
+|`configs/intents/intents_dstc2.json`| DSTC 2 | 0.8744 | 0.8801 |
+|`configs/intents/intents_dstc2_big.json`| DSTC 2 | 0.9682 | 0.9684 |
+|`configs/intents/intents_snips.json` | SNIPS | 0.8829 | -- |
+|`configs/sentiment/insults_kaggle.json`| InsultsKaggle | 0.8757 | 0.7503 |
+|`configs/sentiment/sentiment_ag_news.json`| AG News | 0.8735 | 0.8859 |
+|`configs/sentiment/sentiment_twitter.json`| Twitter.mokoron | 0.8021 (with smiles), 0.8008 (no_smiles)| 0.7949 (with smiles), 0.7943 (no_smiles)|
 
 ## Download pre-trained model
 
