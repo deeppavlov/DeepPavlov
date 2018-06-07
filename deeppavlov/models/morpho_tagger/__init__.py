@@ -1,0 +1,1 @@
+from .tagger import MorphoTaggerWrapper

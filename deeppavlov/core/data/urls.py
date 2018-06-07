@@ -37,7 +37,7 @@ REQ_URLS = {
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes_v2.tar.gz',
     'http://lnsigo.mipt.ru/export/deeppavlov_data/senna.tar.gz'
     'http://lnsigo.mipt.ru/export/deeppavlov_data/ner_rus.tar.gz'
-
+    'http://lnsigo.mipt.ru/export/deeppavlov_data/morpho_tagger.tar.gz'
 }
 
 OPT_URLS = {
