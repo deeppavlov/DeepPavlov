@@ -226,7 +226,7 @@ class KerasEvolutionClassificationManyInputsModel(KerasIntentModel):
                     node_params.pop("node_type")
                     node_params.pop("node_layer")
                     l2_reg = node_params.get("coef_regul_l2")
-                    node_params.pop("l2_reg")
+                    node_params.pop("coef_regul_l2")
                     model_layers[params["nodes"][node_str_id]] = Dropout(rate=params['dropout_rate'])(
                         Bidirectional(CuDNNLSTM(**node_params, kernel_regularizer=l2(l2_reg))))
                 elif params[params["nodes"][node_str_id]]["node_name"] == "SelfMultiplicativeAttention":
@@ -248,7 +248,7 @@ class KerasEvolutionClassificationManyInputsModel(KerasIntentModel):
                             model_layers[params["nodes"][node_str_id]] = Dropout(rate=params['dropout_rate'])(
                                 node_func(**node_params))
                         else:
-                            node_params.pop("l2_reg")
+                            node_params.pop("coef_regul_l2")
                             model_layers[params["nodes"][node_str_id]] = Dropout(rate=params['dropout_rate'])(
                                 node_func(**node_params, kernel_regularizer=l2(l2_reg)))
                     else:
