@@ -35,6 +35,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
     GRAPH_PARAMS = ['knowledge_base_size', 'source_vocab_size',
                     'target_vocab_size', 'hidden_size', 'embedding_size',
+                    'kb_embeddings_control_sum',
                     'kb_attention_hidden_sizes']
 
     def __init__(self, **params):
@@ -61,8 +62,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         self.opt = {k: v for k, v in params.items()
                     if k not in ('knowledge_base_entry_embeddings')}
 
-        # self.opt['embedder_load_path'] = str(params['embedder'].load_path)
         self.kb_embeddings = params['knowledge_base_entry_embeddings']
+        self.opt['kb_embeddings_control_sum'] = float(np.sum(self.kb_embeddings))
         self.opt['knowledge_base_size'] = len(self.kb_embeddings)
         if 'embedding_size' not in params:
             self.opt['embedding_size'] = len(self.kb_embeddings[0])
@@ -263,6 +264,9 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             params = json.load(fp)
         for p in self.GRAPH_PARAMS:
             if self.opt.get(p) != params.get(p):
+                if p in ('kb_embeddings_control_sum') and\
+                        (math.abs(self.opt.get(p, 0.) - params.get(p, 0.)) < 1e-3):
+                    continue
                 raise ConfigError("`{}` parameter must be equal to saved model"
                                   " parameter value `{}`, but is equal to `{}`"
                                   .format(p, params.get(p), self.opt.get(p)))
