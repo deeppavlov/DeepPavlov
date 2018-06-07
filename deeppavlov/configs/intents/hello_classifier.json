@@ -1,0 +1,32 @@
+{
+  "chainer": {
+    "in": "x",
+    "pipe": [
+      {
+        "name": "str_lower",
+        "id": "lower",
+        "in": ["x"],
+        "out": ["x_lower"]
+      },
+      {
+        "name": "nltk_moses_tokenizer",
+        "id": "tokenizer",
+        "in": ["x_lower"],
+        "out": ["x_tokens"]
+      },
+      {
+        "name": "vocab_intersection",
+        "words": ["hi", "hello", "good day"],
+        "in": "x_tokens",
+        "out": "hello_prob"
+      },
+      {
+        "name": "vocab_intersection",
+        "words": ["bye", "chao", "see you"],
+        "in": "x_tokens",
+        "out": "bye_prob"
+      }
+    ],
+    "out": ["hello_prob", "bye_prob"]
+  }
+}
