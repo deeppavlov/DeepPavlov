@@ -170,6 +170,12 @@
         },
         "loss": "binary_crossentropy",
         "text_size": 15,
+        "dropout_rate": {
+          "range": [
+            0.1,
+            0.9
+          ]
+        },
         "model_name": "evolution_classification_model",
         "embedder": "#my_embedder",
         "tokenizer": "#my_tokenizer"
