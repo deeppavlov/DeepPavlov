@@ -1,7 +1,10 @@
 {
   "dataset_reader": {
     "name": "basic_classification_reader",
-    "x": ["sentence1", "sentence2"],
+    "x": [
+      "sentence1",
+      "sentence2"
+    ],
     "y": "gold_label",
     "data_path": "/home/dilyara.baymurzina/evolution_data/snli_data/two_texts/part"
   },
@@ -91,6 +94,12 @@
                 "relu"
               ],
               "choice": true
+            },
+            "coef_regul_l2": {
+              "range": [
+                0.000001,
+                0.001
+              ]
             }
           },
           "Conv1D": {
@@ -108,7 +117,13 @@
               ],
               "discrete": true
             },
-            "padding": "same"
+            "padding": "same",
+            "coef_regul_l2": {
+              "range": [
+                0.000001,
+                0.001
+              ]
+            }
           },
           "CuDNNLSTM": {
             "units": {
@@ -118,7 +133,13 @@
               ],
               "discrete": true
             },
-            "return_sequences": true
+            "return_sequences": true,
+            "coef_regul_l2": {
+              "range": [
+                0.000001,
+                0.001
+              ]
+            }
           },
           "BiCuDNNLSTM": {
             "units": {
@@ -128,7 +149,13 @@
               ],
               "discrete": true
             },
-            "return_sequences": true
+            "return_sequences": true,
+            "coef_regul_l2": {
+              "range": [
+                0.000001,
+                0.001
+              ]
+            }
           },
           "MaxPooling1D": {
             "pool_size": {
