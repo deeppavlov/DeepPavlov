@@ -225,14 +225,15 @@ class KerasEvolutionClassificationManyInputsModel(KerasIntentModel):
                     node_params.pop("node_name")
                     node_params.pop("node_type")
                     node_params.pop("node_layer")
-                    model_layers[params["nodes"][node_str_id]] = Bidirectional(CuDNNLSTM(**node_params))
+                    model_layers[params["nodes"][node_str_id]] = Dropout(rate=params['dropout_rate'])(
+                        Bidirectional(CuDNNLSTM(**node_params)))
                 elif params[params["nodes"][node_str_id]]["node_name"] == "SelfMultiplicativeAttention":
                     node_params = deepcopy(params[params["nodes"][node_str_id]])
                     node_params.pop("node_name")
                     node_params.pop("node_type")
                     node_params.pop("node_layer")
-                    model_layers[params["nodes"][node_str_id]] = \
-                        multiplicative_self_attention_init(**node_params)
+                    model_layers[params["nodes"][node_str_id]] = Dropout(rate=params['dropout_rate'])(
+                        multiplicative_self_attention_init(**node_params))
                 else:
                     node_func = globals().get(params[params["nodes"][node_str_id]]["node_name"], None)
                     node_params = deepcopy(params[params["nodes"][node_str_id]])
@@ -240,7 +241,8 @@ class KerasEvolutionClassificationManyInputsModel(KerasIntentModel):
                     node_params.pop("node_type")
                     node_params.pop("node_layer")
                     if callable(node_func):
-                        model_layers[params["nodes"][node_str_id]] = node_func(**node_params)
+                        model_layers[params["nodes"][node_str_id]] = Dropout(rate=params['dropout_rate'])(
+                            node_func(**node_params))
                     else:
                         raise AttributeError("Node {} is not defined correctly".format(node_str_id))
 

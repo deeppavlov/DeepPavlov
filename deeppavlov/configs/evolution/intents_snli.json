@@ -80,7 +80,12 @@
         "text_size": 51,
         "coef_reg_cnn": 1e-4,
         "coef_reg_den": 1e-4,
-        "dropout_rate": 0.5,
+        "dropout_rate": {
+          "range": [
+            0.1,
+            0.9
+          ]
+        },
         "dense_size": 100,
         "model_name": "cnn_model",
         "embedder": "#my_embedder",
