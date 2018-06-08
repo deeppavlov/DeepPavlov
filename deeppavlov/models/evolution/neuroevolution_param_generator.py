@@ -272,15 +272,15 @@ class NetworkAndParamsEvolution:
                                     p_crossover=p_crossover,
                                     crossover_power=crossover_power)
 
-        print("Number of offsprings: {} individuums".format(len(offsprings)))
+        # print("Number of offsprings: {} individuums".format(len(offsprings)))
 
         changable_next = self.mutation(offsprings,
                                        p_mutation=p_mutation,
                                        mutation_power=mutation_power)
-        print("Number of mutated: {} individuums".format(len(changable_next)))
+        # print("Number of mutated: {} individuums".format(len(changable_next)))
 
         next_population.extend(changable_next)
-        print("Next population: {} individuums".format(len(next_population)))
+        # print("Next population: {} individuums".format(len(next_population)))
 
         for i in range(self.n_saved_best_with_weights):
             # if several train files:
@@ -366,7 +366,6 @@ class NetworkAndParamsEvolution:
         Returns:
             (self.population_size - self.n_saved_best_with_weights) offsprings
         """
-        perm = np.random.permutation(self.population_size)
         offsprings = []
 
         for i in range(self.population_size - self.n_saved_best_with_weights):
@@ -473,6 +472,8 @@ class NetworkAndParamsEvolution:
                                                           "binary_mask"])
 
                 offsprings.append(deepcopy(curr_offsprings[0]))
+            else:
+                offsprings.append(deepcopy(parents[0]))
 
         return offsprings
 
