@@ -171,14 +171,14 @@
             "n_hidden": {
               "range": [
                 50,
-                500
+                200
               ],
               "discrete": true
             },
             "n_output_features": {
               "range": [
                 50,
-                500
+                200
               ],
               "discrete": true
             },
@@ -236,7 +236,7 @@
     "batch_size": {
       "range": [
         50,
-        200
+        100
       ],
       "discrete": true
     },
