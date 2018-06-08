@@ -55,11 +55,9 @@ def score_population(population, population_size, result_file):
     for i in range(population_size):
         val_results = np.loadtxt(fname=str(Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index][
                                                     "save_path"]).parent.joinpath("valid_results.txt")))
-        try:
+        if TEST:
             test_results = np.loadtxt(fname=str(Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index][
                                                         "save_path"]).parent.joinpath("test_results.txt")))
-        except FileNotFoundError:
-            pass
 
         result_table_dict = {}
         for el in order:
@@ -70,9 +68,9 @@ def score_population(population, population_size, result_file):
                 result_table_dict[el + "_test"] = []
         for m_id, m in enumerate(CONSIDERED_METRICS):
             result_table_dict[m + "_valid"].append(val_results[m_id])
-            try:
+            if TEST:
                 result_table_dict[m + "_test"].append(test_results[m_id])
-            except NameError:
+            else:
                 result_table_dict[m + "_test"].append(0.)
         result_table_dict[order[-1]] = [population[i]]
         result_table = pd.DataFrame(result_table_dict)
@@ -122,6 +120,8 @@ print("Given basic params: {}\n".format(basic_params))
 
 # list of names of considered metrics
 CONSIDERED_METRICS = basic_params["train"]["metrics"]
+VALID = basic_params["train"]["valid_best"]
+TEST = basic_params["train"]["test_best"]
 
 if GIVEN_MASK_INIT:
     # Embedding -> BiLSTM -> Dense -> Dense -> GlobalMaxPooling -> Dense(#classes)
