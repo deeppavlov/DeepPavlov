@@ -69,7 +69,7 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
     chainer_config: dict = config['chainer']
     chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
     for component_config in chainer_config['pipe']:
-        component = from_params(component_config, vocabs=[], mode='train')
+        component = from_params(component_config, mode='train')
         if 'fit_on' in component_config:
             component: Estimator
 
@@ -152,16 +152,7 @@ def train_evaluate_model_from_config(config_path: str, to_train=True, to_validat
     metrics_functions = list(zip(train_config['metrics'], get_metrics_by_names(train_config['metrics'])))
 
     if to_train:
-        if 'chainer' in config:
-            model = fit_chainer(config, iterator)
-        else:
-            vocabs = config.get('vocabs', {})
-            for vocab_param_name, vocab_config in vocabs.items():
-                v: Estimator = from_params(vocab_config, mode='train')
-                vocabs[vocab_param_name] = _fit(v, iterator, None)
-
-            model_config = config['model']
-            model = from_params(model_config, vocabs=vocabs, mode='train')
+        model = fit_chainer(config, iterator)
 
         if callable(getattr(model, 'train_on_batch', None)):
             _train_batches(model, iterator, train_config, metrics_functions)
