@@ -85,14 +85,14 @@ DeepPavlov is built on top of machine learning frameworks [TensorFlow](https://w
 
 To use our pre-trained models, you should first download them:
 ```
-python -m deeppavlov.deep download <path_to_config>
+python -m deeppavlov download <path_to_config>
 ```
 or you can use additional key `-d` to automatically download all required models and data with any command like `interact`, `riseapi`, etc.
 
 Then you can interact with the models or train them with the following command:
 
 ```
-python -m deeppavlov.deep <mode> <path_to_config> [-d]
+python -m deeppavlov <mode> <path_to_config> [-d]
 ```
 
 * `<mode>` can be `train`, `predict`, `interact`, `interactbot` or `riseapi`
@@ -155,31 +155,31 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
           
  * Run goal-oriented bot with Telegram interface:
  ```
- python -m deeppavlov.deep interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>
+ python -m deeppavlov interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>
  ```
  * Run goal-oriented bot with console interface:
  ```
- python -m deeppavlov.deep interact deeppavlov/configs/go_bot/gobot_dstc2.json -d
+ python -m deeppavlov interact deeppavlov/configs/go_bot/gobot_dstc2.json -d
  ```
   * Run goal-oriented bot with REST API:
  ```
- python -m deeppavlov.deep riseapi deeppavlov/configs/go_bot/gobot_dstc2.json -d
+ python -m deeppavlov riseapi deeppavlov/configs/go_bot/gobot_dstc2.json -d
  ``` 
   * Run slot-filling model with Telegram interface:
  ```
- python -m deeppavlov.deep interactbot deeppavlov/configs/ner/slotfill_dstc2.json -d -t <TELEGRAM_TOKEN>
+ python -m deeppavlov interactbot deeppavlov/configs/ner/slotfill_dstc2.json -d -t <TELEGRAM_TOKEN>
  ```
  * Run slot-filling model with console interface:
  ```
- python -m deeppavlov.deep interact deeppavlov/configs/ner/slotfill_dstc2.json -d
+ python -m deeppavlov interact deeppavlov/configs/ner/slotfill_dstc2.json -d
  ```
  * Run slot-filling model with REST API:
  ```
- python -m deeppavlov.deep riseapi deeppavlov/configs/ner/slotfill_dstc2.json -d
+ python -m deeppavlov riseapi deeppavlov/configs/ner/slotfill_dstc2.json -d
  ```
  * Predict intents on every line in a file:
  ```
- python -m deeppavlov.deep predict deeppavlov/configs/intents/intents_snips.json -d --batch-size 15 < /data/in.txt > /data/out.txt
+ python -m deeppavlov predict deeppavlov/configs/intents/intents_snips.json -d --batch-size 15 < /data/in.txt > /data/out.txt
  ```
 
 ---
@@ -395,7 +395,7 @@ Inference is triggered by `deeppavlov.core.commands.infer.interact_model()` func
 
 Each library component or skill can be easily made available for inference as a REST web service. The general method is:
 
-`python -m deeppavlov.deep riseapi <config_path> [-d]`
+`python -m deeppavlov riseapi <config_path> [-d]`
 
 (optional `-d` key is for dependencies download before service start)
 
