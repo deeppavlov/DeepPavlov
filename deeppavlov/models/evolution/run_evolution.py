@@ -151,9 +151,9 @@ result_table_columns = []
 
 result_table_dict = {}
 for el in order:
-    if order == "params":
+    if el == "params":
         result_table_dict[el] = []
-        result_table_columns.extend([el + "_valid"])
+        result_table_columns.extend([el])
     else:
         result_table_dict[el + "_valid"] = []
         result_table_dict[el + "_test"] = []
