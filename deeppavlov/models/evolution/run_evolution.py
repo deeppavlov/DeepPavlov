@@ -120,7 +120,6 @@ print("Given basic params: {}\n".format(basic_params))
 
 # list of names of considered metrics
 CONSIDERED_METRICS = basic_params["train"]["metrics"]
-VALID = basic_params["train"]["valid_best"]
 TEST = basic_params["train"]["test_best"]
 
 if GIVEN_MASK_INIT:
