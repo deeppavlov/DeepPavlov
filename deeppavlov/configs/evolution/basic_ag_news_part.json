@@ -197,6 +197,12 @@
         "loss": "binary_crossentropy",
         "confident_threshold": 1,
         "text_size": 50,
+        "dropout_rate": {
+          "range": [
+            0.1,
+            0.9
+          ]
+        },
         "last_layer_activation": "softmax",
         "model_name": "evolution_classification_model",
         "embedder": "#my_embedder",
