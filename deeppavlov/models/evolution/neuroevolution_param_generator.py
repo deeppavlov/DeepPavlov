@@ -247,6 +247,7 @@ class NetworkAndParamsEvolution:
         Args:
             generation: current generation (set of self.population_size configs
             scores: corresponding scores that should be maximized
+            iteration: iteration number
             p_crossover: probability to cross over for current replacement
             crossover_power: part of parents parameters to exchange for offsprings
             p_mutation: probability of mutation for current replacement
@@ -266,16 +267,20 @@ class NetworkAndParamsEvolution:
 
         # here self.n_saved_best_with_weights = len(next_population)
         next_population = self.selection_of_best_with_weights(generation, scores)
-
+        print("Saved with weights: {} individuums".format(self.n_saved_best_with_weights))
         offsprings = self.crossover(generation,
                                     p_crossover=p_crossover,
                                     crossover_power=crossover_power)
 
+        print("Number of offsprings: {} individuums".format(len(offsprings)))
+
         changable_next = self.mutation(offsprings,
                                        p_mutation=p_mutation,
                                        mutation_power=mutation_power)
+        print("Number of mutated: {} individuums".format(len(changable_next)))
 
         next_population.extend(changable_next)
+        print("Next population: {} individuums".format(len(next_population)))
 
         for i in range(self.n_saved_best_with_weights):
             # if several train files:
