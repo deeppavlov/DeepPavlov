@@ -35,8 +35,6 @@ class NetworkAndParamsEvolution:
                  seed=None,
                  start_with_one_neuron=False,
                  evolve_binary_mask=True,
-                 save_best_with_weights_portion=0,
-                 renovation_frequency=1,
                  train_partition=1,
                  initial_binary_mask=None,
                  **kwargs):
@@ -109,9 +107,7 @@ class NetworkAndParamsEvolution:
         self.evolving_train_params = []
         self.n_evolving_train_params = None
         self.evolve_binary_mask = evolve_binary_mask
-        self.n_saved_best_with_weights = int(save_best_with_weights_portion * self.population_size)
-        self.n_saved_best_with_weights_first = self.n_saved_best_with_weights
-        self.renovation_frequency = renovation_frequency
+        self.n_saved_best_with_weights = 0
         self.train_partition = train_partition
         self.evolution_individuum_id = 0
         self.evolution_model_id = 0
