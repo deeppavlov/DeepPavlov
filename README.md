@@ -2,7 +2,7 @@
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 
 **We are in a really early Alpha release. You should be ready for hard adventures. 
-If you have updated to version 0.0.2 or greater - please re-download all pre-trained models**
+In version 0.0.5 we updraded to TensorFlow 1.8, please re-download our pre-trained models.**
 
 DeepPavlov is an open-source conversational AI library built on [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). It is designed for
  * development of production ready chat-bots and complex conversational systems,
@@ -85,14 +85,14 @@ DeepPavlov is built on top of machine learning frameworks [TensorFlow](https://w
 
 To use our pre-trained models, you should first download them:
 ```
-python -m deeppavlov.deep download <path_to_config>
+python -m deeppavlov download <path_to_config>
 ```
 or you can use additional key `-d` to automatically download all required models and data with any command like `interact`, `riseapi`, etc.
 
 Then you can interact with the models or train them with the following command:
 
 ```
-python -m deeppavlov.deep <mode> <path_to_config> [-d]
+python -m deeppavlov <mode> <path_to_config> [-d]
 ```
 
 * `<mode>` can be `train`, `predict`, `interact`, `interactbot` or `riseapi`
@@ -115,19 +115,23 @@ Available model configs are:
 
 - ```deeppavlov/configs/go_bot/*.json```
 
-- ```deeppavlov/configs/seq2seq_go_bot/*.json```
-
-- ```deeppavlov/configs/odqa/*.json```
-
-- ```deeppavlov/configs/squad/*.json```
-
 - ```deeppavlov/configs/intents/*.json```
+
+- ```deeppavlov/configs/morpho_tagger/*.json```
 
 - ```deeppavlov/configs/ner/*.json```
 
+- ```deeppavlov/configs/odqa/*.json```
+
 - ```deeppavlov/configs/ranking/*.json```
 
+- ```deeppavlov/configs/sentiment/*.json```
+
+- ```deeppavlov/configs/seq2seq_go_bot/*.json```
+
 - ```deeppavlov/configs/spelling_correction/*.json```
+
+- ```deeppavlov/configs/squad/*.json```
 
 # Features
 
@@ -155,31 +159,31 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
           
  * Run goal-oriented bot with Telegram interface:
  ```
- python -m deeppavlov.deep interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>
+ python -m deeppavlov interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>
  ```
  * Run goal-oriented bot with console interface:
  ```
- python -m deeppavlov.deep interact deeppavlov/configs/go_bot/gobot_dstc2.json -d
+ python -m deeppavlov interact deeppavlov/configs/go_bot/gobot_dstc2.json -d
  ```
   * Run goal-oriented bot with REST API:
  ```
- python -m deeppavlov.deep riseapi deeppavlov/configs/go_bot/gobot_dstc2.json -d
+ python -m deeppavlov riseapi deeppavlov/configs/go_bot/gobot_dstc2.json -d
  ``` 
   * Run slot-filling model with Telegram interface:
  ```
- python -m deeppavlov.deep interactbot deeppavlov/configs/ner/slotfill_dstc2.json -d -t <TELEGRAM_TOKEN>
+ python -m deeppavlov interactbot deeppavlov/configs/ner/slotfill_dstc2.json -d -t <TELEGRAM_TOKEN>
  ```
  * Run slot-filling model with console interface:
  ```
- python -m deeppavlov.deep interact deeppavlov/configs/ner/slotfill_dstc2.json -d
+ python -m deeppavlov interact deeppavlov/configs/ner/slotfill_dstc2.json -d
  ```
  * Run slot-filling model with REST API:
  ```
- python -m deeppavlov.deep riseapi deeppavlov/configs/ner/slotfill_dstc2.json -d
+ python -m deeppavlov riseapi deeppavlov/configs/ner/slotfill_dstc2.json -d
  ```
  * Predict intents on every line in a file:
  ```
- python -m deeppavlov.deep predict deeppavlov/configs/intents/intents_snips.json -d --batch-size 15 < /data/in.txt > /data/out.txt
+ python -m deeppavlov predict deeppavlov/configs/intents/intents_snips.json -d --batch-size 15 < /data/in.txt > /data/out.txt
  ```
 
 ---
@@ -395,7 +399,7 @@ Inference is triggered by `deeppavlov.core.commands.infer.interact_model()` func
 
 Each library component or skill can be easily made available for inference as a REST web service. The general method is:
 
-`python -m deeppavlov.deep riseapi <config_path> [-d]`
+`python -m deeppavlov riseapi <config_path> [-d]`
 
 (optional `-d` key is for dependencies download before service start)
 
