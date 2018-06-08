@@ -115,19 +115,23 @@ Available model configs are:
 
 - ```deeppavlov/configs/go_bot/*.json```
 
-- ```deeppavlov/configs/seq2seq_go_bot/*.json```
-
-- ```deeppavlov/configs/odqa/*.json```
-
-- ```deeppavlov/configs/squad/*.json```
-
 - ```deeppavlov/configs/intents/*.json```
+
+- ```deeppavlov/configs/morpho_tagger/*.json```
 
 - ```deeppavlov/configs/ner/*.json```
 
+- ```deeppavlov/configs/odqa/*.json```
+
 - ```deeppavlov/configs/ranking/*.json```
 
+- ```deeppavlov/configs/sentiment/*.json```
+
+- ```deeppavlov/configs/seq2seq_go_bot/*.json```
+
 - ```deeppavlov/configs/spelling_correction/*.json```
+
+- ```deeppavlov/configs/squad/*.json```
 
 # Features
 
