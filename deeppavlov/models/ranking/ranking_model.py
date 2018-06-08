@@ -173,26 +173,20 @@ class RankingModel(NNModel):
         else:
             hardest_negative_ind = np.argmin(anchor_negative_dist, axis=1)
 
+        mask_anchor_positive = np.expand_dims(np.repeat(labels, num_samples), 0) \
+                               == np.expand_dims(np.repeat(labels, num_samples), 1)
+        mask_anchor_positive = mask_anchor_positive.astype(float)
+        anchor_positive_dist = mask_anchor_positive * distances
+
         c =[]
         rp = []
         rn = []
 
         if self.hardest_positives:
-            mask_anchor_positive = np.expand_dims(np.repeat(labels, num_samples), 0)\
-             == np.expand_dims(np.repeat(labels, num_samples), 1)
-            mask_anchor_positive = mask_anchor_positive.astype(float)
-            anchor_positive_dist = mask_anchor_positive * distances
-
-            if self.num_hardest_samples is not None:
-                hard = np.argsort(anchor_positive_dist, axis=1)[:, -self.num_hardest_samples:]
-                ind = np.random.randint(self.num_hardest_samples, size=batch_size * num_samples)
-                hardest_positive_ind = hard[batch_size * num_samples * [True], ind]
-            else:
-                hardest_positive_ind = np.argmax(anchor_positive_dist, axis=1)
 
             if self.semi_hard:
-                hardest_negative_ind = []
                 hardest_positive_ind = []
+                hardest_negative_ind = []
                 for p, n in zip(anchor_positive_dist, anchor_negative_dist):
                     no_samples = True
                     p_li = list(zip(p, np.arange(batch_size * num_samples), batch_size * num_samples * [True]))
@@ -212,6 +206,13 @@ class RankingModel(NNModel):
                     if no_samples:
                         print("There is no negative examples with distances greater than positive examples distances.")
                         exit(0)
+            else:
+                if self.num_hardest_samples is not None:
+                    hard = np.argsort(anchor_positive_dist, axis=1)[:, -self.num_hardest_samples:]
+                    ind = np.random.randint(self.num_hardest_samples, size=batch_size * num_samples)
+                    hardest_positive_ind = hard[batch_size * num_samples * [True], ind]
+                else:
+                    hardest_positive_ind = np.argmax(anchor_positive_dist, axis=1)
 
             for i in range(batch_size):
                 for j in range(num_samples):
@@ -220,15 +221,34 @@ class RankingModel(NNModel):
                     rn.append(s[hardest_negative_ind[i*num_samples+j]])
 
         else:
-            for i in range(batch_size):
-                for j in range(num_samples):
-                    for k in range(j+1, num_samples):
-                        c.append(s[i*num_samples+j])
-                        c.append(s[i*num_samples+k])
-                        rp.append(s[i*num_samples+k])
-                        rp.append(s[i*num_samples+j])
-                        rn.append(s[hardest_negative_ind[i*num_samples+j]])
-                        rn.append(s[hardest_negative_ind[i*num_samples+k]])
+            if self.semi_hard:
+                for i in range(batch_size):
+                    for j in range(num_samples):
+                        for k in range(j+1, num_samples):
+                            c.append(s[i*num_samples+j])
+                            c.append(s[i*num_samples+k])
+                            rp.append(s[i*num_samples+k])
+                            rp.append(s[i*num_samples+j])
+                            n = self.get_semi_hard_negative_ind(distances[i*num_samples+j, i*num_samples+k],
+                                                                anchor_negative_dist[i*num_samples+j],
+                                                                batch_size, num_samples)
+                            assert(n != i*num_samples+k)
+                            rn.append(s[n])
+                            n = self.get_semi_hard_negative_ind(distances[i*num_samples+j, i*num_samples+k],
+                                                                anchor_negative_dist[i*num_samples+k],
+                                                                batch_size, num_samples)
+                            assert(n != i*num_samples+j)
+                            rn.append(s[n])
+            else:
+                for i in range(batch_size):
+                    for j in range(num_samples):
+                        for k in range(j + 1, num_samples):
+                            c.append(s[i * num_samples + j])
+                            c.append(s[i * num_samples + k])
+                            rp.append(s[i * num_samples + k])
+                            rp.append(s[i * num_samples + j])
+                            rn.append(s[hardest_negative_ind[i * num_samples + j]])
+                            rn.append(s[hardest_negative_ind[i * num_samples + k]])
 
         triplets = list(zip(c, rp, rn))
         np.random.shuffle(triplets)
@@ -236,6 +256,14 @@ class RankingModel(NNModel):
         rp = [el[1] for el in triplets]
         rn = [el[2] for el in triplets]
         return c, rp, rn
+
+    def get_semi_hard_negative_ind(self, anc_pos_dist, neg_dists, batch_size, num_samples):
+        n_li = sorted(list(zip(neg_dists, np.arange(batch_size * num_samples))), key=lambda el: el[0])
+        for i, x in enumerate(n_li):
+            if x[0] > anc_pos_dist :
+                return x[1]
+        print("There is no negative examples with distances greater than positive examples distances.")
+        exit(0)
 
     @overrides
     def __call__(self, batch):

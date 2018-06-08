@@ -31,7 +31,7 @@
         "device_num": 0,
         "train_now": true,
         "hard_triplets": true,
-        "hardest_positives": true,
+        "hardest_positives": false,
         "semi_hard": true,
         "vocab_name": "sber_faq",
         "vocabs_path": "sber_faq_data",
