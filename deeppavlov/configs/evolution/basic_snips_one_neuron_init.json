@@ -69,7 +69,7 @@
             "units": {
               "range": [
                 50,
-                200
+                500
               ],
               "discrete": true
             },
@@ -115,7 +115,7 @@
             "units": {
               "range": [
                 50,
-                200
+                500
               ],
               "discrete": true
             },
@@ -131,7 +131,7 @@
             "units": {
               "range": [
                 50,
-                200
+                500
               ],
               "discrete": true
             },
@@ -221,7 +221,7 @@
     "batch_size": {
       "range": [
         50,
-        200
+        100
       ],
       "discrete": true
     },
