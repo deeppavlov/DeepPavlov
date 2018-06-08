@@ -2,7 +2,7 @@
   "dataset_reader": {
     "name": "basic_classification_reader",
     "x": "text",
-    "y": "gold_label",
+    "y": "intent",
     "data_path": "/home/dilyara.baymurzina/evolution_data/nlu_evaluation_data/ChatbotCorpus",
     "train": "train_ChatbotCorpus_0.csv",
     "valid": "valid_ChatbotCorpus_0.csv"
