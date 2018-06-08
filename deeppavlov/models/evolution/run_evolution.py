@@ -169,7 +169,7 @@ result_table.loc[:, result_table_columns].to_csv(result_file, index=False, sep='
 
 print("\nIteration #{} starts\n".format(0))
 population = evolution.first_generation()
-print("Considered population: {}\nScoring...\n".format(population))
+# print("Considered population: {}\nScoring...\n".format(population))
 population_scores = score_population(population, POPULATION_SIZE, result_file)[EVOLVE_METRIC]
 
 iters = 1
@@ -178,7 +178,7 @@ while True:
     print("\nIteration #{} starts\n".format(iters))
 
     population = evolution.next_generation(population, population_scores, iters)
-    print("Considered population: {}\nScoring...\n".format(population))
+    # print("Considered population: {}\nScoring...\n".format(population))
     population_scores = score_population(population, POPULATION_SIZE, result_file)[EVOLVE_METRIC]
     print("Population scores: {}".format(population_scores))
     print("\nIteration #{} was done\n".format(iters))
