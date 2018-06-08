@@ -268,35 +268,30 @@ class NetworkAndParamsEvolution:
         if not mutation_power:
             mutation_power = self.mutation_power
 
-        if iteration % self.renovation_frequency != 0:
-            self.n_saved_best_with_weights = 2 * self.n_saved_best_with_weights_first
-        else:
-            self.n_saved_best_with_weights = self.n_saved_best_with_weights_first
+        # here self.n_saved_best_with_weights = len(next_population)
+        next_population = self.selection_of_best_with_weights(generation, scores)
 
-        selected_individuals = self.selection(generation, scores)
-
-        offsprings = self.crossover(selected_individuals,
+        offsprings = self.crossover(generation,
                                     p_crossover=p_crossover,
                                     crossover_power=crossover_power)
 
-        next_population = offsprings[:self.n_saved_best_with_weights]
-        changable_individuals = offsprings[self.n_saved_best_with_weights:]
-
-        changable_next = self.mutation(changable_individuals,
+        changable_next = self.mutation(offsprings,
                                        p_mutation=p_mutation,
                                        mutation_power=mutation_power)
 
         next_population.extend(changable_next)
 
         for i in range(self.n_saved_best_with_weights):
+            # if several train files:
             if self.train_partition != 1:
                 next_population[i]["dataset_reader"]["train"] = str(Path(next_population[i]["dataset_reader"][
                                                                              "train"]).stem.split("_")[0]) \
                                                      + "_" + str(iteration % self.train_partition) + ".csv"
-            # re init learning rate with the final one
+            # re-init learning rate with the final one
             next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["lear_rate"] = \
                 read_json(str(Path(next_population[i]["chainer"]["pipe"][self.model_to_evolve_index][
                                        "save_path"]).parent.joinpath("model_opt.json")))["final_lear_rate"]
+            # paths
             next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"] = \
                 str(Path(next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"]).parent)
             next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
@@ -304,10 +299,12 @@ class NetworkAndParamsEvolution:
                     self.params["model_name"] + "_" + str(i)))
 
         for i in range(self.n_saved_best_with_weights, self.population_size):
+            # if several train files
             if self.train_partition != 1:
                 next_population[i]["dataset_reader"]["train"] = str(Path(next_population[i]["dataset_reader"][
                                                                              "train"]).stem.split("_")[0]) \
                                                      + "_" + str(iteration % self.train_partition) + ".csv"
+            # paths
             next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
                 str(Path(self.params["save_path"]).joinpath("population_" + str(iteration)).joinpath(
                     self.params["model_name"] + "_" + str(i)))
@@ -320,52 +317,61 @@ class NetworkAndParamsEvolution:
 
         return next_population
 
-    def selection(self, population, scores):
+    def selection_of_best_with_weights(self, population, scores):
         """
-        Select self.population_size individuums (with replacement) from given population.
-        Probability of i-th individuum to be selected is scores_i / sum_j(scores_j)
+        Select individuums to save with weights for the next generation from given population.
+        Range is an order of an individuum within sorted scores (1 range = max-score, self.population_size = min-score)
+        Individuum with the highest score has probability equal to 1 (100%).
+        Individuum with the lowest score has probability equal to 0.05 (5%).
+        Probability of i-th individuum to be selected with weights is (a / range_i + b)
+        where a = 0.95 * self.population_size / (self.population_size - 1), and
+        b = (0.05 * self.population_size - 1) / (self.population_size - 1).
         Args:
             population: self.population_size individuums
             scores: corresponding score that should be maximized
 
         Returns:
-            selected self.population_size individuums with replacement
+            selected self.n_saved_best_with_weights (changable) individuums
         """
         scores = np.array(scores, dtype='float')
-        scores = (scores - 1.1 * min(scores) + 0.1 * max(scores))
-        total = np.sum(scores)
-        probas_to_be_selected = scores / total
-        intervals = np.array([np.sum(probas_to_be_selected[:i]) for i in range(self.population_size)])
+        sorted_ids = np.argsort(scores)
+        # the same order as scores but ranges
+        ranges = np.array([self.population_size - np.where(i == sorted_ids)[0][0]
+                           for i in np.arange(self.population_size)])
+        # probas = a / ranges + b
+        a = 0.95 * self.population_size / (self.population_size - 1)
+        b = (0.05 * self.population_size - 1) / (self.population_size - 1)
+        probas_to_be_selected = a / ranges + b
+
         selected = []
+        for i in range(self.population_size):
+            if self.decision(probas_to_be_selected[i]):
+                selected.append(deepcopy(population[i]))
 
-        for i in range(self.n_saved_best_with_weights):
-            ind_id = np.argsort(scores)[-(1+i)]
-            new = deepcopy(population[ind_id])
-            selected.append(new)
-
-        for i in range(self.n_saved_best_with_weights, self.population_size):
-            r = np.random.random()
-            individuum = deepcopy(population[np.where(r > intervals)[0][-1]])
-            selected.append(individuum)
+        self.n_saved_best_with_weights = len(selected)
         return selected
 
     def crossover(self, population, p_crossover, crossover_power):
         """
         Recombine randomly population in pairs and cross over them with given probability.
         Cross over from two parents produces two offsprings
-        each of which contains half of the parameter values from one parent and the other half from the other parent
+        each of which contains crossover_power portion of the parameter values from one parent,
+         and the other (1 - crossover_power portion) from the other parent
         Args:
             population: self.population_size individuums
             p_crossover: probability to cross over for current replacement
             crossover_power: part of EVOLVING parents parameters to exchange for offsprings
 
         Returns:
-            part_of_population offsprings
+            (self.population_size - self.n_saved_best_with_weights) offsprings
         """
         perm = np.random.permutation(self.population_size)
-        offsprings = deepcopy(population)
-        for i in range(self.population_size // 2):
-            parents = population[perm[2 * i]], population[perm[2 * i + 1]]
+        offsprings = []
+
+        for i in range(self.population_size - self.n_saved_best_with_weights):
+            parent_ids = np.random.choice(self.population_size, size=2)
+            parents = population[parent_ids[0]], population[parent_ids[1]]
+
             if self.decision(p_crossover):
                 params_perm = np.random.permutation(self.n_evolving_params)
                 train_params_perm = np.random.permutation(self.n_evolving_train_params)
@@ -437,21 +443,26 @@ class NetworkAndParamsEvolution:
                     for j in range(self.total_nodes * self.total_nodes - binary_mask_part):
                         node_x, node_y = binary_mask_perm[j] // self.total_nodes, binary_mask_perm[j] % self.total_nodes
 
-                        curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y] =\
-                            parents[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y]
-                        curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y] =\
-                            parents[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y]
+                        curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][
+                            "binary_mask"][node_x, node_y] = parents[0]["chainer"]["pipe"][self.model_to_evolve_index][
+                            "binary_mask"][node_x, node_y]
+                        curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][
+                            "binary_mask"][node_x, node_y] = parents[1]["chainer"]["pipe"][self.model_to_evolve_index][
+                            "binary_mask"][node_x, node_y]
 
                     for j in range(self.total_nodes * self.total_nodes - binary_mask_part,
                                    self.total_nodes * self.total_nodes):
                         node_x, node_y = binary_mask_perm[j] // self.total_nodes, binary_mask_perm[j] % self.total_nodes
 
-                        curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y] =\
-                            parents[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y]
-                        curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y] =\
-                            parents[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"][node_x, node_y]
+                        curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][
+                            "binary_mask"][node_x, node_y] = parents[1]["chainer"]["pipe"][self.model_to_evolve_index][
+                            "binary_mask"][node_x, node_y]
+                        curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][
+                            "binary_mask"][node_x, node_y] = parents[0]["chainer"]["pipe"][self.model_to_evolve_index][
+                            "binary_mask"][node_x, node_y]
 
-                    curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index]["binary_mask"] = \
+                    curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][
+                        "binary_mask"] = \
                         check_and_correct_binary_mask(self.nodes,
                                                       curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][
                                                           "binary_mask"])
@@ -460,17 +471,8 @@ class NetworkAndParamsEvolution:
                                                       curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][
                                                           "binary_mask"])
 
-                if perm[2 * i] in range(self.n_saved_best_with_weights):
-                    offsprings[perm[2 * i]] = deepcopy(population[perm[2 * i]])
-                else:
-                    offsprings[perm[2 * i]] = deepcopy(curr_offsprings[0])
-                if perm[2 * i + 1] in range(self.n_saved_best_with_weights):
-                    offsprings[perm[2 * i + 1]] = deepcopy(population[perm[2 * i + 1]])
-                else:
-                    offsprings[perm[2 * i + 1]] = deepcopy(curr_offsprings[1])
+                offsprings.append(deepcopy(curr_offsprings[0]))
 
-        if self.population_size % 2 == 1:
-            offsprings[-1] = deepcopy(population[perm[-1]])
         return offsprings
 
     def mutation(self, population, p_mutation, mutation_power):
