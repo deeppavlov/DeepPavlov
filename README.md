@@ -5,14 +5,14 @@
 If you have updated to version 0.0.2 or greater - please re-download all pre-trained models**
 
 DeepPavlov is an open-source conversational AI library built on [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). It is designed for
- * development of production ready chat-bots and complex conversational systems
- * NLP and dialog systems research
+ * development of production ready chat-bots and complex conversational systems,
+ * NLP and dialog systems research.
  
 Our goal is to enable AI-application developers and researchers with:
- * set of pre-trained NLP models, pre-defined dialog system components (ML/DL/Rule-based) and pipeline templates
- * a framework for implementing and testing their own dialog models 
- * tools for application integration with adjacent infrastructure (messengers, helpdesk software etc.)
- * benchmarking environment for conversational models and uniform access to relevant datasets 
+ * set of pre-trained NLP models, pre-defined dialog system components (ML/DL/Rule-based) and pipeline templates;
+ * a framework for implementing and testing their own dialog models;
+ * tools for application integration with adjacent infrastructure (messengers, helpdesk software etc.);
+ * benchmarking environment for conversational models and uniform access to relevant datasets.
 
 # Demo 
 
@@ -32,28 +32,29 @@ The library is designed according to the following principles:
 <!-- ### Target Architecture
 Target architecture of our library: -->
 
+<p align="left">
+<img src="dp_agnt_diag.png"/>
+</p>
+
+## Key Concepts
+ * `Agent` is a conversational agent communicating with users in natural language (text).
+ * `Skill` fulfills user’s goal in some domain. Typically, this is accomplished by presenting information or completing transaction (e.g. answer question by FAQ, booking tickets etc.). However, for some tasks a success of interaction is defined as continuous engagement (e.g. chit-chat).
+ * `Model` is a reusable functional component of `Skill`.
+   * `Rule-based Models` cannot be trained.
+   * `Machine Learning Models` can be trained only stand alone.
+   * `Deep Learning Models` can be trained independently and in an end-to-end mode being joined in a chain.
+ * `Skill Manager` performs selection of the `Skill` to generate response.
+ * ` Chainer` builds an agent/component pipeline from heterogeneous components (rule-based/ml/dl). It allows to train and infer models in a pipeline as a whole.
+
 The smallest building block of the library is `Model`. `Model` stands for any kind of function in an NLP pipeline. It can be implemented as a neural network, a non-neural ML model or a rule-based system. Besides that, `Model` can have nested structure, i.e. a `Model` can include other `Model`'(s). 
 
 `Model`s can be joined into a `Skill`. `Skill` solves a larger NLP task compared to `Model`. However, in terms of implementation `Skill`s are not different from `Model`s. The only restriction of `Skill`s is that their input and output should both be strings. Therefore, `Skill`s are usually associated with dialogue tasks. 
 
 `Agent` is supposed to be a multi-purpose dialogue system that comprises several `Skill`s and can switch between them. It can be a dialogue system that contains a goal-oriented and chatbot skills and chooses which one to use for generating the answer depending on user input.
 
-<p align="left">
-<img src="dp_agnt_diag.png"/>
-</p>
-
-## Key Concepts
- * `Agent` - a conversational agent communicating with users in natural language (text)
- * `Skill` - a unit of interaction that fulfills user’s needs. Typically, a user’s need is fulfilled by presenting information or completing a transaction (e.g. answer question by FAQ, booking tickets etc.); however, for some tasks success is defined as continuous engagement (e.g. chit-chat)
- * `Models` - atomic functionality blocks
-   * `Rule-based Models` - cannot be trained
-   * `Machine Learning Models` - can be trained only separately
-   * `Deep Learning Models` - can be trained separately and in end-to-end mode being joined in chain
- * `Skill Manager` - mechanism which is used by agent to rank and select the final response shown to user
- * ` Chainer` - tool for building an agent/component pipeline from heterogeneous components (rule-based/ml/dl). Allows to train and infer from pipeline as a whole.
-
-
 DeepPavlov is built on top of machine learning frameworks [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). Other external libraries can be used to build basic components.
+
+---
 
 # Installation
 0. Currently we support only `Linux` platform and `Python 3.6` (**`Python 3.5` is not supported!**)
@@ -134,7 +135,7 @@ Available model configs are:
 | --------- | ----------- |
 | [NER component](deeppavlov/models/ner/README.md) | Based on neural Named Entity Recognition network. The NER component reproduces architecture from the paper [Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition](https://arxiv.org/pdf/1709.09686.pdf) which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf. |
 | [Slot filling components](deeppavlov/models/slotfill/README.md) | Based on fuzzy Levenshtein search to extract normalized slot values from text. The components either rely on NER results or perform needle in haystack search.|
-| [Intent classification component](deeppavlov/models/classifiers/intents/README.md) | Based on shallow-and-wide Convolutional Neural Network architecture from [Kim Y. Convolutional neural networks for sentence classification – 2014](https://arxiv.org/pdf/1408.5882). The model allows multilabel classification of sentences. |
+| [Classification component](deeppavlov/models/classifiers/intents/README.md) | Component for classification tasks (intents, sentiment, etc). Based on shallow-and-wide Convolutional Neural Network architecture from [Kim Y. Convolutional neural networks for sentence classification – 2014](https://arxiv.org/pdf/1408.5882) and others. The model allows multilabel classification of sentences. |
 | [Automatic spelling correction component](deeppavlov/models/spelling_correction/README.md) | Pipelines that use candidates search in a static dictionary and an ARPA language model to correct spelling errors. |
 | [Ranking component](deeppavlov/models/ranking/README.md) |  Based on [LSTM-based deep learning models for non-factoid answer selection](https://arxiv.org/abs/1511.04108). The model performs ranking of responses or contexts from some database by their relevance for the given context. |
 | [Question Answering component](deeppavlov/models/squad/README.md) | Based on [R-NET: Machine Reading Comprehension with Self-matching Networks](https://www.microsoft.com/en-us/research/publication/mrc/). The model solves the task of looking for an answer on a question in a given context ([SQuAD](https://rajpurkar.github.io/SQuAD-explorer/) task format). |
