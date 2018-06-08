@@ -210,7 +210,7 @@ class RankingNetwork(metaclass=TfModelMeta):
 
     def train_on_batch(self, batch):
         if self.use_matrix:
-            self.obj_model.train_on_batch(x=batch[0], y=np.asarray(batch[1]))
+            self.obj_model.train_on_batch(x=[np.asarray(x) for x in batch[0]], y=np.asarray(batch[1]))
         else:
             a, b, c = batch[0]
             a = self.emb_dict.get_embs(a)

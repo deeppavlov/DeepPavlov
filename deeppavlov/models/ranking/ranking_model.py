@@ -223,6 +223,7 @@ class RankingModel(NNModel):
         else:
             if self.semi_hard:
                 for i in range(batch_size):
+                # for i in range(1):
                     for j in range(num_samples):
                         for k in range(j+1, num_samples):
                             c.append(s[i*num_samples+j])

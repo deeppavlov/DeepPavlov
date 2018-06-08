@@ -48,7 +48,7 @@ class RankingIterator:
         data = self.data[data_type]
         if self.random_batches and self.batches_per_epoch is not None and data_type == "train":
             num_steps = self.batches_per_epoch
-            assert(batch_size < len(data))
+            assert(batch_size <= len(data))
         else:
             num_steps = len(data) // batch_size
         if data_type == "train":
@@ -57,6 +57,7 @@ class RankingIterator:
             for i in range(num_steps):
                 if self.random_batches:
                     context_response_data = np.random.choice(data, size=batch_size, replace=False)
+                    # context_response_data = data
                 else:
                     context_response_data = data[i * batch_size:(i + 1) * batch_size]
                 context = [el["context"] for el in context_response_data]
@@ -80,7 +81,8 @@ class RankingIterator:
                 if i < num_steps:
                     context_response_data = data[i * batch_size:(i + 1) * batch_size]
                 else:
-                    context_response_data = data[i * batch_size:len(data)]
+                    if len(data[i * batch_size:len(data)]) > 0:
+                        context_response_data = data[i * batch_size:len(data)]
                 context = [el["context"] for el in context_response_data]
                 response_data, y = self.create_rank_resp(context_response_data, data_type)
                 x = [[context[i], response_data[i]] for i in range(len(context_response_data))]
