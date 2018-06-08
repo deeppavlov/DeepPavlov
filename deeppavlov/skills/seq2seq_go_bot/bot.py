@@ -46,6 +46,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
         super().__init__(save_path=save_path, mode=kwargs['mode'])
 
         self.embedder = embedder
+        self.embedding_size = embedder.dim
         self.src_vocab = source_vocab
         self.tgt_vocab = target_vocab
         self.sos_token = start_of_sequence_token
@@ -92,8 +93,10 @@ class Seq2SeqGoalOrientedBot(NNModel):
         batch_size = len(b_enc_ins)
         max_src_len = max(b_src_lens)
         max_tgt_len = max(b_tgt_lens)
-        b_enc_ins_np = self.src_vocab[self.sos_token] *\
-            np.ones((batch_size, max_src_len), dtype=np.float32)
+        # b_enc_ins_np = self.src_vocab[self.sos_token] *\
+        #    np.ones((batch_size, max_src_len), dtype=np.float32)
+        b_enc_ins_np = np.zeros((batch_size, max_src_len, self.embedding_size),
+                                dtype=np.float32)
         b_dec_ins_np = self.tgt_vocab[self.eos_token] *\
             np.ones((batch_size, max_tgt_len), dtype=np.float32)
         b_dec_outs_np = self.tgt_vocab[self.eos_token] *\
@@ -127,8 +130,9 @@ class Seq2SeqGoalOrientedBot(NNModel):
     def _encode_context(self, tokens):
         if self.debug:
             log.debug("Context tokens = \"{}\"".format(tokens))
-        token_idxs = self.src_vocab([tokens])[0]
-        return token_idxs
+        # token_idxs = self.src_vocab([tokens])[0]
+        # return token_idxs
+        return np.array(self.embedder([tokens])[0])
 
     def _encode_response(self, tokens):
         if self.debug:
@@ -173,8 +177,11 @@ class Seq2SeqGoalOrientedBot(NNModel):
         # Sequence padding
         batch_size = len(b_enc_ins)
         max_src_len = max(b_src_lens)
-        b_enc_ins_np = np.ones((batch_size, max_src_len)) * self.src_vocab[self.sos_token]
-        b_kb_masks_np = np.zeros((batch_size, self.kb_size), np.float32)
+        # b_enc_ins_np = self.src_vocab[self.sos_token] * \
+        #    p.ones((batch_size, max_src_len), dtype=np.float32)
+        b_enc_ins_np = np.zeros((batch_size, max_src_len, self.embedding_size),
+                                dtype=np.float32)
+        b_kb_masks_np = np.zeros((batch_size, self.kb_size), dtype=np.float32)
         for i, (src_len, kb_entries) in enumerate(zip(b_src_lens, kb_entry_list)):
             b_enc_ins_np[i, :src_len] = b_enc_ins[i]
             if self.debug:

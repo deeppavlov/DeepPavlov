@@ -65,8 +65,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         self.kb_embeddings = params['knowledge_base_entry_embeddings']
         self.opt['kb_embeddings_control_sum'] = float(np.sum(self.kb_embeddings))
         self.opt['knowledge_base_size'] = len(self.kb_embeddings)
-        if 'embedding_size' not in params:
-            self.opt['embedding_size'] = len(self.kb_embeddings[0])
+        self.opt['embedding_size'] = len(self.kb_embeddings[0])
 
         self.kb_size = self.opt['knowledge_base_size']
         self.embedding_size = self.opt['embedding_size']
@@ -101,8 +100,9 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
     def _add_placeholders(self):
         # _encoder_inputs: [batch_size, max_input_time]
-        self._encoder_inputs = tf.placeholder(tf.int32,
-                                              [None, None],
+        # _encoder_inputs: [batch_size, max_input_time, embedding_size]
+        self._encoder_inputs = tf.placeholder(tf.float32,
+                                              [None, None, self.embedding_size],
                                               name='encoder_inputs')
         self._batch_size = tf.shape(self._encoder_inputs)[0]
         # _decoder_inputs: [batch_size, max_output_time]
@@ -143,11 +143,13 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         #    "encoder_embedding", [self.src_vocab_size, self.embedding_size])
         #_encoder_emb_inp = tf.nn.embedding_lookup(_encoder_embedding,
         #                                          self._encoder_inputs)
-        _encoder_emb_inp = tf.one_hot(self._encoder_inputs, self.src_vocab_size)
+        # _encoder_emb_inp = tf.one_hot(self._encoder_inputs, self.src_vocab_size)
+        _encoder_emb_inp = self._encoder_inputs
     
         # Decoder embedding
         #_decoder_embedding = tf.get_variable(
-        #    "decoder_embedding", [self.tgt_vocab_size, self.embedding_size])
+        #    "decoder_embedding", [self.tgt_vocab_size + self.kb_size,
+        #                          self.embedding_size])
         #_decoder_emb_inp = tf.nn.embedding_lookup(_decoder_embedding,
         #                                          self._decoder_inputs)
         _decoder_emb_inp = tf.one_hot(self._decoder_inputs,

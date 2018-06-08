@@ -103,14 +103,14 @@ class KBAttention(base.Layer):
             "dtype": self.kb_inputs.dtype.base_dtype,
             "_reuse": reuse
         }
-        print("KB shape =", self.kb_input_shape)
+        # print("KB shape =", self.kb_input_shape)
     
     def build(self, input_shape):
         # if in_shape[:-1] != self.kb_inputs.shape 
 # TODO: check input shape
         in_shape = input_shape[:1].concatenate(self.kb_input_shape)
         in_shape = in_shape[:-1].concatenate(in_shape[-1] + input_shape[-1])
-        print("first in_shape =", in_shape)
+        # print("first in_shape =", in_shape)
         self.layers = []
         for i, size in enumerate(self.hidden_sizes):
             name = self.dense_name
@@ -122,10 +122,10 @@ class KBAttention(base.Layer):
  
             self.layers.append(layer)
 
-        print("input_shape =", input_shape)
-        print("last in_shape =", in_shape)
+        # print("input_shape =", input_shape)
+        # print("last in_shape =", in_shape)
         #in_shape = in_shape[:-2].concatenate(in_shape[-2] + input_shape[-1])
-        #print("last in_shape =", in_shape)
+        # print("last in_shape =", in_shape)
         self.output_layer = tf.layers.Dense(self.units, **self.dense_params)
         self.output_layer.build(input_shape)
         self.built = True
@@ -144,8 +144,8 @@ class KBAttention(base.Layer):
             outputs = layer.call(outputs)
         #outputs = tf.Print(outputs, [outputs], "KB attention pre-last layer output =")
         outputs = tf.squeeze(outputs, [-1])
-        print("inputs shape =", inputs.shape)
-        print("outputs shape =", outputs.shape)
+        # print("inputs shape =", inputs.shape)
+        # print("outputs shape =", outputs.shape)
         outputs = tf.concat([self.output_layer(inputs), outputs], -1)
         return outputs
 
