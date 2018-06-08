@@ -98,13 +98,6 @@ parser.add_argument('--n_layers', help='Please, enter number of each layer type 
 parser.add_argument('--n_types', help='Please, enter number of types of layers', default=1)
 parser.add_argument('--one_neuron_init', help='whether to start with zero binary mask (one neuron network)', default=0)
 parser.add_argument('--given_mask_init', help='whether to start with given binary mask', default=0)
-parser.add_argument('--save_best_portion',
-                    help='Please, enter portion of population to save for the next generation with weights',
-                    default=0.)
-parser.add_argument('--renovation_frequency',
-                    help='Please, enter frequency of renovation (how often in terms of generations '
-                         'to renovate the second best portion)',
-                    default=1)
 parser.add_argument('--train_partition',
                     help='Please, enter partition of splitted train',
                     default=1)
@@ -112,6 +105,7 @@ parser.add_argument('--train_partition',
 args = parser.parse_args()
 
 CONFIG_FILE = args.config
+EVOLVE_METRIC = args.evolve_metric
 POPULATION_SIZE = args.p_size
 GPU_NUMBER = len(args.gpus)
 gpus = [int(gpu) for gpu in args.gpus.split(",")]
@@ -119,9 +113,6 @@ N_LAYERS = int(args.n_layers)
 N_TYPES = int(args.n_types)
 ONE_NEURON_INIT = bool(int(args.one_neuron_init))
 GIVEN_MASK_INIT = bool(int(args.given_mask_init))
-EVOLVE_METRIC = args.evolve_metric
-SAVE_BEST_PORTION = float(args.save_best_portion)
-RENOVATION_FREQUENCY = int(args.renovation_frequency)
 TRAIN_PARTITION = int(args.train_partition)
 
 with open(CONFIG_FILE, "r") as f:
@@ -149,8 +140,6 @@ evolution = NetworkAndParamsEvolution(n_layers=N_LAYERS, n_types=N_TYPES,
                                       key_basic_layers="basic_layers_params",
                                       seed=42,
                                       start_with_one_neuron=ONE_NEURON_INIT,
-                                      save_best_with_weights_portion=SAVE_BEST_PORTION,
-                                      renovation_frequency=RENOVATION_FREQUENCY,
                                       train_partition=TRAIN_PARTITION,
                                       initial_binary_mask=INITIAL_BINARY_MASK,
                                       **basic_params)
