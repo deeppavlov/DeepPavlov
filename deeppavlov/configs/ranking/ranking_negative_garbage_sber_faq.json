@@ -1,6 +1,6 @@
 {
   "dataset_reader": {
-    "name": "negative_sber_faq_reader",
+    "name": "negative_garbage_sber_faq_reader",
     "data_path": "./sber_faq_data"
   },
   "dataset_iterator": {
@@ -12,7 +12,7 @@
     "sample_candidates_valid": "pool",
     "sample_candidates_test": "pool",
     "hard_triplets": true,
-    "num_positive_samples": 10,
+    "num_positive_samples": 20,
     "num_negative_samples": 10,
     "num_ranking_samples_valid": 10,
     "num_ranking_samples_test": 10,
@@ -48,8 +48,8 @@
         "learning_rate": 1e-3,
         "distance": "euclidian",
         "margin": 0.5,
-        "save_path": "sber_faq_ranking/model_weights.h5",
-        "load_path": "sber_faq_ranking/model_weights.h5",
+        "save_path": "sber_faq_ranking_garbage/model_weights.h5",
+        "load_path": "sber_faq_ranking_garbage/model_weights.h5",
         "update_embeddings": "online",
         "interact_pred_num": 3
       }
@@ -58,7 +58,7 @@
   },
   "train": {
     "epochs": 200,
-    "batch_size": 8,
+    "batch_size": 2,
     "pytest_max_batches": 2,
     "metrics": ["r@1", "r@5", "r@10", "rank_response", "loss"],
     "validation_patience": 10,

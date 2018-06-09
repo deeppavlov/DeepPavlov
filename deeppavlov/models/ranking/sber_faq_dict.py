@@ -14,9 +14,9 @@ class SberFAQDict(RankingDict):
               max_sequence_length, padding, truncating)
 
         vocabs_path = expand_path(vocabs_path)
-        self.train_fname = Path(vocabs_path) / 'sber_faq_train_50.csv'
-        self.val_fname = Path(vocabs_path) / 'sber_faq_val_50.csv'
-        self.test_fname = Path(vocabs_path) / 'sber_faq_test_50.csv'
+        self.train_fname = Path(vocabs_path) / 'sber_faq_train.csv'
+        self.val_fname = Path(vocabs_path) / 'sber_faq_val.csv'
+        self.test_fname = Path(vocabs_path) / 'sber_faq_test.csv'
 
     def build_int2tok_vocab(self):
         sen = []
