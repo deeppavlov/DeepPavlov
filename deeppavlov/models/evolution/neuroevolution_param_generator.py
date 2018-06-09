@@ -352,7 +352,7 @@ class NetworkAndParamsEvolution:
         self.n_saved_best_with_weights = len(selected)
         return selected
 
-    def crossover(self, population, p_crossover, crossover_power):
+    def crossover(self, population, scores, p_crossover, crossover_power):
         """
         Recombine randomly population in pairs and cross over them with given probability.
         Cross over from two parents produces two offsprings
@@ -367,10 +367,13 @@ class NetworkAndParamsEvolution:
             (self.population_size - self.n_saved_best_with_weights) offsprings
         """
         offsprings = []
+        scores = np.array(scores, dtype='float')
+        probas_to_be_parent = scores / np.sum(scores)
+        intervals = np.array([np.sum(probas_to_be_parent[:i]) for i in range(self.population_size)])
 
         for i in range(self.population_size - self.n_saved_best_with_weights):
-            parent_ids = np.random.choice(self.population_size, size=2)
-            parents = population[parent_ids[0]], population[parent_ids[1]]
+            rs = np.random.random(2)
+            parents = population[np.where(rs[0] > intervals)[0][-1]], population[np.where(rs[1] > intervals)[0][-1]]
 
             if self.decision(p_crossover):
                 params_perm = np.random.permutation(self.n_evolving_params)
