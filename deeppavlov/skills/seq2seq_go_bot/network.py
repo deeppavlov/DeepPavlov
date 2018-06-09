@@ -35,7 +35,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
     GRAPH_PARAMS = ['knowledge_base_size', 'source_vocab_size',
                     'target_vocab_size', 'hidden_size', 'embedding_size',
-                    'kb_embeddings_control_sum',
+                    'kb_embedding_control_sum',
                     'kb_attention_hidden_sizes']
 
     def __init__(self, **params):
@@ -60,15 +60,20 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
     def _init_params(self, params):
         self.opt = {k: v for k, v in params.items()
-                    if k not in ('knowledge_base_entry_embeddings')}
+                    if k not in ('knowledge_base_entry_embeddings',
+                                 'decoder_embeddings')}
 
-        self.kb_embeddings = params['knowledge_base_entry_embeddings']
-        self.opt['kb_embeddings_control_sum'] = float(np.sum(self.kb_embeddings))
-        self.opt['knowledge_base_size'] = len(self.kb_embeddings)
-        self.opt['embedding_size'] = len(self.kb_embeddings[0])
+        self.kb_embedding = np.array(params['knowledge_base_entry_embeddings'])
+        self.opt['kb_embedding_control_sum'] = float(np.sum(self.kb_embedding))
+        self.opt['knowledge_base_size'] = self.kb_embedding.shape[0]
+        self.opt['embedding_size'] = self.kb_embedding.shape[1]
+        self.decoder_embedding = np.array(params['decoder_embeddings'])
+        if self.opt['embedding_size'] != self.decoder_embedding.shape[1]:
+            raise ValueError("decoder embeddings should have the same dimension"
+                             " as knowledge base entries' embeddings")
 
-        self.kb_size = self.opt['knowledge_base_size']
         self.embedding_size = self.opt['embedding_size']
+        self.kb_size = self.opt['knowledge_base_size']
         self.learning_rate = self.opt['learning_rate']
         self.tgt_sos_id = self.opt['target_start_of_sequence_index']
         self.tgt_eos_id = self.opt['target_end_of_sequence_index']
@@ -109,18 +114,26 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         self._decoder_inputs = tf.placeholder(tf.int32,
                                               [None, None],
                                               name='decoder_inputs')
+        # _decoder_embedding: [tgt_vocab_size + kb_size, embedding_size]
+        self._decoder_embedding = \
+            tf.get_variable("decoder_embedding",
+                            shape=(self.tgt_vocab_size + self.kb_size,
+                                   self.embedding_size),
+                            dtype=tf.float32,
+                            initializer=tf.constant_initializer(self.decoder_embedding),
+                            trainable=False)
         # _decoder_outputs: [batch_size, max_output_time]
         self._decoder_outputs = tf.placeholder(tf.int32,
                                                [None, None],
                                                name='decoder_outputs')
-        # _kb_embeddings: [kb_size, embedding_dim]
+        # _kb_embedding: [kb_size, embedding_size]
 # TODO: try training embeddings
-        kb_W = np.array(self.kb_embeddings)[:, :self.embedding_size]
-        self._kb_embeddings = tf.get_variable("kb_embeddings",
-                                              shape=(kb_W.shape[0], kb_W.shape[1]),
-                                              dtype=tf.float32,
-                                              initializer=tf.constant_initializer(kb_W),
-                                              trainable=False)
+        kb_W = np.array(self.kb_embedding)[:, :self.embedding_size]
+        self._kb_embedding = tf.get_variable("kb_embedding",
+                                             shape=(kb_W.shape[0], kb_W.shape[1]),
+                                             dtype=tf.float32,
+                                             initializer=tf.constant_initializer(kb_W),
+                                             trainable=False)
         # _kb_mask: [batch_size, kb_size]
         self._kb_mask = tf.placeholder(tf.float32, [None, None], name='kb_mask')
 
@@ -139,21 +152,21 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
     def _build_body(self):
         # Encoder embedding
-        #_encoder_embedding = tf.get_variable(
-        #    "encoder_embedding", [self.src_vocab_size, self.embedding_size])
-        #_encoder_emb_inp = tf.nn.embedding_lookup(_encoder_embedding,
+        # _encoder_embedding = tf.get_variable(
+        #   "encoder_embedding", [self.src_vocab_size, self.embedding_size])
+        # _encoder_emb_inp = tf.nn.embedding_lookup(_encoder_embedding,
         #                                          self._encoder_inputs)
-        # _encoder_emb_inp = tf.one_hot(self._encoder_inputs, self.src_vocab_size)
         _encoder_emb_inp = self._encoder_inputs
-    
+        # _encoder_emb_inp = tf.one_hot(self._encoder_inputs, self.src_vocab_size)
+
         # Decoder embedding
-        #_decoder_embedding = tf.get_variable(
+        # _decoder_embedding = tf.get_variable(
         #    "decoder_embedding", [self.tgt_vocab_size + self.kb_size,
         #                          self.embedding_size])
-        #_decoder_emb_inp = tf.nn.embedding_lookup(_decoder_embedding,
-        #                                          self._decoder_inputs)
-        _decoder_emb_inp = tf.one_hot(self._decoder_inputs,
-                                      self.tgt_vocab_size + self.kb_size)
+        _decoder_emb_inp = tf.nn.embedding_lookup(self._decoder_embedding,
+                                                  self._decoder_inputs)
+        # _decoder_emb_inp = tf.one_hot(self._decoder_inputs,
+        #                              self.tgt_vocab_size + self.kb_size)
 
         with tf.variable_scope("Encoder"):
             _encoder_cell = tf.nn.rnn_cell.BasicLSTMCell(self.hidden_size)
@@ -173,15 +186,16 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             # Infer Helper
             _max_iters = tf.round(tf.reduce_max(self._src_sequence_lengths) * 2)
             _helper_infer = tf.contrib.seq2seq.GreedyEmbeddingHelper(
-                lambda d: tf.one_hot(d, self.tgt_vocab_size + self.kb_size),
+                self._decoder_embedding,
                 tf.fill([self._batch_size], self.tgt_sos_id), self.tgt_eos_id)
+            #    lambda d: tf.one_hot(d, self.tgt_vocab_size + self.kb_size),
 
             def decode(helper, scope, max_iters=None, reuse=None):
                 with tf.variable_scope(scope, reuse=reuse):
                     with tf.variable_scope("AttentionOverKB", reuse=reuse):
                         _kb_attn_layer = KBAttention(self.tgt_vocab_size,
                                                      self.kb_attn_hidden_sizes + [1],
-                                                     self._kb_embeddings,
+                                                     self._kb_embedding,
                                                      self._kb_mask,
                                                      activation=tf.nn.relu,
                                                      use_bias=False,
@@ -266,7 +280,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             params = json.load(fp)
         for p in self.GRAPH_PARAMS:
             if self.opt.get(p) != params.get(p):
-                if p in ('kb_embeddings_control_sum') and\
+                if p in ('kb_embedding_control_sum') and\
                         (math.abs(self.opt.get(p, 0.) - params.get(p, 0.)) < 1e-3):
                     continue
                 raise ConfigError("`{}` parameter must be equal to saved model"

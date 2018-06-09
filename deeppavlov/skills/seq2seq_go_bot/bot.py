@@ -67,13 +67,19 @@ class Seq2SeqGoalOrientedBot(NNModel):
             params['source_vocab_size'] = len(self.src_vocab)
         if 'target_vocab_size' not in params:
             params['target_vocab_soze'] = len(self.tgt_vocab)
+        # contruct matrix of knowledge bases values embeddings
         params['knowledge_base_entry_embeddings'] = \
             [self._embed_kb_key(val) for val in self.kb_keys]
+        # contrcust matrix of decoder input token embeddings (zeros for sos_token)
+        dec_embs = self.embedder([[self.tgt_vocab[idx]
+                                   for idx in range(self.tgt_vocab_size)]])[0]
+        dec_embs[self.tgt_vocab[self.sos_token]][:] = 0.
+        params['decoder_embeddings'] = dec_embs
         return Seq2SeqGoalOrientedBotNetwork(**params)
 
     def _embed_kb_key(self, key):
 # TODO: fasttext embedder to work with tokens
-        return self.embedder([key.replace('_', ' ')], mean=True)[0]
+        return self.embedder([key.split('_')], mean=True)[0]
 
     def train_on_batch(self, utters, history_list, kb_entry_list, responses):
         b_enc_ins, b_src_lens = [], []
