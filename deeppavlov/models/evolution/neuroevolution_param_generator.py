@@ -268,7 +268,7 @@ class NetworkAndParamsEvolution:
         # here self.n_saved_best_with_weights = len(next_population)
         next_population = self.selection_of_best_with_weights(generation, scores)
         print("Saved with weights: {} individuums".format(self.n_saved_best_with_weights))
-        offsprings = self.crossover(generation,
+        offsprings = self.crossover(generation, scores,
                                     p_crossover=p_crossover,
                                     crossover_power=crossover_power)
 
