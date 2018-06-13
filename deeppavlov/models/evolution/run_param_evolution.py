@@ -62,8 +62,17 @@ def score_population(population, population_size, result_file):
                 else:
                     val_results[m_id] = 0.
         if TEST:
-            test_results = np.loadtxt(fname=str(Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index][
-                                                        "save_path"]).parent.joinpath("test_results.txt")))
+            try:
+                test_results = np.loadtxt(
+                    fname=str(Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index][
+                                       "save_path"]).parent.joinpath("test_results.txt")))
+            except OSError or FileNotFoundError:
+                test_results = [None for m in CONSIDERED_METRICS]
+                for m_id, m in enumerate(CONSIDERED_METRICS):
+                    if "loss" in m:
+                        test_results[m_id] = 1e6
+                    else:
+                        test_results[m_id] = 0.
 
         result_table_dict = {}
         for el in order:
