@@ -232,7 +232,6 @@
     "metric_optimization": "maximize",
     "metrics": [
       "classification_f1",
-      "classification_f1_weighted",
       "classification_accuracy",
       "classification_log_loss",
       "classification_roc_auc"
