@@ -199,6 +199,10 @@ else:
             model_name + "_" + str(i)).joinpath("config.json")))
         population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"] = \
             np.array(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"])
+        population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"] = \
+            str(Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"]).parent)
+        population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["load_path"] = \
+            str(Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["load_path"]).parent)
 
     population_scores = score_population(population, POPULATION_SIZE, result_file)[EVOLVE_METRIC]
     print("Population scores: {}".format(population_scores))
