@@ -172,6 +172,7 @@ def train_evaluate_model_from_config(config_path: str, to_train=True, to_validat
         elif not isinstance(model, Chainer):
             log.warning('Nothing to train')
 
+    reports = []
     if train_config['validate_best'] or train_config['test_best']:
         # try:
         #     model_config['load_path'] = model_config['save_path']
@@ -181,20 +182,22 @@ def train_evaluate_model_from_config(config_path: str, to_train=True, to_validat
         log.info('Testing the best saved model')
 
         if train_config['validate_best']:
-            report = {
+            reports.append({
                 'valid': _test_model(model, metrics_functions, iterator,
                                      train_config.get('batch_size', -1), 'valid')
-            }
+            })
 
-            print(json.dumps(report, ensure_ascii=False))
+            print(json.dumps(reports[-1], ensure_ascii=False))
 
         if train_config['test_best']:
-            report = {
+            reports.append({
                 'test': _test_model(model, metrics_functions, iterator,
                                     train_config.get('batch_size', -1), 'test')
-            }
+            })
 
-            print(json.dumps(report, ensure_ascii=False))
+            print(json.dumps(reports[-1], ensure_ascii=False))
+
+    return reports
 
 
 def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
