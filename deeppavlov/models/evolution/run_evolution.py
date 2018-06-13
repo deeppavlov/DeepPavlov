@@ -165,22 +165,20 @@ order = deepcopy(CONSIDERED_METRICS)
 order.extend(["params"])
 result_file = Path(basic_params["chainer"]["pipe"][
                        evolution.model_to_evolve_index]["save_path"]).joinpath("result_table.csv")
+result_table_columns = []
+result_table_dict = {}
+for el in order:
+    if el == "params":
+        result_table_dict[el] = []
+        result_table_columns.extend([el])
+    else:
+        result_table_dict[el + "_valid"] = []
+        result_table_dict[el + "_test"] = []
+        result_table_columns.extend([el + "_valid", el + "_test"])
+
+result_table_columns.append("params")
 
 if START_FROM_POPULATION == 0:
-    result_table_columns = []
-
-    result_table_dict = {}
-    for el in order:
-        if el == "params":
-            result_table_dict[el] = []
-            result_table_columns.extend([el])
-        else:
-            result_table_dict[el + "_valid"] = []
-            result_table_dict[el + "_test"] = []
-            result_table_columns.extend([el + "_valid", el + "_test"])
-
-    result_table_columns.append("params")
-
     result_table = pd.DataFrame(result_table_dict)
     result_table.loc[:, result_table_columns].to_csv(result_file, index=False, sep='\t')
 
