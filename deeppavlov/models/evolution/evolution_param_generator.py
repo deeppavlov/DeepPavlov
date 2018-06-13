@@ -14,7 +14,7 @@ from deeppavlov.core.common.file import read_json
 # otherwise, in the whole class change `config["chainer"]["pipe"]` to new path
 
 
-class NetworkAndParamsEvolution:
+class ParamsEvolution:
     """
     Class performs full evolutionary process (task scores -> max):
     1. initializes random population

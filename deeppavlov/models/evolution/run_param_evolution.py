@@ -6,7 +6,7 @@ from subprocess import Popen, PIPE
 import pandas as pd
 from copy import deepcopy, copy
 
-from deeppavlov.models.evolution.neuroevolution_param_generator import NetworkAndParamsEvolution
+from deeppavlov.models.evolution.evolution_param_generator import ParamsEvolution
 from deeppavlov.core.common.file import save_json, read_json
 
 
@@ -129,14 +129,14 @@ TEST = basic_params["train"]["test_best"]
 
 
 # EVOLUTION starts here!
-evolution = NetworkAndParamsEvolution(population_size=POPULATION_SIZE,
-                                      p_crossover=0.2, crossover_power=0.1,
-                                      p_mutation=1., mutation_power=0.1,
-                                      key_model_to_evolve="to_evolve",
-                                      key_basic_layers="basic_layers_params",
-                                      seed=42,
-                                      train_partition=TRAIN_PARTITION,
-                                      **basic_params)
+evolution = ParamsEvolution(population_size=POPULATION_SIZE,
+                            p_crossover=0.2, crossover_power=0.1,
+                            p_mutation=1., mutation_power=0.1,
+                            key_model_to_evolve="to_evolve",
+                            key_basic_layers="basic_layers_params",
+                            seed=42,
+                            train_partition=TRAIN_PARTITION,
+                            **basic_params)
 
 # Result table
 order = deepcopy(CONSIDERED_METRICS)
