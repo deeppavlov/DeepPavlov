@@ -323,10 +323,10 @@ class NetworkAndParamsEvolution:
         Select individuums to save with weights for the next generation from given population.
         Range is an order of an individuum within sorted scores (1 range = max-score, self.population_size = min-score)
         Individuum with the highest score has probability equal to 1 (100%).
-        Individuum with the lowest score has probability equal to 0.05 (5%).
-        Probability of i-th individuum to be selected with weights is (a / range_i + b)
-        where a = 0.95 * self.population_size / (self.population_size - 1), and
-        b = (0.05 * self.population_size - 1) / (self.population_size - 1).
+        Individuum with the lowest score has probability equal to 0 (0%).
+        Probability of i-th individuum to be selected with weights is (a * range_i + b)
+        where a = 1. / (1. - self.population_size), and
+        b = self.population_size / (self.population_size - 1.)
         Args:
             population: self.population_size individuums
             scores: corresponding score that should be maximized
@@ -340,9 +340,13 @@ class NetworkAndParamsEvolution:
         ranges = np.array([self.population_size - np.where(i == sorted_ids)[0][0]
                            for i in np.arange(self.population_size)])
         # probas = a / ranges + b
-        a = 0.95 * self.population_size / (self.population_size - 1)
-        b = (0.05 * self.population_size - 1) / (self.population_size - 1)
-        probas_to_be_selected = a / ranges + b
+        # a = 0.95 * self.population_size / (self.population_size - 1)
+        # b = (0.05 * self.population_size - 1) / (self.population_size - 1)
+        # probas_to_be_selected = a / ranges + b
+
+        a = 1. / (1. - self.population_size)
+        b = self.population_size / (self.population_size - 1.)
+        probas_to_be_selected = a * ranges + b
 
         selected = []
         for i in range(self.population_size):
