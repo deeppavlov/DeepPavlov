@@ -585,7 +585,7 @@ class NetworkAndParamsEvolution:
 
     def sample_params(self, **params):
         if not params:
-            params_copy = deepcopy(self.params)
+            return {}
         else:
             params_copy = deepcopy(params)
         params_sample = dict()

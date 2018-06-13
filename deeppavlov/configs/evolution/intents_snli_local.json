@@ -3,7 +3,7 @@
     "name": "basic_classification_reader",
     "x": "text",
     "y": "gold_label",
-    "data_path": "/home/dilyara.baymurzina/evolution_data/snli_data/one_input/parts",
+    "data_path": "/home/dilyara/data/data_files/SNLI/one_input/parts",
     "train": "train_0.csv",
     "valid": "valid.csv",
     "test": "test.csv"
@@ -26,8 +26,8 @@
           "y"
         ],
         "level": "token",
-        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_data/one_input/snli_classes.dict",
-        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_data/one_input/snli_classes.dict"
+        "save_path": "/home/dilyara/data/data_files/SNLI/one_input/snli_classes.dict",
+        "load_path": "/home/dilyara/data/data_files/SNLI/one_input/snli_classes.dict"
       },
       {
         "in": [
@@ -41,8 +41,8 @@
       {
         "id": "my_embedder",
         "name": "fasttext",
-        "save_path": "/home/dilyara.baymurzina/embeddings/wiki.en.bin",
-        "load_path": "/home/dilyara.baymurzina/embeddings/wiki.en.bin",
+        "save_path": "/home/dilyara/data/data_files/embeddings/wiki.en.bin",
+        "load_path": "/home/dilyara/data/data_files/embeddings/wiki.en.bin",
         "dim": 300
       },
       {
@@ -63,8 +63,8 @@
         ],
         "main": true,
         "name": "intent_model",
-        "save_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/param_evolution_0",
-        "load_path": "/home/dilyara.baymurzina/evolution_data/snli_classification/param_evolution_0",
+        "save_path": "/home/dilyara/data/models/evolution_data/snli_classification/param_evolution_0",
+        "load_path": "/home/dilyara/data/models/evolution_data/snli_classification/param_evolution_0",
         "classes": "#classes_vocab.keys()",
         "kernel_sizes_cnn": [
           1,
