@@ -255,6 +255,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
     log_on = train_config['log_every_n_batches'] > 0 or train_config['log_every_n_epochs'] > 0
     train_y_true = []
     train_y_predicted = []
+    losses = []
     start_time = time.time()
     break_flag = False
     try:
@@ -264,7 +265,9 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                     y_predicted = list(model(list(x)))
                     train_y_true += y_true
                     train_y_predicted += y_predicted
-                model.train_on_batch(x, y_true)
+                loss = model.train_on_batch(x, y_true)
+                if loss is not None:
+                    losses.append(loss)
                 i += 1
                 examples += len(x)
 
@@ -277,6 +280,9 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                         'metrics': prettify_metrics(metrics),
                         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                     }
+                    if losses:
+                        report['loss'] = sum(losses)/len(losses)
+                        losses = []
                     report = {'train': report}
                     print(json.dumps(report, ensure_ascii=False))
                     train_y_true.clear()
