@@ -57,6 +57,7 @@ def score_population(population, population_size, result_file):
             val_results = np.loadtxt(fname=str(Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index][
                                                         "save_path"]).parent.joinpath("valid_results.txt")))
         except OSError or FileNotFoundError:
+            val_results = [None for m in CONSIDERED_METRICS]
             for m_id, m in enumerate(CONSIDERED_METRICS):
                 if "loss" in m:
                     val_results[m_id] = 1e6
