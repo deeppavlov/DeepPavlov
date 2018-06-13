@@ -30,8 +30,6 @@ def score_population(population, population_size, result_file):
                 population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["load_path"] = \
                     str(load_path.joinpath("model"))
 
-                population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["nodes"] = \
-                    evolution.nodes
                 print(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"])
                 try:
                     save_path.mkdir(parents=True)
