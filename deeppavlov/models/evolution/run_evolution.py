@@ -201,7 +201,7 @@ else:
             np.array(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"])
         population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"] = \
             str(Path(basic_params["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"]).joinpath(
-                "population_" + str(START_FROM_POPULATION)).joinpath(model_name + str(i)))
+                "population_" + str(START_FROM_POPULATION)).joinpath(model_name + "_" + str(i)))
         population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["load_path"] = \
             str(Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["load_path"]).parent)
 
