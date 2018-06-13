@@ -197,6 +197,8 @@ else:
     for i in range(POPULATION_SIZE):
         population.append(read_json(Path(PATH_TO_POPULATION).joinpath(
             model_name + "_" + str(i)).joinpath("config.json")))
+        population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"] = \
+            np.array(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["binary_mask"])
 
     population_scores = score_population(population, POPULATION_SIZE, result_file)[EVOLVE_METRIC]
     print("Population scores: {}".format(population_scores))
