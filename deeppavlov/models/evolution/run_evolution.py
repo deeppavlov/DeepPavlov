@@ -7,7 +7,7 @@ import pandas as pd
 from copy import deepcopy, copy
 
 from deeppavlov.models.evolution.neuroevolution_param_generator import NetworkAndParamsEvolution
-from deeppavlov.core.common.file import save_json
+from deeppavlov.core.common.file import save_json, read_json
 
 
 def score_population(population, population_size, result_file):
@@ -106,6 +106,12 @@ parser.add_argument('--given_mask_init', help='whether to start with given binar
 parser.add_argument('--train_partition',
                     help='Please, enter partition of splitted train',
                     default=1)
+parser.add_argument('--start_from_population',
+                    help='Please, enter the population number to start from. 0 means from scratch',
+                    default=0)
+parser.add_argument('--path_to_population',
+                    help='Please, enter the path to population to start from',
+                    default="")
 
 args = parser.parse_args()
 
@@ -119,6 +125,9 @@ N_TYPES = int(args.n_types)
 ONE_NEURON_INIT = bool(int(args.one_neuron_init))
 GIVEN_MASK_INIT = bool(int(args.given_mask_init))
 TRAIN_PARTITION = int(args.train_partition)
+START_FROM_POPULATION = int(args.start_from_population)
+PATH_TO_POPULATION = args.path_to_population
+
 
 with open(CONFIG_FILE, "r") as f:
     basic_params = json.load(f)
@@ -153,36 +162,49 @@ evolution = NetworkAndParamsEvolution(n_layers=N_LAYERS, n_types=N_TYPES,
 # Result table
 order = deepcopy(CONSIDERED_METRICS)
 order.extend(["params"])
-
-result_table_columns = []
-
-result_table_dict = {}
-for el in order:
-    if el == "params":
-        result_table_dict[el] = []
-        result_table_columns.extend([el])
-    else:
-        result_table_dict[el + "_valid"] = []
-        result_table_dict[el + "_test"] = []
-        result_table_columns.extend([el + "_valid", el + "_test"])
-
-result_table_columns.append("params")
-
 result_file = Path(basic_params["chainer"]["pipe"][
                        evolution.model_to_evolve_index]["save_path"]).joinpath("result_table.csv")
-result_table = pd.DataFrame(result_table_dict)
-result_table.loc[:, result_table_columns].to_csv(result_file, index=False, sep='\t')
 
-print("\nIteration #{} starts\n".format(0))
-population = evolution.first_generation()
-# print("Considered population: {}\nScoring...\n".format(population))
-population_scores = score_population(population, POPULATION_SIZE, result_file)[EVOLVE_METRIC]
+if START_FROM_POPULATION == 0:
+    result_table_columns = []
 
-iters = 1
+    result_table_dict = {}
+    for el in order:
+        if el == "params":
+            result_table_dict[el] = []
+            result_table_columns.extend([el])
+        else:
+            result_table_dict[el + "_valid"] = []
+            result_table_dict[el + "_test"] = []
+            result_table_columns.extend([el + "_valid", el + "_test"])
+
+    result_table_columns.append("params")
+
+    result_table = pd.DataFrame(result_table_dict)
+    result_table.loc[:, result_table_columns].to_csv(result_file, index=False, sep='\t')
+
+    print("\nIteration #{} starts\n".format(0))
+    population = evolution.first_generation()
+    population_scores = score_population(population, POPULATION_SIZE, result_file)[EVOLVE_METRIC]
+
+    iters = 1
+else:
+    iters = START_FROM_POPULATION
+    print("\nIteration #{} starts\n".format(iters))
+    model_name = basic_params["chainer"]["pipe"][evolution.model_to_evolve_index]["model_name"]
+    population = []
+
+    for i in range(POPULATION_SIZE):
+        population.append(read_json(Path(PATH_TO_POPULATION).joinpath(
+            model_name + "_" + str(i)).joinpath("config.json")))
+
+    population_scores = score_population(population, POPULATION_SIZE, result_file)[EVOLVE_METRIC]
+    print("Population scores: {}".format(population_scores))
+    print("\nIteration #{} was done\n".format(iters))
+    iters += 1
 
 while True:
     print("\nIteration #{} starts\n".format(iters))
-
     population = evolution.next_generation(population, population_scores, iters)
     # print("Considered population: {}\nScoring...\n".format(population))
     population_scores = score_population(population, POPULATION_SIZE, result_file)[EVOLVE_METRIC]
