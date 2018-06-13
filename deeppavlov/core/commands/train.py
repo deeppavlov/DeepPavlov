@@ -40,6 +40,17 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
+def prettify_metrics(metrics, precision=4):
+    """
+    Prettifies the dictionary of metrics
+    """
+    prettified_metrics = OrderedDict()
+    for key, value in metrics:
+        value = round(value, precision)
+        prettified_metrics[key] = value
+    return prettified_metrics
+
+
 def _fit(model: Estimator, iterator: DataLearningIterator, train_config) -> Estimator:
     x, y = iterator.get_instances('train')
     model.fit(x, y)
@@ -84,7 +95,7 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
     return chainer
 
 
-def train_model_from_config(config_path: str) -> None:
+def train_evaluate_model_from_config(config_path: str, to_train=True, to_validate=True) -> None:
     config = read_json(config_path)
     set_deeppavlov_root(config)
 
@@ -127,21 +138,9 @@ def train_model_from_config(config_path: str) -> None:
     iterator: Union[DataLearningIterator, DataFittingIterator] = from_params(iterator_config,
                                                                              data=data)
 
-    if 'chainer' in config:
-        model = fit_chainer(config, iterator)
-    else:
-        vocabs = config.get('vocabs', {})
-        for vocab_param_name, vocab_config in vocabs.items():
-            v: Estimator = from_params(vocab_config, mode='train')
-            vocabs[vocab_param_name] = _fit(v, iterator, None)
-
-        model_config = config['model']
-        model = from_params(model_config, vocabs=vocabs, mode='train')
-
     train_config = {
         'metrics': ['accuracy'],
-
-        'validate_best': True,
+        'validate_best': to_validate,
         'test_best': True
     }
 
@@ -150,17 +149,28 @@ def train_model_from_config(config_path: str) -> None:
     except KeyError:
         log.warning('Train config is missing. Populating with default values')
 
-    metrics_functions = list(zip(train_config['metrics'],
-                                 get_metrics_by_names(train_config['metrics'])))
+    metrics_functions = list(zip(train_config['metrics'], get_metrics_by_names(train_config['metrics'])))
 
-    if callable(getattr(model, 'train_on_batch', None)):
-        _train_batches(model, iterator, train_config, metrics_functions)
-    elif callable(getattr(model, 'fit_batches', None)):
-        _fit_batches(model, iterator, train_config)
-    elif callable(getattr(model, 'fit', None)):
-        _fit(model, iterator, train_config)
-    elif not isinstance(model, Chainer):
-        log.warning('Nothing to train')
+    if to_train:
+        if 'chainer' in config:
+            model = fit_chainer(config, iterator)
+        else:
+            vocabs = config.get('vocabs', {})
+            for vocab_param_name, vocab_config in vocabs.items():
+                v: Estimator = from_params(vocab_config, mode='train')
+                vocabs[vocab_param_name] = _fit(v, iterator, None)
+
+            model_config = config['model']
+            model = from_params(model_config, vocabs=vocabs, mode='train')
+
+        if callable(getattr(model, 'train_on_batch', None)):
+            _train_batches(model, iterator, train_config, metrics_functions)
+        elif callable(getattr(model, 'fit_batches', None)):
+            _fit_batches(model, iterator, train_config)
+        elif callable(getattr(model, 'fit', None)):
+            _fit(model, iterator, train_config)
+        elif not isinstance(model, Chainer):
+            log.warning('Nothing to train')
 
     if train_config['validate_best'] or train_config['test_best']:
         # try:
@@ -204,7 +214,7 @@ def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
 
     report = {
         'eval_examples_count': len(val_y_true),
-        'metrics': OrderedDict(metrics),
+        'metrics': prettify_metrics(metrics),
         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
     }
     return report
@@ -271,7 +281,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                         'epochs_done': epochs,
                         'batches_seen': i,
                         'examples_seen': examples,
-                        'metrics': dict(metrics),
+                        'metrics': prettify_metrics(metrics),
                         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                     }
                     report = {'train': report}
@@ -310,7 +320,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                     'epochs_done': epochs,
                     'batches_seen': i,
                     'train_examples_seen': examples,
-                    'metrics': dict(metrics),
+                    'metrics': prettify_metrics(metrics),
                     'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                 }
                 model.process_event(event_name='after_train_log', data=report)
