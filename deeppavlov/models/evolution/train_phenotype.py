@@ -17,7 +17,7 @@ import numpy as np
 import sys
 from pathlib import Path
 
-from deeppavlov.core.commands.train import train_model_from_config
+from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.common.file import read_json, save_json
 from deeppavlov.models.evolution.utils import find_index_of_dict_with_key_in_pipe
 
@@ -25,7 +25,7 @@ from deeppavlov.models.evolution.utils import find_index_of_dict_with_key_in_pip
 config_path = sys.argv[1]
 
 print("TRAIN PHENOTYPE")
-reports = train_model_from_config(config_path)
+reports = train_evaluate_model_from_config(config_path)
 print(reports)
 
 if len(reports) == 2:
