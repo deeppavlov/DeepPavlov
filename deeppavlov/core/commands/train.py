@@ -19,6 +19,7 @@ import importlib
 import json
 import time
 from collections import OrderedDict
+from pathlib import Path
 from typing import List, Callable, Tuple, Dict, Union
 
 from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root
@@ -95,8 +96,9 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
     return chainer
 
 
-def train_evaluate_model_from_config(config_path: str, to_train=True, to_validate=True) -> None:
-    config = read_json(config_path)
+def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, to_validate=True) -> None:
+    if isinstance(config, (str, Path)):
+        config = read_json(config)
     set_deeppavlov_root(config)
 
     dataset_config = config.get('dataset', None)
