@@ -109,7 +109,7 @@ def from_params(params: Dict, mode='infer', **kwargs) -> Component:
     config_params = {k: _init_param(v, mode) for k, v in config_params.items()}
 
     try:
-        component = cls(**dict(config_params, **kwargs))
+        component = cls(mode=mode, **dict(config_params, **kwargs))
         try:
             _refs[config_params['id']] = component
         except KeyError:
