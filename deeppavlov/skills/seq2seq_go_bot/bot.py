@@ -79,7 +79,11 @@ class Seq2SeqGoalOrientedBot(NNModel):
 
     def _embed_kb_key(self, key):
 # TODO: fasttext embedder to work with tokens
-        return self.embedder([key.split('_')], mean=True)[0]
+        emb = np.array(self.embedder([key.split('_')], mean=True)[0])
+        if self.debug:
+            log.debug("embedding key tokens='{}', embedding shape = {}"
+                      .format(key.split('_'), emb.shape))
+        return emb
 
     def train_on_batch(self, utters, history_list, kb_entry_list, responses):
         b_enc_ins, b_src_lens = [], []
