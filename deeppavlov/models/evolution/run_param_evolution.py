@@ -175,6 +175,8 @@ if START_FROM_POPULATION == 0:
 
     iters = 1
 else:
+    # to define some clue params of evolution
+    _ = evolution.first_generation()
     iters = START_FROM_POPULATION
     print("\nIteration #{} starts\n".format(iters))
     model_name = basic_params["chainer"]["pipe"][evolution.model_to_evolve_index]["model_name"]
