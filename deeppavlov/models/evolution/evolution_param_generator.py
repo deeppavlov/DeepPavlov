@@ -55,11 +55,13 @@ class ParamsEvolution:
         Path(self.basic_config["chainer"]["pipe"][self.model_to_evolve_index]["save_path"]).mkdir(parents=True,
                                                                                                   exist_ok=True)
 
+        self.dataset_iterator_params = deepcopy(self.basic_config.get("dataset_iterator"))
         self.params = deepcopy(self.basic_config.get("chainer").get("pipe")[self.model_to_evolve_index])
         self.train_params = deepcopy(self.basic_config.get("train"))
 
         print("___Basic config___: {}".format(self.basic_config))
         print("___Model to evolve index in pipe___: {}".format(self.model_to_evolve_index))
+        print("___Dataset iterator params___: {}".format(self.dataset_iterator_params))
         print("___Model params___: {}".format(self.params))
         print("___Train params___: {}".format(self.train_params))
 
@@ -132,6 +134,10 @@ class ParamsEvolution:
         for i in range(self.population_size):
             population.append(deepcopy(self.basic_config))
 
+            # initializing parameters for dataset iterator
+            dataset_iterator_params, dataset_iterator_params_for_search, evolving_params = \
+                self.initialize_params_in_config(self.dataset_iterator_params)
+            self.evolving_params.extend(evolving_params)
             # intitializing parameters for model
             params, params_for_search, evolving_params = self.initialize_params_in_config(self.params)
             self.evolving_params.extend(evolving_params)
@@ -156,6 +162,9 @@ class ParamsEvolution:
                 params["load_path"] = str(Path(self.params["load_path"]).joinpath(
                     "population_" + str(iteration)).joinpath(self.params["model_name"] + "_" + str(i)))
 
+            # exchange dataset iterator params from basic config to sampled train params
+            population[-1]["dataset_iterator"] = {**dataset_iterator_params,
+                                                  **dataset_iterator_params_for_search}
             # exchange model and layers params from basic config to sampled model params
             population[-1]["chainer"]["pipe"][self.model_to_evolve_index] = {**params,
                                                                              **params_for_search}
@@ -372,6 +381,13 @@ class ParamsEvolution:
         for individuum in population:
             mutated_individuum = deepcopy(individuum)
 
+            # mutation of dataset iterator params
+            for param in self.dataset_iterator_params.keys():
+                mutated_individuum["dataset_iterator"][param] = \
+                    self.mutation_of_param(param, self.dataset_iterator_params,
+                                           individuum["dataset_iterator"][param],
+                                           p_mutation, mutation_power)
+
             # mutation of other model params
             for param in self.params.keys():
                 mutated_individuum["chainer"]["pipe"][self.model_to_evolve_index][param] = \
@@ -409,7 +425,8 @@ class ParamsEvolution:
                               params_dict[param]["range"][1])
                     new_mutated_value = val
                 elif params_dict[param].get("choice"):
-                    new_mutated_value = param_value
+                    # new_mutated_value = param_value
+                    new_mutated_value = self.sample_params(**{param: params_dict[param]})[param]
                 else:
                     new_mutated_value = param_value
             else:
