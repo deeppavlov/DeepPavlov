@@ -227,10 +227,13 @@ class ParamsEvolution:
                 next_population[i]["dataset_reader"]["train"] = str(Path(next_population[i]["dataset_reader"][
                                                                              "train"]).stem.split("_")[0]) \
                                                      + "_" + str(iteration % self.train_partition) + ".csv"
-            # re-init learning rate with the final one
-            next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["lear_rate"] = \
-                read_json(str(Path(next_population[i]["chainer"]["pipe"][self.model_to_evolve_index][
-                                       "save_path"]).parent.joinpath("model_opt.json")))["final_lear_rate"]
+            try:
+                # re-init learning rate with the final one
+                next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["lear_rate"] = \
+                    read_json(str(Path(next_population[i]["chainer"]["pipe"][self.model_to_evolve_index][
+                                           "save_path"]).parent.joinpath("model_opt.json")))["final_lear_rate"]
+            except:
+                pass
             # paths
             next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"] = \
                 str(Path(next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"]).parent)
