@@ -8,7 +8,14 @@
     "valid": "valid.csv"
   },
   "dataset_iterator": {
-    "name": "basic_classification_iterator"
+    "name": "basic_classification_iterator",
+    "seed": {
+      "range": [
+        50,
+        500
+      ],
+      "discrete": true
+    }
   },
   "chainer": {
     "in": [
