@@ -558,7 +558,6 @@ class NetworkAndParamsEvolution:
                               params_dict[param]["range"][1])
                     new_mutated_value = val
                 elif params_dict[param].get("choice"):
-                    # TODO: mutation of this parameters
                     # new_mutated_value = param_value
                     new_mutated_value = self.sample_params(**{param: params_dict[param]})[param]
                 else:
