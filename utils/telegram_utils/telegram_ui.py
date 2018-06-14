@@ -62,9 +62,6 @@ def init_bot_for_model(token, model):
         if len(model.in_x) > 1:
             if chat_id not in buffer:
                 send_start_message(message)
-                #buffer[chat_id] = []
-                #expect[:] = list(model.in_x)
-                #bot.send_message(chat_id, f'Please, send {expect.pop(0)}')
             else:
                 buffer[chat_id].append(context)
 
