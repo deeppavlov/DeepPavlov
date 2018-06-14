@@ -47,7 +47,8 @@ def score_population(population, population_size, result_file):
                                                                  ),
                                    shell=True, stdout=PIPE, stderr=PIPE))
         for j, proc in enumerate(procs):
-            print(f'wait on {j}th proc')
+            i = k * len(gpus) + j
+            print(f'wait on {i}th proc')
             proc.wait()
 
     for i in range(population_size):
