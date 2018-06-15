@@ -33,8 +33,11 @@ def main():
 
     while True:
         query = input("Question: ")
-        output = chainer([query])
-        print(*output)
+        try:
+            output = chainer([query])
+            print(*output)
+        except Exception:
+            print("Я не знаю ответ.")
 
 if __name__ == "__main__":
     main()
