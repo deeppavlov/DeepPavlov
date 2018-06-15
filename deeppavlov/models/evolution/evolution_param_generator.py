@@ -3,15 +3,12 @@ from copy import deepcopy
 from pathlib import Path
 import json
 
-from deeppavlov.models.evolution.check_binary_mask import check_and_correct_binary_mask, \
-    number_to_type_layer
 from deeppavlov.models.evolution.utils import find_index_of_dict_with_key_in_pipe
 from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.log import get_logger
 
 
-# please, make sure that
-# `config["chainer"]["pipe"]` is a list of models one of which is a model to be evolved,
-# otherwise, in the whole class change `config["chainer"]["pipe"]` to new path
+log = get_logger(__name__)
 
 
 class ParamsEvolution:
@@ -30,7 +27,7 @@ class ParamsEvolution:
                  population_size,
                  p_crossover=0.5, crossover_power=0.5,
                  p_mutation=0.5, mutation_power=0.1,
-                 key_model_to_evolve="to_evolve",
+                 key_main_model="main_model",
                  seed=None,
                  train_partition=1,
                  **kwargs):
@@ -43,7 +40,7 @@ class ParamsEvolution:
             p_mutation: probability of mutation for current replacement
             mutation_power: allowed percentage of mutation
             key_model_to_evolve: binary flag that should be inserted into the dictionary
-                            with evolving model in the basic config
+                        with main model in the basic config (to determine save and load paths that will be changed)
             seed: random seed for initialization
             train_partition: integer number of train data parts
             **kwargs: basic config with parameters
@@ -51,33 +48,23 @@ class ParamsEvolution:
 
         self.basic_config = deepcopy(kwargs)
         self.model_to_evolve_index = find_index_of_dict_with_key_in_pipe(self.basic_config["chainer"]["pipe"],
-                                                                         key_model_to_evolve)
+                                                                         key_main_model)
         Path(self.basic_config["chainer"]["pipe"][self.model_to_evolve_index]["save_path"]).mkdir(parents=True,
                                                                                                   exist_ok=True)
 
-        self.dataset_iterator_params = deepcopy(self.basic_config.get("dataset_iterator"))
-        self.params = deepcopy(self.basic_config.get("chainer").get("pipe")[self.model_to_evolve_index])
-        self.train_params = deepcopy(self.basic_config.get("train"))
-
-        print("___Basic config___: {}".format(self.basic_config))
-        print("___Model to evolve index in pipe___: {}".format(self.model_to_evolve_index))
-        print("___Dataset iterator params___: {}".format(self.dataset_iterator_params))
-        print("___Model params___: {}".format(self.params))
-        print("___Train params___: {}".format(self.train_params))
+        self.print_dict(self.basic_config, string="Basic config:")
+        log.info("Main model index in pipe: {}".format(self.model_to_evolve_index))
 
         self.population_size = population_size
         self.p_crossover = p_crossover
         self.p_mutation = p_mutation
         self.mutation_power = mutation_power
         self.crossover_power = crossover_power
-        self.evolving_dataset_iterator_params = []
-        self.n_evolving_dataset_iterator_params = None
-        self.evolving_params = []
-        self.n_evolving_params = None
-        self.evolving_train_params = []
-        self.n_evolving_train_params = None
+
         self.n_saved_best_with_weights = 0
         self.train_partition = train_partition
+
+        self.paths_to_evolving_params = []
         self.evolution_individuum_id = 0
         self.evolution_model_id = 0
 
@@ -86,17 +73,59 @@ class ParamsEvolution:
         else:
             np.random.seed(seed)
 
-    def _insert_dict_into_model_params(self, params, model_index, dict_to_insert):
-        params_copy = deepcopy(params)
-        params_copy["chainer"]["pipe"].insert(model_index, dict_to_insert)
-        return params_copy
+    def _find_main_model(self, config, key_main_model, path=[]):
+        """
+        Find path to the main model in config which paths will be changed
+        Args:
+            config:
+            key_main_model:
 
-    def print_dict(self, dict, string=None):
-        if string is None:
-            print(json.dumps(dict, indent=2))
+        Returns:
+            path in config -- list of keys (strings and integers)
+        """
+        config_pointer = config
+        if key_main_model in config_pointer.keys():
+            return path
         else:
-            print(string)
-            print(json.dumps(dict, indent=2))
+            if type(config_pointer) is dict:
+                for key in list(config_pointer.keys()):
+                    path += key
+                    path_ = self._find_main_model(config_pointer[key], key_main_model, path)
+                    if len(path_) > 0:
+                        path = path_
+            elif type(config_pointer) is list:
+                for i in range(len(config_pointer)):
+                    path += i
+                    path_ = self._find_main_model(config_pointer[i], key_main_model, path)
+                    if len(path_) > 0:
+                        path = path_
+            if len(path) > 0:
+                return path
+            else:
+                return []
+
+
+    @staticmethod
+    def _insert_value_or_dict_into_config(config, path, value):
+        config_copy = deepcopy(config)
+        config_pointer = config_copy
+        for el in path[:-1]:
+            if type(config_pointer) is dict:
+                config_pointer = config_pointer.setdefault(el, {})
+            elif type(config_pointer) is list:
+                config_pointer = config_pointer[el]
+            else:
+                pass
+        config_pointer[path[-1]] = value
+        return config_copy
+
+    @staticmethod
+    def print_dict(config, string=None):
+        if string is None:
+            log.info(json.dumps(config, indent=2))
+        else:
+            log.info(string)
+            log.info(json.dumps(config, indent=2))
         return None
 
     def initialize_params_in_config(self, basic_params):
