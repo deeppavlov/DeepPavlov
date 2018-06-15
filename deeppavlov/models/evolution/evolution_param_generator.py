@@ -70,6 +70,8 @@ class ParamsEvolution:
         self.p_mutation = p_mutation
         self.mutation_power = mutation_power
         self.crossover_power = crossover_power
+        self.evolving_dataset_iterator_params = []
+        self.n_evolving_dataset_iterator_params = None
         self.evolving_params = []
         self.n_evolving_params = None
         self.evolving_train_params = []
@@ -137,7 +139,7 @@ class ParamsEvolution:
             # initializing parameters for dataset iterator
             dataset_iterator_params, dataset_iterator_params_for_search, evolving_params = \
                 self.initialize_params_in_config(self.dataset_iterator_params)
-            self.evolving_params.extend(evolving_params)
+            self.evolving_dataset_iterator_params.extend(evolving_params)
             # intitializing parameters for model
             params, params_for_search, evolving_params = self.initialize_params_in_config(self.params)
             self.evolving_params.extend(evolving_params)
@@ -175,9 +177,11 @@ class ParamsEvolution:
             population[-1]["train"]["evolution_model_id"] = self.evolution_model_id
             self.evolution_model_id += 1
 
+        self.evolving_dataset_iterator_params = list(set(self.evolving_dataset_iterator_params))
         self.evolving_params = list(set(self.evolving_params))
         self.evolving_train_params = list(set(self.evolving_train_params))
 
+        self.n_evolving_dataset_iterator_params = len(self.evolving_dataset_iterator_params)
         self.n_evolving_params = len(self.evolving_params)
         self.n_evolving_train_params = len(self.evolving_train_params)
 
@@ -317,14 +321,37 @@ class ParamsEvolution:
             parents = population[np.where(rs[0] > intervals)[0][-1]], population[np.where(rs[1] > intervals)[0][-1]]
 
             if self.decision(p_crossover):
+                dataset_iterator_params_perm = np.random.permutation(self.n_evolving_dataset_iterator_params)
                 params_perm = np.random.permutation(self.n_evolving_params)
                 train_params_perm = np.random.permutation(self.n_evolving_train_params)
 
                 curr_offsprings = [deepcopy(parents[0]),
                                    deepcopy(parents[1])]
 
+                dataset_iterator_part = int(crossover_power * self.n_evolving_dataset_iterator_params)
                 part = int(crossover_power * self.n_evolving_params)
                 train_part = int(crossover_power * self.n_evolving_train_params)
+
+                # exchange of dataset_iterator params
+                for j in range(self.n_evolving_dataset_iterator_params - dataset_iterator_part):
+                    curr_offsprings[0]["dataset_iterator"][
+                        self.evolving_dataset_iterator_params[dataset_iterator_params_perm[j]]] = \
+                        parents[0]["dataset_iterator"][
+                        self.evolving_dataset_iterator_params[dataset_iterator_params_perm[j]]]
+                    curr_offsprings[1]["dataset_iterator"][
+                        self.evolving_dataset_iterator_params[dataset_iterator_params_perm[j]]] = \
+                        parents[1]["dataset_iterator"][
+                        self.evolving_dataset_iterator_params[dataset_iterator_params_perm[j]]]
+                for j in range(self.n_evolving_dataset_iterator_params - dataset_iterator_part,
+                               self.n_evolving_dataset_iterator_params):
+                    curr_offsprings[0]["dataset_iterator"][
+                        self.evolving_dataset_iterator_params[dataset_iterator_params_perm[j]]] = \
+                        parents[1]["dataset_iterator"][
+                        self.evolving_dataset_iterator_params[dataset_iterator_params_perm[j]]]
+                    curr_offsprings[1]["dataset_iterator"][
+                        self.evolving_dataset_iterator_params[dataset_iterator_params_perm[j]]] = \
+                        parents[0]["dataset_iterator"][
+                        self.evolving_dataset_iterator_params[dataset_iterator_params_perm[j]]]
 
                 # exchange of model params (not layers params)
                 for j in range(self.n_evolving_params - part):
