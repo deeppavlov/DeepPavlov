@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import importlib
+import inspect
 from typing import Dict
 
 from deeppavlov.core.commands.utils import expand_path, get_deeppavlov_root, set_deeppavlov_root
@@ -109,7 +110,11 @@ def from_params(params: Dict, mode='infer', **kwargs) -> Component:
     config_params = {k: _init_param(v, mode) for k, v in config_params.items()}
 
     try:
-        component = cls(mode=mode, **dict(config_params, **kwargs))
+        spec = inspect.getfullargspec(cls)
+        if 'mode' in spec.args+spec.kwonlyargs or spec.varkw is not None:
+            kwargs['mode'] = mode
+
+        component = cls(**dict(config_params, **kwargs))
         try:
             _refs[config_params['id']] = component
         except KeyError:
