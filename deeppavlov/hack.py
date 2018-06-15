@@ -32,9 +32,9 @@ chainer = build_model_from_config(read_json(CONFIG_PATH))
 def main():
 
     while True:
-        query = input("Question:")
+        query = input("Question: ")
         output = chainer([query])
-        print(output)
+        print(**output)
 
 if __name__ == "__main__":
     main()
