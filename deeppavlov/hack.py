@@ -34,7 +34,7 @@ def main():
     while True:
         query = input("Question: ")
         output = chainer([query])
-        print(**output)
+        print(*output)
 
 if __name__ == "__main__":
     main()
