@@ -115,3 +115,5 @@ download/
 
 # project data
 /data/
+
+conversation_result.txt
