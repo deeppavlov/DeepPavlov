@@ -16,6 +16,7 @@ limitations under the License.
 
 from pathlib import Path
 import sys
+import csv
 
 p = (Path(__file__) / ".." / "..").resolve()
 sys.path.append(str(p))
@@ -31,9 +32,10 @@ CONFIG_PATH = str(get_project_root()) + '/deeppavlov/configs/odqa/odqa_hack.json
 print(CONFIG_PATH)
 chainer = build_model_from_config(read_json(CONFIG_PATH))
 
-
 def main():
     while True:
+        with open('conversation_result.csv', 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile, delimiter=';')
         try:
             query = input("Question: ")
             answers = chainer([query])
@@ -41,6 +43,7 @@ def main():
                 if '\n' in answer:
                     answer = answer.split('\n')[0]
                 print(answer)
+            writer.writerow(query, *answers)
         except Exception:
             print("Я не знаю ответ.")
 
