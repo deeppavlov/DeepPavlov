@@ -39,18 +39,18 @@ def main():
             writer = csv.writer(csvfile, delimiter=';')
             try:
                 query = input("Question: ")
-                answers = chainer([query])
+                answers = chainer([query.strip()])
                 for answer in answers:
                     if '\n' in answer:
                         answer = answer.split('\n')[0]
                     print(answer)
                 writer.writerow([query, *answers])
-            except IndexError:
+            except Exception:
                 answer = "Я не знаю ответ."
                 try:
-                    writer.writerow([query, answer*3])
+                    writer.writerow([query, [answer]*3])
                 except Exception:
-                    writer.writerow(["Неизвестный вопрос.", answer*3])
+                    writer.writerow(["Неизвестный вопрос.", [answer]*3])
                 print(answer * 3)
 
 
