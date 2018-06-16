@@ -41,6 +41,9 @@ def get_deeppavlov_root() -> Path:
     return paths.deeppavlov_root
 
 
+def get_project_root() -> Path:
+    return Path(__file__, "..", "..", "..", "..").resolve()
+
 def expand_path(path: Union[str, Path]) -> Path:
     return get_deeppavlov_root() / Path(path).expanduser()
 

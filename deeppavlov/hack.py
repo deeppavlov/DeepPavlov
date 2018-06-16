@@ -23,21 +23,27 @@ sys.path.append(str(p))
 from deeppavlov.core.commands.train import build_model_from_config
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import read_json
+from deeppavlov.core.commands.utils import expand_path, get_project_root
 
 log = get_logger(__name__)
 
-CONFIG_PATH = 'configs/odqa/ru_odqa_infer_prod.json'
+CONFIG_PATH = str(get_project_root()) + '/deeppavlov/configs/odqa/odqa_hack.json'
+print(CONFIG_PATH)
 chainer = build_model_from_config(read_json(CONFIG_PATH))
 
-def main():
 
+def main():
     while True:
-        query = input("Question: ")
         try:
-            output = chainer([query])
-            print(*output)
+            query = input("Question: ")
+            answers = chainer([query])
+            for answer in answers:
+                if '\n' in answer:
+                    answer = answer.split('\n')[0]
+                print(answer)
         except Exception:
             print("Я не знаю ответ.")
+
 
 if __name__ == "__main__":
     main()

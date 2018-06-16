@@ -1,12 +1,9 @@
 """
 Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
-
     http://www.apache.org/licenses/LICENSE-2.0
-
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,20 +12,19 @@ limitations under the License.
 """
 
 import sqlite3
-from typing import List, Any, Dict, Optional, Generator, Tuple
+from typing import List, Any, Dict, Optional
 from random import Random
+from pathlib import Path
 
 from overrides import overrides
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import download
-from deeppavlov.core.commands.utils import expand_path, is_empty
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 
 logger = get_logger(__name__)
-
-DB_URL = 'http://lnsigo.mipt.ru/export/datasets/wikipedia/enwiki.db'
 
 
 @register('sqlite_iterator')
@@ -37,21 +33,30 @@ class SQLiteDataIterator(DataFittingIterator):
     Load a SQLite database, read data batches and get docs content.
     """
 
-    def __init__(self, data_dir: str = '', data_url: str = DB_URL, batch_size: int = None,
-                 shuffle: bool = None, seed: int = None, **kwargs):
+    def __init__(self, load_path, data_dir: str = '',
+                 batch_size: int = None, shuffle: bool = None, seed: int = None, **kwargs):
         """
-        :param data_dir: a directory name where DB is located
+        :param data_dir: a directory name where DB should be stored
+        :param load_path: a path to local SQLite DB
         :param data_url: an URL to SQLite DB
         :param batch_size: a batch size for reading from the database
         """
-        download_dir = expand_path(data_dir)
-        download_path = download_dir.joinpath(data_url.split("/")[-1])
-        download(download_path, data_url, force_download=False)
+        self.data_dir = data_dir
 
-        # if not download_dir.exists() or is_empty(download_dir):
-        #     logger.info('[downloading wiki.db from {} to {}]'.format(data_url, download_path))
-        #     download(download_path, data_url)
+        if load_path is not None:
+            if load_path.startswith('http'):
+                logger.info("Downloading database from url: {}".format(load_path))
+                download_dir = expand_path(Path(self.data_dir))
+                download_path = download_dir.joinpath(load_path.split("/")[-1])
+                download(download_path, load_path, force_download=False)
+            elif expand_path(load_path).is_file():
+                download_path = expand_path(load_path)
+            else:
+                raise ValueError('String path expected, got None.')
+        else:
+            raise ValueError('String path expected, got None.')
 
+        logger.info("Connecting to database, path: {}".format(download_path))
         self.connect = sqlite3.connect(str(download_path), check_same_thread=False)
         self.db_name = self.get_db_name()
         self.doc_ids = self.get_doc_ids()

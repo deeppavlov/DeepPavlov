@@ -3,12 +3,8 @@
     "in": [
       "question_raw"
     ],
-    "in_y": [
-      "ans_raw",
-      "ans_raw_start"
-    ],
     "out": [
-      "ans_predicted"
+      "answers"
     ],
     "pipe": [
       {
@@ -26,22 +22,18 @@
           "doc_ids"
         ],
         "out": [
-          "context_raw"
+          "contexts"
         ],
         "data_dir": "odqa",
+        "join_docs": false,
         "shuffle": false,
-        "data_url": "http://lnsigo.mipt.ru/export/datasets/wikipedia/ruwiki.db"
+        "load_path": "http://lnsigo.mipt.ru/export/datasets/wikipedia/ruwiki.db"
       },
       {
-        "config_path": "../deeppavlov/configs/squad/squad_ru.json",
-        "in": [
-          "context_raw",
-          "question_raw"
-        ],
-        "out": [
-          "ans_predicted",
-          "ans_start_predicted"
-        ]
+        "name": "squad_wrapper",
+        "config_path1": "../deeppavlov/configs/squad/squad_ru.json",
+        "in": ["question_raw", "contexts"],
+        "out": ["answers"]
       }
     ]
   },
