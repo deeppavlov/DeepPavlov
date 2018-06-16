@@ -35,7 +35,7 @@ cd deepapvlov/
 ```
 7. Скачайте нужные данные с сервера:
 ```
-python deep.py download deeppavlov/configs/odqa/odqa_hack.json
+python deep.py download configs/odqa/odqa_hack.json
 ```
 8. Запустите процесс интерактивного общения c ODQA (**stdin-stdout**):
 ```
