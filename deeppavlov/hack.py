@@ -32,25 +32,26 @@ CONFIG_PATH = str(get_project_root()) + '/deeppavlov/configs/odqa/odqa_hack.json
 print(CONFIG_PATH)
 chainer = build_model_from_config(read_json(CONFIG_PATH))
 
+
 def main():
-    while True:
-        with open('conversation_result.csv', 'w') as csvfile:
+    with open('conversation_result.csv', 'w') as csvfile:
+        while True:
             writer = csv.writer(csvfile, delimiter=';')
-        try:
-            query = input("Question: ")
-            answers = chainer([query])
-            for answer in answers:
-                if '\n' in answer:
-                    answer = answer.split('\n')[0]
-                print(answer)
-            writer.writerow([query, *answers])
-        except IndexError:
-            answer = "Я не знаю ответ."
             try:
-                writer.writerow([query, answer*3])
-            except Exception:
-                writer.writerow(["Неизвестный вопрос.", answer*3])
-            print(answer * 3)
+                query = input("Question: ")
+                answers = chainer([query])
+                for answer in answers:
+                    if '\n' in answer:
+                        answer = answer.split('\n')[0]
+                    print(answer)
+                writer.writerow([query, *answers])
+            except IndexError:
+                answer = "Я не знаю ответ."
+                try:
+                    writer.writerow([query, answer*3])
+                except Exception:
+                    writer.writerow(["Неизвестный вопрос.", answer*3])
+                print(answer * 3)
 
 
 if __name__ == "__main__":
