@@ -42,3 +42,5 @@ python deep.py download deeppavlov/configs/odqa/odqa_hack.json
 python hack.py
 ```
 9. Задавайте ODQA вопросы на русском языке и наслаждайтесь жизнью.
+
+Если что-то не получается, не отчаивайтесь и обратитесь к тому, кто это напрограммировал.
