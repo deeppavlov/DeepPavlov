@@ -43,7 +43,7 @@ def main():
                 if '\n' in answer:
                     answer = answer.split('\n')[0]
                 print(answer)
-            writer.writerow(query, *answers)
+            writer.writerow([query, *answers])
         except Exception:
             print("Я не знаю ответ.")
 
