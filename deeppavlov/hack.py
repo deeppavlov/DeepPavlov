@@ -34,7 +34,7 @@ chainer = build_model_from_config(read_json(CONFIG_PATH))
 
 def main():
     while True:
-        with open('conversation_result.csv', 'w', newline='') as csvfile:
+        with open('conversation_result.csv', 'w') as csvfile:
             writer = csv.writer(csvfile, delimiter=';')
         try:
             query = input("Question: ")
@@ -44,8 +44,13 @@ def main():
                     answer = answer.split('\n')[0]
                 print(answer)
             writer.writerow([query, *answers])
-        except Exception:
-            print("Я не знаю ответ.")
+        except IndexError:
+            answer = "Я не знаю ответ."
+            try:
+                writer.writerow([query, answer*3])
+            except Exception:
+                writer.writerow(["Неизвестный вопрос.", answer*3])
+            print(answer * 3)
 
 
 if __name__ == "__main__":
