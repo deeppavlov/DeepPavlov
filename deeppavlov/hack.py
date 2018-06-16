@@ -40,18 +40,17 @@ def main():
             try:
                 query = input("Question: ")
                 answers = chainer([query.strip()])
+                answers = [a.split('\n') if '\n' in a else a for a in answers]
                 for answer in answers:
-                    if '\n' in answer:
-                        answer = answer.split('\n')[0]
                     print(answer)
                 writer.writerow([query, *answers])
             except Exception:
                 answer = "Я не знаю ответ."
                 try:
-                    writer.writerow([query, [answer]*3])
+                    writer.writerow([query] + [answer*3])
                 except Exception:
-                    writer.writerow(["Неизвестный вопрос.", [answer]*3])
-                print(answer * 3)
+                    writer.writerow(["Неизвестный вопрос."] + [answer*3])
+                print("\n".format(answer) * 3)
 
 
 if __name__ == "__main__":
