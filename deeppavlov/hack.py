@@ -34,13 +34,13 @@ chainer = build_model_from_config(read_json(CONFIG_PATH))
 
 
 def main():
-    with open('conversation_result.csv', 'w') as csvfile:
+    with open('conversation_result.csv', 'a') as csvfile:
         while True:
             writer = csv.writer(csvfile, delimiter=';')
             try:
                 query = input("Question: ")
                 answers = chainer([query.strip()])
-                answers = [a.split('\n') if '\n' in a else a for a in answers]
+                answers = [a.split('\n')[0] if '\n' in a else a for a in answers]
                 for answer in answers:
                     print(answer)
                 writer.writerow([query, *answers])
