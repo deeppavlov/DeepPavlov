@@ -343,74 +343,29 @@ class ParamsEvolution:
             parents = population[np.where(rs[0] > intervals)[0][-1]], population[np.where(rs[1] > intervals)[0][-1]]
 
             if self.decision(p_crossover):
-                dataset_iterator_params_perm = np.random.permutation(self.n_evolving_dataset_iterator_params)
                 params_perm = np.random.permutation(self.n_evolving_params)
-                train_params_perm = np.random.permutation(self.n_evolving_train_params)
 
                 curr_offsprings = [deepcopy(parents[0]),
                                    deepcopy(parents[1])]
 
-                dataset_iterator_part = int(crossover_power * self.n_evolving_dataset_iterator_params)
                 part = int(crossover_power * self.n_evolving_params)
-                train_part = int(crossover_power * self.n_evolving_train_params)
 
-                # exchange of dataset_iterator params
-                for j in range(self.n_evolving_dataset_iterator_params - dataset_iterator_part):
-                    curr_offsprings[0]["dataset_iterator"][
-                        self.evolving_dataset_iterator_params[dataset_iterator_params_perm[j]]] = \
-                        parents[0]["dataset_iterator"][
-                        self.evolving_dataset_iterator_params[dataset_iterator_params_perm[j]]]
-                    curr_offsprings[1]["dataset_iterator"][
-                        self.evolving_dataset_iterator_params[dataset_iterator_params_perm[j]]] = \
-                        parents[1]["dataset_iterator"][
-                        self.evolving_dataset_iterator_params[dataset_iterator_params_perm[j]]]
-                for j in range(self.n_evolving_dataset_iterator_params - dataset_iterator_part,
-                               self.n_evolving_dataset_iterator_params):
-                    curr_offsprings[0]["dataset_iterator"][
-                        self.evolving_dataset_iterator_params[dataset_iterator_params_perm[j]]] = \
-                        parents[1]["dataset_iterator"][
-                        self.evolving_dataset_iterator_params[dataset_iterator_params_perm[j]]]
-                    curr_offsprings[1]["dataset_iterator"][
-                        self.evolving_dataset_iterator_params[dataset_iterator_params_perm[j]]] = \
-                        parents[0]["dataset_iterator"][
-                        self.evolving_dataset_iterator_params[dataset_iterator_params_perm[j]]]
-
-                # exchange of model params (not layers params)
-                for j in range(self.n_evolving_params - part):
-                    curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][
-                        self.evolving_params[params_perm[j]]] = parents[0][
-                        "chainer"]["pipe"][self.model_to_evolve_index][
-                        self.evolving_params[params_perm[j]]]
-                    curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][
-                        self.evolving_params[params_perm[j]]] = parents[1][
-                        "chainer"]["pipe"][self.model_to_evolve_index][
-                        self.evolving_params[params_perm[j]]]
                 for j in range(self.n_evolving_params - part, self.n_evolving_params):
-                    curr_offsprings[0]["chainer"]["pipe"][self.model_to_evolve_index][
-                        self.evolving_params[params_perm[j]]] = parents[1][
-                        "chainer"]["pipe"][self.model_to_evolve_index][
-                        self.evolving_params[params_perm[j]]]
-                    curr_offsprings[1]["chainer"]["pipe"][self.model_to_evolve_index][
-                        self.evolving_params[params_perm[j]]] = parents[0][
-                        "chainer"]["pipe"][self.model_to_evolve_index][
-                        self.evolving_params[params_perm[j]]]
+                    curr_offsprings[0] = self._insert_value_or_dict_into_config(curr_offsprings[0],
+                                                                                self.paths_to_evolving_params[
+                                                                                    params_perm[j]],
+                                                                                self._get_value_from_config(
+                                                                                    parents[1],
+                                                                                    self.paths_to_evolving_params[
+                                                                                        params_perm[j]]))
 
-                # exchange of train params
-                for j in range(self.n_evolving_train_params - train_part):
-                    curr_offsprings[0]["train"][
-                        self.evolving_train_params[train_params_perm[j]]] = parents[0]["train"][
-                        self.evolving_train_params[train_params_perm[j]]]
-                    curr_offsprings[1]["train"][
-                        self.evolving_train_params[train_params_perm[j]]] = parents[1]["train"][
-                        self.evolving_train_params[train_params_perm[j]]]
-                for j in range(self.n_evolving_train_params - train_part, self.n_evolving_train_params):
-                    curr_offsprings[0]["train"][
-                        self.evolving_train_params[train_params_perm[j]]] = parents[1]["train"][
-                        self.evolving_train_params[train_params_perm[j]]]
-                    curr_offsprings[1]["train"][
-                        self.evolving_train_params[train_params_perm[j]]] = parents[0]["train"][
-                        self.evolving_train_params[train_params_perm[j]]]
-
+                    curr_offsprings[1] = self._insert_value_or_dict_into_config(curr_offsprings[1],
+                                                                                self.paths_to_evolving_params[
+                                                                                    params_perm[j]],
+                                                                                self._get_value_from_config(
+                                                                                    parents[0],
+                                                                                    self.paths_to_evolving_params[
+                                                                                        params_perm[j]]))
                 offsprings.append(deepcopy(curr_offsprings[0]))
             else:
                 offsprings.append(deepcopy(parents[0]))
