@@ -3,7 +3,6 @@ from copy import deepcopy
 from pathlib import Path
 import json
 
-from deeppavlov.models.evolution.utils import find_index_of_dict_with_key_in_pipe
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
 
@@ -48,8 +47,8 @@ class ParamsEvolution:
         """
 
         self.basic_config = deepcopy(kwargs)
-        self.main_model_path = list(self._find_model_path(self.basic_config, key_main_model))[0]
-        Path(self._get_value_from_config(self.basic_config, self.main_model_path + ["save_path"])).mkdir(parents=True,
+        self.main_model_path = list(self.find_model_path(self.basic_config, key_main_model))[0]
+        Path(self.get_value_from_config(self.basic_config, self.main_model_path + ["save_path"])).mkdir(parents=True,
                                                                                                          exist_ok=True)
         self.print_dict(self.basic_config, string="Basic config:")
         log.info("Main model path in config: {}".format(self.main_model_path))
@@ -66,7 +65,7 @@ class ParamsEvolution:
 
         self.paths_to_evolving_params = []
         for evolve_type in ["evolve_range", "evolve_choice", "evolve_bool"]:
-            for path_ in self._find_model_path(self.basic_config, evolve_type):
+            for path_ in self.find_model_path(self.basic_config, evolve_type):
                 self.paths_to_evolving_params.append(path_)
 
         self.n_evolving_params = len(self.paths_to_evolving_params)
@@ -77,7 +76,7 @@ class ParamsEvolution:
         else:
             np.random.seed(seed)
 
-    def _find_model_path(self, config, key_model, path=[]):
+    def find_model_path(self, config, key_model, path=[]):
         """
         Find path to the main model in config which paths will be changed
         Args:
@@ -95,15 +94,15 @@ class ParamsEvolution:
         else:
             if type(config_pointer) is dict:
                 for key in list(config_pointer.keys()):
-                    for path_ in self._find_model_path(config_pointer[key], key_model, path + [key]):
+                    for path_ in self.find_model_path(config_pointer[key], key_model, path + [key]):
                         yield path_
             elif type(config_pointer) is list:
                 for i in range(len(config_pointer)):
-                    for path_ in self._find_model_path(config_pointer[i], key_model, path + [i]):
+                    for path_ in self.find_model_path(config_pointer[i], key_model, path + [i]):
                         yield path_
 
     @staticmethod
-    def _insert_value_or_dict_into_config(config, path, value):
+    def insert_value_or_dict_into_config(config, path, value):
         config_copy = deepcopy(config)
         config_pointer = config_copy
         for el in path[:-1]:
@@ -117,7 +116,7 @@ class ParamsEvolution:
         return config_copy
 
     @staticmethod
-    def _get_value_from_config(config, path):
+    def get_value_from_config(config, path):
         config_copy = deepcopy(config)
         config_pointer = config_copy
         for el in path[:-1]:
@@ -143,22 +142,22 @@ class ParamsEvolution:
 
         for path_ in paths:
             param_name = path_[-1]
-            value = self._get_value_from_config(basic_config, path_)
+            value = self.get_value_from_config(basic_config, path_)
             if type(value) is dict:
                 if value.get("evolve_choice"):
-                    config = self._insert_value_or_dict_into_config(config,
+                    config = self.insert_value_or_dict_into_config(config,
                                                                     path_,
                                                                     self.sample_params(
                                                                         **{param_name:
                                                                                list(value["values"])})[param_name])
                 elif value.get("evolve_range"):
-                    config = self._insert_value_or_dict_into_config(config,
+                    config = self.insert_value_or_dict_into_config(config,
                                                                     path_,
                                                                     self.sample_params(
                                                                         **{param_name:
                                                                                deepcopy(value)})[param_name])
                 elif value.get("evolve_bool"):
-                    config = self._insert_value_or_dict_into_config(config,
+                    config = self.insert_value_or_dict_into_config(config,
                                                                     path_,
                                                                     self.sample_params(
                                                                         **{param_name:
@@ -176,7 +175,7 @@ class ParamsEvolution:
         for i in range(self.population_size):
             population.append(self.initialize_params_in_config(self.basic_config, self.paths_to_evolving_params))
             for which_path in ["save_path", "load_path"]:
-                population[-1] = self._insert_value_or_dict_into_config(population[-1],
+                population[-1] = self.insert_value_or_dict_into_config(population[-1],
                                                                         self.main_model_path + [which_path],
                                                                         str(Path(
                                                                             self.basic_config["save_path"]).joinpath(
@@ -219,11 +218,11 @@ class ParamsEvolution:
                                                                 + "_" + str(iteration % self.train_partition) + ".csv"
             try:
                 # re-init learning rate with the final one (works for KerasModel)
-                next_population[i] = self._insert_value_or_dict_into_config(
+                next_population[i] = self.insert_value_or_dict_into_config(
                     next_population[i],
-                    self._get_value_from_config(next_population[i],
+                    self.get_value_from_config(next_population[i],
                                                 self.main_model_path + ["lear_rate"]),
-                    read_json(str(Path(self._get_value_from_config(next_population[i],
+                    read_json(str(Path(self.get_value_from_config(next_population[i],
                                                                    self.main_model_path + ["save_path"])
                                        ).parent.joinpath("model_opt.json")))["final_lear_rate"])
             except:
@@ -231,26 +230,26 @@ class ParamsEvolution:
 
             if self.elitism_with_weights:
                 # if elite models are saved with weights
-                next_population[i] = self._insert_value_or_dict_into_config(
+                next_population[i] = self.insert_value_or_dict_into_config(
                     next_population[i],
-                    self._get_value_from_config(next_population[i],
+                    self.get_value_from_config(next_population[i],
                                                 self.main_model_path + ["load_path"]),
-                    str(Path(self._get_value_from_config(next_population[i],
+                    str(Path(self.get_value_from_config(next_population[i],
                                                          self.main_model_path + ["save_path"])).parent))
             else:
                 # if elite models are saved only as configurations and trained again
-                next_population[i] = self._insert_value_or_dict_into_config(
+                next_population[i] = self.insert_value_or_dict_into_config(
                     next_population[i],
-                    self._get_value_from_config(next_population[i],
+                    self.get_value_from_config(next_population[i],
                                                 self.main_model_path + ["load_path"]),
-                    str(Path(self._get_value_from_config(next_population[i], self.main_model_path + ["load_path"])
+                    str(Path(self.get_value_from_config(next_population[i], self.main_model_path + ["load_path"])
                              ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i))))
 
-            next_population[i] = self._insert_value_or_dict_into_config(
+            next_population[i] = self.insert_value_or_dict_into_config(
                 next_population[i],
-                self._get_value_from_config(next_population[i],
+                self.get_value_from_config(next_population[i],
                                             self.main_model_path + ["save_path"]),
-                str(Path(self._get_value_from_config(next_population[i], self.main_model_path + ["save_path"])
+                str(Path(self.get_value_from_config(next_population[i], self.main_model_path + ["save_path"])
                          ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i))))
 
         for i in range(self.n_saved_best_pretrained, self.population_size):
@@ -260,11 +259,11 @@ class ParamsEvolution:
                                                                                   "train"]).stem.split("_")[:-1])) \
                                                             + "_" + str(iteration % self.train_partition) + ".csv"
             for which_path in ["save_path", "load_path"]:
-                next_population[i] = self._insert_value_or_dict_into_config(
+                next_population[i] = self.insert_value_or_dict_into_config(
                     next_population[i],
-                    self._get_value_from_config(next_population[i],
+                    self.get_value_from_config(next_population[i],
                                                 self.main_model_path + [which_path]),
-                    str(Path(self._get_value_from_config(next_population[i], self.main_model_path + [which_path])
+                    str(Path(self.get_value_from_config(next_population[i], self.main_model_path + [which_path])
                              ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i))))
 
             next_population[i]["evolution_model_id"] = self.evolution_model_id
@@ -337,18 +336,18 @@ class ParamsEvolution:
                 part = int(self.crossover_power * self.n_evolving_params)
 
                 for j in range(self.n_evolving_params - part, self.n_evolving_params):
-                    curr_offsprings[0] = self._insert_value_or_dict_into_config(curr_offsprings[0],
+                    curr_offsprings[0] = self.insert_value_or_dict_into_config(curr_offsprings[0],
                                                                                 self.paths_to_evolving_params[
                                                                                     params_perm[j]],
-                                                                                self._get_value_from_config(
+                                                                                self.get_value_from_config(
                                                                                     parents[1],
                                                                                     self.paths_to_evolving_params[
                                                                                         params_perm[j]]))
 
-                    curr_offsprings[1] = self._insert_value_or_dict_into_config(curr_offsprings[1],
+                    curr_offsprings[1] = self.insert_value_or_dict_into_config(curr_offsprings[1],
                                                                                 self.paths_to_evolving_params[
                                                                                     params_perm[j]],
-                                                                                self._get_value_from_config(
+                                                                                self.get_value_from_config(
                                                                                     parents[0],
                                                                                     self.paths_to_evolving_params[
                                                                                         params_perm[j]]))
@@ -374,16 +373,16 @@ class ParamsEvolution:
         for individuum in population:
             mutated_individuum = deepcopy(individuum)
             for path_ in self.paths_to_evolving_params:
-                mutated_individuum = self._insert_value_or_dict_into_config(
+                mutated_individuum = self.insert_value_or_dict_into_config(
                     mutated_individuum, path_,
-                    self.mutation_of_param(path_, self._get_value_from_config(individuum, path_)))
+                    self.mutation_of_param(path_, self.get_value_from_config(individuum, path_)))
             mutated.append(mutated_individuum)
 
         return mutated
 
     def mutation_of_param(self, param_path, param_value):
         if self.decision(self.p_mutation):
-            basic_value = self._get_value_from_config(self.basic_config, param_path)
+            basic_value = self.get_value_from_config(self.basic_config, param_path)
             param_name = param_path[-1]
             if type(basic_value) is dict:
                 if basic_value.get('discrete', False):

@@ -19,7 +19,6 @@ from pathlib import Path
 
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.common.file import read_json, save_json
-from deeppavlov.models.evolution.utils import find_index_of_dict_with_key_in_pipe
 
 
 config_path = sys.argv[1]

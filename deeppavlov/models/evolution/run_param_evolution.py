@@ -103,17 +103,22 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--config', help='Please, enter model path to config')
 parser.add_argument('--evolve_metric', help='Please, choose target metric out of given in your config.train.metrics')
+
+parser.add_argument('--p_cross', help='Please, enter probability of crossover', type=float, default=0.2)
+parser.add_argument('--pow_cross', help='Please, enter crossover power', type=float, default=0.1)
+parser.add_argument('--p_mut', help='Please, enter probability of mutation', type=float, default=1.)
+parser.add_argument('--pow_mut', help='Please, enter mutation power', type=float, default=0.1)
+
 parser.add_argument('--p_size', help='Please, enter population size', type=int, default=10)
-parser.add_argument('--gpus', help='Please, enter the list of visible GPUs', default=0)
+parser.add_argument('--gpus', help='Please, enter the list of visible GPUs', default="0")
 parser.add_argument('--train_partition',
-                    help='Please, enter partition of splitted train',
-                    default=1)
+                    help='Please, enter partition of splitted train', default=1)
 parser.add_argument('--start_from_population',
-                    help='Please, enter the population number to start from. 0 means from scratch',
-                    default=0)
+                    help='Please, enter the population number to start from. 0 means from scratch', default=0)
 parser.add_argument('--path_to_population',
-                    help='Please, enter the path to population to start from',
-                    default="")
+                    help='Please, enter the path to population to start from', default="")
+parser.add_argument('--elitism_with_weights',
+                    help='Please, enter whether to save elite models with weights or not', default=False)
 
 args = parser.parse_args()
 
@@ -125,44 +130,49 @@ gpus = [int(gpu) for gpu in args.gpus.split(",")]
 TRAIN_PARTITION = int(args.train_partition)
 START_FROM_POPULATION = int(args.start_from_population)
 PATH_TO_POPULATION = args.path_to_population
+ELITISM_WITH_WEIGHTS = args.elitism_with_weights
+
+P_CROSSOVER = args.p_cross
+POW_CROSSOVER = args.pow_cross
+P_MUTATION = args.p_mut
+POW_MUTATION = args.pow_mut
 
 with open(CONFIG_FILE, "r") as f:
     basic_params = json.load(f)
 
-print("Given basic params: {}\n".format(basic_params))
+print("Given basic params: {}\n".format(json.dumps(basic_params, indent=2)))
 
-# list of names of considered metrics
-CONSIDERED_METRICS = basic_params["train"]["metrics"]
-TEST = basic_params["train"]["test_best"]
-
-
-# EVOLUTION starts here!
 evolution = ParamsEvolution(population_size=POPULATION_SIZE,
-                            p_crossover=0.2, crossover_power=0.1,
-                            p_mutation=1., mutation_power=0.1,
+                            p_crossover=P_CROSSOVER, crossover_power=POW_CROSSOVER,
+                            p_mutation=P_MUTATION, mutation_power=POW_MUTATION,
                             key_model_to_evolve="to_evolve",
                             key_basic_layers="basic_layers_params",
                             seed=42,
                             train_partition=TRAIN_PARTITION,
+                            elitism_with_weights=ELITISM_WITH_WEIGHTS,
                             **basic_params)
+
+CONSIDERED_METRICS = evolution.get_value_from_config(evolution.basic_config,
+                                                     list(evolution.find_model_path(
+                                                         evolution.basic_config, "metrics"))[0])
+TEST = evolution.get_value_from_config(evolution.basic_config,
+                                       list(evolution.find_model_path(
+                                           evolution.basic_config, "test_best"))[0])
 
 # Result table
 order = deepcopy(CONSIDERED_METRICS)
-order.extend(["params"])
-result_file = Path(basic_params["chainer"]["pipe"][
-                       evolution.model_to_evolve_index]["save_path"]).joinpath("result_table.csv")
+result_file = Path(evolution.get_value_from_config(evolution.basic_config,
+                                                   evolution.main_model_path + ["save_path"])
+                   ).joinpath("result_table.csv")
 result_table_columns = []
-
 result_table_dict = {}
 for el in order:
-    if el == "params":
-        result_table_dict[el] = []
-        result_table_columns.extend([el])
-    else:
-        result_table_dict[el + "_valid"] = []
-        result_table_dict[el + "_test"] = []
-        result_table_columns.extend([el + "_valid", el + "_test"])
+    result_table_dict[el + "_valid"] = []
+    result_table_dict[el + "_test"] = []
+    result_table_columns.extend([el + "_valid", el + "_test"])
 
+order.extend(["params"])
+result_table_dict["params"] = []
 result_table_columns.append("params")
 
 if START_FROM_POPULATION == 0:
@@ -173,24 +183,24 @@ if START_FROM_POPULATION == 0:
     population = evolution.first_generation()
     print(population)
     population_scores = score_population(population, POPULATION_SIZE, result_file)[EVOLVE_METRIC]
-
     iters = 1
 else:
-    # to define some clue params of evolution
-    _ = evolution.first_generation()
+    # _ = evolution.first_generation()
     iters = START_FROM_POPULATION
     print("\nIteration #{} starts\n".format(iters))
-    model_name = basic_params["chainer"]["pipe"][evolution.model_to_evolve_index]["model_name"]
-    population = []
 
+    population = []
     for i in range(POPULATION_SIZE):
         population.append(read_json(Path(PATH_TO_POPULATION).joinpath(
-            model_name + "_" + str(i)).joinpath("config.json")))
-        population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"] = \
-            str(Path(basic_params["chainer"]["pipe"][evolution.model_to_evolve_index]["save_path"]).joinpath(
-                "population_" + str(START_FROM_POPULATION)).joinpath(model_name + "_" + str(i)))
-        population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["load_path"] = \
-            str(Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index]["load_path"]).parent)
+            "model_" + str(i)).joinpath("config.json")))
+        population[i] = evolution.insert_value_or_dict_into_config(
+            population[i], evolution.main_model_path + ["save_path"],
+            str(Path(evolution.get_value_from_config(evolution.basic_config, evolution.main_model_path + ["save_path"])
+                     ).joinpath("population_" + str(START_FROM_POPULATION)).joinpath("model_" + str(i))))
+
+        population[i] = evolution.insert_value_or_dict_into_config(
+            population[i], evolution.main_model_path + ["load_path"],
+            str(Path(evolution.get_value_from_config(population[i], evolution.main_model_path + ["load_path"]).parent)))
 
     population_scores = score_population(population, POPULATION_SIZE, result_file)[EVOLVE_METRIC]
     print("Population scores: {}".format(population_scores))
@@ -200,7 +210,6 @@ else:
 while True:
     print("\nIteration #{} starts\n".format(iters))
     population = evolution.next_generation(population, population_scores, iters)
-    # print("Considered population: {}\nScoring...\n".format(population))
     population_scores = score_population(population, POPULATION_SIZE, result_file)[EVOLVE_METRIC]
     print("Population scores: {}".format(population_scores))
     print("\nIteration #{} was done\n".format(iters))

@@ -237,15 +237,3 @@ def expand_tile_batch_size(memory, context):
         expanded = K.reshape(context, shape=((1,) + K.int_shape(context)))
     return K.tile(expanded, repetitions)
 
-
-def find_index_of_dict_with_key_in_pipe(pipe, key):
-    for element_id, element in enumerate(pipe):
-        if check_whether_key_in_dict(element, key):
-            return element_id
-
-
-def check_whether_key_in_dict(model, key):
-    if key in model.keys():
-        return True
-    else:
-        return False
