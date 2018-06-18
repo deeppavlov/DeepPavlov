@@ -2,7 +2,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
 
-@register('vocab_intersection')
+@register('tokens_matcher')
 class TokensMatcher(Component):
     def __init__(self, words, *args, **kwargs):
         self.words = set(words)
