@@ -85,7 +85,7 @@ def start_model_server(model_config_path):
         return redirect('/apidocs/')
 
     @app.route(model_endpoint, methods=['POST'])
-    def answer_intents():
+    def answer():
         """
         Skill
         ---

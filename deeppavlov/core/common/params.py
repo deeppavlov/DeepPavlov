@@ -14,7 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import importlib
-from typing import Dict, Type
+import inspect
+from typing import Dict
 
 from deeppavlov.core.commands.utils import expand_path, get_deeppavlov_root, set_deeppavlov_root
 from deeppavlov.core.common.file import read_json
@@ -43,7 +44,20 @@ def _resolve(val):
     return val
 
 
-def from_params(params: Dict, **kwargs) -> Component:
+def _init_param(param, mode):
+    if isinstance(param, str):
+        param = _resolve(param)
+    elif isinstance(param, (list, tuple)):
+        param = [_init_param(p, mode) for p in param]
+    elif isinstance(param, dict):
+        if {'ref', 'name', 'class', 'config_path'}.intersection(param.keys()):
+            param = from_params(param, mode=mode)
+        else:
+            param = {k: _init_param(v, mode) for k, v in param.items()}
+    return param
+
+
+def from_params(params: Dict, mode='infer', **kwargs) -> Component:
     # what is passed in json:
     config_params = {k: _resolve(v) for k, v in params.items()}
 
@@ -60,9 +74,13 @@ def from_params(params: Dict, **kwargs) -> Component:
     elif 'config_path' in config_params:
         from deeppavlov.core.commands.infer import build_model_from_config
         deeppavlov_root = get_deeppavlov_root()
+        refs = _refs.copy()
+        _refs.clear()
         config = read_json(expand_path(config_params['config_path']))
         model = build_model_from_config(config, as_component=True)
         set_deeppavlov_root({'deeppavlov_root': deeppavlov_root})
+        _refs.clear()
+        _refs.update(refs)
         return model
 
     elif 'class' in config_params:
@@ -89,20 +107,13 @@ def from_params(params: Dict, **kwargs) -> Component:
             raise e
 
     # find the submodels params recursively
-    for param_name, subcls_params in config_params.items():
-        if isinstance(subcls_params, dict):
-            if not {'ref', 'name', 'class', 'config_path'}.intersection(subcls_params):
-                "This parameter is passed as dict to the class constructor."
-                " The user didn't intent it to be a component."
-                for k, v in subcls_params.items():
-                    subcls_params[k] = _resolve(v)
-                continue
-
-            config_params[param_name] = from_params(subcls_params,
-                                                    vocabs=kwargs['vocabs'],
-                                                    mode=kwargs['mode'])
+    config_params = {k: _init_param(v, mode) for k, v in config_params.items()}
 
     try:
+        spec = inspect.getfullargspec(cls)
+        if 'mode' in spec.args+spec.kwonlyargs or spec.varkw is not None:
+            kwargs['mode'] = mode
+
         component = cls(**dict(config_params, **kwargs))
         try:
             _refs[config_params['id']] = component
