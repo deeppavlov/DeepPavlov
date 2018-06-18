@@ -30,7 +30,7 @@ class ParamsEvolution:
                  key_main_model="main",
                  seed=None,
                  train_partition=1,
-                 load_pretrained=False,
+                 elitism_with_weights=False,
                  **kwargs):
         """
         Initialize evolution with random population
@@ -59,7 +59,7 @@ class ParamsEvolution:
         self.p_mutation = p_mutation
         self.mutation_power = mutation_power
         self.crossover_power = crossover_power
-        self.load_pretrained = load_pretrained
+        self.elitism_with_weights = elitism_with_weights
 
         self.n_saved_best_pretrained = 0
         self.train_partition = train_partition
@@ -242,12 +242,23 @@ class ParamsEvolution:
                                        ).parent.joinpath("model_opt.json")))["final_lear_rate"])
             except:
                 pass
-            next_population[i] = self._insert_value_or_dict_into_config(
-                next_population[i],
-                self._get_value_from_config(next_population[i],
-                                            self.main_model_path + ["load_path"]),
-                str(Path(self._get_value_from_config(next_population[i],
-                                                     self.main_model_path + ["save_path"])).parent))
+
+            if self.elitism_with_weights:
+                # if elite models are saved with weights
+                next_population[i] = self._insert_value_or_dict_into_config(
+                    next_population[i],
+                    self._get_value_from_config(next_population[i],
+                                                self.main_model_path + ["load_path"]),
+                    str(Path(self._get_value_from_config(next_population[i],
+                                                         self.main_model_path + ["save_path"])).parent))
+            else:
+                # if elite models are saved only as configurations and trained again
+                next_population[i] = self._insert_value_or_dict_into_config(
+                    next_population[i],
+                    self._get_value_from_config(next_population[i],
+                                                self.main_model_path + ["load_path"]),
+                    str(Path(self._get_value_from_config(next_population[i], self.main_model_path + ["load_path"])
+                             ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i))))
 
             next_population[i] = self._insert_value_or_dict_into_config(
                 next_population[i],
