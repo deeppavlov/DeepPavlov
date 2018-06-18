@@ -187,9 +187,7 @@ class ParamsEvolution:
 
         return population
 
-    def next_generation(self, generation, scores, iteration,
-                        p_crossover=None, crossover_power=None,
-                        p_mutation=None, mutation_power=None):
+    def next_generation(self, generation, scores, iteration):
         """
         Provide an operation of replacement
         Args:
@@ -204,24 +202,12 @@ class ParamsEvolution:
         Returns:
             the next generation according to the given scores of current generation
         """
-        if not p_crossover:
-            p_crossover = self.p_crossover
-        if not crossover_power:
-            crossover_power = self.crossover_power
-        if not p_mutation:
-            p_mutation = self.p_mutation
-        if not mutation_power:
-            mutation_power = self.mutation_power
 
         next_population = self.selection_of_best_with_weights(generation, scores)
         print("Saved with weights: {} individuums".format(self.n_saved_best_pretrained))
-        offsprings = self.crossover(generation, scores,
-                                    p_crossover=p_crossover,
-                                    crossover_power=crossover_power)
+        offsprings = self.crossover(generation, scores)
 
-        changable_next = self.mutation(offsprings,
-                                       p_mutation=p_mutation,
-                                       mutation_power=mutation_power)
+        changable_next = self.mutation(offsprings)
 
         next_population.extend(changable_next)
 
@@ -319,7 +305,7 @@ class ParamsEvolution:
         self.n_saved_best_pretrained = len(selected)
         return selected
 
-    def crossover(self, population, scores, p_crossover, crossover_power):
+    def crossover(self, population, scores):
         """
         Recombine randomly population in pairs and cross over them with given probability.
         Cross over from two parents produces two offsprings
@@ -342,13 +328,13 @@ class ParamsEvolution:
             rs = np.random.random(2)
             parents = population[np.where(rs[0] > intervals)[0][-1]], population[np.where(rs[1] > intervals)[0][-1]]
 
-            if self.decision(p_crossover):
+            if self.decision(self.p_crossover):
                 params_perm = np.random.permutation(self.n_evolving_params)
 
                 curr_offsprings = [deepcopy(parents[0]),
                                    deepcopy(parents[1])]
 
-                part = int(crossover_power * self.n_evolving_params)
+                part = int(self.crossover_power * self.n_evolving_params)
 
                 for j in range(self.n_evolving_params - part, self.n_evolving_params):
                     curr_offsprings[0] = self._insert_value_or_dict_into_config(curr_offsprings[0],
@@ -372,7 +358,7 @@ class ParamsEvolution:
 
         return offsprings
 
-    def mutation(self, population, p_mutation, mutation_power):
+    def mutation(self, population):
         """
         Mutate each parameter of each individuum in population with probability p_mutation
         Args:
@@ -387,53 +373,35 @@ class ParamsEvolution:
 
         for individuum in population:
             mutated_individuum = deepcopy(individuum)
-
-            # mutation of dataset iterator params
-            for param in self.dataset_iterator_params.keys():
-                mutated_individuum["dataset_iterator"][param] = \
-                    self.mutation_of_param(param, self.dataset_iterator_params,
-                                           individuum["dataset_iterator"][param],
-                                           p_mutation, mutation_power)
-
-            # mutation of other model params
-            for param in self.params.keys():
-                mutated_individuum["chainer"]["pipe"][self.model_to_evolve_index][param] = \
-                    self.mutation_of_param(param, self.params,
-                                           individuum["chainer"]["pipe"][self.model_to_evolve_index][param],
-                                           p_mutation, mutation_power)
-
-            # mutation of train params
-            for param in self.train_params.keys():
-                mutated_individuum["train"][param] = \
-                    self.mutation_of_param(param, self.train_params,
-                                           individuum["train"][param],
-                                           p_mutation, mutation_power)
-
+            for path_ in self.paths_to_evolving_params:
+                mutated_individuum = self._insert_value_or_dict_into_config(
+                    mutated_individuum, path_,
+                    self.mutation_of_param(path_, self._get_value_from_config(individuum, path_)))
             mutated.append(mutated_individuum)
 
         return mutated
 
-    def mutation_of_param(self, param, params_dict, param_value, p_mutation, mutation_power):
-        new_mutated_value = deepcopy(param_value)
-        if self.decision(p_mutation):
-            if type(params_dict[param]) is dict:
-                if params_dict[param].get('discrete', False):
+    def mutation_of_param(self, param_path, param_value):
+        if self.decision(self.p_mutation):
+            basic_value = self._get_value_from_config(self.basic_config, param_path)
+            param_name = param_path[-1]
+            if type(basic_value) is dict:
+                if basic_value.get('discrete', False):
                     val = round(param_value +
-                                ((2 * np.random.random() - 1.) * mutation_power
-                                 * self.sample_params(**{param: params_dict[param]})[param]))
-                    val = min(max(params_dict[param]["evolve_range"][0], val),
-                              params_dict[param]["evolve_range"][1])
+                                ((2 * np.random.random() - 1.) * self.mutation_power
+                                 * self.sample_params(**{param_name: basic_value})[param_name]))
+                    val = min(max(basic_value["evolve_range"][0], val),
+                              basic_value["evolve_range"][1])
                     new_mutated_value = val
-                elif 'evolve_range' in params_dict[param].keys():
+                elif 'evolve_range' in basic_value.keys():
                     val = param_value + \
-                          ((2 * np.random.random() - 1.) * mutation_power
-                           * self.sample_params(**{param: params_dict[param]})[param])
-                    val = min(max(params_dict[param]["evolve_range"][0], val),
-                              params_dict[param]["evolve_range"][1])
+                          ((2 * np.random.random() - 1.) * self.mutation_power
+                           * self.sample_params(**{param_name: basic_value})[param_name])
+                    val = min(max(basic_value["evolve_range"][0], val),
+                              basic_value["evolve_range"][1])
                     new_mutated_value = val
-                elif params_dict[param].get("evolve_choice"):
-                    # new_mutated_value = param_value
-                    new_mutated_value = self.sample_params(**{param: params_dict[param]})[param]
+                elif basic_value.get("evolve_choice"):
+                    new_mutated_value = self.sample_params(**{param_name: basic_value})[param_name]
                 else:
                     new_mutated_value = param_value
             else:
