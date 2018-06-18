@@ -123,8 +123,20 @@
     ]
   },
   "train": {
-    "epochs": 100,
-    "batch_size": 64,
+    "epochs": {
+      "range": [
+        50,
+        500
+      ],
+      "discrete": true
+    },
+    "batch_size": {
+      "range": [
+        50,
+        500
+      ],
+      "discrete": true
+    },
     "metrics": [
       "classification_accuracy",
       "classification_f1",
