@@ -13,11 +13,21 @@ class RandomSelector(Component):
         return [random.choice([t for t, sc in r if t]) for r in zip(*responses)]
 
 
+class HighestConfidenceSelector(Component):
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, utterances, batch_history, *responses):
+        responses, confidences = zip(*[zip(*r) for r in responses])
+        indexes = [c.index(max(c)) for c in zip(*confidences)]
+        return [responses[i] for i, *responses in zip(indexes, *responses)]
+
+
 class Agent(Component):
     def __init__(self, skills: List[Component], skills_selector=None, skills_filter=None, *args, **kwargs):
         self.skills = skills
         self.skills_filter = skills_filter or (lambda u, _: [[True] * len(skills)] * len(u))
-        self.skills_selector = skills_selector or RandomSelector()
+        self.skills_selector = skills_selector or HighestConfidenceSelector()
         self.history = defaultdict(list)
         self.states = defaultdict(lambda: [None] * len(self.skills))
 
