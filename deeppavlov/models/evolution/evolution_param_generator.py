@@ -3,13 +3,14 @@ from copy import deepcopy
 from pathlib import Path
 import json
 
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
 
 
 log = get_logger(__name__)
 
-
+@register('params_evolution')
 class ParamsEvolution:
     """
     Class performs full evolutionary process (task scores -> max):
