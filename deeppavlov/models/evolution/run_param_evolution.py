@@ -148,9 +148,9 @@ evolution = ParamsEvolution(population_size=POPULATION_SIZE,
                             elitism_with_weights=ELITISM_WITH_WEIGHTS,
                             **basic_params)
 
-CONSIDERED_METRICS = evolution.get_value_from_config(evolution.basic_config,
-                                                     list(evolution.find_model_path(
-                                                         evolution.basic_config, "metrics"))[0])
+CONSIDERED_METRICS = list(evolution.get_value_from_config(evolution.basic_config,
+                                                          list(evolution.find_model_path(
+                                                              evolution.basic_config, "metrics"))[0]).values())
 TEST = evolution.get_value_from_config(evolution.basic_config,
                                        list(evolution.find_model_path(
                                            evolution.basic_config, "test_best"))[0])
