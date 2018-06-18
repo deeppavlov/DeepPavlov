@@ -2,7 +2,7 @@
 
 1. Создайте виртуальную среду Python 3.6. Например, так:
 ```
-virtualenv env
+virtualenv -p python3 env
 ```
 Но лучше conda:
 ```
@@ -31,7 +31,7 @@ python -m spacy download en
 ```
 6. Перейдите в deeppavlov:
 ```
-cd deepapvlov/
+cd deeppavlov/
 ```
 7. Скачайте нужные данные с сервера:
 ```
