@@ -114,7 +114,7 @@ parser.add_argument('--start_from_population',
 parser.add_argument('--path_to_population',
                     help='Please, enter the path to population to start from', default="")
 parser.add_argument('--elitism_with_weights',
-                    help='Please, enter whether to save elite models with weights or not', default=False)
+                    help='Please, enter whether to save elite models with weights or not', default=0)
 
 args = parser.parse_args()
 
@@ -126,7 +126,7 @@ gpus = [int(gpu) for gpu in args.gpus.split(",")]
 TRAIN_PARTITION = int(args.train_partition)
 START_FROM_POPULATION = int(args.start_from_population)
 PATH_TO_POPULATION = args.path_to_population
-ELITISM_WITH_WEIGHTS = args.elitism_with_weights
+ELITISM_WITH_WEIGHTS = int(args.elitism_with_weights)
 
 P_CROSSOVER = args.p_cross
 POW_CROSSOVER = args.pow_cross
