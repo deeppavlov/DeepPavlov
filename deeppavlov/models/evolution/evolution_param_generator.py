@@ -228,38 +228,49 @@ class ParamsEvolution:
         for i in range(self.n_saved_best_pretrained):
             # if several train files:
             if self.train_partition != 1:
-                next_population[i]["dataset_reader"]["train"] = str(Path(next_population[i]["dataset_reader"][
-                                                                             "train"]).stem.split("_")[0]) \
-                                                     + "_" + str(iteration % self.train_partition) + ".csv"
+                next_population[i]["dataset_reader"]["train"] = "_".join(str(Path(next_population[i]["dataset_reader"][
+                                                                                      "train"]).stem.split("_")[:-1])) \
+                                                                + "_" + str(iteration % self.train_partition) + ".csv"
             try:
-                # re-init learning rate with the final one
-                next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["lear_rate"] = \
-                    read_json(str(Path(next_population[i]["chainer"]["pipe"][self.model_to_evolve_index][
-                                           "save_path"]).parent.joinpath("model_opt.json")))["final_lear_rate"]
+                # re-init learning rate with the final one (works for KerasModel)
+                next_population[i] = self._insert_value_or_dict_into_config(
+                    next_population[i],
+                    self._get_value_from_config(next_population[i],
+                                                self.main_model_path + ["lear_rate"]),
+                    read_json(str(Path(self._get_value_from_config(next_population[i],
+                                                                   self.main_model_path + ["save_path"])
+                                       ).parent.joinpath("model_opt.json")))["final_lear_rate"])
             except:
                 pass
-            # paths
-            next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"] = \
-                str(Path(next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"]).parent)
-            next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
-                str(Path(self.params["save_path"]).joinpath("population_" + str(iteration)).joinpath(
-                    self.params["model_name"] + "_" + str(i)))
+            next_population[i] = self._insert_value_or_dict_into_config(
+                next_population[i],
+                self._get_value_from_config(next_population[i],
+                                            self.main_model_path + ["load_path"]),
+                str(Path(self._get_value_from_config(next_population[i],
+                                                     self.main_model_path + ["save_path"])).parent))
+
+            next_population[i] = self._insert_value_or_dict_into_config(
+                next_population[i],
+                self._get_value_from_config(next_population[i],
+                                            self.main_model_path + ["save_path"]),
+                str(Path(self._get_value_from_config(next_population[i], self.main_model_path + ["save_path"])
+                         ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i))))
 
         for i in range(self.n_saved_best_pretrained, self.population_size):
             # if several train files
             if self.train_partition != 1:
-                next_population[i]["dataset_reader"]["train"] = str(Path(next_population[i]["dataset_reader"][
-                                                                             "train"]).stem.split("_")[0]) \
-                                                     + "_" + str(iteration % self.train_partition) + ".csv"
-            # paths
-            next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["save_path"] = \
-                str(Path(self.params["save_path"]).joinpath("population_" + str(iteration)).joinpath(
-                    self.params["model_name"] + "_" + str(i)))
-            next_population[i]["chainer"]["pipe"][self.model_to_evolve_index]["load_path"] = \
-                str(Path(self.params["load_path"]).joinpath("population_" + str(iteration)).joinpath(
-                    self.params["model_name"] + "_" + str(i)))
+                next_population[i]["dataset_reader"]["train"] = "_".join(str(Path(next_population[i]["dataset_reader"][
+                                                                                  "train"]).stem.split("_")[:-1])) \
+                                                            + "_" + str(iteration % self.train_partition) + ".csv"
+            for which_path in ["save_path", "load_path"]:
+                next_population[i] = self._insert_value_or_dict_into_config(
+                    next_population[i],
+                    self._get_value_from_config(next_population[i],
+                                                self.main_model_path + [which_path]),
+                    str(Path(self._get_value_from_config(next_population[i], self.main_model_path + [which_path])
+                             ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i))))
 
-            next_population[i]["train"]["evolution_model_id"] = self.evolution_model_id
+            next_population[i]["evolution_model_id"] = self.evolution_model_id
             self.evolution_model_id += 1
 
         return next_population
