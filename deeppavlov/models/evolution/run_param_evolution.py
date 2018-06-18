@@ -48,28 +48,31 @@ def score_population(population, population_size, result_file):
             proc.wait()
 
     for i in range(population_size):
-        try:
-            val_results = np.loadtxt(fname=str(Path(evolution.get_value_from_config(
-                population[i], evolution.main_model_path + ["save_path"])).parent.joinpath("valid_results.txt")))
-        except OSError or FileNotFoundError:
-            val_results = [None for m in CONSIDERED_METRICS]
-            for m_id, m in enumerate(CONSIDERED_METRICS):
-                if "loss" in m:
-                    val_results[m_id] = 1e6
-                else:
-                    val_results[m_id] = 0.
-        if TEST:
+        with open(str(Path(evolution.get_value_from_config(
+                population[i],
+                evolution.main_model_path + ["save_path"])).parent.joinpath("out.txt")), "r") as fout:
+            reports_data = fout.read().splitlines()[-2:]
+        reports = []
+        for i in range(2):
             try:
-                test_results = np.loadtxt(
-                    fname=str(Path(population[i]["chainer"]["pipe"][evolution.model_to_evolve_index][
-                                       "save_path"]).parent.joinpath("test_results.txt")))
-            except OSError or FileNotFoundError:
-                test_results = [None for m in CONSIDERED_METRICS]
-                for m_id, m in enumerate(CONSIDERED_METRICS):
-                    if "loss" in m:
-                        test_results[m_id] = 1e6
-                    else:
-                        test_results[m_id] = 0.
+                reports.append(json.loads(reports_data[i]))
+            except:
+                pass
+        if len(reports) == 2 and "valid" in reports[0].keys() and "test" in reports[1].keys():
+            val_results = reports[0]
+            test_results = reports[1]
+        elif len(reports) == 1 and "valid" in reports[0].keys():
+            val_results = reports[0]
+        else:
+            val_results = {}
+            test_results = {}
+            for m in CONSIDERED_METRICS:
+                if "loss" in m:
+                    val_results[m] = 1e6
+                    test_results[m] = 1e6
+                else:
+                    val_results[m] = 0.
+                    test_results[m] = 0.
 
         result_table_dict = {}
         for el in order:
@@ -79,9 +82,9 @@ def score_population(population, population_size, result_file):
                 result_table_dict[el + "_valid"] = []
                 result_table_dict[el + "_test"] = []
         for m_id, m in enumerate(CONSIDERED_METRICS):
-            result_table_dict[m + "_valid"].append(val_results[m_id])
+            result_table_dict[m + "_valid"].append(val_results[m])
             if TEST:
-                result_table_dict[m + "_test"].append(test_results[m_id])
+                result_table_dict[m + "_test"].append(test_results[m])
             else:
                 result_table_dict[m + "_test"].append(0.)
         result_table_dict[order[-1]] = [population[i]]
