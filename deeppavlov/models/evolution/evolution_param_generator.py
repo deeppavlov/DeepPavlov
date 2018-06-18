@@ -421,17 +421,17 @@ class ParamsEvolution:
                     val = round(param_value +
                                 ((2 * np.random.random() - 1.) * mutation_power
                                  * self.sample_params(**{param: params_dict[param]})[param]))
-                    val = min(max(params_dict[param]["range"][0], val),
-                              params_dict[param]["range"][1])
+                    val = min(max(params_dict[param]["evolve_range"][0], val),
+                              params_dict[param]["evolve_range"][1])
                     new_mutated_value = val
-                elif 'range' in params_dict[param].keys():
+                elif 'evolve_range' in params_dict[param].keys():
                     val = param_value + \
                           ((2 * np.random.random() - 1.) * mutation_power
                            * self.sample_params(**{param: params_dict[param]})[param])
-                    val = min(max(params_dict[param]["range"][0], val),
-                              params_dict[param]["range"][1])
+                    val = min(max(params_dict[param]["evolve_range"][0], val),
+                              params_dict[param]["evolve_range"][1])
                     new_mutated_value = val
-                elif params_dict[param].get("choice"):
+                elif params_dict[param].get("evolve_choice"):
                     # new_mutated_value = param_value
                     new_mutated_value = self.sample_params(**{param: params_dict[param]})[param]
                 else:
@@ -468,9 +468,9 @@ class ParamsEvolution:
             if isinstance(param_val, list):
                 params_sample[param] = np.random.choice(param_val)
             elif isinstance(param_val, dict):
-                if 'bool' in param_val and param_val['bool']:
+                if 'evolve_bool' in param_val and param_val['evolve_bool']:
                     sample = bool(np.random.choice([True, False]))
-                elif 'range' in param_val:
+                elif 'evolve_range' in param_val:
                     sample = self._sample_from_ranges(param_val)
                 params_sample[param] = sample
             else:
@@ -478,8 +478,8 @@ class ParamsEvolution:
         return params_sample
 
     def _sample_from_ranges(self, opts):
-        from_ = opts['range'][0]
-        to_ = opts['range'][1]
+        from_ = opts['evolve_range'][0]
+        to_ = opts['evolve_range'][1]
         if opts.get('scale', None) == 'log':
             sample = self._sample_log(from_, to_)
         else:
