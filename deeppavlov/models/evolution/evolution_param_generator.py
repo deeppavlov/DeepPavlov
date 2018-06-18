@@ -84,26 +84,29 @@ class ParamsEvolution:
             path in config -- list of keys (strings and integers)
         """
         config_pointer = config
-        if key_main_model in config_pointer.keys():
+        if type(config_pointer) is dict and key_main_model in config_pointer.keys():
+            # main model is an element of chainer.pipe list
+            # main model is a dictionary and has key key_main_model
             return path
         else:
+            main_path = []
             if type(config_pointer) is dict:
+
                 for key in list(config_pointer.keys()):
-                    path += key
-                    path_ = self._find_main_model(config_pointer[key], key_main_model, path)
-                    if len(path_) > 0:
-                        path = path_
+                    path_ = self._find_main_model(config_pointer[key], key_main_model, path + [key])
+                    if path_:
+                        main_path = path_
             elif type(config_pointer) is list:
                 for i in range(len(config_pointer)):
-                    path += i
-                    path_ = self._find_main_model(config_pointer[i], key_main_model, path)
-                    if len(path_) > 0:
-                        path = path_
-            if len(path) > 0:
-                return path
+                    path_ = self._find_main_model(config_pointer[i], key_main_model, path + [i])
+                    if path_:
+                        main_path = path_
             else:
                 return []
-
+        if main_path:
+            return main_path
+        else:
+            return []
 
     @staticmethod
     def _insert_value_or_dict_into_config(config, path, value):
