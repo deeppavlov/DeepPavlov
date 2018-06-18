@@ -3,7 +3,7 @@ from deeppavlov.core.models.component import Component
 
 
 @register('vocab_intersection')
-class VocabIntersection(Component):
+class TokensMatcher(Component):
     def __init__(self, words, *args, **kwargs):
         self.words = set(words)
 

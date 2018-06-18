@@ -93,7 +93,7 @@ import deeppavlov.models.slotfill.slotfill
 import deeppavlov.models.preprocessors.one_hotter
 import deeppavlov.dataset_readers.ontonotes_reader
 
-import deeppavlov.models.classifiers.vocab_intersection.vocab_intersection
+import deeppavlov.models.classifiers.tokens_matcher.tokens_matcher
 
 
 import deeppavlov.metrics.accuracy

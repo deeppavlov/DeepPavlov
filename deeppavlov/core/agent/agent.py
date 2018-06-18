@@ -33,11 +33,10 @@ class Agent(Component):
             batch = tuple(zip(*[(utterances[i], batch_history[i], batch_states[i][skill_i]) for i in m]))
             res = [(None, 0.)] * batch_size
             if batch:
-                predicted = skill(*batch)
-                for i, p in zip(m, predicted):
-                    state = p[-1]
-                    p = p[:-1]
-                    res[i] = p
+                predicted, confidence, *state = skill(*batch)
+                state = state[0] if state else [None] * len(predicted)
+                for i, predicted, confidence, state in zip(m, predicted, confidence, state):
+                    res[i] = (predicted, confidence)
                     batch_states[i][skill_i] = state
             responses.append(res)
         responses = self.skills_selector(utterances, batch_history, *responses)
