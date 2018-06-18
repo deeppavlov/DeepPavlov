@@ -97,7 +97,9 @@ PARAMS = {
     "odqa": {
         ("odqa/ranker_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK],
         ("odqa/odqa_infer_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK]
-    }
+    },
+    "morpho_tagger/UD2.0/hu":
+        {("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]}
 }
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
@@ -151,7 +153,7 @@ def setup_module():
     test_configs_path.mkdir(parents=True)
 
     for m_name, conf_dict in PARAMS.items():
-        test_configs_path.joinpath(m_name).mkdir(exist_ok=True)
+        test_configs_path.joinpath(m_name).mkdir(exist_ok=True, parents=True)
         for (conf_file, _, _), _ in conf_dict.items():
             download_config(conf_file)
 
@@ -168,7 +170,7 @@ class TestQuickStart(object):
     def interact(conf_file, model_dir, qr_list=None):
         qr_list = qr_list or []
         logfile = io.BytesIO(b'')
-        p = pexpect.spawn("python3", ["-m", "deeppavlov.deep", "interact", str(conf_file)], timeout=None,
+        p = pexpect.spawn("python3", ["-m", "deeppavlov", "interact", str(conf_file)], timeout=None,
                           logfile=logfile)
         try:
             for *query, expected_response in qr_list:  # works until the first failed query
@@ -210,7 +212,7 @@ class TestQuickStart(object):
             post_payload[arg_name] = arg_value
 
         logfile = io.BytesIO(b'')
-        p = pexpect.spawn("python3", ["-m", "deeppavlov.deep", "riseapi", str(conf_file)], timeout=None,
+        p = pexpect.spawn("python3", ["-m", "deeppavlov", "riseapi", str(conf_file)], timeout=None,
                           logfile=logfile)
         try:
             p.expect(url_base)
@@ -259,7 +261,7 @@ class TestQuickStart(object):
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
             logfile = io.BytesIO(b'')
-            _, exitstatus = pexpect.run("python3 -m deeppavlov.deep train " + str(c), timeout=None, withexitstatus=True,
+            _, exitstatus = pexpect.run("python3 -m deeppavlov train " + str(c), timeout=None, withexitstatus=True,
                                         logfile=logfile)
             if exitstatus != 0:
                 logfile.seek(0)
