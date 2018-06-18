@@ -78,7 +78,7 @@
           3
         ],
         "filters_cnn": {
-          "range": [
+          "evolve_range": [
             50,
             500
           ],
@@ -87,7 +87,7 @@
         "confident_threshold": 0.5,
         "optimizer": "Adam",
         "lear_rate": {
-          "range": [
+          "evolve_range": [
             0.0001,
             0.1
           ]
@@ -99,13 +99,13 @@
         "coef_reg_cnn": 1e-4,
         "coef_reg_den": 1e-4,
         "dropout_rate": {
-          "range": [
+          "evolve_range": [
             0.1,
             0.9
           ]
         },
         "dense_size": {
-          "range": [
+          "evolve_range": [
             50,
             500
           ],
@@ -113,7 +113,10 @@
         },
         "model_name": "cnn_model",
         "embedder": "#my_embedder",
-        "tokenizer": "#my_tokenizer"
+        "tokenizer": "#my_tokenizer",
+        "check_bool": {
+          "evolve_bool": true
+        }
       }
     ],
     "out": [
@@ -122,13 +125,28 @@
     ]
   },
   "train": {
-    "epochs": 100,
-    "batch_size": 64,
-    "metrics": [
-      "classification_accuracy",
-      "classification_f1",
-      "classification_roc_auc"
-    ],
+    "epochs": {
+      "evolve_range": [
+        50,
+        500
+      ],
+      "discrete": true
+    },
+    "batch_size": {
+      "evolve_range": [
+        50,
+        500
+      ],
+      "discrete": true
+    },
+    "metrics": {
+      "evolve_choice": true,
+      "values": [
+        "classification_accuracy",
+        "classification_f1",
+        "classification_roc_auc"
+      ]
+    },
     "validation_patience": 5,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
