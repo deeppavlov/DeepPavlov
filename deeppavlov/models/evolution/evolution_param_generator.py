@@ -27,9 +27,10 @@ class ParamsEvolution:
                  population_size,
                  p_crossover=0.5, crossover_power=0.5,
                  p_mutation=0.5, mutation_power=0.1,
-                 key_main_model="main_model",
+                 key_main_model="main",
                  seed=None,
                  train_partition=1,
+                 load_pretrained=False,
                  **kwargs):
         """
         Initialize evolution with random population
@@ -47,25 +48,28 @@ class ParamsEvolution:
         """
 
         self.basic_config = deepcopy(kwargs)
-        self.model_to_evolve_index = find_index_of_dict_with_key_in_pipe(self.basic_config["chainer"]["pipe"],
-                                                                         key_main_model)
-        Path(self.basic_config["chainer"]["pipe"][self.model_to_evolve_index]["save_path"]).mkdir(parents=True,
-                                                                                                  exist_ok=True)
-
+        self.main_model_path = list(self._find_model_path(self.basic_config, key_main_model))[0]
+        Path(self._get_value_from_config(self.basic_config, self.main_model_path + ["save_path"])).mkdir(parents=True,
+                                                                                                         exist_ok=True)
         self.print_dict(self.basic_config, string="Basic config:")
-        log.info("Main model index in pipe: {}".format(self.model_to_evolve_index))
+        log.info("Main model path in config: {}".format(self.main_model_path))
 
         self.population_size = population_size
         self.p_crossover = p_crossover
         self.p_mutation = p_mutation
         self.mutation_power = mutation_power
         self.crossover_power = crossover_power
+        self.load_pretrained = load_pretrained
 
-        self.n_saved_best_with_weights = 0
+        self.n_saved_best_pretrained = 0
         self.train_partition = train_partition
 
         self.paths_to_evolving_params = []
-        self.evolution_individuum_id = 0
+        for evolve_type in ["evolve_range", "evolve_choice", "evolve_bool"]:
+            for path_ in self._find_model_path(self.basic_config, evolve_type):
+                self.paths_to_evolving_params.append(path_)
+
+        self.n_evolving_params = len(self.paths_to_evolving_params)
         self.evolution_model_id = 0
 
         if seed is None:
@@ -73,40 +77,30 @@ class ParamsEvolution:
         else:
             np.random.seed(seed)
 
-    def _find_main_model(self, config, key_main_model, path=[]):
+    def _find_model_path(self, config, key_model, path=[]):
         """
         Find path to the main model in config which paths will be changed
         Args:
             config:
-            key_main_model:
+            key_model:
 
         Returns:
             path in config -- list of keys (strings and integers)
         """
         config_pointer = config
-        if type(config_pointer) is dict and key_main_model in config_pointer.keys():
+        if type(config_pointer) is dict and key_model in config_pointer.keys():
             # main model is an element of chainer.pipe list
             # main model is a dictionary and has key key_main_model
-            return path
+            yield path
         else:
-            main_path = []
             if type(config_pointer) is dict:
-
                 for key in list(config_pointer.keys()):
-                    path_ = self._find_main_model(config_pointer[key], key_main_model, path + [key])
-                    if path_:
-                        main_path = path_
+                    for path_ in self._find_model_path(config_pointer[key], key_model, path + [key]):
+                        yield path_
             elif type(config_pointer) is list:
                 for i in range(len(config_pointer)):
-                    path_ = self._find_main_model(config_pointer[i], key_main_model, path + [i])
-                    if path_:
-                        main_path = path_
-            else:
-                return []
-        if main_path:
-            return main_path
-        else:
-            return []
+                    for path_ in self._find_model_path(config_pointer[i], key_model, path + [i]):
+                        yield path_
 
     @staticmethod
     def _insert_value_or_dict_into_config(config, path, value):
@@ -123,6 +117,19 @@ class ParamsEvolution:
         return config_copy
 
     @staticmethod
+    def _get_value_from_config(config, path):
+        config_copy = deepcopy(config)
+        config_pointer = config_copy
+        for el in path[:-1]:
+            if type(config_pointer) is dict:
+                config_pointer = config_pointer.setdefault(el, {})
+            elif type(config_pointer) is list:
+                config_pointer = config_pointer[el]
+            else:
+                pass
+        return config_pointer[path[-1]]
+
+    @staticmethod
     def print_dict(config, string=None):
         if string is None:
             log.info(json.dumps(config, indent=2))
@@ -131,32 +138,33 @@ class ParamsEvolution:
             log.info(json.dumps(config, indent=2))
         return None
 
-    def initialize_params_in_config(self, basic_params):
-        params = {}
-        params_for_search = {}
-        evolving_params = []
+    def initialize_params_in_config(self, basic_config, paths):
+        config = deepcopy(basic_config)
 
-        for param_name in list(basic_params.keys()):
-            if type(basic_params[param_name]) is dict:
-                if basic_params[param_name].get("choice"):
-                    params_for_search[param_name] = list(basic_params[param_name]["values"])
-                    evolving_params.append(param_name)
-                elif basic_params[param_name].get("range"):
-                    params_for_search[param_name] = deepcopy(basic_params[param_name])
-                    evolving_params.append(param_name)
-                elif basic_params[param_name].get("bool"):
-                    params_for_search[param_name] = deepcopy(basic_params[param_name])
-                    evolving_params.append(param_name)
-                else:
-                    # NOT evolving params
-                    params[param_name] = deepcopy(basic_params[param_name])
-            else:
-                # NOT evolving params
-                params[param_name] = deepcopy(basic_params[param_name])
-        if basic_params:
-            params_for_search = deepcopy(self.sample_params(**params_for_search))
+        for path_ in paths:
+            param_name = path_[-1]
+            value = self._get_value_from_config(basic_config, path_)
+            if type(value) is dict:
+                if value.get("evolve_choice"):
+                    config = self._insert_value_or_dict_into_config(config,
+                                                                    path_,
+                                                                    self.sample_params(
+                                                                        **{param_name:
+                                                                               list(value["values"])})[param_name])
+                elif value.get("evolve_range"):
+                    config = self._insert_value_or_dict_into_config(config,
+                                                                    path_,
+                                                                    self.sample_params(
+                                                                        **{param_name:
+                                                                               deepcopy(value)})[param_name])
+                elif value.get("evolve_bool"):
+                    config = self._insert_value_or_dict_into_config(config,
+                                                                    path_,
+                                                                    self.sample_params(
+                                                                        **{param_name:
+                                                                               deepcopy(value)})[param_name])
 
-        return params, params_for_search, evolving_params
+        return config
 
     def first_generation(self, iteration=0):
         """
@@ -166,56 +174,16 @@ class ParamsEvolution:
         """
         population = []
         for i in range(self.population_size):
-            population.append(deepcopy(self.basic_config))
-
-            # initializing parameters for dataset iterator
-            dataset_iterator_params, dataset_iterator_params_for_search, evolving_params = \
-                self.initialize_params_in_config(self.dataset_iterator_params)
-            self.evolving_dataset_iterator_params.extend(evolving_params)
-            # intitializing parameters for model
-            params, params_for_search, evolving_params = self.initialize_params_in_config(self.params)
-            self.evolving_params.extend(evolving_params)
-            # initializing parameters for train
-            train_params, train_params_for_search, evolving_params = self.initialize_params_in_config(self.train_params)
-            self.evolving_train_params.extend(evolving_params)
-
-            # intitializing path to save model
-            # save_path =  population_iteration/model_name_i/
-            if "model_name" in params_for_search.keys():
-                params["save_path"] = str(Path(self.params["save_path"]).joinpath(
-                    "population_" + str(iteration)).joinpath(params_for_search["model_name"] + "_" + str(i)))
-            else:
-                params["save_path"] = str(Path(self.params["save_path"]).joinpath(
-                    "population_" + str(iteration)).joinpath(self.params["model_name"] + "_" + str(i)))
-
-            # load_path =  population_iteration/model_name_i/
-            if "model_name" in params_for_search.keys():
-                params["load_path"] = str(Path(self.params["load_path"]).joinpath(
-                    "population_" + str(iteration)).joinpath(params_for_search["model_name"] + "_" + str(i)))
-            else:
-                params["load_path"] = str(Path(self.params["load_path"]).joinpath(
-                    "population_" + str(iteration)).joinpath(self.params["model_name"] + "_" + str(i)))
-
-            # exchange dataset iterator params from basic config to sampled train params
-            population[-1]["dataset_iterator"] = {**dataset_iterator_params,
-                                                  **dataset_iterator_params_for_search}
-            # exchange model and layers params from basic config to sampled model params
-            population[-1]["chainer"]["pipe"][self.model_to_evolve_index] = {**params,
-                                                                             **params_for_search}
-
-            # exchange train params from basic config to sampled train params
-            population[-1]["train"] = {**train_params,
-                                       **train_params_for_search}
-            population[-1]["train"]["evolution_model_id"] = self.evolution_model_id
+            population.append(self.initialize_params_in_config(self.basic_config, self.paths_to_evolving_params))
+            for which_path in ["save_path", "load_path"]:
+                population[-1] = self._insert_value_or_dict_into_config(population[-1],
+                                                                        self.main_model_path + [which_path],
+                                                                        str(Path(
+                                                                            self.basic_config["save_path"]).joinpath(
+                                                                            "population_" + str(iteration)).joinpath(
+                                                                            "model_" + str(i))))
+            population[-1]["evolution_model_id"] = self.evolution_model_id
             self.evolution_model_id += 1
-
-        self.evolving_dataset_iterator_params = list(set(self.evolving_dataset_iterator_params))
-        self.evolving_params = list(set(self.evolving_params))
-        self.evolving_train_params = list(set(self.evolving_train_params))
-
-        self.n_evolving_dataset_iterator_params = len(self.evolving_dataset_iterator_params)
-        self.n_evolving_params = len(self.evolving_params)
-        self.n_evolving_train_params = len(self.evolving_train_params)
 
         return population
 
@@ -246,7 +214,7 @@ class ParamsEvolution:
             mutation_power = self.mutation_power
 
         next_population = self.selection_of_best_with_weights(generation, scores)
-        print("Saved with weights: {} individuums".format(self.n_saved_best_with_weights))
+        print("Saved with weights: {} individuums".format(self.n_saved_best_pretrained))
         offsprings = self.crossover(generation, scores,
                                     p_crossover=p_crossover,
                                     crossover_power=crossover_power)
@@ -257,7 +225,7 @@ class ParamsEvolution:
 
         next_population.extend(changable_next)
 
-        for i in range(self.n_saved_best_with_weights):
+        for i in range(self.n_saved_best_pretrained):
             # if several train files:
             if self.train_partition != 1:
                 next_population[i]["dataset_reader"]["train"] = str(Path(next_population[i]["dataset_reader"][
@@ -277,7 +245,7 @@ class ParamsEvolution:
                 str(Path(self.params["save_path"]).joinpath("population_" + str(iteration)).joinpath(
                     self.params["model_name"] + "_" + str(i)))
 
-        for i in range(self.n_saved_best_with_weights, self.population_size):
+        for i in range(self.n_saved_best_pretrained, self.population_size):
             # if several train files
             if self.train_partition != 1:
                 next_population[i]["dataset_reader"]["train"] = str(Path(next_population[i]["dataset_reader"][
@@ -310,7 +278,7 @@ class ParamsEvolution:
             scores: corresponding score that should be maximized
 
         Returns:
-            selected self.n_saved_best_with_weights (changable) individuums
+            selected self.n_saved_best_pretrained (changable) individuums
         """
         scores = np.array(scores, dtype='float')
         sorted_ids = np.argsort(scores)
@@ -326,7 +294,7 @@ class ParamsEvolution:
             if self.decision(probas_to_be_selected[i]):
                 selected.append(deepcopy(population[i]))
 
-        self.n_saved_best_with_weights = len(selected)
+        self.n_saved_best_pretrained = len(selected)
         return selected
 
     def crossover(self, population, scores, p_crossover, crossover_power):
@@ -341,14 +309,14 @@ class ParamsEvolution:
             crossover_power: part of EVOLVING parents parameters to exchange for offsprings
 
         Returns:
-            (self.population_size - self.n_saved_best_with_weights) offsprings
+            (self.population_size - self.n_saved_best_pretained) offsprings
         """
         offsprings = []
         scores = np.array(scores, dtype='float')
         probas_to_be_parent = scores / np.sum(scores)
         intervals = np.array([np.sum(probas_to_be_parent[:i]) for i in range(self.population_size)])
 
-        for i in range(self.population_size - self.n_saved_best_with_weights):
+        for i in range(self.population_size - self.n_saved_best_pretrained):
             rs = np.random.random(2)
             parents = population[np.where(rs[0] > intervals)[0][-1]], population[np.where(rs[1] > intervals)[0][-1]]
 
