@@ -2,6 +2,7 @@ import numpy as np
 from copy import deepcopy
 from pathlib import Path
 import json
+import random
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.file import read_json
@@ -77,6 +78,7 @@ class ParamsEvolution:
             pass
         else:
             np.random.seed(seed)
+            random.seed(seed)
 
     def find_model_path(self, config, key_model, path=[]):
         """
@@ -434,10 +436,10 @@ class ParamsEvolution:
         params_sample = dict()
         for param, param_val in params_copy.items():
             if isinstance(param_val, list):
-                params_sample[param] = np.random.choice(param_val)
+                params_sample[param] = random.choice(param_val)
             elif isinstance(param_val, dict):
                 if 'evolve_bool' in param_val and param_val['evolve_bool']:
-                    sample = bool(np.random.choice([True, False]))
+                    sample = bool(random.choice([True, False]))
                 elif 'evolve_range' in param_val:
                     sample = self._sample_from_ranges(param_val)
                 params_sample[param] = sample
