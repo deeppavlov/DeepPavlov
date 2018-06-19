@@ -19,6 +19,7 @@ import importlib
 import json
 import time
 from collections import OrderedDict
+from pathlib import Path
 from typing import List, Callable, Tuple, Dict, Union
 
 from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root
@@ -69,7 +70,7 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
     chainer_config: dict = config['chainer']
     chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
     for component_config in chainer_config['pipe']:
-        component = from_params(component_config, vocabs=[], mode='train')
+        component = from_params(component_config, mode='train')
         if 'fit_on' in component_config:
             component: Estimator
 
@@ -95,8 +96,9 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
     return chainer
 
 
-def train_evaluate_model_from_config(config_path: str, to_train=True, to_validate=True) -> None:
-    config = read_json(config_path)
+def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, to_validate=True) -> None:
+    if isinstance(config, (str, Path)):
+        config = read_json(config)
     set_deeppavlov_root(config)
 
     dataset_config = config.get('dataset', None)
@@ -152,16 +154,7 @@ def train_evaluate_model_from_config(config_path: str, to_train=True, to_validat
     metrics_functions = list(zip(train_config['metrics'], get_metrics_by_names(train_config['metrics'])))
 
     if to_train:
-        if 'chainer' in config:
-            model = fit_chainer(config, iterator)
-        else:
-            vocabs = config.get('vocabs', {})
-            for vocab_param_name, vocab_config in vocabs.items():
-                v: Estimator = from_params(vocab_config, mode='train')
-                vocabs[vocab_param_name] = _fit(v, iterator, None)
-
-            model_config = config['model']
-            model = from_params(model_config, vocabs=vocabs, mode='train')
+        model = fit_chainer(config, iterator)
 
         if callable(getattr(model, 'train_on_batch', None)):
             _train_batches(model, iterator, train_config, metrics_functions)
@@ -262,6 +255,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
     log_on = train_config['log_every_n_batches'] > 0 or train_config['log_every_n_epochs'] > 0
     train_y_true = []
     train_y_predicted = []
+    losses = []
     start_time = time.time()
     break_flag = False
     try:
@@ -271,7 +265,9 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                     y_predicted = list(model(list(x)))
                     train_y_true += y_true
                     train_y_predicted += y_predicted
-                model.train_on_batch(x, y_true)
+                loss = model.train_on_batch(x, y_true)
+                if loss is not None:
+                    losses.append(loss)
                 i += 1
                 examples += len(x)
 
@@ -284,6 +280,9 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                         'metrics': prettify_metrics(metrics),
                         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                     }
+                    if losses:
+                        report['loss'] = sum(losses)/len(losses)
+                        losses = []
                     report = {'train': report}
                     print(json.dumps(report, ensure_ascii=False))
                     train_y_true.clear()

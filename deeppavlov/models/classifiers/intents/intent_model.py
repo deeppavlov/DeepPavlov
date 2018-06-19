@@ -78,7 +78,6 @@ class KerasIntentModel(KerasModel):
         if model is being initialized from saved
 
         Args:
-            vocabs: dictionary of considered vocabularies
             model_path: path to model serialization dir or file.
                             It is always an empty string and is ignored if it is not set in json config.
             model_dir: name of a serialization dir, can be default or set in json config
@@ -88,21 +87,13 @@ class KerasIntentModel(KerasModel):
             tokenizer: instance of NLTKTokenizer class
             **kwargs:
         """
-        super().__init__(**kwargs) # self.opt initialized in here
+        super().__init__(**kwargs)  # self.opt initialized in here
 
-        self.tokenizer = self.opt.get('tokenizer')
-        self.fasttext_model = self.opt.get('embedder')
-        self.opt.pop("vocabs")
-        self.opt.pop("embedder")
-        self.opt.pop("tokenizer")
+        self.tokenizer = self.opt.pop('tokenizer')
+        self.fasttext_model = self.opt.pop('embedder')
 
-        if self.opt.get('classes'):
-            self.classes = list(np.sort(np.array(list(self.opt.get('classes')))))
-            self.opt['classes'] = self.classes
-        else:
-            # self.classes = list(np.sort(np.array(list(self.opt.get('vocabs')["classes_vocab"].keys()))))
-            self.classes = list(self.opt.get('vocabs')["classes_vocab"].keys())
-            self.opt['classes'] = self.classes
+        self.classes = list(np.sort(np.array(list(self.opt.get('classes')))))
+        self.opt['classes'] = self.classes
         self.n_classes = len(self.classes)
         if self.n_classes == 0:
             ConfigError("Please, provide vocabulary with considered intents.")
