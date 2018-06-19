@@ -28,43 +28,26 @@ log = get_logger(__name__)
 
 def build_model_from_config(config, mode='infer', load_trained=False, as_component=False):
     set_deeppavlov_root(config)
-    if 'chainer' in config:
-        model_config = config['chainer']
+    model_config = config['chainer']
 
-        model = Chainer(model_config['in'], model_config['out'], model_config.get('in_y'), as_component=as_component)
+    model = Chainer(model_config['in'], model_config['out'], model_config.get('in_y'), as_component=as_component)
 
-        for component_config in model_config['pipe']:
-            if load_trained and ('fit_on' in component_config or 'in_y' in component_config):
-                try:
-                    component_config['load_path'] = component_config['save_path']
-                except KeyError:
-                    log.warning('No "save_path" parameter for the {} component, so "load_path" will not be renewed'
-                                .format(component_config.get('name', component_config.get('ref', 'UNKNOWN'))))
-            component = from_params(component_config, vocabs=[], mode=mode)
+    for component_config in model_config['pipe']:
+        if load_trained and ('fit_on' in component_config or 'in_y' in component_config):
+            try:
+                component_config['load_path'] = component_config['save_path']
+            except KeyError:
+                log.warning('No "save_path" parameter for the {} component, so "load_path" will not be renewed'
+                            .format(component_config.get('name', component_config.get('ref', 'UNKNOWN'))))
+        component = from_params(component_config, mode=mode)
 
-            if 'in' in component_config:
-                c_in = component_config['in']
-                c_out = component_config['out']
-                in_y = component_config.get('in_y', None)
-                main = component_config.get('main', False)
-                model.append(component, c_in, c_out, in_y, main)
+        if 'in' in component_config:
+            c_in = component_config['in']
+            c_out = component_config['out']
+            in_y = component_config.get('in_y', None)
+            main = component_config.get('main', False)
+            model.append(component, c_in, c_out, in_y, main)
 
-        return model
-
-    model_config = config['model']
-    if load_trained:
-        try:
-            model_config['load_path'] = model_config['save_path']
-        except KeyError:
-            log.warning('No "save_path" parameter for the model, so "load_path" will not be renewed')
-
-    vocabs = {}
-    if 'vocabs' in config:
-        for vocab_param_name, vocab_config in config['vocabs'].items():
-            v = from_params(vocab_config, mode=mode)
-            vocabs[vocab_param_name] = v
-    model = from_params(model_config, vocabs=vocabs, mode=mode)
-    model.reset()
     return model
 
 
