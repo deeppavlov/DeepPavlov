@@ -15,6 +15,7 @@ import sqlite3
 from typing import List, Any, Dict, Optional
 from random import Random
 from pathlib import Path
+import os
 
 from overrides import overrides
 
@@ -36,7 +37,7 @@ class SquadWrapper(Component):
     """
 
     def __init__(self, config_path1, *args, **kwargs):
-        self.squad_pipeline = build_model_from_config(read_json("/home/gureenkova/tmp/remote_odqa_hack/deeppavlov/configs/squad/squad_ru.json"))
+        self.squad_pipeline = build_model_from_config(read_json(os.path.join(os.path.dirname(__file__), "../../configs/squad/squad_ru.json")))
 
     def __call__(self, question, contexts, *args, **kwargs):
         answers = []
