@@ -82,11 +82,12 @@ def score_population(population, population_size, result_file):
                 result_table_dict[el + "_valid"] = []
                 result_table_dict[el + "_test"] = []
         for m_id, m in enumerate(CONSIDERED_METRICS):
-            val_metrics_path = evolution.find_model_path(val_results, m)
+            val_metrics_path = list(evolution.find_model_path(val_results, m))[0]
             val_m = evolution.get_value_from_config(val_results, val_metrics_path + [m])
+            population_metrics[m].append(val_m)
             result_table_dict[m + "_valid"].append(val_m)
             if TEST:
-                test_metrics_path = evolution.find_model_path(test_results, m)
+                test_metrics_path = list(evolution.find_model_path(test_results, m))[0]
                 test_m = evolution.get_value_from_config(test_results, test_metrics_path + [m])
                 result_table_dict[m + "_test"].append(test_m)
             else:
@@ -94,8 +95,7 @@ def score_population(population, population_size, result_file):
         result_table_dict[order[-1]] = [population[i]]
         result_table = pd.DataFrame(result_table_dict)
         result_table.loc[:, result_table_columns].to_csv(result_file, index=False, sep='\t', mode='a', header=None)
-        for m in CONSIDERED_METRICS:
-            population_metrics[m].append(val_results[m])
+
     return population_metrics
 
 
