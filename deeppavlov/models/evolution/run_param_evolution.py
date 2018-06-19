@@ -90,8 +90,8 @@ def score_population(population, population_size, result_file):
         result_table_dict[order[-1]] = [population[i]]
         result_table = pd.DataFrame(result_table_dict)
         result_table.loc[:, result_table_columns].to_csv(result_file, index=False, sep='\t', mode='a', header=None)
-        for m_id, m in enumerate(CONSIDERED_METRICS):
-            population_metrics[m].append(val_results[m_id])
+        for m in CONSIDERED_METRICS:
+            population_metrics[m].append(val_results[m])
     return population_metrics
 
 
@@ -141,19 +141,19 @@ print("Given basic params: {}\n".format(json.dumps(basic_params, indent=2)))
 evolution = ParamsEvolution(population_size=POPULATION_SIZE,
                             p_crossover=P_CROSSOVER, crossover_power=POW_CROSSOVER,
                             p_mutation=P_MUTATION, mutation_power=POW_MUTATION,
-                            key_model_to_evolve="to_evolve",
-                            key_basic_layers="basic_layers_params",
+                            key_main_model="main",
                             seed=42,
                             train_partition=TRAIN_PARTITION,
                             elitism_with_weights=ELITISM_WITH_WEIGHTS,
                             **basic_params)
 
-CONSIDERED_METRICS = list(evolution.get_value_from_config(evolution.basic_config,
-                                                          list(evolution.find_model_path(
-                                                              evolution.basic_config, "metrics"))[0]).values())
+CONSIDERED_METRICS = evolution.get_value_from_config(evolution.basic_config,
+                                                     list(evolution.find_model_path(
+                                                         evolution.basic_config, "metrics"))[0] + ["metrics"])
+print(CONSIDERED_METRICS)
 TEST = evolution.get_value_from_config(evolution.basic_config,
                                        list(evolution.find_model_path(
-                                           evolution.basic_config, "test_best"))[0])
+                                           evolution.basic_config, "test_best"))[0] + ["test_best"])
 
 # Result table
 order = deepcopy(CONSIDERED_METRICS)
