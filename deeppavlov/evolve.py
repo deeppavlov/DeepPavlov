@@ -187,15 +187,19 @@ def score_population(population, population_size, result_file, considered_metric
                 f_name = save_path.joinpath("config.json")
                 save_json(population[i], f_name)
 
-                curr_file_path = os.path.dirname(os.path.realpath('__file__'))
-
-                procs.append(Popen("CUDA_VISIBLE_DEVICES={} python ./models/evolution/train_phenotype.py {}"
+                curr_dir_path = os.path.dirname(os.path.realpath('__file__'))
+                # TODO: choose current python
+                # TODO: through deep.py train?
+                procs.append(Popen("CUDA_VISIBLE_DEVICES={} {} {}/deep.py train {}"
                              " 1>{}/out.txt 2>{}/err.txt".format(gpus[j],
+                                                                 sys.executable,
+                                                                 curr_dir_path,
                                                                  str(f_name),
                                                                  str(save_path),
                                                                  str(save_path)
                                                                  ),
                                    shell=True, stdout=PIPE, stderr=PIPE))
+
         for j, proc in enumerate(procs):
             i = k * len(gpus) + j
             log.info(f'wait on {i}th proc')

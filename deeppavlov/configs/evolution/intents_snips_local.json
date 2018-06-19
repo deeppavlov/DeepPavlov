@@ -117,6 +117,14 @@
         "tokenizer": "#my_tokenizer",
         "check_bool": {
           "evolve_bool": true
+        },
+        "check_choice": {
+          "evolve_choice": true,
+          "values": [
+            1,
+            2,
+            3
+          ]
         }
       }
     ],
