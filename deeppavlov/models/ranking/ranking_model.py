@@ -238,7 +238,7 @@ class RankingModel(NNModel):
                             assert(n != i*num_samples+k)
                             rn.append(s[n])
                             hrds.append(hrd)
-                            n, hrd = self.get_semi_hard_negative_ind(i, j, k, distances,
+                            n, hrd = self.get_semi_hard_negative_ind(i, k, j, distances,
                                                                 anchor_negative_dist,
                                                                 batch_size, num_samples)
                             assert(n != i*num_samples+j)
