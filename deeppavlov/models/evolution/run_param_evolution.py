@@ -35,6 +35,8 @@ def score_population(population, population_size, result_file):
                 f_name = save_path.joinpath("config.json")
                 save_json(population[i], f_name)
 
+                # __file__
+
                 procs.append(Popen("CUDA_VISIBLE_DEVICES={} python ./models/evolution/train_phenotype.py {}"
                              " 1>{}/out.txt 2>{}/err.txt".format(gpus[j],
                                                                  str(f_name),
