@@ -11,7 +11,7 @@
   "dataset_iterator": {
     "name": "basic_classification_iterator",
     "seed": {
-      "range": [
+      "evolve_range": [
         50,
         500
       ],
@@ -79,7 +79,7 @@
           3
         ],
         "filters_cnn": {
-          "range": [
+          "evolve_range": [
             50,
             500
           ],
@@ -88,7 +88,7 @@
         "confident_threshold": 0.5,
         "optimizer": "Adam",
         "lear_rate": {
-          "range": [
+          "evolve_range": [
             0.0001,
             0.1
           ]
@@ -100,13 +100,13 @@
         "coef_reg_cnn": 1e-4,
         "coef_reg_den": 1e-4,
         "dropout_rate": {
-          "range": [
+          "evolve_range": [
             0.1,
             0.9
           ]
         },
         "dense_size": {
-          "range": [
+          "evolve_range": [
             50,
             500
           ],
@@ -124,14 +124,14 @@
   },
   "train": {
     "epochs": {
-      "range": [
+      "evolve_range": [
         50,
         500
       ],
       "discrete": true
     },
     "batch_size": {
-      "range": [
+      "evolve_range": [
         50,
         500
       ],
