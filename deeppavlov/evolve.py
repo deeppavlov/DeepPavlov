@@ -30,8 +30,6 @@ from deeppavlov.models.evolution.evolution_param_generator import ParamsEvolutio
 from deeppavlov.core.common.file import read_json, save_json
 from deeppavlov.core.common.log import get_logger
 
-
-
 log = get_logger(__name__)
 
 parser = argparse.ArgumentParser()
