@@ -80,8 +80,8 @@
         ],
         "filters_cnn": {
           "evolve_range": [
-            50,
-            500
+            5,
+            50
           ],
           "discrete": true
         },
@@ -107,8 +107,8 @@
         },
         "dense_size": {
           "evolve_range": [
-            50,
-            500
+            5,
+            50
           ],
           "discrete": true
         },
