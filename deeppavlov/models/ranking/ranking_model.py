@@ -20,6 +20,7 @@ import inspect
 from functools import reduce
 import operator
 import numpy as np
+import random
 from nltk.tokenize import sent_tokenize, word_tokenize
 
 from deeppavlov.core.common.attributes import check_attr_true
@@ -181,6 +182,7 @@ class RankingModel(NNModel):
         c =[]
         rp = []
         rn = []
+        hrds = []
 
         if self.hardest_positives:
 
@@ -230,16 +232,18 @@ class RankingModel(NNModel):
                             c.append(s[i*num_samples+k])
                             rp.append(s[i*num_samples+k])
                             rp.append(s[i*num_samples+j])
-                            n = self.get_semi_hard_negative_ind(distances[i*num_samples+j, i*num_samples+k],
-                                                                anchor_negative_dist[i*num_samples+j],
+                            n, hrd = self.get_semi_hard_negative_ind(i, j, k, distances,
+                                                                anchor_negative_dist,
                                                                 batch_size, num_samples)
                             assert(n != i*num_samples+k)
                             rn.append(s[n])
-                            n = self.get_semi_hard_negative_ind(distances[i*num_samples+j, i*num_samples+k],
-                                                                anchor_negative_dist[i*num_samples+k],
+                            hrds.append(hrd)
+                            n, hrd = self.get_semi_hard_negative_ind(i, j, k, distances,
+                                                                anchor_negative_dist,
                                                                 batch_size, num_samples)
                             assert(n != i*num_samples+j)
                             rn.append(s[n])
+                            hrds.append(hrd)
             else:
                 for i in range(batch_size):
                     for j in range(num_samples):
@@ -256,15 +260,20 @@ class RankingModel(NNModel):
         c = [el[0] for el in triplets]
         rp = [el[1] for el in triplets]
         rn = [el[2] for el in triplets]
+        ratio = sum(hrds) / len(hrds)
+        print("Ratio of semi-hard negative samples is %f" % ratio)
         return c, rp, rn
 
-    def get_semi_hard_negative_ind(self, anc_pos_dist, neg_dists, batch_size, num_samples):
-        n_li = sorted(list(zip(neg_dists, np.arange(batch_size * num_samples))), key=lambda el: el[0])
-        for i, x in enumerate(n_li):
+    def get_semi_hard_negative_ind(self, i, j, k, distances, anchor_negative_dist, batch_size, num_samples):
+        anc_pos_dist = distances[i * num_samples + j, i * num_samples + k]
+        neg_dists = anchor_negative_dist[i * num_samples + j]
+        n_li_pre = sorted(list(zip(neg_dists, np.arange(batch_size * num_samples))), key=lambda el: el[0])
+        n_li = list(filter(lambda x: x[1]<i*num_samples, n_li_pre)) + \
+               list(filter(lambda x: x[1]>=(i+1)*num_samples, n_li_pre))
+        for x in n_li:
             if x[0] > anc_pos_dist :
-                return x[1]
-        print("There is no negative examples with distances greater than positive examples distances.")
-        exit(0)
+                return x[1], True
+        return random.choice(n_li)[1], False
 
     @overrides
     def __call__(self, batch):

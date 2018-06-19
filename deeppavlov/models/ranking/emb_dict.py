@@ -41,6 +41,9 @@ class Embeddings(object):
         elif self.embeddings == "word2vec":
             self.embeddings_model = KeyedVectors.load_word2vec_format(str(self.emb_model_file),
                                                                       binary=True)
+        elif self.embeddings == "random":
+            self.embeddings_model = {el: np.random.uniform(-0.6, 0.6, self.embedding_dim)
+                                     for el in tok2int_vocab.keys()}
         log.info("[initializing new `{}`]".format(self.__class__.__name__))
         self.build_int2emb_vocab(tok2int_vocab)
         self.build_emb_matrix(tok2int_vocab)

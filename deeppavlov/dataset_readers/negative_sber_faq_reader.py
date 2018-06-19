@@ -14,9 +14,9 @@ class SberFAQReader(DatasetReader):
         # data_path = expand_path(data_path)
         # self.download_data(data_path)
         dataset = {'train': None, 'valid': None, 'test': None}
-        train_fname = Path(data_path) / 'sber_faq_train_50.csv'
-        valid_fname = Path(data_path) / 'sber_faq_val_50.csv'
-        test_fname = Path(data_path) / 'sber_faq_test_50.csv'
+        train_fname = Path(data_path) / 'sber_faq_train_1849.csv'
+        valid_fname = Path(data_path) / 'sber_faq_val_1849.csv'
+        test_fname = Path(data_path) / 'sber_faq_test_1849.csv'
         self.sen2int_vocab = {}
         self.classes_vocab_train = {}
         self.classes_vocab_valid = {}
@@ -116,7 +116,10 @@ class SberFAQReader(DatasetReader):
             neg_resps = self._get_neg_resps(classes_vocab, k)
             for s1 in sen_li:
                 contexts.append(s1)
-                s2 = random.choice(list(v - {s1}))
+                if len(list(v - {s1})) != 0:
+                    s2 = random.choice(list(v - {s1}))
+                else:
+                    s2 = s1
                 responses.append(s2)
                 positive_responses_pool.append(list(v - {s1}))
 
@@ -130,7 +133,7 @@ class SberFAQReader(DatasetReader):
         return data
 
     def clean_sen(self, sen):
-        return re.sub('\[Клиент:.*\]', '', sen).\
+        return re.sub('\[Клиент:.*\]', '', sen, flags=re.IGNORECASE).\
             replace('&amp, laquo, ', '').replace('&amp, raquo, ', '').\
             replace('&amp laquo ', '').replace('&amp raquo ', '').\
             replace('&amp quot ', '').replace('&amp, quot, ', '').strip()
