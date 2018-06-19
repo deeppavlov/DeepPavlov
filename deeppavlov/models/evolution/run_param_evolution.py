@@ -82,9 +82,13 @@ def score_population(population, population_size, result_file):
                 result_table_dict[el + "_valid"] = []
                 result_table_dict[el + "_test"] = []
         for m_id, m in enumerate(CONSIDERED_METRICS):
-            result_table_dict[m + "_valid"].append(val_results[m])
+            val_metrics_path = evolution.find_model_path(val_results, m)
+            val_m = evolution.get_value_from_config(val_results, val_metrics_path + [m])
+            result_table_dict[m + "_valid"].append(val_m)
             if TEST:
-                result_table_dict[m + "_test"].append(test_results[m])
+                test_metrics_path = evolution.find_model_path(test_results, m)
+                test_m = evolution.get_value_from_config(test_results, test_metrics_path + [m])
+                result_table_dict[m + "_test"].append(test_m)
             else:
                 result_table_dict[m + "_test"].append(0.)
         result_table_dict[order[-1]] = [population[i]]

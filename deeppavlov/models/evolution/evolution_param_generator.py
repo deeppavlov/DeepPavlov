@@ -228,9 +228,6 @@ class ParamsEvolution:
             except:
                 pass
 
-            save_path_prev = self.get_value_from_config(next_population[i], self.main_model_path + ["save_path"])
-            load_path_prev = self.get_value_from_config(next_population[i], self.main_model_path + ["load_path"])
-
             if self.elitism_with_weights:
                 # if elite models are saved with weights
                 next_population[i] = self.insert_value_or_dict_into_config(
