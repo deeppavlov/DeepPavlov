@@ -188,8 +188,6 @@ def score_population(population, population_size, result_file, considered_metric
                 save_json(population[i], f_name)
 
                 curr_dir_path = os.path.dirname(os.path.realpath('__file__'))
-                # TODO: choose current python
-                # TODO: through deep.py train?
                 procs.append(Popen("CUDA_VISIBLE_DEVICES={} {} {}/deep.py train {}"
                              " 1>{}/out.txt 2>{}/err.txt".format(gpus[j],
                                                                  sys.executable,
