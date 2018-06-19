@@ -42,7 +42,7 @@ parser.add_argument('--p_mut', help='probability of mutation', type=float, defau
 parser.add_argument('--pow_mut', help='mutation power', type=float, default=0.1)
 
 parser.add_argument('--p_size', help='population size', type=int, default=10)
-parser.add_argument('--gpus', help='visible GPUs divided by comma <<,>>', default="0")
+parser.add_argument('--gpus', help='visible GPUs divided by comma <<,>>', default="-1")
 parser.add_argument('--train_partition',
                     help='partition of splitted train file', default=1)
 parser.add_argument('--start_from_population',
@@ -186,15 +186,25 @@ def score_population(population, population_size, result_file, considered_metric
                 save_json(population[i], f_name)
 
                 curr_dir_path = os.path.dirname(os.path.realpath('__file__'))
-                procs.append(Popen("CUDA_VISIBLE_DEVICES={} {} {}/deep.py train {}"
-                             " 1>{}/out.txt 2>{}/err.txt".format(gpus[j],
-                                                                 sys.executable,
-                                                                 curr_dir_path,
-                                                                 str(f_name),
-                                                                 str(save_path),
-                                                                 str(save_path)
-                                                                 ),
-                                   shell=True, stdout=PIPE, stderr=PIPE))
+                if len(gpus) == 1 and gpus[0] == -1:
+                    procs.append(Popen("{} {}/deep.py train {}"
+                                       " 1>{}/out.txt 2>{}/err.txt".format(sys.executable,
+                                                                           curr_dir_path,
+                                                                           str(f_name),
+                                                                           str(save_path),
+                                                                           str(save_path)
+                                                                           ),
+                                       shell=True, stdout=PIPE, stderr=PIPE))
+                else:
+                    procs.append(Popen("CUDA_VISIBLE_DEVICES={} {} {}/deep.py train {}"
+                                 " 1>{}/out.txt 2>{}/err.txt".format(gpus[j],
+                                                                     sys.executable,
+                                                                     curr_dir_path,
+                                                                     str(f_name),
+                                                                     str(save_path),
+                                                                     str(save_path)
+                                                                     ),
+                                       shell=True, stdout=PIPE, stderr=PIPE))
 
         for j, proc in enumerate(procs):
             i = k * len(gpus) + j
