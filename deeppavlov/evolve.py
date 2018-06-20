@@ -140,6 +140,20 @@ def main():
                 str(Path(
                     evolution.get_value_from_config(population[i], evolution.main_model_path + ["load_path"]))))
 
+            for path_id, path_ in enumerate(evolution.paths_to_fiton_dicts):
+                population[i] = evolution.insert_value_or_dict_into_config(
+                    population[i], path_ + ["save_path"],
+                    str(Path(evolution.get_value_from_config(evolution.basic_config,
+                                                             evolution.main_model_path + ["save_path"])
+                             ).joinpath("population_" + str(iters)).joinpath("model_" + str(i)).joinpath(
+                        "fitted_model_" + str(path_id))))
+
+            for path_id, path_ in enumerate(evolution.paths_to_fiton_dicts):
+                population[i] = evolution.insert_value_or_dict_into_config(
+                    population[i], path_ + ["load_path"],
+                    str(Path(evolution.get_value_from_config(
+                        population[i], path_ + ["load_path"]))))
+
     run_population(population, evolution, gpus)
     population_scores = results_to_table(population, evolution, considered_metrics,
                                          result_file, result_table_columns)[evolve_metric]
