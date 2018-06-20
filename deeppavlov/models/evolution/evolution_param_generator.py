@@ -74,6 +74,13 @@ class ParamsEvolution:
         self.evolution_model_id = 0
         self.eps = 1e-6
 
+        try:
+            self.evolve_metric_optimization = self.get_value_from_config(
+                self.basic_config, list(self.find_model_path(
+                    self.basic_config, "metric_optimization"))[0] + ["metric_optimization"])
+        except:
+            self.evolve_metric_optimization = "maximize"
+
         if seed is None:
             pass
         else:

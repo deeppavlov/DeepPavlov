@@ -26,6 +26,7 @@ import pandas as pd
 p = (Path(__file__) / ".." / "..").resolve()
 sys.path.append(str(p))
 
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.models.evolution.evolution_param_generator import ParamsEvolution
 from deeppavlov.core.common.file import read_json, save_json
 from deeppavlov.core.common.log import get_logger
@@ -35,7 +36,7 @@ log = get_logger(__name__)
 parser = argparse.ArgumentParser()
 
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
-parser.add_argument('--evolve_metric', help='target metric out of given in your config.train.metrics')
+parser.add_argument('--key_main_model', help='key inserted in dictionary of main model in pipe', default="main")
 parser.add_argument('--p_cross', help='probability of crossover', type=float, default=0.2)
 parser.add_argument('--pow_cross', help='crossover power', type=float, default=0.1)
 parser.add_argument('--p_mut', help='probability of mutation', type=float, default=1.)
@@ -67,7 +68,7 @@ def main():
     args = parser.parse_args()
 
     pipeline_config_path = find_config(args.config_path)
-    evolve_metric = args.evolve_metric
+    key_main_model = args.key_main_model
     population_size = args.p_size
     gpus = [int(gpu) for gpu in args.gpus.split(",")]
     train_partition = int(args.train_partition)
@@ -86,7 +87,7 @@ def main():
     evolution = ParamsEvolution(population_size=population_size,
                                 p_crossover=p_crossover, crossover_power=pow_crossover,
                                 p_mutation=p_mutation, mutation_power=pow_mutation,
-                                key_main_model="main",
+                                key_main_model=key_main_model,
                                 seed=42,
                                 train_partition=train_partition,
                                 elitism_with_weights=elitism_with_weights,
@@ -95,35 +96,29 @@ def main():
     considered_metrics = evolution.get_value_from_config(evolution.basic_config,
                                                          list(evolution.find_model_path(
                                                              evolution.basic_config, "metrics"))[0] + ["metrics"])
+    evolve_metric = considered_metrics[0]
 
-    # Result table
-    order = deepcopy(considered_metrics)
     result_file = Path(evolution.get_value_from_config(evolution.basic_config,
                                                        evolution.main_model_path + ["save_path"])
                        ).joinpath("result_table.csv")
     result_table_columns = []
     result_table_dict = {}
-    for el in order:
+    for el in considered_metrics:
         result_table_dict[el + "_valid"] = []
         result_table_dict[el + "_test"] = []
         result_table_columns.extend([el + "_valid", el + "_test"])
 
-    order.extend(["params"])
     result_table_dict["params"] = []
     result_table_columns.append("params")
 
     if start_from_population == 0:
+        iters = 0
         result_table = pd.DataFrame(result_table_dict)
         result_table.loc[:, result_table_columns].to_csv(result_file, index=False, sep='\t')
 
         log.info("\nIteration #{} starts\n".format(0))
         population = evolution.first_generation()
-        log.info(population)
-        population_scores = score_population(population, population_size, result_file, considered_metrics,
-                                             evolution, order, gpus, result_table_columns)[evolve_metric]
-        iters = 1
     else:
-        # _ = evolution.first_generation()
         iters = start_from_population
         log.info("\nIteration #{} starts\n".format(iters))
 
@@ -142,31 +137,38 @@ def main():
                 str(Path(
                     evolution.get_value_from_config(population[i], evolution.main_model_path + ["load_path"]).parent)))
 
-        population_scores = score_population(population, population_size, result_file, considered_metrics,
-                                             evolution, order, gpus, result_table_columns)[evolve_metric]
-        log.info("Population scores: {}".format(population_scores))
-        log.info("\nIteration #{} was done\n".format(iters))
-        iters += 1
+    run_population(population, evolution, gpus)
+    population_scores = results_to_table(population, evolution, considered_metrics,
+                                         result_file, result_table_columns)[evolve_metric]
+    log.info("Population scores: {}".format(population_scores))
+    log.info("\nIteration #{iters} was done\n")
+    iters += 1
 
     while True:
-        log.info("\nIteration #{} starts\n".format(iters))
+        log.info("\nIteration #{iters} starts\n")
         population = evolution.next_generation(population, population_scores, iters)
-        population_scores = score_population(population, population_size, result_file, considered_metrics,
-                                             evolution, order, gpus, result_table_columns)[evolve_metric]
+        run_population(population, evolution, gpus)
+        population_scores = results_to_table(population, evolution, considered_metrics,
+                                             result_file, result_table_columns)[evolve_metric]
         log.info("Population scores: {}".format(population_scores))
-        log.info("\nIteration #{} was done\n".format(iters))
+        log.info("\nIteration #{iters} was done\n")
         iters += 1
 
 
-def score_population(population, population_size, result_file, considered_metrics,
-                     evolution, order, gpus, result_table_columns):
-    test_best = evolution.get_value_from_config(evolution.basic_config,
-                                                list(evolution.find_model_path(
-                                                    evolution.basic_config, "test_best"))[0] + ["test_best"])
-    population_metrics = {}
-    for m in considered_metrics:
-        population_metrics[m] = []
+def run_population(population, evolution, gpus):
+    """
+    Change save and load paths for obtained population, save config.json with model config,
+    run population via current python executor (with which evolve.py already run)
+    and on given devices (-1 means CPU, other integeres - visible for evolve.py GPUs)
+    Args:
+        population: list of dictionaries - configs of current population
+        evolution: ParamsEvolution
+        gpus: list of given devices (list of integers)
 
+    Returns:
+        None
+    """
+    population_size = len(population)
     for k in range(population_size // len(gpus) + 1):
         procs = []
         for j in range(len(gpus)):
@@ -205,12 +207,31 @@ def score_population(population, population_size, result_file, considered_metric
                                                                      str(save_path)
                                                                      ),
                                        shell=True, stdout=PIPE, stderr=PIPE))
-
         for j, proc in enumerate(procs):
             i = k * len(gpus) + j
             log.info(f'wait on {i}th proc')
             proc.wait()
+    return None
 
+
+def results_to_table(population, evolution, considered_metrics, result_file, result_table_columns):
+    population_size = len(population)
+    validate_best = evolution.get_value_from_config(evolution.basic_config,
+                                                    list(evolution.find_model_path(
+                                                        evolution.basic_config, "validate_best"))[0]
+                                                    + ["validate_best"])
+    test_best = evolution.get_value_from_config(evolution.basic_config,
+                                                list(evolution.find_model_path(
+                                                    evolution.basic_config, "test_best"))[0]
+                                                + ["test_best"])
+    if (not validate_best) and test_best:
+        log.info("validate_best is set to False. Tuning parameters on test")
+    elif (not validate_best) and (not test_best):
+        raise ConfigError("validate_best and test_best are set to False. Can not evolve.")
+
+    population_metrics = {}
+    for m in considered_metrics:
+        population_metrics[m] = []
     for i in range(population_size):
         with open(str(Path(evolution.get_value_from_config(
                 population[i],
@@ -222,42 +243,33 @@ def score_population(population, population_size, result_file, considered_metric
                 reports.append(json.loads(reports_data[i]))
             except:
                 pass
-            
+
         val_results = {}
         test_results = {}
+        for m in considered_metrics:
+            val_results[m] = None
+            test_results[m] = None
         if len(reports) == 2 and "valid" in reports[0].keys() and "test" in reports[1].keys():
-            val_results = reports[0]
+            val_results = reports[0]["metrics"]
             test_results = reports[1]
         elif len(reports) == 1 and "valid" in reports[0].keys():
-            val_results = reports[0]
-        else:
-            for m in considered_metrics:
-                if "loss" in m:
-                    val_results[m] = 1e6
-                    test_results[m] = 1e6
-                else:
-                    val_results[m] = 0.
-                    test_results[m] = 0.
+            val_results = reports[0]["metrics"]
+        elif len(reports) == 1 and "test" in reports[0].keys():
+            test_results = reports[0]["metrics"]
 
         result_table_dict = {}
-        for el in order:
-            if el == "params":
-                result_table_dict[el] = []
-            else:
-                result_table_dict[el + "_valid"] = []
-                result_table_dict[el + "_test"] = []
-        for m_id, m in enumerate(considered_metrics):
-            val_metrics_path = list(evolution.find_model_path(val_results, m))[0]
-            val_m = evolution.get_value_from_config(val_results, val_metrics_path + [m])
-            population_metrics[m].append(val_m)
-            result_table_dict[m + "_valid"].append(val_m)
-            if test_best:
-                test_metrics_path = list(evolution.find_model_path(test_results, m))[0]
-                test_m = evolution.get_value_from_config(test_results, test_metrics_path + [m])
-                result_table_dict[m + "_test"].append(test_m)
-            else:
-                result_table_dict[m + "_test"].append(0.)
-        result_table_dict[order[-1]] = [population[i]]
+        for el in result_table_columns:
+            result_table_dict[el] = []
+
+        for m in considered_metrics:
+            result_table_dict[m + "_valid"].append(val_results[m])
+            result_table_dict[m + "_test"].append(test_results[m])
+            if validate_best:
+                population_metrics[m].append(val_results[m])
+            elif test_best:
+                population_metrics[m].append(test_results[m])
+
+        result_table_dict[result_table_columns[-1]] = [population[i]]
         result_table = pd.DataFrame(result_table_dict)
         result_table.loc[:, result_table_columns].to_csv(result_file, index=False, sep='\t', mode='a', header=None)
 
