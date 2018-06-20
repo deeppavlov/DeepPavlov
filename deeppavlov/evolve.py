@@ -222,14 +222,15 @@ def score_population(population, population_size, result_file, considered_metric
                 reports.append(json.loads(reports_data[i]))
             except:
                 pass
+            
+        val_results = {}
+        test_results = {}
         if len(reports) == 2 and "valid" in reports[0].keys() and "test" in reports[1].keys():
             val_results = reports[0]
             test_results = reports[1]
         elif len(reports) == 1 and "valid" in reports[0].keys():
             val_results = reports[0]
         else:
-            val_results = {}
-            test_results = {}
             for m in considered_metrics:
                 if "loss" in m:
                     val_results[m] = 1e6
