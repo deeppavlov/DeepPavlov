@@ -315,6 +315,8 @@ class ParamsEvolution:
 
     def range_scores(self, scores):
         not_none_scores = np.array([x for x in scores if x is not None])
+        if len(not_none_scores) == 0:
+            not_none_scores = np.array([0])
         min_score = np.min(not_none_scores)
         max_score = np.max(not_none_scores)
         for i in range(self.population_size):
