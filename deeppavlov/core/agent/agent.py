@@ -23,10 +23,18 @@ class HighestConfidenceSelector(Component):
         return [responses[i] for i, *responses in zip(indexes, *responses)]
 
 
+class TransparentFilter(Component):
+    def __init__(self, skills_count, *args, **kwargs):
+        self.size = skills_count
+
+    def __call__(self, utterances, batch_history):
+        return [[True] * self.size] * len(utterances)
+
+
 class Agent(Component):
     def __init__(self, skills: List[Component], skills_selector=None, skills_filter=None, *args, **kwargs):
         self.skills = skills
-        self.skills_filter = skills_filter or (lambda u, _: [[True] * len(skills)] * len(u))
+        self.skills_filter = skills_filter or TransparentFilter(len(skills))
         self.skills_selector = skills_selector or HighestConfidenceSelector()
         self.history = defaultdict(list)
         self.states = defaultdict(lambda: [None] * len(self.skills))
