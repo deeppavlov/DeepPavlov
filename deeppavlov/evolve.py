@@ -247,12 +247,12 @@ def results_to_table(population, evolution, considered_metrics, result_file, res
             val_results[m] = None
             test_results[m] = None
         if len(reports) == 2 and "valid" in reports[0].keys() and "test" in reports[1].keys():
-            val_results = reports[0]["metrics"]
-            test_results = reports[1]
+            val_results = reports[0]["valid"]["metrics"]
+            test_results = reports[1]["test"]["metrics"]
         elif len(reports) == 1 and "valid" in reports[0].keys():
-            val_results = reports[0]["metrics"]
+            val_results = reports[0]["valid"]["metrics"]
         elif len(reports) == 1 and "test" in reports[0].keys():
-            test_results = reports[0]["metrics"]
+            test_results = reports[0]["test"]["metrics"]
 
         result_table_dict = {}
         for el in result_table_columns:
