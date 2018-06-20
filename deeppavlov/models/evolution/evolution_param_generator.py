@@ -51,7 +51,7 @@ class ParamsEvolution:
         self.basic_config = deepcopy(kwargs)
         self.main_model_path = list(self.find_model_path(self.basic_config, key_main_model))[0]
         Path(self.get_value_from_config(self.basic_config, self.main_model_path + ["save_path"])).mkdir(parents=True,
-                                                                                                         exist_ok=True)
+                                                                                                        exist_ok=True)
         # self.print_dict(self.basic_config, string="Basic config:")
         log.info("Main model path in config: {}".format(self.main_model_path))
 
@@ -148,24 +148,12 @@ class ParamsEvolution:
             param_name = path_[-1]
             value = self.get_value_from_config(basic_config, path_)
             if type(value) is dict:
-                if value.get("evolve_choice"):
+                if value.get("evolve_choice") or value.get("evolve_range") or value.get("evolve_bool"):
                     config = self.insert_value_or_dict_into_config(config,
-                                                                    path_,
-                                                                    self.sample_params(
-                                                                        **{param_name:
-                                                                               list(value["values"])})[param_name])
-                elif value.get("evolve_range"):
-                    config = self.insert_value_or_dict_into_config(config,
-                                                                    path_,
-                                                                    self.sample_params(
-                                                                        **{param_name:
-                                                                               deepcopy(value)})[param_name])
-                elif value.get("evolve_bool"):
-                    config = self.insert_value_or_dict_into_config(config,
-                                                                    path_,
-                                                                    self.sample_params(
-                                                                        **{param_name:
-                                                                               deepcopy(value)})[param_name])
+                                                                   path_,
+                                                                   self.sample_params(
+                                                                       **{param_name:
+                                                                              deepcopy(value)})[param_name])
 
         return config
 
@@ -417,7 +405,7 @@ class ParamsEvolution:
         """
         Make decision whether to do action or not with given probability
         Args:
-            probability: probability whether
+            probability: probability whether to do action or not
 
         Returns:
 
@@ -429,25 +417,47 @@ class ParamsEvolution:
             return False
 
     def sample_params(self, **params):
+        """
+        Sample parameters according to the given possible values
+        Args:
+            **params: dictionary {"param_0": {"evolve_range": [0, 10]},
+                                  "param_1": {"evolve_range": [0, 10], "discrete": true},
+                                  "param_2": {"evolve_range": [0, 1], "scale": "log"},
+                                  "param_3": {"evolve_bool": true},
+                                  "param_4": [0, 1, 2, 3]}
+
+        Returns:
+
+        """
         if not params:
             return {}
         else:
             params_copy = deepcopy(params)
         params_sample = dict()
         for param, param_val in params_copy.items():
-            if isinstance(param_val, list):
-                params_sample[param] = random.choice(param_val)
-            elif isinstance(param_val, dict):
+            if isinstance(param_val, dict):
                 if 'evolve_bool' in param_val and param_val['evolve_bool']:
                     sample = bool(random.choice([True, False]))
                 elif 'evolve_range' in param_val:
                     sample = self._sample_from_ranges(param_val)
+                elif 'evolve_choice' in param_val:
+                    sample = random.choice(param_val['values'])
                 params_sample[param] = sample
             else:
                 params_sample[param] = params_copy[param]
         return params_sample
 
     def _sample_from_ranges(self, opts):
+        """
+        Sample parameters from ranges
+        Args:
+            opts: dictionary {"param_0": {"evolve_range": [0, 10]},
+                              "param_1": {"evolve_range": [0, 10], "discrete": true},
+                              "param_2": {"evolve_range": [0, 1], "scale": "log"}}
+
+        Returns:
+            value
+        """
         from_ = opts['evolve_range'][0]
         to_ = opts['evolve_range'][1]
         if opts.get('scale', None) == 'log':
