@@ -116,11 +116,11 @@ def main():
         result_table = pd.DataFrame(result_table_dict)
         result_table.loc[:, result_table_columns].to_csv(result_file, index=False, sep='\t')
 
-        log.info("\nIteration #{} starts\n".format(iters))
+        log.info("Iteration #{} starts".format(iters))
         population = evolution.first_generation()
     else:
         iters = start_from_population
-        log.info("\nIteration #{} starts\n".format(iters))
+        log.info("Iteration #{} starts".format(iters))
 
         population = []
         for i in range(population_size):
@@ -144,17 +144,17 @@ def main():
     population_scores = results_to_table(population, evolution, considered_metrics,
                                          result_file, result_table_columns)[evolve_metric]
     log.info("Population scores: {}".format(population_scores))
-    log.info("\nIteration #{} was done\n".format(iters))
+    log.info("Iteration #{} was done".format(iters))
     iters += 1
 
     while True:
-        log.info("\nIteration #{} starts\n".format(iters))
+        log.info("Iteration #{} starts".format(iters))
         population = evolution.next_generation(population, population_scores, iters)
         run_population(population, evolution, gpus)
         population_scores = results_to_table(population, evolution, considered_metrics,
                                              result_file, result_table_columns)[evolve_metric]
         log.info("Population scores: {}".format(population_scores))
-        log.info("\nIteration #{} was done\n".format(iters))
+        log.info("Iteration #{} was done".format(iters))
         iters += 1
 
 
