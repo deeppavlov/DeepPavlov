@@ -201,7 +201,7 @@ class ParamsEvolution:
                 population[-1] = self.insert_value_or_dict_into_config(
                     population[-1], self.main_model_path + [which_path],
                     str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + [which_path])
-                             ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i))))
+                             ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath("model")))
             population[-1]["evolution_model_id"] = self.evolution_model_id
             self.evolution_model_id += 1
 
@@ -240,7 +240,7 @@ class ParamsEvolution:
                     self.get_value_from_config(next_population[i],
                                                 self.main_model_path + ["lear_rate"]),
                     read_json(str(Path(self.get_value_from_config(next_population[i],
-                                                                   self.main_model_path + ["save_path"])
+                                                                  self.main_model_path + ["save_path"])
                                        ).parent.joinpath("model_opt.json")))["final_lear_rate"])
             except:
                 pass
@@ -251,20 +251,20 @@ class ParamsEvolution:
                     next_population[i],
                     self.main_model_path + ["load_path"],
                     str(Path(self.get_value_from_config(next_population[i],
-                                                        self.main_model_path + ["save_path"])).parent))
+                                                        self.main_model_path + ["save_path"]))))
             else:
                 # if elite models are saved only as configurations and trained again
                 next_population[i] = self.insert_value_or_dict_into_config(
                     next_population[i],
                     self.main_model_path + ["load_path"],
                     str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + ["load_path"])
-                             ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i))))
+                             ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath("model")))
 
             next_population[i] = self.insert_value_or_dict_into_config(
                 next_population[i],
                 self.main_model_path + ["save_path"],
                 str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + ["save_path"])
-                         ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i))))
+                         ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath("model")))
 
         for i in range(self.n_saved_best_pretrained, self.population_size):
             # if several train files
@@ -277,7 +277,7 @@ class ParamsEvolution:
                     next_population[i],
                     self.main_model_path + [which_path],
                     str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + [which_path])
-                             ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i))))
+                             ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath("model")))
 
             next_population[i]["evolution_model_id"] = self.evolution_model_id
             self.evolution_model_id += 1
