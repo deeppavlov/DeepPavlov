@@ -75,6 +75,11 @@ class ParamsEvolution:
         self.evolution_model_id = 0
         self.eps = 1e-6
 
+        self.paths_to_fiton_dicts = []
+        for path_ in self.find_model_path(self.basic_config, "fit_on"):
+            self.paths_to_fiton_dicts.append(path_)
+        self.n_fiton_dicts = len(self.paths_to_fiton_dicts)
+
         try:
             self.evolve_metric_optimization = self.get_value_from_config(
                 self.basic_config, list(self.find_model_path(
@@ -202,6 +207,13 @@ class ParamsEvolution:
                     population[-1], self.main_model_path + [which_path],
                     str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + [which_path])
                              ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath("model")))
+            for path_id, path_ in enumerate(self.paths_to_fiton_dicts):
+                for which_path in ["save_path", "load_path"]:
+                    population[-1] = self.insert_value_or_dict_into_config(
+                        population[-1], path_ + [which_path],
+                        str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + [which_path])
+                                 ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath(
+                            "fitted_model_" + str(path_id))))
             population[-1]["evolution_model_id"] = self.evolution_model_id
             self.evolution_model_id += 1
 
@@ -251,6 +263,11 @@ class ParamsEvolution:
                     self.main_model_path + ["load_path"],
                     str(Path(self.get_value_from_config(next_population[i],
                                                         self.main_model_path + ["save_path"]))))
+                for path_id, path_ in enumerate(self.paths_to_fiton_dicts):
+                    next_population[i] = self.insert_value_or_dict_into_config(
+                        next_population[i], path_ + ["load_path"],
+                        str(Path(self.get_value_from_config(next_population[i],
+                                                            path_ + ["save_path"]))))
             else:
                 # if elite models are saved only as configurations and trained again
                 next_population[i] = self.insert_value_or_dict_into_config(
@@ -264,6 +281,12 @@ class ParamsEvolution:
                 self.main_model_path + ["save_path"],
                 str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + ["save_path"])
                          ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath("model")))
+            for path_id, path_ in enumerate(self.paths_to_fiton_dicts):
+                next_population[i] = self.insert_value_or_dict_into_config(
+                    next_population[i], path_ + ["save_path"],
+                    str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + ["save_path"])
+                             ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath(
+                        "fitted_model_" + str(path_id))))
 
         for i in range(self.n_saved_best_pretrained, self.population_size):
             # if several train files
@@ -277,6 +300,13 @@ class ParamsEvolution:
                     self.main_model_path + [which_path],
                     str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + [which_path])
                              ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath("model")))
+            for path_id, path_ in enumerate(self.paths_to_fiton_dicts):
+                for which_path in ["save_path", "load_path"]:
+                    next_population[i] = self.insert_value_or_dict_into_config(
+                        next_population[i], path_ + [which_path],
+                        str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + [which_path])
+                                 ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath(
+                            "fitted_model_" + str(path_id))))
 
             next_population[i]["evolution_model_id"] = self.evolution_model_id
             self.evolution_model_id += 1
