@@ -130,12 +130,15 @@ def main():
                 population[i], evolution.main_model_path + ["save_path"],
                 str(Path(
                     evolution.get_value_from_config(evolution.basic_config, evolution.main_model_path + ["save_path"])
-                    ).joinpath("population_" + str(start_from_population)).joinpath("model_" + str(i))))
+                    ).joinpath(
+                    "population_" + str(start_from_population)).joinpath(
+                    "model_" + str(i)).joinpath(
+                    "model")))
 
             population[i] = evolution.insert_value_or_dict_into_config(
                 population[i], evolution.main_model_path + ["load_path"],
                 str(Path(
-                    evolution.get_value_from_config(population[i], evolution.main_model_path + ["load_path"]).parent)))
+                    evolution.get_value_from_config(population[i], evolution.main_model_path + ["load_path"]))))
 
     run_population(population, evolution, gpus)
     population_scores = results_to_table(population, evolution, considered_metrics,
