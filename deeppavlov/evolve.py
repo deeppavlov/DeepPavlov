@@ -175,13 +175,7 @@ def run_population(population, evolution, gpus):
             i = k * len(gpus) + j
             if i < population_size:
                 save_path = Path(evolution.get_value_from_config(population[i],
-                                                                 evolution.main_model_path + ["save_path"]))
-                load_path = Path(evolution.get_value_from_config(population[i],
-                                                                 evolution.main_model_path + ["load_path"]))
-                population[i] = evolution.insert_value_or_dict_into_config(
-                    population[i], evolution.main_model_path + ["save_path"], str(save_path.joinpath("model")))
-                population[i] = evolution.insert_value_or_dict_into_config(
-                    population[i], evolution.main_model_path + ["load_path"], str(load_path.joinpath("model")))
+                                                                 evolution.main_model_path + ["save_path"])).parent
 
                 save_path.mkdir(parents=True, exist_ok=True)
                 f_name = save_path.joinpath("config.json")
