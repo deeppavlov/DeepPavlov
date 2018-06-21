@@ -79,6 +79,7 @@ import deeppavlov.vocabs.wiki_sqlite
 import deeppavlov.dataset_readers.insurance_reader
 import deeppavlov.dataset_iterators.ranking_iterator
 import deeppavlov.models.ner.network
+import deeppavlov.models.ner.natasha
 import deeppavlov.models.ranking.ranking_model
 import deeppavlov.models.ranking.metrics
 import deeppavlov.models.preprocessors.char_splitter
