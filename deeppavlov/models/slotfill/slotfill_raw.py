@@ -94,21 +94,21 @@ class SlotFillingComponent(Component, Serializable):
 
     def get_candidate(self, input_text, tag_dict, score_function):
         candidates = []
-        ratios = []
+        positions = []
         for entity_name, entity_list in tag_dict.items():
             for entity in entity_list:
-                ratio = score_function(entity.lower(), input_text.lower())
+                ratio, j = score_function(entity.lower(), input_text.lower())
                 if ratio >= self.threshold:
                     candidates.append(entity_name)
-                    ratios.append(ratio)
+                    positions.append(j)
         if candidates:
-            _, candidates = list(zip(*sorted(zip(ratios, candidates))))
+            _, candidates = list(zip(*sorted(zip(positions, candidates))))
         return candidates
 
     def get_ratio(self, needle, haystack):
-        d = self.fuzzy_substring_distance(needle, haystack)
+        d, j = self.fuzzy_substring_distance(needle, haystack)
         m = len(needle) - d
-        return exp(-d / 5) * (m / len(needle))
+        return exp(-d / 5) * (m / len(needle)), j
 
     @staticmethod
     def fuzzy_substring_distance(needle, haystack):
@@ -142,7 +142,11 @@ class SlotFillingComponent(Component, Serializable):
             row1 = row2
 
         d = n + m
+        j_min = 0
         for j in range(0, n + 1):
             if j == 0 or j == n or not haystack[j].isalnum():
-                d = min(d, row1[j])
-        return d
+                if d > row1[j]:
+                    d = row1[j]
+                    j_min = j
+                # d = min(d, row1[j])
+        return d, j_min
