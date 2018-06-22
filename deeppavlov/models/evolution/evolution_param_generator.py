@@ -242,9 +242,10 @@ class ParamsEvolution:
         for i in range(self.n_saved_best_pretrained):
             # if several train files:
             if self.train_partition != 1:
+                file_ext = str(Path(next_population[i]["dataset_reader"]["train"]).suffix)
                 next_population[i]["dataset_reader"]["train"] = "_".join(str(Path(next_population[i]["dataset_reader"][
                                                                                       "train"]).stem.split("_")[:-1])) \
-                                                                + "_" + str(iteration % self.train_partition) + ".csv"
+                                                                + "_" + str(iteration % self.train_partition) + file_ext
             try:
                 # re-init learning rate with the final one (works for KerasModel)
                 next_population[i] = self.insert_value_or_dict_into_config(
@@ -291,9 +292,10 @@ class ParamsEvolution:
         for i in range(self.n_saved_best_pretrained, self.population_size):
             # if several train files
             if self.train_partition != 1:
+                file_ext = str(Path(next_population[i]["dataset_reader"]["train"]).suffix)
                 next_population[i]["dataset_reader"]["train"] = "_".join(str(Path(next_population[i]["dataset_reader"][
                                                                                   "train"]).stem.split("_")[:-1])) \
-                                                            + "_" + str(iteration % self.train_partition) + ".csv"
+                                                            + "_" + str(iteration % self.train_partition) + file_ext
             for which_path in ["save_path", "load_path"]:
                 next_population[i] = self.insert_value_or_dict_into_config(
                     next_population[i],
