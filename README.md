@@ -33,7 +33,7 @@ The library is designed according to the following principles:
 Target architecture of our library: -->
 
 <p align="left">
-<img src="dp_agnt_diag.png"/>
+<img src="https://deeppavlov.ai/dp_agnt_diag.png"/>
 </p>
 
 ## Key Concepts
