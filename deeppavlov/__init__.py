@@ -43,6 +43,7 @@ import deeppavlov.dataset_iterators.sqlite_iterator
 import deeppavlov.dataset_iterators.morphotagger_iterator
 
 import deeppavlov.models.classifiers.intents.intent_model
+import deeppavlov.models.evolution.evolution_param_generator
 import deeppavlov.models.commutators.random_commutator
 import deeppavlov.models.embedders.fasttext_embedder
 import deeppavlov.models.embedders.dict_embedder
@@ -100,6 +101,8 @@ import deeppavlov.metrics.bleu
 import deeppavlov.metrics.squad_metrics
 import deeppavlov.metrics.roc_auc_score
 import deeppavlov.metrics.fmeasure_classification
+import deeppavlov.metrics.log_loss
+import deeppavlov.metrics.mrr_classification
 
 import deeppavlov.core.common.log
 

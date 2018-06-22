@@ -124,6 +124,7 @@ class KerasIntentModel(KerasModel):
             if self.opt['fasttext_md5'] != current_fasttext_md5:
                 raise ConfigError(
                     "Given fasttext model does NOT match fasttext model used previously to train loaded model")
+        print("Model was successfully initialized!\nModel summary:\n{}".format(self.model.summary()))
 
     def _init_missed_params(self):
         """
