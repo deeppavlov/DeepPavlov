@@ -8,7 +8,7 @@ This repository contains implementation of parameters evolution for DeepPavlov m
 Evolution process can be described in the following way:
 * Initialize parameters of evolutionary process:
   - `p_size` - number of individuums (models) per population
-  - `key_main_model` - key of the dictionary in config containing the model being trained.
+  - `key_main_model` - key of the dictionary in config containing the model being trained (see description below).
   - `p_cross` - probability of crossover for a parent pair
   - `pow_cross` - crossover power - portion of evolving parameters that will be exchanged between parents during crossover
   - `p_mut` - probability of mutation for a parameter
@@ -18,6 +18,20 @@ Evolution process can be described in the following way:
   - `start_from_population` - the number of population to start from that is needed to restart population, for example (by feault, starts from 0 population).
   - `path_to_population` - path to the directory "population_{`start_from_population`}". Should be given if `start_from_population` is not 0.
   - `elitism_with_weights` - binary value (set of values: "0", "1") - whether to initialize elite models with pre-trained weights from previous population or not
+
+* Current version allows to evolve any parameter of the config that is an item of some dictionary in config file. One can make a copy of a usual DeepPavlov model config, and reassign parameters that can be tuned during evolution.
+To evolve some parameter one has to assign it to a dictionary of one of the following type:
+  - ```{"evolve_range": [min_value, max_value]}``` - values uniformly distributed on the given interval,
+  - ```{"evolve_range": [min_value, max_value], "scale": "log"}``` - values distributed on the given interval logariphmically,
+  - ```{"evolve_range": [min_value, max_value], "discrete": true}``` - discrete values uniformly distributed on the following interval,
+  - ```{"evolve_bool": true}``` - bool values,
+  - ```{"evolve_choice": true, "values": [value_0, ..., value_n]}``` - values uniformly taking on of the given values.
+
+* Choose the main model in the pipe being evolved. Find or add extra parameter that determines this model (for example, existing `"main": true`). The dictionary - model containing this parameter as a key will be trained (do not forget to give this parameter's name to `key_main_model`). Change `save_path` and `load_path` of this model to any ABSOLUTE paths (VERY IMPORTANT) to folder where population will be saved.
+
+* All the models in pipe that contain key `fit_on` will be trained every time separately for each model and saved to the same directory with model and called `fitted_model_{i}`.
+
+That's all you need to change in the config. Now let's mode on to the example.
 
 ## Example 
 
