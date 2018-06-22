@@ -125,6 +125,14 @@
             2,
             3
           ]
+        },
+        "check_choice_str": {
+          "evolve_choice": true,
+          "values": [
+            "hello",
+            "hello, again",
+            "bye-bye"
+          ]
         }
       }
     ],

@@ -343,6 +343,16 @@ class ParamsEvolution:
         return selected
 
     def range_scores(self, scores):
+        """
+        Ranges scores,
+        range 1 corresponds to the best score,
+        range self.population_size corresponds to the worst score.
+        Args:
+            scores: list of corresponding scores of population
+
+        Returns:
+            ranges
+        """
         not_none_scores = np.array([x for x in scores if x is not None])
         if len(not_none_scores) == 0:
             not_none_scores = np.array([0])

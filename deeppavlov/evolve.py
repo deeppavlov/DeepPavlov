@@ -84,6 +84,7 @@ def main():
     basic_params = read_json(pipeline_config_path)
     log.info("Given basic params: {}\n".format(json.dumps(basic_params, indent=2)))
 
+    # Initialize evolution
     evolution = ParamsEvolution(population_size=population_size,
                                 p_crossover=p_crossover, crossover_power=pow_crossover,
                                 p_mutation=p_mutation, mutation_power=pow_mutation,
@@ -98,6 +99,7 @@ def main():
                                                              evolution.basic_config, "metrics"))[0] + ["metrics"])
     evolve_metric = considered_metrics[0]
 
+    # Create table variable for gathering results
     result_file = Path(evolution.get_value_from_config(evolution.basic_config,
                                                        evolution.main_model_path + ["save_path"])
                        ).joinpath("result_table.csv")
@@ -112,13 +114,17 @@ def main():
     result_table_columns.append("params")
 
     if start_from_population == 0:
+        # if starting evolution from scratch
         iters = 0
         result_table = pd.DataFrame(result_table_dict)
+        # write down result table file
         result_table.loc[:, result_table_columns].to_csv(result_file, index=False, sep='\t')
 
         log.info("Iteration #{} starts".format(iters))
+        # randomly generate the first population
         population = evolution.first_generation()
     else:
+        # if starting evolution from already existing population
         iters = start_from_population
         log.info("Iteration #{} starts".format(iters))
 
