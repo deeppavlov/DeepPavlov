@@ -15,14 +15,7 @@ from setuptools import setup, find_packages
 import os
 import re
 
-try:  # for pip>=10.0.0
-    from pip._internal.req import parse_requirements
-    from pip._internal.download import PipSession
-    from pip._internal import main as pip_main
-except ImportError:  # for pip<=9.0.3
-    from pip.req import parse_requirements
-    from pip.download import PipSession
-    from pip import main as pip_main
+from utils.pip_wrapper import install
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -30,13 +23,20 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 def read_requirements():
     # # parses requirements from requirements.txt
     reqs_path = os.path.join(__location__, 'requirements.txt')
-    install_reqs = parse_requirements(reqs_path, session=PipSession())
-    reqs = []
-    for ir in install_reqs:
-        pip_main(['install', str(ir.req or ir.link)])
-        if ir.req:
-            reqs.append(str(ir.req))
-    return reqs
+    with open(reqs_path) as f:
+        reqs = [line.strip() for line in f]
+
+    for req in reqs:
+        install(req)
+
+    names = []
+    links = []
+    for req in reqs:
+        if '://' in req:
+            links.append(req)
+        else:
+            names.append(req)
+    return {'install_requires': names, 'dependency_links': links}
 
 
 def readme():
@@ -63,5 +63,5 @@ setup(
     download_url='https://github.com/deepmipt/DeepPavlov/archive/' + meta['__version__'] + '.tar.gz',
     keywords=['NLP', 'NER', 'SQUAD', 'Intents', 'Chatbot'],
     include_package_data=True,
-    install_requires=read_requirements()
+    **read_requirements()
 )
