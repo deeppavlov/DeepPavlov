@@ -51,3 +51,5 @@ cd deeppavlov
 python evolve.py configs/evolution/evolve_intents_snips.json
 ```
 * Folder `download/evolution/classification/intents_snips` will be created. Each population will be saved in a folder `download/evolution/classification/intents_snips/population_i` each of which contains `population_size` folders `model_i` consisting of saved model files explicitly, saved files of models from pipe that has a key "fit_on", `out.txt` and `err.txt` with logs of `deep.py train` script from training each model separately, and `config.json` with config for this individual.
+
+* Now one can open iPython Notebook file `deeppavlov/models/evolution/Results_analysis.ipynb`, set `CONFIG_FILE` to config file path and run cells to see evolution results.
