@@ -165,14 +165,11 @@
       ],
       "discrete": true
     },
-    "metrics": {
-      "evolve_choice": true,
-      "values": [
-        "classification_accuracy",
-        "classification_f1",
-        "classification_roc_auc"
-      ]
-    },
+    "metrics": [
+      "classification_accuracy",
+      "classification_f1",
+      "classification_roc_auc"
+    ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
