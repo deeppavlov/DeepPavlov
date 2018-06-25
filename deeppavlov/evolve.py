@@ -30,6 +30,7 @@ from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.models.evolution.evolution_param_generator import ParamsEvolution
 from deeppavlov.core.common.file import read_json, save_json
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.commands.utils import set_deeppavlov_root, expand_path
 
 log = get_logger(__name__)
 
@@ -100,9 +101,15 @@ def main():
     evolve_metric = considered_metrics[0]
 
     # Create table variable for gathering results
-    result_file = Path(evolution.get_value_from_config(evolution.basic_config,
-                                                       evolution.main_model_path + ["save_path"])
-                       ).joinpath("result_table.csv")
+    set_deeppavlov_root(evolution.basic_config)
+
+    expand_path(Path(evolution.get_value_from_config(
+        evolution.basic_config, evolution.main_model_path + ["save_path"]))).mkdir(parents=True, exist_ok=True)
+
+    result_file = expand_path(Path(evolution.get_value_from_config(evolution.basic_config,
+                                                                   evolution.main_model_path + ["save_path"])
+                                   ).joinpath("result_table.csv"))
+
     result_table_columns = []
     result_table_dict = {}
     for el in considered_metrics:
@@ -130,8 +137,8 @@ def main():
 
         population = []
         for i in range(population_size):
-            population.append(read_json(Path(path_to_population).joinpath(
-                "model_" + str(i)).joinpath("config.json")))
+            population.append(read_json(expand_path(Path(path_to_population).joinpath(
+                "model_" + str(i)).joinpath("config.json"))))
             population[i] = evolution.insert_value_or_dict_into_config(
                 population[i], evolution.main_model_path + ["save_path"],
                 str(Path(
@@ -197,8 +204,8 @@ def run_population(population, evolution, gpus):
         for j in range(len(gpus)):
             i = k * len(gpus) + j
             if i < population_size:
-                save_path = Path(evolution.get_value_from_config(population[i],
-                                                                 evolution.main_model_path + ["save_path"])).parent
+                save_path = expand_path(Path(evolution.get_value_from_config(
+                    population[i], evolution.main_model_path + ["save_path"])).parent)
 
                 save_path.mkdir(parents=True, exist_ok=True)
                 f_name = save_path.joinpath("config.json")
