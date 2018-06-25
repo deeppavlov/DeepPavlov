@@ -144,7 +144,7 @@
         "embedder": "#my_embedder",
         "tokenizer": "#my_tokenizer",
         "check_bool": {
-          "bool": true
+          "evolve_bool": true
         }
       }
     ],
