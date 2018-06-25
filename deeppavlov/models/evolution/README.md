@@ -7,7 +7,7 @@ This repository contains implementation of parameters evolution for DeepPavlov m
 
 Evolution process can be described in the following way:
 * Initialize parameters of evolutionary process:
-  - `p_size` - number of individuums (models) per population
+  - `p_size` - number of individuals (models) per population
   - `key_main_model` - key of the dictionary in config containing the model being trained (see description below).
   - `p_cross` - probability of crossover for a parent pair
   - `pow_cross` - crossover power - portion of evolving parameters that will be exchanged between parents during crossover
@@ -18,6 +18,8 @@ Evolution process can be described in the following way:
   - `start_from_population` - the number of population to start from that is needed to restart population, for example (by feault, starts from 0 population).
   - `path_to_population` - path to the directory "population_{`start_from_population`}". Should be given if `start_from_population` is not 0.
   - `elitism_with_weights` - binary value (set of values: "0", "1") - whether to initialize elite models with pre-trained weights from previous population or not
+
+* **Warning**: `metrics` can not be evolved because the main metric determines evolutionary process.
 
 * Current version allows to evolve any parameter of the config that is an item of some dictionary in config file. One can make a copy of a usual DeepPavlov model config, and reassign parameters that can be tuned during evolution.
 To evolve some parameter one has to assign it to a dictionary of one of the following type:
@@ -35,18 +37,17 @@ That's all you need to change in the config. Now let's mode on to the example.
 
 ## Example 
 
-If one prefers to run evolution on some provided by DeepPavlov dataset,
-firstly, download embeddings and datasets running the following command providing
-corresponding name of the config file (see above):
-
+* If one prefers to run evolution on some provided by DeepPavlov dataset,
+firstly, download embeddings and datasets.
+Consider parameters evolution on SNIPS dataset, download data running the following command providing
+corresponding name of the config file:
 ```
 cd deeppavlov
 python deep.py download configs/intents/intents_snips.json
 ```
-
-To evolve model of interest run the following command providing corresponding name of the config file (see above):
+* To evolve the model run the following command providing corresponding name of the config file (see above):
 ```
 cd deeppavlov
-python evolve.py interact configs/evolution/evolve_intents_snips.json
+python evolve.py configs/evolution/evolve_intents_snips.json
 ```
-
+* Folder `download/evolution/classification/intents_snips` will be created. Each population will be saved in a folder `download/evolution/classification/intents_snips/population_i` each of which contains `population_size` folders `model_i` consisting of saved model files explicitly, saved files of models from pipe that has a key "fit_on", `out.txt` and `err.txt` with logs of `deep.py train` script from training each model separately, and `config.json` with config for this individual.
