@@ -480,6 +480,8 @@ class ParamsEvolution:
                     new_mutated_value = val
                 elif basic_value.get("evolve_choice"):
                     new_mutated_value = self.sample_params(**{param_name: basic_value})[param_name]
+                elif basic_value.get("evolve_bool"):
+                    new_mutated_value = self.sample_params(**{param_name: basic_value})[param_name]
                 else:
                     new_mutated_value = param_value
             else:
