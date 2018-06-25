@@ -142,7 +142,10 @@
         },
         "model_name": "cnn_model",
         "embedder": "#my_embedder",
-        "tokenizer": "#my_tokenizer"
+        "tokenizer": "#my_tokenizer",
+        "check_bool": {
+          "bool": true
+        }
       }
     ],
     "out": [
