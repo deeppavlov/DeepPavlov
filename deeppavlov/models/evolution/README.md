@@ -19,6 +19,8 @@ Evolution process can be described in the following way:
   - `path_to_population` - path to the directory "population_{`start_from_population`}". Should be given if `start_from_population` is not 0.
   - `elitism_with_weights` - binary value (set of values: "0", "1") - whether to initialize elite models with pre-trained weights from previous population or not
 
+* **Warning**: `metrics` can not be evolved because the main metric determines evolutionary process.
+
 * Current version allows to evolve any parameter of the config that is an item of some dictionary in config file. One can make a copy of a usual DeepPavlov model config, and reassign parameters that can be tuned during evolution.
 To evolve some parameter one has to assign it to a dictionary of one of the following type:
   - ```{"evolve_range": [min_value, max_value]}``` - values uniformly distributed on the given interval,
@@ -37,7 +39,6 @@ That's all you need to change in the config. Now let's mode on to the example.
 
 * If one prefers to run evolution on some provided by DeepPavlov dataset,
 firstly, download embeddings and datasets.
-
 Consider parameters evolution on SNIPS dataset, download data running the following command providing
 corresponding name of the config file:
 ```
