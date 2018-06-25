@@ -52,8 +52,6 @@ class ParamsEvolution:
 
         self.basic_config = deepcopy(kwargs)
         self.main_model_path = list(self.find_model_path(self.basic_config, key_main_model))[0]
-        Path(self.get_value_from_config(self.basic_config, self.main_model_path + ["save_path"])).mkdir(parents=True,
-                                                                                                        exist_ok=True)
         log.info("Main model path in config: {}".format(self.main_model_path))
 
         self.population_size = population_size
