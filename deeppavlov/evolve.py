@@ -99,9 +99,6 @@ def main():
                                                          list(evolution.find_model_path(
                                                              evolution.basic_config, "metrics"))[0] + ["metrics"])
 
-    if type(considered_metrics) is str:
-        considered_metrics = [considered_metrics]
-
     log.info(considered_metrics)
     evolve_metric = considered_metrics[0]
 
