@@ -98,6 +98,12 @@ def main():
     considered_metrics = evolution.get_value_from_config(evolution.basic_config,
                                                          list(evolution.find_model_path(
                                                              evolution.basic_config, "metrics"))[0] + ["metrics"])
+    if type(considered_metrics) is dict:
+        considered_metrics = evolution.sample_params(considered_metrics)["metrics"]
+    if type(considered_metrics) is str:
+        considered_metrics = [considered_metrics]
+
+    log.info(considered_metrics)
     evolve_metric = considered_metrics[0]
 
     # Create table variable for gathering results

@@ -56,7 +56,7 @@
         "name": "fasttext",
         "save_path": "embeddings/dstc2_fastText_model.bin",
         "load_path": "embeddings/dstc2_fastText_model.bin",
-        "dim": 300
+        "dim": 100
       },
       {
         "id": "my_tokenizer",
@@ -91,15 +91,28 @@
           ],
           "discrete": true
         },
-        "confident_threshold": 0.5,
+        "confident_threshold": {
+          "evolve_choice": true,
+          "values": [
+            0.5,
+            1
+          ]
+        },
         "optimizer": "Adam",
         "lear_rate": {
           "evolve_range": [
             0.0001,
             0.1
-          ]
+          ],
+          "scale": "log"
         },
-        "lear_rate_decay": 0.1,
+        "lear_rate_decay": {
+          "evolve_range": [
+            0.0001,
+            0.1
+          ],
+          "scale": "log"
+        },
         "loss": "binary_crossentropy",
         "text_size": 15,
         "coef_reg_cnn": {
@@ -152,11 +165,14 @@
       ],
       "discrete": true
     },
-    "metrics": [
-      "classification_accuracy",
-      "classification_f1",
-      "classification_roc_auc"
-    ],
+    "metrics": {
+      "evolve_choice": true,
+      "values": [
+        "classification_accuracy",
+        "classification_f1",
+        "classification_roc_auc"
+      ]
+    },
     "validation_patience": 5,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
