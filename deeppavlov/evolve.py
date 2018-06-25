@@ -238,7 +238,7 @@ def run_population(population, evolution, gpus):
                                        shell=True, stdout=PIPE, stderr=PIPE))
         for j, proc in enumerate(procs):
             i = k * len(gpus) + j
-            log.info(f'wait on {i}th proc')
+            log.info(f'Waiting on {i}th proc')
             proc.wait()
     return None
 
@@ -254,9 +254,9 @@ def results_to_table(population, evolution, considered_metrics, result_file, res
                                                     evolution.basic_config, "test_best"))[0]
                                                 + ["test_best"])
     if (not validate_best) and test_best:
-        log.info("validate_best is set to False. Tuning parameters on test")
+        log.info("Validate_best is set to False. Tuning parameters on test")
     elif (not validate_best) and (not test_best):
-        raise ConfigError("validate_best and test_best are set to False. Can not evolve.")
+        raise ConfigError("Validate_best and test_best are set to False. Can not evolve.")
 
     population_metrics = {}
     for m in considered_metrics:
