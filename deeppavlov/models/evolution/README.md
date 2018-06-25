@@ -7,7 +7,7 @@ This repository contains implementation of parameters evolution for DeepPavlov m
 
 Evolution process can be described in the following way:
 * Initialize parameters of evolutionary process:
-  - `p_size` - number of individuums (models) per population
+  - `p_size` - number of individuals (models) per population
   - `key_main_model` - key of the dictionary in config containing the model being trained (see description below).
   - `p_cross` - probability of crossover for a parent pair
   - `pow_cross` - crossover power - portion of evolving parameters that will be exchanged between parents during crossover
@@ -35,18 +35,18 @@ That's all you need to change in the config. Now let's mode on to the example.
 
 ## Example 
 
-If one prefers to run evolution on some provided by DeepPavlov dataset,
-firstly, download embeddings and datasets running the following command providing
-corresponding name of the config file (see above):
+* If one prefers to run evolution on some provided by DeepPavlov dataset,
+firstly, download embeddings and datasets.
 
+Consider parameters evolution on SNIPS dataset, download data running the following command providing
+corresponding name of the config file:
 ```
 cd deeppavlov
 python deep.py download configs/intents/intents_snips.json
 ```
-
-To evolve model of interest run the following command providing corresponding name of the config file (see above):
+* To evolve the model run the following command providing corresponding name of the config file (see above):
 ```
 cd deeppavlov
-python evolve.py interact configs/evolution/evolve_intents_snips.json
+python evolve.py configs/evolution/evolve_intents_snips.json
 ```
-
+* Folder `download/evolution/classification/intents_snips` will be created. Each population will be saved in a folder `download/evolution/classification/intents_snips/population_i` each of which contains `population_size` folders `model_i` consisting of saved model files explicitly, saved files of models from pipe that has a key "fit_on", `out.txt` and `err.txt` with logs of `deep.py train` script from training each model separately, and `config.json` with config for this individual.
