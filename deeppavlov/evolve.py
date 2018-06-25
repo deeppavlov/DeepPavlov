@@ -99,7 +99,7 @@ def main():
                                                          list(evolution.find_model_path(
                                                              evolution.basic_config, "metrics"))[0] + ["metrics"])
     if type(considered_metrics) is dict:
-        considered_metrics = evolution.sample_params(considered_metrics)["metrics"]
+        considered_metrics = evolution.sample_params(**{"metrics": considered_metrics})["metrics"]
     if type(considered_metrics) is str:
         considered_metrics = [considered_metrics]
 
