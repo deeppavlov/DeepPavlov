@@ -40,7 +40,7 @@
       "host": "",
       "port": "",
       "model_endpoint": "/squad",
-      "model_args_names": ["context", "question"]
+      "model_args_names": ["text1", "question"]
     },
     "ODQA": {
       "host": "",
