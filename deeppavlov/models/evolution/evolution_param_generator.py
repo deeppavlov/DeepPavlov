@@ -206,12 +206,14 @@ class ParamsEvolution:
                     str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + [which_path])
                              ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath("model")))
             for path_id, path_ in enumerate(self.paths_to_fiton_dicts):
+                suffix = Path(self.get_value_from_config(self.basic_config,
+                                                         path_ + ["save_path"])).suffix
                 for which_path in ["save_path", "load_path"]:
                     population[-1] = self.insert_value_or_dict_into_config(
                         population[-1], path_ + [which_path],
                         str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + [which_path])
                                  ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath(
-                            "fitted_model_" + str(path_id))))
+                            "fitted_model_" + str(path_id)).with_suffix(suffix)))
             population[-1]["evolution_model_id"] = self.evolution_model_id
             self.evolution_model_id += 1
 
@@ -281,11 +283,13 @@ class ParamsEvolution:
                 str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + ["save_path"])
                          ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath("model")))
             for path_id, path_ in enumerate(self.paths_to_fiton_dicts):
+                suffix = Path(self.get_value_from_config(self.basic_config,
+                                                         path_ + ["save_path"])).suffix
                 next_population[i] = self.insert_value_or_dict_into_config(
                     next_population[i], path_ + ["save_path"],
                     str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + ["save_path"])
                              ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath(
-                        "fitted_model_" + str(path_id))))
+                        "fitted_model_" + str(path_id)).with_suffix(suffix)))
 
         for i in range(self.n_saved_best_pretrained, self.population_size):
             # if several train files
@@ -301,12 +305,14 @@ class ParamsEvolution:
                     str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + [which_path])
                              ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath("model")))
             for path_id, path_ in enumerate(self.paths_to_fiton_dicts):
+                suffix = Path(self.get_value_from_config(self.basic_config,
+                                                         path_ + ["save_path"])).suffix
                 for which_path in ["save_path", "load_path"]:
                     next_population[i] = self.insert_value_or_dict_into_config(
                         next_population[i], path_ + [which_path],
                         str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + [which_path])
                                  ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath(
-                            "fitted_model_" + str(path_id))))
+                            "fitted_model_" + str(path_id)).with_suffix(suffix)))
 
             next_population[i]["evolution_model_id"] = self.evolution_model_id
             self.evolution_model_id += 1
