@@ -59,7 +59,8 @@ PARAMS = {
         ("intents/intents_dstc2.json", "intents", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_dstc2_big.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
-    "snips": {("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+    "snips": {
+        ("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_snips_bigru.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_snips_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
