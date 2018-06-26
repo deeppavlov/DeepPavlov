@@ -11,6 +11,7 @@ keras==2.1.2
 gensim==2.3.0
 pandas==0.21.1
 fuzzywuzzy==0.16.0
+pybind11==2.2.3
 git+https://github.com/facebookresearch/fastText.git@25d0bb04bf43d8b674fe9ae5722ef65a0856f5d6#egg=fastText
 nltk==3.2.5
 scikit-learn==0.19.0
