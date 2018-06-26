@@ -257,6 +257,7 @@ class ParamsEvolution:
             except:
                 pass
 
+            # load_paths
             if self.elitism_with_weights:
                 # if elite models are saved with weights
                 next_population[i] = self.insert_value_or_dict_into_config(
@@ -276,7 +277,16 @@ class ParamsEvolution:
                     self.main_model_path + ["load_path"],
                     str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + ["load_path"])
                              ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath("model")))
+                for path_id, path_ in enumerate(self.paths_to_fiton_dicts):
+                    suffix = Path(self.get_value_from_config(self.basic_config,
+                                                             path_ + ["load_path"])).suffix
+                    next_population[i] = self.insert_value_or_dict_into_config(
+                        next_population[i], path_ + ["load_path"],
+                        str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + ["load_path"])
+                                 ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath(
+                            "fitted_model_" + str(path_id)).with_suffix(suffix)))
 
+            # save_paths
             next_population[i] = self.insert_value_or_dict_into_config(
                 next_population[i],
                 self.main_model_path + ["save_path"],
