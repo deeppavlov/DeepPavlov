@@ -6,18 +6,18 @@
 This repository contains implementation of parameters evolution for DeepPavlov models.
 
 Evolution process can be described in the following way:
-* Initialize parameters of evolutionary process:
-  - `p_size` - number of individuals (models) per population
-  - `key_main_model` - key of the dictionary in config containing the model being trained (see description below).
-  - `p_cross` - probability of crossover for a parent pair
-  - `pow_cross` - crossover power - portion of evolving parameters that will be exchanged between parents during crossover
-  - `p_mut` - probability of mutation for a parameter
-  - `pow_mut` - mutation power - maximal portion of maximal possible value of parameter which can be added or subtracted during mutation
-  - `gpus` - available GPUs divided by comma "," (default "-1" means CPU support; "0,3,5,2" means visible 0, 2, 3, 5 GPUs)
-  - `train_partition` - if train file is too big to train (recommeded to divide train files if train dataset is more than 100 thousands examples), one can split it in `train_partition` number of files, save it calling "any_name_{0}.any_extension", ..., "any_name_{`train_partition`}.any_extension". In dataset_reader "train" field indicate the first one file. Population is trained on the N_{population} % `train_partition` part of the dataset.
-  - `start_from_population` - the number of population to start from that is needed to restart population, for example (by feault, starts from 0 population).
-  - `path_to_population` - path to the directory "population_{`start_from_population`}". Should be given if `start_from_population` is not 0.
-  - `elitism_with_weights` - binary value (set of values: "0", "1") - whether to initialize elite models with pre-trained weights from previous population or not
+* Initialize parameters of evolutionary process setting the following arguments to `evolve.py`:
+  - `--p_size` - number of individuals (models) per population (*Default: 10*).
+  - `--key_main_model` - key of the dictionary in config containing the model being trained (see description below) (Default: "main").
+  - `--p_cross` - probability of crossover for a parent pair (*Default: 0.2*).
+  - `--pow_cross` - crossover power - portion of evolving parameters that will be exchanged between parents during crossover (Default: 0.1).
+  - `--p_mut` - probability of mutation for a parameter (*Default: 1.*).
+  - `--pow_mut` - mutation power - maximal portion of maximal possible value of parameter which can be added or subtracted during mutation (Default: 0.1).
+  - `--gpus` - available GPUs divided by comma "," (*Default: -1 means CPU support*). If one runs `evolve.py` with assigned `CUDA_VISIBLE_DEVICES`, gpus are either of the same numeration (e.g. `CUDA_VISIBLE_DEVICES=3,4,5` and `--gpus 4,4,5` mean running models on `4,4,5` original GPUs) or ordinal number of device within those from `CUDA_VISIBLE_DEVICES` (e.g. `CUDA_VISIBLE_DEVICES=3,4,5` and `--gpus 1,1,2` mean running models on `4,4,5` original GPUs).
+  - `--train_partition` - if train file is too big to train (recommeded to divide train files if train dataset is more than 100 thousands examples), one can split it in `train_partition` number of files, save it calling "any_name_{0}.any_extension", ..., "any_name_{`train_partition`}.any_extension". In dataset_reader "train" field indicate the first one file. Population is trained on the N_{population} % `train_partition` part of the dataset (*Default: 1*).
+  - `--start_from_population` - the number of population to start from that is needed to restart population (*Default: 0 means starts from 0 population*).
+  - `--path_to_population` - path to the directory "population_{`start_from_population`}". Should be given if `start_from_population` is not 0 (*Default: ""*).
+  - `--elitism_with_weights` - binary value (set of values: "0", "1") - whether to initialize elite models with pre-trained weights from previous population or not (*Default: 0 means save elite models without weights*).
 
 * **Warning**: `metrics` can not be evolved because the main metric determines evolutionary process.
 
