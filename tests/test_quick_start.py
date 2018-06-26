@@ -76,7 +76,7 @@ PARAMS = {
         ("sentiment/sentiment_ag_news.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
     },
     "evolution": {
-        ("evolution/evolve_intents_snips.json", "evolution", ('E',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("evolution/evolve_intents_snips.json", "evolution", ('E',)): None
     },
     "sample": {
         ("intents/intents_sample_csv.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -284,7 +284,7 @@ class TestQuickStart(object):
             c = test_configs_path / conf_file
             model_path = download_path / model_dir
 
-            if 'IP' not in mode:
+            if 'IP' not in mode and 'TI' not in mode:
                 config_path = str(test_configs_path.joinpath(conf_file))
                 deep_download(['-test', '-c', config_path])
             shutil.rmtree(str(model_path),  ignore_errors=True)
