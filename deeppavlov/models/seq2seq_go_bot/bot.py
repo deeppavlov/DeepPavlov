@@ -22,7 +22,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.data.vocab import DefaultVocabulary
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
-from deeppavlov.skills.seq2seq_go_bot.network import Seq2SeqGoalOrientedBotNetwork
+from deeppavlov.models.seq2seq_go_bot.network import Seq2SeqGoalOrientedBotNetwork
 from deeppavlov.core.common.log import get_logger
 
 

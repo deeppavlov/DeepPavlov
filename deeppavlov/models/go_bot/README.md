@@ -13,16 +13,16 @@ Here is a simple example of interaction with a trained dialogue bot (can be down
 ```x::
 >> Hello, welcome to the Cambridge restaurant system. You can ask for restaurants by area, price range or food type. How may I help you?
 x::hi, i want cheap food
-2018-05-16 12:28:48.459 INFO in 'deeppavlov.skills.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'cheap'}, got 22 results.
+2018-05-16 12:28:48.459 INFO in 'deeppavlov.models.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'cheap'}, got 22 results.
 >> The lucky star serves chinese food in the cheap price range.
 x::is there anything with french food?
-2018-05-16 12:29:02.795 INFO in 'deeppavlov.skills.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'cheap', 'food': 'french'}, got 0 results.
+2018-05-16 12:29:02.795 INFO in 'deeppavlov.models.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'cheap', 'food': 'french'}, got 0 results.
 >> Sorry there is no french restaurant in the cheap price range.
 x::ok, maybe there is something in expensive pricerange?
-2018-05-16 12:29:23.337 INFO in 'deeppavlov.skills.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'expensive', 'food': 'french'}, got 2 results.
+2018-05-16 12:29:23.337 INFO in 'deeppavlov.models.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'expensive', 'food': 'french'}, got 2 results.
 >> Cote serves french food in the expensive price range.
 x::in what part of town is it?
-2018-05-16 12:29:31.193 INFO in 'deeppavlov.skills.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'expensive', 'food': 'french'}, got 2 results.
+2018-05-16 12:29:31.193 INFO in 'deeppavlov.models.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'expensive', 'food': 'french'}, got 2 results.
 >> Restaurant two two is a nice place in the north of town serving tasty french food.
 x::ok, give me their phone number
 >> The phone number of restaurant two two is 01223 351880.
@@ -31,10 +31,10 @@ x::address and post code too
 x::ok, thank you!
 >> Restaurant two two serves french food in the expensive price range.
 x::and if i wanted an italian restuarant?
-2018-05-16 12:30:15.98 INFO in 'deeppavlov.skills.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'expensive', 'food': 'italian'}, got 4 results.
+2018-05-16 12:30:15.98 INFO in 'deeppavlov.models.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'expensive', 'food': 'italian'}, got 4 results.
 >> Frankie and bennys serves italian food in the expensive price range.
 x::more cheaply priced?
-2018-05-16 12:30:36.560 INFO in 'deeppavlov.skills.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'cheap', 'food': 'italian'}, got 5 results.
+2018-05-16 12:30:36.560 INFO in 'deeppavlov.models.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'cheap', 'food': 'italian'}, got 5 results.
 >> Da vinci pizzeria serves italian food in the cheap price range.
 x::ok, give me their phone number and address, please
 >> The phone number of da vinci pizzeria is 01223 351707 and it is on 20 milton road chesterton.
