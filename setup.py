@@ -24,7 +24,7 @@ def read_requirements():
     # # parses requirements from requirements.txt
     reqs_path = os.path.join(__location__, 'requirements.txt')
     with open(reqs_path) as f:
-        reqs = [line.strip() for line in f]
+        reqs = [line.strip() for line in f if not line.strip().startswith('#')]
 
     for req in reqs:
         install(req)
@@ -46,7 +46,7 @@ def readme():
 
 
 meta = {}
-with open('deeppavlov/package_meta.py') as f:
+with open(os.path.join(__location__, 'deeppavlov/package_meta.py')) as f:
     exec(f.read(), meta)
 
 setup(
