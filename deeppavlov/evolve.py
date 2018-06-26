@@ -82,6 +82,20 @@ def main():
     p_mutation = args.p_mut
     pow_mutation = args.pow_mut
 
+    if os.environ.get("CUDA_VISIBLE_DEVICES") is None:
+        pass
+    else:
+        cvd = [int(gpu) for gpu in os.environ.get("CUDA_VISIBLE_DEVICES").split(",")]
+        if set(gpus).issubset(set(cvd)):
+            pass
+        else:
+            try:
+                gpus = [cvd[gpu] for gpu in gpus]
+            except:
+                raise ConfigError("Can not use gpus `{}` with CUDA_VISIBLE_DEVICES='{}'".format(
+                    ",".join(gpus), ",".join(cvd)
+                ))
+
     basic_params = read_json(pipeline_config_path)
     log.info("Given basic params: {}\n".format(json.dumps(basic_params, indent=2)))
 
