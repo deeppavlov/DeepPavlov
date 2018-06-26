@@ -210,7 +210,7 @@ class TestQuickStart(object):
         post_payload = {}
         for arg_name in model_args_names:
             arg_value = str(' '.join(['qwerty'] * 10))
-            post_payload[arg_name] = arg_value
+            post_payload[arg_name] = [arg_value]
 
         logfile = io.BytesIO(b'')
         p = pexpect.spawn(sys.executable, ["-m", "deeppavlov", "riseapi", str(conf_file)], timeout=None,
