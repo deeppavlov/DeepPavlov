@@ -264,9 +264,9 @@ def results_to_table(population, evolution, considered_metrics, result_file, res
                 evolution.main_model_path + ["save_path"])).parent.joinpath("out.txt"))), "r") as fout:
             reports_data = fout.read().splitlines()[-2:]
         reports = []
-        for i in range(2):
+        for j in range(2):
             try:
-                reports.append(json.loads(reports_data[i]))
+                reports.append(json.loads(reports_data[j]))
             except:
                 pass
 
