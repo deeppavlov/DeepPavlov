@@ -90,6 +90,10 @@ def main():
         cvd = [int(gpu) for gpu in os.environ.get("CUDA_VISIBLE_DEVICES").split(",")]
         if set(gpus).issubset(set(cvd)):
             pass
+        elif gpus == [-1]:
+            raise ConfigError("Unclear to compute on CPU or CUDA_VISIBLE_DEVICES='{}'".format(
+                ",".join(cvd)
+            ))
         else:
             try:
                 gpus = [cvd[gpu] for gpu in gpus]
