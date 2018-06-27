@@ -193,7 +193,7 @@ def main():
     iters += 1
 
     while True:
-        if iters == iterations:
+        if iterations != -1 and start_from_population + iterations == iters:
             log.info("End of evolution on iteration #{}".format(iters))
             break
         log.info("Iteration #{} starts".format(iters))
