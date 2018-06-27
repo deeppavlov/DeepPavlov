@@ -39,18 +39,27 @@ class SimplePolicy(Component):
         policy_spec.loader.exec_module(self.policy)
         nlg_spec.loader.exec_module(self.nlg)
 
+        self.dst = kwargs['dst']
+
     def __call__(self, state, *args, **kwargs):
         result = []
         for s in state:
             result.append(self._generate_response(*self._choose_action(s)))
-        return zip(*result)
+        response, state = zip(*result)
+        self.dst.state = state
+        logger.debug(f"Final state: {self.dst.state}")
+        return response
 
     def _choose_action(self, state):
+        s = defaultdict(list)
+        s.update(state)
         for condition, action in self.policy.get():
-            if condition(state):
-                a, p = action(state)
+            if condition(s):
+                a, p = action(s)
+                dp = defaultdict(list)
+                dp.update(p)
                 if a is not None:
-                    return (a, p), state
+                    return (a, dp), s
 
     def _generate_response(self, action, state):
         return self.nlg.get(*action, state)

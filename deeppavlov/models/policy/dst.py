@@ -37,6 +37,8 @@ class SimpleDST(Component):
         self.state = []
 
     def __call__(self, *args, **kwargs):
+        logger.debug(f"State before update: {self.state}")
+
         batch = []
         for arg in args:
             if isinstance(arg, (list, tuple)):
@@ -51,6 +53,8 @@ class SimpleDST(Component):
                 params = {**params, **d}
             params_batch.append(params)
 
+        logger.debug(f"New state params:  {params_batch}")
+
         result = []
         if not self.state:
             for params in params_batch:
@@ -60,12 +64,17 @@ class SimpleDST(Component):
                 result.append(self._update_state(s, ps))
 
         self.state = result
+
+        logger.debug(f"State after update: {self.state}")
+
         return result
 
     def _update_state(self, state, params):
         new_state = state
+        p = defaultdict(list)
+        p.update(params)
         for f in self.policy.get():
-            new_state = f(new_state, params)
+            new_state = f(new_state, p)
         return new_state
 
 
