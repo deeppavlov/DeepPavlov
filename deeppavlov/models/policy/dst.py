@@ -19,6 +19,7 @@ limitations under the License.
 from typing import List, Generator, Any
 from collections import defaultdict
 import importlib.util
+import copy
 from pathlib import Path
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
@@ -29,11 +30,13 @@ logger = get_logger(__name__)
 
 @register('simple_dst')
 class SimpleDST(Component):
-    def __init__(self, update_policy, *args, **kwargs):
-        policy_path = Path(update_policy)
-        policy_spec = importlib.util.spec_from_file_location(policy_path.stem, policy_path)
-        self.policy = importlib.util.module_from_spec(policy_spec)
-        policy_spec.loader.exec_module(self.policy)
+    def __init__(self, commands, *args, **kwargs):
+        commands_path = Path(commands)
+        commands_spec = importlib.util.spec_from_file_location(commands_path.stem, commands_path)
+        commands = importlib.util.module_from_spec(commands_spec)
+        commands_spec.loader.exec_module(commands)
+        self.commands = defaultdict(list)
+        self.commands.update(commands.get())
         self.state = []
 
     def __call__(self, *args, **kwargs):
@@ -71,10 +74,19 @@ class SimpleDST(Component):
 
     def _update_state(self, state, params):
         new_state = state
+        if '__COMMANDS__' in state:
+            cmd = copy.deepcopy(state['__COMMANDS__'])
+            del state['__COMMANDS__']
+        else:
+            cmd = [{'command': 'DEFAULT'}]
+
         p = defaultdict(list)
         p.update(params)
-        for f in self.policy.get():
-            new_state = f(new_state, p)
+
+        for c in cmd:
+            print(f'Execute command {c}')
+            new_state = self.commands[c['command']](c, new_state, p)
+
         return new_state
 
 

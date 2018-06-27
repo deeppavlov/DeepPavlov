@@ -21,7 +21,7 @@
         "id": "dst",
         "name": "simple_dst",
         "in": ["slots", "dates"],
-        "update_policy": "./deeppavlov/configs/b_bot/b_bot_dst.py",
+        "commands": "./deeppavlov/configs/b_bot/b_bot_dst.py",
         "out": ["state"]
       },
       {

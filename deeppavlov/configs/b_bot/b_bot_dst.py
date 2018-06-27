@@ -1,22 +1,26 @@
-def update_state(s, p):
-    if not s['COMMANDS']:
-        s.clear()
-        s.update(p)
-    else:
-        for c in s['COMMANDS']:
-            if c['command'] == 'APPEND_TO_SLOT':
-                slot = c['slot']
-                if p[slot]:
-                    s[slot] += p[slot]
-            if c['command'] == 'UPDATE_SLOT':
-                slot = c['slot']
-                if p[slot]:
-                    s[slot] = p[slot]
-        del s['COMMANDS']
+def command_append_to_slot(c, s, p):
+    slot = c['slot']
+    if p[slot]:
+        s[slot] += p[slot]
+    return s
+
+
+def command_update_slot(c, s, p):
+    slot = c['slot']
+    if p[slot]:
+        s[slot] = p[slot]
+    return s
+
+
+def command_default(c, s, p):
+    s.clear()
+    s.update(p)
     return s
 
 
 def get():
-    return [
-        update_state
-    ]
+    return {
+        'APPEND_TO_SLOT':  command_append_to_slot,
+        'UPDATE_SLOT': command_update_slot,
+        'DEFAULT': command_default
+    }

@@ -6,10 +6,10 @@ import datetime
 def get(action, params, state):
     if action == 'ASK_SLOT':
         if params['slot'] == 'team' and params['team']:
-            state['COMMANDS'].append({'command': 'APPEND_TO_SLOT', 'slot': 'team'})
+            state['__COMMANDS__'].append({'command': 'APPEND_TO_SLOT', 'slot': 'team'})
             return "Соперник по матчу для команды '%s'?" % (params['team'][0]), state
         elif params['slot'] == 'team' and not params['team']:
-            state['COMMANDS'].append({'command': 'APPEND_TO_SLOT', 'slot': 'team'})
+            state['__COMMANDS__'].append({'command': 'APPEND_TO_SLOT', 'slot': 'team'})
             return "На какой матч вы хотите узнать коэффициент?", state
         else:
             return "Упс, не знаю как и спросить :(", state
