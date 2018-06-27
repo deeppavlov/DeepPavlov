@@ -52,7 +52,7 @@ parser.add_argument('--start_from_population',
 parser.add_argument('--path_to_population',
                     help='path to population to start from', default="")
 parser.add_argument('--elitism_with_weights',
-                    help='whether to save elite models with weights or without', default=0)
+                    help='whether to save elite models with weights or without', action='store_true')
 parser.add_argument('--iterations', help='Number of iterations', type=int, default=-1)
 
 
@@ -76,7 +76,7 @@ def main():
     train_partition = int(args.train_partition)
     start_from_population = int(args.start_from_population)
     path_to_population = args.path_to_population
-    elitism_with_weights = int(args.elitism_with_weights)
+    elitism_with_weights = args.elitism_with_weights
     iterations = int(args.iterations)
 
     p_crossover = args.p_cross
