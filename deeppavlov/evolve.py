@@ -53,6 +53,7 @@ parser.add_argument('--path_to_population',
                     help='path to population to start from', default="")
 parser.add_argument('--elitism_with_weights',
                     help='whether to save elite models with weights or without', default=0)
+parser.add_argument('--iterations', help='Number of iterations', type=int, default=1)
 
 
 def find_config(pipeline_config_path: str):
@@ -76,6 +77,7 @@ def main():
     start_from_population = int(args.start_from_population)
     path_to_population = args.path_to_population
     elitism_with_weights = int(args.elitism_with_weights)
+    iterations = int(args.iterations)
 
     p_crossover = args.p_cross
     pow_crossover = args.pow_cross
@@ -191,6 +193,9 @@ def main():
     iters += 1
 
     while True:
+        if iters >= iterations:
+            log.info("End of evolution on iteration #{}".format(iters))
+            break
         log.info("Iteration #{} starts".format(iters))
         population = evolution.next_generation(population, population_scores, iters)
         run_population(population, evolution, gpus)
