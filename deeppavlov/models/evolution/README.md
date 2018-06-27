@@ -18,6 +18,7 @@ Evolution process can be described in the following way:
   - `--start_from_population` - the number of population to start from that is needed to restart population (*Default: 0 means starts from 0 population*).
   - `--path_to_population` - path to the directory "population_{`start_from_population`}". Should be given if `start_from_population` is not 0 (*Default: ""*).
   - `--elitism_with_weights` - binary value (set of values: "0", "1") - whether to initialize elite models with pre-trained weights from previous population or not (*Default: 0 means save elite models without weights*).
+  - `--iterations` - number of iterations to conduct (*Default: -1 means infinite number of iterations (while loop)*).
 
 * **Warning**: `metrics` can not be evolved because the main metric determines evolutionary process.
 
