@@ -20,12 +20,12 @@ from deeppavlov.core.commands.infer import interact_model
 
 # PIPELINE_CONFIG_PATH = 'configs/intents/intents_dstc2.json'
 # PIPELINE_CONFIG_PATH = 'configs/intents/intents_snips.json'
-# PIPELINE_CONFIG_PATH = 'configs/ner/ner_dstc2.json'
-# PIPELINE_CONFIG_PATH = 'configs/ner/ner_dstc2.json'
+PIPELINE_CONFIG_PATH = 'configs/ner/ner_dstc2.json'
+# PIPELINE_CONFIG_PATH = 'configs/ner/ner_rus.json'
 # PIPELINE_CONFIG_PATH = 'configs/ner/slotfill_dstc2.json'
 # PIPELINE_CONFIG_PATH = 'configs/error_model/brillmoore_wikitypos_en.json'
 # PIPELINE_CONFIG_PATH = 'configs/error_model/brillmoore_kartaslov_ru.json'
-PIPELINE_CONFIG_PATH = 'configs/error_model/levenstein_searcher.json'
+# PIPELINE_CONFIG_PATH = 'configs/error_model/levenstein_searcher.json'
 # PIPELINE_CONFIG_PATH = 'configs/go_bot/config.json'
 # PIPELINE_CONFIG_PATH = 'configs/go_bot/config_minimal.json'
 # PIPELINE_CONFIG_PATH = 'configs/go_bot/config_all.json'
@@ -38,5 +38,5 @@ PIPELINE_CONFIG_PATH = 'configs/error_model/levenstein_searcher.json'
 # PIPELINE_CONFIG_PATH = 'configs/odqa/ru_odqa_infer_prod.json'
 # PIPELINE_CONFIG_PATH = 'configs/odqa/ranker_test.json'
 
-# train_evaluate_model_from_config(PIPELINE_CONFIG_PATH)
-interact_model(PIPELINE_CONFIG_PATH)
+train_evaluate_model_from_config(PIPELINE_CONFIG_PATH)
+# interact_model(PIPELINE_CONFIG_PATH)

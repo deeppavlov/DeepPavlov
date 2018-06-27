@@ -13,6 +13,8 @@ limitations under the License.
 
 from setuptools import setup, find_packages
 import os
+import re
+
 try:  # for pip>=10.0.0
     from pip._internal.req import parse_requirements
     from pip._internal.download import PipSession
@@ -39,7 +41,8 @@ def read_requirements():
 
 def readme():
     with open(os.path.join(__location__, 'README.md')) as f:
-        return f.read()
+        text = f.read()
+    return re.sub(r']\((?!https?://)', r'](https://github.com/deepmipt/DeepPavlov/blob/master/', text)
 
 
 meta = {}
@@ -57,7 +60,7 @@ setup(
     author_email='info@ipavlov.ai',
     license='Apache License, Version 2.0',
     url='https://github.com/deepmipt/DeepPavlov',
-    download_url='https://github.com/deepmipt/DeepPavlov/archive/0.0.4.tar.gz',
+    download_url='https://github.com/deepmipt/DeepPavlov/archive/' + meta['__version__'] + '.tar.gz',
     keywords=['NLP', 'NER', 'SQUAD', 'Intents', 'Chatbot'],
     include_package_data=True,
     install_requires=read_requirements()

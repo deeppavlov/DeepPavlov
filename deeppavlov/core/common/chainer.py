@@ -21,7 +21,8 @@ from deeppavlov.core.models.nn_model import NNModel
 
 
 class Chainer(Component):
-    def __init__(self, in_x=None, out_params=None, in_y=None, *args, as_component=False, **kwargs):
+    def __init__(self, in_x: [str, list]=None, out_params: [str, list]=None, in_y: [str, list]=None,
+                 *args, as_component: bool=False, **kwargs):
         self.pipe = []
         self.train_pipe = []
         if isinstance(in_x, str):
@@ -42,7 +43,8 @@ class Chainer(Component):
         if as_component:
             self._predict = self._predict_as_component
 
-    def append(self, component, in_x=None, out_params=None, in_y=None, main=False):
+    def append(self, component: Component, in_x: [str, list, dict]=None, out_params: [str, list]=None,
+               in_y: [str, list, dict]=None, main=False):
         if isinstance(in_x, str):
             in_x = [in_x]
         if isinstance(in_y, str):
@@ -50,29 +52,48 @@ class Chainer(Component):
         if isinstance(out_params, str):
             out_params = [out_params]
         in_x = in_x or self.in_x
+
+        if isinstance(in_x, dict):
+            x_keys, in_x = zip(*in_x.items())
+        else:
+            x_keys = []
         out_params = out_params or in_x
         if in_y is not None:
+            if isinstance(in_y, dict):
+                y_keys, in_y = zip(*in_y.items())
+            else:
+                y_keys = []
+            keys = x_keys + y_keys
+
+            if bool(x_keys) != bool(y_keys):
+                raise ConfigError('`in` and `in_y` for a component have to both be lists or dicts')
+
             component: NNModel
             main = True
             assert self.train_map.issuperset(in_x+in_y), ('Arguments {} are expected but only {} are set'
                                                           .format(in_x+in_y, self.train_map))
             preprocessor = Chainer(self.in_x, in_x+in_y, self.in_y)
-            for t_in_x, t_out, t_component in self.train_pipe:
+            for (t_in_x_keys, t_in_x), t_out, t_component in self.train_pipe:
+                if t_in_x_keys:
+                    t_in_x = dict(zip(t_in_x_keys, t_in_x))
                 preprocessor.append(t_component, t_in_x, t_out)
 
             def train_on_batch(*args, **kwargs):
                 preprocessed = zip(*preprocessor(*args, **kwargs))
-                return component.train_on_batch(*preprocessed)
+                if keys:
+                    return component.train_on_batch(**dict(zip(keys, preprocessed)))
+                else:
+                    return component.train_on_batch(*preprocessed)
 
             self.train_on_batch = train_on_batch
             self.process_event = component.process_event
         if main:
             self.main = component
         if self.forward_map.issuperset(in_x):
-            self.pipe.append((in_x, out_params, component))
+            self.pipe.append(((x_keys, in_x), out_params, component))
             self.forward_map = self.forward_map.union(out_params)
         if self.train_map.issuperset(in_x):
-            self.train_pipe.append((in_x, out_params, component))
+            self.train_pipe.append(((x_keys, in_x), out_params, component))
             self.train_map = self.train_map.union(out_params)
         else:
             raise ConfigError('Arguments {} are expected but only {} are set'.format(in_x, self.train_map))
@@ -108,8 +129,12 @@ class Chainer(Component):
         mem = dict(zip(in_params, args))
         del args, x, y
 
-        for in_params, out_params, component in pipe:
-            res = component(*[mem[k] for k in in_params])
+        for (in_keys, in_params), out_params, component in pipe:
+            x = [mem[k] for k in in_params]
+            if in_keys:
+                res = component(**dict(zip(in_keys, x)))
+            else:
+                res = component(*x)
             if len(out_params) == 1:
                 mem[out_params[0]] = res
             else:
@@ -123,8 +148,13 @@ class Chainer(Component):
     def _predict_as_component(self, *args):
         mem = dict(zip(self.in_x, args))
 
-        for in_params, out_params, component in self.pipe:
-            res = component(*[mem[k] for k in in_params])
+        for (in_keys, in_params), out_params, component in self.pipe:
+            x = [mem[k] for k in in_params]
+            if in_keys:
+                res = component(**dict(zip(in_keys, x)))
+            else:
+                res = component(*x)
+
             if len(out_params) == 1:
                 mem[out_params[0]] = res
             else:

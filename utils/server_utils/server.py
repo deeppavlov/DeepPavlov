@@ -57,14 +57,30 @@ def interact(model, params_names):
 
     model_args = []
 
+    data = request.get_json()
     for param_name in params_names:
-        param_value = request.get_json().get(param_name)
-        model_args.append(param_value)
-    if len(params_names) > 1:
-        model_args = [model_args]
+        param_value = data.get(param_name)
+        if param_value is None or (isinstance(param_value, list) and len(param_value) > 0):
+            model_args.append(param_value)
+        else:
+            return jsonify({'error': f"nonempty array expected but got '{param_name}'={repr(param_value)}"}), 400
+
+    lengths = {len(i) for i in model_args if i is not None}
+
+    if not lengths:
+        return jsonify({'error': 'got empty request'}), 400
+    elif len(lengths) > 1:
+        return jsonify({'error': 'got several different batch sizes'}), 400
+
+    if len(params_names) == 1:
+        model_args = model_args[0]
+    else:
+        batch_size = list(lengths)[0]
+        model_args = [arg or [None] * batch_size for arg in model_args]
+        model_args = list(zip(*model_args))
 
     prediction = model(model_args)
-    result = jsonify_data(prediction[0])
+    result = jsonify_data(prediction)
     return jsonify(result), 200
 
 
@@ -85,7 +101,7 @@ def start_model_server(model_config_path):
         return redirect('/apidocs/')
 
     @app.route(model_endpoint, methods=['POST'])
-    def answer_intents():
+    def answer():
         """
         Skill
         ---

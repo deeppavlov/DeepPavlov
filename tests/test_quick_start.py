@@ -2,6 +2,7 @@ import io
 import json
 from pathlib import Path
 import shutil
+import sys
 
 import pytest
 import pexpect
@@ -170,7 +171,7 @@ class TestQuickStart(object):
     def interact(conf_file, model_dir, qr_list=None):
         qr_list = qr_list or []
         logfile = io.BytesIO(b'')
-        p = pexpect.spawn("python3", ["-m", "deeppavlov", "interact", str(conf_file)], timeout=None,
+        p = pexpect.spawn(sys.executable, ["-m", "deeppavlov", "interact", str(conf_file)], timeout=None,
                           logfile=logfile)
         try:
             for *query, expected_response in qr_list:  # works until the first failed query
@@ -209,10 +210,10 @@ class TestQuickStart(object):
         post_payload = {}
         for arg_name in model_args_names:
             arg_value = str(' '.join(['qwerty'] * 10))
-            post_payload[arg_name] = arg_value
+            post_payload[arg_name] = [arg_value]
 
         logfile = io.BytesIO(b'')
-        p = pexpect.spawn("python3", ["-m", "deeppavlov", "riseapi", str(conf_file)], timeout=None,
+        p = pexpect.spawn(sys.executable, ["-m", "deeppavlov", "riseapi", str(conf_file)], timeout=None,
                           logfile=logfile)
         try:
             p.expect(url_base)
@@ -261,7 +262,7 @@ class TestQuickStart(object):
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
             logfile = io.BytesIO(b'')
-            _, exitstatus = pexpect.run("python3 -m deeppavlov train " + str(c), timeout=None, withexitstatus=True,
+            _, exitstatus = pexpect.run(sys.executable + " -m deeppavlov train " + str(c), timeout=None, withexitstatus=True,
                                         logfile=logfile)
             if exitstatus != 0:
                 logfile.seek(0)

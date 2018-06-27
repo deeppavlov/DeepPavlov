@@ -1,17 +1,17 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](/LICENSE.txt)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 
-# Neural Model for Intent Classification
+# Neural Model for Classification
 
-In this repository one can find code for training and using the intent classification model
-which is implemented as a shallow-and-wide Convolutional Neural Network[1]. 
-The model is multi-class and multi-label, which means that each text in a dataset 
-can belong to several classes.
+In this repository one can find code for training and using classification model
+which is implemented as a number of different neural networks (for example, shallow-and-wide Convolutional Neural Network [1]). 
+The model can be used for binary, multi-class or multi-label classification.
 
-We also have a pre-trained model for user intent classification for DSTC 2 dataset.
-DSTC 2 dataset does not initially contain information about intents, 
+We also provide with **pre-trained models** for classification on DSTC 2 dataset, SNIPS dataset, "AG News" dataset, "Detecting Insults in Social Commentary", Twitter sentiment in Russian dataset.
+
+**DSTC 2 dataset** (http://camdial.org/~mh521/dstc/) does not initially contain information about **intents**, 
 therefore, `IntentDataset` (`deeppavlov/datasets/intent_dataset.py`) instance extracts 
-artificial intents for each user reply using information from acts and slots.
+artificial intents for each user reply using information from acts and slots. 
 
 Below we give several examples of intent construction:
 
@@ -35,37 +35,59 @@ In the original dataset this user reply has characteristics
 "db_result": null, 
 "dialog-acts": [{"slots": [], "act": "thankyou"}, {"slots": [], "act": "bye"}]}
 ```
-This message contains two intents `(thankyou, bye)`.
+This message contains two intents `(thankyou, bye)`. Train, valid and test division is the same as on web-site.
+
+
+**SNIPS** dataset (https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines) contains **intent classification** task for 7 intents (approximately 2.4 samples per intent):
+* GetWeather
+* BookRestaurant
+* PlayMusic
+* AddToPlaylist
+* RateBook
+* SearchScreeningEvent
+* SearchCreativeWork
+
+Initially, intent model on SNIPS dataset was trained only as an example of usage that is why we provide pre-trained model for SNIPS with embeddings trained on DSTC-2 dataset that is not the best choice for this task. Train set is divided to train and validation sets to illustrate `basic_classification_iterator` work.
+
+**AG News** dataset (https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html) contains **sentiment classification** task for 5 classes (range from 0 to 4 points scale). Test set is initial one from web-site, valid is a Stratified division 1/5 from the train set from web-site with 42 seed, and the train set is the rest.
+
+**Detecting Insults in Social Commentary** dataset (https://www.kaggle.com/c/detecting-insults-in-social-commentary) contains binary classification task for **detecting insults** for participants of conversation. Train, valid and test division is the same as for the Kaggle challenge.
+
+**Twitter mokoron** dataset (http://study.mokoron.com/) contains **sentiment classification** of Russian twits for positive and negative replies [5]. Train, valid and test division is made by hands (Stratified division: 1/5 from all dataset for test set with 42 seed, then 1/5 from the rest for validation set with 42 seed). Attention! The pre-trained model was trained on `sentiment_twitter_data/no_smiles_data` -- the same dataset but with removed "(" and ")".
+
+|   Model | Dataset | Valid accuracy | Test accuracy |
+|---------------------|-----------------|-----------------|----------------|
+|`configs/intents/intents_dstc2.json`| DSTC 2 | 0.8744 | 0.8801 |
+|`configs/intents/intents_dstc2_big.json`| DSTC 2 | 0.9682 | 0.9684 |
+|`configs/intents/intents_snips.json` | SNIPS | 0.8829 | -- |
+|`configs/sentiment/insults_kaggle.json`| InsultsKaggle | 0.8757 | 0.7503 |
+|`configs/sentiment/sentiment_ag_news.json`| AG News | 0.8735 | 0.8859 |
+|`configs/sentiment/sentiment_twitter.json`| Twitter.mokoron | 0.8021 (with smiles), 0.8008 (no_smiles)| 0.7949 (with smiles), 0.7943 (no_smiles)|
 
 ## Download pre-trained model
 
 DeepPavlov provides the following **pre-trained models**:
-* `configs/intents/intents_dstc2.json` -- DSTC 2 - intent model for English language.
+* `configs/intents/intents_dstc2.json` -- DSTC 2 - intent model for English language with embeddings trained via fastText on DSTC 2 (800 Mb).
+* `configs/intents/intents_dstc2_big.json` -- DSTC 2 - intent model for English language with embeddings trained on Wiki (https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md, 8.5 Gb). This model achieves higher accuracy than the first one.
 * `configs/intents/intents_snips.json` -- SNIPS - intent model for English language.
-* `configs/sentiment/insults_kaggle.json` -- Insults from https://www.kaggle.com/c/detecting-insults-in-social-commentary - sentiment analysis for English language.
-* `configs/sentiment/sentiment_ag_news.json` -- AG News from https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html - sentiment analysis for English language.
-* `configs/sentiment/sentiment_twitter.json` -- Twitter Mokoron from http://study.mokoron.com/ [5] - sentiment analysis for **Russian** language.
+* `configs/sentiment/insults_kaggle.json` -- Insults analysis for English language.
+* `configs/sentiment/sentiment_ag_news.json` -- AG News sentiment analysis for English language.
+* `configs/sentiment/sentiment_twitter.json` -- Twitter Mokoron sentiment analysis for **Russian** language.
 
-**DeepPavlov contains two pre-trained models for DSTC 2 dataset: one was trained using embeddings trained via fastText on DSTC 2 (800 Mb), and the other one was trained using embeddings trained on Wiki (https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md, 8.5 Gb).**
-
-**Two pre-trained models are presented to provide a choice for the user:**
-* **if one prefers to load pre-trained model only for ubderstanding the structure, one should use `configs/intents/intents_dstc2.json`,**
-* **if one prefers to load pre-trained model with significantly higher accuracy, one should be ready to download embedding file of 8.5 Gb and use `configs/intents/intents_dstc2_big.json`.**
-
-To download pre-trained models, vocabs, embeddings on DSTC 2 and SNIPS datasets one should run the following command:
+To download pre-trained models, vocabs, embeddings on the dataset of interest one should run the following command providing corresponding name of the config file (see above):
 ```
 python deep.py download configs/intents/intents_dstc2.json
 ```
 or provide flag `-d` for commands like `interact`, `interactbot`, etc. The flag `-d` provides downloading all the required components.
 
-To download pre-trained models, vocabs, embeddings on Wiki and SNIPS datasets one should run the following command:
+To download pre-trained models, vocabs, embeddings and datasets one should run the following command providing corresponding name of the config file (see above):
 ```
 python deep.py download configs/intents/intents_dstc2_big.json
 ```
 
 ## Infer from pre-trained model
 
-To use a pre-trained model for inference one should run the following command (if one prefers model with bigger embedding file, one should use `configs/intents/intents_dstc2_big.json` instead of `configs/intents/intents_dstc2.json`):
+To use a pre-trained model for inference one should run the following command providing corresponding name of the config file (see above):
 ```
 python deep.py interact configs/intents/intents_dstc2.json
 ```
@@ -97,7 +119,7 @@ and and example of interacting the model from `configs/intents/intents_dstc2_big
 ### Available models
 
 DeepPavlov contains a number of different model configurations for classification task.
-Below the list of available models description is presented:
+Below the list of available models is presented:
 * `cnn_model` -- Shallow-and-wide CNN with max pooling after convolution,
 * `dcnn_model` -- Deep CNN with number of layers determined by the given number of kernel sizes and filters,
 * `cnn_model_max_and_aver_pool` -- Shallow-and-wide CNN with max and average pooling concatenation after convolution,
@@ -109,13 +131,13 @@ Below the list of available models description is presented:
 * `bilstm_self_mult_attention_model` -- Bidirectional LSTM followed by self multiplicative attention layer,
 * `bigru_model` -- Bidirectional GRU model.
 
-##### Please, pay attention that each model has its own parameters that should be specified in config.
+**Please, pay attention that each model has its own parameters that should be specified in config. Required parameters can be found either [in config description notebook](../Config_description.ipynb) or [source code](./intent_model.py) **
 
 ### Configuration parameters
 
 One can find examples of config files [here](../../../configs/intents).
 
-### Detailed description of configuration file and specific parameters for all presented classification models can be found [here](../Config_description.ipynb).
+## Detailed description of configuration file and specific parameters for all presented classification models can be found [here](../Config_description.ipynb).
 
 Some clue parameters for [intents_dstc2.json](../../../configs/intents/intents_dstc2.json) config file are presented in the table below.
 
@@ -223,18 +245,12 @@ Then the training can be run in the same way:
 python deep.py train configs/intents/intents_snips.json
 ```
 
-**The current version of `intents_snips.json` contains parameters for intent recognition for SNIPS benchmark dataset [2] 
-that was restored in `.csv` format and will be downloaded automatically.**
-
-**Important: we do not provide any special embedding binary file for SNIPS dataset.
-In order to train the model one should provide own embedding binary file, because embedding file trained on DSTC-2 dataset is not the best choice for this task.**
-
 ## Comparison
 
 As no one had published intent recognition for DSTC-2 data, 
 the comparison of the presented model is given on **SNIPS** dataset. 
 The evaluation of model scores was conducted in the same way as in [3] to compare with the results from the report of the authors of the dataset.
-The results were achieved with tuning of parameters.
+The results were achieved with tuning of parameters and embeddings trained on Reddit dataset.
 
 |             Model    | AddToPlaylist | BookRestaurant | GetWheather | PlayMusic | RateBook | SearchCreativeWork | SearchScreeningEvent | 
 |----------------------|---------------|----------------|-------------|-----------|----------|--------------------|----------------------|
