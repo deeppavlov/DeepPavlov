@@ -18,11 +18,17 @@
         "save_path": "../deeppavlov/configs/b_bot/slots.json"
       },
       {
+        "name": "simple_dst",
+        "in": ["slots", "dates"],
+        "update_policy": "./deeppavlov/configs/b_bot/b_bot_dst.py",
+        "out": ["state"]
+      },
+      {
         "name": "simple_policy",
         "policy": "./deeppavlov/configs/b_bot/b_bot_policy.py",
         "nlg": "./deeppavlov/configs/b_bot/b_bot_nlg.py",
-        "in": ["slots", "dates"],
-        "out": ["response", "state"]
+        "in": ["state"],
+        "out": ["response", "new_state"]
       }
     ]
   }

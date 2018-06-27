@@ -27,30 +27,45 @@ from deeppavlov.core.common.log import get_logger
 logger = get_logger(__name__)
 
 
-@register('simple_policy')
-class SimplePolicy(Component):
-    def __init__(self, policy, nlg, *args, **kwargs):
-        policy_path = Path(policy)
-        nlg_path = Path(nlg)
+@register('simple_dst')
+class SimpleDST(Component):
+    def __init__(self, update_policy, *args, **kwargs):
+        policy_path = Path(update_policy)
         policy_spec = importlib.util.spec_from_file_location(policy_path.stem, policy_path)
-        nlg_spec = importlib.util.spec_from_file_location(nlg_path.stem, nlg_path)
         self.policy = importlib.util.module_from_spec(policy_spec)
-        self.nlg = importlib.util.module_from_spec(nlg_spec)
         policy_spec.loader.exec_module(self.policy)
-        nlg_spec.loader.exec_module(self.nlg)
+        self.state = []
 
-    def __call__(self, state, *args, **kwargs):
+    def __call__(self, *args, **kwargs):
+        batch = []
+        for arg in args:
+            if isinstance(arg, (list, tuple)):
+                batch.append(arg)
+            else:
+                batch.append([arg])
+        batch = zip(*batch)
+        params_batch = []
+        for dicts in batch:
+            params = defaultdict(list)
+            for d in dicts:
+                params = {**params, **d}
+            params_batch.append(params)
+
         result = []
-        for s in state:
-            result.append(self._generate_response(*self._choose_action(s)))
-        return zip(*result)
+        if not self.state:
+            for params in params_batch:
+                result.append(self._update_state(defaultdict(list), params))
+        else:
+            for s, ps in zip(self.state, params_batch):
+                result.append(self._update_state(s, ps))
 
-    def _choose_action(self, state):
-        for condition, action in self.policy.get():
-            if condition(state):
-                a, p = action(state)
-                if a is not None:
-                    return (a, p), state
+        self.state = result
+        return result
 
-    def _generate_response(self, action, state):
-        return self.nlg.get(*action, state)
+    def _update_state(self, state, params):
+        new_state = state
+        for f in self.policy.get():
+            new_state = f(new_state, params)
+        return new_state
+
+

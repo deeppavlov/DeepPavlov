@@ -1,8 +1,7 @@
 def get():
     return [
-        (lambda s: bool(s['coefficient']) and len(s['team']) == 1 and s['team'][0] == 'краснодар', lambda s: (None, s['team'].append('ливерпуль'))),
-        (lambda s: bool(s['coefficient']) and len(s['team']) == 0, lambda s: ('ASK_SLOT', {"slot": "team", "team": []})),
-        (lambda s: bool(s['coefficient']) and len(s['team']) == 1, lambda s: ('ASK_SLOT', {"slot": "team", "team": s['team']})),
+        (lambda s: bool(s['coefficient']) and len(s['team']) == 0, lambda s: ('ASK_SLOT', {"slot": "team", "team": [], "state": s})),
+        (lambda s: bool(s['coefficient']) and len(s['team']) == 1, lambda s: ('ASK_SLOT', {"slot": "team", "team": s['team'], "state": s})),
         (lambda s: bool(s['coefficient']) and len(s['team']) >= 2, lambda s: ('QUERY_COEFFICIENT', {k: s[k] for k in ['team', 'market', 'bet', 'bookmaker']})),
         (lambda s: bool(s['forecast']), lambda s: ('QUERY FORECAST', {k: s[k] for k in ['team', 'date', 'spor', 'event', 'expert', 'bookmaker']})),
         (lambda s: (not bool(s['coefficient'])) and (bool(s['team']) or

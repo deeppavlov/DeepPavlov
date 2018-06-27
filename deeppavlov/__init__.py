@@ -95,6 +95,7 @@ import deeppavlov.models.preprocessors.one_hotter
 import deeppavlov.dataset_readers.ontonotes_reader
 
 import deeppavlov.models.policy.policy
+import deeppavlov.models.policy.dst
 
 import deeppavlov.metrics.accuracy
 import deeppavlov.metrics.fmeasure
