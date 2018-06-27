@@ -17,7 +17,7 @@ Evolution process can be described in the following way:
   - `--train_partition` - if train file is too big to train (recommeded to divide train files if train dataset is more than 100 thousands examples), one can split it in `train_partition` number of files, save it calling "any_name_{0}.any_extension", ..., "any_name_{`train_partition`}.any_extension". In dataset_reader "train" field indicate the first one file. Population is trained on the N_{population} % `train_partition` part of the dataset (*Default: 1*).
   - `--start_from_population` - the number of population to start from that is needed to restart population (*Default: 0 means starts from 0 population*).
   - `--path_to_population` - path to the directory "population_{`start_from_population`}". Should be given if `start_from_population` is not 0 (*Default: ""*).
-  - `--elitism_with_weights` - binary value (set of values: "0", "1") - whether to initialize elite models with pre-trained weights from previous population or not (*Default: 0 means save elite models without weights*).
+  - `--elitism_with_weights` - whether to initialize elite models with pre-trained weights from previous population or not (*Default: False means save elite models without weights. If parameter is given, then save elite models with weights*).
   - `--iterations` - number of iterations to conduct (*Default: -1 means infinite number of iterations (while loop)*).
 
 * **Warning**: `metrics` can not be evolved because the main metric determines evolutionary process.
