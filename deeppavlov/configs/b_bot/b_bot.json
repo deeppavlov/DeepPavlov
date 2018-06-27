@@ -27,7 +27,6 @@
       {
         "name": "simple_policy",
         "policy": "./deeppavlov/configs/b_bot/b_bot_policy.py",
-        "nlg": "./deeppavlov/configs/b_bot/b_bot_nlg.py",
         "dst": "#dst",
         "in": ["state"],
         "out": ["response"]

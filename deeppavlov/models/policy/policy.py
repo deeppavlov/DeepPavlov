@@ -29,37 +29,31 @@ logger = get_logger(__name__)
 
 @register('simple_policy')
 class SimplePolicy(Component):
-    def __init__(self, policy, nlg, *args, **kwargs):
+    def __init__(self, policy, *args, **kwargs):
         policy_path = Path(policy)
-        nlg_path = Path(nlg)
         policy_spec = importlib.util.spec_from_file_location(policy_path.stem, policy_path)
-        nlg_spec = importlib.util.spec_from_file_location(nlg_path.stem, nlg_path)
-        self.policy = importlib.util.module_from_spec(policy_spec)
-        self.nlg = importlib.util.module_from_spec(nlg_spec)
-        policy_spec.loader.exec_module(self.policy)
-        nlg_spec.loader.exec_module(self.nlg)
+        p = importlib.util.module_from_spec(policy_spec)
+        policy_spec.loader.exec_module(p)
+        self.policy = p.get()
 
         self.dst = kwargs['dst']
 
     def __call__(self, state, *args, **kwargs):
         result = []
         for s in state:
-            result.append(self._generate_response(*self._choose_action(s)))
+            result.append(self._perform_action(s))
         response, state = zip(*result)
         self.dst.state = state
         logger.debug(f"Final state: {self.dst.state}")
         return response
 
-    def _choose_action(self, state):
+    def _perform_action(self, state):
         s = defaultdict(list)
         s.update(state)
-        for condition, action in self.policy.get():
+        for condition, action in self.policy:
             if condition(s):
-                a, p = action(s)
-                dp = defaultdict(list)
-                dp.update(p)
-                if a is not None:
-                    return (a, dp), s
+                response, state = action(s)
+                if response is not None:
+                    return response, state
 
-    def _generate_response(self, action, state):
-        return self.nlg.get(*action, state)
+
