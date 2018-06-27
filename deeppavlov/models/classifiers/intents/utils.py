@@ -41,10 +41,9 @@ def labels2onehot(labels, classes):
         curr = np.zeros(n_classes)
         for intent in sample:
             if intent not in classes:
-                log.warning('Unknown intent {} detected'.format(intent))
-                curr += eye[np.where(np.array(classes) == 'unknown')[0]].reshape(-1)
+                log.warning('Unknown intent {} detected. Assigning no class'.format(intent))
             else:
-                curr += eye[np.where(np.array(classes) == intent)[0]].reshape(-1)
+                curr[np.where(np.array(classes) == intent)[0]] = 1
         y.append(curr)
     y = np.asarray(y)
     return y
