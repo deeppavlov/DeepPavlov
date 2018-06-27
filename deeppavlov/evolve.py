@@ -53,7 +53,7 @@ parser.add_argument('--path_to_population',
                     help='path to population to start from', default="")
 parser.add_argument('--elitism_with_weights',
                     help='whether to save elite models with weights or without', default=0)
-parser.add_argument('--iterations', help='Number of iterations', type=int, default=1)
+parser.add_argument('--iterations', help='Number of iterations', type=int, default=-1)
 
 
 def find_config(pipeline_config_path: str):
@@ -193,7 +193,7 @@ def main():
     iters += 1
 
     while True:
-        if iters >= iterations:
+        if iters == iterations:
             log.info("End of evolution on iteration #{}".format(iters))
             break
         log.info("Iteration #{} starts".format(iters))
