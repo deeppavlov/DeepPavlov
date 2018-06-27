@@ -290,7 +290,7 @@ class TestQuickStart(object):
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
             logfile = io.BytesIO(b'')
-            _, exitstatus = pexpect.run(sys.executable + " -m deeppavlov.evolve " + str(c) + " --iterations 1",
+            _, exitstatus = pexpect.run(sys.executable + " -m deeppavlov.evolve " + str(c) + " --iterations 1 --p_size 1",
                                         timeout=None, withexitstatus=True,
                                         logfile=logfile)
             if exitstatus != 0:
