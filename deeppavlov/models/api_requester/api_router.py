@@ -25,4 +25,4 @@ class ApiRouter(Component):
             for future in concurrent.futures.as_completed(futures):
                 results.append(future.result())
 
-        return resultsgit 
+        return results
