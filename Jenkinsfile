@@ -11,7 +11,7 @@ node('gpu') {
             sh """
                 virtualenv --python=python3 ".venv-$BUILD_NUMBER"
                 . .venv-$BUILD_NUMBER/bin/activate
-                sed -ri 's/^ *tensorflow *(=|<|>|\$)/tensorflow-gpu\\1/g' requirements.txt
+                sed -ri 's/^\\s*tensorflow\\s*(=|<|>|\$)/tensorflow-gpu\\1/g' requirements.txt
                 sed -i "s/stream=True/stream=False/g" deeppavlov/core/data/utils.py
                 python setup.py develop
                 pip install http://lnsigo.mipt.ru/export/en_core_web_sm-2.0.0.tar.gz

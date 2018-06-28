@@ -1,0 +1,4 @@
+lxml==4.1.1
+python-Levenshtein==0.12.0
+kenlm==0.0.0
+sortedcontainers==2.0.2
