@@ -23,6 +23,10 @@ class ApiRouter(Component):
 
             results = []
             for future in concurrent.futures.as_completed(futures):
-                results.append(future.result())
+                result = future.result()
+                if len(result) > 1:
+                    results += result
+                else:
+                    results.append(result)
 
         return results
