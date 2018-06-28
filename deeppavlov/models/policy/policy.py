@@ -40,9 +40,13 @@ class SimplePolicy(Component):
 
     def __call__(self, state, *args, **kwargs):
         result = []
+        print(state)
         for s in state:
             result.append(self._perform_action(s))
+        print(result)
         response, state = zip(*result)
+        if isinstance(state, tuple):
+            state = [state[0]]
         self.dst.state = state
         logger.debug(f"Final state: {self.dst.state}")
         return response
