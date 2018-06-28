@@ -63,7 +63,7 @@
           "y_probas_dict"
         ],
         "main": true,
-        "name": "intent_model",
+        "name": "keras_classification_model",
         "save_path": "intents/intent_cnn_v5",
         "load_path": "intents/intent_cnn_v5",
         "classes": "#classes_vocab.keys()",

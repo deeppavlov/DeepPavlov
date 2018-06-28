@@ -35,7 +35,6 @@ def labels2onehot(labels, classes):
         2d array with one-hot representation of given samples
     """
     n_classes = len(classes)
-    eye = np.eye(n_classes)
     y = []
     for sample in labels:
         curr = np.zeros(n_classes)
