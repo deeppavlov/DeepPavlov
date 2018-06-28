@@ -17,14 +17,14 @@ limitations under the License.
 import sys
 from overrides import overrides
 from typing import List
+import tensorflow as tf
 
 import numpy as np
-import ELMo as Fasttext
-from deeppavlov.core.models.embeddings.data import Batcher as File_Batcher
-from deeppavlov.core.models.embeddings.model import BidirectionalLanguageModel
-from deeppavlov.core.models.embeddings.elmo import weight_layers
-from deeppavlov.core.models.embeddings.ext_batcher import ExtBatcher
-from deeppavlov.core.models.embeddings.vocabulary_creator import create_vocab
+from deeppavlov.models.embedders.elmo.data import Batcher as File_Batcher
+from deeppavlov.models.embedders.elmo.model import BidirectionalLanguageModel
+from deeppavlov.models.embedders.elmo.elmo import weight_layers
+from deeppavlov.models.embedders.elmo.ext_batcher import ExtBatcher
+from deeppavlov.models.embedders.elmo.vocabulary_creator import create_vocab
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -40,8 +40,8 @@ class ELMoEmbedder(Component, Serializable):
     """
     Class implements ELMo embedding model
     """
-    def __init__(self, load_path2weights, load_path2options, load_path2vocab = None, save_path=None,
-                                        dim=1024, pad_zero=False, vocab_workers_n=2, chunk_size = 8, **kwargs):
+    def __init__(self, load_path, save_path=None, dim=1024, pad_zero=False,
+                                vocab_workers_n=2, chunk_size = 8, **kwargs):
         """
         Initialize embedder with given parameters
         Args:
@@ -51,12 +51,7 @@ class ELMoEmbedder(Component, Serializable):
             pad_zero: whether to pad samples or not
             **kwargs: additional arguments
         """
-        super().__init__(save_path=save_path, load_path2weights=load_path2weights,
-                                        load_path2options=load_path2options,
-                                        load_path2vocab = load_path2vocab)
-        self.load_path2weights = load_path2weights
-        self.load_path2options = load_path2options
-        self.load_path2vocab = load_path2vocab
+        super().__init__(save_path=save_path, load_path=load_path)
         self.tok2emb = {}
         self.dim = dim
         self.pad_zero = pad_zero
@@ -78,23 +73,32 @@ class ELMoEmbedder(Component, Serializable):
         Returns:
             ELMo pre-trained model
         """
-
-        if self.load_path2weights and self.load_path2weights.is_file():
-            log.info("[loading elmo weights from `{}`]".format(self.load_path2weights))
+        if self.load_path and self.load_path.is_dir():
+            log.info("[loading embeddings from `{}`]".format(self.load_path))
         else:
-            log.error('No pretrained elmo weights provided or provided load_path2weights "{}" is incorrect.'
+            log.error('No pretrained fasttext model provided or provided load_path "{}" is incorrect.'
                       .format(self.load_path))
             sys.exit(1)
 
-        if self.load_path2options and self.load_path2options.is_file():
-            log.info("[loading elmo options from `{}`]".format(self.load_path2options))
+        load_path2weights = self.load_path / 'weights.hdf5'
+        load_path2options = self.load_path / 'options.json'
+        load_path2vocab = self.load_path / 'vocab.txt'
+        if load_path2weights.is_file():
+            log.info("[loading elmo weights from `{}`]".format(load_path2weights))
         else:
-            log.error('No elmo options provided or provided load_path2options "{}" is incorrect.'
+            log.error('No pretrained elmo weights provided or provided load_path "{}" is incorrect.'
                       .format(self.load_path))
             sys.exit(1)
-        if self.load_path2vocab and self.load_path2vocab.is_file():
-            log.info("[loading elmo options from `{}`]".format(self.load_path2options))
-            loaded_batcher = File_Batcher(vocab, self.char_per_token)
+
+        if load_path2options.is_file():
+            log.info("[loading elmo options from `{}`]".format(load_path2options))
+        else:
+            log.error('No elmo options provided or provided load_path "{}" is incorrect.'
+                      .format(self.load_path))
+            sys.exit(1)
+        if load_path2vocab.is_file():
+            log.info("[loading a vocab from `{}`]".format(load_path2vocab))
+            loaded_batcher = File_Batcher(load_path2vocab, self.char_per_token)
         else:
             loaded_batcher = None
 
@@ -102,8 +106,8 @@ class ELMoEmbedder(Component, Serializable):
         # Input placeholders to the biLM.
         character_ids = tf.placeholder('int32', shape=(None, None, self.char_per_token))
         # Build the biLM graph.
-        bilm = BidirectionalLanguageModel(str(self.load_path2options),
-                    str(self.load_path2weights))
+        bilm = BidirectionalLanguageModel(str(load_path2options),
+                    str(load_path2weights))
 
         # Get ops to compute the LM embeddings.
         embeddings_op = bilm(character_ids)
@@ -129,15 +133,13 @@ class ELMoEmbedder(Component, Serializable):
         if self.loaded_batcher:
             batcher = self.loaded_batcher
         else:
-            vocab = create_vocab(data, cpu_n=self.vocab_workers_n, min_line_per_worker=10000)
+            vocab = create_vocab(batch, cpu_n=self.vocab_workers_n, min_line_per_worker=10000)
             batcher = ExtBatcher(vocab, self.char_per_token)
 
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
-        batch = [self._encode(sample, mean) for sample in batch]
 
         chunk_gen = self._chunk_generator(batch, self.chunk_size)
-
         # Create batches of data.
         data_ids = []
         sent_lens = []
@@ -186,33 +188,3 @@ class ELMoEmbedder(Component, Serializable):
             yield from self.loaded_batcher._lm_vocab._id_to_word
         else:
             yield from ['<S>', '</S>', '<UNK>']
-
-    # def _encode(self, tokens: List[str], mean: bool):
-    #     """
-    #     Embed one text sample
-    #     Args:
-    #         tokens: tokenized text sample
-    #         mean: whether to return mean embedding of tokens per sample
-    #
-    #     Returns:
-    #         list of embedded tokens
-    #     """
-    #     embedded_tokens = []
-    #     for t in tokens:
-    #         try:
-    #             emb = self.tok2emb[t]
-    #         except KeyError:
-    #             try:
-    #                 emb = self.model.get_word_vector(t)[:self.dim]
-    #             except KeyError:
-    #                 emb = np.zeros(self.dim, dtype=np.float32)
-    #             self.tok2emb[t] = emb
-    #         embedded_tokens.append(emb)
-    #
-    #     if mean:
-    #         filtered = [et for et in embedded_tokens if np.any(et)]
-    #         if filtered:
-    #             return np.mean(filtered, axis=0)
-    #         return np.zeros(self.dim, dtype=np.float32)
-    #
-    #     return embedded_tokens

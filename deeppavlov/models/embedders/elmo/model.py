@@ -5,7 +5,7 @@ import h5py
 import json
 import re
 
-from deeppavlov.core.models.embeddings.data import UnicodeCharsVocabulary, Batcher
+from deeppavlov.models.embedders.elmo.data import UnicodeCharsVocabulary, Batcher
 
 DTYPE = 'float32'
 DTYPE_INT = 'int64'

@@ -1,0 +1,32 @@
+{
+  "chainer": {
+    "in": [
+      "x"
+    ],
+    "pipe": [
+      {
+        "in": ["x"],
+        "name": "lazy_tokenizer",
+        "out": ["x"]
+      },
+      {
+        "in": [
+          "x"
+        ],
+        "load_path": "elmo_ruwiki_tok_num_400M",
+        "name": "elmo",
+        "out": [
+          "y"
+        ]
+      }
+    ],
+    "out": [
+      "y"
+    ]
+  },
+  "metadata": {
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/elmo_ruwiki_tok_num_400M.tar.gz"
+    ]
+  }
+}

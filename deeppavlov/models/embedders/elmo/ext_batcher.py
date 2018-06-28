@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
-from deeppavlov.core.models.embeddings.data import Batcher
+from deeppavlov.models.embedders.elmo.data import Batcher
 import numpy as np
 
 
