@@ -64,8 +64,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "intents/intent_cnn_v5",
-        "load_path": "intents/intent_cnn_v5",
+        "save_path": "intents/intents_dstc2_v5",
+        "load_path": "intents/intents_dstc2_v5",
         "classes": "#classes_vocab.keys()",
         "kernel_sizes_cnn": [
           1,
