@@ -2,6 +2,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+import os
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import read_json
@@ -15,11 +16,13 @@ _tf_re = re.compile(r'\s*tensorflow\s*(<|=|>|;|$)')
 
 def install(*packages):
     if any(_tf_re.match(package) for package in packages)\
-            and b'tensorflow-gpu' in subprocess.check_output([sys.executable, '-m', 'pip', 'freeze']):
+            and b'tensorflow-gpu' in subprocess.check_output([sys.executable, '-m', 'pip', 'freeze'],
+                                                             env=os.environ.copy()):
         log.warn('found tensorflow-gpu installed, so upgrading it instead of tensorflow')
         packages = [_tf_re.sub(r'tensorflow-gpu\1', package) for package in packages]
     return subprocess.check_call([sys.executable, '-m', 'pip', 'install',
-                                  *[re.sub(r'\s', '', package) for package in packages]])
+                                  *[re.sub(r'\s', '', package) for package in packages]],
+                                 env=os.environ.copy())
 
 
 def install_from_config(config: [str, Path, dict]):
