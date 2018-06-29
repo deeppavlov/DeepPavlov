@@ -11,7 +11,7 @@ from deeppavlov.core.common.log import get_logger
 
 log = get_logger(__name__)
 
-_tf_re = re.compile(r'\s*tensorflow\s*(<|=|>|;|$)')
+_tf_re = re.compile(r'\s*tensorflow\s*([<=>;]|$)')
 
 
 def install(*packages):
