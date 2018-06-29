@@ -1,4 +1,4 @@
-from keras.layers import Input, LSTM, Embedding, GlobalMaxPooling1D, Lambda, subtract, Subtract
+from keras.layers import Input, LSTM, Embedding, GlobalMaxPooling1D, Lambda, subtract, Conv2D
 from keras.layers.merge import Dot, Subtract
 from keras.models import Model
 from keras.layers.wrappers import Bidirectional
@@ -9,6 +9,7 @@ import tensorflow as tf
 import numpy as np
 from deeppavlov.core.models.tf_backend import TfModelMeta
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.layers import keras_layers
 from pathlib import Path
 
 
@@ -20,7 +21,8 @@ class RankingNetwork(metaclass=TfModelMeta):
     def __init__(self, toks_num, emb_dict, use_matrix, max_sequence_length,
                  hidden_dim, learning_rate, margin, embedding_dim,
                  device_num=0, seed=None, type_of_weights="shared",
-                 max_pooling=True, reccurent="bilstm", distance="cos_similarity"):
+                 max_pooling=True, reccurent="bilstm", distance="cos_similarity",
+                 max_token_length=None, char_emb_dim=None, embedding_level=None):
         self.distance = distance
         self.toks_num = toks_num
         self.emb_dict = emb_dict
@@ -35,6 +37,9 @@ class RankingNetwork(metaclass=TfModelMeta):
         self.type_of_weights = type_of_weights
         self.pooling = max_pooling
         self.recurrent = reccurent
+        self.max_token_length = max_token_length
+        self.embedding_level = embedding_level
+        self.char_emb_dim = char_emb_dim
 
         self.sess = self._config_session()
         K.set_session(self.sess)
@@ -72,12 +77,13 @@ class RankingNetwork(metaclass=TfModelMeta):
 
     def init_from_scratch(self, emb_matrix):
         log.info("[initializing new `{}`]".format(self.__class__.__name__))
-        if self.use_matrix:
-            if self.type_of_weights == "shared":
-                self.obj_model.get_layer(name="embedding").set_weights([emb_matrix])
-            if self.type_of_weights == "separate":
-                self.obj_model.get_layer(name="embedding_a").set_weights([emb_matrix])
-                self.obj_model.get_layer(name="embedding_b").set_weights([emb_matrix])
+        if self.embedding_level is None or self.embedding_level == 'word':
+            if self.use_matrix:
+                if self.type_of_weights == "shared":
+                    self.obj_model.get_layer(name="embedding").set_weights([emb_matrix])
+                if self.type_of_weights == "separate":
+                    self.obj_model.get_layer(name="embedding_a").set_weights([emb_matrix])
+                    self.obj_model.get_layer(name="embedding_b").set_weights([emb_matrix])
 
     def embedding_layer(self):
         if self.type_of_weights == "shared":
@@ -145,21 +151,78 @@ class RankingNetwork(metaclass=TfModelMeta):
             return out_a, out_b
 
     def triplet_hinge_loss_model(self):
-        if self.use_matrix:
-            context = Input(shape=(self.max_sequence_length,))
-            response_positive = Input(shape=(self.max_sequence_length,))
-            response_negative = Input(shape=(self.max_sequence_length,))
-            emb_layer_a, emb_layer_b = self.embedding_layer()
-            emb_c = emb_layer_a(context)
-            emb_rp = emb_layer_b(response_positive)
-            emb_rn = emb_layer_b(response_negative)
-        else:
-            context = Input(shape=(self.max_sequence_length, self.embedding_dim,))
-            response_positive = Input(shape=(self.max_sequence_length, self.embedding_dim,))
-            response_negative = Input(shape=(self.max_sequence_length, self.embedding_dim,))
-            emb_c = context
-            emb_rp = response_positive
-            emb_rn = response_negative
+        if self.embedding_level is None or self.embedding_level == 'word':
+            if self.use_matrix:
+                context = Input(shape=(self.max_sequence_length,))
+                response_positive = Input(shape=(self.max_sequence_length,))
+                response_negative = Input(shape=(self.max_sequence_length,))
+                emb_layer_a, emb_layer_b = self.embedding_layer()
+                emb_c = emb_layer_a(context)
+                emb_rp = emb_layer_b(response_positive)
+                emb_rn = emb_layer_b(response_negative)
+            else:
+                context = Input(shape=(self.max_sequence_length, self.embedding_dim,))
+                response_positive = Input(shape=(self.max_sequence_length, self.embedding_dim,))
+                response_negative = Input(shape=(self.max_sequence_length, self.embedding_dim,))
+                emb_c = context
+                emb_rp = response_positive
+                emb_rn = response_negative
+        elif self.embedding_level == 'char':
+            context = Input(shape=(self.max_sequence_length, self.max_token_length,))
+            response_positive = Input(shape=(self.max_sequence_length, self.max_token_length,))
+            response_negative = Input(shape=(self.max_sequence_length, self.max_token_length,))
+
+            n_characters = self.max_sequence_length
+            char_embedding_dim = self.char_emb_dim
+            filter_widths = (3, 4, 5, 7)
+            emb_layer = Embedding(n_characters,
+                                     char_embedding_dim)
+
+            emb_c = emb_layer(context)
+            emb_rp = emb_layer(response_positive)
+            emb_rn = emb_layer(response_negative)
+
+            conv2d_layers = []
+            for filter_width in filter_widths:
+                conv2d_layers.append(Conv2D(char_embedding_dim,
+                                      (1, filter_width),
+                                      padding='same'))
+            conv_results_list = []
+            for cl in conv2d_layers:
+                conv_results_list.append(cl(emb_c))
+                # units = Concatenate(conv_results_list, axis=3)
+            emb_c = Lambda(lambda x: K.concatenate(x, axis=3))(conv_results_list)
+            emb_c = Lambda(lambda x: K.max(x, axis=2))(emb_c)
+
+            conv_results_list = []
+            for cl in conv2d_layers:
+                conv_results_list.append(cl(emb_rp))
+                # units = Concatenate(conv_results_list, axis=3)
+            emb_rp = Lambda(lambda x: K.concatenate(x, axis=3))(conv_results_list)
+            emb_rp = Lambda(lambda x: K.max(x, axis=2))(emb_rp)
+
+            conv_results_list = []
+            for cl in conv2d_layers:
+                conv_results_list.append(cl(emb_rn))
+                # units = Concatenate(conv_results_list, axis=3)
+            emb_rn = Lambda(lambda x: K.concatenate(x, axis=3))(conv_results_list)
+            emb_rn = Lambda(lambda x: K.max(x, axis=2))(emb_rn)
+
+            # emb_layer = Lambda(lambda x:
+            #                    keras_layers.character_embedding_network(x, n_characters=self.max_token_length,
+            #                                                             char_embedding_dim= self.char_emb_dim))
+
+            # char_emb_layer = keras_layers.CharEmbeddingCNN(n_characters=self.max_token_length,
+            #                                            char_embedding_dim=self.char_emb_dim)
+
+            # char_emb_layer = Lambda(lambda x: keras_layers.char_embedding_cnn(x,
+            #                                                                   n_characters=self.max_token_length,
+            #                                                                   char_embedding_dim=self.char_emb_dim))
+
+            # emb_c = char_emb_layer(context)
+            # emb_rp = char_emb_layer(response_positive)
+            # emb_rn = char_emb_layer(response_negative)
+
         lstm_layer_a, lstm_layer_b = self.lstm_layer()
         lstm_c = lstm_layer_a(emb_c)
         lstm_rp = lstm_layer_b(emb_rp)
@@ -209,80 +272,98 @@ class RankingNetwork(metaclass=TfModelMeta):
         return K.mean(K.maximum(self.margin - y_pred, 0.), axis=-1)
 
     def train_on_batch(self, batch):
-        if self.use_matrix:
+        if self.embedding_level is None or self.embedding_level == 'word':
+            if self.use_matrix:
+                self.obj_model.train_on_batch(x=[np.asarray(x) for x in batch[0]], y=np.asarray(batch[1]))
+            else:
+                a, b, c = batch[0]
+                a = self.emb_dict.get_embs(a)
+                b = self.emb_dict.get_embs(b)
+                c = self.emb_dict.get_embs(c)
+                self.obj_model.train_on_batch(x=[a, b, c], y=np.asarray(batch[1]))
+        elif self.embedding_level == 'char':
             self.obj_model.train_on_batch(x=[np.asarray(x) for x in batch[0]], y=np.asarray(batch[1]))
-        else:
-            a, b, c = batch[0]
-            a = self.emb_dict.get_embs(a)
-            b = self.emb_dict.get_embs(b)
-            c = self.emb_dict.get_embs(c)
-            self.obj_model.train_on_batch(x=[a, b, c], y=np.asarray(batch[1]))
 
     def predict_on_batch(self, batch):
-        if self.use_matrix:
+        if self.embedding_level is None or self.embedding_level == 'word':
+            if self.use_matrix:
+                return self.score_model.predict_on_batch(x=batch)
+            else:
+                a, b, c = batch
+                a = self.emb_dict.get_embs(a)
+                b = self.emb_dict.get_embs(b)
+                c = self.emb_dict.get_embs(c)
+                return self.score_model.predict_on_batch(x=[a, b, c])
+        elif self.embedding_level == 'char':
             return self.score_model.predict_on_batch(x=batch)
-        else:
-            a, b, c = batch
-            a = self.emb_dict.get_embs(a)
-            b = self.emb_dict.get_embs(b)
-            c = self.emb_dict.get_embs(c)
-            return self.score_model.predict_on_batch(x=[a, b, c])
 
     def predict_context_on_batch(self, batch):
-        if self.use_matrix:
+        if self.embedding_level is None or self.embedding_level == 'word':
+            if self.use_matrix:
+                return self.context_embedding.predict_on_batch(x=batch)
+            else:
+                a, b, c = batch
+                a = self.emb_dict.get_embs(a)
+                b = self.emb_dict.get_embs(b)
+                c = self.emb_dict.get_embs(c)
+                return self.context_embedding.predict_on_batch(x=[a, b, c])
+        elif self.embedding_level == 'char':
             return self.context_embedding.predict_on_batch(x=batch)
-        else:
-            a, b, c = batch
-            a = self.emb_dict.get_embs(a)
-            b = self.emb_dict.get_embs(b)
-            c = self.emb_dict.get_embs(c)
-            return self.context_embedding.predict_on_batch(x=[a, b, c])
 
     def predict_context(self, batch, bs):
-        if self.use_matrix:
-            return self.context_embedding.predict(x=batch, batch_size=bs)
-        else:
-            cont_embs = []
-            num_batches = len(batch[0]) // bs
-            for i in range(num_batches):
-                a = batch[0][i * bs:(i + 1) * bs]
-                b = batch[1][i * bs:(i + 1) * bs]
-                c = batch[2][i * bs:(i + 1) * bs]
-                cont_embs.append(self.predict_context_on_batch([a, b, c]))
-            if len(batch[0]) % bs != 0:
-                a = batch[0][num_batches * bs:]
-                b = batch[1][num_batches * bs:]
-                c = batch[2][num_batches * bs:]
-                cont_embs.append(self.predict_context_on_batch([a, b, c]))
-            cont_embs = np.vstack(cont_embs)
+        if self.embedding_level is None or self.embedding_level == 'word':
+            if self.use_matrix:
+                return self.context_embedding.predict(x=batch, batch_size=bs)
+            else:
+                cont_embs = []
+                num_batches = len(batch[0]) // bs
+                for i in range(num_batches):
+                    a = batch[0][i * bs:(i + 1) * bs]
+                    b = batch[1][i * bs:(i + 1) * bs]
+                    c = batch[2][i * bs:(i + 1) * bs]
+                    cont_embs.append(self.predict_context_on_batch([a, b, c]))
+                if len(batch[0]) % bs != 0:
+                    a = batch[0][num_batches * bs:]
+                    b = batch[1][num_batches * bs:]
+                    c = batch[2][num_batches * bs:]
+                    cont_embs.append(self.predict_context_on_batch([a, b, c]))
+                cont_embs = np.vstack(cont_embs)
             return cont_embs
+        elif self.embedding_level == 'char':
+            return self.context_embedding.predict(x=batch, batch_size=bs)
 
     def predict_response_on_batch(self, batch):
-        if self.use_matrix:
+        if self.embedding_level is None or self.embedding_level == 'word':
+            if self.use_matrix:
+                return self.response_embedding.predict_on_batch(x=batch)
+            else:
+                a, b, c = batch
+                a = self.emb_dict.get_embs(a)
+                b = self.emb_dict.get_embs(b)
+                c = self.emb_dict.get_embs(c)
+                return self.response_embedding.predict_on_batch(x=[a, b, c])
+        elif self.embedding_level == 'char':
             return self.response_embedding.predict_on_batch(x=batch)
-        else:
-            a, b, c = batch
-            a = self.emb_dict.get_embs(a)
-            b = self.emb_dict.get_embs(b)
-            c = self.emb_dict.get_embs(c)
-            return self.response_embedding.predict_on_batch(x=[a, b, c])
 
     def predict_response(self, batch, bs):
-        if self.use_matrix:
+        if self.embedding_level is None or self.embedding_level == 'word':
+            if self.use_matrix:
+                return self.response_embedding.predict(x=batch, batch_size=bs)
+            else:
+                resp_embs = []
+                num_batches = len(batch[0]) // bs
+                for i in range(num_batches):
+                    a = batch[0][i * bs:(i + 1) * bs]
+                    b = batch[1][i * bs:(i + 1) * bs]
+                    c = batch[2][i * bs:(i + 1) * bs]
+                    resp_embs.append(self.predict_response_on_batch([a, b, c]))
+                if len(batch[0]) % bs != 0:
+                    a = batch[0][num_batches * bs:]
+                    b = batch[1][num_batches * bs:]
+                    c = batch[2][num_batches * bs:]
+                    resp_embs.append(self.predict_response_on_batch([a, b, c]))
+                resp_embs = np.vstack(resp_embs)
+                return resp_embs
+        elif self.embedding_level == 'char':
             return self.response_embedding.predict(x=batch, batch_size=bs)
-        else:
-            resp_embs = []
-            num_batches = len(batch[0]) // bs
-            for i in range(num_batches):
-                a = batch[0][i * bs:(i + 1) * bs]
-                b = batch[1][i * bs:(i + 1) * bs]
-                c = batch[2][i * bs:(i + 1) * bs]
-                resp_embs.append(self.predict_response_on_batch([a, b, c]))
-            if len(batch[0]) % bs != 0:
-                a = batch[0][num_batches * bs:]
-                b = batch[1][num_batches * bs:]
-                c = batch[2][num_batches * bs:]
-                resp_embs.append(self.predict_response_on_batch([a, b, c]))
-            resp_embs = np.vstack(resp_embs)
-            return resp_embs
 

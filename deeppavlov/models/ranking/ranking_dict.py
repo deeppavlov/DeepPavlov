@@ -11,15 +11,23 @@ log = get_logger(__name__)
 class RankingDict(metaclass=ABCMeta):
 
     def __init__(self, save_path, load_path,
-                 max_sequence_length, padding, truncating):
+                 max_sequence_length, padding, truncating,
+                 max_token_length, embedding_level,
+                 char_pad, char_trunc):
 
         self.max_sequence_length = max_sequence_length
+        self.embedding_level = embedding_level
+        self.max_token_length = max_token_length
         self.padding = padding
         self.truncating = truncating
+        self.char_pad = char_pad
+        self.char_trunc = char_trunc
 
         save_path = expand_path(save_path).resolve().parent
         load_path = expand_path(load_path).resolve().parent
 
+        self.char_save_path = save_path / "char2int.dict"
+        self.char_load_path = load_path / "char2int.dict"
         self.tok_save_path = save_path / "tok2int.dict"
         self.tok_load_path = load_path / "tok2int.dict"
         self.cont_save_path = save_path / "cont2toks.dict"
@@ -40,6 +48,8 @@ class RankingDict(metaclass=ABCMeta):
 
     def init_from_scratch(self):
         log.info("[initializing new `{}`]".format(self.__class__.__name__))
+        self.build_int2char_vocab()
+        self.build_char2int_vocab()
         self.build_int2tok_vocab()
         self.build_tok2int_vocab()
         self.build_context2toks_vocabulary()
@@ -49,6 +59,8 @@ class RankingDict(metaclass=ABCMeta):
 
     def load(self):
         log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
+        self.load_int2char()
+        self.build_char2int_vocab()
         self.load_int2tok()
         self.build_tok2int_vocab()
         self.load_context2toks()
@@ -58,9 +70,14 @@ class RankingDict(metaclass=ABCMeta):
 
     def save(self):
         log.info("[saving `{}`]".format(self.__class__.__name__))
+        self.save_int2char()
         self.save_int2tok()
         self.save_context2toks()
         self.save_response2toks()
+
+    @abstractmethod
+    def build_int2char_vocab(self):
+        pass
 
     @abstractmethod
     def build_int2tok_vocab(self):
@@ -73,6 +90,9 @@ class RankingDict(metaclass=ABCMeta):
     @abstractmethod
     def build_context2toks_vocabulary(self):
         pass
+
+    def build_char2int_vocab(self):
+        self.char2int_vocab = {el[1]: el[0] for el in self.int2char_vocab.items()}
 
     def build_tok2int_vocab(self):
         self.tok2int_vocab = {el[1]: el[0] for el in self.int2tok_vocab.items()}
@@ -101,21 +121,58 @@ class RankingDict(metaclass=ABCMeta):
         return toks_li
 
     def make_ints(self, toks_li):
-        ints_li = []
-        for toks in toks_li:
-            ints = []
-            for tok in toks:
-                index = self.tok2int_vocab.get(tok)
-                if self.tok2int_vocab.get(tok) is not None:
-                    ints.append(index)
+        if self.embedding_level is None or self.embedding_level == 'word':
+            ints_li = []
+            for toks in toks_li:
+                ints = []
+                for tok in toks:
+                    index = self.tok2int_vocab.get(tok)
+                    if self.tok2int_vocab.get(tok) is not None:
+                        ints.append(index)
+                    else:
+                        ints.append(0)
+                ints_li.append(ints)
+            ints_li = pad_sequences(ints_li,
+                                    maxlen=self.max_sequence_length,
+                                    padding=self.padding,
+                                    truncating=self.truncating)
+        elif self.embedding_level=='char':
+            ints_li = np.zeros((len(toks_li), self.max_sequence_length, self.max_token_length))
+            for i, toks in enumerate(toks_li):
+                if self.truncating == 'pre':
+                    toks = toks[-self.max_sequence_length:]
                 else:
-                    ints.append(0)
-            ints_li.append(ints)
-        ints_li = pad_sequences(ints_li,
-                                maxlen=self.max_sequence_length,
-                                padding=self.padding,
-                                truncating=self.truncating)
+                    toks = toks[:self.max_sequence_length]
+                for j, tok in enumerate(toks):
+                    if self.padding == 'pre':
+                        k = j
+                    else:
+                        k = j + self.max_sequence_length - len(toks)
+                    ints = []
+                    for char in tok:
+                        index = self.char2int_vocab.get(char)
+                        if index is not None:
+                            ints.append(index)
+                        else:
+                            ints.append(0)
+                    if self.char_trunc == 'pre':
+                        ints = ints[-self.max_token_length:]
+                    else:
+                        ints = ints[:self.max_token_length]
+                    if self.char_pad == 'pre':
+                        ints_li[i,k,-len(ints):] = ints
+                    else:
+                        ints_li[i,k,:len(ints)] = ints
         return ints_li
+
+    def save_int2char(self):
+        with self.char_save_path.open('w') as f:
+            f.write('\n'.join(['\t'.join([str(el[0]), el[1]]) for el in self.int2char_vocab.items()]))
+
+    def load_int2char(self):
+        with self.char_load_path.open('r') as f:
+            data = f.readlines()
+        self.int2char_vocab = {int(el.split('\t')[0]): el.split('\t')[1][:-1] for el in data}
 
     def save_int2tok(self):
         with self.tok_save_path.open('w') as f:

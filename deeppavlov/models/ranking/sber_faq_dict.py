@@ -8,15 +8,37 @@ import re
 class SberFAQDict(RankingDict):
 
     def __init__(self, vocabs_path, save_path, load_path,
-                 max_sequence_length, padding="post", truncating="pre"):
+                 max_sequence_length, padding="post", truncating="pre",
+                 max_token_length=None, embedding_level=None,
+                 char_pad="post", char_trunc="post"):
 
         super().__init__(save_path, load_path,
-              max_sequence_length, padding, truncating)
+                         max_sequence_length, padding, truncating,
+                         max_token_length, embedding_level,
+                         char_pad, char_trunc)
 
         vocabs_path = expand_path(vocabs_path)
         self.train_fname = Path(vocabs_path) / 'sber_faq_train_1849.csv'
         self.val_fname = Path(vocabs_path) / 'sber_faq_val_1849.csv'
         self.test_fname = Path(vocabs_path) / 'sber_faq_test_1849.csv'
+
+    def build_int2char_vocab(self):
+        sen = []
+        with open(self.train_fname, 'r') as f:
+            reader = csv.reader(f, delimiter='\t')
+            for el in reader:
+                sen.append(self.clean_sen(el[0]))
+        with open(self.val_fname, 'r') as f:
+            reader = csv.reader(f, delimiter='\t')
+            for el in reader:
+                sen.append(self.clean_sen(el[0]))
+        char_set = set()
+        for el in sen:
+            for x in el:
+                char_set.add(x)
+        self.int2char_vocab = {el[0]+1: el[1] for el in enumerate(char_set)}
+        self.int2char_vocab[0] = '<UNK_CHAR>'
+
 
     def build_int2tok_vocab(self):
         sen = []
