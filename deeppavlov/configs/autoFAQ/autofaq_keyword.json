@@ -1,0 +1,23 @@
+{
+
+  "chainer": {
+    "in": "question",
+    "out": "ans_predicted",
+    "pipe": [
+      {
+        "name": "autofaq_keyword",
+        "in": "question",
+        "faq_dataset_path": "/home/andrey/Projects/autoFAQ/data/faq.csv",
+        "defined_phrases": "/home/andrey/Projects/autoFAQ/data/phrases.txt",
+        "out": "ans_predicted"
+      }
+    ]
+  },
+  "metadata": {
+    "labels": {
+      "server_utils": "autofaq"
+    }
+  }
+
+}
+
