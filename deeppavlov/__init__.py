@@ -66,6 +66,7 @@ import deeppavlov.models.tokenizers.ru_tokenizer
 import deeppavlov.models.squad.squad
 import deeppavlov.models.morpho_tagger.tagger
 import deeppavlov.models.morpho_tagger.common
+import deeppavlov.models.api_requester
 
 import deeppavlov.skills.go_bot.bot
 import deeppavlov.skills.go_bot.network
@@ -92,6 +93,8 @@ import deeppavlov.models.slotfill.slotfill_raw
 import deeppavlov.models.slotfill.slotfill
 import deeppavlov.models.preprocessors.one_hotter
 import deeppavlov.dataset_readers.ontonotes_reader
+
+import deeppavlov.models.classifiers.tokens_matcher.tokens_matcher
 
 
 import deeppavlov.metrics.accuracy
