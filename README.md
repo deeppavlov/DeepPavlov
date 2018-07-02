@@ -39,16 +39,16 @@ Target architecture of our library: -->
 ## Key Concepts
  * `Agent` is a conversational agent communicating with users in natural language (text).
  * `Skill` fulfills user’s goal in some domain. Typically, this is accomplished by presenting information or completing transaction (e.g. answer question by FAQ, booking tickets etc.). However, for some tasks a success of interaction is defined as continuous engagement (e.g. chit-chat).
- * `Model` is a reusable functional component of `Skill`.
+ * `Component` is a reusable functional component of `Skill`.
    * `Rule-based Models` cannot be trained.
    * `Machine Learning Models` can be trained only stand alone.
    * `Deep Learning Models` can be trained independently and in an end-to-end mode being joined in a chain.
  * `Skill Manager` performs selection of the `Skill` to generate response.
  * ` Chainer` builds an agent/component pipeline from heterogeneous components (rule-based/ml/dl). It allows to train and infer models in a pipeline as a whole.
 
-The smallest building block of the library is `Model`. `Model` stands for any kind of function in an NLP pipeline. It can be implemented as a neural network, a non-neural ML model or a rule-based system. Besides that, `Model` can have nested structure, i.e. a `Model` can include other `Model`'(s). 
+The smallest building block of the library is `Component`. `Component` stands for any kind of function in an NLP pipeline. It can be implemented as a neural network, a non-neural ML model or a rule-based system. Besides that, `Component` can have nested structure, i.e. a `Component` can include other `Component`'(s). 
 
-`Model`s can be joined into a `Skill`. `Skill` solves a larger NLP task compared to `Model`. However, in terms of implementation `Skill`s are not different from `Model`s. The only restriction of `Skill`s is that their input and output should both be strings. Therefore, `Skill`s are usually associated with dialogue tasks. 
+`Component`s can be joined into a `Skill`. `Skill` solves a larger NLP task compared to `Component`. However, in terms of implementation `Skill`s are not different from `Component`s. The only restriction of `Skill`s is that their input and output should both be strings. Therefore, `Skill`s are usually associated with dialogue tasks. 
 
 `Agent` is supposed to be a multi-purpose dialogue system that comprises several `Skill`s and can switch between them. It can be a dialogue system that contains a goal-oriented and chatbot skills and chooses which one to use for generating the answer depending on user input.
 
@@ -442,4 +442,3 @@ DeepPavlov is built and maintained by [Neural Networks and Deep Learning Lab](ht
 <p align="center">
 <img src="https://ipavlov.ai/img/ipavlov_footer.png" width="50%" height="50%"/>
 </p>
-
