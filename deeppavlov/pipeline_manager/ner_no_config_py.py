@@ -42,6 +42,8 @@ tag_vocab = SimpleVocabulary(in_x="y",
                              load_path="slotfill_dstc2/tag.dict",
                              out_params="y_ind")
 
+# print("here ---->", tag_vocab.in_x)
+
 word_vocab.fit(x)
 tag_vocab.fit(x)
 
@@ -72,7 +74,8 @@ chainer.append(lower, in_x='x_tok', out_params='x_lower')
 chainer.append(word_vocab, in_x='x_lower', out_params=['x_tok_ind'])
 chainer.append(tag_vocab, in_x='y', out_params=['y_ind'])
 chainer.append(mask, in_x='x_tok', out_params=['mask'])
-chainer.append(model, in_x=['x_tok_ind', 'mask'], in_y='y_ind', main=True)
+chainer.append(model, in_x=['x_tok_ind', 'mask'], in_y='y_ind', main=True, out_params=['model_out'])
+chainer.append(tag_vocab, in_x='model_out', out_params=['out'])
 
 train_config = {'batch_size': 64,
                 'metric_optimization': 'maximize',
