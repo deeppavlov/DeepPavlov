@@ -13,7 +13,8 @@ class RankingDict(metaclass=ABCMeta):
     def __init__(self, save_path, load_path,
                  max_sequence_length, padding, truncating,
                  max_token_length, embedding_level,
-                 char_pad, char_trunc):
+                 char_pad, char_trunc,
+                 tok_dynamic_batch, char_dynamic_batch):
 
         self.max_sequence_length = max_sequence_length
         self.embedding_level = embedding_level
@@ -22,6 +23,8 @@ class RankingDict(metaclass=ABCMeta):
         self.truncating = truncating
         self.char_pad = char_pad
         self.char_trunc = char_trunc
+        self.tok_dynamic_batch = tok_dynamic_batch
+        self.char_dynamic_batch = char_dynamic_batch
 
         save_path = expand_path(save_path).resolve().parent
         load_path = expand_path(load_path).resolve().parent
@@ -137,17 +140,30 @@ class RankingDict(metaclass=ABCMeta):
                                     padding=self.padding,
                                     truncating=self.truncating)
         elif self.embedding_level=='char':
-            ints_li = np.zeros((len(toks_li), self.max_sequence_length, self.max_token_length))
+            if self.tok_dynamic_batch:
+                msl = max([len(el) for el in toks_li])
+            else:
+                msl = self.max_sequence_length
+            if self.char_dynamic_batch:
+                mtl = max(len(x) for el in toks_li for x in el)
+            else:
+                mtl = self.max_token_length
+            ints_li = np.zeros((len(toks_li), msl, mtl))
+
             for i, toks in enumerate(toks_li):
-                if self.truncating == 'pre':
-                    toks = toks[-self.max_sequence_length:]
-                else:
-                    toks = toks[:self.max_sequence_length]
-                for j, tok in enumerate(toks):
-                    if self.padding == 'pre':
-                        k = j
+                if not self.tok_dynamic_batch:
+                    if self.truncating == 'pre':
+                        toks = toks[-self.max_sequence_length:]
                     else:
-                        k = j + self.max_sequence_length - len(toks)
+                        toks = toks[:self.max_sequence_length]
+                for j, tok in enumerate(toks):
+                    if not self.tok_dynamic_batch:
+                        if self.padding == 'pre':
+                            k = j
+                        else:
+                            k = j + self.max_sequence_length - len(toks)
+                    else:
+                        k = j
                     ints = []
                     for char in tok:
                         index = self.char2int_vocab.get(char)
@@ -155,14 +171,17 @@ class RankingDict(metaclass=ABCMeta):
                             ints.append(index)
                         else:
                             ints.append(0)
-                    if self.char_trunc == 'pre':
-                        ints = ints[-self.max_token_length:]
+                    if not self.char_dynamic_batch:
+                        if self.char_trunc == 'pre':
+                            ints = ints[-self.max_token_length:]
+                        else:
+                            ints = ints[:self.max_token_length]
+                        if self.char_pad == 'pre':
+                            ints_li[i,k,-len(ints):] = ints
+                        else:
+                            ints_li[i,k,:len(ints)] = ints
                     else:
-                        ints = ints[:self.max_token_length]
-                    if self.char_pad == 'pre':
-                        ints_li[i,k,-len(ints):] = ints
-                    else:
-                        ints_li[i,k,:len(ints)] = ints
+                        ints_li[i, k, :len(ints)] = ints
         return ints_li
 
     def save_int2char(self):

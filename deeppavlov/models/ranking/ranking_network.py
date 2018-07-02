@@ -22,7 +22,8 @@ class RankingNetwork(metaclass=TfModelMeta):
                  hidden_dim, learning_rate, margin, embedding_dim,
                  device_num=0, seed=None, type_of_weights="shared",
                  max_pooling=True, reccurent="bilstm", distance="cos_similarity",
-                 max_token_length=None, char_emb_dim=None, embedding_level=None):
+                 max_token_length=None, char_emb_dim=None, embedding_level=None,
+                 tok_dynamic_batch=False, char_dynamic_batch=False):
         self.distance = distance
         self.toks_num = toks_num
         self.emb_dict = emb_dict
@@ -40,6 +41,8 @@ class RankingNetwork(metaclass=TfModelMeta):
         self.max_token_length = max_token_length
         self.embedding_level = embedding_level
         self.char_emb_dim = char_emb_dim
+        self.tok_dynamic_batch = tok_dynamic_batch
+        self.char_dynamic_batch = char_dynamic_batch
 
         self.sess = self._config_session()
         K.set_session(self.sess)
@@ -168,9 +171,18 @@ class RankingNetwork(metaclass=TfModelMeta):
                 emb_rp = response_positive
                 emb_rn = response_negative
         elif self.embedding_level == 'char':
-            context = Input(shape=(self.max_sequence_length, self.max_token_length,))
-            response_positive = Input(shape=(self.max_sequence_length, self.max_token_length,))
-            response_negative = Input(shape=(self.max_sequence_length, self.max_token_length,))
+            if self.tok_dynamic_batch:
+                msl = None
+            else:
+                msl = self.max_sequence_length
+            if self.char_dynamic_batch:
+                mtl = None
+            else:
+                mtl = self.tok_dynamic_batch
+
+            context = Input(shape=(msl, mtl,))
+            response_positive = Input(shape=(msl, mtl,))
+            response_negative = Input(shape=(msl, mtl,))
 
             n_characters = self.max_sequence_length
             char_embedding_dim = self.char_emb_dim
