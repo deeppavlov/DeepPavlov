@@ -8,20 +8,20 @@
         "in": ["text"],
         "out": ["slots"],
         "return_all": true,
-        "load_path": "../deeppavlov/configs/sbrf_bot/slots.json",
-        "save_path": "../deeppavlov/configs/sbrf_bot/slots.json"
+        "load_path": "../deeppavlov/configs/sbrf_bot/slots.tarifs.json",
+        "save_path": "../deeppavlov/configs/sbrf_bot/slots.tarifs.json"
       },
       {
         "name": "simple_dst",
         "id": "dst",
         "in": ["slots"],
         "out": ["state"],
-        "commands": "./deeppavlov/configs/sbrf_bot/dst.py"
+        "commands": "./deeppavlov/configs/sbrf_bot/dst.tarifs.py"
       },
       {
         "name": "simple_policy",
         "dst": "#dst",
-        "policy": "./deeppavlov/configs/sbrf_bot/policy.py",
+        "policy": "./deeppavlov/configs/sbrf_bot/policy.tarifs.py",
         "in": ["state"],
         "out": ["response"]
       }
