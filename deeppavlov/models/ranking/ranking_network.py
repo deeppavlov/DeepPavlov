@@ -230,36 +230,33 @@ class RankingNetwork(metaclass=TfModelMeta):
                 sigmoid_gate = Activation('sigmoid')(sigmoid_gate)
                 deeper_units = dense2(emb_c)
                 emb_c = Add()([Multiply()([sigmoid_gate, deeper_units]),
-                             Multiply()([Lambda(lambda x: K.constant(1.) - x)(sigmoid_gate), emb_c])])
+                             Multiply()([Lambda(lambda x: K.constant(1., shape=K.shape(x)) - x)(sigmoid_gate), emb_c])])
                 emb_c = Activation('relu')(emb_c)
 
                 sigmoid_gate = dense1(emb_rp)
                 sigmoid_gate = Activation('sigmoid')(sigmoid_gate)
                 deeper_units = dense2(emb_rp)
                 emb_rp = Add()([Multiply()([sigmoid_gate, deeper_units]),
-                              Multiply()([Lambda(lambda x: K.constant(1.) - x)(sigmoid_gate), emb_rp])])
+                              Multiply()([Lambda(lambda x: K.constant(1., shape=K.shape(x)) - x)(sigmoid_gate), emb_rp])])
                 emb_rp = Activation('relu')(emb_rp)
 
                 sigmoid_gate = dense1(emb_rn)
                 sigmoid_gate = Activation('sigmoid')(sigmoid_gate)
                 deeper_units = dense2(emb_rn)
                 emb_rn = Add()([Multiply()([sigmoid_gate, deeper_units]),
-                              Multiply()([Lambda(lambda x: K.constant(1.) - x)(sigmoid_gate), emb_rn])])
+                              Multiply()([Lambda(lambda x: K.constant(1., shape=K.shape(x)) - x)(sigmoid_gate), emb_rn])])
                 emb_rn = Activation('relu')(emb_rn)
 
 
+            # char_emb_layer = Lambda(lambda x: keras_layers.char_emb_cnn(x,
+            #                                                   n_characters=self.max_token_length,
+            #                                                   char_embedding_dim=self.char_emb_dim,
+            #                                                   highway_on_top=self.highway_on_top)
 
-
-            # emb_layer = Lambda(lambda x:
-            #                    keras_layers.character_embedding_network(x, n_characters=self.max_token_length,
-            #                                                             char_embedding_dim= self.char_emb_dim))
-
-            # char_emb_layer = keras_layers.CharEmbeddingCNN(n_characters=self.max_token_length,
-            #                                            char_embedding_dim=self.char_emb_dim)
-
-            # char_emb_layer = Lambda(lambda x: keras_layers.char_embedding_cnn(x,
-            #                                                                   n_characters=self.max_token_length,
-            #                                                                   char_embedding_dim=self.char_emb_dim))
+            # char_emb_layer = keras_layers.char_emb_cnn_model(input_dim_tok=msl, input_dim_char=mtl,
+            #                                                   n_characters=self.max_token_length,
+            #                                                   char_embedding_dim=self.char_emb_dim,
+            #                                                   highway_on_top=self.highway_on_top)
 
             # emb_c = char_emb_layer(context)
             # emb_rp = char_emb_layer(response_positive)

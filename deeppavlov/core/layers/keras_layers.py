@@ -15,9 +15,9 @@ limitations under the License.
 """
 from keras import backend as K
 from keras.models import Model
-from keras.layers import Dense, Reshape, Concatenate, Lambda, Embedding, Conv2D, Activation
+from keras.layers import Dense, Reshape, Concatenate, Lambda, Embedding, Conv2D, Activation, Input
 from keras.engine.topology import Layer
-from keras.layers.merge import Multiply
+from keras.layers.merge import Multiply, Add
 from keras.activations import softmax
 import numpy as np
 
@@ -104,129 +104,85 @@ def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, 
     return output
 
 
-def character_embedding_network(char_input,
-                                n_characters: int = None,
-                                emb_mat: np.array = None,
-                                char_embedding_dim: int = None,
-                                filter_widths=(3, 4, 5, 7),
-                                highway_on_top=False):
-    """ Characters to vector. Every sequence of characters (token)
-        is embedded to vector space with dimensionality char_embedding_dim
-        Convolution plus max_pooling is used to obtain vector representations
-        of words.
+def char_emb_cnn(input,
+                        n_characters: int = None,
+                        emb_mat: np.array = None,
+                        char_embedding_dim: int = None,
+                        filter_widths=(3, 4, 5, 7),
+                        highway_on_top=False):
 
-    Args:
-        char_input: numpy array of int32 type with dimensionality [B, T, C]
-            B - batch size (can be None)
-            T - Number of tokens (can be None)
-            C - number of characters (can be None)
-        n_characters: total number of unique characters
-        emb_mat: if n_characters is not provided the emb_mat should be provided
-            it is a numpy array with dimensions [V, E], where V - vocabulary size
-            and E - embeddings dimension
-        char_embedding_dim: dimensionality of characters embeddings
-        filter_widths: array of width of kernel in convolutional embedding network
-            used in parallel
+    emb_layer = Embedding(n_characters,
+                          char_embedding_dim)
 
-    Returns:
-        embeddings: tensor with dimensionality [B, T, F],
-            where F is dimensionality of embeddings
-    """
-    assert(emb_mat is not None or n_characters is not None)
-
-    char_emb_var = Embedding(n_characters,
-                                 char_embedding_dim)
     if emb_mat is not None:
-        char_emb_var.set_weights([emb_mat])
-    # Character embedding layer
-    c_emb = char_emb_var(char_input)
+        emb_layer.set_weights([emb_mat])
 
-    # Character embedding network
-    conv_results_list = []
-    for filter_width in filter_widths:
-        conv_results_list.append(Conv2D(char_embedding_dim,
-                                        (1, filter_width),
-                                        padding='same')(c_emb))
-    # units = Concatenate(conv_results_list, axis=3)
-    units = Lambda(lambda x: K.concatenate(x, axis=3))(conv_results_list)
-    units = Lambda(lambda x: K.max(x, axis=2))(units)
-    if highway_on_top:
-        sigmoid_gate = Dense(char_embedding_dim * len(filter_widths))(units)
-        sigmoid_gate = Activation('sigmoid')(sigmoid_gate)
-        char_embedding_dim * len(filter_widths)
-        deeper_units = Dense(char_embedding_dim * len(filter_widths))(units)
-        units = Multiply()([sigmoid_gate, deeper_units]) + \
-                Multiply()([Lambda(lambda x: K.constant(1., shape=K.int_shape(x))-x)(sigmoid_gate), units])
-        units = Activation('relu')(units)
-    return units
-
-class CharEmbeddingCNN(Layer):
-
-    def __init__(self,
-                 n_characters: int = None,
-                 emb_mat: np.array = None,
-                 char_embedding_dim: int = None,
-                 filter_widths=(3, 4, 5, 7),
-                 highway_on_top=False,
-                 **kwargs):
-        self.n_characters=n_characters,
-        self.char_embedding_dim = char_embedding_dim,
-        self.filter_widths = filter_widths,
-        self.highway_on_top = highway_on_top
-        super(CharEmbeddingCNN, self).__init__(**kwargs)
-
-        self.char_emb_var = Embedding(n_characters,
-                                 char_embedding_dim)
-        if emb_mat is not None:
-            self.char_emb_var.set_weights([emb_mat])
-
-        self.conv2d_layers = []
-        for filter_width in filter_widths:
-            self.conv2d_layers.append(Conv2D(char_embedding_dim,
-                                  (1, filter_width),
-                                  padding='same'))
-
-    def build(self, input_shape):
-        pass
-
-    def call(self, x):
-        c_emb = self.char_emb_var(x)
-
-        conv_results_list = []
-        for cl in self.conv2d_layers:
-            conv_results_list.append(cl(c_emb))
-
-        units = Lambda(lambda x: K.concatenate(x, axis=3))(conv_results_list)
-        units = Lambda(lambda x: K.max(x, axis=2))(units)
-        return units
-
-    def compute_output_shape(self, input_shape):
-        return (input_shape[0], input_shape[1], self.char_embedding_dim * len(self.filter_widths))
-
-
-def char_embedding_cnn(x,
-                     n_characters: int = None,
-                     emb_mat: np.array = None,
-                     char_embedding_dim: int = None,
-                     filter_widths=(3, 4, 5, 7),
-                     highway_on_top=False):
-    char_emb_var = Embedding(n_characters,
-                                  char_embedding_dim)
-    if emb_mat is not None:
-        char_emb_var.set_weights([emb_mat])
+    emb_c = emb_layer(input)
 
     conv2d_layers = []
     for filter_width in filter_widths:
         conv2d_layers.append(Conv2D(char_embedding_dim,
-                                         (1, filter_width),
-                                         padding='same'))
-    c_emb = char_emb_var(x)
-
+                                    (1, filter_width),
+                                    padding='same'))
     conv_results_list = []
     for cl in conv2d_layers:
-        conv_results_list.append(cl(c_emb))
+        conv_results_list.append(cl(emb_c))
 
-    units = Lambda(lambda x: K.concatenate(x, axis=3))(conv_results_list)
-    units = Lambda(lambda x: K.max(x, axis=2))(units)
-    model = Model(input=x, outputs=units)
-    return model
+    emb_c = Lambda(lambda x: K.concatenate(x, axis=3))(conv_results_list)
+    emb_c = Lambda(lambda x: K.max(x, axis=2))(emb_c)
+
+    if highway_on_top:
+        dense1 = Dense(char_embedding_dim * len(filter_widths))
+        dense2 = Dense(char_embedding_dim * len(filter_widths))
+
+        sigmoid_gate = dense1(emb_c)
+        sigmoid_gate = Activation('sigmoid')(sigmoid_gate)
+        deeper_units = dense2(emb_c)
+        emb_c = Add()([Multiply()([sigmoid_gate, deeper_units]),
+                       Multiply()([Lambda(lambda x: K.constant(1., shape=K.shape(x)) - x)(sigmoid_gate), emb_c])])
+        emb_c = Activation('relu')(emb_c)
+
+    return emb_c
+
+
+def char_emb_cnn_model(input_dim_tok, input_dim_char,
+                        n_characters: int = None,
+                        emb_mat: np.array = None,
+                        char_embedding_dim: int = None,
+                        filter_widths=(3, 4, 5, 7),
+                        highway_on_top=False):
+
+    input = Input(shape=(input_dim_tok, input_dim_char,))
+
+    emb_layer = Embedding(n_characters,
+                          char_embedding_dim)
+
+    if emb_mat is not None:
+        emb_layer.set_weights([emb_mat])
+
+    emb_c = emb_layer(input)
+
+    conv2d_layers = []
+    for filter_width in filter_widths:
+        conv2d_layers.append(Conv2D(char_embedding_dim,
+                                    (1, filter_width),
+                                    padding='same'))
+    conv_results_list = []
+    for cl in conv2d_layers:
+        conv_results_list.append(cl(emb_c))
+
+    emb_c = Lambda(lambda x: K.concatenate(x, axis=3))(conv_results_list)
+    emb_c = Lambda(lambda x: K.max(x, axis=2))(emb_c)
+
+    if highway_on_top:
+        dense1 = Dense(char_embedding_dim * len(filter_widths))
+        dense2 = Dense(char_embedding_dim * len(filter_widths))
+
+        sigmoid_gate = dense1(emb_c)
+        sigmoid_gate = Activation('sigmoid')(sigmoid_gate)
+        deeper_units = dense2(emb_c)
+        emb_c = Add()([Multiply()([sigmoid_gate, deeper_units]),
+                       Multiply()([Lambda(lambda x: K.constant(1., shape=K.shape(x)) - x)(sigmoid_gate), emb_c])])
+        emb_c = Activation('relu')(emb_c)
+
+    return Model(inputs=input, outputs=emb_c)
