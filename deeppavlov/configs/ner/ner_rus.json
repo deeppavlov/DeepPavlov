@@ -141,6 +141,10 @@
     "show_examples": false
   },
   "metadata": {
+    "requirements": [
+      "../requirements/fasttext.txt",
+      "../requirements/tf-gpu.txt"
+    ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",
       "server_utils": "NER"
