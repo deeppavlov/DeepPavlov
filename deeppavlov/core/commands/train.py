@@ -22,7 +22,7 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import List, Callable, Tuple, Dict, Union
 
-from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root
+from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root, import_packages
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.errors import ConfigError
@@ -100,6 +100,8 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
     if isinstance(config, (str, Path)):
         config = read_json(config)
     set_deeppavlov_root(config)
+
+    import_packages(config.get('metadata', {}).get('imports', []))
 
     dataset_config = config.get('dataset', None)
 
