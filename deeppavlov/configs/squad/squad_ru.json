@@ -105,6 +105,9 @@
     "metrics": ["squad_f1", "exact_match"]
   },
   "metadata": {
+    "requirements": [
+      "../requirements/tf-gpu.txt"
+    ],
     "labels": {
       "telegram_utils": "SquadModel",
       "server_utils": "SquadModel"
