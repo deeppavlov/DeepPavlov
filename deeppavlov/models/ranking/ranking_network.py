@@ -1,5 +1,5 @@
-from keras.layers import Input, LSTM, Embedding, GlobalMaxPooling1D, Lambda, subtract, Conv2D
-from keras.layers.merge import Dot, Subtract
+from keras.layers import Input, LSTM, Embedding, GlobalMaxPooling1D, Lambda, subtract, Conv2D, Dense, Activation
+from keras.layers.merge import Dot, Subtract, Add, Multiply
 from keras.models import Model
 from keras.layers.wrappers import Bidirectional
 from keras.optimizers import Adam
@@ -23,7 +23,8 @@ class RankingNetwork(metaclass=TfModelMeta):
                  device_num=0, seed=None, type_of_weights="shared",
                  max_pooling=True, reccurent="bilstm", distance="cos_similarity",
                  max_token_length=None, char_emb_dim=None, embedding_level=None,
-                 tok_dynamic_batch=False, char_dynamic_batch=False):
+                 tok_dynamic_batch=False, char_dynamic_batch=False,
+                 highway_on_top=False):
         self.distance = distance
         self.toks_num = toks_num
         self.emb_dict = emb_dict
@@ -43,6 +44,7 @@ class RankingNetwork(metaclass=TfModelMeta):
         self.char_emb_dim = char_emb_dim
         self.tok_dynamic_batch = tok_dynamic_batch
         self.char_dynamic_batch = char_dynamic_batch
+        self.highway_on_top = highway_on_top
 
         self.sess = self._config_session()
         K.set_session(self.sess)
@@ -219,6 +221,34 @@ class RankingNetwork(metaclass=TfModelMeta):
                 # units = Concatenate(conv_results_list, axis=3)
             emb_rn = Lambda(lambda x: K.concatenate(x, axis=3))(conv_results_list)
             emb_rn = Lambda(lambda x: K.max(x, axis=2))(emb_rn)
+
+            if self.highway_on_top:
+                dense1 = Dense(char_embedding_dim * len(filter_widths))
+                dense2 = Dense(char_embedding_dim * len(filter_widths))
+
+                sigmoid_gate = dense1(emb_c)
+                sigmoid_gate = Activation('sigmoid')(sigmoid_gate)
+                deeper_units = dense2(emb_c)
+                emb_c = Add()([Multiply()([sigmoid_gate, deeper_units]),
+                             Multiply()([Lambda(lambda x: K.constant(1.) - x)(sigmoid_gate), emb_c])])
+                emb_c = Activation('relu')(emb_c)
+
+                sigmoid_gate = dense1(emb_rp)
+                sigmoid_gate = Activation('sigmoid')(sigmoid_gate)
+                deeper_units = dense2(emb_rp)
+                emb_rp = Add()([Multiply()([sigmoid_gate, deeper_units]),
+                              Multiply()([Lambda(lambda x: K.constant(1.) - x)(sigmoid_gate), emb_rp])])
+                emb_rp = Activation('relu')(emb_rp)
+
+                sigmoid_gate = dense1(emb_rn)
+                sigmoid_gate = Activation('sigmoid')(sigmoid_gate)
+                deeper_units = dense2(emb_rn)
+                emb_rn = Add()([Multiply()([sigmoid_gate, deeper_units]),
+                              Multiply()([Lambda(lambda x: K.constant(1.) - x)(sigmoid_gate), emb_rn])])
+                emb_rn = Activation('relu')(emb_rn)
+
+
+
 
             # emb_layer = Lambda(lambda x:
             #                    keras_layers.character_embedding_network(x, n_characters=self.max_token_length,
