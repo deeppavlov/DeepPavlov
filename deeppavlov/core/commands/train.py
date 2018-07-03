@@ -344,12 +344,20 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                     'metrics': prettify_metrics(metrics),
                     'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                 }
+                if losses:
+                    report['loss'] = sum(losses)/len(losses)
+                    losses = []
 
                 if train_config['tensorboard_log_dir'] is not None:
                     for name, score in metrics:
                         metric_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + name,
                                                                         simple_value=score), ])
                         tb_train_writer.add_summary(metric_sum, epochs)
+
+                    if losses:
+                        loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + 'loss',
+                                                                        simple_value=report['loss']), ])
+                        tb_train_writer.add_summary(loss_sum, i)
 
                 model.process_event(event_name='after_train_log', data=report)
                 report = {'train': report}
