@@ -56,6 +56,10 @@
     "log_every_n_batches": 10
   },
   "metadata": {
+    "requirements": [
+      "../requirements/tf.txt",
+      "../requirements/gensim.txt"
+    ],
     "labels": {
       "telegram_utils": "RankingModel",
       "server_utils": "Ranker"
