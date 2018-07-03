@@ -88,7 +88,7 @@ class KerasIntentModel(KerasModel):
             tokenizer: instance of NLTKTokenizer class
             **kwargs:
         """
-        super().__init__(**kwargs) # self.opt initialized in here
+        super().__init__(**kwargs)  # self.opt initialized in here
 
         self.tokenizer = self.opt.get('tokenizer')
         self.fasttext_model = self.opt.get('embedder')
