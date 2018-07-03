@@ -51,6 +51,7 @@
     "batch_size": 10000
   },
   "metadata": {
+    "requirements": [],
     "labels": {
       "server_utils": "Ranker"
     },

@@ -46,6 +46,9 @@
     ]
   },
   "metadata": {
+    "requirements": [
+      "../requirements/tf-gpu.txt"
+    ],
     "labels": {
       "server_utils": "ODQA"
     },

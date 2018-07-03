@@ -166,6 +166,16 @@ def teardown_module():
 
 @pytest.mark.parametrize("model,conf_file,model_dir,mode", TEST_GRID, scope='class')
 class TestQuickStart(object):
+    @staticmethod
+    def install(conf_file):
+        logfile = io.BytesIO(b'')
+        _, exitstatus = pexpect.run(sys.executable + " -m deeppavlov install " + str(conf_file), timeout=None,
+                                    withexitstatus=True,
+                                    logfile=logfile)
+        if exitstatus != 0:
+            logfile.seek(0)
+            raise RuntimeError('Installing process of {} returned non-zero exit code: \n{}'
+                               .format(conf_file, ''.join((line.decode() for line in logfile.readlines()))))
 
     @staticmethod
     def interact(conf_file, model_dir, qr_list=None):
@@ -236,6 +246,7 @@ class TestQuickStart(object):
     def test_interacting_pretrained_model(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
             config_file_path = str(test_configs_path.joinpath(conf_file))
+            self.install(config_file_path)
             deep_download(['-test', '-c', config_file_path])
 
             self.interact(test_configs_path / conf_file, model_dir, PARAMS[model][(conf_file, model_dir, mode)])
@@ -258,6 +269,7 @@ class TestQuickStart(object):
 
             if 'IP' not in mode:
                 config_path = str(test_configs_path.joinpath(conf_file))
+                self.install(config_path)
                 deep_download(['-test', '-c', config_path])
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
