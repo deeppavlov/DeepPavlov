@@ -4,21 +4,9 @@ from os.path import join
 
 from deeppavlov.pipeline_manager.pipegen import PipeGen
 from deeppavlov.pipeline_manager.train import train_evaluate_model_from_dict
-
-# from .logger import Logger
-# from .watcher import Watcher
+from deeppavlov.pipeline_manager.utils import normal_time
+from deeppavlov.pipeline_manager.logger import Logger
 # from .utils import results_visualization
-
-
-def normal_time(z):
-    if z > 1:
-        h = z/3600
-        m = z % 3600/60
-        s = z % 3600 % 60
-        t = '%i:%i:%i' % (h, m, s)
-    else:
-        t = '{0:.2}'.format(z)
-    return t
 
 
 class PipelineManager:
@@ -45,10 +33,8 @@ class PipelineManager:
         self.save_path = join(self.root, '{}-{}-{}'.format(self.date.year, self.date.month, self.date.day),
                               self.exp_name, 'checkpoints')
 
-        # self.logger = Logger(exp_name, root, self.info, self.date)
-        # self.start_exp = time()
-        # self.logger.log['experiment_info']['metrics'] = self.metrics
-        # self.logger.log['experiment_info']['target_metric'] = self.target_metric
+        self.logger = Logger(exp_name, root, self.info, self.date)
+        self.start_exp = time()
 
     def run(self):
         # best_models = {}
@@ -65,26 +51,34 @@ class PipelineManager:
                 print('\n')
                 print('[ Progress: pipe {0}/{1}; Time left: {2}; ]'.format(i+1, self.pipeline_generator.len, itime))
 
-            # self.logger.pipe_ind = i
-            # pipe_start = time()
-            # # add watcher if need
-            # if self.add_watcher:
-            #     watcher = Watcher(join(self.root, '{0}-{1}-{2}'.format(self.date.year, self.date.month, self.date.day),
-            #                            self.exp_name), self.seed)
+            self.logger.log['experiment_info']['metrics'] = pipe['train']['metrics']
+            self.logger.log['experiment_info']['target_metric'] = self.target_metric
+
+            self.logger.pipe_ind = i
+            self.logger.pipe_conf = pipe
+            for conf in pipe['chainer']['pipe']:
+                if conf.get('main', None) == 'True':
+                    self.logger.model = conf['name']
+                else:
+                    pass
+            # start pipeline time
+            pipe_start = time()
 
             if self.mode == 'train':
-                train_evaluate_model_from_dict(pipe, to_train=True, to_validate=True)
+                results = train_evaluate_model_from_dict(pipe, to_train=True, to_validate=True)
             elif self.mode == 'evaluate':
-                train_evaluate_model_from_dict(pipe, to_train=False, to_validate=False)
+                results = train_evaluate_model_from_dict(pipe, to_train=False, to_validate=False)
+            else:
+                raise ValueError("Only 'train' and 'evaluate' mode are available, but {0} was found.".format(self.mode))
 
             # save best models
-            # self.logger.pipe_time = normal_time(time() - pipe_start)
-            # self.logger.pipe_res = dataset_i['results']
-            # self.logger.get_pipe_log()
+            self.logger.pipe_time = normal_time(time() - pipe_start)
+            self.logger.pipe_res = results
+            self.logger.get_pipe_log()
 
-        # save log
-        # self.logger.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)
-        # self.logger.save()
+            # save log
+            self.logger.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)
+            self.logger.save()
 
         # visualization of results
         # path = join(self.root, '{0}-{1}-{2}'.format(self.date.year, self.date.month, self.date.day), self.exp_name)

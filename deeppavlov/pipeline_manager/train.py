@@ -95,7 +95,8 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
     return chainer
 
 
-def train_evaluate_model_from_dict(config: dict, to_train=True, to_validate=True) -> None:
+def train_evaluate_model_from_dict(config: dict, to_train=True,
+                                   to_validate=True) -> Dict[str, Union[int, OrderedDict, str]]:
     set_deeppavlov_root(config)
 
     dataset_config = config.get('dataset', None)
@@ -171,6 +172,7 @@ def train_evaluate_model_from_dict(config: dict, to_train=True, to_validate=True
         elif not isinstance(model, Chainer):
             log.warning('Nothing to train')
 
+    report = dict()
     if train_config['validate_best'] or train_config['test_best']:
         # try:
         #     model_config['load_path'] = model_config['save_path']
@@ -180,20 +182,16 @@ def train_evaluate_model_from_dict(config: dict, to_train=True, to_validate=True
         log.info('Testing the best saved model')
 
         if train_config['validate_best']:
-            report = {
-                'valid': _test_model(model, metrics_functions, iterator,
-                                     train_config.get('batch_size', -1), 'valid')
-            }
-
+            report['valid'] = _test_model(model, metrics_functions, iterator,
+                                          train_config.get('batch_size', -1), 'valid')
             print(json.dumps(report, ensure_ascii=False))
 
         if train_config['test_best']:
-            report = {
-                'test': _test_model(model, metrics_functions, iterator,
-                                    train_config.get('batch_size', -1), 'test')
-            }
-
+            report['test'] = _test_model(model, metrics_functions, iterator,
+                                         train_config.get('batch_size', -1), 'test')
             print(json.dumps(report, ensure_ascii=False))
+
+    return report
 
 
 def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
