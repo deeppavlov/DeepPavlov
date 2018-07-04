@@ -40,7 +40,7 @@
         "embedding_dim": 300,
         "max_sequence_length": 80,
         "use_matrix": true,
-        "embedding_level": "word",
+        "embedding_level": "token",
         "max_token_length": 10,
         "char_emb_dim": 32,
         "tok_dynamic_batch": true,

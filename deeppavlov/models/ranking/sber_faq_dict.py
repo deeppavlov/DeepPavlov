@@ -8,7 +8,7 @@ import re
 class SberFAQDict(RankingDict):
 
     def __init__(self, vocabs_path, save_path, load_path,
-                 max_sequence_length, padding="post", truncating="pre",
+                 max_sequence_length, padding="post", truncating="post",
                  max_token_length=None, embedding_level=None,
                  char_pad="post", char_trunc="post",
                  tok_dynamic_batch=False, char_dynamic_batch=False):

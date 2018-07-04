@@ -82,7 +82,7 @@ class RankingNetwork(metaclass=TfModelMeta):
 
     def init_from_scratch(self, emb_matrix):
         log.info("[initializing new `{}`]".format(self.__class__.__name__))
-        if self.embedding_level is None or self.embedding_level == 'word':
+        if self.embedding_level is None or self.embedding_level == 'token':
             if self.use_matrix:
                 if self.type_of_weights == "shared":
                     self.obj_model.get_layer(name="embedding").set_weights([emb_matrix])
@@ -156,7 +156,7 @@ class RankingNetwork(metaclass=TfModelMeta):
             return out_a, out_b
 
     def triplet_hinge_loss_model(self):
-        if self.embedding_level is None or self.embedding_level == 'word':
+        if self.embedding_level is None or self.embedding_level == 'token':
             if self.tok_dynamic_batch:
                 msl = None
             else:
@@ -315,7 +315,7 @@ class RankingNetwork(metaclass=TfModelMeta):
         return K.mean(K.maximum(self.margin - y_pred, 0.), axis=-1)
 
     def train_on_batch(self, batch):
-        if self.embedding_level is None or self.embedding_level == 'word':
+        if self.embedding_level is None or self.embedding_level == 'token':
             if self.use_matrix:
                 self.obj_model.train_on_batch(x=[np.asarray(x) for x in batch[0]], y=np.asarray(batch[1]))
             else:
@@ -328,7 +328,7 @@ class RankingNetwork(metaclass=TfModelMeta):
             self.obj_model.train_on_batch(x=[np.asarray(x) for x in batch[0]], y=np.asarray(batch[1]))
 
     def predict_on_batch(self, batch):
-        if self.embedding_level is None or self.embedding_level == 'word':
+        if self.embedding_level is None or self.embedding_level == 'token':
             if self.use_matrix:
                 return self.score_model.predict_on_batch(x=batch)
             else:
@@ -341,7 +341,7 @@ class RankingNetwork(metaclass=TfModelMeta):
             return self.score_model.predict_on_batch(x=batch)
 
     def predict_context_on_batch(self, batch):
-        if self.embedding_level is None or self.embedding_level == 'word':
+        if self.embedding_level is None or self.embedding_level == 'token':
             if self.use_matrix:
                 return self.context_embedding.predict_on_batch(x=batch)
             else:
@@ -354,7 +354,7 @@ class RankingNetwork(metaclass=TfModelMeta):
             return self.context_embedding.predict_on_batch(x=batch)
 
     def predict_context(self, batch, bs):
-        if self.embedding_level is None or self.embedding_level == 'word':
+        if self.embedding_level is None or self.embedding_level == 'token':
             if self.use_matrix:
                 return self.context_embedding.predict(x=batch, batch_size=bs)
             else:
@@ -376,7 +376,7 @@ class RankingNetwork(metaclass=TfModelMeta):
             return self.context_embedding.predict(x=batch, batch_size=bs)
 
     def predict_response_on_batch(self, batch):
-        if self.embedding_level is None or self.embedding_level == 'word':
+        if self.embedding_level is None or self.embedding_level == 'token':
             if self.use_matrix:
                 return self.response_embedding.predict_on_batch(x=batch)
             else:
@@ -389,7 +389,7 @@ class RankingNetwork(metaclass=TfModelMeta):
             return self.response_embedding.predict_on_batch(x=batch)
 
     def predict_response(self, batch, bs):
-        if self.embedding_level is None or self.embedding_level == 'word':
+        if self.embedding_level is None or self.embedding_level == 'token':
             if self.use_matrix:
                 return self.response_embedding.predict(x=batch, batch_size=bs)
             else:

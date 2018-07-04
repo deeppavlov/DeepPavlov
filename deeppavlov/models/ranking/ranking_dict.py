@@ -124,9 +124,9 @@ class RankingDict(metaclass=ABCMeta):
         return toks_li
 
     def make_ints(self, toks_li):
-        if self.embedding_level is None or self.embedding_level == 'word':
+        if self.embedding_level is None or self.embedding_level == 'token':
             if self.tok_dynamic_batch:
-                msl = max([len(el) for el in toks_li])
+                msl = min(max([len(el) for el in toks_li]), self.max_sequence_length)
             else:
                 msl = self.max_sequence_length
             ints_li = []
@@ -145,7 +145,7 @@ class RankingDict(metaclass=ABCMeta):
                                     truncating=self.truncating)
         elif self.embedding_level=='char':
             if self.tok_dynamic_batch:
-                msl = max([len(el) for el in toks_li])
+                msl = min(max([len(el) for el in toks_li]), self.max_sequence_length)
             else:
                 msl = self.max_sequence_length
             if self.char_dynamic_batch:
