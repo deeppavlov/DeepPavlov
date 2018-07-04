@@ -24,3 +24,4 @@ scipy==1.0.0
 pymorphy2==0.8
 pymorphy2-dicts-ru
 sortedcontainers==2.0.2
+rusenttokenize==0.0.4
