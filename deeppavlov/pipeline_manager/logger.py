@@ -67,7 +67,8 @@ class Logger(object):
             if name not in old_log['experiments'].keys():
                 old_log['experiments'][name] = new_log['experiments'][name]
             else:
-                old_npipe = len(old_log['experiments'][name]) - 1
+                old_npipe = len(old_log['experiments'][name])  # - 1
+                k = 0
                 for nkey, nval in new_log['experiments'][name].items():
                     match = False
                     for okey, oval in old_log['experiments'][name].items():
@@ -78,7 +79,8 @@ class Logger(object):
                             pass
 
                     if not match:
-                        old_log['experiments'][name][str(old_npipe+1)] = new_log['experiments'][name][nkey]
+                        k += 1
+                        old_log['experiments'][name][str(old_npipe+k)] = new_log['experiments'][name][nkey]
 
         # addition time
         t_old = old_log['experiment_info']['full_time'].split(':')
@@ -91,19 +93,11 @@ class Logger(object):
 
     def get_pipe_log(self):
         ops_times = {}
-        # self.pipe_conf = OrderedDict()
-        # for i in range(len(self.ops.keys())):
-        #     time = self.ops[str(i)].pop('time')
-        #     name = self.ops[str(i)]['op_name']
-        #
-        #     # find main model
-        #     if self.ops[str(i)]['op_type'] == 'model':
-        #         self.model = self.ops[str(i)]['op_name']
-        #     else:
-        #         pass
-        #
-        #     self.pipe_conf[name + '_' + self.ops[str(i)]['op_type']] = {'conf': self.ops[str(i)]}
-        #     ops_times[name] = time
+
+        if (self.model is None) and (self.pipe_conf is not None):
+            for component in self.pipe_conf['chainer']['pipe']:
+                if component.get('main') is True:
+                    self.model = component['name']
 
         pipe_name = '-->'.join([x['name'] for x in self.pipe_conf['chainer']['pipe']])
 

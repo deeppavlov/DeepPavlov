@@ -54,13 +54,8 @@ class PipelineManager:
             self.logger.log['experiment_info']['metrics'] = pipe['train']['metrics']
             self.logger.log['experiment_info']['target_metric'] = self.target_metric
 
-            self.logger.pipe_ind = i
+            self.logger.pipe_ind = i + 1
             self.logger.pipe_conf = pipe
-            for conf in pipe['chainer']['pipe']:
-                if conf.get('main', None) == 'True':
-                    self.logger.model = conf['name']
-                else:
-                    pass
             # start pipeline time
             pipe_start = time()
 
