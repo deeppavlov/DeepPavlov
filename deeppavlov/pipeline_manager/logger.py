@@ -95,11 +95,11 @@ class Logger(object):
         ops_times = {}
 
         if (self.model is None) and (self.pipe_conf is not None):
-            for component in self.pipe_conf['chainer']['pipe']:
+            for component in self.pipe_conf:
                 if component.get('main') is True:
                     self.model = component['name']
 
-        pipe_name = '-->'.join([x['name'] for x in self.pipe_conf['chainer']['pipe']])
+        pipe_name = '-->'.join([x['name'] for x in self.pipe_conf])
 
         if self.model not in self.log['experiments'].keys():
             self.log['experiments'][self.model] = OrderedDict()

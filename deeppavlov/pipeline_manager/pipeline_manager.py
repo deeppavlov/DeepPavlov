@@ -1,4 +1,5 @@
 from time import time
+import json
 from datetime import datetime
 from os.path import join
 
@@ -55,7 +56,7 @@ class PipelineManager:
             self.logger.log['experiment_info']['target_metric'] = self.target_metric
 
             self.logger.pipe_ind = i + 1
-            self.logger.pipe_conf = pipe
+            self.logger.pipe_conf = pipe['chainer']['pipe']
             # start pipeline time
             pipe_start = time()
 
