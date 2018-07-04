@@ -30,7 +30,7 @@ class RankingIterator(DataLearningIterator):
             'all': self.train + self.test + self.valid
         }
 
-        super().__init__(data, seed=seed, shuffle=shuffle)
+        super().__init__(self.data, seed=seed, shuffle=shuffle)
 
 
     def gen_batches(self, batch_size, data_type="train", shuffle=True):
