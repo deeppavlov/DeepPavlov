@@ -23,4 +23,6 @@ flask_cors==3.0.3
 scipy==1.0.0
 pymorphy2==0.8
 pymorphy2-dicts-ru
+sentencepiece==0.0.9
+OpenNMT-tf==1.4.1
 sortedcontainers==2.0.2

@@ -1,0 +1,48 @@
+{
+  "chainer": {
+    "in": [
+      "x"
+    ],
+    "pipe": [
+      {
+        "in": [
+          "x"
+        ],
+        "name": "bpe_tokenizer",
+        "load_path": "./cove_embedder/bpe.model",
+        "indexes_only": false,
+        "preprocess_call": true,
+        "pad_with_empty_str": true,
+        "out": [
+          "x",
+          "lengths"
+        ]
+      },
+      {
+        "in": [
+          "x",
+          "lengths"
+        ],
+        "out": [
+          "embedded"
+        ],
+        "name": "cove_embedder",
+        "vocab_file_path": "./download/cove_embedder/output.vocab",
+        "checkpoint_path": "./download/cove_embedder/averaged_checkpoint/model.ckpt-326107",
+        "cell_class_name": "LSTMCell",
+        "residual_connections": false,
+        "num_units": 256,
+        "num_layers": 4,
+        "reduce_method": "mean"
+      }
+    ],
+    "out": [
+      "embedded"
+    ]
+  },
+  "metadata": {
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/cove_embedder.tar.gz"
+    ]
+  }
+}
