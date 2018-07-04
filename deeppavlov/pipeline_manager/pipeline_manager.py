@@ -3,7 +3,7 @@ from datetime import datetime
 from os.path import join
 
 from deeppavlov.pipeline_manager.pipegen import PipeGen
-from deeppavlov.pipeline_manager.train import train_evaluate_model_from_dict
+from deeppavlov.core.commands.train import train_evaluate_model_from_dict
 from deeppavlov.pipeline_manager.utils import normal_time
 from deeppavlov.pipeline_manager.logger import Logger
 # from .utils import results_visualization
