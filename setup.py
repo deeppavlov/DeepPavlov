@@ -51,7 +51,7 @@ with open('deeppavlov/package_meta.py') as f:
 
 setup(
     name='deeppavlov',
-    packages=find_packages(exclude=('tests',)),
+    packages=find_packages(exclude=('tests', 'docs')),
     version=meta['__version__'],
     description='An open source library for building end-to-end dialog systems and training chatbots.',
     long_description=readme(),
@@ -63,5 +63,9 @@ setup(
     download_url='https://github.com/deepmipt/DeepPavlov/archive/' + meta['__version__'] + '.tar.gz',
     keywords=['NLP', 'NER', 'SQUAD', 'Intents', 'Chatbot'],
     include_package_data=True,
-    install_requires=read_requirements()
+    install_requires=read_requirements() if not os.getenv('READTHEDOCS') else [],
+    extras_require={
+        'tests': ['pytest', 'pexpect'],
+        'docs': ['sphinx', 'sphinx_rtd_theme']
+    }
 )

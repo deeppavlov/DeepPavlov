@@ -1,18 +1,18 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 import copy
 import collections
 import json
@@ -33,6 +33,49 @@ log = get_logger(__name__)
 
 @register('go_bot_rnn')
 class GoalOrientedBotNetwork(TFModel):
+    """
+    The ``GoalOrientedBotNetwork`` is a recurrent network that handles dialogue policy management.
+
+    Parameters
+    ----------
+    optimizer : ``str`` (default = ``'AdamOptimizer'``)
+        One of tf.train.Optimizer subclass as a string.
+    learning_rate : ``float``
+        Learning rate during training.
+    end_learning_rate : ``float`` (default = ``None``)
+        If set, learning rate starts from ``learning rate`` value and decays polynomially.
+        to the value of ``end_learning_rate``.
+    decay_steps : ``int`` (default = ``1000``)
+        Number of steps for learning rate to decay.
+    decay_power : ``float`` (default = ``1.0``)
+        Power used to calculate learning rate decay for polynomial strategy.
+    dropout_rate : ``float`` (default = ``1.0``)
+        Probability of dropping out.
+    l2_reg_coef : ``float`` (default = ``0.0``)
+        L2 regularization coefficient (applied to input and output layer).
+    hidden_dim : ``int``
+        Hidden state dimension.
+    dense_size : ``int``
+        LSTM input size.
+    obs_size : ``int``
+        Input features size (must be equal to the dimension of concatenated ``bow_embedder`` + ``embedder`` +
+        ``intent_classifier`` + ``tracker`` + context features + action size). Could be calculated automatically
+        if not set.
+    action_size : ``int``
+        Output action size. Could be calculated automatically if not set.
+    attention_mechanism : ``dict`` or ``null``
+        Describes attention applied to network inputs:
+        ``attention_mechanism.type`` – type of attention mechanism, one of (``'general'``, ``'bahdanau'``,
+        ``'light_general'``, ``'light_bahdanau'``, ``'cs_general'``, ``'cs_bahdanau'``);
+        ``attention_mechanism.hidden_size`` – attention hidden state size;
+        ``attention_mechanism.max_num_tokens`` – maximum number of input tokens used in attention;
+        ``attention_mechanism.depth`` – number of averages used in constrained attentions
+        (``'cs_bahdanau'`` or ``'cs_general'``);
+        ``attention_mechanism.action_as_key`` – whether to use action from previous timestep as key
+        to attention (default to ``false``);
+        ``attention_mechanism.intent_as_key`` – whether to use utterance intents as attention key (default to ``false``)
+        ``attention_mechanism.projected_align`` – whether to use output projection (default to ``false``)
+    """
     GRAPH_PARAMS = ["hidden_size", "action_size", "dense_size", "obs_size",
                     "attention_mechanism"]
 

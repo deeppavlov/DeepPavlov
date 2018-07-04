@@ -1,17 +1,28 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+DeepPavlov is an open-source conversational AI library built on TensorFlow and Keras. It is designed for
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+* development of production ready chat-bots and complex conversational systems,
+* NLP and dialog systems research.
 
-    http://www.apache.org/licenses/LICENSE-2.0
+Our goal is to enable AI-application developers and researchers with:
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
+* set of pre-trained NLP models, pre-defined dialog system components (ML/DL/Rule-based) and pipeline templates;
+* a framework for implementing and testing their own dialog models;
+* tools for application integration with adjacent infrastructure (messengers, helpdesk software etc.);
+* benchmarking environment for conversational models and uniform access to relevant datasets.
 """
 from .package_meta import __version__, __author__
 
