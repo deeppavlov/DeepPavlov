@@ -157,18 +157,22 @@ class RankingNetwork(metaclass=TfModelMeta):
 
     def triplet_hinge_loss_model(self):
         if self.embedding_level is None or self.embedding_level == 'word':
+            if self.tok_dynamic_batch:
+                msl = None
+            else:
+                msl = self.max_sequence_length
             if self.use_matrix:
-                context = Input(shape=(self.max_sequence_length,))
-                response_positive = Input(shape=(self.max_sequence_length,))
-                response_negative = Input(shape=(self.max_sequence_length,))
+                context = Input(shape=(msl,))
+                response_positive = Input(shape=(msl,))
+                response_negative = Input(shape=(msl,))
                 emb_layer_a, emb_layer_b = self.embedding_layer()
                 emb_c = emb_layer_a(context)
                 emb_rp = emb_layer_b(response_positive)
                 emb_rn = emb_layer_b(response_negative)
             else:
-                context = Input(shape=(self.max_sequence_length, self.embedding_dim,))
-                response_positive = Input(shape=(self.max_sequence_length, self.embedding_dim,))
-                response_negative = Input(shape=(self.max_sequence_length, self.embedding_dim,))
+                context = Input(shape=(msl, self.embedding_dim,))
+                response_positive = Input(shape=(msl, self.embedding_dim,))
+                response_negative = Input(shape=(msl, self.embedding_dim,))
                 emb_c = context
                 emb_rp = response_positive
                 emb_rn = response_negative
