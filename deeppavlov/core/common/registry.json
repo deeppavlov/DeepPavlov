@@ -1,5 +1,6 @@
 {
   "api_requester": "deeppavlov.models.api_requester.api_requester:ApiRequester",
+  "api_router": "deeppavlov.models.api_requester.api_router:ApiRouter",
   "babi_reader": "deeppavlov.dataset_readers.babi_reader:BabiDatasetReader",
   "basic_classification_iterator": "deeppavlov.dataset_iterators.basic_classification_iterator:BasicClassificationDatasetIterator",
   "basic_classification_reader": "deeppavlov.dataset_readers.basic_classification_reader:BasicClassificationDatasetReader",
@@ -33,8 +34,8 @@
   "hcn_at": "deeppavlov.models.trackers.hcn_at:ActionTracker",
   "hcn_et": "deeppavlov.models.trackers.hcn_et:EntityTracker",
   "insurance_reader": "deeppavlov.dataset_readers.insurance_reader:InsuranceReader",
-  "intent_model": "deeppavlov.models.classifiers.intents.intent_model:KerasIntentModel",
   "kenlm_elector": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
+  "keras_classification_model": "deeppavlov.models.classifiers.keras_classification_model:KerasClassificationModel",
   "knowledge_base": "deeppavlov.models.seq2seq_go_bot.kb:KnowledgeBase",
   "knowledge_base_entity_normalizer": "deeppavlov.models.seq2seq_go_bot.kb:KnowledgeBaseEntityNormalizer",
   "kvret_dialog_iterator": "deeppavlov.dataset_iterators.kvret_dialog_iterator:KvretDialogDatasetIterator",
