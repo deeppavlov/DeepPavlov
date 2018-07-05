@@ -13,10 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from deeppavlov.core.commands.utils import set_deeppavlov_root
+from deeppavlov.core.commands.utils import set_deeppavlov_root, import_packages
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.registry import REGISTRY
 
 from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.common.params import from_params
@@ -28,6 +27,9 @@ log = get_logger(__name__)
 
 def build_model_from_config(config, mode='infer', load_trained=False, as_component=False):
     set_deeppavlov_root(config)
+
+    import_packages(config.get('metadata', {}).get('imports', []))
+
     model_config = config['chainer']
 
     model = Chainer(model_config['in'], model_config['out'], model_config.get('in_y'), as_component=as_component)

@@ -19,7 +19,7 @@ from typing import Dict
 
 from deeppavlov.core.commands.utils import expand_path, get_deeppavlov_root, set_deeppavlov_root
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.registry import REGISTRY
+from deeppavlov.core.common.registry import get_model, cls_from_str
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.component import Component
@@ -84,27 +84,14 @@ def from_params(params: Dict, mode='infer', **kwargs) -> Component:
         return model
 
     elif 'class' in config_params:
-        c = config_params.pop('class')
-        try:
-            module_name, cls_name = c.split(':')
-            cls = getattr(importlib.import_module(module_name), cls_name)
-        except ValueError:
-            e = ConfigError('Expected class description in a `module.submodules:ClassName` form, but got `{}`'
-                            .format(c))
-            log.exception(e)
-            raise e
+        cls = cls_from_str(config_params.pop('class'))
     else:
         cls_name = config_params.pop('name', None)
         if not cls_name:
             e = ConfigError('Component config has no `name` nor `ref` or `class` fields')
             log.exception(e)
             raise e
-        try:
-            cls = REGISTRY[cls_name]
-        except KeyError:
-            e = ConfigError('Class {} is not registered.'.format(cls_name))
-            log.exception(e)
-            raise e
+        cls = get_model(cls_name)
 
     # find the submodels params recursively
     config_params = {k: _init_param(v, mode) for k, v in config_params.items()}

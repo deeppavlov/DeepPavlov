@@ -18,7 +18,7 @@ from sklearn.metrics import log_loss
 import numpy as np
 
 from deeppavlov.core.common.metrics_registry import register_metric
-from deeppavlov.models.classifiers.intents.utils import labels2onehot
+from deeppavlov.models.classifiers.utils import labels2onehot
 
 
 @register_metric('classification_log_loss')

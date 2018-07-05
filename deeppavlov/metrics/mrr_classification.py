@@ -17,11 +17,9 @@ limitations under the License.
 import numpy as np
 import json
 from scipy.stats import rankdata
-import tensorflow as tf
-from keras import backend as K
 
 from deeppavlov.core.common.metrics_registry import register_metric
-from deeppavlov.models.classifiers.intents.utils import labels2onehot
+from deeppavlov.models.classifiers.utils import labels2onehot
 
 
 def calc_mrr(rank):
