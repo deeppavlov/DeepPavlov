@@ -150,6 +150,8 @@ Available model configs are:
 |[ODQA](deeppavlov/skills/odqa/README.md) | An open domain question answering skill. The skill accepts free-form questions about the world and outputs an answer based on its Wikipedia knowledge.|
 | **Embeddings** |  |
 | [Pre-trained embeddings for the Russian language](pretrained-vectors.md) | Word vectors for the Russian language trained on joint [Russian Wikipedia](https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0) and [Lenta.ru](https://lenta.ru/) corpora. |
+| **Parameters Evolution** |  |
+| [Parameters evolution for DeepPavlov Models](deeppavlov/models/evolution/README.md) | Implementation of parameters evolution for DeepPavlov models that requires only some small changes in a config file. |
 
 # Basic examples
 
