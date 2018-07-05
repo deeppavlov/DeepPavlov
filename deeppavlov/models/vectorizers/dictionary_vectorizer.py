@@ -1,5 +1,6 @@
 import pathlib
 from collections import defaultdict
+from typing import List, Dict, Generator, Tuple, Any
 
 import numpy as np
 
@@ -10,7 +11,8 @@ from deeppavlov.core.common.registry import register
 @register("dictionary_vectorizer")
 class DictionaryVectorizer(Component):
 
-    def __init__(self, load_path, min_freq=1, unk_token=None):
+    def __init__(self, load_path, min_freq=1, unk_token=None, **kwargs):
+        # super().__init__(**kwargs)
         self.min_freq = min_freq
         self.unk_token = unk_token
         self.load(load_path)
@@ -40,7 +42,7 @@ class DictionaryVectorizer(Component):
         self._train(labels_by_words)
         return self
 
-    def _train(self, labels_by_words:defaultdict[set]):
+    def _train(self, labels_by_words : Dict):
         self._i2t = [self.unk_token] if self.unk_token is not None else []
         self._t2i = defaultdict(lambda: self.unk_token)
         freq = defaultdict(int)

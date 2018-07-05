@@ -91,7 +91,7 @@ class MorphoTaggerDatasetIterator(DataLearningIterator):
             batch_size = L
         for start in range(0, L, batch_size):
             indexes_to_yield = indexes[start:start+batch_size]
-            data_to_yield = tuple(zip(*([data[i] for i in indexes_to_yield])))
+            data_to_yield = tuple(list(x) for x in zip(*([data[i] for i in indexes_to_yield])))
             if return_indexes:
                 yield indexes_to_yield, data_to_yield
             else:
