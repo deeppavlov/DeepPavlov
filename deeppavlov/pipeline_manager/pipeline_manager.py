@@ -1,5 +1,4 @@
 from time import time
-import json
 from datetime import datetime
 from os.path import join
 
@@ -7,7 +6,7 @@ from deeppavlov.pipeline_manager.pipegen import PipeGen
 from deeppavlov.core.commands.train import train_evaluate_model_from_dict
 from deeppavlov.pipeline_manager.utils import normal_time
 from deeppavlov.pipeline_manager.logger import Logger
-# from .utils import results_visualization
+from deeppavlov.pipeline_manager.utils import results_visualization
 
 
 class PipelineManager:
@@ -38,7 +37,6 @@ class PipelineManager:
         self.start_exp = time()
 
     def run(self):
-        # best_models = {}
         # create the pipeline generator
         self.pipeline_generator = PipeGen(self.config_path, n=self.sample_num, stype=self.hyper_search)
 
@@ -51,6 +49,8 @@ class PipelineManager:
                 itime = normal_time(((time() - exp_start_time) / i) * (self.pipeline_generator.len - i))
                 print('\n')
                 print('[ Progress: pipe {0}/{1}; Time left: {2}; ]'.format(i+1, self.pipeline_generator.len, itime))
+
+            pipe = self.change_load_path(pipe, i)
 
             self.logger.log['experiment_info']['metrics'] = pipe['train']['metrics']
             self.logger.log['experiment_info']['target_metric'] = self.target_metric
@@ -77,7 +77,15 @@ class PipelineManager:
             self.logger.save()
 
         # visualization of results
-        # path = join(self.root, '{0}-{1}-{2}'.format(self.date.year, self.date.month, self.date.day), self.exp_name)
-        # results_visualization(path, join(path, 'results', 'images'), self.target_metric)
+        path = join(self.root, '{0}-{1}-{2}'.format(self.date.year, self.date.month, self.date.day), self.exp_name)
+        results_visualization(path, join(path, 'results', 'images'), self.target_metric)
 
         return None
+
+    def change_load_path(self, config, i):
+        for component in config['chainer']['pipe']:
+            if component.get('save_path', None) is not None:
+                component['save_path'] = join(self.save_path, 'pipe_{}'.format(i), component['save_path'].split()[-1])
+            elif component.get('load_path', None) is not None:
+                component['load_path'] = join(self.save_path, 'pipe_{}'.format(i), component['load_path'].split()[-1])
+        return config

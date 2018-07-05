@@ -50,11 +50,6 @@
       [
         {
           "id": "my_tokenizer",
-          "name": "nltk_tokenizer",
-          "tokenizer": "wordpunct_tokenize"
-        },
-        {
-          "id": "my_tokenizer",
           "name": "lazy_tokenizer",
           "tokenizer": "wordpunct_tokenize"
         }
