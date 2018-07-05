@@ -55,6 +55,7 @@
   "random_emb_mat": "deeppavlov.models.preprocessors.assemble_embeddins_matrix:RandomEmbeddingsMatrix",
   "ranking_iterator": "deeppavlov.dataset_iterators.ranking_iterator:RankingIterator",
   "ranking_model": "deeppavlov.models.ranking.ranking_model:RankingModel",
+  "ru_sent_tokenizer": "deeppavlov.models.tokenizers.ru_sent_tokenizer:RuSentTokenizer",
   "ru_tokenizer": "deeppavlov.models.tokenizers.ru_tokenizer:RussianTokenizer",
   "russian_words_vocab": "deeppavlov.vocabs.typos:RussianWordsVocab",
   "sanitizer": "deeppavlov.models.preprocessors.sanitizer:Sanitizer",
