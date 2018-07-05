@@ -21,7 +21,8 @@ test_src_dir = tests_dir / "test_configs"
 download_path = tests_dir / "download"
 
 TEST_MODES = ['IP',  # test_interacting_pretrained_model
-              'TI'  # test_consecutive_training_and_interacting
+              'TI',  # test_consecutive_training_and_interacting
+              'E'    # test_evolving
               ]
 
 ALL_MODES = ('IP', 'TI')
@@ -59,7 +60,8 @@ PARAMS = {
         ("intents/intents_dstc2.json", "intents", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_dstc2_big.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
-    "snips": {("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+    "snips": {
+        ("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_snips_bigru.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_snips_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -72,6 +74,9 @@ PARAMS = {
         ("sentiment/insults_kaggle.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("sentiment/sentiment_twitter.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("sentiment/sentiment_ag_news.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "evolution": {
+        ("evolution/evolve_intents_snips.json", "evolution", ('E',)): None
     },
     "sample": {
         ("intents/intents_sample_csv.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -281,6 +286,29 @@ class TestQuickStart(object):
                 raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
                                    .format(model_dir, ''.join((line.decode() for line in logfile.readlines()))))
             self.interact(c, model_dir)
+
+            shutil.rmtree(str(download_path), ignore_errors=True)
+        else:
+            pytest.skip("Unsupported mode: {}".format(mode))
+
+    def test_evolving(self, model, conf_file, model_dir, mode):
+        if 'E' in mode:
+            c = test_configs_path / conf_file
+            model_path = download_path / model_dir
+
+            if 'IP' not in mode and 'TI' not in mode:
+                config_path = str(test_configs_path.joinpath(conf_file))
+                deep_download(['-test', '-c', config_path])
+            shutil.rmtree(str(model_path),  ignore_errors=True)
+
+            logfile = io.BytesIO(b'')
+            _, exitstatus = pexpect.run(sys.executable + " -m deeppavlov.evolve " + str(c) + " --iterations 1 --p_size 1",
+                                        timeout=None, withexitstatus=True,
+                                        logfile=logfile)
+            if exitstatus != 0:
+                logfile.seek(0)
+                raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
+                                   .format(model_dir, ''.join((line.decode() for line in logfile.readlines()))))
 
             shutil.rmtree(str(download_path), ignore_errors=True)
         else:
