@@ -34,7 +34,7 @@ class ExtUnicodeCharsVocabulary(UnicodeCharsVocabulary):
         begin word, end word and padding.
     """
     def __init__(self, vocab, max_word_length, **kwargs):
-        # rewrited __init__ of Vocabulary
+        # rewritten __init__ of Vocabulary
         self._id_to_word = []
         self._word_to_id = {}
         self._unk = -1
@@ -62,7 +62,7 @@ class ExtUnicodeCharsVocabulary(UnicodeCharsVocabulary):
             raise ValueError("Ensure the vocabulary file has "
                              "<S>, </S>, <UNK> tokens")
 
-        # rewrited __init__ of UnicodeCharsVocabulary
+        # rewritten __init__ of UnicodeCharsVocabulary
         self._max_word_length = max_word_length
 
         # char ids 0-255 come from utf-8 encoding bytes
