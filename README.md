@@ -111,28 +111,6 @@ Every line of input text will be used as a pipeline input parameter, so one exam
 as many input parameters your pipeline expects.  
 You can also specify batch size with `-b` or `--batch-size` parameter.
 
-Available model configs are:
-
-- ```deeppavlov/configs/go_bot/*.json```
-
-- ```deeppavlov/configs/intents/*.json```
-
-- ```deeppavlov/configs/morpho_tagger/*.json```
-
-- ```deeppavlov/configs/ner/*.json```
-
-- ```deeppavlov/configs/odqa/*.json```
-
-- ```deeppavlov/configs/ranking/*.json```
-
-- ```deeppavlov/configs/sentiment/*.json```
-
-- ```deeppavlov/configs/seq2seq_go_bot/*.json```
-
-- ```deeppavlov/configs/spelling_correction/*.json```
-
-- ```deeppavlov/configs/squad/*.json```
-
 # Features
 
 | Component | Description |
@@ -148,8 +126,11 @@ Available model configs are:
 | [Morphological tagging component](deeppavlov/models/morpho_tagger/README.md) | Based on character-based approach to morphological tagging [Heigold et al., 2017. An extensive empirical evaluation of character-based morphological tagging for 14 languages](http://www.aclweb.org/anthology/E17-1048). A state-of-the-art model for Russian and several other languages. Model assigns morphological tags in UD format to sequences of words.|
 | **Skills** |  |
 |[ODQA](deeppavlov/skills/odqa/README.md) | An open domain question answering skill. The skill accepts free-form questions about the world and outputs an answer based on its Wikipedia knowledge.|
+| **Parameters Evolution** |  |
+| [Parameters evolution for models](deeppavlov/models/evolution/README.md) | Implementation of parameters evolution for DeepPavlov models that requires only some small changes in a config file. |
 | **Embeddings** |  |
 | [Pre-trained embeddings for the Russian language](pretrained-vectors.md) | Word vectors for the Russian language trained on joint [Russian Wikipedia](https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0) and [Lenta.ru](https://lenta.ru/) corpora. |
+
 
 # Basic examples
 
