@@ -355,9 +355,9 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                         tb_train_writer.add_summary(metric_sum, epochs)
 
                     if losses:
-                        loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + 'loss',
+                        loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + 'loss',
                                                                         simple_value=report['loss']), ])
-                        tb_train_writer.add_summary(loss_sum, i)
+                        tb_train_writer.add_summary(loss_sum, epochs)
 
                 model.process_event(event_name='after_train_log', data=report)
                 report = {'train': report}
