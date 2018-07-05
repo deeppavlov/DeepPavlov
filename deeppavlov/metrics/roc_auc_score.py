@@ -18,7 +18,7 @@ import sklearn.metrics
 import numpy as np
 
 from deeppavlov.core.common.metrics_registry import register_metric
-from deeppavlov.models.classifiers.intents.utils import labels2onehot
+from deeppavlov.models.classifiers.utils import labels2onehot
 
 
 def roc_auc_score_np(y_true, y_pred):

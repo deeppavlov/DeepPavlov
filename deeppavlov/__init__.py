@@ -48,7 +48,7 @@ import deeppavlov.models.go_bot.tracker
 import deeppavlov.models.seq2seq_go_bot.bot
 import deeppavlov.models.seq2seq_go_bot.network
 import deeppavlov.models.seq2seq_go_bot.kb
-import deeppavlov.models.classifiers.intents.intent_model
+import deeppavlov.models.classifiers.keras_classification_model
 import deeppavlov.models.commutators.random_commutator
 import deeppavlov.models.embedders.fasttext_embedder
 import deeppavlov.models.embedders.dict_embedder
@@ -73,6 +73,7 @@ import deeppavlov.models.squad.squad
 import deeppavlov.models.morpho_tagger.tagger
 import deeppavlov.models.morpho_tagger.common
 import deeppavlov.models.api_requester
+import deeppavlov.models.api_requester.api_router
 
 import deeppavlov.skills.odqa.tfidf_ranker
 import deeppavlov.vocabs.typos
