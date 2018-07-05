@@ -55,6 +55,9 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         load_path = self.opt.get('load_path', None)
         url = self.opt.get('url', None)
         self.model = None
+        self.epochs_done = 0
+        self.batches_seen = 0
+        self.train_examples_seen = 0
 
         super().__init__(save_path=save_path,
                          load_path=load_path,
@@ -100,13 +103,13 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         if callable(optimizer_func):
             if not(lear_rate is None):
                 if not(lear_rate_decay is None):
-                    optimizer_ = optimizer_func(lr=lear_rate, decay=lear_rate_decay)
+                    self.optimizer = optimizer_func(lr=lear_rate, decay=lear_rate_decay)
                 else:
-                    optimizer_ = optimizer_func(lr=lear_rate)
+                    self.optimizer = optimizer_func(lr=lear_rate)
             elif not(lear_rate_decay is None):
-                optimizer_ = optimizer_func(decay=lear_rate_decay)
+                self.optimizer = optimizer_func(decay=lear_rate_decay)
             else:
-                optimizer_ = optimizer_func()
+                self.optimizer = optimizer_func()
         else:
             raise AttributeError("Optimizer {} is not defined in `keras.optimizers`".format(optimizer_name))
 
@@ -116,7 +119,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         else:
             raise AttributeError("Loss {} is not defined in `keras.losses`".format(loss_name))
 
-        model.compile(optimizer=optimizer_, loss=loss)
+        model.compile(optimizer=self.optimizer, loss=loss)
         return model
 
     @overrides
@@ -136,7 +139,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         """
         if self.load_path:
             if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
-                raise ConfigError("Provided save path is incorrect!")
+                raise ConfigError("Provided load path is incorrect!")
 
             opt_path = Path("{}_opt.json".format(str(self.load_path.resolve())))
             weights_path = Path("{}.h5".format(str(self.load_path.resolve())))
@@ -160,13 +163,13 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
                 if callable(optimizer_func):
                     if not (lear_rate is None):
                         if not (lear_rate_decay is None):
-                            optimizer_ = optimizer_func(lr=lear_rate, decay=lear_rate_decay)
+                            self.optimizer = optimizer_func(lr=lear_rate, decay=lear_rate_decay)
                         else:
-                            optimizer_ = optimizer_func(lr=lear_rate)
+                            self.optimizer = optimizer_func(lr=lear_rate)
                     elif not (lear_rate_decay is None):
-                        optimizer_ = optimizer_func(decay=lear_rate_decay)
+                        self.optimizer = optimizer_func(decay=lear_rate_decay)
                     else:
-                        optimizer_ = optimizer_func()
+                        self.optimizer = optimizer_func()
                 else:
                     raise AttributeError("Optimizer {} is not defined in `keras.optimizers`".format(optimizer_name))
 
@@ -176,7 +179,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
                 else:
                     raise AttributeError("Loss {} is not defined".format(loss_name))
 
-                model.compile(optimizer=optimizer_,
+                model.compile(optimizer=self.optimizer,
                               loss=loss)
                 return model
             else:
@@ -211,6 +214,10 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
 
         # if model was loaded from one path and saved to another one
         # then change load_path to save_path for config
+        self.opt["epochs_done"] = self.epochs_done
+        self.opt["final_lear_rate"] = K.eval(self.optimizer.lr) / (1. +
+                                                                   K.eval(self.optimizer.decay) * self.batches_seen)
+
         if self.opt.get("load_path") and self.opt.get("save_path"):
             if self.opt.get("save_path") != self.opt.get("load_path"):
                 self.opt["load_path"] = str(self.opt["save_path"])
@@ -239,3 +246,19 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
     @abstractmethod
     def reset(self):
         pass
+
+    def process_event(self, event_name, data):
+        """
+        Process event after epoch
+        Args:
+            event_name: whether event is send after epoch or batch
+            data: event data (dictionary)
+
+        Returns:
+            None
+        """
+        if event_name == "after_epoch":
+            self.epochs_done = data["epochs_done"]
+            self.batches_seen = data["batches_seen"]
+            self.train_examples_seen = data["train_examples_seen"]
+        return

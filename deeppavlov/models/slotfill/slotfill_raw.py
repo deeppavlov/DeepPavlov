@@ -15,6 +15,9 @@ limitations under the License.
 """
 import json
 from math import exp
+from collections import defaultdict
+
+
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
@@ -28,9 +31,10 @@ log = get_logger(__name__)
 
 @register('slotfill_raw')
 class SlotFillingComponent(Component, Serializable):
-    def __init__(self, threshold=0.7, **kwargs):
+    def __init__(self, threshold=0.7, return_all=False, **kwargs):
         super().__init__(**kwargs)
         self.threshold = threshold
+        self.return_all = return_all
         # self._slot_vals is the dictionary of slot values
         self._slot_vals = None
         self.load()
@@ -49,17 +53,21 @@ class SlotFillingComponent(Component, Serializable):
             # batch example: [['is', 'there', 'anything', 'else']]
             for i, tokens in zip(m, batch):
                 # tokens are['is', 'there', 'anything', 'else']
-                slots[i] = self._predict_slots(tokens, self.threshold)
+                slots_values_lists = self._predict_slots(tokens)
+                if self.return_all:
+                    slots[i] = dict(slots_values_lists)
+                else:
+                    slots[i] = {slot: val_list[0] for slot, val_list in slots_values_lists.items()}
                 # slots[i] example {'food': 'steakhouse'}
         # slots we want, example : [{'pricerange': 'moderate', 'area': 'south'}]
         return slots
 
-    def _predict_slots(self, tokens, threshold):
+    def _predict_slots(self, tokens):
         # For utterance extract named entities and perform normalization for slot filling
-        entities, slots = self._fuzzy_finder(self._slot_vals, tokens, threshold)
-        slot_values = {}
+        entities, slots = self._fuzzy_finder(self._slot_vals, tokens)
+        slot_values = defaultdict(list)
         for entity, slot in zip(entities, slots):
-            slot_values[slot] = entity
+            slot_values[slot].append(entity)
         return slot_values
 
     def load(self, *args, **kwargs):
@@ -70,36 +78,37 @@ class SlotFillingComponent(Component, Serializable):
         with open(self.save_path, 'w') as f:
             json.dump(self._slot_vals, f)
 
-    def _fuzzy_finder(self, slot_dict, tokens, threshold):
+    def _fuzzy_finder(self, slot_dict, tokens):
         global input_entity
         if isinstance(tokens, list):
             input_entity = ' '.join(tokens)
         entities = []
         slots = []
         for slot, tag_dict in slot_dict.items():
-            r, candidate_entity = self.get_candidate(input_entity, tag_dict, self.get_ratio)
-            if r > threshold:
-                entities.append(candidate_entity)
-                slots.append(slot)
+            candidates = self.get_candidate(input_entity, tag_dict, self.get_ratio)
+            for candidate in candidates:
+                if candidate not in entities:
+                    entities.append(candidate)
+                    slots.append(slot)
         return entities, slots
 
     def get_candidate(self, input_text, tag_dict, score_function):
-        r = -1
-        candidate = ""
+        candidates = []
+        positions = []
         for entity_name, entity_list in tag_dict.items():
             for entity in entity_list:
-                ratio = score_function(entity.lower(), input_text.lower())
-                if ratio < r:
-                    continue
-                if ratio > r:
-                    r = ratio
-                    candidate = entity_name
-        return r, candidate
+                ratio, j = score_function(entity.lower(), input_text.lower())
+                if ratio >= self.threshold:
+                    candidates.append(entity_name)
+                    positions.append(j)
+        if candidates:
+            _, candidates = list(zip(*sorted(zip(positions, candidates))))
+        return candidates
 
     def get_ratio(self, needle, haystack):
-        d = self.fuzzy_substring_distance(needle, haystack)
+        d, j = self.fuzzy_substring_distance(needle, haystack)
         m = len(needle) - d
-        return exp(-d / 5) * (m / len(needle))
+        return exp(-d / 5) * (m / len(needle)), j
 
     @staticmethod
     def fuzzy_substring_distance(needle, haystack):
@@ -133,7 +142,11 @@ class SlotFillingComponent(Component, Serializable):
             row1 = row2
 
         d = n + m
+        j_min = 0
         for j in range(0, n + 1):
             if j == 0 or j == n or not haystack[j].isalnum():
-                d = min(d, row1[j])
-        return d
+                if d > row1[j]:
+                    d = row1[j]
+                    j_min = j
+                # d = min(d, row1[j])
+        return d, j_min

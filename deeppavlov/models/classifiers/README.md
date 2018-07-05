@@ -10,7 +10,7 @@ The model can be used for binary, multi-class or multi-label classification.
 We also provide with **pre-trained models** for classification on DSTC 2 dataset, SNIPS dataset, "AG News" dataset, "Detecting Insults in Social Commentary", Twitter sentiment in Russian dataset.
 
 **DSTC 2 dataset** (http://camdial.org/~mh521/dstc/) does not initially contain information about **intents**, 
-therefore, `IntentDataset` (`deeppavlov/datasets/intent_dataset.py`) instance extracts 
+therefore, `Dstc2IntentsDatasetIterator` (`deeppavlov/dataset_iterators/dstc2_intents_interator.py`) instance extracts
 artificial intents for each user reply using information from acts and slots. 
 
 Below we give several examples of intent construction:
@@ -47,7 +47,7 @@ This message contains two intents `(thankyou, bye)`. Train, valid and test divis
 * SearchScreeningEvent
 * SearchCreativeWork
 
-Initially, intent model on SNIPS dataset was trained only as an example of usage that is why we provide pre-trained model for SNIPS with embeddings trained on DSTC-2 dataset that is not the best choice for this task. Train set is divided to train and validation sets to illustrate `basic_classification_iterator` work.
+Initially, classification model on SNIPS dataset was trained only as an example of usage that is why we provide pre-trained model for SNIPS with embeddings trained on DSTC-2 dataset that is not the best choice for this task. Train set is divided to train and validation sets to illustrate `basic_classification_iterator` work.
 
 **AG News** dataset (https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html) contains **sentiment classification** task for 5 classes (range from 0 to 4 points scale). Test set is initial one from web-site, valid is a Stratified division 1/5 from the train set from web-site with 42 seed, and the train set is the rest.
 
@@ -144,10 +144,10 @@ Some clue parameters for [intents_dstc2.json](../../../configs/intents/intents_d
 |   Parameter         |  Description                                                      | 
 |---------------------|-------------------------------------------------------------------|
 | **dataset_reader**  | **an object that reads datasets from files** |
-|   name              | registered name of the dataset reader   <br />*SetOfValues*: "dstc2_datasetreader", "classification_datasetreader" |
+|   name              | registered name of the dataset reader   <br />*SetOfValues*: "dstc2_reader", "basic_classification_reader" |
 |   data_path         | directory where data files are stored                          | 
 | **dataset_iterator**         | **an object that provides models with data in the standard form (each example is a tuple (x, y) where x and y could be numbers, booleans, lists or strings)** |
-|   name              | registered name of the dataset        <br />*SetOfValues*:  "intent_dataset", classification_dataset"     | 
+|   name              | registered name of the dataset        <br />*SetOfValues*:  "dstc2_intents_iterator", basic_classification_iterator"     |
 |   seed              | seed for the batch generator              |
 |   fields_to_merge   | list of fields to merge                <br />*SetOfValues*: list of fields, i.e ["train", "valid", "test"]| 
 |   merged_field      | name of the field where the merged fields should be saved      <br />*SetOfValues*:  field, i.e "train", "valid", "test"           | 
@@ -185,7 +185,7 @@ Some clue parameters for [intents_dstc2.json](../../../configs/intents/intents_d
 | load_path           | path to file from which model files will be loaded    |
 | save_path           | path to file where model files will be saved    |
 | classes             | list of class names. In this case they could be simply obtained from vocab `classes_vocab.keys()` method. To make reference one has to set value to "#classes_vocab.keys()" |
-| model_name          | method of the class KerasIntentModel that corresponds to the model <br />*SetOfValues*: `cnn_model`, `dcnn_model`, `cnn_model_max_and_aver_pool`, `bilstm_model`, `bilstm_bilstm_model`, `bilstm_cnn_model`, `cnn_bilstm_model`, `bilstm_self_add_attention_model`, `bilstm_self_mult_attention_model`, `bigru_model`  | 
+| model_name          | method of the class KerasClassificationModel that corresponds to the model <br />*SetOfValues*: `cnn_model`, `dcnn_model`, `cnn_model_max_and_aver_pool`, `bilstm_model`, `bilstm_bilstm_model`, `bilstm_cnn_model`, `cnn_bilstm_model`, `bilstm_self_add_attention_model`, `bilstm_self_mult_attention_model`, `bigru_model`  |
 | text_size           | length of each sample in words      | 
 | confident_threshold | probability threshold for an instance belonging to a class  <br />*SetOfValues*: \[0., 1.\]  | 
 | lear_rate           | learning rate for training    | 
@@ -220,9 +220,9 @@ python deep.py train configs/intents/intents_dstc2.json
 
 ### Train on other datasets
 
-Constructing intents from DSTC 2 makes `IntentDataset` difficult to use.
-Therefore, we also provide another dataset reader `ClassificationDatasetReader` and dataset `ClassificationDataset`
-to work with `.csv` files. These classes are described in `deeppavlov/dataset_readers` and `deeppavlov/datasets`.
+Constructing intents from DSTC 2 makes `Dstc2IntentsDatasetIterator` difficult to use.
+Therefore, we also provide another dataset reader `BasicClassificationDatasetReader` and dataset `BasicClassificationDatasetIterator`
+to work with `.csv` files. These classes are described in `deeppavlov/dataset_readers/basic_classification_reader.py` and `deeppavlov/dataset_iterators/basic_classification_dataset_iterator.py`.
  
 Training data file `train.csv` (and `valid.csv`, if exists) should be in the following format:
 

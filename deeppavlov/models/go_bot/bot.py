@@ -17,15 +17,13 @@ limitations under the License.
 import re
 
 import numpy as np
-from typing import Type
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.nn_model import NNModel
-from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.skills.go_bot.network import GoalOrientedBotNetwork
-import deeppavlov.skills.go_bot.templates as templ
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.models.go_bot.network import GoalOrientedBotNetwork
+import deeppavlov.models.go_bot.templates as templ
 
 
 log = get_logger(__name__)

@@ -42,7 +42,14 @@ import deeppavlov.dataset_iterators.squad_iterator
 import deeppavlov.dataset_iterators.sqlite_iterator
 import deeppavlov.dataset_iterators.morphotagger_iterator
 
-import deeppavlov.models.classifiers.intents.intent_model
+import deeppavlov.models.go_bot.bot
+import deeppavlov.models.go_bot.network
+import deeppavlov.models.go_bot.tracker
+import deeppavlov.models.seq2seq_go_bot.bot
+import deeppavlov.models.seq2seq_go_bot.network
+import deeppavlov.models.seq2seq_go_bot.kb
+import deeppavlov.models.classifiers.keras_classification_model
+import deeppavlov.models.evolution.evolution_param_generator
 import deeppavlov.models.commutators.random_commutator
 import deeppavlov.models.embedders.fasttext_embedder
 import deeppavlov.models.embedders.elmo_embedder
@@ -67,13 +74,8 @@ import deeppavlov.models.tokenizers.ru_tokenizer
 import deeppavlov.models.squad.squad
 import deeppavlov.models.morpho_tagger.tagger
 import deeppavlov.models.morpho_tagger.common
+import deeppavlov.models.api_requester
 
-import deeppavlov.skills.go_bot.bot
-import deeppavlov.skills.go_bot.network
-import deeppavlov.skills.go_bot.tracker
-import deeppavlov.skills.seq2seq_go_bot.bot
-import deeppavlov.skills.seq2seq_go_bot.network
-import deeppavlov.skills.seq2seq_go_bot.kb
 import deeppavlov.skills.odqa.tfidf_ranker
 import deeppavlov.vocabs.typos
 import deeppavlov.vocabs.wiki_sqlite
@@ -93,6 +95,8 @@ import deeppavlov.models.slotfill.slotfill_raw
 import deeppavlov.models.slotfill.slotfill
 import deeppavlov.models.preprocessors.one_hotter
 import deeppavlov.dataset_readers.ontonotes_reader
+
+import deeppavlov.models.classifiers.tokens_matcher.tokens_matcher
 
 
 import deeppavlov.metrics.accuracy

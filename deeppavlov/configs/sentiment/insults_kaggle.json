@@ -60,7 +60,7 @@
           "y_probas_dict"
         ],
         "main": true,
-        "name": "intent_model",
+        "name": "keras_classification_model",
         "save_path": "sentiment/insults_kaggle_v0",
         "load_path": "sentiment/insults_kaggle_v0",
         "classes": "#classes_vocab.keys()",
