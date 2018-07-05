@@ -17,7 +17,7 @@ limitations under the License.
 
 # originally based on https://github.com/allenai/bilm-tf/blob/master/bilm/data.py
 
-from bilm import UnicodeCharsVocabulary, Batcher
+from bilm.data import UnicodeCharsVocabulary, Batcher
 import numpy as np
 
 
