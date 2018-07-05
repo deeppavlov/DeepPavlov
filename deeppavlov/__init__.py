@@ -48,7 +48,7 @@ import deeppavlov.models.go_bot.tracker
 import deeppavlov.models.seq2seq_go_bot.bot
 import deeppavlov.models.seq2seq_go_bot.network
 import deeppavlov.models.seq2seq_go_bot.kb
-import deeppavlov.models.classifiers.intents.intent_model
+import deeppavlov.models.classifiers.keras_classification_model
 import deeppavlov.models.evolution.evolution_param_generator
 import deeppavlov.models.commutators.random_commutator
 import deeppavlov.models.embedders.fasttext_embedder
@@ -104,8 +104,6 @@ import deeppavlov.metrics.bleu
 import deeppavlov.metrics.squad_metrics
 import deeppavlov.metrics.roc_auc_score
 import deeppavlov.metrics.fmeasure_classification
-import deeppavlov.metrics.log_loss
-import deeppavlov.metrics.mrr_classification
 
 import deeppavlov.core.common.log
 

@@ -60,9 +60,9 @@
           "y_probas_dict"
         ],
         "main": true,
-        "name": "intent_model",
-        "save_path": "intents/intent_cnn_snips_v4",
-        "load_path": "intents/intent_cnn_snips_v4",
+        "name": "keras_classification_model",
+        "save_path": "intents/intents_snips_v4",
+        "load_path": "intents/intents_snips_v4",
         "classes": "#classes_vocab.keys()",
         "kernel_sizes_cnn": [
           1,

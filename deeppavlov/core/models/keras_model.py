@@ -55,6 +55,9 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         load_path = self.opt.get('load_path', None)
         url = self.opt.get('url', None)
         self.model = None
+        self.epochs_done = 0
+        self.batches_seen = 0
+        self.train_examples_seen = 0
 
         super().__init__(save_path=save_path,
                          load_path=load_path,
