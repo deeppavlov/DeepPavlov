@@ -61,7 +61,7 @@
           "y_probas_dict"
         ],
         "main": true,
-        "name": "intent_model",
+        "name": "keras_classification_model",
         "save_path": "intents/intent_cnn_snips_bigru",
         "load_path": "intents/intent_cnn_snips_bigru",
         "classes": "#classes_vocab.keys()",

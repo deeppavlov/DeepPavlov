@@ -60,7 +60,7 @@
           "y_probas_dict"
         ],
         "main": true,
-        "name": "intent_model",
+        "name": "keras_classification_model",
         "save_path": "sentiment/sentiment_twitter_v1",
         "load_path": "sentiment/sentiment_twitter_v1",
         "classes": "#classes_vocab.keys()",

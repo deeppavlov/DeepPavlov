@@ -19,7 +19,7 @@ import numpy as np
 from sklearn.metrics import f1_score
 
 from deeppavlov.core.common.metrics_registry import register_metric
-from deeppavlov.models.classifiers.intents.utils import labels2onehot
+from deeppavlov.models.classifiers.utils import labels2onehot
 
 
 @register_metric('classification_f1')
