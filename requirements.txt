@@ -24,3 +24,4 @@ scipy==1.0.0
 pymorphy2==0.8
 pymorphy2-dicts-ru
 sortedcontainers==2.0.2
+git+https://github.com/allenai/bilm-tf.git@81a4b54937f4dfb93308f709c1cf34dbb37c553e

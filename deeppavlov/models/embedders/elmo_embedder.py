@@ -20,9 +20,9 @@ from typing import List
 import tensorflow as tf
 
 import numpy as np
-from deeppavlov.models.embedders.elmo.data import Batcher as File_Batcher
-from deeppavlov.models.embedders.elmo.model import BidirectionalLanguageModel
-from deeppavlov.models.embedders.elmo.elmo import weight_layers
+from bilm import Batcher as File_Batcher
+from bilm import BidirectionalLanguageModel
+from bilm import weight_layers
 from deeppavlov.models.embedders.elmo.ext_batcher import ExtBatcher
 from deeppavlov.models.embedders.elmo.vocabulary_creator import create_vocab
 
@@ -133,7 +133,7 @@ class ELMoEmbedder(Component, Serializable):
         if self.loaded_batcher:
             batcher = self.loaded_batcher
         else:
-            vocab = create_vocab(batch, cpu_n=self.vocab_workers_n, min_line_per_worker=10000)
+            vocab = create_vocab(batch, worker_n=self.vocab_workers_n, min_line_per_worker=10000)
             batcher = ExtBatcher(vocab, self.char_per_token)
 
         sess = tf.Session()

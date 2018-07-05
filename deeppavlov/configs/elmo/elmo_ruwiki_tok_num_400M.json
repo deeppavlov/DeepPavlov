@@ -25,6 +25,10 @@
     ]
   },
   "metadata": {
+    "requirements": [
+      "../requirements/tf-gpu.txt",
+      "../requirements/elmo.txt"
+    ],
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/elmo_ruwiki_tok_num_400M.tar.gz"
     ]
