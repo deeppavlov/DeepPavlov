@@ -51,6 +51,7 @@
   "nltk_tokenizer": "deeppavlov.models.tokenizers.nltk_tokenizer:NLTKTokenizer",
   "one_hotter": "deeppavlov.models.preprocessors.one_hotter:OneHotter",
   "ontonotes_reader": "deeppavlov.dataset_readers.ontonotes_reader:OntonotesReader",
+  "params_evolution": "deeppavlov.models.evolution.evolution_param_generator:ParamsEvolution",
   "pymorphy_russian_lemmatizer": "deeppavlov.models.preprocessors.russian_lemmatizer:PymorphyRussianLemmatizer",
   "random": "deeppavlov.models.commutators.random_commutator:RandomCommutator",
   "random_emb_mat": "deeppavlov.models.preprocessors.assemble_embeddins_matrix:RandomEmbeddingsMatrix",
