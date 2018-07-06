@@ -56,6 +56,7 @@
       "server_utils": "Ranker"
     },
     "download": [
+      "http://lnsigo.mipt.ru/export/datasets/wikipedia/ruwiki.tar.gz",
       "http://lnsigo.mipt.ru/export/deeppavlov_data/ru_odqa.tar.gz"
     ]
   }
