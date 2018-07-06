@@ -76,7 +76,7 @@ class ELMoEmbedder(Component, Serializable):
         if self.load_path and self.load_path.is_dir():
             log.info("[loading embeddings from `{}`]".format(self.load_path))
         else:
-            log.error('No pretrained fasttext model provided or provided load_path "{}" is incorrect.'
+            log.error('No pretrained ELMo model provided or provided load_path "{}" is incorrect.'
                       .format(self.load_path))
             sys.exit(1)
 
