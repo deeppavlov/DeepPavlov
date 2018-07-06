@@ -28,8 +28,8 @@
           "fit_on_batch": [
             "questions_raw"
           ],
-          "save_path": "odqa/wiki_tfidf_matrix_test.npz",
-          "load_path": "odqa/wiki_tfidf_matrix_test.npz",
+          "save_path": "odqa/en_wiki_test_tfidf.npz",
+          "load_path": "odqa/en_wiki_test_tfidf.npz",
           "tokenizer": {
             "name": "stream_spacy_tokenizer",
             "lemmas": true,
