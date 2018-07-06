@@ -16,12 +16,11 @@ limitations under the License.
 
 from abc import abstractmethod
 from pathlib import Path
-from copy import deepcopy, copy
+from copy import copy
 
 import tensorflow as tf
 import keras.metrics
 import keras.optimizers
-from typing import Dict
 from overrides import overrides
 from .tf_backend import TfModelMeta
 from keras import backend as K
@@ -134,56 +133,61 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
             model with loaded weights and network parameters from files
             but compiled with given learning parameters
         """
-        if self.load_path:
-            if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
-                raise ConfigError("Provided save path is incorrect!")
-
-            opt_path = Path("{}_opt.json".format(str(self.load_path.resolve())))
-            weights_path = Path("{}.h5".format(str(self.load_path.resolve())))
-
-            if opt_path.exists() and weights_path.exists():
-
-                log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
-
-                self.opt = read_json(opt_path)
-
-                model_func = getattr(self, model_name, None)
-                if callable(model_func):
-                    model = model_func(params=self.opt)
-                else:
-                    raise AttributeError("Model {} is not defined".format(model_name))
-
-                log.info("[loading weights from {}]".format(weights_path.name))
-                model.load_weights(str(weights_path))
-
-                optimizer_func = getattr(keras.optimizers, optimizer_name, None)
-                if callable(optimizer_func):
-                    if not (lear_rate is None):
-                        if not (lear_rate_decay is None):
-                            optimizer_ = optimizer_func(lr=lear_rate, decay=lear_rate_decay)
-                        else:
-                            optimizer_ = optimizer_func(lr=lear_rate)
-                    elif not (lear_rate_decay is None):
-                        optimizer_ = optimizer_func(decay=lear_rate_decay)
-                    else:
-                        optimizer_ = optimizer_func()
-                else:
-                    raise AttributeError("Optimizer {} is not defined in `keras.optimizers`".format(optimizer_name))
-
-                loss_func = getattr(keras.losses, loss_name, None)
-                if callable(loss_func):
-                    loss = loss_func
-                else:
-                    raise AttributeError("Loss {} is not defined".format(loss_name))
-
-                model.compile(optimizer=optimizer_,
-                              loss=loss)
-                return model
-            else:
-                return self.init_model_from_scratch(model_name, optimizer_name, loss_name, lear_rate, lear_rate_decay)
-        else:
-            log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
+        if self.opt.get('scratch_init') is True:
+            log.warning("Init from scratch for {}".format(self.__class__.__name__))
             return self.init_model_from_scratch(model_name, optimizer_name, loss_name, lear_rate, lear_rate_decay)
+        else:
+            if self.load_path:
+                if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
+                    raise ConfigError("Provided save path is incorrect!")
+
+                opt_path = Path("{}_opt.json".format(str(self.load_path.resolve())))
+                weights_path = Path("{}.h5".format(str(self.load_path.resolve())))
+
+                if opt_path.exists() and weights_path.exists():
+
+                    log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
+
+                    self.opt = read_json(opt_path)
+
+                    model_func = getattr(self, model_name, None)
+                    if callable(model_func):
+                        model = model_func(params=self.opt)
+                    else:
+                        raise AttributeError("Model {} is not defined".format(model_name))
+
+                    log.info("[loading weights from {}]".format(weights_path.name))
+                    model.load_weights(str(weights_path))
+
+                    optimizer_func = getattr(keras.optimizers, optimizer_name, None)
+                    if callable(optimizer_func):
+                        if not (lear_rate is None):
+                            if not (lear_rate_decay is None):
+                                optimizer_ = optimizer_func(lr=lear_rate, decay=lear_rate_decay)
+                            else:
+                                optimizer_ = optimizer_func(lr=lear_rate)
+                        elif not (lear_rate_decay is None):
+                            optimizer_ = optimizer_func(decay=lear_rate_decay)
+                        else:
+                            optimizer_ = optimizer_func()
+                    else:
+                        raise AttributeError("Optimizer {} is not defined in `keras.optimizers`".format(optimizer_name))
+
+                    loss_func = getattr(keras.losses, loss_name, None)
+                    if callable(loss_func):
+                        loss = loss_func
+                    else:
+                        raise AttributeError("Loss {} is not defined".format(loss_name))
+
+                    model.compile(optimizer=optimizer_,
+                                  loss=loss)
+                    return model
+                else:
+                    return self.init_model_from_scratch(model_name, optimizer_name, loss_name, lear_rate,
+                                                        lear_rate_decay)
+            else:
+                log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
+                return self.init_model_from_scratch(model_name, optimizer_name, loss_name, lear_rate, lear_rate_decay)
 
     @overrides
     def save(self, fname=None):

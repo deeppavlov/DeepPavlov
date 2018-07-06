@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from collections import defaultdict
+from copy import copy
 import numpy as np
 
 import tensorflow as tf
@@ -30,18 +31,25 @@ class TFModel(NNModel, metaclass=TfModelMeta):
         if not hasattr(self, 'sess'):
             raise RuntimeError('Your tensorflow model {} must'
                                ' have sess attribute!'.format(self.__class__.__name__))
+
+        self.opt = copy(kwargs)
+
         super().__init__(*args, **kwargs)
 
     def load(self, exclude_scopes=['Optimizer']):
         """Load model parameters from self.load_path"""
-        path = str(self.load_path.resolve())
-        # Check presence of the model files
-        if tf.train.checkpoint_exists(path):
-            log.info('[loading model from {}]'.format(path))
-            # Exclude optimizer variables from saved variables
-            var_list = self._get_trainable_variables(exclude_scopes)
-            saver = tf.train.Saver(var_list)
-            saver.restore(self.sess, path)
+
+        if self.opt.get('scratch_init') is True:
+            log.warning("Init from scratch for {}".format(self.__class__.__name__))
+        else:
+            path = str(self.load_path.resolve())
+            # Check presence of the model files
+            if tf.train.checkpoint_exists(path):
+                log.info('[loading model from {}]'.format(path))
+                # Exclude optimizer variables from saved variables
+                var_list = self._get_trainable_variables(exclude_scopes)
+                saver = tf.train.Saver(var_list)
+                saver.restore(self.sess, path)
 
     def save(self, exclude_scopes=['Optimizer']):
         """Save model parameters to self.save_path"""

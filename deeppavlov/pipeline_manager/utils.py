@@ -38,7 +38,10 @@ def results_analizator(log, target_metric='f1_weighted', num_best=5):
     for name in models_names:
         for key, val in log['experiments'][name].items():
             for met in metrics:
-                main['models'][name][met].append(val['results']['valid']['metrics'][met])
+                if val['results'].get('test') is not None:
+                    main['models'][name][met].append(val['results']['test']['metrics'][met])
+                else:
+                    main['models'][name][met].append(val['results']['valid']['metrics'][met])
             main['models'][name]['pipe_conf'].append(val['config'])
 
     m = 0

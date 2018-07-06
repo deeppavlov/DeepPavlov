@@ -13,12 +13,6 @@ hyper_search = 'random'
 sample_num = 10
 target_metric = None
 
-# {
-#     "id": "my_tokenizer",
-#     "name": "nltk_tokenizer",
-#     "tokenizer": "wordpunct_tokenize"
-# },
-
 
 def main():
 

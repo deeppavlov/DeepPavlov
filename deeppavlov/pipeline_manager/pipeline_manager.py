@@ -1,6 +1,7 @@
 from time import time
 from datetime import datetime
 from os.path import join
+from copy import copy
 
 from deeppavlov.pipeline_manager.pipegen import PipeGen
 from deeppavlov.core.commands.train import train_evaluate_model_from_dict
@@ -50,20 +51,21 @@ class PipelineManager:
                 print('\n')
                 print('[ Progress: pipe {0}/{1}; Time left: {2}; ]'.format(i+1, self.pipeline_generator.len, itime))
 
-            pipe = self.change_load_path(pipe, i)
-
-            self.logger.log['experiment_info']['metrics'] = pipe['train']['metrics']
+            self.logger.log['experiment_info']['metrics'] = copy(pipe['train']['metrics'])
             self.logger.log['experiment_info']['target_metric'] = self.target_metric
 
             self.logger.pipe_ind = i + 1
-            self.logger.pipe_conf = pipe['chainer']['pipe']
+            self.logger.pipe_conf = copy(pipe['chainer']['pipe'])
             # start pipeline time
             pipe_start = time()
+            pipe_ = self.change_load_path(pipe, i + 1)
+
+            print(pipe_['chainer']['pipe'][-1])
 
             if self.mode == 'train':
-                results = train_evaluate_model_from_dict(pipe, to_train=True, to_validate=True)
+                results = train_evaluate_model_from_dict(pipe_, to_train=True, to_validate=True)
             elif self.mode == 'evaluate':
-                results = train_evaluate_model_from_dict(pipe, to_train=False, to_validate=False)
+                results = train_evaluate_model_from_dict(pipe_, to_train=False, to_validate=False)
             else:
                 raise ValueError("Only 'train' and 'evaluate' mode are available, but {0} was found.".format(self.mode))
 
@@ -82,10 +84,15 @@ class PipelineManager:
 
         return None
 
-    def change_load_path(self, config, i):
-        for component in config['chainer']['pipe']:
+    def change_load_path(self, config, n):
+        cp_pipe = copy(config['chainer']['pipe'])
+        for component in cp_pipe:
             if component.get('save_path', None) is not None:
-                component['save_path'] = join(self.save_path, 'pipe_{}'.format(i), component['save_path'].split()[-1])
+                sp = component['save_path'].split('/')[-1]
+                component['save_path'] = join(self.save_path, 'pipe_{}'.format(n), sp)
             elif component.get('load_path', None) is not None:
-                component['load_path'] = join(self.save_path, 'pipe_{}'.format(i), component['load_path'].split()[-1])
+                lp = component['load_path'].split('/')[-1]
+                component['load_path'] = join(self.save_path, 'pipe_{}'.format(n), lp)
+
+        config['chainer']['pipe'] = cp_pipe
         return config

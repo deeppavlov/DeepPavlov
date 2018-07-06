@@ -50,6 +50,11 @@
       [
         {
           "id": "my_tokenizer",
+          "name": "nltk_tokenizer",
+          "tokenizer": "wordpunct_tokenize"
+        },
+        {
+          "id": "my_tokenizer",
           "name": "lazy_tokenizer",
           "tokenizer": "wordpunct_tokenize"
         }
@@ -67,6 +72,7 @@
           "y_probas_dict"
         ],
         "main": true,
+        "scratch_init": true,
         "name": "intent_model",
         "save_path": "intents/intent_cnn_snips_v4",
         "classes": "#classes_vocab.keys()",
@@ -102,6 +108,7 @@
           "y_probas_dict"
         ],
         "main": true,
+        "scratch_init": true,
         "name": "intent_model",
         "save_path": "intents/intent_cnn_snips_v4",
         "classes": "#classes_vocab.keys()",
