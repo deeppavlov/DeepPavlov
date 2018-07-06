@@ -43,7 +43,7 @@
         "embedding_level": "token",
         "max_token_length": 10,
         "char_emb_dim": 32,
-        "tok_dynamic_batch": true,
+        "tok_dynamic_batch": false,
         "char_dynamic_batch": true,
         "highway_on_top": false,
         "seed": 243,

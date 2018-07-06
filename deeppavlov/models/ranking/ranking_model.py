@@ -100,7 +100,8 @@ class RankingModel(NNModel):
             log.info("[initializing new `{}`]".format(self.__class__.__name__))
             self.dict.init_from_scratch()
             self.embdict.init_from_scratch(self.dict.tok2int_vocab)
-            self._net = RankingNetwork(toks_num=len(self.dict.tok2int_vocab),
+            self._net = RankingNetwork(chars_num=len(self.dict.char2int_vocab),
+                                       toks_num=len(self.dict.tok2int_vocab),
                                        emb_dict=self.embdict,
                                        **self.network_parameters)
             self._net.init_from_scratch(self.embdict.emb_matrix)
@@ -108,7 +109,8 @@ class RankingModel(NNModel):
             log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
             self.dict.load()
             self.embdict.load()
-            self._net = RankingNetwork(toks_num=len(self.dict.tok2int_vocab),
+            self._net = RankingNetwork(chars_num=len(self.dict.char2int_vocab),
+                                       toks_num=len(self.dict.tok2int_vocab),
                                        emb_dict=self.embdict,
                                        **self.network_parameters)
             self._net.load(self.load_path)

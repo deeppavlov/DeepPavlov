@@ -124,68 +124,69 @@ class RankingDict(metaclass=ABCMeta):
         return toks_li
 
     def make_ints(self, toks_li):
+        if self.tok_dynamic_batch:
+            msl = min(max([len(el) for el in toks_li]), self.max_sequence_length)
+        else:
+            msl = self.max_sequence_length
+        if self.char_dynamic_batch:
+            mtl = min(max(len(x) for el in toks_li for x in el), self.max_token_length)
+        else:
+            mtl = self.max_token_length
+
         if self.embedding_level is None or self.embedding_level == 'token':
-            if self.tok_dynamic_batch:
-                msl = min(max([len(el) for el in toks_li]), self.max_sequence_length)
+            return self.make_tok_ints(toks_li, msl)
+        elif self.embedding_level == 'char':
+            return self.make_char_ints(toks_li, msl, mtl)
+        elif self.embedding_level == 'token_and_char':
+            tok_ints = self.make_tok_ints(toks_li, msl)
+            char_ints = self.make_char_ints(toks_li, msl, mtl)
+            return np.concatenate([np.expand_dims(tok_ints, axis=2), char_ints], axis=2)
+
+    def make_tok_ints(self, toks_li, msl):
+        ints_li = []
+        for toks in toks_li:
+            ints = []
+            for tok in toks:
+                index = self.tok2int_vocab.get(tok)
+                if self.tok2int_vocab.get(tok) is not None:
+                    ints.append(index)
+                else:
+                    ints.append(0)
+            ints_li.append(ints)
+        ints_li = pad_sequences(ints_li,
+                                maxlen=msl,
+                                padding=self.padding,
+                                truncating=self.truncating)
+        return ints_li
+
+    def make_char_ints(self, toks_li, msl, mtl):
+        ints_li = np.zeros((len(toks_li), msl, mtl))
+
+        for i, toks in enumerate(toks_li):
+            if self.truncating == 'post':
+                toks = toks[:msl]
             else:
-                msl = self.max_sequence_length
-            ints_li = []
-            for toks in toks_li:
+                toks = toks[-msl:]
+            for j, tok in enumerate(toks):
+                if self.padding == 'post':
+                    k = j
+                else:
+                    k = j + msl - len(toks)
                 ints = []
-                for tok in toks:
-                    index = self.tok2int_vocab.get(tok)
-                    if self.tok2int_vocab.get(tok) is not None:
+                for char in tok:
+                    index = self.char2int_vocab.get(char)
+                    if index is not None:
                         ints.append(index)
                     else:
                         ints.append(0)
-                ints_li.append(ints)
-            ints_li = pad_sequences(ints_li,
-                                    maxlen=msl,
-                                    padding=self.padding,
-                                    truncating=self.truncating)
-        elif self.embedding_level=='char':
-            if self.tok_dynamic_batch:
-                msl = min(max([len(el) for el in toks_li]), self.max_sequence_length)
-            else:
-                msl = self.max_sequence_length
-            if self.char_dynamic_batch:
-                mtl = max(len(x) for el in toks_li for x in el)
-            else:
-                mtl = self.max_token_length
-            ints_li = np.zeros((len(toks_li), msl, mtl))
-
-            for i, toks in enumerate(toks_li):
-                if not self.tok_dynamic_batch:
-                    if self.truncating == 'pre':
-                        toks = toks[-self.max_sequence_length:]
-                    else:
-                        toks = toks[:self.max_sequence_length]
-                for j, tok in enumerate(toks):
-                    if not self.tok_dynamic_batch:
-                        if self.padding == 'pre':
-                            k = j
-                        else:
-                            k = j + self.max_sequence_length - len(toks)
-                    else:
-                        k = j
-                    ints = []
-                    for char in tok:
-                        index = self.char2int_vocab.get(char)
-                        if index is not None:
-                            ints.append(index)
-                        else:
-                            ints.append(0)
-                    if not self.char_dynamic_batch:
-                        if self.char_trunc == 'pre':
-                            ints = ints[-self.max_token_length:]
-                        else:
-                            ints = ints[:self.max_token_length]
-                        if self.char_pad == 'pre':
-                            ints_li[i,k,-len(ints):] = ints
-                        else:
-                            ints_li[i,k,:len(ints)] = ints
-                    else:
-                        ints_li[i, k, :len(ints)] = ints
+                if self.char_trunc == 'post':
+                    ints = ints[:mtl]
+                else:
+                    ints = ints[-mtl:]
+                if self.char_pad == 'post':
+                    ints_li[i, k, :len(ints)] = ints
+                else:
+                    ints_li[i, k, -len(ints):] = ints
         return ints_li
 
     def save_int2char(self):
