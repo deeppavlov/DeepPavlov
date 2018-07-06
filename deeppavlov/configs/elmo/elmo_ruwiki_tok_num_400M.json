@@ -26,7 +26,7 @@
   },
   "metadata": {
     "requirements": [
-      "../requirements/tf-gpu.txt",
+      "../requirements/tf.txt",
       "../requirements/elmo.txt"
     ],
     "download": [

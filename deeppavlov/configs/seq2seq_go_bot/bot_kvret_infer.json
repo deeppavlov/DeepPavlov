@@ -82,6 +82,10 @@
     "show_examples": false
   },
   "metadata": {
+    "requirements": [
+      "../requirements/tf.txt",
+      "../requirements/spacy.txt"
+    ],
     "labels": {
       "telegram_utils": "Seq2SeqGoalOrientedBot",
       "server_utils": "GoalOrientedBot"

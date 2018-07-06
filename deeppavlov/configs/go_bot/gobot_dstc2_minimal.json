@@ -67,6 +67,11 @@
     ]
   },
   "train": {
+    "requirements": [
+      "../requirements/tf.txt",
+      "../requirements/fasttext.txt",
+      "../requirements/spacy.txt"
+    ],
 	"epochs": 200,
 	"batch_size": 4,
 

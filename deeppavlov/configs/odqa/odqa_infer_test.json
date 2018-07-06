@@ -66,6 +66,10 @@
     ]
   },
   "metadata": {
+    "requirements": [
+      "../requirements/tf-gpu.txt",
+      "../requirements/spacy.txt"
+    ],
     "labels": {
       "server_utils": "ODQA"
     },

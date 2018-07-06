@@ -37,6 +37,9 @@
     "metrics": ["slots_accuracy"]
   },
   "metadata": {
+    "requirements": [
+      "../requirements/tf.txt"
+    ],
     "labels": {
       "telegram_utils": "NERModel",
       "server_utils": "DstcSlotFillingNetwork"
