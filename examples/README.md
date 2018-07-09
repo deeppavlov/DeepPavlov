@@ -27,4 +27,4 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 # Tutorials
 
-To dive deeper into DeepPavlov work through [tutorials](tutorials/)
+To dive deeper into DeepPavlov work through [tutorials](tutorials/).
