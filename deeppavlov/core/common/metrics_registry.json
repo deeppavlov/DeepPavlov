@@ -1,7 +1,6 @@
 {
   "accuracy": "deeppavlov.metrics.accuracy:accuracy",
   "bleu": "deeppavlov.metrics.bleu:bleu",
-  "google_bleu": "deeppavlov.metrics.bleu:google_bleu",
   "classification_accuracy": "deeppavlov.metrics.accuracy:classification_accuracy",
   "classification_f1": "deeppavlov.metrics.fmeasure_classification:fmeasure",
   "classification_f1_weighted": "deeppavlov.metrics.fmeasure_classification:fmeasure",
@@ -9,6 +8,7 @@
   "classification_mrr": "deeppavlov.metrics.mrr_classification:mrr_score",
   "classification_roc_auc": "deeppavlov.metrics.roc_auc_score:roc_auc_score",
   "exact_match": "deeppavlov.metrics.squad_metrics:exact_match",
+  "google_bleu": "deeppavlov.metrics.bleu:google_bleu",
   "loss": "deeppavlov.models.ranking.metrics:triplet_loss",
   "ner_f1": "deeppavlov.metrics.fmeasure:ner_f1",
   "per_item_accuracy": "deeppavlov.metrics.accuracy:per_item_accuracy",
