@@ -10,8 +10,8 @@
 
 ## Task-oriented bot with DeepPavlov
 
-[video](https://youtu.be/uvH1zB7qahI)
+[Jupyter notebook](02_deeppavlov_to_bot.ipynb) | [video](https://youtu.be/uvH1zB7qahI)
 
 ## Chit-chat bot with DeepPavlov
 
-[video](https://youtu.be/G1TkCkoghC8)
+[Jupyter notebook](03_deeppavlov_chitchat.ipynb) | [video](https://youtu.be/G1TkCkoghC8)
