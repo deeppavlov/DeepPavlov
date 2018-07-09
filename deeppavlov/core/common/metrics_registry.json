@@ -1,6 +1,7 @@
 {
   "accuracy": "deeppavlov.metrics.accuracy:accuracy",
   "bleu": "deeppavlov.metrics.bleu:bleu",
+  "google_bleu": "deeppavlov.metrics.bleu:google_bleu",
   "classification_accuracy": "deeppavlov.metrics.accuracy:classification_accuracy",
   "classification_f1": "deeppavlov.metrics.fmeasure_classification:fmeasure",
   "classification_f1_weighted": "deeppavlov.metrics.fmeasure_classification:fmeasure",

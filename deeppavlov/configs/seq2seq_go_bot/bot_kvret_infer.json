@@ -110,6 +110,7 @@
   "metadata": {
     "requirements": [
       "../requirements/tf.txt",
+      "../requirements/fasttext.txt",
       "../requirements/spacy.txt"
     ],
     "labels": {
@@ -118,7 +119,11 @@
     },
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/seq2seq_go_bot.tar.gz"
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/seq2seq_go_bot.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin",
+        "subdir": "embeddings"
+      }
     ]
   }
 }

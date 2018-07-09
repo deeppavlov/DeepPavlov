@@ -24,7 +24,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.tf_model import TFModel
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.skills.seq2seq_go_bot.kb_attn_layer import KBAttention
+from deeppavlov.models.seq2seq_go_bot.kb_attn_layer import KBAttention
 
 
 log = get_logger(__name__)
