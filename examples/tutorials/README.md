@@ -14,7 +14,7 @@ Learn how to read and prepare data for trainable components.
 
 ## Named Entity Recognition with DeepPavlov
 
-[Jupyter notebook](02_deeppavlov_ner.ipynb) | [video](https://youtu.be/6HlL87PWxXU)
+[Jupyter notebook](02_deeppavlov_ner.ipynb) | [slides](02_deeppavlov_ner.pdf) | [video](https://youtu.be/6HlL87PWxXU)
 
 This tutorial is about building a simple Convolutional Neural Network to solve the CoNLL 2003 Named Entity Recognition task. The library components are used for downloading, preprocessing, batching, and scoring.  
 
