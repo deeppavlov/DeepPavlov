@@ -26,6 +26,6 @@ Intro to DeepPavlov configs, an examplory config to build a vocabulary of word t
 
 ## Chit-chat bot with DeepPavlov
 
-In this tutorial we are going to implement sequence-to-sequence model in DeepPavlov. We will implement encoder, decoder, attention mechanism and teacher forcing.
+[Jupyter notebook](04_deeppavlov_chitchat.ipynb) | [slides](04_deeppavlov_chitchat.pdf) | [video](https://youtu.be/G1TkCkoghC8)
 
-[Jupyter notebook](04_deeppavlov_chitchat.ipynb) | [video](https://youtu.be/G1TkCkoghC8)
+In this tutorial we are going to implement sequence-to-sequence model in DeepPavlov. We will implement encoder, decoder, attention mechanism and teacher forcing.
