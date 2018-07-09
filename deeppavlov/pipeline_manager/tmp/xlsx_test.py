@@ -95,6 +95,58 @@ def sort_pipes(pipes, target_metric):
     return sort_pipes_
 
 
+def plot_bar(book, data, metrics_):
+    graph_worksheet = book.add_worksheet('Plots')
+    chart = book.add_chart({'type': 'bar'})
+
+    # TODO fix this constrains on numbers of colors
+    colors = ['#FF9900', '#e6ff00', '#ff1a00', '#00ff99', '#9900ff', '#0066ff']
+    pipe_ind = []
+    metric = {}
+    x = 0
+    y = 0
+    for met in metrics_:
+        metric[met] = []
+        for pipe in data:
+            ind = int(pipe['index'])
+            if ind not in pipe_ind:
+                pipe_ind.append(ind)
+
+            if 'test' not in pipe['res']:
+                name_ = list(pipe['res'].keys())[0]
+                metric[met].append(pipe['res'][name_][met])
+            else:
+                metric[met].append(pipe['res']['test'][met])
+
+        # write in book
+        graph_worksheet.merge_range(x, y, x, y+1, met)
+        graph_worksheet.write_column(x+1, y, pipe_ind)
+        graph_worksheet.write_column(x+1, y+1, metric[met])
+
+        # Add a series to the chart.
+        chart.add_series({'name': ['Plots', x, y, x, y+1],
+                          'categories': ['Plots', x+1, y, x+len(pipe_ind), y],
+                          'values': ['Plots', x+1, y+1, x+len(pipe_ind), y+1],
+                          'data_labels': {'value': True, 'legend_key': True, 'position': 'center', 'leader_lines': True,
+                                          'num_format': '#,##0.00', 'font': {'name': 'Consolas'}},
+                          'border': {'color': 'black'},
+                          'fill': {'colors': colors}})
+
+        y += 2
+
+    # Add a chart title and some axis labels.
+    chart.set_title({'name': 'Results bar'})
+    chart.set_x_axis({'name': 'Scores'})
+    chart.set_y_axis({'name': 'Pipelines'})
+
+    # Set an Excel chart style.
+    chart.set_style(11)
+
+    # Insert the chart into the worksheet.
+    graph_worksheet.insert_chart('H1', chart)  # , {'x_offset': 25, 'y_offset': 10}
+    return book
+
+
 def build_report(log, target_metric=None):
     if isinstance(log, str):
         with open(log, 'r') as lgd:
@@ -156,10 +208,13 @@ def build_report(log, target_metric=None):
     # Start from the first cell. Rows and columns are zero indexed.
     row = 0
     col = 0
+    # Write pipelines table
     for pipe in pipelines:
         h = write_pipe(worksheet, pipe, row, col, cell_format, max_com)
         row += h + 1
 
+    # Write graphs (bars)
+    workbook = plot_bar(workbook, pipelines, metrics)
     workbook.close()
 
     return None
