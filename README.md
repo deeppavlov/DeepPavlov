@@ -1,18 +1,65 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/deepmipt/DeepPavlov/blob/master/LICENSE)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 
-**We are in a really early Alpha release. You should be ready for hard adventures. 
-In version 0.0.5 we updraded to TensorFlow 1.8, please re-download our pre-trained models.**
+_We are still in a really early Alpha release._
 
 DeepPavlov is an open-source conversational AI library built on [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). It is designed for
  * development of production ready chat-bots and complex conversational systems,
  * NLP and dialog systems research.
- 
-Our goal is to enable AI-application developers and researchers with:
- * set of pre-trained NLP models, pre-defined dialog system components (ML/DL/Rule-based) and pipeline templates;
- * a framework for implementing and testing their own dialog models;
- * tools for application integration with adjacent infrastructure (messengers, helpdesk software etc.);
- * benchmarking environment for conversational models and uniform access to relevant datasets.
+
+# Hello Bot in DeepPavlov
+
+Import key components to build HelloBot. 
+```python
+from deeppavlov.core.agent import Agent, HighestConfidenceSelector
+from deeppavlov.skills.pattern_matching_skill import PatternMatchingSkill
+```
+
+Create skills as pre-defined responses for a user's input containing specific keywords. Every skill returns response and confidence.
+```python
+hello = PatternMatchingSkill(responses=['Hello world! :)'], patterns=["hi", "hello", "good day"])
+bye = PatternMatchingSkill(['Goodbye world! :(', 'See you around.'], ["bye", "chao", "see you"])
+fallback = PatternMatchingSkill(["I don't understand, sorry :/", 'I can say "Hello world!" 8)'])
+```
+
+Agent executes skills and then takes response from the skill with the highest confidence.
+```python
+HelloBot = Agent([hello, bye, fallback], skills_selector=HighestConfidenceSelector())
+```
+
+Give the floor to the HelloBot!
+```python
+print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
+```
+
+[Jupyther notebook with HelloBot example.](examples/hello_bot.ipynb)
+
+
+# Installation
+
+0. Currently we support only `Linux` platform and `Python 3.6` (**`Python 3.5` is not supported!**)
+
+1. Create a virtual environment with `Python 3.6`
+    ```
+    virtualenv env
+    ```
+2. Activate the environment.
+    ```
+    source ./env/bin/activate
+    ```
+3. Clone the repo and `cd` to project root
+   ```
+   git clone https://github.com/deepmipt/DeepPavlov.git
+   cd DeepPavlov
+   ```
+4. Install the requirements:
+    ```
+    python setup.py develop
+    ```
+5. Install `spacy` dependencies:
+    ```
+    python -m spacy download en
+    ```
 
 # Demo 
 
@@ -20,17 +67,11 @@ Demo of selected features is available at [demo.ipavlov.ai](https://demo.ipavlov
 
 # Conceptual overview
 
-<!-- ### Principles
-The library is designed according to the following principles:
- * hybrid ML/DL/Rule-based architecture as a current approach
- * support of modular dialog system design
- * end-to-end deep learning architecture as a long-term goal
- * component-based software engineering, maximization of reusability
- * multiple alternative solutions for the same NLP task to enable flexible data-driven configuration
- * easy extension and benchmarking -->
- 
-<!-- ### Target Architecture
-Target architecture of our library: -->
+Our goal is to enable AI-application developers and researchers with:
+ * set of pre-trained NLP models, pre-defined dialog system components (ML/DL/Rule-based) and pipeline templates;
+ * a framework for implementing and testing their own dialog models;
+ * tools for application integration with adjacent infrastructure (messengers, helpdesk software etc.);
+ * benchmarking environment for conversational models and uniform access to relevant datasets.
 
 <p align="left">
 <img src="https://deeppavlov.ai/dp_agnt_diag.png"/>
@@ -55,31 +96,6 @@ The smallest building block of the library is `Model`. `Model` stands for any ki
 DeepPavlov is built on top of machine learning frameworks [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). Other external libraries can be used to build basic components.
 
 ---
-
-# Installation
-0. Currently we support only `Linux` platform and `Python 3.6` (**`Python 3.5` is not supported!**)
-
-1. Create a virtual environment with `Python 3.6`
-    ```
-    virtualenv env
-    ```
-2. Activate the environment.
-    ```
-    source ./env/bin/activate
-    ```
-3. Clone the repo and `cd` to project root
-   ```
-   git clone https://github.com/deepmipt/DeepPavlov.git
-   cd DeepPavlov
-   ```
-4. Install the requirements:
-    ```
-    python setup.py develop
-    ```
-5. Install `spacy` dependencies:
-    ```
-    python -m spacy download en
-    ```
 
 # Quick start
 
@@ -132,12 +148,8 @@ You can also specify batch size with `-b` or `--batch-size` parameter.
 | [Pre-trained embeddings for the Russian language](pretrained-vectors.md) | Word vectors for the Russian language trained on joint [Russian Wikipedia](https://ru.wikipedia.org/wiki/%D0%97%D0%B0%D0%B3%D0%BB%D0%B0%D0%B2%D0%BD%D0%B0%D1%8F_%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B8%D1%86%D0%B0) and [Lenta.ru](https://lenta.ru/) corpora. |
 
 
-# Basic examples
-
-View video demo of deployment of a goal-oriented bot and a slot-filling model with Telegram UI
-
-[![Alt text for your video](https://img.youtube.com/vi/yzoiCa_sMuY/0.jpg)](https://youtu.be/yzoiCa_sMuY)
-          
+# Examples of some components
+       
  * Run goal-oriented bot with Telegram interface:
  ```
  python -m deeppavlov interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>
@@ -166,6 +178,12 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
  ```
  python -m deeppavlov predict deeppavlov/configs/intents/intents_snips.json -d --batch-size 15 < /data/in.txt > /data/out.txt
  ```
+ 
+ View [video demo](https://youtu.be/yzoiCa_sMuY) of deployment of a goal-oriented bot and a slot-filling model with Telegram UI
+
+#  Tutorials
+
+Jupyter notebooks and videos explaining how to use DeepPalov for different tasks can be found in [/examples/tutorials/](examples/tutorials/)
 
 ---
 
@@ -220,7 +238,7 @@ View video demo of deployment of a goal-oriented bot and a slot-filling model wi
 </tr>
 </table>
 
-## Config
+## Config of component
 
 An NLP pipeline config is a JSON file that contains one required element `chainer`:
 
