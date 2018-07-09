@@ -6,7 +6,7 @@
 
 ## Named Entity Recognition with DeepPavlov
 
-[video](https://youtu.be/6HlL87PWxXU)
+[Jupyter notebook](01_deeppavlov_ner.ipynb) | [video](https://youtu.be/6HlL87PWxXU)
 
 ## Task-oriented bot with DeepPavlov
 
