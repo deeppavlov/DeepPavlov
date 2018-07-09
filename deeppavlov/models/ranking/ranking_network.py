@@ -189,63 +189,11 @@ class RankingNetwork(metaclass=TfModelMeta):
             response_positive = Input(shape=(msl, mtl,))
             response_negative = Input(shape=(msl, mtl,))
 
-            n_characters = self.chars_num
-            char_embedding_dim = self.char_emb_dim
-            filter_widths = (3, 4, 5, 7)
-            emb_layer = Embedding(n_characters,
-                                     char_embedding_dim)
-
-            emb_c = emb_layer(context)
-            emb_rp = emb_layer(response_positive)
-            emb_rn = emb_layer(response_negative)
-
-            conv2d_layers = []
-            for filter_width in filter_widths:
-                conv2d_layers.append(Conv2D(char_embedding_dim,
-                                      (1, filter_width),
-                                      padding='same'))
-            conv_results_list = []
-            for cl in conv2d_layers:
-                conv_results_list.append(cl(emb_c))
-            emb_c = Lambda(lambda x: K.concatenate(x, axis=3))(conv_results_list)
-            emb_c = Lambda(lambda x: K.max(x, axis=2))(emb_c)
-
-            conv_results_list = []
-            for cl in conv2d_layers:
-                conv_results_list.append(cl(emb_rp))
-            emb_rp = Lambda(lambda x: K.concatenate(x, axis=3))(conv_results_list)
-            emb_rp = Lambda(lambda x: K.max(x, axis=2))(emb_rp)
-
-            conv_results_list = []
-            for cl in conv2d_layers:
-                conv_results_list.append(cl(emb_rn))
-            emb_rn = Lambda(lambda x: K.concatenate(x, axis=3))(conv_results_list)
-            emb_rn = Lambda(lambda x: K.max(x, axis=2))(emb_rn)
-
-            if self.highway_on_top:
-                dense1 = Dense(char_embedding_dim * len(filter_widths))
-                dense2 = Dense(char_embedding_dim * len(filter_widths))
-
-                sigmoid_gate = dense1(emb_c)
-                sigmoid_gate = Activation('sigmoid')(sigmoid_gate)
-                deeper_units = dense2(emb_c)
-                emb_c = Add()([Multiply()([sigmoid_gate, deeper_units]),
-                             Multiply()([Lambda(lambda x: K.constant(1., shape=K.shape(x)) - x)(sigmoid_gate), emb_c])])
-                emb_c = Activation('relu')(emb_c)
-
-                sigmoid_gate = dense1(emb_rp)
-                sigmoid_gate = Activation('sigmoid')(sigmoid_gate)
-                deeper_units = dense2(emb_rp)
-                emb_rp = Add()([Multiply()([sigmoid_gate, deeper_units]),
-                              Multiply()([Lambda(lambda x: K.constant(1., shape=K.shape(x)) - x)(sigmoid_gate), emb_rp])])
-                emb_rp = Activation('relu')(emb_rp)
-
-                sigmoid_gate = dense1(emb_rn)
-                sigmoid_gate = Activation('sigmoid')(sigmoid_gate)
-                deeper_units = dense2(emb_rn)
-                emb_rn = Add()([Multiply()([sigmoid_gate, deeper_units]),
-                              Multiply()([Lambda(lambda x: K.constant(1., shape=K.shape(x)) - x)(sigmoid_gate), emb_rn])])
-                emb_rn = Activation('relu')(emb_rn)
+            char_cnn_layer = keras_layers.char_emb_cnn_func(n_characters=self.chars_num,
+                                                            char_embedding_dim=self.char_emb_dim)
+            emb_c = char_cnn_layer(context)
+            emb_rp = char_cnn_layer(response_positive)
+            emb_rn = char_cnn_layer(response_negative)
 
         elif self.embedding_level == 'token_and_char':
             if self.char_dynamic_batch:
@@ -279,43 +227,16 @@ class RankingNetwork(metaclass=TfModelMeta):
                 rp_char = Lambda(lambda x: x[:,:,self.embedding_dim:])(response_positive)
                 rn_char = Lambda(lambda x: x[:,:,self.embedding_dim:])(response_negative)
 
-            n_characters = self.chars_num
-            char_embedding_dim = self.char_emb_dim
-            filter_widths = (3, 4, 5, 7)
-            emb_layer = Embedding(n_characters,
-                                  char_embedding_dim)
+            char_cnn_layer = keras_layers.char_emb_cnn_func(n_characters=self.chars_num,
+                                                            char_embedding_dim=self.char_emb_dim)
 
-            emb_c_char = emb_layer(c_char)
-            emb_rp_char = emb_layer(rp_char)
-            emb_rn_char = emb_layer(rn_char)
-
-            conv2d_layers = []
-            for filter_width in filter_widths:
-                conv2d_layers.append(Conv2D(char_embedding_dim,
-                                            (1, filter_width),
-                                            padding='same'))
-            conv_results_list = []
-            for cl in conv2d_layers:
-                conv_results_list.append(cl(emb_c_char))
-            emb_c_char = Lambda(lambda x: K.concatenate(x, axis=3))(conv_results_list)
-            emb_c_char = Lambda(lambda x: K.max(x, axis=2))(emb_c_char)
-
-            conv_results_list = []
-            for cl in conv2d_layers:
-                conv_results_list.append(cl(emb_rp_char))
-            emb_rp_char = Lambda(lambda x: K.concatenate(x, axis=3))(conv_results_list)
-            emb_rp_char = Lambda(lambda x: K.max(x, axis=2))(emb_rp_char)
-
-            conv_results_list = []
-            for cl in conv2d_layers:
-                conv_results_list.append(cl(emb_rn_char))
-            emb_rn_char = Lambda(lambda x: K.concatenate(x, axis=3))(conv_results_list)
-            emb_rn_char = Lambda(lambda x: K.max(x, axis=2))(emb_rn_char)
+            emb_c_char = char_cnn_layer(c_char)
+            emb_rp_char = char_cnn_layer(rp_char)
+            emb_rn_char = char_cnn_layer(rn_char)
 
             emb_c = Lambda(lambda x: K.concatenate(x, axis=-1))([emb_c, emb_c_char])
             emb_rp = Lambda(lambda x: K.concatenate(x, axis=-1))([emb_rp, emb_rp_char])
             emb_rn = Lambda(lambda x: K.concatenate(x, axis=-1))([emb_rn, emb_rn_char])
-
 
         lstm_layer_a, lstm_layer_b = self.lstm_layer()
         lstm_c = lstm_layer_a(emb_c)
