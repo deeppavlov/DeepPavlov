@@ -14,12 +14,15 @@ Learn how to read and prepare data for trainable components.
 
 ## Named Entity Recognition with DeepPavlov
 
-This tutorial is about building a simple Convolutional Neural Network to solve the CoNLL 2003 Named Entity Recognition task. The library components is used for downloading, preprocessing, batching, and socoring.  
 [Jupyter notebook](02_deeppavlov_ner.ipynb) | [video](https://youtu.be/6HlL87PWxXU)
+
+This tutorial is about building a simple Convolutional Neural Network to solve the CoNLL 2003 Named Entity Recognition task. The library components are used for downloading, preprocessing, batching, and scoring.  
 
 ## Task-oriented bot with DeepPavlov
 
-[Jupyter notebook](03_deeppavlov_to_bot.ipynb) | [video](https://youtu.be/uvH1zB7qahI)
+[Jupyter notebook](04_deeppavlov_gobot.ipynb) | [slides](04_deeppavlov_gobot.pdf) | [video](https://youtu.be/uvH1zB7qahI)
+
+Intro to DeepPavlov configs, an examplory config to build a vocabulary of word tokens. Train 4 task-oriented bots on DSTC2: a basic one, a bot with a database of restaurants, a bot with fasttext embeddings, a bot with attention mechanism over input words. 
 
 ## Chit-chat bot with DeepPavlov
 
