@@ -2,7 +2,7 @@
 
 ## Introduction to DeepPavlov
 
-[Jupyter notebook](00_deeppavlov_intro.ipynb) | [slides](00_deeppavlov_intro.pdf) | [video](https://youtu.be/ElO7_wbtO6g)
+[Jupyter notebook](00_deeppavlov_intro.ipynb) | [slides](00_deeppavlov_intro.pdf) 
 
 Install the library and understand a simple "Hello World!" Bot written in 7 lines of code. Experiment with basic pattern matching rule-based bot.
 
