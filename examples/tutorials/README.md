@@ -20,7 +20,7 @@ This tutorial is about building a simple Convolutional Neural Network to solve t
 
 ## Task-oriented bot with DeepPavlov
 
-[Jupyter notebook](04_deeppavlov_gobot.ipynb) | [slides](04_deeppavlov_gobot.pdf) | [video](https://youtu.be/uvH1zB7qahI)
+[Jupyter notebook](03_deeppavlov_gobot.ipynb) | [slides](03_deeppavlov_gobot.pdf) | [video](https://youtu.be/uvH1zB7qahI)
 
 Intro to DeepPavlov configs, an examplory config to build a vocabulary of word tokens. Train 4 task-oriented bots on DSTC2: a basic one, a bot with a database of restaurants, a bot with fasttext embeddings, a bot with attention mechanism over input words. 
 
