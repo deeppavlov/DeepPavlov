@@ -61,7 +61,7 @@
           "y_probas_dict"
         ],
         "main": true,
-        "name": "intent_model",
+        "name": "keras_classification_model",
         "save_path": "intents/intent_cnn_snips_cnn_bistlm",
         "load_path": "intents/intent_cnn_snips_cnn_bilstm",
         "classes": "#classes_vocab.keys()",
@@ -110,6 +110,10 @@
     "test_best": false
   },
   "metadata": {
+    "requirements": [
+      "../requirements/tf.txt",
+      "../requirements/fasttext.txt"
+    ],
     "labels": {
       "telegram_utils": "IntentModel"
     },

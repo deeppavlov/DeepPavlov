@@ -51,6 +51,9 @@
     "batch_size": 2
   },
   "metadata": {
+    "requirements": [
+      "../requirements/spacy.txt"
+    ],
     "labels": {
       "server_utils": "Ranker"
     },

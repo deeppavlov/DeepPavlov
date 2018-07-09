@@ -66,6 +66,9 @@
     "log_every_n_epochs": 1
   },
   "metadata": {
+    "requirements": [
+      "../requirements/tf.txt"
+    ],
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/morpho_tagger.tar.gz",
       {
