@@ -13,8 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+import os
+from hashlib import md5
 from pathlib import Path
+from typing import List, Union
 
 import requests
 from tqdm import tqdm
@@ -35,7 +37,7 @@ _MARK_DONE = '.done'
 tqdm.monitor_interval = 0
 
 
-def download(dest_file_path, source_url, force_download=True):
+def download(dest_file_path: [List[Union[str, Path]]], source_url: str, force_download=True):
     """Download a file from URL to one or several target locations
 
     Args:
@@ -44,43 +46,50 @@ def download(dest_file_path, source_url, force_download=True):
         force_download: download file if it already exists, or not
 
     """
-    CHUNK = 16 * 1024
 
-    if isinstance(dest_file_path, str):
-        dest_file_path = [Path(dest_file_path).absolute()]
-    elif isinstance(dest_file_path, Path):
-        dest_file_path = [dest_file_path.absolute()]
-    elif isinstance(dest_file_path, list):
-        dest_file_path = [Path(path) for path in dest_file_path]
-
-    first_dest_path = dest_file_path.pop()
-
-    if force_download or not first_dest_path.exists():
-        first_dest_path.parent.mkdir(parents=True, exist_ok=True)
-
-        r = requests.get(source_url, stream=True)
-        total_length = int(r.headers.get('content-length', 0))
-
-        with first_dest_path.open('wb') as f:
-            log.info('Downloading from {} to {}'.format(source_url, first_dest_path))
-
-            pbar = tqdm(total=total_length, unit='B', unit_scale=True)
-            for chunk in r.iter_content(chunk_size=CHUNK):
-                if chunk:  # filter out keep-alive new chunks
-                    pbar.update(len(chunk))
-                    f.write(chunk)
-            f.close()
+    if isinstance(dest_file_path, list):
+        dest_file_paths = [Path(path) for path in dest_file_path]
     else:
-        log.info('File already exists in {}'.format(first_dest_path))
+        dest_file_paths = [Path(dest_file_path).absolute()]
 
-    while len(dest_file_path) > 0:
-        dest_path = dest_file_path.pop()
+    if not force_download:
+        to_check = list(dest_file_paths)
+        dest_file_paths = []
+        for p in to_check:
+            if p.exists():
+                log.info(f'File already exists in {p}')
+            else:
+                dest_file_paths.append(p)
 
-        if force_download or not dest_path.exists():
+    if dest_file_paths:
+        cache_dir = os.getenv('DP_CACHE_DIR')
+        cached_exists = False
+        if cache_dir:
+            first_dest_path = Path(cache_dir) / md5(source_url.encode('utf8')).hexdigest()[:15]
+            cached_exists = first_dest_path.exists()
+        else:
+            first_dest_path = dest_file_paths.pop()
+
+        if not cached_exists:
+            first_dest_path.parent.mkdir(parents=True, exist_ok=True)
+
+            r = requests.get(source_url, stream=True)
+            total_length = int(r.headers.get('content-length', 0))
+
+            CHUNK = 32 * 1024
+
+            with first_dest_path.open('wb') as f:
+                log.info('Downloading from {} to {}'.format(source_url, first_dest_path))
+
+                pbar = tqdm(total=total_length, unit='B', unit_scale=True)
+                for chunk in r.iter_content(chunk_size=CHUNK):
+                    if chunk:  # filter out keep-alive new chunks
+                        pbar.update(len(chunk))
+                        f.write(chunk)
+
+        for dest_path in dest_file_paths:
             dest_path.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(str(first_dest_path), str(dest_path))
-        else:
-            log.info('File already exists in {}'.format(dest_path))
 
 
 def untar(file_path, extract_folder=None):

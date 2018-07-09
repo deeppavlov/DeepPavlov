@@ -57,7 +57,7 @@ class BasicClassificationDatasetReader(DatasetReader):
             if url is None:
                 raise Exception("data path {} does not exist or is empty, and download url parameter not specified!".format(data_path))
             log.info("Loading train data from {} to {}".format(url, data_path))
-            download(source_url=url, dest_file_path=Path(data_path, train_file))
+            download(source_url=url, dest_file_paths=Path(data_path, train_file))
 
         data = {"train": [],
                 "valid": [],
