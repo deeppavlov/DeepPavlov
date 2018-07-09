@@ -2,7 +2,7 @@
 
 ## Introduction to DeepPavlov
 
-[video](https://youtu.be/ElO7_wbtO6g)
+[Jupyter notebook](00_deeppavlov_intro.ipynb) | [slides](00_deeppavlov_intro.pdf) | [video](https://youtu.be/ElO7_wbtO6g)
 
 ## Named Entity Recognition with DeepPavlov
 
