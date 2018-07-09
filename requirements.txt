@@ -25,3 +25,4 @@ pymorphy2==0.8
 pymorphy2-dicts-ru
 sortedcontainers==2.0.2
 matplotlib
+xlsxwriter
