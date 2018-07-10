@@ -1,7 +1,9 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/deepmipt/DeepPavlov/blob/master/LICENSE)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 
-_We are still in a really early Alpha release._
+_We are still in a really early Alpha release._  
+__In version 0.0.6 everything from package `deeppavlov.skills` except `deeppavlov.skills.pattern_matching_skill` was moved to `deeppavlov.models` so your imports might break__  
+
 
 DeepPavlov is an open-source conversational AI library built on [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). It is designed for
  * development of production ready chat-bots and complex conversational systems,

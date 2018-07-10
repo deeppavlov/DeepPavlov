@@ -1,2 +1,2 @@
-__version__ = '0.0.5.4'
+__version__ = '0.0.6b'
 __author__ = 'Neural Networks and Deep Learning lab, MIPT'
