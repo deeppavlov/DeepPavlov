@@ -28,8 +28,8 @@
           "fit_on_batch": [
             "questions_raw"
           ],
-          "save_path": "odqa/wiki_tfidf_matrix_test.npz",
-          "load_path": "odqa/wiki_tfidf_matrix_test.npz",
+          "save_path": "odqa/en_wiki_test_tfidf.npz",
+          "load_path": "odqa/en_wiki_test_tfidf.npz",
           "tokenizer": {
             "name": "stream_spacy_tokenizer",
             "lemmas": true,
@@ -74,7 +74,8 @@
       "server_utils": "ODQA"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/odqa.tar.gz",
+      "http://lnsigo.mipt.ru/export/datasets/wikipedia/wiki_test.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/odqa_test.tar.gz",
       "http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_1.1.tar.gz"
     ]
   }

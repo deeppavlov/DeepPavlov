@@ -81,7 +81,7 @@
   "str_lower": "deeppavlov.models.preprocessors.str_lower:StrLower",
   "stream_spacy_tokenizer": "deeppavlov.models.tokenizers.spacy_tokenizer:StreamSpacyTokenizer",
   "tag_output_prettifier": "deeppavlov.models.morpho_tagger.common:TagOutputPrettifier",
-  "tfidf_ranker": "deeppavlov.skills.odqa.tfidf_ranker:TfidfRanker",
+  "tfidf_ranker": "deeppavlov.models.ranking.tfidf_ranker:TfidfRanker",
   "tokens_matcher": "deeppavlov.models.classifiers.tokens_matcher.tokens_matcher:TokensMatcher",
   "top1_elector": "deeppavlov.models.spelling_correction.electors.top1_elector:TopOneElector",
   "typos_custom_reader": "deeppavlov.dataset_readers.typos_reader:TyposCustom",
