@@ -58,14 +58,12 @@ def simple_download(url: str, destination: [Path, str]):
                     downloaded += len(chunk)
                     pbar.update(len(chunk))
                     f.write(chunk)
-            if not total_length or downloaded == total_length:
-                done = True
-            elif downloaded < total_length:
+            if downloaded < total_length:
                 log.warn(f'Download stopped abruptly, trying to resume from {downloaded} to reach {total_length}')
                 resume_header = {'Range': f'bytes={downloaded}-'}
                 r = requests.get(url, headers=resume_header, stream=True)
             else:
-                raise RuntimeError(f'Downloaded extra! Got {downloaded} bytes instead of {total_length}')
+                done = True
 
 
 def download(dest_file_path: [List[Union[str, Path]]], source_url: str, force_download=True):
