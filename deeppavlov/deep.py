@@ -28,6 +28,7 @@ from deeppavlov.core.common.log import get_logger
 from deeppavlov.download import deep_download
 from utils.telegram_utils.telegram_ui import interact_model_by_telegram
 from utils.server_utils.server import start_model_server
+from utils.pip_wrapper import install_from_config
 
 
 log = get_logger(__name__)
@@ -35,7 +36,8 @@ log = get_logger(__name__)
 parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
-                    choices={'train', 'evaluate', 'interact', 'predict', 'interactbot', 'riseapi', 'download'})
+                    choices={'train', 'evaluate', 'interact', 'predict', 'interactbot', 'riseapi', 'download',
+                             'install'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 parser.add_argument("-t", "--token", help="telegram bot token", type=str)
 parser.add_argument("-b", "--batch-size", dest="batch_size", default=1, help="inference batch size", type=int)
@@ -75,6 +77,8 @@ def main():
         start_model_server(pipeline_config_path)
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
+    elif args.mode == 'install':
+        install_from_config(pipeline_config_path)
 
 
 if __name__ == "__main__":

@@ -24,3 +24,7 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 ```
 
 [Jupyther notebook with HelloBot example.](hello_bot.ipynb)
+
+# Tutorials
+
+To dive deeper into DeepPavlov work through [tutorials](tutorials/).

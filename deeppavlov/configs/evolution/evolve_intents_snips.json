@@ -1,0 +1,200 @@
+{
+  "dataset_reader": {
+    "name": "basic_classification_reader",
+    "x": "text",
+    "y": "intents",
+    "data_path": "snips"
+  },
+  "dataset_iterator": {
+    "name": "basic_classification_iterator",
+    "seed": {
+      "evolve_range": [
+        50,
+        500
+      ],
+      "discrete": true
+    },
+    "field_to_split": "train",
+    "split_fields": [
+      "train",
+      "valid"
+    ],
+    "split_proportions": [
+      0.9,
+      0.1
+    ]
+  },
+  "chainer": {
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
+    "pipe": [
+      {
+        "id": "classes_vocab",
+        "name": "default_vocab",
+        "fit_on": [
+          "y"
+        ],
+        "level": "token",
+        "save_path": "vocabs/snips_classes.dict",
+        "load_path": "vocabs/snips_classes.dict"
+      },
+      {
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_lower"
+        ],
+        "name": "str_lower"
+      },
+      {
+        "id": "my_embedder",
+        "name": "fasttext",
+        "save_path": "embeddings/dstc2_fastText_model.bin",
+        "load_path": "embeddings/dstc2_fastText_model.bin",
+        "dim": 100
+      },
+      {
+        "id": "my_tokenizer",
+        "name": "nltk_tokenizer",
+        "tokenizer": "wordpunct_tokenize"
+      },
+      {
+        "in": [
+          "x_lower"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_labels",
+          "y_probas_dict"
+        ],
+        "main": true,
+        "name": "intent_model",
+        "save_path": "evolution/classification/intents_snips",
+        "load_path": "evolution/classification/intents_snips",
+        "classes": "#classes_vocab.keys()",
+        "kernel_sizes_cnn": [
+          1,
+          2,
+          3
+        ],
+        "filters_cnn": {
+          "evolve_range": [
+            50,
+            100
+          ],
+          "discrete": true
+        },
+        "confident_threshold": {
+          "evolve_choice": true,
+          "values": [
+            0.5,
+            1
+          ]
+        },
+        "optimizer": "Adam",
+        "lear_rate": {
+          "evolve_range": [
+            0.0001,
+            0.1
+          ],
+          "scale": "log"
+        },
+        "lear_rate_decay": {
+          "evolve_range": [
+            0.0001,
+            0.1
+          ],
+          "scale": "log"
+        },
+        "loss": "binary_crossentropy",
+        "text_size": 15,
+        "coef_reg_cnn": {
+          "evolve_range": [
+            1e-6,
+            1e-3
+          ]
+        },
+        "coef_reg_den": {
+          "evolve_range": [
+            1e-6,
+            1e-3
+          ]
+        },
+        "dropout_rate": {
+          "evolve_range": [
+            0.1,
+            0.9
+          ]
+        },
+        "dense_size": {
+          "evolve_range": [
+            50,
+            100
+          ],
+          "discrete": true
+        },
+        "model_name": "cnn_model",
+        "embedder": "#my_embedder",
+        "tokenizer": "#my_tokenizer",
+        "check_bool": {
+          "evolve_bool": true
+        }
+      }
+    ],
+    "out": [
+      "y_labels",
+      "y_probas_dict"
+    ]
+  },
+  "train": {
+    "epochs": {
+      "evolve_range": [
+        50,
+        500
+      ],
+      "discrete": true
+    },
+    "batch_size": {
+      "evolve_range": [
+        50,
+        500
+      ],
+      "discrete": true
+    },
+    "metrics": [
+      "classification_accuracy",
+      "classification_f1",
+      "classification_roc_auc"
+    ],
+    "validation_patience": 5,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
+    "validate_best": true,
+    "test_best": false
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "IntentModel",
+      "server_utils": "KerasIntentModel"
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/intents.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/datasets/snips_intents/train.csv",
+        "subdir": "snips"
+      },
+      {
+        "url": "http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/dstc2_fastText_model.bin",
+        "subdir": "embeddings"
+      }
+    ]
+  }
+}

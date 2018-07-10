@@ -22,12 +22,12 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import List, Callable, Tuple, Dict, Union
 
-from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root
+from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root, import_packages
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.registry import model as get_model
+from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.common.metrics_registry import get_metrics_by_names
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
@@ -100,6 +100,8 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
     if isinstance(config, (str, Path)):
         config = read_json(config)
     set_deeppavlov_root(config)
+
+    import_packages(config.get('metadata', {}).get('imports', []))
 
     dataset_config = config.get('dataset', None)
 
@@ -355,9 +357,9 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                         tb_train_writer.add_summary(metric_sum, epochs)
 
                     if losses:
-                        loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + 'loss',
+                        loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + 'loss',
                                                                         simple_value=report['loss']), ])
-                        tb_train_writer.add_summary(loss_sum, i)
+                        tb_train_writer.add_summary(loss_sum, epochs)
 
                 model.process_event(event_name='after_train_log', data=report)
                 report = {'train': report}

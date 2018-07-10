@@ -22,7 +22,6 @@ from scipy import sparse
 import numpy as np
 from sklearn.utils import murmurhash3_32
 
-from deeppavlov.models.tokenizers.spacy_tokenizer import StreamSpacyTokenizer
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.log import get_logger
@@ -42,7 +41,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
     Create a tfidf matrix from collection of documents.
     """
 
-    def __init__(self, hash_size=2 ** 24, tokenizer: Type = StreamSpacyTokenizer, doc_index: dict =None,
+    def __init__(self, tokenizer, hash_size=2 ** 24, doc_index: dict =None,
                  save_path: str = None, load_path: str = None, **kwargs):
         """
 

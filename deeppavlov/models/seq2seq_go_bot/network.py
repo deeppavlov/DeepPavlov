@@ -16,7 +16,6 @@ limitations under the License.
 
 import json
 import tensorflow as tf
-from tensorflow.contrib.layers import xavier_initializer
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.errors import ConfigError
