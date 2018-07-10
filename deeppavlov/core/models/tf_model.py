@@ -38,18 +38,14 @@ class TFModel(NNModel, metaclass=TfModelMeta):
 
     def load(self, exclude_scopes=['Optimizer']):
         """Load model parameters from self.load_path"""
-
-        if self.opt.get('scratch_init') is True:
-            log.warning("Init from scratch for {}".format(self.__class__.__name__))
-        else:
-            path = str(self.load_path.resolve())
-            # Check presence of the model files
-            if tf.train.checkpoint_exists(path):
-                log.info('[loading model from {}]'.format(path))
-                # Exclude optimizer variables from saved variables
-                var_list = self._get_trainable_variables(exclude_scopes)
-                saver = tf.train.Saver(var_list)
-                saver.restore(self.sess, path)
+        path = str(self.load_path.resolve())
+        # Check presence of the model files
+        if tf.train.checkpoint_exists(path):
+            log.info('[loading model from {}]'.format(path))
+            # Exclude optimizer variables from saved variables
+            var_list = self._get_trainable_variables(exclude_scopes)
+            saver = tf.train.Saver(var_list)
+            saver.restore(self.sess, path)
 
     def save(self, exclude_scopes=['Optimizer']):
         """Save model parameters to self.save_path"""

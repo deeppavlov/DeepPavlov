@@ -39,12 +39,13 @@ class PipelineManager:
 
     def run(self):
         # create the pipeline generator
-        self.pipeline_generator = PipeGen(self.config_path, n=self.sample_num, stype=self.hyper_search)
+        self.pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, stype=self.hyper_search)
 
         # Start generating pipelines configs
         print('[ Experiment start - {0} pipes, will be run]'.format(self.pipeline_generator.len))
         exp_start_time = time()
         for i, pipe in enumerate(self.pipeline_generator()):
+            print("____________{}____________".format(i))
             # print progress
             if i != 0:
                 itime = normal_time(((time() - exp_start_time) / i) * (self.pipeline_generator.len - i))
@@ -58,14 +59,11 @@ class PipelineManager:
             self.logger.pipe_conf = copy(pipe['chainer']['pipe'])
             # start pipeline time
             pipe_start = time()
-            pipe_ = self.change_load_path(pipe, i + 1)
-
-            print(pipe_['chainer']['pipe'][-1])
 
             if self.mode == 'train':
-                results = train_evaluate_model_from_dict(pipe_, to_train=True, to_validate=True)
-            elif self.mode == 'evaluate':
-                results = train_evaluate_model_from_dict(pipe_, to_train=False, to_validate=False)
+                results = train_evaluate_model_from_dict(pipe, to_train=True, to_validate=True)
+            # elif self.mode == 'evaluate':
+            #     results = train_evaluate_model_from_dict(pipe, to_train=False, to_validate=False)
             else:
                 raise ValueError("Only 'train' and 'evaluate' mode are available, but {0} was found.".format(self.mode))
 
@@ -78,21 +76,7 @@ class PipelineManager:
             self.logger.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)
             self.logger.save()
 
-        # visualization of results
-        path = join(self.root, '{0}-{1}-{2}'.format(self.date.year, self.date.month, self.date.day), self.exp_name)
-        results_visualization(path, join(path, 'results', 'images'), self.target_metric)
-
+            # visualization of results
+            path = join(self.root, '{0}-{1}-{2}'.format(self.date.year, self.date.month, self.date.day), self.exp_name)
+            results_visualization(path, join(path, 'results', 'images'), self.target_metric)
         return None
-
-    def change_load_path(self, config, n):
-        cp_pipe = copy(config['chainer']['pipe'])
-        for component in cp_pipe:
-            if component.get('save_path', None) is not None:
-                sp = component['save_path'].split('/')[-1]
-                component['save_path'] = join(self.save_path, 'pipe_{}'.format(n), sp)
-            elif component.get('load_path', None) is not None:
-                lp = component['load_path'].split('/')[-1]
-                component['load_path'] = join(self.save_path, 'pipe_{}'.format(n), lp)
-
-        config['chainer']['pipe'] = cp_pipe
-        return config

@@ -3,7 +3,7 @@ import numpy as np
 import json
 import xlsxwriter
 import matplotlib
-import matplotlib.pyplot as plt  # .pyplot as plt
+import matplotlib.pyplot as plt
 
 from os.path import join, isdir
 from os import mkdir
@@ -166,7 +166,7 @@ def plot_bar(book, data, metrics_):
     return book
 
 
-def build_report(log, target_metric=None):
+def build_report(log, target_metric=None, save_path='./'):
     if isinstance(log, str):
         with open(log, 'r') as lgd:
             log_data = json.load(lgd)
@@ -182,12 +182,13 @@ def build_report(log, target_metric=None):
     if target_metric is None:
         target_metric = metrics[0]
 
-    workbook = xlsxwriter.Workbook('Report_{0}_{1}.xlsx'.format(exp_name, date))
+    workbook = xlsxwriter.Workbook(join(save_path, 'Report_{0}_{1}.xlsx'.format(exp_name, date)))
     worksheet = workbook.add_worksheet("Pipelines_table")
 
     pipelines = []
     max_com = 0
     for model_name, val in log_data['experiments'].items():
+        print("Len pipe;ines: -------{}------".format(len(val)))
         for num, conf in val.items():
             pipe = dict(index=int(num), components=[], res={})
             # max amount of components
@@ -571,7 +572,5 @@ def results_visualization(root, savepath, target_metric=None):
     # reading and scrabbing data
     info = results_analizator(log, target_metric=target_metric)
     plot_res(info, savepath=savepath)
-    # plot_res_table(info, savepath=savepath)
-    # get_table(log, target_metric=target_metric, savepath=join(root, 'results'))
-
+    build_report(log, target_metric=target_metric, save_path=root)
     return None

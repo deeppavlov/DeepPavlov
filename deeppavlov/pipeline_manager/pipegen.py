@@ -1,5 +1,6 @@
 import numpy as np
 
+from os.path import join
 from itertools import product
 from copy import deepcopy
 
@@ -13,7 +14,8 @@ log = get_logger(__name__)
 
 
 class PipeGen:
-    def __init__(self, config_path: str, n=10, stype: str ='grid') -> object:
+    def __init__(self, config_path: str, save_path: str, stype: str ='grid', n=10):
+        self.save_path = save_path
         self.config_path = config_path
         self.N = n
         self.stype = stype
@@ -58,12 +60,24 @@ class PipeGen:
             raise ValueError("Sorry {0} search not implemented."
                              " At the moment you can use only 'random' and 'grid' search.".format(self.stype))
 
-        for pipe in pipe_gen:
+        for k, pipe in enumerate(pipe_gen):
             new_config = deepcopy(self.main_config)
             new_config['chainer'] = deepcopy(self.chainer)
             chainer_pipe = list(pipe)
+            chainer_pipe = self.change_load_path(chainer_pipe, k)
             new_config['chainer']['pipe'] = chainer_pipe
             yield new_config
+
+    def change_load_path(self, config, n):
+        for component in config:
+            if component.get('scratch_init') is True:
+                if component.get('save_path', None) is not None:
+                    sp = component['save_path'].split('/')[-1]
+                    component['save_path'] = join('..', self.save_path, 'pipe_{}'.format(n), sp)
+                if component.get('load_path', None) is not None:
+                    lp = component['load_path'].split('/')[-1]
+                    component['load_path'] = join('..', self.save_path, 'pipe_{}'.format(n), lp)
+        return config
 
     def random_get_len(self):
         test = []
