@@ -52,13 +52,9 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
    git clone https://github.com/deepmipt/DeepPavlov.git
    cd DeepPavlov
    ```
-4. Install the requirements:
+4. Install basic requirements:
     ```
     python setup.py develop
-    ```
-5. Install `spacy` dependencies:
-    ```
-    python -m spacy download en
     ```
 
 # Demo 
@@ -99,7 +95,13 @@ DeepPavlov is built on top of machine learning frameworks [TensorFlow](https://w
 
 # Quick start
 
-To use our pre-trained models, you should first download them:
+To use our pre-trained models, you should first install their requirements:
+```
+python -m deeppavlov install <path_to_config>
+```
+
+  
+Then download the models and data for them:
 ```
 python -m deeppavlov download <path_to_config>
 ```
