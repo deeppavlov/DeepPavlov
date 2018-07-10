@@ -37,6 +37,37 @@ _MARK_DONE = '.done'
 tqdm.monitor_interval = 0
 
 
+def simple_download(url: str, destination: [Path, str]):
+    CHUNK = 32 * 1024
+
+    destination = Path(destination)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+
+    r = requests.get(url, stream=True)
+    total_length = int(r.headers.get('content-length', 0))
+
+    with destination.open('wb') as f:
+        log.info('Downloading from {} to {}'.format(url, destination))
+
+        pbar = tqdm(total=total_length, unit='B', unit_scale=True)
+        done = False
+        downloaded = 0
+        while not done:
+            for chunk in r.iter_content(chunk_size=CHUNK):
+                if chunk:  # filter out keep-alive new chunks
+                    downloaded += len(chunk)
+                    pbar.update(len(chunk))
+                    f.write(chunk)
+            if not total_length or downloaded == total_length:
+                done = True
+            elif downloaded < total_length:
+                log.warn(f'Download stopped abruptly, trying to resume from {downloaded} to reach {total_length}')
+                resume_header = {'Range': f'bytes={downloaded}-'}
+                r = requests.get(url, headers=resume_header, stream=True)
+            else:
+                raise RuntimeError(f'Downloaded extra! Got {downloaded} bytes instead of {total_length}')
+
+
 def download(dest_file_path: [List[Union[str, Path]]], source_url: str, force_download=True):
     """Download a file from URL to one or several target locations
 
@@ -73,19 +104,7 @@ def download(dest_file_path: [List[Union[str, Path]]], source_url: str, force_do
         if not cached_exists:
             first_dest_path.parent.mkdir(parents=True, exist_ok=True)
 
-            r = requests.get(source_url, stream=True)
-            total_length = int(r.headers.get('content-length', 0))
-
-            CHUNK = 32 * 1024
-
-            with first_dest_path.open('wb') as f:
-                log.info('Downloading from {} to {}'.format(source_url, first_dest_path))
-
-                pbar = tqdm(total=total_length, unit='B', unit_scale=True)
-                for chunk in r.iter_content(chunk_size=CHUNK):
-                    if chunk:  # filter out keep-alive new chunks
-                        pbar.update(len(chunk))
-                        f.write(chunk)
+            simple_download(source_url, first_dest_path)
 
         for dest_path in dest_file_paths:
             dest_path.parent.mkdir(parents=True, exist_ok=True)
