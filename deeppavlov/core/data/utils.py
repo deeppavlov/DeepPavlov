@@ -61,6 +61,8 @@ def simple_download(url: str, destination: [Path, str]):
                 log.warn(f'Download stopped abruptly, trying to resume from {downloaded} to reach {total_length}')
                 resume_header = {'Range': f'bytes={downloaded}-'}
                 r = requests.get(url, headers=resume_header, stream=True)
+                if total_length - downloaded != int(r.headers['content-length']):
+                    raise RuntimeError('It looks like the server does not support resuming downloads')
             else:
                 done = True
 
