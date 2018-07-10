@@ -12,6 +12,7 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 _tf_re = re.compile(r'\s*tensorflow\s*([<=>;]|$)')
+_spacy_re = re.compile(r'\s*spacy\s*([<=>;]|$)')
 
 
 def install(*packages):
@@ -20,9 +21,12 @@ def install(*packages):
                                                              env=os.environ.copy()):
         log.warn('found tensorflow-gpu installed, so upgrading it instead of tensorflow')
         packages = [_tf_re.sub(r'tensorflow-gpu\1', package) for package in packages]
-    return subprocess.check_call([sys.executable, '-m', 'pip', 'install',
-                                  *[re.sub(r'\s', '', package) for package in packages]],
-                                 env=os.environ.copy())
+    result = subprocess.check_call([sys.executable, '-m', 'pip', 'install',
+                                   *[re.sub(r'\s', '', package) for package in packages]],
+                                   env=os.environ.copy())
+    if any(_spacy_re.match(package) for package in packages):
+        subprocess.check_call([sys.executable, '-m', 'spacy', 'download', 'en'], env=os.environ.copy())
+    return result
 
 
 def install_from_config(config: [str, Path, dict]):
