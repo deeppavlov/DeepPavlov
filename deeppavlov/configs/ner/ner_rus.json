@@ -138,9 +138,14 @@
     "val_every_n_epochs": 1,
 
     "log_every_n_epochs": 1,
-    "show_examples": false
+    "show_examples": false,
+    "tensorboard_log_dir": "ner_rus/logs"
   },
   "metadata": {
+    "requirements": [
+      "../requirements/fasttext.txt",
+      "../requirements/tf-gpu.txt"
+    ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",
       "server_utils": "NER"

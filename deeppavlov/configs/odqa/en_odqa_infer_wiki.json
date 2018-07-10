@@ -1,0 +1,62 @@
+{
+  "chainer": {
+    "in": [
+      "question_raw"
+    ],
+    "in_y": [
+      "ans_raw",
+      "ans_raw_start"
+    ],
+    "out": [
+      "ans_predicted"
+    ],
+    "pipe": [
+      {
+        "config_path": "../deeppavlov/configs/ranking/en_ranker_tfidf_wiki.json",
+        "in": [
+          "question_raw"
+        ],
+        "out": [
+          "doc_ids"
+        ]
+      },
+      {
+        "name": "wiki_sqlite_vocab",
+        "in": [
+          "doc_ids"
+        ],
+        "out": [
+          "context_raw"
+        ],
+        "data_dir": "odqa",
+        "shuffle": false,
+        "data_url": "http://lnsigo.mipt.ru/export/datasets/wikipedia/enwiki.db"
+      },
+      {
+        "config_path": "../deeppavlov/configs/squad/squad.json",
+        "in": [
+          "context_raw",
+          "question_raw"
+        ],
+        "out": [
+          "ans_predicted",
+          "ans_start_predicted"
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requirements": [
+      "../requirements/tf-gpu.txt",
+      "../requirements/spacy.txt"
+    ],
+    "labels": {
+      "server_utils": "ODQA"
+    },
+    "download": [
+      "http://lnsigo.mipt.ru/export/datasets/wikipedia/enwiki.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/en_odqa.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_1.1.tar.gz"
+    ]
+  }
+}
