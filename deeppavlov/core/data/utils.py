@@ -46,10 +46,9 @@ def simple_download(url: str, destination: [Path, str]):
     r = requests.get(url, stream=True)
     total_length = int(r.headers.get('content-length', 0))
 
-    with destination.open('wb') as f:
+    with destination.open('wb') as f, tqdm(total=total_length, unit='B', unit_scale=True) as pbar:
         log.info('Downloading from {} to {}'.format(url, destination))
 
-        pbar = tqdm(total=total_length, unit='B', unit_scale=True)
         done = False
         downloaded = 0
         while not done:
