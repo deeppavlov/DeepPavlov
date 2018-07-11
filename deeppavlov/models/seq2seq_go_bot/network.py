@@ -195,15 +195,23 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         with tf.variable_scope("Encoder"):
             _encoder_cell = tf.nn.rnn_cell.BasicLSTMCell(self.hidden_size)
             # Run Dynamic RNN
-            #   _encoder_outputs: [max_time, batch_size, num_units]
-            #   _encoder_state: [batch_size, num_units]
+            #   _encoder_outputs: [max_time, batch_size, hidden_size]
+            #   _encoder_state: [batch_size, hidden_size]
 # input_states?
             _encoder_outputs, _encoder_state = tf.nn.dynamic_rnn(
                 _encoder_cell, _encoder_emb_inp, dtype=tf.float32,
                 sequence_length=self._src_sequence_lengths, time_major=False)
 
+        # Create an attention mechanism
+        _attention_mechanism = tf.contrib.seq2seq.LuongAttention(
+            self.hidden_size, _encoder_outputs,
+            memory_sequence_length=self._src_sequence_lengths, name='attention')
+
         with tf.variable_scope("Decoder"):
             _decoder_cell = tf.nn.rnn_cell.BasicLSTMCell(self.hidden_size)
+            _decoder_cell = tf.contrib.seq2seq.AttentionWrapper(
+                _decoder_cell, _attention_mechanism,
+                attention_layer_size=self.hidden_size)
             # Train Helper
             _helper = tf.contrib.seq2seq.TrainingHelper(
                 _decoder_emb_inp, self._tgt_sequence_lengths, time_major=False)
@@ -226,12 +234,16 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                                                      reuse=reuse)
 # TODO: rm output dense layer
                     # Output dense layer
-                    #_projection_layer = \
-                    #    tf.layers.Dense(self.tgt_vocab_size, use_bias=False, _reuse=reuse)
+                    # _projection_layer = \
+                    #   tf.layers.Dense(self.tgt_vocab_size, use_bias=False, _reuse=reuse)
+                    # Copy encoder hidden state to decoder inital state
+                    _decoder_init_state = \
+                        _decoder_cell.zero_state(self._batch_size, dtype=tf.float32)\
+                        .clone(cell_state=_encoder_state)
                     # Decoder
                     _decoder = \
                         tf.contrib.seq2seq.BasicDecoder(_decoder_cell, helper,
-                                                        initial_state=_encoder_state,
+                                                        initial_state=_decoder_init_state,
                                                         output_layer=_kb_attn_layer)
                     # Dynamic decoding
 # TRY: impute_finished = True,
