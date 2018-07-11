@@ -16,6 +16,7 @@ limitations under the License.
 import os
 from hashlib import md5
 from pathlib import Path
+from urllib.parse import urlparse
 from typing import List, Union
 
 import requests
@@ -104,6 +105,8 @@ def download(dest_file_path: [List[Union[str, Path]]], source_url: str, force_do
             first_dest_path.parent.mkdir(parents=True, exist_ok=True)
 
             simple_download(source_url, first_dest_path)
+        else:
+            log.info(f'Found cached {source_url} in {first_dest_path}')
 
         for dest_path in dest_file_paths:
             dest_path.parent.mkdir(parents=True, exist_ok=True)
@@ -127,7 +130,7 @@ def untar(file_path, extract_folder=None):
     tar.close()
 
 
-def ungzip(file_path, extract_folder=None):
+def ungzip(file_path, extract_path: Path=None):
     """Simple .gz archive extractor
 
         Args:
@@ -137,9 +140,7 @@ def ungzip(file_path, extract_folder=None):
         """
     CHUNK = 16 * 1024
     file_path = Path(file_path)
-    extract_path = file_path.with_suffix('')
-    if extract_folder is not None:
-        extract_path = Path(extract_folder) / extract_path.name
+    extract_path = extract_path or file_path.with_suffix('')
 
     with gzip.open(file_path, 'rb') as fin, extract_path.open('wb') as fout:
         while True:
@@ -149,7 +150,7 @@ def ungzip(file_path, extract_folder=None):
             fout.write(block)
 
 
-def download_decompress(url, download_path, extract_paths=None):
+def download_decompress(url: str, download_path: [Path, str], extract_paths=None):
     """Download and extract .tar.gz or .gz file to one or several target locations.
     The archive is deleted if extraction was successful.
 
@@ -159,36 +160,54 @@ def download_decompress(url, download_path, extract_paths=None):
         until the end of extraction
         extract_paths: path or list of paths where contents of archive will be extracted
     """
-    file_name = url.split('/')[-1]
+    file_name = Path(urlparse(url).path).name
     download_path = Path(download_path)
-    arch_file_path = download_path / file_name
-    download(arch_file_path, url)
 
     if extract_paths is None:
         extract_paths = [download_path]
-    elif isinstance(extract_paths, str):
-        extract_paths = [Path(extract_paths)]
     elif isinstance(extract_paths, list):
         extract_paths = [Path(path) for path in extract_paths]
-
-    if url.endswith(('.tar.gz', '.gz', '.zip')):
-        for extract_path in extract_paths:
-            log.info('Extracting {} archive into {}'.format(arch_file_path, extract_path))
-            extract_path.mkdir(parents=True, exist_ok=True)
-
-            if url.endswith('.tar.gz'):
-                untar(arch_file_path, extract_path)
-            elif url.endswith('.gz'):
-                ungzip(arch_file_path, extract_path)
-            elif url.endswith('.zip'):
-                zip_ref = zipfile.ZipFile(arch_file_path, 'r')
-                zip_ref.extractall(extract_path)
-                zip_ref.close()
-
-        arch_file_path.unlink()
     else:
-        log.error('File {} has unsupported format. '
-                  'Not extracted, downloaded to {}'.format(file_name, arch_file_path))
+        extract_paths = [Path(extract_paths)]
+
+    cache_dir = os.getenv('DP_CACHE_DIR')
+    extracted = False
+    if cache_dir:
+        cache_dir = Path(cache_dir)
+        url_hash = md5(url.encode('utf8')).hexdigest()[:15]
+        arch_file_path = cache_dir / url_hash
+        extracted_path = cache_dir / (url_hash + '_extracted')
+        extracted = extracted_path.exists()
+        if not extracted and not arch_file_path.exists():
+            simple_download(url, arch_file_path)
+    else:
+        arch_file_path = download_path / file_name
+        simple_download(url, arch_file_path)
+        extracted_path = extract_paths.pop()
+
+    if not extracted:
+        log.info('Extracting {} archive into {}'.format(arch_file_path, extracted_path))
+        extracted_path.mkdir(parents=True, exist_ok=True)
+
+        if file_name.endswith('.tar.gz'):
+            untar(arch_file_path, extracted_path)
+        elif file_name.endswith('.gz'):
+            ungzip(arch_file_path, extracted_path / Path(file_name).with_suffix('').name)
+        elif file_name.endswith('.zip'):
+            with zipfile.ZipFile(arch_file_path, 'r') as zip_ref:
+                zip_ref.extractall(extracted_path)
+        else:
+            raise RuntimeError(f'Trying to extract an unknown type of archive {file_name}')
+
+        if not cache_dir:
+            arch_file_path.unlink()
+
+    for extract_path in extract_paths:
+        for f in extracted_path.iterdir():
+            if f.is_dir():
+                shutil.copytree(str(f), str(extract_path / f.name))
+            else:
+                shutil.copy(str(f), str(extract_path / f.name))
 
 
 def load_vocab(vocab_path):
