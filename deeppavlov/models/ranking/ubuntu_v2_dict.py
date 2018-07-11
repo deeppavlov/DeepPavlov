@@ -89,5 +89,5 @@ class UbuntuV2Dict(RankingDict):
                 resp_test += el[1:]
 
         sen = cont_train + resp_train + cont_valid + resp_valid + cont_test + resp_test
-        int2toks_vocab = {el[0]: word_tokenize(el[1]) for el in enumerate(sen)}
+        int2toks_vocab = {el[0]: el[1].split() for el in enumerate(sen)}
         return int2toks_vocab

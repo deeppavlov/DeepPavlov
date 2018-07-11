@@ -139,18 +139,39 @@ class RankingModel(NNModel):
             c, rp, rn = self.make_hard_triplets(x, self._net)
             y = np.ones((len(c), len(x[0][1])))
         else:
-            context = [el[0] for el in x]
-            pos_neg_response = [el[1] for el in x]
-            response = [el[0] for el in pos_neg_response]
-            negative_response = [el[1] for el in pos_neg_response]
-            c = self.dict.make_toks(context, type="context")
+            # context = [el[0] for el in x]
+            # pos_neg_response = [el[1] for el in x]
+            # response = [el[0] for el in pos_neg_response]
+            # negative_response = [el[1] for el in pos_neg_response]
+            # c = self.dict.make_toks(context, type="context")
+            # c = self.dict.make_ints(c)
+            # rp = self.dict.make_toks(response, type="response")
+            # rp = self.dict.make_ints(rp)
+            # rn = self.dict.make_toks(negative_response, type="response")
+            # rn = self.dict.make_ints(rn)
+            b = self.make_batch(x)
+        # b = [c, rp, rn], np.asarray(y)
+        self._net.train_on_batch(b, y)
+
+    def make_batch(self, x):
+        sample_len = len(x[0])
+        b = sample_len * [[[], []]]
+        for el in x:
+            for i, pair in enumerate(el):
+                b[i][0].append(pair[0])
+                b[i][1].append(pair[1])
+        for i in range(sample_len):
+            c = self.dict.make_toks(b[i][0], type="context")
             c = self.dict.make_ints(c)
-            rp = self.dict.make_toks(response, type="response")
-            rp = self.dict.make_ints(rp)
-            rn = self.dict.make_toks(negative_response, type="response")
-            rn = self.dict.make_ints(rn)
-        b = [c, rp, rn], np.asarray(y)
-        self._net.train_on_batch(b)
+            b[i][0] = c
+            r = self.dict.make_toks(b[i][1], type="response")
+            r = self.dict.make_ints(r)
+            b[i][1] = r
+        return b
+
+
+
+
 
     def make_hard_triplets(self, x, net):
         samples = [el[2] for el in x]
@@ -291,7 +312,7 @@ class RankingModel(NNModel):
             c = self.dict.make_toks(context, type="context")
             c = self.dict.make_ints(c)
             if self.update_embeddings == 'online':
-                c_emb = self._net.predict_context_on_batch([c, c, c])
+                c_emb = self._net.predict_context_on_batch([c, c])
                 self.update_contexts(c_emb, context)
             response = [list(el[1]) for el in batch]
             batch_size = len(response)
@@ -300,10 +321,10 @@ class RankingModel(NNModel):
             r = self.dict.make_toks(response, type="response")
             r = self.dict.make_ints(r)
             if self.update_embeddings == 'online':
-                r_embs = list(self._net.predict_response_on_batch([r, r, r]))
+                r_embs = list(self._net.predict_response_on_batch([r, r]))
                 self.update_responses(r_embs, response)
-            r_embs = [np.vstack(r_embs[i:batch_size*ranking_length:ranking_length])
-                        for i in range(ranking_length)]
+            # r_embs = [np.vstack(r_embs[i:batch_size*ranking_length:ranking_length])
+            #             for i in range(ranking_length)]
             y_pred = []
             for i in range(ranking_length):
                 r_emb = r_embs[i]

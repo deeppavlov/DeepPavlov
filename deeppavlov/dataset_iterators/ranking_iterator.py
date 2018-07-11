@@ -12,7 +12,7 @@ class RankingIterator:
                  sample_candidates, sample_candidates_valid, sample_candidates_test,
                  num_negative_samples, num_ranking_samples_valid, num_ranking_samples_test,
                  seed=None, len_vocab=0, pos_pool_sample=False, pos_pool_rank=True, random_batches=False,
-                 batches_per_epoch=None, hard_triplets=False, num_positive_samples=5, type_of_loss=None):
+                 batches_per_epoch=None, hard_triplets=False, num_positive_samples=5, type_of_model=None):
 
         '''
         pos_pool_rank: whether to count samples from "pos_pool" as correct answers at test/validation
@@ -32,7 +32,7 @@ class RankingIterator:
         self.num_positive_samples = num_positive_samples
         self.num_ranking_samples_valid = num_ranking_samples_valid
         self.num_ranking_samples_test = num_ranking_samples_test
-        self.type_of_loss = type_of_loss
+        self.type_of_model = type_of_model
 
         np.random.seed(seed)
         self.train = data.get('train', [])
@@ -66,21 +66,21 @@ class RankingIterator:
                     response = [random.choice(el["pos_pool"]) for el in context_response_data]
                 else:
                     response = [el["response"] for el in context_response_data]
-                if self.type_of_loss is None or self.type_of_loss == 'triplet':
+                if self.type_of_model is None or self.type_of_model == 'triplet':
                     negative_response = self.create_neg_resp_rand(context_response_data, batch_size, data_type)
                     if self.hard_triplets:
                         labels = [el["label"] for el in context_response_data]
                         positives = [random.choices(el["pos_pool"], k=self.num_positive_samples)
                                      for el in context_response_data]
-                        x = [([context[i], response[i]], [context[i], negative_response[i]], positives[i], labels[i])
+                        x = [[(context[i], response[i]), (context[i], negative_response[i]), positives[i], labels[i]]
                              for i in range(len(context_response_data))]
                     else:
-                        x = [([context[i], response[i]], [context[i], negative_response[i]])
+                        x = [[(context[i], response[i]), (context[i], negative_response[i])]
                              for i in range(len(context_response_data))]
                     y = batch_size * [np.ones(self.num_negative_samples)]
-                elif self.type_of_loss == 'crossentropy':
+                elif self.type_of_model == 'duplet':
                     y = [el["label"] for el in context_response_data]
-                    x = [[context[i], response[i]] for i in range(len(context_response_data))]
+                    x = [[(context[i], response[i])] for i in range(len(context_response_data))]
                 yield (x, y)
         if data_type in ["valid", "test"]:
             for i in range(num_steps + 1):
@@ -91,7 +91,8 @@ class RankingIterator:
                         context_response_data = data[i * batch_size:len(data)]
                 context = [el["context"] for el in context_response_data]
                 response_data, y = self.create_rank_resp(context_response_data, data_type)
-                x = [[context[i], response_data[i]] for i in range(len(context_response_data))]
+                # x = [[context[i], response_data[i]] for i in range(len(context_response_data))]
+                x = [[(context[i], el) for el in response_data[i]] for i in range(len(context_response_data))]
                 yield (x, y)
 
     def create_neg_resp_rand(self, context_response_data, batch_size, data_type):
