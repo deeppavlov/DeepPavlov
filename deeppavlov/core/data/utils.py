@@ -205,8 +205,11 @@ def download_decompress(url: str, download_path: [Path, str], extract_paths=None
     for extract_path in extract_paths:
         for f in extracted_path.iterdir():
             if f.is_dir():
-                shutil.copytree(str(f), str(extract_path / f.name))
+                dest = str(extract_path / f.name)
+                shutil.rmtree(dest, ignore_errors=True)
+                shutil.copytree(str(f), dest)
             else:
+                extract_path.mkdir(parents=True, exist_ok=True)
                 shutil.copy(str(f), str(extract_path / f.name))
 
 
