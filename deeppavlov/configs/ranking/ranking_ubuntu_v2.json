@@ -1,0 +1,88 @@
+{
+  "dataset_reader": {
+    "name": "ubuntu_v2_reader",
+    "data_path": "./ubuntu_v2_data"
+  },
+  "dataset_iterator": {
+    "name": "ranking_iterator",
+    "seed": 243,
+    "random_batches": false,
+    "batches_per_epoch": 100,
+    "sample_candidates": "pool",
+    "sample_candidates_valid": "pool",
+    "sample_candidates_test": "pool",
+    "hard_triplets": true,
+    "num_positive_samples": 10,
+    "num_negative_samples": 10,
+    "num_ranking_samples_valid": 10,
+    "num_ranking_samples_test": 10,
+    "pos_pool_sample": false,
+    "pos_pool_rank": false,
+    "type_of_model": "duplet"
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "in": ["x"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "name": "ranking_model",
+        "device_num": 0,
+        "train_now": true,
+        "type_of_model": "duplet",
+        "hard_triplets": true,
+        "hardest_positives": false,
+        "semi_hard": true,
+        "vocab_name": "ubuntu_v2",
+        "vocabs_path": "ubuntu_v2_data",
+        "embeddings": "random",
+        "embeddings_path": "ubuntu_v2_embeddings/ft_sber_sg_300.bin",
+        "embedding_dim": 300,
+        "max_sequence_length": 50,
+        "use_matrix": true,
+        "embedding_level": "token",
+        "max_token_length": 10,
+        "char_emb_dim": 32,
+        "tok_dynamic_batch": false,
+        "char_dynamic_batch": true,
+        "highway_on_top": false,
+        "seed": 243,
+        "reccurent": "bilstm",
+        "max_pooling": true,
+        "type_of_weights": "shared",
+        "hidden_dim": 300,
+        "learning_rate": 1e-3,
+        "distance": "euclidian",
+        "margin": 0.1,
+        "save_path": "ubuntu_v2_ranking/model_weights.h5",
+        "load_path": "ubuntu_v2_ranking/model_weights.h5",
+        "update_embeddings": "scores",
+        "interact_pred_num": 3
+      }
+    ],
+    "out": ["y_predicted"]
+  },
+  "train": {
+    "epochs": 200,
+    "batch_size": 8,
+    "pytest_max_batches": 2,
+    "metrics": ["r@1", "r@5", "r@10", "rank_response", "loss"],
+    "validation_patience": 10,
+    "val_every_n_epochs": 1,
+    "log_every_n_batches": 10
+  },
+  "metadata": {
+    "labels": {
+      "telegram_utils": "RankingModel",
+      "server_utils": "Ranker"
+    },
+    "download": [
+      {
+        "url": "http://lnsigo.mipt.ru/export/embeddings/wiki.en.bin",
+        "subdir": "sber_faq_embeddings"
+      }
+    ]
+  }
+}

@@ -66,6 +66,7 @@ import deeppavlov.dataset_readers.insurance_reader
 import deeppavlov.dataset_readers.sber_faq_reader
 import deeppavlov.dataset_readers.negative_sber_faq_reader
 import deeppavlov.dataset_readers.negative_garbage_sber_faq_reader
+import deeppavlov.dataset_readers.ubuntu_v2_reader
 import deeppavlov.dataset_iterators.ranking_iterator
 import deeppavlov.models.ner.network
 import deeppavlov.models.ranking.ranking_model

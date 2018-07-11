@@ -29,6 +29,7 @@ from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.ranking.ranking_network import RankingNetwork
 from deeppavlov.models.ranking.insurance_dict import InsuranceDict
 from deeppavlov.models.ranking.sber_faq_dict import SberFAQDict
+from deeppavlov.models.ranking.ubuntu_v2_dict import UbuntuV2Dict
 from deeppavlov.models.ranking.emb_dict import Embeddings
 from deeppavlov.core.common.log import get_logger
 
@@ -74,10 +75,14 @@ class RankingModel(NNModel):
             dict_parameter_names = list(inspect.signature(InsuranceDict.__init__).parameters)
             dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
             self.dict = InsuranceDict(**dict_parameters)
-        if self.opt["vocab_name"] == "sber_faq":
+        elif self.opt["vocab_name"] == "sber_faq":
             dict_parameter_names = list(inspect.signature(SberFAQDict.__init__).parameters)
             dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
             self.dict = SberFAQDict(**dict_parameters)
+        elif self.opt["vocab_name"] == "ubuntu_v2":
+            dict_parameter_names = list(inspect.signature(UbuntuV2Dict.__init__).parameters)
+            dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
+            self.dict = UbuntuV2Dict(**dict_parameters)
 
         embdict_parameter_names = list(inspect.signature(Embeddings.__init__).parameters)
         embdict_parameters = {par: self.opt[par] for par in embdict_parameter_names if par in self.opt}
@@ -285,22 +290,18 @@ class RankingModel(NNModel):
             context = [el[0] for el in batch]
             c = self.dict.make_toks(context, type="context")
             c = self.dict.make_ints(c)
-            c_emb = self._net.predict_context_on_batch([c, c, c])
             if self.update_embeddings == 'online':
+                c_emb = self._net.predict_context_on_batch([c, c, c])
                 self.update_contexts(c_emb, context)
-            # response = [el[1] for el in batch]
             response = [list(el[1]) for el in batch]
             batch_size = len(response)
             ranking_length = len(response[0])
-            # response = reduce(operator.concat, response)
             response = [x for el in response for x in el]
+            r = self.dict.make_toks(response, type="response")
+            r = self.dict.make_ints(r)
             if self.update_embeddings == 'online':
-                r = self.dict.make_toks(response, type="response")
-                r = self.dict.make_ints(r)
                 r_embs = list(self._net.predict_response_on_batch([r, r, r]))
-            elif self.update_embeddings == 'on_validation':
-                r_embs = [self.dict.response2emb_vocab[el] for el in response]
-            self.update_responses(r_embs, response)
+                self.update_responses(r_embs, response)
             r_embs = [np.vstack(r_embs[i:batch_size*ranking_length:ranking_length])
                         for i in range(ranking_length)]
             y_pred = []

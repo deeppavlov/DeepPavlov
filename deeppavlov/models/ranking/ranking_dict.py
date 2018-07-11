@@ -51,7 +51,8 @@ class RankingDict(metaclass=ABCMeta):
 
     def init_from_scratch(self):
         log.info("[initializing new `{}`]".format(self.__class__.__name__))
-        self.build_int2char_vocab()
+        if self.embedding_level == 'char' or self.embedding_level == 'token_and_char':
+            self.build_int2char_vocab()
         self.build_char2int_vocab()
         self.build_int2tok_vocab()
         self.build_tok2int_vocab()
@@ -62,7 +63,8 @@ class RankingDict(metaclass=ABCMeta):
 
     def load(self):
         log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
-        self.load_int2char()
+        if self.embedding_level == 'char' or self.embedding_level == 'token_and_char':
+            self.load_int2char()
         self.build_char2int_vocab()
         self.load_int2tok()
         self.build_tok2int_vocab()

@@ -4,6 +4,7 @@ from keras.models import Model
 from keras.layers.wrappers import Bidirectional
 from keras.optimizers import Adam
 from keras.initializers import glorot_uniform, Orthogonal
+from keras import losses
 from keras import backend as K
 import tensorflow as tf
 import numpy as np
@@ -24,7 +25,7 @@ class RankingNetwork(metaclass=TfModelMeta):
                  max_pooling=True, reccurent="bilstm", distance="cos_similarity",
                  max_token_length=None, char_emb_dim=None, embedding_level=None,
                  tok_dynamic_batch=False, char_dynamic_batch=False,
-                 highway_on_top=False):
+                 highway_on_top=False, type_of_loss=None):
         self.distance = distance
 
         self.toks_num = toks_num
@@ -47,13 +48,18 @@ class RankingNetwork(metaclass=TfModelMeta):
         self.tok_dynamic_batch = tok_dynamic_batch
         self.char_dynamic_batch = char_dynamic_batch
         self.highway_on_top = highway_on_top
+        self.type_of_loss = type_of_loss
 
         self.sess = self._config_session()
         K.set_session(self.sess)
 
-        self.loss = self.triplet_loss
         self.optimizer = Adam(lr=self.learning_rate)
-        self.obj_model = self.triplet_hinge_loss_model()
+        if self.type_of_loss is None or self.type_of_loss == 'triplet':
+            self.loss = self.triplet_loss
+            self.obj_model = self.triplet_hinge_loss_model()
+        elif self.type_of_loss == 'crossentropy':
+            self.loss = losses.binary_crossentropy
+            self.obj_model = self.crossentropy_loss_model()
         self.obj_model.compile(loss=self.loss, optimizer=self.optimizer)
         self.score_model = Model(inputs=self.obj_model.input,
                                  outputs=self.obj_model.get_layer(name="score_model").get_output_at(0))
@@ -248,12 +254,6 @@ class RankingNetwork(metaclass=TfModelMeta):
             lstm_rp = pooling_layer(lstm_rp)
             lstm_rn = pooling_layer(lstm_rn)
         if self.distance == "euclidian":
-            # cosine_layer = Dot(normalize=False, axes=-1, name="score_model")
-            # dist_pos = Subtract([lstm_c, lstm_rp])
-            # dist_neg = Subtract([lstm_c, lstm_rn])
-            # cosine_pos = cosine_layer([dist_pos, dist_pos])
-            # cosine_neg = cosine_layer([dist_neg, dist_neg])
-            # score_diff = Subtract()([cosine_neg, cosine_pos])
             dist_score = Lambda(self.euclidian_dist,
                                 output_shape=self.euclidian_dist_output_shape,
                                 name="score_model")
@@ -283,86 +283,151 @@ class RankingNetwork(metaclass=TfModelMeta):
 
     def triplet_loss(self, y_true, y_pred):
         """Triplet loss function"""
-
         return K.mean(K.maximum(self.margin - y_pred, 0.), axis=-1)
+
+    def crossentropy_loss_model(self):
+        if self.tok_dynamic_batch:
+            msl = None
+        else:
+            msl = self.max_sequence_length
+
+        if self.embedding_level is None or self.embedding_level == 'token':
+            if self.use_matrix:
+                context = Input(shape=(msl,))
+                response = Input(shape=(msl,))
+                emb_layer_a, emb_layer_b = self.embedding_layer()
+                emb_c = emb_layer_a(context)
+                emb_r = emb_layer_b(response)
+            else:
+                context = Input(shape=(msl, self.embedding_dim,))
+                response = Input(shape=(msl, self.embedding_dim,))
+                emb_c = context
+                emb_r = response
+        elif self.embedding_level == 'char':
+            if self.char_dynamic_batch:
+                mtl = None
+            else:
+                mtl = self.tok_dynamic_batch
+
+            context = Input(shape=(msl, mtl,))
+            response = Input(shape=(msl, mtl,))
+
+            char_cnn_layer = keras_layers.char_emb_cnn_func(n_characters=self.chars_num,
+                                                            char_embedding_dim=self.char_emb_dim)
+            emb_c = char_cnn_layer(context)
+            emb_r = char_cnn_layer(response)
+
+        elif self.embedding_level == 'token_and_char':
+            if self.char_dynamic_batch:
+                mtl = None
+            else:
+                mtl = self.tok_dynamic_batch + self.embedding_dim
+
+            context = Input(shape=(msl, mtl,))
+            response = Input(shape=(msl, mtl,))
+
+            if self.use_matrix:
+                c_tok = Lambda(lambda x: x[:,:,0])(context)
+                r_tok = Lambda(lambda x: x[:,:,0])(response)
+                emb_layer_a, emb_layer_b = self.embedding_layer()
+                emb_c = emb_layer_a(c_tok)
+                emb_rp = emb_layer_b(r_tok)
+                c_char = Lambda(lambda x: x[:,:,1:])(context)
+                r_char = Lambda(lambda x: x[:,:,1:])(response)
+            else:
+                c_tok = Lambda(lambda x: x[:,:,:self.embedding_dim])(context)
+                r_tok = Lambda(lambda x: x[:,:,:self.embedding_dim])(response)
+                emb_c = c_tok
+                emb_rp = r_tok
+                c_char = Lambda(lambda x: x[:,:,self.embedding_dim:])(context)
+                r_char = Lambda(lambda x: x[:,:,self.embedding_dim:])(response)
+
+            char_cnn_layer = keras_layers.char_emb_cnn_func(n_characters=self.chars_num,
+                                                            char_embedding_dim=self.char_emb_dim)
+
+            emb_c_char = char_cnn_layer(c_char)
+            emb_r_char = char_cnn_layer(r_char)
+
+            emb_c = Lambda(lambda x: K.concatenate(x, axis=-1))([emb_c, emb_c_char])
+            emb_r = Lambda(lambda x: K.concatenate(x, axis=-1))([emb_rp, emb_r_char])
+
+        lstm_layer_a, lstm_layer_b = self.lstm_layer()
+        lstm_c = lstm_layer_a(emb_c)
+        lstm_r = lstm_layer_b(emb_r)
+        if self.pooling:
+            pooling_layer = GlobalMaxPooling1D(name="pooling")
+            lstm_c = pooling_layer(lstm_c)
+            lstm_r = pooling_layer(lstm_r)
+
+        dist = Lambda(self.merge_func)([lstm_c, lstm_r])
+        dense = Dense(1, activation='sigmoid', name="score_model")(dist)
+
+        model = Model([context, response], dense)
+        return model
+
+    def merge_func(self, inputs):
+        input1, input2 = inputs
+        a = K.abs(input1-input2)
+        b = Multiply()(inputs)
+        return K.concatenate([input1, input2, a, b])
 
     def train_on_batch(self, batch):
         if self.embedding_level is None or self.embedding_level == 'token':
             if self.use_matrix:
                 self.obj_model.train_on_batch(x=[np.asarray(x) for x in batch[0]], y=np.asarray(batch[1]))
             else:
-                a, b, c = batch[0]
-                a = self.emb_dict.get_embs(a)
-                b = self.emb_dict.get_embs(b)
-                c = self.emb_dict.get_embs(c)
-                self.obj_model.train_on_batch(x=[a, b, c], y=np.asarray(batch[1]))
-
+                b = batch[0]
+                for i in range(len(b)):
+                    b[i] = self.emb_dict.get_embs(b[i])
+                self.obj_model.train_on_batch(x=b, y=np.asarray(batch[1]))
         elif self.embedding_level == 'char':
             self.obj_model.train_on_batch(x=[np.asarray(x) for x in batch[0]], y=np.asarray(batch[1]))
-
         elif self.embedding_level == 'token_and_char':
             if self.use_matrix:
                 self.obj_model.train_on_batch(x=[np.asarray(x) for x in batch[0]], y=np.asarray(batch[1]))
             else:
-                a, b, c = [x[0] for x in batch[0]]
-                a = self.emb_dict.get_embs(a)
-                b = self.emb_dict.get_embs(b)
-                c = self.emb_dict.get_embs(c)
-                self.obj_model.train_on_batch(x=[a, b, c], y=np.asarray(batch[1]))
+                b = [x[0] for x in batch[0]]
+                for i in range(len(b)):
+                    b[i] = self.emb_dict.get_embs(b[i])
+                self.obj_model.train_on_batch(x=b, y=np.asarray(batch[1]))
 
     def predict_on_batch(self, batch):
         if self.embedding_level is None or self.embedding_level == 'token':
             if self.use_matrix:
                 return self.score_model.predict_on_batch(x=batch)
             else:
-                a, b, c = batch
-                a = self.emb_dict.get_embs(a)
-                b = self.emb_dict.get_embs(b)
-                c = self.emb_dict.get_embs(c)
-                return self.score_model.predict_on_batch(x=[a, b, c])
-
+                b = batch
+                for i in range(len(b)):
+                    b[i] = self.emb_dict.get_embs(b[i])
+                return self.score_model.predict_on_batch(x=b)
         elif self.embedding_level == 'char':
             return self.score_model.predict_on_batch(x=batch)
-
         elif self.embedding_level == 'token_and_char':
             if self.use_matrix:
                 return self.score_model.predict_on_batch(x=batch)
             else:
-                a = self.emb_dict.get_embs(batch[0][:,:,0])
-                b = self.emb_dict.get_embs(batch[1][:,:,0])
-                c = self.emb_dict.get_embs(batch[2][:,:,0])
-                a = np.concatenate([a, batch[0][:,:,1:]], axis=2)
-                b = np.concatenate([b, batch[1][:,:,1:]], axis=2)
-                c = np.concatenate([c, batch[2][:,:,1:]], axis=2)
-
-                return self.score_model.predict_on_batch(x=[a, b, c])
+                b = [batch[i][:,:,0] for i in range(len(batch))]
+                b = [np.concatenate([b[i], batch[i][:,:,1:]], axis=2) for i in range(len(batch))]
+                return self.score_model.predict_on_batch(x=b)
 
     def predict_context_on_batch(self, batch):
         if self.embedding_level is None or self.embedding_level == 'token':
             if self.use_matrix:
                 return self.context_embedding.predict_on_batch(x=batch)
             else:
-                a, b, c = batch
-                a = self.emb_dict.get_embs(a)
-                b = self.emb_dict.get_embs(b)
-                c = self.emb_dict.get_embs(c)
-                return self.context_embedding.predict_on_batch(x=[a, b, c])
-
+                b = batch
+                for i in range(len(b)):
+                    b[i] = self.emb_dict.get_embs(b[i])
+                return self.context_embedding.predict_on_batch(x=b)
         elif self.embedding_level == 'char':
             return self.context_embedding.predict_on_batch(x=batch)
-
         elif  self.embedding_level == 'token_and_char':
             if self.use_matrix:
                 return self.context_embedding.predict_on_batch(x=batch)
             else:
-                a = self.emb_dict.get_embs(batch[0][:,:,0])
-                b = self.emb_dict.get_embs(batch[1][:,:,0])
-                c = self.emb_dict.get_embs(batch[2][:,:,0])
-                a = np.concatenate([a, batch[0][:,:,1:]], axis=2)
-                b = np.concatenate([b, batch[1][:,:,1:]], axis=2)
-                c = np.concatenate([c, batch[2][:,:,1:]], axis=2)
-                return self.context_embedding.predict_on_batch(x=[a, b, c])
-
+                b = [batch[i][:,:,0] for i in range(len(batch))]
+                b = [np.concatenate([b[i], batch[i][:,:,1:]], axis=2) for i in range(len(batch))]
+                return self.context_embedding.predict_on_batch(x=b)
 
     def predict_context(self, batch, bs):
         if self.embedding_level is None or self.embedding_level == 'token':
@@ -372,21 +437,15 @@ class RankingNetwork(metaclass=TfModelMeta):
                 cont_embs = []
                 num_batches = len(batch[0]) // bs
                 for i in range(num_batches):
-                    a = batch[0][i * bs:(i + 1) * bs]
-                    b = batch[1][i * bs:(i + 1) * bs]
-                    c = batch[2][i * bs:(i + 1) * bs]
-                    cont_embs.append(self.context_embedding.predict_on_batch(x=[a, b, c]))
+                    b = [batch[j][i * bs:(i + 1) * bs] for j in range(len(batch))]
+                    cont_embs.append(self.context_embedding.predict_on_batch(x=b))
                 if len(batch[0]) % bs != 0:
-                    a = batch[0][num_batches * bs:]
-                    b = batch[1][num_batches * bs:]
-                    c = batch[2][num_batches * bs:]
-                    cont_embs.append(self.context_embedding.predict_on_batch(x=[a, b, c]))
+                    b = [batch[j][num_batches * bs:] for j in range(len(batch))]
+                    cont_embs.append(self.context_embedding.predict_on_batch(x=b))
                 cont_embs = np.vstack(cont_embs)
             return cont_embs
-
         elif self.embedding_level == 'char':
             return self.context_embedding.predict(x=batch, batch_size=bs)
-
         elif self.embedding_level == 'token_and_char':
             if self.use_matrix:
                 return self.context_embedding.predict(x=batch, batch_size=bs)
@@ -394,50 +453,33 @@ class RankingNetwork(metaclass=TfModelMeta):
                 cont_embs = []
                 num_batches = len(batch[0]) // bs
                 for i in range(num_batches):
-                    a = self.emb_dict.get_embs(batch[0][:, :, 0])
-                    b = self.emb_dict.get_embs(batch[1][:, :, 0])
-                    c = self.emb_dict.get_embs(batch[2][:, :, 0])
-                    a = np.concatenate([a, batch[0][:, :, 1:]], axis=2)
-                    b = np.concatenate([b, batch[1][:, :, 1:]], axis=2)
-                    c = np.concatenate([c, batch[2][:, :, 1:]], axis=2)
-                    cont_embs.append(self.context_embedding.predict_on_batch(x=[a, b, c]))
+                    b = [self.emb_dict.get_embs(batch[j][:, :, 0]) for j in range(len(batch))]
+                    b = [np.concatenate([b[j], batch[j][:, :, i*bs+1:(i+1)*bs+1]], axis=2) for j in range(len(batch))]
+                    cont_embs.append(self.context_embedding.predict_on_batch(b))
                 if len(batch[0]) % bs != 0:
-                    a = self.emb_dict.get_embs(batch[0][:, :, 0])
-                    b = self.emb_dict.get_embs(batch[1][:, :, 0])
-                    c = self.emb_dict.get_embs(batch[2][:, :, 0])
-                    a = np.concatenate([a, batch[0][:, :, 1:]], axis=2)
-                    b = np.concatenate([b, batch[1][:, :, 1:]], axis=2)
-                    c = np.concatenate([c, batch[2][:, :, 1:]], axis=2)
-                    cont_embs.append(self.context_embedding.predict_on_batch(x=[a, b, c]))
+                    b = [self.emb_dict.get_embs(batch[j][:, :, 0]) for j in range(len(batch))]
+                    b = [np.concatenate([b[j], batch[j][:, :, num_batches*bs+1:]], axis=2) for j in range(len(batch))]
+                    cont_embs.append(self.context_embedding.predict_on_batch(b))
                 cont_embs = np.vstack(cont_embs)
             return cont_embs
-
 
     def predict_response_on_batch(self, batch):
         if self.embedding_level is None or self.embedding_level == 'token':
             if self.use_matrix:
                 return self.response_embedding.predict_on_batch(x=batch)
             else:
-                a, b, c = batch
-                a = self.emb_dict.get_embs(a)
-                b = self.emb_dict.get_embs(b)
-                c = self.emb_dict.get_embs(c)
-                return self.response_embedding.predict_on_batch(x=[a, b, c])
-
+                b = batch
+                b = [self.emb_dict.get_embs(el) for el in b]
+                return self.response_embedding.predict_on_batch(x=b)
         elif self.embedding_level == 'char':
             return self.response_embedding.predict_on_batch(x=batch)
-
         elif self.embedding_level == 'token_and_char':
             if self.use_matrix:
                 return self.response_embedding.predict_on_batch(x=batch)
             else:
-                a = self.emb_dict.get_embs(batch[0][:,:,0])
-                b = self.emb_dict.get_embs(batch[1][:,:,0])
-                c = self.emb_dict.get_embs(batch[2][:,:,0])
-                a = np.concatenate([a, batch[0][:,:,1:]], axis=2)
-                b = np.concatenate([b, batch[1][:,:,1:]], axis=2)
-                c = np.concatenate([c, batch[2][:,:,1:]], axis=2)
-                return self.response_embedding.predict_on_batch(x=[a, b, c])
+                b = [self.emb_dict.get_embs(batch[i][:,:,0]) for i in range(len(batch))]
+                b = [np.concatenate([b[i], batch[i][:,:,1:]], axis=2) for i in range(len(batch))]
+                return self.response_embedding.predict_on_batch(x=b)
 
     def predict_response(self, batch, bs):
         if self.embedding_level is None or self.embedding_level == 'token':
@@ -447,42 +489,28 @@ class RankingNetwork(metaclass=TfModelMeta):
                 resp_embs = []
                 num_batches = len(batch[0]) // bs
                 for i in range(num_batches):
-                    a = batch[0][i * bs:(i + 1) * bs]
-                    b = batch[1][i * bs:(i + 1) * bs]
-                    c = batch[2][i * bs:(i + 1) * bs]
-                    resp_embs.append(self.response_embedding.predict_on_batch([a, b, c]))
+                    b = [batch[j][i * bs:(i + 1) * bs] for j in range(len(batch))]
+                    resp_embs.append(self.response_embedding.predict_on_batch(b))
                 if len(batch[0]) % bs != 0:
-                    a = batch[0][num_batches * bs:]
-                    b = batch[1][num_batches * bs:]
-                    c = batch[2][num_batches * bs:]
-                    resp_embs.append(self.response_embedding.predict_on_batch([a, b, c]))
+                    b = [batch[0][num_batches * bs:] for j in range(len(batch))]
+                    resp_embs.append(self.response_embedding.predict_on_batch(b))
                 resp_embs = np.vstack(resp_embs)
                 return resp_embs
-
         elif self.embedding_level == 'char':
             return self.response_embedding.predict(x=batch, batch_size=bs)
-
         elif self.embedding_level == 'token_and_char':
             if self.use_matrix:
                 return self.response_embedding.predict(x=batch, batch_size=bs)
             else:
                 resp_embs = []
-                num_batches = len(batch[0]) // bs
+                num_batches = (len(batch[0]) - 1) // bs
                 for i in range(num_batches):
-                    a = self.emb_dict.get_embs(batch[0][:, :, 0])
-                    b = self.emb_dict.get_embs(batch[1][:, :, 0])
-                    c = self.emb_dict.get_embs(batch[2][:, :, 0])
-                    a = np.concatenate([a, batch[0][:, :, 1:]], axis=2)
-                    b = np.concatenate([b, batch[1][:, :, 1:]], axis=2)
-                    c = np.concatenate([c, batch[2][:, :, 1:]], axis=2)
-                    resp_embs.append(self.response_embedding.predict_on_batch([a, b, c]))
+                    b = [self.emb_dict.get_embs(batch[j][:, :, 0]) for j in range(len(batch))]
+                    b = [np.concatenate([b[j], batch[j][:, :, i*bs+1:(i+1)*bs+1]], axis=2) for j in range(len(batch))]
+                    resp_embs.append(self.response_embedding.predict_on_batch(b))
                 if len(batch[0]) % bs != 0:
-                    a = self.emb_dict.get_embs(batch[0][:, :, 0])
-                    b = self.emb_dict.get_embs(batch[1][:, :, 0])
-                    c = self.emb_dict.get_embs(batch[2][:, :, 0])
-                    a = np.concatenate([a, batch[0][:, :, 1:]], axis=2)
-                    b = np.concatenate([b, batch[1][:, :, 1:]], axis=2)
-                    c = np.concatenate([c, batch[2][:, :, 1:]], axis=2)
-                    resp_embs.append(self.response_embedding.predict_on_batch([a, b, c]))
+                    b = [self.emb_dict.get_embs(batch[j][:, :, 0]) for j in range(len(batch))]
+                    b = [np.concatenate([b[j], batch[j][:, :, num_batches*bs+1:]], axis=2) for j in range(len(batch))]
+                    resp_embs.append(self.response_embedding.predict_on_batch(b))
                 resp_embs = np.vstack(resp_embs)
                 return resp_embs
