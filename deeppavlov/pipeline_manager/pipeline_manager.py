@@ -16,7 +16,6 @@ class PipelineManager:
                  root='./experiments/',
                  hyper_search='grid',
                  sample_num=10,
-                 add_watcher=False,
                  target_metric=None):
 
         self.config_path = config_path
@@ -26,7 +25,6 @@ class PipelineManager:
         self.hyper_search = hyper_search
         self.sample_num = sample_num
         self.date = datetime.now()
-        self.add_watcher = add_watcher
         self.target_metric = target_metric
         self.pipeline_generator = None
 
@@ -71,11 +69,11 @@ class PipelineManager:
             self.logger.pipe_res = results
             self.logger.get_pipe_log()
 
-            # save log
-            self.logger.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)
-            self.logger.save()
+        # save log
+        self.logger.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)
+        self.logger.save()
 
-            # visualization of results
-            path = join(self.root, '{0}-{1}-{2}'.format(self.date.year, self.date.month, self.date.day), self.exp_name)
-            results_visualization(path, join(path, 'results', 'images'), self.target_metric)
+        # visualization of results
+        path = join(self.root, '{0}-{1}-{2}'.format(self.date.year, self.date.month, self.date.day), self.exp_name)
+        results_visualization(path, join(path, 'results', 'images'), self.target_metric)
         return None

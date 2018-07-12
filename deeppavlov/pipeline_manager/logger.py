@@ -19,7 +19,6 @@ class Logger(object):
         self.model = None
         self.pipe_res = None
         self.pipe_time = None
-        # self.ops = {}
 
         # build folder dependencies
         self.log_path = join(self.root, '{0}-{1}-{2}'.format(date.year, date.month, date.day), self.exp_name)
@@ -44,12 +43,15 @@ class Logger(object):
         self.model = None
         self.pipe_res = None
         self.pipe_time = None
-        # self.ops = {}
 
     def save(self):
+        # with open(self.log_file, 'w') as log_file:
+        #     json.dump(self.log, log_file)
+        #     log_file.close()
         if not isfile(self.log_file):
             with open(self.log_file, 'w') as log_file:
                 json.dump(self.log, log_file)
+                log_file.close()
         else:
             with open(self.log_file, 'r') as old_file:
                 old_log = json.load(old_file)
@@ -58,6 +60,7 @@ class Logger(object):
             self.log = self.merge_logs(old_log, self.log)
             with open(self.log_file, 'w') as log_file:
                 json.dump(self.log, log_file)
+                log_file.close()
 
     @staticmethod
     def merge_logs(old_log, new_log):

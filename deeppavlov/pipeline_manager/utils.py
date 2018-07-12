@@ -170,6 +170,7 @@ def build_report(log, target_metric=None, save_path='./'):
     if isinstance(log, str):
         with open(log, 'r') as lgd:
             log_data = json.load(lgd)
+            lgd.close()
     elif isinstance(log, dict):
         log_data = log
     else:
@@ -188,7 +189,6 @@ def build_report(log, target_metric=None, save_path='./'):
     pipelines = []
     max_com = 0
     for model_name, val in log_data['experiments'].items():
-        print("Len pipe;ines: -------{}------".format(len(val)))
         for num, conf in val.items():
             pipe = dict(index=int(num), components=[], res={})
             # max amount of components

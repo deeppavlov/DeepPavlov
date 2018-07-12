@@ -6,12 +6,12 @@ set_deeppavlov_root({})
 data_path = expand_path('snips')
 
 path = '/home/mks/projects/DeepPavlov/deeppavlov/configs/my_configs/intents/intents_snips.json'
-exp_name = 'test'
+exp_name = 'test_10'
 mode = 'train'
 root = '/home/mks/projects/DeepPavlov/experiments/'
 hyper_search = 'grid'
 sample_num = 10
-target_metric = None
+target_metric = 'classification_f1'
 
 
 def main():
@@ -19,8 +19,7 @@ def main():
     deep_download(['-c', path])
 
     manager = PipelineManager(config_path=path, exp_name=exp_name, mode=mode, root=root,
-                              hyper_search=hyper_search, sample_num=sample_num, add_watcher=False,
-                              target_metric=target_metric)
+                              hyper_search=hyper_search, sample_num=sample_num, target_metric=target_metric)
     manager.run()
 
 
