@@ -1,5 +1,6 @@
 import pathlib
 from collections import defaultdict
+import re
 from typing import List, Dict, Generator, Tuple, Any, AnyStr
 
 import numpy as np
@@ -84,7 +85,9 @@ class DictionaryVectorizer(Serializable):
             self.word_tag_mapping[word] = [x for x in labels if x is not None]
         return self
 
-    def __call__(self, data: List[List[AnyStr]]):
+    def __call__(self, data: List):
+        if isinstance(data[0], str):
+            data = [[x for x in re.split("(\w+|[,.])", elem) if x.strip() != ""] for elem in data]
         max_length = max(len(x) for x in data)
         answer = np.zeros(shape=(len(data), max_length, self.dim), dtype=int)
         for i, sent in enumerate(data):
@@ -170,7 +173,9 @@ class PymorphyVectorizer(Serializable):
             self._data[start] = code
         return self
 
-    def __call__(self, data: List[List[AnyStr]]):
+    def __call__(self, data: List):
+        if isinstance(data[0], str):
+            data = [[x for x in re.split("(\w+|[,.])", elem) if x.strip() != ""] for elem in data]
         max_length = max(len(x) for x in data)
         answer = np.zeros(shape=(len(data), max_length, self.dim), dtype=int)
         for i, sent in enumerate(data):
