@@ -58,19 +58,22 @@ class RankingNetwork(metaclass=TfModelMeta):
         K.set_session(self.sess)
 
         self.optimizer = Adam(lr=self.learning_rate)
+        self.duplet = self.duplet_model()
         if self.type_of_model is None or self.type_of_model == 'triplet':
             self.loss = self.triplet_loss
             self.obj_model = self.triplet_model()
         elif self.type_of_model == 'duplet':
             self.loss = losses.binary_crossentropy
-            self.obj_model = self.duplet_model()
+            self.obj_model = self.duplet
         self.obj_model.compile(loss=self.loss, optimizer=self.optimizer)
-        self.score_model = Model(inputs=self.obj_model.input,
-                                 outputs=self.obj_model.get_layer(name="score_model").get_output_at(0))
-        self.context_embedding = Model(inputs=self.obj_model.input,
-                                 outputs=self.obj_model.get_layer(name="pooling").get_output_at(0))
-        self.response_embedding = Model(inputs=self.obj_model.input,
-                                 outputs=self.obj_model.get_layer(name="pooling").get_output_at(1))
+        self.score_model = self.duplet
+        self.context_embedding = self.duplet.get_layer(name="pooling").get_output_at(0)
+        self.response_embedding = self.duplet.get_layer(name="pooling").get_output_at(1)
+
+        self.context_embedding = Model(inputs=self.duplet.input,
+                                 outputs=self.duplet.get_layer(name="pooling").get_output_at(0))
+        self.response_embedding = Model(inputs=self.duplet.input,
+                                 outputs=self.duplet.get_layer(name="pooling").get_output_at(1))
 
     def _config_session(self):
         """
@@ -250,7 +253,7 @@ class RankingNetwork(metaclass=TfModelMeta):
         return model
 
     def triplet_model(self):
-        duplet = self.duplet_model()
+        duplet = self.duplet
         c_shape = K.int_shape(duplet.inputs[0])
         r_shape = K.int_shape(duplet.inputs[1])
         c1 = Input(c_shape)
@@ -290,7 +293,7 @@ class RankingNetwork(metaclass=TfModelMeta):
                     b[i] = self.emb_dict.get_embs(b[i])
                 self.obj_model.train_on_batch(x=b, y=np.asarray(y))
 
-    def predict_on_batch(self, batch):
+    def predict_score_on_batch(self, batch):
         if self.embedding_level is None or self.embedding_level == 'token':
             if self.use_matrix:
                 return self.score_model.predict_on_batch(x=batch)
