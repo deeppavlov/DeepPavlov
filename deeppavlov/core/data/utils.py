@@ -18,15 +18,18 @@ from hashlib import md5
 from pathlib import Path
 from urllib.parse import urlparse
 from typing import List, Union
-
 import requests
 from tqdm import tqdm
 import tarfile
 import gzip
-import numpy as np
-import re
 import zipfile
+import re
 import shutil
+import secrets
+
+import requests
+from tqdm import tqdm
+import numpy as np
 
 from deeppavlov.core.common.log import get_logger
 
@@ -38,13 +41,22 @@ _MARK_DONE = '.done'
 tqdm.monitor_interval = 0
 
 
+def get_download_token():
+    token_file = Path.home() / '.deeppavlov'
+    if not token_file.exists():
+        token_file.write_text(secrets.token_urlsafe(32), encoding='utf8')
+
+    return token_file.read_text(encoding='utf8').strip()
+
+
 def simple_download(url: str, destination: [Path, str]):
     CHUNK = 32 * 1024
 
     destination = Path(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
 
-    r = requests.get(url, stream=True)
+    headers = {'dp-token': get_download_token()}
+    r = requests.get(url, stream=True, headers=headers)
     total_length = int(r.headers.get('content-length', 0))
 
     log.info('Downloading from {} to {}'.format(url, destination))
@@ -59,8 +71,8 @@ def simple_download(url: str, destination: [Path, str]):
                     f.write(chunk)
             if downloaded < total_length:
                 log.warn(f'Download stopped abruptly, trying to resume from {downloaded} to reach {total_length}')
-                resume_header = {'Range': f'bytes={downloaded}-'}
-                r = requests.get(url, headers=resume_header, stream=True)
+                headers['Range'] = f'bytes={downloaded}-'
+                r = requests.get(url, headers=headers, stream=True)
                 if total_length - downloaded != int(r.headers['content-length']):
                     raise RuntimeError('It looks like the server does not support resuming downloads')
             else:
