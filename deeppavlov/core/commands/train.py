@@ -239,6 +239,12 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
 
     train_config = dict(default_train_config, **train_config)
 
+    if 'train_metrics' in train_config:
+        train_metrics_functions = list(zip(train_config['train_metrics'],
+                                           get_metrics_by_names(train_config['train_metrics'])))
+    else:
+        train_metrics_functions = metrics_functions
+
     if train_config['metric_optimization'] == 'maximize':
         def improved(score, best):
             return score > best
@@ -283,7 +289,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                 examples += len(x)
 
                 if train_config['log_every_n_batches'] > 0 and i % train_config['log_every_n_batches'] == 0:
-                    metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in metrics_functions]
+                    metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in train_metrics_functions]
                     report = {
                         'epochs_done': epochs,
                         'batches_seen': i,
@@ -338,7 +344,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
 
             if train_config['log_every_n_epochs'] > 0 and epochs % train_config['log_every_n_epochs'] == 0\
                     and train_y_true:
-                metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in metrics_functions]
+                metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in train_metrics_functions]
                 report = {
                     'epochs_done': epochs,
                     'batches_seen': i,
