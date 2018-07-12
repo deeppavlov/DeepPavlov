@@ -100,9 +100,9 @@ PARAMS = {
         ("odqa/odqa_infer_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK]
     },
     "morpho_tagger":{
-        ("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger_hu", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger_hu", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_train_pymorphy.json",
-         "morpho_tagger_pymorphy", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+         "morpho_tagger_pymorphy", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
     }
 }
 
