@@ -6,10 +6,10 @@ set_deeppavlov_root({})
 data_path = expand_path('snips')
 
 path = '/home/mks/projects/DeepPavlov/deeppavlov/configs/my_configs/intents/intents_snips.json'
-exp_name = 'plot_test'
+exp_name = 'test'
 mode = 'train'
 root = '/home/mks/projects/DeepPavlov/experiments/'
-hyper_search = 'random'
+hyper_search = 'grid'
 sample_num = 10
 target_metric = None
 

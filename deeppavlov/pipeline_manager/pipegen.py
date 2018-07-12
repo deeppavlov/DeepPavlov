@@ -235,10 +235,13 @@ class PipeGen:
 
         def update(el):
             lst = []
-            if 'search' not in el.keys():
-                lst.append(el)
+            if el is not None:
+                if 'search' not in el.keys():
+                    lst.append(el)
+                else:
+                    lst.extend(self.grid_param_gen(el))
             else:
-                lst.extend(self.grid_param_gen(el))
+                lst.append(el)
             return lst
 
         for i, x in enumerate(self.structure):
