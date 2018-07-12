@@ -45,7 +45,7 @@ parser.add_argument("-b", "--batch-size", dest="batch_size", default=1, help="in
 parser.add_argument("-f", "--input-file", dest="file_path", default=None, help="Path to the input file", type=str)
 parser.add_argument("-d", "--download", action="store_true", help="download model components")
 
-parser.add_argument("-r", "--root", dest="root", default='./experiments',
+parser.add_argument("-r", "--root", dest="root", default='./download/experiments',
                     help="folder where you will save the results and control points", type=str)
 parser.add_argument("-hp", "--hyper", dest="hyper_search", default='grid',
                     help="type of hyper search 'grid' or 'random'", type=str)
