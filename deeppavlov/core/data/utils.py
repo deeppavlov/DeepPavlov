@@ -47,9 +47,8 @@ def simple_download(url: str, destination: [Path, str]):
     r = requests.get(url, stream=True)
     total_length = int(r.headers.get('content-length', 0))
 
+    log.info('Downloading from {} to {}'.format(url, destination))
     with destination.open('wb') as f, tqdm(total=total_length, unit='B', unit_scale=True) as pbar:
-        log.info('Downloading from {} to {}'.format(url, destination))
-
         done = False
         downloaded = 0
         while not done:
@@ -203,14 +202,23 @@ def download_decompress(url: str, download_path: [Path, str], extract_paths=None
             arch_file_path.unlink()
 
     for extract_path in extract_paths:
-        for f in extracted_path.iterdir():
-            if f.is_dir():
-                dest = str(extract_path / f.name)
-                shutil.rmtree(dest, ignore_errors=True)
-                shutil.copytree(str(f), dest)
+        for src in extracted_path.iterdir():
+            dest = extract_path / src.name
+            if src.is_dir():
+                copytree(src, dest)
             else:
                 extract_path.mkdir(parents=True, exist_ok=True)
-                shutil.copy(str(f), str(extract_path / f.name))
+                shutil.copy(str(src), str(dest))
+
+
+def copytree(src: Path, dest: Path):
+    dest.mkdir(parents=True, exist_ok=True)
+    for f in src.iterdir():
+        f_dest = dest / f.name
+        if f.is_dir():
+            copytree(f, f_dest)
+        else:
+            shutil.copy(str(f), str(f_dest))
 
 
 def load_vocab(vocab_path):
