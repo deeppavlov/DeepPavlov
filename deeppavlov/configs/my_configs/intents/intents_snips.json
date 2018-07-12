@@ -49,6 +49,14 @@
       ],
       [
         {
+        "in": ["x"],
+        "name": "str_lower",
+        "out": ["x"]
+        },
+        null
+      ],
+      [
+        {
           "id": "my_tokenizer",
           "name": "nltk_tokenizer",
           "tokenizer": "wordpunct_tokenize"

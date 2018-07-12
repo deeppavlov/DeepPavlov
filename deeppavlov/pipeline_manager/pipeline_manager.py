@@ -45,7 +45,6 @@ class PipelineManager:
         print('[ Experiment start - {0} pipes, will be run]'.format(self.pipeline_generator.len))
         exp_start_time = time()
         for i, pipe in enumerate(self.pipeline_generator()):
-            print("____________{}____________".format(i))
             # print progress
             if i != 0:
                 itime = normal_time(((time() - exp_start_time) / i) * (self.pipeline_generator.len - i))
@@ -62,8 +61,8 @@ class PipelineManager:
 
             if self.mode == 'train':
                 results = train_evaluate_model_from_dict(pipe, to_train=True, to_validate=True)
-            # elif self.mode == 'evaluate':
-            #     results = train_evaluate_model_from_dict(pipe, to_train=False, to_validate=False)
+            elif self.mode == 'evaluate':
+                results = train_evaluate_model_from_dict(pipe, to_train=False, to_validate=False)
             else:
                 raise ValueError("Only 'train' and 'evaluate' mode are available, but {0} was found.".format(self.mode))
 

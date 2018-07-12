@@ -86,10 +86,13 @@ class PipeGen:
         for x in self.structure:
             ln = []
             for y in x:
-                if "search" not in y.keys():
+                if y is None:
                     ln.append(False)
                 else:
-                    ln.append(True)
+                    if "search" not in y.keys():
+                        ln.append(False)
+                    else:
+                        ln.append(True)
             test.append(ln)
 
         zgen = product(*test)
@@ -112,22 +115,25 @@ class PipeGen:
 
     @staticmethod
     def get_p(z):
-        if 'search' in z.keys():
-            l_ = list()
-            for key, it in z.items():
-                if key == 'search':
-                    pass
-                else:
-                    if isinstance(it, list):
-                        l_.append(len(it))
-                    else:
-                        pass
-            p = 1
-            for q in l_:
-                p *= q
-            return p
-        else:
+        if z is None:
             return 1
+        else:
+            if 'search' in z.keys():
+                l_ = list()
+                for key, it in z.items():
+                    if key == 'search':
+                        pass
+                    else:
+                        if isinstance(it, list):
+                            l_.append(len(it))
+                        else:
+                            pass
+                p = 1
+                for q in l_:
+                    p *= q
+                return p
+            else:
+                return 1
 
     @staticmethod
     def grid_param_gen(conf):
@@ -192,9 +198,12 @@ class PipeGen:
             pipe = list(pipe)
 
             for conf in pipe:
-                if "search" in conf.keys():
-                    search = True
-                    break
+                if conf is None:
+                    pipe.remove(conf)
+                else:
+                    if "search" in conf.keys():
+                        search = True
+                        break
 
             if search:
                 ops_samples = {}
@@ -238,4 +247,10 @@ class PipeGen:
                 ln.extend(update(y))
             self.pipes.append(ln)
 
-        return product(*self.pipes)
+        lgen = product(*self.pipes)
+        for pipe in lgen:
+            pipe = list(pipe)
+            for conf in pipe:
+                if conf is None:
+                    pipe.remove(conf)
+            yield pipe
