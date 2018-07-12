@@ -100,9 +100,9 @@ PARAMS = {
         ("odqa/odqa_infer_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK]
     },
     "morpho_tagger":{
-        ("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger_hu", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_train_pymorphy.json",
-         "morpho_tagger", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+         "morpho_tagger_pymorphy", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     }
 }
 
@@ -125,7 +125,7 @@ def download_config(conf_file):
         src_file = test_src_dir / conf_file
 
     if not src_file.is_file():
-        raise RuntimeError('Unexisting config file {}'.format(conf_file))
+        raise RuntimeError('No config file {}'.format(conf_file))
 
     with src_file.open() as fin:
         config = json.load(fin)
@@ -137,7 +137,9 @@ def download_config(conf_file):
 
     config["deeppavlov_root"] = str(download_path)
 
-    with (test_configs_path / conf_file).open("w") as fout:
+    conf_file = test_configs_path / conf_file
+    conf_file.parent.mkdir(exist_ok=True, parents=True)
+    with (conf_file).open("w") as fout:
         json.dump(config, fout)
 
     # Download referenced config files
