@@ -12,7 +12,7 @@
     ],
     "pipe": [
       {
-        "config_path": "../deeppavlov/configs/odqa/ru_ranker_prod.json",
+        "config_path": "../deeppavlov/configs/ranking/ru_ranker_tfidf_wiki.json",
         "in": [
           "question_raw"
         ],
@@ -46,10 +46,14 @@
     ]
   },
   "metadata": {
+    "requirements": [
+      "../requirements/tf-gpu.txt"
+    ],
     "labels": {
       "server_utils": "ODQA"
     },
     "download": [
+      "http://lnsigo.mipt.ru/export/datasets/wikipedia/ruwiki.tar.gz",
       "http://lnsigo.mipt.ru/export/deeppavlov_data/ru_odqa.tar.gz",
       "http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_ru.tar.gz"
     ]

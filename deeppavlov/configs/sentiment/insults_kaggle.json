@@ -60,7 +60,7 @@
           "y_probas_dict"
         ],
         "main": true,
-        "name": "intent_model",
+        "name": "keras_classification_model",
         "save_path": "sentiment/insults_kaggle_v0",
         "load_path": "sentiment/insults_kaggle_v0",
         "classes": "#classes_vocab.keys()",
@@ -107,6 +107,10 @@
     "test_best": true
   },
   "metadata": {
+    "requirements": [
+      "../requirements/tf.txt",
+      "../requirements/fasttext.txt"
+    ],
     "labels": {
       "telegram_utils": "IntentModel",
       "server_utils": "KerasIntentModel"

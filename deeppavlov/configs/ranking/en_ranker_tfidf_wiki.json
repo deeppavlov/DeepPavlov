@@ -3,7 +3,7 @@
     "name": "sqlite_iterator",
     "data_dir": "odqa",
     "shuffle": false,
-    "data_url": "http://lnsigo.mipt.ru/export/datasets/wikipedia/wiki_test.db"
+    "data_url": "http://lnsigo.mipt.ru/export/datasets/wikipedia/enwiki.db"
   },
   "chainer": {
     "in": [
@@ -31,8 +31,8 @@
           "fit_on_batch": [
             "x"
           ],
-          "save_path": "odqa/wiki_tfidf_matrix_test.npz",
-          "load_path": "odqa/wiki_tfidf_matrix_test.npz",
+          "save_path": "odqa/enwiki_tfidf_matrix.npz",
+          "load_path": "odqa/enwiki_tfidf_matrix.npz",
           "tokenizer": {
             "name": "stream_spacy_tokenizer",
             "lemmas": true,
@@ -48,14 +48,18 @@
   "train": {
     "validate_best": false,
     "test_best": false,
-    "batch_size": 2
+    "batch_size": 10000
   },
   "metadata": {
+    "requirements": [
+      "../requirements/spacy.txt"
+    ],
     "labels": {
       "server_utils": "Ranker"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/odqa.tar.gz"
+      "http://lnsigo.mipt.ru/export/datasets/wikipedia/enwiki.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/en_odqa.tar.gz"
     ]
   }
 }

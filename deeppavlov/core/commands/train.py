@@ -22,12 +22,12 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import List, Callable, Tuple, Dict, Union
 
-from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root
+from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root, import_packages
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.registry import model as get_model
+from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.common.metrics_registry import get_metrics_by_names
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
@@ -100,6 +100,8 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
     if isinstance(config, (str, Path)):
         config = read_json(config)
     set_deeppavlov_root(config)
+
+    import_packages(config.get('metadata', {}).get('imports', []))
 
     dataset_config = config.get('dataset', None)
 
@@ -235,10 +237,17 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
         # 'show_examples': False,
 
         'validate_best': True,
-        'test_best': True
+        'test_best': True,
+        'tensorboard_log_dir': None,
     }
 
     train_config = dict(default_train_config, **train_config)
+
+    if 'train_metrics' in train_config:
+        train_metrics_functions = list(zip(train_config['train_metrics'],
+                                           get_metrics_by_names(train_config['train_metrics'])))
+    else:
+        train_metrics_functions = metrics_functions
 
     if train_config['metric_optimization'] == 'maximize':
         def improved(score, best):
@@ -262,6 +271,14 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
     losses = []
     start_time = time.time()
     break_flag = False
+
+    if train_config['tensorboard_log_dir'] is not None:
+        import tensorflow as tf
+        tb_log_dir = expand_path(train_config['tensorboard_log_dir'])
+
+        tb_train_writer = tf.summary.FileWriter(str(tb_log_dir / 'train_log'))
+        tb_valid_writer = tf.summary.FileWriter(str(tb_log_dir / 'valid_log'))
+
     try:
         while True:
             for x, y_true in iterator.gen_batches(train_config['batch_size']):
@@ -276,7 +293,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                 examples += len(x)
 
                 if train_config['log_every_n_batches'] > 0 and i % train_config['log_every_n_batches'] == 0:
-                    metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in metrics_functions]
+                    metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in train_metrics_functions]
                     report = {
                         'epochs_done': epochs,
                         'batches_seen': i,
@@ -284,10 +301,23 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                         'metrics': prettify_metrics(metrics),
                         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                     }
+
                     if losses:
                         report['loss'] = sum(losses)/len(losses)
                         losses = []
                     report = {'train': report}
+
+                    if train_config['tensorboard_log_dir'] is not None:
+                        for name, score in metrics:
+                            metric_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + name,
+                                                                            simple_value=score), ])
+                            tb_train_writer.add_summary(metric_sum, i)
+
+                        if losses:
+                            loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + 'loss',
+                                                                            simple_value=report['loss']), ])
+                            tb_train_writer.add_summary(loss_sum, i)
+
                     print(json.dumps(report, ensure_ascii=False))
                     train_y_true.clear()
                     train_y_predicted.clear()
@@ -318,7 +348,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
 
             if train_config['log_every_n_epochs'] > 0 and epochs % train_config['log_every_n_epochs'] == 0\
                     and train_y_true:
-                metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in metrics_functions]
+                metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in train_metrics_functions]
                 report = {
                     'epochs_done': epochs,
                     'batches_seen': i,
@@ -326,6 +356,21 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                     'metrics': prettify_metrics(metrics),
                     'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                 }
+                if losses:
+                    report['loss'] = sum(losses)/len(losses)
+                    losses = []
+
+                if train_config['tensorboard_log_dir'] is not None:
+                    for name, score in metrics:
+                        metric_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + name,
+                                                                        simple_value=score), ])
+                        tb_train_writer.add_summary(metric_sum, epochs)
+
+                    if losses:
+                        loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + 'loss',
+                                                                        simple_value=report['loss']), ])
+                        tb_train_writer.add_summary(loss_sum, epochs)
+
                 model.process_event(event_name='after_train_log', data=report)
                 report = {'train': report}
                 print(json.dumps(report, ensure_ascii=False))
@@ -340,6 +385,12 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                 report['train_examples_seen'] = examples
 
                 metrics = list(report['metrics'].items())
+
+                if train_config['tensorboard_log_dir'] is not None:
+                    for name, score in metrics:
+                        metric_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + name,
+                                                                        simple_value=score), ])
+                        tb_valid_writer.add_summary(metric_sum, epochs)
 
                 m_name, score = metrics[0]
                 if improved(score, best):

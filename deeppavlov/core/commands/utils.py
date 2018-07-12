@@ -50,3 +50,8 @@ def is_empty(d: Path) -> bool:
     Check if directory is empty.
     """
     return not bool(list(d.iterdir()))
+
+
+def import_packages(packages: list):
+    for package in packages:
+        __import__(package)
