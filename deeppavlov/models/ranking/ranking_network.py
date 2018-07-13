@@ -170,19 +170,6 @@ class RankingNetwork(metaclass=TfModelMeta):
                            return_sequences=ret_seq)
             return out_a, out_b
 
-    def euclidian_dist_output_shape(self, input_shape):
-        return (input_shape[0][0], 1)
-
-    def euclidian_dist(self, x_pair):
-        x1_norm = K.l2_normalize(x_pair[0], axis=1)
-        x2_norm = K.l2_normalize(x_pair[1], axis=1)
-        diff = subtract([x1_norm, x2_norm])
-        square = K.square(diff)
-        sum = K.sum(square, axis=1)
-        sum = K.clip(sum, min_value=1e-12, max_value=None)
-        dist = K.sqrt(sum)
-        return dist
-
     def triplet_loss(self, y_true, y_pred):
         """Triplet loss function"""
         return K.mean(K.maximum(self.margin - y_pred, 0.), axis=-1)
@@ -246,10 +233,20 @@ class RankingNetwork(metaclass=TfModelMeta):
             lstm_c = pooling_layer(lstm_c)
             lstm_r = pooling_layer(lstm_r)
 
-        dist = Lambda(self.similarity_dist)([lstm_c, lstm_r])
-        dense = Dense(1, activation='sigmoid', name="score_model")(dist)
+        if self.distance == "cos_similarity":
+            cosine_layer = Dot(normalize=True, axes=-1, name="score_model")
+            score = cosine_layer([lstm_c, lstm_r])
+            score = Lambda(lambda x: -x)(score)
+        elif self.distance == "euclidian":
+            dist_score = Lambda(self.euclidian_dist,
+                                output_shape=self.euclidian_dist_output_shape,
+                                name="score_model")
+            score = dist_score([lstm_c, lstm_r])
+        elif self.distance == "sigmoid":
+            dist = Lambda(self.diff_mult_dist)([lstm_c, lstm_r])
+            score = Dense(1, activation='sigmoid', name="score_model")(dist)
 
-        model = Model([context, response], dense)
+        model = Model([context, response], score)
         return model
 
     def triplet_model(self):
@@ -266,11 +263,26 @@ class RankingNetwork(metaclass=TfModelMeta):
         model = Model([c1, r1, c2, r2], score_diff)
         return model
 
-    def similarity_dist(self, inputs):
+    def diff_mult_dist(self, inputs):
         input1, input2 = inputs
         a = K.abs(input1-input2)
         b = Multiply()(inputs)
         return K.concatenate([input1, input2, a, b])
+
+    def euclidian_dist_output_shape(self, input_shape):
+        return (input_shape[0][0], 1)
+
+    def euclidian_dist(self, x_pair):
+        x1_norm = K.l2_normalize(x_pair[0], axis=1)
+        x2_norm = K.l2_normalize(x_pair[1], axis=1)
+        diff = subtract([x1_norm, x2_norm])
+        square = K.square(diff)
+        sum = K.sum(square, axis=1)
+        sum = K.clip(sum, min_value=1e-12, max_value=None)
+        dist = K.sqrt(sum)
+        return dist
+
+
 
     def train_on_batch(self, batch, y):
         batch = [x for el in batch for x in el]
