@@ -79,7 +79,7 @@ class RankingIterator:
                         x = [[context_response_pairs[i], positives[i], labels[i]]
                             for i in range(len(context_response_data))]
                     else:
-                        x = [[(context[i], el) for el in [response[i]] + negative_response[i]]
+                        x = [[(context[i], el) for el in [response[i]] + [negative_response[i]]]
                              for i in range(len(context_response_data))]
                     y = batch_size * [np.ones(self.num_negative_samples)]
                 elif self.type_of_model == 'duplet':
@@ -101,7 +101,7 @@ class RankingIterator:
     def create_neg_resp_rand(self, context_response_data, batch_size, data_type):
         sample_candidates = self.sample_candidates
         if sample_candidates == "pool":
-            negative_response_data = [random.choices(el["neg_pool"], k=self.num_negative_samples-1)
+            negative_response_data = [random.choice(el["neg_pool"])
                                       for el in context_response_data]
         elif sample_candidates == "global":
             candidates = []

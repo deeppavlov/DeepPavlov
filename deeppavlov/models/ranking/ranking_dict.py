@@ -53,7 +53,7 @@ class RankingDict(metaclass=ABCMeta):
         log.info("[initializing new `{}`]".format(self.__class__.__name__))
         if self.embedding_level == 'char' or self.embedding_level == 'token_and_char':
             self.build_int2char_vocab()
-        self.build_char2int_vocab()
+            self.build_char2int_vocab()
         self.build_int2tok_vocab()
         self.build_tok2int_vocab()
         self.build_context2toks_vocabulary()
@@ -65,7 +65,7 @@ class RankingDict(metaclass=ABCMeta):
         log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
         if self.embedding_level == 'char' or self.embedding_level == 'token_and_char':
             self.load_int2char()
-        self.build_char2int_vocab()
+            self.build_char2int_vocab()
         self.load_int2tok()
         self.build_tok2int_vocab()
         self.load_context2toks()
@@ -75,7 +75,8 @@ class RankingDict(metaclass=ABCMeta):
 
     def save(self):
         log.info("[saving `{}`]".format(self.__class__.__name__))
-        self.save_int2char()
+        if self.embedding_level == 'char' or self.embedding_level == 'token_and_char':
+            self.save_int2char()
         self.save_int2tok()
         self.save_context2toks()
         self.save_response2toks()

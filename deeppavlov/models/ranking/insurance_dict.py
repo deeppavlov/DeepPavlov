@@ -6,10 +6,16 @@ from deeppavlov.models.ranking.ranking_dict import RankingDict
 class InsuranceDict(RankingDict):
 
     def __init__(self, vocabs_path, save_path, load_path,
-                 max_sequence_length, padding="post", truncating="pre"):
+                 max_sequence_length, padding="post", truncating="pre",
+                 max_token_length=None, embedding_level=None,
+                 char_pad="post", char_trunc="post",
+                 tok_dynamic_batch=False, char_dynamic_batch=False):
 
         super().__init__(save_path, load_path,
-              max_sequence_length, padding, truncating)
+                         max_sequence_length, padding, truncating,
+                         max_token_length, embedding_level,
+                         char_pad, char_trunc,
+                         tok_dynamic_batch, char_dynamic_batch)
 
         vocabs_path = expand_path(vocabs_path)
         self.int2tok_fname = Path(vocabs_path) / 'vocabulary'
@@ -55,3 +61,6 @@ class InsuranceDict(RankingDict):
             contexts.append(c.split(' '))
         self.context2toks_vocab = {el[0]: [self.int2tok_vocab[int(x.split('_')[1])]
                                    for x in el[1]] for el in enumerate(contexts)}
+
+    def build_int2char_vocab(self):
+        pass
