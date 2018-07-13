@@ -274,7 +274,7 @@ And now all parts together:
   "train": {
     "epochs": 100,
     "batch_size": 64,
-    "metrics": ["ner_f1", "per_item_accuracy"],
+    "metrics": ["ner_f1", "per_token_accuracy"],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
     "log_every_n_batches": 100,
