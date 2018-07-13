@@ -13,7 +13,7 @@ node('gpu') {
                 . .venv-$BUILD_NUMBER/bin/activate
                 sed -i "s/stream=True/stream=False/g" deeppavlov/core/data/utils.py
                 python setup.py develop
-                pip install -r requirements/tf-gpu.txt
+                pip install -r dp_requirements/tf-gpu.txt
                 pip install -r requirements-dev.txt
             """
         }
