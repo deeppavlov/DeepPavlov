@@ -38,7 +38,7 @@
   },
   "metadata": {
     "requirements": [
-      "../requirements/tf.txt"
+      "../dp_requirements/tf.txt"
     ],
     "labels": {
       "telegram_utils": "NERModel",

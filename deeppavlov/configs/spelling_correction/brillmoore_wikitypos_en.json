@@ -59,7 +59,7 @@
   },
   "metadata": {
     "requirements": [
-      "../requirements/spelling.txt"
+      "../dp_requirements/spelling.txt"
     ],
     "labels": {
       "telegram_utils": "ErrorModel",
