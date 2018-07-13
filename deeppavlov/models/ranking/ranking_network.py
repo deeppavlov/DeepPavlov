@@ -236,7 +236,8 @@ class RankingNetwork(metaclass=TfModelMeta):
         if self.distance == "cos_similarity":
             cosine_layer = Dot(normalize=True, axes=-1, name="score_model")
             score = cosine_layer([lstm_c, lstm_r])
-            score = Lambda(lambda x: -x)(score)
+            # score = Lambda(lambda x: -x)(score)
+            score = Lambda(lambda x: K.constant(1., shape=K.shape(x)) - x)(score)
         elif self.distance == "euclidian":
             dist_score = Lambda(self.euclidian_dist,
                                 output_shape=self.euclidian_dist_output_shape,
