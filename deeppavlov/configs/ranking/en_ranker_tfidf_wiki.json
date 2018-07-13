@@ -52,7 +52,7 @@
   },
   "metadata": {
     "requirements": [
-      "../requirements/spacy.txt"
+      "../dp_requirements/spacy.txt"
     ],
     "labels": {
       "server_utils": "Ranker"

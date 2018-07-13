@@ -25,7 +25,11 @@ def install(*packages):
                                    *[re.sub(r'\s', '', package) for package in packages]],
                                    env=os.environ.copy())
     if any(_spacy_re.match(package) for package in packages):
-        subprocess.check_call([sys.executable, '-m', 'spacy', 'download', 'en'], env=os.environ.copy())
+        try:
+            import spacy
+            spacy.load('en')
+        except IOError:
+            subprocess.check_call([sys.executable, '-m', 'spacy', 'download', 'en'], env=os.environ.copy())
     return result
 
 

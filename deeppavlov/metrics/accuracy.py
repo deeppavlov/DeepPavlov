@@ -88,6 +88,7 @@ def per_item_accuracy(y_true, y_predicted):
     correct = sum([y1 == y2 for y1, y2 in zip(y_true, y_predicted)])
     return correct / examples_len if examples_len else 0
 
+
 @register_metric('per_token_accuracy')
 def per_token_accuracy(y_true, y_predicted):
     y_true = list(itertools.chain(*y_true))
