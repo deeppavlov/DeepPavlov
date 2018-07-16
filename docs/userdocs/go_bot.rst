@@ -132,7 +132,7 @@ Config parameters:
    +  ``slot_vals`` — list of slots that should be tracked
 
 
--  ``network parameters`` - see :doc:`GoalOrientedBotNetwork </apiref/skills/go_bot>` for details.
+-  ``network parameters`` - see :doc:`GoalOrientedBotNetwork </apiref/models/go_bot>` for details.
 -  ``slot_filler`` — model that predicts slot values for a given utterance
 
    +  ``name`` — slot filler name (``"dstc_slotfilling"`` recommended, for implementation see ``deeppavlov.models.ner``)
