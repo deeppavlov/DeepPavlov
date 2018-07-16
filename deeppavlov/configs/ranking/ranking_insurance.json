@@ -38,10 +38,11 @@
         "type_of_weights": "shared",
         "hidden_dim": 300,
         "learning_rate": 1e-3,
+        "distance": "cos_similarity",
         "margin": 0.1,
         "save_path": "insurance_ranking/model_weights.h5",
         "load_path": "insurance_ranking/model_weights.h5",
-        "update_embeddings": "online",
+        "update_embeddings": "no",
         "interact_pred_num": 3
       }
     ],

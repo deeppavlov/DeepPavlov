@@ -308,7 +308,7 @@ class RankingModel(NNModel):
             b = self.make_batch(batch)
             for el in b:
                 yp = self._net.predict_score_on_batch(el)
-                y_pred.append(yp)
+                y_pred.append(np.expand_dims(yp, axis=1))
             y_pred = np.hstack(y_pred)
             return y_pred
 
