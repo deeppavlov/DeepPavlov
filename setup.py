@@ -51,7 +51,7 @@ with open(os.path.join(__location__, 'deeppavlov/package_meta.py')) as f:
 
 setup(
     name='deeppavlov',
-    packages=find_packages(exclude=('tests',)),
+    packages=find_packages(exclude=('tests',)) + ['dp_requirements'],
     version=meta['__version__'],
     description='An open source library for building end-to-end dialog systems and training chatbots.',
     long_description=readme(),

@@ -106,7 +106,7 @@
   },
   "metadata": {
     "requirements": [
-      "../requirements/tf-gpu.txt"
+      "../dp_requirements/tf-gpu.txt"
     ],
     "labels": {
       "telegram_utils": "SquadModel",
