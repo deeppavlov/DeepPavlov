@@ -53,15 +53,15 @@ setup(
     name='deeppavlov',
     packages=find_packages(exclude=('tests',)) + ['dp_requirements'],
     version=meta['__version__'],
-    description='An open source library for building end-to-end dialog systems and training chatbots.',
+    description=meta['__description__'],
     long_description=readme(),
-    long_description_content_type="text/markdown",
+    long_description_content_type='text/markdown',
     author=meta['__author__'],
     author_email='info@ipavlov.ai',
     license='Apache License, Version 2.0',
     url='https://github.com/deepmipt/DeepPavlov',
     download_url='https://github.com/deepmipt/DeepPavlov/archive/' + meta['__version__'] + '.tar.gz',
-    keywords=['NLP', 'NER', 'SQUAD', 'Intents', 'Chatbot'],
+    keywords=meta['__keywords__'],
     include_package_data=True,
     **read_requirements()
 )
