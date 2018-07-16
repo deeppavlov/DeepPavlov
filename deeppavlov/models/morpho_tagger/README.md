@@ -6,7 +6,15 @@
 It is an implementation of neural morphological tagger from
 [Heigold et al., 2017. An extensive empirical evaluation of character-based morphological tagging for 14 languages](http://www.aclweb.org/anthology/E17-1048).
 We distribute the model trained on ru_syntagrus corpus of [Universal Dependencies project](www.universaldependencies.org).
-If you want to use it from scratch, do the following:
+Our model achieves the state-of-the-art performance among open source systems:
+
+| Model | Tag accuracy | Sentence accuracy|
+|:----- |:-------------:|:-------------:|
+| UD1.2 | 93.57 | 43.04 |
+| Our (basic) | 95.17 | 50.58 |
+| Our (+Pymorphy) | 96.23 | 58.00 |
+
+If you want to use our models from scratch, do the following:
 
 1. Download data
 ```
@@ -17,19 +25,27 @@ To perform all downloads in runtime you can also run all subsequent commands wit
 ```
 python -m deeppavlov.models.morpho_tagger morpho_ru_syntagrus_predict
 ```
-A subdirectory ``results`` will be created in your current working directory and predictions will be written to the file ```ud_ru_syntagrus_test.res``` in it.
+to use a basic model, or
+```
+python -m deeppavlov.models.morpho_tagger morpho_ru_syntagrus_predict_pymorphy
+```
+to invoke a model which additionally utilizes information from [Pymorphy2](http://pymorphy2.readthedocs.io) library.
+
+A subdirectory ``results`` will be created in your current working directory 
+and predictions will be written to the file ```ud_ru_syntagrus_test.res``` in it.
 3. To evaluate ru_syntagrus model on ru_syntagrus test subset, run
 ```
 python -m deeppavlov evaluate morpho_ru_syntagrus_train
 ```
-4. To retrain model on ru_syntagrus dataset, run
+4. To retrain model on ru_syntagrus dataset, run one of the following (the first is for Pymorphy-enriched model)
 ```
+python -m deeppavlov train morpho_ru_syntagrus_train_pymorphy
 python -m deeppavlov train morpho_ru_syntagrus_train
 ```
 Be careful, one epoch takes 8-60 minutes depending on your GPU.
 5. To tag Russian sentences from stdin, run
 ```
-python -m deeppavlov interact morpho_ru_syntagrus_predict
+python -m deeppavlov interact morpho_ru_syntagrus_predict_pymorphy
 ```
 
 Read the detailed readme below.
@@ -105,6 +121,11 @@ The character-level part implements the model from
 First it embeds the characters into dense vectors, then passes these vectors through multiple
 parallel convolutional layers and concatenates the output of these convolutions. The convolution
 output is propagated through a highway layer to obtain the final word representation.
+
+You can optionally use a morphological dictionary during tagging. In this case our model collects
+a 0/1 vector with ones corresponding to the dictionary tags of a current word. This vector is
+passed through a one-layer perceptron to obtain an embedding of dictionary information. 
+This embedding is concatenated with the output of character-level network.
 
 As a word-level network we utilize a Bidirectional LSTM, its outputs are projected through a dense
 layer with a softmax activation. In principle, several BiLSTM layers may be stacked as well
@@ -238,8 +259,45 @@ The second part is the tag vocabulary which transforms tag labels the model shou
       },
   ```
   
+  If you want to utilize external morphological knowledge, you can do it in two ways. 
+  The first is to use [DictionaryVectorizer](../../models/vectorizers/dictionary_vectorizer.py#L18).
+  DictionaryVectorizer is instantiated from a dictionary file. Each line of a dictionary file contains two columns: 
+  a word and a space-separated list of its possible tags. Tags can be in any possible format. The config part for
+  DictionaryVectorizer looks as
+  
+ ```
+    {
+        "id": "dictionary_vectorizer",
+        "name": "dictionary_vectorizer",
+        "load_path": PATH_TO_YOUR_DICTIONARY_FILE,
+        "save_path": PATH_TO_YOUR_DICTIONARY_FILE,
+        "in": ["x"],
+        "out": ["x_possible_tags"]
+    }
+ ```
+  
+  The second variant for external morphological dictionary, available only for Russian, 
+  is [Pymorphy2](http://pymorphy2.readthedocs.io). In this case the vectorizer list all Pymorphy2 tags
+  for a given word and transforms them to UD2.0 format using 
+  [russian-tagsets](https://github.com/kmike/russian-tagsets) library. Possible UD2.0 tags
+  are listed in a separate distributed with the library. This part of the config look as
+  (see [config example](../../configs/morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_train_pymorphy.json))
+  
+  ```json
+      {
+        "id": "pymorphy_vectorizer",
+        "name": "pymorphy_vectorizer",
+        "save_path": "morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
+        "load_path": "morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
+        "max_pymorphy_variants": 5,
+        "in": ["x"],
+        "out": ["x_possible_tags"]
+      }
+  ```
+  
   The next part performs the tagging itself. Together with general parameters it describes 
   the input parameters of [CharacterTagger](../../models/morpho_tagger/network.py#L33) class.
+  
   ```
     {
         "in": ["x_processed"],
@@ -260,9 +318,14 @@ The second part is the tag vocabulary which transforms tag labels the model shou
     }
  ```
  
+  When an additional vectorizer is used, the first line is changed to
+  `"in": ["x_processed", "x_possible_tags"]` and an additional parameter 
+  `"word_vectorizers": [["#pymorphy_vectorizer.dim", 128]]` is appended.
+  
 General parameters are:
 - **`in`** - data to be used during training. "x_processed" means
-that network obtains the output of the lowercase_preprocessor as its input.
+that network obtains the output of the lowercase_preprocessor as its input. 
+"x_possible_tags" refers to the output of external morphological dictionary.
 - **`in_y`** - the target to be used as gold labels during training.
 - **`out`** - the name of the model output.
 - **`name`** - registered name of the class [CharacterTagger](../../models/morpho_tagger/network.py#L33).
@@ -291,6 +354,9 @@ min(self.char_filter_multiple * *width*, 200) filters.
 - **`word_lstm_units`** - number of units in word-level LSTM (default=128). It can be a list if there
 are multiple layers.
 - **`word_dropout`** - ratio of dropout before word-level LSTM (default=0.0).
+-- **`word_vectorizers`** - the list of word vectorizers specified in the previous sections of the **chainer**.
+Each item in the list contains a reference to the dimension of the corresponding vectorizer and the size of
+output embedding.
 - **`regularizer`** - the weight of l2-regularizer for output probabilities (default=None). None means
 that no regularizer is applied.
 - **`verbose`** - the level of verbosity during training. If it is positive, prints model summary.

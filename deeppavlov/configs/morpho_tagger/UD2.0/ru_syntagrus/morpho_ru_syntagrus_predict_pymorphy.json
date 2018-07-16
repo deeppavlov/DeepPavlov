@@ -75,6 +75,9 @@
     "outfile": "results/ud_ru_syntagrus_test.res"
   },
   "metadata": {
+    "requirements": [
+      "../requirements/tf.txt", "../requirements/morpho_tagger.txt"
+    ],
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/morpho_tagger.tar.gz",
       {
