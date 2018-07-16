@@ -67,13 +67,19 @@ class RankingNetwork(metaclass=TfModelMeta):
             self.obj_model = self.duplet
         self.obj_model.compile(loss=self.loss, optimizer=self.optimizer)
         self.score_model = self.duplet
-        self.context_embedding = self.duplet.get_layer(name="pooling").get_output_at(0)
-        self.response_embedding = self.duplet.get_layer(name="pooling").get_output_at(1)
-
         self.context_embedding = Model(inputs=self.duplet.inputs,
                                  outputs=self.duplet.get_layer(name="pooling").get_output_at(0))
         self.response_embedding = Model(inputs=self.duplet.inputs,
                                  outputs=self.duplet.get_layer(name="pooling").get_output_at(1))
+
+        # self.score_model = Model(inputs=[self.obj_model.inputs[0], self.obj_model.inputs[1]],
+        #                          outputs=self.obj_model.get_layer(name="score_model").get_output_at(0))
+        # self.context_embedding = Model(inputs=[self.obj_model.inputs[0], self.obj_model.inputs[1]],
+        #                          outputs=self.obj_model.get_layer(name="pooling").get_output_at(0))
+        # self.response_embedding = Model(inputs=[self.obj_model.inputs[2], self.obj_model.inputs[3]],
+        #                          outputs=self.obj_model.get_layer(name="pooling").get_output_at(1))
+
+
 
     def _config_session(self):
         """
@@ -236,17 +242,13 @@ class RankingNetwork(metaclass=TfModelMeta):
         if self.distance == "cos_similarity":
             cosine_layer = Dot(normalize=True, axes=-1, name="score_model")
             score = cosine_layer([lstm_c, lstm_r])
-            # score = Lambda(lambda x: -x)(score)
-            score = Lambda(lambda x: K.constant(1., shape=K.shape(x)) - x)(score)
+            score = Lambda(lambda x: 1. - x)(score)
         elif self.distance == "euclidian":
-            dist_score = Lambda(self.euclidian_dist,
-                                output_shape=self.euclidian_dist_output_shape,
-                                name="score_model")
+            dist_score = Lambda(lambda x: K.expand_dims(self.euclidian_dist(x)), name="score_model")
             score = dist_score([lstm_c, lstm_r])
         elif self.distance == "sigmoid":
             dist = Lambda(self.diff_mult_dist)([lstm_c, lstm_r])
             score = Dense(1, activation='sigmoid', name="score_model")(dist)
-
         model = Model([context, response], score)
         return model
 
@@ -269,9 +271,6 @@ class RankingNetwork(metaclass=TfModelMeta):
         a = K.abs(input1-input2)
         b = Multiply()(inputs)
         return K.concatenate([input1, input2, a, b])
-
-    def euclidian_dist_output_shape(self, input_shape):
-        return (input_shape[0][0], 1)
 
     def euclidian_dist(self, x_pair):
         x1_norm = K.l2_normalize(x_pair[0], axis=1)
@@ -356,6 +355,220 @@ class RankingNetwork(metaclass=TfModelMeta):
                     embs.append(self.predict_embedding_on_batch(b, type=type))
                 embs = np.vstack(embs)
                 return embs
+
+    # def triplet_model(self):
+    #     if self.embedding_level is None or self.embedding_level == 'token':
+    #         if self.use_matrix:
+    #             context1 = Input(shape=(self.max_sequence_length,))
+    #             response_positive = Input(shape=(self.max_sequence_length,))
+    #             context2 = Input(shape=(self.max_sequence_length,))
+    #             response_negative = Input(shape=(self.max_sequence_length,))
+    #             emb_layer_a, emb_layer_b = self.embedding_layer()
+    #             emb_c1 = emb_layer_a(context1)
+    #             emb_c2 = emb_layer_a(context2)
+    #             emb_rp = emb_layer_b(response_positive)
+    #             emb_rn = emb_layer_b(response_negative)
+    #         else:
+    #             context1 = Input(shape=(self.max_sequence_length, self.embedding_dim,))
+    #             response_positive = Input(shape=(self.max_sequence_length, self.embedding_dim,))
+    #             context2 = Input(shape=(self.max_sequence_length, self.embedding_dim,))
+    #             response_negative = Input(shape=(self.max_sequence_length, self.embedding_dim,))
+    #             emb_c1 = context1
+    #             emb_c2 = context2
+    #             emb_rp = response_positive
+    #             emb_rn = response_negative
+    #     elif self.embedding_level == 'char':
+    #         context1 = Input(shape=(self.max_sequence_length, self.max_token_length,))
+    #         response_positive = Input(shape=(self.max_sequence_length, self.max_token_length,))
+    #         context2 = Input(shape=(self.max_sequence_length, self.max_token_length,))
+    #         response_negative = Input(shape=(self.max_sequence_length, self.max_token_length,))
+    #
+    #         char_cnn_layer = keras_layers.char_emb_cnn_func(n_characters=self.chars_num,
+    #                                                         char_embedding_dim=self.char_emb_dim)
+    #         emb_c1 = char_cnn_layer(context1)
+    #         emb_c2 = char_cnn_layer(context2)
+    #         emb_rp = char_cnn_layer(response_positive)
+    #         emb_rn = char_cnn_layer(response_negative)
+    #
+    #     elif self.embedding_level == 'token_and_char':
+    #         context1 = Input(shape=(self.max_sequence_length, self.max_token_length,))
+    #         context2 = Input(shape=(self.max_sequence_length, self.max_token_length,))
+    #         response_positive = Input(shape=(self.max_sequence_length, self.max_token_length,))
+    #         response_negative = Input(shape=(self.max_sequence_length, self.max_token_length,))
+    #
+    #         if self.use_matrix:
+    #             c_tok1 = Lambda(lambda x: x[:,:,0])(context1)
+    #             c_tok2 = Lambda(lambda x: x[:,:,0])(context2)
+    #             rp_tok = Lambda(lambda x: x[:,:,0])(response_positive)
+    #             rn_tok = Lambda(lambda x: x[:,:,0])(response_negative)
+    #             emb_layer_a, emb_layer_b = self.embedding_layer()
+    #             emb_c1 = emb_layer_a(c_tok1)
+    #             emb_c2 = emb_layer_a(c_tok2)
+    #             emb_rp = emb_layer_b(rp_tok)
+    #             emb_rn = emb_layer_b(rn_tok)
+    #             c_char1 = Lambda(lambda x: x[:,:,1:])(context1)
+    #             c_char2 = Lambda(lambda x: x[:,:,1:])(context2)
+    #             rp_char = Lambda(lambda x: x[:,:,1:])(response_positive)
+    #             rn_char = Lambda(lambda x: x[:,:,1:])(response_negative)
+    #         else:
+    #             c_tok1 = Lambda(lambda x: x[:,:,:self.embedding_dim])(context1)
+    #             c_tok2 = Lambda(lambda x: x[:,:,:self.embedding_dim])(context2)
+    #             rp_tok = Lambda(lambda x: x[:,:,:self.embedding_dim])(response_positive)
+    #             rn_tok = Lambda(lambda x: x[:,:,:self.embedding_dim])(response_negative)
+    #             emb_c1 = c_tok1
+    #             emb_c2 = c_tok2
+    #             emb_rp = rp_tok
+    #             emb_rn = rn_tok
+    #             c_char1 = Lambda(lambda x: x[:,:,self.embedding_dim:])(context1)
+    #             c_char2 = Lambda(lambda x: x[:,:,self.embedding_dim:])(context2)
+    #             rp_char = Lambda(lambda x: x[:,:,self.embedding_dim:])(response_positive)
+    #             rn_char = Lambda(lambda x: x[:,:,self.embedding_dim:])(response_negative)
+    #
+    #         char_cnn_layer = keras_layers.char_emb_cnn_func(n_characters=self.chars_num,
+    #                                                         char_embedding_dim=self.char_emb_dim)
+    #
+    #         emb_c_char1 = char_cnn_layer(c_char1)
+    #         emb_c_char2 = char_cnn_layer(c_char2)
+    #         emb_rp_char = char_cnn_layer(rp_char)
+    #         emb_rn_char = char_cnn_layer(rn_char)
+    #
+    #         emb_c1 = Lambda(lambda x: K.concatenate(x, axis=-1))([emb_c1, emb_c_char1])
+    #         emb_c2 = Lambda(lambda x: K.concatenate(x, axis=-1))([emb_c2, emb_c_char2])
+    #         emb_rp = Lambda(lambda x: K.concatenate(x, axis=-1))([emb_rp, emb_rp_char])
+    #         emb_rn = Lambda(lambda x: K.concatenate(x, axis=-1))([emb_rn, emb_rn_char])
+    #
+    #     lstm_layer_a, lstm_layer_b = self.lstm_layer()
+    #     lstm_c1 = lstm_layer_a(emb_c1)
+    #     lstm_c2 = lstm_layer_a(emb_c2)
+    #     lstm_rp = lstm_layer_b(emb_rp)
+    #     lstm_rn = lstm_layer_b(emb_rn)
+    #     if self.pooling:
+    #         pooling_layer = GlobalMaxPooling1D(name="pooling")
+    #         lstm_c1 = pooling_layer(lstm_c1)
+    #         lstm_c2 = pooling_layer(lstm_c2)
+    #         lstm_rp = pooling_layer(lstm_rp)
+    #         lstm_rn = pooling_layer(lstm_rn)
+    #     if self.distance == "euclidian":
+    #         dist_score = Lambda(lambda x: K.expand_dims(self.euclidian_dist(x)), name="score_model")
+    #         dist_pos = dist_score([lstm_c1, lstm_rp])
+    #         dist_neg = dist_score([lstm_c2, lstm_rn])
+    #     elif self.distance == "cos_similarity":
+    #         cosine_layer = Dot(normalize=True, axes=-1, name="score_model")
+    #         dist_pos = cosine_layer([lstm_c1, lstm_rp])
+    #         dist_pos = Lambda(lambda x: 1. - x)(dist_pos)
+    #         dist_neg = cosine_layer([lstm_c2, lstm_rn])
+    #         dist_neg = Lambda(lambda x: 1. - x)(dist_neg)
+    #     score_diff = Subtract()([dist_neg, dist_pos])
+    #     model = Model([context1, response_positive, context2, response_negative], score_diff)
+    #     return model
+    # def triplet_model(self):
+    #     if self.embedding_level is None or self.embedding_level == 'token':
+    #         if self.use_matrix:
+    #             context1 = Input(shape=(self.max_sequence_length,))
+    #             response_positive = Input(shape=(self.max_sequence_length,))
+    #             context2 = Input(shape=(self.max_sequence_length,))
+    #             response_negative = Input(shape=(self.max_sequence_length,))
+    #             emb_layer_a, emb_layer_b = self.embedding_layer()
+    #             emb_c1 = emb_layer_a(context1)
+    #             emb_c2 = emb_layer_a(context2)
+    #             emb_rp = emb_layer_b(response_positive)
+    #             emb_rn = emb_layer_b(response_negative)
+    #         else:
+    #             context1 = Input(shape=(self.max_sequence_length, self.embedding_dim,))
+    #             response_positive = Input(shape=(self.max_sequence_length, self.embedding_dim,))
+    #             context2 = Input(shape=(self.max_sequence_length, self.embedding_dim,))
+    #             response_negative = Input(shape=(self.max_sequence_length, self.embedding_dim,))
+    #             emb_c1 = context1
+    #             emb_c2 = context2
+    #             emb_rp = response_positive
+    #             emb_rn = response_negative
+    #     elif self.embedding_level == 'char':
+    #         context1 = Input(shape=(self.max_sequence_length, self.max_token_length,))
+    #         response_positive = Input(shape=(self.max_sequence_length, self.max_token_length,))
+    #         context2 = Input(shape=(self.max_sequence_length, self.max_token_length,))
+    #         response_negative = Input(shape=(self.max_sequence_length, self.max_token_length,))
+    #
+    #         char_cnn_layer = keras_layers.char_emb_cnn_func(n_characters=self.chars_num,
+    #                                                         char_embedding_dim=self.char_emb_dim)
+    #         emb_c1 = char_cnn_layer(context1)
+    #         emb_c2 = char_cnn_layer(context2)
+    #         emb_rp = char_cnn_layer(response_positive)
+    #         emb_rn = char_cnn_layer(response_negative)
+    #
+    #     elif self.embedding_level == 'token_and_char':
+    #         context1 = Input(shape=(self.max_sequence_length, self.max_token_length,))
+    #         context2 = Input(shape=(self.max_sequence_length, self.max_token_length,))
+    #         response_positive = Input(shape=(self.max_sequence_length, self.max_token_length,))
+    #         response_negative = Input(shape=(self.max_sequence_length, self.max_token_length,))
+    #
+    #         if self.use_matrix:
+    #             c_tok1 = Lambda(lambda x: x[:,:,0])(context1)
+    #             c_tok2 = Lambda(lambda x: x[:,:,0])(context2)
+    #             rp_tok = Lambda(lambda x: x[:,:,0])(response_positive)
+    #             rn_tok = Lambda(lambda x: x[:,:,0])(response_negative)
+    #             emb_layer_a, emb_layer_b = self.embedding_layer()
+    #             emb_c1 = emb_layer_a(c_tok1)
+    #             emb_c2 = emb_layer_a(c_tok2)
+    #             emb_rp = emb_layer_b(rp_tok)
+    #             emb_rn = emb_layer_b(rn_tok)
+    #             c_char1 = Lambda(lambda x: x[:,:,1:])(context1)
+    #             c_char2 = Lambda(lambda x: x[:,:,1:])(context2)
+    #             rp_char = Lambda(lambda x: x[:,:,1:])(response_positive)
+    #             rn_char = Lambda(lambda x: x[:,:,1:])(response_negative)
+    #         else:
+    #             c_tok1 = Lambda(lambda x: x[:,:,:self.embedding_dim])(context1)
+    #             c_tok2 = Lambda(lambda x: x[:,:,:self.embedding_dim])(context2)
+    #             rp_tok = Lambda(lambda x: x[:,:,:self.embedding_dim])(response_positive)
+    #             rn_tok = Lambda(lambda x: x[:,:,:self.embedding_dim])(response_negative)
+    #             emb_c1 = c_tok1
+    #             emb_c2 = c_tok2
+    #             emb_rp = rp_tok
+    #             emb_rn = rn_tok
+    #             c_char1 = Lambda(lambda x: x[:,:,self.embedding_dim:])(context1)
+    #             c_char2 = Lambda(lambda x: x[:,:,self.embedding_dim:])(context2)
+    #             rp_char = Lambda(lambda x: x[:,:,self.embedding_dim:])(response_positive)
+    #             rn_char = Lambda(lambda x: x[:,:,self.embedding_dim:])(response_negative)
+    #
+    #         char_cnn_layer = keras_layers.char_emb_cnn_func(n_characters=self.chars_num,
+    #                                                         char_embedding_dim=self.char_emb_dim)
+    #
+    #         emb_c_char1 = char_cnn_layer(c_char1)
+    #         emb_c_char2 = char_cnn_layer(c_char2)
+    #         emb_rp_char = char_cnn_layer(rp_char)
+    #         emb_rn_char = char_cnn_layer(rn_char)
+    #
+    #         emb_c1 = Lambda(lambda x: K.concatenate(x, axis=-1))([emb_c1, emb_c_char1])
+    #         emb_c2 = Lambda(lambda x: K.concatenate(x, axis=-1))([emb_c2, emb_c_char2])
+    #         emb_rp = Lambda(lambda x: K.concatenate(x, axis=-1))([emb_rp, emb_rp_char])
+    #         emb_rn = Lambda(lambda x: K.concatenate(x, axis=-1))([emb_rn, emb_rn_char])
+    #
+    #     lstm_layer_a, lstm_layer_b = self.lstm_layer()
+    #     lstm_c1 = lstm_layer_a(emb_c1)
+    #     lstm_c2 = lstm_layer_a(emb_c2)
+    #     lstm_rp = lstm_layer_b(emb_rp)
+    #     lstm_rn = lstm_layer_b(emb_rn)
+    #     if self.pooling:
+    #         pooling_layer = GlobalMaxPooling1D(name="pooling")
+    #         lstm_c1 = pooling_layer(lstm_c1)
+    #         lstm_c2 = pooling_layer(lstm_c2)
+    #         lstm_rp = pooling_layer(lstm_rp)
+    #         lstm_rn = pooling_layer(lstm_rn)
+    #     if self.distance == "euclidian":
+    #         dist_score = Lambda(lambda x: K.expand_dims(self.euclidian_dist(x)), name="score_model")
+    #         dist_pos = dist_score([lstm_c1, lstm_rp])
+    #         dist_neg = dist_score([lstm_c2, lstm_rn])
+    #     elif self.distance == "cos_similarity":
+    #         cosine_layer = Dot(normalize=True, axes=-1, name="score_model")
+    #         dist_pos = cosine_layer([lstm_c1, lstm_rp])
+    #         dist_pos = Lambda(lambda x: 1. - x)(dist_pos)
+    #         dist_neg = cosine_layer([lstm_c2, lstm_rn])
+    #         dist_neg = Lambda(lambda x: 1. - x)(dist_neg)
+    #     score_diff = Subtract()([dist_neg, dist_pos])
+    #     model = Model([context1, response_positive, context2, response_negative], score_diff)
+    #     return model
+
+
+
 
     # def triplet_hinge_loss_model(self):
     #     if self.embedding_level is None or self.embedding_level == 'token':
