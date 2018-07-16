@@ -77,7 +77,7 @@
   },
   "metadata": {
     "requirements": [
-      "../requirements/tf.txt", "../requirements/morpho_tagger.txt"
+      "../dp_requirements/tf.txt", "../dp_requirements/morpho_tagger.txt"
     ],
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/morpho_tagger.tar.gz",
