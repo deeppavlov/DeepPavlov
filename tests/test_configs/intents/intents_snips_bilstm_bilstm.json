@@ -105,8 +105,8 @@
   },
   "metadata": {
     "requirements": [
-      "../requirements/tf.txt",
-      "../requirements/fasttext.txt"
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/fasttext.txt"
     ],
     "labels": {
       "telegram_utils": "IntentModel"

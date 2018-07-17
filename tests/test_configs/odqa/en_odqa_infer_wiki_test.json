@@ -12,13 +12,33 @@
     ],
     "pipe": [
       {
-        "config_path": "../deeppavlov/configs/odqa/en_ranker_prod.json",
+        "name": "tfidf_ranker",
         "in": [
           "question_raw"
         ],
         "out": [
-          "doc_ids"
-        ]
+          "doc_ids",
+          "doc_scores"
+        ],
+        "fit_on_batch": [
+          "questions_raw"
+        ],
+        "vectorizer": {
+          "name": "hashing_tfidf_vectorizer",
+          "fit_on_batch": [
+            "questions_raw"
+          ],
+          "save_path": "odqa/en_wiki_test_tfidf.npz",
+          "load_path": "odqa/en_wiki_test_tfidf.npz",
+          "tokenizer": {
+            "name": "stream_spacy_tokenizer",
+            "lemmas": true,
+            "ngram_range": [
+              1,
+              2
+            ]
+          }
+        }
       },
       {
         "name": "wiki_sqlite_vocab",
@@ -30,7 +50,7 @@
         ],
         "data_dir": "odqa",
         "shuffle": false,
-        "data_url": "http://lnsigo.mipt.ru/export/datasets/wikipedia/enwiki.db"
+        "data_url": "http://lnsigo.mipt.ru/export/datasets/wikipedia/wiki_test.db"
       },
       {
         "config_path": "../deeppavlov/configs/squad/squad.json",
@@ -47,14 +67,15 @@
   },
   "metadata": {
     "requirements": [
-      "../requirements/tf-gpu.txt",
-      "../requirements/spacy.txt"
+      "../dp_requirements/tf-gpu.txt",
+      "../dp_requirements/spacy.txt"
     ],
     "labels": {
       "server_utils": "ODQA"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/en_odqa.tar.gz",
+      "http://lnsigo.mipt.ru/export/datasets/wikipedia/wiki_test.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/odqa_test.tar.gz",
       "http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_1.1.tar.gz"
     ]
   }

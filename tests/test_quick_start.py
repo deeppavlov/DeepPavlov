@@ -1,8 +1,10 @@
 import io
 import json
+import os
 from pathlib import Path
 import shutil
 import sys
+from tempfile import TemporaryDirectory
 
 import pytest
 import pexpect
@@ -14,6 +16,7 @@ from deeppavlov.core.data.utils import get_all_elems_from_json
 from utils.server_utils.server import get_server_params, SERVER_CONFIG_FILENAME
 
 
+cache_dir = None
 tests_dir = Path(__file__, '..').resolve()
 test_configs_path = tests_dir / "deeppavlov" / "configs"
 src_dir = tests_dir.parent / "deeppavlov" / "configs"
@@ -97,15 +100,16 @@ PARAMS = {
     "elmo": {
         ("elmo/elmo_ruwiki_tok_num_400M.json", "elmo_ruwiki_tok_num_400M", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
-    "ranking": {("ranking/ranking_insurance.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
+
+    "ranking": {("ranking/ranking_insurance.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/en_ranker_tfidf_wiki_test.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
     "squad": {
         ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): [FOUR_ARGUMENTS_INFER_CHECK]},
     "odqa": {
-        ("odqa/ranker_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK],
-        ("odqa/odqa_infer_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK]
+        ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "morpho_tagger/UD2.0/hu":
         {("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]}
@@ -166,10 +170,17 @@ def setup_module():
         for (conf_file, _, _), _ in conf_dict.items():
             download_config(conf_file)
 
+    global cache_dir
+    cache_dir = TemporaryDirectory()
+    os.environ['DP_CACHE_DIR'] = cache_dir.name
+
 
 def teardown_module():
     shutil.rmtree(str(test_configs_path.parent), ignore_errors=True)
     shutil.rmtree(str(download_path), ignore_errors=True)
+
+    global cache_dir
+    cache_dir.cleanup()
 
 
 @pytest.mark.parametrize("model,conf_file,model_dir,mode", TEST_GRID, scope='class')
@@ -200,7 +211,8 @@ class TestQuickStart(object):
                 p.expect(">> ")
                 if expected_response is not None:
                     actual_response = p.readline().decode().strip()
-                    assert expected_response == actual_response, f"Error in interacting with {model_dir} ({conf_file}): {query}"
+                    assert expected_response == actual_response,\
+                        f"Error in interacting with {model_dir} ({conf_file}): {query}"
 
             p.expect("::")
             p.sendline("quit")
@@ -305,7 +317,7 @@ class TestQuickStart(object):
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
             logfile = io.BytesIO(b'')
-            _, exitstatus = pexpect.run(sys.executable + " -m deeppavlov.evolve " + str(c) + " --iterations 1 --p_size 1",
+            _, exitstatus = pexpect.run(sys.executable + f" -m deeppavlov.evolve {c} --iterations 1 --p_size 1",
                                         timeout=None, withexitstatus=True,
                                         logfile=logfile)
             if exitstatus != 0:

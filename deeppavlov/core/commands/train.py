@@ -145,7 +145,8 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
     train_config = {
         'metrics': ['accuracy'],
         'validate_best': to_validate,
-        'test_best': True
+        'test_best': True,
+        'show_examples': False
     }
 
     try:
@@ -178,7 +179,8 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
         if train_config['validate_best']:
             report = {
                 'valid': _test_model(model, metrics_functions, iterator,
-                                     train_config.get('batch_size', -1), 'valid')
+                                     train_config.get('batch_size', -1), 'valid',
+                                     show_examples=train_config['show_examples'])
             }
 
             print(json.dumps(report, ensure_ascii=False))
@@ -186,7 +188,8 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
         if train_config['test_best']:
             report = {
                 'test': _test_model(model, metrics_functions, iterator,
-                                    train_config.get('batch_size', -1), 'test')
+                                    train_config.get('batch_size', -1), 'test',
+                                    show_examples=train_config['show_examples'])
             }
 
             print(json.dumps(report, ensure_ascii=False))
@@ -194,7 +197,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
 
 def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
                 iterator: DataLearningIterator, batch_size=-1, data_type='valid',
-                start_time: float=None) -> Dict[str, Union[int, OrderedDict, str]]:
+                start_time: float=None, show_examples=False) -> Dict[str, Union[int, OrderedDict, str]]:
     if start_time is None:
         start_time = time.time()
 
@@ -212,6 +215,17 @@ def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
         'metrics': prettify_metrics(metrics),
         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
     }
+
+    if show_examples:
+        try:
+            report['examples'] = [{
+                'x': x_item,
+                'y_predicted': y_predicted_item,
+                'y_true': y_true_item
+            } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
+        except NameError:
+            log.warning(f'Could not log examples for {data_type}, assuming it\'s empty')
+
     return report
 
 
@@ -230,7 +244,6 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
 
         'log_every_n_batches': 0,
         'log_every_n_epochs': 0,
-        # 'show_examples': False,
 
         'validate_best': True,
         'test_best': True,
@@ -238,6 +251,12 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
     }
 
     train_config = dict(default_train_config, **train_config)
+
+    if 'train_metrics' in train_config:
+        train_metrics_functions = list(zip(train_config['train_metrics'],
+                                           get_metrics_by_names(train_config['train_metrics'])))
+    else:
+        train_metrics_functions = metrics_functions
 
     if train_config['metric_optimization'] == 'maximize':
         def improved(score, best):
@@ -283,7 +302,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                 examples += len(x)
 
                 if train_config['log_every_n_batches'] > 0 and i % train_config['log_every_n_batches'] == 0:
-                    metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in metrics_functions]
+                    metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in train_metrics_functions]
                     report = {
                         'epochs_done': epochs,
                         'batches_seen': i,
@@ -291,6 +310,16 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                         'metrics': prettify_metrics(metrics),
                         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                     }
+
+                    if train_config['show_examples']:
+                        try:
+                            report['examples'] = [{
+                                'x': x_item,
+                                'y_predicted': y_predicted_item,
+                                'y_true': y_true_item
+                            } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
+                        except NameError:
+                            log.warning('Could not log examples as y_predicted is not defined')
 
                     if losses:
                         report['loss'] = sum(losses)/len(losses)
@@ -338,7 +367,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
 
             if train_config['log_every_n_epochs'] > 0 and epochs % train_config['log_every_n_epochs'] == 0\
                     and train_y_true:
-                metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in metrics_functions]
+                metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in train_metrics_functions]
                 report = {
                     'epochs_done': epochs,
                     'batches_seen': i,
@@ -346,6 +375,17 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                     'metrics': prettify_metrics(metrics),
                     'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                 }
+
+                if train_config['show_examples']:
+                    try:
+                        report['examples'] = [{
+                            'x': x_item,
+                            'y_predicted': y_predicted_item,
+                            'y_true': y_true_item
+                        } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
+                    except NameError:
+                        log.warning('Could not log examples')
+
                 if losses:
                     report['loss'] = sum(losses)/len(losses)
                     losses = []
@@ -369,7 +409,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
 
             if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
                 report = _test_model(model, metrics_functions, iterator,
-                                     train_config['batch_size'], 'valid', start_time)
+                                     train_config['batch_size'], 'valid', start_time, train_config['show_examples'])
                 report['epochs_done'] = epochs
                 report['batches_seen'] = i
                 report['train_examples_seen'] = examples
