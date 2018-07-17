@@ -95,110 +95,13 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
     return chainer
 
 
-def train_evaluate_model_from_config(config_path: str, to_train=True, to_validate=True) -> None:
-    config = read_json(config_path)
-    set_deeppavlov_root(config)
-
-    dataset_config = config.get('dataset', None)
-
-    if dataset_config:
-        config.pop('dataset')
-        ds_type = dataset_config['type']
-        if ds_type == 'classification':
-            reader = {'name': 'basic_classification_reader'}
-            iterator = {'name': 'basic_classification_iterator'}
-            config['dataset_reader'] = {**dataset_config, **reader}
-            config['dataset_iterator'] = {**dataset_config, **iterator}
-        else:
-            raise Exception("Unsupported dataset type: {}".format(ds_type))
-
-    data = []
-    reader_config = config.get('dataset_reader', None)
-
-    if reader_config:
-        reader_config = config['dataset_reader']
-        if 'class' in reader_config:
-            c = reader_config.pop('class')
-            try:
-                module_name, cls_name = c.split(':')
-                reader = getattr(importlib.import_module(module_name), cls_name)()
-            except ValueError:
-                e = ConfigError('Expected class description in a `module.submodules:ClassName` form, but got `{}`'
-                                .format(c))
-                log.exception(e)
-                raise e
-        else:
-            reader = get_model(reader_config.pop('name'))()
-        data_path = expand_path(reader_config.pop('data_path', ''))
-        data = reader.read(data_path, **reader_config)
+def train_evaluate_model_from_config(config_path: Union[str, Dict], to_train=True,
+                                     to_validate=True) -> Union[Dict, None]:
+    if isinstance(config_path, Dict):
+        config = config_path
     else:
-        log.warning("No dataset reader is provided in the JSON config.")
+        config = read_json(config_path)
 
-    iterator_config = config['dataset_iterator']
-    iterator: Union[DataLearningIterator, DataFittingIterator] = from_params(iterator_config,
-                                                                             data=data)
-
-    train_config = {
-        'metrics': ['accuracy'],
-        'validate_best': to_validate,
-        'test_best': True
-    }
-
-    try:
-        train_config.update(config['train'])
-    except KeyError:
-        log.warning('Train config is missing. Populating with default values')
-
-    metrics_functions = list(zip(train_config['metrics'], get_metrics_by_names(train_config['metrics'])))
-
-    if to_train:
-        if 'chainer' in config:
-            model = fit_chainer(config, iterator)
-        else:
-            vocabs = config.get('vocabs', {})
-            for vocab_param_name, vocab_config in vocabs.items():
-                v: Estimator = from_params(vocab_config, mode='train')
-                vocabs[vocab_param_name] = _fit(v, iterator, None)
-
-            model_config = config['model']
-            model = from_params(model_config, vocabs=vocabs, mode='train')
-
-        if callable(getattr(model, 'train_on_batch', None)):
-            _train_batches(model, iterator, train_config, metrics_functions)
-        elif callable(getattr(model, 'fit_batches', None)):
-            _fit_batches(model, iterator, train_config)
-        elif callable(getattr(model, 'fit', None)):
-            _fit(model, iterator, train_config)
-        elif not isinstance(model, Chainer):
-            log.warning('Nothing to train')
-
-    if train_config['validate_best'] or train_config['test_best']:
-        # try:
-        #     model_config['load_path'] = model_config['save_path']
-        # except KeyError:
-        #     log.warning('No "save_path" parameter for the model, so "load_path" will not be renewed')
-        model = build_model_from_config(config, load_trained=True)
-        log.info('Testing the best saved model')
-
-        if train_config['validate_best']:
-            report = {
-                'valid': _test_model(model, metrics_functions, iterator,
-                                     train_config.get('batch_size', -1), 'valid')
-            }
-
-            print(json.dumps(report, ensure_ascii=False))
-
-        if train_config['test_best']:
-            report = {
-                'test': _test_model(model, metrics_functions, iterator,
-                                    train_config.get('batch_size', -1), 'test')
-            }
-
-            print(json.dumps(report, ensure_ascii=False))
-
-
-def train_evaluate_model_from_dict(config: dict, to_train=True,
-                                   to_validate=True) -> Dict[str, Union[int, OrderedDict, str]]:
     set_deeppavlov_root(config)
 
     dataset_config = config.get('dataset', None)
@@ -284,16 +187,25 @@ def train_evaluate_model_from_dict(config: dict, to_train=True,
         log.info('Testing the best saved model')
 
         if train_config['validate_best']:
-            report['valid'] = _test_model(model, metrics_functions, iterator,
-                                          train_config.get('batch_size', -1), 'valid')
+            report = {
+                'valid': _test_model(model, metrics_functions, iterator,
+                                     train_config.get('batch_size', -1), 'valid')
+            }
+
             print(json.dumps(report, ensure_ascii=False))
 
         if train_config['test_best']:
-            report['test'] = _test_model(model, metrics_functions, iterator,
-                                         train_config.get('batch_size', -1), 'test')
+            report = {
+                'test': _test_model(model, metrics_functions, iterator,
+                                    train_config.get('batch_size', -1), 'test')
+            }
+
             print(json.dumps(report, ensure_ascii=False))
 
-    return report
+    if isinstance(config_path, Dict):
+        return report
+    else:
+        return None
 
 
 def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],

@@ -4,7 +4,7 @@ from os.path import join
 from copy import copy
 
 from deeppavlov.pipeline_manager.pipegen import PipeGen
-from deeppavlov.core.commands.train import train_evaluate_model_from_dict
+from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.pipeline_manager.utils import normal_time
 from deeppavlov.pipeline_manager.logger import Logger
 from deeppavlov.pipeline_manager.utils import results_visualization
@@ -58,9 +58,9 @@ class PipelineManager:
             pipe_start = time()
 
             if self.mode == 'train':
-                results = train_evaluate_model_from_dict(pipe, to_train=True, to_validate=True)
+                results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
             elif self.mode == 'evaluate':
-                results = train_evaluate_model_from_dict(pipe, to_train=False, to_validate=False)
+                results = train_evaluate_model_from_config(pipe, to_train=False, to_validate=False)
             else:
                 raise ValueError("Only 'train' and 'evaluate' mode are available, but {0} was found.".format(self.mode))
 
