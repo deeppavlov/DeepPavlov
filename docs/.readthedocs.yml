@@ -3,5 +3,8 @@
 build:
   image: latest
 
+formats: []
+
 python:
+  pip_install: true
   version: 3.6
