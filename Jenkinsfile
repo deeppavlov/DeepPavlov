@@ -11,11 +11,9 @@ node('gpu') {
             sh """
                 virtualenv --python=python3 ".venv-$BUILD_NUMBER"
                 . .venv-$BUILD_NUMBER/bin/activate
-                sed -ri 's/^ *tensorflow *(=|<|>|\$)/tensorflow-gpu\\1/g' requirements.txt
                 sed -i "s/stream=True/stream=False/g" deeppavlov/core/data/utils.py
                 python setup.py develop
-                pip install http://lnsigo.mipt.ru/export/en_core_web_sm-2.0.0.tar.gz
-                python -m spacy link en_core_web_sm en --force
+                pip install -r dp_requirements/tf-gpu.txt
                 pip install -r requirements-dev.txt
             """
         }

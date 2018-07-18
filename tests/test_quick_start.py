@@ -1,7 +1,10 @@
 import io
 import json
+import os
 from pathlib import Path
 import shutil
+import sys
+from tempfile import TemporaryDirectory
 
 import pytest
 import pexpect
@@ -13,6 +16,7 @@ from deeppavlov.core.data.utils import get_all_elems_from_json
 from utils.server_utils.server import get_server_params, SERVER_CONFIG_FILENAME
 
 
+cache_dir = None
 tests_dir = Path(__file__, '..').resolve()
 test_configs_path = tests_dir / "deeppavlov" / "configs"
 src_dir = tests_dir.parent / "deeppavlov" / "configs"
@@ -20,7 +24,8 @@ test_src_dir = tests_dir / "test_configs"
 download_path = tests_dir / "download"
 
 TEST_MODES = ['IP',  # test_interacting_pretrained_model
-              'TI'  # test_consecutive_training_and_interacting
+              'TI',  # test_consecutive_training_and_interacting
+              'E'    # test_evolving
               ]
 
 ALL_MODES = ('IP', 'TI')
@@ -58,7 +63,8 @@ PARAMS = {
         ("intents/intents_dstc2.json", "intents", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_dstc2_big.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
-    "snips": {("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+    "snips": {
+        ("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_snips_bigru.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_snips_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -71,6 +77,9 @@ PARAMS = {
         ("sentiment/insults_kaggle.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("sentiment/sentiment_twitter.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("sentiment/sentiment_ag_news.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "evolution": {
+        ("evolution/evolve_intents_snips.json", "evolution", ('E',)): None
     },
     "sample": {
         ("intents/intents_sample_csv.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -88,15 +97,15 @@ PARAMS = {
                 ("moderate price range", "{'pricerange': 'moderate'}")
             ]
     },
-    "ranking": {("ranking/ranking_insurance.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
+    "ranking": {("ranking/ranking_insurance.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/en_ranker_tfidf_wiki_test.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
     "squad": {
         ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): [FOUR_ARGUMENTS_INFER_CHECK]},
     "odqa": {
-        ("odqa/ranker_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK],
-        ("odqa/odqa_infer_test.json", "odqa", ()): [ONE_ARGUMENT_INFER_CHECK]
+        ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "morpho_tagger/UD2.0/hu":
         {("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]}
@@ -157,20 +166,37 @@ def setup_module():
         for (conf_file, _, _), _ in conf_dict.items():
             download_config(conf_file)
 
+    global cache_dir
+    cache_dir = TemporaryDirectory()
+    os.environ['DP_CACHE_DIR'] = cache_dir.name
+
 
 def teardown_module():
     shutil.rmtree(str(test_configs_path.parent), ignore_errors=True)
     shutil.rmtree(str(download_path), ignore_errors=True)
 
+    global cache_dir
+    cache_dir.cleanup()
+
 
 @pytest.mark.parametrize("model,conf_file,model_dir,mode", TEST_GRID, scope='class')
 class TestQuickStart(object):
+    @staticmethod
+    def install(conf_file):
+        logfile = io.BytesIO(b'')
+        _, exitstatus = pexpect.run(sys.executable + " -m deeppavlov install " + str(conf_file), timeout=None,
+                                    withexitstatus=True,
+                                    logfile=logfile)
+        if exitstatus != 0:
+            logfile.seek(0)
+            raise RuntimeError('Installing process of {} returned non-zero exit code: \n{}'
+                               .format(conf_file, ''.join((line.decode() for line in logfile.readlines()))))
 
     @staticmethod
     def interact(conf_file, model_dir, qr_list=None):
         qr_list = qr_list or []
         logfile = io.BytesIO(b'')
-        p = pexpect.spawn("python3", ["-m", "deeppavlov", "interact", str(conf_file)], timeout=None,
+        p = pexpect.spawn(sys.executable, ["-m", "deeppavlov", "interact", str(conf_file)], timeout=None,
                           logfile=logfile)
         try:
             for *query, expected_response in qr_list:  # works until the first failed query
@@ -181,7 +207,8 @@ class TestQuickStart(object):
                 p.expect(">> ")
                 if expected_response is not None:
                     actual_response = p.readline().decode().strip()
-                    assert expected_response == actual_response, f"Error in interacting with {model_dir} ({conf_file}): {query}"
+                    assert expected_response == actual_response,\
+                        f"Error in interacting with {model_dir} ({conf_file}): {query}"
 
             p.expect("::")
             p.sendline("quit")
@@ -209,10 +236,10 @@ class TestQuickStart(object):
         post_payload = {}
         for arg_name in model_args_names:
             arg_value = str(' '.join(['qwerty'] * 10))
-            post_payload[arg_name] = arg_value
+            post_payload[arg_name] = [arg_value]
 
         logfile = io.BytesIO(b'')
-        p = pexpect.spawn("python3", ["-m", "deeppavlov", "riseapi", str(conf_file)], timeout=None,
+        p = pexpect.spawn(sys.executable, ["-m", "deeppavlov", "riseapi", str(conf_file)], timeout=None,
                           logfile=logfile)
         try:
             p.expect(url_base)
@@ -235,6 +262,7 @@ class TestQuickStart(object):
     def test_interacting_pretrained_model(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
             config_file_path = str(test_configs_path.joinpath(conf_file))
+            self.install(config_file_path)
             deep_download(['-test', '-c', config_file_path])
 
             self.interact(test_configs_path / conf_file, model_dir, PARAMS[model][(conf_file, model_dir, mode)])
@@ -257,17 +285,41 @@ class TestQuickStart(object):
 
             if 'IP' not in mode:
                 config_path = str(test_configs_path.joinpath(conf_file))
+                self.install(config_path)
                 deep_download(['-test', '-c', config_path])
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
             logfile = io.BytesIO(b'')
-            _, exitstatus = pexpect.run("python3 -m deeppavlov train " + str(c), timeout=None, withexitstatus=True,
+            _, exitstatus = pexpect.run(sys.executable + " -m deeppavlov train " + str(c), timeout=None, withexitstatus=True,
                                         logfile=logfile)
             if exitstatus != 0:
                 logfile.seek(0)
                 raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
                                    .format(model_dir, ''.join((line.decode() for line in logfile.readlines()))))
             self.interact(c, model_dir)
+
+            shutil.rmtree(str(download_path), ignore_errors=True)
+        else:
+            pytest.skip("Unsupported mode: {}".format(mode))
+
+    def test_evolving(self, model, conf_file, model_dir, mode):
+        if 'E' in mode:
+            c = test_configs_path / conf_file
+            model_path = download_path / model_dir
+
+            if 'IP' not in mode and 'TI' not in mode:
+                config_path = str(test_configs_path.joinpath(conf_file))
+                deep_download(['-test', '-c', config_path])
+            shutil.rmtree(str(model_path),  ignore_errors=True)
+
+            logfile = io.BytesIO(b'')
+            _, exitstatus = pexpect.run(sys.executable + f" -m deeppavlov.evolve {c} --iterations 1 --p_size 1",
+                                        timeout=None, withexitstatus=True,
+                                        logfile=logfile)
+            if exitstatus != 0:
+                logfile.seek(0)
+                raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
+                                   .format(model_dir, ''.join((line.decode() for line in logfile.readlines()))))
 
             shutil.rmtree(str(download_path), ignore_errors=True)
         else:

@@ -95,6 +95,11 @@
     "show_examples": false
   },
   "metadata": {
+    "requirements": [
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/fasttext.txt",
+      "../dp_requirements/spacy.txt"
+    ],
     "labels": {
       "telegram_utils": "GoalOrientedBot",
       "server_utils": "GoalOrientedBot"

@@ -58,6 +58,9 @@
     "test_best": true
   },
   "metadata": {
+    "requirements": [
+      "../dp_requirements/spelling.txt"
+    ],
     "labels": {
       "telegram_utils": "ErrorModel",
       "server_utils": "ErrorModel"
