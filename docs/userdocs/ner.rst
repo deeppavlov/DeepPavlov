@@ -14,12 +14,12 @@ sequence.*
 
 For NER task there are some common types of entities used as tags:
 
-- persons
-- locations
-- organizations
-- expressions of time
-- quantities
-- monetary values
+-  persons
+-  locations
+-  organizations
+-  expressions of time
+-  quantities
+-  monetary values
 
 Furthermore, to distinguish adjacent entities with the same tag many
 applications use BIO tagging scheme. Here "B" denotes beginning of an
@@ -194,7 +194,7 @@ pre-processing:
           },
     ]
 
-Module str\_lower performs lowercasing. Module lazy\_tokenizer performes
+Module str\_lower performs lowercasing. Module lazy\_tokenizer performs
 tokenization if the elements of the batch are strings but not tokens.
 The mask module prepares masks for the network. It serves to cope with
 different lengths inputs inside the batch. The mask is a matrix filled
@@ -491,9 +491,11 @@ Entity Recognition*\ " https://arxiv.org/pdf/1709.09686.pdf, which is
 inspired by LSTM+CRF architecture from
 https://arxiv.org/pdf/1603.01360.pdf.
 
-Bi-LSTM architecture of NER network was tested on three datasets: -
-Gareev corpus [5] (obtainable by request to authors) - FactRuEval 2016
-[6] - Persons-1000 [7]
+Bi-LSTM architecture of NER network was tested on three datasets:
+
+-  Gareev corpus [5] (obtainable by request to authors)
+-  FactRuEval 2016 [6]
+-  Persons-1000 [7]
 
 The F1 measure for our model along with the results of other published
 solutions are provided in the table below:
