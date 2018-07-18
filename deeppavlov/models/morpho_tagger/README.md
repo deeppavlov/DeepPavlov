@@ -260,7 +260,7 @@ The second part is the tag vocabulary which transforms tag labels the model shou
   ```
   
   If you want to utilize external morphological knowledge, you can do it in two ways. 
-  The first is to use [DictionaryVectorizer](../../models/vectorizers/dictionary_vectorizer.py#L18).
+  The first is to use [DictionaryVectorizer](../vectorizers/word_vectorizer.py#L18).
   DictionaryVectorizer is instantiated from a dictionary file. Each line of a dictionary file contains two columns: 
   a word and a space-separated list of its possible tags. Tags can be in any possible format. The config part for
   DictionaryVectorizer looks as

@@ -143,7 +143,6 @@ class Chainer(Component):
         res = [mem[k] for k in to_return]
         if len(res) == 1:
             return res[0]
-        ### зачем??????
         return list(zip(*res))
 
     def _predict_as_component(self, *args):

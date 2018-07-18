@@ -5,17 +5,45 @@ from typing import List, Dict, Generator, Tuple, Any, AnyStr
 
 import numpy as np
 
-from sortedcontainers import SortedListWithKey
 from pymorphy2 import MorphAnalyzer
 from russian_tagsets import converters
 
 from deeppavlov.core.models.serializable import Serializable
-from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
 
 
+class WordIndexVectorizer(Serializable):
+    """
+    A basic class for custom word-level vectorizers
+    """
+
+    def __init__(self, save_path, load_path, **kwargs):
+        super().__init__(save_path, load_path, **kwargs)
+
+    @property
+    def dim(self):
+        raise NotImplementedError("You should implement dim property in your WordIndexVectorizer subclass.")
+
+    def _get_word_indexes(self, word: AnyStr) -> List:
+        """
+        Transforms a word to corresponding vector of indexes
+        """
+        raise NotImplementedError("You should implement get_word_indexes function "
+                                  "in your WordIndexVectorizer subclass.")
+
+    def __call__(self, data: List):
+        if isinstance(data[0], str):
+            data = [[x for x in re.split("(\w+|[,.])", elem) if x.strip() != ""] for elem in data]
+        max_length = max(len(x) for x in data)
+        answer = np.zeros(shape=(len(data), max_length, self.dim), dtype=int)
+        for i, sent in enumerate(data):
+            for j, word in enumerate(sent):
+                answer[i, j][self._get_word_indexes(word)] = 1
+        return answer
+
+
 @register("dictionary_vectorizer")
-class DictionaryVectorizer(Serializable):
+class DictionaryVectorizer(WordIndexVectorizer):
     """
     Transforms words into 0-1 vector of its possible tags, read from a vocabulary file.
     The format of the vocabulary must be
@@ -37,8 +65,7 @@ class DictionaryVectorizer(Serializable):
         return len(self._t2i)
 
     def save(self):
-        save_path = str(self.save_path)
-        with open(save_path, "w", encoding="utf8") as fout:
+        with self.save_path.open("w", encoding="utf8") as fout:
             for word, curr_labels in sorted(self.word_tag_mapping.items()):
                 curr_labels = [self._i2t[index] for index in curr_labels]
                 curr_labels = [x for x in curr_labels if x != self.unk_token]
@@ -46,27 +73,24 @@ class DictionaryVectorizer(Serializable):
         return self
 
     def load(self):
-        if isinstance(self.load_path, str):
-            load_path = pathlib.Path(self.load_path)
-            if load_path.is_dir():
-                load_path = [str(x) for x in load_path.iterdir() if x.is_file()]
-            else:
-                load_path = [str(load_path)]
-        else:
-            load_path = [str(x) for x in self.load_path]
+        if not isinstance(self.load_path, list):
+            self.load_path = [self.load_path]
+        for i, path in enumerate(self.load_path):
+            if isinstance(path, str):
+                self.load_path[i] = pathlib.Path(path)
         labels_by_words = defaultdict(set)
-        for infile in load_path:
-            with open(infile, "r", encoding="utf8") as fin:
+        for infile in self.load_path:
+            with infile.open("r", encoding="utf8") as fin:
                 for line in fin:
                     line = line.strip()
                     if line.count("\t") != 1:
                         continue
                     word, labels = line.split("\t")
                     labels_by_words[word].update(labels.split())
-        self._train(labels_by_words)
+        self._initialize(labels_by_words)
         return self
 
-    def _train(self, labels_by_words : Dict):
+    def _initialize(self, labels_by_words : Dict):
         self._i2t = [self.unk_token] if self.unk_token is not None else []
         self._t2i = defaultdict(lambda: self.unk_token)
         freq = defaultdict(int)
@@ -85,19 +109,12 @@ class DictionaryVectorizer(Serializable):
             self.word_tag_mapping[word] = [x for x in labels if x is not None]
         return self
 
-    def __call__(self, data: List):
-        if isinstance(data[0], str):
-            data = [[x for x in re.split("(\w+|[,.])", elem) if x.strip() != ""] for elem in data]
-        max_length = max(len(x) for x in data)
-        answer = np.zeros(shape=(len(data), max_length, self.dim), dtype=int)
-        for i, sent in enumerate(data):
-            for j, word in enumerate(sent):
-                answer[i, j][self.word_tag_mapping[word]] = 1
-        return answer
+    def _get_word_indexes(self, word: AnyStr):
+        return self.word_tag_mapping[word]
 
 
 @register("pymorphy_vectorizer")
-class PymorphyVectorizer(Serializable):
+class PymorphyVectorizer(WordIndexVectorizer):
     """
         Transforms russian words into 0-1 vector of its possible Universal Dependencies tags.
         Tags are obtained using Pymorphy analyzer (pymorphy2.readthedocs.io)
@@ -130,14 +147,12 @@ class PymorphyVectorizer(Serializable):
         return len(self._t2i)
 
     def save(self):
-        save_path = str(self.save_path)
-        with open(save_path, "r", encoding="utf8") as fout:
+        with self.save_path.open("w", encoding="utf8") as fout:
             fout.write("\n".join(self._i2t))
 
     def load(self):
-        load_path = str(self.load_path)
         self._i2t = []
-        with open(load_path, "r", encoding="utf8") as fin:
+        with self.load_path.open("r", encoding="utf8") as fin:
             for line in fin:
                 line = line.strip()
                 if line == "":
@@ -172,16 +187,6 @@ class PymorphyVectorizer(Serializable):
                 start = child
             self._data[start] = code
         return self
-
-    def __call__(self, data: List):
-        if isinstance(data[0], str):
-            data = [[x for x in re.split("(\w+|[,.])", elem) if x.strip() != ""] for elem in data]
-        max_length = max(len(x) for x in data)
-        answer = np.zeros(shape=(len(data), max_length, self.dim), dtype=int)
-        for i, sent in enumerate(data):
-            for j, word in enumerate(sent):
-                answer[i, j][self._get_word_indexes(word)] = 1
-        return answer
 
     def find_compatible(self, tag):
         if " " in tag and "_" not in tag:

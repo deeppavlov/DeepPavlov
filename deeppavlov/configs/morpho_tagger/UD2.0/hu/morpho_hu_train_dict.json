@@ -39,6 +39,7 @@
       {
         "id": "dictionary_vectorizer",
         "name": "dictionary_vectorizer",
+        "save_path": "/home/alexeysorokin/data/DeepPavlov/download/UD2.0_dict",
         "load_path": "/home/alexeysorokin/data/DeepPavlov/download/UD2.0_dict",
         "in": ["x"],
         "out": ["x_possible_tags"]

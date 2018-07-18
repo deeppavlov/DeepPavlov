@@ -105,13 +105,12 @@ class MorphoTaggerWrapper(NNModel):
 
         """
         if len(args) > 2:
-            # data, labels = list(args[:-1]), args[-1]
             data, labels = [list(x) for x in args[:-1]], list(args[-1])
         else:
             data, labels = args
         self._net.train_on_batch(data, labels, **self.train_parameters)
 
-    def __call__(self, x_batch, *args, **kwargs):
+    def __call__(self, *x_batch, **kwargs):
         """
         Predicts answers on batch elements.
 
@@ -119,7 +118,7 @@ class MorphoTaggerWrapper(NNModel):
             instance: a batch to predict answers on
 
         """
-        if len(args) > 0:
-            x_batch = [x_batch] + list(args)
+        # if len(args) > 0:
+        #     x_batch = [x_batch] + list(args)
         return self._net.predict_on_batch(x_batch, **kwargs)
 
