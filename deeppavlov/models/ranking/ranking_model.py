@@ -148,6 +148,13 @@ class RankingModel(NNModel):
             y = np.ones((len(c), len(x[0][1])))
         else:
             b = self.make_batch(x)
+            for i in range(len(x[0])):
+                c = self.dict.make_toks(b[i][0], type="context")
+                c = self.dict.make_ints(c)
+                b[i][0] = c
+                r = self.dict.make_toks(b[i][1], type="response")
+                r = self.dict.make_ints(r)
+                b[i][1] = r
         self._net.train_on_batch(b, y)
 
     def make_batch(self, x):
@@ -160,13 +167,6 @@ class RankingModel(NNModel):
                 c.append(el[i][0])
                 r.append(el[i][1])
             b.append([c, r])
-        for i in range(sample_len):
-            c = self.dict.make_toks(b[i][0], type="context")
-            c = self.dict.make_ints(c)
-            b[i][0] = c
-            r = self.dict.make_toks(b[i][1], type="response")
-            r = self.dict.make_ints(r)
-            b[i][1] = r
         return b
 
     def make_hard_triplets(self, x, net):
@@ -307,7 +307,11 @@ class RankingModel(NNModel):
             y_pred = []
             b = self.make_batch(batch)
             for el in b:
-                yp = self._net.predict_score_on_batch(el)
+                c = self.dict.make_toks(el[0], type="context")
+                c = self.dict.make_ints(c)
+                r = self.dict.make_toks(el[1], type="response")
+                r = self.dict.make_ints(r)
+                yp = self._net.predict_score_on_batch([c, r])
                 y_pred.append(yp)
             y_pred = np.hstack(y_pred)
             return y_pred
