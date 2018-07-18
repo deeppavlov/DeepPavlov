@@ -40,7 +40,7 @@ sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 # -- Project information -----------------------------------------------------
 
 project = 'DeepPavlov'
-copyright = '2018' + deeppavlov.__author__
+copyright = '2018, ' + deeppavlov.__author__
 author = deeppavlov.__author__
 
 # The short X.Y version

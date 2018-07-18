@@ -11,12 +11,12 @@ sequence.*
 
 For NER task there are some common types of entities used as tags:
 
-- persons
-- locations
-- organizations
-- expressions of time
-- quantities
-- monetary values
+-  persons
+-  locations
+-  organizations
+-  expressions of time
+-  quantities
+-  monetary values
 
 Furthermore, to distinguish adjacent entities with the same tag many
 applications use BIO tagging scheme. Here "B" denotes beginning of an
@@ -56,15 +56,14 @@ For example, there is an entity of "food" type:
 
 It is definitely misspelled. The set of all known food entities is
 {'chinese', 'russian', 'european'}. The nearest known entity from the
-given set is *chinese*. So the output of the Slot Filling system should
-be *chinese*.
+given set is *chinese*. So the output of the Slot Filling system will be
+*chinese*.
 
 Configuration of the model
 --------------------------
 
-Configuration of the model can be performed in code or in JSON
-configuration file. To train the model you need to specify four groups
-of parameters:
+Configuration of the model can be performed in code or in JSON configuration file.
+To train the model you need to specify four groups of parameters:
 
 -  ``dataset_reader``
 -  ``dataset_iterator``
