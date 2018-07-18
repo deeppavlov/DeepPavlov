@@ -116,7 +116,7 @@ class NerNetwork(TFModel):
                  seed: int = None,
                  lr_drop_patience: int = 5,
                  lr_drop_value: float = 0.1,
-                 **kwargs):
+                 **kwargs) -> None:
         tf.set_random_seed(seed)
         np.random.seed(seed)
         self._learning_rate = learning_rate

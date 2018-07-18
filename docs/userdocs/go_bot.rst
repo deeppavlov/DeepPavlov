@@ -17,16 +17,16 @@ be downloaded with ``deeppavlov/download.py``):
 
     >> Hello, welcome to the Cambridge restaurant system. You can ask for restaurants by area, price range or food type. How may I help you?
     x::hi, i want cheap food
-    2018-05-16 12:28:48.459 INFO in 'deeppavlov.skills.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'cheap'}, got 22 results.
+    2018-05-16 12:28:48.459 INFO in 'deeppavlov.models.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'cheap'}, got 22 results.
     >> The lucky star serves chinese food in the cheap price range.
     x::is there anything with french food?
-    2018-05-16 12:29:02.795 INFO in 'deeppavlov.skills.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'cheap', 'food': 'french'}, got 0 results.
+    2018-05-16 12:29:02.795 INFO in 'deeppavlov.models.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'cheap', 'food': 'french'}, got 0 results.
     >> Sorry there is no french restaurant in the cheap price range.
     x::ok, maybe there is something in expensive pricerange?
-    2018-05-16 12:29:23.337 INFO in 'deeppavlov.skills.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'expensive', 'food': 'french'}, got 2 results.
+    2018-05-16 12:29:23.337 INFO in 'deeppavlov.models.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'expensive', 'food': 'french'}, got 2 results.
     >> Cote serves french food in the expensive price range.
     x::in what part of town is it?
-    2018-05-16 12:29:31.193 INFO in 'deeppavlov.skills.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'expensive', 'food': 'french'}, got 2 results.
+    2018-05-16 12:29:31.193 INFO in 'deeppavlov.models.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'expensive', 'food': 'french'}, got 2 results.
     >> Restaurant two two is a nice place in the north of town serving tasty french food.
     x::ok, give me their phone number
     >> The phone number of restaurant two two is 01223 351880.
@@ -35,10 +35,10 @@ be downloaded with ``deeppavlov/download.py``):
     x::ok, thank you!
     >> Restaurant two two serves french food in the expensive price range.
     x::and if i wanted an italian restuarant?
-    2018-05-16 12:30:15.98 INFO in 'deeppavlov.skills.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'expensive', 'food': 'italian'}, got 4 results.
+    2018-05-16 12:30:15.98 INFO in 'deeppavlov.models.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'expensive', 'food': 'italian'}, got 4 results.
     >> Frankie and bennys serves italian food in the expensive price range.
     x::more cheaply priced?
-    2018-05-16 12:30:36.560 INFO in 'deeppavlov.skills.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'cheap', 'food': 'italian'}, got 5 results.
+    2018-05-16 12:30:36.560 INFO in 'deeppavlov.models.go_bot.bot'['bot'] at line 346: Made api_call with {'pricerange': 'cheap', 'food': 'italian'}, got 5 results.
     >> Da vinci pizzeria serves italian food in the cheap price range.
     x::ok, give me their phone number and address, please
     >> The phone number of da vinci pizzeria is 01223 351707 and it is on 20 milton road chesterton.
@@ -61,7 +61,8 @@ Requirements
    ``deeppavlov/configs/intents/intents_dstc2_big.json`` is recommended
 3. (*optional*) downloaded english fasttext embeddings trained on wiki
    (https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip)\: fasttext embeddings can be loaded via
-   ``python3 deeppavlov/download.py -all`` you can use any english embeddings, but edit go\_bot config accordingly.
+   ``python3 deeppavlov/download.py -all`` you can use any english embeddings of your choice, but edit go\_bot config
+   accordingly.
 
 **TO INFER** from a go\_bot model you should **additionaly** have:
 
@@ -280,7 +281,6 @@ present in the ``dataset_reader.data_path`` directory, will be downloaded from i
 
 If your model needs to be trained on different data, you have several ways of achieving that (sorted by increase
 in the amount of code):
-
 
 1. Use ``"dialog_iterator"`` in dataset iterator config section and ``"dstc2_v2_reader"`` in dataset reader config
    section (**the simplest, but not the best way**):
