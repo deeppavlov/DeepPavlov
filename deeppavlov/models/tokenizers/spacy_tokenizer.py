@@ -15,11 +15,9 @@ limitations under the License.
 """
 
 from itertools import chain
-from typing import List, Generator, Any, Tuple
+from typing import List, Generator, Any
 
-import spacy
-from spacy.lang.en import English
-from sklearn.feature_extraction.stop_words import ENGLISH_STOP_WORDS
+import en_core_web_sm as spacy_en
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
@@ -56,9 +54,9 @@ class StreamSpacyTokenizer(Component):
         if ngram_range is None:
             ngram_range = [1, 1]
         self.stopwords = stopwords or []
-        self.model = spacy.load('en', disable=disable)
+        self.model = spacy_en.load(disable=disable)
         self.model.add_pipe(self.model.create_pipe('sentencizer'))
-        self.tokenizer = English().Defaults.create_tokenizer(self.model)
+        self.tokenizer = self.model.Defaults.create_tokenizer(self.model)
         self.batch_size = batch_size
         self.ngram_range = tuple(ngram_range)  # cast JSON array to tuple
         self.lemmas = lemmas
