@@ -14,7 +14,8 @@ class RankingDict(metaclass=ABCMeta):
                  max_sequence_length, padding, truncating,
                  max_token_length, embedding_level,
                  char_pad, char_trunc,
-                 tok_dynamic_batch, char_dynamic_batch):
+                 tok_dynamic_batch, char_dynamic_batch,
+                 update_embeddings=False):
 
         self.max_sequence_length = max_sequence_length
         self.embedding_level = embedding_level
@@ -25,6 +26,7 @@ class RankingDict(metaclass=ABCMeta):
         self.char_trunc = char_trunc
         self.tok_dynamic_batch = tok_dynamic_batch
         self.char_dynamic_batch = char_dynamic_batch
+        self.upd_embs = update_embeddings
 
         save_path = expand_path(save_path).resolve().parent
         load_path = expand_path(load_path).resolve().parent
@@ -57,9 +59,10 @@ class RankingDict(metaclass=ABCMeta):
         self.build_int2tok_vocab()
         self.build_tok2int_vocab()
         self.build_context2toks_vocabulary()
-        self.build_context2emb_vocabulary()
         self.build_response2toks_vocabulary()
-        self.build_response2emb_vocabulary()
+        if self.upd_embs:
+            self.build_context2emb_vocabulary()
+            self.build_response2emb_vocabulary()
 
     def load(self):
         log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
@@ -69,9 +72,10 @@ class RankingDict(metaclass=ABCMeta):
         self.load_int2tok()
         self.build_tok2int_vocab()
         self.load_context2toks()
-        self.build_context2emb_vocabulary()
         self.load_response2toks()
-        self.build_response2emb_vocabulary()
+        if self.upd_embs:
+            self.build_context2emb_vocabulary()
+            self.build_response2emb_vocabulary()
 
     def save(self):
         log.info("[saving `{}`]".format(self.__class__.__name__))

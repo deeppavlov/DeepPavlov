@@ -58,7 +58,8 @@
         "margin": 0.1,
         "save_path": "ubuntu_v2_ranking/model_weights.h5",
         "load_path": "ubuntu_v2_ranking/model_weights.h5",
-        "update_embeddings": "no",
+        "update_embeddings": false,
+        "update_method": "online",
         "interact_pred_num": 3
       }
     ],
@@ -68,7 +69,7 @@
     "epochs": 200,
     "batch_size": 256,
     "pytest_max_batches": 2,
-    "metrics": ["r@1", "r@5", "r@10", "rank_response", "loss"],
+    "metrics": ["r@1", "r@5", "r@10", "rank_response"],
     "validation_patience": 10,
     "val_every_n_epochs": 1
   },

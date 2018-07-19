@@ -66,7 +66,9 @@ class RankingModel(NNModel):
         self.hardest_positives = opt.get('hardest_positives')
         self.semi_hard = opt.get('semi_hard')
         self.num_hardest_samples = opt.get('num_hardest_samples')
-        self.upd_embs = opt.get('update_embeddings', 'on_validation')
+        self.upd_embs = opt.get('update_embeddings', False)
+        self.upd_method = opt.get('update_method', 'online')
+        self.distance = opt.get('distance', 'sigmoid')
         self.opt = opt
         self.interact_pred_num = opt['interact_pred_num']
         self.vocabs = opt.get('vocabs', None)
@@ -134,15 +136,17 @@ class RankingModel(NNModel):
         already created by super().__init__ part in called in __init__ of this class"""
         log.info('[saving model to {}]'.format(self.save_path.resolve()))
         self._net.save(self.save_path)
-        if self.upd_embs == 'on_validation':
-            self.set_embeddings()
+        if self.upd_embs:
+            if self.upd_method == 'on_validation':
+                self.set_embeddings()
         self.dict.save()
         self.embdict.save()
 
     @check_attr_true('train_now')
     def train_on_batch(self, x, y):
-        if self.upd_embs == 'on_validation':
-            self.reset_embeddings()
+        if self.upd_embs:
+            if self.upd_method == 'on_validation':
+                self.reset_embeddings()
         if self.hard_triplets:
             c, rp, rn = self.make_hard_triplets(x, self._net)
             y = np.ones((len(c), len(x[0][1])))
@@ -300,10 +304,11 @@ class RankingModel(NNModel):
 
     def __call__(self, batch):
         if type(batch[0]) == list:
-            if self.upd_embs == 'on_validation':
-                self.set_embeddings()
-            if self.upd_embs == 'online':
-                self.update_embeddings(batch)
+            if self.upd_embs:
+                if self.upd_method == 'on_validation':
+                    self.set_embeddings()
+                if self.upd_method == 'online':
+                    self.update_embeddings(batch)
             y_pred = []
             b = self.make_batch(batch)
             for el in b:
@@ -312,7 +317,10 @@ class RankingModel(NNModel):
                 r = self.dict.make_toks(el[1], type="response")
                 r = self.dict.make_ints(r)
                 yp = self._net.predict_score_on_batch([c, r])
-                y_pred.append(yp)
+                if self.distance == 'sigmoid':
+                    y_pred.append(1.-yp)
+                else:
+                    y_pred.append(yp)
             y_pred = np.hstack(y_pred)
             return y_pred
 

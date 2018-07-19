@@ -1,6 +1,7 @@
 from pathlib import Path
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.models.ranking.ranking_dict import RankingDict
+from collections import Counter
 from nltk import word_tokenize
 import csv
 import re
@@ -11,7 +12,8 @@ class UbuntuV2Dict(RankingDict):
                  max_sequence_length, padding="post", truncating="post",
                  max_token_length=None, embedding_level=None,
                  char_pad="post", char_trunc="post",
-                 tok_dynamic_batch=False, char_dynamic_batch=False):
+                 tok_dynamic_batch=False, char_dynamic_batch=False,
+                 tok_vocab_size=None):
 
         super().__init__(save_path, load_path,
                          max_sequence_length, padding, truncating,
@@ -23,7 +25,7 @@ class UbuntuV2Dict(RankingDict):
         self.train_fname = Path(vocabs_path) / 'train.csv'
         self.val_fname = Path(vocabs_path) / 'valid.csv'
         self.test_fname = Path(vocabs_path) / 'test.csv'
-
+        self.tok_vocab_size = tok_vocab_size
         self.int2char_vocab = dict()
 
     def build_int2char_vocab(self):
@@ -40,18 +42,34 @@ class UbuntuV2Dict(RankingDict):
         self.int2char_vocab = {el[0]+1: el[1] for el in enumerate(char_set)}
         self.int2char_vocab[0] = '<UNK_CHAR>'
 
-
-    def build_int2tok_vocab(self):
+    def _find_most_common_words(self):
         sen = []
         with open(self.train_fname, 'r') as f:
             reader = csv.reader(f)
             next(reader)
             for el in reader:
                 sen += el[:2]
-        word_set = set()
+        c = Counter()
         for el in sen:
             for x in el.split():
-                word_set.add(x)
+                c[x] += 1
+        most_com_words = set([el[0] for el in c.most_common(self.tok_vocab_size-1)])
+        return most_com_words
+
+    def build_int2tok_vocab(self):
+        if self.tok_vocab_size is not None:
+            word_set = self._find_most_common_words()
+        else:
+            sen = []
+            with open(self.train_fname, 'r') as f:
+                reader = csv.reader(f)
+                next(reader)
+                for el in reader:
+                    sen += el[:2]
+            word_set = set()
+            for el in sen:
+                for x in el.split():
+                    word_set.add(x)
         self.int2tok_vocab = {el[0]+1: el[1] for el in enumerate(word_set)}
         self.int2tok_vocab[0] = '<UNK>'
 
