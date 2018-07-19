@@ -25,6 +25,7 @@
     "in_y": [
       "y"
     ],
+    "search": true,
     "pipe": [
       [
         {
@@ -80,7 +81,6 @@
           "y_probas_dict"
         ],
         "main": true,
-        "scratch_init": true,
         "name": "intent_model",
         "save_path": "intents/intent_cnn_snips_v4",
         "classes": "#classes_vocab.keys()",
@@ -116,7 +116,6 @@
           "y_probas_dict"
         ],
         "main": true,
-        "scratch_init": true,
         "name": "intent_model",
         "save_path": "intents/intent_cnn_snips_v4",
         "classes": "#classes_vocab.keys()",

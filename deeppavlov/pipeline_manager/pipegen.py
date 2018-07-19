@@ -102,7 +102,7 @@ class PipeGen:
             config: dict; new config with changed save and load paths
         """
         for component in config:
-            if component.get('scratch_init') is True:
+            if component.get('main') is True:
                 if component.get('save_path', None) is not None:
                     sp = component['save_path'].split('/')[-1]
                     component['save_path'] = join('..', self.save_path, 'pipe_{}'.format(n+1), sp)
