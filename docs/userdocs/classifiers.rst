@@ -198,7 +198,7 @@ Configuration parameters
 One can find examples of config files in ``deeppavlov/configs/intents``.
 
 Detailed description of configuration file and specific parameters for all presented classification models can be found
-in :doc:`this notebook <Config_description.ipynb>`.
+in :doc:`reference </apiref/models/classifiers>`.
 
 Some clue parameters for ``deeppavlov/configs/intents/intents_dstc2.json`` config file are
 presented in the table below.

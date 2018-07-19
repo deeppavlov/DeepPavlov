@@ -13,9 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
 import numpy as np
-
 from keras.layers import Dense, Input, concatenate, Activation, Concatenate, Reshape
 from keras.layers.wrappers import Bidirectional
 from keras.layers.recurrent import LSTM, GRU
@@ -43,7 +41,22 @@ log = get_logger(__name__)
 @register('keras_classification_model')
 class KerasClassificationModel(KerasModel):
     """
-    Class implements keras model for intent recognition task for multi-class multi-label data
+    Class implements Keras model for classification task for multi-class multi-label data.
+
+    Initialize and train vocabularies, initializes embedder, tokenizer, and then initialize model using parameters
+    from opt dictionary (from config), if model is being initialized from saved.
+
+    Parameters:
+        model_path (str): Path to model serialization dir or file. It is always an empty string and is ignored if it is
+            not set in json config.
+        model_dir (str): Name of a serialization dir, can be default or set in json config.
+        model_file (str): Name of a serialization file (usually binary model file), can be default / set in json config.
+        embedder (FasttextEmbedder): Embedder.
+        tokenizer (NLTKTokenizer): Tokenizer.
+
+    Todo:
+        * clarify initialization parameters
+        * consider explicit parameter specification in public methods' signatures
     """
     FIXED_PARAMS = [
         "classes",
@@ -72,21 +85,6 @@ class KerasClassificationModel(KerasModel):
                         "rec_dropout_rate": 0.}
 
     def __init__(self, **kwargs):
-        """
-        Initialize and train vocabularies, initializes embedder, tokenizer,
-        and then initialize model using parameters from opt dictionary (from config),
-        if model is being initialized from saved
-
-        Args:
-            model_path: path to model serialization dir or file.
-                            It is always an empty string and is ignored if it is not set in json config.
-            model_dir: name of a serialization dir, can be default or set in json config
-            model_file: name of a serialization file (usually binary model file),
-                            can be default or set in json config
-            embedder: instance of FasttextEmbedder class
-            tokenizer: instance of NLTKTokenizer class
-            **kwargs:
-        """
         super().__init__(**kwargs)  # self.opt initialized in here
 
         self.tokenizer = self.opt.pop('tokenizer')
@@ -229,14 +227,24 @@ class KerasClassificationModel(KerasModel):
 
     def cnn_model(self, params):
         """
-        Build un-compiled model of shallow-and-wide CNN
-        Args:
-            params: dictionary of parameters for NN
+        Build un-compiled model of shallow-and-wide CNN.
+
+        Parameters:
+            kernel_sizes_cnn (list[int]): list of kernel sizes of convolutions.
+            filters_cnn (int): Number of filters for convolutions.
+            coef_reg_cnn (float): L2-regularization coefficient for convolutions. Default: ``0.0``.
+            dropout_rate (float): Dropout rate used after convolutions and between dense layers. Default: ``0.0``.
+            dense_size (int): Number of units for dense layer.
+            coef_reg_dense (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
+            last_layer_activation (str): Activation type for the last classification layer. Default: ``'sigmoid'``.
 
         Returns:
-            Un-compiled model
-        """
+            keras.models.Model: uncompiled instance of Keras Model
 
+        Todo:
+            * type annotations should be checked (docstring in this method is the template for others 9 analogs)
+            * order parameters correctly
+        """
         inp = Input(shape=(params['text_size'], params['embedding_size']))
 
         outputs = []
@@ -267,12 +275,19 @@ class KerasClassificationModel(KerasModel):
 
     def dcnn_model(self, params):
         """
-        Build un-compiled model of deep CNN
-        Args:
-            params: dictionary of parameters for NN
+        Build un-compiled model of deep CNN.
+
+        Parameters:
+            kernel_sizes_cnn: List of kernel sizes of convolutions.
+            filters_cnn: List of numbers of filters for convolutions.
+            coef_reg_cnn: L2-regularization coefficient for convolutions.
+            dropout_rate: Dropout rate to be used after convolutions and between dense layers.
+            dense_size: Number of units for dense layer.
+            coef_reg_dense: L2-regularization coefficient for dense layers.
+            last_layer_activation: Activation type for the last classification layer. Default: ``'sigmoid'``.
 
         Returns:
-            Un-compiled model
+            keras.models.Model: uncompiled instance of Keras Model
         """
 
         if type(self.opt['filters_cnn']) is str:
@@ -307,14 +322,20 @@ class KerasClassificationModel(KerasModel):
 
     def cnn_model_max_and_aver_pool(self, params):
         """
-        Build un-compiled model of shallow-and-wide CNN
-        where average pooling after convolutions
-        is replaced with concatenation of average and max poolings
-        Args:
-            params: dictionary of parameters for NN
+        Build un-compiled model of shallow-and-wide CNN where average pooling after convolutions is replaced with
+        concatenation of average and max poolings.
+
+        Parameters:
+            kernel_sizes_cnn: List of kernel sizes of convolutions.
+            filters_cnn: Number of filters for convolutions.
+            coef_reg_cnn: L2-regularization coefficient for convolutions.
+            dropout_rate: Dropout rate to be used after convolutions and between dense layers.
+            dense_size: Number of units for dense layer.
+            coef_reg_dense: L2-regularization coefficient for dense layers.
+            last_layer_activation: Activation type for the last classification layer. Default: ``'sigmoid'``.
 
         Returns:
-            Un-compiled model
+            keras.models.Model: uncompiled instance of Keras Model
         """
 
         inp = Input(shape=(params['text_size'], params['embedding_size']))
@@ -349,12 +370,19 @@ class KerasClassificationModel(KerasModel):
 
     def bilstm_model(self, params):
         """
-        Build un-compiled BiLSTM
-        Args:
-            params: dictionary of parameters for NN
+        Build un-compiled BiLSTM.
+
+        Parameters:
+            units_lstm: Number of units for LSTM.
+            coef_reg_lstm: L2-regularization coefficient for LSTM.
+            rec_dropout_rate: Droupout rate for LSTM.
+            dropout_rate: Dropout rate to be used after BiLSTM and between dense layers.
+            dense_size: Number of units for dense layer.
+            coef_reg_dense: L2-regularization coefficient for dense layers.
+            last_layer_activation: Activation type for the last classification layer. Default: ``'sigmoid'``.
 
         Returns:
-            Un-compiled model
+            keras.models.Model: uncompiled instance of Keras Model
         """
 
         inp = Input(shape=(params['text_size'], params['embedding_size']))
@@ -379,12 +407,20 @@ class KerasClassificationModel(KerasModel):
 
     def bilstm_bilstm_model(self, params):
         """
-        Build un-compiled two-layers BiLSTM
-        Args:
-            params: dictionary of parameters for NN
+        Build un-compiled two-layers BiLSTM.
+
+        Parameters:
+            units_lstm_1: Number of units for the first LSTM layer.
+            units_lstm_2: Number of units for the second LSTM layer.
+            coef_reg_lstm: L2-regularization coefficient for LSTM.
+            rec_dropout_rate: Droupout rate for LSTM.
+            dropout_rate: Dropout rate to be used between all BiLSTM and dense layers.
+            dense_size: Number of units for dense layer.
+            coef_reg_dense: L2-regularization coefficient for dense layers.
+            last_layer_activation: activation type for the last classification layer. Default: ``'sigmoid'``.
 
         Returns:
-            Un-compiled model
+            keras.models.Model: uncompiled instance of Keras Model
         """
 
         inp = Input(shape=(params['text_size'], params['embedding_size']))
@@ -417,12 +453,22 @@ class KerasClassificationModel(KerasModel):
 
     def bilstm_cnn_model(self, params):
         """
-        Build un-compiled BiLSTM-CNN
-        Args:
-            params: dictionary of parameters for NN
+        Build un-compiled BiLSTM-CNN.
+
+        Parameters:
+            units_lstm: Number of units for the first LSTM layer.
+            coef_reg_lstm: L2-regularization coefficient for LSTM.
+            rec_dropout_rate: Droupout rate for LSTM.
+            kernel_sizes_cnn: List of kernel sizes of convolutions.
+            filters_cnn: Number of filters for convolutions.
+            coef_reg_cnn: L2-regularization coefficient for convolutions.
+            dropout_rate: Dropout rate to be used between BiLSTM and CNN, after CNN and between dense layers.
+            dense_size: Number of units for dense layer.
+            coef_reg_dense: L2-regularization coefficient for dense layers.
+            last_layer_activation: Activation type for the last classification layer. Default: ``'sigmoid'``.
 
         Returns:
-            Un-compiled model
+            keras.models.Model: uncompiled instance of Keras Model
         """
 
         inp = Input(shape=(params['text_size'], params['embedding_size']))
@@ -460,12 +506,22 @@ class KerasClassificationModel(KerasModel):
 
     def cnn_bilstm_model(self, params):
         """
-        Build un-compiled BiLSTM-CNN
-        Args:
-            params: dictionary of parameters for NN
+        Build un-compiled BiLSTM-CNN.
+
+        Parameters:
+            kernel_sizes_cnn: List of kernel sizes of convolutions.
+            filters_cnn: Number of filters for convolutions.
+            coef_reg_cnn: L2-regularization coefficient for convolutions.
+            units_lstm: Number of units for the first LSTM layer.
+            coef_reg_lstm: L2-regularization coefficient for LSTM.
+            rec_dropout_rate: Droupout rate for LSTM.
+            dropout_rate: Dropout rate to be used between BiLSTM and CNN, after BiLSTM and between dense layers.
+            dense_size: Number of units for dense layer.
+            coef_reg_dense: L2-regularization coefficient for dense layers.
+            last_layer_activation: Activation type for the last classification layer. Default: ``'sigmoid'``.
 
         Returns:
-            Un-compiled model
+            keras.models.Model: uncompiled instance of Keras Model
         """
 
         inp = Input(shape=(params['text_size'], params['embedding_size']))
@@ -504,12 +560,21 @@ class KerasClassificationModel(KerasModel):
 
     def bilstm_self_add_attention_model(self, params):
         """
-        Method builds uncompiled model of BiLSTM with self additive attention
-        Args:
-            params: disctionary of parameters for NN
+        Method builds uncompiled model of BiLSTM with self additive attention.
+
+        Parameters:
+            units_lstm: Number of units for the first LSTM layer.
+            coef_reg_lstm: L2-regularization coefficient for LSTM.
+            rec_dropout_rate: Droupout rate for LSTM.
+            self_att_hid: Number of hidden units for additive self-attention layer.
+            self_att_out: Number of output units for additive self-attention layer.
+            dropout_rate: Dropout rate to be used after self-attention layer and between dense layers.
+            dense_size: Number of units for dense layer.
+            coef_reg_dense: L2-regularization coefficient for dense layers.
+            last_layer_activation: Activation type for the last classification layer. Default: ``'sigmoid'``.
 
         Returns:
-            Uncompiled model
+            keras.models.Model: uncompiled instance of Keras Model
         """
 
         inp = Input(shape=(params['text_size'], params['embedding_size']))
@@ -537,12 +602,21 @@ class KerasClassificationModel(KerasModel):
 
     def bilstm_self_mult_attention_model(self, params):
         """
-        Method builds uncompiled model of BiLSTM with self multiplicative attention
-        Args:
-            params: disctionary of parameters for NN
+        Method builds uncompiled model of BiLSTM with self multiplicative attention.
+
+        Parameters:
+            units_lstm: Number of units for the first LSTM layer.
+            coef_reg_lstm: L2-regularization coefficient for LSTM.
+            rec_dropout_rate: Droupout rate for LSTM.
+            self_att_hid: Number of hidden units for multiplicative self-attention layer.
+            self_att_out: Number of output units for multiplicative self-attention layer.
+            dropout_rate: Dropout rate to be used after self-attention layer and between dense layers.
+            dense_size: Number of units for dense layer.
+            coef_reg_dense: L2-regularization coefficient for dense layers.
+            last_layer_activation: Activation type for the last classification layer. Default: ``'sigmoid'``.
 
         Returns:
-            Uncompiled model
+            keras.models.Model: uncompiled instance of Keras Model
         """
 
         inp = Input(shape=(params['text_size'], params['embedding_size']))
@@ -571,12 +645,19 @@ class KerasClassificationModel(KerasModel):
 
     def bigru_model(self, params):
         """
-        Method builds uncompiled model BiGRU
-        Args:
-            params: disctionary of parameters for NN
+        Method builds uncompiled model BiGRU.
+
+        Parameters:
+            units_lstm: Number of units for the first GRU layer.
+            coef_reg_lstm: L2-regularization coefficient for GRU.
+            rec_dropout_rate: Droupout rate for GRU.
+            dropout_rate: Dropout rate to be used after BiGRU and between dense layers.
+            dense_size: Number of units for dense layer.
+            coef_reg_dense: L2-regularization coefficient for dense layers.
+            last_layer_activation: Activation type for the last classification layer. Default: ``'sigmoid'``
 
         Returns:
-            Uncompiled model
+            keras.models.Model: uncompiled instance of Keras Model
         """
 
         inp = Input(shape=(params['text_size'], params['embedding_size']))

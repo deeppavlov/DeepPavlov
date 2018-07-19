@@ -12,29 +12,8 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
-from unittest.mock import MagicMock
-
-import deeppavlov
 import sphinx_rtd_theme
-
-
-sys.path.insert(0, os.path.abspath('.'))
-
-
-class Mock(MagicMock):
-    @classmethod
-    def __getattr__(cls, name):
-        return MagicMock()
-
-
-MOCK_MODULES = ['tensorflow', 'fastText', 'nltk', 'gensim', 'gensim.models', 'tensorflow.python',
-                'tensorflow.python.client', 'tensorflow.contrib', 'tensorflow.contrib.layers', 'kenlm', 'spacy',
-                'spacy.lang', 'spacy.lang.en', 'gensim.models.wrappers']
-
-
-sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+import deeppavlov
 
 
 # -- Project information -----------------------------------------------------
@@ -64,6 +43,7 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
+    'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
 ]
 
@@ -125,7 +105,7 @@ html_context = {
         'https://media.readthedocs.org/css/sphinx_rtd_theme.css',
         'https://media.readthedocs.org/css/readthedocs-doc-embed.css',
         '_static/deeppavlov.css'
-    ],
+    ]
 }
 
 # Custom sidebar templates, must be a dictionary that maps document names
@@ -198,10 +178,15 @@ texinfo_documents = [
 
 # -- Extension configuration -------------------------------------------------
 
+autodoc_mock_imports = ['tensorflow', 'fastText', 'nltk', 'gensim', 'kenlm', 'spacy']
+
 # -- Options for intersphinx extension ---------------------------------------
 
-# Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+# Configuration for intersphinx
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/dev', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/reference', None)
+}
 
 # -- Options for todo extension ----------------------------------------------
 
