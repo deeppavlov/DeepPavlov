@@ -7,14 +7,26 @@ from copy import deepcopy
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.pipeline_manager.hyperpar import HyperPar
+from deeppavlov.pipeline_manager.utils import HyperPar
 
 
 log = get_logger(__name__)
 
 
 class PipeGen:
+    """
+    The class implements the generator of standard DeepPavlov configs.
+    """
     def __init__(self, config_path: str, save_path: str, stype: str ='grid', n=10):
+        """
+        Initialize generator with input params.
+
+        Args:
+            config_path: str; path to config file with search pattern.
+            save_path: str; path to folder with pipelines checkpoints
+            stype: str; random or grid - the trigger that determines type of hypersearch
+            n: int; determines the number of generated pipelines, if hyper_search == random.
+        """
         self.save_path = save_path
         self.config_path = config_path
         self.N = n
@@ -41,6 +53,12 @@ class PipeGen:
         return self.generator
 
     def get_structure(self):
+        """
+        Read search pattern from config (json) file.
+
+        Returns:
+            self
+        """
         self.main_config = read_json(self.config_path)
         if 'chainer' not in self.main_config:
             raise ConfigError("Main config file not contain 'chainer' component."
@@ -52,6 +70,11 @@ class PipeGen:
         return self
 
     def pipeline_gen(self):
+        """
+        Generate DeepPavlov standard configs (dicts).
+        Returns:
+            python generator
+        """
         if self.stype == 'random':
             pipe_gen = self.random_conf_gen()
         elif self.stype == 'grid':
@@ -69,6 +92,15 @@ class PipeGen:
             yield new_config
 
     def change_load_path(self, config, n):
+        """
+        Change save_path and load_path attributes in standard config.
+        Args:
+            config: dict; the chainer content.
+            n: int; pipeline number
+
+        Returns:
+            config: dict; new config with changed save and load paths
+        """
         for component in config:
             if component.get('scratch_init') is True:
                 if component.get('save_path', None) is not None:
@@ -80,6 +112,11 @@ class PipeGen:
         return config
 
     def random_get_len(self):
+        """
+        Computes number of generated pipelines.
+        Returns:
+            self
+        """
         test = []
         lst = []
 
@@ -137,6 +174,14 @@ class PipeGen:
 
     @staticmethod
     def grid_param_gen(conf):
+        """
+        Compute cartesian product of config parameters.
+        Args:
+            conf: dict; component of search pattern
+
+        Returns:
+            list
+        """
         search_conf = deepcopy(conf)
         list_of_var = []
 
@@ -175,6 +220,11 @@ class PipeGen:
         return list_of_var
 
     def grid_get_len(self):
+        """
+        Computes number of generated pipelines.
+        Returns:
+            self
+        """
         leng = []
         for x in self.structure:
             k = 0
@@ -189,6 +239,11 @@ class PipeGen:
 
     # random generation
     def random_conf_gen(self):
+        """
+        Creates generator that return all possible pipelines.
+        Returns:
+            python generator
+        """
         for x in self.structure:
             self.pipes.append(x)
 
@@ -232,7 +287,11 @@ class PipeGen:
 
     # grid generation
     def grid_conf_gen(self):
-
+        """
+        Creates generator that return all possible pipelines.
+        Returns:
+            python generator
+        """
         def update(el):
             lst = []
             if el is not None:
