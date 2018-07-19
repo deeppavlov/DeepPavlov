@@ -1,4 +1,4 @@
-# This is "Hello world!" example of simple bot implemented in DeepPavlov
+# This is "Hello, World!" example of simple bot implemented in DeepPavlov
 
 Import key components to build HelloBot. 
 ```python
