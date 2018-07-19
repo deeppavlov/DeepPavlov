@@ -49,9 +49,6 @@ class PipeGen:
 
         self.generator = self.pipeline_gen()
 
-    def __call__(self, *args, **kwargs):
-        return self.generator
-
     def get_structure(self):
         """
         Read search pattern from config (json) file.
@@ -68,48 +65,6 @@ class PipeGen:
         self.structure = self.chainer['pipe']
 
         return self
-
-    def pipeline_gen(self):
-        """
-        Generate DeepPavlov standard configs (dicts).
-        Returns:
-            python generator
-        """
-        if self.stype == 'random':
-            pipe_gen = self.random_conf_gen()
-        elif self.stype == 'grid':
-            pipe_gen = self.grid_conf_gen()
-        else:
-            raise ValueError("Sorry {0} search not implemented."
-                             " At the moment you can use only 'random' and 'grid' search.".format(self.stype))
-
-        for k, pipe in enumerate(pipe_gen):
-            new_config = deepcopy(self.main_config)
-            new_config['chainer'] = deepcopy(self.chainer)
-            chainer_pipe = list(pipe)
-            chainer_pipe = self.change_load_path(chainer_pipe, k)
-            new_config['chainer']['pipe'] = chainer_pipe
-            yield new_config
-
-    def change_load_path(self, config, n):
-        """
-        Change save_path and load_path attributes in standard config.
-        Args:
-            config: dict; the chainer content.
-            n: int; pipeline number
-
-        Returns:
-            config: dict; new config with changed save and load paths
-        """
-        for component in config:
-            if component.get('main') is True:
-                if component.get('save_path', None) is not None:
-                    sp = component['save_path'].split('/')[-1]
-                    component['save_path'] = join('..', self.save_path, 'pipe_{}'.format(n+1), sp)
-                if component.get('load_path', None) is not None:
-                    lp = component['load_path'].split('/')[-1]
-                    component['load_path'] = join('..', self.save_path, 'pipe_{}'.format(n+1), lp)
-        return config
 
     def random_get_len(self):
         """
@@ -172,53 +127,6 @@ class PipeGen:
             else:
                 return 1
 
-    @staticmethod
-    def grid_param_gen(conf):
-        """
-        Compute cartesian product of config parameters.
-        Args:
-            conf: dict; component of search pattern
-
-        Returns:
-            list
-        """
-        search_conf = deepcopy(conf)
-        list_of_var = []
-
-        # delete "search" key and element
-        del search_conf['search']
-
-        values = list()
-        keys = list()
-
-        static_keys = list()
-        static_values = list()
-        for key, item in search_conf.items():
-            if isinstance(search_conf[key], list):
-                values.append(item)
-                keys.append(key)
-            elif isinstance(search_conf[key], dict):
-                raise ValueError("Grid search are not supported 'dict', that contain values of parameters.")
-            elif isinstance(search_conf[key], tuple):
-                raise ValueError("Grid search are not supported 'tuple', that contain values of parameters.")
-            else:
-                static_values.append(search_conf[key])
-                static_keys.append(key)
-
-        valgen = product(*values)
-
-        config = {}
-        for i in range(len(static_keys)):
-            config[static_keys[i]] = static_values[i]
-
-        for val in valgen:
-            cop = deepcopy(config)
-            for i, v in enumerate(val):
-                cop[keys[i]] = v
-            list_of_var.append(cop)
-
-        return list_of_var
-
     def grid_get_len(self):
         """
         Computes number of generated pipelines.
@@ -236,6 +144,28 @@ class PipeGen:
             self.len *= x
 
         return self
+
+    def pipeline_gen(self):
+        """
+        Generate DeepPavlov standard configs (dicts).
+        Returns:
+            python generator
+        """
+        if self.stype == 'random':
+            pipe_gen = self.random_conf_gen()
+        elif self.stype == 'grid':
+            pipe_gen = self.grid_conf_gen()
+        else:
+            raise ValueError("Sorry {0} search not implemented."
+                             " At the moment you can use only 'random' and 'grid' search.".format(self.stype))
+
+        for k, pipe in enumerate(pipe_gen):
+            new_config = deepcopy(self.main_config)
+            new_config['chainer'] = deepcopy(self.chainer)
+            chainer_pipe = list(pipe)
+            chainer_pipe = self.change_load_path(chainer_pipe, k)
+            new_config['chainer']['pipe'] = chainer_pipe
+            yield new_config
 
     # random generation
     def random_conf_gen(self):
@@ -285,6 +215,53 @@ class PipeGen:
             else:
                 yield pipe
 
+    @staticmethod
+    def grid_param_gen(conf):
+        """
+        Compute cartesian product of config parameters.
+        Args:
+            conf: dict; component of search pattern
+
+        Returns:
+            list
+        """
+        search_conf = deepcopy(conf)
+        list_of_var = []
+
+        # delete "search" key and element
+        del search_conf['search']
+
+        values = list()
+        keys = list()
+
+        static_keys = list()
+        static_values = list()
+        for key, item in search_conf.items():
+            if isinstance(search_conf[key], list):
+                values.append(item)
+                keys.append(key)
+            elif isinstance(search_conf[key], dict):
+                raise ValueError("Grid search are not supported 'dict', that contain values of parameters.")
+            elif isinstance(search_conf[key], tuple):
+                raise ValueError("Grid search are not supported 'tuple', that contain values of parameters.")
+            else:
+                static_values.append(search_conf[key])
+                static_keys.append(key)
+
+        valgen = product(*values)
+
+        config = {}
+        for i in range(len(static_keys)):
+            config[static_keys[i]] = static_values[i]
+
+        for val in valgen:
+            cop = deepcopy(config)
+            for i, v in enumerate(val):
+                cop[keys[i]] = v
+            list_of_var.append(cop)
+
+        return list_of_var
+
     # grid generation
     def grid_conf_gen(self):
         """
@@ -316,3 +293,26 @@ class PipeGen:
                 if conf is None:
                     pipe.remove(conf)
             yield pipe
+
+    def change_load_path(self, config, n):
+        """
+        Change save_path and load_path attributes in standard config.
+        Args:
+            config: dict; the chainer content.
+            n: int; pipeline number
+
+        Returns:
+            config: dict; new config with changed save and load paths
+        """
+        for component in config:
+            if component.get('main') is True:
+                if component.get('save_path', None) is not None:
+                    sp = component['save_path'].split('/')[-1]
+                    component['save_path'] = join('..', self.save_path, 'pipe_{}'.format(n+1), sp)
+                if component.get('load_path', None) is not None:
+                    lp = component['load_path'].split('/')[-1]
+                    component['load_path'] = join('..', self.save_path, 'pipe_{}'.format(n+1), lp)
+        return config
+
+    def __call__(self, *args, **kwargs):
+        return self.generator
