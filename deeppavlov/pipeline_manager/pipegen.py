@@ -105,10 +105,10 @@ class PipeGen:
             if component.get('scratch_init') is True:
                 if component.get('save_path', None) is not None:
                     sp = component['save_path'].split('/')[-1]
-                    component['save_path'] = join('..', self.save_path, 'pipe_{}'.format(n), sp)
+                    component['save_path'] = join('..', self.save_path, 'pipe_{}'.format(n+1), sp)
                 if component.get('load_path', None) is not None:
                     lp = component['load_path'].split('/')[-1]
-                    component['load_path'] = join('..', self.save_path, 'pipe_{}'.format(n), lp)
+                    component['load_path'] = join('..', self.save_path, 'pipe_{}'.format(n+1), lp)
         return config
 
     def random_get_len(self):

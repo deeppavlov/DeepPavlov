@@ -46,13 +46,12 @@ class PipelineManager:
         if date is not None:
             self.date = date
         else:
-            self.date = datetime.now()
+            date_ = datetime.now()
+            self.date = '{}-{}-{}'.format(date_.year, date_.month, date_.day)
 
         self.root = root
-        self.save_path = join(self.root, '{}-{}-{}'.format(self.date.year, self.date.month, self.date.day),
-                              self.exp_name, 'checkpoints')
+        self.save_path = join(self.root, self.date, self.exp_name, 'checkpoints')
 
-        # TODO fix date to str
         self.logger = Logger(exp_name, root, self.info, self.date)
         self.start_exp = time()
 
@@ -101,6 +100,6 @@ class PipelineManager:
         self.logger.save()
 
         # visualization of results
-        path = join(self.root, '{0}-{1}-{2}'.format(self.date.year, self.date.month, self.date.day), self.exp_name)
+        path = join(self.root, self.date, self.exp_name)
         results_visualization(path, join(path, 'results', 'images'), self.target_metric)
         return None

@@ -35,8 +35,7 @@ class Logger(object):
         self.pipe_time = None
 
         # build folder dependencies
-        # TODO fix date to str
-        self.log_path = join(self.root, '{0}-{1}-{2}'.format(date.year, date.month, date.day), self.exp_name)
+        self.log_path = join(self.root, date, self.exp_name)
         self.log_file = join(self.log_path, self.exp_name + '.json')
 
         if not isdir(self.log_path):
@@ -44,7 +43,7 @@ class Logger(object):
         if not isdir(join(self.log_path, 'results', 'images')):
             os.makedirs(join(self.log_path, 'results', 'images'))
 
-        self.log = OrderedDict(experiment_info=OrderedDict(date='{0}-{1}-{2}'.format(date.year, date.month, date.day),
+        self.log = OrderedDict(experiment_info=OrderedDict(date=date,
                                                            exp_name=self.exp_name,
                                                            root=self.root,
                                                            info=self.exp_inf),
