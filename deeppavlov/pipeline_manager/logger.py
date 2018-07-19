@@ -7,7 +7,21 @@ from deeppavlov.pipeline_manager.utils import normal_time
 
 
 class Logger(object):
+    """
+    The class implements data collection on how the experiment is going. Pipeline configuration information,
+    pipeline results, and time information is collected.
+    """
     def __init__(self, name, root, info, date):
+        """
+        Init log, and creates folders for logs, report and checkpoints.
+
+        Args:
+            name: str; name of the experiments.
+            root: str; path to root folder.
+            info: dict; ome additional information that you want to add to the log, the content of the dictionary
+             does not affect the algorithm
+            date: str; date of the experiment.
+        """
         self.exp_name = name
         self.exp_inf = info
         self.root = root
@@ -21,6 +35,7 @@ class Logger(object):
         self.pipe_time = None
 
         # build folder dependencies
+        # TODO fix date to str
         self.log_path = join(self.root, '{0}-{1}-{2}'.format(date.year, date.month, date.day), self.exp_name)
         self.log_file = join(self.log_path, self.exp_name + '.json')
 
@@ -45,6 +60,7 @@ class Logger(object):
         self.pipe_time = None
 
     def save(self):
+        """save log in file"""
         # with open(self.log_file, 'w') as log_file:
         #     json.dump(self.log, log_file)
         #     log_file.close()
@@ -64,6 +80,7 @@ class Logger(object):
 
     @staticmethod
     def merge_logs(old_log, new_log):
+        """ Combines two logs into one """
         new_models_names = list(new_log['experiments'].keys())
 
         for name in new_models_names:
@@ -95,6 +112,7 @@ class Logger(object):
         return old_log
 
     def get_pipe_log(self):
+        """ Updates the log with information about the new pipeline """
         ops_times = {}
 
         if (self.model is None) and (self.pipe_conf is not None):

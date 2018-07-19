@@ -11,12 +11,29 @@ from deeppavlov.pipeline_manager.utils import results_visualization
 
 
 class PipelineManager:
-    def __init__(self, config_path, exp_name, mode='train',
-                 info=None,
-                 root='./experiments/',
-                 hyper_search='grid',
-                 sample_num=10,
-                 target_metric=None):
+    """
+    The class implements functions for automatic iteration of pipelines and hyperparameters search.
+    """
+    def __init__(self, config_path, exp_name, date=None, mode='train', info=None, root='./experiments/',
+                 hyper_search='grid', sample_num=10, target_metric=None):
+        """
+        Initialize logger, builds a directory tree, initialize date.
+
+        Args:
+            config_path: str; path to config file.
+            exp_name: str; name of the experiment.
+            date: str; date of the experiment.
+            mode: str; train or evaluate - the trigger that determines the operation of the algorithm
+            info: dict; some additional information that you want to add to the log, the content of the dictionary
+             does not affect the algorithm
+            root: str; root path, the root path where the report will be generated and saved checkpoints
+            hyper_search: str; grid or random - the trigger that determines type of hypersearch
+            sample_num: int; determines the number of generated pipelines, if hyper_search == random.
+            target_metric: str; The metric name on the basis of which the results will be sorted when the report
+             is generated. The default value is None, in this case the target metric is taken  the first name from
+             those names that are specified in the config file. If the specified metric is not contained in DeepPavlov
+             will be called error.
+        """
 
         self.config_path = config_path
         self.exp_name = exp_name
@@ -24,18 +41,28 @@ class PipelineManager:
         self.info = info
         self.hyper_search = hyper_search
         self.sample_num = sample_num
-        self.date = datetime.now()
         self.target_metric = target_metric
         self.pipeline_generator = None
+        if date is not None:
+            self.date = date
+        else:
+            self.date = datetime.now()
 
         self.root = root
         self.save_path = join(self.root, '{}-{}-{}'.format(self.date.year, self.date.month, self.date.day),
                               self.exp_name, 'checkpoints')
 
+        # TODO fix date to str
         self.logger = Logger(exp_name, root, self.info, self.date)
         self.start_exp = time()
 
     def run(self):
+        """
+        Initializes the pipeline generator and runs the experiment. Creates a report after the experiments
+
+        Returns:
+            None
+        """
         # create the pipeline generator
         self.pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, stype=self.hyper_search)
 

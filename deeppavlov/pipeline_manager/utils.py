@@ -1,10 +1,11 @@
-import pandas as pd
 import numpy as np
 import json
 import xlsxwriter
 import matplotlib
 import matplotlib.pyplot as plt
+import time
 
+from copy import deepcopy
 from os.path import join, isdir
 from os import mkdir
 matplotlib.use('agg')
@@ -21,7 +22,64 @@ def normal_time(z):
     return t
 
 
-# ------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------Hyperparameters search----------------------------------------
+
+
+class HyperPar:
+    """
+    Glory to the great Michael!
+    """
+    def __init__(self, **kwargs):
+        np.random.seed(int(time.time()))
+        self.params = kwargs
+
+    def sample_params(self):
+        params = deepcopy(self.params)
+        params_sample = dict()
+        for param, param_val in params.items():
+            if isinstance(param_val, list):
+                params_sample[param] = np.random.choice(param_val)
+            elif isinstance(param_val, dict):
+                if 'bool' in param_val and param_val['bool']:
+                    sample = bool(np.random.choice([True, False]))
+                elif 'range' in param_val:
+                    # Generate number of smaples
+                    if 'n_samples' in param_val:
+                        if param_val['n_samples'] > 1 and param_val.get('increasing', False):
+
+                            sample_1 = self._sample_from_ranges(param_val)
+                            sample_2 = self._sample_from_ranges(param_val)
+                            start_stop = sorted([sample_1, sample_2])
+                            sample = [s for s in np.linspace(start_stop[0], start_stop[1], param_val['n_samples'])]
+                            if param_val.get('discrete', False):
+                                sample = [int(s) for s in sample]
+                        else:
+                            sample = [self._sample_from_ranges(param_val) for _ in range(param_val['n_samples'])]
+                    else:
+                        sample = self._sample_from_ranges(param_val)
+                params_sample[param] = sample
+            else:
+                params_sample[param] = param_val
+        return params_sample
+
+    def _sample_from_ranges(self, opts):
+        from_ = opts['range'][0]
+        to_ = opts['range'][1]
+        if opts.get('scale', None) == 'log':
+            sample = self._sample_log(from_, to_)
+        else:
+            sample = np.random.uniform(from_, to_)
+        if opts.get('discrete', False):
+            sample = int(np.round(sample))
+        return sample
+
+    @staticmethod
+    def _sample_log(from_, to_):
+        sample = np.exp(np.random.uniform(np.log(from_), np.log(to_)))
+        return float(sample)
+
+
+# ------------------------------------------------Generate reports-----------------------------------------------------
 def get_pipe_sq(pipe_dict):
     names = list(pipe_dict['res'].keys())
     m = 0
@@ -53,6 +111,7 @@ def write_component(sheet, comp_dict, start_x, start_y, mx_height, cell_format):
 
 
 def write_metrics(sheet, comp_dict, start_x, start_y, mx_height, cell_format):
+    """ Write metric info in pipeline table """
     data_names = list(comp_dict['res'].keys())
     metric_names = list(comp_dict['res'][data_names[-1]].keys())
 
@@ -69,6 +128,7 @@ def write_metrics(sheet, comp_dict, start_x, start_y, mx_height, cell_format):
 
 
 def write_pipe(sheet, pipe_dict, start_x, start_y, cell_format, max_):
+    """ Add pipeline to the table """
     height, width = get_pipe_sq(pipe_dict)
     # height = height - 1
 
@@ -89,6 +149,7 @@ def write_pipe(sheet, pipe_dict, start_x, start_y, cell_format, max_):
 
 
 def sort_pipes(pipes, target_metric):
+    """ Sorts the pipelines by target metric values """
     ind_val = []
     sort_pipes_ = []
     dtype = [('value', 'float'), ('index', 'int')]
@@ -115,6 +176,7 @@ def sort_pipes(pipes, target_metric):
 
 
 def plot_bar(book, data, metrics_):
+    """ Builds a histogram of the results in table """
     graph_worksheet = book.add_worksheet('Plots')
     chart = book.add_chart({'type': 'bar'})
 
@@ -167,6 +229,21 @@ def plot_bar(book, data, metrics_):
 
 
 def build_report(log, target_metric=None, save_path='./'):
+    """
+    Analyzes the log and creates a table (file_name.xlsx) with experiment report. In the report, the information is
+    sorted by the target metric.
+
+    Args:
+        log: str; path to log file
+        target_metric: str; The metric name on the basis of which the results will be sorted when the report
+             is generated. The default value is None, in this case the target metric is taken  the first name from
+             those names that are specified in the config file. If the specified metric is not contained in DeepPavlov
+             will be called error
+        save_path: str;
+
+    Returns:
+        None
+    """
     if isinstance(log, str):
         with open(log, 'r') as lgd:
             log_data = json.load(lgd)
@@ -240,10 +317,20 @@ def build_report(log, target_metric=None, save_path='./'):
     return None
 
 
-# ------------------------------------------------------------------------------------------------------------------
-
-
 def results_analizator(log, target_metric='f1_weighted', num_best=5):
+    """
+    It analyzes the log and collects the information necessary to create a graph.
+    Args:
+        log: dict; dict from log
+        target_metric: str; The metric name on the basis of which the results will be sorted when the report
+             is generated. The default value is None, in this case the target metric is taken  the first name from
+             those names that are specified in the config file. If the specified metric is not contained in DeepPavlov
+             will be called error.
+        num_best: int; border top index
+
+    Returns:
+        dict
+    """
     models_names = list(log['experiments'].keys())
     metrics = log['experiment_info']['metrics']
     if target_metric not in metrics:
@@ -292,203 +379,23 @@ def results_analizator(log, target_metric='f1_weighted', num_best=5):
     return main
 
 
-def get_table(log, savepath, target_metric='f1_weighted', num_best=None):
-    metrics = log['experiment_info']['metrics']
-    if target_metric not in metrics:
-        print("Warning: Target metric '{}' not in log. The fisrt metric in log will be use as target metric.".format(
-            target_metric))
-        target_metric = metrics[0]
-
-    pd_main = {"Model": [], "Speller": [], "Tokenizer": [], "Lemmatizer": [], "Vectorizer": []}
-    for met in metrics:
-        pd_main[met] = []
-
-    for name in log['experiments'].keys():
-        for key, val in log['experiments'][name].items():
-            pd_main['Model'].append(name)
-            ops = val['light_config'].split('-->')
-
-            for met in metrics:
-                pd_main[met].append(val['results']['valid']['metrics'][met])
-
-            spel = False
-            tok = False
-            lem = False
-            vec = False
-
-            for op in ops:
-                op_name, op_type = op.split('_')
-                if op_type == 'Speller':
-                    pd_main["Speller"].append(op_name)
-                    spel = True
-                elif op_type == 'Tokenizer':
-                    pd_main["Tokenizer"].append(op_name)
-                    tok = True
-                elif op_type == 'Lemmatizer':
-                    pd_main["Lemmatizer"].append(op_name)
-                    lem = True
-                elif op_type == 'vectorizer':
-                    pd_main["Vectorizer"].append(op_name)
-                    vec = True
-                else:
-                    pass
-
-            if not spel:
-                pd_main["Speller"].append("None")
-            if not tok:
-                pd_main["Tokenizer"].append("None")
-            if not lem:
-                pd_main["Lemmatizer"].append("None")
-            if not vec:
-                pd_main["Vectorizer"].append("None")
-
-    pdf = pd.DataFrame(pd_main)
-    pdf = pdf.sort_values(target_metric, ascending=False)
-
-    # get slice if need
-    if num_best is not None:
-        pdf = pdf[:num_best+1]
-
-    #     pt = pd.pivot_table(pdf, index=["Speller", "Tokenizer", "Lemmatizer", "Vectorizer", "Model"])
-    pt = pd.pivot_table(pdf,
-                        index=["Model", "Speller", "Tokenizer", "Lemmatizer", "Vectorizer"])
-    pt = pt.reindex(pt.sort_values(by=target_metric, ascending=False).index)
-
-    # save it as excel
-    writer = pd.ExcelWriter(join(savepath, 'report.xlsx'))
-    pt.to_excel(writer, 'Sheet1')
-    writer.save()
-    return None
-
-
-def ploting_hist(x, y, plot_name='Plot', color='y', width=0.35, plot_size=(10, 6), axes_names=['X', 'Y'],
-                 x_lables=None, y_lables=None, xticks=True, legend=True, ext='png', savepath='./results/images/'):
-    fig, ax = plt.subplots(figsize=plot_size)
-    rects = ax.bar(x, y, width, color=color)
-
-    # add some text for labels, title and axes ticks
-    ax.set_xlabel(axes_names[0])
-    ax.set_ylabel(axes_names[1])
-    ax.set_title(plot_name)
-
-    if xticks and x_lables is not None:
-        ax.set_xticks(x)
-        ax.set_xticklabels(x_lables)
-
-    if legend and y_lables is not None:
-        ax.legend((rects[0],), y_lables)
-
-    def autolabel(rects):
-        """
-        Attach a text label above each bar displaying its height
-        """
-        for rect in rects:
-            height = rect.get_height()
-            ax.text(rect.get_x() + rect.get_width() / 2., 1.01 * height,
-                    '{0:.3}'.format(float(height)),
-                    ha='center', va='bottom')
-
-    autolabel(rects)
-
-    if not isdir(savepath):
-        mkdir(savepath)
-    adr = join(savepath, '{0}.{1}'.format(plot_name, ext))
-    fig.savefig(adr, dpi=200)
-    fig.close()
-    return None
-
-
-def plot_res_table(info, save=True, savepath='./', width=0.2, fheight=8, fwidth=12, ext='png'):
-    # prepeare data
-    info = info['sorted']
-    bar_list = []
-    models = list(info.keys())
-    metrics = list(info[models[0]].keys())
-    n = len(metrics)
-
-    for met in metrics:
-        tmp = []
-        for model in models:
-            tmp.append(info[model][met][0])
-        bar_list.append(tmp)
-
-    x = np.arange(len(models))
-
-    # ploting
-    fig, ax = plt.subplots()
-    fig.set_figheight(fheight)
-    fig.set_figwidth(fwidth)
-
-    colors = plt.cm.Paired(np.linspace(0, 0.5, len(bar_list)))
-
-    # add some text for labels, title and axes ticks
-    ax.set_ylabel('Scores').set_fontsize(20)
-    ax.set_title('Scores by metric').set_fontsize(20)
-
-    bars = []
-    for i, y in enumerate(bar_list):
-        if i == 0:
-            bars.append(ax.bar(x, y, width, color=colors[i]))
-        else:
-            bars.append(ax.bar(x + i * width, y, width, color=colors[i]))
-
-    yticks = ax.get_yticks()
-    ax.set_yticklabels(['{0:.2}'.format(float(y)) for y in yticks], fontsize=15)
-
-    ax.grid(True, linestyle='--', color='b', alpha=0.1)
-
-    # Plot bars and create text labels for the table
-    cell_text = []
-    for row in range(n):
-        cell_text.append(['test' for x in models])
-
-    # Add a table at the bottom of the axes
-    the_table = plt.table(cellText=cell_text,
-                          rowLabels=metrics,
-                          rowColours=colors,
-                          colLabels=models,
-                          loc='bottom')
-
-    # Adjust layout to make room for the table:
-    plt.subplots_adjust(left=0.2, bottom=0.2)
-
-    # plot x sticks and labels
-    plt.xticks([])
-
-    # add some text for labels, title and axes ticks
-    ax.set_ylabel('Scores')
-    ax.set_title('Scores by metric')
-
-    # plot legend
-    ax.legend(tuple([bar[0] for bar in bars]), tuple(metrics))
-
-    # auto lables
-    def autolabel(columns):
-        """
-        Attach a text label above each bar displaying its height
-        """
-        for rects in columns:
-            for rect in rects:
-                height = rect.get_height()
-                ax.text(rect.get_x() + rect.get_width() / 2., 1.05 * height, '{0:.2}'.format(float(height)),
-                        ha='center', va='bottom', fontsize=12)
-
-    autolabel(bars)
-    plt.ylim(0, 1.1)
-
-    # show the picture
-    if save:
-        if not isdir(savepath):
-            mkdir(savepath)
-        adr = join(savepath, '{0}.{1}'.format('main_hist_tab', ext))
-        fig.savefig(adr, dpi=100)
-        plt.close(fig)
-    else:
-        plt.show()
-    return None
-
-
 def plot_res(info, save=True, savepath='./', width=0.2, fheight=8, fwidth=12, ext='png'):
+    """
+    Creates a histogram with the results of the experiment.
+
+    Args:
+        info: dict; special dict with information about models, and metrics values
+        save: bool; save trigger
+        savepath: str;
+        width: float; width of one column
+        fheight: int; height of plot
+        fwidth: int; width of plot
+        ext: str; image file extension
+
+    Returns:
+        None
+    """
+
     # prepeare data
     info = info['sorted']
 
@@ -565,6 +472,7 @@ def plot_res(info, save=True, savepath='./', width=0.2, fheight=8, fwidth=12, ex
 
 
 def results_visualization(root, savepath, target_metric=None):
+    """ Reads the log and generates a report based on it """
     with open(join(root, root.split('/')[-1] + '.json'), 'r') as log_file:
         log = json.load(log_file)
         log_file.close()
