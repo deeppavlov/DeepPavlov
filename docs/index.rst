@@ -9,14 +9,23 @@ Welcome to DeepPavlov's documentation!
 .. toctree::
    :glob:
    :maxdepth: 1
-   :caption: User Documentation
+   :caption: Getting Started
 
    Installation <userdocs/installation>
-   Getting Started <userdocs/getting_started>
+   Hello bot! <userdocs/hello_bot>
+
+
+.. toctree::
+   :glob:
+   :maxdepth: 1
+   :caption: Components
+
    Classification <userdocs/classifiers>
    Slot filling <userdocs/slot_filling>
    Goal-Oriented Dialogue Bot <userdocs/go_bot>
+   Sequence-To-Sequence Dialogue Bot <userdocs/seq2seq_go_bot>
    Named Entity Recognition <userdocs/ner>
+   Spelling Correction <userdocs/spelling_correction>
 
 
 .. toctree::
