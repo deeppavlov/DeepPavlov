@@ -13,6 +13,7 @@ Welcome to DeepPavlov's documentation!
 
    Installation <userdocs/installation>
    Hello bot! <userdocs/hello_bot>
+   Pre-trained word vectors <userdocs/pretrained_vectors>
 
 
 .. toctree::
@@ -26,6 +27,9 @@ Welcome to DeepPavlov's documentation!
    Sequence-To-Sequence Dialogue Bot <userdocs/seq2seq_go_bot>
    Named Entity Recognition <userdocs/ner>
    Spelling Correction <userdocs/spelling_correction>
+   TF-IDF Ranking <userdocs/tfidf_ranking>
+   Neural Ranking <userdocs/neural_ranking>
+   Open-Domain Question Answering <userdocs/odqa>
 
 
 .. toctree::
