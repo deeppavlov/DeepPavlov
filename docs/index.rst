@@ -30,6 +30,7 @@ Welcome to DeepPavlov's documentation!
    TF-IDF Ranking <userdocs/tfidf_ranking>
    Neural Ranking <userdocs/neural_ranking>
    Open-Domain Question Answering <userdocs/odqa>
+   Morphological Tagger <userdocs/morphotagger>
 
 
 .. toctree::
