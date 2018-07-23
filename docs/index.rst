@@ -14,6 +14,7 @@ Welcome to DeepPavlov's documentation!
    Installation <userdocs/installation>
    Hello bot! <userdocs/hello_bot>
    Pre-trained word vectors <userdocs/pretrained_vectors>
+   Parameters evolution <userdocs/parameters_evolution>
 
 
 .. toctree::
