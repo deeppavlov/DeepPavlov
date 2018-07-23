@@ -1,20 +1,16 @@
-.. DeepPavlov documentation master file, created by
-   sphinx-quickstart on Mon Jul 16 10:56:14 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to DeepPavlov's documentation!
 ======================================
 
 .. toctree::
    :glob:
    :maxdepth: 1
-   :caption: Getting Started
+   :caption: Intro
 
-   Installation <userdocs/installation>
-   Hello bot! <userdocs/hello_bot>
-   Pre-trained word vectors <userdocs/pretrained_vectors>
-   Parameters evolution <userdocs/parameters_evolution>
+   Hello bot! <intro/hello_bot>
+   Installation <intro/installation>
+   Pre-trained word vectors <intro/pretrained_vectors>
+   Parameters evolution <intro/parameters_evolution>
+   Tutorials <intro/tutorials>
 
 
 .. toctree::
@@ -22,17 +18,25 @@ Welcome to DeepPavlov's documentation!
    :maxdepth: 1
    :caption: Components
 
-   Classification <userdocs/classifiers>
-   Slot filling <userdocs/slot_filling>
-   Goal-Oriented Dialogue Bot <userdocs/go_bot>
-   Sequence-To-Sequence Dialogue Bot <userdocs/seq2seq_go_bot>
-   Named Entity Recognition <userdocs/ner>
-   Spelling Correction <userdocs/spelling_correction>
-   TF-IDF Ranking <userdocs/tfidf_ranking>
-   Neural Ranking <userdocs/neural_ranking>
-   Context Question Answering <userdocs/squad>
-   Open-Domain Question Answering <userdocs/odqa>
-   Morphological Tagger <userdocs/morphotagger>
+   Classification <components/classifiers>
+   Slot filling <components/slot_filling>
+   Goal-Oriented Dialogue Bot <components/go_bot>
+   Sequence-To-Sequence Dialogue Bot <components/seq2seq_go_bot>
+   Named Entity Recognition <components/ner>
+   Spelling Correction <components/spelling_correction>
+   TF-IDF Ranking <components/tfidf_ranking>
+   Neural Ranking <components/neural_ranking>
+   Context Question Answering <components/squad>
+   Morphological Tagger <components/morphotagger>
+
+
+.. toctree::
+   :glob:
+   :maxdepth: 1
+   :caption: Skills
+
+   Pattern Matching <skills/pattern_matching>
+   Open-Domain Question Answering <skills/odqa>
 
 
 .. toctree::
