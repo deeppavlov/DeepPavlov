@@ -76,8 +76,7 @@ Configuration
 
 The ODQA configs suit only model inferring purposes. The `ranker
 config <#the-ranker-config>`__ should be used for ranker training
-and the `reader
-config <https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/models/squad#config-components>`__
+and the :doc:`reader config </userdocs/squad>`
 should be used for reader training.
 
 References

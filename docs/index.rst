@@ -29,6 +29,7 @@ Welcome to DeepPavlov's documentation!
    Spelling Correction <userdocs/spelling_correction>
    TF-IDF Ranking <userdocs/tfidf_ranking>
    Neural Ranking <userdocs/neural_ranking>
+   Context Question Answering <userdocs/squad>
    Open-Domain Question Answering <userdocs/odqa>
    Morphological Tagger <userdocs/morphotagger>
 
