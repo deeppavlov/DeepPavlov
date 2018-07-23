@@ -29,10 +29,10 @@ def save_json(data, fpath):
 
 
 def save_pickle(data, fpath):
-    with open(fpath, 'wb', encoding='utf8') as fout:
+    with open(fpath, 'wb') as fout:
         pickle.dump(data, fout)
 
 
 def load_pickle(fpath):
-    with open(fpath, 'rb', encoding='utf8') as fin:
+    with open(fpath, 'rb') as fin:
         return pickle.load(fin)
