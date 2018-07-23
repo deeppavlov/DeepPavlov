@@ -44,7 +44,7 @@ def install_from_config(config: [str, Path, dict]):
 
     requirements = []
     for rf in requirements_files:
-        with expand_path(rf).open() as f:
+        with expand_path(rf).open(encoding='utf8') as f:
             for line in f:
                 line = re.sub(r'\s', '', line.strip())
                 if line and not line.startswith('#') and line not in requirements:

@@ -295,13 +295,13 @@ class GoalOrientedBotNetwork(TFModel):
     def save_params(self):
         path = str(self.save_path.with_suffix('.json').resolve())
         log.info('[saving parameters to {}]'.format(path))
-        with open(path, 'w') as fp:
+        with open(path, 'w', encoding='utf8') as fp:
             json.dump(self.opt, fp)
 
     def load_params(self):
         path = str(self.load_path.with_suffix('.json').resolve())
         log.info('[loading parameters from {}]'.format(path))
-        with open(path, 'r') as fp:
+        with open(path, 'r', encoding='utf8') as fp:
             params = json.load(fp)
         for p in self.GRAPH_PARAMS:
             if self.opt.get(p) != params.get(p):

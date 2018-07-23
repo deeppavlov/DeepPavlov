@@ -108,7 +108,7 @@ class DSTC2DatasetReader(DatasetReader):
 
     @staticmethod
     def _iter_file(file_path):
-        for ln in open(file_path, 'rt'):
+        for ln in open(file_path, 'rt', encoding='utf8'):
             if ln.strip():
                 yield json.loads(ln)
             else:
@@ -236,7 +236,7 @@ class DSTC2Version2DatasetReader(DatasetReader):
 
     @staticmethod
     def _iter_file(file_path):
-        for ln in open(file_path, 'rt'):
+        for ln in open(file_path, 'rt', encoding='utf8'):
             if ln.strip():
                 yield json.loads(ln)
             else:

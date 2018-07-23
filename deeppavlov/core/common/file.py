@@ -19,20 +19,20 @@ import pickle
 
 
 def read_json(fpath):
-    with open(fpath) as fin:
+    with open(fpath, encoding='utf8') as fin:
         return json.load(fin)
 
 
 def save_json(data, fpath):
-    with open(fpath, 'w') as fout:
+    with open(fpath, 'w', encoding='utf8') as fout:
         return json.dump(data, fout, ensure_ascii=False, indent=2)
 
 
 def save_pickle(data, fpath):
-    with open(fpath, 'wb') as fout:
+    with open(fpath, 'wb', encoding='utf8') as fout:
         pickle.dump(data, fout)
 
 
 def load_pickle(fpath):
-    with open(fpath, 'rb') as fin:
+    with open(fpath, 'rb', encoding='utf8') as fin:
         return pickle.load(fin)
