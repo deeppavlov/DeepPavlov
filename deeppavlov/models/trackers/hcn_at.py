@@ -77,7 +77,7 @@ class ActionTracker:
         return construct_mask(ctxt_f)
 
     def get_action_templates(self, responses_path: Path):
-        responses = responses_path.read_text().split('\n')
+        responses = responses_path.read_text(encoding='utf8').split('\n')
         responses = list(set([self.et._extract_entities(response, update=False)
                               for response in responses]))
 

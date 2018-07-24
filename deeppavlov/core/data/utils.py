@@ -235,7 +235,7 @@ def copytree(src: Path, dest: Path):
 
 def load_vocab(vocab_path):
     vocab_path = Path(vocab_path)
-    with vocab_path.open() as f:
+    with vocab_path.open(encoding='utf8') as f:
         return f.read().split()
 
 

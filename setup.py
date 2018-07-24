@@ -23,7 +23,7 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 def read_requirements():
     # # parses requirements from requirements.txt
     reqs_path = os.path.join(__location__, 'requirements.txt')
-    with open(reqs_path) as f:
+    with open(reqs_path, encoding='utf8') as f:
         reqs = [line.strip() for line in f if not line.strip().startswith('#')]
 
     for req in reqs:
@@ -40,13 +40,13 @@ def read_requirements():
 
 
 def readme():
-    with open(os.path.join(__location__, 'README.md')) as f:
+    with open(os.path.join(__location__, 'README.md'), encoding='utf8') as f:
         text = f.read()
     return re.sub(r']\((?!https?://)', r'](https://github.com/deepmipt/DeepPavlov/blob/master/', text)
 
 
 meta = {}
-with open(os.path.join(__location__, 'deeppavlov/package_meta.py')) as f:
+with open(os.path.join(__location__, 'deeppavlov/package_meta.py'), encoding='utf8') as f:
     exec(f.read(), meta)
 
 setup(

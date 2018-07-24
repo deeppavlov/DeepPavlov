@@ -49,7 +49,7 @@ class Embeddings(object):
         """Initialize embeddings from the file."""
         log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
         if self.int2emb_load_path.is_file():
-            with open(self.int2emb_load_path, 'r') as f:
+            with open(self.int2emb_load_path, 'r', encoding='utf8') as f:
                 for line in f:
                     values = line.rsplit(sep=' ', maxsplit=self.embedding_dim)
                     assert(len(values) == self.embedding_dim + 1)
@@ -61,7 +61,7 @@ class Embeddings(object):
         log.info("[saving `{}`]".format(self.__class__.__name__))
         """Save the dictionary tok2emb to the file."""
         if not self.int2emb_save_path.is_file():
-            with open(self.int2emb_save_path, 'w') as f:
+            with open(self.int2emb_save_path, 'w', encoding='utf8') as f:
                 data = '\n'.join([str(el[0]) + ' ' +
                                  ' '.join(list(map(str, el[1]))) for el in self.int2emb_vocab.items()])
                 f.write(data)

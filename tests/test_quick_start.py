@@ -132,7 +132,7 @@ def download_config(conf_file):
     if not src_file.is_file():
         raise RuntimeError('Unexisting config file {}'.format(conf_file))
 
-    with src_file.open() as fin:
+    with src_file.open(encoding='utf8') as fin:
         config = json.load(fin)
 
     if config.get("train"):
@@ -142,7 +142,7 @@ def download_config(conf_file):
 
     config["deeppavlov_root"] = str(download_path)
 
-    with (test_configs_path / conf_file).open("w") as fout:
+    with (test_configs_path / conf_file).open("w", encoding='utf8') as fout:
         json.dump(config, fout)
 
     # Download referenced config files

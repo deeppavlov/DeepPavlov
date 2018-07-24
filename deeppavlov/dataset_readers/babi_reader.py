@@ -44,7 +44,7 @@ class BabiDatasetReader(DatasetReader):
         responses = self._get_responses(file_path, dialogs)
 
         responses_path = Path(paths.deeppavlov_root) / 'responses.txt'
-        responses_path.write_text('\n'.join(responses))
+        responses_path.write_text('\n'.join(responses), encoding='utf8')
 
         trainset = [{'context': u, 'response': r} for u, r in zip(utterances, responses)]
 
@@ -72,7 +72,7 @@ class BabiDatasetReader(DatasetReader):
                     filtered_.append(row)
             return filtered_
 
-        with open(file_path) as f:
+        with open(file_path, encoding='utf8') as f:
             dialogs = filter_([rm_index(row.split('\t')) for row in f.read().split('\n')])
             # organize dialogs -> dialog_indices
             prev_idx = -1
@@ -110,7 +110,7 @@ class BabiDatasetReader(DatasetReader):
 #TODO: move save_vocab to babi_dataset
     @staticmethod
     def save_vocab(dialogs, fpath):
-        with open(fpath, 'w') as f:
+        with open(fpath, 'w', encoding='utf8') as f:
             words = sorted(list(set(chain.from_iterable(
                 [instance['context'].split() for dialog in dialogs for instance in dialog]))))
             f.write(' '.join(words))

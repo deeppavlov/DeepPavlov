@@ -51,7 +51,7 @@ class DictEmbedder(Component, Serializable):
         else:
             log.info('Loading existing dictionary of embeddings from {}'.format(self.load_path))
 
-            with open(str(self.load_path)) as fin:
+            with open(self.load_path, encoding='utf8') as fin:
                 for line in fin:
                     values = line.rsplit(sep=' ', maxsplit=self.dim)
                     assert (len(values) == self.dim + 1)

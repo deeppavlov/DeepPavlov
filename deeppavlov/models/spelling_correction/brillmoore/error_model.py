@@ -196,7 +196,7 @@ class ErrorModel(Estimator):
     def save(self):
         logger.info("[saving error_model to `{}`]".format(self.save_path))
 
-        with open(self.save_path, 'w', newline='') as tsv_file:
+        with open(self.save_path, 'w', newline='', encoding='utf8') as tsv_file:
             writer = csv.writer(tsv_file, delimiter='\t')
             for (w, s), log_p in self.costs.items():
                 writer.writerow([w, s, exp(log_p)])
@@ -205,7 +205,7 @@ class ErrorModel(Estimator):
         if self.load_path:
             if self.load_path.is_file():
                 logger.info("loading error_model from `{}`".format(self.load_path))
-                with open(self.load_path, 'r', newline='') as tsv_file:
+                with open(self.load_path, 'r', newline='', encoding='utf8') as tsv_file:
                     reader = csv.reader(tsv_file, delimiter='\t')
                     for w, s, p in reader:
                         self.costs[(w, s)] = log(float(p))

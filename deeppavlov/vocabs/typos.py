@@ -85,7 +85,7 @@ class StaticDictionary:
         if not raw_path:
             raise RuntimeError('raw_path for StaticDictionary is not set')
         raw_path = expand_path(raw_path)
-        with open(raw_path, newline='') as f:
+        with open(raw_path, newline='', encoding='utf8') as f:
             data = [line.strip().split('\t')[0] for line in f]
         return data
 
