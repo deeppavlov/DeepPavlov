@@ -13,7 +13,7 @@ developer.
 Here is a simple example of interaction with a trained dialogue bot (can
 be downloaded with ``deeppavlov/download.py``):
 
-.. code::
+.. code:: bash
 
     >> Hello, welcome to the Cambridge restaurant system. You can ask for restaurants by area, price range or food type. How may I help you?
     x::hi, i want cheap food
@@ -322,7 +322,7 @@ You should provide a maping from actions to text templates in the following form
 
 For example,
 
-.. code::
+.. code:: bash
 
     bye You are welcome!
     canthear  Sorry, I can't hear you.
