@@ -13,7 +13,7 @@
     "sample_candidates_test": "pool",
     "type_of_model": "triplet",
     "hard_triplets": true,
-    "num_positive_samples": 5,
+    "num_positive_samples": 10,
     "num_negative_samples": 10,
     "num_ranking_samples_valid": 10,
     "num_ranking_samples_test": 10,
