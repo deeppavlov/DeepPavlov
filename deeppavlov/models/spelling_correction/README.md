@@ -33,7 +33,7 @@ from deeppavlov.core.commands.infer import build_model_from_config
 
 CONFIG_PATH = 'deeppavlov/configs/spelling_correction/brillmoore_kartaslov_ru.json'
 
-with open(CONFIG_PATH) as config_file:
+with open(CONFIG_PATH, encoding='utf8') as config_file:
     config = json.load(config_file)
 
 model = build_model_from_config(config)

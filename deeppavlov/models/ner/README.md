@@ -519,7 +519,7 @@ from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.commands.train import train_model_from_config
 
 PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_ontonotes.json'
-with open(PIPELINE_CONFIG_PATH) as f:
+with open(PIPELINE_CONFIG_PATH, encoding='utf8') as f:
     config = json.load(f)
 train_model_from_config(PIPELINE_CONFIG_PATH)
 ner_model = build_model_from_config(config)
@@ -539,7 +539,7 @@ from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.commands.train import train_model_from_config
 
 PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_ontonotes.json'
-with open(PIPELINE_CONFIG_PATH) as f:
+with open(PIPELINE_CONFIG_PATH, encoding='utf8') as f:
     config = json.load(f)
 train_model_from_config(PIPELINE_CONFIG_PATH)
 ner_model = build_model_from_config(config)
@@ -617,7 +617,7 @@ from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.download import deep_download
 import json
 PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_rus.json'
-with open(PIPELINE_CONFIG_PATH) as f:
+with open(PIPELINE_CONFIG_PATH, encoding='utf8') as f:
     config = json.load(f)
 deep_download(['-c', PIPELINE_CONFIG_PATH])
 ner_model = build_model_from_config(config)

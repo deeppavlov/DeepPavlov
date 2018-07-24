@@ -30,7 +30,7 @@ class Conll2003DatasetReader(DatasetReader):
 
     def parse_ner_file(self, file_name: Path):
         samples = []
-        with file_name.open() as f:
+        with file_name.open(encoding='utf8') as f:
             tokens = ['<DOCSTART>']
             pos_tags = ['O']
             tags = ['O']

@@ -118,30 +118,30 @@ class RankingDict(metaclass=ABCMeta):
         return ints_li
 
     def save_int2tok(self):
-        with self.tok_save_path.open('w') as f:
+        with self.tok_save_path.open('w', encoding='utf8') as f:
             f.write('\n'.join(['\t'.join([str(el[0]), el[1]]) for el in self.int2tok_vocab.items()]))
 
     def load_int2tok(self):
-        with self.tok_load_path.open('r') as f:
+        with self.tok_load_path.open('r', encoding='utf8') as f:
             data = f.readlines()
         self.int2tok_vocab = {int(el.split('\t')[0]): el.split('\t')[1][:-1] for el in data}
 
     def save_context2toks(self):
-        with self.cont_save_path.open('w') as f:
+        with self.cont_save_path.open('w', encoding='utf8') as f:
             f.write('\n'.join(['\t'.join([str(el[0]), ' '.join(el[1])]) for el in self.context2toks_vocab.items()]))
 
     def load_context2toks(self):
-        with self.cont_load_path.open('r') as f:
+        with self.cont_load_path.open('r', encoding='utf8') as f:
             data = f.readlines()
         self.context2toks_vocab = {int(el.split('\t')[0]): el.split('\t')[1][:-1].split(' ') for el in data}
 
     def save_response2toks(self):
-        with self.resp_save_path.open('w') as f:
+        with self.resp_save_path.open('w', encoding='utf8') as f:
             f.write(
                 '\n'.join(['\t'.join([str(el[0]), ' '.join(el[1])]) for el in self.response2toks_vocab.items()]))
 
     def load_response2toks(self):
-        with self.resp_load_path.open('r') as f:
+        with self.resp_load_path.open('r', encoding='utf8') as f:
             data = f.readlines()
         self.response2toks_vocab = {int(el.split('\t')[0]): el.split('\t')[1][:-1].split(' ') for el in data}
 
