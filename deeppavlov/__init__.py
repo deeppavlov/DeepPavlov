@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from .package_meta import __version__, __author__
+from .package_meta import __author__, __version__, __description__, __keywords__
 
 # check version
 import sys

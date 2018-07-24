@@ -1,3 +1,4 @@
+from typing import Tuple
 import numpy as np
 import tensorflow as tf
 from functools import partial
@@ -15,6 +16,39 @@ log = get_logger(__name__)
 
 @register('ner')
 class NerNetwork(TFModel):
+    """
+    The ``NerNetwork`` is for Neural Named Entity Recognition and Slot Filling.
+
+    Parameters:
+        n_tags: Number of tags in the tag vocabulary.
+        token_emb_dim: Dimensionality of token embeddings, needed if embedding matrix is not provided.
+        char_emb_dim: Dimensionality of token embeddings.
+        capitalization_dim : Dimensionality of capitalization features, if they are provided.
+        pos_features_dim: Dimensionality of POS features, if they are provided.
+        additional_features: Some other features.
+        net_type: Type of the network, either ``'rnn'`` or ``'cnn'``.
+        cell_type: Type of the cell in RNN, either ``'lstm'`` or ``'gru'``.
+        use_cudnn_rnn: Whether to use CUDNN implementation of RNN.
+        two_dense_on_top: Additional dense layer before predictions.
+        n_hidden_list: A list of output feature dimensionality for each layer. A value (100, 200) means that there will
+            be two layers with 100 and 200 units, respectively.
+        cnn_filter_width: The width of the convolutional kernel for Convolutional Neural Networks.
+        use_crf: Whether to use Conditional Random Fields on top of the network (recommended).
+        token_emb_mat: Token embeddings matrix.
+        char_emb_mat: Character embeddings matrix.
+        use_batch_norm: Whether to use Batch Normalization or not. Affects only CNN networks.
+        dropout_keep_prob: Probability of keeping the hidden state, values from 0 to 1. 0.5 works well in most cases.
+        embeddings_dropout: Whether to use dropout on embeddings or not.
+        top_dropout: Whether to use dropout on output units of the network or not.
+        intra_layer_dropout: Whether to use dropout between layers or not.
+        l2_reg: L2 norm regularization for all kernels.
+        clip_grad_norm: Clip the gradients by norm.
+        learning_rate: Learning rate to use during the training (usually from 0.1 to 0.0001)
+        gpu: Number of gpu to use.
+        seed: Random seed.
+        lr_drop_patience: How many epochs to wait until drop the learning rate.
+        lr_drop_value: Amount of learning rate drop.
+    """
     GRAPH_PARAMS = ["n_tags",  # TODO: add check
                     "char_emb_dim",
                     "capitalization_dim",
@@ -27,34 +61,34 @@ class NerNetwork(TFModel):
                     "cell_type"]
 
     def __init__(self,
-                 n_tags,  # Features dimensions
-                 token_emb_dim=None,
-                 char_emb_dim=None,
-                 capitalization_dim=None,
-                 pos_features_dim=None,
-                 additional_features=None,
-                 net_type='rnn',  # Net architecture
-                 cell_type='lstm',
-                 use_cudnn_rnn=False,
-                 two_dense_on_top=False,
-                 n_hidden_list=(128,),
-                 cnn_filter_width=7,
-                 use_crf=False,
-                 token_emb_mat=None,
-                 char_emb_mat=None,
-                 use_batch_norm=False,
-                 dropout_keep_prob=0.5,  # Regularization
-                 embeddings_dropout=False,
-                 top_dropout=False,
-                 intra_layer_dropout=False,
-                 l2_reg=0.0,
-                 clip_grad_norm=5.0,
-                 learning_rate=3e-3,
-                 gpu=None,
-                 seed=None,
-                 lr_drop_patience=5,
-                 lr_drop_value=0.1,
-                 **kwargs):
+                 n_tags: int,  # Features dimensions
+                 token_emb_dim: int = None,
+                 char_emb_dim: int = None,
+                 capitalization_dim: int = None,
+                 pos_features_dim: int = None,
+                 additional_features: int = None,
+                 net_type: str = 'rnn',  # Net architecture
+                 cell_type: str = 'lstm',
+                 use_cudnn_rnn: bool = False,
+                 two_dense_on_top: bool = False,
+                 n_hidden_list: Tuple[int] = (128,),
+                 cnn_filter_width: int = 7,
+                 use_crf: bool = False,
+                 token_emb_mat: np.ndarray = None,
+                 char_emb_mat: np.ndarray = None,
+                 use_batch_norm: bool = False,
+                 dropout_keep_prob: float = 0.5,  # Regularization
+                 embeddings_dropout: bool = False,
+                 top_dropout: bool = False,
+                 intra_layer_dropout: bool = False,
+                 l2_reg: float = 0.0,
+                 clip_grad_norm: float = 5.0,
+                 learning_rate: float = 3e-3,
+                 gpu: int = None,
+                 seed: int = None,
+                 lr_drop_patience: int = 5,
+                 lr_drop_value: float = 0.1,
+                 **kwargs) -> None:
         tf.set_random_seed(seed)
         np.random.seed(seed)
         self._learning_rate = learning_rate
