@@ -26,8 +26,8 @@
   },
   "metadata": {
     "requirements": [
-      "../requirements/tf.txt",
-      "../requirements/elmo.txt"
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/elmo.txt"
     ],
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/elmo_ruwiki_tok_num_400M.tar.gz"
