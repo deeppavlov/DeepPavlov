@@ -85,10 +85,10 @@ def ask_slot(state, params):
         else:
             return "Упс, не знаю как и спросить :(", state
     elif params['slot'] == 'resident':
-        state['__COMMANDS__'].append({'command': 'FILL_SLOT', 'slot': 'resident'})
-        return "Уточните, вы являетесь резидентом или нерезидентом?", state
+        state['__COMMANDS__'].append({'command': 'FILL_SLOT_YES_NO', 'slot': 'resident', 'yes': 'RESIDENT', 'no': 'NO_RESIDENT'})
+        return "Уточните, являетесь резидентом или нерезидентом?", state
     elif params['slot'] == 'client_type':
-        state['__COMMANDS__'].append({'command': 'FILL_SLOT', 'slot': 'client_type'})
+        state['__COMMANDS__'].append({'command': 'FILL_SLOT_YES_NO', 'slot': 'client_type', 'yes': 'INDIVIDUAL', 'no': 'ORGANIZATION'})
         return "Уточните, вы являетесь физическим или юридическим лицом?", state
     elif params['slot'] == 'account_type':
         state['__COMMANDS__'].append({'command': 'FILL_SLOT', 'slot': 'account_type'})
