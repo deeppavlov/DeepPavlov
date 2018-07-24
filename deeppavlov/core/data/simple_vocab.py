@@ -81,7 +81,7 @@ class SimpleVocabulary(Estimator):
 
     def save(self):
         log.info("[saving vocabulary to {}]".format(self.save_path))
-        with self.save_path.open('wt') as f:
+        with self.save_path.open('wt', encoding='utf8') as f:
             for n in range(len(self)):
                 token = self._i2t[n]
                 cnt = self.freqs[token]
@@ -93,7 +93,7 @@ class SimpleVocabulary(Estimator):
             if self.load_path.is_file():
                 log.info("[loading vocabulary from {}]".format(self.load_path))
                 tokens, counts = [], []
-                for ln in self.load_path.open('r'):
+                for ln in self.load_path.open('r', encoding='utf8'):
                     token, cnt = ln.split('\t', 1)
                     tokens.append(token)
                     counts.append(int(cnt))
