@@ -275,7 +275,7 @@ class RankingNetwork(metaclass=TfModelMeta):
     def euclidian_dist(self, x_pair):
         x1_norm = K.l2_normalize(x_pair[0], axis=1)
         x2_norm = K.l2_normalize(x_pair[1], axis=1)
-        diff = subtract([x1_norm, x2_norm])
+        diff = x1_norm - x2_norm
         square = K.square(diff)
         sum = K.sum(square, axis=1)
         sum = K.clip(sum, min_value=1e-12, max_value=None)
