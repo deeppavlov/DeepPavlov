@@ -52,16 +52,14 @@ class Embeddings(object):
         if not self.use_matrix:
             log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
             if self.int2emb_load_path.is_file():
-                with open(self.int2emb_load_path, 'r') as f:
-                    self.emb_matrix = np.load(f)
+                self.emb_matrix = np.load(self.int2emb_load_path)
 
     def save(self):
         """Save the dictionary tok2emb to the file."""
         if not self.use_matrix:
             log.info("[saving `{}`]".format(self.__class__.__name__))
             if not self.int2emb_save_path.is_file():
-                with open(self.int2emb_save_path, 'w') as f:
-                    np.save(f, self.emb_matrix)
+                np.save(self.int2emb_save_path, self.emb_matrix)
 
     def build_emb_matrix(self, tok2int_vocab):
         self.emb_matrix = np.zeros((len(tok2int_vocab), self.embedding_dim))
