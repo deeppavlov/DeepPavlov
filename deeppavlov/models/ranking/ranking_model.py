@@ -148,8 +148,8 @@ class RankingModel(NNModel):
             if self.upd_method == 'on_validation':
                 self.reset_embeddings()
         if self.hard_triplets:
-            c, rp, rn = self.make_hard_triplets(x, self._net)
-            y = np.ones((len(c), len(x[0][1])))
+            b = self.make_hard_triplets(x, y, self._net)
+            y = np.ones(len(b[0][0]))
         else:
             b = self.make_batch(x)
             for i in range(len(x[0])):
@@ -173,9 +173,9 @@ class RankingModel(NNModel):
             b.append([c, r])
         return b
 
-    def make_hard_triplets(self, x, net):
-        samples = [el[2] for el in x]
-        labels = np.array([el[3] for el in x])
+    def make_hard_triplets(self, x, y, net):
+        samples = [[s[1] for s in el] for el in x]
+        labels = y
         batch_size = len(samples)
         num_samples = len(samples[0])
         samp = [y for el in samples for y in el]
@@ -289,7 +289,7 @@ class RankingModel(NNModel):
         rn = [el[2] for el in triplets]
         ratio = sum(hrds) / len(hrds)
         print("Ratio of semi-hard negative samples is %f" % ratio)
-        return c, rp, rn
+        return [(c, rp), (c, rn)]
 
     def get_semi_hard_negative_ind(self, i, j, k, distances, anchor_negative_dist, batch_size, num_samples):
         anc_pos_dist = distances[i * num_samples + j, i * num_samples + k]

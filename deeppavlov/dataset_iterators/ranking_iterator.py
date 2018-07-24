@@ -72,16 +72,12 @@ class RankingIterator:
                         labels = [el["label"] for el in context_response_data]
                         positives = [random.choices(el["pos_pool"], k=self.num_positive_samples)
                                      for el in context_response_data]
-
-                        # should be corrected
-                        context_response_pairs = [[(context[i], el) for el in  [response[i]] + negative_response[i]]
-                                                  for i in range(len(context_response_data))]
-                        x = [[context_response_pairs[i], positives[i], labels[i]]
-                            for i in range(len(context_response_data))]
+                        x = [[(context[i], el) for el in positives[i]] for i in range(len(context_response_data))]
+                        y = labels
                     else:
                         x = [[(context[i], el) for el in [response[i]] + [negative_response[i]]]
                              for i in range(len(context_response_data))]
-                    y = batch_size * [np.ones(self.num_negative_samples)]
+                        y = batch_size * [np.ones(self.num_negative_samples)]
                 elif self.type_of_model == 'duplet':
                     y = [el["label"] for el in context_response_data]
                     x = [[(context[i], response[i])] for i in range(len(context_response_data))]
