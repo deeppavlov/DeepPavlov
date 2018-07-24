@@ -108,6 +108,7 @@ class KBAttention(base.Layer):
     def build(self, input_shape):
         # if in_shape[:-1] != self.kb_inputs.shape 
 # TODO: check input shape
+        # print("in build")
         in_shape = input_shape[:1].concatenate(self.kb_input_shape)
         in_shape = in_shape[:-1].concatenate(in_shape[-1] + input_shape[-1])
         # print("first in_shape =", in_shape)
@@ -124,29 +125,44 @@ class KBAttention(base.Layer):
 
         # print("input_shape =", input_shape)
         # print("last in_shape =", in_shape)
-        #in_shape = in_shape[:-2].concatenate(in_shape[-2] + input_shape[-1])
+        # in_shape = in_shape[:-2].concatenate(in_shape[-2] + input_shape[-1])
         # print("last in_shape =", in_shape)
         self.output_layer = tf.layers.Dense(self.units, **self.dense_params)
         self.output_layer.build(input_shape)
+        # print("build = True")
         self.built = True
       
     def call(self, inputs):
+        # print("in call")
 # TODO: check input dtype
-        batch_size = tf.shape(inputs)[0]
-        kb_inputs = tf.tile(tf.expand_dims(self.kb_inputs, 0), [batch_size, 1, 1])
 
+        # Tile kb_inputs
+        kb_inputs = self.kb_inputs
+        for i in range(inputs.shape.ndims - 1):
+            kb_inputs = tf.expand_dims(kb_inputs, 0)
+        kb_inputs = tf.tile(kb_inputs, tf.concat((tf.shape(inputs)[:-1], [1, 1]), 0))
+
+        # Expand kb_mask
+        kb_mask = self.kb_mask
+        for i in range(inputs.shape.ndims - 2):
+            kb_mask = tf.expand_dims(kb_mask, 1)
+        kb_mask = tf.expand_dims(kb_mask, -1)
+
+        # Tile inputs
         kb_size = tf.shape(self.kb_inputs)[0]
-        cell_inputs = tf.tile(tf.expand_dims(inputs, 1), [1, kb_size, 1])
+        tiling = tf.concat(([1] * (inputs.shape.ndims - 1), [kb_size], [1]), 0)
+        cell_inputs = tf.tile(tf.expand_dims(inputs, -2), tiling)
 
-        outputs = tf.concat([kb_inputs, cell_inputs], -1) 
-        outputs = tf.multiply(outputs, tf.expand_dims(self.kb_mask, -1))
+        outputs = tf.concat([kb_inputs, cell_inputs], -1)
+        outputs = tf.multiply(outputs, kb_mask)
         for layer in self.layers:
             outputs = layer.call(outputs)
-        #outputs = tf.Print(outputs, [outputs], "KB attention pre-last layer output =")
+        # outputs = tf.Print(outputs, [outputs], "KB attention pre-last layer output =")
         outputs = tf.squeeze(outputs, [-1])
         # print("inputs shape =", inputs.shape)
         # print("outputs shape =", outputs.shape)
         outputs = tf.concat([self.output_layer(inputs), outputs], -1)
+        # print("out of call")
         return outputs
 
     def _compute_output_shape(self, input_shape):
@@ -156,7 +172,9 @@ class KBAttention(base.Layer):
             raise ValueError(
                 'The innermost dimension of input_shape must be defined, but saw: %s'
                 % input_shape)
-        return input_shape[:-1].concatenate(self.units + self.kb_input_shape[0])
+        output_shape = input_shape[:-1].concatenate(self.units + self.kb_input_shape[0])
+        # print("computed output shape is", output_shape)
+        return output_shape
 
     def compute_output_shape(self, input_shape):
         return self._compute_output_shape(input_shape)
