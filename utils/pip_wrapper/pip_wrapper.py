@@ -12,7 +12,6 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 _tf_re = re.compile(r'\s*tensorflow\s*([<=>;]|$)')
-_spacy_re = re.compile(r'\s*spacy\s*([<=>;]|$)')
 
 
 def install(*packages):
@@ -24,12 +23,6 @@ def install(*packages):
     result = subprocess.check_call([sys.executable, '-m', 'pip', 'install',
                                    *[re.sub(r'\s', '', package) for package in packages]],
                                    env=os.environ.copy())
-    if any(_spacy_re.match(package) for package in packages):
-        try:
-            import spacy
-            spacy.load('en')
-        except IOError:
-            subprocess.check_call([sys.executable, '-m', 'spacy', 'download', 'en'], env=os.environ.copy())
     return result
 
 
