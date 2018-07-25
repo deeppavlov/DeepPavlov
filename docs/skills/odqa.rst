@@ -47,7 +47,7 @@ Training
 --------
 
 The ODQA ranker and ODQA reader should be trained separately.
-Read about training the **ranker** :doc:`here </userdocs/tfidf_ranking>`.
+Read about training the **ranker** :doc:`here </components/tfidf_ranking>`.
 Read about training the **reader** in our separate `reader
 tutorial <https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/models/squad>`__.
 
@@ -76,7 +76,7 @@ Configuration
 
 The ODQA configs suit only model inferring purposes. The `ranker
 config <#the-ranker-config>`__ should be used for ranker training
-and the :doc:`reader config </userdocs/squad>`
+and the :doc:`reader config </components/squad>`
 should be used for reader training.
 
 References
