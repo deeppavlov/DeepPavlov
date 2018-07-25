@@ -25,7 +25,6 @@
   "emb_mat_assembler": "deeppavlov.models.preprocessors.assemble_embeddins_matrix:EmbeddingsMatrixAssembler",
   "fasttext": "deeppavlov.models.embedders.fasttext_embedder:FasttextEmbedder",
   "featurized_tracker": "deeppavlov.models.go_bot.tracker:FeaturizedTracker",
-  "field_getter": "deeppavlov.models.preprocessors.field_getter:FieldGetter",
   "glove": "deeppavlov.models.embedders.glove_embedder:GloVeEmbedder",
   "go_bot": "deeppavlov.models.go_bot.bot:GoalOrientedBot",
   "go_bot_rnn": "deeppavlov.models.go_bot.network:GoalOrientedBotNetwork",
