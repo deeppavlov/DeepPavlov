@@ -14,10 +14,10 @@
       {
         "in": ["x"],
         "name": "lazy_tokenizer",
-        "out": ["x"]
+        "out": ["x_tokens"]
       },
       {
-        "in": ["x"],
+        "in": ["x_tokens"],
         "name": "str_lower",
         "out": ["x_lower"]
       },
@@ -48,7 +48,7 @@
         "out": ["y_ind"]
       },
       {
-        "in": ["x"],
+        "in": ["x_tokens"],
         "name": "mask",
         "out": ["mask"]
       },
@@ -77,7 +77,7 @@
         "out": ["tags"]
       }
     ],
-    "out": ["tags"]
+    "out": ["x_tokens", "tags"]
   },
   "train": {
     "epochs": 100,
