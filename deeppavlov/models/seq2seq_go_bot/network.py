@@ -125,7 +125,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                               learning_rate=self._learning_rate,
                               optimizer=self._optimizer,
                               clip_norm=10.)
-        # print(tf.global_variables())
+        for v in tf.global_variables():
+            print(v)
         # print("Built the graph.")
 
 
@@ -242,15 +243,17 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
             # TRAIN MODE
             # Create an attention mechanism
-            _attention_mechanism_tr = tf.contrib.seq2seq.LuongAttention(
-                self.hidden_size,
-                self._encoder_outputs,
-                memory_sequence_length=self._src_sequence_lengths,
-                name='attention')
-            _decoder_cell_tr = tf.contrib.seq2seq.AttentionWrapper(
-                _decoder_cell,
-                _attention_mechanism_tr,
-                attention_layer_size=self.hidden_size)
+            with tf.variable_scope("AttentionOverEncoder"):
+                _attention_mechanism_tr = tf.contrib.seq2seq.LuongAttention(
+                    self.hidden_size,
+                    self._encoder_outputs,
+                    memory_sequence_length=self._src_sequence_lengths,
+                    name='attention_mechanism')
+                _decoder_cell_tr = tf.contrib.seq2seq.AttentionWrapper(
+                    _decoder_cell,
+                    _attention_mechanism_tr,
+                    attention_layer_size=self.hidden_size,
+                    name='attention_wrapper')
             # Train Helper to feed inputs for training:
             # read inputs from dense ground truth vectors
             _helper_tr = tf.contrib.seq2seq.TrainingHelper(
@@ -271,15 +274,17 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             _logits = _outputs_inf.rnn_output
 
             # INFER MODE
-            _attention_mechanism_inf = tf.contrib.seq2seq.LuongAttention(
-                self.hidden_size,
-                _tiled_encoder_outputs,
-                memory_sequence_length=_tiled_src_sequence_lengths,
-                name='attention')
-            _decoder_cell_inf = tf.contrib.seq2seq.AttentionWrapper(
-                _decoder_cell,
-                _attention_mechanism_inf,
-                attention_layer_size=self.hidden_size)
+            with tf.variable_scope("AttentionOverEncoder", reuse=True):
+                _attention_mechanism_inf = tf.contrib.seq2seq.LuongAttention(
+                    self.hidden_size,
+                    _tiled_encoder_outputs,
+                    memory_sequence_length=_tiled_src_sequence_lengths,
+                    name='attention_mechanism')
+                _decoder_cell_inf = tf.contrib.seq2seq.AttentionWrapper(
+                    _decoder_cell,
+                    _attention_mechanism_inf,
+                    attention_layer_size=self.hidden_size,
+                    name='attention_wrapper')
             # Infer Helper
             _max_iters = tf.round(tf.reduce_max(self._src_sequence_lengths) * 2)
             # NOTE: helper is not needed?
