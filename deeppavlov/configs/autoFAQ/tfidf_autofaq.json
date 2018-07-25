@@ -23,8 +23,8 @@
         "in": ["x_token_lemmas"],
         "out": ["answer"],
         "fit_on": ["x_token_lemmas","y"],
-        "save_path": "autofaq/faq_skill.pkl",
-        "load_path": "autofaq/faq_skill.pkl",
+        "save_path": "autofaq/faq_data.pkl",
+        "load_path": "autofaq/faq_data.pkl",
         "vectorizer": {
           "name": "tfidf_vectorizer",
           "fit_on_batch": ["x"],
