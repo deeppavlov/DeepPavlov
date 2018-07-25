@@ -322,7 +322,7 @@ You should provide a maping from actions to text templates in the following form
 
 For example,
 
-.. code:: bash
+.. code:: text
 
     bye You are welcome!
     canthear  Sorry, I can't hear you.
@@ -346,7 +346,7 @@ Otherwise, you should specify them and
     cd deeppavlov
     python3 deep.py train configs/go_bot/database_yourdataset.json
 
-where ``configs/go_bot/database_yourdataset.json`` is a copy of ``configs/go_bot/database_dstc2.json`` with configured
+where ``_static/go_bot/database_yourdataset.json``__ is a copy of ``configs/go_bot/database_dstc2.json`` with configured
 ``save_path``, ``primary_keys`` and ``unknown_value``.
 
 Comparison
