@@ -106,10 +106,10 @@ class RankingNetwork(metaclass=TfModelMeta):
         if self.embedding_level is None or self.embedding_level == 'token':
             if self.use_matrix:
                 if self.type_of_weights == "shared":
-                    self.obj_model.get_layer(name="embedding").set_weights([emb_matrix])
+                    self.duplet.get_layer(name="embedding").set_weights([emb_matrix])
                 if self.type_of_weights == "separate":
-                    self.obj_model.get_layer(name="embedding_a").set_weights([emb_matrix])
-                    self.obj_model.get_layer(name="embedding_b").set_weights([emb_matrix])
+                    self.duplet.get_layer(name="embedding_a").set_weights([emb_matrix])
+                    self.duplet.get_layer(name="embedding_b").set_weights([emb_matrix])
 
     def embedding_layer(self):
         if self.type_of_weights == "shared":
