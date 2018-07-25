@@ -35,7 +35,7 @@ logger = get_logger(__name__)
 @register('tfidf_vectorizer')
 class TfIdfVectorizer(Component, Serializable):
 
-    def __init__(self, save_path: str = None, load_path: str = None, **kwargs):
+    def __init__(self, save_path: str = None, load_path: str = None, **kwargs) -> None:
 
         self.save_path = save_path
         self.load_path = load_path
@@ -53,7 +53,7 @@ class TfIdfVectorizer(Component, Serializable):
 
 
 
-    def fit(self, x_train) -> None:
+    def fit(self, x_train: List[str]) -> None:
         self.w_matrix = self.tfidf_vect.fit_transform(x_train)
 
     def save(self) -> None:

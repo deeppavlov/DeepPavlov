@@ -3,12 +3,13 @@ from deeppavlov.core.common.registry import register
 
 from pandas import read_csv
 from numpy import nan
+from typing import Dict
 
 @register('autofaq_reader')
 class AutofaqDatasetReader(DatasetReader):
     
 
-    def read(self, dataset_path, *args, **kwargs):
+    def read(self, dataset_path: str, *args, **kwargs) -> Dict:
         """
         Read dataset from specified csv: dataset_path.
         Args:

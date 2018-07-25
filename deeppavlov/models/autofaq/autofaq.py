@@ -12,6 +12,7 @@ limitations under the License.
 """
 
 import numpy as np
+from typing import List
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
@@ -27,29 +28,29 @@ logger = get_logger(__name__)
 @register("autofaq")
 class AutoFaq(Estimator):
 
-    def __init__(self, vectorizer: TfIdfVectorizer, save_path: str = None, load_path: str = None, **kwargs):
+    def __init__(self, vectorizer: TfIdfVectorizer, save_path: str = None, load_path: str = None, **kwargs) -> None:
         self.vectorizer = vectorizer
         self.save_path = save_path
         self.load_path = load_path
         if kwargs['mode'] != 'train':
             self.load()
 
-    def __call__(self, question):
+    def __call__(self, question: List[List[str]]) -> List[str]:
         question = [' '.join(q) for q in question]
         q_vect = self.vectorizer(question)
         answer_id = np.argmax(np.array(q_vect.dot(self.vectorizer.w_matrix.T).todense()))
 
         return [self.id2answer[answer_id]]
 
-    def fit(self, x_train, y_train, *args) -> None:
+    def fit(self, x_train: List[List[str]], y_train: List[str], *args) -> None:
         self.vectorizer.fit([' '.join(x) for x in x_train])
         self.id2answer = dict(enumerate(y_train))
 
-    def save(self):
+    def save(self) -> None:
         self.vectorizer.save()
         save_pickle(self.id2answer, expand_path(self.save_path))
 
-    def load(self):
+    def load(self) -> None:
         self.vectorizer.load()
         self.id2answer = load_pickle(expand_path(self.load_path))
 
