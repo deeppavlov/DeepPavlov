@@ -78,10 +78,12 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                                                    params['learning_rate'])
         self.opt['decay_steps'] = params.get('decay_steps', 1000)
         self.opt['decay_power'] = params.get('decay_power', 1.)
+        self.opt['beam_width'] = params.get('beam_width', 2)
         self.opt['optimizer'] = params.get('optimizer', 'AdamOptimizer')
 
         self.embedding_size = self.opt['embedding_size']
         self.kb_size = self.opt['knowledge_base_size']
+        self.beam_width = self.opt['beam_width']
         self.learning_rate = self.opt['learning_rate']
         self.end_learning_rate = self.opt['end_learning_rate']
         self.decay_steps = self.opt['decay_steps']
@@ -123,6 +125,9 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                               learning_rate=self._learning_rate,
                               optimizer=self._optimizer,
                               clip_norm=10.)
+        # print(tf.global_variables())
+        # print("Built the graph.")
+
 
     def _add_placeholders(self):
         self._learning_rate = tf.placeholder(tf.float32,
@@ -174,25 +179,16 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                                            [None, None],
                                            name='target_weights')
 
-    def _build_body(self):
-        # Encoder embedding
-        # _encoder_embedding = tf.get_variable(
-        #   "encoder_embedding", [self.src_vocab_size, self.embedding_size])
-        # _encoder_emb_inp = tf.nn.embedding_lookup(_encoder_embedding,
-        #                                          self._encoder_inputs)
-        _encoder_emb_inp = self._encoder_inputs
-        # _encoder_emb_inp = tf.one_hot(self._encoder_inputs, self.src_vocab_size)
-
-        # Decoder embedding
-        # _decoder_embedding = tf.get_variable(
-        #    "decoder_embedding", [self.tgt_vocab_size + self.kb_size,
-        #                          self.embedding_size])
-        _decoder_emb_inp = tf.nn.embedding_lookup(self._decoder_embedding,
-                                                  self._decoder_inputs)
-        # _decoder_emb_inp = tf.one_hot(self._decoder_inputs,
-        #                              self.tgt_vocab_size + self.kb_size)
-
+    def _build_encoder(self):
         with tf.variable_scope("Encoder"):
+            # Encoder embedding
+            # _encoder_embedding = tf.get_variable(
+            #   "encoder_embedding", [self.src_vocab_size, self.embedding_size])
+            # _encoder_emb_inp = tf.nn.embedding_lookup(_encoder_embedding,
+            #                                          self._encoder_inputs)
+            # _encoder_emb_inp = tf.one_hot(self._encoder_inputs, self.src_vocab_size)
+            _encoder_emb_inp = self._encoder_inputs
+
             _encoder_cell = tf.nn.rnn_cell.BasicLSTMCell(self.hidden_size)
             # Run Dynamic RNN
             #   _encoder_outputs: [max_time, batch_size, hidden_size]
@@ -202,63 +198,127 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                 _encoder_cell, _encoder_emb_inp, dtype=tf.float32,
                 sequence_length=self._src_sequence_lengths, time_major=False)
 
-        # Create an attention mechanism
-        _attention_mechanism = tf.contrib.seq2seq.LuongAttention(
-            self.hidden_size, _encoder_outputs,
-            memory_sequence_length=self._src_sequence_lengths, name='attention')
+        self._encoder_outputs = _encoder_outputs
+        self._encoder_state = _encoder_state
 
+    def _build_body(self):
+        self._build_encoder()
+        self._build_decoder()
+        return self._logits, self._predictions
+
+    def _build_decoder(self):
         with tf.variable_scope("Decoder"):
+            # Decoder embedding
+            # _decoder_embedding = tf.get_variable(
+            #    "decoder_embedding", [self.tgt_vocab_size + self.kb_size,
+            #                          self.embedding_size])
+            # _decoder_emb_inp = tf.one_hot(self._decoder_inputs,
+            #                              self.tgt_vocab_size + self.kb_size)
+            _decoder_emb_inp = tf.nn.embedding_lookup(self._decoder_embedding,
+                                                      self._decoder_inputs)
+
+            # Tiling outputs, states, sequence lengths
+            _tiled_encoder_outputs = tf.contrib.seq2seq.tile_batch(
+                self._encoder_outputs, multiplier=self.beam_width)
+            _tiled_encoder_state = tf.contrib.seq2seq.tile_batch(
+                self._encoder_state, multiplier=self.beam_width)
+            _tiled_src_sequence_lengths = tf.contrib.seq2seq.tile_batch(
+                self._src_sequence_lengths, multiplier=self.beam_width)
+
+            with tf.variable_scope("AttentionOverKB"):
+                _kb_attn_layer = KBAttention(self.tgt_vocab_size,
+                                             self.kb_attn_hidden_sizes + [1],
+                                             self._kb_embedding,
+                                             self._kb_mask,
+                                             activation=tf.nn.relu,
+                                             use_bias=False)
+# TODO: rm output dense layer
+            # Output dense layer
+            #_projection_layer = \
+            #  tf.layers.Dense(self.tgt_vocab_size, use_bias=False, _reuse=reuse)
+
+            # Decoder Cell
             _decoder_cell = tf.nn.rnn_cell.BasicLSTMCell(self.hidden_size)
-            _decoder_cell = tf.contrib.seq2seq.AttentionWrapper(
-                _decoder_cell, _attention_mechanism,
+
+            # TRAIN MODE
+            # Create an attention mechanism
+            _attention_mechanism_tr = tf.contrib.seq2seq.LuongAttention(
+                self.hidden_size,
+                self._encoder_outputs,
+                memory_sequence_length=self._src_sequence_lengths,
+                name='attention')
+            _decoder_cell_tr = tf.contrib.seq2seq.AttentionWrapper(
+                _decoder_cell,
+                _attention_mechanism_tr,
                 attention_layer_size=self.hidden_size)
-            # Train Helper
-            _helper = tf.contrib.seq2seq.TrainingHelper(
+            # Train Helper to feed inputs for training:
+            # read inputs from dense ground truth vectors
+            _helper_tr = tf.contrib.seq2seq.TrainingHelper(
                 _decoder_emb_inp, self._tgt_sequence_lengths, time_major=False)
+            # Copy encoder hidden state to decoder inital state
+            _decoder_init_state = \
+                _decoder_cell_tr.zero_state(self._batch_size, dtype=tf.float32)\
+                .clone(cell_state=self._encoder_state)
+            _decoder_tr = \
+                tf.contrib.seq2seq.BasicDecoder(_decoder_cell_tr, _helper_tr,
+                                                initial_state=_decoder_init_state,
+                                                output_layer=_kb_attn_layer)
+            _outputs_inf, _, _ = \
+                tf.contrib.seq2seq.dynamic_decode(_decoder_tr,
+                                                  impute_finished=False,
+                                                  output_time_major=False)
+            # _logits = decode(_helper, "decode").beam_search_decoder_output.scores
+            _logits = _outputs_inf.rnn_output
+
+            # INFER MODE
+            _attention_mechanism_inf = tf.contrib.seq2seq.LuongAttention(
+                self.hidden_size,
+                _tiled_encoder_outputs,
+                memory_sequence_length=_tiled_src_sequence_lengths,
+                name='attention')
+            _decoder_cell_inf = tf.contrib.seq2seq.AttentionWrapper(
+                _decoder_cell,
+                _attention_mechanism_inf,
+                attention_layer_size=self.hidden_size)
             # Infer Helper
             _max_iters = tf.round(tf.reduce_max(self._src_sequence_lengths) * 2)
-            _helper_infer = tf.contrib.seq2seq.GreedyEmbeddingHelper(
-                self._decoder_embedding,
-                tf.fill([self._batch_size], self.tgt_sos_id), self.tgt_eos_id)
+            # NOTE: helper is not needed?
+            # _helper_inf = tf.contrib.seq2seq.GreedyEmbeddingHelper(
+            #    self._decoder_embedding,
+            #    tf.fill([self._batch_size], self.tgt_sos_id), self.tgt_eos_id)
             #    lambda d: tf.one_hot(d, self.tgt_vocab_size + self.kb_size),
+            # Decoder Init State
+            _decoder_init_state = \
+                _decoder_cell_inf.zero_state(tf.shape(_tiled_encoder_outputs)[0],
+                                             dtype=tf.float32)\
+                .clone(cell_state=_tiled_encoder_state)
+            # Define a beam-search decoder
+            _start_tokens = tf.tile(tf.constant([self.tgt_sos_id], tf.int32),
+                                    [self._batch_size])
+            # _start_tokens = tf.fill([self._batch_size], self.tgt_sos_id)
+            _decoder_inf = tf.contrib.seq2seq.BeamSearchDecoder(
+                    cell=_decoder_cell_inf,
+                    embedding=self._decoder_embedding,
+                    start_tokens=_start_tokens,
+                    end_token=self.tgt_eos_id,
+                    initial_state=_decoder_init_state,
+                    beam_width=self.beam_width,
+                    output_layer=_kb_attn_layer,
+                    length_penalty_weight=0.0)
 
-            def decode(helper, scope, max_iters=None, reuse=None):
-                with tf.variable_scope(scope, reuse=reuse):
-                    with tf.variable_scope("AttentionOverKB", reuse=reuse):
-                        _kb_attn_layer = KBAttention(self.tgt_vocab_size,
-                                                     self.kb_attn_hidden_sizes + [1],
-                                                     self._kb_embedding,
-                                                     self._kb_mask,
-                                                     activation=tf.nn.relu,
-                                                     use_bias=False,
-                                                     reuse=reuse)
-# TODO: rm output dense layer
-                    # Output dense layer
-                    # _projection_layer = \
-                    #   tf.layers.Dense(self.tgt_vocab_size, use_bias=False, _reuse=reuse)
-                    # Copy encoder hidden state to decoder inital state
-                    _decoder_init_state = \
-                        _decoder_cell.zero_state(self._batch_size, dtype=tf.float32)\
-                        .clone(cell_state=_encoder_state)
-                    # Decoder
-                    _decoder = \
-                        tf.contrib.seq2seq.BasicDecoder(_decoder_cell, helper,
-                                                        initial_state=_decoder_init_state,
-                                                        output_layer=_kb_attn_layer)
-                    # Dynamic decoding
+            # Dynamic decoding
 # TRY: impute_finished = True,
-                    _outputs, _, _ = \
-                        tf.contrib.seq2seq.dynamic_decode(_decoder,
-                                                          impute_finished=True,
-                                                          maximum_iterations=max_iters,
-                                                          output_time_major=False)
-                    return _outputs
-
-            _logits = decode(_helper, "decode").rnn_output
-            _predictions = \
-                decode(_helper_infer, "decode", _max_iters, reuse=True).sample_id
-
-        return _logits, _predictions
+            _outputs_inf, _, _ = \
+                tf.contrib.seq2seq.dynamic_decode(_decoder_inf,
+                                                  impute_finished=False,
+                                                  maximum_iterations=_max_iters,
+                                                  output_time_major=False)
+            _predictions = _outputs_inf.predicted_ids[:, :, 0]
+            # TODO: rm indexing
+            # _predictions = \
+            #    decode(_helper_infer, "decode", _max_iters, reuse=True).sample_id
+        self._logits = _logits
+        self._predictions = _predictions
 
     def _multilayer_perceptron(units, hidden_dims=[], use_bias=True):
         # Hidden fully connected layers with relu activation
@@ -292,6 +352,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
     def train_on_batch(self, enc_inputs, dec_inputs, dec_outputs,
                        src_seq_lengths, tgt_seq_lengths, tgt_weights, kb_masks):
+        # print("in train_on_batch")
+        # print(np.array(enc_inputs).shape, src_seq_lengths[:10])
         _, loss_value = self.sess.run(
             [self._train_op, self._loss],
             feed_dict={
