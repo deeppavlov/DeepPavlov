@@ -5,8 +5,8 @@ from pandas import read_csv
 from numpy import nan
 from typing import Dict
 
-@register('autofaq_reader')
-class AutofaqDatasetReader(DatasetReader):
+@register('faq_reader')
+class FaqDatasetReader(DatasetReader):
     
 
     def read(self, dataset_path: str, *args, **kwargs) -> Dict:

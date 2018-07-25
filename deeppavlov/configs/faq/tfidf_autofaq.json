@@ -1,6 +1,6 @@
 {
   "dataset_reader": {
-    "name": "autofaq_reader",
+    "name": "faq_reader",
     "data_path": "/home/andrey/Projects/autoFAQ/data/train_faq.csv"
   },
   "dataset_iterator": {
@@ -18,7 +18,7 @@
         "lemmas": true
       },
       {
-        "name": "autofaq",
+        "name": "faq",
         "top_n": 1,
         "in": ["x_token_lemmas"],
         "out": ["answer"],

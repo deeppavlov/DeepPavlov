@@ -25,8 +25,8 @@ from deeppavlov.core.commands.utils import expand_path
 logger = get_logger(__name__)
 
 
-@register("autofaq")
-class AutoFaq(Estimator):
+@register("faq")
+class FaqAnswer(Estimator):
 
     def __init__(self, vectorizer: TfIdfVectorizer, save_path: str = None, load_path: str = None, **kwargs) -> None:
         self.vectorizer = vectorizer
