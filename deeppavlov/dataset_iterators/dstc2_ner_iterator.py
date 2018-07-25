@@ -42,7 +42,7 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
         # TODO: include slot vals to dstc2.tar.gz
         dataset_path = expand_path(dataset_path) / 'slot_vals.json'
         self._build_slot_vals(dataset_path)
-        with open(dataset_path) as f:
+        with open(dataset_path, encoding='utf8') as f:
             self._slot_vals = json.load(f)
         for data_type in ['train', 'test', 'valid']:
             bio_markup_data = self._preprocess(data.get(data_type, []))

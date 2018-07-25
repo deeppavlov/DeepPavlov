@@ -64,6 +64,9 @@
     "outfile": "results/ud_hu_test.res"
   },
   "metadata": {
+    "requirements": [
+      "../dp_requirements/tf.txt"
+    ],
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/morpho_tagger.tar.gz",
       {

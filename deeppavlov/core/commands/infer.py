@@ -13,10 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-from deeppavlov.core.commands.utils import set_deeppavlov_root
+from deeppavlov.core.commands.utils import set_deeppavlov_root, import_packages
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.registry import REGISTRY
 
 from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.common.params import from_params
@@ -28,6 +27,9 @@ log = get_logger(__name__)
 
 def build_model_from_config(config, mode='infer', load_trained=False, as_component=False):
     set_deeppavlov_root(config)
+
+    import_packages(config.get('metadata', {}).get('imports', []))
+
     model_config = config['chainer']
 
     model = Chainer(model_config['in'], model_config['out'], model_config.get('in_y'), as_component=as_component)
@@ -112,7 +114,7 @@ def predict_on_stream(config_path, batch_size=1, file_path=None):
             raise RuntimeError('To process data from terminal please use interact mode')
         f = sys.stdin
     else:
-        f = open(file_path)
+        f = open(file_path, encoding='utf8')
 
     config = read_json(config_path)
     model: Chainer = build_model_from_config(config)

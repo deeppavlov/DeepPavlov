@@ -76,11 +76,13 @@ class KnowledgeBase(Estimator):
 
     def save(self):
         log.info("[saving knowledge base to {}]".format(self.save_path))
-        json.dump(self.kb, self.save_path.open('wt'))
+        with self.save_path.open('wt', encoding='utf8') as fp:
+            json.dump(self.kb, fp)
 
     def load(self):
         log.info("[loading knowledge base from {}]".format(self.load_path))
-        self.kb.update(json.load(self.load_path.open('rt')))
+        with self.load_path.open('rt', encoding='utf8') as fp:
+            self.kb.update(json.load(fp))
 
 
 @register("knowledge_base_entity_normalizer")

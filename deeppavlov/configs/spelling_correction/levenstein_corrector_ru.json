@@ -41,6 +41,9 @@
     "out": ["y_predicted"]
   },
   "metadata": {
+    "requirements": [
+      "../dp_requirements/spelling.txt"
+    ],
     "labels": {
       "telegram_utils": "ErrorModel",
       "server_utils": "ErrorModel"

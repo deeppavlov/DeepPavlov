@@ -15,14 +15,7 @@ from setuptools import setup, find_packages
 import os
 import re
 
-try:  # for pip>=10.0.0
-    from pip._internal.req import parse_requirements
-    from pip._internal.download import PipSession
-    from pip._internal import main as pip_main
-except ImportError:  # for pip<=9.0.3
-    from pip.req import parse_requirements
-    from pip.download import PipSession
-    from pip import main as pip_main
+from utils.pip_wrapper import install
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
@@ -30,38 +23,45 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 def read_requirements():
     # # parses requirements from requirements.txt
     reqs_path = os.path.join(__location__, 'requirements.txt')
-    install_reqs = parse_requirements(reqs_path, session=PipSession())
-    reqs = []
-    for ir in install_reqs:
-        pip_main(['install', str(ir.req or ir.link)])
-        if ir.req:
-            reqs.append(str(ir.req))
-    return reqs
+    with open(reqs_path, encoding='utf8') as f:
+        reqs = [line.strip() for line in f if not line.strip().startswith('#')]
+
+    for req in reqs:
+        install(req)
+
+    names = []
+    links = []
+    for req in reqs:
+        if '://' in req:
+            links.append(req)
+        else:
+            names.append(req)
+    return {'install_requires': names, 'dependency_links': links}
 
 
 def readme():
-    with open(os.path.join(__location__, 'README.md')) as f:
+    with open(os.path.join(__location__, 'README.md'), encoding='utf8') as f:
         text = f.read()
     return re.sub(r']\((?!https?://)', r'](https://github.com/deepmipt/DeepPavlov/blob/master/', text)
 
 
 meta = {}
-with open('deeppavlov/package_meta.py') as f:
+with open(os.path.join(__location__, 'deeppavlov/package_meta.py'), encoding='utf8') as f:
     exec(f.read(), meta)
 
 setup(
     name='deeppavlov',
-    packages=find_packages(exclude=('tests',)),
+    packages=find_packages(exclude=('tests',)) + ['dp_requirements'],
     version=meta['__version__'],
-    description='An open source library for building end-to-end dialog systems and training chatbots.',
+    description=meta['__description__'],
     long_description=readme(),
-    long_description_content_type="text/markdown",
+    long_description_content_type='text/markdown',
     author=meta['__author__'],
     author_email='info@ipavlov.ai',
     license='Apache License, Version 2.0',
     url='https://github.com/deepmipt/DeepPavlov',
     download_url='https://github.com/deepmipt/DeepPavlov/archive/' + meta['__version__'] + '.tar.gz',
-    keywords=['NLP', 'NER', 'SQUAD', 'Intents', 'Chatbot'],
+    keywords=meta['__keywords__'],
     include_package_data=True,
-    install_requires=read_requirements()
+    **read_requirements()
 )
