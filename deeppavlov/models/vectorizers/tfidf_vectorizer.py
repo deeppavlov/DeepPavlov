@@ -14,12 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from typing import List, Type
+from typing import List
 
 import scipy as sp
 from scipy import sparse
 
-from deeppavlov.models.tokenizers.spacy_tokenizer import StreamSpacyTokenizer
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.log import get_logger
