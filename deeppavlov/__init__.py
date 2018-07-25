@@ -42,6 +42,7 @@ import deeppavlov.dataset_iterators.squad_iterator
 import deeppavlov.dataset_iterators.sqlite_iterator
 import deeppavlov.dataset_iterators.morphotagger_iterator
 
+import deeppavlov.models.autofaq.autofaq
 import deeppavlov.models.go_bot.bot
 import deeppavlov.models.go_bot.network
 import deeppavlov.models.go_bot.tracker
@@ -93,6 +94,7 @@ import deeppavlov.models.slotfill.slotfill_raw
 import deeppavlov.models.slotfill.slotfill
 import deeppavlov.models.preprocessors.one_hotter
 import deeppavlov.dataset_readers.ontonotes_reader
+import deeppavlov.dataset_readers.autofaq_reader
 
 import deeppavlov.models.classifiers.tokens_matcher.tokens_matcher
 

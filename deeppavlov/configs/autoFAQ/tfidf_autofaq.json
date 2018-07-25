@@ -1,0 +1,47 @@
+{
+  "dataset_reader": {
+    "name": "autofaq_reader",
+    "data_path": "/home/andrey/Projects/autoFAQ/data/train_faq.csv"
+  },
+  "dataset_iterator": {
+    "name": "data_learning_iterator"
+  },
+
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "in": ["x"],
+        "out": ["x_token_lemmas"],
+        "name": "ru_tokenizer",
+        "lemmas": true
+      },
+      {
+        "name": "autofaq",
+        "top_n": 1,
+        "in": ["x_token_lemmas"],
+        "out": ["answer"],
+        "fit_on": ["x_token_lemmas","y"],
+        "save_path": "autofaq/faq_skill.pkl",
+        "load_path": "autofaq/faq_skill.pkl",
+        "vectorizer": {
+          "name": "tfidf_vectorizer",
+          "fit_on_batch": ["x"],
+          "save_path": "autofaq/faq_vectorizer.pkl",
+          "load_path": "autofaq/faq_vectorizer.pkl"
+        }
+      }
+    ],
+    "out": ["answer"]
+  },
+
+  "train": {
+    "validate_best": false,
+    "test_best": false
+ }
+
+}
+
+
+
