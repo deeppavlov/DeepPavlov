@@ -128,12 +128,16 @@
     "show_examples": false
   },
   "metadata": {
+    "requirements": [
+      "../dp_requirements/gensim.txt",
+      "../dp_requirements/tf-gpu.txt"
+    ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",
       "server_utils": "NER"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes_v2.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_ontonotes_v3.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt",
         "subdir": "embeddings"

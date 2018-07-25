@@ -134,19 +134,24 @@
     "batch_size": 64,
 
     "metrics": ["ner_f1"],
-    "validation_patience": 5,
+    "validation_patience": 7,
     "val_every_n_epochs": 1,
 
     "log_every_n_epochs": 1,
-    "show_examples": false
+    "show_examples": false,
+    "tensorboard_log_dir": "ner_rus/logs"
   },
   "metadata": {
+    "requirements": [
+      "../dp_requirements/fasttext.txt",
+      "../dp_requirements/tf-gpu.txt"
+    ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",
       "server_utils": "NER"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_rus.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_rus_v2.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/embeddings/lenta_lower_100.bin",
         "subdir": "embeddings"

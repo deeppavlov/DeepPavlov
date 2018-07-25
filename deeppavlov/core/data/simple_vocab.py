@@ -36,6 +36,7 @@ class SimpleVocabulary(Estimator):
                  max_tokens=2**30,
                  min_freq=1,
                  pad_with_zeros=False,
+                 unk_token=None,
                  *args,
                  **kwargs):
         super().__init__(**kwargs)
@@ -43,6 +44,7 @@ class SimpleVocabulary(Estimator):
         self._max_tokens = max_tokens
         self._min_freq = min_freq
         self._pad_with_zeros = pad_with_zeros
+        self.unk_token = unk_token
         self.reset()
         if self.load_path:
             self.load()
@@ -79,7 +81,7 @@ class SimpleVocabulary(Estimator):
 
     def save(self):
         log.info("[saving vocabulary to {}]".format(self.save_path))
-        with self.save_path.open('wt') as f:
+        with self.save_path.open('wt', encoding='utf8') as f:
             for n in range(len(self)):
                 token = self._i2t[n]
                 cnt = self.freqs[token]
@@ -91,7 +93,7 @@ class SimpleVocabulary(Estimator):
             if self.load_path.is_file():
                 log.info("[loading vocabulary from {}]".format(self.load_path))
                 tokens, counts = [], []
-                for ln in self.load_path.open('r'):
+                for ln in self.load_path.open('r', encoding='utf8'):
                     token, cnt = ln.split('\t', 1)
                     tokens.append(token)
                     counts.append(int(cnt))
@@ -145,7 +147,10 @@ class SimpleVocabulary(Estimator):
 
     def reset(self):
         self.freqs = None
-        self._t2i = defaultdict(int)
+        unk_index = 0
+        if self.unk_token in self.special_tokens:
+            unk_index = self.special_tokens.index(self.unk_token)
+        self._t2i = defaultdict(lambda: unk_index)
         self._i2t = []
         self.count = 0
 

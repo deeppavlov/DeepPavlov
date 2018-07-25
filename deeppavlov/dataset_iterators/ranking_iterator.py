@@ -1,4 +1,5 @@
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 import numpy as np
 import random
@@ -6,12 +7,12 @@ import math
 
 
 @register('ranking_iterator')
-class RankingIterator:
+class RankingIterator(DataLearningIterator):
 
     def __init__(self, data,
                  sample_candidates, sample_candidates_valid, sample_candidates_test,
                  num_negative_samples, num_ranking_samples_valid, num_ranking_samples_test,
-                 seed=None, len_vocab=0, pos_pool_sample=False, pos_pool_rank=True, random_batches=False,
+                 seed=None, shuffle=False, len_vocab=0, pos_pool_sample=False, pos_pool_rank=True, random_batches=False,
                  batches_per_epoch=None, hard_triplets=False, num_positive_samples=5, type_of_model=None):
 
         '''
@@ -44,6 +45,9 @@ class RankingIterator:
             'test': self.test,
             'all': self.train + self.test + self.valid
         }
+
+        super().__init__(self.data, seed=seed, shuffle=shuffle)
+
 
     def gen_batches(self, batch_size, data_type="train", shuffle=True):
         data = self.data[data_type]

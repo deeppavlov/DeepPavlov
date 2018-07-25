@@ -17,10 +17,11 @@ limitations under the License.
 from copy import deepcopy
 
 import tensorflow as tf
+import numpy as np
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import TFModel
-from deeppavlov.models.squad.utils import CudnnGRU, dot_attention, simple_attention, PtrNet
+from deeppavlov.models.squad.utils import dot_attention, simple_attention, PtrNet, CudnnGRU
 from deeppavlov.core.common.check_gpu import check_gpu_existence
 from deeppavlov.core.layers.tf_layers import cudnn_bi_gru, variational_dropout
 from deeppavlov.core.common.log import get_logger
@@ -112,10 +113,13 @@ class SquadModel(TFModel):
                 cc_emb = variational_dropout(cc_emb, keep_prob=self.keep_prob_ph)
                 qc_emb = variational_dropout(qc_emb, keep_prob=self.keep_prob_ph)
 
-                _, (state_fw, state_bw) = cudnn_bi_gru(cc_emb, self.char_hidden_size, seq_lengths=self.cc_len)
+                _, (state_fw, state_bw) = cudnn_bi_gru(cc_emb, self.char_hidden_size, seq_lengths=self.cc_len,
+                                                       trainable_initial_states=True)
                 cc_emb = tf.concat([state_fw, state_bw], axis=1)
 
-                _, (state_fw, state_bw) = cudnn_bi_gru(qc_emb, self.char_hidden_size, seq_lengths=self.qc_len, reuse=True)
+                _, (state_fw, state_bw) = cudnn_bi_gru(qc_emb, self.char_hidden_size, seq_lengths=self.qc_len,
+                                                       trainable_initial_states=True,
+                                                       reuse=True)
                 qc_emb = tf.concat([state_fw, state_bw], axis=1)
 
                 cc_emb = tf.reshape(cc_emb, [bs, self.c_maxlen, 2 * self.char_hidden_size])
@@ -232,6 +236,11 @@ class SquadModel(TFModel):
         return loss
 
     def __call__(self, c_tokens, c_chars, q_tokens, q_chars, *args, **kwargs):
+        if any(np.sum(c_tokens, axis=-1) == 0) or any(np.sum(q_tokens, axis=-1) == 0):
+            logger.info('SQuAD model: Warning! Empty question or context was found.')
+            noanswers = -np.ones(shape=(c_tokens.shape[0]), dtype=np.int32)
+            return noanswers, noanswers
+
         feed_dict = self._build_feed_dict(c_tokens, c_chars, q_tokens, q_chars)
         yp1, yp2 = self.sess.run([self.yp1, self.yp2], feed_dict=feed_dict)
         return yp1, yp2

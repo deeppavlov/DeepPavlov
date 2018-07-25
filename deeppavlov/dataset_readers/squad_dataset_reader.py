@@ -53,7 +53,8 @@ class SquadDatasetReader(DatasetReader):
 
         dataset = {}
         for f in required_files:
-            data = json.load((dir_path / f).open('r'))
+            with dir_path.joinpath(f).open('r', encoding='utf8') as fp:
+                data = json.load(fp)
             if f == 'dev-v1.1.json':
                 dataset['valid'] = data
             else:

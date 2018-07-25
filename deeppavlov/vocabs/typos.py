@@ -85,7 +85,7 @@ class StaticDictionary:
         if not raw_path:
             raise RuntimeError('raw_path for StaticDictionary is not set')
         raw_path = expand_path(raw_path)
-        with open(raw_path, newline='') as f:
+        with open(raw_path, newline='', encoding='utf8') as f:
             data = [line.strip().split('\t')[0] for line in f]
         return data
 
@@ -103,7 +103,7 @@ class RussianWordsVocab(StaticDictionary):
         log.info('Downloading russian vocab from https://github.com/danakt/russian-words/')
         url = 'https://github.com/danakt/russian-words/raw/master/russian.txt'
         page = requests.get(url)
-        return [word.strip() for word in page.content.decode('cp1251').split('\n')]
+        return [word.strip() for word in page.content.decode('cp1251').strip().split('\n')]
 
 
 @register('wikitionary_100K_vocab')
