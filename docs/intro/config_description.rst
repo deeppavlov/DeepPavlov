@@ -71,12 +71,12 @@ Training
 
 There are two abstract classes for trainable components: **Estimator**
 and **NNModel**.
-`**Estimators** <deeppavlov/core/models/estimator.py>`__ are fit once
+:class:`~deeppavlov.core.models.estimator.Estimator` are fit once
 on any data with no batching or early stopping,
 so it can be safely done at the time of pipeline initialization.
 ``fit`` method has to be implemented for each Estimator. An example of
-Estimator is `Vocab <deeppavlov/core/data/vocab.py>`__.
-`**NNModel** <deeppavlov/core/models/nn_model.py>`__ requires more
+Estimator is :class:`~deeppavlov.core.data.vocab.Vocab`.
+:class:`~deeppavlov.core.models.nn_model.NNModel` requires more
 complex training. It can only be trained in a supervised mode (as
 opposed to **Estimator** which can be trained in both supervised and
 unsupervised settings). This process takes multiple epochs with periodic
@@ -84,7 +84,7 @@ validation and logging.
 ``train_on_batch`` method has to be implemented for each NNModel.
 
 Training is triggered by
-``deeppavlov.core.commands.train.train_model_from_config()`` function.
+:func:`~deeppavlov.core.commands.train.train_model_from_config()` function.
 
 Train config
 ------------
@@ -145,9 +145,9 @@ Simplified version of trainig pipeline contains two elemens:
 can be used for train from classification data in ``csv`` and ``json``
 formats. You can find complete examples of how to use simplified
 training pipeline in
-`intents\_sample\_csv.json <deeppavlov/configs/intents/intents_sample_csv.json>`__
+`intents_sample_csv.json <deeppavlov/configs/intents/intents_sample_csv.json>`_
 and
-`intents\_sample\_json.json <deeppavlov/configs/intents/intents_sample_json.json>`__
+`intents_sample_json.json <deeppavlov/configs/intents/intents_sample_json.json>`_
 config files.
 
 Train Parameters
