@@ -147,7 +147,7 @@ def download_config(conf_file):
 
     conf_file = test_configs_path / conf_file
     conf_file.parent.mkdir(exist_ok=True, parents=True)
-    with conf_file.open("w", encoding="utf8") as fout:
+    with conf_file.open("w", encoding='utf8') as fout:
         json.dump(config, fout)
 
     # Download referenced config files
