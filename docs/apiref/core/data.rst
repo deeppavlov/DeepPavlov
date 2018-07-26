@@ -1,8 +1,7 @@
 core.data
 =========
-Basic DatasetIterator, DatasetReader and Vocab classes.
+DatasetReader, Vocab, DataLearningIterator and DataFittingIterator classes.
 
-.. automodule:: deeppavlov.core.data
 
 .. autoclass:: deeppavlov.core.data.vocab.DefaultVocabulary
 
