@@ -114,7 +114,7 @@ def predict_on_stream(config_path, batch_size=1, file_path=None):
             raise RuntimeError('To process data from terminal please use interact mode')
         f = sys.stdin
     else:
-        f = open(file_path)
+        f = open(file_path, encoding='utf8')
 
     config = read_json(config_path)
     model: Chainer = build_model_from_config(config)

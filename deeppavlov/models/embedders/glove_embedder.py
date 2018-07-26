@@ -49,7 +49,7 @@ class GloVeEmbedder(Component, Serializable):
         """
 
         # Check that header with n_words emb_dim present
-        with open(self.load_path) as f:
+        with open(self.load_path, encoding='utf8') as f:
             header = f.readline()
             if len(header.split()) != 2:
                 raise RuntimeError('The GloVe file must start with number_of_words embeddings_dim line! '

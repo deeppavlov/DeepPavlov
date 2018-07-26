@@ -135,7 +135,7 @@ def download_config(conf_file):
     if not src_file.is_file():
         raise RuntimeError('No config file {}'.format(conf_file))
 
-    with src_file.open() as fin:
+    with src_file.open(encoding='utf8') as fin:
         config = json.load(fin)
 
     if config.get("train"):
@@ -147,7 +147,7 @@ def download_config(conf_file):
 
     conf_file = test_configs_path / conf_file
     conf_file.parent.mkdir(exist_ok=True, parents=True)
-    with (conf_file).open("w") as fout:
+    with conf_file.open("w", encoding="utf8") as fout:
         json.dump(config, fout)
 
     # Download referenced config files

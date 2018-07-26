@@ -18,15 +18,14 @@ class InsuranceDict(RankingDict):
         self.val_context2ints_fname = Path(vocabs_path) / 'question.dev.label.token_idx.pool'
         self.test_context2ints_fname = Path(vocabs_path) / 'question.test1.label.token_idx.pool'
 
-
     def build_int2tok_vocab(self):
-        with open(self.int2tok_fname, 'r') as f:
+        with open(self.int2tok_fname, 'r', encoding='utf8') as f:
             data = f.readlines()
         self.int2tok_vocab = {int(el.split('\t')[0].split('_')[1]): el.split('\t')[1][:-1] for el in data}
         self.int2tok_vocab[0] = '<UNK>'
 
     def build_response2toks_vocabulary(self):
-        with open(self.response2ints_fname, 'r') as f:
+        with open(self.response2ints_fname, 'r', encoding='utf8') as f:
             data = f.readlines()
             response2idxs_vocab = {int(el.split('\t')[0]) - 1:
                                    (el.split('\t')[1][:-1]).split(' ') for el in data}
@@ -35,19 +34,19 @@ class InsuranceDict(RankingDict):
 
     def build_context2toks_vocabulary(self):
         contexts = []
-        with open(self.train_context2ints_fname, 'r') as f:
+        with open(self.train_context2ints_fname, 'r', encoding='utf8') as f:
             data = f.readlines()
         for eli in data:
             eli = eli[:-1]
             c, _ = eli.split('\t')
             contexts.append(c.split(' '))
-        with open(self.val_context2ints_fname, 'r') as f:
+        with open(self.val_context2ints_fname, 'r', encoding='utf8') as f:
             data = f.readlines()
         for eli in data:
             eli = eli[:-1]
             _, c, _ = eli.split('\t')
             contexts.append(c.split(' '))
-        with open(self.test_context2ints_fname, 'r') as f:
+        with open(self.test_context2ints_fname, 'r', encoding='utf8') as f:
             data = f.readlines()
         for eli in data:
             eli = eli[:-1]
