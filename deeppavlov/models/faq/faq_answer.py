@@ -35,15 +35,12 @@ class FaqAnswer(Estimator):
         if kwargs['mode'] != 'train':
             self.load()
 
-    def __call__(self, question: List[List[str]]) -> List[str]:
-        question = [' '.join(q) for q in question]
-        q_vect = self.vectorizer(question)
-        answer_id = np.argmax(np.array(q_vect.dot(self.vectorizer.w_matrix.T).todense()))
+    def __call__(self, q_vect) -> List[str]:
+        answer_id = np.argmax(np.array(q_vect.dot(self.vectorizer.train_vectors.T).todense()))
 
         return [self.id2answer[answer_id]]
 
     def fit(self, x_train: List[List[str]], y_train: List[str], *args) -> None:
-        self.vectorizer.fit([' '.join(x) for x in x_train])
         self.id2answer = dict(enumerate(y_train))
 
     def save(self) -> None:

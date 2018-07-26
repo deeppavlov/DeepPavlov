@@ -46,21 +46,20 @@ class TfIdfVectorizer(Component, Serializable):
 
 
 
-    def __call__(self, questions: List[str]) -> sp.sparse.csr_matrix:
-        q_vects = self.tfidf_vect.transform(questions)
-
+    def __call__(self, questions: List[str]):
+        q_vects = self.tfidf_vect.transform([' '.join(q) for q in questions])
         return q_vects
 
 
 
     def fit(self, x_train: List[str]) -> None:
-        self.w_matrix = self.tfidf_vect.fit_transform(x_train)
+        self.train_vectors = self.tfidf_vect.fit_transform([' '.join(x) for x in x_train])
 
     def save(self) -> None:
         logger.info("Saving tfidf vectorizer to {}".format(self.save_path))
-        save_pickle((self.w_matrix, self.tfidf_vect), expand_path(self.save_path))
+        save_pickle((self.train_vectors, self.tfidf_vect), expand_path(self.save_path))
 
 
     def load(self) -> None:
         logger.info("Loading tfidf vectorizer from {}".format(self.load_path))
-        self.w_matrix, self.tfidf_vect = load_pickle(expand_path(self.load_path))
+        self.train_vectors, self.tfidf_vect = load_pickle(expand_path(self.load_path))

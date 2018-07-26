@@ -8,29 +8,31 @@
   },
 
   "chainer": {
-    "in": ["x"],
-    "in_y": ["y"],
+    "in": "q",
     "pipe": [
       {
-        "in": ["x"],
-        "out": ["x_token_lemmas"],
         "name": "ru_tokenizer",
-        "lemmas": true
+        "in": "q",
+        "lemmas": true,
+        "out": "q_token_lemmas"
+      },
+      {
+        "id": "vectorizer",
+        "name": "tfidf_vectorizer",
+        "in": "q_token_lemmas",
+        "fit_on": ["q_token_lemmas"],
+        "save_path": "autofaq/faq_vectorized.pkl",
+        "load_path": "autofaq/faq_vectorized.pkl",
+        "out": "q_vect"
       },
       {
         "name": "faq",
-        "top_n": 1,
-        "in": ["x_token_lemmas"],
-        "out": ["answer"],
-        "fit_on": ["x_token_lemmas","y"],
+        "in": "q_vect",
+        "fit_on": ["q_vect","y"],
         "save_path": "autofaq/faq_data.pkl",
         "load_path": "autofaq/faq_data.pkl",
-        "vectorizer": {
-          "name": "tfidf_vectorizer",
-          "fit_on_batch": ["x"],
-          "save_path": "autofaq/faq_vectorizer.pkl",
-          "load_path": "autofaq/faq_vectorizer.pkl"
-        }
+        "vectorizer": "#vectorizer",
+        "out": "answer"
       }
     ],
     "out": ["answer"]
