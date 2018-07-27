@@ -116,7 +116,12 @@ class KerasClassificationModel(KerasModel):
                   "lear_rate_decay": self.opt.get('lear_rate_decay')}
 
         self.model = self.load(**params)
-        self._change_not_fixed_params(**kwargs)
+        self._change_not_fixed_params(text_size=text_size, model_name=model_name,
+                                      optimizer=optimizer, loss=loss,
+                                      lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,
+                                      last_layer_activation=last_layer_activation,
+                                      confident_threshold=confident_threshold,
+                                      **kwargs)
 
         # Check if md5 hash sum of current loaded fasttext model
         # is equal to saved
@@ -179,7 +184,7 @@ class KerasClassificationModel(KerasModel):
         """
         Train the model on the given batch
         Args:
-            texts: list of texts (or list of lists of text tokens)
+            texts: list of texts
             labels: list of labels
 
         Returns:
@@ -196,7 +201,7 @@ class KerasClassificationModel(KerasModel):
         """
         Infer the model on the given batch
         Args:
-            texts: list of texts (or list of lists of text tokens)
+            texts: list of texts
             labels: list of labels
 
         Returns:
