@@ -35,7 +35,9 @@ class BasicClassificationDatasetReader(DatasetReader):
     """
 
     @overrides
-    def read(self, data_path, url=None, *args, **kwargs):
+    def read(self, data_path: str, url: str = None,
+             format: str = "csv", class_sep: str = ",",
+             *args, **kwargs):
         """
         Read dataset from data_path directory.
         Reading files are all data_types + extension
@@ -44,6 +46,13 @@ class BasicClassificationDatasetReader(DatasetReader):
         Args:
             data_path: directory with files
             url: download data files if data_path not exists or empty
+            format: extension of files. Set of Values: ``"csv", "json"``
+            class_sep: string separator of labels in column with labels
+            sep (str): delimeter for ``"csv"`` files. Default: ``","``
+            header (int): row number to use as the column names
+            names (array): list of column names to use
+            orient (str): indication of expected JSON string format
+            lines (boolean): read the file as a json object per line. Default: ``False``
 
         Returns:
             dictionary with types from data_types.
@@ -51,7 +60,7 @@ class BasicClassificationDatasetReader(DatasetReader):
         """
         data_types = ["train", "valid", "test"]
 
-        train_file = format(kwargs.get('train', 'train.csv'))
+        train_file = kwargs.get('train', 'train.csv')
 
         if not Path(data_path, train_file).exists():
             if url is None:
