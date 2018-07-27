@@ -1,4 +1,4 @@
-Rest API
+REST API
 ========
 
 Each library component or skill can be easily made available for
