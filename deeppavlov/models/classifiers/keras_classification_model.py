@@ -43,68 +43,56 @@ class KerasClassificationModel(KerasModel):
     """
     Class implements Keras model for classification task for multi-class multi-labeled data.
 
-    Todo:
-        * clarify initialization parameters
-        * consider explicit parameter specification in public methods' signatures
+    Attributes:
+        opt: dictionary with all model parameters
+        tokenizer: tokenizer class instance
+        fasttext_model: fasttext model instance
+        classes: list of considered classes
+        n_classes: number of considered classes
+        model: keras model itself
+        epochs_done: number of epochs that were done
+        batches_seen: number of epochs that were seen
+        train_examples_seen: number of training samples that were seen
+        sess: tf session
+        optimizer: keras.optimizers instance
     """
-    FIXED_PARAMS = [
-        "classes",
-        "model_name",
-        "embedding_size",
-        "fasttext_md5",
-        "kernel_sizes_cnn",
-        "filters_cnn",
-        "dense_size",
-        "units_lstm",
-        "units_lstm_1",
-        "units_lstm_2",
-        "self_att_hid",
-        "self_att_out"
-    ]
 
-    CHANGABLE_PARAMS = {"confident_threshold": 0.5,
-                        "optimizer": "Adam",
-                        "lear_rate": 1e-2,
-                        "lear_rate_decay": 0.,
-                        "loss": "binary_crossentropy",
-                        "coef_reg_cnn": 0.,
-                        "coef_reg_den": 0.,
-                        "coef_reg_lstm": 0.,
-                        "dropout_rate": 0.,
-                        "rec_dropout_rate": 0.}
-
-    def __init__(self, **kwargs):
+    def __init__(self, text_size: int,
+                 model_name: str, optimizer: str = "Adam", loss: str = "binary_crossentropy",
+                 lear_rate: float = 0.01, lear_rate_decay: float = 0.,
+                 last_layer_activation="sigmoid",
+                 confident_threshold: float = 0.5,
+                 **kwargs):
         """
         Initialize and train vocabularies, initializes embedder, tokenizer, and then initialize model using parameters
         from opt dictionary (from config), if model is being initialized from saved.
         Args:
-            model_path (str): path to model serialization dir or file.
-                    It is always an empty string and is ignored if it is not set in json config.
-            model_dir (str): name of a serialization dir, can be default or set in json config
-            model_file (str): name of a serialization file (usually binary model file),
-                    can be default/set in json config
-            embedder (FasttextEmbedder): embedder
-            tokenizer (NLTKTokenizer): tokenizer
-            classes (list): list of classes names presented in the dataset
-                    (in config it is determined as keys of vocab over `y`)
+            text_size (int): maximal length of text in tokens (words),
+                    longer texts are cutted,
+                    shorter ones are padded by zeros (pre-padding)
             model_name (str): particular method of this class to initialize model configuration
             optimizer (str): function name from keras.optimizers
+            loss (str): function name from keras.losses.
             lear_rate (float): learning rate for optimizer.
             lear_rate_decay (float): learning rate decay for optimizer
-            loss (str): function name from keras.losses.
             last_layer_activation (str): parameter that determines activation function after classification layer.
                     For multi-label classification use `sigmoid`,
                     otherwise, `softmax`.
-            text_size (int): maximal length of text in tokens (words),
-                    longer texts are cutted,
-                    shorter ones are padded by zeros (pre-padding).
             confident_threshold (float): boundary value of probability for converting probabilities to labels.
                     The value is from 0 to 1.
                     If all probabilities are lower than confident_threshold,
                     label with the highest probability is assigned.
                     If `last_layer_activation` is `softmax` (not multi-label classification), assign to 1.
+            classes (list): list of classes names presented in the dataset
+                    (in config it is determined as keys of vocab over `y`)
+            embedder (FasttextEmbedder): embedder
+            tokenizer (NLTKTokenizer): tokenizer
         """
-        super().__init__(**kwargs)  # self.opt = copy(kwargs) initialized in here
+        super().__init__(text_size=text_size, model_name=model_name,
+                         optimizer=optimizer, loss=loss,
+                         lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,
+                         last_layer_activation=last_layer_activation, confident_threshold=confident_threshold,
+                         **kwargs)  # self.opt = copy(kwargs) initialized in here
 
         self.tokenizer = self.opt.pop('tokenizer')
         self.fasttext_model = self.opt.pop('embedder')
@@ -128,7 +116,6 @@ class KerasClassificationModel(KerasModel):
                   "lear_rate_decay": self.opt.get('lear_rate_decay')}
 
         self.model = self.load(**params)
-        self._init_missed_params()
         self._change_not_fixed_params(**kwargs)
 
         # Check if md5 hash sum of current loaded fasttext model
@@ -143,16 +130,6 @@ class KerasClassificationModel(KerasModel):
                     "Given fasttext model does NOT match fasttext model used previously to train loaded model")
         print("Model was successfully initialized!\nModel summary:\n{}".format(self.model.summary()))
 
-    def _init_missed_params(self):
-        """
-        Initialize not given changable parameters with default values
-        Returns:
-            None
-        """
-        for param in list(self.CHANGABLE_PARAMS.keys()):
-            self.opt[param] = self.opt.get(param, self.CHANGABLE_PARAMS[param])
-        return
-
     def _change_not_fixed_params(self, **kwargs):
         """
         Change changable parameters from saved model to given ones.
@@ -162,6 +139,20 @@ class KerasClassificationModel(KerasModel):
         Returns:
             None
         """
+        FIXED_PARAMS = [
+            "classes",
+            "model_name",
+            "embedding_size",
+            "fasttext_md5",
+            "kernel_sizes_cnn",
+            "filters_cnn",
+            "dense_size",
+            "units_lstm",
+            "units_lstm_1",
+            "units_lstm_2",
+            "self_att_hid",
+            "self_att_out"
+        ]
         for param in self.opt.keys():
             if param not in self.FIXED_PARAMS:
                 self.opt[param] = kwargs.get(param)
