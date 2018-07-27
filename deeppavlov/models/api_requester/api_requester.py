@@ -1,4 +1,4 @@
-from typing import Any, List, Dict
+from typing import Any, List, Dict, AsyncIterable
 
 import requests
 import asyncio
@@ -11,11 +11,11 @@ from deeppavlov.core.models.component import Component
 class ApiRequester(Component):
     """Component for forwarding parameters to APIs
 
-    Parameters:
+    Args:
         url: url of the API.
         out: count of expected returned values or their names in a chainer.
         param_names: list of parameter names for API requests.
-        debatchify: if True, single instances will be sent to the API endpoint instead of batches.
+        debatchify: if ``True``, single instances will be sent to the API endpoint instead of batches.
 
     Attributes:
         url: url of the API.
@@ -64,9 +64,15 @@ class ApiRequester(Component):
 
         return response
 
-    async def get_async_response(self, data, batch_size):
+    async def get_async_response(self, data: dict, batch_size: int) -> AsyncIterable:
         """Helper function for sending requests asynchronously if the API endpoint does not support batching
 
+        Args:
+            data: data to be passed to the API endpoint
+            batch_size: requests count
+
+        Yields:
+            requests results parsed as json
         """
         loop = asyncio.get_event_loop()
         futures = [
