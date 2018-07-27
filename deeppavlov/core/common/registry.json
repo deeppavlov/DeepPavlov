@@ -15,7 +15,6 @@
   "dialog_db_result_iterator": "deeppavlov.dataset_iterators.dialog_iterator:DialogDBResultDatasetIterator",
   "dialog_iterator": "deeppavlov.dataset_iterators.dialog_iterator:DialogDatasetIterator",
   "dialog_vocab": "deeppavlov.core.data.simple_vocab:DialogVocab",
-  "dict_emb": "deeppavlov.models.embedders.dict_embedder:DictEmbedder",
   "dirty_comments_preprocessor": "deeppavlov.models.preprocessors.dirty_comments_preprocessor:DirtyCommentsPreprocessor",
   "dstc2_intents_iterator": "deeppavlov.dataset_iterators.dstc2_intents_iterator:Dstc2IntentsDatasetIterator",
   "dstc2_ner_iterator": "deeppavlov.dataset_iterators.dstc2_ner_iterator:Dstc2NerDatasetIterator",
