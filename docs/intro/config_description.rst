@@ -132,11 +132,11 @@ and ``train``:
     }
 
 
-Simplified version of training pipeline contains two elemens: ``dataset`` and ``train``. The ``dataset`` element
+Simplified version of training pipeline contains two elements: ``dataset`` and ``train``. The ``dataset`` element
 currently can be used for train from classification data in ``csv`` and ``json`` formats. You can find complete examples
 of how to use simplified training pipeline in
-`intents_sample_csv.json </deeppavlov/configs/intents/intents_sample_csv.json>`_ and
-`intents_sample_json.json </deeppavlov/configs/intents/intents_sample_json.json>`_ config files.
+:download:`intents_sample_csv.json <../../deeppavlov/configs/intents/intents_sample_csv.json>` and
+:download:`intents_sample_json.json <../../deeppavlov/configs/intents/intents_sample_json.json>` config files.
 
 
 Train Parameters
