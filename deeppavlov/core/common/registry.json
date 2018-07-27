@@ -49,7 +49,6 @@
   "ontonotes_reader": "deeppavlov.dataset_readers.ontonotes_reader:OntonotesReader",
   "params_evolution": "deeppavlov.models.evolution.evolution_param_generator:ParamsEvolution",
   "pymorphy_russian_lemmatizer": "deeppavlov.models.preprocessors.russian_lemmatizer:PymorphyRussianLemmatizer",
-  "random": "deeppavlov.models.commutators.random_commutator:RandomCommutator",
   "random_emb_mat": "deeppavlov.models.preprocessors.assemble_embeddins_matrix:RandomEmbeddingsMatrix",
   "ranking_iterator": "deeppavlov.dataset_iterators.ranking_iterator:RankingIterator",
   "ranking_model": "deeppavlov.models.ranking.ranking_model:RankingModel",
