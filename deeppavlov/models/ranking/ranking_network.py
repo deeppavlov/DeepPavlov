@@ -26,8 +26,8 @@ class RankingNetwork(metaclass=TfModelMeta):
                  max_token_length=None, char_emb_dim=None, embedding_level=None,
                  tok_dynamic_batch=False, char_dynamic_batch=False,
                  highway_on_top=False, type_of_model=None):
-        self.distance = distance
 
+        self.distance = distance
         self.toks_num = toks_num
         self.emb_dict = emb_dict
         self.use_matrix = use_matrix

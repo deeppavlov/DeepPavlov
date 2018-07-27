@@ -9,3 +9,4 @@ Concrete Model classes.
    models.classifiers <models/classifiers>
    models.ner <models/ner>
    models.go_bot <models/go_bot>
+   models.ranking <models/neural_ranking>

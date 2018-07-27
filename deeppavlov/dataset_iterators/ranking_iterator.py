@@ -23,7 +23,7 @@ class RankingIterator(DataLearningIterator):
                  sample_candidates_pool, sample_candidates_pool_valid, sample_candidates_pool_test,
                  num_negative_samples, num_ranking_samples_valid, num_ranking_samples_test,
                  seed=None, shuffle=False, len_vocab=0, pos_pool_sample=False, pos_pool_rank=True, random_batches=False,
-                 batches_per_epoch=None, hard_triplets=False, num_positive_samples=5, type_of_model=None):
+                 batches_per_epoch=None, hard_triplets_sampling=False, num_positive_samples=5, type_of_model=None):
 
         '''
         pos_pool_rank: whether to count samples from "pos_pool" as correct answers at test/validation
@@ -39,7 +39,7 @@ class RankingIterator(DataLearningIterator):
         self.sample_candidates_pool_valid = sample_candidates_pool_valid
         self.sample_candidates_pool_test = sample_candidates_pool_test
         self.num_negative_samples = num_negative_samples
-        self.hard_triplets = hard_triplets
+        self.hard_triplets_sampling = hard_triplets_sampling
         self.num_positive_samples = num_positive_samples
         self.num_ranking_samples_valid = num_ranking_samples_valid
         self.num_ranking_samples_test = num_ranking_samples_test
@@ -82,7 +82,7 @@ class RankingIterator(DataLearningIterator):
                     response = [el["response"] for el in context_response_data]
                 if self.type_of_model is None or self.type_of_model == 'triplet':
                     negative_response = self.create_neg_resp_rand(context_response_data, batch_size, data_type)
-                    if self.hard_triplets:
+                    if self.hard_triplets_sampling:
                         labels = [el["label"] for el in context_response_data]
                         positives = [random.choices(el["pos_pool"], k=self.num_positive_samples)
                                      for el in context_response_data]

@@ -42,19 +42,24 @@ class RankingModel(NNModel):
 
     """Class to perform ranking.
 
-        Attributes:
+    Attributes:
         data: A dataset to iterate over.
 
     """
 
-    def __init__(self, **kwargs):
-        """ Initialize the model and additional parent classes attributes
+    def __init__(self,
+                 hard_triplets_sampling: bool = False,
+                 hardest_positives: bool = False,
+                 semi_hard_negatives: bool = False,
+                 num_hardest_negatives: int = None,
+                 update_embeddings: bool = False,
+                 online_update: bool = True,
+                 distance: str = 'sigmoid',
+                 interact_pred_num: int = 3,
 
-        Args:
-            **kwargs: a dictionary containing parameters for model and parameters for training
-                      it formed from json config file part that correspond to your model.
 
-        """
+
+                 **kwargs):
 
         # Parameters for parent classes
         save_path = kwargs.get('save_path', None)
@@ -62,34 +67,29 @@ class RankingModel(NNModel):
         train_now = kwargs.get('train_now', None)
         mode = kwargs.get('mode', None)
 
-        # Call parent constructors. Results in addition of attributes (save_path,
-        # load_path, train_now, mode to current instance) and creation of save_folder
-        # if it doesn't exist
         super().__init__(save_path=save_path, load_path=load_path,
                          train_now=train_now, mode=mode)
 
-        opt = deepcopy(kwargs)
-        self.train_now = opt['train_now']
-        self.hard_triplets = opt.get('hard_triplets')
-        self.hardest_positives = opt.get('hardest_positives')
-        self.semi_hard = opt.get('semi_hard')
-        self.num_hardest_samples = opt.get('num_hardest_samples')
-        self.upd_embs = opt.get('update_embeddings', False)
-        self.upd_method = opt.get('update_method', 'online')
-        self.distance = opt.get('distance', 'sigmoid')
-        self.opt = opt
-        self.interact_pred_num = opt['interact_pred_num']
-        self.vocabs = opt.get('vocabs', None)
+        self.hard_triplets_sampling = hard_triplets_sampling
+        self.hardest_positives = hardest_positives
+        self.semi_hard_negatives = semi_hard_negatives
+        self.num_hardest_negatives = num_hardest_negatives
+        self.upd_embs = update_embeddings
+        self.online_update= online_update
+        self.distance = distance
+        self.interact_pred_num = interact_pred_num
 
-        if self.opt["vocab_name"] == "insurance":
+        opt = deepcopy(kwargs)
+
+        if opt["vocab_name"] == "insurance":
             dict_parameter_names = list(inspect.signature(InsuranceDict.__init__).parameters)
             dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
             self.dict = InsuranceDict(**dict_parameters)
-        elif self.opt["vocab_name"] == "sber_faq":
+        elif opt["vocab_name"] == "sber_faq":
             dict_parameter_names = list(inspect.signature(SberFAQDict.__init__).parameters)
             dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
             self.dict = SberFAQDict(**dict_parameters)
-        elif self.opt["vocab_name"] == "ubuntu_v2":
+        elif opt["vocab_name"] == "ubuntu_v2":
             dict_parameter_names = list(inspect.signature(UbuntuV2Dict.__init__).parameters)
             dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
             self.dict = UbuntuV2Dict(**dict_parameters)
@@ -97,9 +97,6 @@ class RankingModel(NNModel):
         embdict_parameter_names = list(inspect.signature(Embeddings.__init__).parameters)
         embdict_parameters = {par: self.opt[par] for par in embdict_parameter_names if par in self.opt}
         self.embdict= Embeddings(**embdict_parameters)
-
-
-        # self.dict: DictInterface = kwargs['vocab']
 
         network_parameter_names = list(inspect.signature(RankingNetwork.__init__).parameters)
         self.network_parameters = {par: opt[par] for par in network_parameter_names if par in opt}
@@ -145,7 +142,7 @@ class RankingModel(NNModel):
         log.info('[saving model to {}]'.format(self.save_path.resolve()))
         self._net.save(self.save_path)
         if self.upd_embs:
-            if self.upd_method == 'on_validation':
+            if not self.online_update:
                 self.set_embeddings()
         self.dict.save()
         self.embdict.save()
@@ -153,9 +150,9 @@ class RankingModel(NNModel):
     @check_attr_true('train_now')
     def train_on_batch(self, x, y):
         if self.upd_embs:
-            if self.upd_method == 'on_validation':
+            if not self.online_update:
                 self.reset_embeddings()
-        if self.hard_triplets:
+        if self.hard_triplets_sampling:
             b = self.make_hard_triplets(x, y, self._net)
             y = np.ones(len(b[0][0]))
         else:
@@ -203,9 +200,9 @@ class RankingModel(NNModel):
         mask_anchor_negative = mask_anchor_negative.astype(float)
         max_anchor_negative_dist = np.max(distances, axis=1, keepdims=True)
         anchor_negative_dist = distances + max_anchor_negative_dist * (1.0 - mask_anchor_negative)
-        if self.num_hardest_samples is not None:
-            hard = np.argsort(anchor_negative_dist, axis=1)[:, :self.num_hardest_samples]
-            ind = np.random.randint(self.num_hardest_samples, size=batch_size * num_samples)
+        if self.num_hardest_negatives is not None:
+            hard = np.argsort(anchor_negative_dist, axis=1)[:, :self.num_hardest_negatives]
+            ind = np.random.randint(self.num_hardest_negatives, size=batch_size * num_samples)
             hardest_negative_ind = hard[batch_size * num_samples * [True], ind]
         else:
             hardest_negative_ind = np.argmin(anchor_negative_dist, axis=1)
@@ -222,7 +219,7 @@ class RankingModel(NNModel):
 
         if self.hardest_positives:
 
-            if self.semi_hard:
+            if self.semi_hard_negatives:
                 hardest_positive_ind = []
                 hardest_negative_ind = []
                 for p, n in zip(anchor_positive_dist, anchor_negative_dist):
@@ -245,9 +242,9 @@ class RankingModel(NNModel):
                         print("There is no negative examples with distances greater than positive examples distances.")
                         exit(0)
             else:
-                if self.num_hardest_samples is not None:
-                    hard = np.argsort(anchor_positive_dist, axis=1)[:, -self.num_hardest_samples:]
-                    ind = np.random.randint(self.num_hardest_samples, size=batch_size * num_samples)
+                if self.num_hardest_negatives is not None:
+                    hard = np.argsort(anchor_positive_dist, axis=1)[:, -self.num_hardest_negatives:]
+                    ind = np.random.randint(self.num_hardest_negatives, size=batch_size * num_samples)
                     hardest_positive_ind = hard[batch_size * num_samples * [True], ind]
                 else:
                     hardest_positive_ind = np.argmax(anchor_positive_dist, axis=1)
@@ -259,7 +256,7 @@ class RankingModel(NNModel):
                     rn.append(s[hardest_negative_ind[i*num_samples+j]])
 
         else:
-            if self.semi_hard:
+            if self.semi_hard_negatives:
                 for i in range(batch_size):
                     for j in range(num_samples):
                         for k in range(j+1, num_samples):
@@ -313,10 +310,10 @@ class RankingModel(NNModel):
     def __call__(self, batch):
         if type(batch[0]) == list:
             if self.upd_embs:
-                if self.upd_method == 'on_validation':
-                    self.set_embeddings()
-                if self.upd_method == 'online':
+                if self.online_update:
                     self.update_embeddings(batch)
+                else:
+                    self.set_embeddings()
             y_pred = []
             b = self.make_batch(batch)
             for el in b:
