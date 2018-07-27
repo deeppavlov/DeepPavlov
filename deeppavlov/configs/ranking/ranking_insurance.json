@@ -7,9 +7,9 @@
     "name": "ranking_iterator",
     "seed": 243,
     "len_vocab": 24981,
-    "sample_candidates": "global",
-    "sample_candidates_valid": "pool",
-    "sample_candidates_test": "pool",
+    "sample_candidates_pool": false,
+    "sample_candidates_pool_valid": true,
+    "sample_candidates_pool_test": true,
     "num_negative_samples": 500,
     "num_ranking_samples_valid": 500,
     "num_ranking_samples_test": 500

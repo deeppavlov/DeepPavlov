@@ -8,9 +8,19 @@ import math
 
 @register('ranking_iterator')
 class RankingIterator(DataLearningIterator):
+    """The class contains methods for iterating over ranking data in training, validation / testing mode.
+
+    Attributes:
+        data: A dataset to iterate over.
+        sample_candidates_pool: Whether to sample candidates from  a predifened pool of candidates.
+            If ``True``, negative candidates for each data sample should be provided.
+            Else, negative sampling over the whole data will be performed.
+    """
+
+
 
     def __init__(self, data,
-                 sample_candidates, sample_candidates_valid, sample_candidates_test,
+                 sample_candidates_pool, sample_candidates_pool_valid, sample_candidates_pool_test,
                  num_negative_samples, num_ranking_samples_valid, num_ranking_samples_test,
                  seed=None, shuffle=False, len_vocab=0, pos_pool_sample=False, pos_pool_rank=True, random_batches=False,
                  batches_per_epoch=None, hard_triplets=False, num_positive_samples=5, type_of_model=None):
@@ -25,9 +35,9 @@ class RankingIterator(DataLearningIterator):
         self.pos_pool_sample = pos_pool_sample
         self.pos_pool_rank = pos_pool_rank
         self.len_vocab = len_vocab
-        self.sample_candidates = sample_candidates
-        self.sample_candidates_valid = sample_candidates_valid
-        self.sample_candidates_test = sample_candidates_test
+        self.sample_candidates_pool = sample_candidates_pool
+        self.sample_candidates_pool_valid = sample_candidates_pool_valid
+        self.sample_candidates_pool_test = sample_candidates_pool_test
         self.num_negative_samples = num_negative_samples
         self.hard_triplets = hard_triplets
         self.num_positive_samples = num_positive_samples
@@ -100,10 +110,10 @@ class RankingIterator(DataLearningIterator):
 
     def create_neg_resp_rand(self, context_response_data, batch_size, data_type):
         sample_candidates = self.sample_candidates
-        if sample_candidates == "pool":
+        if sample_candidates:
             negative_response_data = [random.choice(el["neg_pool"])
                                       for el in context_response_data]
-        elif sample_candidates == "global":
+        else:
             candidates = []
             for i in range(batch_size):
                 candidate = np.random.randint(0, self.len_vocab, 1)[0]
@@ -116,11 +126,11 @@ class RankingIterator(DataLearningIterator):
     def create_rank_resp(self, context_response_data, data_type="valid"):
         if data_type == "valid":
             ranking_length = self.num_ranking_samples_valid
-            sample_candidates = self.sample_candidates_valid
+            sample_candidates_pool = self.sample_candidates_pool_valid
         elif data_type == "test":
             ranking_length = self.num_ranking_samples_test
-            sample_candidates = self.sample_candidates_test
-        if sample_candidates == "global":
+            sample_candidates_pool = self.sample_candidates_pool_test
+        if not sample_candidates_pool:
             ranking_length = self.len_vocab
         if self.pos_pool_rank:
             y = [len(el["pos_pool"]) * np.ones(ranking_length) for el in context_response_data]

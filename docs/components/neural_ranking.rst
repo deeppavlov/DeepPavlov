@@ -1,32 +1,23 @@
-Neural Model for Ranking
-========================
+Neural Model for Information Retrieval and Ranking
+==================================================
 
-There is a task in NLP to retrieve the context closest semantically or
-the most
-suitable response to a given context from some context (response)
-database.
+This library component solves the task of Information Retrieval (IR)
+and is intended to retrieve the response closest semantically
+to a given context from some database.
 The code in this repository uses a deep learning
-approach to address the question answer selection task. Currently, a
-basic
-model is implemented with bidirectional long short-term memory
-(biLSTM), with max pooling and without attention. The model was
-trained on the dataset:
-`InsuranceQA V1 <https://github.com/shuzi/insuranceQA>`__:
+approach to address the IR task.
 
-The distinguishing feature of the model is the use of triplet loss [1,
-2].
-This loss has a margin hyperparameter, which usually ranges from 0.01
-to 0.2.
-It is required to provide positive and negative response candidates
-for each context
-from the dataset to train the model.
+The model can be trained with crossentropy or with triplet loss [1,
+2]. To train with triplet loss
+it is required to provide positive and negative response candidates
+for each context.
 Sampling of negative candidates can be performed globally from the
 whole response set
 or from pools of responses predefined separately for each context.
 The same is true for validation and test, i.e. validation and test
 can be carried out for the entire set of answers or
 for the answers pools selected separately for each context.
-There is a possibility in the model to encode contexts and responses
+There is a possibility to encode contexts and responses in the model
 with biLSTM layers
 having shared or separate weights.
 
@@ -34,13 +25,12 @@ Each train data sample for feeding the model is arranged as follows:
 
 ::
 
-    {'context': [21507, 4696, 5843, 13035, 1628, 20923, 16083, 18690], 'response': 7009, 'pos_pool': [7009, 7010], 'neg_pool': None}
+    {'context': 21507, 'response': 7009, 'pos_pool': [7009, 7010], 'neg_pool': None}
 
 The context has a "context" key in the data sample.
-It is represented by a list of integers which are keys
-that give the list of tokens using the dictionary "integer–token".
+It is represented by a single integer.
 The correct response has the "response" key in the sample,
-its value is always a single integer.
+its value is  also always a single integer.
 The list of possible correct responses (there may be several) can be
 obtained
 with the "pos\_pool" key.
@@ -53,17 +43,14 @@ Its value is None, when global sampling is used, or the list of fixed
 length, when sampling from predefined negative responses is used.
 It is important that values in "pos\_pool" and "negative\_pool" do
 not overlap.
-Single responses in "response", "pos\_pool", "neg\_pool" are
+Single items in "context", "response", "pos\_pool", "neg\_pool" are
 represented
 by single integers that give lists of integers
 using the dictionary "integer–list of integers".
-These lists of integers can be converted to lists of tokens with
-the same dictionary "integer–token" which is used for contexts.
-The additional "integer–list of integers" vocabulary is used
-to not store all possible negative responses in the form of
-sequences.
+These lists of integers are converted to lists of tokens with
+the dictionary "integer–token".
 Validation and test data samples representation are almost the same
-as the train samples one shown above.
+as the train sample shown above.
 
 Infer from pre-trained model
 ----------------------------

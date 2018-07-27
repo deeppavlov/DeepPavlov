@@ -6,9 +6,9 @@
   "dataset_iterator": {
     "name": "ranking_iterator",
     "seed": 243,
-    "sample_candidates": "pool",
-    "sample_candidates_valid": "pool",
-    "sample_candidates_test": "pool",
+    "sample_candidates_pool": true,
+    "sample_candidates_pool_valid": true,
+    "sample_candidates_pool_test": true,
     "num_negative_samples": 10,
     "num_ranking_samples_valid": 10,
     "num_ranking_samples_test": 10,
