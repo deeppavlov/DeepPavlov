@@ -39,6 +39,14 @@ log = get_logger(__name__)
 
 @register('ranking_model')
 class RankingModel(NNModel):
+
+    """Class to perform ranking.
+
+        Attributes:
+        data: A dataset to iterate over.
+
+    """
+
     def __init__(self, **kwargs):
         """ Initialize the model and additional parent classes attributes
 
