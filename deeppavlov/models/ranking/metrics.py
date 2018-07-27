@@ -18,7 +18,7 @@ def r_at_5(labels, predictions):
     return recall_at_k(labels, predictions, k=5)
 
 @register_metric('r@10')
-def r_at_5(labels, predictions):
+def r_at_10(labels, predictions):
     return recall_at_k(labels, predictions, k=10)
 
 def recall_at_k(y_true, y_pred, k):
