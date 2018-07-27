@@ -94,7 +94,6 @@ class KerasClassificationModel(KerasModel):
                          lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,
                          last_layer_activation=last_layer_activation, confident_threshold=confident_threshold,
                          **kwargs)  # self.opt = copy(kwargs) initialized in here
-        log.info(self.opt)
         self.tokenizer = self.opt.pop('tokenizer')
         self.fasttext_model = self.opt.pop('embedder')
 
@@ -170,14 +169,13 @@ class KerasClassificationModel(KerasModel):
             array of embedded texts
         """
         pad = np.zeros(self.opt['embedding_size'])
-        log.info(sentences)
         embeddings_batch = self.fasttext_model([sen[:self.opt['text_size']] for sen in sentences])
         embeddings_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + tokens for tokens in embeddings_batch]
 
         embeddings_batch = np.asarray(embeddings_batch)
         return embeddings_batch
 
-    def train_on_batch(self, texts: List[List[str]], labels: list):
+    def train_on_batch(self, texts: List[str], labels: list):
         """
         Train the model on the given batch
         Args:
@@ -194,7 +192,7 @@ class KerasClassificationModel(KerasModel):
         metrics_values = self.model.train_on_batch(features, onehot_labels)
         return metrics_values
 
-    def infer_on_batch(self, texts: List[List[str]], labels: list = None):
+    def infer_on_batch(self, texts: List[str], labels: list = None):
         """
         Infer the model on the given batch
         Args:
