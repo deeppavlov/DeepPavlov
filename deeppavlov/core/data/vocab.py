@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from typing import Tuple, Callable
 from collections import Counter, defaultdict
 import itertools
 from pathlib import Path
@@ -21,7 +22,6 @@ from pathlib import Path
 import numpy as np
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.estimator import Estimator
@@ -31,13 +31,28 @@ log = get_logger(__name__)
 
 @register('default_vocab')
 class DefaultVocabulary(Estimator):
-    def __init__(self, save_path, load_path, level='token',
-                 special_tokens=tuple(), default_token=None,
-                 tokenizer=None, min_freq=0, **kwargs):
+    """
+    Implements vocabulary of tokens, chars or other structeres.
 
-        super().__init__(load_path=load_path,
-                         save_path=save_path,
-                         **kwargs)
+    Parameters:
+        level: level of operation can be tokens (``token``) or chars (``char``). Default: ``token``.
+        special_tokens: tuple of tokens that shouldn't be counted. Empty by default.
+        default_token: label assigned to unknown tokens. Default: ``None``.
+        tokenizer: callable used to get tokens out of string. Default: ``None``.
+        min_freq: minimal count of a token (except special tokens). Default: ``0``.
+    """
+
+    def __init__(self,
+                 save_path: str,
+                 load_path: str,
+                 level: str = 'token',
+                 special_tokens: Tuple = tuple(),
+                 default_token: str = None,
+                 tokenizer: Callable = None,
+                 min_freq: int = 0,
+                 **kwargs) -> None:
+
+        super().__init__(load_path=load_path, save_path=save_path, **kwargs)
 
         self.special_tokens = special_tokens
         self.default_token = default_token

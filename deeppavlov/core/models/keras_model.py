@@ -40,6 +40,14 @@ log = get_logger(__name__)
 class KerasModel(NNModel, metaclass=TfModelMeta):
     """
     Class builds keras model with tensorflow backend
+    Attributes:
+        opt: dictionary with all model parameters
+        model: keras model itself
+        epochs_done: number of epochs that were done
+        batches_seen: number of epochs that were seen
+        train_examples_seen: number of training samples that were seen
+        sess: tf session
+        optimizer: keras.optimizers instance
     """
 
     def __init__(self, **kwargs):
@@ -76,17 +84,17 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         config.gpu_options.visible_device_list = '0'
         return tf.Session(config=config)
 
-    def init_model_from_scratch(self, model_name, optimizer_name,
-                                loss_name,
-                                lear_rate=0., lear_rate_decay=0.):
+    def init_model_from_scratch(self, model_name: str, optimizer_name: str,
+                                loss_name: str,
+                                lear_rate: float = 0.01, lear_rate_decay: float = 0.):
         """
         Initialize model from scratch with given params
         Args:
-            model_name (str): name of model function described as a method of this class
-            optimizer_name (str): name of optimizer from keras.optimizers
-            loss_name (str): loss function name (from keras.losses)
-            lear_rate (float): learning rate. Default: ``0.0``.
-            lear_rate_decay (float): learning rate decay. Default: ``0.0``.
+            model_name: name of model function described as a method of this class
+            optimizer_name: name of optimizer from keras.optimizers
+            loss_name: loss function name (from keras.losses)
+            lear_rate: learning rate.
+            lear_rate_decay: learning rate decay.
 
         Returns:
             compiled model with given network and learning parameters
@@ -123,15 +131,16 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         return model
 
     @overrides
-    def load(self, model_name, optimizer_name, loss_name, lear_rate=0., lear_rate_decay=0.):
+    def load(self, model_name: str, optimizer_name: str, loss_name: str,
+             lear_rate: float = 0.01, lear_rate_decay: float = 0.):
         """
         Initialize model from saved params and weights
         Args:
-            model_name (str): name of model function described as a method of this class
-            optimizer_name (str): name of optimizer from keras.optimizers
-            loss_name (str): loss function name (from keras.losses)
-            lear_rate (float): learning rate. Default: ``0.0``.
-            lear_rate_decay (float): learning rate decay. Default: ``0.0``.
+            model_name: name of model function described as a method of this class
+            optimizer_name: name of optimizer from keras.optimizers
+            loss_name: loss function name (from keras.losses)
+            lear_rate: learning rate.
+            lear_rate_decay: learning rate decay.
 
         Returns:
             model with loaded weights and network parameters from files
@@ -189,12 +198,12 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
             return self.init_model_from_scratch(model_name, optimizer_name, loss_name, lear_rate, lear_rate_decay)
 
     @overrides
-    def save(self, fname=None):
+    def save(self, fname: str = None):
         """
         Save the model parameters into <<fname>>_opt.json (or <<ser_file>>_opt.json)
         and model weights into <<fname>>.h5 (or <<ser_file>>.h5)
         Args:
-            fname (str): file_path to save model. If not explicitly given seld.opt["ser_file"] will be used
+            fname: file_path to save model. If not explicitly given seld.opt["ser_file"] will be used
 
         Returns:
             None
@@ -228,13 +237,13 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
     def reset(self):
         pass
 
-    def process_event(self, event_name, data):
+    def process_event(self, event_name: str, data: dict):
         """
         Process event after epoch
         Args:
-            event_name (str): whether event is send after epoch or batch.
+            event_name: whether event is send after epoch or batch.
                     Set of values: ``"after_epoch", "after_batch"``
-            data (dict): event data (dictionary)
+            data: event data (dictionary)
 
         Returns:
             None
