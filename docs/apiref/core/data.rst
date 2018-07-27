@@ -10,4 +10,4 @@ Basic DatasetIterator, DatasetReader and Vocab classes.
 
 .. autoclass:: deeppavlov.core.data.data_fitting_iterator.DataFittingIterator
 
-.. autoclass:: deeppavlov.core.data.data_fitting_iterator.DataLearningIterator
+.. autoclass:: deeppavlov.core.data.data_learning_iterator.DataLearningIterator
