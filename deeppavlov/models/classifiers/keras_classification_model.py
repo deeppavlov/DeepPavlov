@@ -78,18 +78,18 @@ class KerasClassificationModel(KerasModel):
         Initialize and train vocabularies, initializes embedder, tokenizer, and then initialize model using parameters
         from opt dictionary (from config), if model is being initialized from saved.
         Args:
-            model_path (str): Path to model serialization dir or file.
+            model_path (str): path to model serialization dir or file.
                     It is always an empty string and is ignored if it is not set in json config.
-            model_dir (str): Name of a serialization dir, can be default or set in json config
-            model_file (str): Name of a serialization file (usually binary model file),
+            model_dir (str): name of a serialization dir, can be default or set in json config
+            model_file (str): name of a serialization file (usually binary model file),
                     can be default/set in json config
-            embedder (FasttextEmbedder): Embedder
-            tokenizer (NLTKTokenizer): Tokenizer
+            embedder (FasttextEmbedder): embedder
+            tokenizer (NLTKTokenizer): tokenizer
             classes (list): list of classes names presented in the dataset
                     (in config it is determined as keys of vocab over `y`)
             model_name (str): particular method of this class to initialize model configuration
             optimizer (str): function name from keras.optimizers
-            lear_rate (float): learning rate for optimizer
+            lear_rate (float): learning rate for optimizer.
             lear_rate_decay (float): learning rate decay for optimizer
             loss (str): function name from keras.losses.
             last_layer_activation (str): parameter that determines activation function after classification layer.
@@ -157,7 +157,7 @@ class KerasClassificationModel(KerasModel):
         """
         Change changable parameters from saved model to given ones.
         Args:
-            **kwargs (dict): dictionary of new parameters
+            kwargs (dict): dictionary of new parameters
 
         Returns:
             None
@@ -172,7 +172,7 @@ class KerasClassificationModel(KerasModel):
         Convert texts to vector representations using embedder (self.fasttext_model)
                 and padding up to self.opt["text_size"] tokens
         Args:
-            sentences (list): list of lists of tokens
+            sentences (list[list[str]]): list of lists of tokens
 
         Returns:
             array of embedded texts
@@ -189,7 +189,7 @@ class KerasClassificationModel(KerasModel):
         """
         Train the model on the given batch
         Args:
-            texts (list): list of texts (or list of lists of text tokens)
+            texts (list[list[str]]): list of texts (or list of lists of text tokens)
             labels (list): list of labels
 
         Returns:
@@ -206,7 +206,7 @@ class KerasClassificationModel(KerasModel):
         """
         Infer the model on the given batch
         Args:
-            texts (list): list of texts (or list of lists of text tokens)
+            texts (list[list[str]]): list of texts (or list of lists of text tokens)
             labels (list): list of labels
 
         Returns:
@@ -229,7 +229,7 @@ class KerasClassificationModel(KerasModel):
         """
         Infer on the given data
         Args:
-            data (list): [list of sentences]
+            data (list[str]): list of sentences
             *args (): additional arguments
 
         Returns:
@@ -252,11 +252,11 @@ class KerasClassificationModel(KerasModel):
 
         Args:
             kernel_sizes_cnn (list[int]): list of kernel sizes of convolutions.
-            filters_cnn (int): Number of filters for convolutions.
-            dense_size (int): Number of units for dense layer.
-            coef_reg_cnn (float): L2-regularization coefficient for convolutions. Default: ``0.0``.
-            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
-            dropout_rate (float): Dropout rate used after convolutions and between dense layers. Default: ``0.0``.
+            filters_cnn (int): number of filters for convolutions.
+            dense_size (int): number of units for dense layer.
+            coef_reg_cnn (float): l2-regularization coefficient for convolutions. Default: ``0.0``.
+            coef_reg_den (float): l2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): dropout rate used after convolutions and between dense layers. Default: ``0.0``.
             kwargs: other non-used parameters
 
         Returns:
@@ -297,11 +297,11 @@ class KerasClassificationModel(KerasModel):
 
         Args:
             kernel_sizes_cnn (list[int]): list of kernel sizes of convolutions.
-            filters_cnn (int): Number of filters for convolutions.
-            dense_size (int): Number of units for dense layer.
-            coef_reg_cnn (float): L2-regularization coefficient for convolutions. Default: ``0.0``.
-            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
-            dropout_rate (float): Dropout rate used after convolutions and between dense layers. Default: ``0.0``.
+            filters_cnn (int): number of filters for convolutions.
+            dense_size (int): number of units for dense layer.
+            coef_reg_cnn (float): l2-regularization coefficient for convolutions. Default: ``0.0``.
+            coef_reg_den (float): l2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): dropout rate used after convolutions and between dense layers. Default: ``0.0``.
             kwargs: other non-used parameters
 
         Returns:
@@ -342,11 +342,11 @@ class KerasClassificationModel(KerasModel):
 
         Args:
             kernel_sizes_cnn (list[int]): list of kernel sizes of convolutions.
-            filters_cnn (int): Number of filters for convolutions.
-            dense_size (int): Number of units for dense layer.
-            coef_reg_cnn (float): L2-regularization coefficient for convolutions. Default: ``0.0``.
-            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
-            dropout_rate (float): Dropout rate used after convolutions and between dense layers. Default: ``0.0``.
+            filters_cnn (int): number of filters for convolutions.
+            dense_size (int): number of units for dense layer.
+            coef_reg_cnn (float): l2-regularization coefficient for convolutions. Default: ``0.0``.
+            coef_reg_den (float): l2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): dropout rate used after convolutions and between dense layers. Default: ``0.0``.
             kwargs: other non-used parameters
 
         Returns:
@@ -390,12 +390,12 @@ class KerasClassificationModel(KerasModel):
         Build un-compiled BiLSTM.
 
         Args:
-            units_lstm (int): Number of units for LSTM.
-            dense_size (int): Number of units for dense layer.
-            coef_reg_lstm (float): L2-regularization coefficient for LSTM. Default: ``0.0``.
-            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
-            dropout_rate (float): Dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
-            rec_dropout_rate (float): Dropout rate for LSTM. Default: ``0.0``.
+            units_lstm (int): number of units for LSTM.
+            dense_size (int): number of units for dense layer.
+            coef_reg_lstm (float): l2-regularization coefficient for LSTM. Default: ``0.0``.
+            coef_reg_den (float): l2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
+            rec_dropout_rate (float): dropout rate for LSTM. Default: ``0.0``.
             kwargs: other non-used parameters
 
         Returns:
@@ -429,13 +429,13 @@ class KerasClassificationModel(KerasModel):
         Build un-compiled two-layers BiLSTM.
 
         Args:
-            units_lstm_1 (int): Number of units for the first LSTM layer.
-            units_lstm_2 (int): Number of units for the second LSTM layer.
-            dense_size (int): Number of units for dense layer.
-            coef_reg_lstm (float): L2-regularization coefficient for LSTM. Default: ``0.0``.
-            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
-            dropout_rate (float): Dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
-            rec_dropout_rate (float): Dropout rate for LSTM. Default: ``0.0``.
+            units_lstm_1 (int): number of units for the first LSTM layer.
+            units_lstm_2 (int): number of units for the second LSTM layer.
+            dense_size (int): number of units for dense layer.
+            coef_reg_lstm (float): l2-regularization coefficient for LSTM. Default: ``0.0``.
+            coef_reg_den (float): l2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
+            rec_dropout_rate (float): dropout rate for LSTM. Default: ``0.0``.
             kwargs: other non-used parameters
 
         Returns:
@@ -477,15 +477,15 @@ class KerasClassificationModel(KerasModel):
         Build un-compiled BiLSTM-CNN.
 
         Args:
-            units_lstm (int): Number of units for LSTM.
+            units_lstm (int): number of units for LSTM.
             kernel_sizes_cnn (list[int]): list of kernel sizes of convolutions.
-            filters_cnn (int): Number of filters for convolutions.
-            dense_size (int): Number of units for dense layer.
-            coef_reg_lstm (float): L2-regularization coefficient for LSTM. Default: ``0.0``.
-            coef_reg_cnn (float): L2-regularization coefficient for convolutions. Default: ``0.0``.
-            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
-            dropout_rate (float): Dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
-            rec_dropout_rate (float): Dropout rate for LSTM. Default: ``0.0``.
+            filters_cnn (int): number of filters for convolutions.
+            dense_size (int): number of units for dense layer.
+            coef_reg_lstm (float): l2-regularization coefficient for LSTM. Default: ``0.0``.
+            coef_reg_cnn (float): l2-regularization coefficient for convolutions. Default: ``0.0``.
+            coef_reg_den (float): l2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
+            rec_dropout_rate (float): dropout rate for LSTM. Default: ``0.0``.
             kwargs: other non-used parameters
 
         Returns:
@@ -533,14 +533,14 @@ class KerasClassificationModel(KerasModel):
 
         Args:
             kernel_sizes_cnn (list[int]): list of kernel sizes of convolutions.
-            filters_cnn (int): Number of filters for convolutions.
-            units_lstm (int): Number of units for LSTM.
-            dense_size (int): Number of units for dense layer.
-            coef_reg_cnn (float): L2-regularization coefficient for convolutions. Default: ``0.0``.
-            coef_reg_lstm (float): L2-regularization coefficient for LSTM. Default: ``0.0``.
-            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
-            dropout_rate (float): Dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
-            rec_dropout_rate (float): Dropout rate for LSTM. Default: ``0.0``.
+            filters_cnn (int): number of filters for convolutions.
+            units_lstm (int): number of units for LSTM.
+            dense_size (int): number of units for dense layer.
+            coef_reg_cnn (float): l2-regularization coefficient for convolutions. Default: ``0.0``.
+            coef_reg_lstm (float): l2-regularization coefficient for LSTM. Default: ``0.0``.
+            coef_reg_den (float): l2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
+            rec_dropout_rate (float): dropout rate for LSTM. Default: ``0.0``.
             kwargs: other non-used parameters
 
         Returns:
@@ -588,14 +588,14 @@ class KerasClassificationModel(KerasModel):
         Method builds uncompiled model of BiLSTM with self additive attention.
 
         Args:
-            units_lstm (int): Number of units for LSTM.
-            self_att_hid (int): Number of hidden units in self-attention
-            self_att_out (int): Number of output units in self-attention
-            dense_size (int): Number of units for dense layer.
-            coef_reg_lstm (float): L2-regularization coefficient for LSTM. Default: ``0.0``.
-            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
-            dropout_rate (float): Dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
-            rec_dropout_rate (float): Dropout rate for LSTM. Default: ``0.0``.
+            units_lstm (int): number of units for LSTM.
+            self_att_hid (int): number of hidden units in self-attention
+            self_att_out (int): number of output units in self-attention
+            dense_size (int): number of units for dense layer.
+            coef_reg_lstm (float): l2-regularization coefficient for LSTM. Default: ``0.0``.
+            coef_reg_den (float): l2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
+            rec_dropout_rate (float): dropout rate for LSTM. Default: ``0.0``.
             kwargs: other non-used parameters
 
         Returns:
@@ -632,14 +632,14 @@ class KerasClassificationModel(KerasModel):
         Method builds uncompiled model of BiLSTM with self multiplicative attention.
 
         Args:
-            units_lstm (int): Number of units for LSTM.
-            self_att_hid (int): Number of hidden units in self-attention
-            self_att_out (int): Number of output units in self-attention
-            dense_size (int): Number of units for dense layer.
-            coef_reg_lstm (float): L2-regularization coefficient for LSTM. Default: ``0.0``.
-            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
-            dropout_rate (float): Dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
-            rec_dropout_rate (float): Dropout rate for LSTM. Default: ``0.0``.
+            units_lstm (int): number of units for LSTM.
+            self_att_hid (int): number of hidden units in self-attention
+            self_att_out (int): number of output units in self-attention
+            dense_size (int): number of units for dense layer.
+            coef_reg_lstm (float): l2-regularization coefficient for LSTM. Default: ``0.0``.
+            coef_reg_den (float): l2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
+            rec_dropout_rate (float): dropout rate for LSTM. Default: ``0.0``.
             kwargs: other non-used parameters
 
         Returns:
@@ -677,12 +677,12 @@ class KerasClassificationModel(KerasModel):
         Method builds uncompiled model BiGRU.
 
         Args:
-            units_lstm (int): Number of units for GRU.
-            dense_size (int): Number of units for dense layer.
-            coef_reg_lstm (float): L2-regularization coefficient for GRU. Default: ``0.0``.
-            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
-            dropout_rate (float): Dropout rate to be used after BiGRU and between dense layers. Default: ``0.0``.
-            rec_dropout_rate (float): Dropout rate for GRU. Default: ``0.0``.
+            units_lstm (int): number of units for GRU.
+            dense_size (int): number of units for dense layer.
+            coef_reg_lstm (float): l2-regularization coefficient for GRU. Default: ``0.0``.
+            coef_reg_den (float): l2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): dropout rate to be used after BiGRU and between dense layers. Default: ``0.0``.
+            rec_dropout_rate (float): dropout rate for GRU. Default: ``0.0``.
             kwargs: other non-used parameters
 
         Returns:

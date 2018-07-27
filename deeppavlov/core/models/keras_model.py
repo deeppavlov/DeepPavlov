@@ -46,9 +46,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         """
         Initialize model using parameters from opt
         Args:
-            opt: model parameters
-            *args:
-            **kwargs:
+            kwargs (dict): Dictionary with model parameters
         """
         self.opt = copy(kwargs)
         save_path = self.opt.get('save_path', None)
@@ -78,15 +76,17 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         config.gpu_options.visible_device_list = '0'
         return tf.Session(config=config)
 
-    def init_model_from_scratch(self, model_name, optimizer_name, loss_name, lear_rate=None, lear_rate_decay=None):
+    def init_model_from_scratch(self, model_name, optimizer_name,
+                                loss_name,
+                                lear_rate=0., lear_rate_decay=0.):
         """
         Initialize model from scratch with given params
         Args:
-            model_name: name of model function described as a method of this class
-            optimizer_name: name of optimizer from keras.optimizers
-            lr: learning rate
-            decay: learning rate decay
-            loss_name: loss function name (from keras.losses)
+            model_name (str): name of model function described as a method of this class
+            optimizer_name (str): name of optimizer from keras.optimizers
+            loss_name (str): loss function name (from keras.losses)
+            lear_rate (float): learning rate. Default: ``0.0``.
+            lear_rate_decay (float): learning rate decay. Default: ``0.0``.
 
         Returns:
             compiled model with given network and learning parameters
@@ -123,15 +123,15 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         return model
 
     @overrides
-    def load(self, model_name, optimizer_name, loss_name, lear_rate=None, lear_rate_decay=None):
+    def load(self, model_name, optimizer_name, loss_name, lear_rate=0., lear_rate_decay=0.):
         """
         Initialize model from saved params and weights
         Args:
-            model_name: name of model function described as a method of this class
-            optimizer_name: name of optimizer from keras.optimizers
-            lr: learning rate
-            decay: learning rate decay
-            loss_name: loss function name (from keras.losses)
+            model_name (str): name of model function described as a method of this class
+            optimizer_name (str): name of optimizer from keras.optimizers
+            loss_name (str): loss function name (from keras.losses)
+            lear_rate (float): learning rate. Default: ``0.0``.
+            lear_rate_decay (float): learning rate decay. Default: ``0.0``.
 
         Returns:
             model with loaded weights and network parameters from files
@@ -194,7 +194,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         Save the model parameters into <<fname>>_opt.json (or <<ser_file>>_opt.json)
         and model weights into <<fname>>.h5 (or <<ser_file>>.h5)
         Args:
-            fname: file_path to save model. If not explicitly given seld.opt["ser_file"] will be used
+            fname (str): file_path to save model. If not explicitly given seld.opt["ser_file"] will be used
 
         Returns:
             None
@@ -224,25 +224,6 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         save_json(self.opt, opt_path)
         return True
 
-    def mlp(self, opt):
-        """
-        Example of model function
-        Build un-compiled multilayer perceptron model
-        Args:
-            opt: dictionary of parameters
-
-        Returns:
-            un-compiled Keras model
-        """
-        inp = Input(shape=opt['inp_shape'])
-        output = inp
-        for i in range(opt['n_layers']):
-            output = Dense(opt['layer_size'], activation='relu')(output)
-        output = Dense(1, activation='softmax')(output)
-
-        model = Model(inputs=inp, outputs=output)
-        return model
-
     @abstractmethod
     def reset(self):
         pass
@@ -251,8 +232,9 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         """
         Process event after epoch
         Args:
-            event_name: whether event is send after epoch or batch
-            data: event data (dictionary)
+            event_name (str): whether event is send after epoch or batch.
+                    Set of values: ``"after_epoch", "after_batch"``
+            data (dict): event data (dictionary)
 
         Returns:
             None
