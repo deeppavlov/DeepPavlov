@@ -41,18 +41,7 @@ log = get_logger(__name__)
 @register('keras_classification_model')
 class KerasClassificationModel(KerasModel):
     """
-    Class implements Keras model for classification task for multi-class multi-label data.
-
-    Initialize and train vocabularies, initializes embedder, tokenizer, and then initialize model using parameters
-    from opt dictionary (from config), if model is being initialized from saved.
-
-    Parameters:
-        model_path (str): Path to model serialization dir or file. It is always an empty string and is ignored if it is
-            not set in json config.
-        model_dir (str): Name of a serialization dir, can be default or set in json config.
-        model_file (str): Name of a serialization file (usually binary model file), can be default / set in json config.
-        embedder (FasttextEmbedder): Embedder.
-        tokenizer (NLTKTokenizer): Tokenizer.
+    Class implements Keras model for classification task for multi-class multi-labeled data.
 
     Todo:
         * clarify initialization parameters
@@ -85,7 +74,37 @@ class KerasClassificationModel(KerasModel):
                         "rec_dropout_rate": 0.}
 
     def __init__(self, **kwargs):
-        super().__init__(**kwargs)  # self.opt initialized in here
+        """
+        Initialize and train vocabularies, initializes embedder, tokenizer, and then initialize model using parameters
+        from opt dictionary (from config), if model is being initialized from saved.
+        Args:
+            model_path (str): Path to model serialization dir or file.
+                    It is always an empty string and is ignored if it is not set in json config.
+            model_dir (str): Name of a serialization dir, can be default or set in json config
+            model_file (str): Name of a serialization file (usually binary model file),
+                    can be default/set in json config
+            embedder (FasttextEmbedder): Embedder
+            tokenizer (NLTKTokenizer): Tokenizer
+            classes (list): list of classes names presented in the dataset
+                    (in config it is determined as keys of vocab over `y`)
+            model_name (str): particular method of this class to initialize model configuration
+            optimizer (str): function name from keras.optimizers
+            lear_rate (float): learning rate for optimizer
+            lear_rate_decay (float): learning rate decay for optimizer
+            loss (str): function name from keras.losses.
+            last_layer_activation (str): parameter that determines activation function after classification layer.
+                    For multi-label classification use `sigmoid`,
+                    otherwise, `softmax`.
+            text_size (int): maximal length of text in tokens (words),
+                    longer texts are cutted,
+                    shorter ones are padded by zeros (pre-padding).
+            confident_threshold (float): boundary value of probability for converting probabilities to labels.
+                    The value is from 0 to 1.
+                    If all probabilities are lower than confident_threshold,
+                    label with the highest probability is assigned.
+                    If `last_layer_activation` is `softmax` (not multi-label classification), assign to 1.
+        """
+        super().__init__(**kwargs)  # self.opt = copy(kwargs) initialized in here
 
         self.tokenizer = self.opt.pop('tokenizer')
         self.fasttext_model = self.opt.pop('embedder')
@@ -138,7 +157,7 @@ class KerasClassificationModel(KerasModel):
         """
         Change changable parameters from saved model to given ones.
         Args:
-            **kwargs: dictionary of new parameters
+            **kwargs (dict): dictionary of new parameters
 
         Returns:
             None
@@ -150,9 +169,10 @@ class KerasClassificationModel(KerasModel):
 
     def texts2vec(self, sentences):
         """
-        Convert texts to vector representations using embedder and padding up to self.opt["text_size"] tokens
+        Convert texts to vector representations using embedder (self.fasttext_model)
+                and padding up to self.opt["text_size"] tokens
         Args:
-            sentences: list of lists of tokens
+            sentences (list): list of lists of tokens
 
         Returns:
             array of embedded texts
@@ -169,8 +189,8 @@ class KerasClassificationModel(KerasModel):
         """
         Train the model on the given batch
         Args:
-            texts - list of texts (or list of lists of text tokens)
-            labels - list of labels
+            texts (list): list of texts (or list of lists of text tokens)
+            labels (list): list of labels
 
         Returns:
             metrics values on the given batch
@@ -186,8 +206,8 @@ class KerasClassificationModel(KerasModel):
         """
         Infer the model on the given batch
         Args:
-            texts - list of texts (or list of lists of text tokens)
-            labels - list of labels
+            texts (list): list of texts (or list of lists of text tokens)
+            labels (list): list of labels
 
         Returns:
             metrics values on the given batch, if labels are given
@@ -209,8 +229,8 @@ class KerasClassificationModel(KerasModel):
         """
         Infer on the given data
         Args:
-            data: [list of sentences]
-            *args:
+            data (list): [list of sentences]
+            *args (): additional arguments
 
         Returns:
             for each sentence:
@@ -225,33 +245,30 @@ class KerasClassificationModel(KerasModel):
     def reset(self):
         pass
 
-    def cnn_model(self, params):
+    def cnn_model(self, kernel_sizes_cnn, filters_cnn, dense_size,
+                  coef_reg_cnn=0., coef_reg_den=0., dropout_rate=0., **kwargs):
         """
         Build un-compiled model of shallow-and-wide CNN.
 
-        Parameters:
+        Args:
             kernel_sizes_cnn (list[int]): list of kernel sizes of convolutions.
             filters_cnn (int): Number of filters for convolutions.
-            coef_reg_cnn (float): L2-regularization coefficient for convolutions. Default: ``0.0``.
-            dropout_rate (float): Dropout rate used after convolutions and between dense layers. Default: ``0.0``.
             dense_size (int): Number of units for dense layer.
-            coef_reg_dense (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
-            last_layer_activation (str): Activation type for the last classification layer. Default: ``'sigmoid'``.
+            coef_reg_cnn (float): L2-regularization coefficient for convolutions. Default: ``0.0``.
+            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): Dropout rate used after convolutions and between dense layers. Default: ``0.0``.
+            kwargs: other non-used parameters
 
         Returns:
             keras.models.Model: uncompiled instance of Keras Model
-
-        Todo:
-            * type annotations should be checked (docstring in this method is the template for others 9 analogs)
-            * order parameters correctly
         """
-        inp = Input(shape=(params['text_size'], params['embedding_size']))
+        inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
 
         outputs = []
-        for i in range(len(params['kernel_sizes_cnn'])):
-            output_i = Conv1D(params['filters_cnn'], kernel_size=params['kernel_sizes_cnn'][i],
+        for i in range(len(kernel_sizes_cnn)):
+            output_i = Conv1D(filters_cnn, kernel_size=kernel_sizes_cnn[i],
                               activation=None,
-                              kernel_regularizer=l2(params['coef_reg_cnn']),
+                              kernel_regularizer=l2(coef_reg_cnn),
                               padding='same')(inp)
             output_i = BatchNormalization()(output_i)
             output_i = Activation('relu')(output_i)
@@ -260,91 +277,89 @@ class KerasClassificationModel(KerasModel):
 
         output = concatenate(outputs, axis=1)
 
-        output = Dropout(rate=params['dropout_rate'])(output)
-        output = Dense(params['dense_size'], activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
+        output = Dropout(rate=dropout_rate)(output)
+        output = Dense(dense_size, activation=None,
+                       kernel_regularizer=l2(coef_reg_den))(output)
         output = BatchNormalization()(output)
         output = Activation('relu')(output)
-        output = Dropout(rate=params['dropout_rate'])(output)
+        output = Dropout(rate=dropout_rate)(output)
         output = Dense(self.n_classes, activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
+                       kernel_regularizer=l2(coef_reg_den))(output)
         output = BatchNormalization()(output)
-        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
+        act_output = Activation(self.opt.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
-    def dcnn_model(self, params):
+    def dcnn_model(self, kernel_sizes_cnn, filters_cnn, dense_size,
+                   coef_reg_cnn=0., coef_reg_den=0., dropout_rate=0., **kwargs):
         """
         Build un-compiled model of deep CNN.
 
-        Parameters:
-            kernel_sizes_cnn: List of kernel sizes of convolutions.
-            filters_cnn: List of numbers of filters for convolutions.
-            coef_reg_cnn: L2-regularization coefficient for convolutions.
-            dropout_rate: Dropout rate to be used after convolutions and between dense layers.
-            dense_size: Number of units for dense layer.
-            coef_reg_dense: L2-regularization coefficient for dense layers.
-            last_layer_activation: Activation type for the last classification layer. Default: ``'sigmoid'``.
+        Args:
+            kernel_sizes_cnn (list[int]): list of kernel sizes of convolutions.
+            filters_cnn (int): Number of filters for convolutions.
+            dense_size (int): Number of units for dense layer.
+            coef_reg_cnn (float): L2-regularization coefficient for convolutions. Default: ``0.0``.
+            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): Dropout rate used after convolutions and between dense layers. Default: ``0.0``.
+            kwargs: other non-used parameters
 
         Returns:
             keras.models.Model: uncompiled instance of Keras Model
         """
-
-        if type(self.opt['filters_cnn']) is str:
-            self.opt['filters_cnn'] = list(map(int, self.opt['filters_cnn'].split()))
-
-        inp = Input(shape=(params['text_size'], params['embedding_size']))
+        inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
 
         output = inp
 
-        for i in range(len(params['kernel_sizes_cnn'])):
-            output = Conv1D(params['filters_cnn'][i], kernel_size=params['kernel_sizes_cnn'][i],
+        for i in range(len(kernel_sizes_cnn)):
+            output = Conv1D(filters_cnn[i], kernel_size=kernel_sizes_cnn[i],
                             activation=None,
-                            kernel_regularizer=l2(params['coef_reg_cnn']),
+                            kernel_regularizer=l2(coef_reg_cnn),
                             padding='same')(output)
             output = BatchNormalization()(output)
             output = Activation('relu')(output)
             output = MaxPooling1D()(output)
 
         output = GlobalMaxPooling1D()(output)
-        output = Dropout(rate=params['dropout_rate'])(output)
-        output = Dense(params['dense_size'], activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
+        output = Dropout(rate=dropout_rate)(output)
+        output = Dense(dense_size, activation=None,
+                       kernel_regularizer=l2(coef_reg_den))(output)
         output = BatchNormalization()(output)
         output = Activation('relu')(output)
-        output = Dropout(rate=params['dropout_rate'])(output)
+        output = Dropout(rate=dropout_rate)(output)
         output = Dense(self.n_classes, activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
+                       kernel_regularizer=l2(coef_reg_den))(output)
         output = BatchNormalization()(output)
-        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
+        act_output = Activation(self.opt.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
-    def cnn_model_max_and_aver_pool(self, params):
+    def cnn_model_max_and_aver_pool(self, kernel_sizes_cnn, filters_cnn, dense_size,
+                                    coef_reg_cnn=0., coef_reg_den=0., dropout_rate=0., **kwargs):
         """
         Build un-compiled model of shallow-and-wide CNN where average pooling after convolutions is replaced with
         concatenation of average and max poolings.
 
-        Parameters:
-            kernel_sizes_cnn: List of kernel sizes of convolutions.
-            filters_cnn: Number of filters for convolutions.
-            coef_reg_cnn: L2-regularization coefficient for convolutions.
-            dropout_rate: Dropout rate to be used after convolutions and between dense layers.
-            dense_size: Number of units for dense layer.
-            coef_reg_dense: L2-regularization coefficient for dense layers.
-            last_layer_activation: Activation type for the last classification layer. Default: ``'sigmoid'``.
+        Args:
+            kernel_sizes_cnn (list[int]): list of kernel sizes of convolutions.
+            filters_cnn (int): Number of filters for convolutions.
+            dense_size (int): Number of units for dense layer.
+            coef_reg_cnn (float): L2-regularization coefficient for convolutions. Default: ``0.0``.
+            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): Dropout rate used after convolutions and between dense layers. Default: ``0.0``.
+            kwargs: other non-used parameters
 
         Returns:
             keras.models.Model: uncompiled instance of Keras Model
         """
 
-        inp = Input(shape=(params['text_size'], params['embedding_size']))
+        inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
 
         outputs = []
-        for i in range(len(params['kernel_sizes_cnn'])):
-            output_i = Conv1D(params['filters_cnn'], kernel_size=params['kernel_sizes_cnn'][i],
+        for i in range(len(kernel_sizes_cnn)):
+            output_i = Conv1D(filters_cnn, kernel_size=kernel_sizes_cnn[i],
                               activation=None,
-                              kernel_regularizer=l2(params['coef_reg_cnn']),
+                              kernel_regularizer=l2(coef_reg_cnn),
                               padding='same')(inp)
             output_i = BatchNormalization()(output_i)
             output_i = Activation('relu')(output_i)
@@ -355,137 +370,143 @@ class KerasClassificationModel(KerasModel):
 
         output = concatenate(outputs, axis=1)
 
-        output = Dropout(rate=params['dropout_rate'])(output)
-        output = Dense(params['dense_size'], activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
+        output = Dropout(rate=dropout_rate)(output)
+        output = Dense(dense_size, activation=None,
+                       kernel_regularizer=l2(coef_reg_den))(output)
         output = BatchNormalization()(output)
         output = Activation('relu')(output)
-        output = Dropout(rate=params['dropout_rate'])(output)
+        output = Dropout(rate=dropout_rate)(output)
         output = Dense(self.n_classes, activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
+                       kernel_regularizer=l2(coef_reg_den))(output)
         output = BatchNormalization()(output)
-        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
+        act_output = Activation(self.opt.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
-    def bilstm_model(self, params):
+    def bilstm_model(self, units_lstm, dense_size,
+                     coef_reg_lstm=0., coef_reg_den=0.,
+                     dropout_rate=0., rec_dropout_rate=0., **kwargs):
         """
         Build un-compiled BiLSTM.
 
-        Parameters:
-            units_lstm: Number of units for LSTM.
-            coef_reg_lstm: L2-regularization coefficient for LSTM.
-            rec_dropout_rate: Droupout rate for LSTM.
-            dropout_rate: Dropout rate to be used after BiLSTM and between dense layers.
-            dense_size: Number of units for dense layer.
-            coef_reg_dense: L2-regularization coefficient for dense layers.
-            last_layer_activation: Activation type for the last classification layer. Default: ``'sigmoid'``.
+        Args:
+            units_lstm (int): Number of units for LSTM.
+            dense_size (int): Number of units for dense layer.
+            coef_reg_lstm (float): L2-regularization coefficient for LSTM. Default: ``0.0``.
+            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): Dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
+            rec_dropout_rate (float): Dropout rate for LSTM. Default: ``0.0``.
+            kwargs: other non-used parameters
 
         Returns:
             keras.models.Model: uncompiled instance of Keras Model
         """
 
-        inp = Input(shape=(params['text_size'], params['embedding_size']))
+        inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
 
-        output = Bidirectional(LSTM(params['units_lstm'], activation='tanh',
+        output = Bidirectional(LSTM(units_lstm, activation='tanh',
                                     return_sequences=True,
-                                    kernel_regularizer=l2(params['coef_reg_lstm']),
-                                    dropout=params['dropout_rate'],
-                                    recurrent_dropout=params['rec_dropout_rate']))(inp)
+                                    kernel_regularizer=l2(coef_reg_lstm),
+                                    dropout=dropout_rate,
+                                    recurrent_dropout=rec_dropout_rate))(inp)
 
         output = GlobalMaxPooling1D()(output)
-        output = Dropout(rate=params['dropout_rate'])(output)
-        output = Dense(params['dense_size'], activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
+        output = Dropout(rate=dropout_rate)(output)
+        output = Dense(dense_size, activation=None,
+                       kernel_regularizer=l2(coef_reg_den))(output)
         output = Activation('relu')(output)
-        output = Dropout(rate=params['dropout_rate'])(output)
+        output = Dropout(rate=dropout_rate)(output)
         output = Dense(self.n_classes, activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
+                       kernel_regularizer=l2(coef_reg_den))(output)
+        act_output = Activation(self.opt.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
-    def bilstm_bilstm_model(self, params):
+    def bilstm_bilstm_model(self, units_lstm_1, units_lstm_2, dense_size,
+                            coef_reg_lstm=0., coef_reg_den=0.,
+                            dropout_rate=0., rec_dropout_rate=0., **kwargs):
         """
         Build un-compiled two-layers BiLSTM.
 
-        Parameters:
-            units_lstm_1: Number of units for the first LSTM layer.
-            units_lstm_2: Number of units for the second LSTM layer.
-            coef_reg_lstm: L2-regularization coefficient for LSTM.
-            rec_dropout_rate: Droupout rate for LSTM.
-            dropout_rate: Dropout rate to be used between all BiLSTM and dense layers.
-            dense_size: Number of units for dense layer.
-            coef_reg_dense: L2-regularization coefficient for dense layers.
-            last_layer_activation: activation type for the last classification layer. Default: ``'sigmoid'``.
+        Args:
+            units_lstm_1 (int): Number of units for the first LSTM layer.
+            units_lstm_2 (int): Number of units for the second LSTM layer.
+            dense_size (int): Number of units for dense layer.
+            coef_reg_lstm (float): L2-regularization coefficient for LSTM. Default: ``0.0``.
+            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): Dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
+            rec_dropout_rate (float): Dropout rate for LSTM. Default: ``0.0``.
+            kwargs: other non-used parameters
 
         Returns:
             keras.models.Model: uncompiled instance of Keras Model
         """
 
-        inp = Input(shape=(params['text_size'], params['embedding_size']))
+        inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
 
-        output = Bidirectional(LSTM(params['units_lstm_1'], activation='tanh',
+        output = Bidirectional(LSTM(units_lstm_1, activation='tanh',
                                     return_sequences=True,
-                                    kernel_regularizer=l2(params['coef_reg_lstm']),
-                                    dropout=params['dropout_rate'],
-                                    recurrent_dropout=params['rec_dropout_rate']))(inp)
+                                    kernel_regularizer=l2(coef_reg_lstm),
+                                    dropout=dropout_rate,
+                                    recurrent_dropout=rec_dropout_rate))(inp)
 
-        output = Dropout(rate=params['dropout_rate'])(output)
+        output = Dropout(rate=dropout_rate)(output)
 
-        output = Bidirectional(LSTM(params['units_lstm_2'], activation='tanh',
+        output = Bidirectional(LSTM(units_lstm_2, activation='tanh',
                                     return_sequences=True,
-                                    kernel_regularizer=l2(params['coef_reg_lstm']),
-                                    dropout=params['dropout_rate'],
-                                    recurrent_dropout=params['rec_dropout_rate']))(output)
+                                    kernel_regularizer=l2(coef_reg_lstm),
+                                    dropout=dropout_rate,
+                                    recurrent_dropout=rec_dropout_rate))(output)
 
         output = GlobalMaxPooling1D()(output)
-        output = Dropout(rate=params['dropout_rate'])(output)
-        output = Dense(params['dense_size'], activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
+        output = Dropout(rate=dropout_rate)(output)
+        output = Dense(dense_size, activation=None,
+                       kernel_regularizer=l2(coef_reg_den))(output)
         output = Activation('relu')(output)
-        output = Dropout(rate=params['dropout_rate'])(output)
+        output = Dropout(rate=dropout_rate)(output)
         output = Dense(self.n_classes, activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
+                       kernel_regularizer=l2(coef_reg_den))(output)
+        act_output = Activation(self.opt.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
-    def bilstm_cnn_model(self, params):
+    def bilstm_cnn_model(self, units_lstm, kernel_sizes_cnn, filters_cnn, dense_size,
+                         coef_reg_lstm=0., coef_reg_cnn=0., coef_reg_den=0.,
+                         dropout_rate=0., rec_dropout_rate=0., **kwargs):
         """
         Build un-compiled BiLSTM-CNN.
 
-        Parameters:
-            units_lstm: Number of units for the first LSTM layer.
-            coef_reg_lstm: L2-regularization coefficient for LSTM.
-            rec_dropout_rate: Droupout rate for LSTM.
-            kernel_sizes_cnn: List of kernel sizes of convolutions.
-            filters_cnn: Number of filters for convolutions.
-            coef_reg_cnn: L2-regularization coefficient for convolutions.
-            dropout_rate: Dropout rate to be used between BiLSTM and CNN, after CNN and between dense layers.
-            dense_size: Number of units for dense layer.
-            coef_reg_dense: L2-regularization coefficient for dense layers.
-            last_layer_activation: Activation type for the last classification layer. Default: ``'sigmoid'``.
+        Args:
+            units_lstm (int): Number of units for LSTM.
+            kernel_sizes_cnn (list[int]): list of kernel sizes of convolutions.
+            filters_cnn (int): Number of filters for convolutions.
+            dense_size (int): Number of units for dense layer.
+            coef_reg_lstm (float): L2-regularization coefficient for LSTM. Default: ``0.0``.
+            coef_reg_cnn (float): L2-regularization coefficient for convolutions. Default: ``0.0``.
+            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): Dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
+            rec_dropout_rate (float): Dropout rate for LSTM. Default: ``0.0``.
+            kwargs: other non-used parameters
 
         Returns:
             keras.models.Model: uncompiled instance of Keras Model
         """
 
-        inp = Input(shape=(params['text_size'], params['embedding_size']))
+        inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
 
-        output = Bidirectional(LSTM(params['units_lstm'], activation='tanh',
+        output = Bidirectional(LSTM(units_lstm, activation='tanh',
                                     return_sequences=True,
-                                    kernel_regularizer=l2(params['coef_reg_lstm']),
-                                    dropout=params['dropout_rate'],
-                                    recurrent_dropout=params['rec_dropout_rate']))(inp)
+                                    kernel_regularizer=l2(coef_reg_lstm),
+                                    dropout=dropout_rate,
+                                    recurrent_dropout=rec_dropout_rate))(inp)
 
-        output = Reshape(target_shape=(params['text_size'], 2 * params['units_lstm']))(output)
+        output = Reshape(target_shape=(self.opt['text_size'], 2 * units_lstm))(output)
         outputs = []
-        for i in range(len(params['kernel_sizes_cnn'])):
-            output_i = Conv1D(params['filters_cnn'],
-                              kernel_size=params['kernel_sizes_cnn'][i],
+        for i in range(len(kernel_sizes_cnn)):
+            output_i = Conv1D(filters_cnn,
+                              kernel_size=kernel_sizes_cnn[i],
                               activation=None,
-                              kernel_regularizer=l2(params['coef_reg_cnn']),
+                              kernel_regularizer=l2(coef_reg_cnn),
                               padding='same')(output)
             output_i = BatchNormalization()(output_i)
             output_i = Activation('relu')(output_i)
@@ -493,44 +514,46 @@ class KerasClassificationModel(KerasModel):
             outputs.append(output_i)
 
         output = Concatenate(axis=1)(outputs)
-        output = Dropout(rate=params['dropout_rate'])(output)
-        output = Dense(params['dense_size'], activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
+        output = Dropout(rate=dropout_rate)(output)
+        output = Dense(dense_size, activation=None,
+                       kernel_regularizer=l2(coef_reg_den))(output)
         output = Activation('relu')(output)
-        output = Dropout(rate=params['dropout_rate'])(output)
+        output = Dropout(rate=dropout_rate)(output)
         output = Dense(self.n_classes, activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
+                       kernel_regularizer=l2(coef_reg_den))(output)
+        act_output = Activation(self.opt.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
-    def cnn_bilstm_model(self, params):
+    def cnn_bilstm_model(self, kernel_sizes_cnn, filters_cnn, units_lstm, dense_size,
+                         coef_reg_cnn=0., coef_reg_lstm=0., coef_reg_den=0.,
+                         dropout_rate=0., rec_dropout_rate=0., **kwargs):
         """
         Build un-compiled BiLSTM-CNN.
 
-        Parameters:
-            kernel_sizes_cnn: List of kernel sizes of convolutions.
-            filters_cnn: Number of filters for convolutions.
-            coef_reg_cnn: L2-regularization coefficient for convolutions.
-            units_lstm: Number of units for the first LSTM layer.
-            coef_reg_lstm: L2-regularization coefficient for LSTM.
-            rec_dropout_rate: Droupout rate for LSTM.
-            dropout_rate: Dropout rate to be used between BiLSTM and CNN, after BiLSTM and between dense layers.
-            dense_size: Number of units for dense layer.
-            coef_reg_dense: L2-regularization coefficient for dense layers.
-            last_layer_activation: Activation type for the last classification layer. Default: ``'sigmoid'``.
+        Args:
+            kernel_sizes_cnn (list[int]): list of kernel sizes of convolutions.
+            filters_cnn (int): Number of filters for convolutions.
+            units_lstm (int): Number of units for LSTM.
+            dense_size (int): Number of units for dense layer.
+            coef_reg_cnn (float): L2-regularization coefficient for convolutions. Default: ``0.0``.
+            coef_reg_lstm (float): L2-regularization coefficient for LSTM. Default: ``0.0``.
+            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): Dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
+            rec_dropout_rate (float): Dropout rate for LSTM. Default: ``0.0``.
+            kwargs: other non-used parameters
 
         Returns:
             keras.models.Model: uncompiled instance of Keras Model
         """
 
-        inp = Input(shape=(params['text_size'], params['embedding_size']))
+        inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
 
         outputs = []
-        for i in range(len(params['kernel_sizes_cnn'])):
-            output_i = Conv1D(params['filters_cnn'], kernel_size=params['kernel_sizes_cnn'][i],
+        for i in range(len(kernel_sizes_cnn)):
+            output_i = Conv1D(filters_cnn, kernel_size=kernel_sizes_cnn[i],
                               activation=None,
-                              kernel_regularizer=l2(params['coef_reg_cnn']),
+                              kernel_regularizer=l2(coef_reg_cnn),
                               padding='same')(inp)
             output_i = BatchNormalization()(output_i)
             output_i = Activation('relu')(output_i)
@@ -538,144 +561,150 @@ class KerasClassificationModel(KerasModel):
             outputs.append(output_i)
 
         output = concatenate(outputs, axis=1)
-        output = Dropout(rate=params['dropout_rate'])(output)
+        output = Dropout(rate=dropout_rate)(output)
 
-        output = Bidirectional(LSTM(params['units_lstm'], activation='tanh',
+        output = Bidirectional(LSTM(units_lstm, activation='tanh',
                                     return_sequences=True,
-                                    kernel_regularizer=l2(params['coef_reg_lstm']),
-                                    dropout=params['dropout_rate'],
-                                    recurrent_dropout=params['rec_dropout_rate']))(output)
+                                    kernel_regularizer=l2(coef_reg_lstm),
+                                    dropout=dropout_rate,
+                                    recurrent_dropout=rec_dropout_rate))(output)
 
         output = GlobalMaxPooling1D()(output)
-        output = Dropout(rate=params['dropout_rate'])(output)
-        output = Dense(params['dense_size'], activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
+        output = Dropout(rate=dropout_rate)(output)
+        output = Dense(dense_size, activation=None,
+                       kernel_regularizer=l2(coef_reg_den))(output)
         output = Activation('relu')(output)
-        output = Dropout(rate=params['dropout_rate'])(output)
+        output = Dropout(rate=dropout_rate)(output)
         output = Dense(self.n_classes, activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
+                       kernel_regularizer=l2(coef_reg_den))(output)
+        act_output = Activation(self.opt.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
-    def bilstm_self_add_attention_model(self, params):
+    def bilstm_self_add_attention_model(self, units_lstm, dense_size, self_att_hid, self_att_out,
+                                        coef_reg_lstm=0., coef_reg_den=0.,
+                                        dropout_rate=0., rec_dropout_rate=0., **kwargs):
         """
         Method builds uncompiled model of BiLSTM with self additive attention.
 
-        Parameters:
-            units_lstm: Number of units for the first LSTM layer.
-            coef_reg_lstm: L2-regularization coefficient for LSTM.
-            rec_dropout_rate: Droupout rate for LSTM.
-            self_att_hid: Number of hidden units for additive self-attention layer.
-            self_att_out: Number of output units for additive self-attention layer.
-            dropout_rate: Dropout rate to be used after self-attention layer and between dense layers.
-            dense_size: Number of units for dense layer.
-            coef_reg_dense: L2-regularization coefficient for dense layers.
-            last_layer_activation: Activation type for the last classification layer. Default: ``'sigmoid'``.
+        Args:
+            units_lstm (int): Number of units for LSTM.
+            self_att_hid (int): Number of hidden units in self-attention
+            self_att_out (int): Number of output units in self-attention
+            dense_size (int): Number of units for dense layer.
+            coef_reg_lstm (float): L2-regularization coefficient for LSTM. Default: ``0.0``.
+            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): Dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
+            rec_dropout_rate (float): Dropout rate for LSTM. Default: ``0.0``.
+            kwargs: other non-used parameters
 
         Returns:
             keras.models.Model: uncompiled instance of Keras Model
         """
 
-        inp = Input(shape=(params['text_size'], params['embedding_size']))
-        output = Bidirectional(LSTM(params['units_lstm'], activation='tanh',
+        inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
+        output = Bidirectional(LSTM(units_lstm, activation='tanh',
                                     return_sequences=True,
-                                    kernel_regularizer=l2(params['coef_reg_lstm']),
-                                    dropout=params['dropout_rate'],
-                                    recurrent_dropout=params['rec_dropout_rate']))(inp)
+                                    kernel_regularizer=l2(coef_reg_lstm),
+                                    dropout=dropout_rate,
+                                    recurrent_dropout=rec_dropout_rate))(inp)
 
         output = MaxPooling1D(pool_size=2, strides=3)(output)
 
-        output = additive_self_attention(output, n_hidden=params.get("self_att_hid"),
-                                         n_output_features=params.get("self_att_out"))
+        output = additive_self_attention(output, n_hidden=self_att_hid,
+                                         n_output_features=self_att_out)
         output = GlobalMaxPooling1D()(output)
-        output = Dropout(rate=params['dropout_rate'])(output)
-        output = Dense(params['dense_size'], activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
+        output = Dropout(rate=dropout_rate)(output)
+        output = Dense(dense_size, activation=None,
+                       kernel_regularizer=l2(coef_reg_den))(output)
         output = Activation('relu')(output)
-        output = Dropout(rate=params['dropout_rate'])(output)
+        output = Dropout(rate=dropout_rate)(output)
         output = Dense(self.n_classes, activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
+                       kernel_regularizer=l2(coef_reg_den))(output)
+        act_output = Activation(self.opt.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
-    def bilstm_self_mult_attention_model(self, params):
+    def bilstm_self_mult_attention_model(self, units_lstm, dense_size, self_att_hid, self_att_out,
+                                         coef_reg_lstm=0., coef_reg_den=0.,
+                                         dropout_rate=0., rec_dropout_rate=0., **kwargs):
         """
         Method builds uncompiled model of BiLSTM with self multiplicative attention.
 
-        Parameters:
-            units_lstm: Number of units for the first LSTM layer.
-            coef_reg_lstm: L2-regularization coefficient for LSTM.
-            rec_dropout_rate: Droupout rate for LSTM.
-            self_att_hid: Number of hidden units for multiplicative self-attention layer.
-            self_att_out: Number of output units for multiplicative self-attention layer.
-            dropout_rate: Dropout rate to be used after self-attention layer and between dense layers.
-            dense_size: Number of units for dense layer.
-            coef_reg_dense: L2-regularization coefficient for dense layers.
-            last_layer_activation: Activation type for the last classification layer. Default: ``'sigmoid'``.
+        Args:
+            units_lstm (int): Number of units for LSTM.
+            self_att_hid (int): Number of hidden units in self-attention
+            self_att_out (int): Number of output units in self-attention
+            dense_size (int): Number of units for dense layer.
+            coef_reg_lstm (float): L2-regularization coefficient for LSTM. Default: ``0.0``.
+            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): Dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
+            rec_dropout_rate (float): Dropout rate for LSTM. Default: ``0.0``.
+            kwargs: other non-used parameters
 
         Returns:
             keras.models.Model: uncompiled instance of Keras Model
         """
 
-        inp = Input(shape=(params['text_size'], params['embedding_size']))
+        inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
 
-        output = Bidirectional(LSTM(params['units_lstm'], activation='tanh',
+        output = Bidirectional(LSTM(units_lstm, activation='tanh',
                                     return_sequences=True,
-                                    kernel_regularizer=l2(params['coef_reg_lstm']),
-                                    dropout=params['dropout_rate'],
-                                    recurrent_dropout=params['rec_dropout_rate']))(inp)
+                                    kernel_regularizer=l2(coef_reg_lstm),
+                                    dropout=dropout_rate,
+                                    recurrent_dropout=rec_dropout_rate))(inp)
 
         output = MaxPooling1D(pool_size=2, strides=3)(output)
 
-        output = multiplicative_self_attention(output, n_hidden=params.get("self_att_hid"),
-                                               n_output_features=params.get("self_att_out"))
+        output = multiplicative_self_attention(output, n_hidden=self_att_hid,
+                                               n_output_features=self_att_out)
         output = GlobalMaxPooling1D()(output)
-        output = Dropout(rate=params['dropout_rate'])(output)
-        output = Dense(params['dense_size'], activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
+        output = Dropout(rate=dropout_rate)(output)
+        output = Dense(dense_size, activation=None,
+                       kernel_regularizer=l2(coef_reg_den))(output)
         output = Activation('relu')(output)
-        output = Dropout(rate=params['dropout_rate'])(output)
+        output = Dropout(rate=dropout_rate)(output)
         output = Dense(self.n_classes, activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
+                       kernel_regularizer=l2(coef_reg_den))(output)
+        act_output = Activation(self.opt.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model
 
-    def bigru_model(self, params):
+    def bigru_model(self, units_lstm, dense_size,
+                    coef_reg_lstm=0., coef_reg_den=0.,
+                    dropout_rate=0., rec_dropout_rate=0., **kwargs):
         """
         Method builds uncompiled model BiGRU.
 
-        Parameters:
-            units_lstm: Number of units for the first GRU layer.
-            coef_reg_lstm: L2-regularization coefficient for GRU.
-            rec_dropout_rate: Droupout rate for GRU.
-            dropout_rate: Dropout rate to be used after BiGRU and between dense layers.
-            dense_size: Number of units for dense layer.
-            coef_reg_dense: L2-regularization coefficient for dense layers.
-            last_layer_activation: Activation type for the last classification layer. Default: ``'sigmoid'``
+        Args:
+            units_lstm (int): Number of units for GRU.
+            dense_size (int): Number of units for dense layer.
+            coef_reg_lstm (float): L2-regularization coefficient for GRU. Default: ``0.0``.
+            coef_reg_den (float): L2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate (float): Dropout rate to be used after BiGRU and between dense layers. Default: ``0.0``.
+            rec_dropout_rate (float): Dropout rate for GRU. Default: ``0.0``.
+            kwargs: other non-used parameters
 
         Returns:
             keras.models.Model: uncompiled instance of Keras Model
         """
 
-        inp = Input(shape=(params['text_size'], params['embedding_size']))
+        inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
 
-        output = Bidirectional(GRU(params['units_lstm'], activation='tanh',
+        output = Bidirectional(GRU(units_lstm, activation='tanh',
                                    return_sequences=True,
-                                   kernel_regularizer=l2(params['coef_reg_lstm']),
-                                   dropout=params['dropout_rate'],
-                                   recurrent_dropout=params['rec_dropout_rate']))(inp)
+                                   kernel_regularizer=l2(coef_reg_lstm),
+                                   dropout=dropout_rate,
+                                   recurrent_dropout=rec_dropout_rate))(inp)
 
         output = GlobalMaxPooling1D()(output)
-        output = Dropout(rate=params['dropout_rate'])(output)
-        output = Dense(params['dense_size'], activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
+        output = Dropout(rate=dropout_rate)(output)
+        output = Dense(dense_size, activation=None,
+                       kernel_regularizer=l2(coef_reg_den))(output)
         output = Activation('relu')(output)
-        output = Dropout(rate=params['dropout_rate'])(output)
+        output = Dropout(rate=dropout_rate)(output)
         output = Dense(self.n_classes, activation=None,
-                       kernel_regularizer=l2(params['coef_reg_den']))(output)
-        act_output = Activation(params.get("last_layer_activation", "sigmoid"))(output)
+                       kernel_regularizer=l2(coef_reg_den))(output)
+        act_output = Activation(self.opt.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
         return model

@@ -95,7 +95,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         print(model_name)
         model_func = getattr(self, model_name, None)
         if callable(model_func):
-            model = model_func(params=self.opt)
+            model = model_func(**self.opt)
         else:
             raise AttributeError("Model {} is not defined".format(model_name))
 
@@ -152,7 +152,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
 
                 model_func = getattr(self, model_name, None)
                 if callable(model_func):
-                    model = model_func(params=self.opt)
+                    model = model_func(**self.opt)
                 else:
                     raise AttributeError("Model {} is not defined".format(model_name))
 
