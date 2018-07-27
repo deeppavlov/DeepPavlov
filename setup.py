@@ -23,7 +23,7 @@ __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file
 def read_requirements():
     # # parses requirements from requirements.txt
     reqs_path = os.path.join(__location__, 'requirements.txt')
-    with open(reqs_path) as f:
+    with open(reqs_path, encoding='utf8') as f:
         reqs = [line.strip() for line in f if not line.strip().startswith('#')]
 
     for req in reqs:
@@ -40,28 +40,28 @@ def read_requirements():
 
 
 def readme():
-    with open(os.path.join(__location__, 'README.md')) as f:
+    with open(os.path.join(__location__, 'README.md'), encoding='utf8') as f:
         text = f.read()
     return re.sub(r']\((?!https?://)', r'](https://github.com/deepmipt/DeepPavlov/blob/master/', text)
 
 
 meta = {}
-with open(os.path.join(__location__, 'deeppavlov/package_meta.py')) as f:
+with open(os.path.join(__location__, 'deeppavlov/package_meta.py'), encoding='utf8') as f:
     exec(f.read(), meta)
 
 setup(
     name='deeppavlov',
-    packages=find_packages(exclude=('tests',)),
+    packages=find_packages(exclude=('tests',)) + ['dp_requirements'],
     version=meta['__version__'],
-    description='An open source library for building end-to-end dialog systems and training chatbots.',
+    description=meta['__description__'],
     long_description=readme(),
-    long_description_content_type="text/markdown",
+    long_description_content_type='text/markdown',
     author=meta['__author__'],
     author_email='info@ipavlov.ai',
     license='Apache License, Version 2.0',
     url='https://github.com/deepmipt/DeepPavlov',
     download_url='https://github.com/deepmipt/DeepPavlov/archive/' + meta['__version__'] + '.tar.gz',
-    keywords=['NLP', 'NER', 'SQUAD', 'Intents', 'Chatbot'],
+    keywords=meta['__keywords__'],
     include_package_data=True,
     **read_requirements()
 )

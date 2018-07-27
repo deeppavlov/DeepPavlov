@@ -60,14 +60,14 @@
     "epochs": 50,
     "batch_size": 32,
 
-    "metrics": ["per_token_accuracy"],
+    "metrics": ["per_token_accuracy", "accuracy"],
     "validation_patience": 10,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1
   },
   "metadata": {
     "requirements": [
-      "../requirements/tf.txt"
+      "../dp_requirements/tf.txt"
     ],
     "download": [
       "http://lnsigo.mipt.ru/export/deeppavlov_data/morpho_tagger.tar.gz",

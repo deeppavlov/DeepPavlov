@@ -1,8 +1,10 @@
 import io
 import json
+import os
 from pathlib import Path
 import shutil
 import sys
+from tempfile import TemporaryDirectory
 
 import pytest
 import pexpect
@@ -14,6 +16,7 @@ from deeppavlov.core.data.utils import get_all_elems_from_json
 from utils.server_utils.server import get_server_params, SERVER_CONFIG_FILENAME
 
 
+cache_dir = None
 tests_dir = Path(__file__, '..').resolve()
 test_configs_path = tests_dir / "deeppavlov" / "configs"
 src_dir = tests_dir.parent / "deeppavlov" / "configs"
@@ -104,8 +107,11 @@ PARAMS = {
     "odqa": {
         ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
-    "morpho_tagger/UD2.0/hu":
-        {("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]}
+    "morpho_tagger":{
+        ("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger_hu", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_train_pymorphy.json",
+         "morpho_tagger_pymorphy", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+    }
 }
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
@@ -127,9 +133,9 @@ def download_config(conf_file):
         src_file = test_src_dir / conf_file
 
     if not src_file.is_file():
-        raise RuntimeError('Unexisting config file {}'.format(conf_file))
+        raise RuntimeError('No config file {}'.format(conf_file))
 
-    with src_file.open() as fin:
+    with src_file.open(encoding='utf8') as fin:
         config = json.load(fin)
 
     if config.get("train"):
@@ -139,7 +145,9 @@ def download_config(conf_file):
 
     config["deeppavlov_root"] = str(download_path)
 
-    with (test_configs_path / conf_file).open("w") as fout:
+    conf_file = test_configs_path / conf_file
+    conf_file.parent.mkdir(exist_ok=True, parents=True)
+    with conf_file.open("w", encoding='utf8') as fout:
         json.dump(config, fout)
 
     # Download referenced config files
@@ -163,10 +171,17 @@ def setup_module():
         for (conf_file, _, _), _ in conf_dict.items():
             download_config(conf_file)
 
+    global cache_dir
+    cache_dir = TemporaryDirectory()
+    os.environ['DP_CACHE_DIR'] = cache_dir.name
+
 
 def teardown_module():
     shutil.rmtree(str(test_configs_path.parent), ignore_errors=True)
     shutil.rmtree(str(download_path), ignore_errors=True)
+
+    global cache_dir
+    cache_dir.cleanup()
 
 
 @pytest.mark.parametrize("model,conf_file,model_dir,mode", TEST_GRID, scope='class')
@@ -197,7 +212,8 @@ class TestQuickStart(object):
                 p.expect(">> ")
                 if expected_response is not None:
                     actual_response = p.readline().decode().strip()
-                    assert expected_response == actual_response, f"Error in interacting with {model_dir} ({conf_file}): {query}"
+                    assert expected_response == actual_response,\
+                        f"Error in interacting with {model_dir} ({conf_file}): {query}"
 
             p.expect("::")
             p.sendline("quit")
@@ -302,7 +318,7 @@ class TestQuickStart(object):
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
             logfile = io.BytesIO(b'')
-            _, exitstatus = pexpect.run(sys.executable + " -m deeppavlov.evolve " + str(c) + " --iterations 1 --p_size 1",
+            _, exitstatus = pexpect.run(sys.executable + f" -m deeppavlov.evolve {c} --iterations 1 --p_size 1",
                                         timeout=None, withexitstatus=True,
                                         logfile=logfile)
             if exitstatus != 0:

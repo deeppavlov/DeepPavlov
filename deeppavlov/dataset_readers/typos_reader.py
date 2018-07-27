@@ -45,7 +45,7 @@ class TyposCustom(DatasetReader):
     @classmethod
     def read(cls, data_path: str, *args, **kwargs):
         fname = cls.build(data_path)
-        with fname.open(newline='') as tsvfile:
+        with fname.open(newline='', encoding='utf8') as tsvfile:
             reader = csv.reader(tsvfile, delimiter='\t')
             next(reader)
             res = [(mistake, correct) for mistake, correct in reader]
@@ -73,7 +73,7 @@ class TyposWikipedia(TyposCustom):
                     data.append([typo.strip(), correct.strip()])
 
             fname.parent.mkdir(parents=True, exist_ok=True)
-            with fname.open('w', newline='') as tsvfile:
+            with fname.open('w', newline='', encoding='utf8') as tsvfile:
                 writer = csv.writer(tsvfile, delimiter='\t')
                 for line in data:
                     writer.writerow(line)
@@ -108,7 +108,7 @@ class TyposKartaslov(DatasetReader):
     @staticmethod
     def read(data_path: str, *args, **kwargs):
         fname = TyposKartaslov.build(data_path)
-        with open(str(fname), newline='') as csvfile:
+        with open(str(fname), newline='', encoding='utf8') as csvfile:
             reader = csv.reader(csvfile, delimiter=';')
             next(reader)
             res = [(mistake, correct) for correct, mistake, weight in reader]
