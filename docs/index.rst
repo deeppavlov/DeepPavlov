@@ -8,6 +8,7 @@ Welcome to DeepPavlov's documentation!
 
    Hello bot! <intro/hello_bot>
    Installation <intro/installation>
+   Features <features>
    Pre-trained word vectors <intro/pretrained_vectors>
    Configuration files <intro/config_description>
    Parameters evolution <intro/parameters_evolution>

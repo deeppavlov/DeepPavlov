@@ -191,58 +191,6 @@ Jupyter notebooks and videos explaining how to use DeepPalov for different tasks
 
 ---
 
-# Technical overview
-
-## Project modules
-
-<table>
-<tr>
-    <td><b> deeppavlov.core.commands </b></td>
-    <td> basic training and inference functions  </td>
-</tr>
-<tr>
-    <td><b> deeppavlov.core.common </b></td>
-    <td> registration and classes initialization functionality, class method decorators </td>
-</tr>
-<tr>
-    <td><b> deeppavlov.core.data </b></td>
-    <td> basic <b><i>DatasetIterator</i></b>, <b><i>DatasetReader</i></b> and <b><i>Vocab</i></b> classes </td>
-</tr>
-<tr>
-    <td><b> deeppavlov.core.layers </b></td>
-    <td> collection of commonly used <b><i>Layers</i></b> for TF models </td>
-</tr>
-<tr>
-    <td><b> deeppavlov.core.models </b></td>
-    <td> abstract model classes and interfaces </td>
-</tr>
-<tr>
-    <td><b> deeppavlov.dataset_readers </b></td>
-    <td> concrete <b><i>DatasetReader</i></b> classes </td>
-</tr>
-<tr>
-    <td><b> deeppavlov.dataset_iterators </b></td>
-    <td> concrete <b><i>DatasetIterators</i></b> classes </td>
-</tr>
-<tr>
-    <td><b> deeppavlov.metrics </b></td>
-    <td> different <b><i>Metric</i></b> functions </td>
-</tr>
-<tr>
-    <td><b> deeppavlov.models </b></td>
-    <td> concrete <b><i>Model</i></b> classes </td>
-</tr>
-<tr>
-    <td><b> deeppavlov.skills </b></td>
-    <td> <b><i>Skill</i></b> classes. Skills are dialog models.</td>
-</tr>
-<tr>
-    <td><b> deeppavlov.vocabs </b></td>
-    <td> concrete <b><i>Vocab</i></b> classes </td>
-</tr>
-</table>
-
-
 ## Rest API
 
 Each library component or skill can be easily made available for inference as a REST web service. The general method is:
