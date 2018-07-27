@@ -37,19 +37,19 @@ logger = get_logger(__name__)
 class ErrorModel(Estimator):
     """Component for forwarding parameters to APIs
 
+    Args:
+        dictionary: list of all the correct words in the form of trie structure
+        window: maximum context window size
+        candidates_count: count of replacement candidates to return for every token in input
+
     Attributes:
-        costs: logarithmic probabilities
+        costs: logarithmic probabilities of character sequences replacements
+        dictionary: list of all the correct words in the form of trie structure
+        window: maximum context window size
+        candidates_count: count of replacement candidates to return for every token in inpu
     """
 
     def __init__(self, dictionary: StaticDictionary, window: int=1, candidates_count: int=1, *args, **kwargs):
-        """
-
-        Args:
-            dictionary: list of all the correct words in the form of trie structure
-            window: maximum context window size
-            candidates_count: count of replacement candidates to return for every token in input
-        """
-
         super().__init__(*args, **kwargs)
         self.costs = defaultdict(itertools.repeat(float('-inf')).__next__)
         self.dictionary = dictionary

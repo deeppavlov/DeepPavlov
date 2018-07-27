@@ -81,15 +81,7 @@ Config parameters:
 ^^^^^^^^^^^^^^^^^^
 
 -  ``name`` always equals to ``"go_bot"``
--  ``word_vocab`` — vocabulary of tokens from context utterances
-
-    +  ``name`` — ``"default_vocab"`` (for vocabulary's implementation see ``deeppavlov.core.data.vocab``)
-    +  ``level`` — ``"token"``
-    +  ``tokenizer`` — ``{ "name": "split_tokenizer" }``
-    +  ``save_path`` — ``"vocabs/token.dict"``
-    +  ``load_path`` — ``"vocabs/token.dict"``
-
-
+-  ``word_vocab`` — vocabulary of tokens from context utterances (:doc:`deeppavlov.core.data.vocab:DefaultVocabulary </apiref/core/data>` is recommended)
 -  ``template_path`` — map from actions to text templates for response generation
 -  ``template_type`` — type of templates to use (``"BaseTemplate"`` by default) *(optional)*
 -  ``database`` – database that will be used during model inference to make "api\_call" action and
