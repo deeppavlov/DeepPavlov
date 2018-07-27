@@ -63,38 +63,6 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 Demo of selected features is available at [demo.ipavlov.ai](https://demo.ipavlov.ai/)
 
-# Conceptual overview
-
-Our goal is to enable AI-application developers and researchers with:
- * set of pre-trained NLP models, pre-defined dialog system components (ML/DL/Rule-based) and pipeline templates;
- * a framework for implementing and testing their own dialog models;
- * tools for application integration with adjacent infrastructure (messengers, helpdesk software etc.);
- * benchmarking environment for conversational models and uniform access to relevant datasets.
-
-<p align="left">
-<img src="https://deeppavlov.readthedocs.io/en/latest/_static/dp_agnt_diag.png"/>
-</p>
-
-## Key Concepts
- * `Agent` is a conversational agent communicating with users in natural language (text).
- * `Skill` fulfills user’s goal in some domain. Typically, this is accomplished by presenting information or completing transaction (e.g. answer question by FAQ, booking tickets etc.). However, for some tasks a success of interaction is defined as continuous engagement (e.g. chit-chat).
- * `Component` is a reusable functional component of `Skill`.
-   * `Rule-based Models` cannot be trained.
-   * `Machine Learning Models` can be trained only stand alone.
-   * `Deep Learning Models` can be trained independently and in an end-to-end mode being joined in a chain.
- * `Skill Manager` performs selection of the `Skill` to generate response.
- * ` Chainer` builds an agent/component pipeline from heterogeneous components (rule-based/ml/dl). It allows to train and infer models in a pipeline as a whole.
-
-The smallest building block of the library is `Component`. `Component` stands for any kind of function in an NLP pipeline. It can be implemented as a neural network, a non-neural ML model or a rule-based system. Besides that, `Component` can have nested structure, i.e. a `Component` can include other `Component`'(s). 
-
-`Component`s can be joined into a `Skill`. `Skill` solves a larger NLP task compared to `Component`. However, in terms of implementation `Skill`s are not different from `Component`s. The only restriction of `Skill`s is that their input and output should both be strings. Therefore, `Skill`s are usually associated with dialogue tasks. 
-
-`Agent` is supposed to be a multi-purpose dialogue system that comprises several `Skill`s and can switch between them. It can be a dialogue system that contains a goal-oriented and chatbot skills and chooses which one to use for generating the answer depending on user input.
-
-DeepPavlov is built on top of machine learning frameworks [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). Other external libraries can be used to build basic components.
-
----
-
 # Quick start
 
 To use our pre-trained models, you should first install their requirements:
@@ -151,77 +119,9 @@ You can also specify batch size with `-b` or `--batch-size` parameter.
 | **Embeddings** |  |
 | [Pre-trained embeddings for the Russian language](docs/intro/pretrained_vectors.rst) | Word vectors for the Russian language trained on joint [Russian Wikipedia](https://ru.wikipedia.org/) and [Lenta.ru](https://lenta.ru/) corpora. |
 
-
-# Examples of some components
-       
- * Run goal-oriented bot with Telegram interface:
- ```
- python -m deeppavlov interactbot deeppavlov/configs/go_bot/gobot_dstc2.json -d -t <TELEGRAM_TOKEN>
- ```
- * Run goal-oriented bot with console interface:
- ```
- python -m deeppavlov interact deeppavlov/configs/go_bot/gobot_dstc2.json -d
- ```
-  * Run goal-oriented bot with REST API:
- ```
- python -m deeppavlov riseapi deeppavlov/configs/go_bot/gobot_dstc2.json -d
- ``` 
-  * Run slot-filling model with Telegram interface:
- ```
- python -m deeppavlov interactbot deeppavlov/configs/ner/slotfill_dstc2.json -d -t <TELEGRAM_TOKEN>
- ```
- * Run slot-filling model with console interface:
- ```
- python -m deeppavlov interact deeppavlov/configs/ner/slotfill_dstc2.json -d
- ```
- * Run slot-filling model with REST API:
- ```
- python -m deeppavlov riseapi deeppavlov/configs/ner/slotfill_dstc2.json -d
- ```
- * Predict intents on every line in a file:
- ```
- python -m deeppavlov predict deeppavlov/configs/intents/intents_snips.json -d --batch-size 15 < /data/in.txt > /data/out.txt
- ```
- 
- View [video demo](https://youtu.be/yzoiCa_sMuY) of deployment of a goal-oriented bot and a slot-filling model with Telegram UI
-
-#  Tutorials
+# Tutorials
 
 Jupyter notebooks and videos explaining how to use DeepPalov for different tasks can be found in [/examples/tutorials/](examples/tutorials/)
-
----
-
-## Rest API
-
-Each library component or skill can be easily made available for inference as a REST web service. The general method is:
-
-`python -m deeppavlov riseapi <config_path> [-d]`
-
-(optional `-d` key is for dependencies download before service start)
-
-Web service properties (host, port, model endpoint, GET request arguments) are provided in `utils/server_utils/server_config.json`.
-Properties from `common_defaults` section are used by default unless they are overridden by component-specific properties, provided in `model_defaults` section of the `server_config.json`.
-Component-specific properties are bound to the component by `server_utils` label in `metadata/labels` section of the component config. Value of `server_utils` label from component config should match with properties key from `model_defaults` section of `server_config.json`.
-
-For example, `metadata/labels/server_utils` tag from `go_bot/gobot_dstc2.json` references to the *GoalOrientedBot* section of `server_config.json`. Therefore, `model_endpoint` parameter in `common_defaults` will be will be overridden with the same parameter from `model_defaults/GoalOrientedBot`.
-
-Model argument names are provided as list in `model_args_names` parameter, where arguments order corresponds to component API.
-When inferencing model via REST api, JSON payload keys should match component arguments names from `model_args_names`.
-Default argument name for one argument components is *"context"*. 
-Here are POST requests examples for some of the library components:
-
-| Component | POST request JSON payload example |
-| --------- | -------------------- |
-| **One argument components**      |
-| NER component | {"context":"Elon Musk launched his cherry Tesla roadster to the Mars orbit"} |
-| Intent classification component | {"context":"I would like to go to a restaurant with Asian cuisine this evening"} |
-| Automatic spelling correction component | {"context":"errror"} |
-| Ranking component | {"context":"What is the average cost of life insurance services?"} |
-| (Seq2seq) Goal-oriented bot | {"context":"Hello, can you help me to find and book a restaurant this evening?"} |
-| **Two arguments components**     |
-| Question Answering component | {"context":"After 1765, growing philosophical and political differences strained the relationship between Great Britain and its colonies.", "question":"What strained the relationship between Great Britain and its colonies?"} |
-
-Flasgger UI for API testing is provided on `<host>:<port>/apidocs` when running a component in `riseapi` mode.
 
 # License
 
