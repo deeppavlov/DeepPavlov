@@ -12,3 +12,7 @@ Concrete DatasetReader classes.
 .. autoclass:: deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader
 
    .. automethod:: read
+
+.. autoclass:: deeppavlov.dataset_readers.kvret_reader.KvretDatasetReader
+
+   .. automethod:: read
