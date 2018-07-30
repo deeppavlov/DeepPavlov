@@ -47,7 +47,7 @@ PARAMS = {
                 ("преведствую", "приветствую"),
                 ("я джва года дду эту игру", "я два года жду эту игру")
             ],
-        ("spelling_correction/levenstein_corrector_ru.json", "error_model", ('IP',)):
+        ("spelling_correction/levenshtein_corrector_ru.json", "error_model", ('IP',)):
             [
                 ("преветствую", "приветствую"),
                 ("Я джва года хочу такую игру", "я два года хочу такую игру")

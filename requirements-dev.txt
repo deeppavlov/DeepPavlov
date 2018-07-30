@@ -1,4 +1,0 @@
-pytest>=3.4.0
-pexpect>=4.4.0
-sphinx
-sphinx_rtd_theme

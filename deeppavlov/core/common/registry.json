@@ -63,7 +63,7 @@
   "simple_vocab": "deeppavlov.core.data.simple_vocab:SimpleVocabulary",
   "slotfill_raw": "deeppavlov.models.slotfill.slotfill_raw:SlotFillingComponent",
   "spelling_error_model": "deeppavlov.models.spelling_correction.brillmoore.error_model:ErrorModel",
-  "spelling_levenstein": "deeppavlov.models.spelling_correction.levenstein.searcher_component:LevensteinSearcherComponent",
+  "spelling_levenshtein": "deeppavlov.models.spelling_correction.levenshtein.searcher_component:LevenshteinSearcherComponent",
   "split_tokenizer": "deeppavlov.models.tokenizers.split_tokenizer:SplitTokenizer",
   "sqlite_database": "deeppavlov.core.data.sqlite_database:Sqlite3Database",
   "sqlite_iterator": "deeppavlov.dataset_iterators.sqlite_iterator:SQLiteDataIterator",

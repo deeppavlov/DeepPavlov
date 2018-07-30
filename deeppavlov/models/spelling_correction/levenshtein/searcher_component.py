@@ -14,35 +14,43 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from math import log10
-from typing import Iterable
+from typing import Iterable, List, Tuple
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
 
-from .levenstein_searcher import LevensteinSearcher
+from .levenshtein_searcher import LevenshteinSearcher
 
 
 logger = get_logger(__name__)
 
 
-@register('spelling_levenstein')
-class LevensteinSearcherComponent(Component):
-    def __init__(self, words: Iterable[str], max_distance=1, error_probability=1e-4, *args, **kwargs):
-        """
+@register('spelling_levenshtein')
+class LevenshteinSearcherComponent(Component):
+    """Component that finds replacement candidates for tokens at a set Damerau-Levenshtein distance
 
-        :param words: list of every correct word
-        :param max_distance: maximum allowed Damerau-Levenstein distance between source words and candidates
-        :param error_probability: assigned probability for every edit
-        """
+    Args:
+        words: list of every correct word
+        max_distance: maximum allowed Damerau-Levenshtein distance between source words and candidates
+        error_probability: assigned probability for every edit
+
+    Attributes:
+        max_distance: maximum allowed Damerau-Levenshtein distance between source words and candidates
+        error_probability: assigned logarithmic probability for every edit
+        vocab_penalty: assigned logarithmic probability of an out of vocabulary token being the correct one without
+         changes
+    """
+
+    def __init__(self, words: Iterable[str], max_distance: int=1, error_probability: float=1e-4, *args, **kwargs):
         words = list({word.strip().lower().replace('ё', 'е') for word in words})
         alphabet = sorted({letter for word in words for letter in word})
         self.max_distance = max_distance
         self.error_probability = log10(error_probability)
         self.vocab_penalty = self.error_probability * 2
-        self.searcher = LevensteinSearcher(alphabet, words, allow_spaces=True, euristics=2)
+        self.searcher = LevenshteinSearcher(alphabet, words, allow_spaces=True, euristics=2)
 
-    def _infer_instance(self, tokens):
+    def _infer_instance(self, tokens: Iterable[str]) -> List[List[Tuple[float, str]]]:
         candidates = []
         for word in tokens:
             c = {candidate: self.error_probability * distance
@@ -51,5 +59,13 @@ class LevensteinSearcherComponent(Component):
             candidates.append([(score, candidate) for candidate, score in c.items()])
         return candidates
 
-    def __call__(self, batch, *args, **kwargs):
+    def __call__(self, batch: Iterable[Iterable[str]], *args, **kwargs) -> List[List[List[Tuple[float, str]]]]:
+        """Propose candidates for tokens in sentences
+
+        Args:
+            batch: batch of tokenized sentences
+
+        Returns:
+            batch of lists of probabilities and candidates for every token
+        """
         return [self._infer_instance(tokens) for tokens in batch]

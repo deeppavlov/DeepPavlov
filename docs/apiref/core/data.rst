@@ -1,8 +1,12 @@
 core.data
 =========
-Basic DatasetIterator, DatasetReader and Vocab classes.
+DatasetReader, Vocab, DataLearningIterator and DataFittingIterator classes.
 
-.. automodule:: deeppavlov.core.data
-   :members:
+
+.. autoclass:: deeppavlov.core.data.vocab.DefaultVocabulary
 
 .. autoclass:: deeppavlov.core.data.sqlite_database.Sqlite3Database
+
+.. autoclass:: deeppavlov.core.data.data_fitting_iterator.DataFittingIterator
+
+.. autoclass:: deeppavlov.core.data.data_learning_iterator.DataLearningIterator
