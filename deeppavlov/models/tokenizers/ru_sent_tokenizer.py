@@ -10,19 +10,19 @@ class RuSentTokenizer(Component):
     """
     Rule-base sentence tokenizer for Russian language.
     https://github.com/deepmipt/ru_sentence_tokenizer
+
+    Args:
+        shortenings: list of known shortenings. Use default value if working on news or fiction texts
+        joining_shortenings: list of shortenings after that sentence split is not possible (i.e. "ул").
+            Use default value if working on news or fiction texts
+        paired_shortenings: list of known paired shotenings (i.e. "т. е.").
+            Use default value if working on news or fiction texts
+
     """
     def __init__(self, shortenings: Set[str] = SHORTENINGS,
-                       joining_shortenings: Set[str] = JOINING_SHORTENINGS,
-                       paired_shortenings: Set[Tuple[str, str]] = PAIRED_SHORTENINGS):
-        """
-        Args:
-            shortenings: list of known shortenings. Use default value if working on news or fiction texts
-            joining_shortenings: list of shortenings after that sentence split is not possible (i.e. "ул").
-                                 Use default value if working on news or fiction texts
-            paired_shortenings: list of known paired shotenings (i.e. "т. е.").
-                                Use default value if working on news or fiction texts
+                 joining_shortenings: Set[str] = JOINING_SHORTENINGS,
+                 paired_shortenings: Set[Tuple[str, str]] = PAIRED_SHORTENINGS):
 
-        """
         self.shortenings = shortenings
         self.joining_shortenings = joining_shortenings
         self.paired_shortenings = paired_shortenings

@@ -57,6 +57,7 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
 
     def _preprocess(self, data_part):
         processed_data_part = list()
+        processed_texts = dict()
         for sample in data_part:
             for utterance in sample:
                 if 'intents' not in utterance or len(utterance['text']) < 1:
@@ -70,6 +71,11 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
                     for slot_type, slot_val in current_slots:
                         if slot_type in self._slot_vals:
                             slots.append((slot_type, slot_val,))
+
+                # remove duplicate pairs (text, slots)
+                if (text in processed_texts) and (slots in processed_texts[text]):
+                    continue
+                processed_texts[text] = processed_texts.get(text, []) + [slots]
 
                 processed_data_part.append(self._add_bio_markup(text, slots))
         return processed_data_part
