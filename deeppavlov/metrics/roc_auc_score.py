@@ -1,18 +1,17 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 
 import sklearn.metrics
 import numpy as np
@@ -22,7 +21,7 @@ from deeppavlov.core.common.metrics_registry import register_metric
 from deeppavlov.models.classifiers.utils import labels2onehot
 
 
-def roc_auc_score_np(y_true: [list, np.ndarray], y_pred: [list, np.ndarray]):
+def roc_auc_score_np(y_true: [list, np.ndarray], y_pred: [list, np.ndarray]) -> float:
     """
     Compute Area Under the Curve (AUC) from prediction scores.
     Args:
@@ -39,7 +38,7 @@ def roc_auc_score_np(y_true: [list, np.ndarray], y_pred: [list, np.ndarray]):
 
 
 @register_metric('classification_roc_sauc')
-def classification_roc_auc_score(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]]):
+def classification_roc_auc_score(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]]) -> float:
     """
     Compute Area Under the Curve (AUC) from prediction scores.
     Args:

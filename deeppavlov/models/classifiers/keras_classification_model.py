@@ -1,19 +1,18 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-from typing import List
+from typing import List, Tuple
 import numpy as np
 from keras.layers import Dense, Input, concatenate, Activation, Concatenate, Reshape
 from keras.layers.wrappers import Bidirectional
@@ -135,7 +134,7 @@ class KerasClassificationModel(KerasModel):
                     "Given fasttext model does NOT match fasttext model used previously to train loaded model")
         print("Model was successfully initialized!\nModel summary:\n{}".format(self.model.summary()))
 
-    def _change_not_fixed_params(self, **kwargs):
+    def _change_not_fixed_params(self, **kwargs) -> None:
         """
         Change changable parameters from saved model to given ones.
         Args:
@@ -163,7 +162,7 @@ class KerasClassificationModel(KerasModel):
                 self.opt[param] = kwargs.get(param)
         return
 
-    def texts2vec(self, sentences: List[List[str]]):
+    def texts2vec(self, sentences: List[List[str]]) -> np.ndarray:
         """
         Convert texts to vector representations using embedder (self.fasttext_model)
                 and padding up to self.opt["text_size"] tokens
@@ -180,7 +179,7 @@ class KerasClassificationModel(KerasModel):
         embeddings_batch = np.asarray(embeddings_batch)
         return embeddings_batch
 
-    def train_on_batch(self, texts: List[str], labels: list):
+    def train_on_batch(self, texts: List[str], labels: list) -> [float, List[float]]:
         """
         Train the model on the given batch
         Args:
@@ -197,7 +196,7 @@ class KerasClassificationModel(KerasModel):
         metrics_values = self.model.train_on_batch(features, onehot_labels)
         return metrics_values
 
-    def infer_on_batch(self, texts: List[str], labels: list = None):
+    def infer_on_batch(self, texts: List[str], labels: list = None) -> [float, List[float], np.ndarray]:
         """
         Infer the model on the given batch
         Args:
@@ -220,7 +219,7 @@ class KerasClassificationModel(KerasModel):
             predictions = self.model.predict(features)
             return predictions
 
-    def __call__(self, data: List[str], *args):
+    def __call__(self, data: List[str], *args) -> Tuple[np.ndarray, List[dict]]:
         """
         Infer on the given data
         Args:
@@ -237,12 +236,12 @@ class KerasClassificationModel(KerasModel):
         labels = proba2labels(preds, confident_threshold=self.opt['confident_threshold'], classes=self.classes)
         return labels, [dict(zip(self.classes, preds[i])) for i in range(preds.shape[0])]
 
-    def reset(self):
+    def reset(self) -> None:
         pass
 
     def cnn_model(self, kernel_sizes_cnn: List[int], filters_cnn: int, dense_size: int,
                   coef_reg_cnn: float = 0., coef_reg_den: float = 0., dropout_rate: float = 0.,
-                  **kwargs):
+                  **kwargs) -> Model:
         """
         Build un-compiled model of shallow-and-wide CNN.
         Args:
@@ -287,7 +286,7 @@ class KerasClassificationModel(KerasModel):
 
     def dcnn_model(self, kernel_sizes_cnn: List[int], filters_cnn: int, dense_size: int,
                    coef_reg_cnn: float = 0., coef_reg_den: float = 0., dropout_rate: float = 0.,
-                   **kwargs):
+                   **kwargs) -> Model:
         """
         Build un-compiled model of deep CNN.
         Args:
@@ -331,7 +330,7 @@ class KerasClassificationModel(KerasModel):
 
     def cnn_model_max_and_aver_pool(self, kernel_sizes_cnn: List[int], filters_cnn: int, dense_size: int,
                                     coef_reg_cnn: float = 0., coef_reg_den: float = 0., dropout_rate: float = 0.,
-                                    **kwargs):
+                                    **kwargs) -> Model:
         """
         Build un-compiled model of shallow-and-wide CNN where average pooling after convolutions is replaced with
         concatenation of average and max poolings.
@@ -380,7 +379,7 @@ class KerasClassificationModel(KerasModel):
 
     def bilstm_model(self, units_lstm: int, dense_size: int,
                      coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
-                     dropout_rate: float = 0., rec_dropout_rate: float = 0., **kwargs):
+                     dropout_rate: float = 0., rec_dropout_rate: float = 0., **kwargs) -> Model:
         """
         Build un-compiled BiLSTM.
         Args:
@@ -419,7 +418,7 @@ class KerasClassificationModel(KerasModel):
     def bilstm_bilstm_model(self, units_lstm_1: int, units_lstm_2: int, dense_size: int,
                             coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
                             dropout_rate: float = 0., rec_dropout_rate: float = 0.,
-                            **kwargs):
+                            **kwargs) -> Model:
         """
         Build un-compiled two-layers BiLSTM.
         Args:
@@ -467,7 +466,7 @@ class KerasClassificationModel(KerasModel):
     def bilstm_cnn_model(self, units_lstm: int, kernel_sizes_cnn: List[int], filters_cnn: int, dense_size: int,
                          coef_reg_lstm: float = 0., coef_reg_cnn: float = 0., coef_reg_den: float = 0.,
                          dropout_rate: float = 0., rec_dropout_rate: float = 0.,
-                         **kwargs):
+                         **kwargs) -> Model:
         """
         Build un-compiled BiLSTM-CNN.
         Args:
@@ -522,7 +521,7 @@ class KerasClassificationModel(KerasModel):
     def cnn_bilstm_model(self, kernel_sizes_cnn: List[int], filters_cnn: int, units_lstm: int, dense_size: int,
                          coef_reg_cnn: float = 0., coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
                          dropout_rate: float = 0., rec_dropout_rate: float = 0.,
-                         **kwargs):
+                         **kwargs) -> Model:
         """
         Build un-compiled BiLSTM-CNN.
         Args:
@@ -578,7 +577,7 @@ class KerasClassificationModel(KerasModel):
     def bilstm_self_add_attention_model(self, units_lstm: int, dense_size: int, self_att_hid: int, self_att_out: int,
                                         coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
                                         dropout_rate: float = 0., rec_dropout_rate: float = 0.,
-                                        **kwargs):
+                                        **kwargs) -> Model:
         """
         Method builds uncompiled model of BiLSTM with self additive attention.
         Args:
@@ -622,7 +621,7 @@ class KerasClassificationModel(KerasModel):
     def bilstm_self_mult_attention_model(self, units_lstm: int, dense_size: int, self_att_hid: int, self_att_out: int,
                                          coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
                                          dropout_rate: float = 0., rec_dropout_rate: float = 0.,
-                                         **kwargs):
+                                         **kwargs) -> Model:
         """
         Method builds uncompiled model of BiLSTM with self multiplicative attention.
         Args:
@@ -667,7 +666,7 @@ class KerasClassificationModel(KerasModel):
     def bigru_model(self, units_lstm: int, dense_size: int,
                     coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
                     dropout_rate: float = 0., rec_dropout_rate: float = 0.,
-                    **kwargs):
+                    **kwargs) -> Model:
         """
         Method builds uncompiled model BiGRU.
         Args:
