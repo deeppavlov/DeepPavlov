@@ -317,10 +317,7 @@ class RankingModel(NNModel):
                 r = self.dict.make_toks(el[1], type="response")
                 r = self.dict.make_ints(r)
                 yp = self._net.predict_score_on_batch([c, r])
-                if self.distance == 'sigmoid':
-                    y_pred.append(1.-yp)
-                else:
-                    y_pred.append(yp)
+                y_pred.append(yp)
             y_pred = np.hstack(y_pred)
             return y_pred
 
