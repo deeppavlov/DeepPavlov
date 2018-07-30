@@ -1,8 +1,8 @@
 Neural Model for Classification
 ===============================
 
-In this repository one can find code for training and using classification model
-which is implemented as a number of different neural networks (for example, shallow-and-wide Convolutional
+In this repository one can find code for training and using classification models
+which are implemented as a number of different neural networks (for example, shallow-and-wide Convolutional
 Neural Network [1]). The model can be used for binary, multi-class or multi-label classification.
 
 We also provide with **pre-trained models** for classification on DSTC 2 dataset, SNIPS dataset, "AG News" dataset,
@@ -64,8 +64,8 @@ illustrate ``basic_classification_iterator`` work.
 
 **AG News** dataset
 (https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html)
-contains **sentiment classification** task for 5 classes (range from 0
-to 4 points scale). Test set is initial one from web-site, valid is a
+contains **topic classification** task for 5 classes (range from 0
+to 4 points scale). Test set is initial one from a web-site, valid is a
 Stratified division 1/5 from the train set from web-site with 42 seed,
 and the train set is the rest.
 
@@ -76,7 +76,7 @@ participants of conversation. Train, valid and test division is the same
 as for the Kaggle challenge.
 
 **Twitter mokoron** dataset (http://study.mokoron.com/) contains
-**sentiment classification** of Russian twits for positive and negative
+**sentiment classification** of Russian tweets for positive and negative
 replies [5]. Train, valid and test division is made by hands (Stratified
 division: 1/5 from all dataset for test set with 42 seed, then 1/5 from
 the rest for validation set with 42 seed). Attention! The pre-trained
@@ -111,7 +111,7 @@ DeepPavlov provides the following **pre-trained models**:
    This model achieves higher accuracy than the first one.
 -  ``configs/intents/intents_snips.json`` -- SNIPS - intent model for English language.
 -  ``configs/sentiment/insults_kaggle.json`` -- Insults analysis for English language.
--  ``configs/sentiment/sentiment_ag_news.json`` -- AG News sentiment analysis for English language.
+-  ``configs/sentiment/sentiment_ag_news.json`` -- AG News topic analysis for English language.
 -  ``configs/sentiment/sentiment_twitter.json`` -- Twitter Mokoron sentiment analysis for **Russian** language.
 
 To download pre-trained models, vocabs, embeddings on the dataset of interest one should run the following command
@@ -226,7 +226,7 @@ presented in the table below.
 +--------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | split\_fields            | list of fields where the splitted field should be saved \ *SetOfValues*: list of fields, i.e ["train", "valid", "test"]                                                                                                                                                                                                                         |
 +--------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| split\_proportions       | list of corresponding proportions for splitting \ *SetOfValues*: list of floats each of which is in [0., 1.]                                                                                                                                                                                                                                    |
+| split\_proportions       | list of corresponding proportions for splitting \ *SetOfValues*: list of floats each of which is in the range [0., 1.]                                                                                                                                                                                                                          |
 +--------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **chainer**              | **chainer is a structure that receives tuples (in, in_y) and produces out**                                                                                                                                                                                                                                                                     |
 +--------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -427,6 +427,7 @@ trained on Reddit dataset.
 
 How to improve the performance
 ------------------------------
+
 
 -  One can use FastText [4] to train embeddings that are better suited
    for considered datasets.

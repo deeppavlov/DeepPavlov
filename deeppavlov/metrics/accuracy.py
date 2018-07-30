@@ -15,6 +15,8 @@ limitations under the License.
 """
 
 import itertools
+from typing import List, Tuple
+import numpy as np
 
 from deeppavlov.core.common.metrics_registry import register_metric
 
@@ -36,12 +38,12 @@ def accuracy(y_true, y_predicted):
 
 
 @register_metric('sets_accuracy')
-def sets_accuracy(y_true, y_predicted):
+def sets_accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]):
     """
     Calculate accuracy in terms of sets coincidence
     Args:
-        y_true: array of true values
-        y_predicted: array of predicted values
+        y_true: true values
+        y_predicted: predicted values
 
     Returns:
         portion of samples with absolutely coincidental sets of predicted values
@@ -52,15 +54,15 @@ def sets_accuracy(y_true, y_predicted):
 
 
 @register_metric('classification_accuracy')
-def classification_accuracy(y_true, y_predicted):
+def classification_accuracy(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]]):
     """
-    Calculate accuracy in terms of sets coincidence for special case of predictions
-    (from classification KerasIntentModel)
+    Calculate accuracy in terms of sets coincidence for special case of predictions \
+            (from classification KerasIntentModel)
     Args:
-        y_true: array of true labels
-        y_predicted: list of predictions.
-                Each prediction is a tuple of two elements
-                (predicted_labels, dictionary like {"label_i": probability_i} )
+        y_true: true labels
+        y_predicted: predictions. \
+            Each prediction is a tuple of two elements \
+            (predicted_labels, dictionary like {"label_i": probability_i} )
 
     Returns:
         portion of samples with absolutely coincidental sets of predicted values

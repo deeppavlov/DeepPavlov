@@ -13,7 +13,7 @@ developer.
 Here is a simple example of interaction with a trained dialogue bot (can
 be downloaded with ``deeppavlov/download.py``):
 
-.. code::
+.. code:: bash
 
     >> Hello, welcome to the Cambridge restaurant system. You can ask for restaurants by area, price range or food type. How may I help you?
     x::hi, i want cheap food
@@ -322,7 +322,7 @@ You should provide a maping from actions to text templates in the following form
 
 For example,
 
-.. code::
+.. code:: text
 
     bye You are welcome!
     canthear  Sorry, I can't hear you.
@@ -346,7 +346,7 @@ Otherwise, you should specify them and
     cd deeppavlov
     python3 deep.py train configs/go_bot/database_yourdataset.json
 
-where ``configs/go_bot/database_yourdataset.json`` is a copy of ``configs/go_bot/database_dstc2.json`` with configured
+where ``_static/go_bot/database_yourdataset.json``__ is a copy of ``configs/go_bot/database_dstc2.json`` with configured
 ``save_path``, ``primary_keys`` and ``unknown_value``.
 
 Comparison

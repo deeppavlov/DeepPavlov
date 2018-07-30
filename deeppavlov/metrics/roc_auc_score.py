@@ -16,17 +16,18 @@ limitations under the License.
 
 import sklearn.metrics
 import numpy as np
+from typing import List, Tuple
 
 from deeppavlov.core.common.metrics_registry import register_metric
 from deeppavlov.models.classifiers.utils import labels2onehot
 
 
-def roc_auc_score_np(y_true, y_pred):
-    """Compute Area Under the Curve (AUC) from prediction scores.
-
+def roc_auc_score_np(y_true: [list, np.ndarray], y_pred: [list, np.ndarray]):
+    """
+    Compute Area Under the Curve (AUC) from prediction scores.
     Args:
-        y_true: array of true binary labels
-        y_pred: array of target scores, can either be probability estimates of the positive class
+        y_true: true binary labels
+        y_pred: target scores, can either be probability estimates of the positive class
 
     Returns:
         Area Under the Curve (AUC) from prediction scores
@@ -37,15 +38,15 @@ def roc_auc_score_np(y_true, y_pred):
         return 0.
 
 
-@register_metric('classification_roc_auc')
-def roc_auc_score(y_true, y_predicted):
-    """Compute Area Under the Curve (AUC) from prediction scores.
-
+@register_metric('classification_roc_sauc')
+def classification_roc_auc_score(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]]):
+    """
+    Compute Area Under the Curve (AUC) from prediction scores.
     Args:
         y_true: true binary labels
-        y_predicted: list of predictions.
-                Each prediction is a tuple of two elements
-                (predicted_labels, dictionary like {"label_i": probability_i} )
+        y_predicted: predictions. \
+            Each prediction is a tuple of two elements \
+            (predicted_labels, dictionary like {"label_i": probability_i} )
 
     Returns:
         Area Under the Curve (AUC) from prediction scores

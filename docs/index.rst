@@ -8,6 +8,9 @@ Welcome to DeepPavlov's documentation!
 
    Hello bot! <intro/hello_bot>
    Installation <intro/installation>
+   Conceptual overview <intro/overview>
+   Features <intro/features>
+   Configuration files <intro/config_description>
    Pre-trained word vectors <intro/pretrained_vectors>
    Parameters evolution <intro/parameters_evolution>
    Tutorials <intro/tutorials>
@@ -52,7 +55,8 @@ Welcome to DeepPavlov's documentation!
    :maxdepth: 3
    :caption: Developer Guides
 
-   devguides/*
+   REST API <devguides/rest_api>
+   How to contribute <devguides/contribution>
 
 
 
