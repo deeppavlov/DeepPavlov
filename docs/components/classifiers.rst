@@ -64,7 +64,7 @@ illustrate ``basic_classification_iterator`` work.
 
 **AG News** dataset
 (https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html)
-contains **sentiment classification** task for 5 classes (range from 0
+contains **topic classification** task for 5 classes (range from 0
 to 4 points scale). Test set is initial one from web-site, valid is a
 Stratified division 1/5 from the train set from web-site with 42 seed,
 and the train set is the rest.
@@ -111,7 +111,7 @@ DeepPavlov provides the following **pre-trained models**:
    This model achieves higher accuracy than the first one.
 -  ``configs/intents/intents_snips.json`` -- SNIPS - intent model for English language.
 -  ``configs/sentiment/insults_kaggle.json`` -- Insults analysis for English language.
--  ``configs/sentiment/sentiment_ag_news.json`` -- AG News sentiment analysis for English language.
+-  ``configs/sentiment/sentiment_ag_news.json`` -- AG News topic analysis for English language.
 -  ``configs/sentiment/sentiment_twitter.json`` -- Twitter Mokoron sentiment analysis for **Russian** language.
 
 To download pre-trained models, vocabs, embeddings on the dataset of interest one should run the following command
