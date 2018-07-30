@@ -180,7 +180,7 @@ texinfo_documents = [
 
 # -- Extension configuration -------------------------------------------------
 
-autodoc_mock_imports = ['tensorflow', 'fastText', 'nltk', 'gensim', 'kenlm', 'spacy']
+autodoc_mock_imports = ['tensorflow', 'fastText', 'nltk', 'gensim', 'kenlm', 'spacy', 'lxml', 'sortedcontainers']
 
 # -- Options for intersphinx extension ---------------------------------------
 
