@@ -12,3 +12,4 @@ Concrete Model classes.
    models.ner <models/ner>
    models.spelling_correction <models/spelling_correction>
    models.squad <models/context_question_answering>
+   models.hashing_tfidf_ranker <models/hashing_tfidf_ranker>
