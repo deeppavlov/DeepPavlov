@@ -16,7 +16,7 @@ limitations under the License.
 
 import csv
 import itertools
-from typing import List
+from typing import List, Iterable, Tuple
 from collections import defaultdict, Counter
 from heapq import heappop, heappushpop, heappush
 from math import log, exp
@@ -134,7 +134,7 @@ class ErrorModel(Estimator):
         return [(w.strip('⟬⟭'), score) for score, w in sorted(candidates, reverse=True) if
                 score > threshold]
 
-    def _infer_instance(self, instance: List[str]):
+    def _infer_instance(self, instance: List[str]) -> List[List[Tuple[float, str]]]:
         candidates = []
         for incorrect in instance:
             if any([c not in self.dictionary.alphabet for c in incorrect]):
@@ -147,7 +147,15 @@ class ErrorModel(Estimator):
                     candidates.append([(0, incorrect)])
         return candidates
 
-    def __call__(self, data, *args, **kwargs):
+    def __call__(self, data: List[List[str]], *args, **kwargs) -> List[List[List[Tuple[float, str]]]]:
+        """propose candidates for tokens in sentences
+
+        Args:
+            data: batch of tokenized sentences
+
+        Returns:
+            batch of lists of probabilities and candidates for every token
+        """
         if len(data) > 1:
             data = tqdm(data, desc='Infering a batch with the error model', leave=False)
         return [self._infer_instance(instance) for instance in data]
