@@ -14,15 +14,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from sklearn.metrics import log_loss
 import numpy as np
+
+from sklearn.metrics import log_loss
 
 from deeppavlov.core.common.metrics_registry import register_metric
 from deeppavlov.models.classifiers.utils import labels2onehot
 
 
 @register_metric('classification_log_loss')
-def classification_log_loss(y_true, y_predicted):
+def classification_log_loss(y_true: np.ndarray, y_predicted: list):
+    """
+    Calculate log loss for classification module
+    Args:
+        y_true:  true binary labels
+        y_predicted: predictions.
+                Each prediction is a tuple of two elements
+                (predicted_labels, dictionary like {"label_i": probability_i} )
+                where probability is float or keras.tensor
+
+    Returns:
+        log loss
+    """
     classes = np.array(list(y_predicted[0][1].keys()))
     y_true_one_hot = labels2onehot(y_true, classes)
     y_pred_probas = [list(y_predicted[i][1].values()) for i in range(len(y_predicted))]
