@@ -11,6 +11,7 @@ Concrete Model classes.
    models.go_bot <models/go_bot>
    models.hashing_tfidf_ranker <models/hashing_tfidf_ranker>
    models.ner <models/ner>
+   models.preprocessors <models/preprocessors>
    models.spelling_correction <models/spelling_correction>
    models.squad <models/context_question_answering>
    models.tokenizers <models/tokenizers>
