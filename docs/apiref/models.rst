@@ -11,3 +11,4 @@ Concrete Model classes.
    models.go_bot <models/go_bot>
    models.ner <models/ner>
    models.spelling_correction <models/spelling_correction>
+   models.squad <models/context_question_answering>
