@@ -7,7 +7,7 @@ from sortedcontainers import SortedListWithKey
 from .tabled_trie import Trie, make_trie
 
 
-class LevensteinSearcher:
+class LevenshteinSearcher:
     """
     Класс для поиска близких слов
     в соответствии с расстоянием Левенштейна
@@ -213,7 +213,7 @@ class LevensteinSearcher:
 
 def _precompute_absense_costs(dictionary, removal_costs, insertion_costs, n,
                               allow_spaces=False):
-    '''
+    """
     Вычисляет минимальную стоимость появления нового символа в узлах словаря
     в соответствии со штрафами из costs
 
@@ -236,7 +236,7 @@ def _precompute_absense_costs(dictionary, removal_costs, insertion_costs, n,
     answer : list of dicts, len(answer)=len(dictionary)
         answer[i][a][j] равно минимальному штрафу за появление символа a
         в j-ой позиции в вершине с номером i
-    '''
+    """
     answer = [dict() for node in dictionary.data]
     if n == 0:
         return answer
@@ -270,7 +270,7 @@ def _precompute_absense_costs(dictionary, removal_costs, insertion_costs, n,
 
 
 class SegmentTransducer:
-    '''
+    """
     Класс, реализующий взвешенный конечный преобразователь,
     осуществляющий замены из заданного списка операций
 
@@ -287,7 +287,7 @@ class SegmentTransducer:
         (используется только если явно не заданы operation costs
         и они равны значению по умолчанию)
 
-    '''
+    """
     def __init__(self, alphabet, operation_costs=None, allow_spaces=False):
         self.alphabet = alphabet
         if operation_costs is None:
@@ -306,7 +306,7 @@ class SegmentTransducer:
             # self.maximal_value_lengths[up] = self.maximal_key_length
 
     def get_operation_cost(self, up, low):
-        '''
+        """
         Возвращает стоимость элементарной трансдукции up->low
         или np.inf, если такой элементарной трансдукции нет
 
@@ -320,7 +320,7 @@ class SegmentTransducer:
         cost : float
             стоимость элементарной трансдукции up->low
             (np.inf, если такая трансдукция отсутствует)
-        '''
+        """
         up_costs = self.operation_costs.get(up, None)
         if up_costs is None:
             return np.inf
@@ -328,9 +328,9 @@ class SegmentTransducer:
         return cost
 
     def inverse(self):
-        '''
+        """
         Строит пробразователь, задающий обратное конечное преобразование
-        '''
+        """
         # УПРОСТИТЬ ОБРАЩЕНИЕ!!!
         inversed_transducer = SegmentTransducer(self.alphabet, operation_costs=dict())
         inversed_transducer.operation_costs = self._reversed_operation_costs
@@ -342,7 +342,7 @@ class SegmentTransducer:
         return inversed_transducer
 
     def distance(self, first, second, return_transduction = False):
-        '''
+        """
         Вычисляет трансдукцию минимальной стоимости,
         отображающую first в second
 
@@ -366,14 +366,14 @@ class SegmentTransducer:
         final_cost : float
             если return_transduction=False, то возвращает
             минимальную стоимость трансдукции, переводящей first в second
-        '''
+        """
         if return_transduction:
             add_pred = (lambda x, y: (y == np.inf or x < y))
         else:
             add_pred = (lambda x, y: (y == np.inf or x <= y))
         clear_pred = (lambda x, y: (y < np.inf and x < y))
         update_func = lambda x, y: min(x, y)
-        costs, backtraces = self._fill_levenstein_table(first, second,
+        costs, backtraces = self._fill_levenshtein_table(first, second,
                                                         update_func, add_pred, clear_pred)
         final_cost = costs[-1][-1]
         if final_cost == np.inf:
@@ -387,7 +387,7 @@ class SegmentTransducer:
             return final_cost
 
     def transduce(self, first, second, threshold):
-        '''
+        """
         Возвращает все трансдукции, переводящие first в second,
         чья стоимость не превышает threshold
 
@@ -395,11 +395,11 @@ class SegmentTransducer:
         ----------
         result : list
             список вида [(трансдукция, стоимость)]
-        '''
+        """
         add_pred = (lambda x, y: x <= threshold)
         clear_pred =(lambda x, y: False)
         update_func = (lambda x, y: min(x, y))
-        costs, backtraces = self._fill_levenstein_table(first, second,
+        costs, backtraces = self._fill_levenshtein_table(first, second,
                                                         update_func, add_pred, clear_pred,
                                                         threshold=threshold)
         result = self._backtraces_to_transductions(first, second,
@@ -407,7 +407,7 @@ class SegmentTransducer:
         return result
 
     def lower_transductions(self, word, max_cost, return_cost=True):
-        '''
+        """
         Возвращает все трансдукции с верхним элементом word,
         чья стоимость не превышает max_cost
 
@@ -417,7 +417,7 @@ class SegmentTransducer:
             список вида [(трансдукция, стоимость)], если return_cost=True
             список трансдукций, если return_cost=False
             список отсортирован в порядке возрастания стоимости трансдукции
-        '''
+        """
         prefixes = [[] for i in range(len(word) + 1)]
         prefixes[0].append(((), 0.0))
         for pos in range(len(prefixes)):
@@ -460,10 +460,9 @@ class SegmentTransducer:
         inversed_transducer = self.inverse()
         return inversed_transducer.lower_transductions(word, max_cost, return_cost)
 
-    def _fill_levenstein_table(self, first, second, update_func, add_pred, clear_pred,
+    def _fill_levenshtein_table(self, first, second, update_func, add_pred, clear_pred,
                                threshold=None):
-    # Выяснить, можно ли применить разведочный поиск или явно задать границу
-        '''
+        """
         Функция, динамически заполняющая таблицу costs стоимости трансдукций,
         costs[i][j] --- минимальная стоимость трансдукции,
         переводящей first[:i] в second[:j]
@@ -494,7 +493,7 @@ class SegmentTransducer:
             массив, в ячейке с индексами i, j которого хранятся
             обратные ссылки на предыдущую ячейку в оптимальной трансдукции,
             приводящей в ячейку backtraces[i][j]
-        '''
+        """
         m, n = len(first), len(second)
         # если threshold=None, то в качестве порога берётся удвоенная стоимость
         # трансдукции, отображающей символы на одинаковых позициях друг в друга
@@ -544,10 +543,10 @@ class SegmentTransducer:
         return costs, backtraces
 
     def _make_reversed_operation_costs(self):
-        '''
+        """
         Заполняет массив _reversed_operation_costs
         на основе имеющегося массива operation_costs
-        '''
+        """
         _reversed_operation_costs = dict()
         for up, costs in self.operation_costs.items():
             for low, cost in costs.items():
@@ -557,12 +556,12 @@ class SegmentTransducer:
         self._reversed_operation_costs = _reversed_operation_costs
 
     def _make_maximal_key_lengths(self):
-        '''
+        """
         Вычисляет максимальную длину элемента low
         в элементарной трансдукции (up, low) для каждого up
         и максимальную длину элемента up
         в элементарной трансдукции (up, low) для каждого low
-        '''
+        """
         self.max_up_length =\
             (max(len(up) for up in self.operation_costs)
              if len(self.operation_costs) > 0 else -1)
@@ -578,7 +577,7 @@ class SegmentTransducer:
                 max(len(up) for up in costs) if len(costs) > 0 else -1
 
     def _backtraces_to_transductions(self, first, second, backtraces, threshold, return_cost=False):
-        '''
+        """
         Восстанавливает трансдукции по таблице обратных ссылок
 
         Аргументы:
@@ -600,7 +599,7 @@ class SegmentTransducer:
             и вида [трансдукция], если return_cost=False,
             содержащий все трансдукции, переводящие first в second,
             чья стоимость не превышает threshold
-        '''
+        """
         m, n = len(first), len(second)
         agenda = [None] * (m + 1)
         for i in range(m + 1):
@@ -624,7 +623,7 @@ class SegmentTransducer:
             return [elem[0] for elem in agenda[0][0]]
 
     def _perform_insertions(self, initial, max_cost):
-        '''
+        """
         возвращает все трансдукции стоимости <= max_cost,
         которые можно получить из элементов initial
 
@@ -639,7 +638,7 @@ class SegmentTransducer:
         -----------
         final : list of tuples
             финальный список трансдукций вида [(трансдукция, стоимость)]
-        '''
+        """
         queue = list(initial)
         final = initial
         while len(queue) > 0:
@@ -654,9 +653,9 @@ class SegmentTransducer:
         return final
 
     def _make_default_operation_costs(self, allow_spaces=False):
-        '''
+        """
         sets 1.0 cost for every replacement, insertion, deletion and transposition
-        '''
+        """
         self.operation_costs = dict()
         self.operation_costs[""] = {c: 1.0 for c in list(self.alphabet) + [' ']}
         for a in self.alphabet:

@@ -23,7 +23,7 @@
       {
         "in": ["x_tokens"],
         "out": ["tokens_candidates"],
-        "class": "deeppavlov.models.spelling_correction.levenstein.searcher_component:LevensteinSearcherComponent",
+        "class": "deeppavlov.models.spelling_correction.levenshtein.searcher_component:LevenshteinSearcherComponent",
         "words": "#vocab.keys()"
       },
       {
