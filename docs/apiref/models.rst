@@ -11,3 +11,4 @@ Concrete Model classes.
    models.go_bot <models/go_bot>
    models.ner <models/ner>
    models.spelling_correction <models/spelling_correction>
+   models.hashing_tfidf_ranker <models/hashing_tfidf_ranker>
