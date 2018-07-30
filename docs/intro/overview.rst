@@ -24,7 +24,7 @@ Key Concepts
    (e.g. answer question by FAQ, booking tickets etc.). However, for
    some tasks a success of interaction is defined as continuous
    engagement (e.g. chit-chat).
--  ``Component`` is a reusable functional component of ``Skill``.
+-  ``Component`` is a reusable functional part of ``Skill``.
 -  ``Rule-based Models`` cannot be trained.
 -  ``Machine Learning Models`` can be trained only stand alone.
 -  ``Deep Learning Models`` can be trained independently and in an
@@ -32,16 +32,16 @@ Key Concepts
 -  ``Skill Manager`` performs selection of the ``Skill`` to generate
    response.
 -  ``Chainer`` builds an agent/component pipeline from heterogeneous
-   components (rule-based/ml/dl). It allows to train and infer models in
+   components (Rule-based/ML/DL). It allows to train and infer models in
    a pipeline as a whole.
 
 The smallest building block of the library is ``Component``.
 ``Component`` stands for any kind of function in an NLP pipeline. It can
 be implemented as a neural network, a non-neural ML model or a
 rule-based system. Besides that, ``Component`` can have nested
-structure, i.e. a ``Component`` can include other ``Component``'(s).
+structure, i.e. a ``Component`` can include other ``Component`` s.
 
-``Component``\ s can be joined into a ``Skill``. ``Skill`` solves a
+``Component`` s can be joined into a ``Skill``. ``Skill`` solves a
 larger NLP task compared to ``Component``. However, in terms of
 implementation ``Skill``\ s are not different from ``Component``\ s. The
 only restriction of ``Skill``\ s is that their input and output should
