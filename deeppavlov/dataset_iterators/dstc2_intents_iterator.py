@@ -28,6 +28,7 @@ class Dstc2IntentsDatasetIterator(BasicClassificationDatasetIterator):
     """
     Class gets data dictionary from DSTC2DatasetReader instance, construct intents from act and slots, \
         merge fields if necessary, split a field if necessary
+
     Attributes:
         data: dictionary of data with fields "train", "valid" and "test" (or some of them)
     """
@@ -39,6 +40,7 @@ class Dstc2IntentsDatasetIterator(BasicClassificationDatasetIterator):
         """
         Initialize dataset using data from DatasetReader,
         merges and splits fields according to the given parameters
+
         Args:
             data: dictionary of data with fields "train", "valid" and "test" (or some of them)
             fields_to_merge: list of fields (out of ``"train", "valid", "test"``) to merge
