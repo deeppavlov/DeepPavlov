@@ -1,18 +1,17 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 
 import numpy as np
 import sys
@@ -25,7 +24,7 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-def labels2onehot(labels: [list, np.ndarray], classes: np.ndarray):
+def labels2onehot(labels: [list, np.ndarray], classes: np.ndarray) -> np.ndarray:
     """
     Convert labels to one-hot vectors for multi-class multi-label classification
     Args:
@@ -49,7 +48,7 @@ def labels2onehot(labels: [list, np.ndarray], classes: np.ndarray):
     return y
 
 
-def proba2labels(proba: [list, np.ndarray], confident_threshold: float, classes: np.ndarray):
+def proba2labels(proba: [list, np.ndarray], confident_threshold: float, classes: np.ndarray) -> np.ndarray:
     """
     Convert vectors of probabilities to labels using confident threshold
     (if probability to belong with the class is bigger than confident_threshold, sample belongs with the class;
@@ -73,7 +72,7 @@ def proba2labels(proba: [list, np.ndarray], confident_threshold: float, classes:
     return y
 
 
-def proba2onehot(proba: [list, np.ndarray], confident_threshold: float, classes: np.ndarray):
+def proba2onehot(proba: [list, np.ndarray], confident_threshold: float, classes: np.ndarray) -> np.ndarray:
     """
     Convert vectors of probabilities to one-hot representations using confident threshold
     Args:
@@ -87,7 +86,8 @@ def proba2onehot(proba: [list, np.ndarray], confident_threshold: float, classes:
     return labels2onehot(proba2labels(proba, confident_threshold, classes), classes)
 
 
-def log_metrics(names: [list, np.ndarray], values: [list, np.ndarray], updates: int = None, mode: str = 'train'):
+def log_metrics(names: [list, np.ndarray], values: [list, np.ndarray],
+                updates: int = None, mode: str = 'train') -> None:
     """
     Print training and validation data in the following view:
         `mode -->	updates: 0   	names[0]: 0.0	names[1]: 0.0	names[2]: 0.0`
@@ -110,7 +110,7 @@ def log_metrics(names: [list, np.ndarray], values: [list, np.ndarray], updates: 
     return
 
 
-def md5_hashsum(file_names: List[str]):
+def md5_hashsum(file_names: List[str]) -> str:
     """
     Calculate md5 hash sum of files listed
     Args:
