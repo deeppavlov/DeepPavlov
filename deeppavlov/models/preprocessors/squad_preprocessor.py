@@ -1,24 +1,23 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 
 import pickle
 import unicodedata
 from collections import Counter
 from pathlib import Path
-from typing import Tuple, List
+from typing import Tuple, List, Any
 
 import numpy as np
 from nltk import word_tokenize
@@ -48,7 +47,12 @@ class SquadPreprocessor(Component):
         self.question_limit = question_limit
         self.char_limit = char_limit
 
-    def __call__(self, contexts_raw: Tuple[str, ...], questions_raw: Tuple[str, ...], **kwargs):
+    def __call__(self, contexts_raw: Tuple[str, ...], questions_raw: Tuple[str, ...],
+                 **kwargs) -> Tuple[
+                                List[str, ...], List[List[str, ...], List[List[List[str]]]],
+                                List[List[int]], List[List[int]],
+                                List[str, ...], List[List[str, ...], List[List[List[str]]]]
+                              ]:
         contexts = []
         contexts_tokens = []
         contexts_chars = []
