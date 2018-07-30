@@ -15,6 +15,7 @@ limitations under the License.
 """
 
 import numpy as np
+from typing import List, Tuple
 
 from sklearn.metrics import log_loss
 
@@ -23,7 +24,7 @@ from deeppavlov.models.classifiers.utils import labels2onehot
 
 
 @register_metric('classification_log_loss')
-def classification_log_loss(y_true: np.ndarray, y_predicted: list):
+def classification_log_loss(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]]):
     """
     Calculate log loss for classification module
     Args:

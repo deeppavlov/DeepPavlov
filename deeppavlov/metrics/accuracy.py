@@ -15,6 +15,7 @@ limitations under the License.
 """
 
 import itertools
+from typing import List, Tuple
 import numpy as np
 
 from deeppavlov.core.common.metrics_registry import register_metric
@@ -53,7 +54,7 @@ def sets_accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]):
 
 
 @register_metric('classification_accuracy')
-def classification_accuracy(y_true: [list, np.ndarray], y_predicted: list):
+def classification_accuracy(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]]):
     """
     Calculate accuracy in terms of sets coincidence for special case of predictions
     (from classification KerasIntentModel)

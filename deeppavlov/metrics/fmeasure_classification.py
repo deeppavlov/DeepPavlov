@@ -15,6 +15,7 @@ limitations under the License.
 """
 
 import numpy as np
+from typing import List, Tuple
 
 from sklearn.metrics import f1_score
 
@@ -23,7 +24,7 @@ from deeppavlov.models.classifiers.utils import labels2onehot
 
 
 @register_metric('classification_f1')
-def classification_fmeasure(y_true: np.ndarray, y_predicted: list, average="macro"):
+def classification_fmeasure(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]], average="macro"):
     """
     Calculate F1-measure macro
     Args:
@@ -46,7 +47,8 @@ def classification_fmeasure(y_true: np.ndarray, y_predicted: list, average="macr
 
 
 @register_metric('classification_f1_weighted')
-def classification_fmeasure_weighted(y_true: np.ndarray, y_predicted: list, average="weighted"):
+def classification_fmeasure_weighted(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]],
+                                     average="weighted"):
     """
     Calculate F1-measure weighted
     Args:

@@ -16,12 +16,13 @@ limitations under the License.
 
 import sklearn.metrics
 import numpy as np
+from typing import List, Tuple
 
 from deeppavlov.core.common.metrics_registry import register_metric
 from deeppavlov.models.classifiers.utils import labels2onehot
 
 
-def roc_auc_score_np(y_true: np.ndarray, y_pred: np.ndarray):
+def roc_auc_score_np(y_true: [list, np.ndarray], y_pred: [list, np.ndarray]):
     """Compute Area Under the Curve (AUC) from prediction scores.
 
     Args:
@@ -37,8 +38,8 @@ def roc_auc_score_np(y_true: np.ndarray, y_pred: np.ndarray):
         return 0.
 
 
-@register_metric('classification_roc_auc')
-def classification_roc_auc_score(y_true: np.ndarray, y_predicted: list):
+@register_metric('classification_roc_sauc')
+def classification_roc_auc_score(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]]):
     """Compute Area Under the Curve (AUC) from prediction scores.
 
     Args:
