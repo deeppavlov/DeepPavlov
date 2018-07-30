@@ -37,7 +37,7 @@ def roc_auc_score_np(y_true: [list, np.ndarray], y_pred: [list, np.ndarray]) -> 
         return 0.
 
 
-@register_metric('classification_roc_sauc')
+@register_metric('classification_roc_auc')
 def classification_roc_auc_score(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]]) -> float:
     """
     Compute Area Under the Curve (AUC) from prediction scores.
