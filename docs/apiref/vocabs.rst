@@ -6,3 +6,6 @@ Concrete Vocab classes.
    :members:
 
 .. autoclass:: deeppavlov.vocabs.wiki_sqlite.WikiSQLiteVocab
+   :members:
+
+   .. automethod:: __call__
