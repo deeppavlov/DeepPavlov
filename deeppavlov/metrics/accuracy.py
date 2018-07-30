@@ -1,18 +1,17 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 
 import itertools
 from typing import List, Tuple
@@ -38,7 +37,7 @@ def accuracy(y_true, y_predicted):
 
 
 @register_metric('sets_accuracy')
-def sets_accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]):
+def sets_accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> float:
     """
     Calculate accuracy in terms of sets coincidence
     Args:
@@ -54,7 +53,7 @@ def sets_accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]):
 
 
 @register_metric('classification_accuracy')
-def classification_accuracy(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]]):
+def classification_accuracy(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]]) -> float:
     """
     Calculate accuracy in terms of sets coincidence for special case of predictions \
             (from classification KerasIntentModel)

@@ -1,18 +1,17 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 
 import numpy as np
 from typing import List, Tuple
@@ -24,7 +23,7 @@ from deeppavlov.models.classifiers.utils import labels2onehot
 
 
 @register_metric('classification_f1')
-def classification_fmeasure(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]], average="macro"):
+def classification_fmeasure(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]], average="macro") -> float:
     """
     Calculate F1-measure macro
     Args:
@@ -48,7 +47,7 @@ def classification_fmeasure(y_true: List[list], y_predicted: List[Tuple[np.ndarr
 
 @register_metric('classification_f1_weighted')
 def classification_fmeasure_weighted(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]],
-                                     average="weighted"):
+                                     average="weighted") -> float:
     """
     Calculate F1-measure weighted
     Args:

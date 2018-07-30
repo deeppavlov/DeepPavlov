@@ -1,18 +1,17 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 
 from typing import List
 from sklearn.model_selection import train_test_split
@@ -76,7 +75,7 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
                 raise IOError("Given field to split BUT not given names of split fields")
 
     def _split_data(self, field_to_split: str = None, split_fields: List[str] = None,
-                    split_proportions: List[float] = None):
+                    split_proportions: List[float] = None) -> bool:
         """
         Split given field of dataset to the given list of fields with corresponding proportions
         Args:
@@ -96,7 +95,7 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
             self.data[split_fields[-1]] = data_to_div
         return True
 
-    def _merge_data(self, fields_to_merge: List[str] = None, merged_field: str = None):
+    def _merge_data(self, fields_to_merge: List[str] = None, merged_field: str = None) -> bool:
         """
         Merge given fields of dataset
         Args:

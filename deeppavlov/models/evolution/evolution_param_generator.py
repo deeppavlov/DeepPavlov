@@ -1,9 +1,22 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import numpy as np
 from copy import deepcopy
 from pathlib import Path
-import json
 import random
-from typing import List
+from typing import List, Generator, Tuple, Any
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.file import read_json
@@ -114,7 +127,7 @@ class ParamsEvolution:
             np.random.seed(seed)
             random.seed(seed)
 
-    def find_model_path(self, config: dict, key_model: str, path: list = []):
+    def find_model_path(self, config: dict, key_model: str, path: list = []) -> Generator:
         """
         Find path to dictionary in config that contains key 'key_model'
         Args:
@@ -142,7 +155,7 @@ class ParamsEvolution:
 
     @staticmethod
     def insert_value_or_dict_into_config(config: dict, path: list,
-                                         value: [int, float, str, bool, list, dict, np.ndarray]):
+                                         value: [int, float, str, bool, list, dict, np.ndarray]) -> dict:
         """
         Insert value to dictionary determined by path[:-1] in field with key path[-1]
         Args:
@@ -166,7 +179,7 @@ class ParamsEvolution:
         return config_copy
 
     @staticmethod
-    def get_value_from_config(config: dict, path: list):
+    def get_value_from_config(config: dict, path: list) -> Any:
         """
         Return value of config element determined by path
         Args:
@@ -187,7 +200,7 @@ class ParamsEvolution:
                 pass
         return config_pointer[path[-1]]
 
-    def initialize_params_in_config(self, basic_config: dict, paths: List[list]):
+    def initialize_params_in_config(self, basic_config: dict, paths: List[list]) -> dict:
         """
         Randomly initialize all the changable parameters in config
         Args:
@@ -210,7 +223,7 @@ class ParamsEvolution:
 
         return config
 
-    def first_generation(self, iteration: int = 0):
+    def first_generation(self, iteration: int = 0) -> List[dict]:
         """
         Initialize first generation randomly according to the given constraints is self.params
         Args:
@@ -241,7 +254,7 @@ class ParamsEvolution:
 
         return population
 
-    def next_generation(self, generation: List[dict], scores: List[float], iteration: int):
+    def next_generation(self, generation: List[dict], scores: List[float], iteration: int) -> List[dict]:
         """
         Provide replacement
         Args:
@@ -351,7 +364,7 @@ class ParamsEvolution:
 
         return next_population
 
-    def selection_of_best_with_weights(self, population: List[dict], scores: List[float]):
+    def selection_of_best_with_weights(self, population: List[dict], scores: List[float]) -> List[dict]:
         """
         Select individuums to save with weights for the next generation from given population.
         Range is an order of an individuum within sorted scores (1 range = max-score, self.population_size = min-score)
@@ -380,7 +393,7 @@ class ParamsEvolution:
         self.n_saved_best_pretrained = len(selected)
         return selected
 
-    def range_scores(self, scores: List[float]):
+    def range_scores(self, scores: List[float]) -> np.ndarray:
         """
         Ranges scores,
         range 1 corresponds to the best score,
@@ -411,7 +424,7 @@ class ParamsEvolution:
                            for i in np.arange(self.population_size)])
         return ranges
 
-    def crossover(self, population: List[dict], scores: List[float]):
+    def crossover(self, population: List[dict], scores: List[float]) -> List[dict]:
         """
         Recombine randomly population in pairs and cross over them with given probability.
         Cross over from two parents produces two offsprings
@@ -466,7 +479,7 @@ class ParamsEvolution:
 
         return offsprings
 
-    def mutation(self, population: List[dict]):
+    def mutation(self, population: List[dict]) -> List[dict]:
         """
         Mutate each parameter of each individuum in population
         Args:
@@ -489,7 +502,7 @@ class ParamsEvolution:
         return mutated
 
     def mutation_of_param(self, param_path: list,
-                          param_value: [int, float, str, list, dict, bool, np.ndarray]):
+                          param_value: [int, float, str, list, dict, bool, np.ndarray]) -> Any:
         """
         Mutate particular parameter separately
         Args:
@@ -530,7 +543,7 @@ class ParamsEvolution:
 
         return new_mutated_value
 
-    def decision(self, probability: float = 1.):
+    def decision(self, probability: float = 1.) -> bool:
         """
         Make decision whether to do action or not with given probability
         Args:
@@ -545,7 +558,7 @@ class ParamsEvolution:
         else:
             return False
 
-    def sample_params(self, **params):
+    def sample_params(self, **params) -> dict:
         """
         Sample parameters according to the given possible values
         Args:
@@ -576,7 +589,7 @@ class ParamsEvolution:
                 params_sample[param] = params_copy[param]
         return params_sample
 
-    def _sample_from_ranges(self, opts: dict):
+    def _sample_from_ranges(self, opts: dict) -> [int, float]:
         """
         Sample parameters from ranges
         Args:
@@ -598,7 +611,7 @@ class ParamsEvolution:
         return sample
 
     @staticmethod
-    def _sample_log(from_: float = 0., to_: float = 1.):
+    def _sample_log(from_: float = 0., to_: float = 1.) -> float:
         """
         Sample parameters from ranges with log scale
         Args:
