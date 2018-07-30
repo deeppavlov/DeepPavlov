@@ -27,7 +27,7 @@ log = get_logger(__name__)
 @register('dstc2_intents_iterator')
 class Dstc2IntentsDatasetIterator(BasicClassificationDatasetIterator):
     """
-    Class gets data dictionary from DSTC2DatasetReader instance, construct intents from act and slots,
+    Class gets data dictionary from DSTC2DatasetReader instance, construct intents from act and slots, \
         merge fields if necessary, split a field if necessary
     Attributes:
         data: dictionary of data with fields "train", "valid" and "test" (or some of them)
@@ -82,4 +82,3 @@ class Dstc2IntentsDatasetIterator(BasicClassificationDatasetIterator):
                 new_data[field].append((reply['text'], curr_intents))
 
         self.data = new_data
-

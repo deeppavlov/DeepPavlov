@@ -29,10 +29,10 @@ def classification_fmeasure(y_true: List[list], y_predicted: List[Tuple[np.ndarr
     Calculate F1-measure macro
     Args:
         y_true: true binary labels
-        y_predicted: predictions.
-                Each prediction is a tuple of two elements
-                (predicted_labels, dictionary like {"label_i": probability_i} )
-                where probability is float or keras.tensor
+        y_predicted: predictions. \
+            Each prediction is a tuple of two elements \
+            (predicted_labels, dictionary like {"label_i": probability_i} ) \
+            where probability is float or keras.tensor
         average: determines the type of averaging performed on the data
 
     Returns:
@@ -53,10 +53,10 @@ def classification_fmeasure_weighted(y_true: List[list], y_predicted: List[Tuple
     Calculate F1-measure weighted
     Args:
         y_true: true binary labels
-        y_predicted: predictions.
-                Each prediction is a tuple of two elements
-                (predicted_labels, dictionary like {"label_i": probability_i} )
-                where probability is float or keras.tensor
+        y_predicted: predictions. \
+            Each prediction is a tuple of two elements \
+            (predicted_labels, dictionary like {"label_i": probability_i} ) \
+            where probability is float or keras.tensor
         average: determines the type of averaging performed on the data
 
     Returns:
