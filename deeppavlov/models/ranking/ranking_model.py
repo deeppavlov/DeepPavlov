@@ -43,22 +43,30 @@ class RankingModel(NNModel):
     """Class to perform ranking.
 
     Attributes:
-        data: A dataset to iterate over.
-
+        vocab_name: A key that indicates which subclass
+            of the :class:'deeppavlov.models.ranking.ranking_dict.RankingDict` to use.
+        hard_triplets_sampling: Whether to use hard triplets sampling to train the model
+            i.e. to choose negative samples close to positive ones
+        hardest_positives. Whether to use only one hardest positive sample per each anchor sample.
+        semi_hard_negatives: Whether hard negative samples should be further away from anchor samples
+            than positive samples or not.
+        update_embeddings: Whether to store and update context and response embeddings or not.
+        online_update: Only works when ``update_embeddings`` is set to ``True``.
+            Whether to update context and response embeddings which will be used next at the training step.
+            If ``False``, all context and response embeddings will be updated before the validation.
+        interact_pred_num: The number of the most relevant contexts and responses
+            which model returns in the `interact` regime.
     """
 
     def __init__(self,
+                 vocab_name,
                  hard_triplets_sampling: bool = False,
                  hardest_positives: bool = False,
                  semi_hard_negatives: bool = False,
                  num_hardest_negatives: int = None,
                  update_embeddings: bool = False,
                  online_update: bool = True,
-                 distance: str = 'sigmoid',
                  interact_pred_num: int = 3,
-
-
-
                  **kwargs):
 
         # Parameters for parent classes
@@ -76,20 +84,20 @@ class RankingModel(NNModel):
         self.num_hardest_negatives = num_hardest_negatives
         self.upd_embs = update_embeddings
         self.online_update= online_update
-        self.distance = distance
         self.interact_pred_num = interact_pred_num
+        self.vocab_name = vocab_name
 
         opt = deepcopy(kwargs)
 
-        if opt["vocab_name"] == "insurance":
+        if self.vocab_name == "insurance":
             dict_parameter_names = list(inspect.signature(InsuranceDict.__init__).parameters)
             dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
             self.dict = InsuranceDict(**dict_parameters)
-        elif opt["vocab_name"] == "sber_faq":
+        elif self.vocab_name == "sber_faq":
             dict_parameter_names = list(inspect.signature(SberFAQDict.__init__).parameters)
             dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
             self.dict = SberFAQDict(**dict_parameters)
-        elif opt["vocab_name"] == "ubuntu_v2":
+        elif self.vocab_name == "ubuntu_v2":
             dict_parameter_names = list(inspect.signature(UbuntuV2Dict.__init__).parameters)
             dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
             self.dict = UbuntuV2Dict(**dict_parameters)
