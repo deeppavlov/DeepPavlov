@@ -23,8 +23,8 @@ logger = get_logger(__name__)
 
 @register("tfidf_ranker")
 class TfidfRanker(Estimator):
-    """
-    Rank documents according to input strings.
+    """Rank documents according to input strings.
+
     Args:
         vectorizer: a vectorizer class
         top_n: a number of doc ids to return
@@ -45,8 +45,7 @@ class TfidfRanker(Estimator):
     """
 
     def get_main_component(self) -> 'TfidfRanker':
-        """
-        Temporary stub to run REST API
+        """Temporary stub to run REST API
         Returns:
             self
         """
@@ -76,8 +75,8 @@ class TfidfRanker(Estimator):
                 logger.warning("TfidfRanker load_path doesn't exist, is waiting for training.")
 
     def get_index2doc(self) -> Dict[Any, int]:
-        """
-        Invert doc_index.
+        """Invert doc_index.
+
         Returns:
             inverted doc_index dict
 
@@ -85,8 +84,8 @@ class TfidfRanker(Estimator):
         return dict(zip(self.doc_index.values(), self.doc_index.keys()))
 
     def __call__(self, questions: List[str]) -> Tuple[List[Any], List[float]]:
-        """
-        Rank documents and return top n document titles with scores.
+        """Rank documents and return top n document titles with scores.
+
         Args:
             questions: list of queries used in ranking
 
@@ -122,8 +121,8 @@ class TfidfRanker(Estimator):
         return batch_doc_ids, batch_docs_scores
 
     def fit_batches(self, iterator, batch_size: int) -> None:
-        """
-        Generate a batch to be fit to a vectorizer.
+        """Generate a batch to be fit to a vectorizer.
+
         Args:
             iterator: an instance of an iterator class
             batch_size: a size of a generated batch
@@ -137,8 +136,8 @@ class TfidfRanker(Estimator):
             self.vectorizer.fit_batch(x, y)
 
     def fit(self) -> None:
-        """
-        Pass method to chainer.
+        """Pass method to chainer.
+
         Returns:
             None
 
@@ -146,8 +145,8 @@ class TfidfRanker(Estimator):
         pass
 
     def save(self) -> None:
-        """
-        Pass method to a vectorizer.
+        """Pass method to a vectorizer.
+
         Returns:
             None
 
@@ -155,8 +154,8 @@ class TfidfRanker(Estimator):
         self.vectorizer.save()
 
     def load(self) -> None:
-        """
-        Pass method to a vectorizer.
+        """Pass method to a vectorizer.
+
         Returns:
             None
 
