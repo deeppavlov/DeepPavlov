@@ -30,7 +30,7 @@ class DirtyCommentsPreprocessor(Component):
 
     def __call__(self, batch: List[str], **kwargs):
         """
-        Preprocesses given batch
+        Preprocess given batch
         Args:
             batch: list of text samples
             **kwargs: additional arguments
