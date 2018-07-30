@@ -20,19 +20,19 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
 
-from .levenstein_searcher import LevensteinSearcher
+from .levenshtein_searcher import LevenshteinSearcher
 
 
 logger = get_logger(__name__)
 
 
-@register('spelling_levenstein')
-class LevensteinSearcherComponent(Component):
+@register('spelling_levenshtein')
+class LevenshteinSearcherComponent(Component):
     def __init__(self, words: Iterable[str], max_distance=1, error_probability=1e-4, *args, **kwargs):
         """
 
         :param words: list of every correct word
-        :param max_distance: maximum allowed Damerau-Levenstein distance between source words and candidates
+        :param max_distance: maximum allowed Damerau-Levenshtein distance between source words and candidates
         :param error_probability: assigned probability for every edit
         """
         words = list({word.strip().lower().replace('ё', 'е') for word in words})
@@ -40,7 +40,7 @@ class LevensteinSearcherComponent(Component):
         self.max_distance = max_distance
         self.error_probability = log10(error_probability)
         self.vocab_penalty = self.error_probability * 2
-        self.searcher = LevensteinSearcher(alphabet, words, allow_spaces=True, euristics=2)
+        self.searcher = LevenshteinSearcher(alphabet, words, allow_spaces=True, euristics=2)
 
     def _infer_instance(self, tokens):
         candidates = []

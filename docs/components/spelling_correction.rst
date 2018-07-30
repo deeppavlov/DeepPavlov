@@ -2,8 +2,8 @@ Automatic spelling correction pipelines
 =======================================
 
 We provide two types of pipelines for spelling correction:
-`levenstein_corrector <#levenstein_corrector>`__
-uses simple Damerau-Levenstein distance to find correction candidates
+`levenshtein_corrector <#levenshtein_corrector>`__
+uses simple Damerau-Levenshtein distance to find correction candidates
 and `brillmoore <#brillmoore>`__
 uses statistics based error model for it. In both cases correction
 candidates are chosen based on context
@@ -47,12 +47,12 @@ lines to stdout:
     for line in sys.stdin:
         print(model([line])[0], flush=True)
 
-levenstein_corrector
+levenshtein_corrector
 ---------------------
 
-Component `levenstein/searcher_component.py` finds all the
+Component `levenshtein/searcher_component.py` finds all the
 candidates in a static dictionary
-on set Damerau-Levenstein distance.
+on set Damerau-Levenshtein distance.
 It can separate one token into two but it will not work the other way
 around.
 
@@ -63,13 +63,13 @@ Component config parameters:
    chainer's shared memory
 -  ``out`` — list with one element: name for this component's output in
    chainer's shared memory
--  ``name`` always equals to ``"spelling_levenstein"``. Optional if
+-  ``name`` always equals to ``"spelling_levenshtein"``. Optional if
    ``class`` attribute is present
 -  ``class`` always equals to
-   ``deeppavlov.models.spelling_correction.levenstein.searcher_component:LevensteinSearcherComponent``.
+   ``deeppavlov.models.spelling_correction.levenshtein.searcher_component:LevenshteinSearcherComponent``.
    Optional if ``name`` attribute is present
 -  ``words`` — list of all correct words (should be a reference)
--  ``max_distance`` — maximum allowed Damerau-Levenstein distance
+-  ``max_distance`` — maximum allowed Damerau-Levenshtein distance
    between source words and candidates
 -  ``error_probability`` — assigned probability for every edit
 
@@ -187,7 +187,7 @@ on Automatic Spelling Correction for Russian:
 +========================================================================================================+=============+==========+=============+=======================+
 | Yandex.Speller                                                                                         | 83.09       | 59.86    | 69.59       | 5.                    |
 +--------------------------------------------------------------------------------------------------------+-------------+----------+-------------+-----------------------+
-| Damerau Levenstein 1 + lm (deeppavlov/configs/spelling_correction/levenstein_corrector_ru.json)        | 53.26       | 53.74    | 53.50       | 29.3                  |
+| Damerau Levenshtein 1 + lm (deeppavlov/configs/spelling_correction/levenhstein_corrector_ru.json)        | 53.26       | 53.74    | 53.50       | 29.3                  |
 +--------------------------------------------------------------------------------------------------------+-------------+----------+-------------+-----------------------+
 | Brill Moore top 4 + lm (deeppavlov/configs/spelling_correction/brillmoore_kartaslov_ru.json)           | 51.92       | 53.94    | 52.91       | 0.6                   |
 +--------------------------------------------------------------------------------------------------------+-------------+----------+-------------+-----------------------+
