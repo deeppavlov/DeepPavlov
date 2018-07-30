@@ -58,13 +58,13 @@ class RankingNetwork(metaclass=TfModelMeta):
         K.set_session(self.sess)
 
         self.optimizer = Adam(lr=self.learning_rate)
-        self.duplet = self.duplet_model()
+        self.duplet = self.duplet()
         if self.type_of_model is None or self.type_of_model == 'triplet':
             self.loss = self.triplet_loss
             self.obj_model = self.triplet_model()
         elif self.type_of_model == 'duplet':
             self.loss = losses.binary_crossentropy
-            self.obj_model = self.duplet
+            self.obj_model = self.duplet_model()
         self.obj_model.compile(loss=self.loss, optimizer=self.optimizer)
         self.score_model = self.duplet
         self.context_embedding = Model(inputs=self.duplet.inputs,
@@ -180,7 +180,7 @@ class RankingNetwork(metaclass=TfModelMeta):
         """Triplet loss function"""
         return K.mean(K.maximum(self.margin - y_pred, 0.), axis=-1)
 
-    def duplet_model(self):
+    def duplet(self):
         if self.embedding_level is None or self.embedding_level == 'token':
             if self.use_matrix:
                 context = Input(shape=(self.max_sequence_length,))
@@ -249,7 +249,19 @@ class RankingNetwork(metaclass=TfModelMeta):
         elif self.distance == "sigmoid":
             dist = Lambda(self.diff_mult_dist)([lstm_c, lstm_r])
             score = Dense(1, activation='sigmoid', name="score_model")(dist)
+            score = Lambda(lambda x: 1. - x)(score)
         model = Model([context, response], score)
+        return model
+
+    def duplet_model(self):
+        duplet = self.duplet
+        c_shape = K.int_shape(duplet.inputs[0])
+        r_shape = K.int_shape(duplet.inputs[1])
+        c = Input(batch_shape=c_shape)
+        r = Input(batch_shape=r_shape)
+        score = duplet([c, r])
+        score = Lambda(lambda x: 1. - x)(score)
+        model = Model([c, r], score)
         return model
 
     def triplet_model(self):
