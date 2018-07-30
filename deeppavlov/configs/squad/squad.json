@@ -39,7 +39,7 @@
         "load_path": "squad_model/emb/vocab_embedder.pckl",
         "context_limit": "#squad_prepr.context_limit",
         "question_limit": "#squad_prepr.question_limit",
-        "char_limit": "#squad_prepr.context_limit",
+        "char_limit": "#squad_prepr.char_limit",
         "fit_on": ["context_tokens", "question_tokens"],
         "in": ["context_tokens", "question_tokens"],
         "out": ["context_tokens_idxs", "question_tokens_idxs"]

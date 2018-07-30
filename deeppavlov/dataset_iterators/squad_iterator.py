@@ -14,18 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from typing import Dict, Any, List, Tuple
+
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 
 @register('squad_iterator')
 class SquadIterator(DataLearningIterator):
+    """ SquadIterator allows to iterate over examples in SQuAD-like datasets """
+
     def split(self, *args, **kwargs):
         for dt in ['train', 'valid', 'test']:
             setattr(self, dt, SquadIterator._extract_cqas(getattr(self, dt)))
 
     @staticmethod
-    def _extract_cqas(data):
+    def _extract_cqas(data: Dict[str, Any]) -> List[Tuple[Tuple[str, str], Tuple[List[str], List[int]]]]:
         """ Extracts context, question, answer, answer_start from SQuAD data
 
         Args:

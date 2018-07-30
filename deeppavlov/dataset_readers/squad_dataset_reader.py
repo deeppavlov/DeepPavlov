@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+from typing import Dict, Any
 from pathlib import Path
 import json
 
@@ -28,14 +29,25 @@ class SquadDatasetReader(DatasetReader):
     Stanford Question Answering Dataset
     https://rajpurkar.github.io/SQuAD-explorer/
     and
-    Russian dataset from SDSJ
+    Dataset from SDSJ Task B
     https://www.sdsj.ru/ru/contest.html
+
+    Downloads dataset files and prepares train/valid split.
     """
 
     url_squad = 'http://lnsigo.mipt.ru/export/datasets/squad-v1.1.tar.gz'
     url_sber_squad = 'http://lnsigo.mipt.ru/export/datasets/sber_squad-v1.1.tar.gz'
 
-    def read(self, dir_path: str, dataset='SQuAD'):
+    def read(self, dir_path: str, dataset: str = 'SQuAD', *args, **kwargs) -> Dict[str, Dict[str, Any]]:
+        """
+
+        Args:
+            dir_path: path to save data
+            dataset: dataset name (SQuAD or SberSQuAD)
+
+        Returns:
+            dataset split on train/valid
+        """
         if dataset == 'SQuAD':
             self.url = self.url_squad
         elif dataset == 'SberSQuAD':
