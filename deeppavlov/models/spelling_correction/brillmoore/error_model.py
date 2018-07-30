@@ -35,18 +35,19 @@ logger = get_logger(__name__)
 
 @register('spelling_error_model')
 class ErrorModel(Estimator):
-    """Component for forwarding parameters to APIs
+    """Component that uses statistics based error model to find best candidates in a static dictionary.
+    Based on An Improved Error Model for Noisy Channel Spelling Correction by Eric Brill and Robert C. Moore
 
     Args:
         dictionary: list of all the correct words in the form of trie structure
         window: maximum context window size
-        candidates_count: count of replacement candidates to return for every token in input
+        candidates_count: maximum number of replacement candidates to return for every token in the input
 
     Attributes:
         costs: logarithmic probabilities of character sequences replacements
         dictionary: list of all the correct words in the form of trie structure
         window: maximum context window size
-        candidates_count: count of replacement candidates to return for every token in inpu
+        candidates_count: maximum number of replacement candidates to return for every token in the input
     """
 
     def __init__(self, dictionary: StaticDictionary, window: int=1, candidates_count: int=1, *args, **kwargs):
@@ -151,9 +152,6 @@ class ErrorModel(Estimator):
             data = tqdm(data, desc='Infering a batch with the error model', leave=False)
         return [self._infer_instance(instance) for instance in data]
 
-    def reset(self):
-        pass
-
     @staticmethod
     def _distance_edits(seq1, seq2):
         l1, l2 = len(seq1), len(seq2)
@@ -175,7 +173,13 @@ class ErrorModel(Estimator):
 
         return d[-1][-1]
 
-    def fit(self, x, y):
+    def fit(self, x: List[str], y: List[str]):
+        """Calculate character sequences replacements probabilities
+
+        Args:
+            x: words with spelling errors
+            y: words without spelling errors
+        """
         changes = []
         entries = []
         data = list(zip(x, y))
@@ -207,6 +211,9 @@ class ErrorModel(Estimator):
             self.costs[(w, s)] = log(p)
 
     def save(self):
+        """Save replacements probabilities to a file
+
+        """
         logger.info("[saving error_model to `{}`]".format(self.save_path))
 
         with open(self.save_path, 'w', newline='', encoding='utf8') as tsv_file:
@@ -215,6 +222,9 @@ class ErrorModel(Estimator):
                 writer.writerow([w, s, exp(log_p)])
 
     def load(self):
+        """Load replacements probabilities from a file
+
+        """
         if self.load_path:
             if self.load_path.is_file():
                 logger.info("loading error_model from `{}`".format(self.load_path))
