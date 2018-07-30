@@ -7,3 +7,8 @@ deeppavlov.models.spelling_correction
     .. automethod:: fit
     .. automethod:: save
     .. automethod:: load
+
+
+.. autoclass:: deeppavlov.models.spelling_correction.levenshtein.LevenshteinSearcherComponent
+
+    .. automethod:: __call__

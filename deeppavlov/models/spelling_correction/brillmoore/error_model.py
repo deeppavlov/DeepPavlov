@@ -147,8 +147,8 @@ class ErrorModel(Estimator):
                     candidates.append([(0, incorrect)])
         return candidates
 
-    def __call__(self, data: List[List[str]], *args, **kwargs) -> List[List[List[Tuple[float, str]]]]:
-        """propose candidates for tokens in sentences
+    def __call__(self, data: Iterable[Iterable[str]], *args, **kwargs) -> List[List[List[Tuple[float, str]]]]:
+        """Propose candidates for tokens in sentences
 
         Args:
             data: batch of tokenized sentences
@@ -156,6 +156,7 @@ class ErrorModel(Estimator):
         Returns:
             batch of lists of probabilities and candidates for every token
         """
+        data = list(data)
         if len(data) > 1:
             data = tqdm(data, desc='Infering a batch with the error model', leave=False)
         return [self._infer_instance(instance) for instance in data]
