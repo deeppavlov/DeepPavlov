@@ -26,7 +26,7 @@
         "out": "q_vect"
       },
       {
-        "name": "faq_cos_model",
+        "name": "faq_logreg_model",
         "in": "q_vect",
         "fit_on": ["q_vect", "y"],
         "save_path": "autofaq/faq_model.pkl",
@@ -43,6 +43,4 @@
  }
 
 }
-
-
 

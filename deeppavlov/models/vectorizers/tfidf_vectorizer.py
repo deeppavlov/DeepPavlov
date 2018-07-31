@@ -19,7 +19,7 @@ from typing import List
 import scipy as sp
 from scipy import sparse
 
-from deeppavlov.core.models.component import Component
+from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
@@ -33,33 +33,30 @@ logger = get_logger(__name__)
 
 
 @register('tfidf_vectorizer')
-class TfIdfVectorizer(Component, Serializable):
+class TfIdfVectorizer(Estimator, Serializable):
 
     def __init__(self, save_path: str = None, load_path: str = None, **kwargs) -> None:
-
         self.save_path = save_path
         self.load_path = load_path
         if kwargs['mode'] == 'train':
-            self.tfidf_vect = TfidfVectorizer()
+            self.vectorizer = TfidfVectorizer()
         else:
             self.load()
 
-
-
     def __call__(self, questions: List[str]):
-        q_vects = self.tfidf_vect.transform([' '.join(q) for q in questions])
+        q_vects = self.vectorizer.transform([' '.join(q) for q in questions])
         return q_vects
 
 
-
     def fit(self, x_train: List[str]) -> None:
-        self.train_vectors = self.tfidf_vect.fit_transform([' '.join(x) for x in x_train])
+        self.vectorizer.fit([' '.join(x) for x in x_train])
+
 
     def save(self) -> None:
-        logger.info("Saving tfidf vectorizer to {}".format(self.save_path))
-        save_pickle((self.train_vectors, self.tfidf_vect), expand_path(self.save_path))
+        logger.info("Saving tfidf_vectorizer to {}".format(self.save_path))
+        save_pickle(self.vectorizer, expand_path(self.save_path))
 
 
     def load(self) -> None:
-        logger.info("Loading tfidf vectorizer from {}".format(self.load_path))
-        self.train_vectors, self.tfidf_vect = load_pickle(expand_path(self.load_path))
+        logger.info("Loading tfidf_vectorizer from {}".format(self.load_path))
+        self.vectorizer = load_pickle(expand_path(self.load_path))
