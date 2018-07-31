@@ -12,7 +12,7 @@ from deeppavlov.core.models.tf_backend import TfModelMeta
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.layers import keras_layers
 from pathlib import Path
-from deeppavlov.models.ranking.emb_dict import Embeddings
+from deeppavlov.models.ranking.emb_dict import EmbDict
 
 log = get_logger(__name__)
 
@@ -55,9 +55,11 @@ class RankingNetwork(metaclass=TfModelMeta):
     """
 
     def __init__(self,
-                 chars_num: int,
                  toks_num: int,
-                 emb_dict: Embeddings,
+                 chars_num: int,
+                 emb_dict: EmbDict,
+                 max_sequence_length: int,
+                 max_token_length: int,
                  learning_rate: float = 1e-3,
                  device_num: int = 0,
                  seed: int = None,
@@ -67,11 +69,9 @@ class RankingNetwork(metaclass=TfModelMeta):
                  distance: str = "cos_similarity",
                  token_embeddings: bool = True,
                  use_matrix: bool = False,
-                 max_sequence_length: int = None,
                  tok_dynamic_batch: bool = False,
                  embedding_dim: int = 300,
                  char_embeddings: bool = False,
-                 max_token_length: int = None,
                  char_dynamic_batch: bool = False,
                  char_emb_dim: int = 32,
                  highway_on_top: bool = False,

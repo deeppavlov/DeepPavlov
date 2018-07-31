@@ -10,19 +10,34 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-class Embeddings(object):
-    """The class provides embeddings using fasttext model.
+class EmbDict(object):
+    """The class that provides token (word) embeddings.
 
-    Attributes:
-        tok2emb: a dictionary containing embedding vectors (value) for tokens (keys)
-        embedding_dim: a dimension of embeddings
-        opt: given parameters
-        fasttext_model_file: a file containing fasttext binary model
+    Args:
+        save_path: A path including filename to store the instance of
+            :class:`deeppavlov.models.ranking.ranking_network.RankingNetwork`.
+        load_path: A path including filename to load the instance of
+            :class:`deeppavlov.models.ranking.ranking_network.RankingNetwork`.
+        max_sequence_length: A maximum length of a sequence in tokens.
+            Longer sequences will be truncated and shorter ones will be padded.
+        seed: Random seed.
+        embeddings: A type of embeddings. Possible values are ``fasttext``, ``word2vec`` and ``random``.
+        embeddings_path: A path to an embeddings model including filename.
+            The type of the model should coincide with the type of embeddings defined by the ``embeddings`` parameter.
+        embedding_dim: Dimensionality of token (word) embeddings.
+        use_matrix: Whether to use trainable matrix with token (word) embeddings.
     """
 
-    def __init__(self, embedding_dim, max_sequence_length,
-                 embeddings_path, save_path, load_path, embeddings="word2vec", seed=None, use_matrix=False):
-        """Initialize the class according to given parameters."""
+    def __init__(self,
+                 save_path: str,
+                 load_path: str,
+                 embeddings_path: str,
+                 max_sequence_length: int,
+                 embedding_dim: int = 300,
+                 embeddings: str = "word2vec",
+                 seed: int = None,
+                 use_matrix: bool = False):
+
         np.random.seed(seed)
         save_path = expand_path(save_path).resolve().parent
         load_path = expand_path(load_path).resolve().parent

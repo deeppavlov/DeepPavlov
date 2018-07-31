@@ -9,12 +9,51 @@ log = get_logger(__name__)
 
 
 class RankingDict(metaclass=ABCMeta):
+    """Class to encode characters, tokens, whole contexts and responses with vocabularies, to pad and truncate.
 
-    def __init__(self, save_path, load_path,
-                 max_sequence_length, padding, truncating,
-                 max_token_length, token_embeddings, char_embeddings,
-                 char_pad, char_trunc,
-                 tok_dynamic_batch, char_dynamic_batch,
+    Args:
+        save_path: A path including filename to store the instance of
+            :class:`deeppavlov.models.ranking.ranking_network.RankingNetwork`.
+        load_path: A path including filename to load the instance of
+            :class:`deeppavlov.models.ranking.ranking_network.RankingNetwork`.
+        max_sequence_length: A maximum length of a sequence in tokens.
+            Longer sequences will be truncated and shorter ones will be padded.
+        tok_dynamic_batch:  Whether to use dynamic batching. If ``True``, a maximum length of a sequence for a batch
+            will be equal to the maximum of all sequences lengths from this batch,
+            but not higher than ``max_sequence_length``.
+        padding: Padding. Possible values are ``pre`` and ``post``.
+            If set to ``pre`` a sequence will be padded at the beginning.
+            If set to ``post`` it will padded at the end.
+        truncating: Truncating. Possible values are ``pre`` and ``post``.
+            If set to ``pre`` a sequence will be truncated at the beginning.
+            If set to ``post`` it will truncated at the end.
+        max_token_length: A maximum length of a token for representing it by a character-level embedding.
+        char_dynamic_batch: Whether to use dynamic batching for character-level embeddings.
+            If ``True``, a maximum length of a token for a batch
+            will be equal to the maximum of all tokens lengths from this batch,
+            but not higher than ``max_token_length``.
+        char_pad: Character-level padding. Possible values are ``pre`` and ``post``.
+            If set to ``pre`` a token will be padded at the beginning.
+            If set to ``post`` it will padded at the end.
+        char_trunc: Character-level truncating. Possible values are ``pre`` and ``post``.
+            If set to ``pre`` a token will be truncated at the beginning.
+            If set to ``post`` it will truncated at the end.
+        update_embeddings: Whether to store and update context and response embeddings or not.
+    """
+
+    def __init__(self,
+                 save_path: str,
+                 load_path: str,
+                 max_sequence_length: int,
+                 max_token_length: int,
+                 padding: str = 'post',
+                 truncating: str = 'post',
+                 token_embeddings: bool = True,
+                 char_embeddings: bool = False,
+                 char_pad: str = 'post',
+                 char_trunc: str = 'post',
+                 tok_dynamic_batch: bool = False,
+                 char_dynamic_batch: bool = False,
                  update_embeddings=False):
 
         self.max_sequence_length = max_sequence_length

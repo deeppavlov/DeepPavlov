@@ -8,3 +8,9 @@ Ranking class.
 .. autoclass:: deeppavlov.models.ranking.ranking_model.RankingModel
 
 .. autoclass:: deeppavlov.models.ranking.ranking_network.RankingNetwork
+
+.. autoclass:: deeppavlov.models.ranking.ranking_dict.RankingDict
+
+.. autoclass:: deeppavlov.models.ranking.emb_dict.EmbDict
+
+

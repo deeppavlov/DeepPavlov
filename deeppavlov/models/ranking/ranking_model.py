@@ -30,7 +30,7 @@ from deeppavlov.models.ranking.ranking_network import RankingNetwork
 from deeppavlov.models.ranking.insurance_dict import InsuranceDict
 from deeppavlov.models.ranking.sber_faq_dict import SberFAQDict
 from deeppavlov.models.ranking.ubuntu_v2_dict import UbuntuV2Dict
-from deeppavlov.models.ranking.emb_dict import Embeddings
+from deeppavlov.models.ranking.emb_dict import EmbDict
 from deeppavlov.core.common.log import get_logger
 
 
@@ -56,6 +56,7 @@ class RankingModel(NNModel):
             If ``False``, all context and response embeddings will be updated before the validation.
         interact_pred_num: The number of the most relevant contexts and responses
             which model returns in the `interact` regime.
+        **kwargs: Other parameters and parameters of the parent class.
     """
 
     def __init__(self,
@@ -104,7 +105,7 @@ class RankingModel(NNModel):
 
         embdict_parameter_names = list(inspect.signature(Embeddings.__init__).parameters)
         embdict_parameters = {par: self.opt[par] for par in embdict_parameter_names if par in self.opt}
-        self.embdict= Embeddings(**embdict_parameters)
+        self.embdict= EmbDict(**embdict_parameters)
 
         network_parameter_names = list(inspect.signature(RankingNetwork.__init__).parameters)
         self.network_parameters = {par: opt[par] for par in network_parameter_names if par in opt}
