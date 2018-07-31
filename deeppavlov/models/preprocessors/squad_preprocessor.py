@@ -227,7 +227,7 @@ class SquadVocabEmbedder(Estimator):
             else:
                 raise RuntimeError("SquadVocabEmbedder::fit: Unknown level: {}".format(self.level))
 
-            with (self.emb_folder / self.emb_file_name).open('r') as femb:
+            with (self.emb_folder / self.emb_file_name).open('r', encoding='utf8') as femb:
                 emb_voc_size, self.emb_dim = map(int, femb.readline().split())
                 for line in tqdm(femb, total=emb_voc_size):
                     line_split = line.strip().split(' ')

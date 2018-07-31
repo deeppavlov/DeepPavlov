@@ -109,12 +109,12 @@ class DstcSlotFillingNetwork(Component, Serializable):
         download(self.save_path, url)
 
     def save(self, *args, **kwargs):
-        with open(self.save_path, 'w') as f:
+        with open(self.save_path, 'w', encoding='utf8') as f:
             json.dump(self._slot_vals, f)
 
     def load(self, *args, **kwargs):
         if not self.load_path.exists():
             self._download_slot_vals()
-        with open(self.load_path) as f:
+        with open(self.load_path, encoding='utf8') as f:
             self._slot_vals = json.load(f)
 

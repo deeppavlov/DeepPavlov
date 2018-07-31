@@ -111,6 +111,7 @@ class KvretDatasetReader(DatasetReader):
         #    return False
         return True
 
+    @staticmethod
     def _filter_duplicates(dialog):
         last_turn, last_utter = None, None
         for turn in dialog:
@@ -121,7 +122,8 @@ class KvretDatasetReader(DatasetReader):
 
     @classmethod
     def _iter_file(cls, file_path):
-        data = json.load(open(file_path, 'rt'))
+        with open(file_path, 'rt', encoding='utf8') as f:
+            data = json.load(f)
         for i, sample in enumerate(data):
             dialog = list(cls._filter_duplicates(sample['dialogue']))
             if cls._check_dialog(dialog):
