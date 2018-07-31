@@ -21,7 +21,8 @@ class RuSentTokenizer(Component):
     """
     def __init__(self, shortenings: Set[str] = SHORTENINGS,
                  joining_shortenings: Set[str] = JOINING_SHORTENINGS,
-                 paired_shortenings: Set[Tuple[str, str]] = PAIRED_SHORTENINGS):
+                 paired_shortenings: Set[Tuple[str, str]] = PAIRED_SHORTENINGS,
+                 **kwargs):
 
         self.shortenings = shortenings
         self.joining_shortenings = joining_shortenings
