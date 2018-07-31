@@ -1,23 +1,23 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 
 import pickle
 import unicodedata
 from collections import Counter
 from pathlib import Path
+from typing import Tuple, List, Any
 
 import numpy as np
 from nltk import word_tokenize
@@ -35,12 +35,24 @@ logger = get_logger(__name__)
 
 @register('squad_preprocessor')
 class SquadPreprocessor(Component):
-    def __init__(self, context_limit, question_limit, char_limit, *args, **kwargs):
+    """ SquadPreprocessor is used to preprocess context and question in SQuAD-like datasets.
+
+        Params:
+            context_limit: max context length in tokens
+            question_limit: max question length in tokens
+            char_limit: max number of characters in token
+    """
+    def __init__(self, context_limit: int = 450, question_limit: int = 150, char_limit: int = 16, *args, **kwargs):
         self.context_limit = context_limit
         self.question_limit = question_limit
         self.char_limit = char_limit
 
-    def __call__(self, contexts_raw, questions_raw, **kwargs):
+    def __call__(self, contexts_raw: Tuple[str, ...], questions_raw: Tuple[str, ...],
+                 **kwargs) -> Tuple[
+                                List[str, ...], List[List[str, ...], List[List[List[str]]]],
+                                List[List[int]], List[List[int]],
+                                List[str, ...], List[List[str, ...], List[List[List[str]]]]
+                              ]:
         contexts = []
         contexts_tokens = []
         contexts_chars = []
@@ -70,7 +82,7 @@ class SquadPreprocessor(Component):
                questions, questions_tokens, questions_chars, spans
 
     @staticmethod
-    def preprocess_str(line, return_mapping=False):
+    def preprocess_str(line: str, return_mapping: bool = False) -> Tuple[str, List[int], List[int]]:
         """ Removes unicode and other characters from str
 
         Args:
@@ -98,7 +110,7 @@ class SquadPreprocessor(Component):
         return s, r2p, p2r
 
     @staticmethod
-    def convert_idx(text, tokens):
+    def convert_idx(text: str, tokens: List[str]) -> List[Tuple[int, int]]:
         current = 0
         spans = []
         for token in tokens:
@@ -113,10 +125,13 @@ class SquadPreprocessor(Component):
 
 @register('squad_ans_preprocessor')
 class SquadAnsPreprocessor(Component):
+    """ SquadAnsPreprocessor is responsible for answer preprocessing."""
     def __init__(self, *args, **kwargs):
         pass
 
-    def __call__(self, answers_raw, answers_start, r2ps, spans, **kwargs):
+    def __call__(self, answers_raw: Tuple[List[str], ...], answers_start: Tuple[List[int], ...],
+                 r2ps: List[List[int]], spans: List[List[Tuple[int,int]]],
+                 **kwargs) -> Tuple[List[List[str]], List[List[int]], List[List[int]]]:
         """ Processes answers for SQuAD dataset
 
         Args:
@@ -124,7 +139,6 @@ class SquadAnsPreprocessor(Component):
             answers_start: start position of answer (in chars) [batch_size x number_of_answers]
             r2ps: mapping from raw context to processed context
             spans: mapping for tokens in context to position in context
-            **kwargs:
 
         Returns:
             processed answer text, start position in tokens, end position in tokens
@@ -159,8 +173,24 @@ class SquadAnsPreprocessor(Component):
 
 @register('squad_vocab_embedder')
 class SquadVocabEmbedder(Estimator):
-    def __init__(self, emb_folder, emb_url, save_path, load_path,
-                 context_limit, question_limit, char_limit, level='token', *args, **kwargs):
+    """ SquadVocabEmbedder is used to build tokens/chars vocabulary and embedding matrix.
+
+        It extracts tokens/chars form dataset and looks for pretrained embeddings.
+
+        Params:
+            emb_folder: path to download pretrained embeddings
+            emb_url: link to pretrained embeddings
+            save_path: extracted embeddings save path
+            load_path: extracted embeddigns load path
+            context_limit: max context length in tokens
+            question_limit: max question length in tokens
+            char_limit: max number of characters in token
+            level: token or char
+        """
+
+    def __init__(self, emb_folder: str, emb_url: str, save_path: str, load_path: str,
+                 context_limit: int = 450, question_limit: int = 150, char_limit: int = 16,
+                 level:str = 'token', *args, **kwargs):
         self.emb_folder = expand_path(emb_folder)
         self.level = level
         self.emb_url = emb_url
@@ -183,7 +213,16 @@ class SquadVocabEmbedder(Estimator):
         if self.load_path.exists():
             self.load()
 
-    def __call__(self, contexts, questions):
+    def __call__(self, contexts: List[List[str]], questions: List[List[str]]) -> Tuple[np.ndarray, np.ndarray]:
+        """ Transforms tokens/chars to indexes.
+
+        Args:
+            contexts: batch of list of tokens in context
+            questions: batch of list of tokens in question
+
+        Returns:
+            transformed contexts and questions
+        """
         if self.level == 'token':
             c_idxs = np.zeros([len(contexts), self.context_limit], dtype=np.int32)
             q_idxs = np.zeros([len(questions), self.question_limit], dtype=np.int32)
@@ -210,7 +249,7 @@ class SquadVocabEmbedder(Estimator):
 
         return c_idxs, q_idxs
 
-    def fit(self, contexts, questions, *args, **kwargs):
+    def fit(self, contexts: Tuple[List[str], ...], questions: Tuple[List[str]], *args, **kwargs):
         self.vocab = Counter()
         self.embedding_dict = dict()
         if not self.loaded:
@@ -258,7 +297,7 @@ class SquadVocabEmbedder(Estimator):
         self.save_path.parent.mkdir(parents=True, exist_ok=True)
         pickle.dump((self.emb_dim, self.emb_mat, self.token2idx_dict), self.save_path.open('wb'))
 
-    def _get_idx(self, el):
+    def _get_idx(self, el: str) -> int:
         """ Returns idx for el (token or char).
 
         Args:
@@ -275,11 +314,18 @@ class SquadVocabEmbedder(Estimator):
 
 @register('squad_ans_postprocessor')
 class SquadAnsPostprocessor(Component):
+    """ SquadAnsPostprocessor class is responsible for processing SquadModel output.
+
+        It extract answer from context using predicted by SquadModel answer positions.
+    """
+
     def __init__(self, *args, **kwargs):
         pass
 
-    def __call__(self, ans_start, ans_end, contexts, p2rs, spans, **kwargs):
-        """ Postprocesses predicted answers for SQuAD dataset
+    def __call__(self, ans_start: Tuple[int, ...], ans_end: Tuple[int, ...], contexts: Tuple[str, ...],
+                 p2rs: List[List[int]], spans: List[List[Tuple[int, int]]],
+                 **kwargs) -> Tuple[List[str], List[int], List[int]]:
+        """ Extracts answer from context using predicted answer positions.
 
         Args:
             ans_start: predicted start position in processed context: list of ints with len(ans_start) == batch_size
@@ -287,7 +333,6 @@ class SquadAnsPostprocessor(Component):
             contexts: raw contexts
             p2rs: mapping from processed context to raw
             spans: tokens positions in context
-            **kwargs:
 
         Returns:
             postprocessed answer text, start position in raw context, end position in raw context

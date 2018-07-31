@@ -17,7 +17,7 @@ log = get_logger(__name__)
 @register('ner')
 class NerNetwork(TFModel):
     """
-    The ``NerNetwork`` is for Neural Named Entity Recognition and Slot Filling.
+    The :class:`~deeppavlov.models.ner.network.NerNetwork` is for Neural Named Entity Recognition and Slot Filling.
 
     Parameters:
         n_tags: Number of tags in the tag vocabulary.

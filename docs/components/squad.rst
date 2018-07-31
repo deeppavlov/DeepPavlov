@@ -48,103 +48,6 @@ Configuration
 
 Default config could be found at ``deeppavlov/configs/squad/squad.json``
 
-Config components
-~~~~~~~~~~~~~~~~~
-
--  **squad\_dataset\_reader** - downloads and reads SQuAD dataset
--  data\_path - path to save dataset
--  **squad\_iterator** - create batches from SQuAD dataset
--  **squad\_preprocessor** - preprocesses context, question by cleaning
-   data and tokenizing
--  in: **context\_raw**, **question\_raw** - not processed contexts and
-   questions
--  out:
-
-   -  **context** - processed context (cleaned unicode symbols and
-      quoting)
-   -  **context\_tokens** - tokenized context
-   -  **context\_chars** - tokenized context split on chars
-   -  **c\_r2p** - mapping from raw context to processed context
-   -  **c\_p2r** - mapping from processed context to raw context
-   -  **question** - processed question
-   -  **question\_tokens** - tokenized question
-   -  **question\_chars** - tokenized question split on chars
-   -  **spans** - mapping from word indices to position in text
-
--  context\_limit - maximum length of context in words
--  question\_limit - maximum length of question in words
--  char\_limit - maximum number of chars in token
--  **squad\_ans\_preprocessor** - preprocesses answer
--  in:
-
-   -  **ans\_raw** - not processed answer
-   -  **ans\_raw\_start** - start position of not processed answer in
-      context
-   -  **c\_r2p**
-   -  **spans**
-
--  out:
-
-   -  **ans** - processed answer
-   -  **ans\_start** - start position of processed answer
-   -  **ans\_end** - end position of processed answer
-
--  **squad\_vocab\_embedder** - builds vocabulary and embedding matrix
--  in:
-
-   -  **context\_tokens**
-   -  **question\_tokens**
-
--  out
-
-   -  **context\_tokens\_idxs**
-   -  **question\_tokens\_idxs**
-
--  fit\_on: **context\_tokens** and **question\_tokens**
--  level - token or char
--  emb\_folder - path to store pretrained embeddings
--  emb\_url - url to donwload embeddings
--  save\_path - path to save vocabulary and embedding matrix
--  load\_path - path to load vocabulary and embedding matrix
--  context\_limit - maximum length of context in words
--  question\_limit - maximum length of question in words
--  char\_limit - maximum number of chars in token
--  squad\_model - model to find answer on question in context
--  in: **context\_tokens\_idxs**, **context\_chars\_idxs**,
-   **question\_tokens\_idxs**, **question\_chars\_idxs**
--  in\_y: **ans\_start**, **ans\_end**
--  out:
-
-   -  **ans\_start\_predicted** - start position of predicted answer
-   -  **ans\_end\_predicted** - end position of predicted answer
-
--  word\_emb - pretrained word embeddings
--  char\_emb - pretrained char embeddings
--  context\_limit - maximum length of context in words
--  question\_limit - maximum length of question in words
--  char\_limit - maximum number of chars in token
--  train\_char\_emb - update char\_emb during training or not
--  char\_hidden\_size - size of word embedding built on characters
--  encoder\_hidden\_size - hidden size of encoder cells
--  attention\_hidden\_size - hidden size to use to compute attention
--  learning\_rate
--  min\_learning\_rate - minimal lr for lr decay
--  learning\_rate\_patience - patience for lr decay
--  keep\_prob - dropout keep probability
--  grad\_clip - gradient clipping value
--  weight\_decay - weight\_decay rate for exponential moving average
--  save\_path
--  load\_path
--  squad\_ans\_postprocessor - extracts predicted answer from context
--  in: **ans\_start\_predicted**, **ans\_end\_predicted**,
-   **context\_raw**, **c\_p2r**, **spans**
--  out:
--  **ans\_predicted** - text of predicted answer in raw context
--  **ans\_start\_predicted** - start position of predicted answer in raw
-   context
--  **ans\_end\_predicted** - end position of predicted answer in raw
-   context
-
 Running model
 -------------
 
@@ -167,7 +70,10 @@ Interact mode provides command line interface to already trained model.
 
 To run model in interact mode run the following command:
 
-``bash python -m deeppavlov interact deeppavlov/configs/squad/squad.json``
+.. code:: bash
+
+    python -m deeppavlov interact deeppavlov/configs/squad/squad.json
+
 Model will ask you to type in context and question.
 
 Pretrained models:
