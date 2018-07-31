@@ -20,8 +20,7 @@ You can run the following command to try provided pipelines out:
 
     python -m deeppavlov interact <path_to_config> [-d]
 
-where ``<path_to_config>`` is one of the provided config
-files `deeppavlov/configs/spelling_correction`.
+where ``<path_to_config>`` is one of the :config:`provided config files <spelling_correction>`.
 With the optional ``-d`` parameter all the data required to run
 selected pipeline will be downloaded, including
 an appropriate language model.
@@ -50,7 +49,7 @@ lines to stdout:
 levenshtein_corrector
 ---------------------
 
-Component `levenshtein/searcher_component.py` finds all the
+:class:`This component <deeppavlov.models.spelling_correction.levenshtein.LevenshteinSearcherComponent>` finds all the
 candidates in a static dictionary
 on set Damerau-Levenshtein distance.
 It can separate one token into two but it will not work the other way
@@ -76,9 +75,8 @@ Component config parameters:
 brillmoore
 ----------
 
-Component `brillmoore/error_model.py` is based on
-An Improved Error Model for Noisy Channel Spelling
-Correction (http://www.aclweb.org/anthology/P00-1037)
+:class:`This component <deeppavlov.models.spelling_correction.brillmoore.ErrorModel>` is based on
+`An Improved Error Model for Noisy Channel Spelling Correction <http://www.aclweb.org/anthology/P00-1037>`_
 by Eric Brill and Robert C. Moore and uses statistics based error
 model to find best candidates in a static dictionary.
 
@@ -182,21 +180,21 @@ for the `SpellRuEval
 competition <http://www.dialog-21.ru/en/evaluation/2016/spelling_correction/>`__
 on Automatic Spelling Correction for Russian:
 
-+--------------------------------------------------------------------------------------------------------+-------------+----------+-------------+-----------------------+
-| Correction method                                                                                      | Precision   | Recall   | F-measure   | Speed (sentences/s)   |
-+========================================================================================================+=============+==========+=============+=======================+
-| Yandex.Speller                                                                                         | 83.09       | 59.86    | 69.59       | 5.                    |
-+--------------------------------------------------------------------------------------------------------+-------------+----------+-------------+-----------------------+
-| :config:`Damerau Levenshtein 1 + lm<spelling_correction/levenhstein_corrector_ru.json>`                | 53.26       | 53.74    | 53.50       | 29.3                  |
-+--------------------------------------------------------------------------------------------------------+-------------+----------+-------------+-----------------------+
-| :config:`Brill Moore top 4 + lm<spelling_correction/brillmoore_kartaslov_ru.json>`                     | 51.92       | 53.94    | 52.91       | 0.6                   |
-+--------------------------------------------------------------------------------------------------------+-------------+----------+-------------+-----------------------+
-| Hunspell + lm                                                                                          | 41.03       | 48.89    | 44.61       | 2.1                   |
-+--------------------------------------------------------------------------------------------------------+-------------+----------+-------------+-----------------------+
-| JamSpell                                                                                               | 44.57       | 35.69    | 39.64       | 136.2                 |
-+--------------------------------------------------------------------------------------------------------+-------------+----------+-------------+-----------------------+
-| :config:`Brill Moore top 1 <spelling_correction/brillmoore_kartaslov_ru_nolm.json>`                    | 41.29       | 37.26    | 39.17       | 2.4                   |
-+--------------------------------------------------------------------------------------------------------+-------------+----------+-------------+-----------------------+
-| Hunspell                                                                                               | 30.30       | 34.02    | 32.06       | 20.3                  |
-+--------------------------------------------------------------------------------------------------------+-------------+----------+-------------+-----------------------+
++-----------------------------------------------------------------------------------------+-----------+--------+-----------+---------------------+
+| Correction method                                                                       | Precision | Recall | F-measure | Speed (sentences/s) |
++=========================================================================================+===========+========+===========+=====================+
+| Yandex.Speller                                                                          | 83.09     | 59.86  | 69.59     | 5.                  |
++-----------------------------------------------------------------------------------------+-----------+--------+-----------+---------------------+
+| :config:`Damerau Levenshtein 1 + lm<spelling_correction/levenhstein_corrector_ru.json>` | 53.26     | 53.74  | 53.50     | 29.3                |
++-----------------------------------------------------------------------------------------+-----------+--------+-----------+---------------------+
+| :config:`Brill Moore top 4 + lm<spelling_correction/brillmoore_kartaslov_ru.json>`      | 51.92     | 53.94  | 52.91     | 0.6                 |
++-----------------------------------------------------------------------------------------+-----------+--------+-----------+---------------------+
+| Hunspell + lm                                                                           | 41.03     | 48.89  | 44.61     | 2.1                 |
++-----------------------------------------------------------------------------------------+-----------+--------+-----------+---------------------+
+| JamSpell                                                                                | 44.57     | 35.69  | 39.64     | 136.2               |
++-----------------------------------------------------------------------------------------+-----------+--------+-----------+---------------------+
+| :config:`Brill Moore top 1 <spelling_correction/brillmoore_kartaslov_ru_nolm.json>`     | 41.29     | 37.26  | 39.17     | 2.4                 |
++-----------------------------------------------------------------------------------------+-----------+--------+-----------+---------------------+
+| Hunspell                                                                                | 30.30     | 34.02  | 32.06     | 20.3                |
++-----------------------------------------------------------------------------------------+-----------+--------+-----------+---------------------+
 

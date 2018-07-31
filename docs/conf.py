@@ -27,10 +27,6 @@ version = deeppavlov.__version__
 # The full version, including alpha/beta/rc tags
 release = version
 
-extlinks = {
-    'config': (f'https://github.com/deepmipt/DeepPavlov/blob/{release}/deeppavlov/configs/%s', None)
-}
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -186,6 +182,10 @@ texinfo_documents = [
 # -- Extension configuration -------------------------------------------------
 
 autodoc_mock_imports = ['tensorflow', 'fastText', 'nltk', 'gensim', 'kenlm', 'spacy', 'lxml', 'sortedcontainers']
+
+extlinks = {
+    'config': (f'https://github.com/deepmipt/DeepPavlov/blob/{release}/deeppavlov/configs/%s', None)
+}
 
 # -- Options for intersphinx extension ---------------------------------------
 
