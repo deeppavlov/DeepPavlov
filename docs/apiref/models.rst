@@ -6,10 +6,14 @@ Concrete Model classes.
    :members:
 
 .. toctree::
+   models.ranking <models/neural_ranking>
    models.api_requester <models/api_requester>
    models.classifiers <models/classifiers>
    models.go_bot <models/go_bot>
-   models.ner <models/ner>
-   models.spelling_correction <models/spelling_correction>
    models.hashing_tfidf_ranker <models/hashing_tfidf_ranker>
-   models.ranking <models/neural_ranking>
+   models.ner <models/ner>
+   models.preprocessors <models/preprocessors>
+   models.ranking <models/tfidf_ranker>
+   models.spelling_correction <models/spelling_correction>
+   models.squad <models/context_question_answering>
+   models.tokenizers <models/tokenizers>

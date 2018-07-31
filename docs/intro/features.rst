@@ -23,16 +23,16 @@ Component for classification tasks (intents, sentiment, etc) on word-level. Shal
 BiLSTM with self-attention and other models are presented. The model also allows multilabel classification of texts.
 Several pre-trained models are available and presented in Table below.
 
-===============================================================================================================================   =========================================    =========================================
- Dataset                                                                                                                               Valid accuracy                              Test accuracy
-===============================================================================================================================   =========================================    =========================================
-  `DSTC 2 <https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/configs/intents/intents_dstc2.json>`__                      0.8744                                     0.8801
-  `DSTC 2 <https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/configs/intents/intents_dstc2_big.json>`__                  0.9682                                     0.9684
-  `SNIPS <https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/configs/intents/intents_snips.json>`__                       0.8829                                       --
-  `InsultsKaggle <https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/configs/sentiment/insults_kaggle.json>`__            0.8757                                     0.7503
-  `AG News <https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/configs/sentiment/sentiment_ag_news.json>`__               0.8735                                     0.8859
-  `Twitter.mokoron <https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/configs/sentiment/sentiment_twitter.json>`__    0.8021 (with smiles), 0.8008 (no\_smiles)    0.7949 (with smiles), 0.7943 (no\_smiles)
-===============================================================================================================================   =========================================    =========================================
+==========================================================================================   =========================================    =========================================
+ Dataset                                                                                       Valid accuracy                              Test accuracy
+==========================================================================================   =========================================    =========================================
+  :config:`DSTC 2 <intents/intents_dstc2.json>`                                              0.8744                                       0.8801
+  :config:`DSTC 2 <intents/intents_dstc2_big.json>`                                          0.9682                                       0.9684
+  :config:`SNIPS  <intents/intents_snips.json>`                                              0.8829                                       --
+  :config:`InsultsKaggle <sentiment/insults_kaggle.json>`                                    0.8757                                       0.7503
+  :config:`AG News <sentiment/sentiment_ag_news.json>`                                       0.8735                                       0.8859
+  :config:`Twitter.mokoron <sentiment/sentiment_twitter.json>`                               0.8021 (with smiles), 0.8008 (no\_smiles)    0.7949 (with smiles), 0.7943 (no\_smiles)
+==========================================================================================   =========================================    =========================================
 
 - :doc:`Goal-oriented bot </components/go_bot>`
 

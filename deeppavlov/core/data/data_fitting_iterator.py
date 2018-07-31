@@ -23,8 +23,7 @@ logger = get_logger(__name__)
 
 @register('data_fitting_iterator')
 class DataFittingIterator:
-    """
-    Dataset iterator for fitting estimator models, like vocabs, kNN, vectorizers.
+    """Dataset iterator for fitting estimator models, like vocabs, kNN, vectorizers.
     Data is passed as a list of strings(documents).
     Generate batches (for large datasets).
 
@@ -52,16 +51,16 @@ class DataFittingIterator:
         self.doc_ids = doc_ids or self.get_doc_ids()
 
     def get_doc_ids(self):
-        """
-        Generate doc ids.
+        """Generate doc ids.
+
         Returns: doc ids
 
         """
         return list(range(len(self.data)))
 
     def get_doc_content(self, doc_id: Any) -> Optional[str]:
-        """
-        Get doc content by id.
+        """Get doc content by id.
+
         Args:
             doc_id: an id for a doc which content should be extracted
 
@@ -73,7 +72,7 @@ class DataFittingIterator:
 
     def gen_batches(self, batch_size: int, shuffle: bool = None) \
             -> Generator[Tuple[List[list], List[int]], Any, None]:
-        """
+        """Gen batches of documents.
 
         Args:
             batch_size: a number of samples in a single batch

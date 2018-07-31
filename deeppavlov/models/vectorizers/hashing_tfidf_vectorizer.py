@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from collections import Counter
-from typing import List, Any, Generator, Tuple, KeysView, ValuesView, Type, Dict, Optional
+from typing import List, Any, Generator, Tuple, KeysView, ValuesView, Dict, Optional
 
 import scipy as sp
 from scipy import sparse
@@ -28,10 +28,11 @@ from deeppavlov.core.common.registry import register
 TOKENIZER = None
 logger = get_logger(__name__)
 
+Sparse = sp.sparse.csr_matrix
+
 
 def hash_(token: str, hash_size: int) -> int:
-    """
-    Convert a token to a hash of given size.
+    """Convert a token to a hash of given size.
     Args:
         token: a word
         hash_size: hash size
@@ -45,8 +46,8 @@ def hash_(token: str, hash_size: int) -> int:
 
 @register('hashing_tfidf_vectorizer')
 class HashingTfIdfVectorizer(Component, Serializable):
-    """
-    Create a tfidf matrix from collection of documents.
+    """Create a tfidf matrix from collection of documents.
+
     Args:
         tokenizer: a tokenizer class
         hash_size: a hash size, power of two
@@ -66,7 +67,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
 
     """
 
-    def __init__(self, tokenizer, hash_size=2 ** 24, doc_index: Optional[dict] = None,
+    def __init__(self, tokenizer: Component, hash_size=2 ** 24, doc_index: Optional[dict] = None,
                  save_path: Optional[str] = None, load_path: Optional[str] = None, **kwargs):
 
         super().__init__(save_path=save_path, load_path=load_path, mode=kwargs.get('mode', 'infer'))
@@ -83,13 +84,13 @@ class HashingTfIdfVectorizer(Component, Serializable):
         self.cols = []
         self.data = []
 
-    def __call__(self, questions: List[str]) -> sp.sparse.csr_matrix:
-        """
-        Transform input list of documents to a tfidf vectors
+    def __call__(self, questions: List[str]) -> Sparse:
+        """Transform input list of documents to a tfidf vectors.
+
         Args:
             questions: a list of input strings
 
-        Returns:
+        Return:
             transformed documents as a csr_matrix
 
         """
@@ -106,7 +107,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
             # TODO revise policy if len(q_hashes) == 0
 
             if len(q_hashes) == 0:
-                return sp.sparse.csr_matrix((1, self.hash_size))
+                return Sparse((1, self.hash_size))
 
             size = len(self.doc_index)
             Ns = self.term_freqs[hashes_unique]
@@ -116,8 +117,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
             tfidf = np.multiply(tfs, idfs)
 
             indptr = np.array([0, len(hashes_unique)])
-            sp_tfidf = sp.sparse.csr_matrix(
-                (tfidf, hashes_unique, indptr), shape=(1, self.hash_size)
+            sp_tfidf = Sparse((tfidf, hashes_unique, indptr), shape=(1, self.hash_size)
             )
             sp_tfidfs.append(sp_tfidf)
 
@@ -126,8 +126,8 @@ class HashingTfIdfVectorizer(Component, Serializable):
 
     def get_counts(self, docs: List[str], doc_ids: List[Any]) \
             -> Generator[Tuple[KeysView, ValuesView, List[int]], Any, None]:
-        """
-        Get term counts for a list of documents.
+        """Get term counts for a list of documents.
+
         Args:
             docs: a list of input documents
             doc_ids: a list of document ids corresponding to input documents
@@ -155,9 +155,9 @@ class HashingTfIdfVectorizer(Component, Serializable):
             yield hashes, values, col_id
 
     def get_count_matrix(self, row: List[int], col: List[int], data: List[int], size) \
-            -> sp.sparse.csr_matrix:
-        """
-        Get count matrix.
+            -> Sparse:
+        """Get count matrix.
+
         Args:
             row: tfidf matrix rows corresponding to terms
             col:  tfidf matrix cols corresponding to docs
@@ -173,10 +173,9 @@ class HashingTfIdfVectorizer(Component, Serializable):
         return count_matrix
 
     @staticmethod
-    def get_tfidf_matrix(count_matrix: sp.sparse.csr_matrix) -> Tuple[
-        sp.sparse.csr_matrix, np.array]:
-        """
-        Convert a count matrix into a tfidf matrix.
+    def get_tfidf_matrix(count_matrix: Sparse) -> Tuple[Sparse, np.array]:
+        """Convert a count matrix into a tfidf matrix.
+
         Args:
             count_matrix: a count matrix
 
@@ -195,8 +194,8 @@ class HashingTfIdfVectorizer(Component, Serializable):
         return tfidfs, term_freqs
 
     def fit_batch(self, docs: List[str], doc_ids: List[Any]) -> None:
-        """
-        Fit batch of documents while fitting.
+        """Fit batch of documents while fitting.
+
         Args:
             docs: a list of input documents
             doc_ids: a list of document ids corresponding to input documents
@@ -212,8 +211,8 @@ class HashingTfIdfVectorizer(Component, Serializable):
             self.data.extend(batch_data)
 
     def save(self) -> None:
-        """
-        Save tfidf matrix into .npz format.
+        """Save tfidf matrix into .npz format.
+
         Returns:
             None
 
@@ -242,8 +241,8 @@ class HashingTfIdfVectorizer(Component, Serializable):
         self.reset()
 
     def reset(self) -> None:
-        """
-        Clear self.rows, self.cols and self.data
+        """Clear self.rows, self.cols and self.data
+
         Returns:
             None
 
@@ -252,9 +251,8 @@ class HashingTfIdfVectorizer(Component, Serializable):
         self.cols.clear()
         self.data.clear()
 
-    def load(self) -> Tuple[sp.sparse.csr_matrix, Dict]:
-        """
-        Load a tfidf matrix as csr_matrix.
+    def load(self) -> Tuple[Sparse, Dict]:
+        """Load a tfidf matrix as csr_matrix.
 
         Returns:
             a tuple of tfidf matrix and csr data.
@@ -265,6 +263,6 @@ class HashingTfIdfVectorizer(Component, Serializable):
         """
         logger.info("Loading tfidf matrix from {}".format(self.load_path))
         loader = np.load(self.load_path)
-        matrix = sp.sparse.csr_matrix((loader['data'], loader['indices'],
+        matrix = Sparse((loader['data'], loader['indices'],
                                        loader['indptr']), shape=loader['shape'])
         return matrix, loader['opts'].item(0)

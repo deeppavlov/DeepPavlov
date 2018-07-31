@@ -22,6 +22,6 @@ class DatasetReader:
 
     def read(self, data_path: str, *args, **kwargs) -> List:
         """
-        Read a file from a path and returns data as list with training instances.
+        Reads a file from a path and returns data as list with training instances.
         """
         raise NotImplementedError

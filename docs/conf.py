@@ -46,6 +46,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
+    'sphinx.ext.extlinks',
     'nbsphinx',
 ]
 
@@ -180,7 +181,11 @@ texinfo_documents = [
 
 # -- Extension configuration -------------------------------------------------
 
-autodoc_mock_imports = ['tensorflow', 'fastText', 'nltk', 'gensim', 'kenlm', 'spacy']
+autodoc_mock_imports = ['tensorflow', 'fastText', 'nltk', 'gensim', 'kenlm', 'spacy', 'lxml', 'sortedcontainers']
+
+extlinks = {
+    'config': (f'https://github.com/deepmipt/DeepPavlov/blob/{release}/deeppavlov/configs/%s', None)
+}
 
 # -- Options for intersphinx extension ---------------------------------------
 
