@@ -16,3 +16,4 @@ Concrete Model classes.
    models.spelling_correction <models/spelling_correction>
    models.squad <models/context_question_answering>
    models.tokenizers <models/tokenizers>
+   models.embedders <models/embedders>
