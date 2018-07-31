@@ -82,6 +82,9 @@ class ELMoEmbedder(Component, Serializable):
         Returns:
             embedded batch
         """
+        if not batch:
+            return batch
+
         tokens_length = [len(batch_line) for batch_line in batch]
         tokens_length_max = max(tokens_length)
         batch = [batch_line + ['']*(tokens_length_max - len(batch_line)) for batch_line in batch]

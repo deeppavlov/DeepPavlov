@@ -99,8 +99,6 @@ PARAMS = {
     },
     "elmo": {
         ("elmo/elmo_ru-news.json", "elmo_ru-news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("elmo/elmo_ru-twitter.json", "elmo_ru-twitter", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("elmo/elmo_ru-wiki.json", "elmo_ru-wiki", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
     },
 
     "ranking": {("ranking/ranking_insurance.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
