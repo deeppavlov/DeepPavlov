@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from collections import Counter
-from typing import List, Any, Generator, Tuple, KeysView, ValuesView, Type, Dict, Optional
+from typing import List, Any, Generator, Tuple, KeysView, ValuesView, Dict, Optional
 
 import scipy as sp
 from scipy import sparse
@@ -107,7 +107,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
             # TODO revise policy if len(q_hashes) == 0
 
             if len(q_hashes) == 0:
-                return sp.sparse.csr_matrix((1, self.hash_size))
+                return Sparse((1, self.hash_size))
 
             size = len(self.doc_index)
             Ns = self.term_freqs[hashes_unique]
@@ -117,8 +117,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
             tfidf = np.multiply(tfs, idfs)
 
             indptr = np.array([0, len(hashes_unique)])
-            sp_tfidf = sp.sparse.csr_matrix(
-                (tfidf, hashes_unique, indptr), shape=(1, self.hash_size)
+            sp_tfidf = Sparse((tfidf, hashes_unique, indptr), shape=(1, self.hash_size)
             )
             sp_tfidfs.append(sp_tfidf)
 
@@ -174,7 +173,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
         return count_matrix
 
     @staticmethod
-    def get_tfidf_matrix(count_matrix: sp.sparse.csr_matrix) -> Tuple[Sparse, np.array]:
+    def get_tfidf_matrix(count_matrix: Sparse) -> Tuple[Sparse, np.array]:
         """Convert a count matrix into a tfidf matrix.
 
         Args:
@@ -264,6 +263,6 @@ class HashingTfIdfVectorizer(Component, Serializable):
         """
         logger.info("Loading tfidf matrix from {}".format(self.load_path))
         loader = np.load(self.load_path)
-        matrix = sp.sparse.csr_matrix((loader['data'], loader['indices'],
+        matrix = Sparse((loader['data'], loader['indices'],
                                        loader['indptr']), shape=loader['shape'])
         return matrix, loader['opts'].item(0)
