@@ -12,3 +12,5 @@ Concrete DatasetIterator classes.
 .. autoclass:: deeppavlov.dataset_iterators.sqlite_iterator.SQLiteDataIterator
 
 .. autoclass:: deeppavlov.dataset_iterators.dialog_iterator.DialogDatasetIterator
+
+.. autoclass:: deeppavlov.dataset_iterators.dialog_iterator.DialogDBResultDatasetIterator

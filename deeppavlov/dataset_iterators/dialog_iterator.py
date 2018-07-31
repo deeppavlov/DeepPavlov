@@ -24,7 +24,7 @@ class DialogDatasetIterator(DataLearningIterator):
     Iterates over dialog data,
     generates batches where one sample is one dialog.
 
-    Inherits key methods from :doc:`deeppavlov.core.data.data_learning_iterator:DataLearningIterator </apiref/core/data>`.
+    A subclass of :doc:`deeppavlov.core.data.data_learning_iterator:DataLearningIterator </apiref/core/data>`.
 
     Attributes:
         train: list of training dialogs
@@ -58,7 +58,16 @@ class DialogDatasetIterator(DataLearningIterator):
 class DialogDBResultDatasetIterator(DataLearningIterator):
     """
     Iterates over dialog data,
-    outputs list of db_result fields (if present).
+    outputs list of all ``'db_result'`` fields (if present).
+
+    The class helps to build a list of all ``'db_result'`` values present in a dataset.
+
+    Inherits key methods and attributes from :doc:`deeppavlov.core.data.data_learning_iterator:DataLearningIterator </apiref/core/data>`.
+
+    Attributes:
+        train: list of dictionaries from "train" data
+        valid: list of dictionaries from "valid" data
+        test: list of dictionaries from "test" data
     """
     @staticmethod
     def _db_result(data):
