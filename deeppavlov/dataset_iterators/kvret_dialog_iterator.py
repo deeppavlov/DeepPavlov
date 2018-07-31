@@ -21,6 +21,16 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 @register('kvret_dialog_iterator')
 class KvretDialogDatasetIterator(DataLearningIterator):
+    """
+    Inputs data from :doc:`deeppavlov.dataset_readers.dstc2_reader:DSTC2DatasetReader </apiref/dataset_readers>`, constructs dialog history for each turn, generates batches (one sample is a turn).
+
+    Inherits key methods from :doc:`deeppavlov.core.data.data_learning_iterator:DataLearningIterator </apiref/core/data>`.
+
+    Attributes:
+        train: list of "train" ``(context, response)`` tuples
+        valid: list of "valid" ``(context, response)`` tuples 
+        test: list of "test" ``(context, response)`` tuples 
+    """
 # TODO: write custom batch_generator: order of utterances from one dialogue is presumed
     @staticmethod
     def _dialogs(data):

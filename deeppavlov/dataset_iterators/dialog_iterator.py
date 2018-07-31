@@ -27,9 +27,9 @@ class DialogDatasetIterator(DataLearningIterator):
     A subclass of :doc:`deeppavlov.core.data.data_learning_iterator:DataLearningIterator </apiref/core/data>`.
 
     Attributes:
-        train: list of training dialogs
-        valid: list of validation dialogs
-        test: list of dialogs used for testing
+        train: list of training dialogs (tuples ``(context, response)``)
+        valid: list of validation dialogs (tuples ``(context, response)``)
+        test: list of dialogs used for testing (tuples ``(context, response)``)
     """
 
     @staticmethod
@@ -65,9 +65,9 @@ class DialogDBResultDatasetIterator(DataLearningIterator):
     Inherits key methods and attributes from :doc:`deeppavlov.core.data.data_learning_iterator:DataLearningIterator </apiref/core/data>`.
 
     Attributes:
-        train: list of dictionaries from "train" data
-        valid: list of dictionaries from "valid" data
-        test: list of dictionaries from "test" data
+        train: list of tuples ``(db_result dictionary, '')`` from "train" data
+        valid: list of tuples ``(db_result dictionary, '')`` from "valid" data
+        test: list of tuples ``(db_result dictionary, '')`` from "test" data
     """
     @staticmethod
     def _db_result(data):
