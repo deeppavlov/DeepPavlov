@@ -34,18 +34,17 @@ log = get_logger(__name__)
 @register('elmo')
 class ELMoEmbedder(Component, Serializable):
     """
-    Class implements ELMo embedding model
+    ``ELMo`` (Embeddings from Language Models) representations are pre-trained contextual representations from large scale bidirectional language models.
+    Parameters:
+        spec: A ModuleSpec defining the Module to instantiate or a path where to load a ModuleSpec from via load_module_spec by using tenserflow_hub.
+        dim: Dimensionality of output token embeddings of ELMo model.
+        char_emb_dim: Dimensionality of token embeddings.
+        pad_zero: Whether to use pad samples or not.
+        load_path: Load path is not used.
+        save_path: Save path is not used.
     """
-    def __init__(self, spec, load_path=None, save_path=None, dim=1024, pad_zero=False, **kwargs):
-        """
-        Initialize embedder with given parameters
-        Args:
-            load_path: path where to load pre-trained embedding model and options file from
-            save_path: is not used because model is not trainable; therefore, it is unchangable
-            dim: dimensionality of ELMo model
-            pad_zero: whether to pad samples or not
-            **kwargs: additional arguments
-        """
+    def __init__(self, spec, dim=1024, pad_zero=False, load_path=None, save_path=None, **kwargs):
+
         super().__init__(save_path=save_path, load_path=load_path)
         self.spec = spec
         self.dim = dim
@@ -57,13 +56,13 @@ class ELMoEmbedder(Component, Serializable):
 
     def load(self, *args, **kwargs):
         """
-        Load ELMo tensorflow hub module from self.spec
+        Load a ELMo tensorflow hub module from a self.spec.
         Args:
-            *args: arguments
-            **kwargs: arguments
+            *args: arguments.
+            **kwargs: arguments.
 
         Returns:
-            ELMo pre-trained model
+            A ELMo pre-trained model is wrapped a tenserflow hub module.
         """
         elmo_module = hub.Module(self.spec, trainable=False)
 
@@ -72,15 +71,12 @@ class ELMoEmbedder(Component, Serializable):
     @overrides
     def __call__(self, batch, mean=False, *args, **kwargs):
         """
-        Embed sentences from batch
+        Embed sentences from a batch.
         Args:
-            batch: list of tokenized text samples
-            mean: whether to return mean embedding of tokens per sample
-            *args: arguments
-            **kwargs: arguments
-
+            batch: A list of tokenized text samples.
+            mean: Whether to return a mean ELMo embedding of tokens per sample.
         Returns:
-            embedded batch
+            a batch of ELMo embeddings.
         """
         if not batch:
             return batch
@@ -125,9 +121,10 @@ class ELMoEmbedder(Component, Serializable):
 
     def __iter__(self):
         """
-        Iterate over all words from ELMo model vocabulary
+        Iterate over all words from a ELMo model vocabulary.
+        The ELMo model vocabulary consists of '<S>', '</S>', '<UNK>'.
         Returns:
-            iterator
+            An iterator of three elements ('<S>', '</S>', '<UNK>').
         """
 
         yield from ['<S>', '</S>', '<UNK>']
