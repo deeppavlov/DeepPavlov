@@ -6,3 +6,5 @@ Ranking class.
    :members:
 
 .. autoclass:: deeppavlov.models.ranking.ranking_model.RankingModel
+
+.. autoclass:: deeppavlov.models.ranking.ranking_network.RankingNetwork

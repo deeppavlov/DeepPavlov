@@ -9,13 +9,13 @@ class SberFAQDict(RankingDict):
 
     def __init__(self, vocabs_path, save_path, load_path,
                  max_sequence_length, padding="post", truncating="post",
-                 max_token_length=None, embedding_level=None,
+                 max_token_length=None, token_embeddings=True, char_embeddings=False,
                  char_pad="post", char_trunc="post",
                  tok_dynamic_batch=False, char_dynamic_batch=False):
 
         super().__init__(save_path, load_path,
                          max_sequence_length, padding, truncating,
-                         max_token_length, embedding_level,
+                         max_token_length, token_embeddings,
                          char_pad, char_trunc,
                          tok_dynamic_batch, char_dynamic_batch)
 

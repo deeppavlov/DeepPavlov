@@ -36,7 +36,7 @@
         "max_sequence_length": 80,
         "reccurent": "bilstm",
         "max_pooling": true,
-        "type_of_weights": "shared",
+        "shared_weights": true,
         "hidden_dim": 300,
         "learning_rate": 1e-3,
         "distance": "euclidian",

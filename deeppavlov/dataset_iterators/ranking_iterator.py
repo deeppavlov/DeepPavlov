@@ -23,7 +23,7 @@ class RankingIterator(DataLearningIterator):
                  sample_candidates_pool, sample_candidates_pool_valid, sample_candidates_pool_test,
                  num_negative_samples, num_ranking_samples_valid, num_ranking_samples_test,
                  seed=None, shuffle=False, len_vocab=0, pos_pool_sample=False, pos_pool_rank=True, random_batches=False,
-                 batches_per_epoch=None, hard_triplets_sampling=False, num_positive_samples=5, type_of_model=None):
+                 batches_per_epoch=None, hard_triplets_sampling=False, num_positive_samples=5, triplet_mode=True):
 
         '''
         pos_pool_rank: whether to count samples from "pos_pool" as correct answers at test/validation
@@ -43,7 +43,7 @@ class RankingIterator(DataLearningIterator):
         self.num_positive_samples = num_positive_samples
         self.num_ranking_samples_valid = num_ranking_samples_valid
         self.num_ranking_samples_test = num_ranking_samples_test
-        self.type_of_model = type_of_model
+        self.triplet_mode = triplet_mode
 
         np.random.seed(seed)
         self.train = data.get('train', [])
@@ -80,7 +80,7 @@ class RankingIterator(DataLearningIterator):
                     response = [random.choice(el["pos_pool"]) for el in context_response_data]
                 else:
                     response = [el["response"] for el in context_response_data]
-                if self.type_of_model is None or self.type_of_model == 'triplet':
+                if self.triplet_mode:
                     negative_response = self.create_neg_resp_rand(context_response_data, batch_size, data_type)
                     if self.hard_triplets_sampling:
                         labels = [el["label"] for el in context_response_data]
@@ -92,7 +92,7 @@ class RankingIterator(DataLearningIterator):
                         x = [[(context[i], el) for el in [response[i]] + [negative_response[i]]]
                              for i in range(len(context_response_data))]
                         y = batch_size * [np.ones(self.num_negative_samples)]
-                elif self.type_of_model == 'duplet':
+                else:
                     y = [el["label"] for el in context_response_data]
                     x = [[(context[i], response[i])] for i in range(len(context_response_data))]
                 yield (x, y)

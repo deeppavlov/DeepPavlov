@@ -42,12 +42,12 @@ class RankingModel(NNModel):
 
     """Class to perform ranking.
 
-    Attributes:
+    Args:
         vocab_name: A key that indicates which subclass
-            of the :class:'deeppavlov.models.ranking.ranking_dict.RankingDict` to use.
+            of the :class:`deeppavlov.models.ranking.ranking_dict.RankingDict` to use.
         hard_triplets_sampling: Whether to use hard triplets sampling to train the model
-            i.e. to choose negative samples close to positive ones
-        hardest_positives. Whether to use only one hardest positive sample per each anchor sample.
+            i.e. to choose negative samples close to positive ones.
+        hardest_positives: Whether to use only one hardest positive sample per each anchor sample.
         semi_hard_negatives: Whether hard negative samples should be further away from anchor samples
             than positive samples or not.
         update_embeddings: Whether to store and update context and response embeddings or not.

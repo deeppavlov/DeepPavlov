@@ -12,20 +12,72 @@ from deeppavlov.core.models.tf_backend import TfModelMeta
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.layers import keras_layers
 from pathlib import Path
-
+from deeppavlov.models.ranking.emb_dict import Embeddings
 
 log = get_logger(__name__)
 
 
 class RankingNetwork(metaclass=TfModelMeta):
 
-    def __init__(self, chars_num, toks_num, emb_dict, use_matrix, max_sequence_length,
-                 hidden_dim, learning_rate, margin, embedding_dim,
-                 device_num=0, seed=None, type_of_weights="shared",
-                 max_pooling=True, reccurent="bilstm", distance="cos_similarity",
-                 max_token_length=None, char_emb_dim=None, embedding_level=None,
-                 tok_dynamic_batch=False, char_dynamic_batch=False,
-                 highway_on_top=False, type_of_model=None):
+    """Class to perform context-response matching with neural networks.
+
+    Args:
+        learning_rate: Learning rate.
+        device_num: A number of a device to perform model training on if several devices are available in a system.
+        seed: Random seed.
+        shared_weights: Whether to use shared weights in the model to encode contexts and responses.
+        triplet_mode: Whether to use a model with triplet loss.
+            If ``False``, a model with crossentropy loss will be used.
+        margin: A margin parameter for triplet loss. Only required if ``triplet_mode`` is set to ``True``.
+        distance: Distance metric (similarity measure) to compare context and response representations in the model.
+            Possible values are ``cos_similarity`` (cosine similarity), ``euqlidian`` (euqlidian distance),
+            ``sigmoid`` (1 minus sigmoid).
+        token_embeddings: Whether to use token (word) embeddings in the model.
+        use_matrix: Whether to use trainable matrix with token (word) embeddings.
+        max_sequence_length: A maximum length of a sequence in tokens.
+            Longer sequences will be truncated and shorter ones will be padded.
+        tok_dynamic_batch:  Whether to use dynamic batching. If ``True``, a maximum length of a sequence for a batch
+            will be equal to the maximum of all sequences lengths from this batch,
+            but not higher than ``max_sequence_length``.
+        embedding_dim: Dimensionality of token (word) embeddings.
+        char_embeddings: Whether to use character-level token (word) embeddings in the model.
+        max_token_length: A maximum length of a token for representing it by a character-level embedding.
+        char_dynamic_batch: Whether to use dynamic batching for character-level embeddings.
+            If ``True``, a maximum length of a token for a batch
+            will be equal to the maximum of all tokens lengths from this batch,
+            but not higher than ``max_token_length``.
+        char_emb_dim: Dimensionality of character-level embeddings.
+        reccurent: A type of the RNN cell. Possible values are ``lstm`` and ``bilstm``.
+        hidden_dim: Dimensionality of the hidden state of the RNN cell. If ``reccurent`` equals ``bilstm``
+            to get the actual dimensionality ``hidden_dim`` should be doubled.
+        max_pooling: Whether to use max-pooling operation to get context (response) vector representation.
+            If ``False``, the last hidden state of the RNN will be used.
+    """
+
+    def __init__(self,
+                 chars_num: int,
+                 toks_num: int,
+                 emb_dict: Embeddings,
+                 learning_rate: float = 1e-3,
+                 device_num: int = 0,
+                 seed: int = None,
+                 shared_weights: bool = True,
+                 triplet_mode: bool = True,
+                 margin: float = 0.1,
+                 distance: str = "cos_similarity",
+                 token_embeddings: bool = True,
+                 use_matrix: bool = False,
+                 max_sequence_length: int = None,
+                 tok_dynamic_batch: bool = False,
+                 embedding_dim: int = 300,
+                 char_embeddings: bool = False,
+                 max_token_length: int = None,
+                 char_dynamic_batch: bool = False,
+                 char_emb_dim: int = 32,
+                 highway_on_top: bool = False,
+                 reccurent: str = "bilstm",
+                 hidden_dim: int = 300,
+                 max_pooling: bool = True):
 
         self.distance = distance
         self.toks_num = toks_num
@@ -37,14 +89,15 @@ class RankingNetwork(metaclass=TfModelMeta):
         self.margin = margin
         self.embedding_dim = embedding_dim
         self.device_num = device_num
-        self.type_of_weights = type_of_weights
+        self.shared_weights = shared_weights
         self.pooling = max_pooling
         self.recurrent = reccurent
-        self.embedding_level = embedding_level
+        self.token_embeddings = token_embeddings
+        self.char_embeddings = char_embeddings
         self.chars_num = chars_num
         self.char_emb_dim = char_emb_dim
         self.highway_on_top = highway_on_top
-        self.type_of_model = type_of_model
+        self.triplet_mode = triplet_mode
         if tok_dynamic_batch:
             self.max_sequence_length = None
         else:
@@ -59,10 +112,10 @@ class RankingNetwork(metaclass=TfModelMeta):
 
         self.optimizer = Adam(lr=self.learning_rate)
         self.duplet = self.duplet()
-        if self.type_of_model is None or self.type_of_model == 'triplet':
+        if self.triplet_mode:
             self.loss = self.triplet_loss
             self.obj_model = self.triplet_model()
-        elif self.type_of_model == 'duplet':
+        else:
             self.loss = losses.binary_crossentropy
             self.obj_model = self.duplet_model()
         self.obj_model.compile(loss=self.loss, optimizer=self.optimizer)
@@ -103,22 +156,22 @@ class RankingNetwork(metaclass=TfModelMeta):
 
     def init_from_scratch(self, emb_matrix):
         log.info("[initializing new `{}`]".format(self.__class__.__name__))
-        if self.embedding_level is None or self.embedding_level == 'token':
+        if self.token_embeddings and not self.char_embeddings:
             if self.use_matrix:
-                if self.type_of_weights == "shared":
+                if self.shared_weights:
                     self.duplet.get_layer(name="embedding").set_weights([emb_matrix])
-                if self.type_of_weights == "separate":
+                if self.shared_weights:
                     self.duplet.get_layer(name="embedding_a").set_weights([emb_matrix])
                     self.duplet.get_layer(name="embedding_b").set_weights([emb_matrix])
 
     def embedding_layer(self):
-        if self.type_of_weights == "shared":
+        if self.shared_weights:
             out_a = Embedding(self.toks_num,
                             self.embedding_dim,
                             input_length=self.max_sequence_length,
                             trainable=True, name="embedding")
             return out_a, out_a
-        elif self.type_of_weights == "separate":
+        else:
             out_a = Embedding(self.toks_num,
                             self.embedding_dim,
                             input_length=self.max_sequence_length,
@@ -137,7 +190,7 @@ class RankingNetwork(metaclass=TfModelMeta):
             ret_seq = False
         ker_in = glorot_uniform(seed=self.seed)
         rec_in = Orthogonal(seed=self.seed)
-        if self.type_of_weights == "shared":
+        if self.shared_weights:
             if self.recurrent == "bilstm" or self.recurrent is None:
                 out_a = Bidirectional(LSTM(self.hidden_dim,
                                     input_shape=(self.max_sequence_length, self.embedding_dim,),
@@ -151,7 +204,7 @@ class RankingNetwork(metaclass=TfModelMeta):
                            recurrent_initializer=rec_in,
                            return_sequences=ret_seq)
             return out_a, out_a
-        elif self.type_of_weights == "separate":
+        else:
             if self.recurrent == "bilstm" or self.recurrent is None:
                 out_a = Bidirectional(LSTM(self.hidden_dim,
                                     input_shape=(self.max_sequence_length, self.embedding_dim,),
@@ -181,7 +234,7 @@ class RankingNetwork(metaclass=TfModelMeta):
         return K.mean(K.maximum(self.margin - y_pred, 0.), axis=-1)
 
     def duplet(self):
-        if self.embedding_level is None or self.embedding_level == 'token':
+        if self.token_embeddings and not self.char_embeddings:
             if self.use_matrix:
                 context = Input(shape=(self.max_sequence_length,))
                 response = Input(shape=(self.max_sequence_length,))
@@ -193,7 +246,7 @@ class RankingNetwork(metaclass=TfModelMeta):
                 response = Input(shape=(self.max_sequence_length, self.embedding_dim,))
                 emb_c = context
                 emb_r = response
-        elif self.embedding_level == 'char':
+        elif not self.token_embeddings and self.char_embeddings:
             context = Input(shape=(self.max_sequence_length, self.max_token_length,))
             response = Input(shape=(self.max_sequence_length, self.max_token_length,))
 
@@ -202,7 +255,7 @@ class RankingNetwork(metaclass=TfModelMeta):
             emb_c = char_cnn_layer(context)
             emb_r = char_cnn_layer(response)
 
-        elif self.embedding_level == 'token_and_char':
+        elif self.token_embeddings and self.char_embeddings:
             context = Input(shape=(self.max_sequence_length, self.max_token_length,))
             response = Input(shape=(self.max_sequence_length, self.max_token_length,))
 
@@ -296,7 +349,7 @@ class RankingNetwork(metaclass=TfModelMeta):
 
     def train_on_batch(self, batch, y):
         batch = [x for el in batch for x in el]
-        if self.embedding_level is None or self.embedding_level == 'token':
+        if self.token_embeddings and not self.char_embeddings:
             if self.use_matrix:
                 self.obj_model.train_on_batch(x=[np.asarray(x) for x in batch], y=np.asarray(y))
             else:
@@ -304,9 +357,9 @@ class RankingNetwork(metaclass=TfModelMeta):
                 for i in range(len(b)):
                     b[i] = self.emb_dict.get_embs(b[i])
                 self.obj_model.train_on_batch(x=b, y=np.asarray(y))
-        elif self.embedding_level == 'char':
+        elif not self.token_embeddings and self.char_embeddings:
             self.obj_model.train_on_batch(x=[np.asarray(x) for x in batch], y=np.asarray(y))
-        elif self.embedding_level == 'token_and_char':
+        elif self.token_embeddings and self.char_embeddings:
             if self.use_matrix:
                 self.obj_model.train_on_batch(x=[np.asarray(x) for x in batch], y=np.asarray(y))
             else:
@@ -316,7 +369,7 @@ class RankingNetwork(metaclass=TfModelMeta):
                 self.obj_model.train_on_batch(x=b, y=np.asarray(y))
 
     def predict_score_on_batch(self, batch):
-        if self.embedding_level is None or self.embedding_level == 'token':
+        if self.token_embeddings and not self.char_embeddings:
             if self.use_matrix:
                 return self.score_model.predict_on_batch(x=batch)
             else:
@@ -324,9 +377,9 @@ class RankingNetwork(metaclass=TfModelMeta):
                 for i in range(len(b)):
                     b[i] = self.emb_dict.get_embs(b[i])
                 return self.score_model.predict_on_batch(x=b)
-        elif self.embedding_level == 'char':
+        elif not self.token_embeddings and self.char_embeddings:
             return self.score_model.predict_on_batch(x=batch)
-        elif self.embedding_level == 'token_and_char':
+        elif self.token_embeddings and self.char_embeddings:
             if self.use_matrix:
                 return self.score_model.predict_on_batch(x=batch)
             else:
@@ -339,16 +392,16 @@ class RankingNetwork(metaclass=TfModelMeta):
             embedding = self.context_embedding
         elif type == 'response':
             embedding = self.response_embedding
-        if self.embedding_level is None or self.embedding_level == 'token':
+        if self.token_embeddings and not self.char_embeddings:
             if self.use_matrix:
                 return embedding.predict_on_batch(x=batch)
             else:
                 b = batch
                 b = [self.emb_dict.get_embs(el) for el in b]
                 return embedding.predict_on_batch(x=b)
-        elif self.embedding_level == 'char':
+        elif not self.token_embeddings and self.char_embeddings:
             return embedding.predict_on_batch(x=batch)
-        elif self.embedding_level == 'token_and_char':
+        elif self.token_embeddings and self.char_embeddings:
             if self.use_matrix:
                 return embedding.predict_on_batch(x=batch)
             else:

@@ -124,9 +124,9 @@ def multiplicative_self_attention_get_output(units, layers):
     output = layers["output"](attended_units)
     return output
 
-def char_emb_cnn_func(n_characters: int = None,
-                        emb_mat: np.array = None,
-                        char_embedding_dim: int = None,
+def char_emb_cnn_func(n_characters: int,
+                      char_embedding_dim: int,
+                      emb_mat: np.array = None,
                         filter_widths=(3, 4, 5, 7),
                         highway_on_top=False):
 

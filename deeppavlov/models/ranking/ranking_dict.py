@@ -12,13 +12,14 @@ class RankingDict(metaclass=ABCMeta):
 
     def __init__(self, save_path, load_path,
                  max_sequence_length, padding, truncating,
-                 max_token_length, embedding_level,
+                 max_token_length, token_embeddings, char_embeddings,
                  char_pad, char_trunc,
                  tok_dynamic_batch, char_dynamic_batch,
                  update_embeddings=False):
 
         self.max_sequence_length = max_sequence_length
-        self.embedding_level = embedding_level
+        self.token_embeddings = token_embeddings
+        self.char_embeddings = char_embeddings
         self.max_token_length = max_token_length
         self.padding = padding
         self.truncating = truncating
@@ -53,7 +54,7 @@ class RankingDict(metaclass=ABCMeta):
 
     def init_from_scratch(self):
         log.info("[initializing new `{}`]".format(self.__class__.__name__))
-        if self.embedding_level == 'char' or self.embedding_level == 'token_and_char':
+        if self.char_embeddings:
             self.build_int2char_vocab()
             self.build_char2int_vocab()
         self.build_int2tok_vocab()
@@ -66,7 +67,7 @@ class RankingDict(metaclass=ABCMeta):
 
     def load(self):
         log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
-        if self.embedding_level == 'char' or self.embedding_level == 'token_and_char':
+        if self.char_embeddings:
             self.load_int2char()
             self.build_char2int_vocab()
         self.load_int2tok()
@@ -79,7 +80,7 @@ class RankingDict(metaclass=ABCMeta):
 
     def save(self):
         log.info("[saving `{}`]".format(self.__class__.__name__))
-        if self.embedding_level == 'char' or self.embedding_level == 'token_and_char':
+        if self.char_embeddings:
             self.save_int2char()
         self.save_int2tok()
         self.save_context2toks()
@@ -140,11 +141,11 @@ class RankingDict(metaclass=ABCMeta):
         else:
             mtl = self.max_token_length
 
-        if self.embedding_level is None or self.embedding_level == 'token':
+        if self.token_embeddings and not self.char_embeddings:
             return self.make_tok_ints(toks_li, msl)
-        elif self.embedding_level == 'char':
+        elif not self.token_embeddings and self.char_embeddings:
             return self.make_char_ints(toks_li, msl, mtl)
-        elif self.embedding_level == 'token_and_char':
+        elif self.token_embeddings and self.char_embeddings:
             tok_ints = self.make_tok_ints(toks_li, msl)
             char_ints = self.make_char_ints(toks_li, msl, mtl)
             return np.concatenate([np.expand_dims(tok_ints, axis=2), char_ints], axis=2)
