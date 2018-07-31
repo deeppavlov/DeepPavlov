@@ -28,6 +28,8 @@ from deeppavlov.core.common.registry import register
 TOKENIZER = None
 logger = get_logger(__name__)
 
+Sparse = sp.sparse.csr_matrix
+
 
 def hash_(token: str, hash_size: int) -> int:
     """Convert a token to a hash of given size.
@@ -65,7 +67,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
 
     """
 
-    def __init__(self, tokenizer, hash_size=2 ** 24, doc_index: Optional[dict] = None,
+    def __init__(self, tokenizer: Component, hash_size=2 ** 24, doc_index: Optional[dict] = None,
                  save_path: Optional[str] = None, load_path: Optional[str] = None, **kwargs):
 
         super().__init__(save_path=save_path, load_path=load_path, mode=kwargs.get('mode', 'infer'))
@@ -82,7 +84,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
         self.cols = []
         self.data = []
 
-    def __call__(self, questions: List[str]) -> sp.sparse.csr_matrix:
+    def __call__(self, questions: List[str]) -> Sparse:
         """Transform input list of documents to a tfidf vectors.
 
         Args:
@@ -154,7 +156,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
             yield hashes, values, col_id
 
     def get_count_matrix(self, row: List[int], col: List[int], data: List[int], size) \
-            -> sp.sparse.csr_matrix:
+            -> Sparse:
         """Get count matrix.
 
         Args:
@@ -172,8 +174,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
         return count_matrix
 
     @staticmethod
-    def get_tfidf_matrix(count_matrix: sp.sparse.csr_matrix) -> Tuple[
-        sp.sparse.csr_matrix, np.array]:
+    def get_tfidf_matrix(count_matrix: sp.sparse.csr_matrix) -> Tuple[Sparse, np.array]:
         """Convert a count matrix into a tfidf matrix.
 
         Args:
@@ -251,7 +252,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
         self.cols.clear()
         self.data.clear()
 
-    def load(self) -> Tuple[sp.sparse.csr_matrix, Dict]:
+    def load(self) -> Tuple[Sparse, Dict]:
         """Load a tfidf matrix as csr_matrix.
 
         Returns:

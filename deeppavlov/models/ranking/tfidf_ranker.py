@@ -46,6 +46,7 @@ class TfidfRanker(Estimator):
 
     def get_main_component(self) -> 'TfidfRanker':
         """Temporary stub to run REST API
+
         Returns:
             self
         """
