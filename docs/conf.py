@@ -191,7 +191,7 @@ extlinks = {
 
 # Configuration for intersphinx
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/dev', None),
+    'python': ('https://docs.python.org/3.6', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/reference', None)
 }
 
