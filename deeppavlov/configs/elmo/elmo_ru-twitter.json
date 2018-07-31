@@ -10,11 +10,11 @@
         "out": ["x"]
       },
       {
+        "name": "elmo",
         "in": [
           "x"
         ],
-        "load_path": "elmo_ruwiki_tok_num_400M",
-        "name": "elmo",
+        "spec": "http://lnsigo.mipt.ru/export/deeppavlov_data/elmo_ru-twitter_2013-01_2018-04_6k_steps.tar.gz",
         "out": [
           "y"
         ]
@@ -28,9 +28,6 @@
     "requirements": [
       "../dp_requirements/tf.txt",
       "../dp_requirements/elmo.txt"
-    ],
-    "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/elmo_ruwiki_tok_num_400M.tar.gz"
     ]
   }
 }
