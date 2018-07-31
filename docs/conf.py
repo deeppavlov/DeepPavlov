@@ -27,6 +27,10 @@ version = deeppavlov.__version__
 # The full version, including alpha/beta/rc tags
 release = version
 
+extlinks = {
+    'config': (f'https://github.com/deepmipt/DeepPavlov/blob/{release}/deeppavlov/configs/%s', None)
+}
+
 
 # -- General configuration ---------------------------------------------------
 
@@ -46,6 +50,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx.ext.mathjax',
+    'sphinx.ext.extlinks',
     'nbsphinx',
 ]
 
