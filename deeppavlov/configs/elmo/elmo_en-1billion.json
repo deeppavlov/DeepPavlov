@@ -1,0 +1,33 @@
+{
+  "chainer": {
+    "in": [
+      "x"
+    ],
+    "pipe": [
+      {
+        "in": ["x"],
+        "name": "lazy_tokenizer",
+        "out": ["x"]
+      },
+      {
+        "name": "elmo",
+        "in": [
+          "x"
+        ],
+        "spec": "https://tfhub.dev/google/elmo/2",
+        "out": [
+          "y"
+        ]
+      }
+    ],
+    "out": [
+      "y"
+    ]
+  },
+  "metadata": {
+    "requirements": [
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/elmo.txt"
+    ]
+  }
+}

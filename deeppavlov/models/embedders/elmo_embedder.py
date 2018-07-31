@@ -26,6 +26,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.serializable import Serializable
+from deeppavlov.core.data.utils import zero_pad
 
 log = get_logger(__name__)
 
@@ -35,7 +36,7 @@ class ELMoEmbedder(Component, Serializable):
     """
     Class implements ELMo embedding model
     """
-    def __init__(self, spec load_path=None, save_path=None, dim=1024, dim=1024, **kwargs):
+    def __init__(self, spec, load_path=None, save_path=None, dim=1024, pad_zero=False, **kwargs):
         """
         Initialize embedder with given parameters
         Args:
@@ -48,6 +49,7 @@ class ELMoEmbedder(Component, Serializable):
         super().__init__(save_path=save_path, load_path=load_path)
         self.spec = spec
         self.dim = dim
+        self.pad_zero = pad_zero
         self.elmo_module = self.load()
 
     def save(self, *args, **kwargs):
@@ -81,16 +83,10 @@ class ELMoEmbedder(Component, Serializable):
             embedded batch
         """
         tokens_length = [len(batch_line) for batch_line in batch]
-        embeddings = elmo(
-            inputs={
-                "tokens": batch,
-                "sequence_len": tokens_length
-            },
-            signature="tokens",
-            as_dict=True)
+        tokens_length_max = max(tokens_length)
+        batch = [batch_line + ['']*(tokens_length_max - len(batch_line)) for batch_line in batch]
         sess = tf.Session()
         sess.run(tf.global_variables_initializer())
-
         elmo_outputs = self.elmo_module(
                                         inputs={
                                             "tokens": batch,
@@ -98,16 +94,29 @@ class ELMoEmbedder(Component, Serializable):
                                         },
                                         signature="tokens",
                                         as_dict=True)
+
+        elmo_outputs = sess.run(elmo_outputs)
         sess.close()
 
         if mean:
             batch = elmo_outputs['default']
+
+            dim0, dim1 = batch.shape
+
+            if self.dim != dim1:
+                batch = np.resize(batch, (dim0,self.dim))
         else:
             batch = elmo_outputs['elmo']
 
-        dim1, dim2 = batch.shape
-        if self.dim != dim2:
-            batch = np.resize(batch, (dim1,self.dim))
+            dim0, dim1, dim2 = batch.shape
+
+            if self.dim != dim2:
+                batch = np.resize(batch, (dim0, dim1,self.dim))
+
+            batch = [batch_line[:length_line] for length_line, batch_line in zip(tokens_length,batch)]
+
+            if self.pad_zero:
+                batch = zero_pad(batch)
 
         return batch
 
