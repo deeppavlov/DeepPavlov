@@ -55,7 +55,7 @@ class RankingModel(NNModel):
             If ``False``, all context and response embeddings will be updated before the validation.
         interact_pred_num: The number of the most relevant contexts and responses
             which model returns in the `interact` regime.
-        **kwargs: Other parameters and parameters of the parent class.
+        **kwargs: Other parameters.
     """
 
     def __init__(self,

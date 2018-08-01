@@ -9,14 +9,15 @@ from deeppavlov.core.commands.utils import get_deeppavlov_root, expand_path
 class InsuranceReader(DatasetReader):
     
     def read(self, data_path):
-        """Read data from files and forms the dataset.
+        """Read the InsuranceQA data from files and forms the dataset.
 
         Args:
             data_path: A path to a folder where dataset files are stored.
 
         Returns:
-            The dataset as dict
+            A list of tuples of inputs and correct outputs for every data type in ``train``, ``valid`` and ``test``.
         """
+
         data_path = expand_path(data_path)
         self._download_data(data_path)
         dataset = {'train': None, 'valid': None, 'test': None}
