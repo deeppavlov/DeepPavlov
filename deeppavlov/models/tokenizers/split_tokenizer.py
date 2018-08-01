@@ -25,10 +25,18 @@ class SplitTokenizer(Component):
 
     Doesn't have any parameters.
     """
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs) -> None:
         pass
 
     def __call__(self, batch: List[str]) -> List[List[str]]:
+        """
+        Tokenize givne batch
+        Args:
+            batch: list of texts to tokenize
+
+        Returns:
+            tokenized batch
+        """
         if isinstance(batch, (list, tuple)):
             return [sample.split() for sample in batch]
         else:
