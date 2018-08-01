@@ -3,16 +3,18 @@ from pathlib import Path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import download_decompress, mark_done, is_done
 from deeppavlov.core.commands.utils import get_deeppavlov_root, expand_path
+from typing import Dict, List, Union
 
 
 @register('insurance_reader')
 class InsuranceReader(DatasetReader):
     
-    def read(self, data_path):
+    def read(self, data_path: str, **kwargs) -> Dict[str, List[Dict[str, Union[int, List[int]]]]]:
         """Read the InsuranceQA data from files and forms the dataset.
 
         Args:
             data_path: A path to a folder where dataset files are stored.
+            **kwargs: Other parameters.
 
         Returns:
         data: A dictionary containing training, validation and test parts of the dataset obtainable via

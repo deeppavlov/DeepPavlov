@@ -32,7 +32,7 @@ from deeppavlov.models.ranking.sber_faq_dict import SberFAQDict
 from deeppavlov.models.ranking.ubuntu_v2_dict import UbuntuV2Dict
 from deeppavlov.models.ranking.emb_dict import EmbDict
 from deeppavlov.core.common.log import get_logger
-
+from typing import Union, List, Tuple, Dict
 
 log = get_logger(__name__)
 
@@ -116,6 +116,7 @@ class RankingModel(NNModel):
 
     @overrides
     def load(self):
+        """Load the model from the last checkpoint."""
         if not self.load_path.exists():
             log.info("[initializing new `{}`]".format(self.__class__.__name__))
             self.dict.init_from_scratch()
@@ -145,8 +146,7 @@ class RankingModel(NNModel):
 
     @overrides
     def save(self):
-        """Save model to the save_path, provided in config. The directory is
-        already created by super().__init__ part in called in __init__ of this class"""
+        """Save the model."""
         log.info('[saving model to {}]'.format(self.save_path.resolve()))
         self._net.save(self.save_path)
         if self.upd_embs:
@@ -156,7 +156,8 @@ class RankingModel(NNModel):
         self.embdict.save()
 
     @check_attr_true('train_now')
-    def train_on_batch(self, x, y):
+    def train_on_batch(self, x: List[List[Tuple[int, int]]], y: List[int]):
+        """Train the model on a batch."""
         if self.upd_embs:
             if not self.online_update:
                 self.reset_embeddings()
@@ -174,7 +175,7 @@ class RankingModel(NNModel):
                 b[i][1] = r
         self._net.train_on_batch(b, y)
 
-    def make_batch(self, x):
+    def  make_batch(self, x):
         sample_len = len(x[0])
         b = []
         for i in range(sample_len):
@@ -315,7 +316,9 @@ class RankingModel(NNModel):
                 return x[1], True
         return random.choice(n_li)[1], False
 
-    def __call__(self, batch):
+    def __call__(self, batch: Union[List[List[Tuple[int, int]]], List[str]]) ->\
+            Union[np.ndarray, Dict[str, List[str]]]:
+        """Make a prediction on a batch."""
         if type(batch[0]) == list:
             if self.upd_embs:
                 if self.online_update:

@@ -3,7 +3,7 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 import numpy as np
 import random
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 
 @register('ranking_iterator')
@@ -117,7 +117,8 @@ class RankingIterator(DataLearningIterator):
         super().__init__(self.data, seed=seed, shuffle=shuffle)
 
 
-    def gen_batches(self, batch_size, data_type="train", shuffle=True):
+    def gen_batches(self, batch_size: int, data_type: str = "train", shuffle: bool = True)->\
+            Tuple[List[List[Tuple[int, int]]], List[int]]:
         """Generate batches of inputs and expected outputs to train neural networks.
 
         Args:
