@@ -16,7 +16,7 @@ limitations under the License.
 
 import sys
 from overrides import overrides
-from typing import List
+from typing import List, Union, Iterator
 import tensorflow as tf
 
 import numpy as np
@@ -34,18 +34,18 @@ log = get_logger(__name__)
 @register('elmo')
 class ELMoEmbedder(Component, Serializable):
     """
-    ``ELMo`` (Embeddings from Language Models) representations are pre-trained contextual representations from large scale bidirectional language models.
+    ``ELMo`` (Embeddings from Language Models) representations are pre-trained contextual representations from large scale bidirectional language models. See a paper `Deep contextualized word representations <https://arxiv.org/abs/1802.05365>`__ for more information about the algorithm and a detailed analysis.
+
     Parameters:
-        spec: A ModuleSpec defining the Module to instantiate or a path where to load a ModuleSpec from via load_module_spec by using tenserflow_hub.
+        spec: A ``ModuleSpec`` defining the Module to instantiate or a path where to load a ``ModuleSpec`` from via ``tenserflow_hub.load_module_spec`` by using `TensorFlow Hub <https://www.tensorflow.org/hub/overview>`__.
         dim: Dimensionality of output token embeddings of ELMo model.
-        char_emb_dim: Dimensionality of token embeddings.
         pad_zero: Whether to use pad samples or not.
         load_path: Load path is not used.
         save_path: Save path is not used.
     """
-    def __init__(self, spec, dim=1024, pad_zero=False, load_path=None, save_path=None, **kwargs):
+    def __init__(self, spec: str, dim: int = 1024, pad_zero: bool = False, load_path = None, save_path = None, **kwargs) -> None:
 
-        super().__init__(save_path=save_path, load_path=load_path)
+        super().__init__(save_path = save_path, load_path = load_path)
         self.spec = spec
         self.dim = dim
         self.pad_zero = pad_zero
@@ -57,6 +57,7 @@ class ELMoEmbedder(Component, Serializable):
     def load(self, *args, **kwargs):
         """
         Load a ELMo tensorflow hub module from a self.spec.
+
         Args:
             *args: arguments.
             **kwargs: arguments.
@@ -64,19 +65,21 @@ class ELMoEmbedder(Component, Serializable):
         Returns:
             A ELMo pre-trained model is wrapped a tenserflow hub module.
         """
-        elmo_module = hub.Module(self.spec, trainable=False)
+        elmo_module = hub.Module(self.spec, trainable = False)
 
         return elmo_module
 
     @overrides
-    def __call__(self, batch, mean=False, *args, **kwargs):
+    def __call__(self, batch: List[List[str]], mean: bool = False, *args, **kwargs) -> Union[List[np.ndarray],np.ndarray]:
         """
         Embed sentences from a batch.
+
         Args:
             batch: A list of tokenized text samples.
             mean: Whether to return a mean ELMo embedding of tokens per sample.
+
         Returns:
-            a batch of ELMo embeddings.
+            A batch of ELMo embeddings.
         """
         if not batch:
             return batch
@@ -119,12 +122,13 @@ class ELMoEmbedder(Component, Serializable):
 
         return batch
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator:
         """
         Iterate over all words from a ELMo model vocabulary.
-        The ELMo model vocabulary consists of '<S>', '</S>', '<UNK>'.
+        The ELMo model vocabulary consists of ``['<S>', '</S>', '<UNK>']``.
+
         Returns:
-            An iterator of three elements ('<S>', '</S>', '<UNK>').
+            An iterator of three elements ``['<S>', '</S>', '<UNK>']``.
         """
 
         yield from ['<S>', '</S>', '<UNK>']
