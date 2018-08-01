@@ -1,8 +1,11 @@
 # Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
+#
 #     http://www.apache.org/licenses/LICENSE-2.0
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +20,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.models.vectorizers.hashing_tfidf_vectorizer import HashingTfIdfVectorizer
+from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 
 logger = get_logger(__name__)
 
@@ -121,7 +125,7 @@ class TfidfRanker(Estimator):
 
         return batch_doc_ids, batch_docs_scores
 
-    def fit_batches(self, iterator, batch_size: int) -> None:
+    def fit_batches(self, iterator: DataFittingIterator, batch_size: int) -> None:
         """Generate a batch to be fit to a vectorizer.
 
         Args:
@@ -146,7 +150,7 @@ class TfidfRanker(Estimator):
         pass
 
     def save(self) -> None:
-        """Pass method to a vectorizer.
+        """Pass method to `self.vectorizer`.
 
         Returns:
             None
@@ -155,7 +159,7 @@ class TfidfRanker(Estimator):
         self.vectorizer.save()
 
     def load(self) -> None:
-        """Pass method to a vectorizer.
+        """Pass method to `self.vectorizer`.
 
         Returns:
             None

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import sqlite3
-from typing import List, Any, Dict, Optional, Generator, Tuple
+from typing import List, Any, Dict, Optional
 from random import Random
 
 from overrides import overrides
@@ -21,7 +21,7 @@ from overrides import overrides
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import download
-from deeppavlov.core.commands.utils import expand_path, is_empty
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 
 logger = get_logger(__name__)
@@ -59,10 +59,6 @@ class SQLiteDataIterator(DataFittingIterator):
         download_dir = expand_path(data_dir)
         download_path = download_dir.joinpath(data_url.split("/")[-1])
         download(download_path, data_url, force_download=False)
-
-        # if not download_dir.exists() or is_empty(download_dir):
-        #     logger.info('[downloading wiki.db from {} to {}]'.format(data_url, download_path))
-        #     download(download_path, data_url)
 
         self.connect = sqlite3.connect(str(download_path), check_same_thread=False)
         self.db_name = self.get_db_name()
