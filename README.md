@@ -1,7 +1,6 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/deepmipt/DeepPavlov/blob/master/LICENSE)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 
-_We are still in a really early Alpha release._  
 __In version 0.0.6 everything from package `deeppavlov.skills` except `deeppavlov.skills.pattern_matching_skill` was moved to `deeppavlov.models` so your imports might break__  
 
 
@@ -40,25 +39,28 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 # Features
 
 **Components**
-- [NER](docs/components/ner.rst)
-- [Slot filling](docs/components/slot_filling.rst)
-- [Classification](docs/components/classifiers.rst)
-- [Goal-oriented bot](docs/components/go_bot.rst)
-- [Seq2seq goal-oriented bot](docs/components/seq2seq_go_bot.rst)
-- [Automatic spelling correction](docs/components/spelling_correction.rst)
-- [Ranking](docs/components/neural_ranking.rst)
-- [Question Answering](docs/components/squad.rst)
-- [Morphological tagging](docs/components/morphotagger.rst)
+
+[Named Entity Recognition](docs/components/ner.rst) | [Slot filling](docs/components/slot_filling.rst)
+
+[Intent/Sentence Classification](docs/components/classifiers.rst) |  [Sentence Similarity/Ranking](docs/components/neural_ranking.rst)
+
+[Goal(Task)-oriented Bot](docs/components/go_bot.rst) | [Seq2seq Goal-Oriented bot](docs/components/seq2seq_go_bot.rst)
+
+[Question Answering over Text (SQuAD)](docs/components/squad.rst) 
+
+[Morphological tagging](docs/components/morphotagger.rst) | [Automatic Spelling Correction](docs/components/spelling_correction.rst)
 
 **Skills**
-- [ODQA](docs/skills/odqa.rst)
 
-**Parameters Evolution**
-- [Parameters evolution for models](docs/intro/parameters_evolution.rst)
+[Open Domain Questions Answering](docs/skills/odqa.rst)
 
 **Embeddings**
-- [Pre-trained embeddings for the Russian language](docs/intro/pretrained_vectors.rst)
 
+[Pre-trained embeddings for the Russian language](docs/intro/pretrained_vectors.rst)
+
+**Auto ML**
+
+[Tuning Models with Evolutionary Algorithm](docs/intro/parameters_evolution.rst)
 
 # Installation
 
@@ -116,7 +118,6 @@ from stdin.
 Every line of input text will be used as a pipeline input parameter, so one example will consist of as many lines,
 as many input parameters your pipeline expects.  
 You can also specify batch size with `-b` or `--batch-size` parameter.
-
 
 # Tutorials
 
