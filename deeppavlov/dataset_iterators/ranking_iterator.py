@@ -100,7 +100,7 @@ class RankingIterator(DataLearningIterator):
             A tuple of a batch of inputs and a batch of expected outputs.
 
             Inputs and expected outputs have different structure and meaning
-            depending on class attributes values and `data_type`.
+            depending on class attributes values and ``data_type``.
         """
         data = self.data[data_type]
         if self.random_batches and self.batches_per_epoch is not None and data_type == "train":
