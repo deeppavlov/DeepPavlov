@@ -51,13 +51,16 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 [Morphological tagging](docs/components/morphotagger.rst) | [Automatic Spelling Correction](docs/components/spelling_correction.rst)
 
 **Skills**
-- [Open Domain Questions Answering](docs/skills/odqa.rst)
+
+[Open Domain Questions Answering](docs/skills/odqa.rst)
 
 **Embeddings**
-- [Pre-trained embeddings for the Russian language](docs/intro/pretrained_vectors.rst)
+
+[Pre-trained embeddings for the Russian language](docs/intro/pretrained_vectors.rst)
 
 **Auto ML**
-- [Tuning Models with Evolutionary Algorithm](docs/intro/parameters_evolution.rst)
+
+[Tuning Models with Evolutionary Algorithm](docs/intro/parameters_evolution.rst)
 
 # Installation
 
