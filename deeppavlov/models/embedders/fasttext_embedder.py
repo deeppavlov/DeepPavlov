@@ -39,7 +39,7 @@ class FasttextEmbedder(Component, Serializable):
         model: fastText model instance
         tok2emb: dictionary with already embedded tokens
         dim: dimension of embeddings
-        pad_zero: whether to pad with zeros or not
+        pad_zero: whether to pad sequence of tokens with zeros or not
         load_path: path with pre-trained fastText binary model
 
     """
@@ -61,6 +61,15 @@ class FasttextEmbedder(Component, Serializable):
         self.model = self.load()
 
     def save(self, *args, **kwargs) -> None:
+        """
+        Class do not save loaded model again as it is not trained during usage
+        Args:
+            *args: arguments
+            **kwargs: arguments
+
+        Returns:
+            None
+        """
         raise NotImplementedError
 
     def load(self, *args, **kwargs) -> Fasttext.FastText._FastText:
@@ -86,7 +95,7 @@ class FasttextEmbedder(Component, Serializable):
         return model
 
     @overrides
-    def __call__(self, batch, mean=False, *args, **kwargs) -> List[Union[list, np.ndarray]]:
+    def __call__(self, batch: List[List[str]], mean: bool = False, *args, **kwargs) -> List[Union[list, np.ndarray]]:
         """
         Embed sentences from batch
         Args:
