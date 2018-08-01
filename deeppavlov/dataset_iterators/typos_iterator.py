@@ -18,7 +18,8 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 @register('typos_iterator')
 class TyposDatasetIterator(DataLearningIterator):
-    """Dataset iterator used for training :class:`~deeppavlov.models.spelling_correction.brillmoore.ErrorModel`
+    """Implementation of :class:`~deeppavlov.core.data.data_learning_iterator.DataLearningIterator` used for training
+     :class:`~deeppavlov.models.spelling_correction.brillmoore.ErrorModel`
 
     """
     def split(self, test_ratio: float=0., *args, **kwargs):

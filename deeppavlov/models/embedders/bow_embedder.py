@@ -30,8 +30,8 @@ class BoWEmbedder(Component):
 
             In [1]: bow = BoWEmbedder()
 
-            In [2]: bow(['a', 'b', 'c'], {'a': 0, 'b': 1})
-            Out[2]: 
+            In [2]: bow(['a', 'b', 'c'], vocab={'a': 0, 'b': 1})
+            Out[2]:
             [array([1, 0], dtype=int32),
              array([0, 1], dtype=int32),
              array([0, 0], dtype=int32)]
