@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import copy
 import json
 from pathlib import Path
+from typing import Dict, List
 
 from overrides import overrides
 
@@ -30,27 +32,31 @@ log = get_logger(__name__)
 @register('dstc2_reader')
 class DSTC2DatasetReader(DatasetReader):
     """
-    Contains labelled dialogs from Dialog State Tracking Challenge 2
-    http://camdial.org/~mh521/dstc/
+    Contains labelled dialogs from Dialog State Tracking Challenge 2 (http://camdial.org/~mh521/dstc/)
 
     There've been made the following modifications to the original dataset:
-    1. added api calls to restaurant database
-        - example: api_call area="south" food="dontcare" pricerange="cheap"
-    2. new actions
-        - bot dialog actions were concatenated into one action
-        (example: {"dialog_acts": ["ask", "request"]} -> {"dialog_acts": ["ask_request"]})
-        - if a slot key was associated with the dialog action, the new act
-        was a concatenation of an act and a slot key
-        (example: {"dialog_acts": ["ask"], "slot_vals": ["area"]} ->
-        {"dialog_acts": ["ask_area"]})
-    3. new train/dev/test split
-        - original dstc2 consisted of three different MDP polices,
-        the original train and dev datasets (consisting of two polices) were
-        merged and randomly split into train/dev/test
-    4. minor fixes
-        - fixed several dialogs, where actions were wrongly annotated
-        - uppercased first letter of bot responses
-        - unified punctuation for bot responses'
+
+        1. added api calls to restaurant database
+
+            - example: ``api_call area="south" food="dontcare" pricerange="cheap"``
+
+        2. new actions
+
+            - bot dialog actions were concatenated into one action (example: ``{"dialog_acts": ["ask", "request"]}`` -> ``{"dialog_acts": ["ask_request"]}``)
+
+            - if a slot key was associated with the dialog action, the new act was a concatenation of an act and a slot key (example: ``{"dialog_acts": ["ask"], "slot_vals": ["area"]}`` -> ``{"dialog_acts": ["ask_area"]}``)
+
+        3. new train/dev/test split
+
+            - original dstc2 consisted of three different MDP policies, the original train and dev datasets (consisting of two policies) were merged and randomly split into train/dev/test
+
+        4. minor fixes
+
+            - fixed several dialogs, where actions were wrongly annotated
+
+            - uppercased first letter of bot responses
+
+            - unified punctuation for bot responses
     """
 
     url = 'http://lnsigo.mipt.ru/export/datasets/dstc2_v2.tar.gz'
@@ -60,8 +66,19 @@ class DSTC2DatasetReader(DatasetReader):
         assert datatype in ('trn', 'val', 'tst'), "wrong datatype name"
         return 'dstc2-{}.jsonlist'.format(datatype)
 
+    @classmethod
     @overrides
-    def read(self, data_path, dialogs=False):
+    def read(self, data_path: str, dialogs: bool = False) -> Dict[str, List]:
+        """
+        Downloads ``'dstc2_v2.tar.gz'`` archive from ipavlov internal server, decompresses and saves files to ``data_path``.
+
+        Parameters:
+            data_path: path to save DSTC2 dataset
+            dialogs: flag which indicates whether to output list of turns or list of dialogs
+        
+        Returns:
+            dictionary that contains ``'train'`` field with dialogs from ``'dstc2-trn.jsonlist'``, ``'valid'`` field with dialogs from ``'dstc2-val.jsonlist'`` and ``'test'`` field with dialogs from ``'dstc2-tst.jsonlist'``. Each field is a list of tuples ``(x_i, y_i)``.
+        """
         required_files = (self._data_fname(dt) for dt in ('trn', 'val', 'tst'))
         if not all(Path(data_path, f).exists() for f in required_files):
             log.info('[downloading data from {} to {}]'.format(self.url, data_path))
@@ -170,3 +187,4 @@ class DSTC2DatasetReader(DatasetReader):
         if with_indices:
             return utterances, responses, dialog_indices
         return utterances, responses
+

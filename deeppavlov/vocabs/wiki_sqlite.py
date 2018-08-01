@@ -10,24 +10,26 @@ logger = get_logger(__name__)
 
 @register('wiki_sqlite_vocab')
 class WikiSQLiteVocab(SQLiteDataIterator):
-    """
-    Get SQlite documents by ids.
+    """Get content from SQLite database by document ids.
+
+    Args:
+        data_url: an URL where to download a DB from
+        data_dir:  a directory where to save downloaded DB to
+
     """
 
     def __init__(self, data_url, data_dir: str = '', **kwargs):
-        """
-        :param data_url: an URL to SQLite DB
-        :param data_dir: a directory name where DB is located
-        """
 
         super().__init__(data_dir=data_dir, data_url=data_url)
 
     def __call__(self, doc_ids: Optional[List[List[Any]]] = None, *args, **kwargs) -> List[str]:
-        """
-        Get the contents of files, stacked by space.
-        :param questions: queries to search an answer for
-        :param n: a number of documents to return
-        :return: document contents (as a single string)
+        """Get the contents of files, stacked by space.
+
+        Args:
+            doc_ids: a batch of lists of ids to get contents for
+
+        Returns:
+            a list of contents
         """
         all_contents = []
         if not doc_ids:

@@ -8,7 +8,15 @@ deeppavlov.models.spelling_correction
     .. automethod:: save
     .. automethod:: load
 
-
 .. autoclass:: deeppavlov.models.spelling_correction.levenshtein.LevenshteinSearcherComponent
+
+    .. automethod:: __call__
+
+
+.. autoclass:: deeppavlov.models.spelling_correction.electors.top1_elector.TopOneElector
+
+    .. automethod:: __call__
+
+.. autoclass:: deeppavlov.models.spelling_correction.electors.kenlm_elector.KenlmElector
 
     .. automethod:: __call__
