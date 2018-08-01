@@ -16,7 +16,8 @@ limitations under the License.
 
 import sys
 from overrides import overrides
-from typing import List
+from typing import List, Generator, Union
+from pathlib import Path
 
 import numpy as np
 import fastText as Fasttext
@@ -34,8 +35,16 @@ log = get_logger(__name__)
 class FasttextEmbedder(Component, Serializable):
     """
     Class implements fastText embedding model
+    Attributes:
+        model: fastText model instance
+        tok2emb: dictionary with already embedded tokens
+        dim: dimension of embeddings
+        pad_zero: whether to pad with zeros or not
+        load_path: path with pre-trained fastText binary model
+
     """
-    def __init__(self, load_path, save_path=None, dim=100, pad_zero=False, **kwargs):
+    def __init__(self, load_path: [str, Path], save_path: [str, Path] = None, dim: int = 100, pad_zero: bool = False,
+                 **kwargs) -> None:
         """
         Initialize embedder with given parameters
         Args:
@@ -51,10 +60,10 @@ class FasttextEmbedder(Component, Serializable):
         self.pad_zero = pad_zero
         self.model = self.load()
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         raise NotImplementedError
 
-    def load(self, *args, **kwargs):
+    def load(self, *args, **kwargs) -> Fasttext.FastText._FastText:
         """
         Load fastText binary model from self.load_path
         Args:
@@ -77,7 +86,7 @@ class FasttextEmbedder(Component, Serializable):
         return model
 
     @overrides
-    def __call__(self, batch, mean=False, *args, **kwargs):
+    def __call__(self, batch, mean=False, *args, **kwargs) -> List[Union[list, np.ndarray]]:
         """
         Embed sentences from batch
         Args:
@@ -94,7 +103,7 @@ class FasttextEmbedder(Component, Serializable):
             batch = zero_pad(batch)
         return batch
 
-    def __iter__(self):
+    def __iter__(self) -> Generator:
         """
         Iterate over all words from fastText model vocabulary
         Returns:
@@ -102,7 +111,7 @@ class FasttextEmbedder(Component, Serializable):
         """
         yield from self.model.get_words()
 
-    def _encode(self, tokens: List[str], mean: bool):
+    def _encode(self, tokens: List[str], mean: bool) -> Union[List[np.ndarray], np.ndarray]:
         """
         Embed one text sample
         Args:
@@ -110,7 +119,7 @@ class FasttextEmbedder(Component, Serializable):
             mean: whether to return mean embedding of tokens per sample
 
         Returns:
-            list of embedded tokens
+            list of embedded tokens or array of mean values
         """
         embedded_tokens = []
         for t in tokens:
