@@ -15,7 +15,8 @@ class InsuranceReader(DatasetReader):
             data_path: A path to a folder where dataset files are stored.
 
         Returns:
-            A list of tuples of inputs and correct outputs for every data type in ``train``, ``valid`` and ``test``.
+        data: A dictionary containing training, validation and test parts of the dataset obtainable via
+            ``train``, ``valid`` and ``test`` keys.
         """
 
         data_path = expand_path(data_path)

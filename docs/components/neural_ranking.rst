@@ -18,39 +18,7 @@ The same is true for validation and test, i.e. validation and test
 can be carried out for the entire set of answers or
 for the answers pools selected separately for each context.
 There is a possibility to encode contexts and responses in the model
-with biLSTM layers
-having shared or separate weights.
-
-Each train data sample for feeding the model is arranged as follows:
-
-::
-
-    {'context': 21507, 'response': 7009, 'pos_pool': [7009, 7010], 'neg_pool': None}
-
-The context has a "context" key in the data sample.
-It is represented by a single integer.
-The correct response has the "response" key in the sample,
-its value is  also always a single integer.
-The list of possible correct responses (there may be several) can be
-obtained
-with the "pos\_pool" key.
-The value of the "response" should be equal to the one item from the
-list
-obtained using the "pos\_pool" key.
-The list of possible negative responses (there can be a lot of them,
-100–10000) is represented by the key "neg\_pool".
-Its value is None, when global sampling is used, or the list of fixed
-length, when sampling from predefined negative responses is used.
-It is important that values in "pos\_pool" and "negative\_pool" do
-not overlap.
-Single items in "context", "response", "pos\_pool", "neg\_pool" are
-represented
-by single integers that give lists of integers
-using the dictionary "integer–list of integers".
-These lists of integers are converted to lists of tokens with
-the dictionary "integer–token".
-Validation and test data samples representation are almost the same
-as the train sample shown above.
+with biLSTM layers having shared or separate weights.
 
 Infer from pre-trained model
 ----------------------------
@@ -63,7 +31,7 @@ the following command:
 
     python -m deeppavlov interact deeppavlov/configs/ranking/ranking_insurance.json
 
-Now user can enter a text of context and get relevant contexts and
+Now a user can enter a text of context and get relevant contexts and
 responses:
 
 ::

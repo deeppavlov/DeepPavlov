@@ -10,8 +10,37 @@ from typing import Dict, List
 class RankingIterator(DataLearningIterator):
     """The class contains methods for iterating over a dataset for ranking in training, validation and test mode.
 
+    Note:
+        Each sample in ``data['train']`` is arranged as follows:
+        ``{'context': 21507, 'response': 7009, 'pos_pool': [7009, 7010], 'neg_pool': None}``.
+        The context has a 'context' key in the data sample.
+        It is represented by a single integer.
+        The correct response has the 'response' key in the sample,
+        its value is  also always a single integer.
+        The list of possible correct responses (there may be several) can be
+        obtained
+        with the 'pos\_pool' key.
+        The value of the 'response' should be equal to the one item from the
+        list
+        obtained using the 'pos\_pool' key.
+        The list of possible negative responses (there can be a lot of them,
+        100–10000) is represented by the key 'neg\_pool'.
+        Its value is None, when global sampling is used, or the list of fixed
+        length, when sampling from predefined negative responses is used.
+        It is important that values in 'pos\_pool' and 'negative\_pool' do
+        not overlap.
+        Single items in 'context', 'response', 'pos\_pool', 'neg\_pool' are
+        represented
+        by single integers that give lists of integers
+        using some dictionary `integer–list of integers`.
+        These lists of integers are converted to lists of tokens with
+        some dictionary `integer–token`.
+        Samples in ``data['valid']`` and ``data['test']`` representation are almost the same
+        as the train sample shown above.
+
     Args:
-        data: A parameter containing training, validation and test parts of the dataset for ranking to iterate over.
+        data: A dictionary containing training, validation and test parts of the dataset obtainable via
+            ``train``, ``valid`` and ``test`` keys.
         sample_candidates_pool: Whether to sample candidates from  a predefined pool of candidates
             for each sample in training mode. If ``False``, negative sampling from the whole data will be performed.
         sample_candidates_pool_valid: Whether to validate a model on a predefined pool of candidates for each sample.
@@ -89,7 +118,7 @@ class RankingIterator(DataLearningIterator):
 
 
     def gen_batches(self, batch_size, data_type="train", shuffle=True):
-        """Generate batches of inputs and expected outputs to train neural networks
+        """Generate batches of inputs and expected outputs to train neural networks.
 
         Args:
             batch_size: number of samples in batch
