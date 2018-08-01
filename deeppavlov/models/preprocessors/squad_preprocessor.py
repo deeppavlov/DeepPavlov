@@ -49,9 +49,9 @@ class SquadPreprocessor(Component):
 
     def __call__(self, contexts_raw: Tuple[str, ...], questions_raw: Tuple[str, ...],
                  **kwargs) -> Tuple[
-                                List[str, ...], List[List[str, ...], List[List[List[str]]]],
+                                List[str], List[List[str], List[List[List[str]]]],
                                 List[List[int]], List[List[int]],
-                                List[str, ...], List[List[str, ...], List[List[List[str]]]]
+                                List[str], List[List[str], List[List[List[str]]]]
                               ]:
         contexts = []
         contexts_tokens = []
