@@ -31,7 +31,7 @@ class WikiSQLiteVocab(SQLiteDataIterator):
 
     """
 
-    def __init__(self, data_url, data_dir: str = '', **kwargs):
+    def __init__(self, data_url: str, data_dir: str = '', **kwargs):
 
         super().__init__(data_dir=data_dir, data_url=data_url)
 

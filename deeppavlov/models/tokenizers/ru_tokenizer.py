@@ -30,30 +30,30 @@ logger = get_logger(__name__)
 @register('ru_tokenizer')
 class RussianTokenizer(Component):
     """Tokenize or lemmatize a list of documents for Russian language. Default models are
-    nltk.TokTok tokenizer and pymorphy2 lemmatizer.
+    ``nltk.TokTok`` tokenizer and ``pymorphy2`` lemmatizer.
     Return a list of tokens or lemmas for a whole document.
-    If is called onto 'List[str]', performs detokenizing procedure.
+    If is called onto ``List[str]``, performs detokenizing procedure.
 
     Args:
         stopwords: a list of stopwords that should be ignored during tokenizing/lemmatizing
          and ngrams creation
         ngram_range: size of ngrams to create; only unigrams are returned by default
         lemmas: whether to perform lemmatizing or not
-        lowercase: whether to perform lowercasing or not; is performed by default by '_tokenize'
-         and '_lemmatize' methods
-        alphas_only: whether to filter out not alpha tokens; is performed by default by '_filter'
+        lowercase: whether to perform lowercasing or not; is performed by default by ``_tokenize``
+         and ``_lemmatize`` methods
+        alphas_only: whether to filter out non-alpha tokens; is performed by default by ``_filter``
          method
 
     Attributes:
         stopwords: a list of stopwords that should be ignored during tokenizing/lemmatizing
          and ngrams creation
-        tokenizer: an instance of nltk.TokTok tokenizer class
-        lemmatizer: an instance of pymorphy2.MorphAnalyzer lemmatizer class
+        tokenizer: an instance of ``nltk.TokTok`` tokenizer class
+        lemmatizer: an instance of ``pymorphy2.MorphAnalyzer`` lemmatizer class
         ngram_range: size of ngrams to create; only unigrams are returned by default
         lemmas: whether to perform lemmatizing or not
-        lowercase: whether to perform lowercasing or not; is performed by default by '_tokenize'
-         and '_lemmatize' methods
-        alphas_only: whether to filter out not alpha tokens; is performed by default by '_filter'
+        lowercase: whether to perform lowercasing or not; is performed by default by ``_tokenize``
+         and ``_lemmatize`` methods
+        alphas_only: whether to filter out non-alpha tokens; is performed by default by ``_filter``
          method
          tok2morph: token to lemma cash
 
@@ -86,7 +86,7 @@ class RussianTokenizer(Component):
             a batch of lists of tokens/lemmas; or a batch of detokenized strings
 
         Raises:
-            TypeError: If the first element of `batch` is neither List, nor str.
+            TypeError: If the first element of `batch` is neither `List`, nor `str`.
 
         """
         if isinstance(batch[0], str):
@@ -107,7 +107,7 @@ class RussianTokenizer(Component):
            data: a list of documents to tokenize
            ngram_range: size of ngrams to create; only unigrams are returned by default
            lowercase: whether to perform lowercasing or not; is performed by default by
-            '_tokenize' and '_lemmatize' methods
+           ``_tokenize`` and ``_lemmatize`` methods
 
        Yields:
            list of lists of ngramized tokens or list of detokenized strings
