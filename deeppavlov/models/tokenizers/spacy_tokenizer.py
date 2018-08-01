@@ -110,7 +110,7 @@ class StreamSpacyTokenizer(Component):
         raise TypeError(
             "StreamSpacyTokenizer.__call__() is not implemented for `{}`".format(type(batch[0])))
 
-    def _tokenize(self, data: List[str], ngram_range: Tuple[int]=(1, 1), batch_size: int=10000,
+    def _tokenize(self, data: List[str], ngram_range: Tuple[int, int]=(1, 1), batch_size: int=10000,
                   n_threads: int=1, lowercase: bool=True) -> Generator[List[str], Any, None]:
         """Tokenize a list of documents.
 
@@ -154,7 +154,7 @@ class StreamSpacyTokenizer(Component):
             processed_doc = ngramize(filtered, ngram_range=_ngram_range)
             yield from processed_doc
 
-    def _lemmatize(self, data: List[str], ngram_range: Tuple[int]=(1, 1), batch_size: int=10000,
+    def _lemmatize(self, data: List[str], ngram_range: Tuple[int, int]=(1, 1), batch_size: int=10000,
                    n_threads: int=1) -> Generator[List[str], Any, None]:
         """Lemmatize a list of documents.
 

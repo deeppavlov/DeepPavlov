@@ -99,7 +99,7 @@ class RussianTokenizer(Component):
         raise TypeError(
             "StreamSpacyTokenizer.__call__() is not implemented for `{}`".format(type(batch[0])))
 
-    def _tokenize(self, data: List[str], ngram_range: Tuple[int]=(1, 1), lowercase: bool=True)\
+    def _tokenize(self, data: List[str], ngram_range: Tuple[int, int]=(1, 1), lowercase: bool=True)\
             -> Generator[List[str], Any, None]:
         """Tokenize a list of documents.
 
@@ -135,15 +135,13 @@ class RussianTokenizer(Component):
             processed_doc = ngramize(filtered, ngram_range=_ngram_range)
             yield from processed_doc
 
-    def _lemmatize(self, data: List[str], ngram_range: Tuple[int]=(1, 1)) -> \
+    def _lemmatize(self, data: List[str], ngram_range: Tuple[int, int]=(1, 1)) -> \
             Generator[List[str], Any, None]:
         """Lemmatize a list of documents.
 
         Args:
             data: a list of documents to tokenize
             ngram_range: size of ngrams to create; only unigrams are returned by default
-            batch_size: a batch size for inner spacy multi-threading
-            n_threads: a number of threads for inner spacy multi-threading
 
         Yields:
             list of lists of ngramized tokens or list of detokenized strings
