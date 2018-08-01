@@ -1,7 +1,9 @@
 {
   "dataset_reader": {
     "name": "faq_reader",
-    "data_path": "/home/andrey/Projects/autoFAQ/data/train_faq.csv"
+    "x_col_name": "Question",
+    "y_col_name": "Answer",
+    "data_url": "ftp://share.ipavlov.mipt.ru/datasets/faq/faq.csv"
   },
   "dataset_iterator": {
     "name": "data_learning_iterator"
@@ -21,16 +23,16 @@
         "name": "tfidf_vectorizer",
         "in": "q_token_lemmas",
         "fit_on": ["q_token_lemmas"],
-        "save_path": "autofaq/faq_vectorizer.pkl",
-        "load_path": "autofaq/faq_vectorizer.pkl",
+        "save_path": "autofaq/faq_vectorizer_pretrained_tfidf.pkl",
+        "load_path": "autofaq/faq_vectorizer_pretrained_tfidf.pkl",
         "out": "q_vect"
       },
       {
         "name": "faq_cos_model",
         "in": "q_vect",
         "fit_on": ["q_vect", "y"],
-        "save_path": "autofaq/faq_model.pkl",
-        "load_path": "autofaq/faq_model.pkl",
+        "save_path": "autofaq/faq_pretrained_model.pkl",
+        "load_path": "autofaq/faq_pretrained_model.pkl",
         "out": "answer"
       }
     ],

@@ -16,9 +16,6 @@ limitations under the License.
 
 from typing import List
 
-import scipy as sp
-from scipy import sparse
-
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.log import get_logger
@@ -35,13 +32,16 @@ logger = get_logger(__name__)
 @register('tfidf_vectorizer')
 class TfIdfVectorizer(Estimator, Serializable):
 
-    def __init__(self, save_path: str = None, load_path: str = None, **kwargs) -> None:
+    def __init__(self, pre_trained_vectorizer: str = None, save_path: str = None, load_path: str = None, **kwargs) -> None:
+        self.pre_trained_vectorizer = pre_trained_vectorizer
         self.save_path = save_path
         self.load_path = load_path
-        if kwargs['mode'] == 'train':
-            self.vectorizer = TfidfVectorizer()
-        else:
+
+        if kwargs['mode'] != 'train':
             self.load()
+        else:
+            self.vectorizer = TfidfVectorizer()
+
 
     def __call__(self, questions: List[str]):
         q_vects = self.vectorizer.transform([' '.join(q) for q in questions])
