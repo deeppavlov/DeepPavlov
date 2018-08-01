@@ -74,19 +74,19 @@ class RussianTokenizer(Component):
         self.alphas_only = alphas_only
         self.tok2morph = {}
 
-    def __call__(self, batch: Union[List[List[str]], List[str]]) -> Union[
-        List[List[str]], List[str]]:
+    def __call__(self, batch: Union[List[str], List[List[str]]]) -> \
+            Union[List[List[str]], List[str]]:
         """Tokenize or detokenize strings, depends on the type structure of passed arguments.
 
         Args:
-            batch: a batch of lists of documents to perform tokenizing/lemmatizing;
-             or a batch of lists of strings to perform detokenizing
+            batch: a batch of documents to perform tokenizing/lemmatizing;
+             or a batch of lists of tokens/lemmas to perform detokenizing
 
         Returns:
             a batch of lists of tokens/lemmas; or a batch of detokenized strings
 
         Raises:
-            TypeError: If the first element of `batch` is neither List, no str.
+            TypeError: If the first element of `batch` is neither List, nor str.
 
         """
         if isinstance(batch[0], str):
