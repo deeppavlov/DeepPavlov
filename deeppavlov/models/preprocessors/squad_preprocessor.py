@@ -45,6 +45,7 @@ class SquadPreprocessor(Component):
             question_limit: max question length in tokens
             char_limit: max number of characters in token
     """
+
     def __init__(self, context_limit: int = 450, question_limit: int = 150, char_limit: int = 16, *args, **kwargs):
         self.context_limit = context_limit
         self.question_limit = question_limit
@@ -56,7 +57,7 @@ class SquadPreprocessor(Component):
                                 List[List[int]], List[List[int]],
                                 List[str], List[List[str]], List[List[List[str]]],
                                 List[List[Tuple[int, int]]]
-                              ]:
+                            ]:
         """ Performs preprocessing of context and question
         Args:
             contexts_raw: batch of contexts to preprocess
@@ -100,7 +101,7 @@ class SquadPreprocessor(Component):
             questions_chars.append(q_chars)
             spans.append(SquadPreprocessor.convert_idx(c, c_tokens))
         return contexts, contexts_tokens, contexts_chars, contexts_r2p, contexts_p2r, \
-               questions, questions_tokens, questions_chars, spans
+            questions, questions_tokens, questions_chars, spans
 
     @staticmethod
     def preprocess_str(line: str, return_mapping: bool = False) -> Union[Tuple[str, List[int], List[int]], str]:
@@ -147,6 +148,7 @@ class SquadPreprocessor(Component):
 @register('squad_ans_preprocessor')
 class SquadAnsPreprocessor(Component):
     """ SquadAnsPreprocessor is responsible for answer preprocessing."""
+
     def __init__(self, *args, **kwargs):
         pass
 
@@ -211,7 +213,7 @@ class SquadVocabEmbedder(Estimator):
 
     def __init__(self, emb_folder: str, emb_url: str, save_path: str, load_path: str,
                  context_limit: int = 450, question_limit: int = 150, char_limit: int = 16,
-                 level:str = 'token', *args, **kwargs):
+                 level: str = 'token', *args, **kwargs):
         self.emb_folder = expand_path(emb_folder)
         self.level = level
         self.emb_url = emb_url
@@ -299,7 +301,7 @@ class SquadVocabEmbedder(Estimator):
                         self.embedding_dict[word] = vec
 
             self.token2idx_dict = {token: idx for idx,
-                                             token in enumerate(self.embedding_dict.keys(), 2)}
+                                                  token in enumerate(self.embedding_dict.keys(), 2)}
             self.token2idx_dict[self.NULL] = 0
             self.token2idx_dict[self.OOV] = 1
             self.embedding_dict[self.NULL] = [0. for _ in range(self.emb_dim)]
