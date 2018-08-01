@@ -24,7 +24,7 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-def labels2onehot(labels: [list, np.ndarray], classes: np.ndarray) -> np.ndarray:
+def labels2onehot(labels: [list, np.ndarray], classes:  [list, np.ndarray]) -> np.ndarray:
     """
     Convert labels to one-hot vectors for multi-class multi-label classification
     Args:
@@ -48,7 +48,7 @@ def labels2onehot(labels: [list, np.ndarray], classes: np.ndarray) -> np.ndarray
     return y
 
 
-def proba2labels(proba: [list, np.ndarray], confident_threshold: float, classes: np.ndarray) -> np.ndarray:
+def proba2labels(proba: [list, np.ndarray], confident_threshold: float, classes:  [list, np.ndarray]) -> np.ndarray:
     """
     Convert vectors of probabilities to labels using confident threshold
     (if probability to belong with the class is bigger than confident_threshold, sample belongs with the class;
@@ -72,7 +72,7 @@ def proba2labels(proba: [list, np.ndarray], confident_threshold: float, classes:
     return y
 
 
-def proba2onehot(proba: [list, np.ndarray], confident_threshold: float, classes: np.ndarray) -> np.ndarray:
+def proba2onehot(proba: [list, np.ndarray], confident_threshold: float, classes:  [list, np.ndarray]) -> np.ndarray:
     """
     Convert vectors of probabilities to one-hot representations using confident threshold
     Args:
