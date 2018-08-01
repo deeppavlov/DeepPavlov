@@ -27,9 +27,9 @@ logger = get_logger(__name__)
 
 @register('stream_spacy_tokenizer')
 class StreamSpacyTokenizer(Component):
-    """Tokenize or lemmatize a list of documents. Default spacy model is 'en_core_web_sm'.
+    """Tokenize or lemmatize a list of documents. Default spacy model is **en_core_web_sm**.
     Return a list of tokens or lemmas for a whole document.
-    If is called onto 'List[str]', performs detokenizing procedure.
+    If is called onto ``List[str]``, performs detokenizing procedure.
 
     Args:
         disable: spacy pipeline elements to disable, serves a purpose of performing; if nothing
@@ -39,12 +39,12 @@ class StreamSpacyTokenizer(Component):
         ngram_range: size of ngrams to create; only unigrams are returned by default
         lemmas: whether to perform lemmatizing or not
         n_threads: a number of threads for inner spacy multi-threading
-        lowercase: whether to perform lowercasing or not; is performed by default by '_tokenize'
-         and '_lemmatize' methods
-        alphas_only: whether to filter out not alpha tokens; is performed by default by '_filter'
+        lowercase: whether to perform lowercasing or not; is performed by default by ``_tokenize``
+         and ``_lemmatize`` methods
+        alphas_only: whether to filter out non-alpha tokens; is performed by default by ``_filter``
          method
         spacy_model: a string name of spacy model to use; DeepPavlov searches for this name in
-         downloaded spacy models; default model is 'en_core_web_sm', it downloads automatically
+         downloaded spacy models; default model is **en_core_web_sm**, it downloads automatically
          during DeepPavlov installation
 
 
@@ -57,9 +57,9 @@ class StreamSpacyTokenizer(Component):
         ngram_range: size of ngrams to create; only unigrams are returned by default
         lemmas: whether to perform lemmatizing or not
         n_threads: a number of threads for inner spacy multi-threading
-        lowercase: whether to perform lowercasing or not; is performed by default by '_tokenize'
-         and '_lemmatize' methods
-        alphas_only: whether to filter out not alpha tokens; is performed by default by '_filter'
+        lowercase: whether to perform lowercasing or not; is performed by default by ``_tokenize``
+         and ``_lemmatize`` methods
+        alphas_only: whether to filter out non-alpha tokens; is performed by default by ``_filter``
          method
 
     """
@@ -120,7 +120,7 @@ class StreamSpacyTokenizer(Component):
             batch_size: a batch size for inner spacy multi-threading
             n_threads: a number of threads for inner spacy multi-threading
             lowercase: whether to perform lowercasing or not; is performed by default by
-             '_tokenize' and '_lemmatize' methods
+             ``_tokenize`` and ``_lemmatize`` methods
 
         Yields:
             list of lists of ngramized tokens or list of detokenized strings

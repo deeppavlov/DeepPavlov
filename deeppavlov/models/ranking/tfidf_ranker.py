@@ -150,7 +150,7 @@ class TfidfRanker(Estimator):
         pass
 
     def save(self) -> None:
-        """Pass method to `self.vectorizer`.
+        """Pass method to ``self.vectorizer``.
 
         Returns:
             None
@@ -159,7 +159,7 @@ class TfidfRanker(Estimator):
         self.vectorizer.save()
 
     def load(self) -> None:
-        """Pass method to `self.vectorizer`.
+        """Pass method to ``self.vectorizer``.
 
         Returns:
             None

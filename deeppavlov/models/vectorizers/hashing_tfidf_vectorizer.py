@@ -206,7 +206,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
             self.data.extend(batch_data)
 
     def save(self) -> None:
-        """Save tfidf matrix into .npz format.
+        """Save tfidf matrix into **.npz** format.
 
         Returns:
             None
