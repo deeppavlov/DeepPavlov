@@ -24,14 +24,12 @@ class BoWEmbedder(Component):
     """
     Performs one-hot encoding of tokens based on a pre-built vocabulary of tokens.
 
-    Usage example:
-
+    Example:
         .. code:: python
 
-            In [1]: bow = BoWEmbedder()
+            >>> bow = BoWEmbedder()
 
-            In [2]: bow(['a', 'b', 'c'], vocab={'a': 0, 'b': 1})
-            Out[2]:
+            >>> bow(['a', 'b', 'c'], vocab={'a': 0, 'b': 1})
             [array([1, 0], dtype=int32),
              array([0, 1], dtype=int32),
              array([0, 0], dtype=int32)]

@@ -30,7 +30,8 @@ class SplitTokenizer(Component):
 
     def __call__(self, batch: List[str]) -> List[List[str]]:
         """
-        Tokenize givne batch
+        Tokenize given batch
+
         Args:
             batch: list of texts to tokenize
 
