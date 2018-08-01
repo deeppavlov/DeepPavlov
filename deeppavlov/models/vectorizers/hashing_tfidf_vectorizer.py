@@ -25,7 +25,6 @@ from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 
-TOKENIZER = None
 logger = get_logger(__name__)
 
 Sparse = sp.sparse.csr_matrix
@@ -76,10 +75,6 @@ class HashingTfIdfVectorizer(Component, Serializable):
         self.tokenizer = tokenizer
         self.term_freqs = None
         self.doc_index = doc_index
-
-        global TOKENIZER
-        TOKENIZER = self.tokenizer
-
         self.rows = []
         self.cols = []
         self.data = []
@@ -194,7 +189,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
         return tfidfs, term_freqs
 
     def fit_batch(self, docs: List[str], doc_ids: List[Any]) -> None:
-        """Fit batch of documents while fitting.
+        """Fit batch of documents.
 
         Args:
             docs: a list of input documents
@@ -211,7 +206,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
             self.data.extend(batch_data)
 
     def save(self) -> None:
-        """Save tfidf matrix into .npz format.
+        """Save tfidf matrix into **.npz** format.
 
         Returns:
             None

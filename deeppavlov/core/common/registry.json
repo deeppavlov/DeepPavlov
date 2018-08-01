@@ -43,7 +43,7 @@
   "negative_garbage_sber_faq_reader": "deeppavlov.dataset_readers.negative_garbage_sber_faq_reader:SberFAQReader",
   "negative_sber_faq_reader": "deeppavlov.dataset_readers.negative_sber_faq_reader:SberFAQReader",
   "ner": "deeppavlov.models.ner.network:NerNetwork",
-  "nltk_moses_tokenizer": "deeppavlov.models.tokenizers.nltk_moses_tokenizer:NLTKTokenizer",
+  "nltk_moses_tokenizer": "deeppavlov.models.tokenizers.nltk_moses_tokenizer:NLTKMosesTokenizer",
   "nltk_tokenizer": "deeppavlov.models.tokenizers.nltk_tokenizer:NLTKTokenizer",
   "one_hotter": "deeppavlov.models.preprocessors.one_hotter:OneHotter",
   "ontonotes_reader": "deeppavlov.dataset_readers.ontonotes_reader:OntonotesReader",

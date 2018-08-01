@@ -16,6 +16,7 @@
 import copy
 import json
 from pathlib import Path
+from typing import Dict, List
 
 from overrides import overrides
 
@@ -35,28 +36,27 @@ class DSTC2DatasetReader(DatasetReader):
 
     There've been made the following modifications to the original dataset:
 
-    1. added api calls to restaurant database
+        1. added api calls to restaurant database
 
-        - example: ``api_call area="south" food="dontcare" pricerange="cheap"``
+            - example: ``api_call area="south" food="dontcare" pricerange="cheap"``
 
-    2. new actions
+        2. new actions
 
-        - bot dialog actions were concatenated into one action (example: ``{"dialog_acts": ["ask", "request"]}`` -> ``{"dialog_acts": ["ask_request"]}``)
+            - bot dialog actions were concatenated into one action (example: ``{"dialog_acts": ["ask", "request"]}`` -> ``{"dialog_acts": ["ask_request"]}``)
 
-        - if a slot key was associated with the dialog action, the new act was a concatenation of an act and a slot key (example: ``{"dialog_acts": ["ask"], "slot_vals": ["area"]}`` -> ``{"dialog_acts": ["ask_area"]}``)
+            - if a slot key was associated with the dialog action, the new act was a concatenation of an act and a slot key (example: ``{"dialog_acts": ["ask"], "slot_vals": ["area"]}`` -> ``{"dialog_acts": ["ask_area"]}``)
 
-    3. new train/dev/test split
+        3. new train/dev/test split
 
-        - original dstc2 consisted of three different MDP polices, the original train and dev datasets (consisting of two polices) were merged and randomly split into train/dev/test
+            - original dstc2 consisted of three different MDP policies, the original train and dev datasets (consisting of two policies) were merged and randomly split into train/dev/test
 
-    4. minor fixes
+        4. minor fixes
 
-        - fixed several dialogs, where actions were wrongly annotated
+            - fixed several dialogs, where actions were wrongly annotated
 
-        - uppercased first letter of bot responses
+            - uppercased first letter of bot responses
 
-        - unified punctuation for bot responses
-
+            - unified punctuation for bot responses
     """
 
     url = 'http://lnsigo.mipt.ru/export/datasets/dstc2_v2.tar.gz'
@@ -66,8 +66,9 @@ class DSTC2DatasetReader(DatasetReader):
         assert datatype in ('trn', 'val', 'tst'), "wrong datatype name"
         return 'dstc2-{}.jsonlist'.format(datatype)
 
+    @classmethod
     @overrides
-    def read(self, data_path: str, dialogs: bool = False):
+    def read(self, data_path: str, dialogs: bool = False) -> Dict[str, List]:
         """
         Downloads ``'dstc2_v2.tar.gz'`` archive from ipavlov internal server, decompresses and saves files to ``data_path``.
 
