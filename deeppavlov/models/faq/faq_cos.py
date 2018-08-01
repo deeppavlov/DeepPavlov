@@ -37,9 +37,9 @@ class FaqCosineSimilarityModel(Estimator, Serializable):
             self.load()
 
     def __call__(self, q_vect) -> List[str]:
-        cos_similarities = np.array(q_vect[0].dot(self.x_train_features.T).todense())
+        cos_similarities = np.array(q_vect[0].dot(self.x_train_features.T).todense())[0]
         answer_id = np.argmax(cos_similarities)
-        return [self.y_train[answer_id]]
+        return [self.y_train[answer_id], np.round(cos_similarities[answer_id],2)]
 
     def fit(self, x_train_vects, y_train) -> None:
         if len(x_train_vects) != 0:
