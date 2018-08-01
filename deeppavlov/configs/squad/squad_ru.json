@@ -113,7 +113,7 @@
       "server_utils": "SquadModel"
     },
     "download": [
-      "http://TODO",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_ru_1.3_cpu_compatible.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.vec",
         "subdir": "embeddings"
