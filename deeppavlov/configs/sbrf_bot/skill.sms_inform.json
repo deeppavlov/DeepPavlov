@@ -1,0 +1,32 @@
+{
+  "chainer": {
+    "in": ["text"],
+    "out": ["response"],
+    "pipe": [
+      {
+        "name": "slotfill_raw",
+        "in": ["text"],
+        "out": ["slots"],
+        "return_all": true,
+        "threshold": 0.5,
+        "load_path": "../deeppavlov/configs/sbrf_bot/slots.sms_inform.json",
+        "save_path": "../deeppavlov/configs/sbrf_bot/slots.sms_inform.json"
+      },
+      {
+        "name": "simple_dst",
+        "id": "dst",
+        "in": ["slots"],
+        "out": ["state"],
+        "commands": "./deeppavlov/configs/sbrf_bot/dst.sms_inform.py"
+      },
+      {
+        "name": "simple_policy",
+        "dst": "#dst",
+        "policy": "./deeppavlov/configs/sbrf_bot/policy.sms_inform.py",
+        "in": ["state"],
+        "out": ["response"]
+      }
+    ]
+  }
+
+}
