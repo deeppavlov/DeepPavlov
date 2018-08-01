@@ -17,7 +17,7 @@ import pickle
 import unicodedata
 from collections import Counter
 from pathlib import Path
-from typing import Tuple, List, Any
+from typing import Tuple, List, Union
 
 import numpy as np
 from nltk import word_tokenize
@@ -51,7 +51,8 @@ class SquadPreprocessor(Component):
                  **kwargs) -> Tuple[
                                 List[str], List[List[str]], List[List[List[str]]],
                                 List[List[int]], List[List[int]],
-                                List[str], List[List[str]], List[List[List[str]]]
+                                List[str], List[List[str]], List[List[List[str]]],
+                                List[List[Tuple[int, int]]]
                               ]:
         contexts = []
         contexts_tokens = []
@@ -82,7 +83,7 @@ class SquadPreprocessor(Component):
                questions, questions_tokens, questions_chars, spans
 
     @staticmethod
-    def preprocess_str(line: str, return_mapping: bool = False) -> Tuple[str, List[int], List[int]]:
+    def preprocess_str(line: str, return_mapping: bool = False) -> Union[Tuple[str, List[int], List[int]], str]:
         """ Removes unicode and other characters from str
 
         Args:
