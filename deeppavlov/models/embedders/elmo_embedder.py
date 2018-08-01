@@ -44,7 +44,8 @@ class ELMoEmbedder(Component):
         self.spec = spec
         self.dim = dim
         self.pad_zero = pad_zero
-        self.elmo_module, self.sess = self._load()
+        self.elmo_outputs, self.sess,  self.tokens_ph,  self.tokens_length_ph =\
+                                        self._load()
 
 
     def _load(self, *args, **kwargs):
@@ -59,12 +60,28 @@ class ELMoEmbedder(Component):
             A ELMo pre-trained model is wrapped a tenserflow hub module.
         """
         elmo_module = hub.Module(self.spec, trainable = False)
+
         sess_config = tf.ConfigProto()
         sess_config.gpu_options.allow_growth = True
         sess = tf.Session(config=sess_config)
+
+        tokens_ph = tf.placeholder(shape=(None, None), dtype=tf.string,
+                                                        name='tokens')
+        tokens_length_ph = tf.placeholder(shape=(None), dtype=tf.int32,
+                                                        name='tokens_length')
+
+        elmo_outputs = elmo_module(
+                                    inputs={
+                                        "tokens": tokens_ph,
+                                        "sequence_len": tokens_length_ph
+                                    },
+                                    signature="tokens",
+                                    as_dict=True
+                                   )
+
         sess.run(tf.global_variables_initializer())
 
-        return elmo_module, sess
+        return elmo_outputs, sess, tokens_ph, tokens_length_ph
 
     @overrides
     def __call__(self, batch: List[List[str]], mean: bool = False, *args, **kwargs) -> Union[List[np.ndarray],np.ndarray]:
@@ -84,15 +101,15 @@ class ELMoEmbedder(Component):
         tokens_length = [len(batch_line) for batch_line in batch]
         tokens_length_max = max(tokens_length)
         batch = [batch_line + ['']*(tokens_length_max - len(batch_line)) for batch_line in batch]
-        elmo_outputs = self.elmo_module(
-                                        inputs={
-                                            "tokens": batch,
-                                            "sequence_len": tokens_length
-                                        },
-                                        signature="tokens",
-                                        as_dict=True)
 
-        elmo_outputs = self.sess.run(elmo_outputs)
+        elmo_outputs = self.sess.run(
+                                    self.elmo_outputs,
+                                    feed_dict =
+                                    {
+                                        self.tokens_ph : batch,
+                                        self.tokens_length_ph : tokens_length,
+                                    }
+                                    )
 
         if mean:
             batch = elmo_outputs['default']
