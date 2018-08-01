@@ -33,6 +33,8 @@ with RedirectedPrints():
 class NLTKTokenizer(Component):
     """
     Class split texts on tokens using NLTK
+    Attributes:
+        tokenizer: tokenizer instance from nltk.tokenizers
     """
     def __init__(self, tokenizer: str = "wordpunct_tokenize", download: bool = False,
                  *args, **kwargs):
