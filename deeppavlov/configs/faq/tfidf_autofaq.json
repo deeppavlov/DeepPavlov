@@ -33,10 +33,10 @@
         "fit_on": ["q_vect", "y"],
         "save_path": "autofaq/faq_pretrained_model.pkl",
         "load_path": "autofaq/faq_pretrained_model.pkl",
-        "out": "answer"
+        "out": ["answer", "score"]
       }
     ],
-    "out": "answer"
+    "out": ["answer", "score"]
   },
 
   "train": {
