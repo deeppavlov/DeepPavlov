@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import List, Dict, Tuple, Any
 
 
 class DatasetReader:
-    """
-    A ``DatasetReader`` reads data from some location and constructs a dataset.
+    """An abstract class for reading data from some location and construction of a dataset.
+
     """
 
-    def read(self, data_path: str, *args, **kwargs) -> List:
-        """
-        Reads a file from a path and returns data as list with training instances.
+    def read(self, data_path: str, *args, **kwargs) -> Dict[str, List[Tuple[Any, Any]]]:
+        """Reads a file from a path and returns data as a list of tuples of inputs and correct outputs
+         for every data type in ``train``, ``valid`` and ``test``.
         """
         raise NotImplementedError
