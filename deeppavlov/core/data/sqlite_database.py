@@ -25,18 +25,26 @@ log = get_logger(__name__)
 @register('sqlite_database')
 class Sqlite3Database(Estimator):
     """
-    Loads and trains sqlite table of any items (with name `table_name`
-    on path `save_path`).
+    Loads and trains sqlite table of any items (with name ``table_name``
+    and path ``save_path``).
 
     Primary (unique) keys must be specified, all other keys are infered from data.
-    Batch here is a list of dicts, where each dict corresponds to an item.
+    Batch here is a list of dictionaries, where each dictionary corresponds to an item.
     If an item doesn't contain values for all keys, then missing values will be stored
-    with `unknown_value`.
+    with ``unknown_value``.
+
+    Parameters:
+        save_path: sqlite database path.
+        table_name: name of the sqlite table.
+        primary_keys: list of table primary keys' names.
+        keys: all table keys' names.
+        unknown_value: value assigned to missing item values.
+        **kwargs: parameters passed to parent :class:`~deeppavlov.core.models.estimator.Estimator` class.
     """
 
     def __init__(self, save_path: str,
-                 primary_keys: List[str],
                  table_name: str,
+                 primary_keys: List[str],
                  keys: List[str] = None,
                  unknown_value: str = 'UNK',
                  *args, **kwargs) -> None:

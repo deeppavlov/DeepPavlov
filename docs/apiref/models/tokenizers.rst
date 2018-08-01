@@ -14,3 +14,13 @@ deeppavlov.models.tokenizers
     :members:
 
     .. automethod:: __call__
+
+.. autoclass:: deeppavlov.models.tokenizers.nltk_tokenizer.NLTKTokenizer
+    :members:
+
+    .. automethod:: __call__
+
+.. autoclass:: deeppavlov.models.tokenizers.nltk_moses_tokenizer.NLTKMosesTokenizer
+    :members:
+
+    .. automethod:: __call__
