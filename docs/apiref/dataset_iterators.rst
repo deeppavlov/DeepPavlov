@@ -5,6 +5,10 @@ Concrete DatasetIterator classes.
 .. automodule:: deeppavlov.dataset_iterators
    :members:
 
+.. autoclass:: deeppavlov.dataset_iterators.ranking_iterator.RankingIterator
+
+   .. automethod:: gen_batches
+
 .. autoclass:: deeppavlov.dataset_iterators.basic_classification_iterator.BasicClassificationDatasetIterator
 
 .. autoclass:: deeppavlov.dataset_iterators.dstc2_intents_iterator.Dstc2IntentsDatasetIterator

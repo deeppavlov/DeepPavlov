@@ -82,7 +82,7 @@ command:
     python -m deeppavlov interact deeppavlov/configs/ranking/ranking_insurance.json
 
 As an example of configuration file see
-:config:`Insurance Ranking <deeppavlov/configs/ranking/ranking_insurance.json>`
+:config:`ranking_insurance.json <ranking/ranking_insurance.json>`.
 
 
 Comparison

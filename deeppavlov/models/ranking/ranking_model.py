@@ -39,11 +39,10 @@ log = get_logger(__name__)
 
 @register('ranking_model')
 class RankingModel(NNModel):
-
     """Class to perform ranking.
 
     Args:
-        vocab_name: A key that indicates which subclass
+        vocab_name: A key word that indicates which subclass
             of the :class:`deeppavlov.models.ranking.ranking_dict.RankingDict` to use.
         hard_triplets_sampling: Whether to use hard triplets sampling to train the model
             i.e. to choose negative samples close to positive ones.
@@ -103,7 +102,7 @@ class RankingModel(NNModel):
             dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
             self.dict = UbuntuV2Dict(**dict_parameters)
 
-        embdict_parameter_names = list(inspect.signature(Embeddings.__init__).parameters)
+        embdict_parameter_names = list(inspect.signature(EmbDict.__init__).parameters)
         embdict_parameters = {par: self.opt[par] for par in embdict_parameter_names if par in self.opt}
         self.embdict= EmbDict(**embdict_parameters)
 
