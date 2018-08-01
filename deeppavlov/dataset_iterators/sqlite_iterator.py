@@ -49,7 +49,7 @@ class SQLiteDataIterator(DataFittingIterator):
         doc2index: a dictionary of document indices and their titles
         batch_size: a number of samples in a single batch
         shuffle: whether to shuffle data when batching
-        random: an instance of Random class.
+        random: an instance of :class:`Random` class.
 
     """
 

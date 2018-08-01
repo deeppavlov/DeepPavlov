@@ -32,18 +32,18 @@ class TfidfRanker(Estimator):
     Args:
         vectorizer: a vectorizer class
         top_n: a number of doc ids to return
-        active: whether to return a number specified by top_n (True) or all ids (False)
+        active: whether to return a number specified by :attr:`top_n` (True) or all ids (False)
 
     Attributes:
         top_n: a number of doc ids to return
         vectorizer: an instance of vectorizer class
-        active: whether to return a number specified by top_n or all ids
+        active: whether to return a number specified by :attr:`top_n` or all ids
         tfidf_matrix: a loaded tfidf matrix
         ngram_range: ngram range used when tfidf matrix was created
         hash_size: hash size of the tfidf matrix
         term_freqs: a dictionary with tfidf terms and their frequences
         doc_index: a dictionary of doc ids and corresponding doc titles
-        index2doc: inverted doc_index
+        index2doc: inverted :attr:`doc_index`
         iterator: a dataset iterator used for generating batches while fitting the vectorizer
 
     """
@@ -141,7 +141,7 @@ class TfidfRanker(Estimator):
             self.vectorizer.fit_batch(x, y)
 
     def fit(self) -> None:
-        """Pass method to chainer.
+        """Pass method to :class:`Chainer`.
 
         Returns:
             None
@@ -150,7 +150,7 @@ class TfidfRanker(Estimator):
         pass
 
     def save(self) -> None:
-        """Pass method to ``self.vectorizer``.
+        """Pass method to :attr:`vectorizer`.
 
         Returns:
             None
@@ -159,7 +159,7 @@ class TfidfRanker(Estimator):
         self.vectorizer.save()
 
     def load(self) -> None:
-        """Pass method to ``self.vectorizer``.
+        """Pass method to :attr:`vectorizer`.
 
         Returns:
             None

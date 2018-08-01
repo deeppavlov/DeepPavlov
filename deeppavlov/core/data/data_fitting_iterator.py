@@ -35,7 +35,7 @@ class DataFittingIterator:
 
     Attributes:
         shuffle: whether to shuffle data when batching
-        random: instance of ``Random`` initialized with a seed
+        random: instance of :class:`Random` initialized with a seed
         data: list of documents
         doc_ids: provided by a user ids or generated automatically ids
 

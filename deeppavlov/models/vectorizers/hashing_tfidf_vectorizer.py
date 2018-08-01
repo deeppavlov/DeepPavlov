@@ -51,13 +51,12 @@ class HashingTfIdfVectorizer(Component, Serializable):
         tokenizer: a tokenizer class
         hash_size: a hash size, power of two
         doc_index: a dictinary of document ids and their titles
-        save_path: a path to .npz file where tfidf matrix is saved
-        load_path: a path to .npz file where tfidf matrix is loaded from
+        save_path: a path to **.npz** file where tfidf matrix is saved
+        load_path: a path to **.npz** file where tfidf matrix is loaded from
 
     Attributes:
         hash_size: a hash size
         tokenizer: instance of a tokenizer class
-        random: instance of ``Random`` initialized with a seed
         term_freqs: a dictionary with tfidf terms and their frequences
         doc_index: provided by a user ids or generated automatically ids
         rows: tfidf matrix rows corresponding to terms
@@ -157,7 +156,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
             row: tfidf matrix rows corresponding to terms
             col:  tfidf matrix cols corresponding to docs
             data: tfidf matrix data corresponding to tfidf values
-            size: self.doc_index size
+            size: :attr:`doc_index` size
 
         Returns:
             a count csr_matrix
@@ -236,7 +235,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
         self.reset()
 
     def reset(self) -> None:
-        """Clear self.rows, self.cols and self.data
+        """Clear :attr:`rows`, :attr:`cols` and :attr:`data`
 
         Returns:
             None
