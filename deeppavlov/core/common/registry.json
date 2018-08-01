@@ -24,9 +24,6 @@
   "dstc2_v2_reader": "deeppavlov.dataset_readers.dstc2_reader:DSTC2Version2DatasetReader",
   "dstc_slotfilling": "deeppavlov.models.slotfill.slotfill:DstcSlotFillingNetwork",
   "emb_mat_assembler": "deeppavlov.models.preprocessors.assemble_embeddins_matrix:EmbeddingsMatrixAssembler",
-  "faq_cos_model": "deeppavlov.models.faq.faq_cos:FaqCosineSimilarityModel",
-  "faq_logreg_model": "deeppavlov.models.faq.faq_logreg:FaqLogRegModel",
-  "faq_reader": "deeppavlov.dataset_readers.faq_reader:FaqDatasetReader",
   "fasttext": "deeppavlov.models.embedders.fasttext_embedder:FasttextEmbedder",
   "featurized_tracker": "deeppavlov.models.go_bot.tracker:FeaturizedTracker",
   "field_getter": "deeppavlov.models.preprocessors.field_getter:FieldGetter",
@@ -85,7 +82,6 @@
   "stream_spacy_tokenizer": "deeppavlov.models.tokenizers.spacy_tokenizer:StreamSpacyTokenizer",
   "tag_output_prettifier": "deeppavlov.models.morpho_tagger.common:TagOutputPrettifier",
   "tfidf_ranker": "deeppavlov.models.ranking.tfidf_ranker:TfidfRanker",
-  "tfidf_vectorizer": "deeppavlov.models.vectorizers.tfidf_vectorizer:TfIdfVectorizer",
   "tokens_matcher": "deeppavlov.models.classifiers.tokens_matcher.tokens_matcher:TokensMatcher",
   "top1_elector": "deeppavlov.models.spelling_correction.electors.top1_elector:TopOneElector",
   "typos_custom_reader": "deeppavlov.dataset_readers.typos_reader:TyposCustom",
@@ -93,7 +89,5 @@
   "typos_kartaslov_reader": "deeppavlov.dataset_readers.typos_reader:TyposKartaslov",
   "typos_wikipedia_reader": "deeppavlov.dataset_readers.typos_reader:TyposWikipedia",
   "wiki_sqlite_vocab": "deeppavlov.vocabs.wiki_sqlite:WikiSQLiteVocab",
-  "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary",
-  "simple_dst": "deeppavlov.models.policy.dst:SimpleDST",
-  "simple_policy": "deeppavlov.models.policy.policy:SimplePolicy"
+  "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary"
 }

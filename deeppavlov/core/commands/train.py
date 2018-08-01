@@ -133,7 +133,11 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
                 raise e
         else:
             reader = get_model(reader_config.pop('name'))()
-        data_path = expand_path(reader_config.pop('data_path', ''))
+        data_path = reader_config.pop('data_path', '')
+        if isinstance(data_path, list):
+            data_path = [expand_path(x) for x in data_path]
+        else:
+            data_path = expand_path(data_path)
         data = reader.read(data_path, **reader_config)
     else:
         log.warning("No dataset reader is provided in the JSON config.")

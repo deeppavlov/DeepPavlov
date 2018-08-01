@@ -107,8 +107,11 @@ PARAMS = {
     "odqa": {
         ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
-    "morpho_tagger/UD2.0/hu":
-        {("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]}
+    "morpho_tagger":{
+        ("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger_hu", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_train_pymorphy.json",
+         "morpho_tagger_pymorphy", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+    }
 }
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
@@ -130,7 +133,7 @@ def download_config(conf_file):
         src_file = test_src_dir / conf_file
 
     if not src_file.is_file():
-        raise RuntimeError('Unexisting config file {}'.format(conf_file))
+        raise RuntimeError('No config file {}'.format(conf_file))
 
     with src_file.open(encoding='utf8') as fin:
         config = json.load(fin)
@@ -142,7 +145,9 @@ def download_config(conf_file):
 
     config["deeppavlov_root"] = str(download_path)
 
-    with (test_configs_path / conf_file).open("w", encoding='utf8') as fout:
+    conf_file = test_configs_path / conf_file
+    conf_file.parent.mkdir(exist_ok=True, parents=True)
+    with conf_file.open("w", encoding='utf8') as fout:
         json.dump(config, fout)
 
     # Download referenced config files
