@@ -1,27 +1,27 @@
 {
   "chainer": {
     "in": [
-      "x"
+      "sentences"
     ],
     "pipe": [
       {
-        "in": ["x"],
+        "in": ["sentences"],
         "name": "lazy_tokenizer",
-        "out": ["x"]
+        "out": ["tokens"]
       },
       {
         "name": "elmo",
         "in": [
-          "x"
+          "tokens"
         ],
         "spec": "https://tfhub.dev/google/elmo/2",
         "out": [
-          "y"
+          "tokens_emb"
         ]
       }
     ],
     "out": [
-      "y"
+      "tokens_emb"
     ]
   },
   "metadata": {

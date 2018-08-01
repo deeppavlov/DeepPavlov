@@ -1,18 +1,16 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import sys
 from overrides import overrides
@@ -32,7 +30,7 @@ log = get_logger(__name__)
 
 
 @register('elmo')
-class ELMoEmbedder(Component, Serializable):
+class ELMoEmbedder(Component):
     """
     ``ELMo`` (Embeddings from Language Models) representations are pre-trained contextual representations from large scale bidirectional language models. See a paper `Deep contextualized word representations <https://arxiv.org/abs/1802.05365>`__ for more information about the algorithm and a detailed analysis.
 
@@ -40,21 +38,16 @@ class ELMoEmbedder(Component, Serializable):
         spec: A ``ModuleSpec`` defining the Module to instantiate or a path where to load a ``ModuleSpec`` from via ``tenserflow_hub.load_module_spec`` by using `TensorFlow Hub <https://www.tensorflow.org/hub/overview>`__.
         dim: Dimensionality of output token embeddings of ELMo model.
         pad_zero: Whether to use pad samples or not.
-        load_path: Load path is not used.
-        save_path: Save path is not used.
     """
-    def __init__(self, spec: str, dim: int = 1024, pad_zero: bool = False, load_path = None, save_path = None, **kwargs) -> None:
+    def __init__(self, spec: str, dim: int = 1024, pad_zero: bool = False, **kwargs) -> None:
 
-        super().__init__(save_path = save_path, load_path = load_path)
         self.spec = spec
         self.dim = dim
         self.pad_zero = pad_zero
-        self.elmo_module = self.load()
+        self.elmo_module, self.sess = self._load()
 
-    def save(self, *args, **kwargs):
-        raise NotImplementedError
 
-    def load(self, *args, **kwargs):
+    def _load(self, *args, **kwargs):
         """
         Load a ELMo tensorflow hub module from a self.spec.
 
@@ -66,8 +59,12 @@ class ELMoEmbedder(Component, Serializable):
             A ELMo pre-trained model is wrapped a tenserflow hub module.
         """
         elmo_module = hub.Module(self.spec, trainable = False)
+        sess_config = tf.ConfigProto()
+        sess_config.gpu_options.allow_growth = True
+        sess = tf.Session(config=sess_config)
+        sess.run(tf.global_variables_initializer())
 
-        return elmo_module
+        return elmo_module, sess
 
     @overrides
     def __call__(self, batch: List[List[str]], mean: bool = False, *args, **kwargs) -> Union[List[np.ndarray],np.ndarray]:
@@ -87,8 +84,6 @@ class ELMoEmbedder(Component, Serializable):
         tokens_length = [len(batch_line) for batch_line in batch]
         tokens_length_max = max(tokens_length)
         batch = [batch_line + ['']*(tokens_length_max - len(batch_line)) for batch_line in batch]
-        sess = tf.Session()
-        sess.run(tf.global_variables_initializer())
         elmo_outputs = self.elmo_module(
                                         inputs={
                                             "tokens": batch,
@@ -97,8 +92,7 @@ class ELMoEmbedder(Component, Serializable):
                                         signature="tokens",
                                         as_dict=True)
 
-        elmo_outputs = sess.run(elmo_outputs)
-        sess.close()
+        elmo_outputs = self.sess.run(elmo_outputs)
 
         if mean:
             batch = elmo_outputs['default']
