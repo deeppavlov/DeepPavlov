@@ -103,7 +103,7 @@ class RankingModel(NNModel):
             self.dict = UbuntuV2Dict(**dict_parameters)
 
         embdict_parameter_names = list(inspect.signature(EmbDict.__init__).parameters)
-        embdict_parameters = {par: self.opt[par] for par in embdict_parameter_names if par in self.opt}
+        embdict_parameters = {par: opt[par] for par in embdict_parameter_names if par in opt}
         self.embdict= EmbDict(**embdict_parameters)
 
         network_parameter_names = list(inspect.signature(RankingNetwork.__init__).parameters)

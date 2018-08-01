@@ -7,6 +7,14 @@ Ranking class.
 
 .. autoclass:: deeppavlov.models.ranking.ranking_model.RankingModel
 
+   .. automethod:: load
+
+   .. automethod:: save
+
+   .. automethod:: train_on_batch
+
+   .. automethod:: __call__
+
 .. autoclass:: deeppavlov.models.ranking.ranking_network.RankingNetwork
 
 .. autoclass:: deeppavlov.models.ranking.ranking_dict.RankingDict
