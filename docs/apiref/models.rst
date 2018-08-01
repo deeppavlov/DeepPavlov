@@ -9,6 +9,7 @@ Concrete Model classes.
    models.api_requester <models/api_requester>
    models.classifiers <models/classifiers>
    models.go_bot <models/go_bot>
+   models.seq2seq_go_bot <models/seq2seq_go_bot>
    models.hashing_tfidf_ranker <models/hashing_tfidf_ranker>
    models.morpho_tagger <models/morpho_tagger>
    models.ner <models/ner>
