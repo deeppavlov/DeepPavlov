@@ -1,0 +1,87 @@
+{
+  "dataset_reader": {
+    "name": "morphotagger_dataset_reader",
+    "data_path": "UD2.0_source",
+    "language": "hu", "data_types": ["train", "dev", "test"]
+  },
+  "dataset_iterator": {
+    "name": "morphotagger_dataset"
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "id": "lowercase_preprocessor",
+        "name": "lowercase_preprocessor",
+        "in": ["x"],
+        "out": ["x_processed"]
+      },
+      {
+        "id": "tag_vocab",
+        "name": "default_vocab",
+        "fit_on": ["y"],
+		"level": "token",
+        "special_tokens": ["PAD", "BEGIN", "END"],
+        "save_path": "morpho_tagger/UD2.0/hu/tag.dict",
+        "load_path": "morpho_tagger/UD2.0/hu/tag.dict"
+      },
+      {
+        "id": "char_vocab",
+        "name": "default_vocab",
+        "min_freq": 3,
+        "fit_on": ["x_processed"],
+        "special_tokens": ["PAD", "BEGIN", "END"],
+		"level": "char",
+        "save_path": "morpho_tagger/UD2.0/hu/char.dict",
+        "load_path": "morpho_tagger/UD2.0/hu/char.dict"
+      },
+      {
+        "id": "dictionary_vectorizer",
+        "name": "dictionary_vectorizer",
+        "save_path": "/home/alexeysorokin/data/DeepPavlov/download/UD2.0_dict",
+        "load_path": "/home/alexeysorokin/data/DeepPavlov/download/UD2.0_dict",
+        "in": ["x"],
+        "out": ["x_possible_tags"]
+      },
+      {
+        "in": ["x_processed", "x_possible_tags"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "name": "morpho_tagger",
+        "main": true,
+        "save_path": "morpho_tagger/UD2.0/hu/model_dict.hdf5",
+        "load_path": "morpho_tagger/UD2.0/hu/model_dict.hdf5",
+        "tags": "#tag_vocab",
+        "symbols": "#char_vocab",
+        "verbose": 1,
+        "char_embeddings_size": 32, "char_window_size": [1, 2, 3, 4, 5, 6, 7],
+        "word_lstm_units": 128, "conv_dropout": 0.0, "char_conv_layers": 1,
+        "char_highway_layers": 1, "highway_dropout": 0.0, "word_lstm_layers": 1,
+        "char_filter_multiple": 50, "intermediate_dropout": 0.0, "word_dropout": 0.2,
+        "lstm_dropout": 0.3, "regularizer": 0.01, "lm_dropout": 0.3,
+        "word_vectorizers": [["#dictionary_vectorizer.dim", 128]]
+      }
+    ],
+    "out": ["y_predicted"]
+  },
+  "train": {
+    "epochs": 2,
+    "batch_size": 32,
+
+    "metrics": ["per_token_accuracy"],
+    "validation_patience": 10,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1
+  },
+  "metadata": {
+    "download": [
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/morpho_tagger.tar.gz",
+      {
+        "url": "http://lnsigo.mipt.ru/export/datasets/UD2.0_source/hu.tar.gz",
+        "subdir": "UD2.0_source/hu"
+      }
+    ],
+  "telegram_utils": "MorphoTaggerModel"
+  }
+}

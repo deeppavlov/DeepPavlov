@@ -33,6 +33,41 @@ log = get_logger(__name__)
 
 @register('go_bot_rnn')
 class GoalOrientedBotNetwork(TFModel):
+    """
+    The ``GoalOrientedBotNetwork`` is a recurrent network that handles dialogue policy management.
+
+    Parameters:
+        optimizer (:obj:`str`): One of tf.train.Optimizer subclass as a string. Default: ``'AdamOptimizer'``.
+        learning_rate (float): Learning rate during training.
+        end_learning_rate (float): If set, learning rate starts from ``learning rate`` value and decays polynomially
+            to the value of ``end_learning_rate``. Default: ``None``.
+        decay_steps (int): Number of steps for learning rate to decay. Default: ``1000``.
+        decay_power (float): Power used to calculate learning rate decay for polynomial strategy. Default: ``1.0``.
+        dropout_rate (float): Probability of dropping out. Default: ``0.0``.
+        l2_reg_coef (float): L2 regularization coefficient (applied to input and output layer). Default: ``0.0``.
+        hidden_dim (int): Hidden state dimension.
+        dense_size (int): LSTM input size.
+        obs_size (int): Input features size (must be equal to the dimension of concatenated
+            ``bow_embedder`` + ``embedder`` + ``intent_classifier`` + ``tracker`` + context features + action size).
+            Could be calculated automatically if not set (default).
+        action_size (int): Output action size. Could be calculated automatically if not set (default).
+        attention_mechanism : (:obj:`dict` or ``null``): Describes attention applied to network inputs.
+
+            * ``attention_mechanism.type`` – type of attention mechanism, one of (``'general'``, ``'bahdanau'``,
+              ``'light_general'``, ``'light_bahdanau'``, ``'cs_general'``, ``'cs_bahdanau'``).
+            * ``attention_mechanism.hidden_size`` – attention hidden state size.
+            * ``attention_mechanism.max_num_tokens`` – maximum number of input tokens used in attention.
+            * ``attention_mechanism.depth`` – number of averages used in constrained attentions
+              (``'cs_bahdanau'`` or ``'cs_general'``).
+            * ``attention_mechanism.action_as_key`` – whether to use action from previous timestep as key
+              to attention. Default: ``false``.
+            * ``attention_mechanism.intent_as_key`` – use utterance intents as attention key or not. Default: ``false``.
+            * ``attention_mechanism.projected_align`` – whether to use output projection. Default: ``false``.
+
+    Todo:
+        * consider explicit parameter specification with type annotations
+        * it is better to reorder parameters (required first)
+    """
     GRAPH_PARAMS = ["hidden_size", "action_size", "dense_size", "obs_size",
                     "attention_mechanism"]
 
@@ -295,13 +330,13 @@ class GoalOrientedBotNetwork(TFModel):
     def save_params(self):
         path = str(self.save_path.with_suffix('.json').resolve())
         log.info('[saving parameters to {}]'.format(path))
-        with open(path, 'w') as fp:
+        with open(path, 'w', encoding='utf8') as fp:
             json.dump(self.opt, fp)
 
     def load_params(self):
         path = str(self.load_path.with_suffix('.json').resolve())
         log.info('[loading parameters from {}]'.format(path))
-        with open(path, 'r') as fp:
+        with open(path, 'r', encoding='utf8') as fp:
             params = json.load(fp)
         for p in self.GRAPH_PARAMS:
             if self.opt.get(p) != params.get(p):

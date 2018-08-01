@@ -175,13 +175,14 @@ class Templates:
         return self._templates
 
     def load(self, filename):
-        for ln in open(filename, 'r'):
-            act, template = ln.strip('\n').split('\t', 1)
-            self.__setitem__(act, self.ttype.from_str(template))
+        with open(filename, 'r', encoding='utf8') as fp:
+            for ln in fp:
+                act, template = ln.strip('\n').split('\t', 1)
+                self.__setitem__(act, self.ttype.from_str(template))
         return self
 
     def save(self, filename):
-        with open(filename, 'w') as outfile:
+        with open(filename, 'w', encoding='utf8') as outfile:
             for act in sorted(self.actions):
                 template = self.__getitem__(act)
                 outfile.write('{}\t{}\n'.format(act, template))

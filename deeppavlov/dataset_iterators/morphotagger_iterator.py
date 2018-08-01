@@ -60,14 +60,9 @@ class MorphoTaggerDatasetIterator(DataLearningIterator):
 
     def __init__(self, data, seed=None, shuffle=True,
                  validation_split=0.2, bucket=True):
-
-        # processed_data = {mode: preprocess_data(sample, to_lower=to_lower,
-        #                                         append_case=append_case)
-        #                   for mode, sample in data.items()}
-        processed_data = data
         self.bucket = bucket
         self.validation_split = validation_split
-        super().__init__(processed_data, seed, shuffle)
+        super().__init__(data, seed, shuffle)
 
     def split(self):
         if len(self.valid) == 0:
@@ -91,7 +86,7 @@ class MorphoTaggerDatasetIterator(DataLearningIterator):
             batch_size = L
         for start in range(0, L, batch_size):
             indexes_to_yield = indexes[start:start+batch_size]
-            data_to_yield = tuple(zip(*([data[i] for i in indexes_to_yield])))
+            data_to_yield = tuple(list(x) for x in zip(*([data[i] for i in indexes_to_yield])))
             if return_indexes:
                 yield indexes_to_yield, data_to_yield
             else:

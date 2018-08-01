@@ -29,7 +29,7 @@ def calc_mrr(rank):
 
 def mrr_from_json(fname):
     data = []
-    with open(fname) as f:
+    with open(fname, encoding='utf8') as f:
         for line in f.readlines():
             data += [json.loads(line)]
     rank_i = []
@@ -55,7 +55,7 @@ def mrr_from_dict(data):
 
 def make_json_predictions(fname, predictions):
     data = []
-    with open(fname) as f:
+    with open(fname, encoding='utf8') as f:
         for line in f.readlines():
             data += [json.loads(line)]
 

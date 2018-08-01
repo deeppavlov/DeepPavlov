@@ -30,19 +30,19 @@ class InsuranceReader(DatasetReader):
 
     def _build_context2toks_vocabulary(self, train_f, val_f, test_f):
         contexts = []
-        with open(train_f, 'r') as f:
+        with open(train_f, 'r', encoding='utf8') as f:
             data = f.readlines()
         for eli in data:
             eli = eli[:-1]
             c, _ = eli.split('\t')
             contexts.append(c)
-        with open(val_f, 'r') as f:
+        with open(val_f, 'r', encoding='utf8') as f:
             data = f.readlines()
         for eli in data:
             eli = eli[:-1]
             _, c, _ = eli.split('\t')
             contexts.append(c)
-        with open(test_f, 'r') as f:
+        with open(test_f, 'r', encoding='utf8') as f:
             data = f.readlines()
         for eli in data:
             eli = eli[:-1]
@@ -55,7 +55,7 @@ class InsuranceReader(DatasetReader):
         positive_responses_pool = []
         contexts = []
         responses = []
-        with open(fname, 'r') as f:
+        with open(fname, 'r', encoding='utf8') as f:
             data = f.readlines()
         for eli in data:
             eli = eli[:-1]
@@ -75,7 +75,7 @@ class InsuranceReader(DatasetReader):
         neg_responses_pool = []
         contexts = []
         pos_responses = []
-        with open(fname, 'r') as f:
+        with open(fname, 'r', encoding='utf8') as f:
             data = f.readlines()
         for eli in data:
             eli = eli[:-1]
