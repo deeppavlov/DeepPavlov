@@ -55,7 +55,7 @@ class RussianTokenizer(Component):
          and :meth:`_lemmatize` methods
         alphas_only: whether to filter out non-alpha tokens; is performed by default by :meth:`_filter`
          method
-         tok2morph: token-to-lemma cash
+         tok2morph: token-to-lemma cache
 
     """
 
@@ -86,7 +86,7 @@ class RussianTokenizer(Component):
             a batch of lists of tokens/lemmas; or a batch of detokenized strings
 
         Raises:
-            TypeError: If the first element of ``batch`` is neither `List`, nor `str`.
+            TypeError: If the first element of ``batch`` is neither ``List``, nor ``str``.
 
         """
         if isinstance(batch[0], str):
@@ -198,7 +198,7 @@ class RussianTokenizer(Component):
         """Redefine a list of stopwords.
 
        Args:
-           stopwords: a list of stopwords to set
+           stopwords: a list of stopwords
 
        Returns:
            None

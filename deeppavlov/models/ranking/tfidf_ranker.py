@@ -32,7 +32,8 @@ class TfidfRanker(Estimator):
     Args:
         vectorizer: a vectorizer class
         top_n: a number of doc ids to return
-        active: whether to return a number specified by :attr:`top_n` (True) or all ids (False)
+        active: whether to return a number specified by :attr:`top_n` (``True``) or all ids
+         (``False``)
 
     Attributes:
         top_n: a number of doc ids to return

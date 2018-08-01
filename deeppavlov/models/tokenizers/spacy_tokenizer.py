@@ -213,7 +213,7 @@ class StreamSpacyTokenizer(Component):
         """Redefine a list of stopwords.
 
         Args:
-            stopwords: a list of stopwords to set
+            stopwords: a list of stopwords
 
         Returns:
             None
