@@ -89,7 +89,7 @@ class RankingIterator(DataLearningIterator):
 
 
     def gen_batches(self, batch_size, data_type="train", shuffle=True):
-        """Generate batches of inputs and expected output to train neural networks
+        """Generate batches of inputs and expected outputs to train neural networks
 
         Args:
             batch_size: number of samples in batch
