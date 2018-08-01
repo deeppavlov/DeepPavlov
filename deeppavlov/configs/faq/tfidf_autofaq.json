@@ -42,7 +42,19 @@
   "train": {
     "validate_best": false,
     "test_best": false
- }
+ },
+  "metadata": {
+    "download": [
+      {
+        "url": "http://lnsigo.mipt.ru/export/faq/pretrained/faq_pretrained_model.pkl",
+        "subdir": "autofaq"
+      },
+      {
+        "url": "http://lnsigo.mipt.ru/export/faq/pretrained/faq_vectorizer_pretrained_tfidf.pkl",
+        "subdir": "autofaq"
+      }
+    ]
+  }
 
 }
 

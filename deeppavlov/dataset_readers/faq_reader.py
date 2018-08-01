@@ -2,7 +2,6 @@ from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.common.registry import register
 
 from pandas import read_csv
-from numpy import nan
 from typing import Dict
 
 @register('faq_reader')
