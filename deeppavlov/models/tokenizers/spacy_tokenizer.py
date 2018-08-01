@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from itertools import chain
-from typing import List, Generator, Any, Optional, Union
+from typing import List, Generator, Any, Optional, Union, Tuple
 
 import spacy
 
@@ -61,6 +61,7 @@ class StreamSpacyTokenizer(Component):
          and '_lemmatize' methods
         alphas_only: whether to filter out not alpha tokens; is performed by default by '_filter'
          method
+
     """
 
     def __init__(self, disable: Optional[List[str]] = None, stopwords: Optional[List[str]] = None,
@@ -84,7 +85,8 @@ class StreamSpacyTokenizer(Component):
         self.lowercase = lowercase
         self.alphas_only = alphas_only
 
-    def __call__(self, batch: Union[List[List[str]], List[str]]):
+    def __call__(self, batch: Union[List[List[str]], List[str]]) -> \
+            Union[List[List[str]], List[str]]:
         """Tokenize or detokenize strings, depends on the type structure of passed arguments.
 
         Args:
@@ -108,8 +110,8 @@ class StreamSpacyTokenizer(Component):
         raise TypeError(
             "StreamSpacyTokenizer.__call__() is not implemented for `{}`".format(type(batch[0])))
 
-    def _tokenize(self, data: List[str], ngram_range=(1, 1), batch_size=10000, n_threads=1,
-                  lowercase=True) -> Generator[List[str], Any, None]:
+    def _tokenize(self, data: List[str], ngram_range: Tuple[int]=(1, 1), batch_size: int=10000,
+                  n_threads: int=1, lowercase: bool=True) -> Generator[List[str], Any, None]:
         """Tokenize a list of documents.
 
         Args:
@@ -120,8 +122,11 @@ class StreamSpacyTokenizer(Component):
             lowercase: whether to perform lowercasing or not; is performed by default by
              '_tokenize' and '_lemmatize' methods
 
+        Yields:
+            list of lists of ngramized tokens or list of detokenized strings
+
         Returns:
-            a batch of lists of tokens/lemmas; or a batch of detokenized strings
+            None
 
         """
         # DEBUG
@@ -149,8 +154,8 @@ class StreamSpacyTokenizer(Component):
             processed_doc = ngramize(filtered, ngram_range=_ngram_range)
             yield from processed_doc
 
-    def _lemmatize(self, data: List[str], ngram_range=(1, 1), batch_size=10000, n_threads=1) -> \
-            Generator[List[str], Any, None]:
+    def _lemmatize(self, data: List[str], ngram_range: Tuple[int]=(1, 1), batch_size: int=10000,
+                   n_threads: int=1) -> Generator[List[str], Any, None]:
         """Lemmatize a list of documents.
 
         Args:
@@ -159,8 +164,11 @@ class StreamSpacyTokenizer(Component):
             batch_size: a batch size for inner spacy multi-threading
             n_threads: a number of threads for inner spacy multi-threading
 
+       Yields:
+           list of lists of ngramized lemmas or list of detokenized strings
+
         Returns:
-            a batch of lists of tokens/lemmas; or a batch of detokenized strings
+            None
 
         """
         # DEBUG
@@ -178,12 +186,12 @@ class StreamSpacyTokenizer(Component):
             processed_doc = ngramize(filtered, ngram_range=_ngram_range)
             yield from processed_doc
 
-    def _filter(self, items: List[str], alphas_only=True) -> List[str]:
+    def _filter(self, items: List[str], alphas_only: bool=True) -> List[str]:
         """Filter a list of tokens/lemmas.
 
         Args:
             items: a list of tokens/lemmas to filter
-            alphas_only: whether to filter out not alpha tokens
+            alphas_only: whether to filter out non-alpha tokens
 
         Returns:
             a list of filtered tokens/lemmas
