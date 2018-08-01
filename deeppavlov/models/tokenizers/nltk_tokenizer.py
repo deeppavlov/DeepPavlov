@@ -15,6 +15,7 @@ limitations under the License.
 """
 
 import nltk
+from typing import List
 
 from deeppavlov.core.common.prints import RedirectedPrints
 from deeppavlov.core.models.component import Component
@@ -31,9 +32,10 @@ with RedirectedPrints():
 @register("nltk_tokenizer")
 class NLTKTokenizer(Component):
     """
-    Class split texts on tokens
+    Class split texts on tokens using NLTK
     """
-    def __init__(self, tokenizer="wordpunct_tokenize", download=False, *args, **kwargs):
+    def __init__(self, tokenizer: str = "wordpunct_tokenize", download: bool = False,
+                 *args, **kwargs):
         """
         Initialize tokenizer with given parameters
         Args:
@@ -48,7 +50,7 @@ class NLTKTokenizer(Component):
         if not callable(self.tokenizer):
             raise AttributeError("Tokenizer {} is not defined in nltk.tokenizer".format(tokenizer))
 
-    def __call__(self, batch, *args, **kwargs):
+    def __call__(self, batch: List[str], *args, **kwargs) -> List[List[str]]:
         """
         Tokenize given batch
         Args:
