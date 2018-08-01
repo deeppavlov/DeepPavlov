@@ -14,6 +14,7 @@
 
 import json
 from pathlib import Path
+from typing import Dict, List
 
 from overrides import overrides
 
@@ -43,8 +44,9 @@ class KvretDatasetReader(DatasetReader):
         assert datatype in ('train', 'dev', 'test'), "wrong datatype name"
         return 'kvret_{}_public.json'.format(datatype)
 
+    @classmethod
     @overrides
-    def read(self, data_path: str, dialogs: bool = False):
+    def read(self, data_path: str, dialogs: bool = False) -> Dict[str, List]:
         """
         Downloads ``'kvrest_public.tar.gz'``, decompresses, saves files to ``data_path``.
 

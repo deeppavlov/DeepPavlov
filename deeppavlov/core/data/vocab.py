@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple, Callable
+from typing import List, Callable
 from collections import Counter, defaultdict
 import itertools
 from pathlib import Path
@@ -33,18 +33,18 @@ class DefaultVocabulary(Estimator):
     Implements vocabulary of tokens, chars or other structeres.
 
     Parameters:
-        level: level of operation can be tokens (``token``) or chars (``char``). Default: ``token``.
-        special_tokens: tuple of tokens that shouldn't be counted. Empty by default.
-        default_token: label assigned to unknown tokens. Default: ``None``.
-        tokenizer: callable used to get tokens out of string. Default: ``None``.
-        min_freq: minimal count of a token (except special tokens). Default: ``0``.
+        level: level of operation can be tokens (``'token'``) or chars (``'char'``).
+        special_tokens: tuple of tokens that shouldn't be counted.
+        default_token: label assigned to unknown tokens.
+        tokenizer: callable used to get tokens out of string.
+        min_freq: minimal count of a token (except special tokens).
     """
 
     def __init__(self,
                  save_path: str,
                  load_path: str,
                  level: str = 'token',
-                 special_tokens: Tuple = tuple(),
+                 special_tokens: List[str] = [],
                  default_token: str = None,
                  tokenizer: Callable = None,
                  min_freq: int = 0,
@@ -214,4 +214,3 @@ class DefaultVocabulary(Estimator):
 
     def batch_idxs2batch_toks(self, b_idxs, filter_paddings=False):
         return [self.idxs2toks(idxs, filter_paddings) for idxs in b_idxs]
-
