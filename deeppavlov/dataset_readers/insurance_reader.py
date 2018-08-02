@@ -17,7 +17,7 @@ class InsuranceReader(DatasetReader):
             **kwargs: Other parameters.
 
         Returns:
-        data: A dictionary containing training, validation and test parts of the dataset obtainable via
+            A dictionary containing training, validation and test parts of the dataset obtainable via
             ``train``, ``valid`` and ``test`` keys.
         """
 
