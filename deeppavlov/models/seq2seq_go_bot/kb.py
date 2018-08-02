@@ -38,8 +38,12 @@ class KnowledgeBase(Estimator):
             >>> from models.seq2seq_go_bot.kb import KnowledgeBase
             >>> kb = KnowledgeBase(save_path="kb.json", load_path="kb.json")
             >>> kb.fit(['person1'], [['name', 'hair', 'eyes']], [[{'name': 'Sasha', 'hair': 'long dark', 'eyes': 'light blue '}]])
-            >>> kb.kb
-            {'person1': [('sasha_hair', 'long dark') ('sasha_eyes', 'light blue ')]}
+
+            >>> kb(['person1'])
+            [[('sasha_hair', 'long dark'), ('sasha_eyes', 'light blue ')]]
+
+            >>> kb(['person_that_doesnt_exist'])
+            [[]]
 
     Parameters:
         save_path: path to save the dictionary with knowledge.
@@ -121,8 +125,8 @@ class KnowledgeBaseEntityNormalizer(Component):
             >>> from models.seq2seq_go_bot.kb import KnowledgeBase
             >>> kb = KnowledgeBase(save_path="kb.json", load_path="kb.json")
             >>> kb.fit(['person1'], [['name', 'hair', 'eyes']], [[{'name': 'Sasha', 'hair': 'long dark', 'eyes': 'light blue '}]])
-            >>> kb.kb
-            {'person1': [('sasha_hair', 'long dark') ('sasha_eyes', 'light blue ')]}
+            >>> kb(['person1'])
+            [[('sasha_hair', 'long dark'), ('sasha_eyes', 'light blue ')]]
 
             >>> from models.seq2seq_go_bot.kb import KnowledgeBaseEntityNormalizer
             >>> normalizer = KnowledgeBaseEntityNormalizer(kb=kb, denormalize=False)
@@ -130,7 +134,9 @@ class KnowledgeBaseEntityNormalizer(Component):
             [['some', 'guy', 'with', 'sasha_hair', 'hair', 'said', 'hi']]
 
             >>> denormalizer = KnowledgeBaseEntityNormalizer(kb=kb, denormalize=True)
-            [['some', 'guy', 'with', 'sasha_hair', 'hair', 'said', 'hi']]
+            >>> denormalizer(['person1'], [['some', 'guy', 'with', 'sasha_hair', 'hair', 'said', 'hi']])
+            [['some', 'guy', 'with', 'long', 'dark', 'hair', 'said', 'hi']]
+
 
     Parameters:
         kb: knowledge base of type :class:`~deeppavlov.models.seq2seq_go_bot.KnowledgeBase`.
