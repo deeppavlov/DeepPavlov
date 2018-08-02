@@ -31,11 +31,12 @@ log = get_logger(__name__)
 
 @register('static_dictionary')
 class StaticDictionary:
-    """
+    """Trie vocabulary used in spelling correction algorithms
 
     Args:
-        data_dir:
+        data_dir: directory where the built trie will be stored
         dictionary_name:
+        raw_dictionary_path:
 
     Attributes:
         dict_name:
