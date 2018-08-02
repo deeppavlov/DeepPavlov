@@ -6,8 +6,10 @@ Concrete Model classes.
    :members:
 
 .. toctree::
+   models.ranking <models/neural_ranking>
    models.api_requester <models/api_requester>
    models.classifiers <models/classifiers>
+   models.embedders <models/embedders>
    models.go_bot <models/go_bot>
    models.seq2seq_go_bot <models/seq2seq_go_bot>
    models.vectorizers <models/vectorizers>
@@ -18,4 +20,3 @@ Concrete Model classes.
    models.spelling_correction <models/spelling_correction>
    models.squad <models/context_question_answering>
    models.tokenizers <models/tokenizers>
-   models.embedders <models/embedders>

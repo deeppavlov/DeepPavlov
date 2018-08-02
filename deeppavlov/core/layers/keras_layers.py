@@ -14,9 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 from keras import backend as K
-from keras.layers import Dense, Reshape, Concatenate, Lambda, Multiply
+from keras.models import Model
+from keras.layers import Dense, Reshape, Concatenate, Lambda, Embedding, Conv2D, Activation, Input
+from keras.engine.topology import Layer
+from keras.layers.merge import Multiply, Add
 from keras.activations import softmax
-
+import numpy as np
 
 def expand_tile(units, axis):
     """
@@ -101,7 +104,6 @@ def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, 
     output = Dense(n_output_features, activation=activation)(attended_units)
     return output
 
-
 def multiplicative_self_attention_init(n_hidden, n_output_features, activation):
     layers = {}
     layers["queries"] = Dense(n_hidden)
@@ -121,3 +123,43 @@ def multiplicative_self_attention_get_output(units, layers):
     attended_units = Lambda(lambda x: K.sum(x, axis=2))(mult)
     output = layers["output"](attended_units)
     return output
+
+def char_emb_cnn_func(n_characters: int,
+                      char_embedding_dim: int,
+                      emb_mat: np.array = None,
+                        filter_widths=(3, 4, 5, 7),
+                        highway_on_top=False):
+
+    emb_layer = Embedding(n_characters,
+                          char_embedding_dim)
+
+    if emb_mat is not None:
+        emb_layer.set_weights([emb_mat])
+
+    conv2d_layers = []
+    for filter_width in filter_widths:
+        conv2d_layers.append(Conv2D(char_embedding_dim,
+                                    (1, filter_width),
+                                    padding='same'))
+
+    if highway_on_top:
+        dense1 = Dense(char_embedding_dim * len(filter_widths))
+        dense2 = Dense(char_embedding_dim * len(filter_widths))
+
+    def result(input):
+        emb_c = emb_layer(input)
+        conv_results_list = []
+        for cl in conv2d_layers:
+            conv_results_list.append(cl(emb_c))
+        emb_c = Lambda(lambda x: K.concatenate(x, axis=3))(conv_results_list)
+        emb_c = Lambda(lambda x: K.max(x, axis=2))(emb_c)
+        if highway_on_top:
+            sigmoid_gate = dense1(emb_c)
+            sigmoid_gate = Activation('sigmoid')(sigmoid_gate)
+            deeper_units = dense2(emb_c)
+            emb_c = Add()([Multiply()([sigmoid_gate, deeper_units]),
+                           Multiply()([Lambda(lambda x: K.constant(1., shape=K.shape(x)) - x)(sigmoid_gate), emb_c])])
+            emb_c = Activation('relu')(emb_c)
+        return emb_c
+
+    return result

@@ -1,0 +1,33 @@
+{
+  "chainer": {
+    "in": [
+      "sentences"
+    ],
+    "pipe": [
+      {
+        "in": ["sentences"],
+        "name": "lazy_tokenizer",
+        "out": ["tokens"]
+      },
+      {
+        "name": "elmo",
+        "in": [
+          "tokens"
+        ],
+        "spec": "https://tfhub.dev/google/elmo/2",
+        "out": [
+          "tokens_emb"
+        ]
+      }
+    ],
+    "out": [
+      "tokens_emb"
+    ]
+  },
+  "metadata": {
+    "requirements": [
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/elmo.txt"
+    ]
+  }
+}
