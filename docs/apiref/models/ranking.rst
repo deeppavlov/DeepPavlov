@@ -1,9 +1,9 @@
 deeppavlov.models.ranking
 =========================
-Ranking class.
+
+Ranking classes.
 
 .. automodule:: deeppavlov.models.ranking
-   :members:
 
 .. autoclass:: deeppavlov.models.ranking.ranking_model.RankingModel
 
@@ -21,4 +21,7 @@ Ranking class.
 
 .. autoclass:: deeppavlov.models.ranking.emb_dict.EmbDict
 
+.. autoclass:: deeppavlov.models.ranking.tfidf_ranker.TfidfRanker
+    :members:
 
+    .. automethod:: __call__
