@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 from overrides import overrides
 from typing import List, Union, Iterator
 import tensorflow as tf
@@ -23,7 +22,6 @@ import tensorflow_hub as hub
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.data.utils import zero_pad
 
 log = get_logger(__name__)
@@ -32,43 +30,64 @@ log = get_logger(__name__)
 @register('elmo')
 class ELMoEmbedder(Component):
     """
-    ``ELMo`` (Embeddings from Language Models) representations are pre-trained contextual representations from large scale bidirectional language models. See a paper `Deep contextualized word representations <https://arxiv.org/abs/1802.05365>`__ for more information about the algorithm and a detailed analysis.
+    ``ELMo`` (Embeddings from Language Models) representations are pre-trained contextual representations from
+    large-scale bidirectional language models. See a paper `Deep contextualized word representations
+    <https://arxiv.org/abs/1802.05365>`__ for more information about the algorithm and a detailed analysis.
 
     Parameters:
-        spec: A ``ModuleSpec`` defining the Module to instantiate or a path where to load a ``ModuleSpec`` from via ``tenserflow_hub.load_module_spec`` by using `TensorFlow Hub <https://www.tensorflow.org/hub/overview>`__.
+        spec: A ``ModuleSpec`` defining the Module to instantiate or a path where to load a ``ModuleSpec`` from via
+            ``tenserflow_hub.load_module_spec`` by using `TensorFlow Hub <https://www.tensorflow.org/hub/overview>`__.
         dim: Dimensionality of output token embeddings of ELMo model.
         pad_zero: Whether to use pad samples or not.
+
+    Examples:
+        You can use ELMo models from DeepPavlov as usual `TensorFlow Hub Module
+        <https://www.tensorflow.org/hub/modules/google/elmo/2>`_.
+
+        >>> import tensorflow_hub as hub
+        >>> elmo = hub.Module("http://lnsigo.mipt.ru/export/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz",
+        trainable=True)
+        >>> embeddings = elmo(["это предложение", "word"], signature="default", as_dict=True)["elmo"]
+
+        You can also embed tokenized sentences.
+
+        >>> tokens_input = [["мама", "мыла", "раму"], ["рама", "", ""]]
+        >>> tokens_length = [3, 1]
+        >>> embeddings = elmo(
+                inputs={
+                        "tokens": tokens_input,
+                        "sequence_len": tokens_length
+                        },
+                signature="tokens",
+                as_dict=True)["elmo"]
+
+        You can also get ``hub.text_embedding_column`` like described `here
+        <https://www.tensorflow.org/hub/tutorials/text_classification_with_tf_hub#feature_columns>`_.
+
+
     """
     def __init__(self, spec: str, dim: int = 1024, pad_zero: bool = False, **kwargs) -> None:
 
         self.spec = spec
         self.dim = dim
         self.pad_zero = pad_zero
-        self.elmo_outputs, self.sess,  self.tokens_ph,  self.tokens_length_ph =\
-                                        self._load()
+        self.elmo_outputs, self.sess,  self.tokens_ph,  self.tokens_length_ph = self._load()
 
-
-    def _load(self, *args, **kwargs):
+    def _load(self):
         """
-        Load a ELMo tensorflow hub module from a self.spec.
-
-        Args:
-            *args: arguments.
-            **kwargs: arguments.
+        Load a ELMo TensorFlow Hub Module from a self.spec.
 
         Returns:
-            A ELMo pre-trained model is wrapped a tenserflow hub module.
+            ELMo pre-trained model wrapped in TenserFlow Hub Module.
         """
-        elmo_module = hub.Module(self.spec, trainable = False)
+        elmo_module = hub.Module(self.spec, trainable=False)
 
         sess_config = tf.ConfigProto()
         sess_config.gpu_options.allow_growth = True
         sess = tf.Session(config=sess_config)
 
-        tokens_ph = tf.placeholder(shape=(None, None), dtype=tf.string,
-                                                        name='tokens')
-        tokens_length_ph = tf.placeholder(shape=(None), dtype=tf.int32,
-                                                        name='tokens_length')
+        tokens_ph = tf.placeholder(shape=(None, None), dtype=tf.string, name='tokens')
+        tokens_length_ph = tf.placeholder(shape=(None,), dtype=tf.int32, name='tokens_length')
 
         elmo_outputs = elmo_module(
                                     inputs={
@@ -84,7 +103,8 @@ class ELMoEmbedder(Component):
         return elmo_outputs, sess, tokens_ph, tokens_length_ph
 
     @overrides
-    def __call__(self, batch: List[List[str]], mean: bool = False, *args, **kwargs) -> Union[List[np.ndarray],np.ndarray]:
+    def __call__(self, batch: List[List[str]], mean: bool = False,
+                 *args, **kwargs) -> Union[List[np.ndarray], np.ndarray]:
         """
         Embed sentences from a batch.
 
@@ -95,7 +115,7 @@ class ELMoEmbedder(Component):
         Returns:
             A batch of ELMo embeddings.
         """
-        if not batch:
+        if batch and batch[0]:
             return batch
 
         tokens_length = [len(batch_line) for batch_line in batch]
@@ -104,10 +124,10 @@ class ELMoEmbedder(Component):
 
         elmo_outputs = self.sess.run(
                                     self.elmo_outputs,
-                                    feed_dict =
+                                    feed_dict=
                                     {
-                                        self.tokens_ph : batch,
-                                        self.tokens_length_ph : tokens_length,
+                                        self.tokens_ph: batch,
+                                        self.tokens_length_ph: tokens_length,
                                     }
                                     )
 
@@ -124,9 +144,9 @@ class ELMoEmbedder(Component):
             dim0, dim1, dim2 = batch.shape
 
             if self.dim != dim2:
-                batch = np.resize(batch, (dim0, dim1,self.dim))
+                batch = np.resize(batch, (dim0, dim1, self.dim))
 
-            batch = [batch_line[:length_line] for length_line, batch_line in zip(tokens_length,batch)]
+            batch = [batch_line[:length_line] for length_line, batch_line in zip(tokens_length, batch)]
 
             if self.pad_zero:
                 batch = zero_pad(batch)
