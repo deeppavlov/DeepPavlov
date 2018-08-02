@@ -39,10 +39,10 @@ class StreamSpacyTokenizer(Component):
         ngram_range: size of ngrams to create; only unigrams are returned by default
         lemmas: whether to perform lemmatizing or not
         n_threads: a number of threads for inner spacy multi-threading
-        lowercase: whether to perform lowercasing or not; is performed by default by ``_tokenize``
-         and ``_lemmatize`` methods
-        alphas_only: whether to filter out non-alpha tokens; is performed by default by ``_filter``
-         method
+        lowercase: whether to perform lowercasing or not; is performed by default by :meth:`_tokenize`
+         and :meth:`_lemmatize` methods
+        alphas_only: whether to filter out non-alpha tokens; is performed by default by
+         :meth:`_filter` method
         spacy_model: a string name of spacy model to use; DeepPavlov searches for this name in
          downloaded spacy models; default model is **en_core_web_sm**, it downloads automatically
          during DeepPavlov installation
@@ -52,14 +52,14 @@ class StreamSpacyTokenizer(Component):
         stopwords: a list of stopwords that should be ignored during tokenizing/lemmatizing
          and ngrams creation
         model: a loaded spacy model
-        tokenizer: a loaded spacy tokenizer from the model
+        tokenizer: a loaded spacy tokenizer from the :attr:`model`
         batch_size: a batch size for inner spacy multi-threading
         ngram_range: size of ngrams to create; only unigrams are returned by default
         lemmas: whether to perform lemmatizing or not
         n_threads: a number of threads for inner spacy multi-threading
-        lowercase: whether to perform lowercasing or not; is performed by default by ``_tokenize``
-         and ``_lemmatize`` methods
-        alphas_only: whether to filter out non-alpha tokens; is performed by default by ``_filter``
+        lowercase: whether to perform lowercasing or not; is performed by default by :meth:`_tokenize`
+         and :meth:`_lemmatize` methods
+        alphas_only: whether to filter out non-alpha tokens; is performed by default by :meth:`_filter`
          method
 
     """
@@ -97,7 +97,7 @@ class StreamSpacyTokenizer(Component):
             a batch of lists of tokens/lemmas; or a batch of detokenized strings
 
         Raises:
-            TypeError: If the first element of `batch` is neither List, nor str.
+            TypeError: If the first element of ``batch`` is neither List, nor str.
 
         """
         if isinstance(batch[0], str):
@@ -120,7 +120,7 @@ class StreamSpacyTokenizer(Component):
             batch_size: a batch size for inner spacy multi-threading
             n_threads: a number of threads for inner spacy multi-threading
             lowercase: whether to perform lowercasing or not; is performed by default by
-             ``_tokenize`` and ``_lemmatize`` methods
+             :meth:`_tokenize` and :meth:`_lemmatize` methods
 
         Yields:
             list of lists of ngramized tokens or list of detokenized strings
@@ -213,7 +213,7 @@ class StreamSpacyTokenizer(Component):
         """Redefine a list of stopwords.
 
         Args:
-            stopwords: a list of stopwords to set
+            stopwords: a list of stopwords
 
         Returns:
             None
