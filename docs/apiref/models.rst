@@ -18,5 +18,5 @@ Concrete Model classes.
    models.preprocessors <models/preprocessors>
    models.ranking <models/tfidf_ranker>
    models.spelling_correction <models/spelling_correction>
-   models.squad <models/context_question_answering>
+   models.squad <models/squad>
    models.tokenizers <models/tokenizers>
