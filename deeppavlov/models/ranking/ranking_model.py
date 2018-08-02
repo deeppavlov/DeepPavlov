@@ -28,8 +28,6 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.ranking.ranking_network import RankingNetwork
 from deeppavlov.models.ranking.insurance_dict import InsuranceDict
-from deeppavlov.models.ranking.sber_faq_dict import SberFAQDict
-from deeppavlov.models.ranking.ubuntu_v2_dict import UbuntuV2Dict
 from deeppavlov.models.ranking.emb_dict import EmbDict
 from deeppavlov.core.common.log import get_logger
 from typing import Union, List, Tuple, Dict
@@ -94,14 +92,6 @@ class RankingModel(NNModel):
             dict_parameter_names = list(inspect.signature(InsuranceDict.__init__).parameters)
             dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
             self.dict = InsuranceDict(**dict_parameters)
-        elif self.vocab_name == "sber_faq":
-            dict_parameter_names = list(inspect.signature(SberFAQDict.__init__).parameters)
-            dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
-            self.dict = SberFAQDict(**dict_parameters)
-        elif self.vocab_name == "ubuntu_v2":
-            dict_parameter_names = list(inspect.signature(UbuntuV2Dict.__init__).parameters)
-            dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
-            self.dict = UbuntuV2Dict(**dict_parameters)
 
         embdict_parameter_names = list(inspect.signature(EmbDict.__init__).parameters)
         embdict_parameters = {par: opt[par] for par in embdict_parameter_names if par in opt}
