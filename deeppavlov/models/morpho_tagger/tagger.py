@@ -94,7 +94,7 @@ class MorphoTaggerWrapper(NNModel):
         log.info('[saving model to {}]'.format(path))
         self._net.save(path)
 
-    def train_on_batch(self, x: list, y: list):
+    def train_on_batch(self, *args):
         """ Perform training of the network given the dataset data
 
         Args:
@@ -104,9 +104,13 @@ class MorphoTaggerWrapper(NNModel):
         Returns:
 
         """
-        self._net.train_on_batch(x, y, **self.train_parameters)
+        if len(args) > 2:
+            data, labels = [list(x) for x in args[:-1]], list(args[-1])
+        else:
+            data, labels = args
+        self._net.train_on_batch(data, labels, **self.train_parameters)
 
-    def __call__(self, x_batch, **kwargs):
+    def __call__(self, *x_batch, **kwargs):
         """
         Predicts answers on batch elements.
 
@@ -114,5 +118,7 @@ class MorphoTaggerWrapper(NNModel):
             instance: a batch to predict answers on
 
         """
+        # if len(args) > 0:
+        #     x_batch = [x_batch] + list(args)
         return self._net.predict_on_batch(x_batch, **kwargs)
 
