@@ -22,6 +22,9 @@ class RankingNetwork(metaclass=TfModelMeta):
     """Class to perform context-response matching with neural networks.
 
     Args:
+        toks_num: A size of `tok2int` vocabulary to build embedding layer.
+        chars_num: A size of `char2int` vocabulary to build character-level embedding layer.
+
         learning_rate: Learning rate.
         device_num: A number of a device to perform model training on if several devices are available in a system.
         seed: Random seed.
@@ -59,7 +62,7 @@ class RankingNetwork(metaclass=TfModelMeta):
                  chars_num: int,
                  emb_dict: EmbDict,
                  max_sequence_length: int,
-                 max_token_length: int,
+                 max_token_length: int = None,
                  learning_rate: float = 1e-3,
                  device_num: int = 0,
                  seed: int = None,

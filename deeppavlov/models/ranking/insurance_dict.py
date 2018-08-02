@@ -12,8 +12,9 @@ class InsuranceDict(RankingDict):
                  tok_dynamic_batch=False, char_dynamic_batch=False):
 
         super().__init__(save_path, load_path,
-                         max_sequence_length, padding, truncating,
-                         max_token_length, token_embeddings, char_embeddings,
+                         max_sequence_length, max_token_length,
+                         padding, truncating,
+                         token_embeddings, char_embeddings,
                          char_pad, char_trunc,
                          tok_dynamic_batch, char_dynamic_batch)
 

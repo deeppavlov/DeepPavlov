@@ -85,6 +85,7 @@ class RankingModel(NNModel):
         self.upd_embs = update_embeddings
         self.online_update= online_update
         self.interact_pred_num = interact_pred_num
+        self.train_now = train_now
         self.vocab_name = vocab_name
 
         opt = deepcopy(kwargs)

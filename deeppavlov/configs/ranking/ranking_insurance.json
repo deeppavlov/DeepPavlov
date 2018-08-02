@@ -27,7 +27,7 @@
         "train_now": true,
         "vocab_name": "insurance",
         "vocabs_path": "insurance_data/insuranceQA-master/V1",
-        "embeddings": "fasttext",
+        "embeddings": "random",
         "embeddings_path": "insurance_embeddings/wiki.en.bin",
         "embedding_dim": 300,
         "use_matrix": false,

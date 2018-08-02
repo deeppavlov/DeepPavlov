@@ -203,8 +203,7 @@ class RankingIterator(DataLearningIterator):
         Returns:
             one negative response for each context in a batch.
         """
-        sample_candidates = self.sample_candidates
-        if sample_candidates:
+        if self.sample_candidates_pool:
             negative_response_data = [random.choice(el["neg_pool"])
                                       for el in context_response_data]
         else:
