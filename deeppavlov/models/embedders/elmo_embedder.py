@@ -115,8 +115,9 @@ class ELMoEmbedder(Component):
         Returns:
             A batch of ELMo embeddings.
         """
-        if batch and batch[0]:
-            return batch
+        if not (batch and batch[0]):
+            empty_vec = np.zeros(self.dim, dtype=np.float32)
+            return [empty_vec] if mean else [[empty_vec]]
 
         tokens_length = [len(batch_line) for batch_line in batch]
         tokens_length_max = max(tokens_length)
