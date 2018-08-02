@@ -1,18 +1,17 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer
@@ -48,6 +47,9 @@ def stacked_cnn(units: tf.Tensor,
         training_ph: boolean placeholder determining whether is training phase now or not.
             It is used only for batch normalization to determine whether to use
             current batch average (std) or memory stored average (std)
+        add_l2_losses: whether to add l2 losses on network kernels to
+                tf.GraphKeys.REGULARIZATION_LOSSES or not
+
     Returns:
         units: tensor at the output of the last convolutional layer
     """
@@ -124,7 +126,7 @@ def bi_rnn(units: tf.Tensor,
 
         Args:
             units: a tensorflow tensor with dimensionality [None, n_tokens, n_features]
-            n_hidden_list: list with number of hidden units at the ouput of each layer
+            n_hidden: list with number of hidden units at the ouput of each layer
             seq_lengths: length of sequences for different length sequences in batch
                 can be None for maximum length as a length for every sample in the batch
             cell_type: 'lstm' or 'gru'
@@ -132,8 +134,7 @@ def bi_rnn(units: tf.Tensor,
                 to initialize the hidden states of the network or use just zeros
             use_peepholes: whether to use peephole connections (only 'lstm' case affected)
             name: what variable_scope to use for the network parameters
-            add_l2_losses: whether to add l2 losses on network kernels to
-                tf.GraphKeys.REGULARIZATION_LOSSES or not
+
         Returns:
             units: tensor at the output of the last recurrent layer
                 with dimensionality [None, n_tokens, n_hidden_list[-1]]
@@ -551,7 +552,7 @@ def cudnn_gru(units, n_hidden, n_layers=1, trainable_initial_states=False,
 
 
 def cudnn_compatible_gru(units, n_hidden, n_layers=1, trainable_initial_states=False,
-              seq_lengths=None, input_initial_h=None, name='cudnn_gru', reuse=False):
+                         seq_lengths=None, input_initial_h=None, name='cudnn_gru', reuse=False):
     """ CuDNN Compatible GRU implementation.
         It should be used to load models saved with CudnnGRUCell to run on CPU.
 
@@ -586,7 +587,7 @@ def cudnn_compatible_gru(units, n_hidden, n_layers=1, trainable_initial_states=F
         initial_h = input_initial_h or init_h
 
         with tf.variable_scope('cudnn_gru', reuse=reuse):
-            single_cell = lambda: tf.contrib.cudnn_rnn.CudnnCompatibleGRUCell(n_hidden)
+            def single_cell(): return tf.contrib.cudnn_rnn.CudnnCompatibleGRUCell(n_hidden)
             cell = tf.nn.rnn_cell.MultiRNNCell([single_cell() for _ in range(n_layers)])
 
             units = tf.transpose(units, (1, 0, 2))
@@ -609,7 +610,7 @@ def cudnn_gru_wrapper(units, n_hidden, n_layers=1, trainable_initial_states=Fals
 
     if GPU_AVAILABLE:
         return cudnn_gru(units, n_hidden, n_layers, trainable_initial_states,
-              seq_lengths, input_initial_h, name, reuse)
+                         seq_lengths, input_initial_h, name, reuse)
 
     log.info('\nWarning! tf.contrib.cudnn_rnn.CudnnCompatibleGRUCell is used. '
              'It is okay for inference mode, but '
@@ -618,11 +619,11 @@ def cudnn_gru_wrapper(units, n_hidden, n_layers=1, trainable_initial_states=Fals
              )
 
     return cudnn_compatible_gru(units, n_hidden, n_layers, trainable_initial_states,
-              seq_lengths, input_initial_h, name, reuse)
+                                seq_lengths, input_initial_h, name, reuse)
 
 
-def cudnn_lstm(units, n_hidden, n_layers=1, trainable_initial_states=None, seq_lengths=None, initial_h=None, initial_c=None,
-               name='cudnn_lstm', reuse=False):
+def cudnn_lstm(units, n_hidden, n_layers=1, trainable_initial_states=None, seq_lengths=None, initial_h=None,
+               initial_c=None, name='cudnn_lstm', reuse=False):
     """ Fast CuDNN LSTM implementation
 
         Args:
@@ -724,7 +725,7 @@ def cudnn_compatible_lstm(units, n_hidden, n_layers=1, trainable_initial_states=
         initial_c = initial_c or init_c
 
         with tf.variable_scope('cudnn_lstm', reuse=reuse):
-            single_cell = lambda: tf.contrib.cudnn_rnn.CudnnCompatibleLSTMCell(n_hidden)
+            def single_cell(): return tf.contrib.cudnn_rnn.CudnnCompatibleLSTMCell(n_hidden)
 
             cell = tf.nn.rnn_cell.MultiRNNCell([single_cell() for _ in range(n_layers)])
 
@@ -755,7 +756,7 @@ def cudnn_lstm_wrapper(units, n_hidden, n_layers=1, trainable_initial_states=Non
 
     if GPU_AVAILABLE:
         return cudnn_lstm(units, n_hidden, n_layers, trainable_initial_states,
-              seq_lengths, initial_h, initial_c, name, reuse)
+                          seq_lengths, initial_h, initial_c, name, reuse)
 
     log.info('\nWarning! tf.contrib.cudnn_rnn.CudnnCompatibleLSTMCell is used. '
              'It is okay for inference mode, but '
@@ -764,7 +765,7 @@ def cudnn_lstm_wrapper(units, n_hidden, n_layers=1, trainable_initial_states=Non
              )
 
     return cudnn_compatible_lstm(units, n_hidden, n_layers, trainable_initial_states,
-              seq_lengths, initial_h, initial_c, name, reuse)
+                                 seq_lengths, initial_h, initial_c, name, reuse)
 
 
 def cudnn_bi_gru(units,
