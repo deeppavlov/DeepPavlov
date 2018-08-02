@@ -33,24 +33,25 @@ log = get_logger(__name__)
 class FasttextEmbedder(Component, Serializable):
     """
     Class implements fastText embedding model
+
+    Args:
+        load_path: path where to load pre-trained embedding model from
+        save_path: is not used because model is not trainable; therefore, it is unchangable
+        dim: dimensionality of fastText model
+        pad_zero: whether to pad samples or not
+        **kwargs: additional arguments
+
     Attributes:
         model: fastText model instance
         tok2emb: dictionary with already embedded tokens
         dim: dimension of embeddings
         pad_zero: whether to pad sequence of tokens with zeros or not
         load_path: path with pre-trained fastText binary model
-
     """
     def __init__(self, load_path: [str, Path], save_path: [str, Path] = None, dim: int = 100, pad_zero: bool = False,
                  **kwargs) -> None:
         """
         Initialize embedder with given parameters
-        Args:
-            load_path: path where to load pre-trained embedding model from
-            save_path: is not used because model is not trainable; therefore, it is unchangable
-            dim: dimensionality of fastText model
-            pad_zero: whether to pad samples or not
-            **kwargs: additional arguments
         """
         super().__init__(save_path=save_path, load_path=load_path)
         self.tok2emb = {}
@@ -113,6 +114,7 @@ class FasttextEmbedder(Component, Serializable):
     def __iter__(self) -> Generator:
         """
         Iterate over all words from fastText model vocabulary
+
         Returns:
             iterator
         """

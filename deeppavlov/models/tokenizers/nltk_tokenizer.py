@@ -31,12 +31,12 @@ with RedirectedPrints():
 class NLTKTokenizer(Component):
     """Class for splitting texts on tokens using NLTK
 
-    Attributes:
-        tokenizer: tokenizer instance from nltk.tokenizers
-
     Args:
         tokenizer: tokenization mode for `nltk.tokenize`
         download: whether to download nltk data
+
+    Attributes:
+        tokenizer: tokenizer instance from nltk.tokenizers
     """
     def __init__(self, tokenizer: str = "wordpunct_tokenize", download: bool = False,
                  *args, **kwargs):

@@ -3,8 +3,7 @@ dataset_readers
 Concrete DatasetReader classes.
 
 .. autoclass:: deeppavlov.dataset_readers.basic_classification_reader.BasicClassificationDatasetReader
-
-   .. automethod:: read
+   :members:
 
 .. automodule:: deeppavlov.dataset_readers.dstc2_reader
    :members:
