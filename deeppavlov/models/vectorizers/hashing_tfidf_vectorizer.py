@@ -148,7 +148,7 @@ class HashingTfIdfVectorizer(Component, Serializable):
                 col_id = []
             yield hashes, values, col_id
 
-    def get_count_matrix(self, row: List[int], col: List[int], data: List[int], size) \
+    def get_count_matrix(self, row: List[int], col: List[int], data: List[int], size: int) \
             -> Sparse:
         """Get count matrix.
 
