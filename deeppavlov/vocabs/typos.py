@@ -34,15 +34,16 @@ class StaticDictionary:
     """Trie vocabulary used in spelling correction algorithms
 
     Args:
-        data_dir: directory where the built trie will be stored
-        dictionary_name:
-        raw_dictionary_path:
+        data_dir: path to the directory where the built trie will be stored. Relative paths are interpreted as
+            relative to pipeline's data directory
+        dictionary_name: logical name of the dictionary
+        raw_dictionary_path: path to the source file with the list of words
 
     Attributes:
-        dict_name:
-        alphabet:
-        words_set:
-        words_trie:
+        dict_name: logical name of the dictionary
+        alphabet: set of all the characters used in this dictionary
+        words_set: set of all the words
+        words_trie: trie structure of all the words
     """
 
     def __init__(self, data_dir: [Path, str]='', *args, dictionary_name: str='dictionary', **kwargs):
@@ -100,6 +101,18 @@ class StaticDictionary:
 
 @register('russian_words_vocab')
 class RussianWordsVocab(StaticDictionary):
+    """Implementation of :class:`~deeppavlov.vocabs.typos.StaticDictionary` that builds data from https://github.com/danakt/russian-words/
+
+    Args:
+        data_dir: path to the directory where the built trie will be stored. Relative paths are interpreted as
+            relative to pipeline's data directory
+
+    Attributes:
+        dict_name: logical name of the dictionary
+        alphabet: set of all the characters used in this dictionary
+        words_set: set of all the words
+        words_trie: trie structure of all the words
+    """
 
     def __init__(self, data_dir: [Path, str]='', *args, **kwargs):
         kwargs['dictionary_name'] = 'russian_words_vocab'
@@ -115,6 +128,19 @@ class RussianWordsVocab(StaticDictionary):
 
 @register('wikitionary_100K_vocab')
 class Wiki100KDictionary(StaticDictionary):
+    """Implementation of :class:`~deeppavlov.vocabs.typos.StaticDictionary` that builds data
+    from `Wikitionary <https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists#Project_Gutenberg>`__
+
+    Args:
+        data_dir: path to the directory where the built trie will be stored. Relative paths are interpreted as
+            relative to pipeline's data directory
+
+    Attributes:
+        dict_name: logical name of the dictionary
+        alphabet: set of all the characters used in this dictionary
+        words_set: set of all the words
+        words_trie: trie structure of all the words
+    """
     def __init__(self, data_dir: [Path, str]='', *args, **kwargs):
         kwargs['dictionary_name'] = 'wikipedia_100K_vocab'
         super().__init__(data_dir, *args, **kwargs)

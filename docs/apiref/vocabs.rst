@@ -9,3 +9,6 @@ Concrete Vocab classes.
    :members:
 
    .. automethod:: __call__
+
+.. automodule:: deeppavlov.vocabs.typos
+   :members:
