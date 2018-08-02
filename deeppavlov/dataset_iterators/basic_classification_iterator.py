@@ -29,6 +29,18 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
     """
     Class gets data dictionary from DatasetReader instance, merge fields if necessary, split a field if necessary
 
+    Args:
+        data: dictionary of data with fields "train", "valid" and "test" (or some of them)
+        fields_to_merge: list of fields (out of ``"train", "valid", "test"``) to merge
+        merged_field: name of field (out of ``"train", "valid", "test"``) to which save merged fields
+        field_to_split: name of field (out of ``"train", "valid", "test"``) to split
+        split_fields: list of fields (out of ``"train", "valid", "test"``) to which save splitted field
+        split_proportions: list of corresponding proportions for splitting
+        seed: random seed
+        shuffle: whether to shuffle examples in batches
+        *args: arguments
+        **kwargs: arguments
+
     Attributes:
         data: dictionary of data with fields "train", "valid" and "test" (or some of them)
     """
@@ -40,17 +52,6 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
         """
         Initialize dataset using data from DatasetReader,
         merges and splits fields according to the given parameters
-        Args:
-            data: dictionary of data with fields "train", "valid" and "test" (or some of them)
-            fields_to_merge: list of fields (out of ``"train", "valid", "test"``) to merge
-            merged_field: name of field (out of ``"train", "valid", "test"``) to which save merged fields
-            field_to_split: name of field (out of ``"train", "valid", "test"``) to split
-            split_fields: list of fields (out of ``"train", "valid", "test"``) to which save splitted field
-            split_proportions: list of corresponding proportions for splitting
-            seed: random seed
-            shuffle: whether to shuffle examples in batches
-            *args: arguments
-            **kwargs: arguments
         """
         super().__init__(data, seed=seed, shuffle=shuffle)
 
