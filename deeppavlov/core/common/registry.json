@@ -23,6 +23,7 @@
   "dstc2_reader": "deeppavlov.dataset_readers.dstc2_reader:DSTC2DatasetReader",
   "dstc2_v2_reader": "deeppavlov.dataset_readers.dstc2_reader:DSTC2Version2DatasetReader",
   "dstc_slotfilling": "deeppavlov.models.slotfill.slotfill:DstcSlotFillingNetwork",
+  "elmo": "deeppavlov.models.embedders.elmo_embedder:ELMoEmbedder",
   "emb_mat_assembler": "deeppavlov.models.preprocessors.assemble_embeddins_matrix:EmbeddingsMatrixAssembler",
   "fasttext": "deeppavlov.models.embedders.fasttext_embedder:FasttextEmbedder",
   "featurized_tracker": "deeppavlov.models.go_bot.tracker:FeaturizedTracker",
