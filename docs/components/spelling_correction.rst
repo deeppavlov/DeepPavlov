@@ -50,8 +50,7 @@ levenshtein_corrector
 ---------------------
 
 :class:`This component <deeppavlov.models.spelling_correction.levenshtein.LevenshteinSearcherComponent>` finds all the
-candidates in a static dictionary
-on set Damerau-Levenshtein distance.
+candidates in a static dictionary on a set Damerau-Levenshtein distance.
 It can separate one token into two but it will not work the other way
 around.
 
@@ -171,11 +170,9 @@ Comparison
 
 We compared our pipelines with
 `Yandex.Speller <http://api.yandex.ru/speller/>`__,
-`JamSpell <https://github.com/bakwc/JamSpell>`__ that was trained on
-biggest part of our Russian texts corpus that JamSpell could handle and
+`JamSpell <https://github.com/bakwc/JamSpell>`__  and
 `PyHunSpell <https://github.com/blatinier/pyhunspell>`__
-on the `test
-set <http://www.dialog-21.ru/media/3838/test_sample_testset.txt>`__
+on the `test set <http://www.dialog-21.ru/media/3838/test_sample_testset.txt>`__
 for the `SpellRuEval
 competition <http://www.dialog-21.ru/en/evaluation/2016/spelling_correction/>`__
 on Automatic Spelling Correction for Russian:
