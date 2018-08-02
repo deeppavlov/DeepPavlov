@@ -681,8 +681,8 @@ def cudnn_lstm(units, n_hidden, n_layers=1, trainable_initial_states=None, seq_l
 def cudnn_compatible_lstm(units, n_hidden, n_layers=1, trainable_initial_states=None, seq_lengths=None, initial_h=None,
                           initial_c=None, name='cudnn_lstm', reuse=False):
 
-    """ CuDNN Compatible GRU implementation.
-        It should be used to load models saved with CudnnGRUCell to run on CPU.
+    """ CuDNN Compatible LSTM implementation.
+        It should be used to load models saved with CudnnLSTMCell to run on CPU.
 
         Args:
             units: tf.Tensor with dimensions [B x T x F], where
