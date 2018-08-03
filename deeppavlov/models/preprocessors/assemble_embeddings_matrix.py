@@ -5,6 +5,7 @@ from sklearn.decomposition import PCA
 
 @register('emb_mat_assembler')
 class EmbeddingsMatrixAssembler:
+    """Assembles matrix of embeddings."""
     def __init__(self, embedder, vocab, character_level=False, emb_dim=None, estimate_by_n=10000, *args, **kwargs):
         if emb_dim is None:
             emb_dim = embedder.dim

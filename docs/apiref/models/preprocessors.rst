@@ -9,11 +9,15 @@ deeppavlov.models.preprocessors
 
     .. automethod:: __call__
 
+.. autoclass:: deeppavlov.models.preprocessors.assemble_embeddings_matrix.EmbeddingsMatrixAssembler
+
 .. autoclass:: deeppavlov.models.preprocessors.capitalization.LowercasePreprocessor
 
 .. autoclass:: deeppavlov.models.preprocessors.mask.Mask
 
 .. autoclass:: deeppavlov.models.preprocessors.one_hotter.OneHotter
+
+.. autoclass:: deeppavlov.models.preprocessors.russian_lemmatizer.PymorphyRussianLemmatizer
 
 .. autoclass:: deeppavlov.models.preprocessors.str_lower.StrLower
 
