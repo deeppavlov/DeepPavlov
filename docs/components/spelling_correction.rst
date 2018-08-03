@@ -160,9 +160,9 @@ Provided pipelines use `KenLM <http://kheafield.com/code/kenlm/>`__ to
 process language models, so if you want to build your own,
 we suggest you consult its website. We do also provide our own
 language models for
-`english <http://lnsigo.mipt.ru/export/lang_models/en_wiki_no_punkt.arpa.binary.gz>`__
+`english <http://files.deeppavlov.ai/lang_models/en_wiki_no_punkt.arpa.binary.gz>`__
 (5.5GB) and
-`russian <http://lnsigo.mipt.ru/export/lang_models/ru_wiyalen_no_punkt.arpa.binary.gz>`__
+`russian <http://files.deeppavlov.ai/lang_models/ru_wiyalen_no_punkt.arpa.binary.gz>`__
 (3.1GB) languages.
 
 Comparison

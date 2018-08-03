@@ -91,7 +91,7 @@
     },
     "download": [
       {
-        "url": "http://lnsigo.mipt.ru/export/datasets/dstc2_v2.tar.gz",
+        "url": "http://files.deeppavlov.ai/datasets/dstc2_v2.tar.gz",
         "subdir": "dstc2"
       }
     ]

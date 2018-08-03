@@ -59,7 +59,7 @@ class DSTC2DatasetReader(DatasetReader):
             - unified punctuation for bot responses
     """
 
-    url = 'http://lnsigo.mipt.ru/export/datasets/dstc2_v2.tar.gz'
+    url = 'http://files.deeppavlov.ai/datasets/dstc2_v2.tar.gz'
 
     @staticmethod
     def _data_fname(datatype):

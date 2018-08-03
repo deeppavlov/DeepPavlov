@@ -14,7 +14,7 @@
         "in": [
           "tokens"
         ],
-        "spec": "http://lnsigo.mipt.ru/export/deeppavlov_data/elmo_ru-twitter_2013-01_2018-04_600k_steps.tar.gz",
+        "spec": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-twitter_2013-01_2018-04_600k_steps.tar.gz",
         "out": [
           "tokens_emb"
         ]

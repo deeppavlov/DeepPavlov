@@ -76,9 +76,9 @@
   },
   "metadata": {
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/morpho_tagger.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/datasets/UD2.0_source/hu.tar.gz",
+        "url": "http://files.deeppavlov.ai/datasets/UD2.0_source/hu.tar.gz",
         "subdir": "UD2.0_source/hu"
       }
     ],

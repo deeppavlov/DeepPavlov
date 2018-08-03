@@ -104,5 +104,5 @@ class Dstc2NerDatasetIterator(DataLearningIterator):
 
     @staticmethod
     def _build_slot_vals(slot_vals_json_path='data/'):
-        url = 'http://lnsigo.mipt.ru/export/datasets/dstc_slot_vals.json'
+        url = 'http://files.deeppavlov.ai/datasets/dstc_slot_vals.json'
         download(slot_vals_json_path, url)

@@ -43,7 +43,7 @@ class ErrorModel(Estimator):
 
     Attributes:
         costs: logarithmic probabilities of character sequences replacements
-        dictionary: list of all the correct words in the form of trie structure
+        dictionary: a :class:`~deeppavlov.vocabs.typos.StaticDictionary` object
         window: maximum context window size
         candidates_count: maximum number of replacement candidates to return for every token in the input
     """

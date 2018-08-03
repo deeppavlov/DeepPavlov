@@ -104,7 +104,7 @@ class DstcSlotFillingNetwork(Component, Serializable):
         return entities, slots
 
     def _download_slot_vals(self):
-        url = 'http://lnsigo.mipt.ru/export/datasets/dstc_slot_vals.json'
+        url = 'http://files.deeppavlov.ai/datasets/dstc_slot_vals.json'
         download(self.save_path, url)
 
     def save(self, *args, **kwargs):

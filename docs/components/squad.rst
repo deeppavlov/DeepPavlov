@@ -83,7 +83,7 @@ SQuAD
 ~~~~~
 
 Pretrained model is available and can be downloaded:
-http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_1.2.tar.gz
+http://files.deeppavlov.ai/deeppavlov_data/squad_model_1.2.tar.gz
 
 It achieves ~80 F-1 score and ~71 EM on dev set. Results of the most
 recent solutions could be found on `SQuAD
@@ -93,6 +93,6 @@ SDSJ Task B
 ~~~~~~~~~~~
 
 Pretrained model is available and can be downloaded:
-http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_ru_1.2.tar.gz
+http://files.deeppavlov.ai/deeppavlov_data/squad_model_ru_1.2.tar.gz
 
 It achieves ~80 F-1 score and ~60 EM on dev set.

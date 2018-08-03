@@ -100,11 +100,11 @@
       },
       "download": [
       {
-        "url": "http://lnsigo.mipt.ru/export/datasets/dstc2_v2.tar.gz",
+        "url": "http://files.deeppavlov.ai/datasets/dstc2_v2.tar.gz",
         "subdir": "dstc2"
       },
       {
-        "url": "http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "embeddings"
       }
     ]

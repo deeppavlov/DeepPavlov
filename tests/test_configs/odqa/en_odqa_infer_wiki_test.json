@@ -50,7 +50,7 @@
         ],
         "data_dir": "odqa",
         "shuffle": false,
-        "data_url": "http://lnsigo.mipt.ru/export/datasets/wikipedia/wiki_test.db"
+        "data_url": "http://files.deeppavlov.ai/datasets/wikipedia/wiki_test.db"
       },
       {
         "config_path": "../deeppavlov/configs/squad/squad.json",
@@ -75,9 +75,9 @@
       "server_utils": "ODQA"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/datasets/wikipedia/wiki_test.tar.gz",
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/odqa_test.tar.gz",
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_1.1.tar.gz"
+      "http://files.deeppavlov.ai/datasets/wikipedia/wiki_test.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/odqa_test.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/squad_model_1.1.tar.gz"
     ]
   }
 }
