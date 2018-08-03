@@ -19,6 +19,10 @@ deeppavlov.models.preprocessors
 
 .. autoclass:: deeppavlov.models.preprocessors.russian_lemmatizer.PymorphyRussianLemmatizer
 
+.. autoclass:: deeppavlov.models.preprocessors.assemble_embeddings_matrix.RandomEmbeddingsMatrix
+
+.. autoclass:: deeppavlov.models.preprocessors.sanitizer.Sanitizer
+
 .. autoclass:: deeppavlov.models.preprocessors.str_lower.StrLower
 
     .. automethod:: __call__
