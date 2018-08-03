@@ -24,7 +24,7 @@ class Template(metaclass=ABCMeta):
         return cls(s)
 
 
-class BaseTemplate(Template):
+class DefaultTemplate(Template):
 
     def __init__(self, text=""):
         self.text = text
