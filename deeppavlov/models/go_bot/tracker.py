@@ -12,14 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from abc import ABCMeta, abstractmethod
 import numpy as np
 
-from deeppavlov.core.models.component import Component
-from deeppavlov.core.common.registry import register
+
+class Tracker(metaclass=ABCMeta):
+
+    @abstractmethod
+    def reset_state():
+        pass
+
+    @abstractmethod
+    def update_state():
+        pass
+
+    @abstractmethod
+    def get_state():
+        pass
+
+    @abstractmethod
+    def get_features():
+        pass
 
 
-@register('default_tracker')
-class DefaultTracker(Component):
+class DefaultTracker(Tracker):
 
     def __init__(self, slot_names):
         self.slot_names = list(slot_names)
@@ -62,12 +78,11 @@ class DefaultTracker(Component):
                 feats[i] = 1.
         return feats
 
-    def __call__(self):
+    def get_features(self):
         return self.curr_feats
 
 
-@register('featurized_tracker')
-class FeaturizedTracker(Component):
+class FeaturizedTracker(Tracker):
 
     def __init__(self, slot_names, *args, **kwargs):
         self.slot_names = list(slot_names)
@@ -136,5 +151,5 @@ class FeaturizedTracker(Component):
                 feats[i] = 1.
         return feats
 
-    def __call__(self):
+    def get_features(self):
         return self.curr_feats

@@ -21,6 +21,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.models.go_bot.tracker import Tracker
 from deeppavlov.models.go_bot.network import GoalOrientedBotNetwork
 import deeppavlov.models.go_bot.templates as templ
 
@@ -34,8 +35,8 @@ class GoalOrientedBot(NNModel):
                  template_path: str,
                  network_parameters: Dict[str, Any],
                  tokenizer: Component,
-                 tracker: Component,
-                 template_type: str = "BaseTemplate",
+                 tracker: Tracker,
+                 template_type: str = "DefaultTemplate",
                  database: Component = None,
                  api_call_action: str = None,  # TODO: make it unrequired
                  bow_embedder: Component = None,
@@ -177,7 +178,7 @@ class GoalOrientedBot(NNModel):
             if self.debug:
                 log.debug("Slot vals: {}".format(self.slot_filler([tokens])))
 
-        state_features = self.tracker()
+        state_features = self.tracker.get_features()
 
         # Other features
         result_matches_state = 0.

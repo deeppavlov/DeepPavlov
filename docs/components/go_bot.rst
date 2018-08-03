@@ -83,7 +83,7 @@ Config parameters:
 -  ``name`` always equals to ``"go_bot"``
 -  ``word_vocab`` — vocabulary of tokens from context utterances (:doc:`deeppavlov.core.data.vocab:DefaultVocabulary </apiref/core/data>` is recommended)
 -  ``template_path`` — map from actions to text templates for response generation
--  ``template_type`` — type of templates to use (``"BaseTemplate"`` by default) *(optional)*
+-  ``template_type`` — type of templates to use (``"DefaultTemplate"`` by default) *(optional)*
 -  ``database`` – database that will be used during model inference to make "api\_call" action and
    get ``db_result`` *(optional)*
 
@@ -317,7 +317,7 @@ Templates
 '''''''''
 
 You should provide a maping from actions to text templates in the following format (and set ``template_type`` to
-``"BaseTemplate"``, DSTC2 uses an extension of templates –``"DualTemplate"``, you will probably not need it):
+``"DefaultTemplate"``, DSTC2 uses an extension of templates –``"DualTemplate"``, you will probably not need it):
 ``action_template``, where filled slots in templates should start with "#" and mustn't contain whitespaces.
 
 For example,
