@@ -34,7 +34,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
         target_vocab: vocabulary of bot response tokens.
         start_of_sequence_token: token that defines start of input sequence.
         end_of_sequence_token: token that defines end of input sequence and start of output sequence.
-        debug: flag indicating debug mode for logging.
+        debug: whether to display debug output.
         **kwargs: parameters passed to parent :class:`~deeppavlov.core.models.nn_model.NNModel` class.
     """
     def __init__(self,
@@ -46,7 +46,6 @@ class Seq2SeqGoalOrientedBot(NNModel):
                  debug: bool = False,
                  save_path: str = None,
                  **kwargs) -> None:
-
         super().__init__(save_path=save_path, **kwargs)
 
         self.network = network

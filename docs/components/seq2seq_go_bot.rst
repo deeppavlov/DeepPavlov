@@ -1,19 +1,25 @@
-Sequence-To-Sequence Dialogue Bot for goal-oriented task
+Sequence-To-Sequence Dialogue Bot For Goal-Oriented Task
 ========================================================
 
-Dialogue agent is able to handle multi-domain data.
-The model is end-to-end differentiable and does not need to explicitly
-model dialogue state or belief trackers.
+A goal-oriented bot based on a rnn that encodes user utterance and generates 
+response in a sequence-to-sequence manner. For network architecture is similar
+to `[2] <#references>`__.
 
-We also used a new Stanford NLP Group released dataset of 3,031
-dialogues `[2] <#references>`__ that are grounded through
-underlying knowledge bases and span three distinct tasks in the in-car
-personal assistant space:
-calendar scheduling, weather information retrieval, and
-point-of-interest navigation.
+The dialogue agent is able to handle multi-domain data. The model is
+end-to-end differentiable and does not need to explicitly model dialogue 
+state or belief trackers.
 
-Here is a simple example of interaction with a trained dialogue bot (can
-be downloaded with ``deeppavlov/download.py``:
+We also used a new Stanford NLP Group released dataset of 3,031 dialogues
+`[1] <#references>`__ that are grounded through underlying knowledge bases
+and span three distinct tasks in the in-car personal assistant space:
+
+    - calendar scheduling,
+    - weather information retrieval and
+    - point-of-interest navigation.
+
+For more info on the dataset see :class:`~deeppavlov.dataset_readers.kvret_reader.KvretDatasetReader`.
+
+Here is a simple example of interaction with a trained dialogue bot (available for download):
 
 ::
 
@@ -36,68 +42,45 @@ be downloaded with ``deeppavlov/download.py``:
 
 Usage
 -----
+ 
+To interact with a pretrained seq2seq\_go\_bot model using commandline run:
 
-Requirements
-^^^^^^^^^^^^
+.. code:: bash 
+ 
+    python -m deeppavlov interact <path_to_config> [-d] 
+ 
+where ``<path_to_config>`` is one of the :config:`provided config files <seq2seq_go_bot>`. 
 
-To use a seq2seq\_go\_bot model you should have a pretrained
-goal-oriented bot model
+You can also train your own model by running:
 
--  config
-   ``deeppavlov/configs/seq2seq_go_bot/bot_kvret_infer.json``
-   is recommended to be used in inference mode
-     
--  config
-   ``deeppavlov/configs/seq2seq_go_bot/bot_kvret.json``
-   is recommended to be used in train mode
+.. code:: bash 
+ 
+    python -m deeppavlov train <path_to_config> [-d] 
 
-Config parameters:
-^^^^^^^^^^^^^^^^^^
+The ``-d`` parameter downloads:
+    - data required to train your model (embeddings, etc.);
+    - a pretrained model when you use :config:`configs/seq2seq_go_bot/bot_kvret_infer.json <seq2seq_go_bot/bot_kvret_infer.json>` or :config:`configs/seq2seq_go_bot/bot_kvret.json <seq2seq_go_bot/bot_kvret.json>`.
 
--  ``name`` always equals to ``"seq2seq_go_bot"``
--  ``source_vocab`` — vocabulary of tokens from context (source)
-   utterances
--  ``target_vocab`` — vocabulary of tokens from response (target)
-   utterances
--  ``start_of_sequence_token`` — token corresponding to the start of
-   sequence during decoding
--  ``end_of_sequence_token`` — token corresponding to the end of
-   sequence during decoding
--  ``bow_encoder`` — one of bag-of-words encoders from
-   ``deeppavlov.models.encoders.bow``
-   module
--  ``name`` — encoder name
--  other arguments specific to your encoder
--  ``debug`` — whether to display debug output (defaults to ``false``)
-   *(optional)*
--  ``network`` — reccurent network that handles encoder-decoder
-   mechanism
+After downloading required files you can use the configs in your python code.
 
-    -  ``name`` equals to ``"seq2seq_go_bot_nn"``
-    -  ``learning_rate`` — learning rate during training
-    -  ``target_start_of_sequence_index`` — index of
-       ``start_of_sequence_token`` in decoder vocabulary
-    -  ``target_end_of_sequence_index`` — index of ``end_of_sequence_token``
-       in decoder vocabulary
-    -  ``source_vocab_size`` — size of encoder token vocabulary (size of
-       ``source_vocab`` is recommended)
-    -  ``target_vocab_size`` — size of decoder token vocabulary (size of
-       ``target_vocab`` is recommended)
-    -  ``hidden_size`` — LSTM hidden state size equal for encoder and
-       decoder
+Configs
+^^^^^^^
 
-Usage example
-^^^^^^^^^^^^^
+Config :config:`configs/seq2seq_go_bot/bot_kvret_infer.json <seq2seq_go_bot/bot_kvret_infer.json>` is recommended to be used for inference (interaction) of a pretrained model.
 
--  To infer from a pretrained model with config path equal to
-   ``path/to/config.json``:
+Config :config:`configs/seq2seq_go_bot/bot_kvret.json <seq2seq_go_bot/bot_kvret.json>` is recommended to be used for training a new model.
+
+Python example
+^^^^^^^^^^^^^^
+
+To infer from a pretrained model with config path equal to ``<path_to_config>``:
 
 .. code:: python
 
     from deeppavlov.core.commands.infer import build_model_from_config
     from deeppavlov.core.common.file import read_json
 
-    CONFIG_PATH = 'path/to/config.json'
+    CONFIG_PATH = '<path_to_config>'
     model = build_model_from_config(read_json(CONFIG_PATH))
 
     utterance = ""
@@ -105,21 +88,15 @@ Usage example
         print(">> " + model([utterance])[0])
         utterance = input(':: ')
 
--  To interact via command line use
-   ``deeppavlov/deep.py`` script:
+Config parameters:
+^^^^^^^^^^^^^^^^^^
 
-.. code:: bash
-
-    cd deeppavlov
-    python3 deep.py interact path/to/config.json
+To configure your own pipelines that contain a ``"seq2seq_go_bot"`` component, refer to documentation for :class:`~deeppavlov.models.seq2seq_go_bot.bot.Seq2SeqGoalOrientedBot` and :class:`~deeppavlov.models.seq2seq_go_bot.network.Seq2SeqGoalOrientedBotNetwork` classes.
 
 References
 ----------
 
-[1] [A New Multi-Turn, Multi-Domain, Task-Oriented Dialogue
-Dataset](\ https://nlp.stanford.edu/blog/a-new-multi-turn-multi-domain-task-oriented-dialogue-dataset/)
+[1] `A New Multi-Turn, Multi-Domain, Task-Oriented Dialogue Dataset - 2017 <https://nlp.stanford.edu/blog/a-new-multi-turn-multi-domain-task-oriented-dialogue-dataset/>`_
 
-[2] [Mihail Eric, Lakshmi Krishnan, Francois Charette, and Christopher
-D. Manning, Key-Value Retrieval Networks for Task-Oriented Dialogue –
-2017](\ https://arxiv.org/abs/1705.05414.pdf)
+[2] `Mihail Eric, Lakshmi Krishnan, Francois Charette, and Christopher D. Manning, "Key-Value Retrieval Networks for Task-Oriented Dialogue – 2017 <https://arxiv.org/abs/1705.05414>`_
 
