@@ -17,10 +17,10 @@ Config
 ======
 
 Default ranker config for **English** language is
-`configs/ranking/en_ranker_tfidf_wiki.json <https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/configs/ranking/en_ranker_tfidf_wiki.json>`__.
+`ranking/en_ranker_tfidf_wiki.json <https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/configs/ranking/en_ranker_tfidf_wiki.json>`__.
 
 Default ranker config for **Russian** language is
-`configs/ranking/ru_ranker_tfidf_wiki.json <https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/configs/ranking/ru_ranker_tfidf_wiki.json>`__.
+`ranking/ru_ranker_tfidf_wiki.json <https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/configs/ranking/ru_ranker_tfidf_wiki.json>`__.
 
 Config Structure
 ----------------
@@ -162,6 +162,17 @@ size **hash_size x number of documents** which is
 **2**24 x 1463888**. This matrix is built with
 :class:`~deeppavlov.models.vectorizers.hashing_tfidf_vectorizer.HashingTfIdfVectorizer` class.
 class.
+
+Comparison
+==========
+
+Scores for **TF-IDF Ranker** skill:
+
++-------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+----------------+
+| Skill                                           | Config                                                                                                                                   | Recall (top 5) |
++=================================================+====================================================================================+=====================================================+================+
+| **TF-IDF Ranker English**                       |  `en_ranker_infer_wiki.json <https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/configs/ranking/en_ranker_tfidf_wiki.json>`__ | 0.756          |
++-------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+----------------+
 
 
 References
