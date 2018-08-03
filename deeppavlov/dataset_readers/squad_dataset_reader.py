@@ -34,8 +34,8 @@ class SquadDatasetReader(DatasetReader):
     Downloads dataset files and prepares train/valid split.
     """
 
-    url_squad = 'http://lnsigo.mipt.ru/export/datasets/squad-v1.1.tar.gz'
-    url_sber_squad = 'http://lnsigo.mipt.ru/export/datasets/sber_squad-v1.1.tar.gz'
+    url_squad = 'http://files.deeppavlov.ai/datasets/squad-v1.1.tar.gz'
+    url_sber_squad = 'http://files.deeppavlov.ai/datasets/sber_squad-v1.1.tar.gz'
 
     def read(self, dir_path: str, dataset: str = 'SQuAD', *args, **kwargs) -> Dict[str, Dict[str, Any]]:
         """

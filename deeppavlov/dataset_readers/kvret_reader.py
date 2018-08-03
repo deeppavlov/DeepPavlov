@@ -37,7 +37,7 @@ class KvretDatasetReader(DatasetReader):
     For details see https://nlp.stanford.edu/blog/a-new-multi-turn-multi-domain-task-oriented-dialogue-dataset/.
     """
 
-    url = 'http://lnsigo.mipt.ru/export/datasets/kvret_public.tar.gz'
+    url = 'http://files.deeppavlov.ai/datasets/kvret_public.tar.gz'
 
     @staticmethod
     def _data_fname(datatype):

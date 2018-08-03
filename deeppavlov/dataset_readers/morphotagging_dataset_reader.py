@@ -87,7 +87,7 @@ class MorphotaggerDatasetReader(DatasetReader):
     """Class to read training datasets in UD format
     """
 
-    URL = 'http://lnsigo.mipt.ru/export/datasets/UD2.0_source/'
+    URL = 'http://files.deeppavlov.ai/datasets/UD2.0_source/'
 
     def read(self, data_path: Union[List, str], language: Union[str, None] = None,
              data_types: Union[List[str], None] = None, **kwargs) -> Dict[str, List]:

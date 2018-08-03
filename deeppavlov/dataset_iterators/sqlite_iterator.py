@@ -26,7 +26,7 @@ from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 
 logger = get_logger(__name__)
 
-DB_URL = 'http://lnsigo.mipt.ru/export/datasets/wikipedia/enwiki.db'
+DB_URL = 'http://files.deeppavlov.ai/datasets/wikipedia/enwiki.db'
 
 
 @register('sqlite_iterator')

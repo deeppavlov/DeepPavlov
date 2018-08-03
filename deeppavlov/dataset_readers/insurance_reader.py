@@ -41,7 +41,7 @@ class InsuranceReader(DatasetReader):
             data_path: A path to a folder where dataset files are stored.
         """
         if not is_done(Path(data_path)):
-            download_decompress(url="http://lnsigo.mipt.ru/export/datasets/insuranceQA-master.zip",
+            download_decompress(url="http://files.deeppavlov.ai/datasets/insuranceQA-master.zip",
                                 download_path=data_path)
             mark_done(data_path)
 

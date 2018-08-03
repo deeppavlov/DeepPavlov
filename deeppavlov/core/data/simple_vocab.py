@@ -29,6 +29,7 @@ log = get_logger(__name__)
 
 @register('simple_vocab')
 class SimpleVocabulary(Estimator):
+    """Implements simple vocabulary."""
     def __init__(self,
                  special_tokens=tuple(),
                  max_tokens=2**30,
@@ -160,6 +161,7 @@ class SimpleVocabulary(Estimator):
 
 @register('char_vocab')
 class CharacterVocab(SimpleVocabulary):
+    """Implements character vocabulary."""
     def fit(self, tokens):
         chars = chain(*tokens)
         super().fit(chars)
@@ -178,6 +180,7 @@ class CharacterVocab(SimpleVocabulary):
 
 @register('dialog_vocab')
 class DialogVocab(SimpleVocabulary):
+    """Implements dialog vocabulary."""
     def fit(self, utterances):
         tokens = chain(*utterances)
         super().fit(tokens)
@@ -192,4 +195,3 @@ class DialogVocab(SimpleVocabulary):
         if self._pad_with_zeros:
             indices_batch = zero_pad_char(indices_batch)
         return indices_batch
-

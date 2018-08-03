@@ -3,7 +3,7 @@
     "name": "sqlite_iterator",
     "data_dir": "odqa",
     "shuffle": false,
-    "data_url": "http://lnsigo.mipt.ru/export/datasets/wikipedia/enwiki.db"
+    "data_url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.db"
   },
   "chainer": {
     "in": [
@@ -59,8 +59,8 @@
       "server_utils": "Ranker"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/datasets/wikipedia/enwiki.tar.gz",
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/en_odqa.tar.gz"
+      "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/en_odqa.tar.gz"
     ]
   }
 }

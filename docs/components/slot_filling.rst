@@ -202,7 +202,7 @@ The last part of the config is metadata:
           "telegram_utils": "NERModel"
         },
         "download": [
-          "http://lnsigo.mipt.ru/export/deeppavlov_data/slotfill_dstc2.tar.gz"
+          "http://files.deeppavlov.ai/deeppavlov_data/slotfill_dstc2.tar.gz"
         ]
       }
 

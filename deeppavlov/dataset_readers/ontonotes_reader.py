@@ -23,7 +23,7 @@ from deeppavlov.core.common.registry import register
 
 @register('ontonotes_reader')
 class OntonotesReader(DatasetReader):
-    URL = 'http://lnsigo.mipt.ru/export/datasets/ontonotes_senna.pckl'
+    URL = 'http://files.deeppavlov.ai/datasets/ontonotes_senna.pckl'
 
     def read(self, data_path, file_name: str='ontonotes_senna.pckl', provide_senna_pos=False, provide_senna_ner=False):
         path = Path(data_path).resolve() / file_name
