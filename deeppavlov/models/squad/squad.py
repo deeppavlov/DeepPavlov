@@ -50,6 +50,9 @@ class SquadModel(TFModel):
             learning_rate_patience: number of epochs without score improvements to decay learning rate
             grad_clip: gradient clipping value
             weight_decay: weight decay value
+
+        Attributes:
+
         """
 
     def __init__(self, word_emb: np.ndarray, char_emb: np.ndarray, context_limit: int = 450, question_limit: int = 150,
@@ -254,6 +257,19 @@ class SquadModel(TFModel):
 
     def train_on_batch(self, c_tokens: np.ndarray, c_chars: np.ndarray, q_tokens: np.ndarray, q_chars: np.ndarray,
                        y1s: Tuple[List[int], ...], y2s: Tuple[List[int], ...]) -> float:
+        """ This method is called by trainer to make one training step on one batch.
+
+        Args:
+            c_tokens: batch of tokenized contexts
+            c_chars: batch of tokenized contexts, each token split on chars
+            q_tokens: batch of tokenized questions
+            q_chars: batch of tokenized questions, each token split on chars
+            y1s: batch of ground truth answer start positions
+            y2s: batch of ground truth answer end positions
+
+        Returns:
+            value of loss function on batch
+        """
         # TODO: filter examples in batches with answer position greater self.context_limit
         # select one answer from list of correct answers
         y1s = list(map(lambda x: x[0], y1s))
@@ -264,6 +280,17 @@ class SquadModel(TFModel):
 
     def __call__(self, c_tokens: np.ndarray, c_chars: np.ndarray, q_tokens: np.ndarray, q_chars: np.ndarray,
                  *args, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
+        """ Predicts answer start and end positions by given context and question.
+
+        Args:
+            c_tokens: batch of tokenized contexts
+            c_chars: batch of tokenized contexts, each token split on chars
+            q_tokens: batch of tokenized questions
+            q_chars: batch of tokenized questions, each token split on chars
+
+        Returns:
+            answer_start and answer_end positions
+        """
         if any(np.sum(c_tokens, axis=-1) == 0) or any(np.sum(q_tokens, axis=-1) == 0):
             logger.info('SQuAD model: Warning! Empty question or context was found.')
             noanswers = -np.ones(shape=(c_tokens.shape[0]), dtype=np.int32)
@@ -273,7 +300,15 @@ class SquadModel(TFModel):
         yp1, yp2 = self.sess.run([self.yp1, self.yp2], feed_dict=feed_dict)
         return yp1, yp2
 
-    def process_event(self, event_name: str, data):
+    def process_event(self, event_name: str, data) -> None:
+        """ Processes events sent by trainer.
+
+            Implements learning rate decay.
+        Args:
+            event_name: event_name sent by trainer
+            data: number of examples, epochs, metrics sent by trainer
+
+        """
         if event_name == "after_validation":
             if data['impatience'] > self.last_impatience:
                 self.lr_impatience += 1

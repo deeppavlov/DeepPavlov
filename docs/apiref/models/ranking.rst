@@ -3,7 +3,7 @@ deeppavlov.models.ranking
 
 Ranking classes.
 
-.. automodule:: deeppavlov.models.ranking
+.. automodule:: deeppavlov.models.ranking.ranking_model
 
 .. autoclass:: deeppavlov.models.ranking.ranking_model.RankingModel
 
