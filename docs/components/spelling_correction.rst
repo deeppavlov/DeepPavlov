@@ -2,7 +2,7 @@ Automatic spelling correction pipelines
 =======================================
 
 We provide two types of pipelines for spelling correction:
-`levenshtein_corrector <#levenshtein_corrector>`__
+`levenshtein_corrector <#levenshtein-corrector>`__
 uses simple Damerau-Levenshtein distance to find correction candidates
 and `brillmoore <#brillmoore>`__
 uses statistics based error model for it. In both cases correction
