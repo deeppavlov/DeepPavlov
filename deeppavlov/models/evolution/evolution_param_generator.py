@@ -37,6 +37,20 @@ class ParamsEvolution:
         c. mutation with given mutation rate p_mutation (probability to mutate)
             according to given mutation power sigma
             (current mutation power is randomly from -sigma to sigma)
+
+    Args:
+        population_size: number of individuums per generation
+        p_crossover: probability to cross over for current replacement
+        crossover_power: part of EVOLVING parents parameters to exchange for offsprings
+        p_mutation: probability of mutation for current replacement
+        mutation_power: allowed percentage of mutation
+        key_model_to_evolve: binary flag that should be inserted into the dictionary
+                    with main model in the basic config (to determine save and load paths that will be changed)
+        seed: random seed for initialization
+        train_partition: integer number of train data parts
+        elitism_with_weights: whether to save elite models with weigths or without
+        **kwargs: basic config with parameters
+
     Attributes:
         basic_config: dictionary with initial evolutionary config
         main_model_path: list of keys and/or integers (for list) with relative path to main model (subdictionary)
@@ -58,7 +72,6 @@ class ParamsEvolution:
         n_fiton_dicts: number of dictionaries that can be "fitted on"
         evolve_metric_optimization: whether to maximize or minimize considered metric
                 Set of Values: ``"maximize", "minimize"``
-
     """
 
     def __init__(self,
@@ -72,18 +85,6 @@ class ParamsEvolution:
                  **kwargs):
         """
         Initialize evolution with random population
-        Args:
-            population_size: number of individuums per generation
-            p_crossover: probability to cross over for current replacement
-            crossover_power: part of EVOLVING parents parameters to exchange for offsprings
-            p_mutation: probability of mutation for current replacement
-            mutation_power: allowed percentage of mutation
-            key_model_to_evolve: binary flag that should be inserted into the dictionary
-                        with main model in the basic config (to determine save and load paths that will be changed)
-            seed: random seed for initialization
-            train_partition: integer number of train data parts
-            elitism_with_weights: whether to save elite models with weigths or without
-            **kwargs: basic config with parameters
         """
 
         self.basic_config = deepcopy(kwargs)

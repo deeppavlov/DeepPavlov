@@ -97,13 +97,13 @@ def prettify(sent: Union[str, List[str]], tags: List[str], return_string: bool =
 
 @register('tag_output_prettifier')
 class TagOutputPrettifier(Component):
-    """A class wrapper to ``prettify`` function.
+    """Wrapper to :func:`~deeppavlov.models.morpho_tagger.common.` function.
 
-        Args:
-            return_string: whether to return a list of strings or a single string
-            begin: a string to append in the beginning
-            end: a string to append in the end
-            sep: separator between word analyses
+    Args:
+        return_string: whether to return a list of strings or a single string
+        begin: a string to append in the beginning
+        end: a string to append in the end
+        sep: separator between word analyses
     """
 
     def __init__(self, return_string: bool=True, begin: str="",

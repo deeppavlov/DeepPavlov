@@ -43,6 +43,28 @@ class KerasClassificationModel(KerasModel):
     """
     Class implements Keras model for classification task for multi-class multi-labeled data.
 
+    Args:
+        text_size: maximal length of text in tokens (words),
+                longer texts are cutted,
+                shorter ones are padded by zeros (pre-padding)
+        model_name: particular method of this class to initialize model configuration
+        optimizer: function name from keras.optimizers
+        loss: function name from keras.losses.
+        lear_rate: learning rate for optimizer.
+        lear_rate_decay: learning rate decay for optimizer
+        last_layer_activation: parameter that determines activation function after classification layer.
+                For multi-label classification use `sigmoid`,
+                otherwise, `softmax`.
+        confident_threshold: boundary value of probability for converting probabilities to labels.
+                The value is from 0 to 1.
+                If all probabilities are lower than confident_threshold,
+                label with the highest probability is assigned.
+                If `last_layer_activation` is `softmax` (not multi-label classification), assign to 1.
+        classes: list of classes names presented in the dataset
+                (in config it is determined as keys of vocab over `y`)
+        embedder: embedder
+        tokenizer: tokenizer
+
     Attributes:
         opt: dictionary with all model parameters
         tokenizer: tokenizer class instance
@@ -66,27 +88,6 @@ class KerasClassificationModel(KerasModel):
         """
         Initialize and train vocabularies, initializes embedder, tokenizer, and then initialize model using parameters
         from opt dictionary (from config), if model is being initialized from saved.
-        Args:
-            text_size (int): maximal length of text in tokens (words),
-                    longer texts are cutted,
-                    shorter ones are padded by zeros (pre-padding)
-            model_name (str): particular method of this class to initialize model configuration
-            optimizer (str): function name from keras.optimizers
-            loss (str): function name from keras.losses.
-            lear_rate (float): learning rate for optimizer.
-            lear_rate_decay (float): learning rate decay for optimizer
-            last_layer_activation (str): parameter that determines activation function after classification layer.
-                    For multi-label classification use `sigmoid`,
-                    otherwise, `softmax`.
-            confident_threshold (float): boundary value of probability for converting probabilities to labels.
-                    The value is from 0 to 1.
-                    If all probabilities are lower than confident_threshold,
-                    label with the highest probability is assigned.
-                    If `last_layer_activation` is `softmax` (not multi-label classification), assign to 1.
-            classes (list): list of classes names presented in the dataset
-                    (in config it is determined as keys of vocab over `y`)
-            embedder (FasttextEmbedder): embedder
-            tokenizer (NLTKTokenizer): tokenizer
         """
         super().__init__(text_size=text_size, model_name=model_name,
                          optimizer=optimizer, loss=loss,
@@ -138,7 +139,7 @@ class KerasClassificationModel(KerasModel):
         """
         Change changable parameters from saved model to given ones.
         Args:
-            kwargs (dict): dictionary of new parameters
+            kwargs: dictionary of new parameters
 
         Returns:
             None
@@ -164,8 +165,7 @@ class KerasClassificationModel(KerasModel):
 
     def texts2vec(self, sentences: List[List[str]]) -> np.ndarray:
         """
-        Convert texts to vector representations using embedder (self.fasttext_model)
-                and padding up to self.opt["text_size"] tokens
+        Convert texts to vector representations using embedder and padding up to self.opt["text_size"] tokens
         Args:
             sentences: list of lists of tokens
 
