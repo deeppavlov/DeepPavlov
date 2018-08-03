@@ -10,4 +10,3 @@ Concrete Model classes.
    :caption: Models
 
    models/*
-git
