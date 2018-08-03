@@ -34,38 +34,40 @@ log = get_logger(__name__)
 @register('go_bot_rnn')
 class GoalOrientedBotNetwork(TFModel):
     """
-    The ``GoalOrientedBotNetwork`` is a recurrent network that handles dialogue policy management.
+    The ``GoalOrientedBotNetwork`` is a recurrent network that handles dialogue policy
+    management.
+    Inputs features of an utterance and predicts label of a bot action
+    (classification task).
+
+    An LSTM with a dense layer for input features and a dense layer for it's output.
+    Softmax is used as an output activation function.
 
     Parameters:
-        optimizer: One of tf.train.Optimizer subclass as a string. Default: ``'AdamOptimizer'``.
-        learning_rate: Learning rate during training.
-        end_learning_rate: If set, learning rate starts from ``learning rate`` value and decays polynomially
-            to the value of ``end_learning_rate``. Default: ``None``.
-        decay_steps: Number of steps for learning rate to decay. Default: ``1000``.
-        decay_power: Power used to calculate learning rate decay for polynomial strategy. Default: ``1.0``.
+        hidden_size: size of rnn hidden layer.
+        action_size: size of rnn output (equals to number of bot actions).
+        obs_size: input features' size (must be equal to sum of output sizes of
+            ``bow_embedder``, ``embedder``, ``intent_classifier``, ``tracker.num_features``
+            plus size of context features(=6) and ``action_size``).
+        learning_rate: learning rate during training.
+        end_learning_rate: if set, learning rate starts from ``learning rate`` value and
+            decays polynomially to the value of ``end_learning_rate``.
+        decay_steps: number of steps for learning rate to decay.
+        decay_power: power used to calculate learning rate decay for polynomial strategy.
         dropout_rate: Probability of dropping out. Default: ``0.0``.
-        l2_reg_coef: L2 regularization coefficient (applied to input and output layer). Default: ``0.0``.
-        hidden_dim: Hidden state dimension.
-        dense_size: LSTM input size.
-        obs_size: Input features size (must be equal to the dimension of concatenated
-            ``bow_embedder`` + ``embedder`` + ``intent_classifier`` + ``tracker`` + context features + action size).
-            Could be calculated automatically if not set (default).
-        action_size: Output action size. Could be calculated automatically if not set (default).
-        attention_mechanism: Describes attention applied to network inputs. Default: ``None``.
-
-            * ``type`` – type of attention mechanism, one of (``'general'``, ``'bahdanau'``,
-              ``'light_general'``, ``'light_bahdanau'``, ``'cs_general'``, ``'cs_bahdanau'``).
-            * ``hidden_size`` – attention hidden state size.
-            * ``max_num_tokens`` – maximum number of input tokens used in attention.
-            * ``depth`` – number of averages used in constrained attentions
+        l2_reg_coef: l2 regularization weight (applied to input and output layer).
+        dense_size: rnn input size.
+        optimizer: one of tf.train.Optimizer subclasses as a string.
+        attention_mechanism: describes attention applied to embeddings of input tokens.
+            
+            * **type** – type of attention mechanism, possible values are ``'general'``, ``'bahdanau'``, ``'light_general'``, ``'light_bahdanau'``, ``'cs_general'`` and ``'cs_bahdanau'``.
+            * **hidden_size** – attention hidden state size.
+            * **max_num_tokens** – maximum number of input tokens.
+            * **depth** – number of averages used in constrained attentions
               (``'cs_bahdanau'`` or ``'cs_general'``).
-            * ``action_as_key`` – whether to use action from previous timestep as key
-              to attention. Default: ``false``.
-            * ``intent_as_key`` – use utterance intents as attention key or not. Default: ``false``.
-            * ``projected_align`` – whether to use output projection. Default: ``false``.
-
-    Todo:
-        * it is better to reorder parameters (required first)
+            * **action_as_key** – whether to use action from previous timestep as key
+              to attention.
+            * **intent_as_key** – use utterance intents as attention key or not.
+            * **projected_align** – whether to use output projection.
     """
     GRAPH_PARAMS = ["hidden_size", "action_size", "dense_size", "obs_size",
                     "attention_mechanism"]
@@ -81,8 +83,8 @@ class GoalOrientedBotNetwork(TFModel):
                  dropout_rate: float = 0.,
                  l2_reg_coef: float = 0.,
                  dense_size: int = None,
-                 attention_mechanism: Dict = None,
                  optimizer: str = 'AdamOptimizer',
+                 attention_mechanism: Dict = None,
                  **kwargs):
         end_learning_rate = end_learning_rate or learning_rate
         dense_size = dense_size or hidden_size
@@ -99,8 +101,8 @@ class GoalOrientedBotNetwork(TFModel):
             'decay_power': decay_power,
             'dropout_rate': dropout_rate,
             'l2_reg_coef': l2_reg_coef,
-            'attention_mechanism': attention_mechanism,
-            'optimizer': optimizer
+            'optimizer': optimizer,
+            'attention_mechanism': attention_mechanism
         }
 
         # initialize parameters
