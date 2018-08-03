@@ -43,6 +43,8 @@ Networks" <https://www.microsoft.com/en-us/research/publication/mrc/>`__)
 and its `implementation <https://github.com/HKUST-KnowComp/R-Net>`__ by
 Wenxuan Zhou.
 
+Model documentation: :class:`~deeppavlov.models.squad.squad.SquadModel`
+
 Configuration
 -------------
 
