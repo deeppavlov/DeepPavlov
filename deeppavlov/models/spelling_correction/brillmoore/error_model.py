@@ -37,7 +37,7 @@ class ErrorModel(Estimator):
     Based on An Improved Error Model for Noisy Channel Spelling Correction by Eric Brill and Robert C. Moore
 
     Args:
-        dictionary: list of all the correct words in the form of trie structure
+        dictionary: a :class:`~deeppavlov.vocabs.typos.StaticDictionary` object
         window: maximum context window size
         candidates_count: maximum number of replacement candidates to return for every token in the input
 
