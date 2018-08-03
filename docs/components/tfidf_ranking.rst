@@ -17,10 +17,10 @@ Config
 ======
 
 Default ranker config for **English** language is
-`ranking/en_ranker_tfidf_wiki.json <https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/configs/ranking/en_ranker_tfidf_wiki.json>`__.
+:config:`ranking/en_ranker_tfidf_wiki.json <ranking/en_ranker_tfidf_wiki.json>`
 
 Default ranker config for **Russian** language is
-`ranking/ru_ranker_tfidf_wiki.json <https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/configs/ranking/ru_ranker_tfidf_wiki.json>`__.
+:config:`ranking/ru_ranker_tfidf_wiki.json <ranking/ru_ranker_tfidf_wiki.json>`
 
 Config Structure
 ----------------
@@ -122,8 +122,7 @@ and is built by the following steps:
 #. Download a Wikipedia dump file. We took the latest
    `enwiki dump <https://dumps.wikimedia.org/enwiki/20180201>`__
    (from 2018-02-11)
-#. Unpack and extract the articles with
-   `WikiExtractor <https://github.com/attardi/wikiextractor>`__
+#. Unpack and extract the articles with `WikiExtractor`_
    (with ``--json``, ``--no-templates``, ``--filter_disambig_pages``
    options)
 #. Build a database with the help of `DrQA
@@ -168,11 +167,11 @@ Comparison
 
 Scores for **TF-IDF Ranker** skill:
 
-+-------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+----------------+
-| Skill                                           | Config                                                                                                                                   | Recall (top 5) |
-+=================================================+====================================================================================+=====================================================+================+
-| **TF-IDF Ranker English**                       |  `en_ranker_infer_wiki.json <https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/configs/ranking/en_ranker_tfidf_wiki.json>`__ | 0.756          |
-+-------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+----------------+
++-------------------------------------------------+--------------------------------------------------------------------------+----------------+
+| Skill                                           | Config                                                                   | Recall (top 5) |
++=================================================+==========================================================================+================+
+| **TF-IDF Ranker English**                       |  :config:`en_ranker_tfidf_wiki.json <ranking/en_ranker_tfidf_wiki.json>` | 0.756          |
++-------------------------------------------------+--------------------------------------------------------------------------+----------------+
 
 
 References
@@ -181,4 +180,5 @@ References
 .. target-notes::
 
 .. _`DrQA`: https://github.com/facebookresearch/DrQA/
+.. _`WikiExtractor`: https://github.com/attardi/wikiextractor
 
