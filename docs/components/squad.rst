@@ -53,6 +53,8 @@ Running model
 
 **Tensorflow-1.8 with GPU support is required** to run this model.
 
+.. _reader_training:
+
 Training
 --------
 

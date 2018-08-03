@@ -68,6 +68,8 @@ Running the Ranker
 
     Training and inferring the ranker requires ~16 GB RAM.
 
+.. _ranker_training:
+
 Training
 --------
 

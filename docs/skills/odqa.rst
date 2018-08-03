@@ -35,28 +35,33 @@ Running ODQA
 
 **About 16 GB of RAM required**
 
+.. note::
+
+    TensorFlow 1.8 with GPU support is required to run this skill.
+
+    About 16 GB of RAM required.
+
 Training
 --------
 
-The ODQA ranker and ODQA reader should be trained separately.
-Read about training the **ranker** :doc:`here </components/tfidf_ranking>`.
-Read about training the **reader** in our separate `reader
-tutorial <https://github.com/deepmipt/DeepPavlov/tree/master/deeppavlov/models/squad>`__.
+**ODQA ranker** and **ODQA reader** should be trained separately.
+Read about training the **ranker** :ref:`here <ranker_training>`.
+Read about training the **reader** in our separate :doc:`reader tutorial </apiref/models/go_bot>`.
 
 Interacting
 -----------
 
-When interacted, the ODQA model returns a plain answer to the user's
+When interacting, the **ODQA** skill returns a plain answer to the user's
 question.
 
-Run the following to interact **English** ODQA:
+Run the following to interact with **English ODQA**:
 
 .. code:: bash
 
     cd deeppavlov/
     python deep.py interact deeppavlov/configs/odqa/en_odqa_infer_wiki.json -d
 
-Run the following to interact the ranker:
+Run the following to interact with **Russian ODQA**:
 
 .. code:: bash
 
@@ -66,10 +71,9 @@ Run the following to interact the ranker:
 Configuration
 =============
 
-The ODQA configs suit only model inferring purposes. The `ranker
-config <#the-ranker-config>`__ should be used for ranker training
-and the :doc:`reader config </components/squad>`
-should be used for reader training.
+The **ODQA** configs suit only model inferring purposes. For training purposes use
+the :ref:`ranker configs <ranker_training>` and the :ref:`reader configs <reader_training>`
+accordingly.
 
 References
 ==========
