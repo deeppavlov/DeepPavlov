@@ -82,8 +82,7 @@ def read_infile(infile: str, word_column: int = WORD_COLUMN, pos_column: int = P
 
 @register('morphotagger_dataset_reader')
 class MorphotaggerDatasetReader(DatasetReader):
-    """Class to read training datasets in UD format
-    """
+    """Class to read training datasets in UD format"""
 
     URL = 'http://files.deeppavlov.ai/datasets/UD2.0_source/'
 

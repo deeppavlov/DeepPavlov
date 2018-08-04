@@ -30,31 +30,28 @@ logger = get_logger(__name__)
 
 @register('squad_model')
 class SquadModel(TFModel):
-    """ SquadModel predicts answer start and end position in given context by given question.
+    """
+    SquadModel predicts answer start and end position in given context by given question.
 
-        High level architecture:
-            Word embeddings -> Contextual embeddings -> Question-Context Attention -> Self-attention -> Pointer Network
+    High level architecture:
+    Word embeddings -> Contextual embeddings -> Question-Context Attention -> Self-attention -> Pointer Network
 
-        Parameters:
-            word_emb: pretrained word embeddings
-            char_emb: pretrained char embeddings
-            context_limit: max context length in tokens
-            question_limit: max question length in tokens
-            char_limit: max number of characters in token
-            char_hidden_size: hidden size of charRNN
-            encoder_hidden_size: hidden size of encoder RNN
-            attention_hidden_size: size of projection layer in attention
-            keep_prob: dropout keep probability
-            learning_rate: initial learning rate
-            min_learning_rate: min learning rate, is used in learning rate decay
-            learning_rate_patience: number of epochs without score improvements to decay learning rate
-            grad_clip: gradient clipping value
-            weight_decay: weight decay value
-
-        Attributes:
-
-        """
-
+    Parameters:
+        word_emb: pretrained word embeddings
+        char_emb: pretrained char embeddings
+        context_limit: max context length in tokens
+        question_limit: max question length in tokens
+        char_limit: max number of characters in token
+        char_hidden_size: hidden size of charRNN
+        encoder_hidden_size: hidden size of encoder RNN
+        attention_hidden_size: size of projection layer in attention
+        keep_prob: dropout keep probability
+        learning_rate: initial learning rate
+        min_learning_rate: min learning rate, is used in learning rate decay
+        learning_rate_patience: number of epochs without score improvements to decay learning rate
+        grad_clip: gradient clipping value
+        weight_decay: weight decay value
+    """
     def __init__(self, word_emb: np.ndarray, char_emb: np.ndarray, context_limit: int = 450, question_limit: int = 150,
                  char_limit: int = 16, train_char_emb: bool = True, char_hidden_size: int = 100,
                  encoder_hidden_size: int = 75, attention_hidden_size: int = 75, keep_prob: float = 0.7,
@@ -257,7 +254,8 @@ class SquadModel(TFModel):
 
     def train_on_batch(self, c_tokens: np.ndarray, c_chars: np.ndarray, q_tokens: np.ndarray, q_chars: np.ndarray,
                        y1s: Tuple[List[int], ...], y2s: Tuple[List[int], ...]) -> float:
-        """ This method is called by trainer to make one training step on one batch.
+        """
+        This method is called by trainer to make one training step on one batch.
 
         Args:
             c_tokens: batch of tokenized contexts
@@ -280,7 +278,8 @@ class SquadModel(TFModel):
 
     def __call__(self, c_tokens: np.ndarray, c_chars: np.ndarray, q_tokens: np.ndarray, q_chars: np.ndarray,
                  *args, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
-        """ Predicts answer start and end positions by given context and question.
+        """
+        Predicts answer start and end positions by given context and question.
 
         Args:
             c_tokens: batch of tokenized contexts
@@ -301,13 +300,12 @@ class SquadModel(TFModel):
         return yp1, yp2
 
     def process_event(self, event_name: str, data) -> None:
-        """ Processes events sent by trainer.
+        """
+        Processes events sent by trainer. Implements learning rate decay.
 
-            Implements learning rate decay.
         Args:
             event_name: event_name sent by trainer
             data: number of examples, epochs, metrics sent by trainer
-
         """
         if event_name == "after_validation":
             if data['impatience'] > self.last_impatience:

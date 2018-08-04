@@ -27,7 +27,8 @@ log = get_logger(__name__)
 
 @register('dstc_slotfilling')
 class DstcSlotFillingNetwork(Component, Serializable):
-    def __init__(self, threshold=0.8, **kwargs):
+    """Slot filling for DSTC2 task with neural network"""
+    def __init__(self, threshold: float = 0.8, **kwargs):
         super().__init__(**kwargs)
         self.threshold = threshold
         # Check existance of file with slots, slot values, and corrupted (misspelled) slot values
@@ -116,4 +117,3 @@ class DstcSlotFillingNetwork(Component, Serializable):
             self._download_slot_vals()
         with open(self.load_path, encoding='utf8') as f:
             self._slot_vals = json.load(f)
-

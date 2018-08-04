@@ -5,6 +5,8 @@ Concrete DatasetReader classes.
 .. autoclass:: deeppavlov.dataset_readers.basic_classification_reader.BasicClassificationDatasetReader
    :members:
 
+.. autoclass:: deeppavlov.dataset_readers.conll2003_reader.Conll2003DatasetReader
+
 .. automodule:: deeppavlov.dataset_readers.dstc2_reader
    :members:
 
@@ -16,6 +18,8 @@ Concrete DatasetReader classes.
    :members:
 
 .. autoclass:: deeppavlov.dataset_readers.morphotagging_dataset_reader.MorphotaggerDatasetReader
+
+.. autoclass:: deeppavlov.dataset_readers.ontonotes_reader.OntonotesReader
 
 .. autoclass:: deeppavlov.dataset_readers.squad_dataset_reader.SquadDatasetReader
    :members:

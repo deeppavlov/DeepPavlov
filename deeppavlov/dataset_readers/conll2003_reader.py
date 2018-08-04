@@ -7,7 +7,7 @@ from deeppavlov.core.common.registry import register
 
 @register('conll2003_reader')
 class Conll2003DatasetReader(DatasetReader):
-
+    """Class to read training datasets in CONLL2003 format"""
     def download_conll(self, dir_path):
         download_decompress('http://files.deeppavlov.ai/deeppavlov_data/conll2003_v2.tar.gz', dir_path)
 
