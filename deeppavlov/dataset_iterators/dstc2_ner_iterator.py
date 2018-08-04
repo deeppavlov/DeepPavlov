@@ -1,22 +1,21 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import logging
 import json
 from random import Random
+from typing import List, Tuple
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
@@ -28,15 +27,17 @@ logger = logging.getLogger(__name__)
 
 @register('dstc2_ner_iterator')
 class Dstc2NerDatasetIterator(DataLearningIterator):
+    """
+    Iterates over data for DSTC2 NER task. Dataset takes a dict with fields 'train', 'test', 'valid'. A list of samples
+    (pairs x, y) is stored in each field.
 
-    def __init__(self, data, dataset_path, seed=None, shuffle=False):
-        r""" Dataset takes a dict with fields 'train', 'test', 'valid'. A list of samples (pairs x, y) is stored
-             in each field.
-
-             Args:
-                data: list of (x, y) pairs. Each pair is a sample from the dataset. x as well as y can be a tuple
-                    of different input features.
-        """
+    Args:
+        data: list of (x, y) pairs, samples from the dataset: x as well as y can be a tuple of different input features.
+        dataset_path: path to dataset
+        seed: value for random seed
+        shuffle: whether to shuffle the data
+    """
+    def __init__(self, data: List[Tuple], dataset_path: str, seed: int = None, shuffle: bool = False):
         self.shuffle = shuffle
         self.random = Random(seed)
         # TODO: include slot vals to dstc2.tar.gz
