@@ -103,6 +103,9 @@ ENV/
 #IDEA
 .idea/
 
+#Atom IDE
+.ftpconfig
+
 #GIT
 .git/
 
