@@ -138,6 +138,7 @@ class KerasClassificationModel(KerasModel):
     def _change_not_fixed_params(self, **kwargs) -> None:
         """
         Change changable parameters from saved model to given ones.
+
         Args:
             kwargs: dictionary of new parameters
 
@@ -166,6 +167,7 @@ class KerasClassificationModel(KerasModel):
     def texts2vec(self, sentences: List[List[str]]) -> np.ndarray:
         """
         Convert texts to vector representations using embedder and padding up to self.opt["text_size"] tokens
+
         Args:
             sentences: list of lists of tokens
 
@@ -182,6 +184,7 @@ class KerasClassificationModel(KerasModel):
     def train_on_batch(self, texts: List[str], labels: list) -> [float, List[float]]:
         """
         Train the model on the given batch
+
         Args:
             texts: list of texts
             labels: list of labels
@@ -199,6 +202,7 @@ class KerasClassificationModel(KerasModel):
     def infer_on_batch(self, texts: List[str], labels: list = None) -> [float, List[float], np.ndarray]:
         """
         Infer the model on the given batch
+
         Args:
             texts: list of texts
             labels: list of labels
@@ -222,6 +226,7 @@ class KerasClassificationModel(KerasModel):
     def __call__(self, data: List[str], *args) -> Tuple[np.ndarray, List[dict]]:
         """
         Infer on the given data
+
         Args:
             data: list of sentences
             *args: additional arguments
@@ -244,6 +249,7 @@ class KerasClassificationModel(KerasModel):
                   **kwargs) -> Model:
         """
         Build un-compiled model of shallow-and-wide CNN.
+
         Args:
             kernel_sizes_cnn: list of kernel sizes of convolutions.
             filters_cnn: number of filters for convolutions.
@@ -289,6 +295,7 @@ class KerasClassificationModel(KerasModel):
                    **kwargs) -> Model:
         """
         Build un-compiled model of deep CNN.
+
         Args:
             kernel_sizes_cnn: list of kernel sizes of convolutions.
             filters_cnn: number of filters for convolutions.
@@ -334,6 +341,7 @@ class KerasClassificationModel(KerasModel):
         """
         Build un-compiled model of shallow-and-wide CNN where average pooling after convolutions is replaced with
         concatenation of average and max poolings.
+
         Args:
             kernel_sizes_cnn: list of kernel sizes of convolutions.
             filters_cnn: number of filters for convolutions.
@@ -382,6 +390,7 @@ class KerasClassificationModel(KerasModel):
                      dropout_rate: float = 0., rec_dropout_rate: float = 0., **kwargs) -> Model:
         """
         Build un-compiled BiLSTM.
+
         Args:
             units_lstm (int): number of units for LSTM.
             dense_size (int): number of units for dense layer.
@@ -421,6 +430,7 @@ class KerasClassificationModel(KerasModel):
                             **kwargs) -> Model:
         """
         Build un-compiled two-layers BiLSTM.
+
         Args:
             units_lstm_1: number of units for the first LSTM layer.
             units_lstm_2: number of units for the second LSTM layer.
@@ -469,6 +479,7 @@ class KerasClassificationModel(KerasModel):
                          **kwargs) -> Model:
         """
         Build un-compiled BiLSTM-CNN.
+
         Args:
             units_lstm: number of units for LSTM.
             kernel_sizes_cnn: list of kernel sizes of convolutions.
@@ -524,6 +535,7 @@ class KerasClassificationModel(KerasModel):
                          **kwargs) -> Model:
         """
         Build un-compiled BiLSTM-CNN.
+
         Args:
             kernel_sizes_cnn: list of kernel sizes of convolutions.
             filters_cnn: number of filters for convolutions.
@@ -580,6 +592,7 @@ class KerasClassificationModel(KerasModel):
                                         **kwargs) -> Model:
         """
         Method builds uncompiled model of BiLSTM with self additive attention.
+
         Args:
             units_lstm: number of units for LSTM.
             self_att_hid: number of hidden units in self-attention
@@ -624,6 +637,7 @@ class KerasClassificationModel(KerasModel):
                                          **kwargs) -> Model:
         """
         Method builds uncompiled model of BiLSTM with self multiplicative attention.
+
         Args:
             units_lstm: number of units for LSTM.
             self_att_hid: number of hidden units in self-attention
@@ -669,6 +683,7 @@ class KerasClassificationModel(KerasModel):
                     **kwargs) -> Model:
         """
         Method builds uncompiled model BiGRU.
+
         Args:
             units_lstm: number of units for GRU.
             dense_size: number of units for dense layer.

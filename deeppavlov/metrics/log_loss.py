@@ -26,6 +26,7 @@ from deeppavlov.models.classifiers.utils import labels2onehot
 def classification_log_loss(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]]) -> float:
     """
     Calculate log loss for classification module
+
     Args:
         y_true:  true binary labels
         y_predicted: predictions. \

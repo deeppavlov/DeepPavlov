@@ -63,6 +63,7 @@ class GloVeEmbedder(Component, Serializable):
     def save(self, *args, **kwargs) -> None:
         """
         Class do not save loaded model again as it is not trained during usage
+
         Args:
             *args: arguments
             **kwargs: arguments
@@ -75,6 +76,7 @@ class GloVeEmbedder(Component, Serializable):
     def load(self, *args, **kwargs) -> KeyedVectors:
         """
         Load dict of embeddings from given file
+
         Args:
             *args: arguments
             **kwargs: arguments
@@ -114,6 +116,7 @@ class GloVeEmbedder(Component, Serializable):
     def __call__(self, batch: List[List[str]], mean: bool = False, *args, **kwargs) -> List[Union[list, np.ndarray]]:
         """
         Embed sentences from batch
+
         Args:
             batch: list of tokenized text samples
             mean: whether to return mean embedding of tokens per sample
@@ -133,6 +136,7 @@ class GloVeEmbedder(Component, Serializable):
     def _encode(self, tokens: List[str], mean: bool) -> Union[List[np.ndarray], np.ndarray]:
         """
         Embed one text sample
+
         Args:
             tokens: tokenized text sample
             mean: whether to return mean embedding of tokens per sample

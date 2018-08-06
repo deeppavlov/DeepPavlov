@@ -1,18 +1,17 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 from keras import backend as K
 from keras.models import Model
 from keras.layers import Dense, Reshape, Concatenate, Lambda, Embedding, Conv2D, Activation, Input
@@ -21,9 +20,11 @@ from keras.layers.merge import Multiply, Add
 from keras.activations import softmax
 import numpy as np
 
+
 def expand_tile(units, axis):
     """
     Expand and tile tensor along given axis
+
     Args:
         units: tf tensor with dimensions [batch_size, time_steps, n_input_features]
         axis: axis along which expand and tile. Must be 1 or 2
@@ -50,6 +51,7 @@ def additive_self_attention(units, n_hidden=None, n_output_features=None, activa
             the formula: score(h_i, h_j) = <v, tanh(W_1 h_i + W_2 h_j)>
             v is a learnable vector of n_hidden dimensionality,
             W_1 and W_2 are learnable [n_hidden, n_input_features] matrices
+
     Args:
         units: tf tensor with dimensionality [batch_size, time_steps, n_input_features]
         n_hidden: number of2784131 units in hidden representation of similarity measure
@@ -79,6 +81,7 @@ def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, 
     Compute multiplicative self attention for time series of vectors (with batch dimension)
     the formula: score(h_i, h_j) = <W_1 h_i,  W_2 h_j>,  W_1 and W_2 are learnable matrices
     with dimensionality [n_hidden, n_input_features]
+
     Args:
         units: tf tensor with dimensionality [batch_size, time_steps, n_input_features]
         n_hidden: number of units in hidden representation of similarity measure

@@ -24,6 +24,7 @@ from deeppavlov.models.classifiers.utils import labels2onehot
 def roc_auc_score_np(y_true: [list, np.ndarray], y_pred: [list, np.ndarray]) -> float:
     """
     Compute Area Under the Curve (AUC) from prediction scores.
+
     Args:
         y_true: true binary labels
         y_pred: target scores, can either be probability estimates of the positive class
@@ -41,6 +42,7 @@ def roc_auc_score_np(y_true: [list, np.ndarray], y_pred: [list, np.ndarray]) -> 
 def classification_roc_auc_score(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]]) -> float:
     """
     Compute Area Under the Curve (AUC) from prediction scores.
+
     Args:
         y_true: true binary labels
         y_predicted: predictions. \

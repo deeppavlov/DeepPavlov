@@ -124,12 +124,6 @@ providing corresponding name of the config file (see above):
 or provide flag ``-d`` for commands like ``interact``, ``interactbot``,
 etc. The flag ``-d`` provides downloading all the required components.
 
-To download pre-trained models, vocabs, embeddings and datasets one should run the following command providing
-corresponding name of the config file (see above):
-
-::
-
-    python deep.py download configs/intents/intents_dstc2_big.json
 
 Infer from pre-trained model
 ----------------------------
@@ -151,8 +145,8 @@ For 'interactbot' mode one should specify a Telegram bot token in ``-t`` paramet
 environment variable.
 
 Now user can enter a text string and get output of two elements: the first one is an array of classes names
-(intents) which the string belongs to, and the second one is a dictionary with probability distribution among all
-the considered classes (take into account that as the task is a multi-class classification then sum of probabilities
+ which the string belongs to, and the second one is a dictionary with probability distribution among all
+the considered classes (take into account that for multi-class classification then sum of probabilities
 is not equal to 1).
 
 An example of interacting the model from ``configs/intents/intents_dstc2.json``
@@ -162,7 +156,7 @@ An example of interacting the model from ``configs/intents/intents_dstc2.json``
     :: hey! I want cheap restaurant
     >> (array(['inform_pricerange'], dtype='<U17'), {'ack': 0.0040760376, 'affirm': 0.017633557, 'bye': 0.023906048, 'confirm_area': 0.0040424005, 'confirm_food': 0.012261569, 'confirm_pricerange': 0.007227284, 'deny_food': 0.003502861, 'deny_name': 0.003412795, 'hello': 0.0061915903, 'inform_area': 0.15999688, 'inform_food': 0.18303667, 'inform_name': 0.0042709936, 'inform_pricerange': 0.30197725, 'inform_this': 0.03864918, 'negate': 0.016452404, 'repeat': 0.003964727, 'reqalts': 0.026930325, 'reqmore': 0.0030793257, 'request_addr': 0.08075432, 'request_area': 0.018258458, 'request_food': 0.018060096, 'request_phone': 0.07433994, 'request_postcode': 0.012727374, 'request_pricerange': 0.024933394, 'request_signature': 0.0034591882, 'restart': 0.0038622846, 'thankyou': 0.036836267, 'unknown': 0.045310754})
 
-and and example of interacting the model from
+and an example of interacting the model from
 ``configs/intents/intents_dstc2_big.json``
 
 ::
@@ -190,12 +184,12 @@ classification task. Below the list of available models is presented:
 * ``bilstm_self_mult_attention_model`` -- Bidirectional LSTM followed by self multiplicative attention layer,
 * ``bigru_model`` -- Bidirectional GRU model.
 
-Please, pay attention that each model has its own parameters that should be specified in config.
+**Please, pay attention that each model has its own parameters that should be specified in config.**
 
 Configuration parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-One can find examples of config files in ``deeppavlov/configs/intents``.
+One can find examples of config files in ``deeppavlov/configs/intents`` and ``deeppavlov/configs/sentiment``.
 
 Detailed description of configuration file and specific parameters for all presented classification models can be found
 in :doc:`reference </apiref/models/classifiers>`.

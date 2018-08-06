@@ -131,6 +131,7 @@ class ParamsEvolution:
     def find_model_path(self, config: dict, key_model: str, path: list = []) -> Generator:
         """
         Find path to dictionary in config that contains key 'key_model'
+
         Args:
             config: dictionary
             key_model: key of sub-dictionary to be found
@@ -159,6 +160,7 @@ class ParamsEvolution:
                                          value: [int, float, str, bool, list, dict, np.ndarray]) -> dict:
         """
         Insert value to dictionary determined by path[:-1] in field with key path[-1]
+
         Args:
             config: dictionary
             path: list of keys and/or integers (for list)
@@ -183,6 +185,7 @@ class ParamsEvolution:
     def get_value_from_config(config: dict, path: list) -> Any:
         """
         Return value of config element determined by path
+
         Args:
             config: dictionary
             path: list of keys and/or integers (for list)
@@ -204,6 +207,7 @@ class ParamsEvolution:
     def initialize_params_in_config(self, basic_config: dict, paths: List[list]) -> dict:
         """
         Randomly initialize all the changable parameters in config
+
         Args:
             basic_config: config where changable parameters are dictionaries with keys
                 `evolve_range`, `evolve_bool`, `evolve_choice`
@@ -227,6 +231,7 @@ class ParamsEvolution:
     def first_generation(self, iteration: int = 0) -> List[dict]:
         """
         Initialize first generation randomly according to the given constraints is self.params
+
         Args:
             iteration: number of iteration
 
@@ -258,6 +263,7 @@ class ParamsEvolution:
     def next_generation(self, generation: List[dict], scores: List[float], iteration: int) -> List[dict]:
         """
         Provide replacement
+
         Args:
             generation: current generation (set of self.population_size configs
             scores: corresponding scores that should be maximized
@@ -374,6 +380,7 @@ class ParamsEvolution:
         Probability of i-th individuum to be selected with weights is (a * range_i + b)
         where a = 1. / (1. - self.population_size), and
         b = self.population_size / (self.population_size - 1.)
+
         Args:
             population: self.population_size individuums
             scores: list of corresponding scores
@@ -399,6 +406,7 @@ class ParamsEvolution:
         Ranges scores,
         range 1 corresponds to the best score,
         range self.population_size corresponds to the worst score.
+
         Args:
             scores: list of corresponding scores of population
 
@@ -431,6 +439,7 @@ class ParamsEvolution:
         Cross over from two parents produces two offsprings
         each of which contains crossover_power portion of the parameter values from one parent,
          and the other (1 - crossover_power portion) from the other parent
+
         Args:
             population: self.population_size individuums
             scores: list of corresponding scores
@@ -483,6 +492,7 @@ class ParamsEvolution:
     def mutation(self, population: List[dict]) -> List[dict]:
         """
         Mutate each parameter of each individuum in population
+
         Args:
             population: self.population_size individuums
 
@@ -506,6 +516,7 @@ class ParamsEvolution:
                           param_value: [int, float, str, list, dict, bool, np.ndarray]) -> Any:
         """
         Mutate particular parameter separately
+
         Args:
             param_path: path to parameter in basic config
             param_value: current parameter valuer
@@ -547,6 +558,7 @@ class ParamsEvolution:
     def decision(self, probability: float = 1.) -> bool:
         """
         Make decision whether to do action or not with given probability
+
         Args:
             probability: probability whether to do action or not
 
@@ -562,6 +574,7 @@ class ParamsEvolution:
     def sample_params(self, **params) -> dict:
         """
         Sample parameters according to the given possible values
+
         Args:
             **params: dictionary like {"param_0": {"evolve_range": [0, 10]},
                                        "param_1": {"evolve_range": [0, 10], "discrete": true},
@@ -593,6 +606,7 @@ class ParamsEvolution:
     def _sample_from_ranges(self, opts: dict) -> [int, float]:
         """
         Sample parameters from ranges
+
         Args:
             opts: dictionary {"param_0": {"evolve_range": [0, 10]},
                               "param_1": {"evolve_range": [0, 10], "discrete": true},
@@ -615,6 +629,7 @@ class ParamsEvolution:
     def _sample_log(from_: float = 0., to_: float = 1.) -> float:
         """
         Sample parameters from ranges with log scale
+
         Args:
             from_: lower boundary of values
             to_:  upper boundary of values

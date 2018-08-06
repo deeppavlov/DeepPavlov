@@ -26,6 +26,7 @@ from deeppavlov.models.classifiers.utils import labels2onehot
 def classification_fmeasure(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]], average="macro") -> float:
     """
     Calculate F1-measure macro
+
     Args:
         y_true: true binary labels
         y_predicted: predictions. \
@@ -50,6 +51,7 @@ def classification_fmeasure_weighted(y_true: List[list], y_predicted: List[Tuple
                                      average="weighted") -> float:
     """
     Calculate F1-measure weighted
+
     Args:
         y_true: true binary labels
         y_predicted: predictions. \

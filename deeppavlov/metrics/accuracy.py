@@ -24,6 +24,7 @@ from deeppavlov.core.common.metrics_registry import register_metric
 def accuracy(y_true, y_predicted):
     """
     Calculate accuracy in terms of absolute coincidence
+
     Args:
         y_true: array of true values
         y_predicted: array of predicted values
@@ -40,6 +41,7 @@ def accuracy(y_true, y_predicted):
 def sets_accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> float:
     """
     Calculate accuracy in terms of sets coincidence
+
     Args:
         y_true: true values
         y_predicted: predicted values
@@ -57,6 +59,7 @@ def classification_accuracy(y_true: List[list], y_predicted: List[Tuple[np.ndarr
     """
     Calculate accuracy in terms of sets coincidence for special case of predictions \
             (from classification KerasIntentModel)
+
     Args:
         y_true: true labels
         y_predicted: predictions. \

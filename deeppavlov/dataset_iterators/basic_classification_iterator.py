@@ -79,6 +79,7 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
                     split_proportions: List[float] = None) -> bool:
         """
         Split given field of dataset to the given list of fields with corresponding proportions
+
         Args:
             field_to_split: field name (out of ``"train", "valid", "test"``) which to split
             split_fields: list of names (out of ``"train", "valid", "test"``) of fields to which split
@@ -99,6 +100,7 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
     def _merge_data(self, fields_to_merge: List[str] = None, merged_field: str = None) -> bool:
         """
         Merge given fields of dataset
+
         Args:
             fields_to_merge: list of fields (out of ``"train", "valid", "test"``) to merge
             merged_field: name of field (out of ``"train", "valid", "test"``) to which save merged fields

@@ -27,6 +27,7 @@ log = get_logger(__name__)
 def labels2onehot(labels: [list, np.ndarray], classes:  [list, np.ndarray]) -> np.ndarray:
     """
     Convert labels to one-hot vectors for multi-class multi-label classification
+
     Args:
         labels: list of samples where each sample is a list of classes which sample belongs with
         classes: array of classes' names
@@ -53,6 +54,7 @@ def proba2labels(proba: [list, np.ndarray], confident_threshold: float, classes:
     Convert vectors of probabilities to labels using confident threshold
     (if probability to belong with the class is bigger than confident_threshold, sample belongs with the class;
     if no probabilities bigger than confident threshold, sample belongs with the class with the biggest probability)
+
     Args:
         proba: list of samples where each sample is a vector of probabilities to belong with given classes
         confident_threshold (float): boundary of probability to belong with a class
@@ -75,6 +77,7 @@ def proba2labels(proba: [list, np.ndarray], confident_threshold: float, classes:
 def proba2onehot(proba: [list, np.ndarray], confident_threshold: float, classes:  [list, np.ndarray]) -> np.ndarray:
     """
     Convert vectors of probabilities to one-hot representations using confident threshold
+
     Args:
         proba: samples where each sample is a vector of probabilities to belong with given classes
         confident_threshold: boundary of probability to belong with a class
@@ -91,6 +94,7 @@ def log_metrics(names: [list, np.ndarray], values: [list, np.ndarray],
     """
     Print training and validation data in the following view:
         `mode -->	updates: 0   	names[0]: 0.0	names[1]: 0.0	names[2]: 0.0`
+
     Args:
         names: names of considered metrics
         values: values of considered metrics
@@ -113,6 +117,7 @@ def log_metrics(names: [list, np.ndarray], values: [list, np.ndarray],
 def md5_hashsum(file_names: List[str]) -> str:
     """
     Calculate md5 hash sum of files listed
+
     Args:
         file_names: list of file names
 
