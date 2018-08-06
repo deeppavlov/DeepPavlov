@@ -39,7 +39,7 @@
         "load_path": "squad_model/emb/vocab_embedder.pckl",
         "context_limit": "#squad_prepr.context_limit",
         "question_limit": "#squad_prepr.question_limit",
-        "char_limit": "#squad_prepr.context_limit",
+        "char_limit": "#squad_prepr.char_limit",
         "fit_on": ["context_tokens", "question_tokens"],
         "in": ["context_tokens", "question_tokens"],
         "out": ["context_tokens_idxs", "question_tokens_idxs"]
@@ -112,7 +112,7 @@
       "server_utils": "SquadModel"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_1.2.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_1.3_cpu_compatible.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M.vec",
         "subdir": "embeddings"
