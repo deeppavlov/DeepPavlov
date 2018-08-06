@@ -153,6 +153,8 @@ Train Parameters
 -  ``log_every_n_batches``, ``log_every_n_epochs`` — how often to calculate metrics for train data, defaults to ``-1``
    (never)
 -  ``validate_best``, ``test_best`` flags to infer the best saved model on valid and test data, defaults to ``true``
+-  ``tensorboard_log_dir`` — path to write logged metrics during training. Use tensorboard to visualize metrics
+   plots.
 
 
 DatasetReader
