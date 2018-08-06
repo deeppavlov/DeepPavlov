@@ -42,7 +42,7 @@ class SquadDatasetReader(DatasetReader):
 
         Args:
             dir_path: path to save data
-            dataset: dataset name (SQuAD or SberSQuAD)
+            dataset: dataset name: ``'SQuAD'`` or ``'SberSQuAD'``
 
         Returns:
             dataset split on train/valid

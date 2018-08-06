@@ -25,3 +25,5 @@ Concrete DatasetIterator classes.
 .. autoclass:: deeppavlov.dataset_iterators.ranking_iterator.RankingIterator
 
    .. automethod:: gen_batches
+
+.. autoclass:: deeppavlov.dataset_iterators.squad_iterator.SquadIterator
