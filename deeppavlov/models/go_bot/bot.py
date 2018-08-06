@@ -31,26 +31,66 @@ log = get_logger(__name__)
 
 @register("go_bot")
 class GoalOrientedBot(NNModel):
+    """
+    The dialogue bot is based on  https://arxiv.org/abs/1702.03274, which introduces
+    Hybrid Code Networks that combine an RNN with domain-specific knowledge
+    and system action templates.
+
+    Todo:
+        add docstring for trackers.
+
+    Parameters:
+        tokenizer: one of tokenizers from
+            :doc:`deeppavlov.models.tokenizers </apiref/models/tokenizers>` module.
+        tracker: dialogue state tracker from
+            :doc:`deeppavlov.models.go_bot.tracker </apiref/models/go_bot>`.
+        network_parameters: initialization parameters for policy network (see
+            :class:`~deeppavlov.models.go_bot.network.GoalOrientedBotNetwork`).
+        template_path: file with mapping between actions and text templates
+            for response generation.
+        template_type: type of used response templates in string format.
+        word_vocab: vocabulary of input word tokens
+            (:class:`~deeppavlov.core.data.vocab.DefaultVocabulary` recommended).
+        bow_embedder: instance of one-hot word encoder
+            :class:`~deeppavlov.models.embedders.bow_embedder.BoWEmbedder`.
+        embedder: one of embedders from
+            :doc:`deeppavlov.models.embedders </apiref/models/embedders>` module.
+        slot_filler: component that outputs slot values for a given utterance
+            (:class:`~deeppavlov.models.slotfill.slotfill.DstcSlotFillingNetwork`
+            recommended).
+        intent_classifier: component that outputs intents probability distribution
+            for a given utterance (
+            :class:`~deeppavlov.models.classifiers.keras_classification_model.KerasClassificationModel`
+            recommended).
+        database: database that will be used during inference to perform
+            ``api_call_action`` actions and get ``'db_result'`` result (
+            :class:`~deeppavlov.core.data.sqlite_database.Sqlite3Database`
+            recommended).
+        api_call_action: label of the action that corresponds to database api call
+            (it must be present in your ``template_path`` file), during interaction
+            it will be used to get ``'db_result'`` from ``database``.
+        use_action_mask: if ``True``, network output will be applied with a mask
+            over allowed actions.
+        debug: whether to display debug output.
+    """
     def __init__(self,
-                 template_path: str,
-                 network_parameters: Dict[str, Any],
                  tokenizer: Component,
                  tracker: Tracker,
+                 network_parameters: Dict[str, Any],
+                 template_path: str,
                  template_type: str = "DefaultTemplate",
-                 database: Component = None,
-                 api_call_action: str = None,  # TODO: make it unrequired
+                 word_vocab: Component = None,
                  bow_embedder: Component = None,
                  embedder: Component = None,
                  slot_filler: Component = None,
                  intent_classifier: Component = None,
+                 database: Component = None,
+                 api_call_action: str = None,  # TODO: make it unrequired
                  use_action_mask: bool = False,
-                 word_vocab: Component = None,
                  debug: bool = False,
                  load_path: str = None,
                  save_path: str = None,
                  **kwargs):
-        #TODO: docstring
-
         super().__init__(load_path=load_path, save_path=save_path, **kwargs)
 
         self.tokenizer = tokenizer
@@ -77,7 +117,7 @@ class GoalOrientedBot(NNModel):
 
         self.intents = []
         if callable(self.intent_classifier):
-            # intent_classifier returns y_labels, y_probs
+            # intent_classifier returns (y_labels, y_probs)
             self.intents = list(self.intent_classifier(["hi"])[1][0].keys())
 
         self.network = self._init_network(network_parameters)

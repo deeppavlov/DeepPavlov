@@ -80,67 +80,6 @@ Requirements
 Config parameters:
 ^^^^^^^^^^^^^^^^^^
 
--  ``name`` always equals to ``"go_bot"``
--  ``word_vocab`` — vocabulary of tokens from context utterances (:doc:`deeppavlov.core.data.vocab:DefaultVocabulary </apiref/core/data>` is recommended)
--  ``template_path`` — map from actions to text templates for response generation
--  ``template_type`` — type of templates to use (``"DefaultTemplate"`` by default) *(optional)*
--  ``database`` – database that will be used during model inference to make "api\_call" action and
-   get ``db_result`` *(optional)*
-
-   +  ``name`` — ``"sqlite_database"`` from
-      :doc:`deeppavlov.core.data.sqlite_database:Sqlite3Database </apiref/core/data>` or your implementation
-   +  ``table_name`` – sqlite table name
-   +  ``primary_keys`` – list of primary table keys' names
-   +  ``keys`` – ordered list of table key names, if not set will be inferred from loaded database automatically
-      *(optional, recommended not to be used)*
-   +  ``unknown_value`` – value used to fill unknown column values (defaults to ``"UNK"``) *(optional)*
-   +  ``save_path`` – path to database filename (will load to it, and save to it)
-
-
--  ``api_call_action`` – label of action that corresponds to database api call (the same label that is used
-   to represent the action in your ``template_path`` file), during interaction it will be used to get ``db_result``
-   from ``database`` *(optional)*
--  ``use_action_mask`` — if ``true``, action mask is applied to network output *(False, by default)*
--  ``tokenizer`` — one of tokenizers from ``deeppavlov.models.tokenizers`` module
-
-   +  ``name`` — tokenizer name
-   +  other arguments specific to your tokenizer
-
-
--  ``bow_embedder`` — ``deeppavlov.models.embedders.bow_embedder`` or ``null`` *(optional)*
-
-   +  ``name`` — embedder name
-   +  other arguments specific to your bag of words embedder
-
-
--  ``embedder`` — one of embedders from ``deeppavlov.models.embedders`` module *(optional)*
-
-   +  ``name`` — embedder name (``"fasttext"`` recommended, see ``deeppavlov.models.embedders.fasttext_embedder``)
-   +  other arguments specific to your embedder
-
-
--  ``tracker`` — dialogue state tracker from ``deeppavlov.models.trackers``
-
-   +  ``name`` — tracker name (``"default_tracker"`` or ``"featurized_tracker"`` recommended)
-   +  ``slot_vals`` — list of slots that should be tracked
-
-
--  ``network parameters`` - see :doc:`GoalOrientedBotNetwork </apiref/models/go_bot>` for details.
--  ``slot_filler`` — model that predicts slot values for a given utterance
-
-   +  ``name`` — slot filler name (``"dstc_slotfilling"`` recommended, for implementation see ``deeppavlov.models.ner``)
-   +  other slot filler arguments
-
-
--  ``intent_classifier`` — model that outputs intents probability distribution for a given utterance
-
-   +  ``name`` — intent classifier name (``"intent_model"`` recommended, for implementation
-      see ``deeppavlov.models.classifiers.intents``)
-   +  classifier's other arguments
-
-
--  ``debug`` — whether to display debug output (defaults to ``false``) *(optional)*
-
 For a working exemplary config see ``deeeppavlov/configs/go_bot/gobot_dstc2.json`` (model without embeddings).
 
 A minimal model without ``slot_filler``, ``intent_classifier`` and ``embedder`` is configured

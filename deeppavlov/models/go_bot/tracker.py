@@ -12,32 +12,56 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Dict, Union, Tuple, Any
 from abc import ABCMeta, abstractmethod
 import numpy as np
 
 
 class Tracker(metaclass=ABCMeta):
+    """
+    An abstract class for trackers: a model that holds a dialogue state and
+    generates state features.
+    """
 
     @abstractmethod
-    def reset_state():
+    def reset_state(self) -> None:
+        """Resets dialogue state"""
         pass
 
     @abstractmethod
-    def update_state():
+    def update_state(self,
+                     slots: Union[List[Tuple[str, Any]], Dict[str, Any]]) -> 'Tracker':
+        """
+        Updates dialogue state with new ``slots``, calculates features.
+        
+        Returns:
+            Tracker: ."""
         pass
 
     @abstractmethod
-    def get_state():
+    def get_state(self) -> Dict[str, Any]:
+        """
+        Returns:
+            Dict[str, Any]: dictionary with current slots and their values."""
         pass
 
     @abstractmethod
-    def get_features():
+    def get_features(self) -> np.ndarray:
+        """
+        Returns:
+            np.ndarray[float]: numpy array with calculates state features."""
         pass
 
 
 class DefaultTracker(Tracker):
+    """
+    Tracker that overwrites slots with new values.
+    Features are binary indicators: slot is present/absent.
 
-    def __init__(self, slot_names):
+    Parameters:
+        slot_names: list of slots that should be tracked.
+    """
+    def __init__(self, slot_names: List[str]) -> None:
         self.slot_names = list(slot_names)
         self.reset_state()
 
@@ -83,8 +107,16 @@ class DefaultTracker(Tracker):
 
 
 class FeaturizedTracker(Tracker):
+    """
+    Tracker that overwrites slots with new values.
+    Features are binary features (slot is present/absent) plus difference features
+    (slot value is (the same)/(not the same) as before last update) and count
+    features (sum of present slots and sum of changed during last update slots).
 
-    def __init__(self, slot_names, *args, **kwargs):
+    Parameters:
+        slot_names: list of slots that should be tracked.
+    """
+    def __init__(self, slot_names: List[str]) -> None:
         self.slot_names = list(slot_names)
         self.reset_state()
 
