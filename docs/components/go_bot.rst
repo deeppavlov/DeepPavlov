@@ -10,8 +10,8 @@ knowledge and system action templates.
 modules that depend on a dataset and must be provided by software
 developer.
 
-Here is a simple example of interaction with a trained dialogue bot (can
-be downloaded with ``deeppavlov/download.py``):
+Here is a simple example of interaction with a trained dialogue bot
+(available for download):
 
 .. code:: bash
 
@@ -56,64 +56,80 @@ Requirements
 **TO TRAIN** a go\_bot model you should have:
 
 1. (*optional, but recommended*) pretrained named entity recognition model (NER)
-   ``deeppavlov/configs/ner/ner_dstc2.json`` is recommended
+
+   - config :config:`configs/ner/slotfill_dstc2.json <ner/slotfill_dstc2.json>` is recommended
 2. (*optional, but recommended*) pretrained intents classifier model
-   ``deeppavlov/configs/intents/intents_dstc2_big.json`` is recommended
-3. (*optional*) downloaded english fasttext embeddings trained on wiki
-   (https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip)\: fasttext embeddings can be loaded via
-   ``python3 deeppavlov/download.py -all`` you can use any english embeddings of your choice, but edit go\_bot config
-   accordingly.
+
+   - config :config:`configs/intents/intents_dstc2_big.json <intents/intents_dstc2_big.json>` is recommended
+3. (*optional*) any sentence (word) embeddings for english
+
+   - fasttext embeddings can be downloaded
+
+      - via link https://s3-us-west-1.amazonaws.com/fasttext-vectors/wiki.en.zip
+      - or using deeppavlov with :code:`python3 -m deeppavlov download <path_to_config>`,
+        where ``<path_to_config>`` is one of the :config:`provided config files <go_bot>`.
 
 **TO INFER** from a go\_bot model you should **additionaly** have:
 
 4. pretrained vocabulary of dataset utterance tokens
 
--  it is trained in the same config as go\_bot model
+   - it is trained in the same config as go\_bot model
 
 5. pretrained goal-oriented bot model itself
+   
+   - config :config:`configs/go_bot/gobot_dstc2.json <go_bot/gobot_dstc2.json>` is recommended
+   - ``slot_filler`` section of go\_bot's config should match NER's configuration
+   - ``intent_classifier`` section of go\_bot's config should match classifier's configuration
 
--  config ``deeppavlov/configs/go_bot/gobot_dstc2.json`` is recommended
--  ``slot_filler`` section of go\_bot's config should match NER's configuration
--  ``intent_classifier`` section of go\_bot's config should match classifier's configuration
--  double-check that corresponding ``load_path`` point to NER and intent classifier model files
+Configs:
+^^^^^^^^
 
-Config parameters:
-^^^^^^^^^^^^^^^^^^
-
-For a working exemplary config see ``deeeppavlov/configs/go_bot/gobot_dstc2.json`` (model without embeddings).
+For a working exemplary config see
+:config:`configs/go_bot/gobot_dstc2.json <go_bot/gobot_dstc2.json>` (model without embeddings).
 
 A minimal model without ``slot_filler``, ``intent_classifier`` and ``embedder`` is configured
-in ``deeeppavlov/configs/go_bot/gobot_dstc2_minimal.json``.
+in :config:`configs/go_bot/gobot_dstc2_minimal.json <go_bot/gobot_dstc2_minimal.json>`.
 
-A full model (with fasttext embeddings) configuration is in ``deeeppavlov/configs/go_bot/gobot_dstc2_all.json``.
-
-The best state-of-the-art model (with attention mechanism, relies on ``embedder`` and does not use bag-of-words) is
-configured in ``deeeppavlov/configs/go_bot/gobot_dstc2_best.json``.
+The best state-of-the-art model (with attention mechanism, relies on ``embedder`` and
+does not use bag-of-words) is configured in
+:config:`configs/go_bot/gobot_dstc2_best.json <go_bot/gobot_dstc2_best.json>`.
 
 Usage example
 ^^^^^^^^^^^^^
 
-Available **pretrained for DSTC2 dataset** models:
-
--  model for ``deeppavlov/configs/go_bot/gobot_dstc2.json``
--  model for ``deeppavlov/configs/go_bot/gobot_dstc2_best.json``
-
-To use pretrained model you should firstly **download it** (if you haven't done it already
-by ``python3 deeppavlov/download.py -all``):
+To interact with a pretrained go\_bot model using commandline run:
 
 .. code:: bash
 
-    cd deeppavlov
-    python3 deep.py interact path/to/config.json -d
+    python -m deeppavlov interact <path_to_config> [-d]
 
-To infer from a pretrained model with config path equal to ``path/to/config.json``:
+where ``<path_to_config>`` is one of the :config:`provided config files <go_bot>`.
+
+You can also train your own model by running:
+
+.. code:: bash
+
+    python -m deeppavlov train <path_to_config> [-d]
+
+The ``-d`` parameter downloads
+
+   - data required to train your model (embeddings, etc.);
+   - a pretrained model if available (provided not for all configs). 
+
+**Pretrained for DSTC2** models are available for
+
+   - :config:`configs/go_bot/gobot_dstc2.json <go_bot/gobot_dstc2.json>` and
+   - :config:`configs/go_bot/gobot_dstc2.json <go_bot/gobot_dstc2_best.json>`.
+
+After downloading required files you can use the configs in your python code.
+To infer from a pretrained model with config path equal to ``<path_to_config>``:
 
 .. code:: python
 
     from deeppavlov.core.commands.infer import build_model_from_config
     from deeppavlov.core.common.file import read_json
 
-    CONFIG_PATH = 'path/to/config.json'
+    CONFIG_PATH = '<path_to_config>'
     model = build_model_from_config(read_json(CONFIG_PATH))
 
     utterance = ""
@@ -121,50 +137,10 @@ To infer from a pretrained model with config path equal to ``path/to/config.json
         print(">> " + model([utterance])[0])
         utterance = input(':: ')
 
-To interact via command line use ``deeppavlov/deep.py`` script:
-
-.. code:: bash
-
-    cd deeppavlov
-    python3 deep.py interact path/to/config.json
-
-Training
---------
-
-To train model with config path ``path/to/config.json`` you should firstly **download** all the needed data
-(if you haven't done it already by ``python3 deeppavlov/download.py -all``):
-
-.. code:: bash
-
-    cd deeppavlov
-    python3 deep.py train path/to/config.json -d
-
-The script will download needed data (dataset, embeddings) for the particular model.
-
 Config parameters
 ^^^^^^^^^^^^^^^^^
 
-To be used for training, your config json file should include parameters:
-
--  ``dataset_reader``
--  ``name`` — ``"your_reader_here"`` for a custom dataset or ``"dstc2_v2_reader"`` to use DSTC2 (for implementation
-   see ``deeppavlov.dataset_readers.dstc2_reader``)
--  ``data_path`` — a path to a dataset file, which in case of ``"dstc2_v2_reader"`` will be automatically downloaded
-   from internet and placed to ``data_path`` directory
--  ``dataset_iterator`` — it should always be set to ``{"name": "dialog_iterator"}`` (for implementation
-   see ``deeppavlov.dataset_iterators.dialog_iterator.py``)
-
-See ``deeeppavlov/configs/go_bot/gobot_dstc2.json`` for details.
-
-Train run
-^^^^^^^^^
-
-The easiest way to run the training is by using ``deeppavlov/deep.py`` script:
-
-.. code:: bash
-
-    cd deeppavlov
-    python3 deep.py train path/to/config.json
+To configure your own pipelines that contain a ``"go_bot"`` component, refer to documentation for :class:`~deeppavlov.models.go_bot.bot.GoalOrientedBot` and :class:`~deeppavlov.models.go_bot.network.GoalOrientedBotNetwork` classes.
 
 Datasets
 --------
@@ -201,63 +177,80 @@ Challenge 2 `[2] <#references>`__. The modifications were as follows:
    -  uppercased first letter of bot responses
    -  unified punctuation for bot responses
 
+See :class:`deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader` for implementation.
+
 Your data
 ^^^^^^^^^
 
 Dialogs
 '''''''
 
-If your model uses DSTC2 and relies on ``dstc2_v2_reader`` (``DSTC2Version2DatasetReader``), all needed files, if not
-present in the ``dataset_reader.data_path`` directory, will be downloaded from internet.
+If your model uses DSTC2 and relies on ``"dstc2_reader"``
+(:class:`~deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader`),
+all needed files, if not present in the
+:attr:`DSTC2DatasetReader.data_path <deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader.data_path>` directory,
+will be downloaded from web.
 
-If your model needs to be trained on different data, you have several ways of achieving that (sorted by increase
-in the amount of code):
+If your model needs to be trained on different data, you have several ways of
+achieving that (sorted by increase in the amount of code):
 
-1. Use ``"dialog_iterator"`` in dataset iterator config section and ``"dstc2_v2_reader"`` in dataset reader config
-   section (**the simplest, but not the best way**):
+1. Use ``"dialog_iterator"`` in dataset iterator config section and
+   ``"dstc2_reader"`` in dataset reader config section
+   (**the simplest, but not the best way**):
 
-   -  set ``dataset_iterator.data_path`` to your data directory;
+   -  set ``dataset_reader.data_path`` to your data directory;
    -  your data files should have the same format as expected in
-      ``deeppavlov.dataset_readers.dstc2_reader:DSTC2Version2DatasetReader.read()`` function.
+      :meth:`DSTC2DatasetReader.read() <deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader.read>`
+      method.
 
+2. Use ``"dialog_iterator"`` in dataset iterator config section and
+   ``"your_dataset_reader"`` in dataset reader config section (**recommended**):
 
-2. Use ``"dialog_iterator"`` in dataset iterator config section and ``"your_dataset_reader"`` in dataset reader config
-   section (**recommended**):
-
-   -  clone ``deeppavlov.dataset_readers.dstc2_reader:DSTC2Version2DatasetReader`` to ``YourDatasetReader``;
+   -  clone :class:`deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader` to
+      ``YourDatasetReader``;
    -  register as ``"your_dataset_reader"``;
-   -  rewrite so that it implements the same interface as the origin. Particularly, ``YourDatasetReader.read()`` must
-      have the same output as ``DSTC2DatasetReader.read()``:
-   -  ``train`` — training dialog turns consisting of tuples:
+   -  rewrite so that it implements the same interface as the origin.
+      Particularly, ``YourDatasetReader.read()`` must have the same output as
+      :meth:`DSTC2DatasetReader.read() <deeppavlov.dataset_readers.dstc2_reader.DSTC2DatasetReader.read>`.
+   
+      -  ``train`` — training dialog turns consisting of tuples:
+      
+         -  first tuple element contains first user's utterance info
+            (as dict with the following fields):
 
-      -  first tuple element contains first user's utterance info (as dict with the following fields):
+            -  ``text`` — utterance string
+            -  ``intents`` — list of string intents, associated with user's utterance
+            -  ``db_result`` — a database response *(optional)*
+            -  ``episode_done`` — set to ``true``, if current utterance is
+               the start of a new dialog, and ``false`` (or skipped) otherwise *(optional)*
 
-         -  ``text`` — utterance string
-         -  ``intents`` — list of string intents, associated with user's utterance
-         -  ``db_result`` — a database response *(optional)*
-         -  ``episode_done`` — set to ``true``, if current utterance is the start of a new dialog, and ``false``
-            (or skipped) otherwise *(optional)*
+         -  second tuple element contains second user's response info
 
-      -  second tuple element contains second user's response info
+            -  ``text`` — utterance string
+            -  ``act`` — an act, associated with the user's utterance
 
-         -  ``text`` — utterance string
-         -  ``act`` — an act, associated with the user's utterance
-
-   -  ``valid`` — validation dialog turns in the same format
-   -  ``test`` — test dialog turns in the same format
-
+      -  ``valid`` — validation dialog turns in the same format
+      -  ``test`` — test dialog turns in the same format
 
 3. Use your own dataset iterator and dataset reader (**if 2. doesn't work for you**):
 
-   -  your ``YourDatasetIterator.gen_batches()`` class method output should match the input format for chainer from
-      ``configs/go_bot/gobot_dstc2.json``.
+   -  your ``YourDatasetIterator.gen_batches()`` class method output should match the
+      input format for chainer from
+      :config:`configs/go_bot/gobot_dstc2.json <go_bot/gobot_dstc2.json>`.
 
 Templates
 '''''''''
 
-You should provide a maping from actions to text templates in the following format (and set ``template_type`` to
-``"DefaultTemplate"``, DSTC2 uses an extension of templates –``"DualTemplate"``, you will probably not need it):
-``action_template``, where filled slots in templates should start with "#" and mustn't contain whitespaces.
+You should provide a maping from actions to text templates in the format
+
+.. code:: text
+
+    action1<tab>template1
+    action2<tab>template2
+    ...
+    actionN<tab>templateN
+
+where filled slots in templates should start with "#" and mustn't contain whitespaces.
 
 For example,
 
@@ -268,50 +261,54 @@ For example,
     expl-conf_area  Did you say you are looking for a restaurant in the #area of town?
     inform_area+inform_food+offer_name  #name is a nice place in the #area of town serving tasty #food food.
 
+It is recommended to use ``"DefaultTemplate"`` value for ``template_type`` parameter.
+
 Database (optional)
 '''''''''''''''''''
 
-If your dataset doesn't imply any api calls to an external database, just do not set ``database`` and
-``api_call_action`` parameters and skip the section below.
+If your dataset doesn't imply any api calls to an external database, just do not set
+``database`` and ``api_call_action`` parameters and skip the section below.
 
-Otherwise, you should specify them and
+Otherwise, you should
 
 1. provide sql table with requested items or
-2. construct such table from provided in train samples ``db_result`` items. This can be done with the following script:
+2. construct such table from provided in train samples ``db_result`` items.
+   This can be done with the following script:
 
 
-.. code:: bash
+    .. code:: bash
 
-    cd deeppavlov
-    python3 deep.py train configs/go_bot/database_yourdataset.json
+        python -m deeppavlov train configs/go_bot/database_<your_dataset>.json
 
-where ``_static/go_bot/database_yourdataset.json``__ is a copy of ``configs/go_bot/database_dstc2.json`` with configured
-``save_path``, ``primary_keys`` and ``unknown_value``.
+    where ``configs/go_bot/database_<your_dataset>.json`` is a copy
+    of ``configs/go_bot/database_dstc2.json`` with configured
+    ``save_path``, ``primary_keys`` and ``unknown_value``.
 
 Comparison
 ----------
 
 Scores for different modifications of our bot model:
 
-+-------------------------------------------------+------------------------------------------------------------------------------------+------------------------------+
-| Model                                           | Config                                                                             | Test turn textual accuracy   |
-+=================================================+====================================================================================+==============================+
-| basic bot                                       |  ``gobot_dstc2_minimal.json``                                                      | 0.3809                       |
-+-------------------------------------------------+------------------------------------------------------------------------------------+------------------------------+
-| bot with slot filler & fasttext embeddings      |                                                                                    | 0.5317                       |
-+-------------------------------------------------+------------------------------------------------------------------------------------+------------------------------+
-| bot with slot filler & intents                  |  ``gobot_dstc2.json``                                                              | 0.5113                       |
-+-------------------------------------------------+------------------------------------------------------------------------------------+------------------------------+
-| bot with slot filler & intents & embeddings     |  ``gobot_dstc2_all.json``                                                          | 0.5145                       |
-+-------------------------------------------------+------------------------------------------------------------------------------------+------------------------------+
-| bot with slot filler & embeddings & attention   |  ``gobot_dstc2_best.json``                                                         | **0.5525**                   |
-+-------------------------------------------------+------------------------------------------------------------------------------------+------------------------------+
++-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
+| Model                                         | Config                                                               | Test turn textual accuracy |
++===============================================+======================================================================+============================+
+| basic bot                                     | :config:`gobot_dstc2_minimal.json <go_bot/gobot_dstc2_minimal.json>` | 0.3809                     |
++-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
+| bot with slot filler & fasttext embeddings    |                                                                      | 0.5317                     |
++-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
+| bot with slot filler & intents                | :config:`gobot_dstc2.json <go_bot/gobot_dstc2.json>`                 | 0.5113                     |
++-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
+| bot with slot filler & intents & embeddings   |                                                                      | 0.5145                     |
++-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
+| bot with slot filler & embeddings & attention | :config:`gobot_dstc2_best.json <go_bot/gobot_dstc2_best.json>`       | **0.5525**                 |
++-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
 
-There is another modification of DSTC2 dataset called dialog babi Task6 `[3] <#references>`__. It differs from ours
-in train/valid/test split and intent/action labeling.
+There is another modification of DSTC2 dataset called dialog babi Task6
+`[3] <#references>`__. It differs from ours in train/valid/test split and
+intent/action labeling.
 
-These are the test scores provided by Williams et al. (2017) `[1] <#references>`__ (can't be directly compared with
-above):
+These are the test scores provided by Williams et al. (2017) `[1] <#references>`__
+(can't be directly compared with above):
 
 +----------------------------------------------------+------------------------------+
 |                   Model                            | Test turn textual accuracy   |
