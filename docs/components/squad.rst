@@ -50,15 +50,11 @@ Configuration
 
 Default config could be found at ``deeppavlov/configs/squad/squad.json``
 
-Running model
+Model usage
 -------------
 
-**Tensorflow-1.8 with GPU support is required** to run this model.
-
-.. _reader_training:
-
 Training
---------
+~~~~~~~~
 
 **Warning**: training with default config requires about 9Gb on GPU. Run
 following command to train the model:
@@ -68,7 +64,7 @@ following command to train the model:
     python -m deeppavlov train deeppavlov/configs/squad/squad.json
 
 Interact mode
--------------
+~~~~~~~~~~~~~
 
 Interact mode provides command line interface to already trained model.
 
@@ -87,7 +83,10 @@ SQuAD
 ~~~~~
 
 Pretrained model is available and can be downloaded:
-http://files.deeppavlov.ai/deeppavlov_data/squad_model_1.2.tar.gz
+
+.. code:: bash
+
+    python -m deeppavlov download deeppavlov/configs/squad/squad.json
 
 It achieves ~80 F-1 score and ~71 EM on dev set. Results of the most
 recent solutions could be found on `SQuAD
@@ -97,6 +96,9 @@ SDSJ Task B
 ~~~~~~~~~~~
 
 Pretrained model is available and can be downloaded:
-http://files.deeppavlov.ai/deeppavlov_data/squad_model_ru_1.2.tar.gz
+
+.. code:: bash
+
+    python -m deeppavlov download deeppavlov/configs/squad/squad_ru.json
 
 It achieves ~80 F-1 score and ~60 EM on dev set.
