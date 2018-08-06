@@ -89,7 +89,6 @@ To use our pre-trained models, you should first install their requirements:
 ```
 python -m deeppavlov install <path_to_config>
 ```
-
   
 Then download the models and data for them:
 ```
@@ -118,6 +117,10 @@ from stdin.
 Every line of input text will be used as a pipeline input parameter, so one example will consist of as many lines,
 as many input parameters your pipeline expects.  
 You can also specify batch size with `-b` or `--batch-size` parameter.
+
+# Documentation
+
+[docs.deeppavlov.ai](http://docs.deeppavlov.ai/)
 
 # Tutorials
 
