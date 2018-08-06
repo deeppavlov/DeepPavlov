@@ -69,13 +69,13 @@ Requirements
       - or using deeppavlov with :code:`python3 -m deeppavlov download <path_to_config>`,
         where ``<path_to_config>`` is one of the :config:`provided config files <go_bot>`.
 
-**TO INFER** from a go\_bot model you should **additionaly** have:
+**TO INFER** from a go\_bot model you should **additionally** have:
 
 4. pretrained vocabulary of dataset utterance tokens
 
    - it is trained in the same config as go\_bot model
 
-5. pretrained goal-oriented bot model itself
+5. pretrained goal-oriented bot model
    
    - config :config:`configs/go_bot/gobot_dstc2.json <go_bot/gobot_dstc2.json>` is recommended
    - ``slot_filler`` section of go\_bot's config should match NER's configuration
@@ -168,8 +168,9 @@ Challenge 2 `[2] <#references>`__. The modifications were as follows:
 
 -  **new train/dev/test split**
 
-   -  original dstc2 consisted of three different MDP polices, the original train and dev datasets (consisting of
-      two polices) were merged and randomly split into train/dev/test
+   -  original dstc2 consisted of three different MDP policies, the original train
+      and dev datasets (consisting of two policies) were merged and
+      randomly split into train/dev/test
 
 -  **minor fixes**
 
@@ -216,7 +217,7 @@ achieving that (sorted by increase in the amount of code):
       -  ``train`` — training dialog turns consisting of tuples:
       
          -  first tuple element contains first user's utterance info
-            (as dict with the following fields):
+            (as dictionary with the following fields):
 
             -  ``text`` — utterance string
             -  ``intents`` — list of string intents, associated with user's utterance
