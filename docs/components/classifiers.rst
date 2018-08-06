@@ -327,34 +327,34 @@ presented in the table below.
 | download                 | links for downloading all the components required for the considered model                                                                                                                                                                                                                                                                      |
 +--------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-Train on DSTC-2
-~~~~~~~~~~~~~~~
+Train again on provided datasets
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To re-train a model or train it with different parameters on DSTC-2
-dataset, one should set ``save_path`` to a directory where the trained
+To train from pre-trained model, re-train a model or train it
+with other parameters on one of the provided datasets,
+one should set ``save_path`` to a directory where the trained
 model will be saved (pre-trained model will be loaded if ``load_path``
 is provided and files exist, otherwise it will be created from scratch).
-All other parameters of the model as well as embedder and tokenizer
+All other parameters of the model as well as embedder, tokenizer and preprocessor
 could be changed. Then training can be run in the following way:
 
 ::
 
-    python deep.py train configs/intents/intents_dstc2.json
+    python deep.py train "path_to_config"
 
 Train on other datasets
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Constructing intents from DSTC 2 makes ``Dstc2IntentsDatasetIterator`` difficult to use.
 Therefore, we also provide another dataset reader ``BasicClassificationDatasetReader`` and dataset
-``BasicClassificationDatasetIterator`` to work with ``.csv`` files. These classes are described in
+``BasicClassificationDatasetIterator`` to work with ``.csv`` and ``.json`` files. These classes are described in
 ``deeppavlov/dataset_readers/basic_classification_reader.py`` and
 ``deeppavlov/dataset_iterators/basic_classification_dataset_iterator.py``.
 
-Training data file ``train.csv`` (and ``valid.csv``, if exists) should
-be in the following format:
+Data files should be in the following format:
 
 +-----------+---------------------------------+
-| text      | intents                         |
+| x         | y                               |
 +===========+=================================+
 | text\_0   | intent\_0                       |
 +-----------+---------------------------------+
@@ -371,13 +371,13 @@ To train model one should
 
 * set ``data_path`` to the directory to which ``train.csv`` should be downloaded,
 * set ``save_path`` to the directory where the trained model should be saved,
-* set all other parameters of model as well as embedder and tokenizer to desired ones.
+* set all other parameters of model as well as embedder, tokenizer and preprocessor to desired ones.
 
-Then the training can be run in the same way:
+Then training process can be run in the same way:
 
 ::
 
-    python deep.py train configs/intents/intents_snips.json
+    python deep.py train "path_to_config"
 
 The current version of ``intents_snips.json`` contains parameters for
 intent recognition for SNIPS benchmark dataset [2] that was restored in
