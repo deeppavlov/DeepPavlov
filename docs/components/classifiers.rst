@@ -145,7 +145,7 @@ For 'interactbot' mode one should specify a Telegram bot token in ``-t`` paramet
 environment variable.
 
 Now user can enter a text string and get output of two elements: the first one is an array of classes names
- which the string belongs to, and the second one is a dictionary with probability distribution among all
+which the string belongs to, and the second one is a dictionary with probability distribution among all
 the considered classes (take into account that for multi-class classification then sum of probabilities
 is not equal to 1).
 
