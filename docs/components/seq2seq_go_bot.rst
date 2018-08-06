@@ -40,6 +40,13 @@ Here is a simple example of interaction with a trained dialogue bot (available f
     x_text:: Thanks!
     >> you're welcome.
 
+Configs
+^^^^^^^
+
+Config :config:`configs/seq2seq_go_bot/bot_kvret_infer.json <seq2seq_go_bot/bot_kvret_infer.json>` is recommended to be used for inference (interaction) of a pretrained model.
+
+Config :config:`configs/seq2seq_go_bot/bot_kvret.json <seq2seq_go_bot/bot_kvret.json>` is recommended to be used for training a new model.
+
 Usage
 -----
  
@@ -62,16 +69,6 @@ The ``-d`` parameter downloads:
     - a pretrained model when you use :config:`configs/seq2seq_go_bot/bot_kvret_infer.json <seq2seq_go_bot/bot_kvret_infer.json>` or :config:`configs/seq2seq_go_bot/bot_kvret.json <seq2seq_go_bot/bot_kvret.json>`.
 
 After downloading required files you can use the configs in your python code.
-
-Configs
-^^^^^^^
-
-Config :config:`configs/seq2seq_go_bot/bot_kvret_infer.json <seq2seq_go_bot/bot_kvret_infer.json>` is recommended to be used for inference (interaction) of a pretrained model.
-
-Config :config:`configs/seq2seq_go_bot/bot_kvret.json <seq2seq_go_bot/bot_kvret.json>` is recommended to be used for training a new model.
-
-Python example
-^^^^^^^^^^^^^^
 
 To infer from a pretrained model with config path equal to ``<path_to_config>``:
 
