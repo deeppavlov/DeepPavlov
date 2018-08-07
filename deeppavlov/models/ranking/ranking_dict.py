@@ -54,7 +54,7 @@ class RankingDict(metaclass=ABCMeta):
                  char_trunc: str = 'post',
                  tok_dynamic_batch: bool = False,
                  char_dynamic_batch: bool = False,
-                 update_embeddings=False):
+                 update_embeddings: bool = False):
 
         self.max_sequence_length = max_sequence_length
         self.token_embeddings = token_embeddings
@@ -114,8 +114,8 @@ class RankingDict(metaclass=ABCMeta):
         self.load_context2toks()
         self.load_response2toks()
         if self.upd_embs:
-            self.build_context2emb_vocabulary()
-            self.build_response2emb_vocabulary()
+            self.load_cont()
+            self.load_resp()
 
     def save(self):
         log.info("[saving `{}`]".format(self.__class__.__name__))
@@ -124,6 +124,9 @@ class RankingDict(metaclass=ABCMeta):
         self.save_int2tok()
         self.save_context2toks()
         self.save_response2toks()
+        if self.upd_embs:
+            self.save_cont()
+            self.save_resp()
 
     @abstractmethod
     def build_int2char_vocab(self):
