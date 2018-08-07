@@ -16,6 +16,8 @@ from typing import List, Dict, Union, Tuple, Any
 from abc import ABCMeta, abstractmethod
 import numpy as np
 
+from deeppavlov.core.common.registry import register
+
 
 class Tracker(metaclass=ABCMeta):
     """
@@ -106,6 +108,7 @@ class DefaultTracker(Tracker):
         return self.curr_feats
 
 
+@register('featurized_tracker')
 class FeaturizedTracker(Tracker):
     """
     Tracker that overwrites slots with new values.

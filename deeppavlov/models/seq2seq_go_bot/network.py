@@ -54,10 +54,10 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         # specify model options
         self.opt = {
             'hidden_size': hidden_size,
-            'src_vocab_size': source_vocab_size,
-            'tgt_vocab_size': target_vocab_size,
-            'tgt_sos_id': target_start_of_sequence_index,
-            'tgt_eos_id': target_end_of_sequence_index,
+            'source_vocab_size': source_vocab_size,
+            'target_vocab_size': target_vocab_size,
+            'target_start_of_sequence_index': target_start_of_sequence_index,
+            'target_end_of_sequence_index': target_end_of_sequence_index,
             'learning_rate': learning_rate
         }
         # initialize parameters
