@@ -60,7 +60,7 @@ Requirements
    - config :config:`configs/ner/slotfill_dstc2.json <ner/slotfill_dstc2.json>` is recommended
 2. (*optional, but recommended*) pretrained intents classifier model
 
-   - config :config:`configs/intents/intents_dstc2_big.json <intents/intents_dstc2_big.json>` is recommended
+   - config :config:`configs/classifiers/intents_dstc2_big.json <classifiers/intents_dstc2_big.json>` is recommended
 3. (*optional*) any sentence (word) embeddings for english
 
    - fasttext embeddings can be downloaded
