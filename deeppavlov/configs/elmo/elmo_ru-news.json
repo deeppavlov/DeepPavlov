@@ -14,7 +14,7 @@
         "in": [
           "tokens"
         ],
-        "spec": "http://lnsigo.mipt.ru/export/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz",
+        "spec": "embeddings/elmo_ru",
         "out": [
           "tokens_emb"
         ]
@@ -28,6 +28,12 @@
     "requirements": [
       "../dp_requirements/tf.txt",
       "../dp_requirements/elmo.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz",
+        "subdir": "embeddings/elmo_ru"
+      }
     ]
   }
 }

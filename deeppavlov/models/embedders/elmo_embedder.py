@@ -19,6 +19,7 @@ import tensorflow as tf
 import numpy as np
 import tensorflow_hub as hub
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
@@ -68,7 +69,7 @@ class ELMoEmbedder(Component):
     """
     def __init__(self, spec: str, dim: int = 1024, pad_zero: bool = False, **kwargs) -> None:
 
-        self.spec = spec
+        self.spec = spec if '://' in spec else str(expand_path(spec))
         self.dim = dim
         self.pad_zero = pad_zero
         self.elmo_outputs, self.sess,  self.tokens_ph,  self.tokens_length_ph = self._load()
