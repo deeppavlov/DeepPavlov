@@ -115,11 +115,11 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/sentiment.tar.gz",
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
-      "http://lnsigo.mipt.ru/export/datasets/ag_news_data.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/sentiment.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+      "http://files.deeppavlov.ai/datasets/ag_news_data.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "embeddings"
       }
     ]

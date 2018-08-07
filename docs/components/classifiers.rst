@@ -1,8 +1,8 @@
 Neural Model for Classification
 ===============================
 
-In this repository one can find code for training and using classification model
-which is implemented as a number of different neural networks (for example, shallow-and-wide Convolutional
+In this repository one can find code for training and using classification models
+which are implemented as a number of different neural networks (for example, shallow-and-wide Convolutional
 Neural Network [1]). The model can be used for binary, multi-class or multi-label classification.
 
 We also provide with **pre-trained models** for classification on DSTC 2 dataset, SNIPS dataset, "AG News" dataset,
@@ -64,8 +64,8 @@ illustrate ``basic_classification_iterator`` work.
 
 **AG News** dataset
 (https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html)
-contains **sentiment classification** task for 5 classes (range from 0
-to 4 points scale). Test set is initial one from web-site, valid is a
+contains **topic classification** task for 5 classes (range from 0
+to 4 points scale). Test set is initial one from a web-site, valid is a
 Stratified division 1/5 from the train set from web-site with 42 seed,
 and the train set is the rest.
 
@@ -76,7 +76,7 @@ participants of conversation. Train, valid and test division is the same
 as for the Kaggle challenge.
 
 **Twitter mokoron** dataset (http://study.mokoron.com/) contains
-**sentiment classification** of Russian twits for positive and negative
+**sentiment classification** of Russian tweets for positive and negative
 replies [5]. Train, valid and test division is made by hands (Stratified
 division: 1/5 from all dataset for test set with 42 seed, then 1/5 from
 the rest for validation set with 42 seed). Attention! The pre-trained
@@ -111,7 +111,7 @@ DeepPavlov provides the following **pre-trained models**:
    This model achieves higher accuracy than the first one.
 -  ``configs/intents/intents_snips.json`` -- SNIPS - intent model for English language.
 -  ``configs/sentiment/insults_kaggle.json`` -- Insults analysis for English language.
--  ``configs/sentiment/sentiment_ag_news.json`` -- AG News sentiment analysis for English language.
+-  ``configs/sentiment/sentiment_ag_news.json`` -- AG News topic analysis for English language.
 -  ``configs/sentiment/sentiment_twitter.json`` -- Twitter Mokoron sentiment analysis for **Russian** language.
 
 To download pre-trained models, vocabs, embeddings on the dataset of interest one should run the following command
@@ -124,12 +124,6 @@ providing corresponding name of the config file (see above):
 or provide flag ``-d`` for commands like ``interact``, ``interactbot``,
 etc. The flag ``-d`` provides downloading all the required components.
 
-To download pre-trained models, vocabs, embeddings and datasets one should run the following command providing
-corresponding name of the config file (see above):
-
-::
-
-    python deep.py download configs/intents/intents_dstc2_big.json
 
 Infer from pre-trained model
 ----------------------------
@@ -151,8 +145,8 @@ For 'interactbot' mode one should specify a Telegram bot token in ``-t`` paramet
 environment variable.
 
 Now user can enter a text string and get output of two elements: the first one is an array of classes names
-(intents) which the string belongs to, and the second one is a dictionary with probability distribution among all
-the considered classes (take into account that as the task is a multi-class classification then sum of probabilities
+which the string belongs to, and the second one is a dictionary with probability distribution among all
+the considered classes (take into account that for multi-class classification then sum of probabilities
 is not equal to 1).
 
 An example of interacting the model from ``configs/intents/intents_dstc2.json``
@@ -162,7 +156,7 @@ An example of interacting the model from ``configs/intents/intents_dstc2.json``
     :: hey! I want cheap restaurant
     >> (array(['inform_pricerange'], dtype='<U17'), {'ack': 0.0040760376, 'affirm': 0.017633557, 'bye': 0.023906048, 'confirm_area': 0.0040424005, 'confirm_food': 0.012261569, 'confirm_pricerange': 0.007227284, 'deny_food': 0.003502861, 'deny_name': 0.003412795, 'hello': 0.0061915903, 'inform_area': 0.15999688, 'inform_food': 0.18303667, 'inform_name': 0.0042709936, 'inform_pricerange': 0.30197725, 'inform_this': 0.03864918, 'negate': 0.016452404, 'repeat': 0.003964727, 'reqalts': 0.026930325, 'reqmore': 0.0030793257, 'request_addr': 0.08075432, 'request_area': 0.018258458, 'request_food': 0.018060096, 'request_phone': 0.07433994, 'request_postcode': 0.012727374, 'request_pricerange': 0.024933394, 'request_signature': 0.0034591882, 'restart': 0.0038622846, 'thankyou': 0.036836267, 'unknown': 0.045310754})
 
-and and example of interacting the model from
+and an example of interacting the model from
 ``configs/intents/intents_dstc2_big.json``
 
 ::
@@ -190,12 +184,12 @@ classification task. Below the list of available models is presented:
 * ``bilstm_self_mult_attention_model`` -- Bidirectional LSTM followed by self multiplicative attention layer,
 * ``bigru_model`` -- Bidirectional GRU model.
 
-Please, pay attention that each model has its own parameters that should be specified in config.
+**Please, pay attention that each model has its own parameters that should be specified in config.**
 
 Configuration parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-One can find examples of config files in ``deeppavlov/configs/intents``.
+One can find examples of config files in ``deeppavlov/configs/intents`` and ``deeppavlov/configs/sentiment``.
 
 Detailed description of configuration file and specific parameters for all presented classification models can be found
 in :doc:`reference </apiref/models/classifiers>`.
@@ -226,7 +220,7 @@ presented in the table below.
 +--------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | split\_fields            | list of fields where the splitted field should be saved \ *SetOfValues*: list of fields, i.e ["train", "valid", "test"]                                                                                                                                                                                                                         |
 +--------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| split\_proportions       | list of corresponding proportions for splitting \ *SetOfValues*: list of floats each of which is in [0., 1.]                                                                                                                                                                                                                                    |
+| split\_proportions       | list of corresponding proportions for splitting \ *SetOfValues*: list of floats each of which is in the range [0., 1.]                                                                                                                                                                                                                          |
 +--------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | **chainer**              | **chainer is a structure that receives tuples (in, in_y) and produces out**                                                                                                                                                                                                                                                                     |
 +--------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -333,34 +327,34 @@ presented in the table below.
 | download                 | links for downloading all the components required for the considered model                                                                                                                                                                                                                                                                      |
 +--------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-Train on DSTC-2
-~~~~~~~~~~~~~~~
+Train again on provided datasets
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To re-train a model or train it with different parameters on DSTC-2
-dataset, one should set ``save_path`` to a directory where the trained
+To train from pre-trained model, re-train a model or train it
+with other parameters on one of the provided datasets,
+one should set ``save_path`` to a directory where the trained
 model will be saved (pre-trained model will be loaded if ``load_path``
 is provided and files exist, otherwise it will be created from scratch).
-All other parameters of the model as well as embedder and tokenizer
+All other parameters of the model as well as embedder, tokenizer and preprocessor
 could be changed. Then training can be run in the following way:
 
 ::
 
-    python deep.py train configs/intents/intents_dstc2.json
+    python deep.py train "path_to_config"
 
 Train on other datasets
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Constructing intents from DSTC 2 makes ``Dstc2IntentsDatasetIterator`` difficult to use.
 Therefore, we also provide another dataset reader ``BasicClassificationDatasetReader`` and dataset
-``BasicClassificationDatasetIterator`` to work with ``.csv`` files. These classes are described in
+``BasicClassificationDatasetIterator`` to work with ``.csv`` and ``.json`` files. These classes are described in
 ``deeppavlov/dataset_readers/basic_classification_reader.py`` and
 ``deeppavlov/dataset_iterators/basic_classification_dataset_iterator.py``.
 
-Training data file ``train.csv`` (and ``valid.csv``, if exists) should
-be in the following format:
+Data files should be in the following format:
 
 +-----------+---------------------------------+
-| text      | intents                         |
+| x         | y                               |
 +===========+=================================+
 | text\_0   | intent\_0                       |
 +-----------+---------------------------------+
@@ -377,13 +371,13 @@ To train model one should
 
 * set ``data_path`` to the directory to which ``train.csv`` should be downloaded,
 * set ``save_path`` to the directory where the trained model should be saved,
-* set all other parameters of model as well as embedder and tokenizer to desired ones.
+* set all other parameters of model as well as embedder, tokenizer and preprocessor to desired ones.
 
-Then the training can be run in the same way:
+Then training process can be run in the same way:
 
 ::
 
-    python deep.py train configs/intents/intents_snips.json
+    python deep.py train "path_to_config"
 
 The current version of ``intents_snips.json`` contains parameters for
 intent recognition for SNIPS benchmark dataset [2] that was restored in
@@ -427,6 +421,7 @@ trained on Reddit dataset.
 
 How to improve the performance
 ------------------------------
+
 
 -  One can use FastText [4] to train embeddings that are better suited
    for considered datasets.

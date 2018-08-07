@@ -7,12 +7,12 @@
     "name": "ranking_iterator",
     "seed": 243,
     "len_vocab": 24981,
-    "sample_candidates": "global",
-    "sample_candidates_valid": "pool",
-    "sample_candidates_test": "pool",
-    "num_negative_samples": 500,
-    "num_ranking_samples_valid": 500,
-    "num_ranking_samples_test": 500
+    "sample_candidates_pool": false,
+    "sample_candidates_pool_valid": true,
+    "sample_candidates_pool_test": true,
+    "num_negative_samples": 5,
+    "num_ranking_samples_valid": 5,
+    "num_ranking_samples_test": 5
   },
   "chainer": {
     "in": ["x"],
@@ -27,7 +27,7 @@
         "train_now": true,
         "vocab_name": "insurance",
         "vocabs_path": "insurance_data/insuranceQA-master/V1",
-        "embeddings": "fasttext",
+        "embeddings": "random",
         "embeddings_path": "insurance_embeddings/wiki.en.bin",
         "embedding_dim": 300,
         "use_matrix": false,
@@ -35,12 +35,14 @@
         "max_sequence_length": 200,
         "reccurent": "bilstm",
         "max_pooling": true,
-        "type_of_weights": "shared",
+        "shared_weights": true,
         "hidden_dim": 300,
         "learning_rate": 1e-3,
+        "distance": "cos_similarity",
         "margin": 0.1,
         "save_path": "insurance_ranking/model_weights.h5",
         "load_path": "insurance_ranking/model_weights.h5",
+        "update_embeddings": true,
         "interact_pred_num": 3
       }
     ],
@@ -65,13 +67,13 @@
       "server_utils": "Ranker"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/insurance_ranking.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/insurance_ranking_ds.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/datasets/insuranceQA-master.zip",
+        "url": "http://files.deeppavlov.ai/datasets/insuranceQA-master.zip",
         "subdir": "insurance_data"
       },
       {
-        "url": "http://lnsigo.mipt.ru/export/embeddings/wiki.en.bin",
+        "url": "http://files.deeppavlov.ai/embeddings/wiki.en.bin",
         "subdir": "insurance_embeddings"
       }
     ]

@@ -14,7 +14,7 @@
         "in": [
           "tokens"
         ],
-        "spec": "http://lnsigo.mipt.ru/export/deeppavlov_data/elmo_ru-wiki_600k_steps.tar.gz",
+        "spec": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-wiki_600k_steps.tar.gz",
         "out": [
           "tokens_emb"
         ]

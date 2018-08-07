@@ -115,10 +115,10 @@
       "telegram_utils": "IntentModel"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/intents.tar.gz",
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/intents.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "embeddings"
       }
     ]

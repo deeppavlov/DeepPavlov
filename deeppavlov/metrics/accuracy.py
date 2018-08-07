@@ -1,20 +1,21 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 
 import itertools
+from typing import List, Tuple
+import numpy as np
 
 from deeppavlov.core.common.metrics_registry import register_metric
 
@@ -23,6 +24,7 @@ from deeppavlov.core.common.metrics_registry import register_metric
 def accuracy(y_true, y_predicted):
     """
     Calculate accuracy in terms of absolute coincidence
+
     Args:
         y_true: array of true values
         y_predicted: array of predicted values
@@ -36,12 +38,13 @@ def accuracy(y_true, y_predicted):
 
 
 @register_metric('sets_accuracy')
-def sets_accuracy(y_true, y_predicted):
+def sets_accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> float:
     """
     Calculate accuracy in terms of sets coincidence
+
     Args:
-        y_true: array of true values
-        y_predicted: array of predicted values
+        y_true: true values
+        y_predicted: predicted values
 
     Returns:
         portion of samples with absolutely coincidental sets of predicted values
@@ -52,15 +55,16 @@ def sets_accuracy(y_true, y_predicted):
 
 
 @register_metric('classification_accuracy')
-def classification_accuracy(y_true, y_predicted):
+def classification_accuracy(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]]) -> float:
     """
-    Calculate accuracy in terms of sets coincidence for special case of predictions
-    (from classification KerasIntentModel)
+    Calculate accuracy in terms of sets coincidence for special case of predictions \
+            (from classification KerasIntentModel)
+
     Args:
-        y_true: array of true labels
-        y_predicted: list of predictions.
-                Each prediction is a tuple of two elements
-                (predicted_labels, dictionary like {"label_i": probability_i} )
+        y_true: true labels
+        y_predicted: predictions. \
+            Each prediction is a tuple of two elements \
+            (predicted_labels, dictionary like {"label_i": probability_i} )
 
     Returns:
         portion of samples with absolutely coincidental sets of predicted values

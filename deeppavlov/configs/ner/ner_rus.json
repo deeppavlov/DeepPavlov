@@ -151,9 +151,9 @@
       "server_utils": "NER"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_rus_v2_cpu_compatible.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/ner_rus_v2_cpu_compatible.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/embeddings/lenta_lower_100.bin",
+        "url": "http://files.deeppavlov.ai/embeddings/lenta_lower_100.bin",
         "subdir": "embeddings"
       }
     ]

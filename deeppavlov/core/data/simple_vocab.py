@@ -1,18 +1,16 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from collections import Counter, defaultdict
 from itertools import chain
@@ -31,6 +29,7 @@ log = get_logger(__name__)
 
 @register('simple_vocab')
 class SimpleVocabulary(Estimator):
+    """Implements simple vocabulary."""
     def __init__(self,
                  special_tokens=tuple(),
                  max_tokens=2**30,
@@ -162,6 +161,7 @@ class SimpleVocabulary(Estimator):
 
 @register('char_vocab')
 class CharacterVocab(SimpleVocabulary):
+    """Implements character vocabulary."""
     def fit(self, tokens):
         chars = chain(*tokens)
         super().fit(chars)
@@ -180,6 +180,7 @@ class CharacterVocab(SimpleVocabulary):
 
 @register('dialog_vocab')
 class DialogVocab(SimpleVocabulary):
+    """Implements dialog vocabulary."""
     def fit(self, utterances):
         tokens = chain(*utterances)
         super().fit(tokens)
@@ -194,4 +195,3 @@ class DialogVocab(SimpleVocabulary):
         if self._pad_with_zeros:
             indices_batch = zero_pad_char(indices_batch)
         return indices_batch
-
