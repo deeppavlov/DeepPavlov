@@ -113,7 +113,7 @@
       "server_utils": "SquadModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/squad_model_ru_1.2.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/squad_model_ru_1.3_cpu_compatible.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.vec",
         "subdir": "embeddings"
