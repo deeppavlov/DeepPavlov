@@ -40,27 +40,27 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 **Components**
 
-[Named Entity Recognition](docs/components/ner.rst) | [Slot filling](docs/components/slot_filling.rst)
+[Named Entity Recognition](http://docs.deeppavlov.ai/en/latest/components/ner.html) | [Slot filling](http://docs.deeppavlov.ai/en/latest/components/slot_filling.html)
 
-[Intent/Sentence Classification](docs/components/classifiers.rst) |  [Sentence Similarity/Ranking](docs/components/neural_ranking.rst)
+[Intent/Sentence Classification](http://docs.deeppavlov.ai/en/latest/components/classifiers.html) |  [Sentence Similarity/Ranking](http://docs.deeppavlov.ai/en/latest/components/neural_ranking.html)
 
-[Goal(Task)-oriented Bot](docs/components/go_bot.rst) | [Seq2seq Goal-Oriented bot](docs/components/seq2seq_go_bot.rst)
+[Goal(Task)-oriented Bot](http://docs.deeppavlov.ai/en/latest/components/go_bot.html) | [Seq2seq Goal-Oriented bot](http://docs.deeppavlov.ai/en/latest/components/seq2seq_go_bot.html)
 
-[Question Answering over Text (SQuAD)](docs/components/squad.rst) 
+[Question Answering over Text (SQuAD)](http://docs.deeppavlov.ai/en/latest/components/squad.html) 
 
-[Morphological tagging](docs/components/morphotagger.rst) | [Automatic Spelling Correction](docs/components/spelling_correction.rst)
+[Morphological tagging](http://docs.deeppavlov.ai/en/latest/components/morphotagger.html) | [Automatic Spelling Correction](http://docs.deeppavlov.ai/en/latest/components/spelling_correction.html)
 
 **Skills**
 
-[Open Domain Questions Answering](docs/skills/odqa.rst)
+[Open Domain Questions Answering](http://docs.deeppavlov.ai/en/latest/skills/odqa.html)
 
 **Embeddings**
 
-[Pre-trained embeddings for the Russian language](docs/intro/pretrained_vectors.rst)
+[Pre-trained embeddings for the Russian language](http://docs.deeppavlov.ai/en/latest/intro/pretrained_vectors.html)
 
 **Auto ML**
 
-[Tuning Models with Evolutionary Algorithm](docs/intro/parameters_evolution.rst)
+[Tuning Models with Evolutionary Algorithm](http://docs.deeppavlov.ai/en/latest/intro/parameters_evolution.html)
 
 # Installation
 
