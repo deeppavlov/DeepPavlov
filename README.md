@@ -52,6 +52,8 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 **Skills**
 
+[Goal(Task)-oriented Bot](http://docs.deeppavlov.ai/en/latest/skills/go_bot.html) | [Seq2seq Goal-Oriented bot](http://docs.deeppavlov.ai/en/latest/skills/seq2seq_go_bot.html)
+
 [Open Domain Questions Answering](http://docs.deeppavlov.ai/en/latest/skills/odqa.html)
 
 **Embeddings**

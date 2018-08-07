@@ -72,20 +72,19 @@ class BasicClassificationDatasetReader(DatasetReader):
                 "valid": [],
                 "test": []}
         for data_type in data_types:
-            file_format = kwargs.get('format', 'csv')
-            file_name = kwargs.get(data_type, '{}.{}'.format(data_type, file_format))
+            file_name = kwargs.get(data_type, '{}.{}'.format(data_type, format))
             file = Path(data_path).joinpath(file_name)
             if file.exists():
-                if file_format == 'csv':
+                if format == 'csv':
                     keys = ('sep', 'header', 'names')
                     options = {k: kwargs[k] for k in keys if k in kwargs}
                     df = pd.read_csv(file, **options)
-                elif file_format == 'json':
+                elif format == 'json':
                     keys = ('orient', 'lines')
                     options = {k: kwargs[k] for k in keys if k in kwargs}
                     df = pd.read_json(file, **options)
                 else:
-                    raise Exception('Unsupported file format: {}'.format(file_format))
+                    raise Exception('Unsupported file format: {}'.format(format))
 
                 x = kwargs.get("x", "text")
                 y = kwargs.get('y', 'labels')
