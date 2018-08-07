@@ -34,7 +34,7 @@ Several pre-trained models are available and presented in Table below.
   :config:`Twitter.mokoron <sentiment/sentiment_twitter.json>`                               0.8021 (with smiles), 0.8008 (no\_smiles)    0.7949 (with smiles), 0.7943 (no\_smiles)
 ==========================================================================================   =========================================    =========================================
 
-- :doc:`Goal-oriented bot </components/go_bot>`
+- :doc:`Goal-oriented bot </skills/go_bot>`
 
 Based on Hybrid Code Networks (HCNs) architecture from `Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code
 Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017
@@ -42,7 +42,7 @@ Networks: practical and efficient end-to-end dialog control with supervised and 
 customizable: embeddings, slot filler and intent classifier can switched on and off on demand.
 
 
-- :doc:`Seq2seq goal-oriented bot </components/seq2seq_go_bot>`
+- :doc:`Seq2seq goal-oriented bot </skills/seq2seq_go_bot>`
 
 Dialogue agent predicts responses in a goal-oriented dialog and is able to handle multiple domains (pretrained bot
 allows calendar scheduling, weather information retrieval, and point-of-interest navigation). The model is end-to-end
