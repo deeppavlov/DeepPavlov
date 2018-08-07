@@ -1,22 +1,13 @@
 {
   "dataset_reader": {
     "name": "basic_classification_reader",
-    "x": "text",
-    "y": "intents",
-    "data_path": "snips"
+    "x": "Comment",
+    "y": "Class",
+    "data_path": "insults_data"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator",
-    "seed": 42,
-    "field_to_split": "train",
-    "split_fields": [
-      "train",
-      "valid"
-    ],
-    "split_proportions": [
-      0.9,
-      0.1
-    ]
+    "seed": 42
   },
   "chainer": {
     "in": [
@@ -33,11 +24,20 @@
           "y"
         ],
         "level": "token",
-        "save_path": "vocabs/snips_classes.dict",
-        "load_path": "vocabs/snips_classes.dict"
+        "save_path": "vocabs/insults_kaggle_classes.dict",
+        "load_path": "vocabs/insults_kaggle_classes.dict"
       },
       {
-        "in": "x",
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_prep"
+        ],
+        "name": "dirty_comments_preprocessor"
+      },
+      {
+        "in": "x_prep",
         "out": "x_tok",
         "id": "my_tokenizer",
         "name": "nltk_tokenizer",
@@ -48,9 +48,9 @@
         "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
-        "save_path": "embeddings/dstc2_fastText_model.bin",
-        "load_path": "embeddings/dstc2_fastText_model.bin",
-        "dim": 100
+        "save_path": "embeddings/wordpunct_tok_reddit_comments_2017_11_300.bin",
+        "load_path": "embeddings/wordpunct_tok_reddit_comments_2017_11_300.bin",
+        "dim": 300
       },
       {
         "in": [
@@ -65,8 +65,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "intents/intents_snips_v4",
-        "load_path": "intents/intents_snips_v4",
+        "save_path": "classifiers/insults_kaggle_v0",
+        "load_path": "classifiers/insults_kaggle_v0",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "kernel_sizes_cnn": [
@@ -80,9 +80,10 @@
         "lear_rate": 0.01,
         "lear_rate_decay": 0.1,
         "loss": "binary_crossentropy",
-        "text_size": 15,
-        "coef_reg_cnn": 1e-4,
-        "coef_reg_den": 1e-4,
+        "last_layer_activation": "softmax",
+        "text_size": 100,
+        "coef_reg_cnn": 1e-3,
+        "coef_reg_den": 1e-2,
         "dropout_rate": 0.5,
         "dense_size": 100,
         "model_name": "cnn_model"
@@ -106,7 +107,7 @@
     "log_every_n_epochs": 5,
     "show_examples": false,
     "validate_best": true,
-    "test_best": false
+    "test_best": true
   },
   "metadata": {
     "requirements": [
@@ -118,14 +119,11 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/intents.tar.gz",
       "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
+      "http://files.deeppavlov.ai/datasets/insults_data.tar.gz",
       {
-        "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
-        "subdir": "snips"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/dstc2_fastText_model.bin",
+        "url": "http://files.deeppavlov.ai/embeddings/reddit_fastText/wordpunct_tok_reddit_comments_2017_11_300.bin",
         "subdir": "embeddings"
       }
     ]

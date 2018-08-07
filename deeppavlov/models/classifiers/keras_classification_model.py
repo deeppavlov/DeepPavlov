@@ -148,9 +148,9 @@ class KerasClassificationModel(KerasModel):
                 self.opt[param] = kwargs.get(param)
         return
 
-    def cut_texts(self, sentences: List[List[np.ndarray]]) -> np.ndarray:
+    def pad_texts(self, sentences: List[List[np.ndarray]]) -> np.ndarray:
         """
-        Cut tokenized texts to self.opt["text_size"] tokens
+        Cut and pad tokenized texts to self.opt["text_size"] tokens
 
         Args:
             sentences: list of lists of tokens
@@ -174,7 +174,7 @@ class KerasClassificationModel(KerasModel):
         Returns:
             metrics values on the given batch
         """
-        features = self.cut_texts(texts)
+        features = self.pad_texts(texts)
         onehot_labels = labels2onehot(labels, classes=self.classes)
         metrics_values = self.model.train_on_batch(features, onehot_labels)
         return metrics_values
@@ -192,12 +192,12 @@ class KerasClassificationModel(KerasModel):
             predictions, otherwise
         """
         if labels:
-            features = self.cut_texts(texts)
+            features = self.pad_texts(texts)
             onehot_labels = labels2onehot(labels, classes=self.classes)
             metrics_values = self.model.test_on_batch(features, onehot_labels)
             return metrics_values
         else:
-            features = self.cut_texts(texts)
+            features = self.pad_texts(texts)
             predictions = self.model.predict(features)
             return predictions
 

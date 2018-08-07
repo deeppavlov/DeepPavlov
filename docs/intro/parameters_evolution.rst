@@ -97,7 +97,7 @@ Example
    ::
 
        cd deeppavlov
-       python deep.py download configs/intents/intents_snips.json
+       python deep.py download configs/classifiers/intents_snips.json
 
 -  To evolve the model run the following command providing corresponding
    name of the config file (see above):

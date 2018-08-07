@@ -66,11 +66,13 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "intents/intent_cnn_snips_bigru",
-        "load_path": "intents/intent_cnn_snips_bigru",
+        "save_path": "classifiers/intent_cnn_snips_bilstm_self_add_attention",
+        "load_path": "classifiers/intent_cnn_snips_bilstm_self_add_attention",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "units_lstm": 64,
+        "self_att_hid": 64,
+        "self_att_out": 64,
         "confident_threshold": 0.5,
         "optimizer": "Adam",
         "lear_rate": 0.01,
@@ -82,7 +84,7 @@
         "dropout_rate": 0.5,
         "rec_dropout_rate": 0.5,
         "dense_size": 100,
-        "model_name": "bigru_model"
+        "model_name": "bilstm_self_add_attention_model"
       }
     ],
     "out": [

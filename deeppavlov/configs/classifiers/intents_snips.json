@@ -1,19 +1,12 @@
 {
-  "dataset": {
-    "type": "classification",
-    "format": "csv",
-    "sep": ",",
-    "header": 0,
-    "names": [
-      "text",
-      "classes"
-    ],
-    "class_sep": ",",
-    "train": "sample.csv",
-    "data_path": "sample",
+  "dataset_reader": {
+    "name": "basic_classification_reader",
     "x": "text",
-    "y": "classes",
-    "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
+    "y": "intents",
+    "data_path": "snips"
+  },
+  "dataset_iterator": {
+    "name": "basic_classification_iterator",
     "seed": 42,
     "field_to_split": "train",
     "split_fields": [
@@ -72,8 +65,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "intents/intents_snips_v4",
-        "load_path": "intents/intents_snips_v4",
+        "save_path": "classifiers/intents_snips_v4",
+        "load_path": "classifiers/intents_snips_v4",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "kernel_sizes_cnn": [
@@ -101,7 +94,7 @@
     ]
   },
   "train": {
-    "epochs": 100,
+    "epochs": 1000,
     "batch_size": 64,
     "metrics": [
       "classification_accuracy",
@@ -109,8 +102,8 @@
       "classification_roc_auc"
     ],
     "validation_patience": 5,
-    "val_every_n_epochs": 1,
-    "log_every_n_epochs": 1,
+    "val_every_n_epochs": 5,
+    "log_every_n_epochs": 5,
     "show_examples": false,
     "validate_best": true,
     "test_best": false
@@ -125,11 +118,11 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/intents.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
       "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
-        "subdir": "sample"
+        "subdir": "snips"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/dstc2_fastText_model.bin",

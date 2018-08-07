@@ -26,12 +26,12 @@ Several pre-trained models are available and presented in Table below.
 ==========================================================================================   =========================================    =========================================
  Dataset                                                                                       Valid accuracy                              Test accuracy
 ==========================================================================================   =========================================    =========================================
-  :config:`DSTC 2 <intents/intents_dstc2.json>`                                              0.8744                                       0.8801
-  :config:`DSTC 2 <intents/intents_dstc2_big.json>`                                          0.9682                                       0.9684
-  :config:`SNIPS  <intents/intents_snips.json>`                                              0.8829                                       --
-  :config:`InsultsKaggle <sentiment/insults_kaggle.json>`                                    0.8757                                       0.7503
-  :config:`AG News <sentiment/sentiment_ag_news.json>`                                       0.8735                                       0.8859
-  :config:`Twitter.mokoron <sentiment/sentiment_twitter.json>`                               0.8021 (with smiles), 0.8008 (no\_smiles)    0.7949 (with smiles), 0.7943 (no\_smiles)
+  :config:`DSTC 2 <classifiers/intents_dstc2.json>`                                              0.8744                                       0.8801
+  :config:`DSTC 2 <classifiers/intents_dstc2_big.json>`                                          0.9682                                       0.9684
+  :config:`SNIPS  <classifiers/intents_snips.json>`                                              0.8829                                       --
+  :config:`InsultsKaggle <classifiers/insults_kaggle.json>`                                      0.8757                                       0.7503
+  :config:`AG News <classifiers/topic_ag_news.json>`                                             0.8735                                       0.8859
+  :config:`Twitter.mokoron <classifiers/sentiment_twitter.json>`                             0.8021 (with smiles), 0.8008 (no\_smiles)    0.7949 (with smiles), 0.7943 (no\_smiles)
 ==========================================================================================   =========================================    =========================================
 
 - :doc:`Goal-oriented bot </components/go_bot>`
@@ -123,7 +123,7 @@ Examples of some components
    ``python -m deeppavlov riseapi deeppavlov/configs/ner/slotfill_dstc2.json -d``
 -  Predict intents on every line in a file:
 
-   ``python -m deeppavlov predict deeppavlov/configs/intents/intents_snips.json -d --batch-size 15 < /data/in.txt > /data/out.txt``
+   ``python -m deeppavlov predict deeppavlov/configs/classifiers/intents_snips.json -d --batch-size 15 < /data/in.txt > /data/out.txt``
 
 
 View `video demo <https://youtu.be/yzoiCa_sMuY>`__ of deployment of a
