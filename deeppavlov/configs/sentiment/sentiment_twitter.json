@@ -37,6 +37,15 @@
         "name": "dirty_comments_preprocessor"
       },
       {
+        "in": "x_prep",
+        "out": "x_tok",
+        "id": "my_tokenizer",
+        "name": "nltk_tokenizer",
+        "tokenizer": "wordpunct_tokenize"
+      },
+      {
+        "in": "x_tok",
+        "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
         "save_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
@@ -44,13 +53,8 @@
         "dim": 300
       },
       {
-        "id": "my_tokenizer",
-        "name": "nltk_tokenizer",
-        "tokenizer": "wordpunct_tokenize"
-      },
-      {
         "in": [
-          "x_prep"
+          "x_emb"
         ],
         "in_y": [
           "y"
@@ -63,6 +67,7 @@
         "name": "keras_classification_model",
         "save_path": "sentiment/sentiment_twitter_v1",
         "load_path": "sentiment/sentiment_twitter_v1",
+        "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "kernel_sizes_cnn": [
           1,
@@ -81,9 +86,7 @@
         "coef_reg_den": 1e-2,
         "dropout_rate": 0.5,
         "dense_size": 100,
-        "model_name": "cnn_model",
-        "embedder": "#my_embedder",
-        "tokenizer": "#my_tokenizer"
+        "model_name": "cnn_model"
       }
     ],
     "out": [

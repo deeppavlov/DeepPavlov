@@ -40,6 +40,15 @@
         "load_path": "vocabs/classes.dict"
       },
       {
+        "in": "x",
+        "out": "x_tok",
+        "id": "my_tokenizer",
+        "name": "nltk_tokenizer",
+        "tokenizer": "wordpunct_tokenize"
+      },
+      {
+        "in": "x_tok",
+        "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
         "save_path": "embeddings/dstc2_fastText_model.bin",
@@ -47,13 +56,8 @@
         "dim": 100
       },
       {
-        "id": "my_tokenizer",
-        "name": "nltk_tokenizer",
-        "tokenizer": "wordpunct_tokenize"
-      },
-      {
         "in": [
-          "x"
+          "x_emb"
         ],
         "in_y": [
           "y"
@@ -66,6 +70,7 @@
         "name": "keras_classification_model",
         "save_path": "intents/intents_dstc2_v4",
         "load_path": "intents/intents_dstc2_v4",
+        "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "kernel_sizes_cnn": [
           1,
@@ -83,9 +88,7 @@
         "coef_reg_den": 1e-4,
         "dropout_rate": 0.5,
         "dense_size": 100,
-        "model_name": "cnn_model",
-        "embedder": "#my_embedder",
-        "tokenizer": "#my_tokenizer"
+        "model_name": "cnn_model"
       }
     ],
     "out": [
