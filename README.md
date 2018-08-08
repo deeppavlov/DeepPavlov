@@ -58,7 +58,9 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 **Embeddings**
 
-[Pre-trained embeddings for the Russian language](http://docs.deeppavlov.ai/en/latest/intro/pretrained_vectors.html)
+[ELMo embeddings for the Russian language](http://docs.deeppavlov.ai/en/master/apiref/models/embedders.html#deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder)
+
+[FastText embeddings for the Russian language](http://docs.deeppavlov.ai/en/latest/intro/pretrained_vectors.html)
 
 **Auto ML**
 
