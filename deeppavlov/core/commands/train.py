@@ -172,6 +172,8 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
         elif not isinstance(model, Chainer):
             log.warning('Nothing to train')
 
+    res = {}
+
     if train_config['validate_best'] or train_config['test_best']:
         # try:
         #     model_config['load_path'] = model_config['save_path']
@@ -187,6 +189,8 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
                                      show_examples=train_config['show_examples'])
             }
 
+            res['valid'] = report['valid']['metrics']
+
             print(json.dumps(report, ensure_ascii=False))
 
         if train_config['test_best']:
@@ -196,7 +200,11 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
                                     show_examples=train_config['show_examples'])
             }
 
+            res['test'] = report['test']['metrics']
+
             print(json.dumps(report, ensure_ascii=False))
+
+    return res
 
 
 def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
