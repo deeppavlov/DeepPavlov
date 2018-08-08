@@ -1,4 +1,4 @@
-Pretrained embeddings
+Pre-trained embeddings
 ============================
 
 ELMo
