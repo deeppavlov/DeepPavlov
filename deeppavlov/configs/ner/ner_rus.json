@@ -14,10 +14,10 @@
       {
         "in": ["x"],
         "name": "lazy_tokenizer",
-        "out": ["x"]
+        "out": ["x_tokens"]
       },
       {
-        "in": ["x"],
+        "in": ["x_tokens"],
         "name": "str_lower",
         "out": ["x_lower"]
       },
@@ -49,7 +49,7 @@
         "out": ["y_ind"]
       },
       {
-        "in": ["x"],
+        "in": ["x_tokens"],
         "name": "char_splitter",
         "out": ["x_char"]
       },
@@ -72,7 +72,7 @@
         "out": ["x_emb"]
       },
       {
-        "in": ["x"],
+        "in": ["x_tokens"],
         "name": "mask",
         "out": ["mask"]
       },
@@ -91,7 +91,7 @@
       {
         "id": "capitalization",
         "name": "capitalization_featurizer",
-        "in": ["x"],
+        "in": ["x_tokens"],
         "out": ["cap"]
       },
       {
@@ -127,7 +127,7 @@
       }
     ],
 
-    "out": ["tags"]
+    "out": ["x_tokens", "tags"]
   },
   "train": {
     "epochs": 100,
@@ -151,9 +151,9 @@
       "server_utils": "NER"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/ner_rus_v2.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/ner_rus_v2_cpu_compatible.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/embeddings/lenta_lower_100.bin",
+        "url": "http://files.deeppavlov.ai/embeddings/lenta_lower_100.bin",
         "subdir": "embeddings"
       }
     ]

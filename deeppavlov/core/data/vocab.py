@@ -1,19 +1,18 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
+from typing import List, Callable
 from collections import Counter, defaultdict
 import itertools
 from pathlib import Path
@@ -21,7 +20,6 @@ from pathlib import Path
 import numpy as np
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.estimator import Estimator
@@ -31,13 +29,28 @@ log = get_logger(__name__)
 
 @register('default_vocab')
 class DefaultVocabulary(Estimator):
-    def __init__(self, save_path, load_path, level='token',
-                 special_tokens=tuple(), default_token=None,
-                 tokenizer=None, min_freq=0, **kwargs):
+    """
+    Implements vocabulary of tokens, chars or other structeres.
 
-        super().__init__(load_path=load_path,
-                         save_path=save_path,
-                         **kwargs)
+    Parameters:
+        level: level of operation can be tokens (``'token'``) or chars (``'char'``).
+        special_tokens: tuple of tokens that shouldn't be counted.
+        default_token: label assigned to unknown tokens.
+        tokenizer: callable used to get tokens out of string.
+        min_freq: minimal count of a token (except special tokens).
+    """
+
+    def __init__(self,
+                 save_path: str,
+                 load_path: str,
+                 level: str = 'token',
+                 special_tokens: List[str] = [],
+                 default_token: str = None,
+                 tokenizer: Callable = None,
+                 min_freq: int = 0,
+                 **kwargs) -> None:
+
+        super().__init__(load_path=load_path, save_path=save_path, **kwargs)
 
         self.special_tokens = special_tokens
         self.default_token = default_token
@@ -201,4 +214,3 @@ class DefaultVocabulary(Estimator):
 
     def batch_idxs2batch_toks(self, b_idxs, filter_paddings=False):
         return [self.idxs2toks(idxs, filter_paddings) for idxs in b_idxs]
-

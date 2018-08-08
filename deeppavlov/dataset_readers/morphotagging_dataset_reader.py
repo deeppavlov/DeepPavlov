@@ -1,20 +1,20 @@
-"""
-Copyright 2018 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2018 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from pathlib import Path
+from typing import Dict, List, Union, Tuple
+
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import download_decompress, mark_done
 from deeppavlov.core.common.log import get_logger
@@ -27,14 +27,28 @@ WORD_COLUMN, POS_COLUMN, TAG_COLUMN = 1, 3, 5
 
 log = get_logger(__name__)
 
-def get_language(filepath):
-    """
-    Extracts language from typical UD filename
+def get_language(filepath: str) -> str:
+    """Extracts language from typical UD filename
     """
     return filepath.split("-")[0]
 
-def read_infile(infile, word_column=WORD_COLUMN, pos_column=POS_COLUMN,
-                tag_column=TAG_COLUMN, max_sents=-1, read_only_words=False):
+def read_infile(infile: str, word_column: int = WORD_COLUMN, pos_column: int = POS_COLUMN,
+                tag_column: int = TAG_COLUMN, max_sents: int = -1,
+                read_only_words: bool = False) -> List[Tuple[List, Union[List, None]]]:
+    """Reads input file in CONLL-U format
+
+    Args:
+        infile: a path to a file
+        word_column: column containing words (default=1)
+        pos_column: column containing part-of-speech labels (default=3)
+        tag_column: column containing fine-grained tags (default=5)
+        max_sents: maximal number of sents to read
+        read_only_words: whether to read only words
+
+    Returns:
+        a list of sentences. Each item contains a word sequence and a tag sequence, which is ``None``
+        in case ``read_only_words = True``
+    """
     answer, curr_word_sent, curr_tag_sent = [], [], []
     with open(infile, "r", encoding="utf8") as fin:
         for line in fin:
@@ -68,20 +82,24 @@ def read_infile(infile, word_column=WORD_COLUMN, pos_column=POS_COLUMN,
 
 @register('morphotagger_dataset_reader')
 class MorphotaggerDatasetReader(DatasetReader):
-    """
-    Class to read training datasets in UD format
-    """
+    """Class to read training datasets in UD format"""
 
-    URL = 'http://lnsigo.mipt.ru/export/datasets/UD2.0_source/'
+    URL = 'http://files.deeppavlov.ai/datasets/UD2.0_source/'
 
-    def read(self, data_path, language=None, data_types=None, **kwargs):
-        """
-        Reads UD dataset from data_path.
+    def read(self, data_path: Union[List, str], language: Union[str, None] = None,
+             data_types: Union[List[str], None] = None, **kwargs) -> Dict[str, List]:
+        """Reads UD dataset from data_path.
 
-        data_path: str or list, can be either
-            1. a directory containing files. The file for data_type 'mode'
-            is then data_path / {language}-ud-{mode}.conllu
-            2. a list of files, containing the same number of items as data_types
+        Args:
+            data_path: can be either
+                1. a directory containing files. The file for data_type 'mode'
+                is then data_path / {language}-ud-{mode}.conllu
+                2. a list of files, containing the same number of items as data_types
+            language: a language to detect filename when it is not given
+            data_types: which dataset parts among 'train', 'dev', 'test' are returned
+
+        Returns:
+            a dictionary containing dataset fragments (see ``read_infile``) for given data types
         """
         if data_types is None:
             data_types = ["train", "dev"]

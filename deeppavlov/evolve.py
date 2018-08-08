@@ -277,7 +277,7 @@ def results_to_table(population, evolution, considered_metrics, result_file, res
     for i in range(population_size):
         with open(str(expand_path(Path(evolution.get_value_from_config(
                 population[i],
-                evolution.main_model_path + ["save_path"])).parent.joinpath("out.txt"))), "r") as fout:
+                evolution.main_model_path + ["save_path"])).parent.joinpath("out.txt"))), "r", encoding='utf8') as fout:
             reports_data = fout.read().splitlines()[-2:]
         reports = []
         for j in range(2):

@@ -1,18 +1,16 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import copy
 import re
@@ -26,7 +24,7 @@ class Template(metaclass=ABCMeta):
         return cls(s)
 
 
-class BaseTemplate(Template):
+class DefaultTemplate(Template):
 
     def __init__(self, text=""):
         self.text = text
@@ -175,13 +173,14 @@ class Templates:
         return self._templates
 
     def load(self, filename):
-        for ln in open(filename, 'r'):
-            act, template = ln.strip('\n').split('\t', 1)
-            self.__setitem__(act, self.ttype.from_str(template))
+        with open(filename, 'r', encoding='utf8') as fp:
+            for ln in fp:
+                act, template = ln.strip('\n').split('\t', 1)
+                self.__setitem__(act, self.ttype.from_str(template))
         return self
 
     def save(self, filename):
-        with open(filename, 'w') as outfile:
+        with open(filename, 'w', encoding='utf8') as outfile:
             for act in sorted(self.actions):
                 template = self.__getitem__(act)
                 outfile.write('{}\t{}\n'.format(act, template))

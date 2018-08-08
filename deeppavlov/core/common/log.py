@@ -29,7 +29,7 @@ def get_logger(logger_name):
         config_dir = Path(__file__).resolve().parent
         log_config_path = Path(config_dir, '..', '..', LOG_CONFIG_FILENAME).resolve()
 
-        with open(log_config_path) as log_config_json:
+        with open(log_config_path, encoding='utf8') as log_config_json:
             log_config = json.load(log_config_json)
 
         configured_loggers = [log_config.get('root', {})] + log_config.get('loggers', [])

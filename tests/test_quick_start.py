@@ -47,7 +47,7 @@ PARAMS = {
                 ("преведствую", "приветствую"),
                 ("я джва года дду эту игру", "я два года жду эту игру")
             ],
-        ("spelling_correction/levenstein_corrector_ru.json", "error_model", ('IP',)):
+        ("spelling_correction/levenshtein_corrector_ru.json", "error_model", ('IP',)):
             [
                 ("преветствую", "приветствую"),
                 ("Я джва года хочу такую игру", "я два года хочу такую игру")
@@ -56,8 +56,7 @@ PARAMS = {
     "go_bot": {
         ("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("go_bot/gobot_dstc2_all.json", "gobot_dstc2_all", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "intents": {
         ("intents/intents_dstc2.json", "intents", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
@@ -97,6 +96,10 @@ PARAMS = {
                 ("moderate price range", "{'pricerange': 'moderate'}")
             ]
     },
+    "elmo": {
+        ("elmo/elmo_ru-news.json", "elmo_ru-news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+    },
+
     "ranking": {("ranking/ranking_insurance.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
                 ("ranking/en_ranker_tfidf_wiki_test.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
     "squad": {
@@ -107,8 +110,11 @@ PARAMS = {
     "odqa": {
         ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
-    "morpho_tagger/UD2.0/hu":
-        {("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]}
+    "morpho_tagger":{
+        ("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger_hu", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_train_pymorphy.json",
+         "morpho_tagger_pymorphy", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+    }
 }
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
@@ -130,9 +136,9 @@ def download_config(conf_file):
         src_file = test_src_dir / conf_file
 
     if not src_file.is_file():
-        raise RuntimeError('Unexisting config file {}'.format(conf_file))
+        raise RuntimeError('No config file {}'.format(conf_file))
 
-    with src_file.open() as fin:
+    with src_file.open(encoding='utf8') as fin:
         config = json.load(fin)
 
     if config.get("train"):
@@ -142,7 +148,9 @@ def download_config(conf_file):
 
     config["deeppavlov_root"] = str(download_path)
 
-    with (test_configs_path / conf_file).open("w") as fout:
+    conf_file = test_configs_path / conf_file
+    conf_file.parent.mkdir(exist_ok=True, parents=True)
+    with conf_file.open("w", encoding='utf8') as fout:
         json.dump(config, fout)
 
     # Download referenced config files

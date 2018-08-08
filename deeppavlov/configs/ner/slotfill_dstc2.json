@@ -14,16 +14,16 @@
       {
         "in": ["x"],
         "name": "lazy_tokenizer",
-        "out": ["x"]
+        "out": ["x_tokens"]
       },
       {
-        "in": ["x"],
+        "in": ["x_tokens"],
         "config_path": "../deeppavlov/configs/ner/ner_dstc2.json",
-        "out": ["tags"]
+        "out": ["x_tokens", "tags"]
       },
 
       {
-        "in": ["x", "tags"],
+        "in": ["x_tokens", "tags"],
         "name": "dstc_slotfilling",
         "threshold": 0.8,
         "save_path": "slotfill_dstc2/dstc_slot_vals.json",
@@ -45,7 +45,7 @@
       "server_utils": "DstcSlotFillingNetwork"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/slotfill_dstc2.tar.gz"
+      "http://files.deeppavlov.ai/deeppavlov_data/slotfill_dstc2.tar.gz"
     ]
   }
 }

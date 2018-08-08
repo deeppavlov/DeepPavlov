@@ -1,18 +1,17 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 import json
 from math import exp
 from collections import defaultdict
@@ -31,7 +30,8 @@ log = get_logger(__name__)
 
 @register('slotfill_raw')
 class SlotFillingComponent(Component, Serializable):
-    def __init__(self, threshold=0.7, return_all=False, **kwargs):
+    """Slot filling using Fuzzy search"""
+    def __init__(self, threshold: float = 0.7, return_all: bool = False, **kwargs):
         super().__init__(**kwargs)
         self.threshold = threshold
         self.return_all = return_all
@@ -71,11 +71,11 @@ class SlotFillingComponent(Component, Serializable):
         return slot_values
 
     def load(self, *args, **kwargs):
-        with open(self.load_path) as f:
+        with open(self.load_path, encoding='utf8') as f:
             self._slot_vals = json.load(f)
 
     def save(self):
-        with open(self.save_path, 'w') as f:
+        with open(self.save_path, 'w', encoding='utf8') as f:
             json.dump(self._slot_vals, f)
 
     def _fuzzy_finder(self, slot_dict, tokens):

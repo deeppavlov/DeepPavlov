@@ -1,25 +1,30 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 from keras import backend as K
-from keras.layers import Dense, Reshape, Concatenate, Lambda, Multiply
+from keras.models import Model
+from keras.layers import Dense, Reshape, Concatenate, Lambda, Embedding, Conv2D, Activation, Input
+from keras.engine.topology import Layer
+from keras.layers.merge import Multiply, Add
 from keras.activations import softmax
+import numpy as np
 
 
 def expand_tile(units, axis):
-    """Expand and tile tensor along given axis
+    """
+    Expand and tile tensor along given axis
+
     Args:
         units: tf tensor with dimensions [batch_size, time_steps, n_input_features]
         axis: axis along which expand and tile. Must be 1 or 2
@@ -41,19 +46,20 @@ def softvaxaxis2(x):
 
 
 def additive_self_attention(units, n_hidden=None, n_output_features=None, activation=None):
-    """ Computes additive self attention for time series of vectors (with batch dimension)
+    """
+    Compute additive self attention for time series of vectors (with batch dimension)
             the formula: score(h_i, h_j) = <v, tanh(W_1 h_i + W_2 h_j)>
             v is a learnable vector of n_hidden dimensionality,
             W_1 and W_2 are learnable [n_hidden, n_input_features] matrices
 
-        Args:
-            units: tf tensor with dimensionality [batch_size, time_steps, n_input_features]
-            n_hidden: number of2784131 units in hidden representation of similarity measure
-            n_output_features: number of features in output dense layer
-            activation: activation at the output
+    Args:
+        units: tf tensor with dimensionality [batch_size, time_steps, n_input_features]
+        n_hidden: number of2784131 units in hidden representation of similarity measure
+        n_output_features: number of features in output dense layer
+        activation: activation at the output
 
-        Returns:
-            output: self attended tensor with dimensionality [batch_size, time_steps, n_output_features]
+    Returns:
+        output: self attended tensor with dimensionality [batch_size, time_steps, n_output_features]
         """
     n_input_features = K.int_shape(units)[2]
     if n_hidden is None:
@@ -71,7 +77,8 @@ def additive_self_attention(units, n_hidden=None, n_output_features=None, activa
 
 
 def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, activation=None):
-    """ Computes multiplicative self attention for time series of vectors (with batch dimension)
+    """
+    Compute multiplicative self attention for time series of vectors (with batch dimension)
     the formula: score(h_i, h_j) = <W_1 h_i,  W_2 h_j>,  W_1 and W_2 are learnable matrices
     with dimensionality [n_hidden, n_input_features]
 
@@ -100,7 +107,6 @@ def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, 
     output = Dense(n_output_features, activation=activation)(attended_units)
     return output
 
-
 def multiplicative_self_attention_init(n_hidden, n_output_features, activation):
     layers = {}
     layers["queries"] = Dense(n_hidden)
@@ -120,3 +126,43 @@ def multiplicative_self_attention_get_output(units, layers):
     attended_units = Lambda(lambda x: K.sum(x, axis=2))(mult)
     output = layers["output"](attended_units)
     return output
+
+def char_emb_cnn_func(n_characters: int,
+                      char_embedding_dim: int,
+                      emb_mat: np.array = None,
+                        filter_widths=(3, 4, 5, 7),
+                        highway_on_top=False):
+
+    emb_layer = Embedding(n_characters,
+                          char_embedding_dim)
+
+    if emb_mat is not None:
+        emb_layer.set_weights([emb_mat])
+
+    conv2d_layers = []
+    for filter_width in filter_widths:
+        conv2d_layers.append(Conv2D(char_embedding_dim,
+                                    (1, filter_width),
+                                    padding='same'))
+
+    if highway_on_top:
+        dense1 = Dense(char_embedding_dim * len(filter_widths))
+        dense2 = Dense(char_embedding_dim * len(filter_widths))
+
+    def result(input):
+        emb_c = emb_layer(input)
+        conv_results_list = []
+        for cl in conv2d_layers:
+            conv_results_list.append(cl(emb_c))
+        emb_c = Lambda(lambda x: K.concatenate(x, axis=3))(conv_results_list)
+        emb_c = Lambda(lambda x: K.max(x, axis=2))(emb_c)
+        if highway_on_top:
+            sigmoid_gate = dense1(emb_c)
+            sigmoid_gate = Activation('sigmoid')(sigmoid_gate)
+            deeper_units = dense2(emb_c)
+            emb_c = Add()([Multiply()([sigmoid_gate, deeper_units]),
+                           Multiply()([Lambda(lambda x: K.constant(1., shape=K.shape(x)) - x)(sigmoid_gate), emb_c])])
+            emb_c = Activation('relu')(emb_c)
+        return emb_c
+
+    return result
