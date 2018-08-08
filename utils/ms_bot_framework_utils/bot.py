@@ -4,7 +4,7 @@ from queue import Queue
 from threading import Thread
 from requests.exceptions import HTTPError
 
-from conversation import Conversation
+from utils.ms_bot_framework_utils.conversation import Conversation
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.commands.infer import build_model_from_config
@@ -13,9 +13,13 @@ log = get_logger(__name__)
 
 
 class Bot(Thread):
-    def __init__(self, config: dict, model_config_path: str, input_queue: Queue):
+    def __init__(self, config: dict, model_config_path: str, client_id: str, client_secret: str, input_queue: Queue):
         super(Bot, self).__init__()
         self.config = config
+
+        self.config['ms_bot_framework_defaults']['auth_client_id'] = client_id
+        self.config['ms_bot_framework_defaults']['auth_client_secret'] = client_secret
+
         self.model = self._init_model(model_config_path)
         self.conversations = {}
         self.access_info = {}

@@ -5,7 +5,7 @@ from flask import Flask, request, jsonify, redirect
 from flasgger import Swagger
 from flask_cors import CORS
 
-from bot import Bot
+from utils.ms_bot_framework_utils.bot import Bot
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.commands.infer import build_model_from_config
@@ -19,13 +19,13 @@ Swagger(app)
 CORS(app)
 
 
-def init_model(model_config_path):
+def init_model(model_config_path: str):
     model_config = read_json(model_config_path)
     model = build_model_from_config(model_config)
     return model
 
 
-def start_model_server(model_config_path):
+def start_bot_framework_server(model_config_path: str, client_id: str, client_secret: str):
     server_config_dir = Path(__file__).resolve().parent
     server_config_path = Path(server_config_dir, '..', SERVER_CONFIG_FILENAME).resolve()
     server_params = read_json(server_config_path)
@@ -34,7 +34,7 @@ def start_model_server(model_config_path):
     port = server_params['common_defaults']['port']
 
     input_q = Queue()
-    bot = Bot(server_params, model_config_path, input_q)
+    bot = Bot(server_params, model_config_path, client_id, client_secret, input_q)
     bot.start()
 
     @app.route('/')
@@ -48,8 +48,3 @@ def start_model_server(model_config_path):
         return jsonify({}), 200
 
     app.run(host=host, port=port, threaded=True)
-
-
-if __name__ == '__main__':
-    model_cfg = '/home/litinsky/repo/DeepPavlov/deeppavlov/configs/intents/intents_snips.json'
-    start_model_server(model_cfg)
