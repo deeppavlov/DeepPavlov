@@ -7,7 +7,7 @@ deeppavlov.models.classifiers
 .. autoclass:: deeppavlov.models.classifiers.keras_classification_model.KerasClassificationModel
 
     .. automethod:: __call__
-    .. automethod:: pad_texts
+    .. automethod:: texts2vec
     .. automethod:: train_on_batch
     .. automethod:: infer_on_batch
     .. automethod:: cnn_model

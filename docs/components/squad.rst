@@ -53,6 +53,8 @@ Default config could be found at ``deeppavlov/configs/squad/squad.json``
 Model usage
 -------------
 
+.. _reader_training:
+
 Training
 ~~~~~~~~
 

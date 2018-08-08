@@ -9,14 +9,14 @@ class InsuranceDict(RankingDict):
                  max_sequence_length, padding="post", truncating="post",
                  max_token_length=None, token_embeddings=True, char_embeddings=False,
                  char_pad="post", char_trunc="post",
-                 tok_dynamic_batch=False, char_dynamic_batch=False):
+                 tok_dynamic_batch=False, char_dynamic_batch=False, update_embeddings = False):
 
         super().__init__(save_path, load_path,
                          max_sequence_length, max_token_length,
                          padding, truncating,
                          token_embeddings, char_embeddings,
                          char_pad, char_trunc,
-                         tok_dynamic_batch, char_dynamic_batch)
+                         tok_dynamic_batch, char_dynamic_batch, update_embeddings)
 
         vocabs_path = expand_path(vocabs_path)
         self.int2tok_fname = Path(vocabs_path) / 'vocabulary'

@@ -47,9 +47,6 @@ class RankingModel(NNModel):
         semi_hard_negatives: Whether hard negative samples should be further away from anchor samples
             than positive samples or not.
         update_embeddings: Whether to store and update context and response embeddings or not.
-        online_update: Only works when ``update_embeddings`` is set to ``True``.
-            Whether to update context and response embeddings which will be used next at the training step.
-            If ``False``, all context and response embeddings will be updated before the validation.
         interact_pred_num: The number of the most relevant contexts and responses
             which model returns in the `interact` regime.
         **kwargs: Other parameters.
@@ -62,7 +59,6 @@ class RankingModel(NNModel):
                  semi_hard_negatives: bool = False,
                  num_hardest_negatives: int = None,
                  update_embeddings: bool = False,
-                 online_update: bool = True,
                  interact_pred_num: int = 3,
                  **kwargs):
 
@@ -80,7 +76,6 @@ class RankingModel(NNModel):
         self.semi_hard_negatives = semi_hard_negatives
         self.num_hardest_negatives = num_hardest_negatives
         self.upd_embs = update_embeddings
-        self.online_update= online_update
         self.interact_pred_num = interact_pred_num
         self.train_now = train_now
         self.vocab_name = vocab_name
@@ -90,7 +85,7 @@ class RankingModel(NNModel):
         if self.vocab_name == "insurance":
             dict_parameter_names = list(inspect.signature(InsuranceDict.__init__).parameters)
             dict_parameters = {par: opt[par] for par in dict_parameter_names if par in opt}
-            self.dict = InsuranceDict(**dict_parameters)
+            self.dict = InsuranceDict(**dict_parameters, update_embeddings=update_embeddings)
 
         embdict_parameter_names = list(inspect.signature(EmbDict.__init__).parameters)
         embdict_parameters = {par: opt[par] for par in embdict_parameter_names if par in opt}
@@ -140,8 +135,7 @@ class RankingModel(NNModel):
         log.info('[saving model to {}]'.format(self.save_path.resolve()))
         self._net.save(self.save_path)
         if self.upd_embs:
-            if not self.online_update:
-                self.set_embeddings()
+            self.set_embeddings()
         self.dict.save()
         self.embdict.save()
 
@@ -149,8 +143,7 @@ class RankingModel(NNModel):
     def train_on_batch(self, x: List[List[Tuple[int, int]]], y: List[int]):
         """Train the model on a batch."""
         if self.upd_embs:
-            if not self.online_update:
-                self.reset_embeddings()
+            self.reset_embeddings()
         if self.hard_triplets_sampling:
             b = self.make_hard_triplets(x, y, self._net)
             y = np.ones(len(b[0][0]))
@@ -310,11 +303,6 @@ class RankingModel(NNModel):
             Union[np.ndarray, Dict[str, List[str]]]:
         """Make a prediction on a batch."""
         if type(batch[0]) == list:
-            if self.upd_embs:
-                if self.online_update:
-                    self.update_embeddings(batch)
-                else:
-                    self.set_embeddings()
             y_pred = []
             b = self.make_batch(batch)
             for el in b:

@@ -43,7 +43,7 @@ Networks: practical and efficient end-to-end dialog control with supervised and 
 customizable: embeddings, slot filler and intent classifier can switched on and off on demand.
 
 
-- :doc:`Seq2seq goal-oriented bot </components/seq2seq_go_bot>`
+- :doc:`Seq2seq goal-oriented bot </skills/seq2seq_go_bot>`
 
 Dialogue agent predicts responses in a goal-oriented dialog and is able to handle multiple domains (pretrained bot
 allows calendar scheduling, weather information retrieval, and point-of-interest navigation). The model is end-to-end
@@ -124,7 +124,7 @@ Examples of some components
    ``python -m deeppavlov riseapi deeppavlov/configs/ner/slotfill_dstc2.json -d``
 -  Predict intents on every line in a file:
 
-   ``python -m deeppavlov predict deeppavlov/configs/classifiers/intents_snips.json -d --batch-size 15 < /data/in.txt > /data/out.txt``
+   ``python -m deeppavlov predict deeppavlov/configs/intents/intents_snips.json -d --batch-size 15 < /data/in.txt > /data/out.txt``
 
 
 View `video demo <https://youtu.be/yzoiCa_sMuY>`__ of deployment of a
