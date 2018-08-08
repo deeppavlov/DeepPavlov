@@ -41,8 +41,8 @@ parser.add_argument("mode", help="select a mode, train or interact", type=str,
                              'riseapi', 'download', 'install'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 parser.add_argument("-t", "--token", help="telegram bot token", type=str)
-parser.add_argument("-i", "--ms-id", help="microsoft bot framework client id", type=str)
-parser.add_argument("-s", "--ms-secret", help="microsoft bot framework client secret", type=str)
+parser.add_argument("-i", "--ms-id", help="microsoft bot framework app id", type=str)
+parser.add_argument("-s", "--ms-secret", help="microsoft bot framework app secret", type=str)
 parser.add_argument("-b", "--batch-size", dest="batch_size", default=1, help="inference batch size", type=int)
 parser.add_argument("-f", "--input-file", dest="file_path", default=None, help="Path to the input file", type=str)
 parser.add_argument("-d", "--download", action="store_true", help="download model components")
@@ -64,8 +64,8 @@ def main():
     if args.download or args.mode == 'download':
         deep_download(['-c', pipeline_config_path])
     token = args.token or os.getenv('TELEGRAM_TOKEN')
-    ms_id = args.ms_id or os.getenv('MS_CLIENT_ID')
-    ms_secret = args.ms_secret or os.getenv('MS_CLIENT_SECRET')
+    ms_id = args.ms_id or os.getenv('MS_APP_ID')
+    ms_secret = args.ms_secret or os.getenv('MS_APP_SECRET')
 
     if args.mode == 'train':
         train_evaluate_model_from_config(pipeline_config_path)
@@ -80,11 +80,11 @@ def main():
             interact_model_by_telegram(pipeline_config_path, token)
     elif args.mode == 'interactmsbot':
         if not ms_id:
-            log.error('Microsoft Bot Framework client id required: initiate -i param '
-                      'or MS_CLIENT_ID env var with Microsoft client id')
+            log.error('Microsoft Bot Framework app id required: initiate -i param '
+                      'or MS_APP_ID env var with Microsoft app id')
         elif not ms_secret:
-            log.error('Microsoft Bot Framework client secret required: initiate -s param '
-                      'or MS_CLIENT_SECRET env var with Microsoft client secret')
+            log.error('Microsoft Bot Framework app secret required: initiate -s param '
+                      'or MS_APP_SECRET env var with Microsoft app secret')
         else:
             start_bot_framework_server(pipeline_config_path, ms_id, ms_secret)
     elif args.mode == 'riseapi':

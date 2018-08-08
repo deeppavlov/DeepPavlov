@@ -25,7 +25,7 @@ def init_model(model_config_path: str):
     return model
 
 
-def start_bot_framework_server(model_config_path: str, client_id: str, client_secret: str):
+def start_bot_framework_server(model_config_path: str, app_id: str, app_secret: str):
     server_config_dir = Path(__file__).resolve().parent
     server_config_path = Path(server_config_dir, '..', SERVER_CONFIG_FILENAME).resolve()
     server_params = read_json(server_config_path)
@@ -34,7 +34,7 @@ def start_bot_framework_server(model_config_path: str, client_id: str, client_se
     port = server_params['common_defaults']['port']
 
     input_q = Queue()
-    bot = Bot(server_params, model_config_path, client_id, client_secret, input_q)
+    bot = Bot(server_params, model_config_path, app_id, app_secret, input_q)
     bot.start()
 
     @app.route('/')

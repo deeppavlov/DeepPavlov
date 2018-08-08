@@ -11,9 +11,12 @@ class Conversation:
         self.bot = bot
         self.bot_id = activity['recipient']['id']
         self.bot_name = activity['recipient']['name']
+        self.service_url = activity['serviceUrl']
         self.channel_id = activity['channelId']
+        self.conversation_id = activity['conversation']['id']
         self.buffer = []
         self.expect = []
+        self.multiargument_initiated = False
 
         if self.channel_id not in self.bot.http_sessions.keys() or not self.bot.http_sessions['self.channel_id']:
             self.bot.http_sessions['self.channel_id'] = requests.Session()
@@ -47,7 +50,9 @@ class Conversation:
         log.debug(f'Sent activity to the MSBotFramework server. '
                   f'Response code: {response.status_code}, response contents: {response.json()}')
 
-    def _send_message(self, in_activity: dict, message_text: str):
+    def _send_message(self, message_text: str, in_activity: dict = None):
+        service_url = self.service_url
+
         out_activity = {
             'type': 'message',
             'from': {
@@ -55,22 +60,33 @@ class Conversation:
                 'name': self.bot_name
             },
             'conversation': {
-                'id': in_activity['conversation']['id']
-            },
-            'recepient': {
-                'id': in_activity['from']['id']
+                'id': self.conversation_id
             },
             'text': message_text
         }
 
-        if 'name' in in_activity['conversation'].keys():
-            out_activity['conversation']['name'] = in_activity['conversation']['name']
+        if in_activity:
+            try:
+                service_url = in_activity['serviceUrl']
+            except KeyError:
+                pass
 
-        if 'name' in in_activity['from'].keys():
-            out_activity['recepient']['name'] = in_activity['from']['name']
+            try:
+                out_activity['recepient']['id'] = in_activity['from']['id']
+            except KeyError:
+                pass
 
-        service_url = in_activity['serviceUrl']
-        url = urljoin(service_url, f"v3/conversations/{in_activity['conversation']['id']}/activities")
+            try:
+                out_activity['conversation']['name'] = in_activity['conversation']['name']
+            except KeyError:
+                pass
+
+            try:
+                out_activity['recepient']['name'] = in_activity['from']['name']
+            except KeyError:
+                pass
+
+        url = urljoin(service_url, f"v3/conversations/{self.conversation_id}/activities")
 
         self._send_activity(url, out_activity)
 
@@ -78,19 +94,24 @@ class Conversation:
         in_text = in_activity['text']
 
         if len(self.bot.model.in_x) > 1:
-            self.buffer.append(in_text)
-
-            if self.expect:
-                self._send_message(in_activity, f'Please, send {self.expect.pop(0)}')
-            else:
-                pred = self.bot.model([tuple(self.buffer)])
-                out_text = str(pred[0])
-                self._send_message(in_activity, out_text)
-
-                self.buffer = []
+            if not self.multiargument_initiated:
+                self.multiargument_initiated = True
                 self.expect[:] = list(self.bot.model.in_x)
-                self._send_message(in_activity, f'Please, send {self.expect.pop(0)}')
+                self._send_message(f'Please, send {self.expect.pop(0)}')
+            else:
+                self.buffer.append(in_text)
+
+                if self.expect:
+                    self._send_message(f'Please, send {self.expect.pop(0)}', in_activity)
+                else:
+                    pred = self.bot.model([tuple(self.buffer)])
+                    out_text = str(pred[0])
+                    self._send_message(out_text, in_activity)
+
+                    self.buffer = []
+                    self.expect[:] = list(self.bot.model.in_x)
+                    self._send_message(f'Please, send {self.expect.pop(0)}', in_activity)
         else:
             pred = self.bot.model([in_text])
             out_text = str(pred[0])
-            self._send_message(in_activity, out_text)
+            self._send_message(out_text, in_activity)

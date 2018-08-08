@@ -13,12 +13,12 @@ log = get_logger(__name__)
 
 
 class Bot(Thread):
-    def __init__(self, config: dict, model_config_path: str, client_id: str, client_secret: str, input_queue: Queue):
+    def __init__(self, config: dict, model_config_path: str, app_id: str, app_secret: str, input_queue: Queue):
         super(Bot, self).__init__()
         self.config = config
 
-        self.config['ms_bot_framework_defaults']['auth_client_id'] = client_id
-        self.config['ms_bot_framework_defaults']['auth_client_secret'] = client_secret
+        self.config['ms_bot_framework_defaults']['auth_app_id'] = app_id
+        self.config['ms_bot_framework_defaults']['auth_app_secret'] = app_secret
 
         self.model = self._init_model(model_config_path)
         self.conversations = {}
@@ -53,8 +53,8 @@ class Bot(Thread):
 
         payload = {'grant_type': self.config['ms_bot_framework_defaults']['auth_grant_type'],
                    'scope': self.config['ms_bot_framework_defaults']['auth_scope'],
-                   'client_id': self.config['ms_bot_framework_defaults']['auth_client_id'],
-                   'client_secret': self.config['ms_bot_framework_defaults']['auth_client_secret']}
+                   'client_id': self.config['ms_bot_framework_defaults']['auth_app_id'],
+                   'client_secret': self.config['ms_bot_framework_defaults']['auth_app_secret']}
 
         result = requests.post(url=self.config['ms_bot_framework_defaults']['auth_url'],
                                headers=headers,
