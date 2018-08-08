@@ -91,8 +91,6 @@ class Conversation:
                 self.expect[:] = list(self.bot.model.in_x)
                 self._send_message(in_activity, f'Please, send {self.expect.pop(0)}')
         else:
-            print('ELSE!')
             pred = self.bot.model([in_text])
-            print(f'PREDICTION: {str(pred)}')
             out_text = str(pred[0])
             self._send_message(in_activity, out_text)

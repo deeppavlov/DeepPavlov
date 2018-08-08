@@ -1,6 +1,7 @@
 import threading
 import requests
-from multiprocessing import Process, Queue
+from queue import Queue
+from threading import Thread
 from requests.exceptions import HTTPError
 
 from conversation import Conversation
@@ -11,7 +12,7 @@ from deeppavlov.core.commands.infer import build_model_from_config
 log = get_logger(__name__)
 
 
-class Bot(Process):
+class Bot(Thread):
     def __init__(self, config: dict, model_config_path: str, input_queue: Queue):
         super(Bot, self).__init__()
         self.config = config

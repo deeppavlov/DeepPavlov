@@ -1,5 +1,5 @@
 from pathlib import Path
-from multiprocessing import Queue
+from queue import Queue
 
 from flask import Flask, request, jsonify, redirect
 from flasgger import Swagger
