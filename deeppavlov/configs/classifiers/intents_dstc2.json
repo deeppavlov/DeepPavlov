@@ -22,8 +22,8 @@
           "y"
         ],
         "level": "token",
-        "save_path": "vocabs/classes.dict",
-        "load_path": "vocabs/classes.dict"
+        "save_path": "vocabs/dstc2_classes.dict",
+        "load_path": "vocabs/dstc2_classes.dict"
       },
       {
         "in": "x",
