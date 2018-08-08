@@ -1,5 +1,18 @@
-Pre-trained word vectors
-========================
+Pretrained embeddings
+============================
+
+ELMo
+----
+
+| We are publishing :class:`Russian language ELMo embeddings model <deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder>` for tensorflow-hub.
+| ELMo (Embeddings from Language Models) representations are pre-trained contextual representations from
+  large-scale bidirectional language models. See a paper `Deep contextualized word representations
+  <https://arxiv.org/abs/1802.05365>`__ for more information about the algorithm and a detailed analysis.
+| These vectors where trained on `Russian Wikipedia <https://ru.wikipedia.org/>`__.
+
+
+fastText
+--------
 
 We are publishing pre-trained word vectors for Russian language. These
 vectors were trained on joint `Russian
@@ -14,13 +27,13 @@ You can get vectors either in binary or in text (vec) formats both for
 fastText and GloVe.
 
 License
--------
+~~~~~~~
 
 The pre-trained word vectors are distributed under the `License Apache
 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`__.
 
 Downloads
----------
+~~~~~~~~~
 
 The models can be downloaded from:
 
@@ -39,7 +52,7 @@ The models can be downloaded from:
 +-----------------------+---------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 Word vectors training parameters
---------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 These word vectors were trained with following parameters ([...] is for
 default value):

@@ -11,7 +11,7 @@ Welcome to DeepPavlov's documentation!
    Conceptual overview <intro/overview>
    Features <intro/features>
    Configuration files <intro/config_description>
-   Pre-trained word vectors <intro/pretrained_vectors>
+   Pre-trained embeddings <intro/pretrained_vectors>
    Parameters evolution <intro/parameters_evolution>
    Tutorials <intro/tutorials>
 
