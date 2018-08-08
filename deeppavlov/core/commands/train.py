@@ -96,7 +96,8 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
     return chainer
 
 
-def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, to_validate=True) -> None:
+def train_evaluate_model_from_config(config: [str, Path, dict],
+                                     to_train=True, to_validate=True) -> Dict[str, Dict[str, float]]:
     if isinstance(config, (str, Path)):
         config = read_json(config)
     set_deeppavlov_root(config)
