@@ -86,7 +86,7 @@ def interact(model, params_names):
 
 def start_model_server(model_config_path):
     server_config_dir = Path(__file__).resolve().parent
-    server_config_path = Path(server_config_dir, SERVER_CONFIG_FILENAME).resolve()
+    server_config_path = Path(server_config_dir, '..', SERVER_CONFIG_FILENAME).resolve()
 
     model = init_model(model_config_path)
 

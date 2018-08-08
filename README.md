@@ -123,7 +123,7 @@ For the `interactbot` mode you should specify Telegram bot token in `-t` paramet
 * Add section to `utils/telegram_utils/model_info.json` with your custom Telegram messages
 * In model config file specify `metadata.labels.telegram_utils` parameter with name which refers to the added section of `utils/telegram_utils/model_info.json`
 
-For `riseapi` mode you should specify api settings (host, port, etc.) in [*utils/server_utils/server_config.json*](utils/server_utils/server_config.json) configuration file. If provided, values from *model_defaults* section override values for the same parameters from *common_defaults* section. Model names in *model_defaults* section should be similar to the class names of the models main component.
+For `riseapi` mode you should specify api settings (host, port, etc.) in [*utils/server_config.json*](utils/server_utils/server_config.json) configuration file. If provided, values from *model_defaults* section override values for the same parameters from *common_defaults* section. Model names in *model_defaults* section should be similar to the class names of the models main component0.
 
 For `predict` you can specify path to input file with `-f` or `--input-file` parameter, otherwise, data will be taken
 from stdin.  

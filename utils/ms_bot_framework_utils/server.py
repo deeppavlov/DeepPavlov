@@ -33,7 +33,6 @@ def start_model_server(model_config_path):
     host = server_params['common_defaults']['host']
     port = server_params['common_defaults']['port']
 
-    #model = init_model(model_config_path)
     input_q = Queue()
     bot = Bot(server_params, model_config_path, input_q)
     bot.start()

@@ -1,7 +1,8 @@
 {
   "common_defaults": {
     "host": "0.0.0.0",
-    "port": 7050,
+    "port": 5000,
+    "model_endpoint": "/model",
     "model_args_names": ["context"]
   },
   "ms_bot_framework_defaults": {
@@ -10,8 +11,8 @@
     "auth_content_type":"application/x-www-form-urlencoded",
     "auth_grant_type":"client_credentials",
     "auth_scope":"https://api.botframework.com/.default",
-    "auth_client_id":"ca7e1625-b7b3-47c2-b35b-b5940fa180d1",
-    "auth_client_secret":"#A{qaFX9$by&a2UI",
+    "auth_client_id":"",
+    "auth_client_secret":"",
     "auth_polling_interval": 3500
   },
   "model_defaults": {
