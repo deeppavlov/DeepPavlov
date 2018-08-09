@@ -105,7 +105,9 @@ def download_resources(args):
         download_resource(url, dest_paths)
 
 
-def deep_download(args=None):
+def deep_download(args: [str, Path, list]=None):
+    if isinstance(args, (str, Path)):
+        args = ['-c', str(args)]  # if args is a path to config
     args = parser.parse_args(args)
     log.info("Downloading...")
     download_resources(args)
