@@ -107,7 +107,7 @@ class TagOutputPrettifier(Component):
     """
 
     def __init__(self, return_string: bool=True, begin: str="",
-                 end: str ="", sep: str ="\n"):
+                 end: str ="", sep: str ="\n", **kwargs):
 
         self.return_string = return_string
         self.begin = begin
