@@ -91,27 +91,28 @@ class Conversation:
         self._send_activity(url, out_activity)
 
     def _handle_message(self, in_activity: dict):
-        in_text = in_activity['text']
+        if 'text' in in_activity.keys():
+            in_text = in_activity['text']
 
-        if len(self.bot.model.in_x) > 1:
-            if not self.multiargument_initiated:
-                self.multiargument_initiated = True
-                self.expect[:] = list(self.bot.model.in_x)
-                self._send_message(f'Please, send {self.expect.pop(0)}')
-            else:
-                self.buffer.append(in_text)
-
-                if self.expect:
-                    self._send_message(f'Please, send {self.expect.pop(0)}', in_activity)
-                else:
-                    pred = self.bot.model([tuple(self.buffer)])
-                    out_text = str(pred[0])
-                    self._send_message(out_text, in_activity)
-
-                    self.buffer = []
+            if len(self.bot.model.in_x) > 1:
+                if not self.multiargument_initiated:
+                    self.multiargument_initiated = True
                     self.expect[:] = list(self.bot.model.in_x)
-                    self._send_message(f'Please, send {self.expect.pop(0)}', in_activity)
-        else:
-            pred = self.bot.model([in_text])
-            out_text = str(pred[0])
-            self._send_message(out_text, in_activity)
+                    self._send_message(f'Please, send {self.expect.pop(0)}')
+                else:
+                    self.buffer.append(in_text)
+
+                    if self.expect:
+                        self._send_message(f'Please, send {self.expect.pop(0)}', in_activity)
+                    else:
+                        pred = self.bot.model([tuple(self.buffer)])
+                        out_text = str(pred[0])
+                        self._send_message(out_text, in_activity)
+
+                        self.buffer = []
+                        self.expect[:] = list(self.bot.model.in_x)
+                        self._send_message(f'Please, send {self.expect.pop(0)}', in_activity)
+            else:
+                pred = self.bot.model([in_text])
+                out_text = str(pred[0])
+                self._send_message(out_text, in_activity)
