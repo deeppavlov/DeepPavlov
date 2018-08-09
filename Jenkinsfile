@@ -18,7 +18,7 @@ node('gpu') {
         }
         stage('Tests') {
             sh """
-                . tests/.venv-$BUILD_NUMBER/bin/activate
+                . .venv-$BUILD_NUMBER/bin/activate
                 pytest -v
             """
         }
