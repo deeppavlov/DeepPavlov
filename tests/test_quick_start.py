@@ -19,7 +19,7 @@ from utils.server_utils.server import get_server_params, SERVER_CONFIG_FILENAME
 
 
 cache_dir = None
-tests_dir = Path(__file__, '..').resolve()
+tests_dir = Path(__file__).parent
 test_configs_path = tests_dir / "deeppavlov" / "configs"
 src_dir = Path(deeppavlov.__path__[0]) / "configs"
 test_src_dir = tests_dir / "test_configs"
@@ -273,7 +273,7 @@ class TestQuickStart(object):
         if 'IP' in mode:
             config_file_path = str(test_configs_path.joinpath(conf_file))
             self.install(config_file_path)
-            deep_download(['-test', '-c', config_file_path])
+            deep_download(['-c', config_file_path])
 
             self.interact(test_configs_path / conf_file, model_dir, PARAMS[model][(conf_file, model_dir, mode)])
         else:
@@ -296,7 +296,7 @@ class TestQuickStart(object):
             if 'IP' not in mode:
                 config_path = str(test_configs_path.joinpath(conf_file))
                 self.install(config_path)
-                deep_download(['-test', '-c', config_path])
+                deep_download(['-c', config_path])
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
             logfile = io.BytesIO(b'')
@@ -319,7 +319,7 @@ class TestQuickStart(object):
 
             if 'IP' not in mode and 'TI' not in mode:
                 config_path = str(test_configs_path.joinpath(conf_file))
-                deep_download(['-test', '-c', config_path])
+                deep_download(['-c', config_path])
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
             logfile = io.BytesIO(b'')

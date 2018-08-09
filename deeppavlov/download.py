@@ -19,11 +19,8 @@ from collections import defaultdict
 from pathlib import Path
 import sys
 
+import deeppavlov
 from deeppavlov.core.commands.utils import get_deeppavlov_root, set_deeppavlov_root, expand_path
-
-root_path = (Path(__file__) / ".." / "..").resolve()
-sys.path.append(str(root_path))
-
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.data.utils import download, download_decompress, get_all_elems_from_json
 from deeppavlov.core.common.log import get_logger
@@ -73,7 +70,7 @@ def get_configs_downloads(config_path=None):
     if config_path:
         configs = [config_path]
     else:
-        configs = list(root_path.joinpath('deeppavlov', 'configs').glob('**/*.json'))
+        configs = list(Path(deeppavlov.__path__[0], 'configs').glob('**/*.json'))
 
     for config_path in configs:
         for url, dest in get_config_downloads(config_path):
