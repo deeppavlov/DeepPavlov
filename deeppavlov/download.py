@@ -82,14 +82,8 @@ def get_configs_downloads(config_path=None):
     return all_downloads
 
 
-def download_resource(resource, download_path):
-    url = resource['url']
-    sub_dirs = resource['subdir']
-    dest_paths = []
-
-    for sub_dir in sub_dirs:
-        dest_path = download_path.joinpath(sub_dir)
-        dest_paths.append(dest_path)
+def download_resource(url, dest_paths):
+    dest_paths = list(dest_paths)
 
     if url.endswith(('.tar.gz', '.gz', '.zip')):
         download_path = dest_paths[0].parent
@@ -101,14 +95,6 @@ def download_resource(resource, download_path):
 
 
 def download_resources(args):
-    download_path = root_path / 'download'
-
-    if args.test:
-        download_path = root_path / 'tests' / 'download'
-        test = True
-    else:
-        test = False
-
     if not args.all and not args.config:
         log.error('You should provide either skill config path or -all flag')
         sys.exit(1)
@@ -118,9 +104,8 @@ def download_resources(args):
         config_path = Path(args.config).resolve()
         downloads = get_configs_downloads(config_path=config_path)
 
-    for url in downloads:
-        resource = downloads[url]
-        download_resource(resource, download_path)
+    for url, dest_paths in downloads.items():
+        download_resource(url, dest_paths)
 
 
 def deep_download(args=None):
