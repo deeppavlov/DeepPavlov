@@ -23,14 +23,13 @@ from deeppavlov.core.common.file import save_pickle
 from deeppavlov.core.common.file import load_pickle
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.models.serializable import Serializable
-from numpy import linalg
-from scipy.sparse.linalg import norm as sparse_norm
+from sklearn.linear_model import LogisticRegression
 
 logger = get_logger(__name__)
 
 
-@register("faq_cos_model")
-class FaqCosineSimilarityModel(Estimator, Serializable):
+@register("faq_logreg_model")
+class FaqLogregModel(Estimator, Serializable):
 
     def __init__(self, save_path: str = None, load_path: str = None, **kwargs) -> None:
         self.save_path = save_path
@@ -40,38 +39,34 @@ class FaqCosineSimilarityModel(Estimator, Serializable):
 
     def __call__(self, q_vect) -> List[str]:
 
-        if isinstance(q_vect[0], csr_matrix):
-            norm = sparse_norm(q_vect[0]) * sparse_norm(self.x_train_features, axis=1)
-            cos_similarities = np.array(q_vect[0].dot(self.x_train_features.T).todense())[0]/norm
-        elif isinstance(q_vect[0], np.ndarray):
-            norm = linalg.norm(q_vect[0])*linalg.norm(self.x_train_features, axis=1)
-            cos_similarities = q_vect[0].dot(self.x_train_features.T)/norm
-        else:
-            raise NotImplementedError('Not implemented this type of vectors')
+        probs = self.logreg.predict_proba(q_vect)
+        answer_ids = np.argmax(probs, axis=1)
 
+        scores = np.round(np.choose(answer_ids, probs.T).tolist(), 2)
+        answers = self.logreg.classes_[answer_ids].tolist()
 
-        answer_id = np.argmax(cos_similarities)
-        return [self.y_train[answer_id]], [np.round(cos_similarities[answer_id],2)]
+        return answers, scores
 
     def fit(self, x_train_vects, y_train) -> None:
         if len(x_train_vects) != 0:
             if isinstance(x_train_vects[0], csr_matrix):
-                self.x_train_features = vstack(list(x_train_vects))
+                x_train_features = vstack(list(x_train_vects))
             elif isinstance(x_train_vects[0], np.ndarray):
-                self.x_train_features = np.vstack(list(x_train_vects))
+                x_train_features = np.vstack(list(x_train_vects))
             else:
                 raise NotImplementedError('Not implemented this type of vectors')
         else:
             raise ValueError("Train vectors can't be empty")
 
-        self.y_train = list(y_train)
+        self.logreg = LogisticRegression()
+        self.logreg.fit(x_train_features, list(y_train))
 
 
     def save(self) -> None:
-        logger.info("Saving faq_model to {}".format(self.save_path))
-        save_pickle((self.x_train_features,self.y_train), expand_path(self.save_path))
+        logger.info("Saving faq_logreg_model to {}".format(self.save_path))
+        save_pickle(self.logreg, expand_path(self.save_path))
 
 
     def load(self) -> None:
-        logger.info("Loading faq_model from {}".format(self.load_path))
-        self.x_train_features, self.y_train = load_pickle(expand_path(self.load_path))
+        logger.info("Loading faq_logreg_model from {}".format(self.load_path))
+        self.logreg = load_pickle(expand_path(self.load_path))
