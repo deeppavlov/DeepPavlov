@@ -29,7 +29,7 @@ from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.commands.train import get_iterator_from_config
 from deeppavlov.core.commands.train import read_data_by_config
 
-
+PARAM_RANGE_SUFFIX_NAME = '_range'
 log = get_logger(__name__)
 
 parser = argparse.ArgumentParser()
@@ -78,22 +78,21 @@ def main():
     config = read_json(pipeline_config_path)
     data = read_data_by_config(config)
 
-    params = {}
-    for elem in config['chainer']['pipe']:
+    param_values = {}
+    chainer_items = []
+    for i, elem in enumerate(config['chainer']['pipe']):
         for key in elem.keys():
-            if key.endswith('_range'):
-                params[key.partition('_range')[0]] = elem[key]
+            if key.endswith(PARAM_RANGE_SUFFIX_NAME):
+                param_values[key.partition(PARAM_RANGE_SUFFIX_NAME)[0]] = elem[key]
+                chainer_items.append(i)
 
-    combinations = list(product(*params.values()))
-    param_names = [k for k in params.keys()]
+    combinations = list(product(*param_values.values()))
+    param_names = [k for k in param_values.keys()]
 
     scores=[]
     for comb in combinations:
         for i, param_value in enumerate(comb):
-            for j, elem in enumerate(config['chainer']['pipe']):
-                for key in elem.keys():
-                    if key.partition('_range')[0] in param_names:
-                        config['chainer']['pipe'][j][param_names[i]] = param_value
+            config['chainer']['pipe'][chainer_items[i]][param_names[i]] = param_value
 
         if args.loocv:
             scores.append(calc_loocv_score(config, data))
@@ -102,6 +101,7 @@ def main():
 
     print(get_best_params(combinations, scores, param_names))
 
-
+# try to run:
+# --config_path path_to_config.json --loocv 1
 if __name__ == "__main__":
     main()
