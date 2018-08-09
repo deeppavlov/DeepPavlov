@@ -23,7 +23,7 @@ from itertools import product
 p = (Path(__file__) / ".." / "..").resolve()
 sys.path.append(str(p))
 
-from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.file import read_json, save_json
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.commands.train import get_iterator_from_config
@@ -53,7 +53,7 @@ def calc_loocv_score(config, data):
     all_data = data['train'] + data['valid']
     m = len(all_data)
     all_scores = []
-    for i in range(m):
+    for i in range(2):
         data_i = {}
         data_i['train'] = all_data.copy()
         data_i['valid'] = [data_i['train'].pop(i)]
@@ -74,10 +74,12 @@ def get_best_params(combinations, scores, param_names):
 def main():
     args = parser.parse_args()
 
+    # read config
     pipeline_config_path = find_config(args.config_path)
     config = read_json(pipeline_config_path)
     data = read_data_by_config(config)
 
+    # prepare params search
     param_values = {}
     chainer_items = []
     for i, elem in enumerate(config['chainer']['pipe']):
@@ -89,6 +91,7 @@ def main():
     combinations = list(product(*param_values.values()))
     param_names = [k for k in param_values.keys()]
 
+    # get cv scores
     scores=[]
     for comb in combinations:
         for i, param_value in enumerate(comb):
@@ -99,7 +102,16 @@ def main():
         else:
             raise NotImplementedError('Not implemented this type of CV')
 
-    print(get_best_params(combinations, scores, param_names))
+    best_params_dict = get_best_params(combinations, scores, param_names)
+    print(best_params_dict)
+
+    # save config
+    for i, param_name in enumerate(best_params_dict.keys()):
+        if param_name != 'score':
+            config['chainer']['pipe'][chainer_items[i]][param_name] = best_params_dict[param_name]
+            config['chainer']['pipe'][chainer_items[i]].pop(param_name+PARAM_RANGE_SUFFIX_NAME)
+    save_json(config, pipeline_config_path.replace('.json', '_cvbest.json'))
+
 
 # try to run:
 # --config_path path_to_config.json --loocv 1
