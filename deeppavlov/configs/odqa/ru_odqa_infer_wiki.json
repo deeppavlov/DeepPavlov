@@ -30,7 +30,7 @@
         ],
         "data_dir": "odqa",
         "shuffle": false,
-        "data_url": "http://lnsigo.mipt.ru/export/datasets/wikipedia/ruwiki.db"
+        "data_url": "http://files.deeppavlov.ai/datasets/wikipedia/ruwiki.db"
       },
       {
         "config_path": "../deeppavlov/configs/squad/squad_ru.json",
@@ -53,9 +53,9 @@
       "server_utils": "ODQA"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/datasets/wikipedia/ruwiki.tar.gz",
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/ru_odqa.tar.gz",
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/squad_model_ru.tar.gz"
+      "http://files.deeppavlov.ai/datasets/wikipedia/ruwiki.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/ru_odqa.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/squad_model_ru.tar.gz"
     ]
   }
 }

@@ -46,7 +46,7 @@ class ELMoEmbedder(Component):
         <https://www.tensorflow.org/hub/modules/google/elmo/2>`_.
 
         >>> import tensorflow_hub as hub
-        >>> elmo = hub.Module("http://lnsigo.mipt.ru/export/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz",
+        >>> elmo = hub.Module("http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz",
         trainable=True)
         >>> embeddings = elmo(["это предложение", "word"], signature="default", as_dict=True)["elmo"]
 

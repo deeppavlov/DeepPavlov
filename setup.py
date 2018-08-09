@@ -1,20 +1,19 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-    http://www.apache.org/licenses/LICENSE-2.0
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from setuptools import setup, find_packages
 import os
 import re
 
+import deeppavlov
 from utils.pip_wrapper import install
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
@@ -45,23 +44,29 @@ def readme():
     return re.sub(r']\((?!https?://)', r'](https://github.com/deepmipt/DeepPavlov/blob/master/', text)
 
 
-meta = {}
-with open(os.path.join(__location__, 'deeppavlov/package_meta.py'), encoding='utf8') as f:
-    exec(f.read(), meta)
-
 setup(
     name='deeppavlov',
-    packages=find_packages(exclude=('tests',)) + ['dp_requirements'],
-    version=meta['__version__'],
-    description=meta['__description__'],
+    packages=find_packages(exclude=('tests', 'docs')) + ['dp_requirements'],
+    version=deeppavlov.__version__,
+    description=deeppavlov.__description__,
     long_description=readme(),
     long_description_content_type='text/markdown',
-    author=meta['__author__'],
-    author_email='info@ipavlov.ai',
-    license='Apache License, Version 2.0',
+    author=deeppavlov.__author__,
+    author_email=deeppavlov.__email__,
+    license=deeppavlov.__license__,
     url='https://github.com/deepmipt/DeepPavlov',
-    download_url='https://github.com/deepmipt/DeepPavlov/archive/' + meta['__version__'] + '.tar.gz',
-    keywords=meta['__keywords__'],
+    download_url='https://github.com/deepmipt/DeepPavlov/archive/' + deeppavlov.__version__ + '.tar.gz',
+    keywords=deeppavlov.__keywords__,
     include_package_data=True,
+    extras_require={
+            'tests': [
+                'pytest',
+                'pexpect'],
+            'docs': [
+                'sphinx',
+                'sphinx_rtd_theme',
+                'nbsphinx',
+                'ipykernel'
+            ]},
     **read_requirements()
 )

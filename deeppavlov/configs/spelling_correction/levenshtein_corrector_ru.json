@@ -23,7 +23,7 @@
       {
         "in": ["x_tokens"],
         "out": ["tokens_candidates"],
-        "class": "deeppavlov.models.spelling_correction.levenstein.searcher_component:LevensteinSearcherComponent",
+        "class": "deeppavlov.models.spelling_correction.levenshtein.searcher_component:LevenshteinSearcherComponent",
         "words": "#vocab.keys()"
       },
       {
@@ -50,11 +50,11 @@
     },
     "download": [
       {
-        "url": "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs/russian_words_vocab.dict.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/vocabs/russian_words_vocab.dict.gz",
         "subdir": "vocabs"
       },
       {
-        "url": "http://lnsigo.mipt.ru/export/lang_models/ru_wiyalen_no_punkt.arpa.binary.gz",
+        "url": "http://files.deeppavlov.ai/lang_models/ru_wiyalen_no_punkt.arpa.binary.gz",
         "subdir": "language_models"
       }
     ]
