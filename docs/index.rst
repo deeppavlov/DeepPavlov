@@ -8,7 +8,10 @@ Welcome to DeepPavlov's documentation!
 
    Hello bot! <intro/hello_bot>
    Installation <intro/installation>
-   Pre-trained word vectors <intro/pretrained_vectors>
+   Conceptual overview <intro/overview>
+   Features <intro/features>
+   Configuration files <intro/config_description>
+   Pre-trained embeddings <intro/pretrained_vectors>
    Parameters evolution <intro/parameters_evolution>
    Tutorials <intro/tutorials>
 
@@ -18,16 +21,14 @@ Welcome to DeepPavlov's documentation!
    :maxdepth: 1
    :caption: Components
 
+   Context Question Answering <components/squad>
    Classification <components/classifiers>
-   Slot filling <components/slot_filling>
-   Goal-Oriented Dialogue Bot <components/go_bot>
-   Sequence-To-Sequence Dialogue Bot <components/seq2seq_go_bot>
+   Morphological Tagger <components/morphotagger>
    Named Entity Recognition <components/ner>
+   Neural Ranking <components/neural_ranking>
+   Slot filling <components/slot_filling>
    Spelling Correction <components/spelling_correction>
    TF-IDF Ranking <components/tfidf_ranking>
-   Neural Ranking <components/neural_ranking>
-   Context Question Answering <components/squad>
-   Morphological Tagger <components/morphotagger>
 
 
 .. toctree::
@@ -35,8 +36,10 @@ Welcome to DeepPavlov's documentation!
    :maxdepth: 1
    :caption: Skills
 
-   Pattern Matching <skills/pattern_matching>
+   Goal-Oriented Dialogue Bot <skills/go_bot>
    Open-Domain Question Answering <skills/odqa>
+   Pattern Matching <skills/pattern_matching>
+   Sequence-To-Sequence Dialogue Bot <skills/seq2seq_go_bot>
 
 
 .. toctree::
@@ -52,7 +55,8 @@ Welcome to DeepPavlov's documentation!
    :maxdepth: 3
    :caption: Developer Guides
 
-   devguides/*
+   REST API <devguides/rest_api>
+   How to contribute <devguides/contribution>
 
 
 

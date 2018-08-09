@@ -1,3 +1,17 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from typing import Tuple
 import numpy as np
 import tensorflow as tf
@@ -6,7 +20,6 @@ from functools import partial
 from deeppavlov.core.layers.tf_layers import embedding_layer, character_embedding_network, variational_dropout
 from deeppavlov.core.layers.tf_layers import cudnn_bi_lstm, cudnn_bi_gru, bi_rnn, stacked_cnn, INITIALIZER
 from deeppavlov.core.models.tf_model import TFModel
-from deeppavlov.core.common.check_gpu import check_gpu_existence
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 
@@ -17,7 +30,7 @@ log = get_logger(__name__)
 @register('ner')
 class NerNetwork(TFModel):
     """
-    The ``NerNetwork`` is for Neural Named Entity Recognition and Slot Filling.
+    The :class:`~deeppavlov.models.ner.network.NerNetwork` is for Neural Named Entity Recognition and Slot Filling.
 
     Parameters:
         n_tags: Number of tags in the tag vocabulary.
@@ -198,8 +211,6 @@ class NerNetwork(TFModel):
             self._input_features.append(feat_ph)
 
     def _build_cudnn_rnn(self, units, n_hidden_list, cell_type, intra_layer_dropout, mask):
-        if not check_gpu_existence():
-            raise RuntimeError('Usage of cuDNN RNN layers require GPU along with cuDNN library')
         sequence_lengths = tf.to_int32(tf.reduce_sum(mask, axis=1))
         for n, n_hidden in enumerate(n_hidden_list):
             with tf.variable_scope(cell_type.upper() + '_' + str(n)):

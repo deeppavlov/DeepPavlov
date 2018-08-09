@@ -1,19 +1,19 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 import copy
+from typing import Dict
 import collections
 import json
 import numpy as np
@@ -34,47 +34,79 @@ log = get_logger(__name__)
 @register('go_bot_rnn')
 class GoalOrientedBotNetwork(TFModel):
     """
-    The ``GoalOrientedBotNetwork`` is a recurrent network that handles dialogue policy management.
+    The ``GoalOrientedBotNetwork`` is a recurrent network that handles dialogue policy
+    management.
+    Inputs features of an utterance and predicts label of a bot action
+    (classification task).
+
+    An LSTM with a dense layer for input features and a dense layer for it's output.
+    Softmax is used as an output activation function.
 
     Parameters:
-        optimizer (:obj:`str`): One of tf.train.Optimizer subclass as a string. Default: ``'AdamOptimizer'``.
-        learning_rate (float): Learning rate during training.
-        end_learning_rate (float): If set, learning rate starts from ``learning rate`` value and decays polynomially
-            to the value of ``end_learning_rate``. Default: ``None``.
-        decay_steps (int): Number of steps for learning rate to decay. Default: ``1000``.
-        decay_power (float): Power used to calculate learning rate decay for polynomial strategy. Default: ``1.0``.
-        dropout_rate (float): Probability of dropping out. Default: ``0.0``.
-        l2_reg_coef (float): L2 regularization coefficient (applied to input and output layer). Default: ``0.0``.
-        hidden_dim (int): Hidden state dimension.
-        dense_size (int): LSTM input size.
-        obs_size (int): Input features size (must be equal to the dimension of concatenated
-            ``bow_embedder`` + ``embedder`` + ``intent_classifier`` + ``tracker`` + context features + action size).
-            Could be calculated automatically if not set (default).
-        action_size (int): Output action size. Could be calculated automatically if not set (default).
-        attention_mechanism : (:obj:`dict` or ``null``): Describes attention applied to network inputs.
-
-            * ``attention_mechanism.type`` – type of attention mechanism, one of (``'general'``, ``'bahdanau'``,
-              ``'light_general'``, ``'light_bahdanau'``, ``'cs_general'``, ``'cs_bahdanau'``).
-            * ``attention_mechanism.hidden_size`` – attention hidden state size.
-            * ``attention_mechanism.max_num_tokens`` – maximum number of input tokens used in attention.
-            * ``attention_mechanism.depth`` – number of averages used in constrained attentions
+        hidden_size: size of rnn hidden layer.
+        action_size: size of rnn output (equals to number of bot actions).
+        obs_size: input features' size (must be equal to sum of output sizes of
+            ``bow_embedder``, ``embedder``, ``intent_classifier``, ``tracker.num_features``
+            plus size of context features(=6) and ``action_size``).
+        learning_rate: learning rate during training.
+        end_learning_rate: if set, learning rate starts from ``learning rate`` value and
+            decays polynomially to the value of ``end_learning_rate``.
+        decay_steps: number of steps for learning rate to decay.
+        decay_power: power used to calculate learning rate decay for polynomial strategy.
+        dropout_rate: Probability of dropping out. Default: ``0.0``.
+        l2_reg_coef: l2 regularization weight (applied to input and output layer).
+        dense_size: rnn input size.
+        optimizer: one of tf.train.Optimizer subclasses as a string.
+        attention_mechanism: describes attention applied to embeddings of input tokens.
+            
+            * **type** – type of attention mechanism, possible values are ``'general'``, ``'bahdanau'``, ``'light_general'``, ``'light_bahdanau'``, ``'cs_general'`` and ``'cs_bahdanau'``.
+            * **hidden_size** – attention hidden state size.
+            * **max_num_tokens** – maximum number of input tokens.
+            * **depth** – number of averages used in constrained attentions
               (``'cs_bahdanau'`` or ``'cs_general'``).
-            * ``attention_mechanism.action_as_key`` – whether to use action from previous timestep as key
-              to attention. Default: ``false``.
-            * ``attention_mechanism.intent_as_key`` – use utterance intents as attention key or not. Default: ``false``.
-            * ``attention_mechanism.projected_align`` – whether to use output projection. Default: ``false``.
-
-    Todo:
-        * consider explicit parameter specification with type annotations
-        * it is better to reorder parameters (required first)
+            * **action_as_key** – whether to use action from previous timestep as key
+              to attention.
+            * **intent_as_key** – use utterance intents as attention key or not.
+            * **projected_align** – whether to use output projection.
     """
     GRAPH_PARAMS = ["hidden_size", "action_size", "dense_size", "obs_size",
                     "attention_mechanism"]
 
-    def __init__(self, **params):
-        self.debug_pipe = None
+    def __init__(self,
+                 hidden_size: int,
+                 action_size: int,
+                 obs_size: int,
+                 learning_rate: float,
+                 end_learning_rate: float = None,
+                 decay_steps: int = 1000,
+                 decay_power: float = 1.,
+                 dropout_rate: float = 0.,
+                 l2_reg_coef: float = 0.,
+                 dense_size: int = None,
+                 optimizer: str = 'AdamOptimizer',
+                 attention_mechanism: Dict = None,
+                 **kwargs):
+        end_learning_rate = end_learning_rate or learning_rate
+        dense_size = dense_size or hidden_size
+
+        # specify model options
+        self.opt = {
+            'hidden_size': hidden_size,
+            'action_size': action_size,
+            'obs_size': obs_size,
+            'dense_size': dense_size,
+            'learning_rate': learning_rate,
+            'end_learning_rate': end_learning_rate,
+            'decay_steps': decay_steps,
+            'decay_power': decay_power,
+            'dropout_rate': dropout_rate,
+            'l2_reg_coef': l2_reg_coef,
+            'optimizer': optimizer,
+            'attention_mechanism': attention_mechanism
+        }
+
         # initialize parameters
-        self._init_params(params)
+        self._init_params()
         # build computational graph
         self._build_graph()
         # initialize session
@@ -82,7 +114,7 @@ class GoalOrientedBotNetwork(TFModel):
 
         self.sess.run(tf.global_variables_initializer())
 
-        super().__init__(**params)
+        super().__init__(**kwargs)
         if tf.train.checkpoint_exists(str(self.save_path.resolve())):
             log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
             self.load()
@@ -90,7 +122,6 @@ class GoalOrientedBotNetwork(TFModel):
             log.info("[initializing `{}` from scratch]".format(self.__class__.__name__))
 
         self.reset_state()
-        self.global_step = 0
 
     def __call__(self, features, emb_context, key, action_mask, prob=False):
         feed_dict = {
@@ -132,17 +163,7 @@ class GoalOrientedBotNetwork(TFModel):
                           feed_dict=feed_dict)
         return loss_value, prediction
 
-    def _init_params(self, params):
-        self.opt = copy.deepcopy(params)
-        self.opt['dropout_rate'] = params.get('dropout_rate', 0.)
-        self.opt['dense_size'] = params.get('dense_size', self.opt['hidden_size'])
-        self.opt['end_learning_rate'] = params.get('end_learning_rate',
-                                                   params['learning_rate'])
-        self.opt['decay_steps'] = params.get('decay_steps', 1000)
-        self.opt['decay_power'] = params.get('decay_power', 1.)
-        self.opt['l2_reg_coef'] = params.get('l2_reg_coef', 0.)
-        self.opt['optimizer'] = params.get('optimizer', 'AdamOptimizer')
-
+    def _init_params(self):
         self.learning_rate = self.opt['learning_rate']
         self.end_learning_rate = self.opt['end_learning_rate']
         self.decay_steps = self.opt['decay_steps']
@@ -161,7 +182,7 @@ class GoalOrientedBotNetwork(TFModel):
             raise ConfigError("`optimizer` parameter should be a name of"
                               " tf.train.Optimizer subclass")
 
-        attn = params.get('attention_mechanism')
+        attn = self.opt.get('attention_mechanism')
         if attn:
             self.opt['attention_mechanism'] = attn
 
@@ -354,6 +375,8 @@ class GoalOrientedBotNetwork(TFModel):
         # set zero state
         self.state_c = np.zeros([1, self.hidden_size], dtype=np.float32)
         self.state_h = np.zeros([1, self.hidden_size], dtype=np.float32)
+        # setting global step number to 0
+        self.global_step = 0
 
     def shutdown(self):
         self.sess.close()

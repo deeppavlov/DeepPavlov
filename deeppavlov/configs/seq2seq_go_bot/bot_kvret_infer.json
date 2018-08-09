@@ -92,8 +92,8 @@
       "server_utils": "GoalOrientedBot"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/seq2seq_go_bot.tar.gz"
+      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/seq2seq_go_bot.tar.gz"
     ]
   }
 }

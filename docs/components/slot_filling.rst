@@ -2,7 +2,7 @@ Neural Named Entity Recognition and Slot Filling
 ================================================
 
 This component solves Slot-Filling task using Levenshtein search and different neural network architectures for NER.
-To read about NER without slot filling please address  :doc:`NER documentation </userdocs/ner>`.
+To read about NER without slot filling please address  :doc:`NER documentation </components/ner>`.
 This component serves for solving DSTC 2 Slot-Filling task. In most of the cases, NER task can be formulated as:
 
 *Given a sequence of tokens (words, and maybe punctuation symbols)
@@ -202,7 +202,7 @@ The last part of the config is metadata:
           "telegram_utils": "NERModel"
         },
         "download": [
-          "http://lnsigo.mipt.ru/export/deeppavlov_data/slotfill_dstc2.tar.gz"
+          "http://files.deeppavlov.ai/deeppavlov_data/slotfill_dstc2.tar.gz"
         ]
       }
 

@@ -1,29 +1,69 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
+from typing import List, Dict, Union, Tuple, Any
+from abc import ABCMeta, abstractmethod
 import numpy as np
 
-from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
 
 
-@register('default_tracker')
-class DefaultTracker(Component):
+class Tracker(metaclass=ABCMeta):
+    """
+    An abstract class for trackers: a model that holds a dialogue state and
+    generates state features.
+    """
 
-    def __init__(self, slot_names):
+    @abstractmethod
+    def reset_state(self) -> None:
+        """Resets dialogue state"""
+        pass
+
+    @abstractmethod
+    def update_state(self,
+                     slots: Union[List[Tuple[str, Any]], Dict[str, Any]]) -> 'Tracker':
+        """
+        Updates dialogue state with new ``slots``, calculates features.
+        
+        Returns:
+            Tracker: ."""
+        pass
+
+    @abstractmethod
+    def get_state(self) -> Dict[str, Any]:
+        """
+        Returns:
+            Dict[str, Any]: dictionary with current slots and their values."""
+        pass
+
+    @abstractmethod
+    def get_features(self) -> np.ndarray:
+        """
+        Returns:
+            np.ndarray[float]: numpy array with calculates state features."""
+        pass
+
+
+class DefaultTracker(Tracker):
+    """
+    Tracker that overwrites slots with new values.
+    Features are binary indicators: slot is present/absent.
+
+    Parameters:
+        slot_names: list of slots that should be tracked.
+    """
+    def __init__(self, slot_names: List[str]) -> None:
         self.slot_names = list(slot_names)
         self.reset_state()
 
@@ -64,14 +104,22 @@ class DefaultTracker(Component):
                 feats[i] = 1.
         return feats
 
-    def __call__(self):
+    def get_features(self):
         return self.curr_feats
 
 
 @register('featurized_tracker')
-class FeaturizedTracker(Component):
+class FeaturizedTracker(Tracker):
+    """
+    Tracker that overwrites slots with new values.
+    Features are binary features (slot is present/absent) plus difference features
+    (slot value is (the same)/(not the same) as before last update) and count
+    features (sum of present slots and sum of changed during last update slots).
 
-    def __init__(self, slot_names, *args, **kwargs):
+    Parameters:
+        slot_names: list of slots that should be tracked.
+    """
+    def __init__(self, slot_names: List[str]) -> None:
         self.slot_names = list(slot_names)
         self.reset_state()
 
@@ -138,5 +186,5 @@ class FeaturizedTracker(Component):
                 feats[i] = 1.
         return feats
 
-    def __call__(self):
+    def get_features(self):
         return self.curr_feats

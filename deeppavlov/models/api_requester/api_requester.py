@@ -1,3 +1,5 @@
+from typing import Any, List, Dict, AsyncIterable
+
 import requests
 import asyncio
 
@@ -7,14 +9,37 @@ from deeppavlov.core.models.component import Component
 
 @register('api_requester')
 class ApiRequester(Component):
-    def __init__(self, url: str, out: [int, list], param_names=(), debatchify=False, *args,
-                 **kwargs):
+    """Component for forwarding parameters to APIs
+
+    Args:
+        url: url of the API.
+        out: count of expected returned values or their names in a chainer.
+        param_names: list of parameter names for API requests.
+        debatchify: if ``True``, single instances will be sent to the API endpoint instead of batches.
+
+    Attributes:
+        url: url of the API.
+        out: count of expected returned values.
+        param_names: list of parameter names for API requests.
+        debatchify: if True, single instances will be sent to the API endpoint instead of batches.
+    """
+    def __init__(self, url: str, out: [int, list], param_names: [list, tuple]=(), debatchify: bool=False,
+                 *args, **kwargs):
         self.url = url
         self.param_names = param_names
         self.out_count = out if isinstance(out, int) else len(out)
         self.debatchify = debatchify
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: List[Any], **kwargs: Dict[str, Any]):
+        """
+
+        Args:
+            *args: list of parameters sent to the API endpoint. Parameter names are taken from self.param_names.
+            **kwargs: named parameters to send to the API endpoint. If not empty, args are ignored
+
+        Returns:
+            result of the API request(s)
+        """
         data = kwargs or dict(zip(self.param_names, args))
 
         if self.debatchify:
@@ -39,7 +64,16 @@ class ApiRequester(Component):
 
         return response
 
-    async def get_async_response(self, data, batch_size):
+    async def get_async_response(self, data: dict, batch_size: int) -> AsyncIterable:
+        """Helper function for sending requests asynchronously if the API endpoint does not support batching
+
+        Args:
+            data: data to be passed to the API endpoint
+            batch_size: requests count
+
+        Yields:
+            requests results parsed as json
+        """
         loop = asyncio.get_event_loop()
         futures = [
             loop.run_in_executor(
