@@ -54,8 +54,7 @@
     },
     "download": [
       "http://files.deeppavlov.ai/datasets/wikipedia/ruwiki.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/ru_odqa.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/squad_model_ru.tar.gz"
+      "http://files.deeppavlov.ai/deeppavlov_data/ru_odqa.tar.gz"
     ]
   }
 }
