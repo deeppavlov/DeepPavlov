@@ -193,7 +193,7 @@ class CharacterTagger:
         # TO_DO: add weights to deal with padded instances
         return self.model_.train_on_batch(X, Y)
 
-    def predict_on_batch(self, data: List, return_indexes=False):
+    def predict_on_batch(self, data: [list, tuple], return_indexes=False):
         """
         Makes predictions on a single batch
 
