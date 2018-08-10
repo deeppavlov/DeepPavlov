@@ -98,7 +98,6 @@ class CudnnCompatibleGRU:
             gru_fw, gru_bw = self.grus[layer]
             init_fw, init_bw = self.inits[layer]
             mask_fw, mask_bw = self.dropout_mask[layer]
-            print(outputs)
             with tf.variable_scope('fw_{}'.format(layer), reuse=tf.AUTO_REUSE):
                 with tf.variable_scope('cudnn_gru', reuse=tf.AUTO_REUSE):
                     out_fw, _ = tf.nn.dynamic_rnn(cell=gru_fw, inputs=outputs[-1] * mask_fw, time_major=True,
