@@ -125,7 +125,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
         preds = [list(_filter(self.tgt_vocab(utter_idxs)))
                  for utter_idxs in pred_idxs]
         if self.debug:
-            print("Dialog prediction = \"{}\"".format(preds[-1]))
+            log.debug("Dialog prediction = \"{}\"".format(preds[-1]))
         return preds
 
     def save(self):

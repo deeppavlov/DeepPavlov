@@ -115,7 +115,7 @@ class KerasClassificationModel(KerasModel):
                   "lear_rate": self.opt.get('lear_rate'),
                   "lear_rate_decay": self.opt.get('lear_rate_decay')}
 
-        self.model = self.load(**params)
+        self.model: Model = self.load(**params)
         self._change_not_fixed_params(text_size=text_size, model_name=model_name,
                                       optimizer=optimizer, loss=loss,
                                       lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,
@@ -133,7 +133,10 @@ class KerasClassificationModel(KerasModel):
             if self.opt['fasttext_md5'] != current_fasttext_md5:
                 raise ConfigError(
                     "Given fasttext model does NOT match fasttext model used previously to train loaded model")
-        print("Model was successfully initialized!\nModel summary:\n{}".format(self.model.summary()))
+
+        summary = ['Model was successfully initialized!', 'Model summary:']
+        self.model.summary(print_fn=summary.append)
+        log.info('\n'.join(summary))
 
     def _change_not_fixed_params(self, **kwargs) -> None:
         """
