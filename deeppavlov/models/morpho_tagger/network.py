@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import inspect
-import json
 from typing import List
 
 import keras.layers as kl
@@ -110,7 +108,7 @@ class CharacterTagger:
         self.model_ = Model(inputs, outputs)
         self.model_.compile(**compile_args)
         if self.verbose > 0:
-            log.info(str(self.model_.summary()))
+            self.model_.summary(print_fn=log.info)
         return self
 
     def build_word_cnn(self, inputs):
