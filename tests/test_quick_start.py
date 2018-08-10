@@ -11,15 +11,17 @@ import pexpect
 import requests
 from urllib.parse import urljoin
 
+import deeppavlov
 from deeppavlov.download import deep_download
 from deeppavlov.core.data.utils import get_all_elems_from_json
+import utils
 from utils.server_utils.server import get_server_params, SERVER_CONFIG_FILENAME
 
 
 cache_dir = None
-tests_dir = Path(__file__, '..').resolve()
+tests_dir = Path(__file__).parent
 test_configs_path = tests_dir / "deeppavlov" / "configs"
-src_dir = tests_dir.parent / "deeppavlov" / "configs"
+src_dir = Path(deeppavlov.__path__[0]) / "configs"
 test_src_dir = tests_dir / "test_configs"
 download_path = tests_dir / "download"
 
@@ -238,7 +240,7 @@ class TestQuickStart(object):
 
     @staticmethod
     def interact_api(conf_file):
-        server_conf_file = Path(tests_dir, "..").resolve() / "utils" / "server_utils" / SERVER_CONFIG_FILENAME
+        server_conf_file = Path(utils.__path__[0]) / "server_utils" / SERVER_CONFIG_FILENAME
 
         server_params = get_server_params(server_conf_file, conf_file)
         model_args_names = server_params['model_args_names']
@@ -278,7 +280,7 @@ class TestQuickStart(object):
         if 'IP' in mode:
             config_file_path = str(test_configs_path.joinpath(conf_file))
             self.install(config_file_path)
-            deep_download(['-test', '-c', config_file_path])
+            deep_download(['-c', config_file_path])
 
             self.interact(test_configs_path / conf_file, model_dir, PARAMS[model][(conf_file, model_dir, mode)])
         else:
@@ -301,7 +303,7 @@ class TestQuickStart(object):
             if 'IP' not in mode:
                 config_path = str(test_configs_path.joinpath(conf_file))
                 self.install(config_path)
-                deep_download(['-test', '-c', config_path])
+                deep_download(['-c', config_path])
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
             logfile = io.BytesIO(b'')
@@ -324,7 +326,7 @@ class TestQuickStart(object):
 
             if 'IP' not in mode and 'TI' not in mode:
                 config_path = str(test_configs_path.joinpath(conf_file))
-                deep_download(['-test', '-c', config_path])
+                deep_download(['-c', config_path])
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
             logfile = io.BytesIO(b'')
