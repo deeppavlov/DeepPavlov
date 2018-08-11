@@ -138,7 +138,7 @@ class SquadPreprocessor(Component):
         for token in tokens:
             current = text.find(token, current)
             if current < 0:
-                print("Token {} cannot be found".format(token))
+                logger.error("Token {} cannot be found".format(token))
                 raise Exception()
             spans.append((current, current + len(token)))
             current += len(token)
