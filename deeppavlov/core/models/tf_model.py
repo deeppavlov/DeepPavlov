@@ -122,7 +122,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
             block_name = var.name.split('/')[0]
             number_of_parameters = np.prod(var.get_shape().as_list())
             blocks[block_name] += number_of_parameters
-        for block_name in blocks:
-            log.info(block_name, blocks[block_name])
+        for block_name, cnt in blocks.items():
+            log.info("{} - {}.".format(block_name, cnt))
         total_num_parameters = np.sum(list(blocks.values()))
         log.info('Total number of parameters equal {}'.format(total_num_parameters))
