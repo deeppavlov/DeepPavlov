@@ -83,36 +83,36 @@ the rest for validation set with 42 seed). Attention! The pre-trained
 model was trained on ``sentiment_twitter_data/no_smiles_data`` -- the
 same dataset but with removed "(" and ")".
 
-+------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| Model                                          | Dataset           | Valid accuracy                              | Test accuracy                               |
-+================================================+===================+=============================================+=============================================+
-| ``configs/classifiers/intents_dstc2.json``     | DSTC 2            | 0.8744                                      | 0.8801                                      |
-+------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| ``configs/classifiers/intents_dstc2_big.json`` | DSTC 2            | 0.9682                                      | 0.9684                                      |
-+------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| ``configs/classifiers/intents_snips.json``     | SNIPS             | 0.8829                                      | --                                          |
-+------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| ``configs/classifiers/insults_kaggle.json``    | InsultsKaggle     | 0.8757                                      | 0.7503                                      |
-+------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| ``configs/classifiers/topic_ag_news.json``     | AG News           | 0.8735                                      | 0.8859                                      |
-+------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| ``configs/classifiers/sentiment_twitter.json`` | Twitter.mokoron   | 0.8021 (with smiles), 0.8008 (no\_smiles)   | 0.7949 (with smiles), 0.7943 (no\_smiles)   |
-+------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
++---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
+| Model                                                                           | Dataset           | Valid accuracy                              | Test accuracy                               |
++=================================================================================+===================+=============================================+=============================================+
+| :config:`intents_dstc2.json <configs/classifiers/intents_dstc2.json>`           | DSTC 2            | 0.8744                                      | 0.8801                                      |
++---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
+| :config:`intents_dstc2_big.json <configs/classifiers/intents_dstc2_big.json>`   | DSTC 2            | 0.9682                                      | 0.9684                                      |
++---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
+| :config:`intents_snips.json <configs/classifiers/intents_snips.json>`           | SNIPS             | 0.8829                                      | --                                          |
++---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
+| :config:`insults_kaggle.json <configs/classifiers/insults_kaggle.json>`         | InsultsKaggle     | 0.8757                                      | 0.7503                                      |
++---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
+| :config:`topic_ag_news.json <configs/classifiers/topic_ag_news.json>`           | AG News           | 0.8735                                      | 0.8859                                      |
++---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
+| :config:`sentiment_twitter.json <configs/classifiers/sentiment_twitter.json>`   | Twitter.mokoron   | 0.8021 (with smiles), 0.8008 (no\_smiles)   | 0.7949 (with smiles), 0.7943 (no\_smiles)   |
++---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
 
 Download pre-trained model
 --------------------------
 
 DeepPavlov provides the following **pre-trained models**:
 
--  ``configs/classifiers/intents_dstc2.json`` -- DSTC 2 - intent model for English language with embeddings trained
+-  :config:`intents_dstc2.json <configs/classifiers/intents_dstc2.json>` -- DSTC 2 - intent model for English language with embeddings trained
    via fastText on DSTC 2 (800 Mb).
--  ``configs/classifiers/intents_dstc2_big.json`` -- DSTC 2 - intent model for English language with embeddings trained
+-  :config:`intents_dstc2_big.json <configs/classifiers/intents_dstc2_big.json>` -- DSTC 2 - intent model for English language with embeddings trained
    on Wiki (https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md, 8.5 Gb).
    This model achieves higher accuracy than the first one.
--  ``configs/classifiers/intents_snips.json`` -- SNIPS - intent model for English language.
--  ``configs/classifiers/insults_kaggle.json`` -- Insults analysis for English language.
--  ``configs/classifiers/topic_ag_news.json`` -- AG News topic analysis for English language.
--  ``configs/classifiers/sentiment_twitter.json`` -- Twitter Mokoron sentiment analysis for **Russian** language.
+-  :config:`intents_snips.json <configs/classifiers/intents_snips.json>` -- SNIPS - intent model for English language.
+-  :config:`insults_kaggle.json <configs/classifiers/insults_kaggle.json>` -- Insults analysis for English language.
+-  :config:`topic_ag_news.json <configs/classifiers/topic_ag_news.json>` -- AG News topic analysis for English language.
+-  :config:`sentiment_twitter.json <configs/classifiers/sentiment_twitter.json>` -- Twitter Mokoron sentiment analysis for **Russian** language.
 
 To download pre-trained models, vocabs, embeddings on the dataset of interest one should run the following command
 providing corresponding name of the config file (see above):
@@ -149,7 +149,7 @@ which the string belongs to, and the second one is a dictionary with probability
 the considered classes (take into account that for multi-class classification then sum of probabilities
 is not equal to 1).
 
-An example of interacting the model from ``configs/classifiers/intents_dstc2.json``
+An example of interacting the model from :config:`intents_dstc2.json <configs/classifiers/intents_dstc2.json>`
 
 ::
 
@@ -157,7 +157,7 @@ An example of interacting the model from ``configs/classifiers/intents_dstc2.jso
     >> (array(['inform_pricerange'], dtype='<U17'), {'ack': 0.0040760376, 'affirm': 0.017633557, 'bye': 0.023906048, 'confirm_area': 0.0040424005, 'confirm_food': 0.012261569, 'confirm_pricerange': 0.007227284, 'deny_food': 0.003502861, 'deny_name': 0.003412795, 'hello': 0.0061915903, 'inform_area': 0.15999688, 'inform_food': 0.18303667, 'inform_name': 0.0042709936, 'inform_pricerange': 0.30197725, 'inform_this': 0.03864918, 'negate': 0.016452404, 'repeat': 0.003964727, 'reqalts': 0.026930325, 'reqmore': 0.0030793257, 'request_addr': 0.08075432, 'request_area': 0.018258458, 'request_food': 0.018060096, 'request_phone': 0.07433994, 'request_postcode': 0.012727374, 'request_pricerange': 0.024933394, 'request_signature': 0.0034591882, 'restart': 0.0038622846, 'thankyou': 0.036836267, 'unknown': 0.045310754})
 
 and an example of interacting the model from
-``configs/classifiers/intents_dstc2_big.json``
+:config:`intents_dstc2_big.json <configs/classifiers/intents_dstc2_big.json>`
 
 ::
 
@@ -194,7 +194,7 @@ One can find examples of config files in ``deeppavlov/configs/classifiers``.
 Detailed description of configuration file and specific parameters for all presented classification models can be found
 in :doc:`reference </apiref/models/classifiers>`.
 
-Some clue parameters for ``deeppavlov/configs/classifiers/intents_dstc2.json`` config file are
+Some clue parameters for :config:`intents_dstc2.json <configs/classifiers/intents_dstc2.json>` config file are
 presented in the table below.
 
 +--------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -379,7 +379,7 @@ Then training process can be run in the same way:
 
     python deep.py train "path_to_config"
 
-The current version of ``intents_snips.json`` contains parameters for
+The current version of :config:`intents_snips.json <configs/classifiers/intents_snips.json>`` contains parameters for
 intent recognition for SNIPS benchmark dataset [2] that was restored in
 ``.csv`` format and will be downloaded automatically.
 
