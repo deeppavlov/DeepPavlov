@@ -60,7 +60,7 @@
           "y_probas_dict"
         ],
         "main": true,
-        "name": "intent_model",
+        "name": "keras_classification_model",
         "save_path": "sentiment/insults_kaggle_v0",
         "load_path": "sentiment/insults_kaggle_v0",
         "classes": "#classes_vocab.keys()",
@@ -107,16 +107,20 @@
     "test_best": true
   },
   "metadata": {
+    "requirements": [
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/fasttext.txt"
+    ],
     "labels": {
       "telegram_utils": "IntentModel",
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/sentiment.tar.gz",
-      "http://lnsigo.mipt.ru/export/datasets/insults_data.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/sentiment.tar.gz",
+      "http://files.deeppavlov.ai/datasets/insults_data.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/embeddings/reddit_fastText/wordpunct_tok_reddit_comments_2017_11_300.bin",
+        "url": "http://files.deeppavlov.ai/embeddings/reddit_fastText/wordpunct_tok_reddit_comments_2017_11_300.bin",
         "subdir": "embeddings"
       }
     ]

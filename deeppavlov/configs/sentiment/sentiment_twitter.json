@@ -60,7 +60,7 @@
           "y_probas_dict"
         ],
         "main": true,
-        "name": "intent_model",
+        "name": "keras_classification_model",
         "save_path": "sentiment/sentiment_twitter_v1",
         "load_path": "sentiment/sentiment_twitter_v1",
         "classes": "#classes_vocab.keys()",
@@ -107,16 +107,20 @@
     "test_best": true
   },
   "metadata": {
+    "requirements": [
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/fasttext.txt"
+    ],
     "labels": {
       "telegram_utils": "IntentModel",
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/sentiment.tar.gz",
-      "http://lnsigo.mipt.ru/export/datasets/sentiment_twitter_data.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/sentiment.tar.gz",
+      "http://files.deeppavlov.ai/datasets/sentiment_twitter_data.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
         "subdir": "embeddings"
       }
     ]

@@ -1,18 +1,16 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from collections import Counter, defaultdict
 from itertools import chain
@@ -31,11 +29,13 @@ log = get_logger(__name__)
 
 @register('simple_vocab')
 class SimpleVocabulary(Estimator):
+    """Implements simple vocabulary."""
     def __init__(self,
                  special_tokens=tuple(),
                  max_tokens=2**30,
                  min_freq=1,
                  pad_with_zeros=False,
+                 unk_token=None,
                  *args,
                  **kwargs):
         super().__init__(**kwargs)
@@ -43,6 +43,7 @@ class SimpleVocabulary(Estimator):
         self._max_tokens = max_tokens
         self._min_freq = min_freq
         self._pad_with_zeros = pad_with_zeros
+        self.unk_token = unk_token
         self.reset()
         if self.load_path:
             self.load()
@@ -79,7 +80,7 @@ class SimpleVocabulary(Estimator):
 
     def save(self):
         log.info("[saving vocabulary to {}]".format(self.save_path))
-        with self.save_path.open('wt') as f:
+        with self.save_path.open('wt', encoding='utf8') as f:
             for n in range(len(self)):
                 token = self._i2t[n]
                 cnt = self.freqs[token]
@@ -91,7 +92,7 @@ class SimpleVocabulary(Estimator):
             if self.load_path.is_file():
                 log.info("[loading vocabulary from {}]".format(self.load_path))
                 tokens, counts = [], []
-                for ln in self.load_path.open('r'):
+                for ln in self.load_path.open('r', encoding='utf8'):
                     token, cnt = ln.split('\t', 1)
                     tokens.append(token)
                     counts.append(int(cnt))
@@ -145,7 +146,10 @@ class SimpleVocabulary(Estimator):
 
     def reset(self):
         self.freqs = None
-        self._t2i = defaultdict(int)
+        unk_index = 0
+        if self.unk_token in self.special_tokens:
+            unk_index = self.special_tokens.index(self.unk_token)
+        self._t2i = defaultdict(lambda: unk_index)
         self._i2t = []
         self.count = 0
 
@@ -157,6 +161,7 @@ class SimpleVocabulary(Estimator):
 
 @register('char_vocab')
 class CharacterVocab(SimpleVocabulary):
+    """Implements character vocabulary."""
     def fit(self, tokens):
         chars = chain(*tokens)
         super().fit(chars)
@@ -175,6 +180,7 @@ class CharacterVocab(SimpleVocabulary):
 
 @register('dialog_vocab')
 class DialogVocab(SimpleVocabulary):
+    """Implements dialog vocabulary."""
     def fit(self, utterances):
         tokens = chain(*utterances)
         super().fit(tokens)
@@ -189,4 +195,3 @@ class DialogVocab(SimpleVocabulary):
         if self._pad_with_zeros:
             indices_batch = zero_pad_char(indices_batch)
         return indices_batch
-

@@ -63,9 +63,9 @@
           "y_probas_dict"
         ],
         "main": true,
-        "name": "intent_model",
-        "save_path": "intents/intent_cnn_v5",
-        "load_path": "intents/intent_cnn_v5",
+        "name": "keras_classification_model",
+        "save_path": "intents/intents_dstc2_v5",
+        "load_path": "intents/intents_dstc2_v5",
         "classes": "#classes_vocab.keys()",
         "kernel_sizes_cnn": [
           1,
@@ -107,14 +107,18 @@
     "show_examples": false
   },
   "metadata": {
+    "requirements": [
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/fasttext.txt"
+    ],
     "labels": {
       "telegram_utils": "IntentModel"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/intents.tar.gz",
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/intents.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "embeddings"
       }
     ]

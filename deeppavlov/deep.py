@@ -29,6 +29,7 @@ from deeppavlov.core.common.log import get_logger
 from deeppavlov.download import deep_download
 from utils.telegram_utils.telegram_ui import interact_model_by_telegram
 from utils.server_utils.server import start_model_server
+from utils.pip_wrapper import install_from_config
 
 
 log = get_logger(__name__)
@@ -37,7 +38,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
                     choices={'train', 'evaluate', 'interact', 'predict', 'interactbot', 'riseapi', 'download',
-                             'sort_out'})
+                             'install', 'sort_out'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 parser.add_argument("-e", "--exp_name", help="name of experiment", type=str)
 parser.add_argument("-t", "--token", help="telegram bot token", type=str)
@@ -93,6 +94,8 @@ def main():
                                   root=args.root, hyper_search=args.hyper_search, sample_num=args.sample_num,
                                   target_metric=args.target_metric)
         manager.run()
+    elif args.mode == 'install':
+        install_from_config(pipeline_config_path)
 
 
 if __name__ == "__main__":

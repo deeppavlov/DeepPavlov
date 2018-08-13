@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
-    "name": "dstc2_v2_reader",
-    "data_path": "dstc2_v2"
+    "name": "dstc2_reader",
+    "data_path": "dstc2"
   },
   "dataset_iterator": {
     "name": "dialog_db_result_iterator"
@@ -17,7 +17,7 @@
         "fit_on": ["db_result"],
         "table_name": "mytable",
         "primary_keys": ["name"],
-        "save_path": "dstc2_v2/resto.sqlite"
+        "save_path": "dstc2/resto.sqlite"
       }
     ]
   },
@@ -26,8 +26,8 @@
   "metadata": {
     "download": [
       {
-        "url": "http://lnsigo.mipt.ru/export/datasets/dstc2_v2.tar.gz",
-        "subdir": "dstc2_v2"
+        "url": "http://files.deeppavlov.ai/datasets/dstc2_v2.tar.gz",
+        "subdir": "dstc2"
       }
     ]
   }
