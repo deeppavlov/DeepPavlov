@@ -199,7 +199,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
 
             print(json.dumps(report, ensure_ascii=False))
 
-    if isinstance(config_path, Dict):
+    if isinstance(config, Dict):
         return report
     else:
         return None
@@ -344,7 +344,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
 
                         if losses:
                             loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + 'loss',
-                                                                            simple_value=report['loss']), ])
+                                                                          simple_value=report['loss']), ])
                             tb_train_writer.add_summary(loss_sum, i)
 
                     print(json.dumps(report, ensure_ascii=False))
