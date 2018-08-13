@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import copy
 import inspect
 
@@ -104,11 +103,8 @@ class MorphoTaggerWrapper(NNModel):
         Returns:
 
         """
-        if len(args) > 2:
-            data, labels = [list(x) for x in args[:-1]], list(args[-1])
-        else:
-            data, labels = args
-        self._net.train_on_batch(data, labels, **self.train_parameters)
+        *data, labels = args
+        self._net.train_on_batch(data, labels)
 
     def __call__(self, *x_batch, **kwargs):
         """

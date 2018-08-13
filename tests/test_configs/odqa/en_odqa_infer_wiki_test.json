@@ -76,8 +76,7 @@
     },
     "download": [
       "http://files.deeppavlov.ai/datasets/wikipedia/wiki_test.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/odqa_test.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/squad_model_1.1.tar.gz"
+      "http://files.deeppavlov.ai/deeppavlov_data/odqa_test.tar.gz"
     ]
   }
 }

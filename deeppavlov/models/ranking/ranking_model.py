@@ -231,7 +231,8 @@ class RankingModel(NNModel):
                         if not no_samples:
                             break
                     if no_samples:
-                        print("There is no negative examples with distances greater than positive examples distances.")
+                        log.error("There are no negative examples with distances"
+                                  " greater than positive examples distances.")
                         exit(0)
             else:
                 if self.num_hardest_negatives is not None:
@@ -285,7 +286,7 @@ class RankingModel(NNModel):
         rp = [el[1] for el in triplets]
         rn = [el[2] for el in triplets]
         ratio = sum(hrds) / len(hrds)
-        print("Ratio of semi-hard negative samples is %f" % ratio)
+        log.info("Ratio of semi-hard negative samples is %f" % ratio)
         return [(c, rp), (c, rn)]
 
     def get_semi_hard_negative_ind(self, i, j, k, distances, anchor_negative_dist, batch_size, num_samples):
