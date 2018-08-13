@@ -28,14 +28,15 @@ from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.commands.train import get_iterator_from_config
 from deeppavlov.core.commands.train import read_data_by_config
+from sklearn.model_selection import KFold
 
 PARAM_RANGE_SUFFIX_NAME = '_range'
 log = get_logger(__name__)
 
 parser = argparse.ArgumentParser()
-
 parser.add_argument("--config_path", help="path to a pipeline json config", type=str)
 parser.add_argument("--loocv", help="path to a pipeline json config", type=bool, default=False)
+parser.add_argument("--folds", help="path to a pipeline json config", type=int, default=None)
 
 
 def find_config(pipeline_config_path: str):
@@ -53,7 +54,7 @@ def calc_loocv_score(config, data):
     all_data = data['train'] + data['valid']
     m = len(all_data)
     all_scores = []
-    for i in range(2):
+    for i in range(m):
         data_i = {}
         data_i['train'] = all_data.copy()
         data_i['valid'] = [data_i['train'].pop(i)]
@@ -63,6 +64,26 @@ def calc_loocv_score(config, data):
         all_scores.append(score['valid']['accuracy'])
 
     return np.mean(all_scores)
+
+def calc_cvfolds_score(config, data, n_folds):
+
+    all_data = data['train'] + data['valid']
+    m = len(all_data)
+    all_scores = []
+
+    kf = KFold(n_splits=n_folds, shuffle=True)
+
+    for train_index, valid_index in kf.split(all_data):
+        data_i = {}
+        data_i['train'] = np.array(all_data)[train_index].tolist()
+        data_i['valid'] = np.array(all_data)[valid_index].tolist()
+        data_i['test'] = []
+        iterator = get_iterator_from_config(config, data_i)
+        score = train_evaluate_model_from_config(config, iterator=iterator)
+        all_scores.append(score['valid']['accuracy'])
+
+    return np.mean(all_scores)
+
 
 def get_best_params(combinations, scores, param_names):
     max_id = np.argmax(scores)
@@ -99,6 +120,8 @@ def main():
 
         if args.loocv:
             scores.append(calc_loocv_score(config, data))
+        elif args.folds is not None:
+            scores.append(calc_cvfolds_score(config, data, args.folds))
         else:
             raise NotImplementedError('Not implemented this type of CV')
 
@@ -114,6 +137,7 @@ def main():
 
 
 # try to run:
-# --config_path path_to_config.json --loocv 1
+# --config_path path_to_config.json --folds 2
 if __name__ == "__main__":
     main()
+
