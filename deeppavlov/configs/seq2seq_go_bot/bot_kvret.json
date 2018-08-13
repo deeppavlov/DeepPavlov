@@ -89,7 +89,8 @@
         "network_parameters": {
           "load_path": "seq2seq_go_bot/model",
           "save_path": "seq2seq_go_bot/model",
-          "learning_rate": 0.0001,
+          "learning_rate": 0.001,
+          "beam_width": 1,
           "target_start_of_sequence_index": "#tgt_token_vocab.__getitem__('<SOS>')",
           "target_end_of_sequence_index": "#tgt_token_vocab.__getitem__('<EOS>')",
           "source_vocab_size": "#src_token_vocab.__len__()",
@@ -120,7 +121,7 @@
     "epochs": 200,
     "batch_size": 16,
 
-    "metrics": ["bleu", "google_bleu", "accuracy"],
+    "metrics": ["google_bleu", "bleu", "accuracy"],
     "validation_patience": 15,
     "val_every_n_epochs": 1,
 

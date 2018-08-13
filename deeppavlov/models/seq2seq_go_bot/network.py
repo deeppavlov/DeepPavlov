@@ -35,8 +35,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
     GRAPH_PARAMS = ['knowledge_base_size', 'source_vocab_size',
                     'target_vocab_size', 'hidden_size', 'embedding_size',
-                    'kb_embedding_control_sum',
-                    'kb_attention_hidden_sizes']
+                    'kb_embedding_control_sum', 'kb_attention_hidden_sizes',
+                    'beam_width']
 
     def __init__(self, **params):
         # initialize parameters
@@ -121,14 +121,14 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         # self._loss = tf.reduce_mean(_loss_tensor, name='loss')
 # TODO: tune clip_norm
         self._train_op = \
-            self.get_train_op(self._loss, 
+            self.get_train_op(self._loss,
                               learning_rate=self._learning_rate,
                               optimizer=self._optimizer,
                               clip_norm=10.)
-        for v in tf.global_variables():
-            print(v)
-        # print("Built the graph.")
-
+        # log.info("Trainable variables")
+        # for v in tf.trainable_variables():
+        #    log.info(v)
+        # self.print_number_of_parameters()
 
     def _add_placeholders(self):
         self._learning_rate = tf.placeholder(tf.float32,
@@ -180,6 +180,11 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                                            [None, None],
                                            name='target_weights')
 
+    def _build_body(self):
+        self._build_encoder()
+        self._build_decoder()
+        return self._logits, self._predictions
+
     def _build_encoder(self):
         with tf.variable_scope("Encoder"):
             # Encoder embedding
@@ -190,7 +195,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             # _encoder_emb_inp = tf.one_hot(self._encoder_inputs, self.src_vocab_size)
             _encoder_emb_inp = self._encoder_inputs
 
-            _encoder_cell = tf.nn.rnn_cell.BasicLSTMCell(self.hidden_size)
+            _encoder_cell = tf.nn.rnn_cell.LSTMCell(self.hidden_size,
+                                                    name='basic_lstm_cell')
             # Run Dynamic RNN
             #   _encoder_outputs: [max_time, batch_size, hidden_size]
             #   _encoder_state: [batch_size, hidden_size]
@@ -201,11 +207,6 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
         self._encoder_outputs = _encoder_outputs
         self._encoder_state = _encoder_state
-
-    def _build_body(self):
-        self._build_encoder()
-        self._build_decoder()
-        return self._logits, self._predictions
 
     def _build_decoder(self):
         with tf.variable_scope("Decoder"):
@@ -235,25 +236,31 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                                              use_bias=False)
 # TODO: rm output dense layer
             # Output dense layer
-            #_projection_layer = \
+            # _projection_layer = \
             #  tf.layers.Dense(self.tgt_vocab_size, use_bias=False, _reuse=reuse)
 
             # Decoder Cell
-            _decoder_cell = tf.nn.rnn_cell.BasicLSTMCell(self.hidden_size)
+            _decoder_cell = tf.nn.rnn_cell.LSTMCell(self.hidden_size,
+                                                    name='basic_lstm_cell')
+
+            def build_dec_cell(enc_out, enc_seq_len, reuse=None):
+                with tf.variable_scope("dec_cell_attn", reuse=reuse):
+                    # Create an attention mechanism
+                    # _attention_mechanism = tf.contrib.seq2seq.BahdanauAttention(
+                    _attention_mechanism = tf.contrib.seq2seq.LuongAttention(
+                        self.hidden_size,
+                        memory=enc_out,
+                        memory_sequence_length=enc_seq_len)
+                    _cell = tf.contrib.seq2seq.AttentionWrapper(
+                        _decoder_cell,
+                        _attention_mechanism,
+                        attention_layer_size=self.hidden_size)
+                    return _cell
 
             # TRAIN MODE
-            # Create an attention mechanism
-            with tf.variable_scope("AttentionOverEncoder"):
-                _attention_mechanism_tr = tf.contrib.seq2seq.LuongAttention(
-                    self.hidden_size,
-                    self._encoder_outputs,
-                    memory_sequence_length=self._src_sequence_lengths,
-                    name='attention_mechanism')
-                _decoder_cell_tr = tf.contrib.seq2seq.AttentionWrapper(
-                    _decoder_cell,
-                    _attention_mechanism_tr,
-                    attention_layer_size=self.hidden_size,
-                    name='attention_wrapper')
+            _decoder_cell_tr = build_dec_cell(self._encoder_outputs,
+                                              self._src_sequence_lengths)
+            self._decoder_cell_tr = _decoder_cell_tr
             # Train Helper to feed inputs for training:
             # read inputs from dense ground truth vectors
             _helper_tr = tf.contrib.seq2seq.TrainingHelper(
@@ -266,25 +273,21 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                 tf.contrib.seq2seq.BasicDecoder(_decoder_cell_tr, _helper_tr,
                                                 initial_state=_decoder_init_state,
                                                 output_layer=_kb_attn_layer)
-            _outputs_inf, _, _ = \
-                tf.contrib.seq2seq.dynamic_decode(_decoder_tr,
-                                                  impute_finished=False,
-                                                  output_time_major=False)
+            # Wrap into variable scope to share attention parameters
+            # Required!
+            with tf.variable_scope('decode_with_shared_attention'):
+                _outputs_inf, _, _ = \
+                    tf.contrib.seq2seq.dynamic_decode(_decoder_tr,
+                                                      impute_finished=False,
+                                                      output_time_major=False)
             # _logits = decode(_helper, "decode").beam_search_decoder_output.scores
             _logits = _outputs_inf.rnn_output
 
             # INFER MODE
-            with tf.variable_scope("AttentionOverEncoder", reuse=True):
-                _attention_mechanism_inf = tf.contrib.seq2seq.LuongAttention(
-                    self.hidden_size,
-                    _tiled_encoder_outputs,
-                    memory_sequence_length=_tiled_src_sequence_lengths,
-                    name='attention_mechanism')
-                _decoder_cell_inf = tf.contrib.seq2seq.AttentionWrapper(
-                    _decoder_cell,
-                    _attention_mechanism_inf,
-                    attention_layer_size=self.hidden_size,
-                    name='attention_wrapper')
+            _decoder_cell_inf = build_dec_cell(_tiled_encoder_outputs,
+                                               _tiled_src_sequence_lengths,
+                                               reuse=True)
+            self._decoder_cell_inf = _decoder_cell_inf
             # Infer Helper
             _max_iters = tf.round(tf.reduce_max(self._src_sequence_lengths) * 2)
             # NOTE: helper is not needed?
@@ -311,13 +314,15 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                     output_layer=_kb_attn_layer,
                     length_penalty_weight=0.0)
 
-            # Dynamic decoding
-# TRY: impute_finished = True,
-            _outputs_inf, _, _ = \
-                tf.contrib.seq2seq.dynamic_decode(_decoder_inf,
-                                                  impute_finished=False,
-                                                  maximum_iterations=_max_iters,
-                                                  output_time_major=False)
+            # Wrap into variable scope to share attention parameters
+            # Required!
+            with tf.variable_scope("decode_with_shared_attention", reuse=True):
+                # TODO: try impute_finished = True,
+                _outputs_inf, _, _ = \
+                    tf.contrib.seq2seq.dynamic_decode(_decoder_inf,
+                                                      impute_finished=False,
+                                                      maximum_iterations=_max_iters,
+                                                      output_time_major=False)
             _predictions = _outputs_inf.predicted_ids[:, :, 0]
             # TODO: rm indexing
             # _predictions = \
@@ -328,7 +333,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
     def _multilayer_perceptron(units, hidden_dims=[], use_bias=True):
         # Hidden fully connected layers with relu activation
         for i, h in enumerate(hidden_dims):
-# TODO: check stddev
+            # TODO: check stddev
             _W_init = tf.truncated_normal([units.shape[-1], h],
                                           stddev=1,)
             _W = tf.Variable(_W_init, name="W_{}".format(i))
@@ -357,8 +362,6 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
     def train_on_batch(self, enc_inputs, dec_inputs, dec_outputs,
                        src_seq_lengths, tgt_seq_lengths, tgt_weights, kb_masks):
-        # print("in train_on_batch")
-        # print(np.array(enc_inputs).shape, src_seq_lengths[:10])
         _, loss_value = self.sess.run(
             [self._train_op, self._loss],
             feed_dict={
