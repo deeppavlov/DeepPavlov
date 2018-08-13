@@ -1,20 +1,18 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-from copy import deepcopy
+from typing import List, Tuple
 
 import tensorflow as tf
 import numpy as np
@@ -31,22 +29,50 @@ logger = get_logger(__name__)
 
 @register('squad_model')
 class SquadModel(TFModel):
-    def __init__(self, **kwargs):
-        self.opt = deepcopy(kwargs)
-        self.init_word_emb = self.opt['word_emb']
-        self.init_char_emb = self.opt['char_emb']
-        self.context_limit = self.opt['context_limit']
-        self.question_limit = self.opt['question_limit']
-        self.char_limit = self.opt['char_limit']
-        self.char_hidden_size = self.opt['char_hidden_size']
-        self.hidden_size = self.opt['encoder_hidden_size']
-        self.attention_hidden_size = self.opt['attention_hidden_size']
-        self.keep_prob = self.opt['keep_prob']
-        self.learning_rate = self.opt['learning_rate']
-        self.min_learning_rate = self.opt['min_learning_rate']
-        self.learning_rate_patience = self.opt['learning_rate_patience']
-        self.grad_clip = self.opt['grad_clip']
-        self.weight_decay = self.opt['weight_decay']
+    """
+    SquadModel predicts answer start and end position in given context by given question.
+
+    High level architecture:
+    Word embeddings -> Contextual embeddings -> Question-Context Attention -> Self-attention -> Pointer Network
+
+    Parameters:
+        word_emb: pretrained word embeddings
+        char_emb: pretrained char embeddings
+        context_limit: max context length in tokens
+        question_limit: max question length in tokens
+        char_limit: max number of characters in token
+        char_hidden_size: hidden size of charRNN
+        encoder_hidden_size: hidden size of encoder RNN
+        attention_hidden_size: size of projection layer in attention
+        keep_prob: dropout keep probability
+        learning_rate: initial learning rate
+        min_learning_rate: min learning rate, is used in learning rate decay
+        learning_rate_patience: number of epochs without score improvements to decay learning rate
+        grad_clip: gradient clipping value
+        weight_decay: weight decay value
+    """
+    def __init__(self, word_emb: np.ndarray, char_emb: np.ndarray, context_limit: int = 450, question_limit: int = 150,
+                 char_limit: int = 16, train_char_emb: bool = True, char_hidden_size: int = 100,
+                 encoder_hidden_size: int = 75, attention_hidden_size: int = 75, keep_prob: float = 0.7,
+                 learning_rate: float = 0.5, min_learning_rate: float = 0.001, learning_rate_patience: int = 1,
+                 grad_clip: float = 5.0, weight_decay: float = 1.0, **kwargs):
+
+        self.init_word_emb = word_emb
+        self.init_char_emb = char_emb
+        self.context_limit = context_limit
+        self.question_limit = question_limit
+        self.char_limit = char_limit
+        self.train_char_emb = train_char_emb
+        self.char_hidden_size = char_hidden_size
+        self.hidden_size = encoder_hidden_size
+        self.attention_hidden_size = attention_hidden_size
+        self.keep_prob = keep_prob
+        self.learning_rate = learning_rate
+        self.min_learning_rate = min_learning_rate
+        self.learning_rate_patience = learning_rate_patience
+        self.grad_clip = grad_clip
+        self.weight_decay = weight_decay
+
         self.word_emb_dim = self.init_word_emb.shape[1]
         self.char_emb_dim = self.init_char_emb.shape[1]
 
@@ -81,7 +107,7 @@ class SquadModel(TFModel):
         self.word_emb = tf.get_variable("word_emb", initializer=tf.constant(self.init_word_emb, dtype=tf.float32),
                                         trainable=False)
         self.char_emb = tf.get_variable("char_emb", initializer=tf.constant(self.init_char_emb, dtype=tf.float32),
-                                        trainable=self.opt['train_char_emb'])
+                                        trainable=self.train_char_emb)
 
         self.c_mask = tf.cast(self.c_ph, tf.bool)
         self.q_mask = tf.cast(self.q_ph, tf.bool)
@@ -227,7 +253,22 @@ class SquadModel(TFModel):
 
         return feed_dict
 
-    def train_on_batch(self, c_tokens, c_chars, q_tokens, q_chars, y1s, y2s):
+    def train_on_batch(self, c_tokens: np.ndarray, c_chars: np.ndarray, q_tokens: np.ndarray, q_chars: np.ndarray,
+                       y1s: Tuple[List[int], ...], y2s: Tuple[List[int], ...]) -> float:
+        """
+        This method is called by trainer to make one training step on one batch.
+
+        Args:
+            c_tokens: batch of tokenized contexts
+            c_chars: batch of tokenized contexts, each token split on chars
+            q_tokens: batch of tokenized questions
+            q_chars: batch of tokenized questions, each token split on chars
+            y1s: batch of ground truth answer start positions
+            y2s: batch of ground truth answer end positions
+
+        Returns:
+            value of loss function on batch
+        """
         # TODO: filter examples in batches with answer position greater self.context_limit
         # select one answer from list of correct answers
         y1s = list(map(lambda x: x[0], y1s))
@@ -236,7 +277,20 @@ class SquadModel(TFModel):
         loss, _ = self.sess.run([self.loss, self.train_op], feed_dict=feed_dict)
         return loss
 
-    def __call__(self, c_tokens, c_chars, q_tokens, q_chars, *args, **kwargs):
+    def __call__(self, c_tokens: np.ndarray, c_chars: np.ndarray, q_tokens: np.ndarray, q_chars: np.ndarray,
+                 *args, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Predicts answer start and end positions by given context and question.
+
+        Args:
+            c_tokens: batch of tokenized contexts
+            c_chars: batch of tokenized contexts, each token split on chars
+            q_tokens: batch of tokenized questions
+            q_chars: batch of tokenized questions, each token split on chars
+
+        Returns:
+            answer_start and answer_end positions
+        """
         if any(np.sum(c_tokens, axis=-1) == 0) or any(np.sum(q_tokens, axis=-1) == 0):
             logger.info('SQuAD model: Warning! Empty question or context was found.')
             noanswers = -np.ones(shape=(c_tokens.shape[0]), dtype=np.int32)
@@ -246,7 +300,14 @@ class SquadModel(TFModel):
         yp1, yp2 = self.sess.run([self.yp1, self.yp2], feed_dict=feed_dict)
         return yp1, yp2
 
-    def process_event(self, event_name, data):
+    def process_event(self, event_name: str, data) -> None:
+        """
+        Processes events sent by trainer. Implements learning rate decay.
+
+        Args:
+            event_name: event_name sent by trainer
+            data: number of examples, epochs, metrics sent by trainer
+        """
         if event_name == "after_validation":
             if data['impatience'] > self.last_impatience:
                 self.lr_impatience += 1

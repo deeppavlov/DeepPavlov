@@ -1,18 +1,16 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import json
 import tensorflow as tf
@@ -28,15 +26,42 @@ log = get_logger(__name__)
 
 @register("seq2seq_go_bot_nn")
 class Seq2SeqGoalOrientedBotNetwork(TFModel):
+    """
+    The :class:`~deeppavlov.models.seq2seq_go_bot.bot.GoalOrientedBotNetwork` is a recurrent network that encodes user utterance and generates response in a sequence-to-sequence manner.
+
+    For network architecture is similar to https://arxiv.org/abs/1705.05414 .
+
+    Parameters:
+        hidden_size: RNN hidden layer size.
+        target_start_of_sequence_index: index of a start of sequence token during decoding.
+        target_end_of_sequence_index: index of an end of sequence token during decoding.
+        source_vocab_size: size of a vocabulary of encoder tokens.
+        target_vocab_size: size of a vocabulary of decoder tokens.
+        learning_rate: training learning rate.
+        **kwargs: parameters passed to a parent :class:`~deeppavlov.core.models.tf_model.TFModel` class.
+    """
 
     GRAPH_PARAMS = ['source_vocab_size', 'target_vocab_size', 'hidden_size']
-    
+
     def __init__(self,
-                 #embedder=None,
-                 **params):
+                 hidden_size: int,
+                 source_vocab_size: int,
+                 target_vocab_size: int,
+                 target_start_of_sequence_index: int,
+                 target_end_of_sequence_index: int,
+                 learning_rate: float,
+                 **kwargs) -> None:
+        # specify model options
+        self.opt = {
+            'hidden_size': hidden_size,
+            'source_vocab_size': source_vocab_size,
+            'target_vocab_size': target_vocab_size,
+            'target_start_of_sequence_index': target_start_of_sequence_index,
+            'target_end_of_sequence_index': target_end_of_sequence_index,
+            'learning_rate': learning_rate
+        }
         # initialize parameters
-        #self.embedder = embedder
-        self._init_params(params)
+        self._init_params()
         # build computational graph
         self._build_graph()
         # initialize session
@@ -44,7 +69,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
         self.sess.run(tf.global_variables_initializer())
 
-        super().__init__(**params)
+        super().__init__(**kwargs)
 
         if tf.train.checkpoint_exists(str(self.save_path.resolve())):
             log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
@@ -52,23 +77,20 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         else:
             log.info("[initializing `{}` from scratch]".format(self.__class__.__name__))
 
-    def _init_params(self, params):
-        self.opt = params
-        
-        self.learning_rate = self.opt['learning_rate']
-        self.tgt_sos_id = self.opt['target_start_of_sequence_index']
-        self.tgt_eos_id = self.opt['target_end_of_sequence_index']
+    def _init_params(self):
+        self.hidden_size = self.opt['hidden_size']
         self.src_vocab_size = self.opt['source_vocab_size']
         self.tgt_vocab_size = self.opt['target_vocab_size']
-        #self.embedding_size = self.opt['embedding_size']
-        self.hidden_size = self.opt['hidden_size']
+        self.tgt_sos_id = self.opt['target_start_of_sequence_index']
+        self.tgt_eos_id = self.opt['target_end_of_sequence_index']
+        self.learning_rate = self.opt['learning_rate']
 
     def _build_graph(self):
 
         self._add_placeholders()
 
         _logits, self._predictions = self._build_body()
-       
+
         _weights = tf.expand_dims(self._tgt_weights, -1)
         _loss_tensor = \
             tf.losses.sparse_softmax_cross_entropy(logits=_logits,

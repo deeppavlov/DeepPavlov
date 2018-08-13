@@ -1,21 +1,20 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, softwaredata
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, softwaredata
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import json
 from pathlib import Path
+from typing import Dict, List
 
 from overrides import overrides
 
@@ -28,20 +27,36 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-
 @register('kvret_reader')
 class KvretDatasetReader(DatasetReader):
+    """
+    A New Multi-Turn, Multi-Domain, Task-Oriented Dialogue Dataset.
 
-    url = 'http://lnsigo.mipt.ru/export/datasets/kvret_public.tar.gz'
+    Stanford NLP released a corpus of 3,031 multi-turn dialogues in three distinct domains appropriate for an in-car assistant: calendar scheduling, weather information retrieval, and point-of-interest navigation. The dialogues are grounded through knowledge bases ensuring that they are versatile in their natural language without being completely free form.
+
+    For details see https://nlp.stanford.edu/blog/a-new-multi-turn-multi-domain-task-oriented-dialogue-dataset/.
+    """
+
+    url = 'http://files.deeppavlov.ai/datasets/kvret_public.tar.gz'
 
     @staticmethod
     def _data_fname(datatype):
         assert datatype in ('train', 'dev', 'test'), "wrong datatype name"
         return 'kvret_{}_public.json'.format(datatype)
 
+    @classmethod
     @overrides
-    def read(self, data_path, dialogs=False):
-    #TODO: mkdir if it doesn't exist
+    def read(self, data_path: str, dialogs: bool = False) -> Dict[str, List]:
+        """
+        Downloads ``'kvrest_public.tar.gz'``, decompresses, saves files to ``data_path``.
+
+        Parameters:
+            data_path: path to save data
+            dialogs: flag indices whether to output list of turns or list of dialogs
+
+        Returns:
+            dictionary with ``'train'`` containing dialogs from ``'kvret_train_public.json'``, ``'valid'`` containing dialogs from ``'kvret_valid_public.json'``, ``'test'`` containing dialogs from ``'kvret_test_public.json'``. Each fields is a list of tuples ``(x_i, y_i)``.
+        """
 
         required_files = (self._data_fname(dt) for dt in ('train', 'dev', 'test'))
         if not all(Path(data_path, f).exists() for f in required_files):

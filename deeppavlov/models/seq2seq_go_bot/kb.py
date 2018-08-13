@@ -1,21 +1,21 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 import itertools
 import json
 import re
+from typing import Callable, List, Dict
 from collections import defaultdict
 
 from deeppavlov.core.common.registry import register
@@ -29,8 +29,33 @@ log = get_logger(__name__)
 
 @register("knowledge_base")
 class KnowledgeBase(Estimator):
+    """
+    A custom dictionary that encodes knowledge facts from :class:`~deeppavlov.dataset_readers.kvret_reader.KvretDatasetReader` data.
 
-    def __init__(self, save_path, load_path=None, tokenizer=None, *args, **kwargs):
+    Example:
+        .. code:: python
+
+            >>> from models.seq2seq_go_bot.kb import KnowledgeBase
+            >>> kb = KnowledgeBase(save_path="kb.json", load_path="kb.json")
+            >>> kb.fit(['person1'], [['name', 'hair', 'eyes']], [[{'name': 'Sasha', 'hair': 'long dark', 'eyes': 'light blue '}]])
+
+            >>> kb(['person1'])
+            [[('sasha_hair', 'long dark'), ('sasha_eyes', 'light blue ')]]
+
+            >>> kb(['person_that_doesnt_exist'])
+            [[]]
+
+    Parameters:
+        save_path: path to save the dictionary with knowledge.
+        load_path: path to load the json with knowledge.
+        tokenizer: tokenizer used to split entity values into tokens.
+        **kwargs: parameters passed to parent :class:`~deeppavlov.core.models.estimator.Estimator`.
+    """
+    def __init__(self,
+                 save_path: str,
+                 load_path: str = None,
+                 tokenizer: Callable = None,
+                 *args, **kwargs) -> None:
         super().__init__(save_path=save_path,
                          load_path=load_path,
                          *args, **kwargs)
@@ -46,7 +71,7 @@ class KnowledgeBase(Estimator):
     def _update(self, keys, kb_columns_list, kb_items_list):
         for key, cols, items in zip(keys, kb_columns_list, kb_items_list):
             if (None not in (key, items, cols)) and (key not in self.kb):
-                kv_entry_list = (self._key_value_entries(item, cols)\
+                kv_entry_list = (self._key_value_entries(item, cols)
                                  for item in items)
                 self.kb[key] = list(itertools.chain(*kv_entry_list))
 
@@ -61,7 +86,7 @@ class KnowledgeBase(Estimator):
                 else:
                     yield (key, kb_item[col])
 
-    def __call__(self, keys):
+    def __call__(self, keys: List[str]) -> List[str]:
 # TODO: check if during validation kv is updated
         return [self.kb[key] for key in keys]
 
@@ -87,19 +112,52 @@ class KnowledgeBase(Estimator):
 
 @register("knowledge_base_entity_normalizer")
 class KnowledgeBaseEntityNormalizer(Component):
+    """
+    Uses instance of :class:`~deeppavlov.models.seq2seq_go_bot.kb.KnowledgeBase` to normalize or to undo normalization of entities in the input utterance.
 
-    def __init__(self, kb, denormalize=False, *args, **kwargs):
+    To normalize is to substitute all mentions of database entities with their normalized form.
+
+    To undo normalization is to substitute all mentions of database normalized entities with their original form.
+
+    Example:
+        .. code:: python
+
+            >>> from models.seq2seq_go_bot.kb import KnowledgeBase
+            >>> kb = KnowledgeBase(save_path="kb.json", load_path="kb.json")
+            >>> kb.fit(['person1'], [['name', 'hair', 'eyes']], [[{'name': 'Sasha', 'hair': 'long dark', 'eyes': 'light blue '}]])
+            >>> kb(['person1'])
+            [[('sasha_hair', 'long dark'), ('sasha_eyes', 'light blue ')]]
+
+            >>> from models.seq2seq_go_bot.kb import KnowledgeBaseEntityNormalizer
+            >>> normalizer = KnowledgeBaseEntityNormalizer(kb=kb, denormalize=False)
+            >>> normalizer(['person1'], [["some", "guy", "with", "long", "dark", "hair", "said", "hi"]])
+            [['some', 'guy', 'with', 'sasha_hair', 'hair', 'said', 'hi']]
+
+            >>> denormalizer = KnowledgeBaseEntityNormalizer(kb=kb, denormalize=True)
+            >>> denormalizer(['person1'], [['some', 'guy', 'with', 'sasha_hair', 'hair', 'said', 'hi']])
+            [['some', 'guy', 'with', 'long', 'dark', 'hair', 'said', 'hi']]
+
+
+    Parameters:
+        kb: knowledge base of type :class:`~deeppavlov.models.seq2seq_go_bot.KnowledgeBase`.
+        denormalize: flag indicates whether to normalize or to undo normalization ("denormalize").
+        **kwargs: parameters passed to parent :class:`~deeppavlov.core.models.component.Component` class.
+    """
+
+    def __init__(self, kb: KnowledgeBase, denormalize: bool = False, **kwargs) -> None:
         self.kb = kb
         self.denormalize_flag = denormalize
 
     def normalize(self, key, tokens):
         utter = ' '.join(tokens)
         for entity, value in self.kb([key])[0]:
-            to_replace = ' '.join(value)
-            if to_replace:
-                utter = utter.replace(to_replace, entity)
+            # is value is tokens, get string
+            if isinstance(value, (list, tuple)):
+                value = ' '.join(value)
+            if value:
+                utter = utter.replace(value, entity)
             else:
-                log.debug("Empty value for knowledge base entry with key = {}"\
+                log.debug("Empty value for knowledge base entry with key = {}"
                           .format(key))
         return utter.split()
 
@@ -107,13 +165,19 @@ class KnowledgeBaseEntityNormalizer(Component):
         for entity, value in self.kb([key])[0]:
             if entity in tokens:
                 entity_pos = tokens.index(entity)
-                tokens = tokens[:entity_pos] + value + tokens[entity_pos + 1:] 
+                # if value is string, split to tokens
+                if isinstance(value, str):
+                    value = value.split()
+                tokens = tokens[:entity_pos] + value + tokens[entity_pos + 1:]
         return tokens
 
-    def __call__(self, keys, values, kb_columns_list=None, kb_items_list=None):
+    def __call__(self,
+                 keys: List[str],
+                 values: List[str],
+                 kb_columns_list: List[List[str]] = None,
+                 kb_items_list: List[List[Dict[str, str]]] = None) -> List[List[str]]:
         if None not in (kb_columns_list, kb_items_list):
             self.kb._update(keys, kb_columns_list, kb_items_list)
         if self.denormalize_flag:
             return [self.denormalize(key, val) for key, val in zip(keys, values)]
         return [self.normalize(key, val) for key, val in zip(keys, values)]
-

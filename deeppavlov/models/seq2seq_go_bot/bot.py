@@ -1,26 +1,22 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import itertools
-from typing import Type
 
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
-from deeppavlov.core.data.vocab import DefaultVocabulary
-from deeppavlov.models.seq2seq_go_bot.network import Seq2SeqGoalOrientedBotNetwork
 from deeppavlov.core.common.log import get_logger
 
 
@@ -29,23 +25,34 @@ log = get_logger(__name__)
 
 @register("seq2seq_go_bot")
 class Seq2SeqGoalOrientedBot(NNModel):
+    """
+    A goal-oriented bot based on a sequence-to-sequence rnn. For implementation details see :class:`~deeppavlov.models.seq2seq_go_bot.network.Seq2SeqGoalOrientedBotNetwork`. Pretrained for :class:`~deeppavlov.dataset_readers.kvret_reader.KvretDatasetReader` dataset.
+
+    Parameters:
+        network: object of :class:`~deeppavlov.models.seq2seq_go_bot.network.Seq2SeqGoalOrientedBotNetwork` class.
+        source_vocab: vocabulary of input tokens.
+        target_vocab: vocabulary of bot response tokens.
+        start_of_sequence_token: token that defines start of input sequence.
+        end_of_sequence_token: token that defines end of input sequence and start of output sequence.
+        debug: whether to display debug output.
+        **kwargs: parameters passed to parent :class:`~deeppavlov.core.models.nn_model.NNModel` class.
+    """
     def __init__(self,
-                 end_of_sequence_token,
-                 start_of_sequence_token,
-                 network: Type = Seq2SeqGoalOrientedBotNetwork,
-                 source_vocab: Type = DefaultVocabulary,
-                 target_vocab: Type = DefaultVocabulary,
-                 debug=False,
-                 save_path=None,
-                 **kwargs):
+                 network: Component,
+                 source_vocab: Component,
+                 target_vocab: Component,
+                 start_of_sequence_token: str,
+                 end_of_sequence_token: str,
+                 debug: bool = False,
+                 save_path: str = None,
+                 **kwargs) -> None:
+        super().__init__(save_path=save_path, **kwargs)
 
-        super().__init__(save_path=save_path, mode=kwargs['mode'])
-
-        self.sos_token = start_of_sequence_token
-        self.eos_token = end_of_sequence_token
         self.network = network
         self.src_vocab = source_vocab
         self.tgt_vocab = target_vocab
+        self.sos_token = start_of_sequence_token
+        self.eos_token = end_of_sequence_token
         self.debug = debug
 
     def train_on_batch(self, *batch):
@@ -85,7 +92,7 @@ class Seq2SeqGoalOrientedBot(NNModel):
 
     def _encode_response(self, tokens):
         if self.debug:
-            log.debug("Response tokens = \"{}\"".format(y_tokens))
+            log.debug("Response tokens = \"{}\"".format(tokens))
         token_idxs = self.tgt_vocab(tokens)
         return ([self.tgt_vocab[self.sos_token]] + token_idxs,
                 token_idxs + [self.tgt_vocab[self.eos_token]])
@@ -115,10 +122,10 @@ class Seq2SeqGoalOrientedBot(NNModel):
             b_enc_ins[i].extend([self.src_vocab[self.eos_token]] * src_padd_len)
 
         pred_idxs = self.network(b_enc_ins, b_src_lens)
-        preds = [list(_filter(self.tgt_vocab(utter_idxs)))\
+        preds = [list(_filter(self.tgt_vocab(utter_idxs)))
                  for utter_idxs in pred_idxs]
         if self.debug:
-            print("Dialog prediction = \"{}\"".format(preds[-1]))
+            log.debug("Dialog prediction = \"{}\"".format(preds[-1]))
         return preds
 
     def save(self):

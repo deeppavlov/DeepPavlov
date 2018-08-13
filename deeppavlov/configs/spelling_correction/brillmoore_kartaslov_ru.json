@@ -67,9 +67,9 @@
       "server_utils": "ErrorModel"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/error_model.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/error_model.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/lang_models/ru_wiyalen_no_punkt.arpa.binary.gz",
+        "url": "http://files.deeppavlov.ai/lang_models/ru_wiyalen_no_punkt.arpa.binary.gz",
         "subdir": "language_models"
       }
     ]

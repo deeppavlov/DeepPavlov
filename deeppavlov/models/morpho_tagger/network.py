@@ -1,21 +1,17 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-import inspect
-import json
 from typing import List
 
 import keras.layers as kl
@@ -112,7 +108,7 @@ class CharacterTagger:
         self.model_ = Model(inputs, outputs)
         self.model_.compile(**compile_args)
         if self.verbose > 0:
-            log.info(str(self.model_.summary()))
+            self.model_.summary(print_fn=log.info)
         return self
 
     def build_word_cnn(self, inputs):
@@ -174,12 +170,10 @@ class CharacterTagger:
         return pre_outputs, lstm_outputs
 
     def _transform_batch(self, data, labels=None, transform_to_one_hot=True):
-        if len(self.word_vectorizers) > 0:
-            data, additional_data = data[0], data[1:]
+        data, additional_data = data[0], data[1:]
         L = max(len(x) for x in data)
         X = np.array([self._make_sent_vector(x, L) for x in data])
-        if len(self.word_vectorizers) > 0:
-            X = [X] + [np.array(x) for x in additional_data]
+        X = [X] + [np.array(x) for x in additional_data]
         if labels is not None:
             Y = np.array([self._make_tags_vector(y, L) for y in labels])
             if transform_to_one_hot:
@@ -199,7 +193,7 @@ class CharacterTagger:
         # TO_DO: add weights to deal with padded instances
         return self.model_.train_on_batch(X, Y)
 
-    def predict_on_batch(self, data: List, return_indexes=False):
+    def predict_on_batch(self, data: [list, tuple], return_indexes=False):
         """
         Makes predictions on a single batch
 
@@ -208,10 +202,7 @@ class CharacterTagger:
         answer: a batch of label sequences
         """
         X = self._transform_batch(data)
-        if len(self.word_vectorizers) > 0:
-            objects_number, lengths = len(X[0]), [len(elem) for elem in data[0]]
-        else:
-            objects_number, lengths = len(X), [len(elem) for elem in data]
+        objects_number, lengths = len(X[0]), [len(elem) for elem in data[0]]
         Y = self.model_.predict_on_batch(X)
         labels = np.argmax(Y, axis=-1)
         answer: List[List[str]] = [None] * objects_number
@@ -247,5 +238,3 @@ class CharacterTagger:
 
     def load(self, infile):
         self.model_.load_weights(infile)
-
-

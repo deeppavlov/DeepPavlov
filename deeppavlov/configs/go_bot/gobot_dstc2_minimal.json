@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
-    "name": "dstc2_v2_reader",
-    "data_path": "dstc2_v2"
+    "name": "dstc2_reader",
+    "data_path": "dstc2"
   },
   "dataset_iterator": {
     "name": "dialog_iterator"
@@ -25,7 +25,7 @@
         "name": "sqlite_database",
         "table_name": "mytable",
         "primary_keys": ["name"],
-        "save_path": "dstc2_v2/resto.sqlite"
+        "save_path": "dstc2/resto.sqlite"
       },
       {
         "in": ["x"],
@@ -35,7 +35,7 @@
         "name": "go_bot",
         "debug": false,
         "word_vocab": "#token_vocab",
-        "template_path": "dstc2_v2/dstc2-templates.txt",
+        "template_path": "dstc2/dstc2-templates.txt",
         "template_type": "DualTemplate",
         "database": "#restaurant_database",
         "api_call_action": "api_call",
@@ -91,8 +91,8 @@
     },
     "download": [
       {
-        "url": "http://lnsigo.mipt.ru/export/datasets/dstc2_v2.tar.gz",
-        "subdir": "dstc2_v2"
+        "url": "http://files.deeppavlov.ai/datasets/dstc2_v2.tar.gz",
+        "subdir": "dstc2"
       }
     ]
   }

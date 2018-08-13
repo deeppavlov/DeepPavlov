@@ -9,12 +9,11 @@ node('gpu') {
         stage('Setup') {
             env.CUDA_VISIBLE_DEVICES=0
             sh """
-                virtualenv --python=python3 ".venv-$BUILD_NUMBER"
-                . .venv-$BUILD_NUMBER/bin/activate
-                sed -i "s/stream=True/stream=False/g" deeppavlov/core/data/utils.py
-                python setup.py develop
+                virtualenv --python=python3 '.venv-$BUILD_NUMBER'
+                . '.venv-$BUILD_NUMBER/bin/activate'
+                pip install .[tests]
                 pip install -r dp_requirements/tf-gpu.txt
-                pip install -r requirements-dev.txt
+                rm -rf `find . -mindepth 1 -maxdepth 1 ! -name tests ! -name Jenkinsfile ! -name '.venv-$BUILD_NUMBER'`
             """
         }
         stage('Tests') {

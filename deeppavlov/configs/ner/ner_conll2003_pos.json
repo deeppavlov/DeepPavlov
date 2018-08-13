@@ -172,7 +172,7 @@
     },
     "download": [
       {
-        "url": "http://lnsigo.mipt.ru/export/embeddings/glove.6B.100d.txt",
+        "url": "http://files.deeppavlov.ai/embeddings/glove.6B.100d.txt",
         "subdir": "embeddings"
       }
     ]

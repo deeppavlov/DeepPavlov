@@ -1,22 +1,20 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import csv
 import itertools
-from typing import List
+from typing import List, Iterable, Tuple
 from collections import defaultdict, Counter
 from heapq import heappop, heappushpop, heappush
 from math import log, exp
@@ -35,8 +33,22 @@ logger = get_logger(__name__)
 
 @register('spelling_error_model')
 class ErrorModel(Estimator):
-    def __init__(self, dictionary: StaticDictionary, window=1, candidates_count=1, *args, **kwargs):
+    """Component that uses statistics based error model to find best candidates in a static dictionary.
+    Based on An Improved Error Model for Noisy Channel Spelling Correction by Eric Brill and Robert C. Moore
 
+    Args:
+        dictionary: a :class:`~deeppavlov.vocabs.typos.StaticDictionary` object
+        window: maximum context window size
+        candidates_count: maximum number of replacement candidates to return for every token in the input
+
+    Attributes:
+        costs: logarithmic probabilities of character sequences replacements
+        dictionary: a :class:`~deeppavlov.vocabs.typos.StaticDictionary` object
+        window: maximum context window size
+        candidates_count: maximum number of replacement candidates to return for every token in the input
+    """
+
+    def __init__(self, dictionary: StaticDictionary, window: int=1, candidates_count: int=1, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.costs = defaultdict(itertools.repeat(float('-inf')).__next__)
         self.dictionary = dictionary
@@ -120,7 +132,7 @@ class ErrorModel(Estimator):
         return [(w.strip('⟬⟭'), score) for score, w in sorted(candidates, reverse=True) if
                 score > threshold]
 
-    def _infer_instance(self, instance: List[str]):
+    def _infer_instance(self, instance: List[str]) -> List[List[Tuple[float, str]]]:
         candidates = []
         for incorrect in instance:
             if any([c not in self.dictionary.alphabet for c in incorrect]):
@@ -133,13 +145,19 @@ class ErrorModel(Estimator):
                     candidates.append([(0, incorrect)])
         return candidates
 
-    def __call__(self, data, *args, **kwargs):
+    def __call__(self, data: Iterable[Iterable[str]], *args, **kwargs) -> List[List[List[Tuple[float, str]]]]:
+        """Propose candidates for tokens in sentences
+
+        Args:
+            data: batch of tokenized sentences
+
+        Returns:
+            batch of lists of probabilities and candidates for every token
+        """
+        data = list(data)
         if len(data) > 1:
             data = tqdm(data, desc='Infering a batch with the error model', leave=False)
         return [self._infer_instance(instance) for instance in data]
-
-    def reset(self):
-        pass
 
     @staticmethod
     def _distance_edits(seq1, seq2):
@@ -162,7 +180,13 @@ class ErrorModel(Estimator):
 
         return d[-1][-1]
 
-    def fit(self, x, y):
+    def fit(self, x: List[str], y: List[str]):
+        """Calculate character sequences replacements probabilities
+
+        Args:
+            x: words with spelling errors
+            y: words without spelling errors
+        """
         changes = []
         entries = []
         data = list(zip(x, y))
@@ -194,6 +218,9 @@ class ErrorModel(Estimator):
             self.costs[(w, s)] = log(p)
 
     def save(self):
+        """Save replacements probabilities to a file
+
+        """
         logger.info("[saving error_model to `{}`]".format(self.save_path))
 
         with open(self.save_path, 'w', newline='', encoding='utf8') as tsv_file:
@@ -202,6 +229,9 @@ class ErrorModel(Estimator):
                 writer.writerow([w, s, exp(log_p)])
 
     def load(self):
+        """Load replacements probabilities from a file
+
+        """
         if self.load_path:
             if self.load_path.is_file():
                 logger.info("loading error_model from `{}`".format(self.load_path))
