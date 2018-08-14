@@ -35,8 +35,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
     GRAPH_PARAMS = ['knowledge_base_size', 'source_vocab_size',
                     'target_vocab_size', 'hidden_size', 'embedding_size',
-                    'kb_embedding_control_sum', 'kb_attention_hidden_sizes',
-                    'beam_width']
+                    'kb_embedding_control_sum', 'kb_attention_hidden_sizes']
 
     def __init__(self, **params):
         # initialize parameters
@@ -53,7 +52,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
         super().__init__(**params)
 
-        if tf.train.checkpoint_exists(str(self.save_path.resolve())):
+        if tf.train.checkpoint_exists(str(self.load_path.resolve())):
             log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
             self.load()
         else:
@@ -124,7 +123,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             self.get_train_op(self._loss,
                               learning_rate=self._learning_rate,
                               optimizer=self._optimizer,
-                              clip_norm=10.)
+                              clip_norm=2.)
         # log.info("Trainable variables")
         # for v in tf.trainable_variables():
         #    log.info(v)
@@ -329,21 +328,6 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             #    decode(_helper_infer, "decode", _max_iters, reuse=True).sample_id
         self._logits = _logits
         self._predictions = _predictions
-
-    def _multilayer_perceptron(units, hidden_dims=[], use_bias=True):
-        # Hidden fully connected layers with relu activation
-        for i, h in enumerate(hidden_dims):
-            # TODO: check stddev
-            _W_init = tf.truncated_normal([units.shape[-1], h],
-                                          stddev=1,)
-            _W = tf.Variable(_W_init, name="W_{}".format(i))
-            units = tf.matmul(units, _W)
-            if use_bias:
-                _b_init = tf.truncated_normal([h])
-                _b = tf.Variable(_b_init, name="b_{}".format(i))
-                units = tf.add(units, _b)
-            units = tf.nn.relu(units)
-        return units
 
     def __call__(self, enc_inputs, src_seq_lengths, kb_masks, prob=False):
         predictions = self.sess.run(
