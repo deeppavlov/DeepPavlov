@@ -34,6 +34,7 @@ from deeppavlov.core.commands.utils import expand_path
 
 PARAM_RANGE_SUFFIX_NAME = '_range'
 SAVE_PATH_ELEMENT_NAME = 'save_path'
+BACKUP_SUFFIX_FILENAME = '_backuped'
 log = get_logger(__name__)
 
 parser = argparse.ArgumentParser()
@@ -62,17 +63,17 @@ def backup_saved_models(models_paths):
     for model_path in models_paths:
         path = expand_path(model_path)
         if os.path.isfile(path):
-            os.rename(path, expand_path(model_path+'_backuped'))
+            os.rename(path, expand_path(model_path+BACKUP_SUFFIX_FILENAME))
 
 def restore_saved_models(models_paths):
     for model_path in models_paths:
         path = expand_path(model_path)
-        backuped_path = expand_path(model_path+'_backuped')
+        backuped_path = expand_path(model_path+BACKUP_SUFFIX_FILENAME)
         if os.path.isfile(backuped_path):
             os.rename(backuped_path, path)
 
 
-def calc_loocv_score(config, data, models_paths):
+def calc_loocv_score(config, data, models_paths, target_metric):
 
     all_data = data['train'] + data['valid']
     m = len(all_data)
@@ -85,11 +86,11 @@ def calc_loocv_score(config, data, models_paths):
         iterator = get_iterator_from_config(config, data_i)
         delete_saved_model(models_paths)
         score = train_evaluate_model_from_config(config, iterator=iterator)
-        all_scores.append(score['valid']['accuracy'])
+        all_scores.append(score['valid'][target_metric])
 
     return np.mean(all_scores)
 
-def calc_cvfolds_score(config, data, n_folds, models_paths):
+def calc_cvfolds_score(config, data, n_folds, models_paths, target_metric):
 
     all_data = data['train'] + data['valid']
     all_scores = []
@@ -104,7 +105,7 @@ def calc_cvfolds_score(config, data, n_folds, models_paths):
         iterator = get_iterator_from_config(config, data_i)
         delete_saved_model(models_paths)
         score = train_evaluate_model_from_config(config, iterator=iterator)
-        all_scores.append(score['valid']['accuracy'])
+        all_scores.append(score['valid'][target_metric])
 
     return np.mean(all_scores)
 
@@ -125,6 +126,8 @@ def main():
     config = config_init.copy()
     config_best_model = config_init.copy()
     data = read_data_by_config(config)
+    # get target metric as first element in "train->metrics"
+    target_metric = config_init['train']['metrics'][0]
 
     # prepare params search
     param_values = {}
@@ -155,9 +158,9 @@ def main():
                 config['chainer']['pipe'][chainer_items[i]][param_names[i]] = param_value
 
             if args.loocv:
-                scores.append(calc_loocv_score(config, data, models_paths))
+                scores.append(calc_loocv_score(config, data, models_paths, target_metric))
             elif args.folds is not None:
-                scores.append(calc_cvfolds_score(config, data, args.folds, models_paths))
+                scores.append(calc_cvfolds_score(config, data, args.folds, models_paths, target_metric))
             else:
                 raise NotImplementedError('Not implemented this type of CV')
 
