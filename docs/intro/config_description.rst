@@ -101,8 +101,8 @@ parameter which contains a list of ground truth answer names. For example:
         "in_y": ["y"],
         "out": ["y_predicted"],
         "name": "intent_model",
-        "save_path": "intents/intent_cnn",
-        "load_path": "intents/intent_cnn",
+        "save_path": "classifiers/intent_cnn",
+        "load_path": "classifiers/intent_cnn",
         "classes_vocab": {
           "ref": "classes_vocab"
         }
@@ -135,8 +135,8 @@ and ``train``:
 Simplified version of training pipeline contains two elements: ``dataset`` and ``train``. The ``dataset`` element
 currently can be used for train from classification data in ``csv`` and ``json`` formats. You can find complete examples
 of how to use simplified training pipeline in
-:config:`intents_sample_csv.json <intents/intents_sample_csv.json>` and
-:config:`intents_sample_json.json <intents/intents_sample_json.json>` config files.
+:config:`intents_sample_csv.json <classifiers/intents_sample_csv.json>` and
+:config:`intents_sample_json.json <classifiers/intents_sample_json.json>` config files.
 
 
 Train Parameters
