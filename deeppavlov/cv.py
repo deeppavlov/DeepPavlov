@@ -19,6 +19,7 @@ from pathlib import Path
 import sys
 import numpy as np
 from itertools import product
+import os
 
 p = (Path(__file__) / ".." / "..").resolve()
 sys.path.append(str(p))
@@ -29,14 +30,17 @@ from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.commands.train import get_iterator_from_config
 from deeppavlov.core.commands.train import read_data_by_config
 from sklearn.model_selection import KFold
+from deeppavlov.core.commands.utils import expand_path
 
 PARAM_RANGE_SUFFIX_NAME = '_range'
+SAVE_PATH_ELEMENT_NAME = 'save_path'
 log = get_logger(__name__)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--config_path", help="path to a pipeline json config", type=str)
-parser.add_argument("--loocv", help="path to a pipeline json config", type=bool, default=False)
-parser.add_argument("--folds", help="path to a pipeline json config", type=int, default=None)
+parser.add_argument("--loocv", help="do leave-one-out cross validation?", type=bool, default=False)
+parser.add_argument("--folds", help="number of folds", type=int, default=None)
+parser.add_argument("--search_type", help="search type: grid or random search", type=str, default='grid')
 
 
 def find_config(pipeline_config_path: str):
@@ -48,8 +52,27 @@ def find_config(pipeline_config_path: str):
             pipeline_config_path = str(configs[0])
     return pipeline_config_path
 
+def delete_saved_model(models_paths):
+    for model_path in models_paths:
+        path = expand_path(model_path)
+        if os.path.isfile(path):
+            os.remove(path)
 
-def calc_loocv_score(config, data):
+def backup_saved_models(models_paths):
+    for model_path in models_paths:
+        path = expand_path(model_path)
+        if os.path.isfile(path):
+            os.rename(path, expand_path(model_path+'_backuped'))
+
+def restore_saved_models(models_paths):
+    for model_path in models_paths:
+        path = expand_path(model_path)
+        backuped_path = expand_path(model_path+'_backuped')
+        if os.path.isfile(backuped_path):
+            os.rename(backuped_path, path)
+
+
+def calc_loocv_score(config, data, models_paths):
 
     all_data = data['train'] + data['valid']
     m = len(all_data)
@@ -60,15 +83,15 @@ def calc_loocv_score(config, data):
         data_i['valid'] = [data_i['train'].pop(i)]
         data_i['test'] = []
         iterator = get_iterator_from_config(config, data_i)
+        delete_saved_model(models_paths)
         score = train_evaluate_model_from_config(config, iterator=iterator)
         all_scores.append(score['valid']['accuracy'])
 
     return np.mean(all_scores)
 
-def calc_cvfolds_score(config, data, n_folds):
+def calc_cvfolds_score(config, data, n_folds, models_paths):
 
     all_data = data['train'] + data['valid']
-    m = len(all_data)
     all_scores = []
 
     kf = KFold(n_splits=n_folds, shuffle=True)
@@ -79,6 +102,7 @@ def calc_cvfolds_score(config, data, n_folds):
         data_i['valid'] = np.array(all_data)[valid_index].tolist()
         data_i['test'] = []
         iterator = get_iterator_from_config(config, data_i)
+        delete_saved_model(models_paths)
         score = train_evaluate_model_from_config(config, iterator=iterator)
         all_scores.append(score['valid']['accuracy'])
 
@@ -97,43 +121,64 @@ def main():
 
     # read config
     pipeline_config_path = find_config(args.config_path)
-    config = read_json(pipeline_config_path)
+    config_init = read_json(pipeline_config_path)
+    config = config_init.copy()
+    config_best_model = config_init.copy()
     data = read_data_by_config(config)
 
     # prepare params search
     param_values = {}
     chainer_items = []
+    models_paths = []
     for i, elem in enumerate(config['chainer']['pipe']):
         for key in elem.keys():
+            # find params ranges in config
             if key.endswith(PARAM_RANGE_SUFFIX_NAME):
                 param_values[key.partition(PARAM_RANGE_SUFFIX_NAME)[0]] = elem[key]
                 chainer_items.append(i)
+        if (('in_y' in elem) | ('fit_on' in elem) | ('fit_on_batch' in elem)) & (SAVE_PATH_ELEMENT_NAME in elem):
+            models_paths.append(elem[SAVE_PATH_ELEMENT_NAME])
 
-    combinations = list(product(*param_values.values()))
-    param_names = [k for k in param_values.keys()]
+    # backup initial model files
+    backup_saved_models(models_paths)
 
     # get cv scores
-    scores=[]
-    for comb in combinations:
-        for i, param_value in enumerate(comb):
-            config['chainer']['pipe'][chainer_items[i]][param_names[i]] = param_value
+    if args.search_type == 'grid':
+        # generate params combnations for grid search
+        combinations = list(product(*param_values.values()))
+        param_names = [k for k in param_values.keys()]
 
-        if args.loocv:
-            scores.append(calc_loocv_score(config, data))
-        elif args.folds is not None:
-            scores.append(calc_cvfolds_score(config, data, args.folds))
-        else:
-            raise NotImplementedError('Not implemented this type of CV')
+        # calculate cv scores
+        scores=[]
+        for comb in combinations:
+            for i, param_value in enumerate(comb):
+                config['chainer']['pipe'][chainer_items[i]][param_names[i]] = param_value
 
-    best_params_dict = get_best_params(combinations, scores, param_names)
-    print(best_params_dict)
+            if args.loocv:
+                scores.append(calc_loocv_score(config, data, models_paths))
+            elif args.folds is not None:
+                scores.append(calc_cvfolds_score(config, data, args.folds, models_paths))
+            else:
+                raise NotImplementedError('Not implemented this type of CV')
+
+        # get model with best score
+        best_params_dict = get_best_params(combinations, scores, param_names)
+        log.info('Best model params: {}'.format(best_params_dict))
+    else:
+        raise NotImplementedError('Not implemented this type of search')
+
+    # restore initial model files
+    delete_saved_model(models_paths)
+    restore_saved_models(models_paths)
 
     # save config
     for i, param_name in enumerate(best_params_dict.keys()):
         if param_name != 'score':
-            config['chainer']['pipe'][chainer_items[i]][param_name] = best_params_dict[param_name]
-            config['chainer']['pipe'][chainer_items[i]].pop(param_name+PARAM_RANGE_SUFFIX_NAME)
-    save_json(config, pipeline_config_path.replace('.json', '_cvbest.json'))
+            config_best_model['chainer']['pipe'][chainer_items[i]][param_name] = best_params_dict[param_name]
+            config_best_model['chainer']['pipe'][chainer_items[i]].pop(param_name+PARAM_RANGE_SUFFIX_NAME)
+    best_model_filename = pipeline_config_path.replace('.json', '_cvbest.json')
+    save_json(config_best_model, best_model_filename)
+    log.info('Best model saved in json-file: {}'.format(best_model_filename))
 
 
 # try to run:
