@@ -161,7 +161,7 @@ class KerasClassificationModel(KerasModel):
         """
         pad = np.zeros(self.opt['embedding_size'])
         cutted_batch = [sen[:self.opt['text_size']] for sen in sentences]
-        cutted_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + tokens for tokens in cutted_batch]
+        cutted_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + list(tokens) for tokens in cutted_batch]
         return np.asarray(cutted_batch)
 
     def train_on_batch(self, texts: List[List[np.ndarray]], labels: list) -> [float, List[float]]:
