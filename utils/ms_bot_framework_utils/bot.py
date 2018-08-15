@@ -1,8 +1,9 @@
 import threading
 import requests
+from requests.exceptions import HTTPError
 from queue import Queue
 from threading import Thread
-from requests.exceptions import HTTPError
+from collections import namedtuple
 
 from .conversation import Conversation
 from deeppavlov.core.common.log import get_logger
@@ -25,6 +26,7 @@ class Bot(Thread):
         self.access_info = {}
         self.http_sessions = {}
         self.input_queue = input_queue
+        self.ConvKey = namedtuple('ConvKey', ['channel_id', 'conversation_id'])
 
         self._request_access_info()
         polling_interval = self.config['auth_polling_interval']
@@ -69,11 +71,12 @@ class Bot(Thread):
         log.info(f'Obtained authentication information from Microsoft Bot Framework: {str(self.access_info)}')
 
     def _handle_activity(self, activity: dict):
-        conversation_key = f"{activity['channelId']}||{activity['conversation']['id']}"
+        # conversation_key = f"{activity['channelId']}||{activity['conversation']['id']}"
+        conversation_key = self.ConvKey(activity['channelId'], activity['conversation']['id'])
 
         if conversation_key not in self.conversations.keys():
             self.conversations[conversation_key] = Conversation(self, activity)
-            log.info(f'Created new conversation {conversation_key}')
+            log.info(f'Created new conversation, key: {str(conversation_key)}')
 
         conversation = self.conversations[conversation_key]
         conversation.handle_activity(activity)

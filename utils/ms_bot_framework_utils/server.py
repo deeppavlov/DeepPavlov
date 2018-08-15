@@ -8,7 +8,6 @@ from flask_cors import CORS
 from utils.ms_bot_framework_utils.bot import Bot
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.commands.infer import build_model_from_config
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 
@@ -17,12 +16,6 @@ log = get_logger(__name__)
 app = Flask(__name__)
 Swagger(app)
 CORS(app)
-
-
-def init_model(model_config_path: str):
-    model_config = read_json(model_config_path)
-    model = build_model_from_config(model_config)
-    return model
 
 
 def start_bot_framework_server(model_config_path: str, app_id: str, app_secret: str):
