@@ -139,7 +139,8 @@
     "batch_size": 256,
     "metrics": [
       "classification_accuracy",
-      "classification_f1"
+      "classification_f1",
+      "classification_f1_weighted"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 20,
