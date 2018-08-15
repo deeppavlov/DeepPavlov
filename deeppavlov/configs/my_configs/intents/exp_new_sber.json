@@ -138,7 +138,7 @@
     "epochs": 50,
     "batch_size": 256,
     "metrics": [
-      "accuracy",
+      "classification_accuracy",
       "classification_f1"
     ],
     "validation_patience": 5,
