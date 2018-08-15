@@ -4,7 +4,7 @@ from queue import Queue
 from threading import Thread
 from requests.exceptions import HTTPError
 
-from utils.ms_bot_framework_utils.conversation import Conversation
+from .conversation import Conversation
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.commands.infer import build_model_from_config
@@ -15,10 +15,10 @@ log = get_logger(__name__)
 class Bot(Thread):
     def __init__(self, config: dict, model_config_path: str, app_id: str, app_secret: str, input_queue: Queue):
         super(Bot, self).__init__()
-        self.config = config
+        self.config = config['ms_bot_framework_defaults']
 
-        self.config['ms_bot_framework_defaults']['auth_app_id'] = app_id
-        self.config['ms_bot_framework_defaults']['auth_app_secret'] = app_secret
+        self.config['auth_app_id'] = app_id
+        self.config['auth_app_secret'] = app_secret
 
         self.model = self._init_model(model_config_path)
         self.conversations = {}
@@ -27,7 +27,7 @@ class Bot(Thread):
         self.input_queue = input_queue
 
         self._request_access_info()
-        polling_interval = self.config['ms_bot_framework_defaults']['auth_polling_interval']
+        polling_interval = self.config['auth_polling_interval']
         timer = threading.Timer(polling_interval, self._update_access_info)
         timer.start()
 
@@ -42,21 +42,21 @@ class Bot(Thread):
         return model
 
     def _update_access_info(self):
-        polling_interval = self.config['ms_bot_framework_defaults']['auth_polling_interval']
+        polling_interval = self.config['auth_polling_interval']
         timer = threading.Timer(polling_interval, self._update_access_info)
         timer.start()
         self._request_access_info()
 
     def _request_access_info(self):
-        headers = {'Host': self.config['ms_bot_framework_defaults']['auth_host'],
-                   'Content-Type': self.config['ms_bot_framework_defaults']['auth_content_type']}
+        headers = {'Host': self.config['auth_host'],
+                   'Content-Type': self.config['auth_content_type']}
 
-        payload = {'grant_type': self.config['ms_bot_framework_defaults']['auth_grant_type'],
-                   'scope': self.config['ms_bot_framework_defaults']['auth_scope'],
-                   'client_id': self.config['ms_bot_framework_defaults']['auth_app_id'],
-                   'client_secret': self.config['ms_bot_framework_defaults']['auth_app_secret']}
+        payload = {'grant_type': self.config['auth_grant_type'],
+                   'scope': self.config['auth_scope'],
+                   'client_id': self.config['auth_app_id'],
+                   'client_secret': self.config['auth_app_secret']}
 
-        result = requests.post(url=self.config['ms_bot_framework_defaults']['auth_url'],
+        result = requests.post(url=self.config['auth_url'],
                                headers=headers,
                                data=payload)
 
