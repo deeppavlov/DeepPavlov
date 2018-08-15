@@ -80,6 +80,7 @@ class PipelineManager:
 
             self.logger.pipe_ind = i + 1
             self.logger.pipe_conf = copy(pipe['chainer']['pipe'])
+
             # start pipeline time
             pipe_start = time()
 

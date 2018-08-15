@@ -8,6 +8,7 @@ import time
 from copy import deepcopy
 from os.path import join, isdir
 from os import mkdir
+from typing import Union, List, Tuple
 matplotlib.use('agg')
 
 
@@ -29,35 +30,40 @@ class HyperPar:
     """
     Glory to the great Michael!
     """
-    def __init__(self, **kwargs):
+    def __init__(self, stop_keys=['in', 'in_x', 'in_y', 'out'], **kwargs):
         np.random.seed(int(time.time()))
         self.params = kwargs
+        self.stop_keys = stop_keys
 
     def sample_params(self):
         params = deepcopy(self.params)
         params_sample = dict()
         for param, param_val in params.items():
-            if isinstance(param_val, list):
-                params_sample[param] = np.random.choice(param_val)
-            elif isinstance(param_val, dict):
-                if 'bool' in param_val and param_val['bool']:
-                    sample = bool(np.random.choice([True, False]))
-                elif 'range' in param_val:
-                    # Generate number of smaples
-                    if 'n_samples' in param_val:
-                        if param_val['n_samples'] > 1 and param_val.get('increasing', False):
+            if param not in self.stop_keys:
+                if isinstance(param_val, list):
+                    el_indexies = np.arange(len(param_val))
+                    params_sample[param] = param_val[np.random.choice(el_indexies)]
+                elif isinstance(param_val, dict):
+                    if 'bool' in param_val and param_val['bool']:
+                        sample = bool(np.random.choice([True, False]))
+                    elif 'range' in param_val:
+                        # Generate number of smaples
+                        if 'n_samples' in param_val:
+                            if param_val['n_samples'] > 1 and param_val.get('increasing', False):
 
-                            sample_1 = self._sample_from_ranges(param_val)
-                            sample_2 = self._sample_from_ranges(param_val)
-                            start_stop = sorted([sample_1, sample_2])
-                            sample = [s for s in np.linspace(start_stop[0], start_stop[1], param_val['n_samples'])]
-                            if param_val.get('discrete', False):
-                                sample = [int(s) for s in sample]
+                                sample_1 = self._sample_from_ranges(param_val)
+                                sample_2 = self._sample_from_ranges(param_val)
+                                start_stop = sorted([sample_1, sample_2])
+                                sample = [s for s in np.linspace(start_stop[0], start_stop[1], param_val['n_samples'])]
+                                if param_val.get('discrete', False):
+                                    sample = [int(s) for s in sample]
+                            else:
+                                sample = [self._sample_from_ranges(param_val) for _ in range(param_val['n_samples'])]
                         else:
-                            sample = [self._sample_from_ranges(param_val) for _ in range(param_val['n_samples'])]
-                    else:
-                        sample = self._sample_from_ranges(param_val)
-                params_sample[param] = sample
+                            sample = self._sample_from_ranges(param_val)
+                    params_sample[param] = sample
+                else:
+                    params_sample[param] = param_val
             else:
                 params_sample[param] = param_val
         return params_sample

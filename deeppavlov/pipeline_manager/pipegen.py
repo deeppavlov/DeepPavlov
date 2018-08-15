@@ -236,18 +236,22 @@ class PipeGen:
 
         static_keys = list()
         static_values = list()
+        stop_keys = ['in', 'in_x', 'in_y', 'out']
         for key, item in search_conf.items():
-            if isinstance(search_conf[key], list):
-                values.append(item)
-                keys.append(key)
-            elif isinstance(search_conf[key], dict):
-                raise ValueError("Grid search are not supported 'dict', that contain values of parameters.")
-            elif isinstance(search_conf[key], tuple):
-                raise ValueError("Grid search are not supported 'tuple', that contain values of parameters.")
+            if key not in stop_keys:
+                if isinstance(search_conf[key], list):
+                    values.append(item)
+                    keys.append(key)
+                elif isinstance(search_conf[key], dict):
+                    raise ValueError("Grid search are not supported 'dict', that contain values of parameters.")
+                elif isinstance(search_conf[key], tuple):
+                    raise ValueError("Grid search are not supported 'tuple', that contain values of parameters.")
+                else:
+                    static_values.append(search_conf[key])
+                    static_keys.append(key)
             else:
                 static_values.append(search_conf[key])
                 static_keys.append(key)
-
         valgen = product(*values)
 
         config = {}

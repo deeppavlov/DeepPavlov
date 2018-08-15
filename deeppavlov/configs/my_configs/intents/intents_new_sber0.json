@@ -1,0 +1,113 @@
+{
+  "dataset_reader": {
+    "name": "basic_classification_reader",
+    "x": "text",
+    "y": "target",
+    "data_path": "new_sber"
+  },
+  "dataset_iterator": {
+    "name": "basic_classification_iterator",
+    "seed": 42,
+    "field_to_split": "train",
+    "split_fields": [
+      "train",
+      "valid"
+    ],
+    "split_proportions": [
+      0.9,
+      0.1
+    ]
+  },
+  "chainer": {
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
+    "search": true,
+    "pipe": [
+        {
+        "id": "classes_vocab",
+        "name": "default_vocab",
+        "fit_on": [
+          "y"
+        ],
+        "level": "token",
+        "save_path": "vocabs/sber_classes.dict",
+        "load_path": "vocabs/sber_classes.dict"
+      },
+      {
+        "id": "my_embedder",
+        "name": "glove",
+        "save_path": "embeddings/new_sber_w2v.txt",
+        "load_path": "embeddings/new_sber_w2v.txt",
+        "dim": 100
+      },
+      {
+          "id": "my_tokenizer",
+          "name": "nltk_tokenizer",
+          "tokenizer": "wordpunct_tokenize"
+        },
+      {
+        "in": [
+          "x"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_labels",
+          "y_probas_dict"
+        ],
+        "main": true,
+        "name": "keras_classification_model",
+        "save_path": "new_sber/intent_cnn_snips_v4",
+        "classes": "#classes_vocab.keys()",
+        "units_lstm": 128,
+        "rec_dropout_rate": 0.0,
+        "confident_threshold": 1.0,
+        "optimizer": "Adam",
+        "lear_rate": 0.001,
+        "lear_rate_decay": 0.0,
+        "loss": "categorical_crossentropy",
+        "text_size": 50,
+        "coef_reg_lstm": 0.0,
+        "coef_reg_den": 0.0,
+        "dropout_rate": 0.0,
+        "dense_size": 100,
+        "last_layer_activation": "softmax",
+        "model_name": "bilstm_model",
+        "embedder": "#my_embedder",
+        "tokenizer": "#my_tokenizer"
+      }
+    ],
+    "out": [
+      "y_labels",
+      "y_probas_dict"
+    ]
+  },
+  "train": {
+    "epochs": 20,
+    "batch_size": 512,
+    "metrics": [
+      "classification_accuracy",
+      "classification_f1"
+    ],
+    "validation_patience": 5,
+    "val_every_n_epochs": 10,
+    "log_every_n_epochs": 1,
+    "show_examples": false,
+    "validate_best": false,
+    "test_best": true
+  },
+  "metadata": {
+    "requirements": [
+      "../dp_requirements/gensim.txt"
+    ],
+    "labels": {
+      "telegram_utils": "IntentModel",
+      "server_utils": "KerasIntentModel"
+    }
+  }
+}
