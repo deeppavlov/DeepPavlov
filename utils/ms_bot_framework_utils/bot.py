@@ -28,10 +28,11 @@ class Bot(Thread):
         self.input_queue = input_queue
         self.ConvKey = namedtuple('ConvKey', ['channel_id', 'conversation_id'])
 
-        self._request_access_info()
         polling_interval = self.config['auth_polling_interval']
-        timer = threading.Timer(polling_interval, self._update_access_info)
-        timer.start()
+        self.timer = threading.Timer(polling_interval, self._update_access_info)
+
+        self._request_access_info()
+        self.timer.start()
 
     def run(self):
         while True:
