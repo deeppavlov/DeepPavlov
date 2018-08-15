@@ -91,7 +91,8 @@ class Conversation:
         self._send_activity(url, out_activity)
 
     def _handle_message(self, in_activity: dict):
-        if 'text' in in_activity.keys():
+
+        def handle_text():
             in_text = in_activity['text']
 
             if len(self.bot.model.in_x) > 1:
@@ -116,3 +117,12 @@ class Conversation:
                 pred = self.bot.model([in_text])
                 out_text = str(pred[0])
                 self._send_message(out_text, in_activity)
+
+        def handle_unsupported():
+            self._send_message('Unsupported message type!', in_activity)
+            log.warn(f'Recived message with unsupported type: {str(in_activity)}')
+
+        if 'text' in in_activity.keys():
+            handle_text()
+        else:
+            handle_unsupported()
