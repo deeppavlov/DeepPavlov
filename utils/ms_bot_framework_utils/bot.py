@@ -1,36 +1,34 @@
 import threading
 import requests
-from requests.exceptions import HTTPError
 from queue import Queue
+from requests.exceptions import HTTPError
 from threading import Thread
 from collections import namedtuple
 
+from .model import Model
 from .conversation import Conversation
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.common.file import read_json
-from deeppavlov.core.commands.infer import build_model_from_config
 
 log = get_logger(__name__)
 
 
 class Bot(Thread):
-    def __init__(self, config: dict, model_config_path: str, app_id: str, app_secret: str, input_queue: Queue):
+    def __init__(self, config: dict, input_queue: Queue):
         super(Bot, self).__init__()
-        self.config = config['ms_bot_framework_defaults']
+        self.config = config
 
-        self.config['auth_app_id'] = app_id
-        self.config['auth_app_secret'] = app_secret
-
-        self.model = self._init_model(model_config_path)
         self.conversations = {}
         self.access_info = {}
         self.http_sessions = {}
         self.input_queue = input_queue
         self.ConvKey = namedtuple('ConvKey', ['channel_id', 'conversation_id'])
 
+        self.model = None
+        if not self.config['multi_instance']:
+            self.model = self._init_model(self.config)
+
         polling_interval = self.config['auth_polling_interval']
         self.timer = threading.Timer(polling_interval, self._update_access_info)
-
         self._request_access_info()
         self.timer.start()
 
@@ -39,9 +37,8 @@ class Bot(Thread):
             activity = self.input_queue.get()
             self._handle_activity(activity)
 
-    def _init_model(self, model_config_path):
-        model_config = read_json(model_config_path)
-        model = build_model_from_config(model_config)
+    def _init_model(self, server_config: dict):
+        model = Model(server_config)
         return model
 
     def _update_access_info(self):
@@ -72,11 +69,14 @@ class Bot(Thread):
         log.info(f'Obtained authentication information from Microsoft Bot Framework: {str(self.access_info)}')
 
     def _handle_activity(self, activity: dict):
-        # conversation_key = f"{activity['channelId']}||{activity['conversation']['id']}"
         conversation_key = self.ConvKey(activity['channelId'], activity['conversation']['id'])
 
         if conversation_key not in self.conversations.keys():
-            self.conversations[conversation_key] = Conversation(self, activity)
+            if self.config['multi_instance']:
+                conv_model = self._init_model(self.config)
+            else:
+                conv_model = self.model
+            self.conversations[conversation_key] = Conversation(self, conv_model, activity)
             log.info(f'Created new conversation, key: {str(conversation_key)}')
 
         conversation = self.conversations[conversation_key]

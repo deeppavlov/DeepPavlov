@@ -1,22 +1,32 @@
 import requests
+from collections import namedtuple
 from urllib.parse import urljoin
 
 from deeppavlov.core.common.log import get_logger
 
+
 log = get_logger(__name__)
+
+Observation = namedtuple('Observation', ['content', 'history', 'conversation_id'])
 
 
 class Conversation:
-    def __init__(self, bot, activity: dict):
+    def __init__(self, bot, model, activity: dict):
         self.bot = bot
+        self.model = model
+
         self.bot_id = activity['recipient']['id']
         self.bot_name = activity['recipient']['name']
         self.service_url = activity['serviceUrl']
         self.channel_id = activity['channelId']
         self.conversation_id = activity['conversation']['id']
+
         self.buffer = []
         self.expect = []
         self.multiargument_initiated = False
+
+        # TODO: implement conversation state storing
+        self.history = None
 
         if self.channel_id not in self.bot.http_sessions.keys() or not self.bot.http_sessions['self.channel_id']:
             self.bot.http_sessions['self.channel_id'] = requests.Session()
@@ -92,13 +102,19 @@ class Conversation:
 
     def _handle_message(self, in_activity: dict):
 
+        def infer(content):
+            observation = Observation(content=content,
+                                      history=self.history,
+                                      conversation_id=None)
+            return self.model.infer(observation)
+
         def handle_text():
             in_text = in_activity['text']
 
-            if len(self.bot.model.in_x) > 1:
+            if len(self.model.in_x) > 1:
                 if not self.multiargument_initiated:
                     self.multiargument_initiated = True
-                    self.expect[:] = list(self.bot.model.in_x)
+                    self.expect[:] = list(self.model.in_x)
                     self._send_message(f'Please, send {self.expect.pop(0)}')
                 else:
                     self.buffer.append(in_text)
@@ -106,15 +122,15 @@ class Conversation:
                     if self.expect:
                         self._send_message(f'Please, send {self.expect.pop(0)}', in_activity)
                     else:
-                        pred = self.bot.model([tuple(self.buffer)])
+                        pred = infer([tuple(self.buffer)])
                         out_text = str(pred[0])
                         self._send_message(out_text, in_activity)
 
                         self.buffer = []
-                        self.expect[:] = list(self.bot.model.in_x)
+                        self.expect[:] = list(self.model.in_x)
                         self._send_message(f'Please, send {self.expect.pop(0)}', in_activity)
             else:
-                pred = self.bot.model([in_text])
+                pred = infer([in_text])
                 out_text = str(pred[0])
                 self._send_message(out_text, in_activity)
 

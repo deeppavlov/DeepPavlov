@@ -18,7 +18,9 @@ Swagger(app)
 CORS(app)
 
 
-def start_bot_framework_server(model_config_path: str, app_id: str, app_secret: str):
+def start_bot_framework_server(model_config_path: str, app_id: str, app_secret: str,
+                               multi_instance: bool = False, stateful: bool = False, use_history: bool = False):
+
     server_config_dir = Path(__file__).resolve().parent
     server_config_path = Path(server_config_dir, '..', SERVER_CONFIG_FILENAME).resolve()
     server_params = read_json(server_config_path)
@@ -26,8 +28,17 @@ def start_bot_framework_server(model_config_path: str, app_id: str, app_secret: 
     host = server_params['common_defaults']['host']
     port = server_params['common_defaults']['port']
 
+    server_params = server_params['ms_bot_framework_defaults']
+
+    server_params['model_config_path'] = model_config_path
+    server_params['auth_app_id'] = app_id
+    server_params['auth_app_secret'] = app_secret
+    server_params['multi_instance'] = multi_instance
+    server_params['stateful'] = stateful
+    server_params['use_history'] = use_history
+
     input_q = Queue()
-    bot = Bot(server_params, model_config_path, app_id, app_secret, input_q)
+    bot = Bot(server_params, input_q)
     bot.start()
 
     @app.route('/')
