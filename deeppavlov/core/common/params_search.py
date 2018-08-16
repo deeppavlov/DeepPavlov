@@ -63,7 +63,7 @@ class ParamsSearch:
         self.paths_to_params = []
         for search_type in [prefix + "_range", prefix + "_choice", prefix + "_bool"]:
             for path_ in self.find_model_path(self.basic_config, search_type):
-                self.paths_to_search_params.append(path_)
+                self.paths_to_params.append(path_)
 
         self.n_params = len(self.paths_to_params)
 
