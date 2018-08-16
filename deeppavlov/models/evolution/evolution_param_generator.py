@@ -15,7 +15,6 @@
 import numpy as np
 from copy import deepcopy
 from pathlib import Path
-import random
 from typing import List, Generator, Tuple, Any
 
 from deeppavlov.core.common.registry import register

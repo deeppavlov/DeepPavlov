@@ -14,12 +14,10 @@
 
 import numpy as np
 from copy import deepcopy
-from pathlib import Path
 import random
 from typing import List, Generator, Tuple, Any
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
 
 
