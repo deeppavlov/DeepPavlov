@@ -15,7 +15,6 @@ limitations under the License.
 """
 
 import json
-import copy
 import tensorflow as tf
 import numpy as np
 from tensorflow.contrib.layers import xavier_initializer
@@ -23,6 +22,7 @@ from tensorflow.contrib.layers import xavier_initializer
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.tf_model import TFModel
+from deeppavlov.core.layers import tf_layers
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.models.seq2seq_go_bot.kb_attn_layer import KBAttention
 
@@ -75,6 +75,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                              " as knowledge base entries' embeddings")
         self.opt['end_learning_rate'] = params.get('end_learning_rate',
                                                    params['learning_rate'])
+        self.opt['dropout_rate'] = params.get('dropout_rate', 0.)
+        self.opt['state_dropout_rate'] = params.get('state_dropout_rate', 0.)
         self.opt['decay_steps'] = params.get('decay_steps', 1000)
         self.opt['decay_power'] = params.get('decay_power', 1.)
         self.opt['beam_width'] = params.get('beam_width', 2)
@@ -85,6 +87,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         self.beam_width = self.opt['beam_width']
         self.learning_rate = self.opt['learning_rate']
         self.end_learning_rate = self.opt['end_learning_rate']
+        self.dropout_rate = self.opt['dropout_rate']
+        self.state_dropout_rate = self.opt['state_dropout_rate']
         self.decay_steps = self.opt['decay_steps']
         self.decay_power = self.opt['decay_power']
         self.tgt_sos_id = self.opt['target_start_of_sequence_index']
@@ -130,6 +134,10 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         # self.print_number_of_parameters()
 
     def _add_placeholders(self):
+        self._dropout_keep_prob = tf.placeholder_with_default(
+            1.0, shape=[], name='dropout_keep_prob')
+        self._state_dropout_keep_prob = tf.placeholder_with_default(
+            1.0, shape=[], name='state_dropout_keep_prob')
         self._learning_rate = tf.placeholder(tf.float32,
                                              shape=[],
                                              name='learning_rate')
@@ -196,6 +204,15 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
             _encoder_cell = tf.nn.rnn_cell.LSTMCell(self.hidden_size,
                                                     name='basic_lstm_cell')
+            _encoder_cell = tf.contrib.rnn.DropoutWrapper(
+                _encoder_cell,
+#                 input_size=tf.shape(_encoder_emb_inp)[-1],
+                input_size=self.embedding_size,
+                dtype=tf.float32,
+                input_keep_prob=self._dropout_keep_prob,
+                output_keep_prob=self._dropout_keep_prob,
+                state_keep_prob=self._state_dropout_keep_prob,
+                variational_recurrent=True)
             # Run Dynamic RNN
             #   _encoder_outputs: [max_time, batch_size, hidden_size]
             #   _encoder_state: [batch_size, hidden_size]
@@ -203,6 +220,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             _encoder_outputs, _encoder_state = tf.nn.dynamic_rnn(
                 _encoder_cell, _encoder_emb_inp, dtype=tf.float32,
                 sequence_length=self._src_sequence_lengths, time_major=False)
+            # TODO: add dropout in the output layer
 
         self._encoder_outputs = _encoder_outputs
         self._encoder_state = _encoder_state
@@ -241,6 +259,14 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             # Decoder Cell
             _decoder_cell = tf.nn.rnn_cell.LSTMCell(self.hidden_size,
                                                     name='basic_lstm_cell')
+            _decoder_cell = tf.contrib.rnn.DropoutWrapper(
+                _decoder_cell,
+                input_size=self.embedding_size + self.hidden_size,
+                dtype=tf.float32,
+                input_keep_prob=self._dropout_keep_prob,
+                output_keep_prob=self._dropout_keep_prob,
+                state_keep_prob=self._state_dropout_keep_prob,
+                variational_recurrent=True)
 
             def build_dec_cell(enc_out, enc_seq_len, reuse=None):
                 with tf.variable_scope("dec_cell_attn", reuse=reuse):
@@ -312,6 +338,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                     beam_width=self.beam_width,
                     output_layer=_kb_attn_layer,
                     length_penalty_weight=0.0)
+            # TODO: add dropout in the output layer
 
             # Wrap into variable scope to share attention parameters
             # Required!
@@ -333,6 +360,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         predictions = self.sess.run(
             self._predictions,
             feed_dict={
+                self._dropout_keep_prob: 1.,
+                self._state_dropout_keep_prob: 1.,
                 self._learning_rate: 1.,
                 self._encoder_inputs: enc_inputs,
                 self._src_sequence_lengths: src_seq_lengths,
@@ -349,6 +378,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         _, loss_value = self.sess.run(
             [self._train_op, self._loss],
             feed_dict={
+                self._dropout_keep_prob: 1 - self.dropout_rate,
+                self._state_dropout_keep_prob: 1 - self.state_dropout_rate,
                 self._learning_rate: self.get_learning_rate(),
                 self._encoder_inputs: enc_inputs,
                 self._decoder_inputs: dec_inputs,
