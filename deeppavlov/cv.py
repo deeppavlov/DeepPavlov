@@ -26,9 +26,7 @@ sys.path.append(str(p))
 
 from deeppavlov.core.common.file import read_json, save_json
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.commands.train import train_evaluate_model_from_config
-from deeppavlov.core.commands.train import get_iterator_from_config
-from deeppavlov.core.commands.train import read_data_by_config
+from deeppavlov.core.commands.train import train_evaluate_model_from_config, get_iterator_from_config, read_data_by_config
 from sklearn.model_selection import KFold
 from deeppavlov.core.commands.utils import expand_path
 
@@ -38,9 +36,8 @@ BACKUP_SUFFIX_FILENAME = '_backuped'
 log = get_logger(__name__)
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--config_path", help="path to a pipeline json config", type=str)
-parser.add_argument("--loocv", help="do leave-one-out cross validation?", type=bool, default=False)
-parser.add_argument("--folds", help="number of folds", type=int, default=None)
+parser.add_argument("config_path", help="path to a pipeline json config", type=str)
+parser.add_argument("--folds", help="number of folds", type=str, default='5')
 parser.add_argument("--search_type", help="search type: grid or random search", type=str, default='grid')
 
 
@@ -110,10 +107,10 @@ def calc_cvfolds_score(config, data, n_folds, models_paths, target_metric):
     return np.mean(all_scores)
 
 
-def get_best_params(combinations, scores, param_names):
+def get_best_params(combinations, scores, param_names, target_metric):
     max_id = np.argmax(scores)
     best_params = dict(zip(param_names, combinations[max_id]))
-    best_params['score'] = scores[max_id]
+    best_params[target_metric] = scores[max_id]
 
     return best_params
 
@@ -157,15 +154,16 @@ def main():
             for i, param_value in enumerate(comb):
                 config['chainer']['pipe'][chainer_items[i]][param_names[i]] = param_value
 
-            if args.loocv:
+            if args.folds == 'loo':
                 scores.append(calc_loocv_score(config, data, models_paths, target_metric))
-            elif args.folds is not None:
-                scores.append(calc_cvfolds_score(config, data, args.folds, models_paths, target_metric))
+            elif args.folds.isdigit():
+                n_folds = int(args.folds)
+                scores.append(calc_cvfolds_score(config, data, n_folds, models_paths, target_metric))
             else:
                 raise NotImplementedError('Not implemented this type of CV')
 
         # get model with best score
-        best_params_dict = get_best_params(combinations, scores, param_names)
+        best_params_dict = get_best_params(combinations, scores, param_names, target_metric)
         log.info('Best model params: {}'.format(best_params_dict))
     else:
         raise NotImplementedError('Not implemented this type of search')
@@ -176,7 +174,7 @@ def main():
 
     # save config
     for i, param_name in enumerate(best_params_dict.keys()):
-        if param_name != 'score':
+        if param_name != target_metric:
             config_best_model['chainer']['pipe'][chainer_items[i]][param_name] = best_params_dict[param_name]
             config_best_model['chainer']['pipe'][chainer_items[i]].pop(param_name+PARAM_RANGE_SUFFIX_NAME)
     best_model_filename = pipeline_config_path.replace('.json', '_cvbest.json')
