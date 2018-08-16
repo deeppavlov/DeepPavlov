@@ -580,7 +580,7 @@ class ParamsEvolution:
                                        "param_1": {"evolve_range": [0, 10], "discrete": true},
                                        "param_2": {"evolve_range": [0, 1], "scale": "log"},
                                        "param_3": {"evolve_bool": true},
-                                       "param_4": [0, 1, 2, 3]}
+                                       "param_4": {"evolve_choice": [0, 1, 2, 3]}}
 
         Returns:
             random parameter value
@@ -597,7 +597,7 @@ class ParamsEvolution:
                 elif 'evolve_range' in param_val:
                     sample = self._sample_from_ranges(param_val)
                 elif 'evolve_choice' in param_val:
-                    sample = random.choice(param_val['values'])
+                    sample = random.choice(param_val['evolve_choice'])
                 params_sample[param] = sample
             else:
                 params_sample[param] = params_copy[param]
@@ -608,9 +608,9 @@ class ParamsEvolution:
         Sample parameters from ranges
 
         Args:
-            opts: dictionary {"param_0": {"evolve_range": [0, 10]},
-                              "param_1": {"evolve_range": [0, 10], "discrete": true},
-                              "param_2": {"evolve_range": [0, 1], "scale": "log"}}
+            opts: dictionary  {"evolve_range": [0, 10]} or \
+                              {"evolve_range": [0, 10], "discrete": true} or \
+                              {"evolve_range": [0, 1], "scale": "log"}
 
         Returns:
             random parameter value from range
