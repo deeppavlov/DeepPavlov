@@ -104,8 +104,7 @@ def log_metrics(names: [list, np.ndarray], values: [list, np.ndarray],
     Returns:
         None
     """
-    sys.stdout.write("\r")  # back to previous line
-    log.info("{} -->\t".format(mode))
+    log.info("\r{} -->\t".format(mode))
     if updates is not None:
         log.info("updates: {}\t".format(updates))
 

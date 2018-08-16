@@ -14,19 +14,15 @@ import os
 import re
 
 import deeppavlov
-from utils.pip_wrapper import install
 
 __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
 
 
 def read_requirements():
-    # # parses requirements from requirements.txt
+    """parses requirements from requirements.txt"""
     reqs_path = os.path.join(__location__, 'requirements.txt')
     with open(reqs_path, encoding='utf8') as f:
         reqs = [line.strip() for line in f if not line.strip().startswith('#')]
-
-    for req in reqs:
-        install(req)
 
     names = []
     links = []

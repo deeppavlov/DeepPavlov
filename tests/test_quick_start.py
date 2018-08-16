@@ -11,15 +11,17 @@ import pexpect
 import requests
 from urllib.parse import urljoin
 
+import deeppavlov
 from deeppavlov.download import deep_download
 from deeppavlov.core.data.utils import get_all_elems_from_json
+import utils
 from utils.server_utils.server import get_server_params, SERVER_CONFIG_FILENAME
 
 
 cache_dir = None
-tests_dir = Path(__file__, '..').resolve()
+tests_dir = Path(__file__).parent
 test_configs_path = tests_dir / "deeppavlov" / "configs"
-src_dir = tests_dir.parent / "deeppavlov" / "configs"
+src_dir = Path(deeppavlov.__path__[0]) / "configs"
 test_src_dir = tests_dir / "test_configs"
 download_path = tests_dir / "download"
 
@@ -58,31 +60,29 @@ PARAMS = {
         ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
-    "intents": {
-        ("intents/intents_dstc2.json", "intents", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_dstc2_big.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+    "classifiers": {
+        ("classifiers/intents_dstc2.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_dstc2_big.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/insults_kaggle.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_twitter.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/topic_ag_news.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
     },
     "snips": {
-        ("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bigru.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_cnn.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_self_add_attention.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_self_mult_attention.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_cnn_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
-    },
-    "sentiment": {
-        ("sentiment/insults_kaggle.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("sentiment/sentiment_twitter.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("sentiment/sentiment_ag_news.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+        ("classifiers/intents_snips.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bigru.json", "classifiers", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_cnn.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_self_add_attention.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_self_mult_attention.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_cnn_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "evolution": {
         ("evolution/evolve_intents_snips.json", "evolution", ('E',)): None
     },
     "sample": {
-        ("intents/intents_sample_csv.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_sample_json.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("classifiers/intents_sample_csv.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_sample_json.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "ner": {
         ("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
@@ -112,8 +112,15 @@ PARAMS = {
     },
     "morpho_tagger":{
         ("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger_hu", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("morpho_tagger/UD2.0/hu/morpho_hu_predict.json", "morpho_tagger_hu", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_train_pymorphy.json",
-         "morpho_tagger_pymorphy", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+         "morpho_tagger_pymorphy", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_train.json",
+         "morpho_tagger_pymorphy", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict.json",
+         "morpho_tagger_pymorphy", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict_pymorphy.json",
+         "morpho_tagger_pymorphy", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     }
 }
 
@@ -231,7 +238,7 @@ class TestQuickStart(object):
 
     @staticmethod
     def interact_api(conf_file):
-        server_conf_file = Path(tests_dir, "..").resolve() / "utils" / "server_utils" / SERVER_CONFIG_FILENAME
+        server_conf_file = Path(utils.__path__[0]) / "server_utils" / SERVER_CONFIG_FILENAME
 
         server_params = get_server_params(server_conf_file, conf_file)
         model_args_names = server_params['model_args_names']
@@ -271,7 +278,7 @@ class TestQuickStart(object):
         if 'IP' in mode:
             config_file_path = str(test_configs_path.joinpath(conf_file))
             self.install(config_file_path)
-            deep_download(['-test', '-c', config_file_path])
+            deep_download(['-c', config_file_path])
 
             self.interact(test_configs_path / conf_file, model_dir, PARAMS[model][(conf_file, model_dir, mode)])
         else:
@@ -294,7 +301,7 @@ class TestQuickStart(object):
             if 'IP' not in mode:
                 config_path = str(test_configs_path.joinpath(conf_file))
                 self.install(config_path)
-                deep_download(['-test', '-c', config_path])
+                deep_download(['-c', config_path])
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
             logfile = io.BytesIO(b'')
@@ -317,7 +324,7 @@ class TestQuickStart(object):
 
             if 'IP' not in mode and 'TI' not in mode:
                 config_path = str(test_configs_path.joinpath(conf_file))
-                deep_download(['-test', '-c', config_path])
+                deep_download(['-c', config_path])
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
             logfile = io.BytesIO(b'')
