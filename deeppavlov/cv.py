@@ -96,8 +96,8 @@ def calc_cvfolds_score(config, data, n_folds, models_paths, target_metric):
 
     for train_index, valid_index in kf.split(all_data):
         data_i = {}
-        data_i['train'] = np.array(all_data)[train_index].tolist()
-        data_i['valid'] = np.array(all_data)[valid_index].tolist()
+        data_i['train'] = [all_data[i] for i in train_index]
+        data_i['valid'] = [all_data[i] for i in valid_index]
         data_i['test'] = []
         iterator = get_iterator_from_config(config, data_i)
         delete_saved_model(models_paths)
