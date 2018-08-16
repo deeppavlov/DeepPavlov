@@ -1,27 +1,27 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import re
-
+from typing import Dict, Any
 import numpy as np
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.models.go_bot.tracker import Tracker
 from deeppavlov.models.go_bot.network import GoalOrientedBotNetwork
 import deeppavlov.models.go_bot.templates as templ
 
@@ -31,26 +31,67 @@ log = get_logger(__name__)
 
 @register("go_bot")
 class GoalOrientedBot(NNModel):
-    def __init__(self,
-                 template_path,
-                 network_parameters,
-                 tokenizer,
-                 tracker,
-                 template_type: str = "BaseTemplate",
-                 database=None,
-                 api_call_action=None,
-                 bow_embedder=None,
-                 embedder=None,
-                 slot_filler=None,
-                 intent_classifier=None,
-                 use_action_mask=False,
-                 debug=False,
-                 save_path=None,
-                 word_vocab=None,
-                 vocabs=None,
-                 **kwargs):
+    """
+    The dialogue bot is based on  https://arxiv.org/abs/1702.03274, which introduces
+    Hybrid Code Networks that combine an RNN with domain-specific knowledge
+    and system action templates.
 
-        super().__init__(save_path=save_path, mode=kwargs['mode'])
+    Todo:
+        add docstring for trackers.
+
+    Parameters:
+        tokenizer: one of tokenizers from
+            :doc:`deeppavlov.models.tokenizers </apiref/models/tokenizers>` module.
+        tracker: dialogue state tracker from
+            :doc:`deeppavlov.models.go_bot.tracker </apiref/models/go_bot>`.
+        network_parameters: initialization parameters for policy network (see
+            :class:`~deeppavlov.models.go_bot.network.GoalOrientedBotNetwork`).
+        template_path: file with mapping between actions and text templates
+            for response generation.
+        template_type: type of used response templates in string format.
+        word_vocab: vocabulary of input word tokens
+            (:class:`~deeppavlov.core.data.vocab.DefaultVocabulary` recommended).
+        bow_embedder: instance of one-hot word encoder
+            :class:`~deeppavlov.models.embedders.bow_embedder.BoWEmbedder`.
+        embedder: one of embedders from
+            :doc:`deeppavlov.models.embedders </apiref/models/embedders>` module.
+        slot_filler: component that outputs slot values for a given utterance
+            (:class:`~deeppavlov.models.slotfill.slotfill.DstcSlotFillingNetwork`
+            recommended).
+        intent_classifier: component that outputs intents probability distribution
+            for a given utterance (
+            :class:`~deeppavlov.models.classifiers.keras_classification_model.KerasClassificationModel`
+            recommended).
+        database: database that will be used during inference to perform
+            ``api_call_action`` actions and get ``'db_result'`` result (
+            :class:`~deeppavlov.core.data.sqlite_database.Sqlite3Database`
+            recommended).
+        api_call_action: label of the action that corresponds to database api call
+            (it must be present in your ``template_path`` file), during interaction
+            it will be used to get ``'db_result'`` from ``database``.
+        use_action_mask: if ``True``, network output will be applied with a mask
+            over allowed actions.
+        debug: whether to display debug output.
+    """
+    def __init__(self,
+                 tokenizer: Component,
+                 tracker: Tracker,
+                 network_parameters: Dict[str, Any],
+                 template_path: str,
+                 template_type: str = "DefaultTemplate",
+                 word_vocab: Component = None,
+                 bow_embedder: Component = None,
+                 embedder: Component = None,
+                 slot_filler: Component = None,
+                 intent_classifier: Component = None,
+                 database: Component = None,
+                 api_call_action: str = None,  # TODO: make it unrequired
+                 use_action_mask: bool = False,
+                 debug: bool = False,
+                 load_path: str = None,
+                 save_path: str = None,
+                 **kwargs):
+        super().__init__(load_path=load_path, save_path=save_path, **kwargs)
 
         self.tokenizer = tokenizer
         self.tracker = tracker
@@ -60,7 +101,7 @@ class GoalOrientedBot(NNModel):
         self.intent_classifier = intent_classifier
         self.use_action_mask = use_action_mask
         self.debug = debug
-        self.word_vocab = word_vocab or vocabs['word_vocab']
+        self.word_vocab = word_vocab
 
         template_path = expand_path(template_path)
         template_type = getattr(templ, template_type)
@@ -70,11 +111,13 @@ class GoalOrientedBot(NNModel):
         log.info("{} templates loaded".format(self.n_actions))
 
         self.database = database
-        self.api_call_id = self.templates.actions.index(api_call_action)
+        self.api_call_id = None
+        if api_call_action is not None:
+            self.api_call_id = self.templates.actions.index(api_call_action)
 
         self.intents = []
         if callable(self.intent_classifier):
-            # intent_classifier returns y_labels, y_probs
+            # intent_classifier returns (y_labels, y_probs)
             self.intents = list(self.intent_classifier(["hi"])[1][0].keys())
 
         self.network = self._init_network(network_parameters)
@@ -154,7 +197,7 @@ class GoalOrientedBot(NNModel):
         # Intent features
         intent_features = []
         if callable(self.intent_classifier):
-            intent, intent_probs = self.intent_classifier([tokens])
+            intent, intent_probs = self.intent_classifier([context])
             intent_features = np.array([intent_probs[0][i] for i in self.intents],
                                        dtype=np.float32)
             if self.debug:
@@ -175,7 +218,7 @@ class GoalOrientedBot(NNModel):
             if self.debug:
                 log.debug("Slot vals: {}".format(self.slot_filler([tokens])))
 
-        state_features = self.tracker()
+        state_features = self.tracker.get_features()
 
         # Other features
         result_matches_state = 0.
@@ -353,7 +396,8 @@ class GoalOrientedBot(NNModel):
             for x in batch:
                 pred = self._infer(x)
                 # if made api_call, then respond with next prediction
-                if np.argmax(self.prev_action) == self.api_call_id:
+                prev_act_id = np.argmax(self.prev_action)
+                if prev_act_id == self.api_call_id:
                     db_result = self.make_api_call(self.tracker.get_state())
                     res.append(self._infer(x, db_result=db_result))
                 else:

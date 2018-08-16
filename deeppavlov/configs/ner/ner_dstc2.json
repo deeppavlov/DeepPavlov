@@ -14,10 +14,10 @@
       {
         "in": ["x"],
         "name": "lazy_tokenizer",
-        "out": ["x"]
+        "out": ["x_tokens"]
       },
       {
-        "in": ["x"],
+        "in": ["x_tokens"],
         "name": "str_lower",
         "out": ["x_lower"]
       },
@@ -48,7 +48,7 @@
         "out": ["y_ind"]
       },
       {
-        "in": ["x"],
+        "in": ["x_tokens"],
         "name": "mask",
         "out": ["mask"]
       },
@@ -77,13 +77,13 @@
         "out": ["tags"]
       }
     ],
-    "out": ["tags"]
+    "out": ["x_tokens", "tags"]
   },
   "train": {
     "epochs": 100,
     "batch_size": 64,
 
-    "metrics": ["ner_f1", "per_item_accuracy"],
+    "metrics": ["ner_f1", "per_token_accuracy"],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
 
@@ -92,14 +92,14 @@
   },
   "metadata": {
     "requirements": [
-      "../requirements/tf.txt"
+      "../dp_requirements/tf.txt"
     ],
     "labels": {
       "telegram_utils": "NERModel",
       "server_utils": "NER"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/slotfill_dstc2.tar.gz"
+      "http://files.deeppavlov.ai/deeppavlov_data/slotfill_dstc2.tar.gz"
     ]
   }
 }

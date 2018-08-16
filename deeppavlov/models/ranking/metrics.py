@@ -17,11 +17,14 @@ def r_at_2(y_true, y_pred):
 def r_at_5(labels, predictions):
     return recall_at_k(labels, predictions, k=5)
 
+@register_metric('r@10')
+def r_at_10(labels, predictions):
+    return recall_at_k(labels, predictions, k=10)
 
 def recall_at_k(y_true, y_pred, k):
     labels = np.array(y_true)
     predictions = np.array(y_pred)
-    predictions = np.flip(np.argsort(predictions, -1), -1)[:, :k]
+    predictions = np.argsort(predictions, -1)[:, :k]
     flags = np.zeros_like(predictions)
     for i in range(predictions.shape[0]):
         for j in range(predictions.shape[1]):
@@ -34,7 +37,7 @@ def recall_at_k(y_true, y_pred, k):
 def rank_response(y_true, y_pred):
     labels = np.array(y_true)
     predictions = np.array(y_pred)
-    predictions = np.flip(np.argsort(predictions, -1), -1)
+    predictions = np.argsort(predictions, -1)
     ranks = []
     for i in range(predictions.shape[0]):
         for j in range(predictions.shape[1]):
@@ -50,4 +53,5 @@ def triplet_loss(y_true, y_pred):
     predictions = np.array(y_pred)
     pos_scores = predictions[:, 0]
     neg_scores = predictions[:, -1]
-    return np.mean(np.maximum(margin - pos_scores + neg_scores, np.zeros(len(y_pred))), axis=-1)
+    return np.mean(np.maximum(margin + pos_scores - neg_scores, np.zeros(len(y_pred))), axis=-1)
+

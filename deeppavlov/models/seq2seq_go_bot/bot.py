@@ -1,28 +1,24 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import numpy as np
-from typing import Type
+from typing import Dict
+# import itertools
 
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
-from deeppavlov.core.data.vocab import DefaultVocabulary
-from deeppavlov.models.seq2seq_go_bot.network import Seq2SeqGoalOrientedBotNetwork
-# from deeppavlov.models.seq2seq_go_bot.wrapper import PerItemWrapper
-from deeppavlov.models.seq2seq_go_bot.dialog_state import DialogState
 from deeppavlov.core.common.log import get_logger
 
 
@@ -31,29 +27,47 @@ log = get_logger(__name__)
 
 @register("seq2seq_go_bot")
 class Seq2SeqGoalOrientedBot(NNModel):
-    def __init__(self,
-                 network_parameters,
-                 embedder,
-                 source_vocab,
-                 target_vocab,
-                 end_of_sequence_token,
-                 start_of_sequence_token,
-                 knowledge_base_keys,
-                 debug=False,
-                 save_path=None,
-                 **kwargs):
+    """
+    A goal-oriented bot based on a sequence-to-sequence rnn. For implementation details see
+    :class:`~deeppavlov.models.seq2seq_go_bot.network.Seq2SeqGoalOrientedBotNetwork`.
+    Pretrained for :class:`~deeppavlov.dataset_readers.kvret_reader.KvretDatasetReader` dataset.
 
-        super().__init__(save_path=save_path, mode=kwargs['mode'])
+    Parameters:
+        network_parameters: parameters passed to object of
+            :class:`~deeppavlov.models.seq2seq_go_bot.network.Seq2SeqGoalOrientedBotNetwork` class.
+        embedder: word embeddings model, see
+            :doc:`deeppavlov.models.embedders </apiref/models/embedders>`.
+        source_vocab: vocabulary of input tokens.
+        target_vocab: vocabulary of bot response tokens.
+        start_of_sequence_token: token that defines start of input sequence.
+        end_of_sequence_token: token that defines end of input sequence and start of
+            output sequence.
+        debug: whether to display debug output.
+        **kwargs: parameters passed to parent
+            :class:`~deeppavlov.core.models.nn_model.NNModel` class.
+    """
+    def __init__(self,
+                 network_parameters: Dict,
+                 embedder: Component,
+                 source_vocab: Component,
+                 target_vocab: Component,
+                 start_of_sequence_token: str,
+                 end_of_sequence_token: str,
+                 knowledge_base_keys,
+                 debug: bool = False,
+                 save_path: str = None,
+                 **kwargs) -> None:
+        super().__init__(save_path=save_path, **kwargs)
 
         self.embedder = embedder
         self.embedding_size = embedder.dim
         self.src_vocab = source_vocab
         self.tgt_vocab = target_vocab
-        self.sos_token = start_of_sequence_token
-        self.eos_token = end_of_sequence_token
         self.tgt_vocab_size = len(target_vocab)
         self.kb_keys = knowledge_base_keys
         self.kb_size = len(self.kb_keys)
+        self.sos_token = start_of_sequence_token
+        self.eos_token = end_of_sequence_token
         self.debug = debug
 
         self.network = self._init_network(network_parameters)

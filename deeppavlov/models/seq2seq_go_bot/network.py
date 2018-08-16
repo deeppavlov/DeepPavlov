@@ -1,28 +1,26 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import json
 import tensorflow as tf
 import numpy as np
+from typing import List
 from tensorflow.contrib.layers import xavier_initializer
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.tf_model import TFModel
-from deeppavlov.core.layers import tf_layers
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.models.seq2seq_go_bot.kb_attn_layer import KBAttention
 
@@ -32,14 +30,78 @@ log = get_logger(__name__)
 
 @register("seq2seq_go_bot_nn")
 class Seq2SeqGoalOrientedBotNetwork(TFModel):
+    """
+    The :class:`~deeppavlov.models.seq2seq_go_bot.bot.GoalOrientedBotNetwork` is a recurrent network that encodes user utterance and generates response in a sequence-to-sequence manner.
+
+    For network architecture is similar to https://arxiv.org/abs/1705.05414 .
+
+    Parameters:
+        hidden_size: RNN hidden layer size.
+        target_start_of_sequence_index: index of a start of sequence token during decoding.
+        target_end_of_sequence_index: index of an end of sequence token during decoding.
+        source_vocab_size: size of a vocabulary of encoder tokens.
+        target_vocab_size: size of a vocabulary of decoder tokens.
+        learning_rate: training learning rate.
+        **kwargs: parameters passed to a parent :class:`~deeppavlov.core.models.tf_model.TFModel` class.
+    """
 
     GRAPH_PARAMS = ['knowledge_base_size', 'source_vocab_size',
                     'target_vocab_size', 'hidden_size', 'embedding_size',
                     'kb_embedding_control_sum', 'kb_attention_hidden_sizes']
 
-    def __init__(self, **params):
-        # initialize parameters
-        self._init_params(params)
+    def __init__(self,
+                 hidden_size: int,
+                 source_vocab_size: int,
+                 target_vocab_size: int,
+                 target_start_of_sequence_index: int,
+                 target_end_of_sequence_index: int,
+                 knowledge_base_entry_embeddings: np.ndarray,
+                 kb_attention_hidden_sizes: List[int],
+                 decoder_embeddings: np.ndarray,
+                 beam_width: int = 1,
+                 learning_rate: float,
+                 end_learning_rate: float = None,
+                 decay_steps: int = 1000,
+                 decay_power: float = 1.0,
+                 dropout_rate: float = 0.0,
+                 state_dropout_rate: float = 0.0,
+                 optimizer: str = 'AdamOptimizer',
+                 **kwargs) -> None:
+        end_learning_rate = end_learning_rate or learning_rate
+
+        # initialize knowledge base embeddings
+        self.kb_embedding = np.array(knowledge_base_entry_embeddings)
+        log.debug("recieved knowledge_base_entry_embeddings with shape = {}"
+                  .format(self.kb_embedding.shape))
+
+        # specify model options
+        self.opt = {
+            'hidden_size': hidden_size,
+            'source_vocab_size': source_vocab_size,
+            'target_vocab_size': target_vocab_size,
+            'target_start_of_sequence_index': target_start_of_sequence_index,
+            'target_end_of_sequence_index': target_end_of_sequence_index,
+            'kb_attention_hidden_sizes': kb_attention_hidden_sizes,
+            'kb_embedding_control_sum': float(np.sum(self.kb_embedding)),
+            'knowledge_base_size': self.kb_embedding.shape[0],
+            'embedding_size': self.kb_embedding.shape[1]
+            'beam_width': beam_width,
+            'learning_rate': learning_rate,
+            'end_learning_rate': end_learning_rate,
+            'decay_steps': decay_steps,
+            'decay_power': decay_power,
+            'dropout_rate': dropout_rate,
+            'state_dropout_rate': state_dropout_rate,
+            'optimizer': optimizer
+        }
+
+        # initialize decoder embeddings
+        self.decoder_embedding = np.array(decoder_embeddings)
+        if self.opt['embedding_size'] != self.decoder_embedding.shape[1]:
+            raise ValueError("decoder embeddings should have the same dimension"
+                             " as knowledge base entries' embeddings")
+        # initialize other parameters
+        self._init_params()
         # build computational graph
         self._build_graph()
         # initialize session
@@ -50,7 +112,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
 
         self.sess.run(tf.global_variables_initializer())
 
-        super().__init__(**params)
+        super().__init__(**kwargs)
 
         if tf.train.checkpoint_exists(str(self.load_path.resolve())):
             log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
@@ -58,30 +120,14 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         else:
             log.info("[initializing `{}` from scratch]".format(self.__class__.__name__))
 
-    def _init_params(self, params):
-        self.opt = {k: v for k, v in params.items()
-                    if k not in ('knowledge_base_entry_embeddings',
-                                 'decoder_embeddings')}
-
-        self.kb_embedding = np.array(params['knowledge_base_entry_embeddings'])
-        log.debug("recieved knowledge_base_entry_embeddings with shape = {}"
-                  .format(self.kb_embedding.shape))
-        self.opt['kb_embedding_control_sum'] = float(np.sum(self.kb_embedding))
-        self.opt['knowledge_base_size'] = self.kb_embedding.shape[0]
-        self.opt['embedding_size'] = self.kb_embedding.shape[1]
-        self.decoder_embedding = np.array(params['decoder_embeddings'])
-        if self.opt['embedding_size'] != self.decoder_embedding.shape[1]:
-            raise ValueError("decoder embeddings should have the same dimension"
-                             " as knowledge base entries' embeddings")
-        self.opt['end_learning_rate'] = params.get('end_learning_rate',
-                                                   params['learning_rate'])
-        self.opt['dropout_rate'] = params.get('dropout_rate', 0.)
-        self.opt['state_dropout_rate'] = params.get('state_dropout_rate', 0.)
-        self.opt['decay_steps'] = params.get('decay_steps', 1000)
-        self.opt['decay_power'] = params.get('decay_power', 1.)
-        self.opt['beam_width'] = params.get('beam_width', 2)
-        self.opt['optimizer'] = params.get('optimizer', 'AdamOptimizer')
-
+    def _init_params(self):
+        self.hidden_size = self.opt['hidden_size']
+        self.src_vocab_size = self.opt['source_vocab_size']
+        self.tgt_vocab_size = self.opt['target_vocab_size']
+        self.tgt_sos_id = self.opt['target_start_of_sequence_index']
+        self.tgt_eos_id = self.opt['target_end_of_sequence_index']
+        self.learning_rate = self.opt['learning_rate']
+        self.kb_attn_hidden_sizes = self.opt['kb_attention_hidden_sizes']
         self.embedding_size = self.opt['embedding_size']
         self.kb_size = self.opt['knowledge_base_size']
         self.beam_width = self.opt['beam_width']
@@ -91,12 +137,6 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         self.state_dropout_rate = self.opt['state_dropout_rate']
         self.decay_steps = self.opt['decay_steps']
         self.decay_power = self.opt['decay_power']
-        self.tgt_sos_id = self.opt['target_start_of_sequence_index']
-        self.tgt_eos_id = self.opt['target_end_of_sequence_index']
-        self.src_vocab_size = self.opt['source_vocab_size']
-        self.tgt_vocab_size = self.opt['target_vocab_size']
-        self.hidden_size = self.opt['hidden_size']
-        self.kb_attn_hidden_sizes = self.opt['kb_attention_hidden_sizes']
 
         self._optimizer = None
         if hasattr(tf.train, self.opt['optimizer']):
@@ -408,7 +448,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
     def load_params(self):
         path = str(self.load_path.with_suffix('.json').resolve())
         log.info('[loading parameters from {}]'.format(path))
-        with open(path, 'r') as fp:
+        with open(path, 'r', encoding='utf8') as fp:
             params = json.load(fp)
         for p in self.GRAPH_PARAMS:
             if self.opt.get(p) != params.get(p):
@@ -426,7 +466,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
     def save_params(self):
         path = str(self.save_path.with_suffix('.json').resolve())
         log.info('[saving parameters to {}]'.format(path))
-        with open(path, 'w') as fp:
+        with open(path, 'w', encoding='utf8') as fp:
             json.dump(self.opt, fp)
 
     def process_event(self, event_name, data):

@@ -131,19 +131,19 @@
   },
   "metadata": {
     "requirements": [
-      "../requirements/tf.txt",
-      "../requirements/fasttext.txt",
-      "../requirements/spacy.txt"
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/spacy.txt",
+      "../dp_requirements/en_core_web_sm.txt"
     ],
     "labels": {
       "telegram_utils": "Seq2SeqGoalOrientedBot",
       "server_utils": "GoalOrientedBot"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/vocabs.tar.gz",
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/seq2seq_go_bot.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/seq2seq_go_bot.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/deeppavlov_data/embeddings/wiki.en.bin",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "embeddings"
       }
     ]

@@ -1,8 +1,21 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from typing import List, Any, Optional
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
-
 from deeppavlov.dataset_iterators.sqlite_iterator import SQLiteDataIterator
 
 logger = get_logger(__name__)
@@ -10,24 +23,26 @@ logger = get_logger(__name__)
 
 @register('wiki_sqlite_vocab')
 class WikiSQLiteVocab(SQLiteDataIterator):
-    """
-    Get SQlite documents by ids.
+    """Get content from SQLite database by document ids.
+
+    Args:
+        data_url: an URL where to download a DB from
+        data_dir:  a directory where to save downloaded DB to
+
     """
 
-    def __init__(self, data_url, data_dir: str = '', **kwargs):
-        """
-        :param data_url: an URL to SQLite DB
-        :param data_dir: a directory name where DB is located
-        """
+    def __init__(self, data_url: str, data_dir: str = '', **kwargs):
 
         super().__init__(data_dir=data_dir, data_url=data_url)
 
     def __call__(self, doc_ids: Optional[List[List[Any]]] = None, *args, **kwargs) -> List[str]:
-        """
-        Get the contents of files, stacked by space.
-        :param questions: queries to search an answer for
-        :param n: a number of documents to return
-        :return: document contents (as a single string)
+        """Get the contents of files, stacked by space.
+
+        Args:
+            doc_ids: a batch of lists of ids to get contents for
+
+        Returns:
+            a list of contents
         """
         all_contents = []
         if not doc_ids:

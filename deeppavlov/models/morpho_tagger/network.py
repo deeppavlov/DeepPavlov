@@ -1,21 +1,17 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-
-import inspect
-import json
 from typing import List
 
 import keras.layers as kl
@@ -44,6 +40,7 @@ class CharacterTagger:
                  char_filter_multiple=25, char_highway_layers=1,
                  conv_dropout=0.0, highway_dropout=0.0,
                  intermediate_dropout=0.0, lstm_dropout=0.0,
+                 word_vectorizers=None,
                  word_lstm_layers=1, word_lstm_units=128,
                  word_dropout=0.0, regularizer=None, verbose=1):
         self.symbols = symbols
@@ -59,10 +56,11 @@ class CharacterTagger:
         self.conv_dropout = conv_dropout
         self.highway_dropout = highway_dropout
         self.intermediate_dropout = intermediate_dropout
-        self.word_lstm_layers = word_lstm_layers
-        self.word_lstm_units = word_lstm_units
         self.lstm_dropout = lstm_dropout
         self.word_dropout = word_dropout
+        self.word_vectorizers = word_vectorizers  # a list of additional vectorizer dimensions
+        self.word_lstm_layers = word_lstm_layers
+        self.word_lstm_units = word_lstm_units
         self.regularizer = regularizer
         self.verbose = verbose
         self.initialize()
@@ -80,6 +78,8 @@ class CharacterTagger:
             self.word_lstm_units = [self.word_lstm_units] * self.word_lstm_layers
         if len(self.word_lstm_units) != self.word_lstm_layers:
             raise ValueError("There should be the same number of lstm layer units and lstm layers")
+        if self.word_vectorizers is None:
+            self.word_vectorizers = []
         if self.regularizer is not None:
             self.regularizer = kreg.l2(self.regularizer)
 
@@ -95,13 +95,20 @@ class CharacterTagger:
         word_inputs = kl.Input(shape=(None, MAX_WORD_LENGTH+2), dtype="int32")
         inputs = [word_inputs]
         word_outputs = self.build_word_cnn(word_inputs)
+        if len(self.word_vectorizers) > 0:
+            additional_word_inputs = [kl.Input(shape=(None, input_dim), dtype="float32")
+                                      for input_dim, dense_dim in self.word_vectorizers]
+            inputs.extend(additional_word_inputs)
+            additional_word_embeddings = [kl.Dense(dense_dim)(additional_word_inputs[i])
+                                          for i, (_, dense_dim) in enumerate(self.word_vectorizers)]
+            word_outputs = kl.Concatenate()([word_outputs] + additional_word_embeddings)
         outputs, lstm_outputs = self.build_basic_network(word_outputs)
         compile_args = {"optimizer": ko.nadam(lr=0.002, clipnorm=5.0),
                         "loss": "categorical_crossentropy", "metrics": ["accuracy"]}
         self.model_ = Model(inputs, outputs)
         self.model_.compile(**compile_args)
         if self.verbose > 0:
-            log.info(str(self.model_.summary()))
+            self.model_.summary(print_fn=log.info)
         return self
 
     def build_word_cnn(self, inputs):
@@ -163,8 +170,10 @@ class CharacterTagger:
         return pre_outputs, lstm_outputs
 
     def _transform_batch(self, data, labels=None, transform_to_one_hot=True):
+        data, additional_data = data[0], data[1:]
         L = max(len(x) for x in data)
         X = np.array([self._make_sent_vector(x, L) for x in data])
+        X = [X] + [np.array(x) for x in additional_data]
         if labels is not None:
             Y = np.array([self._make_tags_vector(y, L) for y in labels])
             if transform_to_one_hot:
@@ -173,7 +182,7 @@ class CharacterTagger:
         else:
             return X
 
-    def train_on_batch(self, data: List[List[str]], labels: List[List[str]], **kwargs):
+    def train_on_batch(self, data, labels):
         """
         Trains model on a single batch
 
@@ -184,7 +193,7 @@ class CharacterTagger:
         # TO_DO: add weights to deal with padded instances
         return self.model_.train_on_batch(X, Y)
 
-    def predict_on_batch(self, data: List[str], return_indexes=False):
+    def predict_on_batch(self, data: [list, tuple], return_indexes=False):
         """
         Makes predictions on a single batch
 
@@ -193,11 +202,12 @@ class CharacterTagger:
         answer: a batch of label sequences
         """
         X = self._transform_batch(data)
+        objects_number, lengths = len(X[0]), [len(elem) for elem in data[0]]
         Y = self.model_.predict_on_batch(X)
         labels = np.argmax(Y, axis=-1)
-        answer: List[List[str]] = [None] * len(X)
-        for i, elem in enumerate(labels):
-            elem = elem[:len(data[i])]
+        answer: List[List[str]] = [None] * objects_number
+        for i, (elem, length) in enumerate(zip(labels, lengths)):
+            elem = elem[:length]
             answer[i] = elem if return_indexes else self.tags.idxs2toks(elem)
         return answer
 
@@ -228,5 +238,3 @@ class CharacterTagger:
 
     def load(self, infile):
         self.model_.load_weights(infile)
-
-
