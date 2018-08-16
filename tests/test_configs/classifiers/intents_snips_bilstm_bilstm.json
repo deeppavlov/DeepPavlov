@@ -38,6 +38,15 @@
         "load_path": "vocabs/snips_classes.dict"
       },
       {
+        "in": "x",
+        "out": "x_tok",
+        "id": "my_tokenizer",
+        "name": "nltk_tokenizer",
+        "tokenizer": "wordpunct_tokenize"
+      },
+      {
+        "in": "x_tok",
+        "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
         "save_path": "embeddings/dstc2_fastText_model.bin",
@@ -45,13 +54,8 @@
         "dim": 100
       },
       {
-        "id": "my_tokenizer",
-        "name": "nltk_tokenizer",
-        "tokenizer": "wordpunct_tokenize"
-      },
-      {
         "in": [
-          "x"
+          "x_emb"
         ],
         "in_y": [
           "y"
@@ -62,10 +66,12 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "intents/intent_cnn_snips_bigru",
-        "load_path": "intents/intent_cnn_snips_bigru",
+        "save_path": "classifiers/intent_cnn_snips_bistlm_bilstm",
+        "load_path": "classifiers/intent_cnn_snips_bilstm_bilstm",
+        "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
-        "units_lstm": 64,
+        "units_lstm_1": 64,
+        "units_lstm_2": 64,
         "confident_threshold": 0.5,
         "optimizer": "Adam",
         "lear_rate": 0.01,
@@ -77,9 +83,7 @@
         "dropout_rate": 0.5,
         "rec_dropout_rate": 0.5,
         "dense_size": 100,
-        "model_name": "bigru_model",
-        "embedder": "#my_embedder",
-        "tokenizer": "#my_tokenizer"
+        "model_name": "bilstm_bilstm_model"
       }
     ],
     "out": [

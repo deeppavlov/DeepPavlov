@@ -27,18 +27,6 @@
         "load_path": "vocabs/ag_news_classes.dict"
       },
       {
-        "id": "my_embedder",
-        "name": "fasttext",
-        "save_path": "embeddings/wiki.en.bin",
-        "load_path": "embeddings/wiki.en.bin",
-        "dim": 100
-      },
-      {
-        "id": "my_tokenizer",
-        "name": "nltk_tokenizer",
-        "tokenizer": "wordpunct_tokenize"
-      },
-      {
         "in": [
           "x"
         ],
@@ -48,8 +36,24 @@
         "name": "str_lower"
       },
       {
+        "in": "x_lower",
+        "out": "x_tok",
+        "id": "my_tokenizer",
+        "name": "nltk_tokenizer",
+        "tokenizer": "wordpunct_tokenize"
+      },
+      {
+        "in": "x_tok",
+        "out": "x_emb",
+        "id": "my_embedder",
+        "name": "fasttext",
+        "save_path": "embeddings/wiki.en.bin",
+        "load_path": "embeddings/wiki.en.bin",
+        "dim": 300
+      },
+      {
         "in": [
-          "x_lower"
+          "x_emb"
         ],
         "in_y": [
           "y"
@@ -60,8 +64,9 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "sentiment/sentiment_ag_news_v0",
-        "load_path": "sentiment/sentiment_ag_news_v0",
+        "save_path": "classifiers/topic_ag_news_v1",
+        "load_path": "classifiers/topic_ag_news_v1",
+        "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "kernel_sizes_cnn": [
           1,
@@ -80,9 +85,7 @@
         "dropout_rate": 0.5,
         "dense_size": 100,
         "last_layer_activation": "softmax",
-        "model_name": "cnn_model",
-        "embedder": "#my_embedder",
-        "tokenizer": "#my_tokenizer"
+        "model_name": "cnn_model"
       }
     ],
     "out": [
@@ -115,7 +118,7 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/sentiment.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
       "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
       "http://files.deeppavlov.ai/datasets/ag_news_data.tar.gz",
       {
