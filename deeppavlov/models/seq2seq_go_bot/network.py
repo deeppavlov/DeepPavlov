@@ -16,7 +16,7 @@ import json
 import tensorflow as tf
 import numpy as np
 from typing import List
-from tensorflow.contrib.layers import xavier_initializer
+import math
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.errors import ConfigError
@@ -31,18 +31,35 @@ log = get_logger(__name__)
 @register("seq2seq_go_bot_nn")
 class Seq2SeqGoalOrientedBotNetwork(TFModel):
     """
-    The :class:`~deeppavlov.models.seq2seq_go_bot.bot.GoalOrientedBotNetwork` is a recurrent network that encodes user utterance and generates response in a sequence-to-sequence manner.
+    The :class:`~deeppavlov.models.seq2seq_go_bot.bot.GoalOrientedBotNetwork`
+    is a recurrent network that encodes user utterance and generates response
+    in a sequence-to-sequence manner.
 
     For network architecture is similar to https://arxiv.org/abs/1705.05414 .
 
     Parameters:
         hidden_size: RNN hidden layer size.
-        target_start_of_sequence_index: index of a start of sequence token during decoding.
-        target_end_of_sequence_index: index of an end of sequence token during decoding.
         source_vocab_size: size of a vocabulary of encoder tokens.
         target_vocab_size: size of a vocabulary of decoder tokens.
-        learning_rate: training learning rate.
-        **kwargs: parameters passed to a parent :class:`~deeppavlov.core.models.tf_model.TFModel` class.
+        target_start_of_sequence_index: index of a start of sequence token during
+            decoding.
+        target_end_of_sequence_index: index of an end of sequence token during decoding.
+        knowledge_base_entry_embeddings: matrix with embeddings of knowledge base entries,
+            size is (number of entries, embedding size).
+        kb_attention_hidden_sizes: list of sizes for attention hidden units.
+        decoder_embeddings: matrix with embeddings for decoder output tokens, size is
+            (`targer_vocab_size` + number of knowledge base entries, embedding size).
+        beam_width: width of beam search decoding.
+        learning_rate: learning rate during training.
+        end_learning_rate: if set, learning rate starts from ``learning_rate`` value
+            and decays polynomially to the value of ``end_learning_rate``.
+        decay_steps: number of steps of learning rate decay.
+        decay_power: power used to calculate learning rate decay for polynomial strategy.
+        dropout_rate: probability of weights' dropout.
+        state_dropout_rate: probability of rnn state dropout.
+        optimizer: one of tf.train.Optimizer subclasses as a string.
+        **kwargs: parameters passed to a parent
+            :class:`~deeppavlov.core.models.tf_model.TFModel` class.
     """
 
     GRAPH_PARAMS = ['knowledge_base_size', 'source_vocab_size',
@@ -58,8 +75,8 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                  knowledge_base_entry_embeddings: np.ndarray,
                  kb_attention_hidden_sizes: List[int],
                  decoder_embeddings: np.ndarray,
-                 beam_width: int = 1,
                  learning_rate: float,
+                 beam_width: int = 1,
                  end_learning_rate: float = None,
                  decay_steps: int = 1000,
                  decay_power: float = 1.0,
@@ -73,6 +90,11 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
         self.kb_embedding = np.array(knowledge_base_entry_embeddings)
         log.debug("recieved knowledge_base_entry_embeddings with shape = {}"
                   .format(self.kb_embedding.shape))
+        # initialize decoder embeddings
+        self.decoder_embedding = np.array(decoder_embeddings)
+        if self.kb_embedding.shape[1] != self.decoder_embedding.shape[1]:
+            raise ValueError("decoder embeddings should have the same dimension"
+                             " as knowledge base entries' embeddings")
 
         # specify model options
         self.opt = {
@@ -84,9 +106,9 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             'kb_attention_hidden_sizes': kb_attention_hidden_sizes,
             'kb_embedding_control_sum': float(np.sum(self.kb_embedding)),
             'knowledge_base_size': self.kb_embedding.shape[0],
-            'embedding_size': self.kb_embedding.shape[1]
-            'beam_width': beam_width,
+            'embedding_size': self.kb_embedding.shape[1],
             'learning_rate': learning_rate,
+            'beam_width': beam_width,
             'end_learning_rate': end_learning_rate,
             'decay_steps': decay_steps,
             'decay_power': decay_power,
@@ -95,11 +117,6 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             'optimizer': optimizer
         }
 
-        # initialize decoder embeddings
-        self.decoder_embedding = np.array(decoder_embeddings)
-        if self.opt['embedding_size'] != self.decoder_embedding.shape[1]:
-            raise ValueError("decoder embeddings should have the same dimension"
-                             " as knowledge base entries' embeddings")
         # initialize other parameters
         self._init_params()
         # build computational graph
@@ -246,7 +263,6 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                                                     name='basic_lstm_cell')
             _encoder_cell = tf.contrib.rnn.DropoutWrapper(
                 _encoder_cell,
-#                 input_size=tf.shape(_encoder_emb_inp)[-1],
                 input_size=self.embedding_size,
                 dtype=tf.float32,
                 input_keep_prob=self._dropout_keep_prob,
@@ -260,7 +276,6 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             _encoder_outputs, _encoder_state = tf.nn.dynamic_rnn(
                 _encoder_cell, _encoder_emb_inp, dtype=tf.float32,
                 sequence_length=self._src_sequence_lengths, time_major=False)
-            # TODO: add dropout in the output layer
 
         self._encoder_outputs = _encoder_outputs
         self._encoder_state = _encoder_state
@@ -291,7 +306,6 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                                              self._kb_mask,
                                              activation=tf.nn.relu,
                                              use_bias=False)
-# TODO: rm output dense layer
             # Output dense layer
             # _projection_layer = \
             #  tf.layers.Dense(self.tgt_vocab_size, use_bias=False, _reuse=reuse)
@@ -378,7 +392,6 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                     beam_width=self.beam_width,
                     output_layer=_kb_attn_layer,
                     length_penalty_weight=0.0)
-            # TODO: add dropout in the output layer
 
             # Wrap into variable scope to share attention parameters
             # Required!
@@ -454,7 +467,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
             if self.opt.get(p) != params.get(p):
                 if p in ('kb_embedding_control_sum') and\
                         (math.abs(self.opt.get(p, 0.) - params.get(p, 0.)) < 1e-3):
-                    continue
+                        continue
                 raise ConfigError("`{}` parameter must be equal to saved model"
                                   " parameter value `{}`, but is equal to `{}`"
                                   .format(p, params.get(p), self.opt.get(p)))

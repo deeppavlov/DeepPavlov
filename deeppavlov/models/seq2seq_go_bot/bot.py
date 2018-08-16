@@ -20,6 +20,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.models.seq2seq_go_bot.network import Seq2SeqGoalOrientedBotNetwork
 
 
 log = get_logger(__name__)
