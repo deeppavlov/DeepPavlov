@@ -583,7 +583,7 @@ class ParamsEvolution:
                                        "param_4": {"evolve_choice": [0, 1, 2, 3]}}
 
         Returns:
-            random parameter value
+            dictionary with randomly sampled parameters
         """
         if not params:
             return {}
@@ -598,6 +598,8 @@ class ParamsEvolution:
                     sample = self._sample_from_ranges(param_val)
                 elif 'evolve_choice' in param_val:
                     sample = random.choice(param_val['evolve_choice'])
+                else:
+                    sample = param_val
                 params_sample[param] = sample
             else:
                 params_sample[param] = params_copy[param]
