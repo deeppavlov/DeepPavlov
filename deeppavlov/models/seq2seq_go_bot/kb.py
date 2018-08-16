@@ -15,7 +15,7 @@
 import itertools
 import json
 import re
-from typing import Callable, List, Dict
+from typing import Callable, List, Tuple
 from collections import defaultdict
 
 from deeppavlov.core.common.registry import register
@@ -30,17 +30,18 @@ log = get_logger(__name__)
 @register("knowledge_base")
 class KnowledgeBase(Estimator):
     """
-    A custom dictionary that encodes knowledge facts from :class:`~deeppavlov.dataset_readers.kvret_reader.KvretDatasetReader` data.
+    A custom dictionary that encodes knowledge facts from
+    :class:`~deeppavlov.dataset_readers.kvret_reader.KvretDatasetReader` data.
 
     Example:
         .. code:: python
 
             >>> from models.seq2seq_go_bot.kb import KnowledgeBase
             >>> kb = KnowledgeBase(save_path="kb.json", load_path="kb.json")
-            >>> kb.fit(['person1'], [['name', 'hair', 'eyes']], [[{'name': 'Sasha', 'hair': 'long dark', 'eyes': 'light blue '}]])
+            >>> kb.fit(['person1'], [['name', 'hair', 'eyes']], [[{'name': 'Sasha', 'hair': 'long   dark', 'eyes': 'light blue '}]])
 
             >>> kb(['person1'])
-            [[('sasha_hair', 'long dark'), ('sasha_eyes', 'light blue ')]]
+            [[('sasha_name', 'Sasha'), ('sasha_hair', 'long   dark'), ('sasha_eyes', 'light blue ')]]
 
             >>> kb(['person_that_doesnt_exist'])
             [[]]
@@ -48,8 +49,10 @@ class KnowledgeBase(Estimator):
     Parameters:
         save_path: path to save the dictionary with knowledge.
         load_path: path to load the json with knowledge.
-        tokenizer: tokenizer used to split entity values into tokens.
-        **kwargs: parameters passed to parent :class:`~deeppavlov.core.models.estimator.Estimator`.
+        tokenizer: tokenizer used to split entity values into tokens (inputs batch
+            of strings and outputs batch of lists of tokens).
+        **kwargs: parameters passed to parent
+            :class:`~deeppavlov.core.models.estimator.Estimator`.
     """
     def __init__(self,
                  save_path: str,
@@ -99,7 +102,7 @@ class KnowledgeBase(Estimator):
             res.append(self.kb[key])
             for k, value in res[-1]:
                 if k not in self.primary_keys:
-                    raise ValueError("Primary key `{}` is not present in knowledge base"\
+                    raise ValueError("Primary key `{}` is not present in knowledge base"
                                      .format(k))
         return res
 
@@ -122,77 +125,81 @@ class KnowledgeBase(Estimator):
         log.info("[loading knowledge base from {}]".format(self.load_path))
         self.kb.update(json.load(self.load_path.open('rt')), primary_keys=False)
         self.primary_keys = json.load(self.load_path.with_suffix('.keys.json').open('rt'))
-=======
-        with self.save_path.open('wt', encoding='utf8') as fp:
-            json.dump(self.kb, fp)
-
-    def load(self):
-        log.info("[loading knowledge base from {}]".format(self.load_path))
-        with self.load_path.open('rt', encoding='utf8') as fp:
-            self.kb.update(json.load(fp))
->>>>>>> origin/dev
 
 
 @register("knowledge_base_entity_normalizer")
 class KnowledgeBaseEntityNormalizer(Component):
     """
-    Uses instance of :class:`~deeppavlov.models.seq2seq_go_bot.kb.KnowledgeBase` to normalize or to undo normalization of entities in the input utterance.
+    Uses instance of :class:`~deeppavlov.models.seq2seq_go_bot.kb.KnowledgeBase`
+    to normalize or to undo normalization of entities in the input utterance.
 
-    To normalize is to substitute all mentions of database entities with their normalized form.
+    To normalize is to substitute all mentions of database entities with their
+    normalized form.
 
-    To undo normalization is to substitute all mentions of database normalized entities with their original form.
+    To undo normalization is to substitute all mentions of database normalized entities
+    with their original form.
 
     Example:
         .. code:: python
 
             >>> from models.seq2seq_go_bot.kb import KnowledgeBase
-            >>> kb = KnowledgeBase(save_path="kb.json", load_path="kb.json")
-            >>> kb.fit(['person1'], [['name', 'hair', 'eyes']], [[{'name': 'Sasha', 'hair': 'long dark', 'eyes': 'light blue '}]])
+            >>> kb = KnowledgeBase(save_path="kb.json", load_path="kb.json", tokenizer=lambda strings: [s.split() for s in strings])
+            >>> kb.fit(['person1'], [['name', 'hair', 'eyes']], [[{'name': 'Sasha', 'hair': 'long   dark', 'eyes': 'light blue '}]])
             >>> kb(['person1'])
-            [[('sasha_hair', 'long dark'), ('sasha_eyes', 'light blue ')]]
+            [[('sasha_name', ['Sasha']), ('sasha_hair', ['long', 'dark']), ('sasha_eyes', ['light','blue'])]]
 
             >>> from models.seq2seq_go_bot.kb import KnowledgeBaseEntityNormalizer
-            >>> normalizer = KnowledgeBaseEntityNormalizer(kb=kb, denormalize=False)
-            >>> normalizer(['person1'], [["some", "guy", "with", "long", "dark", "hair", "said", "hi"]])
+            >>> normalizer = KnowledgeBaseEntityNormalizer(denormalize=False, remove=False)
+            >>> normalizer([["some", "guy", "with", "long", "dark", "hair", "said", "hi"]], kb(['person1']))
             [['some', 'guy', 'with', 'sasha_hair', 'hair', 'said', 'hi']]
 
-            >>> denormalizer = KnowledgeBaseEntityNormalizer(kb=kb, denormalize=True)
-            >>> denormalizer(['person1'], [['some', 'guy', 'with', 'sasha_hair', 'hair', 'said', 'hi']])
+            >>> denormalizer = KnowledgeBaseEntityNormalizer(denormalize=True)
+            >>> denormalizer([['some', 'guy', 'with', 'sasha_hair', 'hair', 'said', 'hi']], kb(['person1']))
             [['some', 'guy', 'with', 'long', 'dark', 'hair', 'said', 'hi']]
+
+            >>> remover = KnowledgeBaseEntityNormalizer(denormalize=False, remove=True)
+            >>> remover([["some", "guy", "with", "long", "dark", "hair", "said", "hi"]], kb(['person1']))
+            [['some', 'guy', 'with', 'hair', 'said', 'hi']
 
 
     Parameters:
-        kb: knowledge base of type :class:`~deeppavlov.models.seq2seq_go_bot.KnowledgeBase`.
-        denormalize: flag indicates whether to normalize or to undo normalization ("denormalize").
-        **kwargs: parameters passed to parent :class:`~deeppavlov.core.models.component.Component` class.
+        denormalize: flag indicates whether to normalize or to undo normalization
+            ("denormalize").
+        remove: flag indicates whether to remove entities or not while normalizing
+            (``denormalize=False``). Is ignored for ``denormalize=True``.
+        **kwargs: parameters passed to parent
+            :class:`~deeppavlov.core.models.component.Component` class.
+    """
 
-    def __init__(self, remove=False, denormalize=False, *args, **kwargs):
+    def __init__(self,
+                 remove: bool = False,
+                 denormalize: bool = False,
+                 **kwargs):
         self.denormalize_flag = denormalize
         self.remove = remove
 
     def normalize(self, tokens, entries):
-        for entity, value_tokens in sorted(entries, key=lambda e: -len(e[1])):
-            value_len = len(value_tokens)
-            if ' '.join(value_tokens).strip():
+        for entity, ent_tokens in sorted(entries, key=lambda e: -len(e[1])):
+            ent_num_tokens = len(ent_tokens)
+            if ' '.join(ent_tokens).strip():
                 for i in range(len(tokens)):
-                    if tokens[i:i+value_len] == value_tokens:
+                    if tokens[i:i+ent_num_tokens] == ent_tokens:
                         if self.remove:
-                            tokens = tokens[:i] + tokens[i+value_len:]
+                            tokens = tokens[:i] + tokens[i+ent_num_tokens:]
                         else:
-                            tokens = tokens[:i] + [entity] + tokens[i+value_len:]
+                            tokens = tokens[:i] + [entity] + tokens[i+ent_num_tokens:]
         return tokens
 
     def denormalize(self, tokens, entries):
-        for entity, value in entries:
+        for entity, ent_tokens in entries:
             while (entity in tokens):
-                entity_pos = tokens.index(entity)
-                tokens = tokens[:entity_pos] + value + tokens[entity_pos+1:] 
+                ent_pos = tokens.index(entity)
+                tokens = tokens[:ent_pos] + ent_tokens + tokens[ent_pos+1:]
         return tokens
 
-    def __call__(self, 
-                 tokens_list: List[str],
-                 entries_list) -> List[List[str]]:
-        # TODO: entries_list type
+    def __call__(self,
+                 tokens_list: List[List[str]],
+                 entries_list: List[Tuple[str, List[str]]]) -> List[List[str]]:
         if self.denormalize_flag:
             return [self.denormalize(t, e) for t, e in zip(tokens_list, entries_list)]
         return [self.normalize(t, e) for t, e in zip(tokens_list, entries_list)]

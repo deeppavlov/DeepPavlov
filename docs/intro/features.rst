@@ -42,7 +42,7 @@ Several pre-trained models are available and presented in Table below.
 +--------------------------------------------------------------------------------------------------+------------------------+-------------------------+
 
 
-- :doc:`Goal-oriented bot </components/go_bot>`
+- :doc:`Goal-oriented bot </skills/go_bot>`
 
 Based on Hybrid Code Networks (HCNs) architecture from `Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code
 Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017
