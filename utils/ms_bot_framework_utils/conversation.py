@@ -1,4 +1,5 @@
 import requests
+import threading
 from collections import namedtuple
 from urllib.parse import urljoin
 
@@ -7,13 +8,14 @@ from deeppavlov.core.common.log import get_logger
 
 log = get_logger(__name__)
 
-Observation = namedtuple('Observation', ['content', 'history', 'conversation_id'])
+Observation = namedtuple('Observation', ['content', 'state', 'conversation_id'])
 
 
 class Conversation:
-    def __init__(self, bot, model, activity: dict):
+    def __init__(self, bot, model, activity: dict, conversation_key, conversation_lifetime: int):
         self.bot = bot
         self.model = model
+        self.key = conversation_key
 
         self.bot_id = activity['recipient']['id']
         self.bot_name = activity['recipient']['name']
@@ -25,8 +27,9 @@ class Conversation:
         self.expect = []
         self.multiargument_initiated = False
 
-        # TODO: implement conversation state storing
-        self.history = None
+        self.conversation_lifetime = conversation_lifetime
+        self.timer = None
+        self._start_timer()
 
         if self.channel_id not in self.bot.http_sessions.keys() or not self.bot.http_sessions['self.channel_id']:
             self.bot.http_sessions['self.channel_id'] = requests.Session()
@@ -36,6 +39,18 @@ class Conversation:
         self.handled_activities = {
             'message': self._handle_message
         }
+
+
+    def _start_timer(self):
+        self.timer = threading.Timer(self.conversation_lifetime, self._self_destruct)
+        self.timer.start()
+
+    def _rearm_self_destruct(self):
+        self.timer.cancel()
+        self._start_timer()
+
+    def _self_destruct(self):
+        self.bot.del_conversation(self.key)
 
     def handle_activity(self, activity: dict):
         activity_type = activity['type']
@@ -104,7 +119,7 @@ class Conversation:
 
         def infer(content):
             observation = Observation(content=content,
-                                      history=self.history,
+                                      state=None,
                                       conversation_id=None)
             return self.model.infer(observation)
 
@@ -137,6 +152,8 @@ class Conversation:
         def handle_unsupported():
             self._send_message('Unsupported message type!', in_activity)
             log.warn(f'Recived message with unsupported type: {str(in_activity)}')
+
+        self._rearm_self_destruct()
 
         if 'text' in in_activity.keys():
             handle_text()

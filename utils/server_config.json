@@ -11,7 +11,8 @@
     "auth_content_type":"application/x-www-form-urlencoded",
     "auth_grant_type":"client_credentials",
     "auth_scope":"https://api.botframework.com/.default",
-    "auth_polling_interval": 3500
+    "auth_polling_interval": 3500,
+    "conversation_lifetime": 3600
   },
   "model_defaults": {
     "DstcSlotFillingNetwork": {

@@ -11,6 +11,8 @@ from deeppavlov.core.common.log import get_logger
 
 log = get_logger(__name__)
 
+ConvKey = namedtuple('ConvKey', ['channel_id', 'conversation_id'])
+
 
 class Bot(Thread):
     def __init__(self, config: dict, input_queue: Queue):
@@ -21,7 +23,6 @@ class Bot(Thread):
         self.access_info = {}
         self.http_sessions = {}
         self.input_queue = input_queue
-        self.ConvKey = namedtuple('ConvKey', ['channel_id', 'conversation_id'])
 
         self.model = None
         if not self.config['multi_instance']:
@@ -37,14 +38,18 @@ class Bot(Thread):
             activity = self.input_queue.get()
             self._handle_activity(activity)
 
+    def del_conversation(self, conversation_key: ConvKey):
+        del self.conversations[conversation_key]
+        log.info(f'Deleted conversation, key: {str(conversation_key)}')
+
     def _init_model(self, server_config: dict):
         model = Model(server_config)
         return model
 
     def _update_access_info(self):
         polling_interval = self.config['auth_polling_interval']
-        timer = threading.Timer(polling_interval, self._update_access_info)
-        timer.start()
+        self.timer = threading.Timer(polling_interval, self._update_access_info)
+        self.timer.start()
         self._request_access_info()
 
     def _request_access_info(self):
@@ -69,14 +74,22 @@ class Bot(Thread):
         log.info(f'Obtained authentication information from Microsoft Bot Framework: {str(self.access_info)}')
 
     def _handle_activity(self, activity: dict):
-        conversation_key = self.ConvKey(activity['channelId'], activity['conversation']['id'])
+        conversation_key = ConvKey(activity['channelId'], activity['conversation']['id'])
 
         if conversation_key not in self.conversations.keys():
             if self.config['multi_instance']:
                 conv_model = self._init_model(self.config)
             else:
                 conv_model = self.model
-            self.conversations[conversation_key] = Conversation(self, conv_model, activity)
+
+            conversation_lifetime = self.config['conversation_lifetime']
+
+            self.conversations[conversation_key] = Conversation(bot=self,
+                                                                model=conv_model,
+                                                                activity=activity,
+                                                                conversation_key=conversation_key,
+                                                                conversation_lifetime=conversation_lifetime)
+
             log.info(f'Created new conversation, key: {str(conversation_key)}')
 
         conversation = self.conversations[conversation_key]
