@@ -20,6 +20,8 @@
   "r@5": "deeppavlov.models.ranking.metrics:r_at_5",
   "rank_response": "deeppavlov.models.ranking.metrics:rank_response",
   "sets_accuracy": "deeppavlov.metrics.accuracy:sets_accuracy",
+  "simple_f1_macro": "deeppavlov.metrics.fmeasure_classification:simple_f1_macro",
+  "simple_f1_weighted": "deeppavlov.metrics.fmeasure_classification:simple_f1_wighted",
   "slots_accuracy": "deeppavlov.metrics.accuracy:slots_accuracy",
   "squad_f1": "deeppavlov.metrics.squad_metrics:squad_f1"
 }

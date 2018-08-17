@@ -8,7 +8,6 @@ import time
 from copy import deepcopy
 from os.path import join, isdir
 from os import mkdir
-from typing import Union, List, Tuple
 matplotlib.use('agg')
 
 

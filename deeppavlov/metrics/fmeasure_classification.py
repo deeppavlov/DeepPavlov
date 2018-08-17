@@ -69,3 +69,45 @@ def classification_fmeasure_weighted(y_true: List[list], y_predicted: List[Tuple
     y_pred_one_hot = labels2onehot(y_pred_labels, classes)
 
     return f1_score(y_true_one_hot, y_pred_one_hot, average=average)
+
+
+@register_metric('simple_f1_macro')
+def simple_f1_macro(y_true, y_predicted, average="macro") -> float:
+    """
+    Calculate F1-measure macro
+
+    Args:
+        y_true: true binary labels
+        y_predicted: predictions.
+        average: determines the type of averaging performed on the data
+
+    Returns:
+        F1-measure
+    """
+    # classes = np.array(list(y_predicted[0][1].keys()))
+    # y_true_one_hot = labels2onehot(y_true, classes)
+    # y_pred_labels = [y_predicted[i][0] for i in range(len(y_predicted))]
+    # y_pred_one_hot = labels2onehot(y_pred_labels, classes)
+
+    return f1_score(y_true, y_predicted, average=average)
+
+
+@register_metric('simple_f1_weighted')
+def simple_f1_weighted(y_true, y_predicted, average="weighted") -> float:
+    """
+    Calculate F1-measure weighted
+
+    Args:
+        y_true: true binary labels
+        y_predicted: predictions.
+        average: determines the type of averaging performed on the data
+
+    Returns:
+        F1-measure
+    """
+    # classes = np.array(list(y_predicted[0][1].keys()))
+    # y_true_one_hot = labels2onehot(y_true, classes)
+    # y_pred_labels = [y_predicted[i][0] for i in range(len(y_predicted))]
+    # y_pred_one_hot = labels2onehot(y_pred_labels, classes)
+
+    return f1_score(y_true, y_predicted, average=average)
