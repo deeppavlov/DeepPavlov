@@ -14,14 +14,10 @@
 
 from typing import List
 from operator import itemgetter
-from pathlib import Path
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.estimator import Component
-from deeppavlov.core.commands.infer import build_model_from_config
-from deeppavlov.core.common.file import read_json
-from deeppavlov.deep import find_config
 
 logger = get_logger(__name__)
 
@@ -32,24 +28,15 @@ class LogitRanker(Component):
      to the squad model separately and get a single best answer for each batch.
 
      Args:
-        squad_model_config: a JSON path to the squad model
+        squad_model: a loaded squad model
 
      Attributes:
-        squad_model: a loaded squad model, ready for inferring
-
-     Raises:
-         FileNotFoundError if a relative path to :attr:`squad_model_config` doesn't have "configs" module as root
+        squad_model: a loaded squad model
 
     """
 
-    def __init__(self, squad_model_config: str, **kwargs):
-        if Path(squad_model_config).is_absolute():
-            abs_config_path = squad_model_config
-        else:
-            abs_config_path = Path(__file__, "..", "..", "..", squad_model_config).resolve()
-        if not abs_config_path.exists():
-            raise FileNotFoundError("A root dir for 'squad_model_config' is 'configs/'")
-        self.squad_model = build_model_from_config(read_json(abs_config_path))
+    def __init__(self, squad_model, **kwargs):
+        self.squad_model = squad_model
 
     def __call__(self, contexts_batch: List[List[str]], questions_batch: List[List[str]]) -> List[str]:
         """
@@ -66,7 +53,7 @@ class LogitRanker(Component):
 
         batch_best_answers = []
         for contexts, questions in zip(contexts_batch, questions_batch):
-            results = self.squad_model(zip(contexts, questions))
+            results = zip(*self.squad_model(contexts, questions))
             best_answer = sorted(results, key=itemgetter(2), reverse=True)[0][0]
             batch_best_answers.append(best_answer)
 
