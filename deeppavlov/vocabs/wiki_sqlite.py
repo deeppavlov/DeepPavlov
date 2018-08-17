@@ -29,14 +29,15 @@ class WikiSQLiteVocab(SQLiteDataIterator):
         data_url: an URL where to download a DB from
         data_dir:  a directory where to save downloaded DB to
         join_docs: whether to join extracted docs with ' ' or not
+        shuffle: whether to shuffle data or not
 
     Attributes:
         join_docs: whether to join extracted docs with ' ' or not
 
     """
 
-    def __init__(self, data_url: str, data_dir: str = '', join_docs: bool=True, **kwargs):
-        super().__init__(data_dir=data_dir, data_url=data_url, shuffle=kwargs.get('shuffle', False))
+    def __init__(self, data_url: str, data_dir: str = '', join_docs: bool=True, shuffle: bool=False, **kwargs):
+        super().__init__(data_dir=data_dir, data_url=data_url, shuffle=shuffle)
         self.join_docs = join_docs
 
     def __call__(self, doc_ids: Optional[List[List[Any]]] = None, *args, **kwargs) -> List[Union[str, List[str]]]:
