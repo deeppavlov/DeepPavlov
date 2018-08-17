@@ -62,7 +62,7 @@
       },
       {
         "name": "logit_ranker",
-        "squad_model_config": "../deeppavlov/configs/squad/squad.json",
+        "squad_model_config": "configs/squad/squad.json",
         "in": [
           "chunks",
           "questions"
