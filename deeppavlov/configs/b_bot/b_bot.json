@@ -1,0 +1,36 @@
+{
+  "chainer": {
+    "in": ["text"],
+    "out": ["response"],
+    "pipe": [
+      {
+        "name": "natasha_ner",
+        "in": ["text"],
+        "out": ["dates"],
+        "classes": ["DatesExtractor"]
+      },
+      {
+        "name": "slotfill_raw",
+        "in": ["text"],
+        "out": ["slots"],
+        "return_all": true,
+        "load_path": "../deeppavlov/configs/b_bot/slots.json",
+        "save_path": "../deeppavlov/configs/b_bot/slots.json"
+      },
+      {
+        "id": "dst",
+        "name": "simple_dst",
+        "in": ["slots", "dates"],
+        "commands": "./deeppavlov/configs/b_bot/b_bot_dst.py",
+        "out": ["state"]
+      },
+      {
+        "name": "simple_policy",
+        "policy": "./deeppavlov/configs/b_bot/b_bot_policy.py",
+        "dst": "#dst",
+        "in": ["state"],
+        "out": ["response"]
+      }
+    ]
+  }
+}
