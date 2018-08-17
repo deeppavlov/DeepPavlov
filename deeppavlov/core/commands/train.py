@@ -96,12 +96,7 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
     return chainer
 
 
-def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, to_validate=True) -> None:
-    if isinstance(config, (str, Path)):
-        config = read_json(config)
-    set_deeppavlov_root(config)
-
-    import_packages(config.get('metadata', {}).get('imports', []))
+def read_data_by_config(config: dict):
 
     dataset_config = config.get('dataset', None)
 
@@ -142,9 +137,24 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
     else:
         log.warning("No dataset reader is provided in the JSON config.")
 
+    return data
+
+def get_iterator_from_config(config: dict, data: dict):
     iterator_config = config['dataset_iterator']
     iterator: Union[DataLearningIterator, DataFittingIterator] = from_params(iterator_config,
                                                                              data=data)
+    return iterator
+
+def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
+                                     to_train=True, to_validate=True) -> Dict[str, Dict[str, float]]:
+    if isinstance(config, (str, Path)):
+        config = read_json(config)
+    set_deeppavlov_root(config)
+    import_packages(config.get('metadata', {}).get('imports', []))
+
+    if iterator is None:
+        data = read_data_by_config(config)
+        iterator = get_iterator_from_config(config, data)
 
     train_config = {
         'metrics': ['accuracy'],
@@ -172,6 +182,8 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
         elif not isinstance(model, Chainer):
             log.warning('Nothing to train')
 
+    res = {}
+
     if train_config['validate_best'] or train_config['test_best']:
         # try:
         #     model_config['load_path'] = model_config['save_path']
@@ -187,7 +199,9 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
                                      show_examples=train_config['show_examples'])
             }
 
-            print(json.dumps(report, ensure_ascii=False))
+            res['valid'] = report['valid']['metrics']
+
+            log.info(json.dumps(report, ensure_ascii=False))
 
         if train_config['test_best']:
             report = {
@@ -196,7 +210,11 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, t
                                     show_examples=train_config['show_examples'])
             }
 
-            print(json.dumps(report, ensure_ascii=False))
+            res['test'] = report['test']['metrics']
+
+            log.info(json.dumps(report, ensure_ascii=False))
+
+    return res
 
 
 def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
