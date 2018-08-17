@@ -7,6 +7,8 @@ deeppavlov.models.preprocessors
 
 .. autoclass:: deeppavlov.models.preprocessors.capitalization.CapitalizationPreprocessor
 
+.. autofunction:: deeppavlov.models.preprocessors.capitalization.process_word
+
 .. autoclass:: deeppavlov.models.preprocessors.capitalization.LowercasePreprocessor
 
 .. autoclass:: deeppavlov.models.preprocessors.char_splitter.CharSplitter
