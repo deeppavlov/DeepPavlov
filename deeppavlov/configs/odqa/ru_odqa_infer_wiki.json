@@ -42,7 +42,9 @@
       },
       {
         "name": "logit_ranker",
-        "squad_model_config": "configs/squad/squad_ru.json",
+        "squad_model": {
+          "config_path": "../deeppavlov/configs/squad/squad_ru.json"
+        },
         "in": [
           "chunks",
           "questions"
@@ -61,17 +63,8 @@
       "server_utils": "ODQA"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/squad_model_ru_1.3_cpu_compatible.tar.gz",
       "http://files.deeppavlov.ai/datasets/wikipedia/ruwiki.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/ru_odqa.tar.gz",
-      {
-        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.vec",
-        "subdir": "embeddings"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize-char.vec",
-        "subdir": "embeddings"
-      }
+      "http://files.deeppavlov.ai/deeppavlov_data/ru_odqa.tar.gz"
     ]
   }
 }
