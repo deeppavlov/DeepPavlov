@@ -1,9 +1,10 @@
 import threading
-import requests
 from queue import Queue
-from requests.exceptions import HTTPError
 from threading import Thread
 from collections import namedtuple
+
+import requests
+from requests.exceptions import HTTPError
 
 from .model import Model
 from .conversation import Conversation
