@@ -1,7 +1,8 @@
-import requests
 import threading
 from collections import namedtuple
 from urllib.parse import urljoin
+
+import requests
 
 from deeppavlov.core.common.log import get_logger
 
