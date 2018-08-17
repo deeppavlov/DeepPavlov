@@ -227,7 +227,7 @@ class Seq2SeqGoalOrientedBotNetwork(TFModel):
                                              shape=(kb_W.shape[0], kb_W.shape[1]),
                                              dtype=tf.float32,
                                              initializer=tf.constant_initializer(kb_W),
-                                             trainable=False)
+                                             trainable=True)
         # _kb_mask: [batch_size, kb_size]
         self._kb_mask = tf.placeholder(tf.float32, [None, None], name='kb_mask')
 
