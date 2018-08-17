@@ -11,6 +11,12 @@ from deeppavlov.core.common.file import read_json
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 
+AUTH_URL =  "https://login.microsoftonline.com/botframework.com/oauth2/v2.0/token"
+AUTH_HOST = "login.microsoftonline.com"
+AUTH_CONTENT_TYPE = "application/x-www-form-urlencoded"
+AUTH_GRANT_TYPE = "client_credentials"
+AUTH_SCOPE = "https://api.botframework.com/.default"
+
 log = get_logger(__name__)
 
 app = Flask(__name__)
@@ -31,8 +37,16 @@ def start_bot_framework_server(model_config_path: str, app_id: str, app_secret: 
     server_params = server_params['ms_bot_framework_defaults']
 
     server_params['model_config_path'] = model_config_path
+
+    server_params['auth_url'] = AUTH_URL
+    server_params['auth_host'] = AUTH_HOST
+    server_params['auth_content_type'] = AUTH_CONTENT_TYPE
+    server_params['auth_grant_type'] = AUTH_GRANT_TYPE
+    server_params['auth_scope'] = AUTH_SCOPE
+
     server_params['auth_app_id'] = app_id
     server_params['auth_app_secret'] = app_secret
+
     server_params['multi_instance'] = multi_instance
     server_params['stateful'] = stateful
     server_params['use_history'] = use_history
