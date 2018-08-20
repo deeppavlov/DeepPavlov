@@ -51,11 +51,11 @@
   "metadata": {
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/faq/pretrained/faq_fasttext_cos_model.pkl",
+        "url": "http://files.deeppavlov.ai/faq/faq_fasttext_cos_model.pkl",
         "subdir": "autofaq"
       },
       {
-        "url": "http://files.deeppavlov.ai/faq/pretrained/faq_sentence2vector_v2w_tfidf.pkl",
+        "url": "http://files.deeppavlov.ai/faq/faq_sentence2vector_v2w_tfidf.pkl",
         "subdir": "autofaq"
       },
       {

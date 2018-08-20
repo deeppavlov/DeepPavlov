@@ -32,15 +32,18 @@ logger = get_logger(__name__)
 @register('tfidf_vectorizer')
 class TfIdfVectorizer(Estimator, Serializable):
 
-    def __init__(self, pre_trained_vectorizer: str = None, save_path: str = None, load_path: str = None, **kwargs) -> None:
-        self.pre_trained_vectorizer = pre_trained_vectorizer
+    def __init__(self, is_pretrained: False, save_path: str = None, load_path: str = None, **kwargs) -> None:
+        self.is_pretrained = is_pretrained
         self.save_path = save_path
         self.load_path = load_path
 
-        if kwargs['mode'] != 'train':
+        if self.is_pretrained:
             self.load()
         else:
-            self.vectorizer = TfidfVectorizer()
+            if kwargs['mode'] != 'train':
+                self.load()
+            else:
+                self.vectorizer = TfidfVectorizer()
 
 
     def __call__(self, questions: List[str]):
@@ -59,8 +62,9 @@ class TfIdfVectorizer(Estimator, Serializable):
 
 
     def save(self) -> None:
-        logger.info("Saving tfidf_vectorizer to {}".format(expand_path(self.save_path)))
-        save_pickle(self.vectorizer, expand_path(self.save_path))
+        if not self.is_pretrained:
+            logger.info("Saving tfidf_vectorizer to {}".format(expand_path(self.save_path)))
+            save_pickle(self.vectorizer, expand_path(self.save_path))
 
 
     def load(self) -> None:

@@ -22,8 +22,7 @@
         "id": "vectorizer",
         "name": "tfidf_vectorizer",
         "in": "q_token_lemmas",
-        "fit_on": ["q_token_lemmas"],
-        "save_path": "autofaq/faq_vectorizer_tfidf.pkl",
+        "is_pretrained": true,
         "load_path": "autofaq/faq_vectorizer_tfidf.pkl",
         "out": "q_vect"
       },
@@ -31,6 +30,8 @@
         "name": "faq_logreg_model",
         "in": "q_vect",
         "fit_on": ["q_vect", "y"],
+        "C": 100,
+        "penalty": "l2",
         "save_path": "autofaq/faq_tfidf_logreg_model.pkl",
         "load_path": "autofaq/faq_tfidf_logreg_model.pkl",
         "out": ["answer", "score"]
@@ -46,11 +47,11 @@
   "metadata": {
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/faq/pretrained/faq_tfidf_logreg_model.pkl",
+        "url": "http://files.deeppavlov.ai/faq/faq_tfidf_logreg_model.pkl",
         "subdir": "autofaq"
       },
       {
-        "url": "http://files.deeppavlov.ai/faq/pretrained/faq_vectorizer_tfidf.pkl",
+        "url": "http://files.deeppavlov.ai/faq/faq_vectorizer_tfidf.pkl",
         "subdir": "autofaq"
       }
     ]
