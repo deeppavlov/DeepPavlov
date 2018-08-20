@@ -38,24 +38,39 @@
       },
       {
         "in": ["x"],
-        "name": "lazy_tokenizer",
-        "out": ["x"]
+        "name": "nltk_tokenizer",
+        "id": "nltk",
+        "out": ["x_tok"]
       },
       {
-        "id": "count",
-        "name": "count_vectorizer",
-        "in": "x",
-        "fit_on": ["x"],
-        "save_path": "intents/vectorizer_pretrained_count.pkl",
-        "load_path": "intents/vectorizer_pretrained_count.pkl",
+        "fit_on": ["x_tok"],
+        "name": "tfidf_vectorizer",
+        "id": "tf-idf",
+        "save_path": "snips/tf-idf.pkl",
+        "load_path": "vocabs/tf-idf.pkl"
+      },
+      {
+        "id": "fasttext",
+        "name": "fasttext",
+        "in": "x_tok",
+        "save_path": "embeddings/dstc2_fastText_model.bin",
+        "load_path": "embeddings/dstc2_fastText_model.bin",
         "out": "x_vec"
       },
       {
+        "in": ["x_vec", "x"],
+        "out": "avr_x",
+        "name": "avr_emb",
+        "tokenizer": "#nltk",
+        "vectorizer": "#tf-idf",
+        "id": "tf-idf_average"
+      },
+      {
         "in": [
-          "x_vec"
+          "avr_x"
         ],
         "fit_on": [
-          "x_vec", "y"
+          "avr_x", "y"
         ],
         "out": [
           "y_labels"
@@ -83,6 +98,10 @@
     "test_best": false
   },
   "metadata": {
+    "requirements": [
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/fasttext.txt"
+    ],
     "labels": {
       "telegram_utils": "IntentModel",
       "server_utils": "KerasIntentModel"

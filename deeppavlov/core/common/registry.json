@@ -1,4 +1,5 @@
 {
+  "avr_emb": "deeppavlov.models.embedders.average_emb:AvrEmb",
   "api_requester": "deeppavlov.models.api_requester.api_requester:ApiRequester",
   "api_router": "deeppavlov.models.api_requester.api_router:ApiRouter",
   "basic_classification_iterator": "deeppavlov.dataset_iterators.basic_classification_iterator:BasicClassificationDatasetIterator",
