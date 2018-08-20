@@ -44,19 +44,25 @@ class TfIdfVectorizer(Estimator, Serializable):
 
 
     def __call__(self, questions: List[str]):
-        q_vects = self.vectorizer.transform([' '.join(q) for q in questions])
+        if isinstance(questions[0], list):
+            questions = [' '.join(q) for q in questions]
+
+        q_vects = self.vectorizer.transform(questions)
         return q_vects
 
 
-    def fit(self, x_train: List[str]) -> None:
-        self.vectorizer.fit([' '.join(x) for x in x_train])
+    def fit(self, x_train: List[str]):
+        if isinstance(x_train[0], list):
+            x_train = [' '.join(q) for q in x_train]
+
+        self.vectorizer.fit(x_train)
 
 
     def save(self) -> None:
-        logger.info("Saving tfidf_vectorizer to {}".format(self.save_path))
+        logger.info("Saving tfidf_vectorizer to {}".format(expand_path(self.save_path)))
         save_pickle(self.vectorizer, expand_path(self.save_path))
 
 
     def load(self) -> None:
-        logger.info("Loading tfidf_vectorizer from {}".format(self.load_path))
+        logger.info("Loading tfidf_vectorizer from {}".format(expand_path(self.load_path)))
         self.vectorizer = load_pickle(expand_path(self.load_path))

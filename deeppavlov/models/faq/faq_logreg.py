@@ -31,9 +31,11 @@ logger = get_logger(__name__)
 @register("faq_logreg_model")
 class FaqLogregModel(Estimator, Serializable):
 
-    def __init__(self, save_path: str = None, load_path: str = None, **kwargs) -> None:
+    def __init__(self, C=1, penalty='l2', save_path: str = None, load_path: str = None, **kwargs) -> None:
         self.save_path = save_path
         self.load_path = load_path
+        self.C = C
+        self.penalty = penalty
         if kwargs['mode'] != 'train':
             self.load()
 
@@ -58,7 +60,7 @@ class FaqLogregModel(Estimator, Serializable):
         else:
             raise ValueError("Train vectors can't be empty")
 
-        self.logreg = LogisticRegression()
+        self.logreg = LogisticRegression(C=self.C, penalty=self.penalty)
         self.logreg.fit(x_train_features, list(y_train))
 
 

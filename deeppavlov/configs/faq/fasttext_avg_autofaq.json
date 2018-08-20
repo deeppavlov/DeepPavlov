@@ -33,8 +33,8 @@
         "name": "faq_cos_model",
         "in": "question_vector",
         "fit_on": ["question_vector", "y"],
-        "save_path": "autofaq/faq_model.pkl",
-        "load_path": "autofaq/faq_model.pkl",
+        "save_path": "autofaq/faq_fasttext_cos_model.pkl",
+        "load_path": "autofaq/faq_fasttext_cos_model.pkl",
         "out": ["answer", "score"]
       }
     ],
@@ -48,11 +48,11 @@
   "metadata": {
     "download": [
       {
-        "url": "http://lnsigo.mipt.ru/export/faq/pretrained/faq_model.pkl",
+        "url": "http://files.deeppavlov.ai/faq/pretrained/faq_fasttext_cos_model.pkl",
         "subdir": "autofaq"
       },
       {
-        "url": "http://lnsigo.mipt.ru/export/embeddings/lenta_lower_100.bin",
+        "url": "http://files.deeppavlov.ai/embeddings/lenta_lower_100.bin",
         "subdir": "embeddings"
       }
     ]
