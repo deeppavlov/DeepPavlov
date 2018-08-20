@@ -13,13 +13,13 @@ This is implementation of FAQ component which helps to classify incoming questio
 Config
 ======
 
-As usual, config consists of main parts:
+As usual, config consists of:
 
 -  **dataset_reader**
 -  **dataset_iterator**
 -  **chainer**
 
-You can use you own dataset_reader, dataset_iterator for you speficic data.
+You can use you own dataset_reader, dataset_iterator for speficic data.
 Let's consider chainer in more details.
 
 Config Structure
@@ -43,6 +43,7 @@ Vectorizers
 Vectorizers produce numeric vectors of input sentences
 
 -  **tfidf_vectorizer** - TF-IDF vectorizer
+
    -  **in** - input data: question
    -  **fit_on** - train data:   token lemmas of question
    -  **is_pretrained** - do you use pretrained model? If so there is no need to train vectorizer
@@ -51,6 +52,7 @@ Vectorizers produce numeric vectors of input sentences
    -  **out** - output data: vectorized sentence
 
 -  **sentence2vector_v2w_tfidf** - Weighted sum of word embeddings from sentence
+
    -  **in** - input data: question
    -  **fit_on** - train data: [token lemmas of question, word embeddings]
    -  **save_path** - path where to save model
@@ -101,7 +103,7 @@ To train your own model by running command `train`, for example:
 .. code:: bash
 
     cd deeppavlov/
-    python deep.py train deeppavlov/configs/faq/tfidf_autofaq.json
+    python deep.py train configs/faq/tfidf_autofaq.json
 
 
 Interacting
@@ -112,7 +114,7 @@ After model has trained, you can use it for inference: model will return answers
 .. code:: bash
 
     cd deeppavlov/
-    python deep.py interact deeppavlov/configs/faq/tfidf_autofaq.json -d
+    python deep.py interact configs/faq/tfidf_autofaq.json -d
 
 
 Inference example:
