@@ -42,12 +42,12 @@
         "out": ["x"]
       },
       {
-        "id": "tfidf",
-        "name": "tfidf_vectorizer",
+        "id": "count",
+        "name": "count_vectorizer",
         "in": "x",
         "fit_on": ["x"],
-        "save_path": "intents/vectorizer_pretrained_tfidf.pkl",
-        "load_path": "intents/vectorizer_pretrained_tfidf.pkl",
+        "save_path": "intents/vectorizer_pretrained_count.pkl",
+        "load_path": "intents/vectorizer_pretrained_count.pkl",
         "out": "x_vec"
       },
       {
@@ -60,10 +60,10 @@
         "out": [
           "y_labels"
         ],
-        "name": "logistic_regression",
+        "name": "random_forest",
         "main": true,
-        "save_path": "intents/log_reg.pkl",
-        "load_path": "intents/log_reg.pkl"
+        "save_path": "intents/rf.pkl",
+        "load_path": "intents/rf.pkl"
       }
     ],
     "out": [

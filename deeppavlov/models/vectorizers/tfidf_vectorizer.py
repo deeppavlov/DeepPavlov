@@ -18,6 +18,7 @@ from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import CountVectorizer
 from deeppavlov.core.common.file import save_pickle
 from deeppavlov.core.common.file import load_pickle
 from deeppavlov.core.commands.utils import expand_path
@@ -38,6 +39,37 @@ class TfIdfVectorizer(Estimator, Serializable):
             self.load()
         else:
             self.vectorizer = TfidfVectorizer()
+
+    def __call__(self, questions: List[str]):
+        q_vects = self.vectorizer.transform([' '.join(q) for q in questions])
+        # q_vects = self.vectorizer.transform(questions)
+        return q_vects
+
+    def fit(self, x_train: List[str]) -> None:
+        self.vectorizer.fit([' '.join(x) for x in x_train])
+        # self.vectorizer.fit(x_train)
+
+    def save(self) -> None:
+        logger.info("Saving tfidf_vectorizer to {}".format(self.save_path))
+        save_pickle(self.vectorizer, expand_path(self.save_path))
+
+    def load(self) -> None:
+        logger.info("Loading tfidf_vectorizer from {}".format(self.load_path))
+        self.vectorizer = load_pickle(expand_path(self.load_path))
+
+
+@register('count_vectorizer')
+class SkcountVectorizer(Estimator, Serializable):
+
+    def __init__(self, pre_trained_vectorizer: str = None, save_path: str = None, load_path: str = None, **kwargs) -> None:
+        self.pre_trained_vectorizer = pre_trained_vectorizer
+        self.save_path = save_path
+        self.load_path = load_path
+
+        if kwargs['mode'] != 'train':
+            self.load()
+        else:
+            self.vectorizer = CountVectorizer()
 
     def __call__(self, questions: List[str]):
         q_vects = self.vectorizer.transform([' '.join(q) for q in questions])
