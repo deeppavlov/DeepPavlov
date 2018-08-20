@@ -43,7 +43,7 @@
         "network_parameters": {
           "load_path": "gobot_dstc2/model",
           "save_path": "gobot_dstc2/model",
-          "learning_rate": 0.004,
+          "learning_rate": 0.005,
           "dropout_rate": 0.85,
           "l2_reg_coef": 7e-4,
           "hidden_size": 128,
@@ -53,7 +53,7 @@
           "config_path": "../deeppavlov/configs/ner/slotfill_dstc2.json"
         },
         "intent_classifier": {
-          "config_path": "../deeppavlov/configs/intents/intents_dstc2_big.json"
+          "config_path": "../deeppavlov/configs/classifiers/intents_dstc2_big.json"
         },
         "embedder": null,
         "bow_embedder": {
@@ -95,7 +95,7 @@
     },
     "download": [
       "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_v4.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_v5.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/datasets/dstc2_v2.tar.gz",
         "subdir": "dstc2"

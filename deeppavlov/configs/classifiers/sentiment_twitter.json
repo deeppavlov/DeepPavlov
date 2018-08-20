@@ -1,23 +1,13 @@
 {
   "dataset_reader": {
     "name": "basic_classification_reader",
-    "x": "text",
-    "y": "intents",
-    "data_path": "snips",
-    "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv"
+    "x": "Twit",
+    "y": "Class",
+    "data_path": "sentiment_twitter_data"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator",
-    "seed": 42,
-    "field_to_split": "train",
-    "split_fields": [
-      "train",
-      "valid"
-    ],
-    "split_proportions": [
-      0.9,
-      0.1
-    ]
+    "seed": 42
   },
   "chainer": {
     "in": [
@@ -34,24 +24,37 @@
           "y"
         ],
         "level": "token",
-        "save_path": "vocabs/snips_classes.dict",
-        "load_path": "vocabs/snips_classes.dict"
+        "save_path": "vocabs/sentiment_twitter_classes.dict",
+        "load_path": "vocabs/sentiment_twitter_classes.dict"
       },
       {
-        "id": "my_embedder",
-        "name": "fasttext",
-        "save_path": "embeddings/dstc2_fastText_model.bin",
-        "load_path": "embeddings/dstc2_fastText_model.bin",
-        "dim": 100
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_prep"
+        ],
+        "name": "dirty_comments_preprocessor"
       },
       {
+        "in": "x_prep",
+        "out": "x_tok",
         "id": "my_tokenizer",
         "name": "nltk_tokenizer",
         "tokenizer": "wordpunct_tokenize"
       },
       {
+        "in": "x_tok",
+        "out": "x_emb",
+        "id": "my_embedder",
+        "name": "fasttext",
+        "save_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "load_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "dim": 300
+      },
+      {
         "in": [
-          "x"
+          "x_emb"
         ],
         "in_y": [
           "y"
@@ -62,10 +65,10 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "intents/intent_cnn_snips_bistlm_cnn",
-        "load_path": "intents/intent_cnn_snips_bilstm_cnn",
+        "save_path": "classifiers/sentiment_twitter_v1",
+        "load_path": "classifiers/sentiment_twitter_v1",
+        "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
-        "units_lstm": 64,
         "kernel_sizes_cnn": [
           1,
           2,
@@ -77,16 +80,13 @@
         "lear_rate": 0.01,
         "lear_rate_decay": 0.1,
         "loss": "binary_crossentropy",
-        "text_size": 15,
-        "coef_reg_cnn": 1e-4,
-        "coef_reg_lstm": 1e-4,
-        "coef_reg_den": 1e-4,
+        "text_size": 100,
+        "last_layer_activation": "softmax",
+        "coef_reg_cnn": 1e-3,
+        "coef_reg_den": 1e-2,
         "dropout_rate": 0.5,
-        "rec_dropout_rate": 0.5,
         "dense_size": 100,
-        "model_name": "bilstm_cnn_model",
-        "embedder": "#my_embedder",
-        "tokenizer": "#my_tokenizer"
+        "model_name": "cnn_model"
       }
     ],
     "out": [
@@ -95,19 +95,19 @@
     ]
   },
   "train": {
-    "epochs": 1,
+    "epochs": 100,
     "batch_size": 64,
     "metrics": [
-      "classification_accuracy",
+      "classification_roc_auc",
       "classification_f1",
-      "classification_roc_auc"
+      "classification_accuracy"
     ],
     "validation_patience": 5,
-    "val_every_n_epochs": 5,
+    "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
     "show_examples": false,
     "validate_best": true,
-    "test_best": false
+    "test_best": true
   },
   "metadata": {
     "requirements": [
@@ -115,17 +115,15 @@
       "../dp_requirements/fasttext.txt"
     ],
     "labels": {
-      "telegram_utils": "IntentModel"
+      "telegram_utils": "IntentModel",
+      "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/intents.tar.gz",
       "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
+      "http://files.deeppavlov.ai/datasets/sentiment_twitter_data.tar.gz",
       {
-        "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
-        "subdir": "snips"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/dstc2_fastText_model.bin",
+        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
         "subdir": "embeddings"
       }
     ]

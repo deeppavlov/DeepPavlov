@@ -99,8 +99,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         Returns:
             compiled model with given network and learning parameters
         """
-        log.info("[initializing `{}` from scratch]".format(self.__class__.__name__))
-        print(model_name)
+        log.info(f'[initializing `{self.__class__.__name__}` from scratch as {model_name}]')
         model_func = getattr(self, model_name, None)
         if callable(model_func):
             model = model_func(**self.opt)
