@@ -26,6 +26,7 @@ from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.commands.infer import interact_model, predict_on_stream
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.download import deep_download
+from deeppavlov.core.common.cross_validation import calc_cv_score
 from utils.telegram_utils.telegram_ui import interact_model_by_telegram
 from utils.server_utils.server import start_model_server
 from utils.pip_wrapper import install_from_config
@@ -37,12 +38,13 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
                     choices={'train', 'evaluate', 'interact', 'predict', 'interactbot', 'riseapi', 'download',
-                             'install'})
+                             'install', 'crossvalidate'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 parser.add_argument("-t", "--token", help="telegram bot token", type=str)
 parser.add_argument("-b", "--batch-size", dest="batch_size", default=1, help="inference batch size", type=int)
 parser.add_argument("-f", "--input-file", dest="file_path", default=None, help="Path to the input file", type=str)
 parser.add_argument("-d", "--download", action="store_true", help="download model components")
+parser.add_argument("--folds", help="number of folds", type=str, default='5')
 
 
 def find_config(pipeline_config_path: str):
@@ -79,6 +81,18 @@ def main():
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'install':
         install_from_config(pipeline_config_path)
+    elif args.mode == 'crossvalidate':
+        is_loo = False
+        n_folds = None
+        if args.folds == 'loo':
+            is_loo = True
+        elif args.folds is None:
+            n_folds = None
+        elif args.folds.isdigit():
+            n_folds = int(args.folds)
+        else:
+            raise NotImplementedError('Not implemented this type of CV')
+        calc_cv_score(pipeline_config_path=pipeline_config_path, n_folds=n_folds, is_loo=is_loo)
 
 
 if __name__ == "__main__":
