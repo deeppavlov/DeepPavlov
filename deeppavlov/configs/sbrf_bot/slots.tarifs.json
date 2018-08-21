@@ -1,0 +1,5 @@
+{
+  "product": {"LIGHT_START": ["легкий старт"], "MINIMAL_PLUS": ["минимальный +"],"BASIS_PLUS": ["базис +"],"BIG_OPPORTUNITES": ["большие возможности"]},
+  "service": {"OPEN_ACCOUNT": ["откпрытие счета"], "TRANSFER_FUNDS": ["перевод средств"], "ISSUE_SERTIFICATE": ["оформление справки"]},
+  "intent": {"PRODUCT": ["продукт"], "SERVICE":["услуга"]}
+}

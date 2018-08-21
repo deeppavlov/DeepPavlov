@@ -1,0 +1,63 @@
+{
+  "dataset_reader": {
+    "name": "faq_reader",
+    "x_col_name": "Question",
+    "y_col_name": "Answer",
+    "data_url": "ftp://share.ipavlov.mipt.ru/datasets/faq/faq.csv"
+  },
+  "dataset_iterator": {
+    "name": "data_learning_iterator"
+  },
+
+  "chainer": {
+    "in": "q",
+    "pipe": [
+      {
+        "name": "ru_tokenizer",
+        "in": "q",
+        "lemmas": true,
+        "out": "q_token_lemmas"
+      },
+      {
+        "id": "vectorizer",
+        "name": "tfidf_vectorizer",
+        "in": "q_token_lemmas",
+        "is_pretrained": true,
+        "load_path": "autofaq/faq_vectorizer_tfidf.pkl",
+        "out": "q_vect"
+      },
+      {
+        "name": "faq_logreg_model",
+        "in": "q_vect",
+        "fit_on": ["q_vect", "y"],
+        "C": 100,
+        "penalty": "l2",
+        "save_path": "autofaq/faq_tfidf_logreg_model.pkl",
+        "load_path": "autofaq/faq_tfidf_logreg_model.pkl",
+        "out": ["answer", "score"]
+      }
+    ],
+    "out": ["answer", "score"]
+  },
+
+  "train": {
+    "validate_best": false,
+    "test_best": false
+ },
+  "metadata": {
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/faq/faq_tfidf_logreg_model.pkl",
+        "subdir": "autofaq"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/faq/faq_vectorizer_tfidf.pkl",
+        "subdir": "autofaq"
+      }
+    ]
+  }
+
+}
+
+
+

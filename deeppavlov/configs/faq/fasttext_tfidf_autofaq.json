@@ -1,0 +1,71 @@
+{
+  "dataset_reader": {
+    "name": "faq_reader",
+    "x_col_name": "Question",
+    "y_col_name": "Answer",
+    "data_url": "ftp://share.ipavlov.mipt.ru/datasets/faq/faq.csv"
+  },
+  "dataset_iterator": {
+    "name": "data_learning_iterator"
+  },
+
+  "chainer": {
+    "in": "question",
+    "pipe": [
+      {
+        "name": "ru_tokenizer",
+        "in": "question",
+        "lemmas": true,
+        "out": "q_token_lemmas"
+      },
+      {
+        "name": "fasttext",
+        "in": "q_token_lemmas",
+        "load_path": "embeddings/lenta_lower_100.bin",
+        "out": "tokens_fasttext_vectors"
+      },
+      {
+        "name": "sentence2vector_v2w_tfidf",
+        "in": ["q_token_lemmas", "tokens_fasttext_vectors"],
+        "fit_on": ["q_token_lemmas"],
+        "save_path": "autofaq/faq_sentence2vector_v2w_tfidf.pkl",
+        "load_path": "autofaq/faq_sentence2vector_v2w_tfidf.pkl",
+        "out": "question_vector"
+      },
+      {
+        "name": "faq_cos_model",
+        "in": "question_vector",
+        "fit_on": ["question_vector", "y"],
+        "save_path": "autofaq/faq_fasttext_cos_model.pkl",
+        "load_path": "autofaq/faq_fasttext_cos_model.pkl",
+        "out": ["answer", "score"]
+      }
+    ],
+    "out": ["answer", "score"]
+  },
+
+  "train": {
+    "validate_best": false,
+    "test_best": false
+ },
+  "metadata": {
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/faq/faq_fasttext_cos_model.pkl",
+        "subdir": "autofaq"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/faq/faq_sentence2vector_v2w_tfidf.pkl",
+        "subdir": "autofaq"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/lenta_lower_100.bin",
+        "subdir": "embeddings"
+      }
+    ]
+  }
+
+}
+
+
+
