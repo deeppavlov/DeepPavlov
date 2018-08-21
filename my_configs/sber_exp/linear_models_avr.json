@@ -54,7 +54,7 @@
         "id": "tf-idf",
         "save_path": "vocabs/tf-idf.pkl",
         "load_path": "vocabs/tf-idf.pkl"
-      }
+        }
       ],
       [
         {
@@ -79,6 +79,7 @@
           "in": ["x_tok"],
           "out": ["x_vec"],
           "name": "elmo",
+          "id": "my_embedder",
           "spec": [
             "embeddings/sber_erp_unlem_epoches_n_1",
             "embeddings/sber_erp_unlem_epoches_n_3",

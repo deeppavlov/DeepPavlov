@@ -35,10 +35,13 @@ class AvrEmb(Component):
     def __init__(self, **kwargs):
         self.tokenizer = kwargs.get('tokenizer', None)
         self.vec_ = kwargs.get('vectorizer', None)
-        self.vec = self.vec_.vectorizer
+        if self.vec_ is not None:
+            self.vec = self.vec_.vectorizer
+        else:
+            self.vec = None
 
     @overrides
-    def __call__(self, data: List[Union[list, np.ndarray]], text: List[List[str]], *args, **kwargs) -> List:
+    def __call__(self, data: List[Union[list, np.ndarray]], text: List[List[str]] = None, *args, **kwargs) -> List:
         result = []
         if self.vec is None:
             vec = self.average(data, result)
@@ -49,7 +52,7 @@ class AvrEmb(Component):
     def average(self, data, res):
         for x in data:
             res.append(np.average(np.array(x), axis=0))
-        return self.result
+        return res
 
     def weigh_tfidf(self, data, text, res):
         feature_names = self.vec.get_feature_names()

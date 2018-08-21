@@ -31,6 +31,17 @@
       ],
       [
         {
+          "in": "x",
+          "out": "x_tok"
+          "id": "my_tokenizer",
+          "name": "nltk_tokenizer",
+          "tokenizer": "wordpunct_tokenize"
+        }
+      ],
+      [
+        {
+          "in": ["x_tok"],
+          "out": ["x_vec"],
           "name": "elmo",
           "id": "my_embedder",
           "search": true,
@@ -45,14 +56,7 @@
       ],
       [
         {
-          "id": "my_tokenizer",
-          "name": "nltk_tokenizer",
-          "tokenizer": "wordpunct_tokenize"
-        }
-      ],
-      [
-        {
-          "in": ["x"],
+          "in": ["x_vec"],
           "in_y": ["y"],
           "out": [
             "y_labels",
@@ -74,7 +78,7 @@
           "lear_rate": 0.01,
           "lear_rate_decay": 0.0,
           "loss": "categorical_crossentropy",
-          "text_size": 50,
+          "text_size": 15,
           "coef_reg_cnn": 0.0,
           "coef_reg_den": 0.0,
           "dropout_rate": 0.5,
@@ -85,7 +89,7 @@
         },
         {
           "in": [
-            "x"
+            "x_vec"
           ],
           "in_y": [
             "y"
@@ -106,7 +110,7 @@
           "lear_rate": 0.001,
           "lear_rate_decay": 0.0,
           "loss": "categorical_crossentropy",
-          "text_size": 50,
+          "text_size": 15,
           "coef_reg_lstm": 1e-4,
           "coef_reg_den": 0.0,
           "dropout_rate": 0.3,
@@ -124,7 +128,7 @@
   },
   "train": {
     "epochs": 50,
-    "batch_size": 256,
+    "batch_size": 32,
     "metrics": [
       "classification_accuracy",
       "classification_f1",
