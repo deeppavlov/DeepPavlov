@@ -1,0 +1,159 @@
+{
+  "dataset_reader": {
+    "name": "basic_classification_reader",
+    "x": "text",
+    "y": "target",
+    "data_path": "new_sber"
+  },
+  "dataset_iterator": {
+    "name": "basic_classification_iterator",
+    "seed": 42,
+    "field_to_split": "train",
+    "split_fields": [
+      "train",
+      "valid"
+    ],
+    "split_proportions": [
+      0.9,
+      0.1
+    ]
+  },
+  "chainer": {
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
+    "search": true,
+    "pipe": [
+      [
+        {
+        "id": "classes_vocab",
+        "name": "default_vocab",
+        "fit_on": [
+          "y"
+        ],
+        "level": "token",
+        "save_path": "vocabs/sber_classes.dict",
+        "load_path": "vocabs/sber_classes.dict"
+      }
+      ],
+      [
+        {
+        "in": ["x"],
+        "name": "ru_tokenizer",
+        "id": "ru_tok",
+        "out": ["x_tok"]
+      }
+      ],
+      [
+        {
+        "fit_on": ["x_tok"],
+        "name": "tfidf_vectorizer",
+        "id": "tf-idf",
+        "save_path": "vocabs/tf-idf.pkl",
+        "load_path": "vocabs/tf-idf.pkl"
+      }
+      ],
+      [
+        {
+          "in": ["x_tok"],
+          "id": "my_embedder",
+          "name": "fasttext",
+          "save_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.bin",
+          "load_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.bin",
+          "dim": 300,
+          "out": "x_vec"
+        },
+        {
+          "in": ["x_tok"],
+          "id": "my_embedder",
+          "name": "glove",
+          "save_path": "embeddings/new_sber_w2v.txt",
+          "load_path": "embeddings/new_sber_w2v.txt",
+          "dim": 100,
+          "out": "x_vec"
+        },
+        {
+          "in": ["x_tok"],
+          "out": ["x_vec"],
+          "name": "elmo",
+          "spec": [
+            "embeddings/sber_erp_unlem_epoches_n_1",
+            "embeddings/sber_erp_unlem_epoches_n_3",
+            "embeddings/sber_erp_unlem_epoches_n_5",
+            "embeddings/sber_erp_unlem_epoches_n_7",
+            "embeddings/sber_erp_unlem_epoches_n_8"
+          ]
+        }
+      ],
+      [
+        {
+          "in": ["x_vec", "x"],
+          "out": "avr_x",
+          "name": "avr_emb",
+          "tokenizer": "#ru_tok",
+          "vectorizer": "#tf-idf",
+          "id": "tf-idf_average"
+        },
+        {
+          "in": ["x_vec"],
+          "out": "avr_x",
+          "name": "avr_emb",
+          "id": "tf-idf_average"
+        }
+      ],
+      [
+        {
+          "in": ["avr_x"],
+          "fit_on": ["avr_x", "y"],
+          "out": ["y_labels"],
+          "name": "random_forest",
+          "main": true,
+          "save_path": "new_sber/checkpoints/rf.pkl",
+          "load_path": "new_sber/checkpoints/rf.pkl"
+        },
+        {
+          "in": ["avr_x"],
+          "fit_on": ["avr_x", "y"],
+          "out": ["y_labels"],
+          "name": "support_vector_classifier",
+          "main": true,
+          "save_path": "new_sber/checkpoints/svm.pkl",
+          "load_path": "new_sber/checkpoints/svm.pkl"
+        },
+        {
+          "in": ["avr_x"],
+          "fit_on": ["avr_x", "y"],
+          "out": ["y_labels"],
+          "name": "logistic_regression",
+          "main": true,
+          "save_path": "new_sber/checkpoints/lr.pkl",
+          "load_path": "new_sber/checkpoints/lr.pkl"
+        }
+      ]
+    ],
+    "out": ["y_labels"]
+  },
+  "train": {
+    "metrics": [
+      "classification_accuracy",
+      "classification_f1",
+      "simple_f1_macro",
+      "simple_f1_weighted"
+    ],
+    "validation_patience": 5,
+    "val_every_n_epochs": 5,
+    "log_every_n_epochs": 5,
+    "show_examples": false,
+    "validate_best": true,
+    "test_best": true
+  },
+  "metadata": {
+    "requirements": [
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/fasttext.txt"
+    ]
+  }
+}
