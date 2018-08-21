@@ -25,3 +25,8 @@ Ranking classes.
     :members:
 
     .. automethod:: __call__
+
+.. autoclass:: deeppavlov.models.ranking.logit_ranker.LogitRanker
+    :members:
+
+    .. automethod:: __call__

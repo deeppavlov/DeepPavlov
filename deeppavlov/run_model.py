@@ -19,8 +19,8 @@ from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.commands.infer import interact_model
 
 
-# PIPELINE_CONFIG_PATH = 'configs/intents/intents_dstc2.json'
-# PIPELINE_CONFIG_PATH = 'configs/intents/intents_snips.json'
+# PIPELINE_CONFIG_PATH = 'configs/classifiers/intents_dstc2.json'
+# PIPELINE_CONFIG_PATH = 'configs/classifiers/intents_snips.json'
 # PIPELINE_CONFIG_PATH = 'configs/ner/ner_dstc2.json'
 # PIPELINE_CONFIG_PATH = 'configs/ner/ner_rus.json'
 # PIPELINE_CONFIG_PATH = 'configs/ner/slotfill_dstc2.json'

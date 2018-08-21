@@ -81,7 +81,7 @@
         "load_path": "squad_model/model",
         "in": ["context_tokens_idxs", "context_chars_idxs", "question_tokens_idxs", "question_chars_idxs"],
         "in_y": ["ans_start", "ans_end"],
-        "out": ["ans_start_predicted", "ans_end_predicted"]
+        "out": ["ans_start_predicted", "ans_end_predicted", "logits"]
       },
       {
         "name": "squad_ans_postprocessor",
@@ -90,7 +90,7 @@
         "out": ["ans_predicted", "ans_start_predicted", "ans_end_predicted"]
       }
     ],
-    "out": ["ans_predicted", "ans_start_predicted"]
+    "out": ["ans_predicted", "ans_start_predicted", "logits"]
   },
   "train": {
     "show_examples": false,

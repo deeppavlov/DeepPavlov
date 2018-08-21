@@ -3,12 +3,8 @@
     "in": [
       "question_raw"
     ],
-    "in_y": [
-      "ans_raw",
-      "ans_raw_start"
-    ],
     "out": [
-      "ans_predicted"
+      "best_answer"
     ],
     "pipe": [
       {
@@ -49,18 +45,41 @@
           "context_raw"
         ],
         "data_dir": "odqa",
+        "join_docs": false,
         "shuffle": false,
         "data_url": "http://files.deeppavlov.ai/datasets/wikipedia/wiki_test.db"
       },
       {
-        "config_path": "../deeppavlov/configs/squad/squad.json",
+        "name": "document_chunker",
         "in": [
-          "context_raw",
-          "question_raw"
+          "context_raw"
         ],
         "out": [
-          "ans_predicted",
-          "ans_start_predicted"
+          "chunks"
+        ],
+        "flatten_result": true
+      },
+      {
+        "name": "string_multiplier",
+        "in": [
+          "question_raw",
+          "chunks"
+        ],
+        "out": [
+          "questions"
+        ]
+      },
+      {
+        "name": "logit_ranker",
+        "squad_model": {
+          "config_path": "../deeppavlov/configs/squad/squad.json"
+        },
+        "in": [
+          "chunks",
+          "questions"
+        ],
+        "out": [
+          "best_answer"
         ]
       }
     ]

@@ -66,7 +66,7 @@ Evolution process can be described in the following way:
 -  ``{"evolve_range": [min_value, max_value], "discrete": true}`` -
    discrete values uniformly distributed on the following interval,
 -  ``{"evolve_bool": true}`` - bool values,
--  ``{"evolve_choice": true, "values": [value_0, ..., value_n]}`` -
+-  ``{"evolve_choice": [value_0, ..., value_n]}`` -
    values uniformly taking out of the given values.
 
 -  Choose the main model in the pipe being evolved. Find or add extra
@@ -97,10 +97,10 @@ Example
    ::
 
        cd deeppavlov
-       python deep.py download configs/intents/intents_snips.json
+       python deep.py download configs/classifiers/intents_snips.json
 
 -  To evolve the model run the following command providing corresponding
-   name of the config file (see above):
+   name of the config file (see above) :config:`intents_dstc2.json <evolution/evolve_intents_snips.json>`:
 
    ::
 

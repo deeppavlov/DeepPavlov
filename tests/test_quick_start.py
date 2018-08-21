@@ -60,31 +60,29 @@ PARAMS = {
         ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
-    "intents": {
-        ("intents/intents_dstc2.json", "intents", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_dstc2_big.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+    "classifiers": {
+        ("classifiers/intents_dstc2.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_dstc2_big.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/insults_kaggle.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_twitter.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/topic_ag_news.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
     },
     "snips": {
-        ("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bigru.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_cnn.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_self_add_attention.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_self_mult_attention.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_cnn_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
-    },
-    "sentiment": {
-        ("sentiment/insults_kaggle.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("sentiment/sentiment_twitter.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("sentiment/sentiment_ag_news.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+        ("classifiers/intents_snips.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bigru.json", "classifiers", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_cnn.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_self_add_attention.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_self_mult_attention.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_cnn_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "evolution": {
         ("evolution/evolve_intents_snips.json", "evolution", ('E',)): None
     },
     "sample": {
-        ("intents/intents_sample_csv.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_sample_json.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("classifiers/intents_sample_csv.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_sample_json.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "ner": {
         ("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
