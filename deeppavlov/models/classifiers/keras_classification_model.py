@@ -28,9 +28,6 @@ from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.keras_model import KerasModel
 from deeppavlov.models.classifiers.utils import labels2onehot, proba2labels
-from deeppavlov.models.classifiers.utils import md5_hashsum
-from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
-from deeppavlov.models.tokenizers.nltk_tokenizer import NLTKTokenizer
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.layers.keras_layers import additive_self_attention, multiplicative_self_attention
 
