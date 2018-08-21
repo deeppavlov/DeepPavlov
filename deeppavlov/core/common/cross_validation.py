@@ -26,6 +26,8 @@ from deeppavlov.core.common.file import read_json, save_json
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.commands.train import train_evaluate_model_from_config, get_iterator_from_config, read_data_by_config
 from sklearn.model_selection import KFold
+from deeppavlov.core.common.params_search import ParamsSearch
+from deeppavlov.core.commands.utils import expand_path
 
 PARAM_RANGE_SUFFIX_NAME = '_range'
 SAVE_PATH_ELEMENT_NAME = 'save_path'
@@ -33,30 +35,37 @@ BACKUP_SUFFIX_FILENAME = '_backuped'
 log = get_logger(__name__)
 
 
+def change_savepath_for_model(config):
+    params_helper = ParamsSearch()
 
-# def delete_saved_model(models_paths):
-#     for model_path in models_paths:
-#         path = expand_path(model_path)
-#         if os.path.isfile(path):
-#             os.remove(path)
-#
-# def backup_saved_models(models_paths):
-#     for model_path in models_paths:
-#         path = expand_path(model_path)
-#         if os.path.isfile(path):
-#             os.rename(path, expand_path(model_path+BACKUP_SUFFIX_FILENAME))
-#
-# def restore_saved_models(models_paths):
-#     for model_path in models_paths:
-#         path = expand_path(model_path)
-#         backuped_path = expand_path(model_path+BACKUP_SUFFIX_FILENAME)
-#         if os.path.isfile(backuped_path):
-#             os.rename(backuped_path, path)
+    dirs_for_saved_models=set()
+    for p in params_helper.find_model_path(config, 'save_path'):
+        p.append('save_path')
+        save_path = Path(params_helper.get_value_from_config(config, p))
+        new_save_path = str(save_path.parent.joinpath("cv_tmp").joinpath(save_path.name))
+
+        dir = expand_path(os.path.dirname(new_save_path))
+        dirs_for_saved_models.add(str(dir))
+        os.makedirs(dir, exist_ok=True)
+
+        config = params_helper.insert_value_or_dict_into_config(config, p, new_save_path)
+
+    return config, dirs_for_saved_models
+
+def delete_dir_for_saved_models(dirs_for_saved_models):
+    for dir in dirs_for_saved_models:
+        for root, dirs, files in os.walk(dir):
+            for file in files:
+                os.remove(os.path.join(root, file))
+            for name in dirs:
+                os.rmdir(os.path.join(root, name))
+        os.rmdir(dir)
 
 
-def delete_saved_model(config):
-    # TODO: change model save path
-    pass
+def create_dirs_to_save_models(dirs_for_saved_models):
+    for dir in dirs_for_saved_models:
+        os.makedirs(dir, exist_ok=True)
+
 
 
 def generate_train_valid(data, n_folds=5, is_loo=False):
@@ -93,18 +102,19 @@ def calc_cv_score(config=None, pipeline_config_path=None, data=None, n_folds=5, 
     if data is None:
         data = read_data_by_config(config)
 
-    target_metric = config['train']['metrics'][0]
+    config, dirs_for_saved_models = change_savepath_for_model(config)
 
     all_scores=[]
-
+    target_metric = config['train']['metrics'][0]
     for data_i in generate_train_valid(data, n_folds=n_folds, is_loo=is_loo):
         iterator = get_iterator_from_config(config, data_i)
-        delete_saved_model(config)
+        create_dirs_to_save_models(dirs_for_saved_models)
         score = train_evaluate_model_from_config(config, iterator=iterator)
+        delete_dir_for_saved_models(dirs_for_saved_models)
         all_scores.append(score['valid'][target_metric])
 
     cv_score = np.mean(all_scores)
-    log.info('Cross-validation \"{}\" is: {}'.format(target_metric, cv_score))
+    log.info('Cross-Validation \"{}\" is: {}'.format(target_metric, cv_score))
 
     return cv_score
 
