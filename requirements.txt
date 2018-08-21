@@ -17,3 +17,4 @@ flask==0.12.2
 flasgger==0.6.6
 flask_cors==3.0.3
 rusenttokenize==0.0.4
+spacy==2.0.12
