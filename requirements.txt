@@ -7,7 +7,7 @@ tqdm==4.23.4
 scipy==1.1.0
 h5py==2.8.0
 keras==2.2.0
-scikit-learn==0.19.1
+scikit-learn==0.19.2
 fuzzywuzzy==0.16.0
 pymorphy2==0.8
 pymorphy2-dicts-ru
