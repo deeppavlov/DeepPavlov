@@ -1,29 +1,11 @@
 {
-  "dataset": {
-    "type": "classification",
-    "format": "csv",
-    "sep": ",",
-    "header": 0,
-    "names": [
-      "text",
-      "classes"
-    ],
-    "class_sep": ",",
-    "train": "sample.csv",
-    "data_path": "sample",
-    "x": "text",
-    "y": "classes",
-    "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
-    "seed": 42,
-    "field_to_split": "train",
-    "split_fields": [
-      "train",
-      "valid"
-    ],
-    "split_proportions": [
-      0.9,
-      0.1
-    ]
+  "dataset_reader": {
+    "name": "dstc2_reader",
+    "data_path": "dstc2"
+  },
+  "dataset_iterator": {
+    "name": "dstc2_intents_iterator",
+    "seed": 42
   },
   "chainer": {
     "in": [
@@ -40,10 +22,19 @@
           "y"
         ],
         "level": "token",
-        "save_path": "vocabs/snips_classes.dict",
-        "load_path": "vocabs/snips_classes.dict"
+        "save_path": "vocabs/dstc2_classes.dict",
+        "load_path": "vocabs/dstc2_classes.dict"
       },
       {
+        "in": "x",
+        "out": "x_tok",
+        "id": "my_tokenizer",
+        "name": "nltk_tokenizer",
+        "tokenizer": "wordpunct_tokenize"
+      },
+      {
+        "in": "x_tok",
+        "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
         "save_path": "embeddings/dstc2_fastText_model.bin",
@@ -51,13 +42,8 @@
         "dim": 100
       },
       {
-        "id": "my_tokenizer",
-        "name": "nltk_tokenizer",
-        "tokenizer": "wordpunct_tokenize"
-      },
-      {
         "in": [
-          "x"
+          "x_emb"
         ],
         "in_y": [
           "y"
@@ -68,18 +54,19 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "intents/intents_snips_v4",
-        "load_path": "intents/intents_snips_v4",
+        "save_path": "classifiers/intents_dstc2_v4",
+        "load_path": "classifiers/intents_dstc2_v4",
+        "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "kernel_sizes_cnn": [
           1,
           2,
           3
         ],
-        "filters_cnn": 256,
+        "filters_cnn": 512,
         "confident_threshold": 0.5,
         "optimizer": "Adam",
-        "lear_rate": 0.01,
+        "lear_rate": 0.1,
         "lear_rate_decay": 0.1,
         "loss": "binary_crossentropy",
         "text_size": 15,
@@ -87,9 +74,7 @@
         "coef_reg_den": 1e-4,
         "dropout_rate": 0.5,
         "dense_size": 100,
-        "model_name": "cnn_model",
-        "embedder": "#my_embedder",
-        "tokenizer": "#my_tokenizer"
+        "model_name": "cnn_model"
       }
     ],
     "out": [
@@ -98,7 +83,7 @@
     ]
   },
   "train": {
-    "epochs": 100,
+    "epochs": 1000,
     "batch_size": 64,
     "metrics": [
       "classification_accuracy",
@@ -106,11 +91,9 @@
       "classification_roc_auc"
     ],
     "validation_patience": 5,
-    "val_every_n_epochs": 1,
-    "log_every_n_epochs": 1,
-    "show_examples": false,
-    "validate_best": true,
-    "test_best": false
+    "val_every_n_epochs": 5,
+    "log_every_n_batches": 100,
+    "show_examples": false
   },
   "metadata": {
     "requirements": [
@@ -122,12 +105,8 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/intents.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
       "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
-      {
-        "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
-        "subdir": "sample"
-      },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/dstc2_fastText_model.bin",
         "subdir": "embeddings"
