@@ -95,8 +95,6 @@
   },
   "train": {
     "metrics": [
-      "classification_accuracy",
-      "classification_f1",
       "simple_f1_macro",
       "simple_f1_weighted"
     ],

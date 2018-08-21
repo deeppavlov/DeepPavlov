@@ -8,7 +8,7 @@ import time
 from copy import deepcopy
 from os.path import join, isdir
 from os import mkdir
-matplotlib.use('agg')
+matplotlib.use('Agg')
 
 
 def normal_time(z):
