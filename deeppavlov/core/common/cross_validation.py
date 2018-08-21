@@ -29,9 +29,8 @@ from sklearn.model_selection import KFold
 from deeppavlov.core.common.params_search import ParamsSearch
 from deeppavlov.core.commands.utils import expand_path
 
-PARAM_RANGE_SUFFIX_NAME = '_range'
 SAVE_PATH_ELEMENT_NAME = 'save_path'
-BACKUP_SUFFIX_FILENAME = '_backuped'
+TEMP_DIR_FOR_CV = 'cv_tmp'
 log = get_logger(__name__)
 
 
@@ -39,10 +38,10 @@ def change_savepath_for_model(config):
     params_helper = ParamsSearch()
 
     dirs_for_saved_models=set()
-    for p in params_helper.find_model_path(config, 'save_path'):
-        p.append('save_path')
+    for p in params_helper.find_model_path(config, SAVE_PATH_ELEMENT_NAME):
+        p.append(SAVE_PATH_ELEMENT_NAME)
         save_path = Path(params_helper.get_value_from_config(config, p))
-        new_save_path = str(save_path.parent.joinpath("cv_tmp").joinpath(save_path.name))
+        new_save_path = str(save_path.parent.joinpath(TEMP_DIR_FOR_CV).joinpath(save_path.name))
 
         dir = expand_path(os.path.dirname(new_save_path))
         dirs_for_saved_models.add(str(dir))
@@ -65,7 +64,6 @@ def delete_dir_for_saved_models(dirs_for_saved_models):
 def create_dirs_to_save_models(dirs_for_saved_models):
     for dir in dirs_for_saved_models:
         os.makedirs(dir, exist_ok=True)
-
 
 
 def generate_train_valid(data, n_folds=5, is_loo=False):

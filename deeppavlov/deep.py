@@ -44,7 +44,7 @@ parser.add_argument("-t", "--token", help="telegram bot token", type=str)
 parser.add_argument("-b", "--batch-size", dest="batch_size", default=1, help="inference batch size", type=int)
 parser.add_argument("-f", "--input-file", dest="file_path", default=None, help="Path to the input file", type=str)
 parser.add_argument("-d", "--download", action="store_true", help="download model components")
-parser.add_argument("--folds", help="number of folds", type=str, default='5')
+parser.add_argument("--folds", help="number of folds", type=int, default=5)
 
 
 def find_config(pipeline_config_path: str):
@@ -82,17 +82,12 @@ def main():
     elif args.mode == 'install':
         install_from_config(pipeline_config_path)
     elif args.mode == 'crossvalidate':
-        is_loo = False
-        n_folds = None
-        if args.folds == 'loo':
-            is_loo = True
-        elif args.folds is None:
-            n_folds = None
-        elif args.folds.isdigit():
-            n_folds = int(args.folds)
+        if args.folds < 2:
+            log.error('Minimum number of Folds is 2')
         else:
-            raise NotImplementedError('Not implemented this type of CV')
-        calc_cv_score(pipeline_config_path=pipeline_config_path, n_folds=n_folds, is_loo=is_loo)
+            n_folds = args.folds
+            score = calc_cv_score(pipeline_config_path=pipeline_config_path, n_folds=n_folds, is_loo=False)
+            print('Cross-Validation score: {}'.format(score))
 
 
 if __name__ == "__main__":
