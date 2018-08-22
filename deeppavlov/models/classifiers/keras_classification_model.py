@@ -34,6 +34,7 @@ from deeppavlov.models.tokenizers.nltk_tokenizer import NLTKTokenizer
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.layers.keras_layers import additive_self_attention, multiplicative_self_attention
 
+from keras import backend as K
 
 log = get_logger(__name__)
 
@@ -47,6 +48,7 @@ class KerasClassificationModel(KerasModel):
         text_size: maximal length of text in tokens (words),
                 longer texts are cutted,
                 shorter ones are padded by zeros (pre-padding)
+        embedding_size: embedding_size from embedder in pipeline
         model_name: particular method of this class to initialize model configuration
         optimizer: function name from keras.optimizers
         loss: function name from keras.losses.
@@ -62,8 +64,6 @@ class KerasClassificationModel(KerasModel):
                 If `last_layer_activation` is `softmax` (not multi-label classification), assign to 1.
         classes: list of classes names presented in the dataset
                 (in config it is determined as keys of vocab over `y`)
-        embedder: embedder
-        tokenizer: tokenizer
 
     Attributes:
         opt: dictionary with all model parameters
@@ -79,7 +79,7 @@ class KerasClassificationModel(KerasModel):
         optimizer: keras.optimizers instance
     """
 
-    def __init__(self, text_size: int,
+    def __init__(self, text_size: int, embedding_size: int,
                  model_name: str, optimizer: str = "Adam", loss: str = "binary_crossentropy",
                  lear_rate: float = 0.01, lear_rate_decay: float = 0.,
                  last_layer_activation="sigmoid",
@@ -89,13 +89,11 @@ class KerasClassificationModel(KerasModel):
         Initialize and train vocabularies, initializes embedder, tokenizer, and then initialize model using parameters
         from opt dictionary (from config), if model is being initialized from saved.
         """
-        super().__init__(text_size=text_size, model_name=model_name,
+        super().__init__(text_size=text_size, embedding_size=embedding_size, model_name=model_name,
                          optimizer=optimizer, loss=loss,
                          lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,
                          last_layer_activation=last_layer_activation, confident_threshold=confident_threshold,
                          **kwargs)  # self.opt = copy(kwargs) initialized in here
-        self.tokenizer = self.opt.pop('tokenizer')
-        self.fasttext_model = self.opt.pop('embedder')
 
         self.classes = list(np.sort(np.array(list(self.opt.get('classes')))))
         self.opt['classes'] = self.classes
@@ -103,10 +101,7 @@ class KerasClassificationModel(KerasModel):
         if self.n_classes == 0:
             ConfigError("Please, provide vocabulary with considered intents.")
 
-        self.opt['embedding_size'] = self.fasttext_model.dim
-
-        if self.fasttext_model.load_path:
-            current_fasttext_md5 = md5_hashsum([self.fasttext_model.load_path])
+        self.opt['embedding_size'] = embedding_size
 
         # Parameters required to init model
         params = {"model_name": self.opt.get('model_name'),
@@ -115,28 +110,15 @@ class KerasClassificationModel(KerasModel):
                   "lear_rate": self.opt.get('lear_rate'),
                   "lear_rate_decay": self.opt.get('lear_rate_decay')}
 
-        self.model: Model = self.load(**params)
-        self._change_not_fixed_params(text_size=text_size, model_name=model_name,
+        self.model = self.load(**params)
+        self._change_not_fixed_params(text_size=text_size, embedding_size=embedding_size, model_name=model_name,
                                       optimizer=optimizer, loss=loss,
                                       lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,
                                       last_layer_activation=last_layer_activation,
                                       confident_threshold=confident_threshold,
                                       **kwargs)
 
-        # Check if md5 hash sum of current loaded fasttext model
-        # is equal to saved
-        try:
-            self.opt['fasttext_md5']
-        except KeyError:
-            self.opt['fasttext_md5'] = current_fasttext_md5
-        else:
-            if self.opt['fasttext_md5'] != current_fasttext_md5:
-                raise ConfigError(
-                    "Given fasttext model does NOT match fasttext model used previously to train loaded model")
-
-        summary = ['Model was successfully initialized!', 'Model summary:']
-        self.model.summary(print_fn=summary.append)
-        log.info('\n'.join(summary))
+        print("Model was successfully initialized!\nModel summary:\n{}".format(self.model.summary()))
 
     def _change_not_fixed_params(self, **kwargs) -> None:
         """
@@ -167,9 +149,9 @@ class KerasClassificationModel(KerasModel):
                 self.opt[param] = kwargs.get(param)
         return
 
-    def texts2vec(self, sentences: List[List[str]]) -> np.ndarray:
+    def pad_texts(self, sentences: List[List[np.ndarray]]) -> np.ndarray:
         """
-        Convert texts to vector representations using embedder and padding up to self.opt["text_size"] tokens
+        Cut and pad tokenized texts to self.opt["text_size"] tokens
 
         Args:
             sentences: list of lists of tokens
@@ -178,60 +160,56 @@ class KerasClassificationModel(KerasModel):
             array of embedded texts
         """
         pad = np.zeros(self.opt['embedding_size'])
-        embeddings_batch = self.fasttext_model([sen[:self.opt['text_size']] for sen in sentences])
-        embeddings_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + tokens for tokens in embeddings_batch]
+        cutted_batch = [sen[:self.opt['text_size']] for sen in sentences]
+        cutted_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + list(tokens) for tokens in cutted_batch]
+        return np.asarray(cutted_batch)
 
-        embeddings_batch = np.asarray(embeddings_batch)
-        return embeddings_batch
-
-    def train_on_batch(self, texts: List[str], labels: list) -> [float, List[float]]:
+    def train_on_batch(self, texts: List[List[np.ndarray]], labels: list) -> [float, List[float]]:
         """
         Train the model on the given batch
 
         Args:
-            texts: list of texts
+            texts: list of tokenized text samples
             labels: list of labels
 
         Returns:
             metrics values on the given batch
         """
-        if isinstance(texts[0], str):
-            texts = self.tokenizer(list(texts))
-        features = self.texts2vec(texts)
+        K.set_session(self.sess)
+        features = self.pad_texts(texts)
         onehot_labels = labels2onehot(labels, classes=self.classes)
         metrics_values = self.model.train_on_batch(features, onehot_labels)
         return metrics_values
 
-    def infer_on_batch(self, texts: List[str], labels: list = None) -> [float, List[float], np.ndarray]:
+    def infer_on_batch(self, texts: List[List[np.ndarray]], labels: list = None) -> [float, List[float], np.ndarray]:
         """
         Infer the model on the given batch
 
         Args:
-            texts: list of texts
+            texts: list of tokenized text samples
             labels: list of labels
 
         Returns:
             metrics values on the given batch, if labels are given
             predictions, otherwise
         """
-        if isinstance(texts[0], str):
-            texts = self.tokenizer(list(texts))
+        K.set_session(self.sess)
         if labels:
-            features = self.texts2vec(texts)
+            features = self.pad_texts(texts)
             onehot_labels = labels2onehot(labels, classes=self.classes)
             metrics_values = self.model.test_on_batch(features, onehot_labels)
             return metrics_values
         else:
-            features = self.texts2vec(texts)
+            features = self.pad_texts(texts)
             predictions = self.model.predict(features)
             return predictions
 
-    def __call__(self, data: List[str], *args) -> Tuple[np.ndarray, List[dict]]:
+    def __call__(self, data: List[List[str]], *args) -> Tuple[np.ndarray, List[dict]]:
         """
         Infer on the given data
 
         Args:
-            data: list of sentences
+            data: list of tokenized text samples
             *args: additional arguments
 
         Returns:

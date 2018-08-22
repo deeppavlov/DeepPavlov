@@ -1,13 +1,14 @@
 {
-  "dataset_reader": {
-    "name": "basic_classification_reader",
+  "dataset": {
+    "type": "classification",
+    "format": "json",
+    "orient": "records",
+    "lines": true,
+    "data_path": "sample",
+    "train": "sample.json",
     "x": "text",
     "y": "intents",
-    "data_path": "snips",
-    "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv"
-  },
-  "dataset_iterator": {
-    "name": "basic_classification_iterator",
+    "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.json",
     "seed": 42,
     "field_to_split": "train",
     "split_fields": [
@@ -38,6 +39,15 @@
         "load_path": "vocabs/snips_classes.dict"
       },
       {
+        "in": "x",
+        "out": "x_tok",
+        "id": "my_tokenizer",
+        "name": "nltk_tokenizer",
+        "tokenizer": "wordpunct_tokenize"
+      },
+      {
+        "in": "x_tok",
+        "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
         "save_path": "embeddings/dstc2_fastText_model.bin",
@@ -45,13 +55,8 @@
         "dim": 100
       },
       {
-        "id": "my_tokenizer",
-        "name": "nltk_tokenizer",
-        "tokenizer": "wordpunct_tokenize"
-      },
-      {
         "in": [
-          "x"
+          "x_emb"
         ],
         "in_y": [
           "y"
@@ -62,10 +67,10 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "intents/intent_cnn_snips_cnn_bistlm",
-        "load_path": "intents/intent_cnn_snips_cnn_bilstm",
+        "save_path": "classifiers/intents_snips_v4",
+        "load_path": "classifiers/intents_snips_v4",
+        "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
-        "units_lstm": 64,
         "kernel_sizes_cnn": [
           1,
           2,
@@ -79,14 +84,10 @@
         "loss": "binary_crossentropy",
         "text_size": 15,
         "coef_reg_cnn": 1e-4,
-        "coef_reg_lstm": 1e-4,
         "coef_reg_den": 1e-4,
         "dropout_rate": 0.5,
-        "rec_dropout_rate": 0.5,
         "dense_size": 100,
-        "model_name": "cnn_bilstm_model",
-        "embedder": "#my_embedder",
-        "tokenizer": "#my_tokenizer"
+        "model_name": "cnn_model"
       }
     ],
     "out": [
@@ -95,7 +96,7 @@
     ]
   },
   "train": {
-    "epochs": 1,
+    "epochs": 100,
     "batch_size": 64,
     "metrics": [
       "classification_accuracy",
@@ -103,7 +104,7 @@
       "classification_roc_auc"
     ],
     "validation_patience": 5,
-    "val_every_n_epochs": 5,
+    "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
     "show_examples": false,
     "validate_best": true,
@@ -115,14 +116,15 @@
       "../dp_requirements/fasttext.txt"
     ],
     "labels": {
-      "telegram_utils": "IntentModel"
+      "telegram_utils": "IntentModel",
+      "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/intents.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
       "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
       {
-        "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
-        "subdir": "snips"
+        "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.json",
+        "subdir": "sample"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/dstc2_fastText_model.bin",
