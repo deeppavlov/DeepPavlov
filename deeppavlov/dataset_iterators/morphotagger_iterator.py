@@ -24,7 +24,7 @@ from deeppavlov.models.preprocessors.capitalization import process_word
 def preprocess_data(data: List[Tuple[List[str], List[str]]], to_lower: bool = True,
                     append_case: str = "first") -> List[Tuple[List[Tuple[str]], List[str]]]:
     """Processes all words in data using
-    :func:`~deeppavlov/dataset_iterators/morphotagger_iterator.process_word`.
+    :func:`~deeppavlov.dataset_iterators.morphotagger_iterator.process_word`.
 
     Args:
         data: a list of pairs (words, tags), each pair corresponds to a single sentence
