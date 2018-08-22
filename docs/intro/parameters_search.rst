@@ -26,7 +26,7 @@ Cross validation command have several parameters:
 
 .. note::
 
-    Folds will be automatically created from union of train and validation dataset.
+    Folds will be created automatically from union of train and validation datasets.
 
 
 Special parameters in config
