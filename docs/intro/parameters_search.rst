@@ -46,8 +46,11 @@ Let's see example for logistic regression model:
         "out": ["answer", "score"]
       }
 
-In this example parameter "c" described as search_choice:
-{"search_choice": [value_0, ..., value_n]} - values for grid search
+In this example parameter "c" described as search_choice, values for grid search:
+
+.. code:: json
+
+    {"search_choice": [value_0, ..., value_n]}
 
 
 Results
