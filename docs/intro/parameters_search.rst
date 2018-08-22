@@ -1,16 +1,16 @@
-Parameters of cross-validation in DeepPavlov
-============================================
+Parameters search
+=================
 
 You can run cross-validation in DeepPavlov to select best parameters of your model.
-For this purpose you have to run special command 'cv'. for example:
+For this purpose you have to run special command 'paramserach'. for example:
 
 .. code:: bash
 
-    python deeppavlov/cv.py path_to_json_config.json --folds 5
+    python deeppavlov/paramserach.py path_to_json_config.json --folds 5
 
 
-CV parameters
--------------
+Parameters
+----------
 
 Cross validation command have several parameters:
 
@@ -21,10 +21,12 @@ Cross validation command have several parameters:
     Do you want to use leave one out cross validation instead of folds?
     Just specify this: ``--folds loo``
 -  ``--search_type``:
-    This parameter is optional. Now you can use only grid search.
+    This parameter is optional - default value is "grid" (grid search).
 
-    //TODO: implement random search
 
+.. note::
+
+    Folds will be automatically created from union of train and validation dataset.
 
 
 Special parameters in config
@@ -40,11 +42,12 @@ Let's see example for logistic regression model:
         "name": "faq_logreg_model",
         "in": "q_vect",
         "fit_on": ["q_vect", "y"],
-        "C": 1,
-        "C_range": [10, 100, 1000],
+        "c": {"search_choice": [1, 10, 100, 1000]},
         "out": ["answer", "score"]
       }
 
+In this example parameter "c" described as search_choice:
+{"search_choice": [value_0, ..., value_n]} - values for grid search
 
 
 Results
@@ -55,6 +58,6 @@ Also you'll see final log messages about best model:
 
 .. code:: bash
 
-    INFO in '__main__'['cv'] at line 169: Best model params: {'C': 10000, 'penalty': 'l1', 'accuracy': 0.81466}
-    INFO in '__main__'['cv'] at line 184: Best model saved in json-file: path_to_model_config_cvbest.json
+    INFO in '__main__'['paramsearch'] at line 169: Best model params: {'C': 10000, 'penalty': 'l1', 'accuracy': 0.81466}
+    INFO in '__main__'['paramsearch'] at line 184: Best model saved in json-file: path_to_model_config_cvbest.json
 
