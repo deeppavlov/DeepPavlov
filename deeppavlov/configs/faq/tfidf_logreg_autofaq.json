@@ -30,7 +30,7 @@
         "name": "faq_logreg_model",
         "in": "q_vect",
         "fit_on": ["q_vect", "y"],
-        "C": 100,
+        "c": 100,
         "penalty": "l2",
         "save_path": "autofaq/faq_tfidf_logreg_model.pkl",
         "load_path": "autofaq/faq_tfidf_logreg_model.pkl",
