@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import tensorflow as tf
 from tensorflow.contrib.layers import xavier_initializer
 import numpy as np
@@ -682,7 +681,6 @@ def cudnn_lstm(units, n_hidden, n_layers=1, trainable_initial_states=None, seq_l
 
 def cudnn_compatible_lstm(units, n_hidden, n_layers=1, trainable_initial_states=None, seq_lengths=None, initial_h=None,
                           initial_c=None, name='cudnn_lstm', reuse=False):
-
     """ CuDNN Compatible LSTM implementation.
         It should be used to load models saved with CudnnLSTMCell to run on CPU.
 
@@ -829,26 +827,26 @@ def cudnn_bi_lstm(units,
                   reuse=False):
     """ Fast CuDNN Bi-LSTM implementation
 
-        Args:
-            units: tf.Tensor with dimensions [B x T x F], where
-                B - batch size
-                T - number of tokens
-                F - features
-            n_hidden: dimensionality of hidden state
-            seq_lengths: number of tokens in each sample in the batch
-            n_layers: number of layers
-            trainable_initial_states: whether to create a special trainable variable
-                to initialize the hidden states of the network or use just zeros
-            name: name of the variable scope to use
-            reuse:whether to reuse already initialized variable
+    Args:
+        units: tf.Tensor with dimensions [B x T x F], where
+            B - batch size
+            T - number of tokens
+            F - features
+        n_hidden: dimensionality of hidden state
+        seq_lengths: number of tokens in each sample in the batch
+        n_layers: number of layers
+        trainable_initial_states: whether to create a special trainable variable
+            to initialize the hidden states of the network or use just zeros
+        name: name of the variable scope to use
+        reuse:whether to reuse already initialized variable
 
-        Returns:
-            h - all hidden states along T dimension,
-                tf.Tensor with dimensionality [B x T x F]
-            h_last - last hidden state, tf.Tensor with dimensionality [B x H * 2]
-                where H - number of hidden units
-            c_last - last cell state, tf.Tensor with dimensionality [B x H * 2]
-                where H - number of hidden units
+    Returns:
+        h - all hidden states along T dimension,
+            tf.Tensor with dimensionality [B x T x F]
+        h_last - last hidden state, tf.Tensor with dimensionality [B x H * 2]
+            where H - number of hidden units
+        c_last - last cell state, tf.Tensor with dimensionality [B x H * 2]
+            where H - number of hidden units
         """
     with tf.variable_scope(name, reuse=reuse):
         if seq_lengths is None:
