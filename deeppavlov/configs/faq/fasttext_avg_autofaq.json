@@ -3,7 +3,7 @@
     "name": "faq_reader",
     "x_col_name": "Question",
     "y_col_name": "Answer",
-    "data_url": "ftp://share.ipavlov.mipt.ru/datasets/faq/faq.csv"
+    "data_url": "http://files.deeppavlov.ai/faq/school/faq_school.csv"
   },
   "dataset_iterator": {
     "name": "data_learning_iterator"
@@ -51,7 +51,7 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/faq/faq_fasttext_cos_model.pkl",
+        "url": "http://files.deeppavlov.ai/faq/school/faq_fasttext_cos_model.pkl",
         "subdir": "autofaq"
       },
       {

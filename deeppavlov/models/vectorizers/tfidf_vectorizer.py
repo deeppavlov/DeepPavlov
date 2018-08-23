@@ -32,7 +32,7 @@ logger = get_logger(__name__)
 @register('tfidf_vectorizer')
 class TfIdfVectorizer(Estimator, Serializable):
 
-    def __init__(self, is_pretrained: False, save_path: str = None, load_path: str = None, **kwargs) -> None:
+    def __init__(self, is_pretrained: str = False, save_path: str = None, load_path: str = None, **kwargs) -> None:
         self.is_pretrained = is_pretrained
         self.save_path = save_path
         self.load_path = load_path
