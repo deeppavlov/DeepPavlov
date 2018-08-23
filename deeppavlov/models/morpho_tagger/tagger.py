@@ -36,9 +36,6 @@ class MorphoTaggerWrapper(NNModel):
         mode: usage mode
         **kwargs: a dictionary containing model parameters specified in the main part
             of json config that corresponds to the model
-
-    Todo:
-        Add detailed arguments description
     """
     def __init__(self, save_path: str = None, load_path: str = None, mode: str = None, **kwargs):
         # Calls parent constructor. Results in creation of save_folder if it doesn't exist
@@ -90,7 +87,8 @@ class MorphoTaggerWrapper(NNModel):
         """Trains the model on a single batch.
 
         Args:
-            args: the list of network inputs. Last element of `args` is the batch of targets,
+            *args: the list of network inputs.
+            Last element of `args` is the batch of targets,
             all previous elements are training data batches
         """
         *data, labels = args

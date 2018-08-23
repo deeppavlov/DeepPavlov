@@ -56,17 +56,25 @@ class CharacterTagger:
         regularizer: l2 regularization parameter
         verbose: the level of verbosity
     """
-    def __init__(self, symbols: DefaultVocabulary, tags: DefaultVocabulary,
+    def __init__(self,
+                 symbols: DefaultVocabulary,
+                 tags: DefaultVocabulary,
                  word_rnn: str = "cnn",
-                 char_embeddings_size: int = 16, char_conv_layers: int = 1,
+                 char_embeddings_size: int = 16,
+                 char_conv_layers: int = 1,
                  char_window_size: Union[int, List[int]] = 5,
                  char_filters: Union[int, List[int]] = None,
-                 char_filter_multiple: int = 25, char_highway_layers: int = 1,
-                 conv_dropout: float = 0.0, highway_dropout: float = 0.0,
-                 intermediate_dropout: float = 0.0, lstm_dropout: float = 0.0,
+                 char_filter_multiple: int = 25,
+                 char_highway_layers: int = 1,
+                 conv_dropout: float = 0.0,
+                 highway_dropout: float = 0.0,
+                 intermediate_dropout: float = 0.0,
+                 lstm_dropout: float = 0.0,
                  word_vectorizers: List[Tuple[int, int]] = None,
-                 word_lstm_layers: int = 1, word_lstm_units: Union[int, List[int]] = 128,
-                 word_dropout: float = 0.0, regularizer: float =None,
+                 word_lstm_layers: int = 1,
+                 word_lstm_units: Union[int, List[int]] = 128,
+                 word_dropout: float = 0.0,
+                 regularizer: float = None,
                  verbose: int = 1):
         self.symbols = symbols
         self.tags = tags
@@ -91,9 +99,6 @@ class CharacterTagger:
         self.build()
 
     def _initialize(self):
-        """
-        Initializes the network.
-        """
         if isinstance(self.char_window_size, int):
             self.char_window_size = [self.char_window_size]
         if self.char_filters is None or isinstance(self.char_filters, int):
