@@ -1,18 +1,17 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 import tensorflow as tf
 
 
@@ -72,6 +71,7 @@ def csoftmax_for_slice(input):
 
     return [csoft, mask_]
 
+
 def csoftmax(tensor, inv_cumulative_att):
     """ It is a implementation of the constrained softmax (csoftmax).
         Based on the paper:
@@ -88,6 +88,7 @@ def csoftmax(tensor, inv_cumulative_att):
     merge_tensor = [tensor, inv_cumulative_att]
     cs, _ = tf.map_fn(csoftmax_for_slice, merge_tensor, dtype=[tf.float32, tf.float32])  # [bs, L]
     return cs
+
 
 def attention_gen_step(hidden_for_sketch, hidden_for_attn_alignment, sketch, key, cum_att):
     """ It is a implementation one step of block of the Luong et al. attention mechanism with general score and the constrained softmax (csoftmax).
@@ -136,6 +137,7 @@ def attention_gen_step(hidden_for_sketch, hidden_for_attn_alignment, sketch, key
         next_sketch = tf.squeeze(tf.matmul(t_reduce_mem,r_att),-1)
         aligned_hidden_sketch = tf.squeeze(tf.matmul(t_hidden_for_attn_alignment,r_att),-1)
     return next_sketch, att, aligned_hidden_sketch
+
 
 def attention_gen_block(hidden_for_sketch, hidden_for_attn_alignment, key, attention_depth):
     """ It is a implementation of the Luong et al. attention mechanism with general score and the constrained softmax (csoftmax).
@@ -215,6 +217,7 @@ def attention_bah_step(hidden_for_sketch, hidden_for_attn_alignment, sketch, cum
         next_sketch = tf.squeeze(tf.matmul(t_reduce_mem,r_att),-1)
         aligned_hidden_sketch = tf.squeeze(tf.matmul(t_hidden_for_attn_alignment,r_att),-1)
     return next_sketch, att, aligned_hidden_sketch
+
 
 def attention_bah_block(hidden_for_sketch, hidden_for_attn_alignment, attention_depth):
     """ It is a implementation of the Bahdanau et al. attention mechanism with concat score and the constrained softmax (csoftmax).
