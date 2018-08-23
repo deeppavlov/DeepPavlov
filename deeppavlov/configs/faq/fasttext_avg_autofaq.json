@@ -46,6 +46,9 @@
     "test_best": false
  },
   "metadata": {
+    "requirements": [
+      "../dp_requirements/fasttext.txt"
+    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/faq/faq_fasttext_cos_model.pkl",
