@@ -83,7 +83,7 @@ This is models that classify incoming question and find corresponding answer
 
    -  **in** - input data: question
    -  **fit_on** - train data: [vectorized sentences, answers]
-   -  **C** - regularization parameter for logistic regression model
+   -  **c** - regularization parameter for logistic regression model
    -  **penalty** - regularization type: 'l1' or 'l2'
    -  **save_path** - path where to save model
    -  **load_path** - path where to load model
@@ -128,7 +128,7 @@ Inference example:
 Available Data and Pretrained Models
 ====================================
 
-You can use pretrained model by links:
+You can use pretrained model on FAQ dataset from school-site: http://www.ftl.name/page/989
 
 .. code::
 
