@@ -12,11 +12,14 @@ limitations under the License.
 """
 
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import save_pickle, load_pickle
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.models.estimator import Estimator
 from typing import List, Tuple
 import spacy
 
+log = get_logger(__name__)
 nlp = spacy.load('en', parser=False)
 
 @register("ecommerce_bot")
@@ -26,6 +29,7 @@ class EcommerceBot(Estimator):
 
     def fit(self, x) -> None:
 
+        log.info('Items to nlp: '+str(len(x)))
         self.title_nlped = [nlp(item['Title']) for item in x]
         log.info('Titles are nlped')
 
@@ -33,7 +37,7 @@ class EcommerceBot(Estimator):
         log.info('Features are nlped')
         
     def save(self, **kwargs) -> None:
-        logger.info("Saving model to {}".format(self.save_path))
+        log.info("Saving model to {}".format(self.save_path))
         save_pickle((self.title_nlped, self.feat_nlped), expand_path(self.save_path))
 
     def load(self, **kwargs) -> None:
