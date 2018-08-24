@@ -233,8 +233,7 @@ class SquadModel(TFModel):
             self.opt = tf.train.AdadeltaOptimizer(learning_rate=self.lr_ph, epsilon=1e-6)
             grads = self.opt.compute_gradients(self.loss)
             gradients, variables = zip(*grads)
-
-            capped_grads, _ = tf.clip_by_global_norm(gradients, self.grad_clip)
+            capped_grads = [tf.clip_by_norm(g, self.grad_clip) for g in gradients]
             self.train_op = self.opt.apply_gradients(zip(capped_grads, variables), global_step=self.global_step)
 
     def _build_feed_dict(self, c_tokens, c_chars, q_tokens, q_chars, y1=None, y2=None):
