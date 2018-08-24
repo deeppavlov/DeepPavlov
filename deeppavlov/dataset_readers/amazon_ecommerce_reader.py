@@ -8,14 +8,15 @@ from typing import Dict, List, Union
 @register('amazon_ecommerce_reader')
 class AmazonEcommerceReader(DatasetReader):
     
-    def read(self, data_path: str, **kwargs):
+    def read(self, data_path: str, catalog: str, **kwargs):
         ec_data_global = []
         data_path = Path(expand_path(data_path))
 
         if data_path.is_dir():
             for fname in data_path.iterdir():
                 if fname.is_file():
-                    ec_data_global += self._load_amazon_ecommerce_file(fname)
+                    if catalog in fname.name:
+                        ec_data_global = self._load_amazon_ecommerce_file(fname)
 
         dataset = {'train': None, 'valid': None, 'test': None}
         dataset["train"] = [(item,1) for item in ec_data_global]
