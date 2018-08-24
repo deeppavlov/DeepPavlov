@@ -24,24 +24,26 @@ nlp = spacy.load('en', parser=False)
 
 @register("ecommerce_bot")
 class EcommerceBot(Estimator):
-    def __init__(self, save_path: str = None, **kwargs):
+    def __init__(self, save_path: str = None, load_path: str = None, **kwargs):
         self.save_path = save_path
+        self.load_path = load_path
+        if kwargs['mode'] != 'train':
+            self.load()
 
     def fit(self, x) -> None:
-
+        
         log.info('Items to nlp: '+str(len(x)))
-        self.title_nlped = [nlp(item['Title']) for item in x]
-        log.info('Titles are nlped')
+        self.ec_data = [dict(item, **{'title_nlped':nlp(item['Title']), 'feat_nlped':nlp(item['Title']+'.'+item['Feature'])}) for item in x]
+        log.info('Data are nlped')
 
-        self.feat_nlped = [nlp(item['Title']+'.'+item['Feature']) if 'Feature' in item else nlp(item['Title']) for item in x]
-        log.info('Features are nlped')
         
     def save(self, **kwargs) -> None:
         log.info("Saving model to {}".format(self.save_path))
-        save_pickle((self.title_nlped, self.feat_nlped), expand_path(self.save_path))
+        save_pickle(self.ec_data, expand_path(self.save_path))
 
     def load(self, **kwargs) -> None:
-        pass
-    
+        logger.info("Loading model from {}".format(self.load_path))
+        self.ec_data = load_pickle(expand_path(self.load_path))
+            
     def __call__(self, x, **kwargs):
         return [1,2]
