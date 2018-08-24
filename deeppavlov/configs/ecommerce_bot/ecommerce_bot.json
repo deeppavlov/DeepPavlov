@@ -1,0 +1,38 @@
+{
+  "dataset_reader": {
+    "name": "amazon_ecommerce_reader",
+    "data_path": "amazon_ecommerce"
+  },
+  "dataset_iterator": {
+    "name": "data_learning_iterator"
+  },
+ "chainer": {
+    "in": ["x"],
+    "out": ["y"],
+    "pipe": [
+      {
+        "name": "ecommerce_bot",
+        "in": ["x"],
+        "fit_on": ["x"],
+        "save_path": "ecommerce_bot/nlped_model.pkl",
+        "load_path": "ecommerce_bot/nlped_model.pkl",
+        "out": ["y"]
+      }
+    ]
+   },
+   "metadata": {
+    "labels": {
+      "telegram_utils": "RankingEmbModel",
+      "server_utils": "RankingEmbModel"
+    },
+    "requirements": [
+        "../dp_requirements/spacy.txt"
+      ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/glove.6B.100d.txt",
+        "subdir": "embeddings"
+      }
+    ]
+  }
+}
