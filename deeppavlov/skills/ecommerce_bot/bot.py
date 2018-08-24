@@ -42,7 +42,7 @@ class EcommerceBot(Estimator):
         save_pickle(self.ec_data, expand_path(self.save_path))
 
     def load(self, **kwargs) -> None:
-        logger.info("Loading model from {}".format(self.load_path))
+        log.info("Loading model from {}".format(self.load_path))
         self.ec_data = load_pickle(expand_path(self.load_path))
             
     def __call__(self, x, **kwargs):
