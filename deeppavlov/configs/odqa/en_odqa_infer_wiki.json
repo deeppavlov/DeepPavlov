@@ -3,12 +3,8 @@
     "in": [
       "question_raw"
     ],
-    "in_y": [
-      "ans_raw",
-      "ans_raw_start"
-    ],
     "out": [
-      "ans_predicted"
+      "best_answer"
     ],
     "pipe": [
       {
@@ -29,18 +25,30 @@
           "context_raw"
         ],
         "data_dir": "odqa",
+        "join_docs": false,
         "shuffle": false,
         "data_url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.db"
       },
       {
-        "config_path": "../deeppavlov/configs/squad/squad.json",
+        "name": "document_chunker",
+        "in": ["context_raw"],
+        "out": ["chunks"],
+        "flatten_result": true
+      },
+      {
+        "name": "string_multiplier",
+        "in": ["question_raw", "chunks"],
+        "out":["questions"]
+      },
+      {
+        "name": "logit_ranker",
+        "squad_model": {"config_path": "../deeppavlov/configs/squad/squad.json"},
         "in": [
-          "context_raw",
-          "question_raw"
+          "chunks",
+          "questions"
         ],
         "out": [
-          "ans_predicted",
-          "ans_start_predicted"
+          "best_answer"
         ]
       }
     ]
@@ -56,8 +64,7 @@
     },
     "download": [
       "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/en_odqa.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/squad_model_1.1.tar.gz"
+      "http://files.deeppavlov.ai/deeppavlov_data/en_odqa.tar.gz"
     ]
   }
 }

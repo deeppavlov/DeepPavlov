@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Tuple
 
 import re
 import string
@@ -21,39 +22,39 @@ from deeppavlov.core.common.metrics_registry import register_metric
 
 
 @register_metric('exact_match')
-def exact_match(y_true, y_predicted):
+def exact_match(y_true: List[Tuple[List[str], List[int]]], y_predicted: List[Tuple[str, int, float]]):
     """ Calculates Exact Match score between y_true and y_predicted
         EM score uses the best matching y_true answer:
             if y_pred equal at least to one answer in y_true then EM = 1, else EM = 0
 
     Args:
         y_true: list of tuples (y_true_text, y_true_start), y_true_text and y_true_start are lists of len num_answers
-        y_predicted: list of tuples (y_pred_text, y_pred_start), y_pred_text : str, y_pred_start : int
+        y_predicted: list of tuples (y_pred_text, y_pred_start, logit), y_pred_text : str, y_pred_start : int, logit: float
 
     Returns:
         exact match score : float
     """
     EM_total = 0
-    for (ground_truth, _), (prediction, _) in zip(y_true, y_predicted):
+    for (ground_truth, _), (prediction, *_) in zip(y_true, y_predicted):
         EMs = [int(normalize_answer(gt) == normalize_answer(prediction)) for gt in ground_truth]
         EM_total += max(EMs)
     return 100 * EM_total / len(y_true) if len(y_true) > 0 else 0
 
 
 @register_metric('squad_f1')
-def squad_f1(y_true, y_predicted):
+def squad_f1(y_true: List[Tuple[List[str], List[int]]], y_predicted: List[Tuple[str, int, float]]):
     """ Calculates F-1 score between y_true and y_predicted
         F-1 score uses the best matching y_true answer
 
     Args:
         y_true: list of tuples (y_true_text, y_true_start), y_true_text and y_true_start are lists of len num_answers
-        y_predicted: list of tuples (y_pred_text, y_pred_start), y_pred_text : str, y_pred_start : int
+        y_predicted: list of tuples (y_pred_text, y_pred_start, logit), y_pred_text : str, y_pred_start : int, logit: float
 
     Returns:
         F-1 score : float
     """
     f1_total = 0.0
-    for (ground_truth, _), (prediction, _) in zip(y_true, y_predicted):
+    for (ground_truth, _), (prediction, *_) in zip(y_true, y_predicted):
         prediction_tokens = normalize_answer(prediction).split()
         f1s = []
         for gt in ground_truth:
