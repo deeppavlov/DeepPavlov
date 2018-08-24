@@ -24,11 +24,18 @@ from deeppavlov.core.common.registry import register
 @register('capitalization_featurizer')
 class CapitalizationPreprocessor(Component):
     """
-    Featurizer useful for NER task. It detects following patterns:
+    Featurizer useful for NER task. It detects following patterns in the words:
     - no capitals
     - single capital single character
     - single capital multiple characters
     - all capitals multiple characters
+
+    Args:
+        pad_zeros: whether to pad capitalization features batch with zeros up
+            to maximal length or not.
+
+    Attributes:
+        dim: dimensionality of the feature vectors, produced by the featurizer
     """
     def __init__(self, pad_zeros=True, *args, **kwargs):
         self.pad_zeros = pad_zeros
