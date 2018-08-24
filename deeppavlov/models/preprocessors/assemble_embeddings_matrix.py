@@ -17,6 +17,10 @@ import numpy as np
 from deeppavlov.core.common.registry import register
 from sklearn.decomposition import PCA
 
+from deeppavlov.core.data.simple_vocab import SimpleVocabulary
+from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
+from deeppavlov.models.embedders.glove_embedder import GloVeEmbedder
+
 
 @register('emb_mat_assembler')
 class EmbeddingsMatrixAssembler:
@@ -36,13 +40,22 @@ class EmbeddingsMatrixAssembler:
         emb_dim: dimensionality of the resulting embeddings. If not `None` it should be less
             or equal to the dimensionality of the embeddings provided by `Embedder`. The
             reduction of dimensionality is performed by taking main components of PCA.
+        estimate_by_n: how much samples to use to estimate covariance matrix for PCA.
+            10000 seems to be enough.
 
     Attributes:
         dim: dimensionality of the embeddings (can be less than dimensionality of
             embeddings produced by `Embedder`.
     """
 
-    def __init__(self, embedder, vocab, character_level=False, emb_dim=None, estimate_by_n=10000, *args, **kwargs):
+    def __init__(self,
+                 embedder: (FasttextEmbedder, GloVeEmbedder),
+                 vocab: SimpleVocabulary,
+                 character_level: bool=False,
+                 emb_dim: int=None,
+                 estimate_by_n: int=10000,
+                 *args,
+                 **kwargs):
         if emb_dim is None:
             emb_dim = embedder.dim
         self.emb_mat = np.zeros([len(vocab), emb_dim], dtype=np.float32)
