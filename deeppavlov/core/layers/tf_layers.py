@@ -525,7 +525,7 @@ def cudnn_gru(units, n_hidden, n_layers=1, trainable_initial_states=False,
     Returns:
         h - all hidden states along T dimension,
             tf.Tensor with dimensionality [B x T x F]
-        h_last - last hidden state, tf.Tensor with dimensionality [B x (n_layers * H)]
+        h_last - last hidden state, tf.Tensor with dimensionality [B x H]
     """
     with tf.variable_scope(name, reuse=reuse):
         gru = tf.contrib.cudnn_rnn.CudnnGRU(num_layers=n_layers,
@@ -541,7 +541,7 @@ def cudnn_gru(units, n_hidden, n_layers=1, trainable_initial_states=False,
 
         h, h_last = gru(tf.transpose(units, (1, 0, 2)), (initial_h, ))
         h = tf.transpose(h, (1, 0, 2))
-        h_last = tf.reshape(h_last, shape=(-1, n_hidden))
+        h_last = tf.squeeze(h_last, axis=0)[-1]  # extract last layer state
 
         # Extract last states if they are provided
         if seq_lengths is not None:
@@ -574,7 +574,7 @@ def cudnn_compatible_gru(units, n_hidden, n_layers=1, trainable_initial_states=F
         Returns:
             h - all hidden states along T dimension,
                 tf.Tensor with dimensionality [B x T x F]
-            h_last - last hidden state, tf.Tensor with dimensionality [B x (n_layers * H)]
+            h_last - last hidden state, tf.Tensor with dimensionality [B x H]
         """
     with tf.variable_scope(name, reuse=reuse):
 
@@ -594,9 +594,10 @@ def cudnn_compatible_gru(units, n_hidden, n_layers=1, trainable_initial_states=F
 
             h, h_last = tf.nn.dynamic_rnn(cell=cell, inputs=units, time_major=True,
                                           initial_state=tuple(tf.unstack(initial_h, axis=0)))
-
             h = tf.transpose(h, (1, 0, 2))
-            h_last = tf.reshape(tf.stack(h_last, axis=0), shape=(-1, n_hidden))
+
+            h_last = h_last[-1]  # h_last is tuple: n_layers x batch_size x n_hidden
+
             # Extract last states if they are provided
             if seq_lengths is not None:
                 indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths], axis=1)
@@ -647,9 +648,9 @@ def cudnn_lstm(units, n_hidden, n_layers=1, trainable_initial_states=None, seq_l
         Returns:
             h - all hidden states along T dimension,
                 tf.Tensor with dimensionality [B x T x F]
-            h_last - last hidden state, tf.Tensor with dimensionality [B x (n_layers * H)]
+            h_last - last hidden state, tf.Tensor with dimensionality [B x H]
                 where H - number of hidden units
-            c_last - last cell state, tf.Tensor with dimensionality [B x (n_layers * H)]
+            c_last - last cell state, tf.Tensor with dimensionality [B x H]
                 where H - number of hidden units
         """
     with tf.variable_scope(name, reuse=reuse):
@@ -668,8 +669,8 @@ def cudnn_lstm(units, n_hidden, n_layers=1, trainable_initial_states=None, seq_l
 
         h, (h_last, c_last) = lstm(tf.transpose(units, (1, 0, 2)), (initial_h, initial_c))
         h = tf.transpose(h, (1, 0, 2))
-        h_last = tf.reshape(h_last, shape=(-1, n_hidden))
-        c_last = tf.reshape(c_last, shape=(-1, n_hidden))
+        h_last = h_last[-1]
+        c_last = c_last[-1]
 
         # Extract last states if they are provided
         if seq_lengths is not None:
@@ -706,9 +707,9 @@ def cudnn_compatible_lstm(units, n_hidden, n_layers=1, trainable_initial_states=
         Returns:
             h - all hidden states along T dimension,
                 tf.Tensor with dimensionality [B x T x F]
-            h_last - last hidden state, tf.Tensor with dimensionality [B x (n_layers * H)]
+            h_last - last hidden state, tf.Tensor with dimensionality [B x H]
                 where H - number of hidden units
-            c_last - last cell state, tf.Tensor with dimensionality [B x (n_layers * H)]
+            c_last - last cell state, tf.Tensor with dimensionality [B x H]
                 where H - number of hidden units
         """
 
@@ -736,12 +737,9 @@ def cudnn_compatible_lstm(units, n_hidden, n_layers=1, trainable_initial_states=
 
             h, state = tf.nn.dynamic_rnn(cell=cell, inputs=units, time_major=True, initial_state=init)
 
-            h_last = tf.stack([state[i].h for i in range(n_layers)], axis=0)
-            h_last = tf.reshape(h_last, shape=(-1, n_hidden))
-            c_last = tf.stack([state[i].c for i in range(n_layers)], axis=0)
-            c_last = tf.reshape(c_last, shape=(-1, n_hidden))
-
             h = tf.transpose(h, (1, 0, 2))
+            h_last = state[-1].h
+            c_last = state[-1].c
 
             # Extract last states if they are provided
             if seq_lengths is not None:
