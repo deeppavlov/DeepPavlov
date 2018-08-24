@@ -1,7 +1,8 @@
 {
   "dataset_reader": {
     "name": "amazon_ecommerce_reader",
-    "data_path": "amazon_ecommerce"
+    "data_path": "amazon_ecommerce",
+    "catalog": "Automotive"
   },
   "dataset_iterator": {
     "name": "data_learning_iterator"
@@ -14,8 +15,8 @@
         "name": "ecommerce_bot",
         "in": ["x"],
         "fit_on": ["x"],
-        "save_path": "ecommerce_bot/nlped_model.pkl",
-        "load_path": "ecommerce_bot/nlped_model.pkl",
+        "save_path": "ecommerce_bot/ecommerce_Books_model.pkl",
+        "load_path": "ecommerce_bot/ecommerce_Books_model.pkl",
         "out": ["y"]
       }
     ]
