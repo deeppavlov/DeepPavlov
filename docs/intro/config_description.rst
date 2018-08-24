@@ -156,6 +156,21 @@ Train Parameters
 -  ``tensorboard_log_dir`` — path to write logged metrics during training. Use tensorboard to visualize metrics
    plots.
 
+Cross-Validation
+----------------
+
+Also you can calculate cross-validation score for specified model (json config) by command ``crossvalidate``:
+
+.. code:: bash
+
+    python deeppavlov/deep.py crossvalidate path_to_json_config.json --folds 5
+
+default value for parameters ``folds`` is 5
+
+.. note::
+
+    Folds will be created automatically from union of train and validation datasets.
+
 
 DatasetReader
 ~~~~~~~~~~~~~

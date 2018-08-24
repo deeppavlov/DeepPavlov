@@ -19,7 +19,8 @@ Cross validation command have several parameters:
 -  ``--folds``:
     This parameter shows how many folds you need in cross validation.
     Do you want to use leave one out cross validation instead of folds?
-    Just specify this: ``--folds loo``
+    Just specify this: ``--folds loo``.
+    If you want not to cross-validate just omit this parameter.
 -  ``--search_type``:
     This parameter is optional - default value is "grid" (grid search).
 
