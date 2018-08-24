@@ -1,3 +1,18 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 import numpy as np
 from deeppavlov.core.common.registry import register
 from sklearn.decomposition import PCA
@@ -5,7 +20,28 @@ from sklearn.decomposition import PCA
 
 @register('emb_mat_assembler')
 class EmbeddingsMatrixAssembler:
-    """Assembles matrix of embeddings obtained from some embedder."""
+    """For a given Vocabulary assembles matrix of embeddings obtained from some `Embedder`. This
+        class also can assemble embeddins of characters using
+
+    Args:
+        embedder: an instance of the class that convertes tokens to vectors.
+            For example :class:`~deeppavlov.models.embedders.fasttext_embedder.FasttextEmbedder` or
+            :class:`~deeppavlov.models.embedders.glove_embedder.GloVeEmbedder`
+        vocab: instance of :class:`~deeppavlov.core.data.SimpleVocab`. The matrix of embeddings
+            will be assembled relying on every token in the vocabulary. the indexing will match
+            vocabulary indexing.
+        character_level: whether to perform assembling on character level. This procedure will
+            assemble matrix with embeddings for every character using averaged embeddings of
+            words, that contain this character.
+        emb_dim: dimensionality of the resulting embeddings. If not `None` it should be less
+            or equal to the dimensionality of the embeddings provided by `Embedder`. The
+            reduction of dimensionality is performed by taking main components of PCA.
+
+    Attributes:
+        dim: dimensionality of the embeddings (can be less than dimensionality of
+            embeddings produced by `Embedder`.
+    """
+
     def __init__(self, embedder, vocab, character_level=False, emb_dim=None, estimate_by_n=10000, *args, **kwargs):
         if emb_dim is None:
             emb_dim = embedder.dim
