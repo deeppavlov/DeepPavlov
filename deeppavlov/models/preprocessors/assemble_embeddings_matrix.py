@@ -74,7 +74,6 @@ class EmbeddingsMatrixAssembler:
                         self.emb_mat[n] = pca(embedder([[token]])[0])[0]
                     else:
                         self.emb_mat[n] = embedder([[token]])[0][0]
-
                 except KeyError:
                     self.emb_mat[n] = np.random.randn(emb_dim) * emb_std
 
