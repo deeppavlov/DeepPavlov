@@ -23,7 +23,7 @@ from deeppavlov.core.common.registry import register
 from sklearn.feature_extraction.text import TfidfVectorizer
 from deeppavlov.core.common.file import save_pickle
 from deeppavlov.core.common.file import load_pickle
-from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.commands.utils import expand_path, make_all_dirs, is_file_exist
 import numpy as np
 
 logger = get_logger(__name__)
@@ -32,12 +32,11 @@ logger = get_logger(__name__)
 @register('sentence2vector_v2w_tfidf')
 class SentenceW2vVectorizerTfidfWeights(Estimator, Serializable):
 
-    def __init__(self, use_pretrained: str = False, save_path: str = None, load_path: str = None, **kwargs) -> None:
+    def __init__(self, save_path: str = None, load_path: str = None, **kwargs) -> None:
         self.save_path = save_path
         self.load_path = load_path
-        self.use_pretrained = use_pretrained
 
-        if self.use_pretrained:
+        if is_file_exist(self.load_path):
             self.load()
         else:
             if kwargs['mode'] != 'train':
@@ -65,12 +64,18 @@ class SentenceW2vVectorizerTfidfWeights(Estimator, Serializable):
         return questions_vectors
 
     def fit(self, x_train: List[str]) -> None:
-        self.vectorizer.fit([' '.join(x) for x in x_train])
+        if isinstance(x_train[0], list):
+            x_train = [' '.join(x) for x in x_train]
+
+        self.vectorizer = TfidfVectorizer()
+        self.vectorizer.fit(x_train)
         self.token2idx = self.vectorizer.vocabulary_
 
     def save(self) -> None:
         logger.info("Saving tfidf_vectorizer to {}".format(self.save_path))
-        save_pickle(self.vectorizer, expand_path(self.save_path))
+        path = expand_path(self.save_path)
+        make_all_dirs(path)
+        save_pickle(self.vectorizer, path)
 
     def load(self) -> None:
         logger.info("Loading tfidf_vectorizer from {}".format(self.load_path))

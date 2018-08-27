@@ -21,7 +21,7 @@ from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.common.file import save_pickle
 from deeppavlov.core.common.file import load_pickle
-from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.commands.utils import expand_path, make_all_dirs
 from deeppavlov.core.models.serializable import Serializable
 from sklearn.linear_model import LogisticRegression
 
@@ -65,7 +65,9 @@ class FaqLogregModel(Estimator, Serializable):
 
     def save(self) -> None:
         logger.info("Saving faq_logreg_model to {}".format(self.save_path))
-        save_pickle(self.logreg, expand_path(self.save_path))
+        path = expand_path(self.save_path)
+        make_all_dirs(path)
+        save_pickle(self.logreg, path)
 
     def load(self) -> None:
         logger.info("Loading faq_logreg_model from {}".format(self.load_path))

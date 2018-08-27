@@ -21,7 +21,7 @@ from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.common.file import save_pickle
 from deeppavlov.core.common.file import load_pickle
-from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.commands.utils import expand_path, make_all_dirs
 from deeppavlov.core.models.serializable import Serializable
 from numpy import linalg
 from scipy.sparse.linalg import norm as sparse_norm
@@ -69,7 +69,9 @@ class FaqCosineSimilarityModel(Estimator, Serializable):
 
     def save(self) -> None:
         logger.info("Saving faq_model to {}".format(self.save_path))
-        save_pickle((self.x_train_features, self.y_train), expand_path(self.save_path))
+        path = expand_path(self.save_path)
+        make_all_dirs(path)
+        save_pickle((self.x_train_features, self.y_train), path)
 
     def load(self) -> None:
         logger.info("Loading faq_model from {}".format(self.load_path))
