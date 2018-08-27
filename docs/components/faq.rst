@@ -46,7 +46,6 @@ Vectorizers produce numeric vectors of input sentences
 
    -  **in** - input data: question
    -  **fit_on** - train data:   token lemmas of question
-   -  **is_pretrained** - do you use pretrained model? If so there is no need to train vectorizer
    -  **save_path** - path where to save model
    -  **load_path** - path where to load model
    -  **out** - output data: vectorized sentence
@@ -132,18 +131,16 @@ You can use pretrained model on FAQ dataset from school-site: http://www.ftl.nam
 
 .. code::
 
-    faq_vectorizer_tfidf            - http://files.deeppavlov.ai/faq/faq_vectorizer_tfidf.pkl
-    faq_tfidf_cos_model             - http://files.deeppavlov.ai/faq/faq_tfidf_cos_model.pkl
-    faq_tfidf_logreg_model          - http://files.deeppavlov.ai/faq/faq_tfidf_logreg_model.pkl
-    faq_fasttext_cos_model          - http://files.deeppavlov.ai/faq/faq_fasttext_cos_model.pkl
-    faq_sentence2vector_v2w_tfidf   - http://files.deeppavlov.ai/faq/faq_sentence2vector_v2w_tfidf.pkl
+    faq_tfidf_cos_model             - http://files.deeppavlov.ai/faq/school/faq_tfidf_cos_model.pkl
+    faq_tfidf_logreg_model          - http://files.deeppavlov.ai/faq/school/faq_tfidf_logreg_model.pkl
+    faq_fasttext_cos_model          - http://files.deeppavlov.ai/faq/school/faq_fasttext_cos_model.pkl
+    tfidf_vectorizer_ruwiki         - http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki.pkl
 
 
--  **faq_vectorizer_tfidf.pkl** - pre-trained model for TF-IDF vectorizer of sentences
 -  **faq_tfidf_cos_model.pkl** - pre-trained cosine similarity model for classifying input question(vectorized by tfidf)
 -  **faq_tfidf_logreg_model.pkl** - pre-trained logistic regression model for classifying input question(vectorized by tfidf)
 -  **faq_fasttext_cos_model.pkl** - pre-trained cosine similarity model for classifying input question(vectorized by word embeddings)
--  **faq_sentence2vector_v2w_tfidf.pkl** - pre-trained model for sentence vectorizer based on weighed average of word embeddings
+-  **tfidf_vectorizer_ruwiki.pkl** - pre-trained model for TF-IDF vectorizer based on russian Wikipedia
 
 
 
