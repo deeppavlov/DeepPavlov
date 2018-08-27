@@ -55,6 +55,7 @@ class TfIdfVectorizer(Estimator, Serializable):
         if isinstance(x_train[0], list):
             x_train = [' '.join(q) for q in x_train]
 
+        self.vectorizer = TfidfVectorizer()
         self.vectorizer.fit(x_train)
 
     def save(self) -> None:
