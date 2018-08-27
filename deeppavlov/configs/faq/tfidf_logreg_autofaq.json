@@ -22,9 +22,7 @@
         "id": "vectorizer",
         "name": "tfidf_vectorizer",
         "in": "q_token_lemmas",
-        "fit_on": ["q_token_lemmas"],
-        "save_path": "vectorizer/tfidf_vectorizer.pkl",
-        "load_path": "vectorizer/tfidf_vectorizer.pkl",
+        "load_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
         "out": "q_vect"
       },
       {
@@ -52,7 +50,7 @@
         "subdir": "faq"
       },
       {
-        "url": "http://files.deeppavlov.ai/faq/school/tfidf_vectorizer.pkl",
+        "url": "http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki.pkl",
         "subdir": "vectorizer"
       }
     ]

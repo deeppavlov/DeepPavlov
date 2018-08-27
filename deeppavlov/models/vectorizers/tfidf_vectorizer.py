@@ -23,8 +23,7 @@ from deeppavlov.core.common.registry import register
 from sklearn.feature_extraction.text import TfidfVectorizer
 from deeppavlov.core.common.file import save_pickle
 from deeppavlov.core.common.file import load_pickle
-from deeppavlov.core.commands.utils import expand_path
-import os
+from deeppavlov.core.commands.utils import expand_path, make_all_dirs, is_file_exist
 
 TOKENIZER = None
 logger = get_logger(__name__)
@@ -33,18 +32,17 @@ logger = get_logger(__name__)
 @register('tfidf_vectorizer')
 class TfIdfVectorizer(Estimator, Serializable):
 
-    def __init__(self, is_pretrained: str = False, save_path: str = None, load_path: str = None, **kwargs) -> None:
-        self.is_pretrained = is_pretrained
+    def __init__(self, save_path: str = None, load_path: str = None, **kwargs) -> None:
         self.save_path = save_path
         self.load_path = load_path
 
-        if self.is_pretrained:
+        if is_file_exist(self.load_path):
             self.load()
         else:
-            if kwargs['mode'] != 'train':
-                self.load()
-            else:
+            if kwargs['mode'] == 'train':
                 self.vectorizer = TfidfVectorizer()
+            else:
+                self.load()
 
     def __call__(self, questions: List[str]):
         if isinstance(questions[0], list):
@@ -62,10 +60,7 @@ class TfIdfVectorizer(Estimator, Serializable):
     def save(self) -> None:
         if not self.is_pretrained:
             path = expand_path(self.save_path)
-            directory = os.path.dirname(path)
-            if not os.path.exists(directory):
-                os.makedirs(directory)
-
+            make_all_dirs(path)
             logger.info("Saving tfidf_vectorizer to {}".format(path))
             save_pickle(self.vectorizer, path)
 
