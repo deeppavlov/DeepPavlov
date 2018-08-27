@@ -40,6 +40,7 @@ class ELMoEmbedder(Component):
             ``tenserflow_hub.load_module_spec`` by using `TensorFlow Hub <https://www.tensorflow.org/hub/overview>`__.
         dim: Dimensionality of output token embeddings of ELMo model.
         pad_zero: Whether to use pad samples or not.
+        mean: Whether to return a mean ELMo embedding of tokens per sample.
 
     Examples:
         You can use ELMo models from DeepPavlov as usual `TensorFlow Hub Module
@@ -67,11 +68,13 @@ class ELMoEmbedder(Component):
 
 
     """
-    def __init__(self, spec: str, dim: int = 1024, pad_zero: bool = False, **kwargs) -> None:
+    def __init__(self, spec: str, dim: int = 1024, pad_zero: bool = False, mean: bool = False,
+                **kwargs) -> None:
 
         self.spec = spec if '://' in spec else str(expand_path(spec))
         self.dim = dim
         self.pad_zero = pad_zero
+        self.mean = mean
         self.elmo_outputs, self.sess,  self.tokens_ph,  self.tokens_length_ph = self._load()
 
     def _load(self):
@@ -104,21 +107,27 @@ class ELMoEmbedder(Component):
         return elmo_outputs, sess, tokens_ph, tokens_length_ph
 
     @overrides
-    def __call__(self, batch: List[List[str]], mean: bool = False,
+    def __call__(self, batch: List[List[str]],
                  *args, **kwargs) -> Union[List[np.ndarray], np.ndarray]:
         """
         Embed sentences from a batch.
 
         Args:
             batch: A list of tokenized text samples.
-            mean: Whether to return a mean ELMo embedding of tokens per sample.
 
         Returns:
             A batch of ELMo embeddings.
         """
-        if not (batch and batch[0]):
+        if not batch:
             empty_vec = np.zeros(self.dim, dtype=np.float32)
-            return [empty_vec] if mean else [[empty_vec]]
+            return [empty_vec] if self.mean else [[empty_vec]]
+
+        filled_batch = []
+        for batch_line in batch:
+            batch_line = batch_line if batch_line else ['']
+            filled_batch.append(batch_line)
+
+        batch = filled_batch
 
         tokens_length = [len(batch_line) for batch_line in batch]
         tokens_length_max = max(tokens_length)
@@ -133,7 +142,7 @@ class ELMoEmbedder(Component):
                                     }
                                     )
 
-        if mean:
+        if self.mean:
             batch = elmo_outputs['default']
 
             dim0, dim1 = batch.shape

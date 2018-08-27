@@ -186,11 +186,13 @@ class SquadModel(TFModel):
             logits1, logits2 = pointer(init, match, self.hidden_size, self.c_mask)
 
         with tf.variable_scope("predict"):
+            outer_logits = tf.exp(tf.expand_dims(logits1, axis=2) + tf.expand_dims(logits2, axis=1))
             outer = tf.matmul(tf.expand_dims(tf.nn.softmax(logits1), axis=2),
                               tf.expand_dims(tf.nn.softmax(logits2), axis=1))
             outer = tf.matrix_band_part(outer, 0, tf.cast(tf.minimum(15, self.c_maxlen), tf.int64))
             self.yp1 = tf.argmax(tf.reduce_max(outer, axis=2), axis=1)
             self.yp2 = tf.argmax(tf.reduce_max(outer, axis=1), axis=1)
+            self.yp_logits = tf.reduce_max(tf.reduce_max(outer_logits, axis=2), axis=1)
             loss_1 = tf.nn.softmax_cross_entropy_with_logits(logits=logits1, labels=self.y1)
             loss_2 = tf.nn.softmax_cross_entropy_with_logits(logits=logits2, labels=self.y2)
             self.loss = tf.reduce_mean(loss_1 + loss_2)
@@ -231,8 +233,7 @@ class SquadModel(TFModel):
             self.opt = tf.train.AdadeltaOptimizer(learning_rate=self.lr_ph, epsilon=1e-6)
             grads = self.opt.compute_gradients(self.loss)
             gradients, variables = zip(*grads)
-
-            capped_grads, _ = tf.clip_by_global_norm(gradients, self.grad_clip)
+            capped_grads = [tf.clip_by_norm(g, self.grad_clip) for g in gradients]
             self.train_op = self.opt.apply_gradients(zip(capped_grads, variables), global_step=self.global_step)
 
     def _build_feed_dict(self, c_tokens, c_chars, q_tokens, q_chars, y1=None, y2=None):
@@ -278,7 +279,7 @@ class SquadModel(TFModel):
         return loss
 
     def __call__(self, c_tokens: np.ndarray, c_chars: np.ndarray, q_tokens: np.ndarray, q_chars: np.ndarray,
-                 *args, **kwargs) -> Tuple[np.ndarray, np.ndarray]:
+                 *args, **kwargs) -> Tuple[np.ndarray, np.ndarray, List[float]]:
         """
         Predicts answer start and end positions by given context and question.
 
@@ -289,7 +290,7 @@ class SquadModel(TFModel):
             q_chars: batch of tokenized questions, each token split on chars
 
         Returns:
-            answer_start and answer_end positions
+            answer_start, answer_end positions, answer logits which represent models confidence
         """
         if any(np.sum(c_tokens, axis=-1) == 0) or any(np.sum(q_tokens, axis=-1) == 0):
             logger.info('SQuAD model: Warning! Empty question or context was found.')
@@ -297,8 +298,8 @@ class SquadModel(TFModel):
             return noanswers, noanswers
 
         feed_dict = self._build_feed_dict(c_tokens, c_chars, q_tokens, q_chars)
-        yp1, yp2 = self.sess.run([self.yp1, self.yp2], feed_dict=feed_dict)
-        return yp1, yp2
+        yp1, yp2, logits = self.sess.run([self.yp1, self.yp2, self.yp_logits], feed_dict=feed_dict)
+        return yp1, yp2, [float(logit) for logit in logits]
 
     def process_event(self, event_name: str, data) -> None:
         """

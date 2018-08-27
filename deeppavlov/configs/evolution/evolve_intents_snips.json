@@ -97,8 +97,7 @@
           "discrete": true
         },
         "confident_threshold": {
-          "evolve_choice": true,
-          "values": [
+          "evolve_choice": [
             0.5,
             1
           ]
