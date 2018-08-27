@@ -204,7 +204,7 @@ class KerasClassificationModel(KerasModel):
             predictions = self.model.predict(features)
             return predictions
 
-    def __call__(self, data: List[List[str]], *args) -> Tuple[np.ndarray, List[dict]]:
+    def __call__(self, data: List[List[str]], *args) -> Tuple[List[list], List[dict]]:
         """
         Infer on the given data
 
