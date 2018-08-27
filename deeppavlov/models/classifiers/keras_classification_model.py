@@ -217,7 +217,7 @@ class KerasClassificationModel(KerasModel):
                 vector of probabilities to belong with each class
                 or list of labels sentence belongs with
         """
-        preds = np.array(self.infer_on_batch(data))
+        preds = np.array(self.infer_on_batch(data), dtype="float64")
 
         labels = proba2labels(preds, confident_threshold=self.opt['confident_threshold'], classes=self.classes)
         return labels, [dict(zip(self.classes, preds[i])) for i in range(preds.shape[0])]
