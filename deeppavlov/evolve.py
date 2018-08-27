@@ -302,6 +302,8 @@ def results_to_table(population, evolution, considered_metrics, result_file, res
             val_results = reports[0]["valid"]["metrics"]
         elif len(reports) == 1 and "test" in reports[0].keys():
             test_results = reports[0]["test"]["metrics"]
+        else:
+            raise ConfigError("Can not proceed output files: didn't find valid and/or test results")
 
         result_table_dict = {}
         for el in result_table_columns:
