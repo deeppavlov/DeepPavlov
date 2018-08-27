@@ -1,9 +1,7 @@
 {
   "dataset_reader": {
-    "name": "faq_reader",
-    "x_col_name": "Question",
-    "y_col_name": "Answer",
-    "data_url": "http://files.deeppavlov.ai/faq/school/faq_school.csv"
+    "name": "wiki_line_reader",
+    "data_path": "wiki/wikitext_ru/ru.wiki.train.txt"
   },
   "dataset_iterator": {
     "name": "data_learning_iterator"
@@ -26,32 +24,20 @@
         "save_path": "vectorizer/tfidf_vectorizer.pkl",
         "load_path": "vectorizer/tfidf_vectorizer.pkl",
         "out": "q_vect"
-      },
-      {
-        "name": "faq_cos_model",
-        "in": "q_vect",
-        "fit_on": ["q_vect", "y"],
-        "save_path": "faq/faq_tfidf_cos_model.pkl",
-        "load_path": "faq/faq_tfidf_cos_model.pkl",
-        "out": ["answer", "score"]
       }
     ],
-    "out": ["answer", "score"]
+    "out": "q_vect"
   },
 
   "train": {
     "validate_best": false,
     "test_best": false
- },
+  },
   "metadata": {
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/faq/school/faq_tfidf_cos_model.pkl",
-        "subdir": "faq"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/faq/school/tfidf_vectorizer.pkl",
-        "subdir": "faq"
+        "url": "http://files.deeppavlov.ai/datasets/wikitext_ru.zip",
+        "subdir": "wiki"
       }
     ]
   }

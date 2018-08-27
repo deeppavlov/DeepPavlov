@@ -32,14 +32,18 @@ logger = get_logger(__name__)
 @register('sentence2vector_v2w_tfidf')
 class SentenceW2vVectorizerTfidfWeights(Estimator, Serializable):
 
-    def __init__(self, save_path: str = None, load_path: str = None, **kwargs) -> None:
+    def __init__(self, use_pretrained: str = False, save_path: str = None, load_path: str = None, **kwargs) -> None:
         self.save_path = save_path
         self.load_path = load_path
+        self.use_pretrained = use_pretrained
 
-        if kwargs['mode'] != 'train':
+        if self.use_pretrained:
             self.load()
         else:
-            self.vectorizer = TfidfVectorizer()
+            if kwargs['mode'] != 'train':
+                self.load()
+            else:
+                self.vectorizer = TfidfVectorizer()
 
     def __call__(self, questions: List[str], tokens_fasttext_vectors):
 

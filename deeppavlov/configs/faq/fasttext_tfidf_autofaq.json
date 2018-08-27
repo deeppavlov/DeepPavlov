@@ -27,17 +27,16 @@
       {
         "name": "sentence2vector_v2w_tfidf",
         "in": ["q_token_lemmas", "tokens_fasttext_vectors"],
-        "fit_on": ["q_token_lemmas"],
-        "save_path": "autofaq/faq_sentence2vector_v2w_tfidf.pkl",
-        "load_path": "autofaq/faq_sentence2vector_v2w_tfidf.pkl",
+        "save_path": "vectorizer/tfidf_vectorizer.pkl",
+        "load_path": "vectorizer/tfidf_vectorizer.pkl",
         "out": "question_vector"
       },
       {
         "name": "faq_cos_model",
         "in": "question_vector",
         "fit_on": ["question_vector", "y"],
-        "save_path": "autofaq/faq_fasttext_cos_model.pkl",
-        "load_path": "autofaq/faq_fasttext_cos_model.pkl",
+        "save_path": "faq/faq_fasttext_cos_model.pkl",
+        "load_path": "faq/faq_fasttext_cos_model.pkl",
         "out": ["answer", "score"]
       }
     ],
@@ -55,11 +54,11 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/faq/school/faq_fasttext_cos_model.pkl",
-        "subdir": "autofaq"
+        "subdir": "faq"
       },
       {
-        "url": "http://files.deeppavlov.ai/faq/school/faq_sentence2vector_v2w_tfidf.pkl",
-        "subdir": "autofaq"
+        "url": "http://files.deeppavlov.ai/faq/school/tfidf_vectorizer.pkl",
+        "subdir": "vectorizer"
       },
       {
         "url": "http://files.deeppavlov.ai/embeddings/lenta_lower_100.bin",

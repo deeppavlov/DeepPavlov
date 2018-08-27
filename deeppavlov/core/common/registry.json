@@ -92,6 +92,7 @@
   "typos_iterator": "deeppavlov.dataset_iterators.typos_iterator:TyposDatasetIterator",
   "typos_kartaslov_reader": "deeppavlov.dataset_readers.typos_reader:TyposKartaslov",
   "typos_wikipedia_reader": "deeppavlov.dataset_readers.typos_reader:TyposWikipedia",
+  "wiki_line_reader": "deeppavlov.dataset_readers.wiki_line_reader:FaqDatasetReader",
   "wiki_sqlite_vocab": "deeppavlov.vocabs.wiki_sqlite:WikiSQLiteVocab",
   "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary"
 }
