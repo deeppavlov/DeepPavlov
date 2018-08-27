@@ -16,7 +16,7 @@
 import numpy as np
 from typing import List, Tuple
 
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, accuracy_score
 
 from deeppavlov.core.common.metrics_registry import register_metric
 from deeppavlov.models.classifiers.utils import labels2onehot
@@ -84,12 +84,23 @@ def simple_f1_macro(y_true, y_predicted, average="macro") -> float:
     Returns:
         F1-measure
     """
-    # classes = np.array(list(y_predicted[0][1].keys()))
-    # y_true_one_hot = labels2onehot(y_true, classes)
-    # y_pred_labels = [y_predicted[i][0] for i in range(len(y_predicted))]
-    # y_pred_one_hot = labels2onehot(y_pred_labels, classes)
-
     return f1_score(y_true, y_predicted, average=average)
+
+
+@register_metric('simple_accuracy')
+def simple_acc(y_true, y_predicted) -> float:
+    """
+    Calculate F1-measure macro
+
+    Args:
+        y_true: true binary labels
+        y_predicted: predictions.
+        average: determines the type of averaging performed on the data
+
+    Returns:
+        F1-measure
+    """
+    return accuracy_score(y_true, y_predicted)
 
 
 @register_metric('simple_f1_weighted')
@@ -105,9 +116,4 @@ def simple_f1_weighted(y_true, y_predicted, average="weighted") -> float:
     Returns:
         F1-measure
     """
-    # classes = np.array(list(y_predicted[0][1].keys()))
-    # y_true_one_hot = labels2onehot(y_true, classes)
-    # y_pred_labels = [y_predicted[i][0] for i in range(len(y_predicted))]
-    # y_pred_one_hot = labels2onehot(y_pred_labels, classes)
-
     return f1_score(y_true, y_predicted, average=average)

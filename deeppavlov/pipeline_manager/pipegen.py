@@ -17,7 +17,7 @@ class PipeGen:
     """
     The class implements the generator of standard DeepPavlov configs.
     """
-    def __init__(self, config_path: str, save_path: str, stype: str ='grid', n=10):
+    def __init__(self, config_path: str, save_path: str, stype: str ='grid', n=10, test_mode=False):
         """
         Initialize generator with input params.
 
@@ -27,6 +27,7 @@ class PipeGen:
             stype: str; random or grid - the trigger that determines type of hypersearch
             n: int; determines the number of generated pipelines, if hyper_search == random.
         """
+        self.test_mode = test_mode
         self.save_path = save_path
         self.config_path = config_path
         self.N = n
@@ -312,10 +313,29 @@ class PipeGen:
             if component.get('main') is True:
                 if component.get('save_path', None) is not None:
                     sp = component['save_path'].split('/')[-1]
-                    component['save_path'] = join('..', self.save_path, 'pipe_{}'.format(n+1), sp)
+                    if not self.test_mode:
+                        component['save_path'] = join('..', self.save_path, 'pipe_{}'.format(n+1), sp)
+                    else:
+                        component['save_path'] = join('..', self.save_path, "tmp", 'pipe_{}'.format(n + 1), sp)
                 if component.get('load_path', None) is not None:
                     lp = component['load_path'].split('/')[-1]
-                    component['load_path'] = join('..', self.save_path, 'pipe_{}'.format(n+1), lp)
+                    if not self.test_mode:
+                        component['load_path'] = join('..', self.save_path, 'pipe_{}'.format(n+1), lp)
+                    else:
+                        component['load_path'] = join('..', self.save_path, "tmp", 'pipe_{}'.format(n + 1), lp)
+            else:
+                if component.get('save_path', None) is not None:
+                    sp = component['save_path'].split('/')[-1]
+                    if not self.test_mode:
+                        component['save_path'] = join('..', self.save_path, sp)
+                    else:
+                        component['save_path'] = join('..', self.save_path, "tmp", sp)
+                # if component.get('load_path', None) is not None:
+                #     lp = component['load_path'].split('/')[-1]
+                #     if not self.test_mode:
+                #         component['load_path'] = join('..', self.save_path, lp)
+                #     else:
+                #         component['load_path'] = join('..', self.save_path, "tmp", lp)
         return config
 
     def __call__(self, *args, **kwargs):

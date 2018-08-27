@@ -2,9 +2,11 @@ from time import time
 from datetime import datetime
 from os.path import join
 from copy import copy
+from shutil import rmtree
 
-from deeppavlov.pipeline_manager.pipegen import PipeGen
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
+from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.pipeline_manager.pipegen import PipeGen
 from deeppavlov.pipeline_manager.utils import normal_time
 from deeppavlov.pipeline_manager.logger import Logger
 from deeppavlov.pipeline_manager.utils import results_visualization
@@ -54,6 +56,8 @@ class PipelineManager:
 
         self.logger = Logger(exp_name, root, self.info, self.date)
         self.start_exp = time()
+        # start test
+        self.test()
 
     def run(self):
         """
@@ -103,4 +107,52 @@ class PipelineManager:
         # visualization of results
         path = join(self.root, self.date, self.exp_name)
         results_visualization(path, join(path, 'results', 'images'), self.target_metric)
+        return None
+
+    def test(self):
+        """
+        Initializes the pipeline generator with tiny data and runs the test of experiment.
+
+        Returns:
+            None
+        """
+        # create tmp folder in self.save_path
+
+        # create the pipeline generator
+        pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, stype=self.hyper_search,
+                                     test_mode=True)
+
+        # Start generating pipelines configs
+        print('[ Test start - {0} pipes, will be run]'.format(pipeline_generator.len))
+        exp_start_time = time()
+        for i, pipe in enumerate(pipeline_generator()):
+            # print progress
+            if i != 0:
+                itime = normal_time(((time() - exp_start_time) / i) * (pipeline_generator.len - i))
+                print('\n')
+                print('[ Test progress: pipe {0}/{1}; Time left: {2}; ]'.format(i + 1, pipeline_generator.len, itime))
+
+            if pipe['dataset_reader']['name'] == 'basic_classification_reader':
+                pipe['dataset_reader'] = {
+                    "name": "basic_classification_reader",
+                    "x": "text",
+                    "y": "target",
+                    "data_path": '../tests/test_data/classification_data/'
+                }
+            else:
+                raise ConfigError("Dataset reader is not intended for classification task."
+                                  "Name of dataset_reader must be 'basic_classification_reader',"
+                                  "but {} was found in config.".format(pipe['dataset_reader']['name']))
+
+            if self.mode == 'train':
+                results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=False)
+            elif self.mode == 'evaluate':
+                results = train_evaluate_model_from_config(pipe, to_train=False, to_validate=False)
+            else:
+                raise ValueError("Only 'train' and 'evaluate' mode are available, but {0} was found.".format(self.mode))
+
+        # del all tmp files in save path
+        rmtree(join(self.save_path, "tmp"))
+
+        print('[ The test was successful ]')
         return None

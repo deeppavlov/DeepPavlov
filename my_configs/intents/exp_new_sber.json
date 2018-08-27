@@ -46,14 +46,14 @@
         "save_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.bin",
         "load_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.bin",
         "dim": 300
-      },
-      {
-        "id": "my_embedder",
-        "name": "glove",
-        "save_path": "embeddings/new_sber_w2v.txt",
-        "load_path": "embeddings/new_sber_w2v.txt",
-        "dim": 100
-      }
+        },
+        {
+          "id": "my_embedder",
+          "name": "glove",
+          "save_path": "embeddings/new_sber_w2v.txt",
+          "load_path": "embeddings/new_sber_w2v.txt",
+          "dim": 100
+        }
       ],
       [
         {
