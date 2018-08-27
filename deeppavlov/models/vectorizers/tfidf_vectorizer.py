@@ -24,6 +24,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from deeppavlov.core.common.file import save_pickle
 from deeppavlov.core.common.file import load_pickle
 from deeppavlov.core.commands.utils import expand_path
+import os
 
 TOKENIZER = None
 logger = get_logger(__name__)
@@ -60,8 +61,13 @@ class TfIdfVectorizer(Estimator, Serializable):
 
     def save(self) -> None:
         if not self.is_pretrained:
-            logger.info("Saving tfidf_vectorizer to {}".format(expand_path(self.save_path)))
-            save_pickle(self.vectorizer, expand_path(self.save_path))
+            path = expand_path(self.save_path)
+            directory = os.path.dirname(path)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+
+            logger.info("Saving tfidf_vectorizer to {}".format(path))
+            save_pickle(self.vectorizer, path)
 
     def load(self) -> None:
         logger.info("Loading tfidf_vectorizer from {}".format(expand_path(self.load_path)))
