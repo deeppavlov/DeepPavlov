@@ -19,10 +19,8 @@ from typing import Union
 from deeppavlov.core.common import paths
 
 
-def set_deeppavlov_root(config: dict):
-    """
-    Make a serialization user dir.
-    """
+def set_deeppavlov_root(config: dict) -> None:
+    """Make a serialization user dir."""
     try:
         deeppavlov_root = Path(config['deeppavlov_root'])
     except KeyError:
@@ -34,22 +32,23 @@ def set_deeppavlov_root(config: dict):
 
 
 def get_deeppavlov_root() -> Path:
+    """Return DeepPavlov root directory."""
     if not paths.deeppavlov_root:
         set_deeppavlov_root({})
     return paths.deeppavlov_root
 
 
 def expand_path(path: Union[str, Path]) -> Path:
+    """Make path expansion."""
     return get_deeppavlov_root() / Path(path).expanduser()
 
 
 def is_empty(d: Path) -> bool:
-    """
-    Check if directory is empty.
-    """
+    """Check if directory is empty."""
     return not bool(list(d.iterdir()))
 
 
-def import_packages(packages: list):
+def import_packages(packages: list) -> None:
+    """Simple function to import packages from list."""
     for package in packages:
         __import__(package)

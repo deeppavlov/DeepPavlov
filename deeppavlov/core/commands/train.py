@@ -39,10 +39,8 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-def prettify_metrics(metrics, precision=4):
-    """
-    Prettifies the dictionary of metrics
-    """
+def prettify_metrics(metrics: dict, precision: int = 4) -> OrderedDict:
+    """Prettifies the dictionary of metrics."""
     prettified_metrics = OrderedDict()
     for key, value in metrics:
         value = round(value, precision)
@@ -63,8 +61,8 @@ def _fit_batches(model: Estimator, iterator: DataFittingIterator, train_config) 
     return model
 
 
-def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingIterator]):
-
+def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingIterator]) -> Chainer:
+    """Fit and return the chainer described in corresponding configuration dictionary."""
     chainer_config: dict = config['chainer']
     chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
     for component_config in chainer_config['pipe']:
@@ -94,7 +92,8 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
     return chainer
 
 
-def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, to_validate=True) -> None:
+def train_evaluate_model_from_config(config: [str, Path, dict], to_train: bool = True, to_validate: bool = True) -> None:
+    """Make training and evaluation of the model described in corresponding configuration file."""
     if isinstance(config, (str, Path)):
         config = read_json(config)
     set_deeppavlov_root(config)
