@@ -110,6 +110,9 @@ class StreamSpacyTokenizer(Component):
         raise TypeError(
             "StreamSpacyTokenizer.__call__() is not implemented for `{}`".format(type(batch[0])))
 
+    def analyze(self, text: str):
+        return self.model(text)
+
     def _tokenize(self, data: List[str], ngram_range: Tuple[int, int]=(1, 1), batch_size: int=10000,
                   n_threads: int=1, lowercase: bool=True) -> Generator[List[str], Any, None]:
         """Tokenize a list of documents.
