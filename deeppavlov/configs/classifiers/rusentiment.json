@@ -9,7 +9,16 @@
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator",
-    "seed": 42
+    "seed": 42,
+    "field_to_split": "train",
+    "split_fields": [
+      "train",
+      "valid"
+    ],
+    "split_proportions": [
+      0.9,
+      0.1
+    ]
   },
   "chainer": {
     "in": [
