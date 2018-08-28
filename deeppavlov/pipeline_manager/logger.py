@@ -11,7 +11,7 @@ class Logger(object):
     The class implements data collection on how the experiment is going. Pipeline configuration information,
     pipeline results, and time information is collected.
     """
-    def __init__(self, name, root, info, date):
+    def __init__(self, name, root, info, date, plot):
         """
         Init log, and creates folders for logs, report and checkpoints.
 
@@ -40,8 +40,9 @@ class Logger(object):
 
         if not isdir(self.log_path):
             os.makedirs(self.log_path)
-        if not isdir(join(self.log_path, 'results', 'images')):
-            os.makedirs(join(self.log_path, 'results', 'images'))
+        if plot:
+            if not isdir(join(self.log_path, 'images')):
+                os.makedirs(join(self.log_path, 'images'))
 
         self.log = OrderedDict(experiment_info=OrderedDict(date=date,
                                                            exp_name=self.exp_name,
@@ -61,9 +62,6 @@ class Logger(object):
 
     def save(self):
         """save log in file"""
-        # with open(self.log_file, 'w') as log_file:
-        #     json.dump(self.log, log_file)
-        #     log_file.close()
         if not isfile(self.log_file):
             with open(self.log_file, 'w') as log_file:
                 json.dump(self.log, log_file)

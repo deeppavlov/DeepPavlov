@@ -18,7 +18,7 @@ class PipelineManager:
     The class implements functions for automatic iteration of pipelines and hyperparameters search.
     """
     def __init__(self, config_path, exp_name, date=None, mode='train', info=None, root='./experiments/',
-                 hyper_search='grid', sample_num=10, target_metric=None):
+                 hyper_search='grid', sample_num=10, target_metric=None, plot=True):
         """
         Initialize logger, builds a directory tree, initialize date.
 
@@ -45,6 +45,7 @@ class PipelineManager:
         self.hyper_search = hyper_search
         self.sample_num = sample_num
         self.target_metric = target_metric
+        self.plot = plot
         self.pipeline_generator = None
         if date is not None:
             self.date = date
@@ -55,7 +56,7 @@ class PipelineManager:
         self.root = root
         self.save_path = join(self.root, self.date, self.exp_name, 'checkpoints')
 
-        self.logger = Logger(exp_name, root, self.info, self.date)
+        self.logger = Logger(exp_name, root, self.info, self.date, self.plot)
         self.start_exp = time()
         # start test
         self.test()
@@ -111,7 +112,7 @@ class PipelineManager:
 
         # visualization of results
         path = join(self.root, self.date, self.exp_name)
-        results_visualization(path, join(path, 'results', 'images'), self.target_metric)
+        results_visualization(path, join(path, 'images'), self.plot, self.target_metric)
         return None
 
     def test(self):

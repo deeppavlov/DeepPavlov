@@ -533,14 +533,18 @@ def plot_res(info, save=True, savepath='./', width=0.2, fheight=8, fwidth=12, ex
 # _________________________________________________Built report_______________________________________________________
 
 
-def results_visualization(root, savepath, target_metric=None):
+def results_visualization(root, savepath, plot, target_metric=None):
     """ Reads the log and generates a report based on it """
     with open(join(root, root.split('/')[-1] + '.json'), 'r') as log_file:
         log = json.load(log_file)
         log_file.close()
 
-    # reading and scrabbing data
-    info = results_analizator(log, target_metric=target_metric)
-    plot_res(info, savepath=savepath)
+    # create the xlsx file with results of experiments
     build_pipeline_table(log, target_metric=target_metric, save_path=root)
+    if plot:
+        # scrub data from log for image creating
+        info = results_analizator(log, target_metric=target_metric)
+        # plot histogram
+        plot_res(info, savepath=savepath)
+
     return None

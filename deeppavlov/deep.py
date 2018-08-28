@@ -48,6 +48,8 @@ parser.add_argument("-d", "--download", action="store_true", help="download mode
 
 parser.add_argument("-r", "--root", dest="root", default='./download/experiments',
                     help="folder where you will save the results and control points", type=str)
+parser.add_argument("-p", "--plot", dest="plot", help="plot a image if true", action='store_true')
+parser.add_argument("-np", "--not-plot", dest="plot", help="plot a image if true", action='store_false')
 parser.add_argument("-hp", "--hyper", dest="hyper_search", default='grid',
                     help="type of hyper search 'grid' or 'random'", type=str)
 parser.add_argument("-sn", "--sample-num", dest="sample_num", default=10,
@@ -92,7 +94,7 @@ def main():
     elif args.mode == 'sort_out':
         manager = PipelineManager(config_path=pipeline_config_path, exp_name=args.exp_name, mode='train',
                                   root=args.root, hyper_search=args.hyper_search, sample_num=args.sample_num,
-                                  target_metric=args.target_metric)
+                                  target_metric=args.target_metric, plot=args.plot)
         manager.run()
     elif args.mode == 'install':
         install_from_config(pipeline_config_path)
