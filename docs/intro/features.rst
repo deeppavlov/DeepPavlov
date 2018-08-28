@@ -76,10 +76,26 @@ Other benchmarks on DSTC2 (can't be directly compared due to dataset :doc:`modif
 
 - :doc:`Seq2seq goal-oriented bot </skills/seq2seq_go_bot>`
 
-Dialogue agent predicts responses in a goal-oriented dialog and is able to handle multiple domains (pretrained bot
-allows calendar scheduling, weather information retrieval, and point-of-interest navigation). The model is end-to-end
-differentiable and does not need to explicitly model dialogue state or belief trackers.
+Dialogue agent predicts responses in a goal-oriented dialog and is able to handle
+multiple domains (pretrained bot allows calendar scheduling, weather information retrieval,
+and point-of-interest navigation). The model is end-to-end differentiable and
+does not need to explicitly model dialogue state or belief trackers.
 
+Comparison of deeppavlov pretrained model with others:
+
++------------------------------------------------------+------------------+-----------------+
+| Dataset & Model                                      | Valid BLEU       | Test BLEU       |
++======================================================+==================+=================+
+| :config:`Kvret, KvretNet  <go_bot/gobot_dstc2.json>` | 0.0436           | 0.0415          |
++------------------------------------------------------+------------------+-----------------+
+| Kvret, KvretNet, Mihail Eric et al. (2017)           | --               | 0.132           |
++------------------------------------------------------+------------------+-----------------+
+| Kvret, CopyNet, Mihail Eric et al. (2017)            | --               | 0.110           |
++------------------------------------------------------+------------------+-----------------+
+| Kvret, Attn Seq2Seq, Mihail Eric et al. (2017)       | --               | 0.102           |
++------------------------------------------------------+------------------+-----------------+
+| Kvret, Rule-based, Mihail Eric et al. (2017)         | --               | 0.066           |
++------------------------------------------------------+------------------+-----------------+
 
 - :doc:`Automatic spelling correction component </components/spelling_correction>`
 

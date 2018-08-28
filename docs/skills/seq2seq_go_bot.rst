@@ -90,6 +90,25 @@ Config parameters:
 
 To configure your own pipelines that contain a ``"seq2seq_go_bot"`` component, refer to documentation for :class:`~deeppavlov.models.seq2seq_go_bot.bot.Seq2SeqGoalOrientedBot` and :class:`~deeppavlov.models.seq2seq_go_bot.network.Seq2SeqGoalOrientedBotNetwork` classes.
 
+Comparison
+^^^^^^^^^^
+
+BLEU scores for different models on KVret dataset:
+
++-----------------------------------------------+------------------+-----------------+
+| Model                                         | Valid BLEU       | Test BLEU       |
++===============================================+==================+=================+
+| :config:`KvretNet <go_bot/gobot_dstc2.json>`  | 0.0436           | 0.0415          |
++-----------------------------------------------+------------------+-----------------+
+| KvretNet, Mihail Eric et al. (2017)           | --               | 0.132           |
++-----------------------------------------------+------------------+-----------------+
+| CopyNet, Mihail Eric et al. (2017)            | --               | 0.110           |
++-----------------------------------------------+------------------+-----------------+
+| Attn Seq2Seq, Mihail Eric et al. (2017)       | --               | 0.102           |
++-----------------------------------------------+------------------+-----------------+
+| Rule-based, Mihail Eric et al. (2017)         | --               | 0.066           |
++-----------------------------------------------+------------------+-----------------+
+
 References
 ----------
 
