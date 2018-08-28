@@ -49,7 +49,7 @@ def labels2onehot(labels: [list, np.ndarray], classes:  [list, np.ndarray]) -> n
     return y
 
 
-def proba2labels(proba: [list, np.ndarray], confident_threshold: float, classes:  [list, np.ndarray]) -> np.ndarray:
+def proba2labels(proba: [list, np.ndarray], confident_threshold: float, classes:  [list, np.ndarray]) -> List[List]:
     """
     Convert vectors of probabilities to labels using confident threshold
     (if probability to belong with the class is bigger than confident_threshold, sample belongs with the class;
@@ -61,16 +61,16 @@ def proba2labels(proba: [list, np.ndarray], confident_threshold: float, classes:
         classes: array of classes' names
 
     Returns:
-        array of lists of labels for each sample
+        list of lists of labels for each sample
     """
     y = []
     for sample in proba:
         to_add = np.where(sample > confident_threshold)[0]
         if len(to_add) > 0:
-            y.append(np.array(classes)[to_add])
+            y.append(np.array(classes)[to_add].tolist())
         else:
-            y.append(np.array([np.array(classes)[np.argmax(sample)]]))
-    y = np.asarray(y)
+            y.append(np.array([np.array(classes)[np.argmax(sample)]]).tolist())
+
     return y
 
 
