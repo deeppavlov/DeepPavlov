@@ -76,26 +76,65 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/rusentiment_v1",
-        "load_path": "classifiers/rusentiment_v1",
+        "save_path": "evolution/classification/rusentiment_v0",
+        "load_path": "evolution/classification/rusentiment_v0",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
+        "kernel_sizes_cnn": [
+          1,
+          2,
+          3
+        ],
+        "filters_cnn": {
+          "evolve_range": [
+            50,
+            100
+          ],
+          "discrete": true
+        },
         "confident_threshold": 1,
         "optimizer": "Adam",
-        "lear_rate": 0.01,
-        "lear_rate_decay": 0.1,
-        "loss": "binary_crossentropy",
+        "lear_rate": {
+          "evolve_range": [
+            1e-4,
+            1e-1
+          ]
+        },
+        "lear_rate_decay": {
+          "evolve_range": [
+            1e-6,
+            1e-2
+          ]
+        },
+        "loss": "categorical_crossentropy",
         "text_size": 100,
         "last_layer_activation": "softmax",
-        "units_lstm": 256,
-        "coef_reg_lstm": 1e-3,
-        "coef_reg_den": 1e-2,
-        "dropout_rate": 0.5,
-        "rec_dropout_rate": 0.1,
-        "dense_size": 100,
-        "self_att_hid": 128,
-        "self_att_out": 128,
-        "model_name": "bilstm_self_mult_attention_model"
+        "coef_reg_cnn": {
+          "evolve_range": [
+            1e-6,
+            1e-2
+          ]
+        },
+        "coef_reg_den": {
+          "evolve_range": [
+            1e-6,
+            1e-2
+          ]
+        },
+        "dropout_rate": {
+          "evolve_range": [
+            0,
+            1
+          ]
+        },
+        "dense_size": {
+          "evolve_range": [
+            50,
+            100
+          ],
+          "discrete": true
+        },
+        "model_name": "cnn_model"
       }
     ],
     "out": [
@@ -105,7 +144,13 @@
   },
   "train": {
     "epochs": 100,
-    "batch_size": 64,
+    "batch_size": {
+      "evolve_range": [
+        50,
+        200
+      ],
+      "discrete": true
+    },
     "metrics": [
       "classification_f1",
       "classification_roc_auc",

@@ -117,7 +117,7 @@
           ],
           "scale": "log"
         },
-        "loss": "binary_crossentropy",
+        "loss": "categorical_crossentropy",
         "text_size": 15,
         "coef_reg_cnn": {
           "evolve_range": [
