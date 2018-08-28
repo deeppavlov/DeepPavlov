@@ -1,6 +1,6 @@
 {
   "dataset_reader": {
-    "name": "wiki_line_reader",
+    "name": "line_reader",
     "data_path": "wiki/wikitext_ru/ru.wiki.train.txt"
   },
   "dataset_iterator": {
@@ -21,8 +21,7 @@
         "name": "tfidf_vectorizer",
         "in": "q_token_lemmas",
         "fit_on": ["q_token_lemmas"],
-        "save_path": "vectorizer/tfidf_vectorizer.pkl",
-        "load_path": "vectorizer/tfidf_vectorizer.pkl",
+        "save_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
         "out": "q_vect"
       }
     ],

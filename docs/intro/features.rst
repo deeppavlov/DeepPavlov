@@ -82,6 +82,12 @@ character-based morphological tagging for 14 languages <http://www.aclweb.org/an
 model for Russian and several other languages. Model assigns morphological tags in UD format to sequences of words.
 
 
+- :doc:`Frequently Asked Questions (FAQ) component </components/faq>`
+
+Set of pipelines for FAQ task: classifying incoming question into set of known questions and return prepared answer.
+You can build different pipelines based on: tf-idf, weighted fasttext, cosine similarity, logistic regression.
+
+
 Skills
 ------
 

@@ -1,15 +1,17 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-    http://www.apache.org/licenses/LICENSE-2.0
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, softwaredata
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 
 import numpy as np
 from typing import List, Tuple
@@ -31,14 +33,34 @@ logger = get_logger(__name__)
 
 @register("faq_cos_model")
 class FaqCosineSimilarityModel(Estimator, Serializable):
+    """
+    FAQ model based on cosine similarity between vectorized sentences
+    """
 
     def __init__(self, save_path: str = None, load_path: str = None, **kwargs) -> None:
+        """FAQ model based on cosine similarity between vectorized sentences
+
+        Parameters:
+            save_path: path where to save model
+            load_path: path to model
+
+        Returns:
+            None
+        """
         self.save_path = save_path
         self.load_path = load_path
         if kwargs['mode'] != 'train':
             self.load()
 
     def __call__(self, q_vect) -> Tuple[List[str], List[str]]:
+        """Found most similar answer for input vectorized question
+
+        Parameters:
+            q_vect: vectorized question
+
+        Returns:
+            Tuple of Answer and Score
+        """
 
         if isinstance(q_vect[0], csr_matrix):
             norm = sparse_norm(q_vect[0]) * sparse_norm(self.x_train_features, axis=1)
@@ -55,6 +77,15 @@ class FaqCosineSimilarityModel(Estimator, Serializable):
         return [self.y_train[answer_id]], [np.round(cos_similarities[answer_id], 2)]
 
     def fit(self, x_train_vects, y_train) -> None:
+        """Train FAQ model
+
+        Parameters:
+            x_train_vects: vectorized question for train dataset
+            y_train: answers for train dataset
+
+        Returns:
+            None
+        """
         if len(x_train_vects) != 0:
             if isinstance(x_train_vects[0], csr_matrix):
                 self.x_train_features = vstack(list(x_train_vects))
@@ -68,11 +99,15 @@ class FaqCosineSimilarityModel(Estimator, Serializable):
         self.y_train = list(y_train)
 
     def save(self) -> None:
+        """Save FAQ model
+        """
         logger.info("Saving faq_model to {}".format(self.save_path))
         path = expand_path(self.save_path)
         make_all_dirs(path)
         save_pickle((self.x_train_features, self.y_train), path)
 
     def load(self) -> None:
+        """Load FAQ model
+        """
         logger.info("Loading faq_model from {}".format(self.load_path))
         self.x_train_features, self.y_train = load_pickle(expand_path(self.load_path))

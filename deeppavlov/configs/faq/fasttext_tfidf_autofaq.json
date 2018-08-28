@@ -25,7 +25,7 @@
         "out": "tokens_fasttext_vectors"
       },
       {
-        "name": "sentence2vector_v2w_tfidf",
+        "name": "sentence2vector_w2v_tfidf",
         "in": ["q_token_lemmas", "tokens_fasttext_vectors"],
         "load_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
         "out": "question_vector"

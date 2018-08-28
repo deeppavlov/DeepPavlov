@@ -1,18 +1,16 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from typing import List
 
@@ -29,10 +27,21 @@ import numpy as np
 logger = get_logger(__name__)
 
 
-@register('sentence2vector_v2w_tfidf')
+@register('sentence2vector_w2v_tfidf')
 class SentenceW2vVectorizerTfidfWeights(Estimator, Serializable):
+    """
+    Sentence vectorizer which produce one vector as tf-idf weighted sum of words vectors in sentence
+    """
 
     def __init__(self, save_path: str = None, load_path: str = None, **kwargs) -> None:
+        """Sentence vectorizer which produce one vector as tf-idf weighted sum of words vectors in sentence
+        Parameters:
+            save_path: path where to save model
+            load_path: path to model
+
+        Returns:
+            None
+        """
         self.save_path = save_path
         self.load_path = load_path
 
@@ -44,7 +53,16 @@ class SentenceW2vVectorizerTfidfWeights(Estimator, Serializable):
             else:
                 self.vectorizer = TfidfVectorizer()
 
-    def __call__(self, questions: List[str], tokens_fasttext_vectors):
+    def __call__(self, questions: List[str], tokens_fasttext_vectors) -> List:
+        """Vectorize list of sentences
+
+        Parameters:
+            questions: list of questions/sentences
+            tokens_fasttext_vectors: fasttext vectors for sentences
+
+        Returns:
+            List of vectorized sentences
+        """
 
         q_vects = self.vectorizer.transform([' '.join(q) for q in questions])
         questions_vectors = []
@@ -64,6 +82,14 @@ class SentenceW2vVectorizerTfidfWeights(Estimator, Serializable):
         return questions_vectors
 
     def fit(self, x_train: List[str]) -> None:
+        """Train tf-idf weights
+
+        Parameters:
+            x_train: train sentences
+
+        Returns:
+            None
+        """
         if isinstance(x_train[0], list):
             x_train = [' '.join(x) for x in x_train]
 
@@ -72,12 +98,16 @@ class SentenceW2vVectorizerTfidfWeights(Estimator, Serializable):
         self.token2idx = self.vectorizer.vocabulary_
 
     def save(self) -> None:
+        """Save model
+        """
         logger.info("Saving tfidf_vectorizer to {}".format(self.save_path))
         path = expand_path(self.save_path)
         make_all_dirs(path)
         save_pickle(self.vectorizer, path)
 
     def load(self) -> None:
+        """Load model
+        """
         logger.info("Loading tfidf_vectorizer from {}".format(self.load_path))
         self.vectorizer = load_pickle(expand_path(self.load_path))
         self.token2idx = self.vectorizer.vocabulary_

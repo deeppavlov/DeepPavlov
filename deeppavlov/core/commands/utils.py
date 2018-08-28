@@ -51,7 +51,9 @@ def make_all_dirs(path: Union[str, Path]) -> None:
     if not os.path.exists(directory):
         os.makedirs(directory)
 
-def is_file_exist(path: Union[str, Path]) -> None:
+def is_file_exist(path: Union[str, Path]):
+    if path is None:
+        return False
 
     return os.path.exists(expand_path(path))
 

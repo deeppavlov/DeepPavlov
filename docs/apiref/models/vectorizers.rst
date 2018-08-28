@@ -1,10 +1,17 @@
 deeppavlov.models.vectorizers
 =============================
 
-.. automodule:: deeppavlov.models.vectorizers.hashing_tfidf_vectorizer
 
 .. autoclass:: deeppavlov.models.vectorizers.hashing_tfidf_vectorizer.HashingTfIdfVectorizer
     :members:
 
     .. automethod:: __call__
 
+.. autoclass:: deeppavlov.models.vectorizers.tfidf_vectorizer.TfIdfVectorizer
+    :members:
+
+.. autoclass:: deeppavlov.models.vectorizers.sentence2vector_w2v_tfidf.SentenceW2vVectorizerTfidfWeights
+    :members:
+
+.. autoclass:: deeppavlov.models.vectorizers.sentence2vector_w2v_avg.SentenceAvgW2vVectorizer
+    :members:

@@ -1,18 +1,16 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from typing import List
 
@@ -31,8 +29,21 @@ logger = get_logger(__name__)
 
 @register('tfidf_vectorizer')
 class TfIdfVectorizer(Estimator, Serializable):
+    """
+    Sentence vectorizer which produce sparse vector with tf-idf values for each word in sentence
+    """
 
     def __init__(self, save_path: str = None, load_path: str = None, **kwargs) -> None:
+        """
+        Sentence vectorizer which produce sparse vector with tf-idf values for each word in sentence
+
+        Parameters:
+            save_path: path where to save model
+            load_path: path to model
+
+        Returns:
+            None
+        """
         self.save_path = save_path
         self.load_path = load_path
 
@@ -45,6 +56,15 @@ class TfIdfVectorizer(Estimator, Serializable):
                 self.load()
 
     def __call__(self, questions: List[str]):
+        """
+        Vectorize sentence into tf-idf values
+
+        Parameters:
+            questions: list of sentences
+
+        Returns:
+            list of vectorized sentences
+        """
         if isinstance(questions[0], list):
             questions = [' '.join(q) for q in questions]
 
@@ -52,6 +72,15 @@ class TfIdfVectorizer(Estimator, Serializable):
         return q_vects
 
     def fit(self, x_train: List[str]):
+        """
+        Train tf-idf vectorizer
+
+        Parameters:
+            x_train: list of sentences for train
+
+        Returns:
+            None
+        """
         if isinstance(x_train[0], list):
             x_train = [' '.join(q) for q in x_train]
 
@@ -59,12 +88,17 @@ class TfIdfVectorizer(Estimator, Serializable):
         self.vectorizer.fit(x_train)
 
     def save(self) -> None:
-        if not self.is_pretrained:
-            path = expand_path(self.save_path)
-            make_all_dirs(path)
-            logger.info("Saving tfidf_vectorizer to {}".format(path))
-            save_pickle(self.vectorizer, path)
+        """
+        Save FAQ model
+        """
+        path = expand_path(self.save_path)
+        make_all_dirs(path)
+        logger.info("Saving tfidf_vectorizer to {}".format(path))
+        save_pickle(self.vectorizer, path)
 
     def load(self) -> None:
+        """
+        Load FAQ model
+        """
         logger.info("Loading tfidf_vectorizer from {}".format(expand_path(self.load_path)))
         self.vectorizer = load_pickle(expand_path(self.load_path))
