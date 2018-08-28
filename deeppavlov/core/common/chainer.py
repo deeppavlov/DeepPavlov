@@ -20,8 +20,12 @@ from deeppavlov.core.models.nn_model import NNModel
 
 
 class Chainer(Component):
-    def __init__(self, in_x: [str, list]=None, out_params: [str, list]=None, in_y: [str, list]=None,
-                 *args, as_component: bool=False, **kwargs):
+    """
+    Builds an agent/component pipeline from heterogeneous components (Rule-based/ML/DL). It allows to train
+    and infer models in a pipeline as a whole.
+    """
+    def __init__(self, in_x: [str, list] = None, out_params: [str, list] = None, in_y: [str, list] = None,
+                 *args, as_component: bool = False, **kwargs):
         self.pipe = []
         self.train_pipe = []
         if isinstance(in_x, str):

@@ -31,6 +31,7 @@ else:
 
 
 def cls_from_str(name: str) -> type:
+    """Returns a class object with the name given as a string."""
     try:
         module_name, cls_name = name.split(':')
     except ValueError:
@@ -41,8 +42,10 @@ def cls_from_str(name: str) -> type:
 
 
 def register(name: str = None) -> type:
-    """Register model. If name is not passed, the model class name is converted to snake-case."""
-
+    """
+    Register classes that could be initialized from JSON configuration file.
+    If name is not passed, the class name is converted to snake-case.
+    """
     def decorate(model_cls: type, reg_name: str = None) -> type:
         model_name = reg_name or short_name(model_cls)
         global _REGISTRY
@@ -56,14 +59,17 @@ def register(name: str = None) -> type:
 
 
 def short_name(cls: type) -> str:
+    """Returns just a class name (without package and module specification)."""
     return cls.__name__.split('.')[-1]
 
 
 def get_model(name: str) -> type:
+    """Returns a registered class object with the name given in the string."""
     if name not in _REGISTRY:
         raise ConfigError("Model {} is not registered.".format(name))
     return cls_from_str(_REGISTRY[name])
 
 
 def list_models() -> list:
+    """Returns a list of names of registered classes."""
     return list(_REGISTRY)
