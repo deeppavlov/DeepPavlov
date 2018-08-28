@@ -71,6 +71,7 @@ class PipelineManager:
 
         # Start generating pipelines configs
         print('[ Experiment start - {0} pipes, will be run]'.format(self.pipeline_generator.len))
+        self.logger.log['experiment_info']['number_of_pipes'] = self.pipeline_generator.len
         exp_start_time = time()
         for i, pipe in enumerate(self.pipeline_generator()):
             # print progress

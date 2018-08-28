@@ -25,30 +25,32 @@
     "in_y": [
       "y"
     ],
-    "search": true,
     "pipe": [
       [
         {
-        "id": "classes_vocab",
-        "name": "default_vocab",
-        "fit_on": [
-          "y"
-        ],
-        "level": "token",
-        "save_path": "vocabs/snips_classes.dict",
-        "load_path": "vocabs/snips_classes.dict"
-      }
+          "id": "classes_vocab",
+          "component_name": "Vocab of classes",
+          "name": "default_vocab",
+          "fit_on": [
+            "y"
+          ],
+          "level": "token",
+          "save_path": "vocabs/snips_classes.dict",
+          "load_path": "vocabs/snips_classes.dict"
+        }
       ],
       [
         {
-        "in": ["x"],
-        "name": "str_lower",
-        "out": ["x"]
+          "component_name": "Convert to lowercase",
+          "in": ["x"],
+          "name": "str_lower",
+          "out": ["x"]
         },
         null
       ],
       [
         {
+          "component_name": "NLTK tokenizer",
           "in": "x",
           "out": "x_tok",
           "id": "my_tokenizer",
@@ -56,6 +58,7 @@
           "tokenizer": "wordpunct_tokenize"
         },
         {
+          "component_name": "Lazy tokenizer",
           "in": "x",
           "out": "x_tok",
           "id": "my_tokenizer",
@@ -65,6 +68,7 @@
       ],
       [
         {
+          "component_name": "dstc2_fasttext_100",
           "in": "x_tok",
           "out": "x_vec",
           "id": "fasttext_embedder",
@@ -88,6 +92,7 @@
           ],
           "main": true,
           "name": "keras_classification_model",
+          "component_name": "WCNN",
           "save_path": "intents/intent_cnn_snips_v4",
           "classes": "#classes_vocab.keys()",
           "kernel_sizes_cnn": [
@@ -122,6 +127,7 @@
           ],
           "main": true,
           "name": "keras_classification_model",
+          "component_name": "Bi-LSTM",
           "save_path": "intents/intent_cnn_snips_v4",
           "classes": "#classes_vocab.keys()",
           "units_lstm": 128,

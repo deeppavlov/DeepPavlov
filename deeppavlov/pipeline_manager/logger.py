@@ -46,7 +46,8 @@ class Logger(object):
         self.log = OrderedDict(experiment_info=OrderedDict(date=date,
                                                            exp_name=self.exp_name,
                                                            root=self.root,
-                                                           info=self.exp_inf),
+                                                           info=self.exp_inf,
+                                                           number_of_pipes=None),
                                dataset={},
                                experiments=OrderedDict())
 
