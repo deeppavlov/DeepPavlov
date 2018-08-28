@@ -86,7 +86,7 @@
           3
         ],
         "filters_cnn": 256,
-        "confident_threshold": 0.5,
+        "confident_threshold": 1,
         "optimizer": "Adam",
         "lear_rate": 0.01,
         "lear_rate_decay": 0.1,
@@ -106,7 +106,7 @@
     ]
   },
   "train": {
-    "epochs": 1000,
+    "epochs": 100,
     "batch_size": 64,
     "metrics": [
       "classification_f1",
