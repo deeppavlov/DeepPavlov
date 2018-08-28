@@ -160,9 +160,9 @@ Config parameters:
 To configure your own pipelines that contain a ``"seq2seq_go_bot"`` component, refer to documentation for :class:`~deeppavlov.models.seq2seq_go_bot.bot.Seq2SeqGoalOrientedBot` and :class:`~deeppavlov.models.seq2seq_go_bot.network.Seq2SeqGoalOrientedBotNetwork` classes.
 
 Comparison
-----------
+^^^^^^^^^^
 
-BLEU scores on test set for different models:
+Comparison of BLEU scores on test set of Kvret dataset:
 
 +------------------------------------------------------+------------------+
 |                    Model                             |  Test BLEU       |
