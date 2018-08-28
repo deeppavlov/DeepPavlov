@@ -3,7 +3,7 @@
     "name": "basic_classification_reader",
     "x": "Twit",
     "y": "Class",
-    "data_path": "rusentiment/Dataset/",
+    "data_path": "rusentiment/",
     "train": "rusentiment_random_posts.csv",
     "test": "rusentiment_test.csv"
   },
