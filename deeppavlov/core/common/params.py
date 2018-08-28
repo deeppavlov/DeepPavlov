@@ -56,7 +56,8 @@ def _init_param(param, mode):
     return param
 
 
-def from_params(params: Dict, mode='infer', **kwargs) -> Component:
+def from_params(params: Dict, mode: str = 'infer', **kwargs) -> Component:
+    """Builds and returns the Component from corresponding dictionary of parameters."""
     # what is passed in json:
     config_params = {k: _resolve(v) for k, v in params.items()}
 
