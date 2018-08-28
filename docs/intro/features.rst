@@ -91,6 +91,13 @@ An open domain question answering skill. The skill accepts free-form questions a
 based on its Wikipedia knowledge.
 
 
++------------------------------------------------------+-----------------------+--------+
+| Dataset                                              |  Wiki dump            |   F1   |
++------------------------------------------------------+-----------------------+--------+
+| :config:`SQuAD (dev) <odqa/en_odqa_infer_wiki.json>` | enwiki (2018-02-11)   |  28.0  |
++------------------------------------------------------+-----------------------+--------+
+
+
 Parameters evolution
 --------------------
 
