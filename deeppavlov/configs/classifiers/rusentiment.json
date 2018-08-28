@@ -1,8 +1,8 @@
 {
   "dataset_reader": {
     "name": "basic_classification_reader",
-    "x": "Twit",
-    "y": "Class",
+    "x": "text",
+    "y": "label",
     "data_path": "rusentiment/",
     "train": "rusentiment_random_posts.csv",
     "test": "rusentiment_test.csv"
@@ -128,7 +128,7 @@
         "subdir": "rusentiment"
       },
       {
-        "url": "https://github.com/text-machine-lab/rusentiment/blob/master/Dataset/rusentiment_test.csv",
+        "url": "https://github.com/text-machine-lab/rusentiment/raw/master/Dataset/rusentiment_test.csv",
         "subdir": "rusentiment"
       },
       {
