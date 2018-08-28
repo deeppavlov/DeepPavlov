@@ -3,7 +3,7 @@
     "name": "basic_classification_reader",
     "x": "text",
     "y": "label",
-    "data_path": "rusentiment/",
+    "data_path": "/home/dilyara/evolution_data/rusentiment_data/",
     "train": "rusentiment_random_posts.csv",
     "test": "rusentiment_test.csv"
   },
@@ -35,8 +35,8 @@
           "y"
         ],
         "level": "token",
-        "save_path": "vocabs/rusentiment_classes.dict",
-        "load_path": "vocabs/rusentiment_classes.dict"
+        "save_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_classes.dict",
+        "load_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_classes.dict"
       },
       {
         "in": [
@@ -59,8 +59,8 @@
         "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
-        "save_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
-        "load_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "save_path": "/home/dilyara/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "load_path": "/home/dilyara/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
         "dim": 300
       },
       {
@@ -76,8 +76,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "evolution/classification/rusentiment_v0",
-        "load_path": "evolution/classification/rusentiment_v0",
+        "save_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_v0",
+        "load_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_v0",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "kernel_sizes_cnn": [
