@@ -37,6 +37,7 @@ class PipeGen:
         self.chainer = None
         self.structure = None
         self.get_structure()
+        self._check_component_name()
 
         if self.stype not in ['grid', 'random']:
             raise ValueError("Sorry {0} search not implemented."
@@ -49,6 +50,15 @@ class PipeGen:
             self.grid_get_len()
 
         self.generator = self.pipeline_gen()
+
+    def _check_component_name(self) -> None:
+        for i, component in enumerate(self.structure):
+            for j, example in enumerate(component):
+                if example is not None:
+                    if "component_name" not in example.keys():
+                        raise ConfigError("The pipeline element in config file, on position {0} and with number {1}"
+                                          "don't contain the 'component_name' key.".format(i+1, j+1))
+        return None
 
     def get_structure(self):
         """
