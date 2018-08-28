@@ -298,6 +298,12 @@ def results_to_table(population, evolution, considered_metrics, result_file, res
             val_results = reports[1]["valid"]["metrics"]
         elif len(reports) == 2 and "test" in reports[0].keys() and "test" in reports[1].keys():
             val_results = reports[1]["test"]["metrics"]
+        elif len(reports) == 2 and "train" in reports[0].keys() and "valid" in reports[1].keys():
+            val_results = reports[1]["valid"]["metrics"]
+        elif len(reports) == 2 and "train" in reports[0].keys() and "test" in reports[1].keys():
+            val_results = reports[1]["test"]["metrics"]
+        elif len(reports) == 2 and "train" in reports[0].keys() and "train" in reports[1].keys():
+            val_results = reports[1]["train"]["metrics"]
         elif len(reports) == 1 and "valid" in reports[0].keys():
             val_results = reports[0]["valid"]["metrics"]
         elif len(reports) == 1 and "test" in reports[0].keys():
