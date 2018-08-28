@@ -1,3 +1,4 @@
+import json
 from time import time
 from datetime import datetime
 from os.path import join
@@ -96,10 +97,13 @@ class PipelineManager:
             else:
                 raise ValueError("Only 'train' and 'evaluate' mode are available, but {0} was found.".format(self.mode))
 
-            # save best models
+            # update logger
             self.logger.pipe_time = normal_time(time() - pipe_start)
             self.logger.pipe_res = results
             self.logger.get_pipe_log()
+
+            # save config in checkpoint folder
+            self.save_config(pipe, i)
 
         # save log
         self.logger.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)
@@ -157,3 +161,8 @@ class PipelineManager:
 
         print('[ The test was successful ]')
         return None
+
+    def save_config(self, conf, i) -> None:
+        with open(join(self.save_path, "pipe_{}".format(i+1), 'config.json'), 'w') as cf:
+            json.dump(conf, cf)
+            cf.close()
