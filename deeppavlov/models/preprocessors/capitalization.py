@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Union, Tuple, List
 
 import numpy as np
 import re
@@ -63,7 +64,20 @@ class CapitalizationPreprocessor(Component):
             return cap_batch
 
 
-def process_word(word, to_lower=False, append_case=None):
+def process_word(word: str, to_lower: bool = False,
+                 append_case: str = None) -> Tuple[str]:
+    """Converts word to a tuple of symbols, optionally converts it to lowercase
+    and adds capitalization label.
+
+    Args:
+        word: input word
+        to_lower: whether to lowercase
+        append_case: whether to add case mark
+            ('<FIRST_UPPER>' for first capital and '<ALL_UPPER>' for all caps)
+
+    Returns:
+        a preprocessed word
+    """
     if all(x.isupper() for x in word) and len(word) > 1:
         uppercase = "<ALL_UPPER>"
     elif word[0].isupper():
@@ -88,12 +102,15 @@ def process_word(word, to_lower=False, append_case=None):
 
 @register('lowercase_preprocessor')
 class LowercasePreprocessor(Component):
+    """A callable wrapper over :func:`process_word`.
+    Takes as input a batch of sentences and returns a batch of preprocessed sentences.
+    """
 
-    def __init__(self, to_lower=True, append_case="first", *args, **kwargs):
+    def __init__(self, to_lower: bool = True, append_case: str = "first", *args, **kwargs):
         self.to_lower = to_lower
         self.append_case = append_case
 
-    def __call__(self, tokens_batch, **kwargs):
+    def __call__(self, tokens_batch: List[Union[List[str], str]], **kwargs) -> List[List[Tuple[str]]]:
         answer = []
         for elem in tokens_batch:
             if isinstance(elem, str):

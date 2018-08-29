@@ -45,11 +45,10 @@ def csoftmax_for_slice(input):
         p = q_list[1] * (1.0 - mass_) / tf.reduce_sum(q_list[1])
         p_new = tf.dynamic_stitch(condition_indices, [q_list[0], p])
 
-        # verification of the condition and modification of masks
-        less_mask = tf.cast(tf.less(u, p_new), tf.int32)  # 0 when u bigger than p, 1 when u less than p
+        # condition verification and mask modification
+        less_mask = tf.cast(tf.less(u, p_new), tf.int32)  # 0 when u is bigger than p, 1 when u is less than p
         condition_indices = tf.dynamic_partition(tf.range(tf.shape(p_new)[0]), less_mask,
-                                                 2)  # 0 when u bigger
-        #  than p, 1 when u less than p
+                                                 2)  # 0 when u is bigger than p, 1 when u is less than p
 
         split_p_new = tf.dynamic_partition(p_new, less_mask, 2)
         split_u = tf.dynamic_partition(u, less_mask, 2)
