@@ -34,7 +34,7 @@ Config Structure
 
 -  **vectorizer** - vectorizer of incoming sentences. It can be word embeddings vectorizer, bag of words vectorizer, tf-idf vectorizer and etc. Th output is vectorized sentences (numeric vectors).
 
--  **faq_model** - This is faq model that classify incoming question. Model receive vectorized train sentences and vectorized question for inference. Output is classified answer from train dataset.
+-  **classifier** - This is faq model that classify incoming question. Model receive vectorized train sentences and vectorized question for inference. Output is classified answer from train dataset.
 
 
 Vectorizers
@@ -50,7 +50,7 @@ Vectorizers produce numeric vectors of input sentences
    -  **load_path** - path where to load model
    -  **out** - output data: vectorized sentence
 
--  **sentence2vector_v2w_tfidf** - Weighted sum of word embeddings from sentence
+-  **sentence2vector_v2w_tfidf** - Sentence vectorizer: weighted sum of word embeddings from sentence
 
    -  **in** - input data: question
    -  **fit_on** - train data: [token lemmas of question, word embeddings]
@@ -58,18 +58,18 @@ Vectorizers produce numeric vectors of input sentences
    -  **load_path** - path where to load model
    -  **out** - output data: vectorized sentence
 
--  **sentence2vector_v2w_avg** - Average sum of word embeddings from sentence
+-  **sentence2vector_v2w_avg** - Sentence vectorizer: average sum of word embeddings from sentence
    -  **in** - input data: question
    -  **out** - output data: vectorized sentence
 
 
 
-Faq models
-----------
+Classifiers for FAQ
+-------------------
 
 This is models that classify incoming question and find corresponding answer
 
--  **faq_cos_model** - ranking model that output answer that has maximum cosine similarity with input vectorized question
+-  **cos_sim_classifier** - Classifier based on cosine similarity
 
    -  **in** - input data: question
    -  **fit_on** - train data: [vectorized sentences, answers]
@@ -78,7 +78,7 @@ This is models that classify incoming question and find corresponding answer
    -  **out** - output data: [answer, score]
 
 
--  **faq_logreg_model** - Logistic Regression, that output most probable answer
+-  **logreg_classifier** - Logistic Regression classifier, that output most probable answer with score
 
    -  **in** - input data: question
    -  **fit_on** - train data: [vectorized sentences, answers]
@@ -131,16 +131,16 @@ You can use pretrained model on FAQ dataset from school-site: http://www.ftl.nam
 
 .. code::
 
-    faq_tfidf_cos_model             - http://files.deeppavlov.ai/faq/school/faq_tfidf_cos_model.pkl
-    faq_tfidf_logreg_model          - http://files.deeppavlov.ai/faq/school/faq_tfidf_logreg_model.pkl
-    faq_fasttext_cos_model          - http://files.deeppavlov.ai/faq/school/faq_fasttext_cos_model.pkl
-    tfidf_vectorizer_ruwiki         - http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki.pkl
+    tfidf_cos_sim_classifier             - http://files.deeppavlov.ai/faq/school/faq_tfidf_cos_model.pkl
+    tfidf_logreg_classifier              - http://files.deeppavlov.ai/faq/school/faq_tfidf_logreg_model.pkl
+    fasttext_cos_classifier              - http://files.deeppavlov.ai/faq/school/faq_fasttext_cos_model.pkl
+    tfidf_vectorizer_ruwiki              - http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki.pkl
 
 
--  **faq_tfidf_cos_model.pkl** - pre-trained cosine similarity model for classifying input question(vectorized by tfidf)
--  **faq_tfidf_logreg_model.pkl** - pre-trained logistic regression model for classifying input question(vectorized by tfidf)
--  **faq_fasttext_cos_model.pkl** - pre-trained cosine similarity model for classifying input question(vectorized by word embeddings)
--  **tfidf_vectorizer_ruwiki.pkl** - pre-trained model for TF-IDF vectorizer based on russian Wikipedia
+-  **tfidf_cos_sim_classifier.pkl** - pre-trained cosine similarity classifier for classifying input question (vectorized by tfidf)
+-  **tfidf_logreg_classifier.pkl**  - pre-trained logistic regression classifier for classifying input question (vectorized by tfidf)
+-  **fasttext_cos_classifier.pkl**  - pre-trained cosine similarity classifier for classifying input question (vectorized by word embeddings)
+-  **tfidf_vectorizer_ruwiki.pkl**  - pre-trained model for TF-IDF vectorizer based on russian Wikipedia
 
 
 
