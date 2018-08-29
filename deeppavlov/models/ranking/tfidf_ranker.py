@@ -12,21 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Dict, Any, Tuple
+from typing import List, Any, Tuple
 
 import numpy as np
 
-from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.models.estimator import Estimator, Component
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.estimator import Component
 from deeppavlov.models.vectorizers.hashing_tfidf_vectorizer import HashingTfIdfVectorizer
-from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 
 logger = get_logger(__name__)
 
 
 @register("tfidf_ranker")
-class TfidfRanker(Estimator):
+class TfidfRanker(Component):
     """Rank documents according to input strings.
 
     Args:
@@ -86,45 +85,3 @@ class TfidfRanker(Estimator):
             batch_docs_scores.append(doc_scores)
 
         return batch_doc_ids, batch_docs_scores
-
-    def fit_batches(self, iterator: DataFittingIterator, batch_size: int) -> None:
-        """Generate a batch to be fit to a vectorizer.
-
-        Args:
-            iterator: an instance of an iterator class
-            batch_size: a size of a generated batch
-
-        Returns:
-            None
-
-        """
-        self.vectorizer.doc_index = iterator.doc2index
-        for x, y in iterator.gen_batches(batch_size):
-            self.vectorizer.fit_batch(x, y)
-
-    def fit(self) -> None:
-        """Pass method to :class:`Chainer`.
-
-        Returns:
-            None
-
-        """
-        pass
-
-    def save(self) -> None:
-        """Pass method to :attr:`vectorizer`.
-
-        Returns:
-            None
-
-        """
-        self.vectorizer.save()
-
-    def load(self) -> None:
-        """Pass method to :attr:`vectorizer`.
-
-        Returns:
-            None
-
-        """
-        self.vectorizer.load()

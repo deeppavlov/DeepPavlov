@@ -21,6 +21,7 @@ import numpy as np
 from sklearn.utils import murmurhash3_32
 
 from deeppavlov.core.models.component import Component
+from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
@@ -45,7 +46,7 @@ def hash_(token: str, hash_size: int) -> int:
 
 
 @register('hashing_tfidf_vectorizer')
-class HashingTfIdfVectorizer(Component, Serializable):
+class HashingTfIdfVectorizer(Estimator, Serializable):
     """Create a tfidf matrix from collection of documents of size [n_documents X n_features(hash_size)].
 
     Args:
@@ -300,3 +301,6 @@ class HashingTfIdfVectorizer(Component, Serializable):
         self.doc_index = iterator.doc2index
         for x, y in iterator.gen_batches(batch_size):
             self.fit_batch(x, y)
+
+    def fit(self):
+        pass
