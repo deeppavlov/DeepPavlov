@@ -1,0 +1,132 @@
+{
+  "dataset_reader": {
+    "name": "basic_classification_reader",
+    "x": "Twit",
+    "y": "Class",
+    "data_path": "sentiment_twitter_data"
+  },
+  "dataset_iterator": {
+    "name": "basic_classification_iterator",
+    "seed": 42
+  },
+  "chainer": {
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
+    "pipe": [
+      {
+        "id": "classes_vocab",
+        "name": "default_vocab",
+        "fit_on": [
+          "y"
+        ],
+        "level": "token",
+        "save_path": "vocabs/sentiment_twitter_classes.dict",
+        "load_path": "vocabs/sentiment_twitter_classes.dict"
+      },
+      {
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_prep"
+        ],
+        "name": "dirty_comments_preprocessor",
+        "delete_smile_brackets": true
+      },
+      {
+        "in": "x_prep",
+        "out": "x_tok",
+        "id": "my_tokenizer",
+        "name": "nltk_tokenizer",
+        "tokenizer": "wordpunct_tokenize"
+      },
+      {
+        "in": "x_tok",
+        "out": "x_emb",
+        "id": "my_embedder",
+        "name": "fasttext",
+        "save_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "load_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "dim": 300
+      },
+      {
+        "in": [
+          "x_emb"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_labels",
+          "y_probas_dict"
+        ],
+        "main": true,
+        "name": "keras_classification_model",
+        "save_path": "classifiers/sentiment_twitter_v2",
+        "load_path": "classifiers/sentiment_twitter_v2",
+        "embedding_size": "#my_embedder.dim",
+        "classes": "#classes_vocab.keys()",
+        "kernel_sizes_cnn": [
+          1,
+          2,
+          3
+        ],
+        "filters_cnn": 256,
+        "confident_threshold": 0.5,
+        "optimizer": "Adam",
+        "lear_rate": 0.01,
+        "lear_rate_decay": 0.1,
+        "loss": "binary_crossentropy",
+        "text_size": 100,
+        "last_layer_activation": "softmax",
+        "coef_reg_cnn": 1e-3,
+        "coef_reg_den": 1e-2,
+        "dropout_rate": 0.5,
+        "dense_size": 100,
+        "model_name": "cnn_model"
+      }
+    ],
+    "out": [
+      "y_labels",
+      "y_probas_dict"
+    ]
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 64,
+    "metrics": [
+      "classification_roc_auc",
+      "classification_f1",
+      "classification_accuracy"
+    ],
+    "validation_patience": 5,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
+    "show_examples": false,
+    "validate_best": true,
+    "test_best": true
+  },
+  "metadata": {
+    "requirements": [
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/fasttext.txt"
+    ],
+    "labels": {
+      "telegram_utils": "IntentModel",
+      "server_utils": "KerasIntentModel"
+    },
+    "download": [
+      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
+      "http://files.deeppavlov.ai/datasets/sentiment_twitter_data.tar.gz",
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "subdir": "embeddings"
+      }
+    ]
+  }
+}
