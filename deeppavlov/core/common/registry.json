@@ -24,6 +24,7 @@
   "dstc2_ner_iterator": "deeppavlov.dataset_iterators.dstc2_ner_iterator:Dstc2NerDatasetIterator",
   "dstc2_reader": "deeppavlov.dataset_readers.dstc2_reader:DSTC2DatasetReader",
   "dstc_slotfilling": "deeppavlov.models.slotfill.slotfill:DstcSlotFillingNetwork",
+  "ecommerce_preprocess": "deeppavlov.models.preprocessors.ecommerce_preprocess:EcommercePreprocess",
   "ecommerce_bot": "deeppavlov.skills.ecommerce_bot.bot:EcommerceBot",
   "elmo": "deeppavlov.models.embedders.elmo_embedder:ELMoEmbedder",
   "emb_mat_assembler": "deeppavlov.models.preprocessors.assemble_embeddings_matrix:EmbeddingsMatrixAssembler",
