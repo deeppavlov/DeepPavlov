@@ -18,8 +18,6 @@ from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.models.estimator import Estimator, Component
 from deeppavlov.metrics.bleu import bleu_advanced
 
-import re
-import json
 import numpy as np
 from scipy.stats import entropy
 from collections import Counter
@@ -46,7 +44,7 @@ class EcommerceBot(Component):
         self.load_path = load_path
         self.min_similarity = min_similarity
         self.min_entropy = min_entropy
-        self.state = None
+        self.state = {}
         if kwargs.get('mode') != 'train':
             self.load()
 
@@ -73,11 +71,11 @@ class EcommerceBot(Component):
         for item_idx, query in enumerate(x):
 
             query = self.tokenizer.analyze(query)
+            query, money_range = self.tokenizer.extract_money(query)
+            log.info(f"Money range {money_range}")
 
-            doc, ran = self.tokenizer.extract_money(query)
-            print(doc)
-            print(ran)
-            return True
+            if len(money_range)==2:
+                self.state['Price'] = money_range
 
             score_title = []
             for item in self.ec_data:
@@ -104,6 +102,13 @@ class EcommerceBot(Component):
 
             results_args = np.argsort(raw_scores_ar, order=('x', 'y'))[
                 ::-1].tolist()
+
+            if 'Price' in self.state:
+                log.debug(f"Items before price filtering {len(results_args)}")
+                results_args = [idx for idx in results_args 
+                    if self.preprocess.price(self.ec_data[idx])>=self.state['Price'][0] and 
+                    self.preprocess.price(self.ec_data[idx])<=self.state['Price'][1]]
+                log.debug(f"Items after price filtering {len(results_args)}")
 
             response.append([self.ec_data[idx] for idx in results_args[int(
                 start[item_idx]):int(stop[item_idx])]])
@@ -140,10 +145,3 @@ class EcommerceBot(Component):
         entropies = [ent_item for ent_item in entropies if ent_item[0]
                      >= self.min_entropy]
         return entropies
-
-
-
-# text = "I need bluetooth speaker cheaper 20 dollars"
-# doc = nlp(text)
-# mon = EcommerceBot._extract_money(doc)
-# print(mon)
