@@ -29,9 +29,7 @@ logger = get_logger(__name__)
 
 @register('sentence2vector_w2v_tfidf')
 class SentenceW2vVectorizerTfidfWeights(Estimator, Serializable):
-    """
-    Sentence vectorizer which produce one vector as tf-idf weighted sum of words vectors in sentence
-    """
+    """Sentence vectorizer which produce one vector as tf-idf weighted sum of words vectors in sentence"""
 
     def __init__(self, save_path: str = None, load_path: str = None, **kwargs) -> None:
         """Sentence vectorizer which produce one vector as tf-idf weighted sum of words vectors in sentence
@@ -63,12 +61,14 @@ class SentenceW2vVectorizerTfidfWeights(Estimator, Serializable):
         Returns:
             List of vectorized sentences
         """
+        if isinstance(questions[0], list):
+            questions = [' '.join(x) for x in questions]
 
-        q_vects = self.vectorizer.transform([' '.join(q) for q in questions])
+        q_vects = self.vectorizer.transform(questions)
         questions_vectors = []
         for i, q in enumerate(questions):
             q_weights = []
-            for token in q:
+            for token in q.split():
                 if token in self.token2idx:
                     tfidf_vector = q_vects[i, :]
                     q_weights.append(tfidf_vector[0, self.token2idx[token]])
@@ -98,16 +98,14 @@ class SentenceW2vVectorizerTfidfWeights(Estimator, Serializable):
         self.token2idx = self.vectorizer.vocabulary_
 
     def save(self) -> None:
-        """Save model
-        """
+        """Save model"""
         logger.info("Saving tfidf_vectorizer to {}".format(self.save_path))
         path = expand_path(self.save_path)
         make_all_dirs(path)
         save_pickle(self.vectorizer, path)
 
     def load(self) -> None:
-        """Load model
-        """
+        """Load model"""
         logger.info("Loading tfidf_vectorizer from {}".format(self.load_path))
         self.vectorizer = load_pickle(expand_path(self.load_path))
         self.token2idx = self.vectorizer.vocabulary_

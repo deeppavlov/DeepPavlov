@@ -25,9 +25,7 @@ logger = get_logger(__name__)
 
 @register('sentence2vector_w2v_avg')
 class SentenceAvgW2vVectorizer(Component):
-    """
-    Sentence vectorizer which produce one vector as average sum of words vectors in sentence
-    """
+    """Sentence vectorizer which produce one vector as average sum of words vectors in sentence"""
 
     def __init__(self, **kwargs) -> None:
         pass

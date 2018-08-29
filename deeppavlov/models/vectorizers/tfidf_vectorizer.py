@@ -29,9 +29,7 @@ logger = get_logger(__name__)
 
 @register('tfidf_vectorizer')
 class TfIdfVectorizer(Estimator, Serializable):
-    """
-    Sentence vectorizer which produce sparse vector with tf-idf values for each word in sentence
-    """
+    """Sentence vectorizer which produce sparse vector with tf-idf values for each word in sentence"""
 
     def __init__(self, save_path: str = None, load_path: str = None, **kwargs) -> None:
         """
@@ -88,17 +86,13 @@ class TfIdfVectorizer(Estimator, Serializable):
         self.vectorizer.fit(x_train)
 
     def save(self) -> None:
-        """
-        Save FAQ model
-        """
+        """Save FAQ model"""
         path = expand_path(self.save_path)
         make_all_dirs(path)
         logger.info("Saving tfidf_vectorizer to {}".format(path))
         save_pickle(self.vectorizer, path)
 
     def load(self) -> None:
-        """
-        Load FAQ model
-        """
+        """Load FAQ model"""
         logger.info("Loading tfidf_vectorizer from {}".format(expand_path(self.load_path)))
         self.vectorizer = load_pickle(expand_path(self.load_path))

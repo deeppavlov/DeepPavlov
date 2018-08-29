@@ -26,13 +26,14 @@
         "out": "q_vect"
       },
       {
-        "name": "faq_logreg_model",
+        "name": "logreg_classifier",
         "in": "q_vect",
         "fit_on": ["q_vect", "y"],
+        "top_n": 1,
         "c": 1000,
         "penalty": "l2",
-        "save_path": "faq/faq_tfidf_logreg_model.pkl",
-        "load_path": "faq/faq_tfidf_logreg_model.pkl",
+        "save_path": "faq/tfidf_logreg_classifier.pkl",
+        "load_path": "faq/tfidf_logreg_classifier.pkl",
         "out": ["answer", "score"]
       }
     ],
@@ -46,7 +47,7 @@
   "metadata": {
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/faq/school/faq_tfidf_logreg_model.pkl",
+        "url": "http://files.deeppavlov.ai/faq/school/tfidf_logreg_classifier.pkl",
         "subdir": "faq"
       },
       {

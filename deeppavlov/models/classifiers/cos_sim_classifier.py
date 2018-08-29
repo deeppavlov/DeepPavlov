@@ -31,13 +31,13 @@ from scipy.sparse.linalg import norm as sparse_norm
 logger = get_logger(__name__)
 
 
-@register("faq_cos_model")
-class FaqCosineSimilarityModel(Estimator, Serializable):
+@register("cos_sim_classifier")
+class CosineSimilarityClassifier(Estimator, Serializable):
     """
     FAQ model based on cosine similarity between vectorized sentences
     """
 
-    def __init__(self, save_path: str = None, load_path: str = None, **kwargs) -> None:
+    def __init__(self, top_n=1, save_path: str = None, load_path: str = None, **kwargs) -> None:
         """FAQ model based on cosine similarity between vectorized sentences
 
         Parameters:
@@ -49,32 +49,50 @@ class FaqCosineSimilarityModel(Estimator, Serializable):
         """
         self.save_path = save_path
         self.load_path = load_path
+        self.top_n = top_n
         if kwargs['mode'] != 'train':
             self.load()
 
-    def __call__(self, q_vect) -> Tuple[List[str], List[str]]:
+    def __call__(self, q_vects) -> Tuple[List[str], List[str]]:
         """Found most similar answer for input vectorized question
 
         Parameters:
-            q_vect: vectorized question
+            q_vects: vectorized questions
 
         Returns:
             Tuple of Answer and Score
         """
 
-        if isinstance(q_vect[0], csr_matrix):
-            norm = sparse_norm(q_vect[0]) * sparse_norm(self.x_train_features, axis=1)
-            cos_similarities = np.array(q_vect[0].dot(self.x_train_features.T).todense())[0]/norm
-        elif isinstance(q_vect[0], np.ndarray):
-            norm = linalg.norm(q_vect[0])*linalg.norm(self.x_train_features, axis=1)
-            cos_similarities = q_vect[0].dot(self.x_train_features.T)/norm
-        elif q_vect[0] is None:
+        if isinstance(q_vects[0], csr_matrix):
+            norm = sparse_norm(q_vects) * sparse_norm(self.x_train_features, axis=1)
+            cos_similarities = np.array(q_vects.dot(self.x_train_features.T).todense())/norm
+        elif isinstance(q_vects[0], np.ndarray):
+            q_vects = np.array(q_vects)
+            norm = linalg.norm(q_vects)*linalg.norm(self.x_train_features, axis=1)
+            cos_similarities = q_vects.dot(self.x_train_features.T)/norm
+        elif q_vects[0] is None:
             cos_similarities = np.zeros(len(self.x_train_features))
         else:
             raise NotImplementedError('Not implemented this type of vectors')
 
-        answer_id = np.argmax(cos_similarities)
-        return [self.y_train[answer_id]], [np.round(cos_similarities[answer_id], 2)]
+        # get cosine similarity for each class
+        y_labels = np.unique(self.y_train)
+        labels_scores = np.zeros((len(cos_similarities), len(y_labels)))
+        for i, label in enumerate(y_labels):
+            labels_scores[:, i] = np.max([cos_similarities[:, i] for i, value in enumerate(self.y_train) if value == label], axis=0)
+
+        # normalize for each class
+        labels_scores = labels_scores/np.sum(labels_scores, axis=1)
+        answer_ids = np.argsort(labels_scores)[:, -self.top_n:]
+
+        # generate top_n asnwers and scores
+        answers = []
+        scores = []
+        for i in range(len(answer_ids)):
+            answers.append([y_labels[id] for id in answer_ids[i, ::-1]])
+            scores.append([np.round(labels_scores[i, id], 2) for id in answer_ids[i, ::-1]])
+
+        return answers, scores
 
     def fit(self, x_train_vects, y_train) -> None:
         """Train FAQ model
@@ -99,15 +117,13 @@ class FaqCosineSimilarityModel(Estimator, Serializable):
         self.y_train = list(y_train)
 
     def save(self) -> None:
-        """Save FAQ model
-        """
+        """Save FAQ model"""
         logger.info("Saving faq_model to {}".format(self.save_path))
         path = expand_path(self.save_path)
         make_all_dirs(path)
         save_pickle((self.x_train_features, self.y_train), path)
 
     def load(self) -> None:
-        """Load FAQ model
-        """
+        """Load FAQ model"""
         logger.info("Loading faq_model from {}".format(self.load_path))
         self.x_train_features, self.y_train = load_pickle(expand_path(self.load_path))

@@ -26,11 +26,12 @@
         "out": "q_vect"
       },
       {
-        "name": "faq_cos_model",
+        "name": "cos_sim_classifier",
         "in": "q_vect",
         "fit_on": ["q_vect", "y"],
-        "save_path": "faq/faq_tfidf_cos_model.pkl",
-        "load_path": "faq/faq_tfidf_cos_model.pkl",
+        "top_n": 1,
+        "save_path": "faq/tfidf_cos_sim_classifier.pkl",
+        "load_path": "faq/tfidf_cos_sim_classifier.pkl",
         "out": ["answer", "score"]
       }
     ],
@@ -44,7 +45,7 @@
   "metadata": {
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/faq/school/faq_tfidf_cos_model.pkl",
+        "url": "http://files.deeppavlov.ai/faq/school/tfidf_cos_sim_classifier.pkl",
         "subdir": "faq"
       },
       {

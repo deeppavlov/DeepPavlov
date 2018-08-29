@@ -29,12 +29,12 @@ from sklearn.linear_model import LogisticRegression
 logger = get_logger(__name__)
 
 
-@register("faq_logreg_model")
-class FaqLogregModel(Estimator, Serializable):
+@register("logreg_classifier")
+class LogregClassifier(Estimator, Serializable):
     """
     FAQ model based on logistic regression
     """
-    def __init__(self, c=1, penalty='l2', save_path: str = None, load_path: str = None, **kwargs) -> None:
+    def __init__(self, top_n=1, c=1, penalty='l2', save_path: str = None, load_path: str = None, **kwargs) -> None:
         """FAQ model based on logistic regression
 
         Parameters:
@@ -48,26 +48,30 @@ class FaqLogregModel(Estimator, Serializable):
         """
         self.save_path = save_path
         self.load_path = load_path
+        self.top_n = top_n
         self.c = c
         self.penalty = penalty
         if kwargs['mode'] != 'train':
             self.load()
 
-    def __call__(self, q_vect) -> Tuple[List[str], List[str]]:
+    def __call__(self, q_vects) -> Tuple[List[str], List[str]]:
         """Found most similar answer for input vectorized question
 
         Parameters:
-            q_vect: vectorized question
+            q_vects: vectorized questions
 
         Returns:
             Tuple of Answer and Score
         """
 
-        probs = self.logreg.predict_proba(q_vect)
-        answer_ids = np.argmax(probs, axis=1)
+        probs = self.logreg.predict_proba(q_vects)
+        answer_ids = np.argsort(probs)[:, -self.top_n:]
 
-        scores = np.round(np.choose(answer_ids, probs.T).tolist(), 2)
-        answers = self.logreg.classes_[answer_ids].tolist()
+        answers = []
+        scores = []
+        for i in range(len(answer_ids)):
+            answers.append([self.logreg.classes_[id] for id in answer_ids[i, ::-1]])
+            scores.append([np.round(probs[i, id], 2) for id in answer_ids[i, ::-1]])
 
         return answers, scores
 
@@ -95,15 +99,13 @@ class FaqLogregModel(Estimator, Serializable):
         self.logreg.fit(x_train_features, list(y_train))
 
     def save(self) -> None:
-        """Save FAQ model
-        """
+        """Save FAQ model"""
         logger.info("Saving faq_logreg_model to {}".format(self.save_path))
         path = expand_path(self.save_path)
         make_all_dirs(path)
         save_pickle(self.logreg, path)
 
     def load(self) -> None:
-        """Load FAQ model
-        """
+        """Load FAQ model"""
         logger.info("Loading faq_logreg_model from {}".format(self.load_path))
         self.logreg = load_pickle(expand_path(self.load_path))

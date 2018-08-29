@@ -31,11 +31,12 @@
         "out": "question_vector"
       },
       {
-        "name": "faq_cos_model",
+        "name": "cos_sim_classifier",
         "in": "question_vector",
         "fit_on": ["question_vector", "y"],
-        "save_path": "faq/faq_fasttext_cos_model.pkl",
-        "load_path": "faq/faq_fasttext_cos_model.pkl",
+        "top_n": 1,
+        "save_path": "faq/fasttext_cos_classifier.pkl",
+        "load_path": "faq/fasttext_cos_classifier.pkl",
         "out": ["answer", "score"]
       }
     ],
@@ -52,7 +53,7 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/faq/school/faq_fasttext_cos_model.pkl",
+        "url": "http://files.deeppavlov.ai/faq/school/fasttext_cos_classifier.pkl",
         "subdir": "faq"
       },
       {
