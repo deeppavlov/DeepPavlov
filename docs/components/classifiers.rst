@@ -62,18 +62,18 @@ embeddings trained on DSTC-2 dataset that is not the best choice for
 this task. Train set is divided to train and validation sets to
 illustrate ``basic_classification_iterator`` work.
 
+**Detecting Insults in Social Commentary** dataset
+(https://www.kaggle.com/c/detecting-insults-in-social-commentary)
+contains binary classification task for **detecting insults** for
+participants of conversation. Train, valid and test division is the same
+as for the Kaggle challenge.
+
 **AG News** dataset
 (https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html)
 contains **topic classification** task for 5 classes (range from 0
 to 4 points scale). Test set is initial one from a web-site, valid is a
 Stratified division 1/5 from the train set from web-site with 42 seed,
 and the train set is the rest.
-
-**Detecting Insults in Social Commentary** dataset
-(https://www.kaggle.com/c/detecting-insults-in-social-commentary)
-contains binary classification task for **detecting insults** for
-participants of conversation. Train, valid and test division is the same
-as for the Kaggle challenge.
 
 **Twitter mokoron** dataset (http://study.mokoron.com/) contains
 **sentiment classification** of Russian tweets for positive and negative
@@ -83,21 +83,41 @@ the rest for validation set with 42 seed). Attention! The pre-trained
 model was trained on ``sentiment_twitter_data/no_smiles_data`` -- the
 same dataset but with removed "(" and ")".
 
-+---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| Model                                                                           | Dataset           | Valid accuracy                              | Test accuracy                               |
-+=================================================================================+===================+=============================================+=============================================+
-| :config:`intents_dstc2.json <classifiers/intents_dstc2.json>`                   | DSTC 2            | 0.8744                                      | 0.8801                                      |
-+---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| :config:`intents_dstc2_big.json <classifiers/intents_dstc2_big.json>`           | DSTC 2            | 0.9682                                      | 0.9684                                      |
-+---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| :config:`intents_snips.json <classifiers/intents_snips.json>`                   | SNIPS             | 0.8829                                      | --                                          |
-+---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| :config:`insults_kaggle.json <classifiers/insults_kaggle.json>`                 | InsultsKaggle     | 0.8757                                      | 0.7503                                      |
-+---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| :config:`topic_ag_news.json <classifiers/topic_ag_news.json>`                   | AG News           | 0.8735                                      | 0.8859                                      |
-+---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| :config:`sentiment_twitter.json <classifiers/sentiment_twitter.json>`           | Twitter.mokoron   | 0.8021 (with smiles), 0.8008 (no\_smiles)   | 0.7949 (with smiles), 0.7943 (no\_smiles)   |
-+---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+| Dataset           | Model                                                    | Task             | Lang | Valid accuracy | Test accuracy |
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+| `DSTC 2`_         | `DSTC 2 on DSTC 2 embeddings`_                           | 28 intents       | En   | 0.8554         | 0.8658        |
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+| `DSTC 2`_         | `DSTC 2 on Wiki embeddings`_                             | 28 intents       | En   | 0.9659         | 0.9659        |
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+| `SNIPS-2017`_     | `SNIPS on DSTC 2 embeddings`_                            | 7 intents        | En   | 0.8829         |    --         |
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+| `SNIPS-2017`_     | `SNIPS on Wiki embeddings`_                              | 7 intents        | En   | 0.9868         |    --         |
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+| `Insults`_        | `InsultsKaggle on Reddit embeddings`_                    | Insult detection | En   | 0.8757         | 0.7503        |
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+| `AG News`_        | `AG News on Wiki embeddings`_                            | 5 topics         | En   | 0.8735         | 0.8859        |
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+|`Twitter mokoron`_ | `Twitter on RuWiki+Lenta embeddings`_                    | Sentiment        | Ru   | 0.8021         | 0.7949        |
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+|`Twitter mokoron`_ | `Twitter on RuWiki+Lenta embeddings with preprocessing`_ | Sentiment        | Ru   | 0.8008         | 0.7943        |
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+
+.. _`DSTC 2`: http://camdial.org/~mh521/dstc/
+.. _`SNIPS-2017`: https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines
+.. _`Insults`: https://www.kaggle.com/c/detecting-insults-in-social-commentary
+.. _`AG News`: https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html
+.. _`Twitter mokoron`: http://study.mokoron.com/
+
+.. _`DSTC 2 on DSTC 2 embeddings`: :config:<classifiers/intents_dstc2.json>
+.. _`DSTC 2 on Wiki embeddings`: :config:<classifiers/intents_dstc2_big.json>
+.. _`SNIPS on DSTC 2 embeddings`: :config:<classifiers/intents_snips.json>
+.. _`SNIPS on Wiki embeddings`: :config:<classifiers/intents_snips_big.json>
+.. _`InsultsKaggle on Reddit embeddings`: :config:<classifiers/insults_kaggle.json>
+.. _`AG News on Wiki embeddings`: :config:<classifiers/topic_ag_news.json>
+.. _`Twitter on RuWiki+Lenta embeddings`: :config:<classifiers/sentiment_twitter.json>
+.. _`Twitter on RuWiki+Lenta embeddings with preprocessing`: :config:<classifiers/sentiment_twitter.json>
+
 
 Download pre-trained model
 --------------------------
