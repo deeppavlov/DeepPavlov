@@ -23,25 +23,41 @@ Component for classification tasks (intents, sentiment, etc) on word-level. Shal
 BiLSTM with self-attention and other models are presented. The model also allows multilabel classification of texts.
 Several pre-trained models are available and presented in Table below.
 
-+---------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-| Config                                                                                                        | Task             | Lang | Valid accuracy | Test accuracy |
-+---------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-| :config:`DSTC 2 on DSTC 2 embeddings <classifiers/intents_dstc2.json>`                                        | 28 intents       | En   | 0.8554         | 0.8658        |
-+---------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-| :config:`DSTC 2 on Wiki embeddings <classifiers/intents_dstc2_big.json>`                                      | 28 intents       | En   | 0.9659         | 0.9659        |
-+---------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-| :config:`SNIPS on DSTC 2 embeddings  <classifiers/intents_snips.json>`                                        | 7 intents        | En   | 0.8829         |    --         |
-+---------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-| :config:`SNIPS on Wiki embeddings  <classifiers/intents_snips_big.json>`                                      | 7 intents        | En   | 0.9868         |    --         |
-+---------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-| :config:`InsultsKaggle on Reddit embeddings <classifiers/insults_kaggle.json>`                                | Insult detection | En   | 0.8757         | 0.7503        |
-+---------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-| :config:`AG News on Wiki embeddings <classifiers/topic_ag_news.json>`                                         | 5 topics         | En   | 0.8735         | 0.8859        |
-+---------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-| :config:`Twitter.mokoron on Russian Wiki+Lenta embeddings <classifiers/sentiment_twitter.json>`               | Sentiment        | Ru   | 0.8021         | 0.7949        |
-+---------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-| :config:`Twitter.mokoron on Russian Wiki+Lenta embeddings, preprocessed <classifiers/sentiment_twitter.json>` | Sentiment        | Ru   | 0.8008         | 0.7943        |
-+---------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+| Dataset           | Model                                                    | Task             | Lang | Valid accuracy | Test accuracy |
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+| `DSTC 2`_         | `DSTC 2 on DSTC 2 embeddings`_                           | 28 intents       | En   | 0.8554         | 0.8658        |
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+| `DSTC 2`_         | `DSTC 2 on Wiki embeddings`_                             | 28 intents       | En   | 0.9659         | 0.9659        |
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+| `SNIPS-2017`_     | `SNIPS on DSTC 2 embeddings`_                            | 7 intents        | En   | 0.8829         |    --         |
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+| `SNIPS-2017`_     | `SNIPS on Wiki embeddings`_                              | 7 intents        | En   | 0.9868         |    --         |
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+| `Insults`_        | `InsultsKaggle on Reddit embeddings`_                    | Insult detection | En   | 0.8757         | 0.7503        |
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+| `AG News`_        | `AG News on Wiki embeddings`_                            | 5 topics         | En   | 0.8735         | 0.8859        |
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+|`Twitter mokoron`_ | `Twitter on RuWiki+Lenta embeddings`_                    | Sentiment        | Ru   | 0.8021         | 0.7949        |
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+|`Twitter mokoron`_ | `Twitter on RuWiki+Lenta embeddings with preprocessing`_ | Sentiment        | Ru   | 0.8008         | 0.7943        |
++-------------------+----------------------------------------------------------+------------------+------+----------------+---------------+
+
+
+.. _`DSTC 2`: http://camdial.org/~mh521/dstc/
+.. _`SNIPS-2017`: https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines
+.. _`Insults`: https://www.kaggle.com/c/detecting-insults-in-social-commentary
+.. _`AG News`: https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html
+.. _`Twitter mokoron`: http://study.mokoron.com/
+
+.. _`DSTC 2 on DSTC 2 embeddings`: :config:<classifiers/intents_dstc2.json>
+.. _`DSTC 2 on Wiki embeddings`: :config:<classifiers/intents_dstc2_big.json>
+.. _`SNIPS on DSTC 2 embeddings`: :config:<classifiers/intents_snips.json>
+.. _`SNIPS on Wiki embeddings`: :config:<classifiers/intents_snips_big.json>
+.. _`InsultsKaggle on Reddit embeddings`: :config:<classifiers/insults_kaggle.json>
+.. _`AG News on Wiki embeddings`: :config:<classifiers/topic_ag_news.json>
+.. _`Twitter on RuWiki+Lenta embeddings`: :config:<classifiers/sentiment_twitter.json>
+.. _`Twitter on RuWiki+Lenta embeddings with preprocessing`: :config:<classifiers/sentiment_twitter.json>
 
 
 - :doc:`Goal-oriented bot </components/go_bot>`
