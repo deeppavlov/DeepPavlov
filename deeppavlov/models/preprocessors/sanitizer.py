@@ -31,7 +31,7 @@ class Sanitizer(Component):
     def __init__(self,
                  diacritical: bool = True,
                  nums: bool = False,
-                 *args, **kwargs):
+                 *args, **kwargs) -> None:
         self.diacritical = diacritical
         self.nums = nums
         self.combining_characters = dict.fromkeys([c for c in range(sys.maxunicode)

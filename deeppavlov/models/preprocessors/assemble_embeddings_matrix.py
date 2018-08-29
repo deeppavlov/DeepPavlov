@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Union
 
 import numpy as np
-from deeppavlov.core.common.registry import register
 from sklearn.decomposition import PCA
 
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.simple_vocab import SimpleVocabulary
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.embedders.glove_embedder import GloVeEmbedder
@@ -49,13 +50,13 @@ class EmbeddingsMatrixAssembler:
     """
 
     def __init__(self,
-                 embedder: (FasttextEmbedder, GloVeEmbedder),
+                 embedder: Union[FasttextEmbedder, GloVeEmbedder],
                  vocab: SimpleVocabulary,
-                 character_level: bool=False,
-                 emb_dim: int=None,
-                 estimate_by_n: int=10000,
+                 character_level: bool = False,
+                 emb_dim: int = None,
+                 estimate_by_n: int = 10000,
                  *args,
-                 **kwargs):
+                 **kwargs) -> None:
         if emb_dim is None:
             emb_dim = embedder.dim
         self.emb_mat = np.zeros([len(vocab), emb_dim], dtype=np.float32)
@@ -106,7 +107,7 @@ class RandomEmbeddingsMatrix:
     Attributes:
         dim: dimensionality of the embeddings
     """
-    def __init__(self, vocab_len, emb_dim, *args, **kwargs):
+    def __init__(self, vocab_len: int, emb_dim: int, *args, **kwargs) -> None:
         self.emb_mat = np.random.randn(vocab_len, emb_dim).astype(np.float32) / np.sqrt(emb_dim)
 
     @property

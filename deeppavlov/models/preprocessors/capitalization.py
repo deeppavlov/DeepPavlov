@@ -11,10 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+
+import re
 from typing import Union, Tuple, List
 
 import numpy as np
-import re
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.data.utils import zero_pad
@@ -37,7 +39,7 @@ class CapitalizationPreprocessor(Component):
     Attributes:
         dim: dimensionality of the feature vectors, produced by the featurizer
     """
-    def __init__(self, pad_zeros=True, *args, **kwargs):
+    def __init__(self, pad_zeros: bool = True, *args, **kwargs) -> None:
         self.pad_zeros = pad_zeros
         self._num_of_features = 4
 
