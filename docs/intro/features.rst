@@ -74,6 +74,15 @@ Based on `R-NET: Machine Reading Comprehension with Self-matching Networks
 <https://www.microsoft.com/en-us/research/publication/mrc/>`__. The model solves the task of looking for an answer on a
 question in a given context (`SQuAD <https://rajpurkar.github.io/SQuAD-explorer/>`__ task format).
 
++---------------+-----------------------------------------------------+----------------+-----------------+
+|    Dataset    | Model config                                        |    EM (dev)    |    F-1 (dev)    |
++---------------+-----------------------------------------------------+----------------+-----------------+
+| `SQuAD-v1.1`_ | :config:`squad <squad/squad.json>`                  |     71.41      |     80.26       |
++---------------+-----------------------------------------------------+----------------+-----------------+
+|  SDSJ Task B  | :config:`squad_ru <squad/squad_ru.json>`            |     60.58      |     80.22       |
++---------------+-----------------------------------------------------+----------------+-----------------+
+
+.. _`SQuAD-v1.1`: https://arxiv.org/abs/1606.05250
 
 - :doc:`Morphological tagging component </components/morphotagger>`
 
