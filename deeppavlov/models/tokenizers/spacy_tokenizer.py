@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
+import math
 from itertools import chain
-from typing import List, Generator, Any, Optional, Union, Tuple
+from typing import List, Generator, Any, Optional, Union, Tuple, Dict
 
 import spacy
+from spacy.matcher import Matcher
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
@@ -109,6 +112,49 @@ class StreamSpacyTokenizer(Component):
             return [detokenize(doc) for doc in batch]
         raise TypeError(
             "StreamSpacyTokenizer.__call__() is not implemented for `{}`".format(type(batch[0])))
+
+    def extract_money(doc) -> Tuple[Dict, Dict]:
+        
+        def below(text): return bool(re.compile(r'below|cheap').match(text))
+        BELOW = nlp.vocab.add_flag(below)
+
+        def above(text): return bool(re.compile(r'above|start').match(text))
+        ABOVE = nlp.vocab.add_flag(above)
+
+        matcher = Matcher(nlp.vocab)
+
+        matcher.add('below', None, [{BELOW: True}, {'LOWER': 'than', 'OP': '?'},
+                                    {'LOWER': 'from', 'OP': '?'}, {'ORTH': '$', 'OP': '?'}, {'ENT_TYPE': 'MONEY', 'LIKE_NUM': True}])
+
+        matcher.add('above', None, [{ABOVE: True}, {'LOWER': 'than', 'OP': '?'},
+                                    {'LOWER': 'from', 'OP': '?'}, {'ORTH': '$', 'OP': '?'}, {'ENT_TYPE': 'MONEY', 'LIKE_NUM': True}])
+
+        matches = matcher(doc)
+        money_range: Tuple = ()
+        doc_no_money = copy.deepcopy(doc)
+        negated = False
+
+        for match_id, start, end in matches:
+            print('MATCH', match_id)
+            string_id = nlp.vocab.strings[match_id]
+            span = doc[start:end]
+            for child in doc[start].children:
+                if child.dep_ == 'neg':
+                    negated = True
+
+            print(match_id, string_id, start, end, span.text, negated)
+            num_token = [token for token in span if token.like_num == True]
+            if len(num_token) != 1:
+                print("Error", str(num_token))
+
+            if (string_id == 'below' and negated == False) or (string_id == 'above' and negated == True):
+                money_range = (0, float(num_token[0].text))                
+
+            if (string_id == 'above' and negated == False) or (string_id == 'below' and negated == True):
+                money_range = (float(num_token[0].text), float(math.inf))                
+
+            del doc_no_money[start:end+1]
+        return doc_no_money, money_range
 
     def analyze(self, text: str):
         return self.model(text)
