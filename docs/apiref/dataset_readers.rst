@@ -27,3 +27,9 @@ Concrete DatasetReader classes.
 
 .. automodule:: deeppavlov.dataset_readers.typos_reader
    :members:
+
+.. autoclass:: deeppavlov.dataset_readers.faq_reader.FaqDatasetReader
+   :members:
+
+.. autoclass:: deeppavlov.dataset_readers.line_reader.LineReader
+   :members:
