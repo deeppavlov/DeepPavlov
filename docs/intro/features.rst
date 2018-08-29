@@ -24,6 +24,7 @@ BiLSTM with self-attention and other models are presented. The model also allows
 Several pre-trained models are available and presented in Table below.
 
 
+
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
 | Dataset           | Model                                                                                                        | Task             | Lang | Valid accuracy | Test accuracy |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
@@ -39,7 +40,7 @@ Several pre-trained models are available and presented in Table below.
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
 | `AG News`_        | :config:`AG News on Wiki embeddings <classifiers/topic_ag_news.json>`                                        | 5 topics         | En   | 0.8735         | 0.8859        |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-|`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings without any preprocessing <classifiers/sentiment_twitter.json>`  | Sentiment        | Ru   | 0.8021         | 0.7949        |
+|`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings without any preprocessing <classifiers/sentiment_twitter.json>`  | Sentiment        | Ru   | 0.9968         | 0.9971        |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
 |`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings with preprocessing <classifiers/sentiment_twitter_preproc.json>` | Sentiment        | Ru   | 0.7944         | 0.7879        |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
