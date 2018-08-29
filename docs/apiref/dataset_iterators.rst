@@ -15,6 +15,7 @@ Concrete DatasetIterator classes.
 
 .. autoclass:: deeppavlov.dataset_iterators.kvret_dialog_iterator.KvretDialogDatasetIterator
 
+.. autofunction:: deeppavlov.dataset_iterators.morphotagger_iterator.preprocess_data
 .. autoclass:: deeppavlov.dataset_iterators.morphotagger_iterator.MorphoTaggerDatasetIterator
 
 .. autoclass:: deeppavlov.dataset_iterators.sqlite_iterator.SQLiteDataIterator

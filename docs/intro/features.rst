@@ -79,8 +79,24 @@ question in a given context (`SQuAD <https://rajpurkar.github.io/SQuAD-explorer/
 
 Based on character-based approach to morphological tagging `Heigold et al., 2017. An extensive empirical evaluation of
 character-based morphological tagging for 14 languages <http://www.aclweb.org/anthology/E17-1048>`__. A state-of-the-art
-model for Russian and several other languages. Model assigns morphological tags in UD format to sequences of words.
+model for Russian and several other languages. Model takes as input tokenized sentences and outputs the corresponding
+sequence of morphological labels in `UD format <http://universaldependencies.org/format.html>`__. The table below
+contains word and sentence accuracy on UD2.0 datasets.
 
++-----------------+------------------------------------+---------------+----------------+
+|    Dataset      | Model                              | Word accuracy | Sent. accuracy |
++-----------------+------------------------------------+---------------+----------------+
+| `UD2.0 Russian`_|`UD Pipe 1.2`_ (Straka et al., 2017)|     93.57     |     43.04      |
++                 +------------------------------------+---------------+----------------+
+|                 |`Basic model`_                      |     95.17     |     50.58      |
++                 +------------------------------------+---------------+----------------+
+|                 |`Pymorphy-enhanced model`_          |     96.23     |     58.00      |
++-----------------+------------------------------------+---------------+----------------+
+
+.. _`UD2.0 Russian`: https://lindat.mff.cuni.cz/repository/xmlui/handle/11234/1-1983
+.. _`UD Pipe 1.2`: http://ufal.mff.cuni.cz/udpipe
+.. _`Basic model`: :config:<morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict.json>
+.. _`Pymorphy-enhanced model`: :config:<morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict_pymorphy.json>
 
 Skills
 ------
