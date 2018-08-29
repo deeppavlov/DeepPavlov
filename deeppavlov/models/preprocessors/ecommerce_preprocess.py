@@ -1,3 +1,4 @@
+import math
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
 
@@ -22,3 +23,9 @@ class EcommercePreprocess(Component):
 
 	def lemmas(self, doc):
 		return [w.lemma_ for w in doc]
+
+	def price(self, item):
+	    if 'ListPrice' in item:
+	    	return float(item['ListPrice'].split('$')[1].replace(",",""))
+	    else:
+	    	return math.inf
