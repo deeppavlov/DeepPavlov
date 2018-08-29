@@ -77,31 +77,36 @@ and the train set is the rest.
 
 **Twitter mokoron** dataset (http://study.mokoron.com/) contains
 **sentiment classification** of Russian tweets for positive and negative
-replies [5]. Train, valid and test division is made by hands (Stratified
+replies [5]. It was automatically labeled.
+Train, valid and test division is made by hands (Stratified
 division: 1/5 from all dataset for test set with 42 seed, then 1/5 from
-the rest for validation set with 42 seed). Attention! The pre-trained
-model was trained on ``sentiment_twitter_data/no_smiles_data`` -- the
-same dataset but with removed "(" and ")".
+the rest for validation set with 42 seed). Two provided pre-trained
+models were trained on the same dataset but with and without preprocessing.
+The main difference between scores is caused by the fact that some symbols
+(deleted during preprocessing) were used for automatic labelling. Therefore,
+it can be considered that model trained on preprocessed data is
+based on semantics while model trained on unprocessed data
+is based on punctuation and syntax.
 
-+-------------------+------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-| Dataset           | Model                                                                                                | Task             | Lang | Valid accuracy | Test accuracy |
-+-------------------+------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-| `DSTC 2`_         | :config:`DSTC 2 on DSTC 2 embeddings <classifiers/intents_dstc2.json>`                               | 28 intents       | En   | 0.8554         | 0.8658        |
-+-------------------+------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-| `DSTC 2`_         | :config:`DSTC 2 on Wiki embeddings <classifiers/intents_dstc2_big.json>`                             | 28 intents       | En   | 0.9659         | 0.9659        |
-+-------------------+------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-| `SNIPS-2017`_     | :config:`SNIPS on DSTC 2 embeddings <classifiers/intents_snips.json>`                                | 7 intents        | En   | 0.8829         |    --         |
-+-------------------+------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-| `SNIPS-2017`_     | :config:`SNIPS on Wiki embeddings <classifiers/intents_snips_big.json>`                              | 7 intents        | En   | 0.9868         |    --         |
-+-------------------+------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-| `Insults`_        | :config:`InsultsKaggle on Reddit embeddings <classifiers/insults_kaggle.json>`                       | Insult detection | En   | 0.8757         | 0.7503        |
-+-------------------+------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-| `AG News`_        | :config:`AG News on Wiki embeddings <classifiers/topic_ag_news.json>`                                | 5 topics         | En   | 0.8735         | 0.8859        |
-+-------------------+------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-|`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings <classifiers/sentiment_twitter.json>`                    | Sentiment        | Ru   | 0.8021         | 0.7949        |
-+-------------------+------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-|`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings with preprocessing <classifiers/sentiment_twitter.json>` | Sentiment        | Ru   | 0.8008         | 0.7943        |
-+-------------------+------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
+| Dataset           | Model                                                                                                        | Task             | Lang | Valid accuracy | Test accuracy |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
+| `DSTC 2`_         | :config:`DSTC 2 on DSTC 2 embeddings <classifiers/intents_dstc2.json>`                                       | 28 intents       | En   | 0.8554         | 0.8658        |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
+| `DSTC 2`_         | :config:`DSTC 2 on Wiki embeddings <classifiers/intents_dstc2_big.json>`                                     | 28 intents       | En   | 0.9659         | 0.9659        |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
+| `SNIPS-2017`_     | :config:`SNIPS on DSTC 2 embeddings <classifiers/intents_snips.json>`                                        | 7 intents        | En   | 0.8829         |    --         |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
+| `SNIPS-2017`_     | :config:`SNIPS on Wiki embeddings <classifiers/intents_snips_big.json>`                                      | 7 intents        | En   | 0.9868         |    --         |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
+| `Insults`_        | :config:`InsultsKaggle on Reddit embeddings <classifiers/insults_kaggle.json>`                               | Insult detection | En   | 0.8757         | 0.7503        |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
+| `AG News`_        | :config:`AG News on Wiki embeddings <classifiers/topic_ag_news.json>`                                        | 5 topics         | En   | 0.8735         | 0.8859        |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
+|`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings without any preprocessing <classifiers/sentiment_twitter.json>`  | Sentiment        | Ru   | 0.8021         | 0.7949        |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
+|`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings with preprocessing <classifiers/sentiment_twitter_preproc.json>` | Sentiment        | Ru   | 0.7944         | 0.7879        |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
 
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
