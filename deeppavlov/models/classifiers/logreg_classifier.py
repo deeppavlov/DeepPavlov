@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from scipy.sparse import vstack
 from scipy.sparse import csr_matrix
 
@@ -32,20 +32,19 @@ logger = get_logger(__name__)
 @register("logreg_classifier")
 class LogregClassifier(Estimator, Serializable):
     """
-    FAQ model based on logistic regression
+    Logistic Regression Classifier
+
+    Parameters:
+        top_n: how many top answers classifier'll return for input vectorized question
+        c: regularization strength in logistic regression model
+        penalty: regularization penalty type in logistic regression model
+        save_path: path to save the model
+        load_path: path to load the model
+
+    Returns:
+        None
     """
-    def __init__(self, top_n=1, c=1, penalty='l2', save_path: str = None, load_path: str = None, **kwargs) -> None:
-        """FAQ model based on logistic regression
-
-        Parameters:
-            c: regularization strength in logistic regression model
-            penalty: regularization penalty type in logistic regression model
-            save_path: path where to save model
-            load_path: path to model
-
-        Returns:
-            None
-        """
+    def __init__(self, top_n: int = 1, c: int = 1, penalty: str = 'l2', save_path: str = None, load_path: str = None, **kwargs) -> None:
         self.save_path = save_path
         self.load_path = load_path
         self.top_n = top_n
@@ -54,8 +53,8 @@ class LogregClassifier(Estimator, Serializable):
         if kwargs['mode'] != 'train':
             self.load()
 
-    def __call__(self, q_vects) -> Tuple[List[str], List[str]]:
-        """Found most similar answer for input vectorized question
+    def __call__(self, q_vects: List) -> Tuple[List[str], List[int]]:
+        """Found most similar answer for input vectorized questions
 
         Parameters:
             q_vects: vectorized questions
@@ -75,11 +74,11 @@ class LogregClassifier(Estimator, Serializable):
 
         return answers, scores
 
-    def fit(self, x_train_vects, y_train) -> None:
-        """Train FAQ model
+    def fit(self, x_train_vects: Tuple[Union[csr_matrix, List]], y_train: Tuple[str]) -> None:
+        """Train classifier
 
         Parameters:
-            x_train_vects: vectorized question for train dataset
+            x_train_vects: vectorized questions for train dataset
             y_train: answers for train dataset
 
         Returns:
@@ -99,13 +98,13 @@ class LogregClassifier(Estimator, Serializable):
         self.logreg.fit(x_train_features, list(y_train))
 
     def save(self) -> None:
-        """Save FAQ model"""
+        """Save classifier parameters"""
         logger.info("Saving faq_logreg_model to {}".format(self.save_path))
         path = expand_path(self.save_path)
         make_all_dirs(path)
         save_pickle(self.logreg, path)
 
     def load(self) -> None:
-        """Load FAQ model"""
+        """Load classifier parameters"""
         logger.info("Loading faq_logreg_model from {}".format(self.load_path))
         self.logreg = load_pickle(expand_path(self.load_path))

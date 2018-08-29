@@ -14,17 +14,15 @@
 
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.common.registry import register
-
+from typing import Dict
 from pandas import read_csv
 
 
 @register('faq_reader')
 class FaqDatasetReader(DatasetReader):
-    """
-    Reader for FAQ dataset
-    """
+    """Reader for FAQ dataset"""
 
-    def read(self, data_path: str = None, data_url: str = None, x_col_name: str = 'x', y_col_name: str = 'y'):
+    def read(self, data_path: str = None, data_url: str = None, x_col_name: str = 'x', y_col_name: str = 'y') -> Dict:
         """
         Read FAQ dataset from specified csv file or remote url
 

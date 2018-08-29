@@ -18,10 +18,12 @@ from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from sklearn.feature_extraction.text import TfidfVectorizer
 from deeppavlov.core.common.file import save_pickle
 from deeppavlov.core.common.file import load_pickle
 from deeppavlov.core.commands.utils import expand_path, make_all_dirs, is_file_exist
+from sklearn.feature_extraction.text import TfidfVectorizer
+from scipy.sparse import csr_matrix
+
 
 TOKENIZER = None
 logger = get_logger(__name__)
@@ -29,19 +31,18 @@ logger = get_logger(__name__)
 
 @register('tfidf_vectorizer')
 class TfIdfVectorizer(Estimator, Serializable):
-    """Sentence vectorizer which produce sparse vector with tf-idf values for each word in sentence"""
+    """
+    Sentence vectorizer which produce sparse vector with TF-IDF values for each word in sentence
+
+    Parameters:
+        save_path: path to save the model
+        load_path: path to load the model
+
+    Returns:
+        None
+    """
 
     def __init__(self, save_path: str = None, load_path: str = None, **kwargs) -> None:
-        """
-        Sentence vectorizer which produce sparse vector with tf-idf values for each word in sentence
-
-        Parameters:
-            save_path: path where to save model
-            load_path: path to model
-
-        Returns:
-            None
-        """
         self.save_path = save_path
         self.load_path = load_path
 
@@ -53,9 +54,9 @@ class TfIdfVectorizer(Estimator, Serializable):
             else:
                 self.load()
 
-    def __call__(self, questions: List[str]):
+    def __call__(self, questions: List[str]) -> csr_matrix:
         """
-        Vectorize sentence into tf-idf values
+        Vectorize sentence into TF-IDF values
 
         Parameters:
             questions: list of sentences
@@ -69,9 +70,9 @@ class TfIdfVectorizer(Estimator, Serializable):
         q_vects = self.vectorizer.transform(questions)
         return q_vects
 
-    def fit(self, x_train: List[str]):
+    def fit(self, x_train: List[str]) -> None:
         """
-        Train tf-idf vectorizer
+        Train TF-IDF vectorizer
 
         Parameters:
             x_train: list of sentences for train
@@ -86,13 +87,13 @@ class TfIdfVectorizer(Estimator, Serializable):
         self.vectorizer.fit(x_train)
 
     def save(self) -> None:
-        """Save FAQ model"""
+        """Save TF-IDF vectorizer"""
         path = expand_path(self.save_path)
         make_all_dirs(path)
         logger.info("Saving tfidf_vectorizer to {}".format(path))
         save_pickle(self.vectorizer, path)
 
     def load(self) -> None:
-        """Load FAQ model"""
+        """Load TF-IDF vectorizer"""
         logger.info("Loading tfidf_vectorizer from {}".format(expand_path(self.load_path)))
         self.vectorizer = load_pickle(expand_path(self.load_path))

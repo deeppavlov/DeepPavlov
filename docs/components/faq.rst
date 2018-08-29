@@ -129,12 +129,12 @@ Available Data and Pretrained Models
 
 You can use pretrained model on FAQ dataset from school-site: http://www.ftl.name/page/989
 
-.. code::
+   ::
 
-    tfidf_cos_sim_classifier             - http://files.deeppavlov.ai/faq/school/faq_tfidf_cos_model.pkl
-    tfidf_logreg_classifier              - http://files.deeppavlov.ai/faq/school/faq_tfidf_logreg_model.pkl
-    fasttext_cos_classifier              - http://files.deeppavlov.ai/faq/school/faq_fasttext_cos_model.pkl
-    tfidf_vectorizer_ruwiki              - http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki.pkl
+    tfidf_cos_sim_classifier    - http://files.deeppavlov.ai/faq/school/faq_tfidf_cos_model.pkl
+    tfidf_logreg_classifier     - http://files.deeppavlov.ai/faq/school/faq_tfidf_logreg_model.pkl
+    fasttext_cos_classifier     - http://files.deeppavlov.ai/faq/school/faq_fasttext_cos_model.pkl
+    tfidf_vectorizer_ruwiki     - http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki.pkl
 
 
 -  **tfidf_cos_sim_classifier.pkl** - pre-trained cosine similarity classifier for classifying input question (vectorized by tfidf)

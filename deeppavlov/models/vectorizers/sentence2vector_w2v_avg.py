@@ -30,7 +30,7 @@ class SentenceAvgW2vVectorizer(Component):
     def __init__(self, **kwargs) -> None:
         pass
 
-    def __call__(self, questions: List[str], tokens_fasttext_vectors) -> List:
+    def __call__(self, questions: List[str], tokens_fasttext_vectors: List) -> List:
         """Vectorize list of sentences
 
         Parameters:

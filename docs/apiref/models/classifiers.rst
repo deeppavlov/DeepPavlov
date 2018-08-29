@@ -22,7 +22,13 @@ deeppavlov.models.classifiers
     .. automethod:: bigru_model
 
 .. autoclass:: deeppavlov.models.classifiers.cos_sim_classifier.CosineSimilarityClassifier
-   :members:
+    :members:
+
+    .. automethod:: __call__
+
 
 .. autoclass:: deeppavlov.models.classifiers.logreg_classifier.LogregClassifier
-   :members:
+    :members:
+
+    .. automethod:: __call__
+

@@ -29,17 +29,18 @@ logger = get_logger(__name__)
 
 @register('sentence2vector_w2v_tfidf')
 class SentenceW2vVectorizerTfidfWeights(Estimator, Serializable):
-    """Sentence vectorizer which produce one vector as tf-idf weighted sum of words vectors in sentence"""
+    """
+    Sentence vectorizer which produce one vector as tf-idf weighted sum of words vectors in sentence
+
+    Parameters:
+        save_path: path to save the model
+        load_path: path to load the model
+
+    Returns:
+        None
+    """
 
     def __init__(self, save_path: str = None, load_path: str = None, **kwargs) -> None:
-        """Sentence vectorizer which produce one vector as tf-idf weighted sum of words vectors in sentence
-        Parameters:
-            save_path: path where to save model
-            load_path: path to model
-
-        Returns:
-            None
-        """
         self.save_path = save_path
         self.load_path = load_path
 
@@ -51,7 +52,7 @@ class SentenceW2vVectorizerTfidfWeights(Estimator, Serializable):
             else:
                 self.vectorizer = TfidfVectorizer()
 
-    def __call__(self, questions: List[str], tokens_fasttext_vectors) -> List:
+    def __call__(self, questions: List[str], tokens_fasttext_vectors: List) -> List:
         """Vectorize list of sentences
 
         Parameters:
@@ -81,7 +82,7 @@ class SentenceW2vVectorizerTfidfWeights(Estimator, Serializable):
 
         return questions_vectors
 
-    def fit(self, x_train: List[str]) -> None:
+    def fit(self, x_train: List) -> None:
         """Train tf-idf weights
 
         Parameters:

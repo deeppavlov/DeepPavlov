@@ -14,7 +14,7 @@
 
 
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Union
 from scipy.sparse import vstack
 from scipy.sparse import csr_matrix
 
@@ -34,26 +34,24 @@ logger = get_logger(__name__)
 @register("cos_sim_classifier")
 class CosineSimilarityClassifier(Estimator, Serializable):
     """
-    FAQ model based on cosine similarity between vectorized sentences
+    Classifier based on cosine similarity between vectorized sentences
+
+    Parameters:
+        save_path: path to save the model
+        load_path: path to load the model
+
+    Returns:
+        None
     """
 
-    def __init__(self, top_n=1, save_path: str = None, load_path: str = None, **kwargs) -> None:
-        """FAQ model based on cosine similarity between vectorized sentences
-
-        Parameters:
-            save_path: path where to save model
-            load_path: path to model
-
-        Returns:
-            None
-        """
+    def __init__(self, top_n: int = 1, save_path: str = None, load_path: str = None, **kwargs) -> None:
         self.save_path = save_path
         self.load_path = load_path
         self.top_n = top_n
         if kwargs['mode'] != 'train':
             self.load()
 
-    def __call__(self, q_vects) -> Tuple[List[str], List[str]]:
+    def __call__(self, q_vects: Union[csr_matrix, List]) -> Tuple[List[str], List[int]]:
         """Found most similar answer for input vectorized question
 
         Parameters:
@@ -94,8 +92,8 @@ class CosineSimilarityClassifier(Estimator, Serializable):
 
         return answers, scores
 
-    def fit(self, x_train_vects, y_train) -> None:
-        """Train FAQ model
+    def fit(self, x_train_vects: Tuple[Union[csr_matrix, List]], y_train: Tuple[str]) -> None:
+        """Train classifier
 
         Parameters:
             x_train_vects: vectorized question for train dataset
@@ -117,13 +115,13 @@ class CosineSimilarityClassifier(Estimator, Serializable):
         self.y_train = list(y_train)
 
     def save(self) -> None:
-        """Save FAQ model"""
+        """Save classifier parameters"""
         logger.info("Saving faq_model to {}".format(self.save_path))
         path = expand_path(self.save_path)
         make_all_dirs(path)
         save_pickle((self.x_train_features, self.y_train), path)
 
     def load(self) -> None:
-        """Load FAQ model"""
+        """Load classifier parameters"""
         logger.info("Loading faq_model from {}".format(self.load_path))
         self.x_train_features, self.y_train = load_pickle(expand_path(self.load_path))
