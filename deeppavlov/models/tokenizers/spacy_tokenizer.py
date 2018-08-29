@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 import copy
 import math
 from itertools import chain
@@ -82,7 +83,7 @@ class StreamSpacyTokenizer(Component):
 
         if sentencizer:
             self.model.add_pipe(self.model.create_pipe('sentencizer'))
-            
+
         self.tokenizer = self.model.Defaults.create_tokenizer(self.model)
         self.batch_size = batch_size
         self.ngram_range = tuple(ngram_range)  # cast JSON array to tuple
@@ -116,15 +117,24 @@ class StreamSpacyTokenizer(Component):
         raise TypeError(
             "StreamSpacyTokenizer.__call__() is not implemented for `{}`".format(type(batch[0])))
 
-    def extract_money(doc) -> Tuple[Dict, Dict]:
+    def extract_money(self, doc) -> Tuple[Any, Tuple[float, float]]:
         
-        def below(text): return bool(re.compile(r'below|cheap').match(text))
-        BELOW = nlp.vocab.add_flag(below)
+        # def below(text): return bool(re.compile(r'below|cheap').match(text))
+        # BELOW = self.model.vocab.add_flag(below)
 
-        def above(text): return bool(re.compile(r'above|start').match(text))
-        ABOVE = nlp.vocab.add_flag(above)
+        # def above(text): return bool(re.compile(r'above|start').match(text))
+        # ABOVE = self.model.vocab.add_flag(above)
 
-        matcher = Matcher(nlp.vocab)
+        for ent in doc.ents:
+            print(str(ent.text)+" "+str(ent.start_char)+" "+str(ent.end_char)+" "+str(ent.label_))
+
+        below = lambda text: bool(re.compile(r'below|cheap').match(text))
+        BELOW = self.model.vocab.add_flag(below)
+
+        above = lambda text: bool(re.compile(r'above|start').match(text))
+        ABOVE = self.model.vocab.add_flag(above)
+
+        matcher = Matcher(self.model.vocab)
 
         matcher.add('below', None, [{BELOW: True}, {'LOWER': 'than', 'OP': '?'},
                                     {'LOWER': 'from', 'OP': '?'}, {'ORTH': '$', 'OP': '?'}, {'ENT_TYPE': 'MONEY', 'LIKE_NUM': True}])
@@ -134,12 +144,12 @@ class StreamSpacyTokenizer(Component):
 
         matches = matcher(doc)
         money_range: Tuple = ()
-        doc_no_money = copy.deepcopy(doc)
+        doc_no_money = list(doc)#copy.deepcopy(doc)
         negated = False
 
         for match_id, start, end in matches:
             print('MATCH', match_id)
-            string_id = nlp.vocab.strings[match_id]
+            string_id = self.model.vocab.strings[match_id]
             span = doc[start:end]
             for child in doc[start].children:
                 if child.dep_ == 'neg':
