@@ -32,7 +32,7 @@ def get_language(filepath: str) -> str:
     """
     return filepath.split("-")[0]
 
-def read_infile(infile: str, word_column: int = WORD_COLUMN, pos_column: int = POS_COLUMN,
+def read_infile(infile: Union[Path, str], word_column: int = WORD_COLUMN, pos_column: int = POS_COLUMN,
                 tag_column: int = TAG_COLUMN, max_sents: int = -1,
                 read_only_words: bool = False) -> List[Tuple[List, Union[List, None]]]:
     """Reads input file in CONLL-U format
