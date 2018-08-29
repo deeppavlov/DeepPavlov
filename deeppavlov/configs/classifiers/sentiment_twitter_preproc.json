@@ -28,7 +28,17 @@
         "load_path": "vocabs/sentiment_twitter_classes.dict"
       },
       {
-        "in": "x",
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_prep"
+        ],
+        "name": "dirty_comments_preprocessor",
+        "delete_smile_brackets": true
+      },
+      {
+        "in": "x_prep",
         "out": "x_tok",
         "id": "my_tokenizer",
         "name": "nltk_tokenizer",
@@ -56,8 +66,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/sentiment_twitter_v3",
-        "load_path": "classifiers/sentiment_twitter_v3",
+        "save_path": "classifiers/sentiment_twitter_v2",
+        "load_path": "classifiers/sentiment_twitter_v2",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "kernel_sizes_cnn": [
