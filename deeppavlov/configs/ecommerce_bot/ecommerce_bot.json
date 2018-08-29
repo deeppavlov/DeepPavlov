@@ -20,7 +20,9 @@
         "save_path": "ecommerce_bot/ecommerce_Phones_model.pkl",
         "load_path": "ecommerce_bot/ecommerce_Phones_model.pkl",
         "tokenizer": {
-          "name": "stream_spacy_tokenizer"
+          "name": "stream_spacy_tokenizer",
+          "spacy_model": "en",
+          "sentencizer": false
         },
         "preprocess": {
           "name": "ecommerce_preprocess"

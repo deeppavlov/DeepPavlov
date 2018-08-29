@@ -71,7 +71,7 @@ class StreamSpacyTokenizer(Component):
                  batch_size: Optional[int] = None, ngram_range: Optional[List[int]] = None,
                  lemmas: bool = False, n_threads: Optional[int] = None,
                  lowercase: Optional[bool] = None, alphas_only: Optional[bool] = None,
-                 spacy_model: str = 'en_core_web_sm', **kwargs):
+                 spacy_model: str = 'en_core_web_sm', sentencizer: bool = True, **kwargs):
 
         if disable is None:
             disable = ['parser', 'ner']
@@ -79,7 +79,10 @@ class StreamSpacyTokenizer(Component):
             ngram_range = [1, 1]
         self.stopwords = stopwords or []
         self.model = spacy.load(spacy_model, disable=disable)
-        self.model.add_pipe(self.model.create_pipe('sentencizer'))
+
+        if sentencizer:
+            self.model.add_pipe(self.model.create_pipe('sentencizer'))
+            
         self.tokenizer = self.model.Defaults.create_tokenizer(self.model)
         self.batch_size = batch_size
         self.ngram_range = tuple(ngram_range)  # cast JSON array to tuple
