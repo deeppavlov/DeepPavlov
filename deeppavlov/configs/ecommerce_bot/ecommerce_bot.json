@@ -22,7 +22,8 @@
         "tokenizer": {
           "name": "stream_spacy_tokenizer",
           "spacy_model": "en",
-          "sentencizer": false
+          "sentencizer": false,
+          "disable": ["parse"]
         },
         "preprocess": {
           "name": "ecommerce_preprocess"
