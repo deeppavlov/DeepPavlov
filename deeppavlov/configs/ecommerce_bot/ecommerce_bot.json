@@ -2,21 +2,29 @@
   "dataset_reader": {
     "name": "amazon_ecommerce_reader",
     "data_path": "amazon_ecommerce",
-    "catalog": "Automotive"
+    "catalog": "Phones"
   },
   "dataset_iterator": {
     "name": "data_learning_iterator"
   },
  "chainer": {
-    "in": ["x"],
+    "in": ["x", "a", "b"],
     "out": ["y"],
     "pipe": [
       {
         "name": "ecommerce_bot",
-        "in": ["x"],
+        "in": ["x", "a", "b"],
         "fit_on": ["x"],
-        "save_path": "ecommerce_bot/ecommerce_Books_model.pkl",
-        "load_path": "ecommerce_bot/ecommerce_Books_model.pkl",
+        "min_similarity": 0.5,
+        "min_entropy": 0.5,
+        "save_path": "ecommerce_bot/ecommerce_Phones_model.pkl",
+        "load_path": "ecommerce_bot/ecommerce_Phones_model.pkl",
+        "tokenizer": {
+          "name": "stream_spacy_tokenizer"
+        },
+        "preprocess": {
+          "name": "ecommerce_preprocess"
+        },
         "out": ["y"]
       }
     ]
