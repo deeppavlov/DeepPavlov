@@ -23,8 +23,6 @@ Component for classification tasks (intents, sentiment, etc) on word-level. Shal
 BiLSTM with self-attention and other models are presented. The model also allows multilabel classification of texts.
 Several pre-trained models are available and presented in Table below.
 
-
-
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
 | Dataset           | Model                                                                                                        | Task             | Lang | Valid accuracy | Test accuracy |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
@@ -44,12 +42,15 @@ Several pre-trained models are available and presented in Table below.
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
 |`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings with preprocessing <classifiers/sentiment_twitter_preproc.json>` | Sentiment        | Ru   | 0.7944         | 0.7879        |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
+|`RuSentiment`_     | :config:`RuSentiment on RuWiki+Lenta embeddings <classifiers/rusentiment_cnn.json>`                          | Sentiment        | Ru   | 0.6822         | 0.7095        |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
 .. _`SNIPS-2017`: https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines
 .. _`Insults`: https://www.kaggle.com/c/detecting-insults-in-social-commentary
 .. _`AG News`: https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html
 .. _`Twitter mokoron`: http://study.mokoron.com/
+.. _`RuSentiment`: http://text-machine.cs.uml.edu/projects/rusentiment/
 
 
 As no one had published intent recognition for DSTC-2 data, the

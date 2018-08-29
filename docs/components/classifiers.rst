@@ -88,6 +88,10 @@ it can be considered that model trained on preprocessed data is
 based on semantics while model trained on unprocessed data
 is based on punctuation and syntax.
 
+**RuSentiment** dataset (http://text-machine.cs.uml.edu/projects/rusentiment/) contains
+**sentiment classification** of social media posts for Russian language within 5 classes 'positive', 'negative',
+'neutral', 'speech', 'skip'.
+
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
 | Dataset           | Model                                                                                                        | Task             | Lang | Valid accuracy | Test accuracy |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
@@ -107,13 +111,15 @@ is based on punctuation and syntax.
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
 |`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings with preprocessing <classifiers/sentiment_twitter_preproc.json>` | Sentiment        | Ru   | 0.7944         | 0.7879        |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
-
+|`RuSentiment`_     | :config:`RuSentiment on RuWiki+Lenta embeddings <classifiers/rusentiment_cnn.json>`                          | Sentiment        | Ru   | 0.6822         | 0.7095        |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------------+---------------+
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
 .. _`SNIPS-2017`: https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines
 .. _`Insults`: https://www.kaggle.com/c/detecting-insults-in-social-commentary
 .. _`AG News`: https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html
 .. _`Twitter mokoron`: http://study.mokoron.com/
+.. _`RuSentiment`: http://text-machine.cs.uml.edu/projects/rusentiment/
 
 
 Download pre-trained model
