@@ -1,3 +1,17 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import numpy as np
 import json
 import xlsxwriter
@@ -8,7 +22,7 @@ import time
 from copy import deepcopy
 from os.path import join, isdir
 from os import mkdir
-matplotlib.use('Agg')
+# matplotlib.use('Agg')
 
 
 def normal_time(z):
@@ -26,9 +40,6 @@ def normal_time(z):
 
 
 class HyperPar:
-    """
-    Glory to the great Michael!
-    """
     def __init__(self, stop_keys=['in', 'in_x', 'in_y', 'out'], **kwargs):
         np.random.seed(int(time.time()))
         self.params = kwargs
@@ -117,7 +128,6 @@ def write_component(sheet, comp_dict, start_x, start_y, mx_height, cell_format):
 
 
 def write_old_metrics(sheet, comp_dict, start_x, start_y, mx_height, cell_format):
-    """ Write metric info in pipeline table """
     data_names = list(comp_dict['res'].keys())
     metric_names = list(comp_dict['res'][data_names[-1]].keys())
 
@@ -134,7 +144,6 @@ def write_old_metrics(sheet, comp_dict, start_x, start_y, mx_height, cell_format
 
 
 def write_old_pipe(sheet, pipe_dict, start_x, start_y, cell_format, max_):
-    """ Add pipeline to the table """
     height, width = get_pipe_sq(pipe_dict)
     # height = height - 1
 
@@ -155,7 +164,6 @@ def write_old_pipe(sheet, pipe_dict, start_x, start_y, cell_format, max_):
 
 
 def sort_old_pipes(pipes, target_metric):
-    """ Sorts the pipelines by target metric values """
     ind_val = []
     sort_pipes_ = []
     dtype = [('value', 'float'), ('index', 'int')]
@@ -181,73 +189,7 @@ def sort_old_pipes(pipes, target_metric):
     return sort_pipes_
 
 
-def plot_bar(book, data, metrics_):
-    """ Builds a histogram of the results in table """
-    graph_worksheet = book.add_worksheet('Plots')
-    chart = book.add_chart({'type': 'bar'})
-
-    # TODO fix this constrains on numbers of colors
-    colors = ['#FF9900', '#e6ff00', '#ff1a00', '#00ff99', '#9900ff', '#0066ff']
-    pipe_ind = []
-    metric = {}
-    x = 0
-    y = 0
-    for met in metrics_:
-        metric[met] = []
-        for pipe in data:
-            ind = int(pipe['index'])
-            if ind not in pipe_ind:
-                pipe_ind.append(ind)
-
-            if 'test' not in pipe['res']:
-                name_ = list(pipe['res'].keys())[0]
-                metric[met].append(pipe['res'][name_][met])
-            else:
-                metric[met].append(pipe['res']['test'][met])
-
-        # write in book
-        graph_worksheet.merge_range(x, y, x, y+1, met)
-        graph_worksheet.write_column(x+1, y, pipe_ind)
-        graph_worksheet.write_column(x+1, y+1, metric[met])
-
-        # Add a series to the chart.
-        chart.add_series({'name': ['Plots', x, y, x, y+1],
-                          'categories': ['Plots', x+1, y, x+len(pipe_ind), y],
-                          'values': ['Plots', x+1, y+1, x+len(pipe_ind), y+1],
-                          'data_labels': {'value': True, 'legend_key': True, 'position': 'center', 'leader_lines': True,
-                                          'num_format': '#,##0.00', 'font': {'name': 'Consolas'}},
-                          'border': {'color': 'black'},
-                          'fill': {'colors': colors}})
-
-        y += 2
-
-    # Add a chart title and some axis labels.
-    chart.set_title({'name': 'Results bar'})
-    chart.set_x_axis({'name': 'Scores'})
-    chart.set_y_axis({'name': 'Pipelines'})
-
-    # Set an Excel chart style.
-    chart.set_style(11)
-
-    # Insert the chart into the worksheet.
-    graph_worksheet.insert_chart('H1', chart)  # , {'x_offset': 25, 'y_offset': 10}
-    return book
-
-
 def build_report(log, target_metric=None, save_path='./'):
-    """
-    Analyzes the log and creates a table (file_name.xlsx) with experiment report. In the report, the information is
-    sorted by the target metric.
-    Args:
-        log: str; path to log file
-        target_metric: str; The metric name on the basis of which the results will be sorted when the report
-             is generated. The default value is None, in this case the target metric is taken  the first name from
-             those names that are specified in the config file. If the specified metric is not contained in DeepPavlov
-             will be called error
-        save_path: str;
-    Returns:
-        None
-    """
     if isinstance(log, str):
         with open(log, 'r') as lgd:
             log_data = json.load(lgd)
@@ -402,7 +344,6 @@ def write_legend(sheet, num, target_metric, metric_names, max_com, cell_format):
 
 
 def write_metrics(sheet, comp_dict, start_x, start_y, cell_format):
-    """ Write metric info in pipeline table """
     data_names = list(comp_dict['res'].keys())
     metric_names = list(comp_dict['res'][data_names[-1]].keys())
 
@@ -486,7 +427,6 @@ def get_best(data, target):
 
 
 def sort_pipes(pipes, target_metric):
-    """ Sorts the pipelines by target metric values """
     ind_val = []
     sort_pipes_ = []
     dtype = [('value', 'float'), ('index', 'int')]
@@ -513,21 +453,6 @@ def sort_pipes(pipes, target_metric):
 
 
 def build_pipeline_table(log, target_metric=None, save_path='./'):
-    """
-    Analyzes the log and creates a table (file_name.xlsx) with experiment report. In the report, the information is
-    sorted by the target metric.
-
-    Args:
-        log: str; path to log file
-        target_metric: str; The metric name on the basis of which the results will be sorted when the report
-             is generated. The default value is None, in this case the target metric is taken  the first name from
-             those names that are specified in the config file. If the specified metric is not contained in DeepPavlov
-             will be called error
-        save_path: str;
-
-    Returns:
-        None
-    """
     if isinstance(log, str):
         with open(log, 'r') as lgd:
             log_data = json.load(lgd)
@@ -576,19 +501,6 @@ def build_pipeline_table(log, target_metric=None, save_path='./'):
 
 
 def results_analizator(log, target_metric='f1_weighted', num_best=5):
-    """
-    It analyzes the log and collects the information necessary to create a graph.
-    Args:
-        log: dict; dict from log
-        target_metric: str; The metric name on the basis of which the results will be sorted when the report
-             is generated. The default value is None, in this case the target metric is taken  the first name from
-             those names that are specified in the config file. If the specified metric is not contained in DeepPavlov
-             will be called error.
-        num_best: int; border top index
-
-    Returns:
-        dict
-    """
     models_names = list(log['experiments'].keys())
     metrics = log['experiment_info']['metrics']
     if target_metric not in metrics:
@@ -638,7 +550,6 @@ def results_analizator(log, target_metric='f1_weighted', num_best=5):
 
 
 def plot_bar(book, data, metrics_):
-    """ Builds a histogram of the results in table """
     graph_worksheet = book.add_worksheet('Plots')
     chart = book.add_chart({'type': 'bar'})
 
@@ -691,22 +602,6 @@ def plot_bar(book, data, metrics_):
 
 
 def plot_res(info, save=True, savepath='./', width=0.2, fheight=8, fwidth=12, ext='png'):
-    """
-    Creates a histogram with the results of the experiment.
-
-    Args:
-        info: dict; special dict with information about models, and metrics values
-        save: bool; save trigger
-        savepath: str;
-        width: float; width of one column
-        fheight: int; height of plot
-        fwidth: int; width of plot
-        ext: str; image file extension
-
-    Returns:
-        None
-    """
-
     # prepeare data
     info = info['sorted']
 
@@ -757,9 +652,6 @@ def plot_res(info, save=True, savepath='./', width=0.2, fheight=8, fwidth=12, ex
 
     # auto lables
     def autolabel(columns):
-        """
-        Attach a text label above each bar displaying its height
-        """
         for rects in columns:
             for rect in rects:
                 height = rect.get_height()
@@ -786,7 +678,6 @@ def plot_res(info, save=True, savepath='./', width=0.2, fheight=8, fwidth=12, ex
 
 
 def results_visualization(root, savepath, plot, target_metric=None):
-    """ Reads the log and generates a report based on it """
     with open(join(root, root.split('/')[-1] + '.json'), 'r') as log_file:
         log = json.load(log_file)
         log_file.close()

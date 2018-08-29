@@ -1,9 +1,25 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import json
+
 from time import time
 from datetime import datetime
 from os.path import join
 from copy import copy
 from shutil import rmtree
+from typing import Union, Dict
 
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.common.errors import ConfigError
@@ -15,29 +31,35 @@ from deeppavlov.pipeline_manager.utils import results_visualization
 
 class PipelineManager:
     """
-    The class implements functions for automatic iteration of pipelines and hyperparameters search.
+    The class implements the functions of automatic pipeline search and search for hyperparameters.
+
+    Args:
+            config_path: path to config file.
+            exp_name: name of the experiment.
+            date: date of the experiment.
+            mode: train or evaluate - the trigger that determines the operation of the algorithm
+            info: some additional information that you want to add to the log, the content of the dictionary
+                  does not affect the algorithm
+            root: root path, the root path where the report will be generated and saved checkpoints
+            hyper_search: grid or random - the trigger that determines type of hypersearch
+            sample_num: determines the number of generated pipelines, if hyper_search == random.
+            target_metric: The metric name on the basis of which the results will be sorted when the report
+                           is generated. The default value is None, in this case the target metric is taken the
+                           first name from those names that are specified in the config file. If the specified metric
+                           is not contained in DeepPavlov will be called error.
+            plot: boolean trigger, which determines whether to draw a graph of results or not
+
+    Attributes:
+        logger: A special class that collects auxiliary statistics and results during training, and stores all
+                the collected data in a separate log.
+        pipeline_generator: A special class that generates configs for training.
     """
-    def __init__(self, config_path, exp_name, date=None, mode='train', info=None, root='./experiments/',
-                 hyper_search='grid', sample_num=10, target_metric=None, plot=True):
+    def __init__(self, config_path: str, exp_name: str, date: Union[str, None] = None, mode: str = 'train',
+                 info: Dict = None, root: str = './experiments/', hyper_search: str = 'grid', sample_num: int = 10,
+                 target_metric: str = None, plot: bool = True):
         """
-        Initialize logger, builds a directory tree, initialize date.
-
-        Args:
-            config_path: str; path to config file.
-            exp_name: str; name of the experiment.
-            date: str; date of the experiment.
-            mode: str; train or evaluate - the trigger that determines the operation of the algorithm
-            info: dict; some additional information that you want to add to the log, the content of the dictionary
-             does not affect the algorithm
-            root: str; root path, the root path where the report will be generated and saved checkpoints
-            hyper_search: str; grid or random - the trigger that determines type of hypersearch
-            sample_num: int; determines the number of generated pipelines, if hyper_search == random.
-            target_metric: str; The metric name on the basis of which the results will be sorted when the report
-             is generated. The default value is None, in this case the target metric is taken  the first name from
-             those names that are specified in the config file. If the specified metric is not contained in DeepPavlov
-             will be called error.
+        Initialize logger, read input args, builds a directory tree, initialize date.
         """
-
         self.config_path = config_path
         self.exp_name = exp_name
         self.mode = mode
@@ -63,10 +85,7 @@ class PipelineManager:
 
     def run(self):
         """
-        Initializes the pipeline generator and runs the experiment. Creates a report after the experiments
-
-        Returns:
-            None
+        Initializes the pipeline generator and runs the experiment. Creates a report after the experiments.
         """
         # create the pipeline generator
         self.pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, stype=self.hyper_search)
@@ -118,12 +137,7 @@ class PipelineManager:
     def test(self):
         """
         Initializes the pipeline generator with tiny data and runs the test of experiment.
-
-        Returns:
-            None
         """
-        # create tmp folder in self.save_path
-
         # create the pipeline generator
         pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, stype=self.hyper_search,
                                      test_mode=True)
@@ -159,11 +173,13 @@ class PipelineManager:
 
         # del all tmp files in save path
         rmtree(join(self.save_path, "tmp"))
-
         print('[ The test was successful ]')
         return None
 
     def save_config(self, conf, i) -> None:
+        """
+        Save train config in checkpoint folder.
+        """
         with open(join(self.save_path, "pipe_{}".format(i+1), 'config.json'), 'w') as cf:
             json.dump(conf, cf)
             cf.close()

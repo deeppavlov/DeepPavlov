@@ -14,8 +14,8 @@
 
 
 import numpy as np
-from typing import List, Tuple
 
+from typing import List, Tuple
 from sklearn.metrics import f1_score, accuracy_score
 
 from deeppavlov.core.common.metrics_registry import register_metric
@@ -71,36 +71,35 @@ def classification_fmeasure_weighted(y_true: List[list], y_predicted: List[Tuple
     return f1_score(y_true_one_hot, y_pred_one_hot, average=average)
 
 
-@register_metric('simple_f1_macro')
-def simple_f1_macro(y_true, y_predicted, average="macro") -> float:
-    """
-    Calculate F1-measure macro
-
-    Args:
-        y_true: true binary labels
-        y_predicted: predictions.
-        average: determines the type of averaging performed on the data
-
-    Returns:
-        F1-measure
-    """
-    return f1_score(y_true, y_predicted, average=average)
-
-
 @register_metric('simple_accuracy')
 def simple_acc(y_true, y_predicted) -> float:
     """
+    Calculate accuracy
+
+    Args:
+        y_true: true binary labels
+        y_predicted: predictions
+
+    Returns:
+        Accuracy
+    """
+    return accuracy_score(y_true, y_predicted)
+
+
+@register_metric('simple_f1_macro')
+def simple_f1_macro(y_true: List[float], y_predicted: List[float], average="macro") -> float:
+    """
     Calculate F1-measure macro
 
     Args:
         y_true: true binary labels
-        y_predicted: predictions.
+        y_predicted: predictions
         average: determines the type of averaging performed on the data
 
     Returns:
-        F1-measure
+        F1-measure macro
     """
-    return accuracy_score(y_true, y_predicted)
+    return f1_score(y_true, y_predicted, average=average)
 
 
 @register_metric('simple_f1_weighted')
@@ -110,10 +109,10 @@ def simple_f1_weighted(y_true, y_predicted, average="weighted") -> float:
 
     Args:
         y_true: true binary labels
-        y_predicted: predictions.
+        y_predicted: predictions
         average: determines the type of averaging performed on the data
 
     Returns:
-        F1-measure
+        F1-measure weighted
     """
     return f1_score(y_true, y_predicted, average=average)

@@ -11,18 +11,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import numpy as np
 
 from typing import List
-
 from pathlib import Path
 from sklearn.externals import joblib
 from sklearn.linear_model.logistic import LogisticRegression
-
-from scipy.sparse import vstack
-from scipy.sparse import csr_matrix
 from sklearn.svm import LinearSVC
 from sklearn.ensemble import RandomForestClassifier
+from scipy.sparse import vstack
+from scipy.sparse import csr_matrix
+
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
@@ -34,17 +34,23 @@ log = get_logger(__name__)
 
 @register("logistic_regression")
 class LogReg(Estimator):
-    """Logistic Regression classifier.
+    """
+    The class implements the Logistic Regression Classifier from Sklearn library.
 
     Args:
-
+        save_path (str): save path
+        load_path (str): load path
+        mode: train/infer trigger
+        **kwargs: additional arguments
 
     Attributes:
-
-
+        model: Logistic Regression Classifier class from sklearn
     """
 
     def __init__(self, **kwargs) -> None:
+        """
+        Initialize Logistic Regression Classifier or load it from load path, if load_path is not None.
+        """
         # Parameters for parent classes
         save_path = kwargs.get('save_path', None)
         load_path = kwargs.get('load_path', None)
@@ -56,10 +62,11 @@ class LogReg(Estimator):
         self.load()
 
     def __call__(self, q_vect: List[str]) -> List[float]:
-        """Predict class of sentence.
+        """
+        Infer on the given data. Predicts the class of the sentence.
 
         Args:
-            q_vect: list of queries used in ranking
+            q_vect: sparse matrix or [n_samples, n_features] matrix
 
         Returns:
             a list of classes
@@ -68,11 +75,11 @@ class LogReg(Estimator):
         return answers
 
     def fit(self, x, y, weights=None, **kwargs):
-        """Train the model.
+        """
+        Train on the given data (hole dataset).
 
         Returns:
-            self
-
+            None
         """
         if len(x) != 0:
             if isinstance(x[0], csr_matrix):
@@ -88,11 +95,8 @@ class LogReg(Estimator):
         return self
 
     def save(self, fname: str = None) -> None:
-        """Pass method to :attr:`vectorizer`.
-
-        Returns:
-            None
-
+        """
+        Save classifier as file with 'pkl' format.
         """
         if not fname:
             fname = self.save_path
@@ -106,11 +110,8 @@ class LogReg(Estimator):
             joblib.dump(self.model, fname)
 
     def load(self) -> None:
-        """Pass method to :attr:`vectorizer`.
-
-        Returns:
-            None
-
+        """
+        Load classifier from load path. Classifier must be stored as file with 'pkl' format.
         """
         if self.load_path:
             if self.load_path.exists():
@@ -126,17 +127,23 @@ class LogReg(Estimator):
 
 @register("support_vector_classifier")
 class Svm(Estimator):
-    """Rank documents according to input strings.
+    """
+    The class implements the Support Vector Classifier from Sklearn library.
 
     Args:
-
+        save_path (str): save path
+        load_path (str): load path
+        mode: train/infer trigger
+        **kwargs: additional arguments
 
     Attributes:
-
-
+        model: Support Vector Classifier class from sklearn
     """
 
     def __init__(self, **kwargs) -> None:
+        """
+        Initialize Support Vector Classifier or load it from load path, if load_path is not None.
+        """
         # Parameters for parent classes
         save_path = kwargs.get('save_path', None)
         load_path = kwargs.get('load_path', None)
@@ -148,10 +155,11 @@ class Svm(Estimator):
         self.load()
 
     def __call__(self, q_vect: List[str]) -> List[float]:
-        """Predict class of sentence.
+        """
+        Infer on the given data. Predicts the class of the sentence.
 
         Args:
-            q_vect: list of queries used in ranking
+            q_vect: sparse matrix or [n_samples, n_features] matrix
 
         Returns:
             a list of classes
@@ -160,11 +168,11 @@ class Svm(Estimator):
         return classes
 
     def fit(self, x, y, weights=None, **kwargs):
-        """Train the model.
+        """
+        Train on the given data (hole dataset).
 
         Returns:
-            self
-
+            None
         """
         if len(x) != 0:
             if isinstance(x[0], csr_matrix):
@@ -180,11 +188,8 @@ class Svm(Estimator):
         return self
 
     def save(self, fname: str = None) -> None:
-        """Pass method to :attr:`vectorizer`.
-
-        Returns:
-            None
-
+        """
+        Save classifier as file with 'pkl' format.
         """
         if not fname:
             fname = self.save_path
@@ -198,11 +203,8 @@ class Svm(Estimator):
             joblib.dump(self.model, fname)
 
     def load(self) -> None:
-        """Pass method to :attr:`vectorizer`.
-
-        Returns:
-            None
-
+        """
+        Load classifier from load path. Classifier must be stored as file with 'pkl' format.
         """
         if self.load_path:
             if self.load_path.exists():
@@ -218,17 +220,23 @@ class Svm(Estimator):
 
 @register("random_forest")
 class RandomForest(Estimator):
-    """Rank documents according to input strings.
+    """
+    The class implements the Random Forest Classifier from Sklearn library.
 
     Args:
-
+        save_path (str): save path
+        load_path (str): load path
+        mode: train/infer trigger
+        **kwargs: additional arguments
 
     Attributes:
-
-
+        model: Random Forest Classifier class from sklearn
     """
 
     def __init__(self, **kwargs) -> None:
+        """
+        Initialize Random Forest Classifier or load it from load path, if load_path is not None.
+        """
         # Parameters for parent classes
         save_path = kwargs.get('save_path', None)
         load_path = kwargs.get('load_path', None)
@@ -240,10 +248,11 @@ class RandomForest(Estimator):
         self.load()
 
     def __call__(self, q_vect: List[str]) -> List[float]:
-        """Predict class of sentence.
+        """
+        Infer on the given data. Predicts the class of the sentence.
 
         Args:
-            q_vect: list of queries used in ranking
+            q_vect: sparse matrix or [n_samples, n_features] matrix
 
         Returns:
             a list of classes
@@ -252,11 +261,11 @@ class RandomForest(Estimator):
         return classes
 
     def fit(self, x, y, weights=None, **kwargs):
-        """Train the model.
+        """
+        Train on the given data (hole dataset).
 
         Returns:
-            self
-
+            None
         """
         if len(x) != 0:
             if isinstance(x[0], csr_matrix):
@@ -272,11 +281,8 @@ class RandomForest(Estimator):
         return self
 
     def save(self, fname: str = None) -> None:
-        """Pass method to :attr:`vectorizer`.
-
-        Returns:
-            None
-
+        """
+        Save classifier as file with 'pkl' format.
         """
         if not fname:
             fname = self.save_path
@@ -290,11 +296,8 @@ class RandomForest(Estimator):
             joblib.dump(self.model, fname)
 
     def load(self) -> None:
-        """Pass method to :attr:`vectorizer`.
-
-        Returns:
-            None
-
+        """
+        Load classifier from load path. Classifier must be stored as file with 'pkl' format.
         """
         if self.load_path:
             if self.load_path.exists():

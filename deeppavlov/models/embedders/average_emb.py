@@ -16,6 +16,7 @@ import numpy as np
 
 from overrides import overrides
 from typing import List, Union
+
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
@@ -26,13 +27,23 @@ log = get_logger(__name__)
 @register('avr_emb')
 class AvrEmb(Component):
     """
-        Parameters:
+    The class implements the functional of embedding the sentence, averaging the embedding of its tokens.
+    If the attributes "tokenizer" and "vec" are None, then simple averaging is applied to the embedding of tokens,
+    else averaging is weighted by tf-idf coefficients.
 
-        Examples:
+    Args:
+        tokenizer: tokenizer ref
+        vec: vectorizer ref
 
-        """
+    Attributes:
+        tokenizer: tokenizer class from pipeline, default None
+        vec: vectorizer class from pipeline, default None
+    """
 
     def __init__(self, **kwargs):
+        """
+        Initialize tokenizer and tf-idf vectorizer from **kwargs dictionary (from config).
+        """
         self.tokenizer = kwargs.get('tokenizer', None)
         self.vec_ = kwargs.get('vectorizer', None)
         if self.vec_ is not None:
@@ -42,6 +53,19 @@ class AvrEmb(Component):
 
     @overrides
     def __call__(self, data: List[Union[list, np.ndarray]], text: List[List[str]] = None, *args, **kwargs) -> List:
+        """
+        Infer on the given data
+
+        Args:
+            data: list of tokenized and vectorized text samples
+            text: text samples
+            *args: additional arguments
+            **kwargs: additional arguments
+
+        Returns:
+            for each sentence:
+                np.vector
+        """
         result = []
         if self.vec is None:
             vec = self.average(data, result)
@@ -50,11 +74,32 @@ class AvrEmb(Component):
         return vec
 
     def average(self, data, res):
+        """
+        Simple averaging of the tokens embeddings.
+
+        Args:
+            data:  list of tokenized and vectorized text samples
+            res: list for sentence embeddings
+
+        Returns:
+             list of sentence embeddings
+        """
         for x in data:
             res.append(np.average(np.array(x), axis=0))
         return res
 
     def weigh_tfidf(self, data, text, res):
+        """
+        Weighted averaging of the tokens embeddings by tf-idf coefficients.
+
+        Args:
+            data:  list of tokenized and vectorized text samples
+            text: text samples
+            res: list for sentence embeddings
+
+        Returns:
+             list of sentence embeddings
+        """
         feature_names = self.vec.get_feature_names()
         x_test = self.vec.transform(text)
         text = self.tokenizer(text)
