@@ -19,7 +19,7 @@ class AmazonEcommerceReader(DatasetReader):
                         ec_data_global = self._load_amazon_ecommerce_file(fname)
 
         dataset = {'train': None, 'valid': None, 'test': None}
-        dataset["train"] = [(item,1) for item in ec_data_global]
+        dataset["train"] = [((item,1,1),) for item in ec_data_global]
         dataset["valid"] = []
         dataset["test"] = []
         return dataset
