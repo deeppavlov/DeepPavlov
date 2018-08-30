@@ -102,15 +102,18 @@ class CosineSimilarityClassifier(Estimator, Serializable):
         Returns:
             None
         """
-        if len(x_train_vects) != 0:
-            if isinstance(x_train_vects[0], csr_matrix):
-                self.x_train_features = vstack(list(x_train_vects))
-            elif isinstance(x_train_vects[0], np.ndarray):
-                self.x_train_features = np.vstack(list(x_train_vects))
+        if isinstance(x_train_vects, tuple):
+            if len(x_train_vects) != 0:
+                if isinstance(x_train_vects[0], csr_matrix):
+                    self.x_train_features = vstack(list(x_train_vects))
+                elif isinstance(x_train_vects[0], np.ndarray):
+                    self.x_train_features = np.vstack(list(x_train_vects))
+                else:
+                    raise NotImplementedError('Not implemented this type of vectors')
             else:
-                raise NotImplementedError('Not implemented this type of vectors')
+                raise ValueError("Train vectors can't be empty")
         else:
-            raise ValueError("Train vectors can't be empty")
+            self.x_train_features = x_train_vects
 
         self.y_train = list(y_train)
 
