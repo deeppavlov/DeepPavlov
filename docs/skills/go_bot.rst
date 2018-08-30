@@ -349,4 +349,4 @@ Sequence-to-Sequence Architecture Gives Good Performance on
 Task-Oriented Dialogue" - 2017 <https://arxiv.org/abs/1701.04024>`_
 
 
-.. |alt text| image:: ../_static/diagram.png
+.. |alt text| image:: ../_static/gobot_diagram.png
