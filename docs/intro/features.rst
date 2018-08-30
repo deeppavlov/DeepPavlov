@@ -82,20 +82,60 @@ trained on Reddit dataset.
 +------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
 
 
-- :doc:`Goal-oriented bot </components/go_bot>`
+- :doc:`Goal-oriented bot </skills/go_bot>`
 
 Based on Hybrid Code Networks (HCNs) architecture from `Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code
 Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017
 <https://arxiv.org/abs/1702.03274>`__. It allows to predict responses in goal-oriented dialog. The model is
-customizable: embeddings, slot filler and intent classifier can switched on and off on demand.
+customizable: embeddings, slot filler and intent classifier can be switched on and off on demand.
+
+Available pre-trained models:
+
++------------------------------------------------------------------------------------------------+---------------------+--------------------+
+| Dataset & Model                                                                                | Valid turn accuracy | Test turn accuracy |
++================================================================================================+=====================+====================+
+| :config:`DSTC2, bot with slot filler & intents <go_bot/gobot_dstc2.json>`                      | 0.5179              | 0.5125             |
++------------------------------------------------------------------------------------------------+---------------------+--------------------+
+| :config:`DSTC2, bot with slot filler & embeddings & attention <go_bot/gobot_dstc2_best.json>`  |  0.5538             | 0.5551             |
++------------------------------------------------------------------------------------------------+---------------------+--------------------+
+
+Other benchmarks on DSTC2 (can't be directly compared due to dataset :doc:`modifications </skills/go_bot>`):
+
++----------------------------------------------------+------------------------------+
+|             Dataset & Model                        | Test turn accuracy           |
++====================================================+==============================+
+| DSTC2, Bordes and Weston (2016)                    |   0.411                      |
++----------------------------------------------------+------------------------------+
+| DSTC2, Perez and Liu (2016)                        |   0.487                      |
++----------------------------------------------------+------------------------------+
+| DSTC2, Eric and Manning (2017)                     |   0.480                      |
++----------------------------------------------------+------------------------------+
+| DSTC2, Williams et al. (2017)                      |   0.556                      |
++----------------------------------------------------+------------------------------+
 
 
 - :doc:`Seq2seq goal-oriented bot </skills/seq2seq_go_bot>`
 
-Dialogue agent predicts responses in a goal-oriented dialog and is able to handle multiple domains (pretrained bot
-allows calendar scheduling, weather information retrieval, and point-of-interest navigation). The model is end-to-end
-differentiable and does not need to explicitly model dialogue state or belief trackers.
+Dialogue agent predicts responses in a goal-oriented dialog and is able to handle
+multiple domains (pretrained bot allows calendar scheduling, weather information retrieval,
+and point-of-interest navigation). The model is end-to-end differentiable and
+does not need to explicitly model dialogue state or belief trackers.
 
+Comparison of deeppavlov pretrained model with others:
+
++------------------------------------------------------+------------------+-----------------+
+| Dataset & Model                                      | Valid BLEU       | Test BLEU       |
++======================================================+==================+=================+
+| :config:`Kvret, KvretNet  <go_bot/gobot_dstc2.json>` | 0.1319           | **0.1328**      |
++------------------------------------------------------+------------------+-----------------+
+| Kvret, KvretNet, Mihail Eric et al. (2017)           | --               | **0.132**       |
++------------------------------------------------------+------------------+-----------------+
+| Kvret, CopyNet, Mihail Eric et al. (2017)            | --               | 0.110           |
++------------------------------------------------------+------------------+-----------------+
+| Kvret, Attn Seq2Seq, Mihail Eric et al. (2017)       | --               | 0.102           |
++------------------------------------------------------+------------------+-----------------+
+| Kvret, Rule-based, Mihail Eric et al. (2017)         | --               | 0.066           |
++------------------------------------------------------+------------------+-----------------+
 
 - :doc:`Automatic spelling correction component </components/spelling_correction>`
 

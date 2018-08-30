@@ -14,6 +14,7 @@
   "default_vocab": "deeppavlov.core.data.vocab:DefaultVocabulary",
   "dialog_db_result_iterator": "deeppavlov.dataset_iterators.dialog_iterator:DialogDBResultDatasetIterator",
   "dialog_iterator": "deeppavlov.dataset_iterators.dialog_iterator:DialogDatasetIterator",
+  "dialog_state": "deeppavlov.models.seq2seq_go_bot.dialog_state:DialogState",
   "dialog_vocab": "deeppavlov.core.data.simple_vocab:DialogVocab",
   "dictionary_vectorizer": "deeppavlov.models.vectorizers.word_vectorizer:DictionaryVectorizer",
   "dirty_comments_preprocessor": "deeppavlov.models.preprocessors.dirty_comments_preprocessor:DirtyCommentsPreprocessor",
