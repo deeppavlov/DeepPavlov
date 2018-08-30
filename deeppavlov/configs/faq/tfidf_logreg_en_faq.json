@@ -3,7 +3,7 @@
     "name": "faq_reader",
     "x_col_name": "Question",
     "y_col_name": "Answer",
-    "data_path": "/home/andrey/Projects/autoFAQ/data/mipt/faq.csv"
+    "data_url": "http://files.deeppavlov.ai/faq/mipt/faq.csv"
   },
   "dataset_iterator": {
     "name": "data_learning_iterator"

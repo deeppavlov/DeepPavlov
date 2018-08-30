@@ -85,7 +85,7 @@ class LogregClassifier(Estimator, Serializable):
         Returns:
             None
         """
-        if isinstance(x_train_vects, list):
+        if isinstance(x_train_vects, tuple):
             if len(x_train_vects) != 0:
                 if isinstance(x_train_vects[0], csr_matrix):
                     x_train_features = vstack(list(x_train_vects))
