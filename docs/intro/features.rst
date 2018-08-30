@@ -10,11 +10,28 @@ Based on neural Named Entity Recognition network. The NER component reproduces a
 of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition <https://arxiv.org/pdf/1709.09686.pdf>`__
 which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf.
 
++---------------------------------------------------------------------------------------------------------------------------+------------------+
+| Dataset                                                                                                                   |     Test F1      |
++---------------------------------------------------------------------------------------------------------------------------+------------------+
+| :config:`Persons-1000 dataset with additional LOC and ORG markup <ner/ner_rus.json>`                                      |       95.25      |
++---------------------------------------------------------------------------------------------------------------------------+------------------+
+| :config:`DSTC 2 <ner/ner_dstc2.json>`                                                                                     |       98.40      |
++---------------------------------------------------------------------------------------------------------------------------+------------------+
+| :config:`OntoNotes  <ner/ner_ontonotes.json>`                                                                             |       87.07      |
++---------------------------------------------------------------------------------------------------------------------------+------------------+
+
 
 - :doc:`Slot filling components </components/slot_filling>`
 
 Based on fuzzy Levenshtein search to extract normalized slot values from text. The components either rely on NER results
 or perform needle in haystack search.
+
++---------------------------------------------------------------------------------------------------------------------------+------------------+
+| Dataset                                                                                                                   |  Slots Accuracy  |
++---------------------------------------------------------------------------------------------------------------------------+------------------+
+| :config:`DSTC 2 <ner/slotfill_dstc2.json>`                                                                                |       98.85      |
++---------------------------------------------------------------------------------------------------------------------------+------------------+
+
 
 
 - :doc:`Classification component </components/classifiers>`
