@@ -16,49 +16,38 @@
     "in": ["x"],
     "in_y": ["y"],
     "pipe": [
-      {
-        "id": "classes_vocab",
-        "name": "default_vocab",
-        "fit_on": [
-          "y"
-        ],
-        "level": "token",
-        "save_path": "vocabs/unlem_classes.dict",
-        "load_path": "vocabs/unlem_classes.dict"
-      },
-      {
-        "in": "x",
-        "out": "x_tok"
-        "id": "my_tokenizer",
-        "name": "ru_tokenizer"
-      },
-      {
-        "in": ["x_tok"],
-        "out": ["x_vec"],
-        "name": "elmo",
-        "id": "my_embedder",
-        "spec": "embeddings/sber_erp_unlem_epoches_n_3",
-      },
-      {
-        "in": ["x_vec"],
-        "in_y": ["y"],
-        "out": [
-          "y_labels",
-          "y_probas_dict"
-        ],
-        "main": true,
-        "embedding_size": 1024,
-        "name": "keras_classification_model",
-        "save_path": "new_sber/checkpoints/cnn",
-        "classes": "#classes_vocab.keys()",
-        "confident_threshold": 1.0,
-        "optimizer": "Adam",
-        "lear_rate": 0.01,
-        "lear_rate_decay": 0.0,
-        "loss": "categorical_crossentropy",
-        "text_size": 15,
-        "model_name": "top_model"
-      }
+      [
+        {
+          "id": "classes_vocab",
+          "name": "default_vocab",
+          "component_name": "Vocab of classes",
+          "fit_on": [
+            "y"
+          ],
+          "level": "token",
+          "save_path": "vocabs/new_classes.dict",
+          "load_path": "vocabs/new_classes.dict"
+        }
+      ],
+      [
+        {
+          "component_name": "tokenizer",
+          "in": "x",
+          "out": "x_tok",
+          "id": "my_tokenizer",
+          "name": "ru_tokenizer"
+        }
+      ],
+      [
+        {
+          "component_name": "ELMO",
+          "in": ["x_tok"],
+          "out": ["x_vec"],
+          "name": "elmo",
+          "id": "my_embedder",
+          "spec": "embeddings/sber_erp_unlem_epoches_n_3"
+        }
+      ]
     ],
     "out": [
       "y_labels",
@@ -66,7 +55,7 @@
     ]
   },
   "train": {
-    "epochs": 40,
+    "epochs": 10,
     "batch_size": 32,
     "metrics": [
       "classification_accuracy",

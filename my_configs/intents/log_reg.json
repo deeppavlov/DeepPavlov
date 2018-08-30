@@ -46,6 +46,7 @@
         "fit_on": ["x_tok"],
         "name": "tfidf_vectorizer",
         "id": "tf-idf",
+        "norm": "l2",
         "save_path": "snips/tf-idf.pkl",
         "load_path": "vocabs/tf-idf.pkl"
       },
@@ -77,6 +78,7 @@
         ],
         "name": "random_forest",
         "main": true,
+        "n_estimators": 15,
         "save_path": "intents/rf.pkl",
         "load_path": "intents/rf.pkl"
       }

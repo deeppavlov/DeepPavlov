@@ -11,6 +11,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
+import numpy as np
+
 from typing import List
 
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -42,17 +44,52 @@ class TfIdfVectorizer(Estimator, Serializable):
         vectorizer: tf-idf vectorizer class from sklearn
     """
 
-    def __init__(self, save_path: str = None, load_path: str = None, **kwargs) -> None:
+    def __init__(self, input='content', encoding='utf-8',
+                 decode_error='strict', strip_accents=None, lowercase=True,
+                 preprocessor=None, tokenizer=None, analyzer='word',
+                 stop_words=None, token_pattern=r"(?u)\b\w\w+\b",
+                 ngram_range=(1, 1), max_df=1.0, min_df=1,
+                 max_features=None, vocabulary=None, binary=False,
+                 dtype=np.int64, norm='l2', use_idf=True, smooth_idf=True,
+                 sublinear_tf=False, save_path: str = None, load_path: str = None, **kwargs) -> None:
         """
         Initialize tf-idf vectorizer or load it from load path, if load_path is not None.
         """
+        # Tf-idf parameters
+        self.input = input
+        self.encoding = encoding
+        self.decode_error = decode_error
+        self.strip_accents = strip_accents
+        self.lowercase = lowercase
+        self.preprocessor = preprocessor
+        self.tokenizer = tokenizer
+        self.analyzer = analyzer
+        self.stop_words = stop_words
+        self.token_pattern = token_pattern
+        self.ngram_range = ngram_range
+        self.max_df = max_df
+        self.min_df = min_df
+        self.max_features = max_features
+        self.vocabulary = vocabulary
+        self.binary = binary
+        self.dtype = dtype
+        self.norm = norm
+        self.use_idf = use_idf
+        self.smooth_idf = smooth_idf
+        self.sublinear_tf = sublinear_tf
+
+        # Parameters for parent classes
         self.save_path = save_path
         self.load_path = load_path
 
         if kwargs['mode'] != 'train':
             self.load()
         else:
-            self.vectorizer = TfidfVectorizer()
+            self.vectorizer = TfidfVectorizer(self.input, self.encoding, self.decode_error, self.strip_accents,
+                                              self.lowercase, self.preprocessor, self.tokenizer, self.analyzer,
+                                              self.stop_words, self.token_pattern, self.ngram_range, self.max_df,
+                                              self.min_df, self.max_features, self.vocabulary, self.binary, self.dtype,
+                                              self.norm, self.use_idf, self.smooth_idf, self.sublinear_tf)
 
     def __call__(self, questions: List[str]):
         """
@@ -109,17 +146,43 @@ class SkcountVectorizer(Estimator, Serializable):
         vectorizer: count vectorizer class from sklearn
     """
 
-    def __init__(self, save_path: str = None, load_path: str = None, **kwargs) -> None:
+    def __init__(self, input='content', encoding='utf-8', decode_error='strict', strip_accents=None,
+                 lowercase=True, preprocessor=None, tokenizer=None, stop_words=None, token_pattern=r"(?u)\b\w\w+\b",
+                 ngram_range=(1, 1), analyzer='word', max_df=1.0, min_df=1, max_features=None, vocabulary=None,
+                 binary=False, dtype=np.int64, save_path: str = None, load_path: str = None, **kwargs) -> None:
         """
         Initialize count vectorizer or load it from load path, if load_path is not None.
         """
+        # Count parameters
+        self.input = input
+        self.encoding = encoding
+        self.decode_error = decode_error
+        self.strip_accents = strip_accents
+        self.lowercase = lowercase
+        self.preprocessor = preprocessor
+        self.tokenizer = tokenizer
+        self.stop_words = stop_words
+        self.token_pattern = token_pattern
+        self.ngram_range = ngram_range
+        self.analyzer = analyzer
+        self.max_df = max_df
+        self.min_df = min_df
+        self.max_features = max_features
+        self.vocabulary = vocabulary
+        self.binary = binary
+        self.dtype = dtype
+
+        # Parameters for parent classes
         self.save_path = save_path
         self.load_path = load_path
 
         if kwargs['mode'] != 'train':
             self.load()
         else:
-            self.vectorizer = CountVectorizer()
+            self.vectorizer = CountVectorizer(self.input, self.encoding, self.decode_error, self.strip_accents,
+                                              self.lowercase, self.preprocessor, self.tokenizer, self.stop_words,
+                                              self.token_pattern, self.ngram_range, self.analyzer, self.max_df,
+                                              self.min_df, self.max_features, self.vocabulary, self.binary, self.dtype)
 
     def __call__(self, questions: List[str]):
         """

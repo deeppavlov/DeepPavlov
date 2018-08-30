@@ -47,10 +47,28 @@ class LogReg(Estimator):
         model: Logistic Regression Classifier class from sklearn
     """
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, penalty='l2', dual=False, tol=0.0001, C=1.0, fit_intercept=True, intercept_scaling=1,
+                 class_weight=None, random_state=None, solver='liblinear', max_iter=100, multi_class='ovr',
+                 verbose=0, warm_start=False, n_jobs=1, **kwargs) -> None:
         """
         Initialize Logistic Regression Classifier or load it from load path, if load_path is not None.
         """
+        # Classifier parameters
+        self.penalty = penalty
+        self.dual = dual
+        self.tol = tol
+        self.C = C
+        self.fit_intercept = fit_intercept
+        self.intercept_scaling = intercept_scaling
+        self.class_weight = class_weight
+        self.random_state = random_state
+        self.solver = solver
+        self.max_iter = max_iter
+        self.multi_class = multi_class
+        self.verbose = verbose
+        self.warm_start = warm_start
+        self.n_jobs = n_jobs
+
         # Parameters for parent classes
         save_path = kwargs.get('save_path', None)
         load_path = kwargs.get('load_path', None)
@@ -119,10 +137,16 @@ class LogReg(Estimator):
                 self.model = joblib.load(self.load_path)
             else:
                 log.warning("initializing `{}` from scratch".format('LogisticRegression'))
-                self.model = LogisticRegression()
+                self.model = LogisticRegression(self.penalty, self.dual, self.tol, self.C, self.fit_intercept,
+                                                self.intercept_scaling, self.class_weight, self.random_state,
+                                                self.solver, self.max_iter, self.multi_class, self.verbose,
+                                                self.warm_start, self.n_jobs)
         else:
             log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
-            self.model = LogisticRegression()
+            self.model = LogisticRegression(self.penalty, self.dual, self.tol, self.C, self.fit_intercept,
+                                            self.intercept_scaling, self.class_weight, self.random_state,
+                                            self.solver, self.max_iter, self.multi_class, self.verbose,
+                                            self.warm_start, self.n_jobs)
 
 
 @register("support_vector_classifier")
@@ -140,10 +164,26 @@ class Svm(Estimator):
         model: Support Vector Classifier class from sklearn
     """
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, penalty='l2', loss='squared_hinge', dual=True, tol=1e-4, C=1.0, multi_class='ovr',
+                 fit_intercept=True, intercept_scaling=1, class_weight=None, verbose=0, random_state=None,
+                 max_iter=1000, **kwargs) -> None:
         """
         Initialize Support Vector Classifier or load it from load path, if load_path is not None.
         """
+        # Classifier parameters
+        self.C = C
+        self.tol = tol
+        self.class_weight = class_weight
+        self.verbose = verbose
+        self.max_iter = max_iter
+        self.random_state = random_state
+        self.penalty = penalty
+        self.loss = loss
+        self.dual = dual
+        self.multi_class = multi_class
+        self.intercept_scaling = intercept_scaling
+        self.fit_intercept = fit_intercept
+
         # Parameters for parent classes
         save_path = kwargs.get('save_path', None)
         load_path = kwargs.get('load_path', None)
@@ -212,10 +252,14 @@ class Svm(Estimator):
                 self.model = joblib.load(self.load_path)
             else:
                 log.warning("initializing `{}` from scratch".format('SVC'))
-                self.model = LinearSVC()
+                self.model = LinearSVC(self.penalty, self.loss, self.dual, self.tol, self.C, self.multi_class,
+                                       self.fit_intercept, self.intercept_scaling, self.class_weight, self.verbose,
+                                       self.random_state, self.max_iter)
         else:
             log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
-            self.model = LinearSVC()
+            self.model = LinearSVC(self.penalty, self.loss, self.dual, self.tol, self.C, self.multi_class,
+                                   self.fit_intercept, self.intercept_scaling, self.class_weight, self.verbose,
+                                   self.random_state, self.max_iter)
 
 
 @register("random_forest")
@@ -233,10 +277,45 @@ class RandomForest(Estimator):
         model: Random Forest Classifier class from sklearn
     """
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, n_estimators=10,
+                 criterion="gini",
+                 max_depth=None,
+                 min_samples_split=2,
+                 min_samples_leaf=1,
+                 min_weight_fraction_leaf=0.,
+                 max_features="auto",
+                 max_leaf_nodes=None,
+                 min_impurity_decrease=0.,
+                 min_impurity_split=None,
+                 bootstrap=True,
+                 oob_score=False,
+                 n_jobs=1,
+                 random_state=None,
+                 verbose=0,
+                 warm_start=False,
+                 class_weight=None, **kwargs) -> None:
         """
         Initialize Random Forest Classifier or load it from load path, if load_path is not None.
         """
+        # Classifier parameters
+        self.n_estimators = n_estimators
+        self.criterion = criterion
+        self.max_depth = max_depth
+        self.min_samples_split = min_samples_split
+        self.min_samples_leaf = min_samples_leaf
+        self.min_weight_fraction_leaf = min_weight_fraction_leaf
+        self.max_features = max_features
+        self.max_leaf_nodes = max_leaf_nodes
+        self.min_impurity_decrease = min_impurity_decrease
+        self.min_impurity_split = min_impurity_split
+        self.bootstrap = bootstrap
+        self.oob_score = oob_score
+        self.n_jobs = n_jobs
+        self.random_state = random_state
+        self.verbose = verbose
+        self.warm_start = warm_start
+        self.class_weight = class_weight
+
         # Parameters for parent classes
         save_path = kwargs.get('save_path', None)
         load_path = kwargs.get('load_path', None)
@@ -305,7 +384,19 @@ class RandomForest(Estimator):
                 self.model = joblib.load(self.load_path)
             else:
                 log.warning("initializing `{}` from scratch".format('RandomForestClassifier'))
-                self.model = RandomForestClassifier()
+                self.model = RandomForestClassifier(self.n_estimators, self.criterion, self.max_depth,
+                                                    self.min_samples_split, self.min_samples_leaf,
+                                                    self.min_weight_fraction_leaf, self.max_features,
+                                                    self.max_leaf_nodes, self.min_impurity_decrease,
+                                                    self.min_impurity_split, self.bootstrap, self.oob_score,
+                                                    self.n_jobs, self.random_state, self.verbose, self.warm_start,
+                                                    self.class_weight)
         else:
             log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
-            self.model = RandomForestClassifier()
+            self.model = RandomForestClassifier(self.n_estimators, self.criterion, self.max_depth,
+                                                self.min_samples_split, self.min_samples_leaf,
+                                                self.min_weight_fraction_leaf, self.max_features,
+                                                self.max_leaf_nodes, self.min_impurity_decrease,
+                                                self.min_impurity_split, self.bootstrap, self.oob_score,
+                                                self.n_jobs, self.random_state, self.verbose, self.warm_start,
+                                                self.class_weight)
