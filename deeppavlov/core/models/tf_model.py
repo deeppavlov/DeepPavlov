@@ -13,8 +13,9 @@
 # limitations under the License.
 
 from collections import defaultdict
-import numpy as np
+from typing import Iterable, Optional
 
+import numpy as np
 import tensorflow as tf
 from tensorflow.python.ops import variables
 
@@ -22,17 +23,19 @@ from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.log import get_logger
 from .tf_backend import TfModelMeta
 
+
 log = get_logger(__name__)
 
 
 class TFModel(NNModel, metaclass=TfModelMeta):
-    def __init__(self, *args, **kwargs):
+    """Parent class for all components using TensorFlow."""
+    def __init__(self, *args, **kwargs) -> None:
         if not hasattr(self, 'sess'):
-            raise RuntimeError('Your tensorflow model {} must'
+            raise RuntimeError('Your TensorFlow model {} must'
                                ' have sess attribute!'.format(self.__class__.__name__))
         super().__init__(*args, **kwargs)
 
-    def load(self, exclude_scopes=['Optimizer']):
+    def load(self, exclude_scopes: Optional[Iterable] = ('Optimizer',)) -> None:
         """Load model parameters from self.load_path"""
         path = str(self.load_path.resolve())
         # Check presence of the model files
@@ -43,7 +46,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
             saver = tf.train.Saver(var_list)
             saver.restore(self.sess, path)
 
-    def save(self, exclude_scopes=['Optimizer']):
+    def save(self, exclude_scopes: Optional[Iterable] = ('Optimizer',)) -> None:
         """Save model parameters to self.save_path"""
         path = str(self.save_path.resolve())
         log.info('[saving model to {}]'.format(path))
@@ -51,12 +54,14 @@ class TFModel(NNModel, metaclass=TfModelMeta):
         saver = tf.train.Saver(var_list)
         saver.save(self.sess, path)
 
-    def _get_saveable_variables(self, exclude_scopes=[]):
+    @staticmethod
+    def _get_saveable_variables(exclude_scopes=tuple()):
         all_vars = variables._all_saveable_objects()
         vars_to_train = [var for var in all_vars if all(sc not in var.name for sc in exclude_scopes)]
         return vars_to_train
 
-    def _get_trainable_variables(self, exclude_scopes=[]):
+    @staticmethod
+    def _get_trainable_variables(exclude_scopes=tuple()):
         all_vars = tf.global_variables()
         vars_to_train = [var for var in all_vars if all(sc not in var.name for sc in exclude_scopes)]
         return vars_to_train

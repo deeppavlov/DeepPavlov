@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import tensorflow as tf
 from abc import ABCMeta
 from functools import wraps
 
 from six import with_metaclass
+import tensorflow as tf
 
 
 def _graph_wrap(func, graph):
@@ -28,6 +28,7 @@ def _graph_wrap(func, graph):
 
 
 class TfModelMeta(with_metaclass(type, ABCMeta)):
+    """Metaclass that helps all child classes to have their own graph."""
     def __call__(cls, *args, **kwargs):
         from .keras_model import KerasModel
         if issubclass(cls, KerasModel):
