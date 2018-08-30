@@ -12,28 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from abc import ABCMeta, abstractmethod
+from typing import Union, Optional
+from pathlib import Path
+
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.log import get_logger
-from abc import ABCMeta, abstractmethod
 
-"""
-:class:`deeppavlov.models.model.Serializable` is an abstract base class that expresses the interface
-for all models that can serialize data to a path.
-"""
 
 log = get_logger(__name__)
 
 
 class Serializable(metaclass=ABCMeta):
     """
-    :attr: `_ser_dir` is a name of a serialization dir, can be default or set in json config
-    :attr: `_ser_file` is a name of a serialization file (usually binary model file),
-     can be default or set in json config
-    :attr: `ser_path` is a path to model serialization dir or file (it depends on the model type).
-     It is always an empty string and is ignored if it is not set in json config.
+    :class:`deeppavlov.models.model.serializable.Serializable` is an abstract base class that expresses the interface
+    for all models that can serialize data to a path.
     """
-
-    def __init__(self, save_path, load_path=None, mode='infer', *args, **kwargs):
+    def __init__(self, save_path: Union[str, Path], load_path: Optional[Union[str, Path]] = None, mode: str = 'infer',
+                 *args, **kwargs) -> None:
 
         if save_path:
             self.save_path = expand_path(save_path)

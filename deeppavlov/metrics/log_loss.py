@@ -23,7 +23,7 @@ from deeppavlov.models.classifiers.utils import labels2onehot
 
 
 @register_metric('classification_log_loss')
-def classification_log_loss(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]]) -> float:
+def classification_log_loss(y_true: List[list], y_predicted: List[Tuple[list, dict]]) -> float:
     """
     Calculate log loss for classification module
 

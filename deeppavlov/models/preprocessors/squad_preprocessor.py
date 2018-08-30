@@ -73,7 +73,6 @@ class SquadPreprocessor(Component):
             questions_tokens: batch of tokenized questions
             questions_chars: batch of tokenized and split on chars questions
             spans: batch of mapping tokens to position in context
-
         """
         contexts = []
         contexts_tokens = []
