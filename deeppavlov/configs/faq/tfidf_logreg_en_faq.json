@@ -47,6 +47,9 @@
     "test_best": false
  },
   "metadata": {
+    "requirements": [
+      "../dp_requirements/spacy.txt"
+    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/faq/mipt/tfidf_logreg_classifier_en_mipt_faq.pkl",
