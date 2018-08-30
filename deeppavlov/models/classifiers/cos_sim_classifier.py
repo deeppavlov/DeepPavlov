@@ -13,8 +13,10 @@
 # limitations under the License.
 
 
-import numpy as np
 from typing import List, Tuple, Union
+
+import numpy as np
+from scipy.sparse.linalg import norm as sparse_norm
 from scipy.sparse import vstack
 from scipy.sparse import csr_matrix
 
@@ -25,8 +27,6 @@ from deeppavlov.core.common.file import save_pickle
 from deeppavlov.core.common.file import load_pickle
 from deeppavlov.core.commands.utils import expand_path, make_all_dirs
 from deeppavlov.core.models.serializable import Serializable
-from numpy import linalg
-from scipy.sparse.linalg import norm as sparse_norm
 
 logger = get_logger(__name__)
 
@@ -66,7 +66,7 @@ class CosineSimilarityClassifier(Estimator, Serializable):
             cos_similarities = np.array(q_vects.dot(self.x_train_features.T).todense())/norm
         elif isinstance(q_vects[0], np.ndarray):
             q_vects = np.array(q_vects)
-            norm = linalg.norm(q_vects)*linalg.norm(self.x_train_features, axis=1)
+            norm = np.linalg.norm(q_vects)*np.linalg.norm(self.x_train_features, axis=1)
             cos_similarities = q_vects.dot(self.x_train_features.T)/norm
         elif q_vects[0] is None:
             cos_similarities = np.zeros(len(self.x_train_features))

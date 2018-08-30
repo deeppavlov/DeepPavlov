@@ -14,6 +14,9 @@
 
 from typing import List
 
+from scipy.sparse import csr_matrix
+from sklearn.feature_extraction.text import TfidfVectorizer
+
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.log import get_logger
@@ -21,8 +24,6 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.file import save_pickle
 from deeppavlov.core.common.file import load_pickle
 from deeppavlov.core.commands.utils import expand_path, make_all_dirs, is_file_exist
-from sklearn.feature_extraction.text import TfidfVectorizer
-from scipy.sparse import csr_matrix
 
 
 TOKENIZER = None

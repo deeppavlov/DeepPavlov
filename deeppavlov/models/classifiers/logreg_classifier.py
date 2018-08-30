@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 from typing import List, Tuple, Union
+
+import numpy as np
 from scipy.sparse import vstack
 from scipy.sparse import csr_matrix
+from sklearn.linear_model import LogisticRegression
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
@@ -24,7 +26,6 @@ from deeppavlov.core.common.file import save_pickle
 from deeppavlov.core.common.file import load_pickle
 from deeppavlov.core.commands.utils import expand_path, make_all_dirs
 from deeppavlov.core.models.serializable import Serializable
-from sklearn.linear_model import LogisticRegression
 
 logger = get_logger(__name__)
 
