@@ -2,18 +2,14 @@
   "dataset_reader": {
     "name": "basic_classification_reader",
     "x": "text",
-    "y": "intents",
-    "data_path": "snips"
+    "y": "label",
+    "data_path": "/home/dilyara/evolution_data/rusentiment_data/",
+    "train": "rusentiment_random_posts.csv",
+    "test": "rusentiment_test.csv"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator",
-    "seed": {
-      "evolve_range": [
-        50,
-        500
-      ],
-      "discrete": true
-    },
+    "seed": 42,
     "field_to_split": "train",
     "split_fields": [
       "train",
@@ -39,16 +35,20 @@
           "y"
         ],
         "level": "token",
-        "save_path": "vocabs/snips_classes.dict",
-        "load_path": "vocabs/snips_classes.dict"
+        "save_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_classes.dict",
+        "load_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_classes.dict"
       },
       {
-        "in": "x",
-        "out": "x_lower",
-        "name": "str_lower"
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_prep"
+        ],
+        "name": "dirty_comments_preprocessor"
       },
       {
-        "in": "x_lower",
+        "in": "x_prep",
         "out": "x_tok",
         "id": "my_tokenizer",
         "name": "nltk_tokenizer",
@@ -59,8 +59,8 @@
         "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
-        "save_path": "embeddings/wiki.en.bin",
-        "load_path": "embeddings/wiki.en.bin",
+        "save_path": "/home/dilyara/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "load_path": "/home/dilyara/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
         "dim": 300
       },
       {
@@ -76,8 +76,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "evolution/classification/intents_snips",
-        "load_path": "evolution/classification/intents_snips",
+        "save_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_v0",
+        "load_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_v0",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "kernel_sizes_cnn": [
@@ -92,45 +92,39 @@
           ],
           "discrete": true
         },
-        "confident_threshold": {
-          "evolve_choice": [
-            0.5,
-            1
-          ]
-        },
+        "confident_threshold": 1,
         "optimizer": "Adam",
         "lear_rate": {
           "evolve_range": [
-            0.0001,
-            0.1
-          ],
-          "scale": "log"
+            1e-4,
+            1e-1
+          ]
         },
         "lear_rate_decay": {
           "evolve_range": [
-            0.0001,
-            0.1
-          ],
-          "scale": "log"
+            1e-6,
+            1e-2
+          ]
         },
         "loss": "categorical_crossentropy",
-        "text_size": 15,
+        "text_size": 100,
+        "last_layer_activation": "softmax",
         "coef_reg_cnn": {
           "evolve_range": [
             1e-6,
-            1e-3
+            1e-2
           ]
         },
         "coef_reg_den": {
           "evolve_range": [
             1e-6,
-            1e-3
+            1e-2
           ]
         },
         "dropout_rate": {
           "evolve_range": [
-            0.1,
-            0.9
+            0,
+            1
           ]
         },
         "dense_size": {
@@ -140,10 +134,7 @@
           ],
           "discrete": true
         },
-        "model_name": "cnn_model",
-        "check_bool": {
-          "evolve_bool": true
-        }
+        "model_name": "cnn_model"
       }
     ],
     "out": [
@@ -152,45 +143,48 @@
     ]
   },
   "train": {
-    "epochs": {
-      "evolve_range": [
-        50,
-        500
-      ],
-      "discrete": true
-    },
+    "epochs": 100,
     "batch_size": {
       "evolve_range": [
         50,
-        500
+        200
       ],
       "discrete": true
     },
     "metrics": [
-      "classification_accuracy",
       "classification_f1",
-      "classification_roc_auc"
+      "classification_roc_auc",
+      "classification_accuracy"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
+    "show_examples": false,
     "validate_best": true,
-    "test_best": false
+    "test_best": true
   },
   "metadata": {
+    "requirements": [
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/fasttext.txt"
+    ],
     "labels": {
       "telegram_utils": "IntentModel",
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/intents.tar.gz",
       "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
       {
-        "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
-        "subdir": "snips"
+        "url": "https://github.com/text-machine-lab/rusentiment/raw/master/Dataset/rusentiment_random_posts.csv",
+        "subdir": "rusentiment"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
+        "url": "https://github.com/text-machine-lab/rusentiment/raw/master/Dataset/rusentiment_test.csv",
+        "subdir": "rusentiment"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
         "subdir": "embeddings"
       }
     ]

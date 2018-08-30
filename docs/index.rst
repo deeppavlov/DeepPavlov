@@ -29,6 +29,7 @@ Welcome to DeepPavlov's documentation!
    Slot filling <components/slot_filling>
    Spelling Correction <components/spelling_correction>
    TF-IDF Ranking <components/tfidf_ranking>
+   FAQ <components/faq>
 
 
 .. toctree::
