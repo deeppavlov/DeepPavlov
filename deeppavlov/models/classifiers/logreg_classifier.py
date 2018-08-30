@@ -86,7 +86,9 @@ class LogregClassifier(Estimator, Serializable):
             None
         """
         if len(x_train_vects) != 0:
-            if isinstance(x_train_vects[0], csr_matrix):
+            if isinstance(x_train_vects, csr_matrix):
+                x_train_features = x_train_vects
+            elif isinstance(x_train_vects[0], csr_matrix):
                 x_train_features = vstack(list(x_train_vects))
             elif isinstance(x_train_vects[0], np.ndarray):
                 x_train_features = np.vstack(list(x_train_vects))
