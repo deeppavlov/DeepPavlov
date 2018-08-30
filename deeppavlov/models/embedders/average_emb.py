@@ -52,7 +52,8 @@ class AvrEmb(Component):
             self.vec = None
 
     @overrides
-    def __call__(self, data: List[Union[list, np.ndarray]], text: List[List[str]] = None, *args, **kwargs) -> List:
+    def __call__(self, data: List[Union[list, np.ndarray]], text: List[List[str]] = None,
+                 *args, **kwargs) -> Union[List, np.ndarray]:
         """
         Infer on the given data
 
@@ -68,12 +69,18 @@ class AvrEmb(Component):
         """
         result = []
         if self.vec is None:
-            vec = self.average(data, result)
+            if isinstance(data, list):
+                return self.average(data, result)
+            elif isinstance(data, np.ndarray):
+                return np.array(self.average(data, result))
         else:
-            vec = self.weigh_tfidf(data, text, result)
-        return vec
+            if isinstance(data, list):
+                return self.weigh_tfidf(data, text, result)
+            elif isinstance(data, np.ndarray):
+                return np.array(self.weigh_tfidf(data, text, result))
 
-    def average(self, data, res):
+    @staticmethod
+    def average(data, res):
         """
         Simple averaging of the tokens embeddings.
 
