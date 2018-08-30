@@ -127,7 +127,22 @@ Inference example:
 Available Data and Pretrained Models
 ====================================
 
-You can use pretrained model on FAQ dataset from school-site: http://www.ftl.name/page/989
+As an example you can try pretrained models on FAQ dataset in English: MIPT FAQ for entrants - https://mipt.ru/english/edu/faqs/
+
+
+   ::
+
+    tfidf_logreg_classifier_en_mipt_faq  - http://files.deeppavlov.ai/faq/mipt/tfidf_logreg_classifier_en_mipt_faq.pkl
+    tfidf_vectorizer_en_mipt_faq         - http://files.deeppavlov.ai/faq/mipt/tfidf_vectorizer_en_mipt_faq.pkl
+
+
+-  **tfidf_logreg_classifier_en_mipt_faq.pkl**  - pre-trained logistic regression classifier for classifying input question (vectorized by tfidf)
+-  **tfidf_vectorizer_en_mipt_faq.pkl**         - pre-trained model for TF-IDF vectorizer based on MIPT FAQ
+
+Example config - :download:`deeppavlov/configs/faq/tfidf_logreg_en_faq.json <../../deeppavlov/configs/faq/tfidf_logreg_en_faq.json>`
+
+
+Also you can use pretrained model on Russan FAQ dataset from school-site: http://www.ftl.name/page/989
 
    ::
 
@@ -140,7 +155,7 @@ You can use pretrained model on FAQ dataset from school-site: http://www.ftl.nam
 -  **tfidf_cos_sim_classifier.pkl** - pre-trained cosine similarity classifier for classifying input question (vectorized by tfidf)
 -  **tfidf_logreg_classifier.pkl**  - pre-trained logistic regression classifier for classifying input question (vectorized by tfidf)
 -  **fasttext_cos_classifier.pkl**  - pre-trained cosine similarity classifier for classifying input question (vectorized by word embeddings)
--  **tfidf_vectorizer_ruwiki.pkl**  - pre-trained model for TF-IDF vectorizer based on russian Wikipedia
+-  **tfidf_vectorizer_ruwiki.pkl**  - pre-trained model for TF-IDF vectorizer based on Russian Wikipedia
 
 
 
