@@ -80,7 +80,7 @@ class CosineSimilarityClassifier(Estimator, Serializable):
             labels_scores[:, i] = np.max([cos_similarities[:, i] for i, value in enumerate(self.y_train) if value == label], axis=0)
 
         # normalize for each class
-        labels_scores = labels_scores/np.sum(labels_scores, axis=1)
+        labels_scores = labels_scores/labels_scores.sum(axis=1, keepdims=True)
         answer_ids = np.argsort(labels_scores)[:, -self.top_n:]
 
         # generate top_n asnwers and scores
