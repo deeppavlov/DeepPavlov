@@ -85,8 +85,8 @@ class LogregClassifier(Estimator, Serializable):
         Returns:
             None
         """
-        if len(x_train_vects) != 0:
-            if isinstance(x_train_vects, list):
+        if isinstance(x_train_vects, list):
+            if len(x_train_vects) != 0:
                 if isinstance(x_train_vects[0], csr_matrix):
                     x_train_features = vstack(list(x_train_vects))
                 elif isinstance(x_train_vects[0], np.ndarray):
@@ -94,9 +94,9 @@ class LogregClassifier(Estimator, Serializable):
                 else:
                     raise NotImplementedError('Not implemented this type of vectors')
             else:
-                x_train_features = x_train_vects
+                raise ValueError("Train vectors can't be empty")
         else:
-            raise ValueError("Train vectors can't be empty")
+            x_train_features = x_train_vects
 
         self.logreg = LogisticRegression(C=self.c, penalty=self.penalty)
         self.logreg.fit(x_train_features, list(y_train))
