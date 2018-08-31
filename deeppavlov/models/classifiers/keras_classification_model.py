@@ -103,7 +103,7 @@ class KerasClassificationModel(KerasModel):
 
         self.opt['embedding_size'] = embedding_size
 
-        if self.opt.get("reinit_lr_with_final_lr", False):
+        if self.opt.get("reinit_lr_with_final_lr", True):
             self.opt["lear_rate"] = self.opt["final_lear_rate"]
             lear_rate = self.opt["final_lear_rate"]
 
