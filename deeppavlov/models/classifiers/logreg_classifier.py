@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 from typing import List, Tuple, Union
+
+import numpy as np
 from scipy.sparse import vstack
 from scipy.sparse import csr_matrix
+from sklearn.linear_model import LogisticRegression
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
@@ -24,7 +26,6 @@ from deeppavlov.core.common.file import save_pickle
 from deeppavlov.core.common.file import load_pickle
 from deeppavlov.core.commands.utils import expand_path, make_all_dirs
 from deeppavlov.core.models.serializable import Serializable
-from sklearn.linear_model import LogisticRegression
 
 logger = get_logger(__name__)
 
@@ -84,15 +85,18 @@ class LogregClassifier(Estimator, Serializable):
         Returns:
             None
         """
-        if len(x_train_vects) != 0:
-            if isinstance(x_train_vects[0], csr_matrix):
-                x_train_features = vstack(list(x_train_vects))
-            elif isinstance(x_train_vects[0], np.ndarray):
-                x_train_features = np.vstack(list(x_train_vects))
+        if isinstance(x_train_vects, tuple):
+            if len(x_train_vects) != 0:
+                if isinstance(x_train_vects[0], csr_matrix):
+                    x_train_features = vstack(list(x_train_vects))
+                elif isinstance(x_train_vects[0], np.ndarray):
+                    x_train_features = np.vstack(list(x_train_vects))
+                else:
+                    raise NotImplementedError('Not implemented this type of vectors')
             else:
-                raise NotImplementedError('Not implemented this type of vectors')
+                raise ValueError("Train vectors can't be empty")
         else:
-            raise ValueError("Train vectors can't be empty")
+            x_train_features = x_train_vects
 
         self.logreg = LogisticRegression(C=self.c, penalty=self.penalty)
         self.logreg.fit(x_train_features, list(y_train))

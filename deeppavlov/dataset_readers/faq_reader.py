@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict
+
+from pandas import read_csv
+
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.common.registry import register
-from typing import Dict
-from pandas import read_csv
 
 
 @register('faq_reader')
@@ -37,15 +39,17 @@ class FaqDatasetReader(DatasetReader):
             ``train``, ``valid`` and ``test`` keys.
         """
 
-        if len(data_url) != 0:
+        if data_url is not None:
             data = read_csv(data_url)
-        else:
+        elif data_path is not None:
             data = read_csv(data_path)
+        else:
+            raise ValueError("Please specify data_path or data_url parameter")
 
         x = data[x_col_name]
         y = data[y_col_name]
 
-        train_xy_tuples = [(x[i], y[i]) for i in range(len(x))]
+        train_xy_tuples = [(x[i].strip(), y[i].strip()) for i in range(len(x))]
 
         dataset = dict()
         dataset["train"] = train_xy_tuples

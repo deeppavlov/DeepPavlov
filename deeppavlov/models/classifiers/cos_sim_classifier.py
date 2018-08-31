@@ -13,8 +13,10 @@
 # limitations under the License.
 
 
-import numpy as np
 from typing import List, Tuple, Union
+
+import numpy as np
+from scipy.sparse.linalg import norm as sparse_norm
 from scipy.sparse import vstack
 from scipy.sparse import csr_matrix
 
@@ -25,8 +27,6 @@ from deeppavlov.core.common.file import save_pickle
 from deeppavlov.core.common.file import load_pickle
 from deeppavlov.core.commands.utils import expand_path, make_all_dirs
 from deeppavlov.core.models.serializable import Serializable
-from numpy import linalg
-from scipy.sparse.linalg import norm as sparse_norm
 
 logger = get_logger(__name__)
 
@@ -66,7 +66,7 @@ class CosineSimilarityClassifier(Estimator, Serializable):
             cos_similarities = np.array(q_vects.dot(self.x_train_features.T).todense())/norm
         elif isinstance(q_vects[0], np.ndarray):
             q_vects = np.array(q_vects)
-            norm = linalg.norm(q_vects)*linalg.norm(self.x_train_features, axis=1)
+            norm = np.linalg.norm(q_vects)*np.linalg.norm(self.x_train_features, axis=1)
             cos_similarities = q_vects.dot(self.x_train_features.T)/norm
         elif q_vects[0] is None:
             cos_similarities = np.zeros(len(self.x_train_features))
@@ -80,7 +80,7 @@ class CosineSimilarityClassifier(Estimator, Serializable):
             labels_scores[:, i] = np.max([cos_similarities[:, i] for i, value in enumerate(self.y_train) if value == label], axis=0)
 
         # normalize for each class
-        labels_scores = labels_scores/np.sum(labels_scores, axis=1)
+        labels_scores = labels_scores/labels_scores.sum(axis=1, keepdims=True)
         answer_ids = np.argsort(labels_scores)[:, -self.top_n:]
 
         # generate top_n asnwers and scores
@@ -102,15 +102,18 @@ class CosineSimilarityClassifier(Estimator, Serializable):
         Returns:
             None
         """
-        if len(x_train_vects) != 0:
-            if isinstance(x_train_vects[0], csr_matrix):
-                self.x_train_features = vstack(list(x_train_vects))
-            elif isinstance(x_train_vects[0], np.ndarray):
-                self.x_train_features = np.vstack(list(x_train_vects))
+        if isinstance(x_train_vects, tuple):
+            if len(x_train_vects) != 0:
+                if isinstance(x_train_vects[0], csr_matrix):
+                    self.x_train_features = vstack(list(x_train_vects))
+                elif isinstance(x_train_vects[0], np.ndarray):
+                    self.x_train_features = np.vstack(list(x_train_vects))
+                else:
+                    raise NotImplementedError('Not implemented this type of vectors')
             else:
-                raise NotImplementedError('Not implemented this type of vectors')
+                raise ValueError("Train vectors can't be empty")
         else:
-            raise ValueError("Train vectors can't be empty")
+            self.x_train_features = x_train_vects
 
         self.y_train = list(y_train)
 

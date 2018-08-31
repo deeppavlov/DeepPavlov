@@ -14,11 +14,11 @@
 
 from typing import List
 
+import numpy as np
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-import numpy as np
 
 logger = get_logger(__name__)
 
