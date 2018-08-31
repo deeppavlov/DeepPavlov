@@ -32,14 +32,16 @@ class SimpleVocabulary(Estimator):
     """Implements simple vocabulary."""
     def __init__(self,
                  special_tokens=tuple(),
+                 default_token=None,
                  max_tokens=2**30,
-                 min_freq=1,
+                 min_freq=0,
                  pad_with_zeros=False,
                  unk_token=None,
                  *args,
                  **kwargs):
         super().__init__(**kwargs)
         self.special_tokens = special_tokens
+        self.default_token = default_token
         self._max_tokens = max_tokens
         self._min_freq = min_freq
         self._pad_with_zeros = pad_with_zeros
@@ -48,9 +50,11 @@ class SimpleVocabulary(Estimator):
         if self.load_path:
             self.load()
 
-    def fit(self, tokens):
+    def fit(self, *args):
         self.reset()
-        self.freqs = Counter(chain(*tokens))
+        tokens = chain(*args)
+        # filter(None, <>) -- to filter empty tokens
+        self.freqs = Counter(filter(None, chain(*tokens)))
         for special_token in self.special_tokens:
             self._t2i[special_token] = self.count
             self._i2t.append(special_token)
@@ -145,11 +149,22 @@ class SimpleVocabulary(Estimator):
             return False
 
     def reset(self):
+        # default index is the position of default_token
+        if self.default_token is not None:
+            default_ind = self.special_tokens.index(self.default_token)
+        else:
+            default_ind = 0
         self.freqs = None
         unk_index = 0
         if self.unk_token in self.special_tokens:
             unk_index = self.special_tokens.index(self.unk_token)
         self._t2i = defaultdict(lambda: unk_index)
+        self._i2t = []
+        self.count = 0
+
+    @staticmethod
+    def is_empty(batch):
+        non_empty = [item for item in batch if len(item) > 0]
         self._i2t = []
         self.count = 0
 
@@ -162,7 +177,8 @@ class SimpleVocabulary(Estimator):
 @register('char_vocab')
 class CharacterVocab(SimpleVocabulary):
     """Implements character vocabulary."""
-    def fit(self, tokens):
+    def fit(self, *args):
+        tokens = chain(*args)
         chars = chain(*tokens)
         super().fit(chars)
 
@@ -181,7 +197,8 @@ class CharacterVocab(SimpleVocabulary):
 @register('dialog_vocab')
 class DialogVocab(SimpleVocabulary):
     """Implements dialog vocabulary."""
-    def fit(self, utterances):
+    def fit(self, *args):
+        utterances = chain(*args)
         tokens = chain(*utterances)
         super().fit(tokens)
 

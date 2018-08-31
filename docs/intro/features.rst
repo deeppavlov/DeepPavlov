@@ -82,20 +82,61 @@ trained on Reddit dataset.
 +------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
 
 
-- :doc:`Goal-oriented bot </components/go_bot>`
+
+- :doc:`Goal-oriented bot </skills/go_bot>`
 
 Based on Hybrid Code Networks (HCNs) architecture from `Jason D. Williams, Kavosh Asadi, Geoffrey Zweig, Hybrid Code
 Networks: practical and efficient end-to-end dialog control with supervised and reinforcement learning – 2017
 <https://arxiv.org/abs/1702.03274>`__. It allows to predict responses in goal-oriented dialog. The model is
-customizable: embeddings, slot filler and intent classifier can switched on and off on demand.
+customizable: embeddings, slot filler and intent classifier can be switched on and off on demand.
+
+Available pre-trained models:
+
++------------------------------------------------------------------------------------------------+---------------------+--------------------+
+| Dataset & Model                                                                                | Valid turn accuracy | Test turn accuracy |
++================================================================================================+=====================+====================+
+| :config:`DSTC2, bot with slot filler & intents <go_bot/gobot_dstc2.json>`                      | 0.5179              | 0.5125             |
++------------------------------------------------------------------------------------------------+---------------------+--------------------+
+| :config:`DSTC2, bot with slot filler & embeddings & attention <go_bot/gobot_dstc2_best.json>`  |  0.5538             | 0.5551             |
++------------------------------------------------------------------------------------------------+---------------------+--------------------+
+
+Other benchmarks on DSTC2 (can't be directly compared due to dataset :doc:`modifications </skills/go_bot>`):
+
++----------------------------------------------------+------------------------------+
+|             Dataset & Model                        | Test turn accuracy           |
++====================================================+==============================+
+| DSTC2, Bordes and Weston (2016)                    |   0.411                      |
++----------------------------------------------------+------------------------------+
+| DSTC2, Perez and Liu (2016)                        |   0.487                      |
++----------------------------------------------------+------------------------------+
+| DSTC2, Eric and Manning (2017)                     |   0.480                      |
++----------------------------------------------------+------------------------------+
+| DSTC2, Williams et al. (2017)                      |   0.556                      |
++----------------------------------------------------+------------------------------+
 
 
 - :doc:`Seq2seq goal-oriented bot </skills/seq2seq_go_bot>`
 
-Dialogue agent predicts responses in a goal-oriented dialog and is able to handle multiple domains (pretrained bot
-allows calendar scheduling, weather information retrieval, and point-of-interest navigation). The model is end-to-end
-differentiable and does not need to explicitly model dialogue state or belief trackers.
+Dialogue agent predicts responses in a goal-oriented dialog and is able to handle
+multiple domains (pretrained bot allows calendar scheduling, weather information retrieval,
+and point-of-interest navigation). The model is end-to-end differentiable and
+does not need to explicitly model dialogue state or belief trackers.
 
+Comparison of deeppavlov pretrained model with others:
+
++------------------------------------------------------+------------------+-----------------+
+| Dataset & Model                                      | Valid BLEU       | Test BLEU       |
++======================================================+==================+=================+
+| :config:`Kvret, KvretNet  <go_bot/gobot_dstc2.json>` | 0.1319           | **0.1328**      |
++------------------------------------------------------+------------------+-----------------+
+| Kvret, KvretNet, Mihail Eric et al. (2017)           | --               | **0.132**       |
++------------------------------------------------------+------------------+-----------------+
+| Kvret, CopyNet, Mihail Eric et al. (2017)            | --               | 0.110           |
++------------------------------------------------------+------------------+-----------------+
+| Kvret, Attn Seq2Seq, Mihail Eric et al. (2017)       | --               | 0.102           |
++------------------------------------------------------+------------------+-----------------+
+| Kvret, Rule-based, Mihail Eric et al. (2017)         | --               | 0.066           |
++------------------------------------------------------+------------------+-----------------+
 
 - :doc:`Automatic spelling correction component </components/spelling_correction>`
 
@@ -114,6 +155,15 @@ Based on `R-NET: Machine Reading Comprehension with Self-matching Networks
 <https://www.microsoft.com/en-us/research/publication/mrc/>`__. The model solves the task of looking for an answer on a
 question in a given context (`SQuAD <https://rajpurkar.github.io/SQuAD-explorer/>`__ task format).
 
++---------------+-----------------------------------------------------+----------------+-----------------+
+|    Dataset    | Model config                                        |    EM (dev)    |    F-1 (dev)    |
++---------------+-----------------------------------------------------+----------------+-----------------+
+| `SQuAD-v1.1`_ | :config:`squad <squad/squad.json>`                  |     71.41      |     80.26       |
++---------------+-----------------------------------------------------+----------------+-----------------+
+|  SDSJ Task B  | :config:`squad_ru <squad/squad_ru.json>`            |     60.58      |     80.22       |
++---------------+-----------------------------------------------------+----------------+-----------------+
+
+.. _`SQuAD-v1.1`: https://arxiv.org/abs/1606.05250
 
 - :doc:`Morphological tagging component </components/morphotagger>`
 
@@ -137,6 +187,12 @@ contains word and sentence accuracy on UD2.0 datasets.
 .. _`UD Pipe 1.2`: http://ufal.mff.cuni.cz/udpipe
 .. _`Basic model`: :config:<morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict.json>
 .. _`Pymorphy-enhanced model`: :config:<morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict_pymorphy.json>
+
+- :doc:`Frequently Asked Questions (FAQ) component </components/faq>`
+
+Set of pipelines for FAQ task: classifying incoming question into set of known questions and return prepared answer.
+You can build different pipelines based on: tf-idf, weighted fasttext, cosine similarity, logistic regression.
+
 
 Skills
 ------
