@@ -163,6 +163,31 @@ Pipelines that use candidates search in a static dictionary and an ARPA language
 Based on `LSTM-based deep learning models for non-factoid answer selection <https://arxiv.org/abs/1511.04108>`__. The
 model performs ranking of responses or contexts from some database by their relevance for the given context.
 
+Available pre-trained model(s):
+
++-------------------+-------------------------------------------------------------+-----------------------+------------------+
+|    Dataset        | Model config                                                | Validation (Recall@1) | Test1 (Recall@1) |
++-------------------+-------------------------------------------------------------+-----------------------+------------------+
+| `InsuranceQA V1`_ | :config:`ranking_insurance <ranking/ranking_insurance.json>`|   67.6                |   67.6           |
++-------------------+-------------------------------------------------------------+-----------------------+------------------+
+
+.. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
+
+Comparison with other models on the `InsuranceQA V1 <https://github.com/shuzi/insuranceQA>`__:
+
++---------------------------------------------------------------+-------------------------+--------------------+
+| Model                                                         | Validation (Recall@1)   | Test1 (Recall@1)   |
++===============================================================+=========================+====================+
+| `Architecture II (HLQA(200) CNNQA(4000) 1-MaxPooling Tanh)`_  | 61.8                    | 62.8               |
++---------------------------------------------------------------+-------------------------+--------------------+
+| `QA-LSTM basic-model(max pooling)`_                           | 64.3                    | 63.1               |
++---------------------------------------------------------------+-------------------------+--------------------+
+| :config:`ranking_insurance <ranking/ranking_insurance.json>`  | **67.6**                | **67.6**           |
++---------------------------------------------------------------+-------------------------+--------------------+
+
+.. _`Architecture II (HLQA(200) CNNQA(4000) 1-MaxPooling Tanh)`: https://arxiv.org/pdf/1508.01585.pdf
+.. _`QA-LSTM basic-model(max pooling)`: https://arxiv.org/pdf/1511.04108.pdf
+
 
 - :doc:`Question Answering component </components/squad>`
 
