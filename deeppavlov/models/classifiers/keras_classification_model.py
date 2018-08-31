@@ -103,6 +103,10 @@ class KerasClassificationModel(KerasModel):
 
         self.opt['embedding_size'] = embedding_size
 
+        if self.opt.get("reinit_lr_with_final_lr", False):
+            self.opt["lear_rate"] = self.opt["final_lear_rate"]
+            lear_rate = self.opt["final_lear_rate"]
+
         # Parameters required to init model
         params = {"model_name": self.opt.get('model_name'),
                   "optimizer_name": self.opt.get('optimizer'),
