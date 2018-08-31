@@ -23,6 +23,7 @@ from deeppavlov.core.common.registry import register
 @register('sanitizer')
 class Sanitizer(Component):
     """Remove all combining characters like diacritical marks from tokens
+
     Args:
         diacritical: whether to remove diacritical signs or not
             diacritical signs are something like hats and stress marks
