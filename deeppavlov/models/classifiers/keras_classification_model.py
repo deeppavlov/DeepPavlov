@@ -110,8 +110,8 @@ class KerasClassificationModel(KerasModel):
         if reinit_lr_with_final_lr:
             lear_rate = self.opt.get("final_lear_rate", lear_rate)
 
-        self.model = self.compile(self.model, optimizer=optimizer, loss=loss,
-                                  lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,)
+        self.model = self.compile(self.model, optimizer_name=optimizer, loss_name=loss,
+                                  lear_rate=lear_rate, lear_rate_decay=lear_rate_decay)
 
         self._change_not_fixed_params(text_size=text_size, embedding_size=embedding_size,
                                       model_name=model_name,
