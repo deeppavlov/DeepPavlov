@@ -54,6 +54,8 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 [Open Domain Questions Answering](http://docs.deeppavlov.ai/en/latest/skills/odqa.html)
 
+[Frequently Asked Questions Answering](http://docs.deeppavlov.ai/en/latest/skills/faq.html)
+
 **Embeddings**
 
 [ELMo embeddings for the Russian language](http://docs.deeppavlov.ai/en/master/apiref/models/embedders.html#deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder)
