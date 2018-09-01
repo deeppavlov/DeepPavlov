@@ -38,6 +38,13 @@ FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_t
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
+    "faq": {
+        ("faq/tfidf_logreg_en_faq.json", "faq_tfidf_logreg_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("faq/tfidf_autofaq.json", "faq_tfidf_cos", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("faq/tfidf_logreg_autofaq.json", "faq_tfidf_logreg", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("faq/fasttext_avg_autofaq.json", "faq_fasttext_avg", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("faq/fasttext_tfidf_autofaq.json", "faq_fasttext_tfidf", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+    },
     "spelling_correction": {
         ("spelling_correction/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
             [
@@ -46,7 +53,6 @@ PARAMS = {
             ],
         ("spelling_correction/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES):
             [
-                ("преведствую", "приветствую"),
                 ("я джва года дду эту игру", "я два года жду эту игру")
             ],
         ("spelling_correction/levenshtein_corrector_ru.json", "error_model", ('IP',)):
@@ -60,31 +66,32 @@ PARAMS = {
         ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
-    "intents": {
-        ("intents/intents_dstc2.json", "intents", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_dstc2_big.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+    "classifiers": {
+        ("classifiers/intents_dstc2.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_dstc2_big.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/insults_kaggle.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_twitter.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_twitter_preproc.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/topic_ag_news.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/rusentiment_cnn.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
     },
     "snips": {
-        ("intents/intents_snips.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bigru.json", "intents", ('TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_cnn.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_self_add_attention.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_bilstm_self_mult_attention.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_snips_cnn_bilstm.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
-    },
-    "sentiment": {
-        ("sentiment/insults_kaggle.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("sentiment/sentiment_twitter.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("sentiment/sentiment_ag_news.json", "sentiment", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+        ("classifiers/intents_snips.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_big.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bigru.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_cnn.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_self_add_attention.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_self_mult_attention.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_cnn_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "evolution": {
         ("evolution/evolve_intents_snips.json", "evolution", ('E',)): None
     },
     "sample": {
-        ("intents/intents_sample_csv.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("intents/intents_sample_json.json", "intents", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("classifiers/intents_sample_csv.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_sample_json.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "ner": {
         ("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
@@ -108,7 +115,23 @@ PARAMS = {
         ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK]
     },
-    "seq2seq_go_bot": {("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ALL_MODES): [FOUR_ARGUMENTS_INFER_CHECK]},
+    "seq2seq_go_bot": {
+        ("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ('TI',)):
+        [
+           ("will it snow on tuesday?",
+            "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
+            "",
+            "",
+            "",
+            None)
+        ],
+        ("seq2seq_go_bot/bot_kvret_infer.json", "seq2seq_go_bot", ('IP',)):
+        [
+           ("will it snow on tuesday?",
+            "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
+            None)
+        ]
+    },
     "odqa": {
         ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },

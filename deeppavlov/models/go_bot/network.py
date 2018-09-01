@@ -46,19 +46,20 @@ class GoalOrientedBotNetwork(TFModel):
         hidden_size: size of rnn hidden layer.
         action_size: size of rnn output (equals to number of bot actions).
         obs_size: input features' size (must be equal to sum of output sizes of
-            ``bow_embedder``, ``embedder``, ``intent_classifier``, ``tracker.num_features``
-            plus size of context features(=6) and ``action_size``).
+            ``bow_embedder``, ``embedder``, ``intent_classifier``,
+            ``tracker.num_features`` plus size of context features(=6) and
+            ``action_size``).
         learning_rate: learning rate during training.
         end_learning_rate: if set, learning rate starts from ``learning rate`` value and
             decays polynomially to the value of ``end_learning_rate``.
         decay_steps: number of steps for learning rate to decay.
         decay_power: power used to calculate learning rate decay for polynomial strategy.
-        dropout_rate: Probability of dropping out. Default: ``0.0``.
+        dropout_rate: probability of weights dropping out.
         l2_reg_coef: l2 regularization weight (applied to input and output layer).
         dense_size: rnn input size.
         optimizer: one of tf.train.Optimizer subclasses as a string.
         attention_mechanism: describes attention applied to embeddings of input tokens.
-            
+
             * **type** – type of attention mechanism, possible values are ``'general'``, ``'bahdanau'``, ``'light_general'``, ``'light_bahdanau'``, ``'cs_general'`` and ``'cs_bahdanau'``.
             * **hidden_size** – attention hidden state size.
             * **max_num_tokens** – maximum number of input tokens.

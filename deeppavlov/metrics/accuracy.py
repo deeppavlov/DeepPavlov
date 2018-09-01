@@ -55,7 +55,7 @@ def sets_accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -
 
 
 @register_metric('classification_accuracy')
-def classification_accuracy(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]]) -> float:
+def classification_accuracy(y_true: List[list], y_predicted: List[Tuple[list, dict]]) -> float:
     """
     Calculate accuracy in terms of sets coincidence for special case of predictions \
             (from classification KerasIntentModel)

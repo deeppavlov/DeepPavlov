@@ -44,8 +44,6 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 [Intent/Sentence Classification](http://docs.deeppavlov.ai/en/latest/components/classifiers.html) |  [Sentence Similarity/Ranking](http://docs.deeppavlov.ai/en/latest/components/neural_ranking.html)
 
-[Goal(Task)-oriented Bot](http://docs.deeppavlov.ai/en/latest/components/go_bot.html) | [Seq2seq Goal-Oriented bot](http://docs.deeppavlov.ai/en/latest/components/seq2seq_go_bot.html)
-
 [Question Answering over Text (SQuAD)](http://docs.deeppavlov.ai/en/latest/components/squad.html) 
 
 [Morphological tagging](http://docs.deeppavlov.ai/en/latest/components/morphotagger.html) | [Automatic Spelling Correction](http://docs.deeppavlov.ai/en/latest/components/spelling_correction.html)

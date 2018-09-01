@@ -1,4 +1,4 @@
-Cython==0.27.1
+Cython==0.28.5
 overrides==1.9
 numpy==1.14.5
 pandas==0.23.1
