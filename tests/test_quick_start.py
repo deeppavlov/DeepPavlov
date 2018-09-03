@@ -27,7 +27,8 @@ download_path = tests_dir / "download"
 
 TEST_MODES = ['IP',  # test_interacting_pretrained_model
               'TI',  # test_consecutive_training_and_interacting
-              'E'    # test_evolving
+              'E',    # test_evolving
+              'CV'    # test_crossvalidation
               ]
 
 ALL_MODES = ('IP', 'TI')
@@ -38,6 +39,9 @@ FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_t
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
+    "cross-validation": {
+        ("cv/cv_intents_snips.json", "cross-validation", ('CV',)): None
+    },
     "spelling_correction": {
         ("spelling_correction/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
             [
@@ -79,6 +83,9 @@ PARAMS = {
     },
     "evolution": {
         ("evolution/evolve_intents_snips.json", "evolution", ('E',)): None
+    },
+    "cross-validation": {
+        ("cv/cv_intents_snips.json", "cross-validation", ('CV',)): None
     },
     "sample": {
         ("classifiers/intents_sample_csv.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -339,3 +346,28 @@ class TestQuickStart(object):
             shutil.rmtree(str(download_path), ignore_errors=True)
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
+
+    def test_crossvalidation(self, model, conf_file, model_dir, mode):
+        if 'CV' in mode:
+            c = test_configs_path / conf_file
+            model_path = download_path / model_dir
+
+            if 'IP' not in mode and 'TI' not in mode:
+                config_path = str(test_configs_path.joinpath(conf_file))
+                deep_download(['-c', config_path])
+            shutil.rmtree(str(model_path),  ignore_errors=True)
+
+            logfile = io.BytesIO(b'')
+            _, exitstatus = pexpect.run(sys.executable + f" -m deeppavlov crossvalidate {c} --folds 2",
+                                        timeout=None, withexitstatus=True,
+                                        logfile=logfile)
+            if exitstatus != 0:
+                logfile.seek(0)
+                raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
+                                   .format(model_dir, ''.join((line.decode() for line in logfile.readlines()))))
+
+            shutil.rmtree(str(download_path), ignore_errors=True)
+        else:
+            pytest.skip("Unsupported mode: {}".format(mode))
+
+
