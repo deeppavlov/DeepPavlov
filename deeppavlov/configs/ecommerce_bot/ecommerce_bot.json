@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "amazon_ecommerce_reader",
-    "data_path": "amazon_ecommerce",
+    "data_path": "./amazon_ecommerce",
     "catalog": "Phones"
   },
   "dataset_iterator": {
@@ -32,18 +32,24 @@
       }
     ]
    },
+   "train":{
+   },
    "metadata": {
     "labels": {
-      "telegram_utils": "RankingEmbModel",
-      "server_utils": "RankingEmbModel"
+      "telegram_utils": "EcommerceBot",
+      "server_utils": "EcommerceBot"
     },
     "requirements": [
         "../dp_requirements/spacy.txt"
       ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/embeddings/glove.6B.100d.txt",
-        "subdir": "embeddings"
+        "url": "ftp://share.ipavlov.mipt.ru/datasets/ecommerce_bot/ecommerce_Phones_model.pkl",
+        "subdir": "ecommerce_bot"
+      },
+      {
+        "url": "ftp://share.ipavlov.mipt.ru/datasets/ecommerce_bot/ecommerce_Books_model.pkl",
+        "subdir": "ecommerce_bot"
       }
     ]
   }
