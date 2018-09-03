@@ -4,6 +4,7 @@ from deeppavlov.core.commands.utils import get_deeppavlov_root, expand_path
 import re
 from pathlib import Path
 from typing import Dict, List, Union
+from deeppavlov.core.data.utils import download_decompress, mark_done, is_done
 
 @register('amazon_ecommerce_reader')
 class AmazonEcommerceReader(DatasetReader):
@@ -12,17 +13,24 @@ class AmazonEcommerceReader(DatasetReader):
         ec_data_global = []
         data_path = Path(expand_path(data_path))
 
+        if not is_done(data_path):
+            self._download_data(data_path, catalog)
+
         if data_path.is_dir():
-            for fname in data_path.iterdir():
-                if fname.is_file():
-                    if catalog in fname.name:
-                        ec_data_global = self._load_amazon_ecommerce_file(fname)
+            for fname in data_path.rglob("*.txt"):
+                if catalog in fname.name:
+                    ec_data_global = self._load_amazon_ecommerce_file(fname)
 
         dataset = {'train': None, 'valid': None, 'test': None}
         dataset["train"] = [((item,1,1),) for item in ec_data_global]
         dataset["valid"] = []
         dataset["test"] = []
         return dataset
+
+    def _download_data(self, data_path, catalog: str):
+        url = "https://github.com/SamTube405/Amazon-E-commerce-Data-set/archive/master.zip"
+        download_decompress(url, data_path)
+        mark_done(data_path)
 
     def _load_amazon_ecommerce_file(self, fname):
         ec_data = []
