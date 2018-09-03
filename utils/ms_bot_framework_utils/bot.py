@@ -28,6 +28,7 @@ class Bot(Thread):
         self.model = None
         if not self.config['multi_instance']:
             self.model = self._init_model(self.config)
+            log.info('New model bot instance level model initiated')
 
         polling_interval = self.config['auth_polling_interval']
         self.timer = threading.Timer(polling_interval, self._update_access_info)
@@ -80,6 +81,7 @@ class Bot(Thread):
         if conversation_key not in self.conversations.keys():
             if self.config['multi_instance']:
                 conv_model = self._init_model(self.config)
+                log.info('New model conversation instance level model initiated')
             else:
                 conv_model = self.model
 
