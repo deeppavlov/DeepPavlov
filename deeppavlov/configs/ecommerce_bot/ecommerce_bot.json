@@ -44,11 +44,11 @@
       ],
     "download": [
       {
-        "url": "ftp://share.ipavlov.mipt.ru/datasets/ecommerce_bot/ecommerce_Phones_model.pkl",
+        "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Phones_model.pkl",
         "subdir": "ecommerce_bot"
       },
       {
-        "url": "ftp://share.ipavlov.mipt.ru/datasets/ecommerce_bot/ecommerce_Books_model.pkl",
+        "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Books_model.pkl",
         "subdir": "ecommerce_bot"
       }
     ]
