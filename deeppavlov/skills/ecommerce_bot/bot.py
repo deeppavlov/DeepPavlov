@@ -18,6 +18,8 @@ from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.models.estimator import Estimator, Component
 from deeppavlov.metrics.bleu import bleu_advanced
 
+import copy
+import json
 import numpy as np
 from scipy.stats import entropy
 from collections import Counter
@@ -52,8 +54,6 @@ class EcommerceBot(Component):
         log.info('Items to nlp: '+str(len(x)))
         self.ec_data = [dict(item, **{'title_nlped': self.tokenizer.analyze(item['Title']),
                                       'feat_nlped':self.tokenizer.analyze(item['Title']+'. '+item['Feature'])}) for item in x]
-
-        print(self.ec_data[0])
         log.info('Data are nlped')
 
     def save(self, **kwargs) -> None:
@@ -67,71 +67,106 @@ class EcommerceBot(Component):
     def __call__(self, x, start=0, stop=5, **kwargs) -> Tuple[Dict[str, Dict[Any, Any]], List[float]]:
         response = []
         confidence = []
+        results_args = []
+        results_args_sim = []
 
         for item_idx, query in enumerate(x):
 
-            query = self.tokenizer.analyze(query)
-            query, money_range = self.tokenizer.extract_money(query)
-            log.info(f"Money range {money_range}")
+            # check if the query is in self.state, if yes then give specification on the previous results
+            if 'entropies' in self.state:
+                for item in self.state['entropies']:
+                    for value in item[2]:
+                        if value[0].lower() == query.lower():
+                            print("specification detected", query)
+                            print("results before specification", len(self.state['results_args']))
+                            # filter results_args according to the specification query
+                            results_args_sim = []
+                            for idx in self.state['results_args']:
+                                if item[1] in self.ec_data[idx]:
+                                    if self.ec_data[idx][item[1]].lower() == query.lower():
+                                        results_args_sim.append(idx)
 
-            if len(money_range)==2:
-                self.state['Price'] = money_range
+                            print("results after specification", len(results_args_sim))
 
-            score_title = []
-            for item in self.ec_data:
-                hyp = self.preprocess.lemmas(self.preprocess.filter_nlp_title(query))
-                ref = self.preprocess.lemmas(item['title_nlped'])
-                score_title.append(bleu_advanced(
-                    hyp, ref, weights=(1,), penalty=False))
+            if len(results_args_sim) == 0:
+                query = self.tokenizer.analyze(query)
+                query, money_range = self.tokenizer.extract_money(query)
+                print("money", query, money_range)
+                # log.info(f"Money range {money_range}")
 
-            score_feat = []
-            for idx, item in enumerate(self.ec_data):
-                hyp = self.preprocess.lemmas(self.preprocess.filter_nlp(query))
-                ref = self.preprocess.lemmas(item['feat_nlped'])
-                score_feat.append(bleu_advanced(
-                    hyp, ref, weights=(0.3, 0.7), penalty=False))
+                if len(money_range)==2:
+                    self.state['Price'] = money_range
 
-            # score_feat = [bleu_advanced(lemmas(filter_nlp(query)), lemmas(item['feat_nlped']), weights=(0.3, 0.7), penalty=False) if score_title[idx]<1 else 1 for idx, item in enumerate(self.ec_data)]
-            scores = np.mean([score_feat, score_title], axis=0).tolist()
+                score_title = []
+                for item in self.ec_data:
+                    hyp = self.preprocess.lemmas(self.preprocess.filter_nlp_title(query))
+                    ref = self.preprocess.lemmas(item['title_nlped'])
+                    score_title.append(bleu_advanced(
+                        hyp, ref, weights=(1,), penalty=False))
 
-            scores_title = [(score, len(self.ec_data[idx]['Title']))
-                            for idx, score in enumerate(scores)]
+                score_feat = []
+                for idx, item in enumerate(self.ec_data):
+                    hyp = self.preprocess.lemmas(self.preprocess.filter_nlp(query))
+                    ref = self.preprocess.lemmas(item['feat_nlped'])
+                    score_feat.append(bleu_advanced(
+                        hyp, ref, weights=(0.3, 0.7), penalty=False))
 
-            raw_scores_ar = np.array(scores_title, dtype=[
-                ('x', 'float_'), ('y', 'int_')])
+                # score_feat = [bleu_advanced(lemmas(filter_nlp(query)), lemmas(item['feat_nlped']), weights=(0.3, 0.7), penalty=False) if score_title[idx]<1 else 1 for idx, item in enumerate(self.ec_data)]
+                self.state['scores'] = np.mean([score_feat, score_title], axis=0).tolist()
 
-            results_args = np.argsort(raw_scores_ar, order=('x', 'y'))[
-                ::-1].tolist()
+                scores_title = [(score, len(self.ec_data[idx]['Title']))
+                                for idx, score in enumerate(self.state['scores'])]
 
-            if 'Price' in self.state:
-                log.debug(f"Items before price filtering {len(results_args)}")
-                results_args = [idx for idx in results_args 
-                    if self.preprocess.price(self.ec_data[idx])>=self.state['Price'][0] and 
-                    self.preprocess.price(self.ec_data[idx])<=self.state['Price'][1]]
-                log.debug(f"Items after price filtering {len(results_args)}")
+                raw_scores_ar = np.array(scores_title, dtype=[
+                    ('x', 'float_'), ('y', 'int_')])
 
-            response.append([self.ec_data[idx] for idx in results_args[int(
-                start[item_idx]):int(stop[item_idx])]])
+                results_args = np.argsort(raw_scores_ar, order=('x', 'y'))[
+                    ::-1].tolist()
 
+                results_args_sim = [idx for idx in results_args if self.state['scores'][idx]>=self.min_similarity]
+                log.debug(f"Items before similarity filtering {len(results_args)} and after {len(results_args_sim)}")
+
+                if 'Price' in self.state:
+                    log.debug(f"Items before price filtering {len(results_args_sim)}")
+                    results_args_sim = [idx for idx in results_args_sim 
+                        if self.preprocess.price(self.ec_data[idx])>=self.state['Price'][0] and 
+                        self.preprocess.price(self.ec_data[idx])<=self.state['Price'][1]]
+                    log.debug(f"Items after price filtering {len(results_args_sim)}")
+
+
+            response = []
+            for idx in results_args_sim[int(
+                start[item_idx]):int(stop[item_idx])]:
+                temp = copy.deepcopy(self.ec_data[idx])
+                del temp['title_nlped']
+                del temp['feat_nlped']
+                response.append(temp)
+            
             confidence.append(
-                [scores[idx] for idx in results_args[int(start[item_idx]):int(stop[item_idx])]])
+                [self.state['scores'][idx] for idx in results_args_sim[int(start[item_idx]):int(stop[item_idx])]])
 
-            entropies = self._entropy_subquery(scores, results_args)
+            entropies = self._entropy_subquery(self.state['scores'], results_args_sim)
 
-        return {'items': response, 'entropy': entropies}, confidence
+            self.state['start'] = int(start[item_idx])
+            self.state['stop'] = int(stop[item_idx])
+            self.state['results_args'] = results_args_sim
+            self.state['confidence'] = confidence
+            self.state['entropies'] = entropies
+
+        return json.dumps(({'items': response, 'entropy': entropies}, confidence))
 
     def _entropy_subquery(self, scores, results_args) -> List[Tuple[float, str, List[Tuple[str, int]]]]:
         fields = ['Size', 'Brand', 'Author', 'Color', 'Genre']
         ent_fields: Dict = {}
 
         i = 0
-        while scores[results_args[i]] > self.min_similarity:
+        for idx in results_args:
             for field in fields:
-                if field in self.ec_data[i]:
+                if field in self.ec_data[idx]:
                     if field not in ent_fields:
                         ent_fields[field] = []
 
-                    ent_fields[field].append(self.ec_data[i][field].lower())
+                    ent_fields[field].append(self.ec_data[idx][field].lower())
             i += 1
 
         entropies = []
@@ -144,4 +179,5 @@ class EcommerceBot(Component):
         entropies = sorted(entropies, key=itemgetter(0), reverse=True)
         entropies = [ent_item for ent_item in entropies if ent_item[0]
                      >= self.min_entropy]
+        
         return entropies
