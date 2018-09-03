@@ -14,7 +14,7 @@ limitations under the License.
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import save_pickle, load_pickle
-from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.commands.utils import expand_path, make_all_dirs
 from deeppavlov.core.models.estimator import Estimator, Component
 from deeppavlov.metrics.bleu import bleu_advanced
 
@@ -28,22 +28,26 @@ from operator import itemgetter
 
 log = get_logger(__name__)
 
+
 @register("ecommerce_bot")
 class EcommerceBot(Component):
-    """Rank catalogue items and specify user query
+    """Class to perform ranking catalogue items accroding to the query
+    Ask questions (according to entropy) to specify the query
 
     Attributes:
         min_similarity: simililarity threshlold for ranking
         min_entropy: min entropy threshold for specifying
         tokenizer: component for SpaCy analyze
         preprocess: text preprocessing component
+        state: global state
     """
 
-    def __init__(self, preprocess: Component, tokenizer: Component, save_path: str, load_path: str, min_similarity: float = 0.5, min_entropy: float = 0.5, **kwargs) -> None:
+    def __init__(self, preprocess: Component, tokenizer: Component, save_path: str, 
+        load_path: str, min_similarity: float = 0.5, min_entropy: float = 0.5, **kwargs) -> None:
         self.preprocess = preprocess
         self.tokenizer = tokenizer
-        self.save_path = save_path
-        self.load_path = load_path
+        self.save_path = expand_path(save_path)
+        self.load_path = expand_path(load_path)
         self.min_similarity = min_similarity
         self.min_entropy = min_entropy
         self.state = {}
@@ -58,11 +62,12 @@ class EcommerceBot(Component):
 
     def save(self, **kwargs) -> None:
         log.info(f"Saving model to {self.save_path}")
-        save_pickle(self.ec_data, expand_path(self.save_path))
+        make_all_dirs(self.save_path)
+        save_pickle(self.ec_data, self.save_path)
 
     def load(self, **kwargs) -> None:
         log.info(f"Loading model from {self.load_path}")
-        self.ec_data = load_pickle(expand_path(self.load_path))
+        self.ec_data = load_pickle(self.load_path)
 
     def __call__(self, x, start=0, stop=5, **kwargs) -> Tuple[Dict[str, Dict[Any, Any]], List[float]]:
         response = []
@@ -72,47 +77,49 @@ class EcommerceBot(Component):
 
         for item_idx, query in enumerate(x):
 
-            # check if the query is in self.state, if yes then give specification on the previous results
             if 'entropies' in self.state:
                 for item in self.state['entropies']:
                     for value in item[2]:
                         if value[0].lower() == query.lower():
-                            print("specification detected", query)
-                            print("results before specification", len(self.state['results_args']))
-                            # filter results_args according to the specification query
+                            log.debug(f"specification detected: {query}")
+                            log.debug(f"results before specification {len(self.state['results_args'])}")
+                            
                             results_args_sim = []
                             for idx in self.state['results_args']:
                                 if item[1] in self.ec_data[idx]:
                                     if self.ec_data[idx][item[1]].lower() == query.lower():
                                         results_args_sim.append(idx)
 
-                            print("results after specification", len(results_args_sim))
+                            log.debug(f"results after specification {results_args_sim}")
 
             if len(results_args_sim) == 0:
-                query = self.tokenizer.analyze(query)
-                query, money_range = self.tokenizer.extract_money(query)
-                print("money", query, money_range)
-                # log.info(f"Money range {money_range}")
 
-                if len(money_range)==2:
+                query = self.tokenizer.analyze(query)
+
+                query, money_range = self.tokenizer.extract_money(query)
+                log.debug(f"money detected: {query} {money_range}")
+
+                if len(money_range) == 2:
                     self.state['Price'] = money_range
 
                 score_title = []
                 for item in self.ec_data:
-                    hyp = self.preprocess.lemmas(self.preprocess.filter_nlp_title(query))
+                    hyp = self.preprocess.lemmas(
+                        self.preprocess.filter_nlp_title(query))
                     ref = self.preprocess.lemmas(item['title_nlped'])
                     score_title.append(bleu_advanced(
                         hyp, ref, weights=(1,), penalty=False))
 
                 score_feat = []
                 for idx, item in enumerate(self.ec_data):
-                    hyp = self.preprocess.lemmas(self.preprocess.filter_nlp(query))
+                    hyp = self.preprocess.lemmas(
+                        self.preprocess.filter_nlp(query))
                     ref = self.preprocess.lemmas(item['feat_nlped'])
                     score_feat.append(bleu_advanced(
                         hyp, ref, weights=(0.3, 0.7), penalty=False))
 
-                # score_feat = [bleu_advanced(lemmas(filter_nlp(query)), lemmas(item['feat_nlped']), weights=(0.3, 0.7), penalty=False) if score_title[idx]<1 else 1 for idx, item in enumerate(self.ec_data)]
-                self.state['scores'] = np.mean([score_feat, score_title], axis=0).tolist()
+                self.state['scores'] = np.mean(
+                    [score_feat, score_title], axis=0).tolist()
 
                 scores_title = [(score, len(self.ec_data[idx]['Title']))
                                 for idx, score in enumerate(self.state['scores'])]
@@ -123,29 +130,30 @@ class EcommerceBot(Component):
                 results_args = np.argsort(raw_scores_ar, order=('x', 'y'))[
                     ::-1].tolist()
 
-                results_args_sim = [idx for idx in results_args if self.state['scores'][idx]>=self.min_similarity]
+                results_args_sim = [
+                    idx for idx in results_args if self.state['scores'][idx] >= self.min_similarity]
                 log.debug(f"Items before similarity filtering {len(results_args)} and after {len(results_args_sim)}")
 
                 if 'Price' in self.state:
                     log.debug(f"Items before price filtering {len(results_args_sim)}")
-                    results_args_sim = [idx for idx in results_args_sim 
-                        if self.preprocess.price(self.ec_data[idx])>=self.state['Price'][0] and 
-                        self.preprocess.price(self.ec_data[idx])<=self.state['Price'][1]]
+                    results_args_sim = [idx for idx in results_args_sim
+                                        if self.preprocess.price(self.ec_data[idx]) >= self.state['Price'][0] and
+                                        self.preprocess.price(self.ec_data[idx]) <= self.state['Price'][1]]
                     log.debug(f"Items after price filtering {len(results_args_sim)}")
-
 
             response = []
             for idx in results_args_sim[int(
-                start[item_idx]):int(stop[item_idx])]:
+                    start[item_idx]):int(stop[item_idx])]:
                 temp = copy.deepcopy(self.ec_data[idx])
                 del temp['title_nlped']
                 del temp['feat_nlped']
                 response.append(temp)
-            
+
             confidence.append(
                 [self.state['scores'][idx] for idx in results_args_sim[int(start[item_idx]):int(stop[item_idx])]])
 
-            entropies = self._entropy_subquery(self.state['scores'], results_args_sim)
+            entropies = self._entropy_subquery(
+                self.state['scores'], results_args_sim)
 
             self.state['start'] = int(start[item_idx])
             self.state['stop'] = int(stop[item_idx])
@@ -153,7 +161,8 @@ class EcommerceBot(Component):
             self.state['confidence'] = confidence
             self.state['entropies'] = entropies
 
-        return json.dumps(({'items': response, 'entropy': entropies}, confidence))
+        # return json.dumps(({'items': response, 'entropy': entropies}, confidence))
+        return {'items': response, 'entropy': entropies}, confidence
 
     def _entropy_subquery(self, scores, results_args) -> List[Tuple[float, str, List[Tuple[str, int]]]]:
         fields = ['Size', 'Brand', 'Author', 'Color', 'Genre']
@@ -179,5 +188,5 @@ class EcommerceBot(Component):
         entropies = sorted(entropies, key=itemgetter(0), reverse=True)
         entropies = [ent_item for ent_item in entropies if ent_item[0]
                      >= self.min_entropy]
-        
+
         return entropies
