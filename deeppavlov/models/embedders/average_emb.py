@@ -17,6 +17,7 @@ import numpy as np
 from overrides import overrides
 from typing import List, Union
 
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
@@ -124,3 +125,99 @@ class AvrEmb(Component):
 
             res.append(np.dot(weights, matrix))
         return res
+
+
+@register('sent_emb_vocab')
+class SentEmb(Component):
+    """
+    The class implements the functional of embedding the sentence, averaging the embedding of its tokens.
+    The embeddings of tokens is averaged over the coefficients tf-idf.
+
+    Args:
+        vocab_path: path to txt file with corpus counter vocab
+
+    Attributes:
+        counter_vocab: dict that contains words frequency
+        corpus_len: a number of words in corpus
+    """
+
+    def __init__(self, vocab_path: str, sklearn: bool = False, **kwargs):
+        """
+        Initialize counter vocab from vocab_path.
+        """
+        self.sklearn = sklearn
+        self.counter_vocab = self.load_counter_vocab(vocab_path)
+        self.corpus_len = self.check_corpus_len(self.counter_vocab)
+
+    @staticmethod
+    def check_corpus_len(vocab):
+        n = 0
+        for key, val in vocab.items():
+            n += val
+        return n
+
+    @staticmethod
+    def load_counter_vocab(load_path):
+        counter_vocab = dict()
+        with open(load_path, 'r') as f:
+            lines = f.readlines()
+            f.close()
+
+        for line in lines:
+            key, val = line[:-1].split('\t')
+            counter_vocab[key] = val
+
+        return counter_vocab
+
+    @overrides
+    def __call__(self, data: List[Union[list, np.ndarray]], text: List[List[str]] = None,
+                 *args, **kwargs) -> Union[List, np.ndarray]:
+        """
+        Infer on the given data
+
+        Args:
+            data: list of tokenized and vectorized text samples
+            text: text samples
+            *args: additional arguments
+            **kwargs: additional arguments
+
+        Returns:
+            for each sentence:
+                np.vector
+        """
+        result = []
+        if isinstance(data, list):
+            return self.weigh_tfidf(data, text, result)
+        elif isinstance(data, np.ndarray):
+            return np.array(self.weigh_tfidf(data, text, result))
+
+    def weigh_tfidf(self, data, text, res):
+        """
+        Weighted averaging of the tokens embeddings by tf-idf coefficients.
+
+        Args:
+            data:  list of tokenized and vectorized text samples
+            text: text samples
+            res: list for sentence embeddings
+
+        Returns:
+             list of sentence embeddings
+        """
+        for i in range(len(text)):
+            weights = self.tf_idf_weights(text[i])
+            matrix = np.array(data[i])
+            res.append(np.dot(weights, matrix))
+        return res
+
+    def tf_idf_weights(self, sent):
+        weights = []
+        for word in sent:
+            if self.counter_vocab.get(word, None) is not None:
+                if self.sklearn:
+                    tf = self.counter_vocab[word] / self.corpus_len
+                    idf = np.log(float(self.corpus_len) / tf) + 1.0
+                    weights.append(tf*idf)
+                else:
+                    weights.append(1.0 / (1.0 + np.log(self.counter_vocab[word])))
+
+        return np.array(weights)
