@@ -1,0 +1,68 @@
+{
+  "dataset_reader": {
+    "name": "faq_reader",
+    "x_col_name": "Question",
+    "y_col_name": "Answer",
+    "data_url": "http://files.deeppavlov.ai/faq/school/faq_school.csv"
+  },
+  "dataset_iterator": {
+    "name": "data_learning_iterator"
+  },
+
+  "chainer": {
+    "in": "question",
+    "pipe": [
+      {
+        "name": "ru_tokenizer",
+        "in": "question",
+        "lemmas": true,
+        "out": "q_token_lemmas"
+      },
+      {
+        "name": "fasttext",
+        "in": "q_token_lemmas",
+        "load_path": "embeddings/lenta_lower_100.bin",
+        "out": "tokens_fasttext_vectors"
+      },
+      {
+        "name": "sentence2vector_w2v_avg",
+        "in": ["q_token_lemmas", "tokens_fasttext_vectors"],
+        "out": "question_vector"
+      },
+      {
+        "name": "cos_sim_classifier",
+        "in": "question_vector",
+        "fit_on": ["question_vector", "y"],
+        "top_n": 1,
+        "save_path": "faq/fasttext_cos_classifier.pkl",
+        "load_path": "faq/fasttext_cos_classifier.pkl",
+        "out": ["answer", "score"]
+      }
+    ],
+    "out": ["answer", "score"]
+  },
+
+  "train": {
+    "validate_best": false,
+    "test_best": false
+ },
+  "metadata": {
+    "requirements": [
+      "../dp_requirements/fasttext.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/faq/school/fasttext_cos_classifier.pkl",
+        "subdir": "faq"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/lenta_lower_100.bin",
+        "subdir": "embeddings"
+      }
+    ]
+  }
+
+}
+
+
+

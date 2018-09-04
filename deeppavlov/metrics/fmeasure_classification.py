@@ -23,7 +23,7 @@ from deeppavlov.models.classifiers.utils import labels2onehot
 
 
 @register_metric('classification_f1')
-def classification_fmeasure(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]], average="macro") -> float:
+def classification_fmeasure(y_true: List[list], y_predicted: List[Tuple[list, dict]], average="macro") -> float:
     """
     Calculate F1-measure macro
 
@@ -47,7 +47,7 @@ def classification_fmeasure(y_true: List[list], y_predicted: List[Tuple[np.ndarr
 
 
 @register_metric('classification_f1_weighted')
-def classification_fmeasure_weighted(y_true: List[list], y_predicted: List[Tuple[np.ndarray, dict]],
+def classification_fmeasure_weighted(y_true: List[list], y_predicted: List[Tuple[list, dict]],
                                      average="weighted") -> float:
     """
     Calculate F1-measure weighted

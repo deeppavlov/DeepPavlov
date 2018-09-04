@@ -26,56 +26,46 @@ log = get_logger(__name__)
 
 @register("morpho_tagger")
 class MorphoTaggerWrapper(NNModel):
-    """
-    Initialize the Model and additional parent classes attributes.
+    """A wrapper over morphological tagger, implemented in
+    :class:~deeppavlov.models.morpho_tagger.network.CharacterTagger.
+    A subclass of :class:`~deeppavlov.core.models.nn_model.NNModel`
 
     Args:
-        **kwargs: a dictionary containing parameters for model and parameters for training it formed from json config
-            file part that correspond to your model.
-
-    Todo:
-        Add detailed arguments description
+        save_path: the path where model is saved
+        load_path: the path from where model is loaded
+        mode: usage mode
+        **kwargs: a dictionary containing model parameters specified in the main part
+            of json config that corresponds to the model
     """
-    def __init__(self, **kwargs):
-        # Parameters for parent classes
-        save_path = kwargs.get('save_path', None)
-        load_path = kwargs.get('load_path', None)
-        train_now = kwargs.get('train_now', None)
-        mode = kwargs.get('mode', None)
-
-        # Call parent constructors. Results in addition of attributes (save_path,
-        # load_path, train_now, mode to current instance) and creation of save_folder
-        # if it doesn't exist
-        super().__init__(save_path=save_path, load_path=load_path,
-                         train_now=train_now, mode=mode)
+    def __init__(self, save_path: str = None, load_path: str = None, mode: str = None, **kwargs):
+        # Calls parent constructor. Results in creation of save_folder if it doesn't exist
+        super().__init__(save_path=save_path, load_path=load_path, mode=mode)
 
         # Dicts are mutable! To prevent changes in config dict outside this class
         # we use deepcopy
         opt = copy.deepcopy(kwargs)
 
-        # Find all input parameters of the network __init__ to pass them into network later
+        # Finds all input parameters of the network __init__ to pass them into network later
         network_parameter_names = list(inspect.signature(CharacterTagger.__init__).parameters)
-        # Fill all provided parameters from opt (opt is a dictionary formed from the model
+        # Fills all provided parameters from opt (opt is a dictionary formed from the model
         # json config file, except the "name" field)
         network_parameters = {par: opt[par] for par in network_parameter_names if par in opt}
 
         self._net = CharacterTagger(**network_parameters)
 
-        # Find all parameters for network train to pass them into train method later
+        # Finds all parameters for network train to pass them into train method later
         train_parameters_names = list(inspect.signature(self._net.train_on_batch).parameters)
 
-        # Fill all provided parameters from opt
+        # Fills all provided parameters from opt
         train_parameters = {par: opt[par] for par in train_parameters_names if par in opt}
-
         self.train_parameters = train_parameters
-
         self.opt = opt
 
-        # Try to load the model (if there are some model files the model will be loaded from them)
+        # Tries to load the model from model `load_path`, if it is available
         self.load()
 
     def load(self):
-        """Check existence of the model file, load the model if the file exists"""
+        """Checks existence of the model file, loads the model if the file exists"""
 
         # General way (load path from config assumed to be the path
         # to the file including extension of the file model)
@@ -87,21 +77,19 @@ class MorphoTaggerWrapper(NNModel):
             self._net.load(path)
 
     def save(self):
-        """Save model to the save_path, provided in config. The directory is
-        already created by super().__init__ part in called in __init__ of this class"""
+        """Saves model to the save_path, provided in config. The directory is
+        already created by super().__init__, which is called in __init__ of this class"""
         path = str(self.save_path.absolute())
         log.info('[saving model to {}]'.format(path))
         self._net.save(path)
 
     def train_on_batch(self, *args):
-        """ Perform training of the network given the dataset data
+        """Trains the model on a single batch.
 
         Args:
-            x: an x batch
-            y: an y batch
-
-        Returns:
-
+            *args: the list of network inputs.
+            Last element of `args` is the batch of targets,
+            all previous elements are training data batches
         """
         *data, labels = args
         self._net.train_on_batch(data, labels)
@@ -112,9 +100,6 @@ class MorphoTaggerWrapper(NNModel):
 
         Args:
             instance: a batch to predict answers on
-
         """
-        # if len(args) > 0:
-        #     x_batch = [x_batch] + list(args)
         return self._net.predict_on_batch(x_batch, **kwargs)
 

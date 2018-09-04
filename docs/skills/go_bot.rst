@@ -301,7 +301,7 @@ Scores for different modifications of our bot model:
 +-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
 | bot with slot filler & intents & embeddings   |                                                                      | 0.5145                     |
 +-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
-| bot with slot filler & embeddings & attention | :config:`gobot_dstc2_best.json <go_bot/gobot_dstc2_best.json>`       | **0.5525**                 |
+| bot with slot filler & embeddings & attention | :config:`gobot_dstc2_best.json <go_bot/gobot_dstc2_best.json>`       | **0.5551**                 |
 +-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
 
 There is another modification of DSTC2 dataset called dialog babi Task6
@@ -349,4 +349,4 @@ Sequence-to-Sequence Architecture Gives Good Performance on
 Task-Oriented Dialogue" - 2017 <https://arxiv.org/abs/1701.04024>`_
 
 
-.. |alt text| image:: ../_static/diagram.png
+.. |alt text| image:: ../_static/gobot_diagram.png

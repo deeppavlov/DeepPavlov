@@ -20,3 +20,15 @@ deeppavlov.models.classifiers
     .. automethod:: bilstm_self_add_attention_model
     .. automethod:: bilstm_self_mult_attention_model
     .. automethod:: bigru_model
+
+.. autoclass:: deeppavlov.models.classifiers.cos_sim_classifier.CosineSimilarityClassifier
+    :members:
+
+    .. automethod:: __call__
+
+
+.. autoclass:: deeppavlov.models.classifiers.logreg_classifier.LogregClassifier
+    :members:
+
+    .. automethod:: __call__
+
