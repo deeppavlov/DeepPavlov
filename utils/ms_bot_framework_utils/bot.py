@@ -67,7 +67,6 @@ class Bot(Thread):
                                headers=headers,
                                data=payload)
 
-        # TODO: insert json content to the error message
         status_code = result.status_code
         if status_code != 200:
             raise HTTPError(f'Authentication token request returned wrong HTTP status code: {status_code}')
