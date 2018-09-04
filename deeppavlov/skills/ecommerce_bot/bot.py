@@ -77,6 +77,7 @@ class EcommerceBot(Component):
 
         for item_idx, query in enumerate(x):
 
+            log.debug(f"query: {query} start: {start[item_idx]} stop:{stop[item_idx]}")
             if 'entropies' in self.state:
                 for item in self.state['entropies']:
                     for value in item[2]:
@@ -90,7 +91,7 @@ class EcommerceBot(Component):
                                     if self.ec_data[idx][item[1]].lower() == query.lower():
                                         results_args_sim.append(idx)
 
-                            log.debug(f"results after specification {results_args_sim}")
+                            log.debug(f"results after specification {len(results_args_sim)}")
 
             if len(results_args_sim) == 0:
 
@@ -101,6 +102,9 @@ class EcommerceBot(Component):
 
                 if len(money_range) == 2:
                     self.state['Price'] = money_range
+                else:
+                    if 'Price' in self.state:
+                        del self.state['Price']
 
                 score_title = []
                 for item in self.ec_data:
@@ -132,13 +136,16 @@ class EcommerceBot(Component):
 
                 results_args_sim = [
                     idx for idx in results_args if self.state['scores'][idx] >= self.min_similarity]
-                log.debug(f"Items before similarity filtering {len(results_args)} and after {len(results_args_sim)}")
+                log.debug(f"Items before similarity filtering {len(results_args)} and after {len(results_args_sim)} with th={self.min_similarity} "+
+                    f"the best one has score {self.state['scores'][results_args[0]]} with title {self.ec_data[results_args[0]]['Title']}")
 
                 if 'Price' in self.state:
-                    log.debug(f"Items before price filtering {len(results_args_sim)}")
+                    log.debug(f"Items before price filtering {len(results_args_sim)} with price {self.state['Price']}")
                     results_args_sim = [idx for idx in results_args_sim
                                         if self.preprocess.price(self.ec_data[idx]) >= self.state['Price'][0] and
-                                        self.preprocess.price(self.ec_data[idx]) <= self.state['Price'][1]]
+                                        self.preprocess.price(self.ec_data[idx]) <= self.state['Price'][1] and
+                                        self.preprocess.price(self.ec_data[idx]) != 0]
+
                     log.debug(f"Items after price filtering {len(results_args_sim)}")
 
             response = []
@@ -151,9 +158,11 @@ class EcommerceBot(Component):
 
             confidence.append(
                 [self.state['scores'][idx] for idx in results_args_sim[int(start[item_idx]):int(stop[item_idx])]])
+            log.debug(f"Response confidence {[self.state['scores'][idx] for idx in results_args_sim[int(start[item_idx]):int(stop[item_idx+2])]]}")
 
             entropies = self._entropy_subquery(
                 self.state['scores'], results_args_sim)
+            log.debug(f"Response entropy {entropies}")
 
             self.state['start'] = int(start[item_idx])
             self.state['stop'] = int(stop[item_idx])
@@ -161,8 +170,8 @@ class EcommerceBot(Component):
             self.state['confidence'] = confidence
             self.state['entropies'] = entropies
 
-        # return json.dumps(({'items': response, 'entropy': entropies}, confidence))
-        return {'items': response, 'entropy': entropies}, confidence
+        return json.dumps(({'items': response, 'entropy': entropies}, confidence))
+        # return {'items': response, 'entropy': entropies}, confidence
 
     def _entropy_subquery(self, scores, results_args) -> List[Tuple[float, str, List[Tuple[str, int]]]]:
         fields = ['Size', 'Brand', 'Author', 'Color', 'Genre']
