@@ -28,4 +28,5 @@ class EcommercePreprocess(Component):
 	    if 'ListPrice' in item:
 	    	return float(item['ListPrice'].split('$')[1].replace(",",""))
 	    else:
-	    	return math.inf
+	    	# return math.inf
+	    	return 0
