@@ -69,7 +69,7 @@ class DirtyCommentsPreprocessor(Component):
         f = [re.sub('\?!+', ' ?! ', x) for x in f]
         f = [re.sub('\.\.+', '..', x) for x in f]
 
-        f = [re.sub(" [*$%&#@][*$%&#@]+", " xexp ", x) for x in f]
+        f = [re.sub("[*$%&#@()]", " ", x) for x in f]
         f = [re.sub(" [0-9]+ ", " DD ", x) for x in f]
         f = [re.sub("<\S*>", "", x) for x in f]
         f = [re.sub('\s+', ' ', x) for x in f]
