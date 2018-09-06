@@ -17,8 +17,8 @@ import numpy as np
 from overrides import overrides
 from typing import List, Union
 
-from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
 
@@ -146,14 +146,15 @@ class SentEmb(Component):
         Initialize counter vocab from vocab_path.
         """
         self.sklearn = sklearn
-        self.counter_vocab = self.load_counter_vocab(vocab_path)
+        self.vocab_path = expand_path(vocab_path)
+        self.counter_vocab, self.min_count = self.load_counter_vocab(self.vocab_path)
         self.corpus_len = self.check_corpus_len(self.counter_vocab)
 
     @staticmethod
     def check_corpus_len(vocab):
         n = 0
         for key, val in vocab.items():
-            n += val
+            n += int(val)
         return n
 
     @staticmethod
@@ -163,11 +164,14 @@ class SentEmb(Component):
             lines = f.readlines()
             f.close()
 
+        min_val = np.inf
         for line in lines:
             key, val = line[:-1].split('\t')
             counter_vocab[key] = val
+            if int(val) < min_val:
+                min_val = int(val)
 
-        return counter_vocab
+        return counter_vocab, min_val
 
     @overrides
     def __call__(self, data: List[Union[list, np.ndarray]], text: List[List[str]] = None,
@@ -207,17 +211,22 @@ class SentEmb(Component):
             weights = self.tf_idf_weights(text[i])
             matrix = np.array(data[i])
             res.append(np.dot(weights, matrix))
+
         return res
 
     def tf_idf_weights(self, sent):
+        threshold = self.min_count
         weights = []
         for word in sent:
-            if self.counter_vocab.get(word, None) is not None:
+            w = self.counter_vocab.get(word, None)
+            if w is not None:
                 if self.sklearn:
-                    tf = self.counter_vocab[word] / self.corpus_len
+                    tf = int(w) / self.corpus_len
                     idf = np.log(float(self.corpus_len) / tf) + 1.0
                     weights.append(tf*idf)
                 else:
-                    weights.append(1.0 / (1.0 + np.log(self.counter_vocab[word])))
+                    weights.append(1.0 / (1.0 + np.log(int(w))))
+            else:
+                weights.append(1.0 / (1.0 + np.log(int(threshold))))
 
         return np.array(weights)

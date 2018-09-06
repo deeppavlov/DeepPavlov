@@ -66,6 +66,7 @@
   "sber_faq_reader": "deeppavlov.dataset_readers.sber_faq_reader:SberFAQReader",
   "seq2seq_go_bot": "deeppavlov.models.seq2seq_go_bot.bot:Seq2SeqGoalOrientedBot",
   "seq2seq_go_bot_nn": "deeppavlov.models.seq2seq_go_bot.network:Seq2SeqGoalOrientedBotNetwork",
+  "sent_emb_vocab": "deeppavlov.models.embedders.average_emb:SentEmb",
   "simple_vocab": "deeppavlov.core.data.simple_vocab:SimpleVocabulary",
   "slotfill_raw": "deeppavlov.models.slotfill.slotfill_raw:SlotFillingComponent",
   "spelling_error_model": "deeppavlov.models.spelling_correction.brillmoore.error_model:ErrorModel",

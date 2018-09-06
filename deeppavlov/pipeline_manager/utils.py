@@ -15,14 +15,12 @@
 import numpy as np
 import json
 import xlsxwriter
-import matplotlib
 import matplotlib.pyplot as plt
 import time
 
 from copy import deepcopy
 from os.path import join, isdir
 from os import mkdir
-# matplotlib.use('Agg')
 
 
 def normal_time(z):
@@ -37,10 +35,8 @@ def normal_time(z):
 
 
 # ---------------------------------------------------Hyperparameters search----------------------------------------
-
-
 class HyperPar:
-    def __init__(self, stop_keys=['in', 'in_x', 'in_y', 'out'], **kwargs):
+    def __init__(self, stop_keys: list = ['in', 'in_x', 'in_y', 'out'], **kwargs):
         np.random.seed(int(time.time()))
         self.params = kwargs
         self.stop_keys = stop_keys
@@ -220,10 +216,7 @@ def build_report(log, target_metric=None, save_path='./'):
 
             for component in conf['config']:
                 comp_data = {}
-                if component.get('id') is not None:
-                    comp_data['name'] = component.pop('id')
-                else:
-                    comp_data['name'] = component.pop('name')
+                comp_data['name'] = component.pop('component_name')
 
                 if 'save_path' in component.keys():
                     del component['save_path']
@@ -684,7 +677,7 @@ def results_visualization(root, savepath, plot, target_metric=None):
 
     # create the xlsx file with results of experiments
     build_pipeline_table(log, target_metric=target_metric, save_path=root)
-    build_report(log, target_metric=target_metric, save_path=root)
+    # build_report(log, target_metric=target_metric, save_path=root)
     if plot:
         # scrub data from log for image creating
         info = results_analizator(log, target_metric=target_metric)

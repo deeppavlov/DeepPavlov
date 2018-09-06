@@ -9,19 +9,12 @@
     "name": "basic_classification_iterator",
     "seed": 42,
     "field_to_split": "train",
-    "split_fields": [
-      "train",
-      "valid"
-    ],
-    "split_proportions": [
-      0.9,
-      0.1
-    ]
+    "split_fields": ["train", "valid"],
+    "split_proportions": [0.9, 0.1]
   },
   "chainer": {
     "in": ["x"],
     "in_y": ["y"],
-    "search": true,
     "pipe": [
       [
         {
@@ -30,7 +23,8 @@
           "fit_on": ["y"],
           "level": "token",
           "save_path": "vocabs/sber_classes.dict",
-          "load_path": "vocabs/sber_classes.dict"
+          "load_path": "vocabs/sber_classes.dict",
+          "component_name": "Vocab"
         }
       ],
       [
@@ -38,7 +32,8 @@
           "in": ["x"],
           "name": "ru_tokenizer",
           "id": "ru_tok",
-          "out": ["x_tok"]
+          "out": ["x_tok"],
+          "component_name": "ru tokenizer"
         }
       ],
       [
@@ -49,7 +44,8 @@
           "name": "tfidf_vectorizer",
           "id": "tf-idf",
           "save_path": "vocabs/tf-idf.pkl",
-          "load_path": "vocabs/tf-idf.pkl"
+          "load_path": "vocabs/tf-idf.pkl",
+          "component_name": "Sklearn tf-idf vectorizer"
         },
         {
           "in": "x_tok",
@@ -58,7 +54,8 @@
           "name": "count_vectorizer",
           "id": "count",
           "save_path": "vocabs/count.pkl",
-          "load_path": "vocabs/count.pkl"
+          "load_path": "vocabs/count.pkl",
+          "component_name": "Sklearn count vectorizer"
         }
       ],
       [
@@ -66,28 +63,11 @@
           "in": ["vec"],
           "fit_on": ["vec", "y"],
           "out": ["y_labels"],
-          "name": "random_forest",
-          "main": true,
-          "save_path": "new_sber/checkpoints/rf.pkl",
-          "load_path": "new_sber/checkpoints/rf.pkl"
-        },
-        {
-          "in": ["vec"],
-          "fit_on": ["vec", "y"],
-          "out": ["y_labels"],
           "name": "support_vector_classifier",
           "main": true,
           "save_path": "new_sber/checkpoints/svm.pkl",
-          "load_path": "new_sber/checkpoints/svm.pkl"
-        },
-        {
-          "in": ["vec"],
-          "fit_on": ["vec", "y"],
-          "out": ["y_labels"],
-          "name": "logistic_regression",
-          "main": true,
-          "save_path": "new_sber/checkpoints/lr.pkl",
-          "load_path": "new_sber/checkpoints/lr.pkl"
+          "load_path": "new_sber/checkpoints/svm.pkl",
+          "component_name": "SVC"
         }
       ]
     ],
@@ -95,22 +75,12 @@
   },
   "train": {
     "metrics": [
+      "simple_accuracy",
       "simple_f1_macro",
       "simple_f1_weighted"
     ],
-    "validation_patience": 5,
-    "val_every_n_epochs": 5,
-    "log_every_n_epochs": 5,
     "show_examples": false,
     "validate_best": true,
     "test_best": true
-  },
-  "metadata": {
-    "requirements": [
-      "../dp_requirements/tf-gpu.txt",
-      "../dp_requirements/fasttext.txt",
-      "../dp_requirements/elmo.txt",
-      "../dp_requirements/gensim.txt"
-    ]
   }
 }
