@@ -39,9 +39,6 @@ FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_t
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
-    "cross-validation": {
-        ("cv/cv_intents_snips.json", "cross-validation", ('CV',)): None
-    },
     "faq": {
         ("faq/tfidf_logreg_en_faq.json", "faq_tfidf_logreg_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("faq/tfidf_autofaq.json", "faq_tfidf_cos", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
@@ -95,7 +92,7 @@ PARAMS = {
         ("evolution/evolve_intents_snips.json", "evolution", ('E',)): None
     },
     "cross-validation": {
-        ("cv/cv_intents_snips.json", "cross-validation", ('CV',)): None
+        ("cv/cv_tfidf_logreg_en_faq.json", "cross-validation-faq", ('CV',)): None
     },
     "sample": {
         ("classifiers/intents_sample_csv.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],

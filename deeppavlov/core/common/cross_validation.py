@@ -75,7 +75,7 @@ def generate_train_valid(data, n_folds=5, is_loo=False):
             data_i = {}
             data_i['train'] = all_data.copy()
             data_i['valid'] = [data_i['train'].pop(i)]
-            data_i['test'] = []
+            data_i['test'] = data['test']
 
             yield data_i
     # for Cross Validation
@@ -85,7 +85,7 @@ def generate_train_valid(data, n_folds=5, is_loo=False):
             data_i = {}
             data_i['train'] = [all_data[i] for i in train_index]
             data_i['valid'] = [all_data[i] for i in valid_index]
-            data_i['test'] = []
+            data_i['test'] = data['test']
 
             yield data_i
 
