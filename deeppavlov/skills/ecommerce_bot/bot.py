@@ -18,6 +18,7 @@ from deeppavlov.core.commands.utils import expand_path, make_all_dirs
 from deeppavlov.core.models.estimator import Estimator, Component
 from deeppavlov.metrics.bleu import bleu_advanced
 
+import sys
 import copy
 import json
 import numpy as np
@@ -94,26 +95,16 @@ class EcommerceBot(Component):
             if len(money_range) == 2:
                 state['Price'] = money_range
             
-            score_title = []
-            for item in self.ec_data:
-                hyp = self.preprocess.lemmas(
-                    self.preprocess.filter_nlp_title(query))
-                ref = self.preprocess.lemmas(item['title_nlped'])
-                score_title.append(bleu_advanced(
-                    hyp, ref, weights=(1,), penalty=False))
-
-            score_feat = []
-            for idx, item in enumerate(self.ec_data):
-                hyp = self.preprocess.lemmas(
-                    self.preprocess.filter_nlp(query))
-                ref = self.preprocess.lemmas(item['feat_nlped'])
-                score_feat.append(bleu_advanced(
-                    hyp, ref, weights=(0.3, 0.7), penalty=False))
+            score_title = [bleu_advanced(self.preprocess.lemmas(item['title_nlped']), self.preprocess.lemmas(self.preprocess.filter_nlp_title(query)), 
+                weights=(1,), penalty=False) for item in self.ec_data]
+            
+            score_feat = [bleu_advanced(self.preprocess.lemmas(item['feat_nlped']), self.preprocess.lemmas(self.preprocess.filter_nlp(query)), 
+                weights=(0.3, 0.7), penalty=False) for idx, item in enumerate(self.ec_data)]
 
             scores = np.mean(
                 [score_feat, score_title], axis=0).tolist()
 
-            scores_title = [(score, len(self.ec_data[idx]['Title']))
+            scores_title = [(score, -len(self.ec_data[idx]['Title']))
                             for idx, score in enumerate(scores)]
 
             raw_scores_ar = np.array(scores_title, dtype=[
@@ -153,9 +144,10 @@ class EcommerceBot(Component):
                 del temp['feat_nlped']
                 response.append(temp)
 
-            confidence.append(
-                [scores[idx] for idx in results_args_sim[start:stop]])
-            log.debug(f"Response confidence {[scores[idx] for idx in results_args_sim[start:stop+2]]}")
+            confidence = [(score_title[idx], score_feat[idx]) for idx in results_args_sim[start:stop]]
+                # [scores[idx] for idx in results_args_sim[start:stop]])
+            
+            log.debug(f"Response confidence {confidence}")
 
             entropies = self._entropy_subquery(
                 scores, results_args_sim)
