@@ -117,6 +117,21 @@ class StreamSpacyTokenizer(Component):
         raise TypeError(
             "StreamSpacyTokenizer.__call__() is not implemented for `{}`".format(type(batch[0])))
 
+    def prepare_for_money(self):
+        below = lambda text: bool(re.compile(r'below|cheap').match(text))
+        BELOW = self.model.vocab.add_flag(below)
+
+        above = lambda text: bool(re.compile(r'above|start').match(text))
+        ABOVE = self.model.vocab.add_flag(above)
+
+        self.matcher = Matcher(self.model.vocab)
+
+        self.matcher.add('below', None, [{BELOW: True}, {'LOWER': 'than', 'OP': '?'},
+                                    {'LOWER': 'from', 'OP': '?'}, {'ORTH': '$', 'OP': '?'}, {'ENT_TYPE': 'MONEY', 'LIKE_NUM': True}])
+
+        self.matcher.add('above', None, [{ABOVE: True}, {'LOWER': 'than', 'OP': '?'},
+                                    {'LOWER': 'from', 'OP': '?'}, {'ORTH': '$', 'OP': '?'}, {'ENT_TYPE': 'MONEY', 'LIKE_NUM': True}])
+
     def extract_money(self, doc) -> Tuple[Any, Tuple[float, float]]:
         
         # def below(text): return bool(re.compile(r'below|cheap').match(text))
@@ -128,21 +143,7 @@ class StreamSpacyTokenizer(Component):
         for ent in doc.ents:
             print(str(ent.text)+" "+str(ent.start_char)+" "+str(ent.end_char)+" "+str(ent.label_))
 
-        below = lambda text: bool(re.compile(r'below|cheap').match(text))
-        BELOW = self.model.vocab.add_flag(below)
-
-        above = lambda text: bool(re.compile(r'above|start').match(text))
-        ABOVE = self.model.vocab.add_flag(above)
-
-        matcher = Matcher(self.model.vocab)
-
-        matcher.add('below', None, [{BELOW: True}, {'LOWER': 'than', 'OP': '?'},
-                                    {'LOWER': 'from', 'OP': '?'}, {'ORTH': '$', 'OP': '?'}, {'ENT_TYPE': 'MONEY', 'LIKE_NUM': True}])
-
-        matcher.add('above', None, [{ABOVE: True}, {'LOWER': 'than', 'OP': '?'},
-                                    {'LOWER': 'from', 'OP': '?'}, {'ORTH': '$', 'OP': '?'}, {'ENT_TYPE': 'MONEY', 'LIKE_NUM': True}])
-
-        matches = matcher(doc)
+        matches = self.matcher(doc)
         money_range: Tuple = ()
         doc_no_money = list(doc)#copy.deepcopy(doc)
         negated = False
