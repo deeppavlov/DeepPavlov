@@ -8,13 +8,13 @@
     "name": "data_learning_iterator"
   },
  "chainer": {
-    "in": ["x", "a", "b"],
-    "out": ["y"],
+    "in": ["X", "State"],
+    "out": ["Y"],
     "pipe": [
       {
         "name": "ecommerce_bot",
-        "in": ["x", "a", "b"],
-        "fit_on": ["x"],
+        "in": ["X", "State"],
+        "fit_on": ["X"],
         "min_similarity": 0.5,
         "min_entropy": 0.5,
         "save_path": "ecommerce_bot/ecommerce_Phones_model.pkl",
@@ -28,7 +28,7 @@
         "preprocess": {
           "name": "ecommerce_preprocess"
         },
-        "out": ["y"]
+        "out": ["Y"]
       }
     ]
    },
