@@ -22,24 +22,25 @@ smooth = SmoothingFunction()
 
 @register_metric('bleu_advanced')
 def bleu_advanced(y_true, y_predicted, weights=(1,), smoothing_function=smooth.method1, auto_reweigh=False, penalty=True):
-    examples_len = len(y_true)
     bleu_list = []
 
-    for y1, y2 in zip(y_true, y_predicted):
-        bleu_measure = sentence_bleu([y2], y1, weights, smoothing_function, auto_reweigh)
+    y2 = y_true
+    y1 = y_predicted
 
-        hyp_len = len(y1)
-        hyp_lengths = hyp_len
-        ref_lengths = closest_ref_length([y2], hyp_len) # 1
+    bleu_measure = sentence_bleu([y2], y1, weights, smoothing_function, auto_reweigh)
 
-        bp = brevity_penalty(ref_lengths, hyp_lengths)
+    hyp_len = len(y1)
+    hyp_lengths = hyp_len
+    ref_lengths = closest_ref_length([y2], hyp_len) # 1
 
-        if penalty == True:
-            bleu_list.append(bleu_measure)
-        else:
-            bleu_list.append(bleu_measure/bp)
+    bp = brevity_penalty(ref_lengths, hyp_lengths)
 
-    return sum(bleu_list) / examples_len if examples_len else 0.
+    if penalty == True:
+        score = bleu_measure
+    else:
+        score = bleu_measure/bp
+
+    return score
 
 @register_metric('bleu')
 def bleu(y_true, y_predicted):
@@ -71,4 +72,3 @@ def per_item_dialog_bleu(y_true, y_predicted):
     y_true = (y['text'] for dialog in y_true for y in dialog)
     return corpus_bleu([[y_t.lower().split()] for y_t in y_true],
                        [y_p.lower().split() for y_p in y_predicted])
-
