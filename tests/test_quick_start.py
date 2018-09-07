@@ -381,7 +381,7 @@ class TestQuickStart(object):
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
             logfile = io.BytesIO(b'')
-            _, exitstatus = pexpect.run(sys.executable + f" -m deeppavlov crossvalidate {c} --folds 2",
+            _, exitstatus = pexpect.run(sys.executable + f" -m deeppavlov crossval {c} --folds 2",
                                         timeout=None, withexitstatus=True,
                                         logfile=logfile)
             if exitstatus != 0:

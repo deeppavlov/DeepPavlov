@@ -38,7 +38,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
                     choices={'train', 'evaluate', 'interact', 'predict', 'interactbot', 'riseapi', 'download',
-                             'install', 'crossvalidate'})
+                             'install', 'crossval'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 parser.add_argument("-t", "--token", help="telegram bot token", type=str)
 parser.add_argument("-b", "--batch-size", dest="batch_size", default=1, help="inference batch size", type=int)
@@ -81,7 +81,7 @@ def main():
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'install':
         install_from_config(pipeline_config_path)
-    elif args.mode == 'crossvalidate':
+    elif args.mode == 'crossval':
         if args.folds < 2:
             log.error('Minimum number of Folds is 2')
         else:
