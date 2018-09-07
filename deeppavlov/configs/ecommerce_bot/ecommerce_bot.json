@@ -21,9 +21,9 @@
         "load_path": "ecommerce_bot/ecommerce_Phones_model.pkl",
         "tokenizer": {
           "name": "stream_spacy_tokenizer",
-          "spacy_model": "en",
+          "spacy_model": "en_core_web_sm",
           "sentencizer": false,
-          "disable": ["parse"]
+          "disable": ["parser"]
         },
         "preprocess": {
           "name": "ecommerce_preprocess"
