@@ -139,7 +139,7 @@ class EcommerceBot(Component):
 
             response = []
             for idx in results_args_sim[start:stop]:
-                temp = copy.deepcopy(self.ec_data[idx])
+                temp = copy.copy(self.ec_data[idx])
                 del temp['title_nlped']
                 del temp['feat_nlped']
                 response.append(temp)
@@ -153,7 +153,9 @@ class EcommerceBot(Component):
                 scores, results_args_sim)
             log.debug(f"Response entropy {entropies}")
 
-        return json.dumps(({'items': response, 'entropy': entropies}, confidence, state))
+            log.debug(f"Total number of relevant answers {len(results_args_sim)}")
+
+        return json.dumps(({'items': response, 'entropy': entropies, 'total':len(results_args_sim)}, confidence, state))
         # return {'items': response, 'entropy': entropies}, confidence
 
     def _entropy_subquery(self, scores, results_args) -> List[Tuple[float, str, List[Tuple[str, int]]]]:
