@@ -19,7 +19,7 @@ import pandas as pd
 from overrides import overrides
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.dataset_reader import DatasetReader
+from deeppavlov.dataset_readers.basic_classification_reader import BasicClassificationDatasetReader
 from deeppavlov.core.data.utils import download
 from deeppavlov.core.common.log import get_logger
 
@@ -27,8 +27,8 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-@register('basic_classification_reader')
-class BasicClassificationDatasetReader(DatasetReader):
+@register('paraphraser_reader')
+class ParaphraserReader(BasicClassificationDatasetReader):
     """
     Class provides reading dataset in .csv format
     """
@@ -56,7 +56,7 @@ class BasicClassificationDatasetReader(DatasetReader):
 
         Returns:
             dictionary with types from data_types.
-            Each field of dictionary is a list of tuples (x_i, y_i)
+            Each field of dictionary is a list of tuples (x1_i, x2_i, y_i)
         """
         data_types = ["train", "valid", "test"]
 
@@ -64,7 +64,8 @@ class BasicClassificationDatasetReader(DatasetReader):
 
         if not Path(data_path, train_file).exists():
             if url is None:
-                raise Exception("data path {} does not exist or is empty, and download url parameter not specified!".format(data_path))
+                raise Exception("data path {} does not exist or is empty, "
+                                "and download url parameter not specified!".format(data_path))
             log.info("Loading train data from {} to {}".format(url, data_path))
             download(source_url=url, dest_file_path=Path(data_path, train_file))
 
@@ -86,13 +87,11 @@ class BasicClassificationDatasetReader(DatasetReader):
                 else:
                     raise Exception('Unsupported file format: {}'.format(format))
 
-                x = kwargs.get("x", "text")
-                y = kwargs.get('y', 'labels')
-                class_sep = kwargs.get('class_sep', ',')
-                if isinstance(x, list):
-                    data[data_type] = [([row[x_] for x_ in x], str(row[y]).split(class_sep)) for _, row in df.iterrows()]
-                else:
-                    data[data_type] = [(row[x], str(row[y]).split(class_sep)) for _, row in df.iterrows()]
+                x1, x2 = kwargs.get("x", ["text_1", "text_2"])
+                y = kwargs.get('y', 'targets')
+
+                sent = [[row[x1], row[x2]] for _, row in df.iterrows()]
+                data[data_type] = [sent, df[y]]
             else:
                 log.warning("Cannot find {} file".format(file))
 

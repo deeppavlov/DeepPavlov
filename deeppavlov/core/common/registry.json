@@ -52,6 +52,7 @@
   "ontonotes_reader": "deeppavlov.dataset_readers.ontonotes_reader:OntonotesReader",
   "params_evolution": "deeppavlov.models.evolution.evolution_param_generator:ParamsEvolution",
   "params_search": "deeppavlov.core.common.params_search:ParamsSearch",
+  "paraphraser_reader": "deeppavlov.dataset_readers.paraphraser_reader:ParaphraserReader",
   "pymorphy_russian_lemmatizer": "deeppavlov.models.preprocessors.russian_lemmatizer:PymorphyRussianLemmatizer",
   "pymorphy_vectorizer": "deeppavlov.models.vectorizers.word_vectorizer:PymorphyVectorizer",
   "random_emb_mat": "deeppavlov.models.preprocessors.assemble_embeddings_matrix:RandomEmbeddingsMatrix",

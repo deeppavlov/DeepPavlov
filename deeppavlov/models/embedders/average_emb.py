@@ -93,7 +93,10 @@ class AvrEmb(Component):
              list of sentence embeddings
         """
         for x in data:
-            res.append(np.average(np.array(x), axis=0))
+            if len(x) == 0:
+                res.append(np.zeros((300,)))
+            else:
+                res.append(np.average(np.array(x), axis=0))
         return res
 
     def weigh_tfidf(self, data, text, res):
@@ -120,10 +123,12 @@ class AvrEmb(Component):
             for w, s in [(feature_names[i], s) for (i, s) in tfidf_scores]:
                 info[w] = s
 
-            weights = np.array([info[w] if w in info.keys() else 0.05 for w in text[i]])
-            matrix = np.array(data[i])
-
-            res.append(np.dot(weights, matrix))
+            if len(text[i]) == 0:
+                res.append(np.zeros((300,)))
+            else:
+                weights = np.array([info[w] if w in info.keys() else 0.05 for w in text[i]])
+                matrix = np.array(data[i])
+                res.append(np.dot(weights, matrix))
         return res
 
 
@@ -208,10 +213,12 @@ class SentEmb(Component):
              list of sentence embeddings
         """
         for i in range(len(text)):
-            weights = self.tf_idf_weights(text[i])
-            matrix = np.array(data[i])
-            res.append(np.dot(weights, matrix))
-
+            if len(text[i]) == 0:
+                res.append(np.zeros((300,)))
+            else:
+                weights = self.tf_idf_weights(text[i])
+                matrix = np.array(data[i])
+                res.append(np.dot(weights, matrix))
         return res
 
     def tf_idf_weights(self, sent):
