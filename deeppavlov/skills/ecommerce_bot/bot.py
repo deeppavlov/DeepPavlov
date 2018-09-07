@@ -47,6 +47,7 @@ class EcommerceBot(Component):
         load_path: str, min_similarity: float = 0.5, min_entropy: float = 0.5, **kwargs) -> None:
         self.preprocess = preprocess
         self.tokenizer = tokenizer
+        self.tokenizer.prepare_for_money()
         self.save_path = expand_path(save_path)
         self.load_path = expand_path(load_path)
         self.min_similarity = min_similarity
