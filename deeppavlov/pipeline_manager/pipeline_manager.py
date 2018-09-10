@@ -98,8 +98,10 @@ class PipelineManager:
             # print progress
             if i != 0:
                 itime = normal_time(((time() - exp_start_time) / i) * (self.pipeline_generator.len - i))
+                ptime = normal_time(time() - exp_start_time)
                 print('\n')
-                print('[ Progress: pipe {0}/{1}; Time left: {2}; ]'.format(i+1, self.pipeline_generator.len, itime))
+                print('[ Progress: pipe {0}/{1}; Time pass: {2} ;'
+                      ' Time left: {3}; ]'.format(i+1, self.pipeline_generator.len, ptime, itime))
 
             self.logger.log['experiment_info']['metrics'] = copy(pipe['train']['metrics'])
             self.logger.log['experiment_info']['target_metric'] = self.target_metric
