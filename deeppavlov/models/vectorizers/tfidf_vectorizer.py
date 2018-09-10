@@ -13,12 +13,13 @@ limitations under the License.
 
 import numpy as np
 
-from typing import List
+from typing import List, Union
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import CountVectorizer
 
 from deeppavlov.core.models.estimator import Estimator
+from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
@@ -223,3 +224,88 @@ class SkcountVectorizer(Estimator, Serializable):
         """
         logger.info("Loading tfidf_vectorizer from {}".format(self.load_path))
         self.vectorizer = load_pickle(expand_path(self.load_path))
+
+
+@register('tfidf_vocab_vectorizer')
+class TfidfVocabVectorizer(Component):
+    """
+    The class implements the tf-idf vectorizer the words counts takes from vocab that learns in large corpus.
+
+    Args:
+        vocab_path (str): save path
+        **kwargs: additional arguments
+
+    Attributes:
+        vocab_path: tf-idf vectorizer class from sklearn
+        corpus_len:
+        counter_vocab:
+        min_count:
+    """
+
+    def __init__(self, vocab_path: str, max_len: int, **kwargs) -> None:
+        """
+        Initialize tf-idf vectorizer or load it from load path, if load_path is not None.
+        """
+        # Tf-idf parameters
+        self.vocab_path = expand_path(vocab_path)
+        self.counter_vocab, self.min_count = self.load_counter_vocab(self.vocab_path)
+        self.corpus_len = self.check_corpus_len(self.counter_vocab)
+        self.max_len = max_len
+
+    @staticmethod
+    def check_corpus_len(vocab):
+        n = 0
+        for key, val in vocab.items():
+            n += int(val)
+        return n
+
+    @staticmethod
+    def load_counter_vocab(load_path):
+        counter_vocab = dict()
+        with open(load_path, 'r') as f:
+            lines = f.readlines()
+            f.close()
+
+        min_val = np.inf
+        for line in lines:
+            key, val = line[:-1].split('\t')
+            counter_vocab[key] = val
+            if int(val) < min_val:
+                min_val = int(val)
+
+        return counter_vocab, min_val
+
+    def __call__(self, text: List[List[str]], *args, **kwargs) -> List[np.ndarray]:
+        """
+        Infer on the given data
+
+        Args:
+            text: text samples
+            *args: additional arguments
+            **kwargs: additional arguments
+
+        Returns:
+            for each sentence:
+                np.vector
+        """
+        result = []
+
+        for i in range(len(text)):
+            if len(text[i]) == 0:
+                result.append(np.zeros((self.max_len,)))
+            else:
+                threshold = self.min_count
+                weights = np.zeros((self.max_len,))
+                for j, word in enumerate(text[i]):
+                    if j < self.max_len:
+                        w = self.counter_vocab.get(word, None)
+                        if w is not None:
+                            weights[j] = 1.0 / (1.0 + np.log(int(w)))
+                        else:
+                            weights[j] = 1.0 / (1.0 + np.log(int(threshold)))
+                    else:
+                        pass
+
+                result.append(weights)
+
+        return result

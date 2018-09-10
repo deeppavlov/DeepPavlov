@@ -75,8 +75,7 @@
           "tol": {"range": [0.00001, 0.005]},
           "C": {"range": [0.5, 2.0]},
           "fit_intercept": [true, false],
-          "class_weight": [null, "balanced"],
-          "max_iter": {"range": [500, 10000]}
+          "class_weight": [null, "balanced"]
         },
         {
           "in": ["vec"],
@@ -94,8 +93,7 @@
           "tol": {"range": [0.00001, 0.005]},
           "C": {"range": [0.5, 2.0]},
           "fit_intercept": [true, false],
-          "class_weight": [null, "balanced"],
-          "max_iter": {"range": [500, 10000]}
+          "class_weight": [null, "balanced"]
         },
         {
           "in": ["vec"],
@@ -113,8 +111,7 @@
           "C": {"range": [0.5, 2.0]},
           "fit_intercept": [true, false],
           "class_weight": [null, "balanced"],
-          "solver": ["liblinear", "saga"],
-          "max_iter": {"range": [50, 1000]}
+          "solver": ["liblinear", "saga"]
         },
         {
           "in": ["vec"],
@@ -132,8 +129,7 @@
           "C": {"range": [0.5, 2.0]},
           "fit_intercept": [true, false],
           "class_weight": [null, "balanced"],
-          "solver": ["lbfgs", "newton-cg"],
-          "max_iter": {"range": [50, 1000]}
+          "solver": ["lbfgs", "newton-cg"]
         },
         {
           "in": ["vec"],

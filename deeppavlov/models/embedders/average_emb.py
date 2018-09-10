@@ -17,6 +17,7 @@ import numpy as np
 from overrides import overrides
 from typing import List, Union
 
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.models.component import Component
@@ -94,7 +95,7 @@ class AvrEmb(Component):
         """
         for x in data:
             if len(x) == 0:
-                res.append(np.zeros((300,)))
+                res.append(np.zeros((len(data[0][0]),)))
             else:
                 res.append(np.average(np.array(x), axis=0))
         return res
@@ -124,7 +125,7 @@ class AvrEmb(Component):
                 info[w] = s
 
             if len(text[i]) == 0:
-                res.append(np.zeros((300,)))
+                res.append(np.zeros((len(data[0][0]),)))
             else:
                 weights = np.array([info[w] if w in info.keys() else 0.05 for w in text[i]])
                 matrix = np.array(data[i])
@@ -146,12 +147,16 @@ class SentEmb(Component):
         corpus_len: a number of words in corpus
     """
 
-    def __init__(self, vocab_path: str, sklearn: bool = False, **kwargs):
+    def __init__(self, vocab_path: str, sklearn: bool = False, use_pos: bool = False,
+                 pos_vocab_path: Union[str, None] = None, **kwargs):
         """
         Initialize counter vocab from vocab_path.
         """
         self.sklearn = sklearn
+        self.use_pos = use_pos
+
         self.vocab_path = expand_path(vocab_path)
+        self.pos_vocab = self.load_pos_vocab(expand_path(pos_vocab_path))
         self.counter_vocab, self.min_count = self.load_counter_vocab(self.vocab_path)
         self.corpus_len = self.check_corpus_len(self.counter_vocab)
 
@@ -178,11 +183,24 @@ class SentEmb(Component):
 
         return counter_vocab, min_val
 
+    @staticmethod
+    def load_pos_vocab(load_path):
+        pos_vocab = dict()
+        with open(load_path, 'r') as f:
+            lines = f.readlines()
+            f.close()
+
+        for line in lines:
+            key, val = line[:-1].split(' ')  # "\t"
+            pos_vocab[key] = val
+
+        return pos_vocab
+
     @overrides
-    def __call__(self, data: List[Union[list, np.ndarray]], text: List[List[str]] = None,
-                 *args, **kwargs) -> Union[List, np.ndarray]:
+    def __call__(self, emb_batch: List[Union[list, np.ndarray]], tokens_batch: List[List[str]] = None,
+                 pos_batch: List[List[str]] = None, *args, **kwargs) -> Union[List, np.ndarray]:
         """
-        Infer on the given data
+        Infer on the given data. Weighted averaging of the tokens embeddings by tf-idf coefficients.
 
         Args:
             data: list of tokenized and vectorized text samples
@@ -195,31 +213,34 @@ class SentEmb(Component):
                 np.vector
         """
         result = []
-        if isinstance(data, list):
-            return self.weigh_tfidf(data, text, result)
-        elif isinstance(data, np.ndarray):
-            return np.array(self.weigh_tfidf(data, text, result))
 
-    def weigh_tfidf(self, data, text, res):
-        """
-        Weighted averaging of the tokens embeddings by tf-idf coefficients.
-
-        Args:
-            data:  list of tokenized and vectorized text samples
-            text: text samples
-            res: list for sentence embeddings
-
-        Returns:
-             list of sentence embeddings
-        """
-        for i in range(len(text)):
-            if len(text[i]) == 0:
-                res.append(np.zeros((300,)))
+        for i in range(len(tokens_batch)):
+            if len(tokens_batch[i]) == 0:
+                result.append(np.zeros((len(emb_batch[0][0]),)))
             else:
-                weights = self.tf_idf_weights(text[i])
-                matrix = np.array(data[i])
-                res.append(np.dot(weights, matrix))
-        return res
+                weights = self.tf_idf_weights(tokens_batch[i])
+                matrix = np.array(emb_batch[i])
+
+                if self.use_pos:
+                    if pos_batch is None:
+                        raise ConfigError("In averaging component config parameter 'use_pos' is true,"
+                                          " but pos_batch input is None")
+                    else:
+                        pos_w = self.pos_weights(pos_batch[i])
+                        new_w = np.multiply(weights, pos_w)
+                        result.append(np.dot(new_w, matrix))
+                else:
+                    result.append(np.dot(weights, matrix))
+
+        return np.array(result)
+
+    def pos_weights(self, pos_sent):
+        weights = []
+        for tag in pos_sent:
+            w_ = self.pos_vocab.get(tag, 1.0)
+            weights.append(float(w_))
+
+        return np.array(weights)
 
     def tf_idf_weights(self, sent):
         threshold = self.min_count
