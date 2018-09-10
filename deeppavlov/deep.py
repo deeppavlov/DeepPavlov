@@ -28,6 +28,7 @@ from deeppavlov.core.common.log import get_logger
 from deeppavlov.download import deep_download
 from utils.telegram_utils.telegram_ui import interact_model_by_telegram
 from utils.server_utils.server import start_model_server
+from utils.ms_bot_framework_utils.server import start_bot_framework_server
 from utils.pip_wrapper import install_from_config
 
 
@@ -36,13 +37,23 @@ log = get_logger(__name__)
 parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
-                    choices={'train', 'evaluate', 'interact', 'predict', 'interactbot', 'riseapi', 'download',
-                             'install'})
+                    choices={'train', 'evaluate', 'interact', 'predict', 'interactbot', 'interactmsbot',
+                             'riseapi', 'download', 'install'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
-parser.add_argument("-t", "--token", help="telegram bot token", type=str)
+
 parser.add_argument("-b", "--batch-size", dest="batch_size", default=1, help="inference batch size", type=int)
 parser.add_argument("-f", "--input-file", dest="file_path", default=None, help="Path to the input file", type=str)
 parser.add_argument("-d", "--download", action="store_true", help="download model components")
+
+parser.add_argument("-t", "--token", help="telegram bot token", type=str)
+parser.add_argument("-i", "--ms-id", help="microsoft bot framework app id", type=str)
+parser.add_argument("-s", "--ms-secret", help="microsoft bot framework app secret", type=str)
+
+parser.add_argument("--multi-instance", action="store_true", help="allow rising of several instances of the model")
+parser.add_argument("--stateful", action="store_true", help="interact with a stateful model")
+parser.add_argument("--use-history", action="store_true", help="feed model with an interaction history")
+
+
 
 
 def find_config(pipeline_config_path: str):
@@ -58,9 +69,17 @@ def find_config(pipeline_config_path: str):
 def main():
     args = parser.parse_args()
     pipeline_config_path = find_config(args.config_path)
+
     if args.download or args.mode == 'download':
         deep_download(['-c', pipeline_config_path])
     token = args.token or os.getenv('TELEGRAM_TOKEN')
+
+    ms_id = args.ms_id or os.getenv('MS_APP_ID')
+    ms_secret = args.ms_secret or os.getenv('MS_APP_SECRET')
+
+    multi_instance = args.multi_instance
+    stateful = args.stateful
+    use_history = args.use_history
 
     if args.mode == 'train':
         train_evaluate_model_from_config(pipeline_config_path)
@@ -73,6 +92,20 @@ def main():
             log.error('Token required: initiate -t param or TELEGRAM_BOT env var with Telegram bot token')
         else:
             interact_model_by_telegram(pipeline_config_path, token)
+    elif args.mode == 'interactmsbot':
+        if not ms_id:
+            log.error('Microsoft Bot Framework app id required: initiate -i param '
+                      'or MS_APP_ID env var with Microsoft app id')
+        elif not ms_secret:
+            log.error('Microsoft Bot Framework app secret required: initiate -s param '
+                      'or MS_APP_SECRET env var with Microsoft app secret')
+        else:
+            start_bot_framework_server(model_config_path=pipeline_config_path,
+                                       app_id=ms_id,
+                                       app_secret=ms_secret,
+                                       multi_instance=multi_instance,
+                                       stateful=stateful,
+                                       use_history=use_history)
     elif args.mode == 'riseapi':
         start_model_server(pipeline_config_path)
     elif args.mode == 'predict':
