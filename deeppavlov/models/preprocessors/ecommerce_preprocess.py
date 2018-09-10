@@ -22,7 +22,7 @@ class EcommercePreprocess(Component):
 		return [w for w in doc if w.tag_ in ['NNP', 'NN', 'PROPN', 'JJ'] and not w.like_num]
 
 	def lemmas(self, doc):
-		return [w.lemma_ for w in doc]
+		return [w.get('lemma_') if type(w) == dict else w.lemma_ for w in doc]
 
 	def price(self, item):
 	    if 'ListPrice' in item:
