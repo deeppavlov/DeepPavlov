@@ -173,6 +173,9 @@ class StreamSpacyTokenizer(Component):
     def analyze(self, text: str):
         return self.model(text)
 
+    def spacy2dict(self, doc, fields = ['tag_', 'like_num', 'lemma_', 'text']):
+        return [{field: getattr(token, field) for field in fields} for token in doc]
+
     def _tokenize(self, data: List[str], ngram_range: Tuple[int, int]=(1, 1), batch_size: int=10000,
                   n_threads: int=1, lowercase: bool=True) -> Generator[List[str], Any, None]:
         """Tokenize a list of documents.
