@@ -11,7 +11,7 @@ node('gpu') {
             sh """
                 virtualenv --python=python3 '.venv-$BUILD_NUMBER'
                 . '.venv-$BUILD_NUMBER/bin/activate'
-                pip install .[tests]
+                pip install .[tests,docs]
                 pip install -r dp_requirements/tf-gpu.txt
                 rm -rf `find . -mindepth 1 -maxdepth 1 ! -name tests ! -name Jenkinsfile ! -name '.venv-$BUILD_NUMBER'`
             """
@@ -20,6 +20,9 @@ node('gpu') {
             sh """
                 . .venv-$BUILD_NUMBER/bin/activate
                 pytest -v
+                cd docs
+                make clean
+                make html
             """
         }
     } catch (e) {
