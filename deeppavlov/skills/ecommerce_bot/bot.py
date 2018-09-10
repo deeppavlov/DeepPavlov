@@ -57,8 +57,10 @@ class EcommerceBot(Component):
 
     def fit(self, x) -> None:
         log.info('Items to nlp: '+str(len(x)))
-        self.ec_data = [dict(item, **{'title_nlped': self.tokenizer.analyze(item['Title']),
-                                      'feat_nlped':self.tokenizer.analyze(item['Title']+'. '+item['Feature'])}) for item in x]
+        self.ec_data = [dict(item, **{
+                                    'title_nlped': self.tokenizer.spacy2dict(self.tokenizer.analyze(item['Title'])),
+                                    'feat_nlped': self.tokenizer.spacy2dict(self.tokenizer.analyze(item['Title']+'. '+item['Feature']))
+                                      }) for item in x]
         log.info('Data are nlped')
 
     def save(self, **kwargs) -> None:
@@ -77,11 +79,14 @@ class EcommerceBot(Component):
         results_args_sim = []
 
         log.debug(f"query: {X} state:{State}")
-
-
+        
         for item_idx, query in enumerate(X):
 
             state = State[item_idx]
+
+            if type(state) == str:
+                state = json.loads(state)
+
             start = state['start'] if 'start' in state else 0
             stop = state['stop'] if 'stop' in state else 5
 
