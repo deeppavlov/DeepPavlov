@@ -41,7 +41,6 @@ class Conversation:
             'message': self._handle_message
         }
 
-
     def _start_timer(self):
         self.timer = threading.Timer(self.conversation_lifetime, self._self_destruct)
         self.timer.start()
@@ -60,6 +59,8 @@ class Conversation:
 
         if activity_type in self.handled_activities.keys():
             self.handled_activities[activity_type](activity)
+        else:
+            log.warning(f'Unsupported activity type: {activity_type}, activity id: {activity_id}')
 
     def _send_activity(self, url: str, out_activity: dict):
         authorization = f"{self.bot.access_info['token_type']} {self.bot.access_info['access_token']}"
