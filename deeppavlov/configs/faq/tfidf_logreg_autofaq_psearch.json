@@ -3,7 +3,7 @@
     "name": "faq_reader",
     "x_col_name": "Question",
     "y_col_name": "Answer",
-    "data_url": "http://files.deeppavlov.ai/faq/mipt/faq.csv"
+    "data_url": "http://files.deeppavlov.ai/faq/school/faq_school.csv"
   },
   "dataset_iterator": {
     "name": "data_learning_iterator"
@@ -13,7 +13,7 @@
     "in": "q",
     "pipe": [
       {
-        "name": "stream_spacy_tokenizer",
+        "name": "ru_tokenizer",
         "in": "q",
         "lemmas": true,
         "out": "q_token_lemmas"
@@ -22,24 +22,22 @@
         "id": "vectorizer",
         "name": "tfidf_vectorizer",
         "in": "q_token_lemmas",
-        "fit_on": ["q_token_lemmas"],
-        "save_path": "faq/tfidf_vectorizer_en_mipt_faq.pkl",
-        "load_path": "faq/tfidf_vectorizer_en_mipt_faq.pkl",
+        "load_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
         "out": "q_vect"
       },
       {
         "name": "logreg_classifier",
         "in": "q_vect",
         "fit_on": ["q_vect", "y"],
-        "top_n": 2,
-        "c": 1000,
-        "penalty": "l2",
-        "save_path": "faq/tfidf_logreg_classifier_en_mipt_faq.pkl",
-        "load_path": "faq/tfidf_logreg_classifier_en_mipt_faq.pkl",
+        "top_n": 1,
+        "c": {"search_choice": [1, 10, 100, 1000]},
+        "penalty": {"search_choice": ["l1", "l2"]},
+        "save_path": "faq/tfidf_logreg_classifier.pkl",
+        "load_path": "faq/tfidf_logreg_classifier.pkl",
         "out": ["answer", "score"]
       }
     ],
-    "out": ["answer", "score"]
+    "out": "answer"
   },
 
   "train": {
@@ -48,18 +46,14 @@
     "test_best": false
  },
   "metadata": {
-    "requirements": [
-      "../dp_requirements/spacy.txt",
-      "../dp_requirements/en_core_web_sm.txt"
-    ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/faq/mipt/tfidf_logreg_classifier_en_mipt_faq.pkl",
+        "url": "http://files.deeppavlov.ai/faq/school/tfidf_logreg_classifier.pkl",
         "subdir": "faq"
       },
       {
-        "url": "http://files.deeppavlov.ai/faq/mipt/tfidf_vectorizer_en_mipt_faq.pkl",
-        "subdir": "faq"
+        "url": "http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "subdir": "vectorizer"
       }
     ]
   }

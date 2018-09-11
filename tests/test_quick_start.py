@@ -92,7 +92,7 @@ PARAMS = {
         ("evolution/evolve_intents_snips.json", "evolution", ('E',)): None
     },
     "cross-validation": {
-        ("cv/cv_tfidf_logreg_en_faq.json", "cross-validation-faq", ('CV',)): None
+        ("cv/cv_tfidf_autofaq.json", "cross-validation-faq", ('CV',)): None
     },
     "sample": {
         ("classifiers/intents_sample_csv.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
