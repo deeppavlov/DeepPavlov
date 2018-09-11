@@ -18,24 +18,19 @@ from deeppavlov.metrics.google_bleu import compute_bleu
 
 from deeppavlov.core.common.metrics_registry import register_metric
 
-smooth = SmoothingFunction()
+SMOOTH = SmoothingFunction()
 
 @register_metric('bleu_advanced')
-def bleu_advanced(y_true, y_predicted, weights=(1,), smoothing_function=smooth.method1, auto_reweigh=False, penalty=True):
-    bleu_list = []
+def bleu_advanced(y_true, y_predicted, weights=(1,), smoothing_function=SMOOTH.method1, auto_reweigh=False, penalty=True):
+    bleu_measure = sentence_bleu([y_true], y_predicted, weights, smoothing_function, auto_reweigh)
 
-    y2 = y_true
-    y1 = y_predicted
-
-    bleu_measure = sentence_bleu([y2], y1, weights, smoothing_function, auto_reweigh)
-
-    hyp_len = len(y1)
+    hyp_len = len(y_predicted)
     hyp_lengths = hyp_len
-    ref_lengths = closest_ref_length([y2], hyp_len) # 1
+    ref_lengths = closest_ref_length([y_true], hyp_len)
 
     bp = brevity_penalty(ref_lengths, hyp_lengths)
-
-    if penalty == True:
+    
+    if penalty is True or bp == 0:
         score = bleu_measure
     else:
         score = bleu_measure/bp
