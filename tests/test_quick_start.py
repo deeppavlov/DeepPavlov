@@ -35,9 +35,13 @@ ALL_MODES = ('IP', 'TI')
 ONE_ARGUMENT_INFER_CHECK = ('Dummy text', None)
 TWO_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', None)
 FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_text', None)
+ONE_ARGUMENT_STATE_INFER_CHECK = ('Dummy text', '{}', None)
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
+    "ecommerce_bot": {
+        ("ecommerce_bot/ecommerce_bot.json", "ecommerce_bot", ALL_MODES): [ONE_ARGUMENT_STATE_INFER_CHECK]
+    },
     "faq": {
         ("faq/tfidf_logreg_en_faq.json", "faq_tfidf_logreg_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("faq/tfidf_autofaq.json", "faq_tfidf_cos", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
