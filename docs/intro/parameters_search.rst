@@ -37,7 +37,7 @@ For example, you try to optimize regularization coefficient in model,
 so you should add additional parameter in config with suffix '_range'.
 Let's see example for logistic regression model:
 
-.. code:: json
+.. code:: python
 
       {
         "name": "faq_logreg_model",
@@ -49,7 +49,7 @@ Let's see example for logistic regression model:
 
 In this example parameter "c" described as search_choice, values for grid search:
 
-.. code:: json
+.. code:: python
 
     {"search_choice": [value_0, ..., value_n]}
 
