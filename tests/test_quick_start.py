@@ -1,6 +1,7 @@
 import io
 import json
 import os
+import signal
 from pathlib import Path
 import shutil
 import sys
@@ -8,6 +9,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 import pexpect
+import pexpect.popen_spawn
 import requests
 from urllib.parse import urljoin
 
@@ -241,8 +243,8 @@ class TestQuickStart(object):
     def interact(conf_file, model_dir, qr_list=None):
         qr_list = qr_list or []
         logfile = io.BytesIO(b'')
-        p = pexpect.spawn(sys.executable, ["-m", "deeppavlov", "interact", str(conf_file)], timeout=None,
-                          logfile=logfile)
+        p = pexpect.popen_spawn.PopenSpawn(' '.join([sys.executable, "-m", "deeppavlov", "interact", str(conf_file)]),
+                                           timeout=None, logfile=logfile)
         try:
             for *query, expected_response in qr_list:  # works until the first failed query
                 for q in query:
@@ -284,8 +286,8 @@ class TestQuickStart(object):
             post_payload[arg_name] = [arg_value]
 
         logfile = io.BytesIO(b'')
-        p = pexpect.spawn(sys.executable, ["-m", "deeppavlov", "riseapi", str(conf_file)], timeout=None,
-                          logfile=logfile)
+        p = pexpect.popen_spawn.PopenSpawn(' '.join([sys.executable, "-m", "deeppavlov", "riseapi", str(conf_file)]),
+                                           timeout=None, logfile=logfile)
         try:
             p.expect(url_base)
             post_response = requests.post(url, json=post_payload, headers=post_headers)
@@ -298,7 +300,7 @@ class TestQuickStart(object):
                                .format(''.join((line.decode() for line in logfile.readlines()))))
 
         finally:
-            p.send(chr(3))
+            p.kill(signal.SIGINT)
             if p.expect(pexpect.EOF) != 0:
                 logfile.seek(0)
                 raise RuntimeError('Error in shutting down API server: \n{}'
