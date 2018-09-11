@@ -5,6 +5,10 @@
     "model_endpoint": "/model",
     "model_args_names": ["context"]
   },
+  "ms_bot_framework_defaults": {
+    "auth_polling_interval": 3500,
+    "conversation_lifetime": 3600
+  },
   "model_defaults": {
     "DstcSlotFillingNetwork": {
       "host": "",

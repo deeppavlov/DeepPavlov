@@ -289,6 +289,36 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
         tb_train_writer = tf.summary.FileWriter(str(tb_log_dir / 'train_log'))
         tb_valid_writer = tf.summary.FileWriter(str(tb_log_dir / 'valid_log'))
 
+    # validate first (important if model is pre-trained)
+    if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
+        report = _test_model(model, metrics_functions, iterator,
+                             train_config['batch_size'], 'valid', start_time, train_config['show_examples'])
+        report['epochs_done'] = epochs
+        report['batches_seen'] = i
+        report['train_examples_seen'] = examples
+
+        metrics = list(report['metrics'].items())
+
+        m_name, score = metrics[0]
+        if improved(score, best):
+            patience = 0
+            log.info('New best {} of {}'.format(m_name, score))
+            best = score
+            log.info('Saving model')
+            model.save()
+            saved = True
+        else:
+            patience += 1
+            log.info('Did not improve on the {} of {}'.format(m_name, best))
+
+        report['impatience'] = patience
+        if train_config['validation_patience'] > 0:
+            report['patience_limit'] = train_config['validation_patience']
+
+        model.process_event(event_name='after_validation', data=report)
+        report = {'valid': report}
+        print(json.dumps(report, ensure_ascii=False))
+
     try:
         while True:
             for x, y_true in iterator.gen_batches(train_config['batch_size']):
