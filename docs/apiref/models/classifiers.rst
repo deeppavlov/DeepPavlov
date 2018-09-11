@@ -7,7 +7,7 @@ deeppavlov.models.classifiers
 .. autoclass:: deeppavlov.models.classifiers.keras_classification_model.KerasClassificationModel
 
     .. automethod:: __call__
-    .. automethod:: texts2vec
+    .. automethod:: pad_texts
     .. automethod:: train_on_batch
     .. automethod:: infer_on_batch
     .. automethod:: cnn_model
@@ -20,3 +20,15 @@ deeppavlov.models.classifiers
     .. automethod:: bilstm_self_add_attention_model
     .. automethod:: bilstm_self_mult_attention_model
     .. automethod:: bigru_model
+
+.. autoclass:: deeppavlov.models.classifiers.cos_sim_classifier.CosineSimilarityClassifier
+    :members:
+
+    .. automethod:: __call__
+
+
+.. autoclass:: deeppavlov.models.classifiers.logreg_classifier.LogregClassifier
+    :members:
+
+    .. automethod:: __call__
+

@@ -62,6 +62,12 @@ embeddings trained on DSTC-2 dataset that is not the best choice for
 this task. Train set is divided to train and validation sets to
 illustrate ``basic_classification_iterator`` work.
 
+**Detecting Insults in Social Commentary** dataset
+(https://www.kaggle.com/c/detecting-insults-in-social-commentary)
+contains binary classification task for **detecting insults** for
+participants of conversation. Train, valid and test division is the same
+as for the Kaggle challenge.
+
 **AG News** dataset
 (https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html)
 contains **topic classification** task for 5 classes (range from 0
@@ -69,57 +75,75 @@ to 4 points scale). Test set is initial one from a web-site, valid is a
 Stratified division 1/5 from the train set from web-site with 42 seed,
 and the train set is the rest.
 
-**Detecting Insults in Social Commentary** dataset
-(https://www.kaggle.com/c/detecting-insults-in-social-commentary)
-contains binary classification task for **detecting insults** for
-participants of conversation. Train, valid and test division is the same
-as for the Kaggle challenge.
-
 **Twitter mokoron** dataset (http://study.mokoron.com/) contains
 **sentiment classification** of Russian tweets for positive and negative
-replies [5]. Train, valid and test division is made by hands (Stratified
+replies [5]. It was automatically labeled.
+Train, valid and test division is made by hands (Stratified
 division: 1/5 from all dataset for test set with 42 seed, then 1/5 from
-the rest for validation set with 42 seed). Attention! The pre-trained
-model was trained on ``sentiment_twitter_data/no_smiles_data`` -- the
-same dataset but with removed "(" and ")".
+the rest for validation set with 42 seed). Two provided pre-trained
+models were trained on the same dataset but with and without preprocessing.
+The main difference between scores is caused by the fact that some symbols
+(deleted during preprocessing) were used for automatic labelling. Therefore,
+it can be considered that model trained on preprocessed data is
+based on semantics while model trained on unprocessed data
+is based on punctuation and syntax.
 
-+------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| Model                                          | Dataset           | Valid accuracy                              | Test accuracy                               |
-+================================================+===================+=============================================+=============================================+
-| ``configs/intents/intents_dstc2.json``         | DSTC 2            | 0.8744                                      | 0.8801                                      |
-+------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| ``configs/intents/intents_dstc2_big.json``     | DSTC 2            | 0.9682                                      | 0.9684                                      |
-+------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| ``configs/intents/intents_snips.json``         | SNIPS             | 0.8829                                      | --                                          |
-+------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| ``configs/sentiment/insults_kaggle.json``      | InsultsKaggle     | 0.8757                                      | 0.7503                                      |
-+------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| ``configs/sentiment/sentiment_ag_news.json``   | AG News           | 0.8735                                      | 0.8859                                      |
-+------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| ``configs/sentiment/sentiment_twitter.json``   | Twitter.mokoron   | 0.8021 (with smiles), 0.8008 (no\_smiles)   | 0.7949 (with smiles), 0.7943 (no\_smiles)   |
-+------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
+**RuSentiment** dataset (http://text-machine.cs.uml.edu/projects/rusentiment/) contains
+**sentiment classification** of social media posts for Russian language within 5 classes 'positive', 'negative',
+'neutral', 'speech', 'skip'.
+
+
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+| Dataset           | Model                                                                                                        | Task             | Lang | Metric   | Valid  | Test   |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+| `DSTC 2`_         | :config:`DSTC 2 on DSTC 2 embeddings <classifiers/intents_dstc2.json>`                                       | 28 intents       | En   | Accuracy | 0.8554 | 0.8658 |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+| `DSTC 2`_         | :config:`DSTC 2 on Wiki embeddings <classifiers/intents_dstc2_big.json>`                                     | 28 intents       | En   | Accuracy | 0.9659 | 0.9659 |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+| `SNIPS-2017`_     | :config:`SNIPS on DSTC 2 embeddings <classifiers/intents_snips.json>`                                        | 7 intents        | En   | F1       | 0.8821 |    --  |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+| `SNIPS-2017`_     | :config:`SNIPS on Wiki embeddings <classifiers/intents_snips_big.json>`                                      | 7 intents        | En   | F1       | 0.9852 |    --  |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+| `Insults`_        | :config:`InsultsKaggle on Reddit embeddings <classifiers/insults_kaggle.json>`                               | Insult detection | En   | ROC-AUC  | 0.9287 | 0.8602 |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+| `AG News`_        | :config:`AG News on Wiki embeddings <classifiers/topic_ag_news.json>`                                        | 5 topics         | En   | Accuracy | 0.8735 | 0.8859 |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+|`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings without any preprocessing <classifiers/sentiment_twitter.json>`  | Sentiment        | Ru   | Accuracy | 0.9968 | 0.9971 |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+|`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings with preprocessing <classifiers/sentiment_twitter_preproc.json>` | Sentiment        | Ru   | Accuracy | 0.7944 | 0.7879 |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+|`RuSentiment`_     | :config:`RuSentiment on RuWiki+Lenta embeddings <classifiers/rusentiment_cnn.json>`                          | Sentiment        | Ru   | F1       | 0.7843 | 0.6556 |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+
+.. _`DSTC 2`: http://camdial.org/~mh521/dstc/
+.. _`SNIPS-2017`: https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines
+.. _`Insults`: https://www.kaggle.com/c/detecting-insults-in-social-commentary
+.. _`AG News`: https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html
+.. _`Twitter mokoron`: http://study.mokoron.com/
+.. _`RuSentiment`: http://text-machine.cs.uml.edu/projects/rusentiment/
+
 
 Download pre-trained model
 --------------------------
 
 DeepPavlov provides the following **pre-trained models**:
 
--  ``configs/intents/intents_dstc2.json`` -- DSTC 2 - intent model for English language with embeddings trained
+-  :config:`intents_dstc2.json <classifiers/intents_dstc2.json>` -- DSTC 2 - intent model for English language with embeddings trained
    via fastText on DSTC 2 (800 Mb).
--  ``configs/intents/intents_dstc2_big.json`` -- DSTC 2 - intent model for English language with embeddings trained
+-  :config:`intents_dstc2_big.json <classifiers/intents_dstc2_big.json>` -- DSTC 2 - intent model for English language with embeddings trained
    on Wiki (https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md, 8.5 Gb).
    This model achieves higher accuracy than the first one.
--  ``configs/intents/intents_snips.json`` -- SNIPS - intent model for English language.
--  ``configs/sentiment/insults_kaggle.json`` -- Insults analysis for English language.
--  ``configs/sentiment/sentiment_ag_news.json`` -- AG News topic analysis for English language.
--  ``configs/sentiment/sentiment_twitter.json`` -- Twitter Mokoron sentiment analysis for **Russian** language.
+-  :config:`intents_snips.json <classifiers/intents_snips.json>` -- SNIPS - intent model for English language.
+-  :config:`insults_kaggle.json <classifiers/insults_kaggle.json>` -- Insults analysis for English language.
+-  :config:`topic_ag_news.json <classifiers/topic_ag_news.json>` -- AG News topic analysis for English language.
+-  :config:`sentiment_twitter.json <classifiers/sentiment_twitter.json>` -- Twitter Mokoron sentiment analysis for **Russian** language.
 
 To download pre-trained models, vocabs, embeddings on the dataset of interest one should run the following command
 providing corresponding name of the config file (see above):
 
 ::
 
-    python deep.py download configs/intents/intents_dstc2.json
+    python deep.py download configs/classifiers/intents_dstc2.json
 
 or provide flag ``-d`` for commands like ``interact``, ``interactbot``,
 etc. The flag ``-d`` provides downloading all the required components.
@@ -133,13 +157,13 @@ command providing corresponding name of the config file (see above):
 
 ::
 
-    python deep.py interact configs/intents/intents_dstc2.json
+    python deep.py interact configs/classifiers/intents_dstc2.json
 
 or
 
 ::
 
-    python deep.py interactbot configs/intents/intents_dstc2.json -t <TELEGRAM_TOKEN>
+    python deep.py interactbot configs/classifiers/intents_dstc2.json -t <TELEGRAM_TOKEN>
 
 For 'interactbot' mode one should specify a Telegram bot token in ``-t`` parameter or in the ``TELEGRAM_TOKEN``
 environment variable.
@@ -149,7 +173,7 @@ which the string belongs to, and the second one is a dictionary with probability
 the considered classes (take into account that for multi-class classification then sum of probabilities
 is not equal to 1).
 
-An example of interacting the model from ``configs/intents/intents_dstc2.json``
+An example of interacting the model from :config:`intents_dstc2.json <classifiers/intents_dstc2.json>`
 
 ::
 
@@ -157,7 +181,7 @@ An example of interacting the model from ``configs/intents/intents_dstc2.json``
     >> (array(['inform_pricerange'], dtype='<U17'), {'ack': 0.0040760376, 'affirm': 0.017633557, 'bye': 0.023906048, 'confirm_area': 0.0040424005, 'confirm_food': 0.012261569, 'confirm_pricerange': 0.007227284, 'deny_food': 0.003502861, 'deny_name': 0.003412795, 'hello': 0.0061915903, 'inform_area': 0.15999688, 'inform_food': 0.18303667, 'inform_name': 0.0042709936, 'inform_pricerange': 0.30197725, 'inform_this': 0.03864918, 'negate': 0.016452404, 'repeat': 0.003964727, 'reqalts': 0.026930325, 'reqmore': 0.0030793257, 'request_addr': 0.08075432, 'request_area': 0.018258458, 'request_food': 0.018060096, 'request_phone': 0.07433994, 'request_postcode': 0.012727374, 'request_pricerange': 0.024933394, 'request_signature': 0.0034591882, 'restart': 0.0038622846, 'thankyou': 0.036836267, 'unknown': 0.045310754})
 
 and an example of interacting the model from
-``configs/intents/intents_dstc2_big.json``
+:config:`intents_dstc2_big.json <classifiers/intents_dstc2_big.json>`
 
 ::
 
@@ -189,12 +213,12 @@ classification task. Below the list of available models is presented:
 Configuration parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-One can find examples of config files in ``deeppavlov/configs/intents`` and ``deeppavlov/configs/sentiment``.
+One can find examples of config files in ``deeppavlov/configs/classifiers``.
 
 Detailed description of configuration file and specific parameters for all presented classification models can be found
 in :doc:`reference </apiref/models/classifiers>`.
 
-Some clue parameters for ``deeppavlov/configs/intents/intents_dstc2.json`` config file are
+Some clue parameters for :config:`intents_dstc2.json <classifiers/intents_dstc2.json>` config file are
 presented in the table below.
 
 +--------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -379,7 +403,7 @@ Then training process can be run in the same way:
 
     python deep.py train "path_to_config"
 
-The current version of ``intents_snips.json`` contains parameters for
+The current version of :config:`intents_snips.json <classifiers/intents_snips.json>`` contains parameters for
 intent recognition for SNIPS benchmark dataset [2] that was restored in
 ``.csv`` format and will be downloaded automatically.
 
@@ -409,7 +433,7 @@ trained on Reddit dataset.
 +------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
 | wit.ai                 | 0.9877          | 0.9913           | 0.9921        | 0.9766       | 0.9977       | 0.9458               | 0.9673                 |
 +------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
-| snips.ai               | 0.9873          | 0.9921           | 0.9939        | 0.9729       | 0.9985       | 0.9455               | 0.9613                 |
+| snips.ai               | 0.9873          |       0.9921     | 0.9939        | 0.9729       | 0.9985       | 0.9455               | 0.9613                 |
 +------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
 | recast.ai              | 0.9894          | 0.9943           | 0.9910        | 0.9660       | 0.9981       | 0.9424               | 0.9539                 |
 +------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+

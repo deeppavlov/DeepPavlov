@@ -197,7 +197,7 @@ class GoalOrientedBot(NNModel):
         # Intent features
         intent_features = []
         if callable(self.intent_classifier):
-            intent, intent_probs = self.intent_classifier([tokens])
+            intent, intent_probs = self.intent_classifier([context])
             intent_features = np.array([intent_probs[0][i] for i in self.intents],
                                        dtype=np.float32)
             if self.debug:

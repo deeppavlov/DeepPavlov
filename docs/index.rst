@@ -40,6 +40,7 @@ Welcome to DeepPavlov's documentation!
    Open-Domain Question Answering <skills/odqa>
    Pattern Matching <skills/pattern_matching>
    Sequence-To-Sequence Dialogue Bot <skills/seq2seq_go_bot>
+   Frequently Asked Questions Answering <skills/faq>
 
 
 .. toctree::

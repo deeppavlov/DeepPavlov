@@ -14,6 +14,23 @@
     ],
     "pipe": [
       {
+        "name": "hashing_tfidf_vectorizer",
+        "id": "vectorizer",
+        "fit_on_batch": [
+          "x"
+        ],
+        "save_path": "odqa/en_wiki_test_tfidf.npz",
+        "load_path": "odqa/en_wiki_test_tfidf.npz",
+        "tokenizer": {
+          "name": "stream_spacy_tokenizer",
+          "lemmas": true,
+          "ngram_range": [
+            1,
+            2
+          ]
+        }
+      },
+      {
         "name": "tfidf_ranker",
         "top_n": 5,
         "in": [
@@ -23,25 +40,7 @@
           "y",
           "score"
         ],
-        "fit_on_batch": [
-          "x"
-        ],
-        "vectorizer": {
-          "name": "hashing_tfidf_vectorizer",
-          "fit_on_batch": [
-            "x"
-          ],
-          "save_path": "odqa/en_wiki_test_tfidf.npz",
-          "load_path": "odqa/en_wiki_test_tfidf.npz",
-          "tokenizer": {
-            "name": "stream_spacy_tokenizer",
-            "lemmas": true,
-            "ngram_range": [
-              1,
-              2
-            ]
-          }
-        }
+        "vectorizer": "#vectorizer"
       }
     ]
   },

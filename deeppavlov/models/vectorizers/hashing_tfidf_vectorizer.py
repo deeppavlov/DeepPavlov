@@ -21,9 +21,11 @@ import numpy as np
 from sklearn.utils import murmurhash3_32
 
 from deeppavlov.core.models.component import Component
+from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 
 logger = get_logger(__name__)
 
@@ -44,13 +46,13 @@ def hash_(token: str, hash_size: int) -> int:
 
 
 @register('hashing_tfidf_vectorizer')
-class HashingTfIdfVectorizer(Component, Serializable):
-    """Create a tfidf matrix from collection of documents.
+class HashingTfIdfVectorizer(Estimator, Serializable):
+    """Create a tfidf matrix from collection of documents of size [n_documents X n_features(hash_size)].
 
     Args:
         tokenizer: a tokenizer class
         hash_size: a hash size, power of two
-        doc_index: a dictinary of document ids and their titles
+        doc_index: a dictionary of document ids and their titles
         save_path: a path to **.npz** file where tfidf matrix is saved
         load_path: a path to **.npz** file where tfidf matrix is loaded from
 
@@ -72,20 +74,29 @@ class HashingTfIdfVectorizer(Component, Serializable):
 
         self.hash_size = hash_size
         self.tokenizer = tokenizer
-        self.term_freqs = None
-        self.doc_index = doc_index
         self.rows = []
         self.cols = []
         self.data = []
 
+        if kwargs.get('mode', 'infer') == 'infer':
+            self.tfidf_matrix, opts = self.load()
+            self.ngram_range = opts['ngram_range']
+            self.hash_size = opts['hash_size']
+            self.term_freqs = opts['term_freqs'].squeeze()
+            self.doc_index = opts['doc_index']
+            self.index2doc = self.get_index2doc()
+        else:
+            self.term_freqs = None
+            self.doc_index = doc_index
+
     def __call__(self, questions: List[str]) -> Sparse:
-        """Transform input list of documents to a tfidf vectors.
+        """Transform input list of documents to tfidf vectors.
 
         Args:
             questions: a list of input strings
 
-        Return:
-            transformed documents as a csr_matrix
+        Returns:
+            transformed documents as a csr_matrix with shape [n_documents X :attr:`hash_size`]
 
         """
 
@@ -112,11 +123,20 @@ class HashingTfIdfVectorizer(Component, Serializable):
 
             indptr = np.array([0, len(hashes_unique)])
             sp_tfidf = Sparse((tfidf, hashes_unique, indptr), shape=(1, self.hash_size)
-            )
+                              )
             sp_tfidfs.append(sp_tfidf)
 
         transformed = sp.sparse.vstack(sp_tfidfs)
         return transformed
+
+    def get_index2doc(self) -> Dict[Any, int]:
+        """Invert doc_index.
+
+        Returns:
+            inverted doc_index dict
+
+        """
+        return dict(zip(self.doc_index.values(), self.doc_index.keys()))
 
     def get_counts(self, docs: List[str], doc_ids: List[Any]) \
             -> Generator[Tuple[KeysView, ValuesView, List[int]], Any, None]:
@@ -251,12 +271,36 @@ class HashingTfIdfVectorizer(Component, Serializable):
         Returns:
             a tuple of tfidf matrix and csr data.
 
+        Raises:
+            FileNotFoundError if :attr:`load_path` doesn't exist.
+
         Todo:
             * implement loading from URL
 
         """
+        if not self.load_path.exists():
+            raise FileNotFoundError("HashingTfIdfVectorizer path doesn't exist!")
+
         logger.info("Loading tfidf matrix from {}".format(self.load_path))
         loader = np.load(self.load_path)
         matrix = Sparse((loader['data'], loader['indices'],
-                                       loader['indptr']), shape=loader['shape'])
+                         loader['indptr']), shape=loader['shape'])
         return matrix, loader['opts'].item(0)
+
+    def fit_batches(self, iterator: DataFittingIterator, batch_size: int) -> None:
+        """Generate a batch to be fit to a vectorizer.
+
+        Args:
+            iterator: an instance of an iterator class
+            batch_size: a size of a generated batch
+
+        Returns:
+            None
+
+        """
+        self.doc_index = iterator.doc2index
+        for x, y in iterator.gen_batches(batch_size):
+            self.fit_batch(x, y)
+
+    def fit(self):
+        pass

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Any, Optional
+from typing import List, Any, Optional, Union
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
@@ -28,21 +28,26 @@ class WikiSQLiteVocab(SQLiteDataIterator):
     Args:
         data_url: an URL where to download a DB from
         data_dir:  a directory where to save downloaded DB to
+        join_docs: whether to join extracted docs with ' ' or not
+        shuffle: whether to shuffle data or not
+
+    Attributes:
+        join_docs: whether to join extracted docs with ' ' or not
 
     """
 
-    def __init__(self, data_url: str, data_dir: str = '', **kwargs):
+    def __init__(self, data_url: str, data_dir: str = '', join_docs: bool=True, shuffle: bool=False, **kwargs):
+        super().__init__(data_dir=data_dir, data_url=data_url, shuffle=shuffle)
+        self.join_docs = join_docs
 
-        super().__init__(data_dir=data_dir, data_url=data_url)
-
-    def __call__(self, doc_ids: Optional[List[List[Any]]] = None, *args, **kwargs) -> List[str]:
-        """Get the contents of files, stacked by space.
+    def __call__(self, doc_ids: Optional[List[List[Any]]] = None, *args, **kwargs) -> List[Union[str, List[str]]]:
+        """Get the contents of files, stacked by space or as they are.
 
         Args:
             doc_ids: a batch of lists of ids to get contents for
 
         Returns:
-            a list of contents
+            a list of contents / list of lists of contents
         """
         all_contents = []
         if not doc_ids:
@@ -51,7 +56,8 @@ class WikiSQLiteVocab(SQLiteDataIterator):
 
         for ids in doc_ids:
             contents = [self.get_doc_content(doc_id) for doc_id in ids]
-            contents = ' '.join(contents)
+            if self.join_docs:
+                contents = ' '.join(contents)
             all_contents.append(contents)
 
         return all_contents

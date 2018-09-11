@@ -1,0 +1,47 @@
+{
+  "dataset_reader": {
+    "name": "line_reader",
+    "data_path": "wiki/wikitext_ru/ru.wiki.train.txt"
+  },
+  "dataset_iterator": {
+    "name": "data_learning_iterator"
+  },
+
+  "chainer": {
+    "in": "q",
+    "pipe": [
+      {
+        "name": "ru_tokenizer",
+        "in": "q",
+        "lemmas": true,
+        "out": "q_token_lemmas"
+      },
+      {
+        "id": "vectorizer",
+        "name": "tfidf_vectorizer",
+        "in": "q_token_lemmas",
+        "fit_on": ["q_token_lemmas"],
+        "save_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "out": "q_vect"
+      }
+    ],
+    "out": "q_vect"
+  },
+
+  "train": {
+    "validate_best": false,
+    "test_best": false
+  },
+  "metadata": {
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/datasets/wikitext_ru.zip",
+        "subdir": "wiki"
+      }
+    ]
+  }
+
+}
+
+
+
