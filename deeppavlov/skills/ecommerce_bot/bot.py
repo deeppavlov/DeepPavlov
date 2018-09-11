@@ -29,7 +29,6 @@ from deeppavlov.metrics.bleu import bleu_advanced
 
 log = get_logger(__name__)
 
-
 @register("ecommerce_bot")
 class EcommerceBot(Component):
     """Class to perform ranking catalogue items accroding to the query
@@ -166,12 +165,7 @@ class EcommerceBot(Component):
                 response.append(temp)
 
             confidence = [(score_title[idx], score_feat[idx]) for idx in results_args_sim[start:stop]]
-
-            log.debug(f"Response confidence {confidence}")
-
             entropies = self._entropy_subquery(results_args_sim)
-            log.debug(f"Response entropy {entropies}")
-
             log.debug(f"Total number of relevant answers {len(results_args_sim)}")
 
         return json.dumps(({'items': response, 'entropy': entropies, 'total':len(results_args_sim)}, confidence, state))
@@ -180,7 +174,6 @@ class EcommerceBot(Component):
         fields = ['Size', 'Brand', 'Author', 'Color', 'Genre']
         ent_fields: Dict = {}
 
-        i = 0
         for idx in results_args:
             for field in fields:
                 if field in self.ec_data[idx]:
@@ -188,10 +181,8 @@ class EcommerceBot(Component):
                         ent_fields[field] = []
 
                     ent_fields[field].append(self.ec_data[idx][field].lower())
-            i += 1
 
         entropies = []
-
         for key, value in ent_fields.items():
             count = Counter(value)
             entropies.append(
