@@ -200,7 +200,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
 
             res['valid'] = report['valid']['metrics']
 
-            log.info(json.dumps(report, ensure_ascii=False))
+            print(json.dumps(report, ensure_ascii=False))
 
         if train_config['test_best']:
             report = {
@@ -211,7 +211,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
 
             res['test'] = report['test']['metrics']
 
-            log.info(json.dumps(report, ensure_ascii=False))
+            print(json.dumps(report, ensure_ascii=False))
 
     return res
 
