@@ -25,7 +25,7 @@ CORS(app)
 
 
 def start_bot_framework_server(model_config_path: str, app_id: str, app_secret: str,
-                               multi_instance: bool = False, stateful: bool = False, use_history: bool = False):
+                               multi_instance: bool = False, stateful: bool = False, rich_content: bool = False):
 
     server_config_dir = Path(__file__).resolve().parent
     server_config_path = Path(server_config_dir, '..', SERVER_CONFIG_FILENAME).resolve()
@@ -49,7 +49,7 @@ def start_bot_framework_server(model_config_path: str, app_id: str, app_secret: 
 
     server_params['multi_instance'] = multi_instance
     server_params['stateful'] = stateful
-    server_params['use_history'] = use_history
+    server_params['rich_content'] = rich_content
 
     input_q = Queue()
     bot = Bot(server_params, input_q)
