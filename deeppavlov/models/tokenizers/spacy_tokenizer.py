@@ -12,14 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
-import copy
-import math
 from itertools import chain
-from typing import List, Generator, Any, Optional, Union, Tuple, Dict
+from typing import List, Generator, Any, Optional, Union, Tuple
 
 import spacy
-from spacy.matcher import Matcher
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
@@ -72,7 +68,7 @@ class StreamSpacyTokenizer(Component):
                  batch_size: Optional[int] = None, ngram_range: Optional[List[int]] = None,
                  lemmas: bool = False, n_threads: Optional[int] = None,
                  lowercase: Optional[bool] = None, alphas_only: Optional[bool] = None,
-                 spacy_model: str = 'en_core_web_sm', sentencizer: bool = True, **kwargs):
+                 spacy_model: str = 'en_core_web_sm', **kwargs):
 
         if disable is None:
             disable = ['parser', 'ner']
@@ -80,10 +76,7 @@ class StreamSpacyTokenizer(Component):
             ngram_range = [1, 1]
         self.stopwords = stopwords or []
         self.model = spacy.load(spacy_model, disable=disable)
-
-        if sentencizer:
-            self.model.add_pipe(self.model.create_pipe('sentencizer'))
-
+        self.model.add_pipe(self.model.create_pipe('sentencizer'))
         self.tokenizer = self.model.Defaults.create_tokenizer(self.model)
         self.batch_size = batch_size
         self.ngram_range = tuple(ngram_range)  # cast JSON array to tuple
@@ -116,65 +109,6 @@ class StreamSpacyTokenizer(Component):
             return [detokenize(doc) for doc in batch]
         raise TypeError(
             "StreamSpacyTokenizer.__call__() is not implemented for `{}`".format(type(batch[0])))
-
-    def prepare_for_money(self):
-        below = lambda text: bool(re.compile(r'below|cheap').match(text))
-        BELOW = self.model.vocab.add_flag(below)
-
-        above = lambda text: bool(re.compile(r'above|start').match(text))
-        ABOVE = self.model.vocab.add_flag(above)
-
-        self.matcher = Matcher(self.model.vocab)
-
-        self.matcher.add('below', None, [{BELOW: True}, {'LOWER': 'than', 'OP': '?'},
-                                    {'LOWER': 'from', 'OP': '?'}, {'ORTH': '$', 'OP': '?'}, {'ENT_TYPE': 'MONEY', 'LIKE_NUM': True}])
-
-        self.matcher.add('above', None, [{ABOVE: True}, {'LOWER': 'than', 'OP': '?'},
-                                    {'LOWER': 'from', 'OP': '?'}, {'ORTH': '$', 'OP': '?'}, {'ENT_TYPE': 'MONEY', 'LIKE_NUM': True}])
-
-    def extract_money(self, doc) -> Tuple[Any, Tuple[float, float]]:
-        
-        # def below(text): return bool(re.compile(r'below|cheap').match(text))
-        # BELOW = self.model.vocab.add_flag(below)
-
-        # def above(text): return bool(re.compile(r'above|start').match(text))
-        # ABOVE = self.model.vocab.add_flag(above)
-
-        for ent in doc.ents:
-            print(str(ent.text)+" "+str(ent.start_char)+" "+str(ent.end_char)+" "+str(ent.label_))
-
-        matches = self.matcher(doc)
-        money_range: Tuple = ()
-        doc_no_money = list(doc)#copy.deepcopy(doc)
-        negated = False
-
-        for match_id, start, end in matches:
-            print('MATCH', match_id)
-            string_id = self.model.vocab.strings[match_id]
-            span = doc[start:end]
-            for child in doc[start].children:
-                if child.dep_ == 'neg':
-                    negated = True
-
-            print(match_id, string_id, start, end, span.text, negated)
-            num_token = [token for token in span if token.like_num == True]
-            if len(num_token) != 1:
-                print("Error", str(num_token))
-
-            if (string_id == 'below' and negated == False) or (string_id == 'above' and negated == True):
-                money_range = (0, float(num_token[0].text))                
-
-            if (string_id == 'above' and negated == False) or (string_id == 'below' and negated == True):
-                money_range = (float(num_token[0].text), float(math.inf))                
-
-            del doc_no_money[start:end+1]
-        return doc_no_money, money_range
-
-    def analyze(self, text: str):
-        return self.model(text)
-
-    def spacy2dict(self, doc, fields = ['tag_', 'like_num', 'lemma_', 'text']):
-        return [{field: getattr(token, field) for field in fields} for token in doc]
 
     def _tokenize(self, data: List[str], ngram_range: Tuple[int, int]=(1, 1), batch_size: int=10000,
                   n_threads: int=1, lowercase: bool=True) -> Generator[List[str], Any, None]:
