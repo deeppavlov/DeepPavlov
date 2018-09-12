@@ -6,7 +6,7 @@ For this purpose you have to run special command 'paramserach'. for example:
 
 .. code:: bash
 
-    python deeppavlov/paramserach.py path_to_json_config.json --folds 5
+    python -m deeppavlov.paramsearch path_to_json_config.json --folds 5
 
 
 Parameters

@@ -11,12 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import shutil
 from pathlib import Path
+from collections import OrderedDict
 
 import numpy as np
 from sklearn.model_selection import KFold
-from collections import OrderedDict
 
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
@@ -32,7 +33,7 @@ log = get_logger(__name__)
 def change_savepath_for_model(config):
     params_helper = ParamsSearch()
 
-    dirs_for_saved_models=set()
+    dirs_for_saved_models = set()
     for p in params_helper.find_model_path(config, SAVE_PATH_ELEMENT_NAME):
         p.append(SAVE_PATH_ELEMENT_NAME)
         save_path = Path(params_helper.get_value_from_config(config, p))
@@ -108,4 +109,3 @@ def calc_cv_score(config=None, pipeline_config_path=None, data=None, n_folds=5, 
         log.info('Cross-Validation \"{}\" is: {}'.format(key, cv_score[key]))
 
     return cv_score
-
