@@ -6,9 +6,10 @@ from collections import namedtuple
 import requests
 from requests.exceptions import HTTPError
 
-from .model import Model
 from .conversation import Conversation
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.common.file import read_json
+from deeppavlov.core.commands.infer import build_model_from_config
 
 log = get_logger(__name__)
 
@@ -27,8 +28,8 @@ class Bot(Thread):
 
         self.model = None
         if not self.config['multi_instance']:
-            self.model = self._init_model(self.config)
-            log.info('New model bot instance level model initiated')
+            self.model = self._init_model()
+            log.info('New bot instance level model initiated')
 
         polling_interval = self.config['auth_polling_interval']
         self.timer = threading.Timer(polling_interval, self._update_access_info)
@@ -44,8 +45,9 @@ class Bot(Thread):
         del self.conversations[conversation_key]
         log.info(f'Deleted conversation, key: {str(conversation_key)}')
 
-    def _init_model(self, server_config: dict):
-        model = Model(server_config)
+    def _init_model(self):
+        model_config = read_json(self.config['model_config_path'])
+        model = build_model_from_config(model_config)
         return model
 
     def _update_access_info(self):
@@ -79,18 +81,18 @@ class Bot(Thread):
 
         if conversation_key not in self.conversations.keys():
             if self.config['multi_instance']:
-                conv_model = self._init_model(self.config)
-                log.info('New model conversation instance level model initiated')
+                conv_model = self._init_model()
+                log.info('New conversation instance level model initiated')
             else:
                 conv_model = self.model
 
-            conversation_lifetime = self.config['conversation_lifetime']
+            #conversation_lifetime = self.config['conversation_lifetime']
 
             self.conversations[conversation_key] = Conversation(bot=self,
                                                                 model=conv_model,
                                                                 activity=activity,
-                                                                conversation_key=conversation_key,
-                                                                conversation_lifetime=conversation_lifetime)
+                                                                conversation_key=conversation_key #,conversation_lifetime=conversation_lifetime
+                                                                )
 
             log.info(f'Created new conversation, key: {str(conversation_key)}')
 

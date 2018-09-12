@@ -1,22 +1,21 @@
 import threading
-from collections import namedtuple
 from urllib.parse import urljoin
 
 import requests
 
 from deeppavlov.core.common.log import get_logger
 
-
 log = get_logger(__name__)
-
-Observation = namedtuple('Observation', ['content', 'state', 'conversation_id'])
 
 
 class Conversation:
-    def __init__(self, bot, model, activity: dict, conversation_key, conversation_lifetime: int):
+    def __init__(self, bot, model, activity: dict, conversation_key
+                 # , conversation_lifetime: int
+                 ):
         self.bot = bot
         self.model = model
         self.key = conversation_key
+        self.out_gateway = OutGateway(self)
 
         self.bot_id = activity['recipient']['id']
         self.bot_name = activity['recipient']['name']
@@ -24,11 +23,16 @@ class Conversation:
         self.channel_id = activity['channelId']
         self.conversation_id = activity['conversation']['id']
 
+        self.rich_content = self.bot.config['rich_content']
+        self.stateful = self.bot.config['stateful']
+        self.state = None
+        self.in_x = self.model.in_x[1:] if self.stateful else self.model.in_x
+
         self.buffer = []
         self.expect = []
         self.multiargument_initiated = False
 
-        self.conversation_lifetime = conversation_lifetime
+        self.conversation_lifetime = self.bot.config['conversation_lifetime']
         self.timer = None
         self._start_timer()
 
@@ -57,19 +61,104 @@ class Conversation:
         activity_id = activity['id']
         log.debug(f'Received activity. Type: {activity_type}, id: {activity_id}')
 
+        # REMOVE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        log.debug(f'\nACTIVITY:\n{activity}\n')
+
         if activity_type in self.handled_activities.keys():
             self.handled_activities[activity_type](activity)
         else:
             log.warning(f'Unsupported activity type: {activity_type}, activity id: {activity_id}')
 
+        self._rearm_self_destruct()
+
+    def _handle_usupported(self, activity: dict):
+        activity_type = activity['type']
+        self.out_gateway.send_message(f'Unsupported kind of {activity_type} activity!')
+        log.warn(f'Recived message with unsupported type: {str(in_activity)}')
+
+    def _send_infer_results(self, pre):
+
+    def _handle_message(self, in_activity: dict):
+        if 'text' in in_activity.keys():
+            in_text = in_activity['text']
+        else:
+            self._handle_usupported(in_activity)
+
+
+
+        """
+        def infer(content: [tuple, str]):
+            if self.stateful:
+                content = tuple([content]) if isinstance(content, str) else content
+                observation = [tuple([self.state]) + content]
+            else:
+                observation = [content]
+            return self.model.infer(observation)
+
+        def handle_text():
+            in_text = in_activity['text']
+
+            if len(self.in_x) > 1:
+                if not self.multiargument_initiated:
+                    self.multiargument_initiated = True
+                    self.expect[:] = list(self.in_x)
+                    self.out_gateway.send_message(f'Please, send {self.expect.pop(0)}')
+                else:
+                    self.buffer.append(in_text)
+
+                    if self.expect:
+                        self.out_gateway.send_message(f'Please, send {self.expect.pop(0)}', in_activity)
+                    else:
+                        pred = infer(tuple(self.buffer))
+                        out_text = str(pred[0])
+                        self.out_gateway.send_message(out_text, in_activity)
+
+                        self.buffer = []
+                        self.expect[:] = list(self.in_x)
+                        self.out_gateway.send_message(f'Please, send {self.expect.pop(0)}', in_activity)
+            else:
+                pred = infer(in_text)
+                out_text = str(pred[0])
+                self.out_gateway.send_message(out_text, in_activity)
+
+        def handle_unsupported():
+            self.out_gateway.send_message('Unsupported message type!', in_activity)
+            log.warn(f'Recived message with unsupported type: {str(in_activity)}')
+
+        if 'text' in in_activity.keys():
+            handle_text()
+        else:
+            handle_unsupported()
+        """
+
+    def _infer(self, content: [tuple, str]):
+        if self.stateful:
+            content = tuple([content]) if not isinstance(content, tuple) else content
+            observation = [tuple([self.state]) + content]
+        else:
+            observation = [content]
+
+        prediction = self.model(observation)
+
+        if self.stateful:
+            self.state = prediction['state']
+
+        return prediction
+
+
+class OutGateway:
+    def __init__(self, conversation: Conversation):
+        self.conversation = conversation
+
     def _send_activity(self, url: str, out_activity: dict):
-        authorization = f"{self.bot.access_info['token_type']} {self.bot.access_info['access_token']}"
+        authorization = f"{self.conversation.bot.access_info['token_type']} " \
+                        f"{self.conversation.bot.access_info['access_token']}"
         headers = {
             'Authorization': authorization,
             'Content-Type': 'application/json'
         }
 
-        response = self.http_session.post(
+        response = self.conversation.http_session.post(
             url=url,
             json=out_activity,
             headers=headers)
@@ -77,19 +166,43 @@ class Conversation:
         log.debug(f'Sent activity to the MSBotFramework server. '
                   f'Response code: {response.status_code}, response contents: {response.json()}')
 
-    def _send_message(self, message_text: str, in_activity: dict = None):
-        service_url = self.service_url
+    def send_message(self, message_text: str, in_activity: dict = None):
+        service_url = self.conversation.service_url
+
+        card_action_1 = {
+            "title": "Test_1",
+            "type": "imBack",
+            "value": "Test_a_button_1"
+        }
+
+        card_action_2 = {
+            "title": "Test_2",
+            "type": "imBack",
+            "value": "Test_a_button_2"
+        }
+
+        rich_card = {
+            "buttons": [card_action_1, card_action_2]
+        }
+
+        attachments = [
+            {
+                "contentType": "application/vnd.microsoft.card.thumbnail",
+                "content": rich_card
+            }
+        ]
 
         out_activity = {
             'type': 'message',
             'from': {
-                'id': self.bot_id,
-                'name': self.bot_name
+                'id': self.conversation.bot_id,
+                'name': self.conversation.bot_name
             },
             'conversation': {
-                'id': self.conversation_id
+                'id': self.conversation.conversation_id
             },
-            'text': message_text
+            'text': message_text,
+            'attachments': attachments
         }
 
         if in_activity:
@@ -113,51 +226,6 @@ class Conversation:
             except KeyError:
                 pass
 
-        url = urljoin(service_url, f"v3/conversations/{self.conversation_id}/activities")
+        url = urljoin(service_url, f"v3/conversations/{self.conversation.conversation_id}/activities")
 
         self._send_activity(url, out_activity)
-
-    def _handle_message(self, in_activity: dict):
-
-        def infer(content):
-            observation = Observation(content=content,
-                                      state=None,
-                                      conversation_id=None)
-            return self.model.infer(observation)
-
-        def handle_text():
-            in_text = in_activity['text']
-
-            if len(self.model.in_x) > 1:
-                if not self.multiargument_initiated:
-                    self.multiargument_initiated = True
-                    self.expect[:] = list(self.model.in_x)
-                    self._send_message(f'Please, send {self.expect.pop(0)}')
-                else:
-                    self.buffer.append(in_text)
-
-                    if self.expect:
-                        self._send_message(f'Please, send {self.expect.pop(0)}', in_activity)
-                    else:
-                        pred = infer([tuple(self.buffer)])
-                        out_text = str(pred[0])
-                        self._send_message(out_text, in_activity)
-
-                        self.buffer = []
-                        self.expect[:] = list(self.model.in_x)
-                        self._send_message(f'Please, send {self.expect.pop(0)}', in_activity)
-            else:
-                pred = infer([in_text])
-                out_text = str(pred[0])
-                self._send_message(out_text, in_activity)
-
-        def handle_unsupported():
-            self._send_message('Unsupported message type!', in_activity)
-            log.warn(f'Recived message with unsupported type: {str(in_activity)}')
-
-        self._rearm_self_destruct()
-
-        if 'text' in in_activity.keys():
-            handle_text()
-        else:
-            handle_unsupported()

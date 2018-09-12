@@ -16,13 +16,5 @@ class Model:
         self.in_x = self.model.in_x
 
     def infer(self, observation):
-        if self.server_config['stateful']:
-            # TODO: implemet stateful mode
-            prediction = '"stateful" mode is not supported yet'
-        elif self.server_config['rich_content']:
-            # TODO: implemet rich-content mode
-            prediction = '"rich-content" mode is not supported yet'
-        else:
-            prediction = self.model(observation.content)
-
+        prediction = self.model(observation)
         return prediction
