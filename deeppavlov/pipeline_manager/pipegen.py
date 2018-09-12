@@ -38,10 +38,11 @@ class PipeGen:
         Initialize generator with input params.
 
         Args:
-            config_path: str; path to config file with search pattern.
-            save_path: str; path to folder with pipelines checkpoints
+            config: str or dict; path to config file with search pattern, or dict with it config.
+            save_path: str; path to folder with pipelines checkpoints.
             stype: str; random or grid - the trigger that determines type of hypersearch
             n: int; determines the number of generated pipelines, if hyper_search == random.
+            test_mode: bool; trigger that determine logic of changing save and loads paths in config.
         """
         if isinstance(config, dict):
             self.main_config = config
