@@ -1,18 +1,16 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import datetime
 import importlib
@@ -41,10 +39,8 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-def prettify_metrics(metrics, precision=4):
-    """
-    Prettifies the dictionary of metrics
-    """
+def prettify_metrics(metrics: dict, precision: int = 4) -> OrderedDict:
+    """Prettifies the dictionary of metrics."""
     prettified_metrics = OrderedDict()
     for key, value in metrics:
         value = round(value, precision)
@@ -65,8 +61,8 @@ def _fit_batches(model: Estimator, iterator: DataFittingIterator, train_config) 
     return model
 
 
-def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingIterator]):
-
+def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingIterator]) -> Chainer:
+    """Fit and return the chainer described in corresponding configuration dictionary."""
     chainer_config: dict = config['chainer']
     chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
     for component_config in chainer_config['pipe']:
@@ -97,6 +93,7 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
 
 
 def train_evaluate_model_from_config(config: [str, Path, dict], to_train=True, to_validate=True) -> Union[Dict, None]:
+    """Make training and evaluation of the model described in corresponding configuration file."""
     if isinstance(config, (str, Path)):
         config = read_json(config)
     set_deeppavlov_root(config)
@@ -297,6 +294,36 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
 
         tb_train_writer = tf.summary.FileWriter(str(tb_log_dir / 'train_log'))
         tb_valid_writer = tf.summary.FileWriter(str(tb_log_dir / 'valid_log'))
+
+    # validate first (important if model is pre-trained)
+    if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
+        report = _test_model(model, metrics_functions, iterator,
+                             train_config['batch_size'], 'valid', start_time, train_config['show_examples'])
+        report['epochs_done'] = epochs
+        report['batches_seen'] = i
+        report['train_examples_seen'] = examples
+
+        metrics = list(report['metrics'].items())
+
+        m_name, score = metrics[0]
+        if improved(score, best):
+            patience = 0
+            log.info('New best {} of {}'.format(m_name, score))
+            best = score
+            log.info('Saving model')
+            model.save()
+            saved = True
+        else:
+            patience += 1
+            log.info('Did not improve on the {} of {}'.format(m_name, best))
+
+        report['impatience'] = patience
+        if train_config['validation_patience'] > 0:
+            report['patience_limit'] = train_config['validation_patience']
+
+        model.process_event(event_name='after_validation', data=report)
+        report = {'valid': report}
+        print(json.dumps(report, ensure_ascii=False))
 
     try:
         while True:

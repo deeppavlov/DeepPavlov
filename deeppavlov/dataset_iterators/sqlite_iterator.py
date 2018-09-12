@@ -39,7 +39,7 @@ class SQLiteDataIterator(DataFittingIterator):
         data_dir: a directory where to save downloaded DB to
         data_url: an URL where to download a DB from
         batch_size: a number of samples in a single batch
-        shuffle: whether to shuffle data when batching
+        shuffle: whether to shuffle data during batching
         seed: random seed for data shuffling
 
     Attributes:
@@ -48,7 +48,7 @@ class SQLiteDataIterator(DataFittingIterator):
         doc_ids: DB document ids
         doc2index: a dictionary of document indices and their titles
         batch_size: a number of samples in a single batch
-        shuffle: whether to shuffle data when batching
+        shuffle: whether to shuffle data during batching
         random: an instance of :class:`Random` class.
 
     """

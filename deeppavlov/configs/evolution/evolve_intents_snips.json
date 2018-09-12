@@ -43,12 +43,8 @@
         "load_path": "vocabs/snips_classes.dict"
       },
       {
-        "in": [
-          "x"
-        ],
-        "out": [
-          "x_lower"
-        ],
+        "in": "x",
+        "out": "x_lower",
         "name": "str_lower"
       },
       {
@@ -79,7 +75,7 @@
           "y_probas_dict"
         ],
         "main": true,
-        "name": "intent_model",
+        "name": "keras_classification_model",
         "save_path": "evolution/classification/intents_snips",
         "load_path": "evolution/classification/intents_snips",
         "embedding_size": "#my_embedder.dim",
@@ -117,7 +113,7 @@
           ],
           "scale": "log"
         },
-        "loss": "binary_crossentropy",
+        "loss": "categorical_crossentropy",
         "text_size": 15,
         "coef_reg_cnn": {
           "evolve_range": [
@@ -194,7 +190,7 @@
         "subdir": "snips"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/dstc2_fastText_model.bin",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "embeddings"
       }
     ]

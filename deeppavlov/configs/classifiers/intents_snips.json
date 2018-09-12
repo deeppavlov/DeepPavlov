@@ -104,7 +104,7 @@
     "validation_patience": 5,
     "val_every_n_epochs": 5,
     "log_every_n_epochs": 5,
-    "show_examples": false,
+    "show_examples": true,
     "validate_best": true,
     "test_best": false
   },

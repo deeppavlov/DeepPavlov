@@ -40,6 +40,7 @@ Welcome to DeepPavlov's documentation!
    Open-Domain Question Answering <skills/odqa>
    Pattern Matching <skills/pattern_matching>
    Sequence-To-Sequence Dialogue Bot <skills/seq2seq_go_bot>
+   Frequently Asked Questions Answering <skills/faq>
 
 
 .. toctree::
@@ -56,6 +57,7 @@ Welcome to DeepPavlov's documentation!
    :caption: Developer Guides
 
    REST API <devguides/rest_api>
+   Microsoft Bot Framework integration <devguides/ms_bot_integration>
    How to contribute <devguides/contribution>
 
 

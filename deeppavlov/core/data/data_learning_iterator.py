@@ -25,10 +25,10 @@ class DataLearningIterator:
     Args:
         data: list of (x, y) pairs for every data type in ``'train'``, ``'valid'`` and ``'test'``
         seed: random seed for data shuffling
-        shuffle: whether to shuffle data when batching
+        shuffle: whether to shuffle data during batching
 
     Attributes:
-        shuffle: whether to shuffle data when batching
+        shuffle: whether to shuffle data during batching
         random: instance of ``Random`` initialized with a seed
     """
     def split(self, *args, **kwargs):
