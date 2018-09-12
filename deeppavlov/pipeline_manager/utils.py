@@ -245,7 +245,7 @@ def build_report(log, target_metric=None, save_path='./'):
                 pipe['components'].append(comp_data)
 
             for name, val_ in conf['results'].items():
-                pipe['res'][name] = val_['metrics']
+                pipe['res'][name] = val_
             pipelines.append(pipe)
 
     # Sorting pipelines
@@ -314,7 +314,7 @@ def get_data(log):
                 pipe['components'].append(comp_data)
 
             for name, val_ in conf['results'].items():
-                pipe['res'][name] = val_['metrics']
+                pipe['res'][name] = val_
             pipelines.append(pipe)
 
     return max_com, pipelines
