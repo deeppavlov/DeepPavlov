@@ -275,7 +275,7 @@ class TestQuickStart(object):
         model_args_names = server_params['model_args_names']
 
         url_base = 'http://{}:{}/'.format(server_params['host'], server_params['port'])
-        url = urljoin(url_base, server_params['model_endpoint'])
+        url = urljoin(url_base.replace('http://0.0.0.0:', 'http://127.0.0.1:'), server_params['model_endpoint'])
 
         post_headers = {'Accept': 'application/json'}
 
@@ -299,11 +299,12 @@ class TestQuickStart(object):
                                .format(''.join((line.decode() for line in logfile.readlines()))))
 
         finally:
-            p.kill(signal.SIGINT)
-            if p.wait() != 0:
-                logfile.seek(0)
-                raise RuntimeError('Error in shutting down API server: \n{}'
-                                   .format(''.join((line.decode() for line in logfile.readlines()))))
+            p.kill(signal.SIGTERM)
+            p.wait()
+            # if p.wait() != 0:
+            #     logfile.seek(0)
+            #     raise RuntimeError('Error in shutting down API server: \n{}'
+            #                        .format(''.join((line.decode() for line in logfile.readlines()))))
 
     def test_interacting_pretrained_model(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
