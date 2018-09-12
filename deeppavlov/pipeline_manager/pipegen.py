@@ -50,9 +50,6 @@ class PipeGen:
         self.main_config = None
         self.chainer = None
         self.structure = None
-        #########################
-        self.batch_size = None
-        #########################
         self.get_structure()
         self._check_component_name()
 
@@ -91,11 +88,6 @@ class PipeGen:
 
         self.chainer = self.main_config.pop('chainer')
         self.structure = self.chainer['pipe']
-        #####################################################
-        # if self.chainer['train'].get('train', None) is not None:
-        #     if isinstance(self.chainer['train']['batch_size'], list):
-        #         self.batch_size = self.chainer['train']['batch_size']
-        #####################################################
         return self
 
     def random_get_len(self):
@@ -197,10 +189,6 @@ class PipeGen:
             chainer_pipe = list(pipe)
             chainer_pipe = self.change_load_path(chainer_pipe, k)
             new_config['chainer']['pipe'] = chainer_pipe
-            #########################################################################
-            if self.batch_size is not None:
-                new_config['train']['batch_size'] = np.random.choice(self.batch_size)
-            #########################################################################
             yield new_config
 
     # random generation

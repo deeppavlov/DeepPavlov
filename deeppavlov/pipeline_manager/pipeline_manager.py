@@ -173,6 +173,8 @@ class PipelineManager:
             else:
                 raise ValueError("Only 'train' and 'evaluate' mode are available, but {0} was found.".format(self.mode))
 
+            del results
+
         # del all tmp files in save path
         rmtree(join(self.save_path, "tmp"))
         print('[ The test was successful ]')
