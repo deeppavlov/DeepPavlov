@@ -120,8 +120,7 @@ def main():
             log.error('Minimum number of Folds is 2')
         else:
             n_folds = args.folds
-            score = calc_cv_score(pipeline_config_path=pipeline_config_path, n_folds=n_folds, is_loo=False)
-            print('Cross-Validation score: {}'.format(score))
+            calc_cv_score(pipeline_config_path=pipeline_config_path, n_folds=n_folds, is_loo=False)
 
 
 if __name__ == "__main__":

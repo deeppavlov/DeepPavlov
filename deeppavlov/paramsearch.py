@@ -93,7 +93,8 @@ def main():
 
             if ((n_folds is not None) | (is_loo)):
                 # CV for model evaluation
-                score = calc_cv_score(config=config, data=data, n_folds=n_folds, is_loo=is_loo)
+                score_dict = calc_cv_score(config=config, data=data, n_folds=n_folds, is_loo=is_loo)
+                score = score_dict[next(iter(score_dict))]
             else:
                 # train/valid for model evaluation
                 data_to_evaluate = data.copy()
