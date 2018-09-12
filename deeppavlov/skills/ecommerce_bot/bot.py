@@ -1,15 +1,14 @@
-"""
-Copyright 2018 Neural Networks and Deep Learning lab, MIPT
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-    http://www.apache.org/licenses/LICENSE-2.0
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2018 Neural Networks and Deep Learning lab, MIPT
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import copy
 import json
 
@@ -31,49 +30,68 @@ log = get_logger(__name__)
 
 @register("ecommerce_bot")
 class EcommerceBot(Component):
-    """Class to perform ranking catalogue items accroding to the query
-    Ask questions (according to entropy) to specify the query
+    """Class to retrieve product items from `load_path` catalogs
+    in sorted order according to the similarity measure
+    Retrieve the specification attributes with corresponding values
+    in sorted order according to entropy.
 
-    Attributes:
-        min_similarity: simililarity threshlold for ranking
+    Parameters:
+        min_similarity: similarity threshold for ranking
         min_entropy: min entropy threshold for specifying
-        tokenizer: component for SpaCy analyze
+        entropy_fields: the specification attributes of the catalog items
         preprocess: text preprocessing component
-        state: global state
+
+    Returns:
+        items: product items in sorted order from `start` till `end` (from the dialog state)
+        entropies: attributes with corresponding values in sorted order
+        total: total number of retrieved results that satisfy min_similarity
+        confidence: similarity score
+        state: dialog state
     """
 
-    def __init__(self, preprocess: Component, tokenizer: Component, save_path: str,
-                 load_path: str, min_similarity: float = 0.5, min_entropy: float = 0.5, **kwargs) -> None:
+    def __init__(self, preprocess: Component, save_path: str, load_path: str, 
+                 entropy_fields: list, min_similarity: float = 0.5,
+                 min_entropy: float = 0.5, **kwargs) -> None:
         self.preprocess = preprocess
-        self.tokenizer = tokenizer
-        self.tokenizer.prepare_for_money()
         self.save_path = expand_path(save_path)
 
-        if type(load_path) == list:
+        if isinstance(load_path, list):
             self.load_path = [expand_path(path) for path in load_path]
         else:
             self.load_path = [expand_path(load_path)]
 
         self.min_similarity = min_similarity
         self.min_entropy = min_entropy
-        self.ec_data = []
+        self.entropy_fields = entropy_fields
+        self.ec_data: List = []
         if kwargs.get('mode') != 'train':
             self.load()
 
-    def fit(self, data) -> None:
-        log.info('Items to nlp: '+str(len(data)))
+    def fit(self, data: List[Dict[Any, Any]]) -> None:
+        """Preprocess items `title` and `description` from the `data`
+
+        Parameters:
+            data: list of catalog items
+
+        Returns:
+            None
+        """
+
+        log.info(f"Items to nlp: {len(data)}")
         self.ec_data = [dict(item, **{
-                                    'title_nlped': self.tokenizer.spacy2dict(self.tokenizer.analyze(item['Title'])),
-                                    'feat_nlped': self.tokenizer.spacy2dict(self.tokenizer.analyze(item['Title']+'. '+item['Feature']))
+                                    'title_nlped': self.preprocess.spacy2dict(self.preprocess.analyze(item['Title'])),
+                                    'feat_nlped': self.preprocess.spacy2dict(self.preprocess.analyze(item['Title']+'. '+item['Feature']))
                                       }) for item in data]
         log.info('Data are nlped')
 
     def save(self, **kwargs) -> None:
+        """Save classifier parameters"""
         log.info(f"Saving model to {self.save_path}")
         make_all_dirs(self.save_path)
         save_pickle(self.ec_data, self.save_path)
 
     def load(self, **kwargs) -> None:
+        """Load classifier parameters"""
         log.info(f"Loading model from {self.load_path}")
         for path in self.load_path:
             if is_file_exist(path):
@@ -83,19 +101,34 @@ class EcommerceBot(Component):
 
         log.info(f"Loaded items {len(self.ec_data)}")
 
-    def __call__(self, queries, states, **kwargs) -> Tuple[Dict[str, Dict[Any, Any]], List[float], Dict[Any, Any]]:
-        response = []
-        confidence = []
-        results_args = []
-        results_args_sim = []
+    def __call__(self, queries: List[str], states: List[Dict[Any, Any]], **kwargs) -> Tuple[Dict[str, Dict[Any, Any]], List[float], Dict[Any, Any]]:
+        """Retrieve catalog items according to the BLEU measure
 
-        log.debug(f"queries: {queries} states:{states}")
-        
+        Parameters:
+            queries: list of queries
+            states: list of dialogs state
+
+        Returns:
+            response:   items: list of retrieved items 
+                        total: total number of relevant items
+                        entropies: list of entropy attributes with corresponding values
+
+            confidence: list of similarity scores
+            state: dialog state
+        """
+
+        response: List = []
+        confidence: List = []
+        results_args: List = []
+        results_args_sim: List = []
+
+        log.debug(f"queries: {queries} states: {states}")
+
         for item_idx, query in enumerate(queries):
 
             state = states[item_idx]
 
-            if type(state) == str:
+            if isinstance(state, str):
                 try:
                     state = json.loads(state)
                 except:
@@ -107,18 +140,20 @@ class EcommerceBot(Component):
             state['start'] = start
             state['stop'] = stop
 
-            query = self.tokenizer.analyze(query)
+            query = self.preprocess.analyze(query)
 
-            query, money_range = self.tokenizer.extract_money(query)
+            query, money_range = self.preprocess.extract_money(query)
             log.debug(f"money detected: {query} {money_range}")
 
             if len(money_range) == 2:
                 state['Price'] = money_range
-            
-            score_title = [bleu_advanced(self.preprocess.lemmas(item['title_nlped']), self.preprocess.lemmas(self.preprocess.filter_nlp_title(query)), 
+
+            score_title = [bleu_advanced(self.preprocess.lemmas(item['title_nlped']),
+                           self.preprocess.lemmas(self.preprocess.filter_nlp_title(query)),
                            weights=(1,), penalty=False) for item in self.ec_data]
-            
-            score_feat = [bleu_advanced(self.preprocess.lemmas(item['feat_nlped']), self.preprocess.lemmas(self.preprocess.filter_nlp(query)), 
+
+            score_feat = [bleu_advanced(self.preprocess.lemmas(item['feat_nlped']),
+                          self.preprocess.lemmas(self.preprocess.filter_nlp(query)),
                           weights=(0.3, 0.7), penalty=False) for idx, item in enumerate(self.ec_data)]
 
             scores = np.mean(
@@ -150,12 +185,14 @@ class EcommerceBot(Component):
                                         self.preprocess.price(self.ec_data[idx]) <= price[1] and
                                         self.preprocess.price(self.ec_data[idx]) != 0]
                     log.debug(f"Items after price filtering {len(results_args_sim)}")
-                    
+
                 elif key in ['query', 'start', 'stop']:
                     continue
 
                 else:
-                    results_args_sim = [idx for idx in results_args_sim if key in self.ec_data[idx] if self.ec_data[idx][key].lower() == value.lower()]
+                    results_args_sim = [idx for idx in results_args_sim
+                                        if key in self.ec_data[idx]
+                                        if self.ec_data[idx][key].lower() == value.lower()]
 
             response = []
             for idx in results_args_sim[start:stop]:
@@ -164,18 +201,27 @@ class EcommerceBot(Component):
                 del temp['feat_nlped']
                 response.append(temp)
 
-            confidence = [(score_title[idx], score_feat[idx]) for idx in results_args_sim[start:stop]]
+            confidence = [(score_title[idx], score_feat[idx])
+                          for idx in results_args_sim[start:stop]]
             entropies = self._entropy_subquery(results_args_sim)
             log.debug(f"Total number of relevant answers {len(results_args_sim)}")
 
         return json.dumps(({'items': response, 'entropy': entropies, 'total':len(results_args_sim)}, confidence, state))
 
-    def _entropy_subquery(self, results_args) -> List[Tuple[float, str, List[Tuple[str, int]]]]:
-        fields = ['Size', 'Brand', 'Author', 'Color', 'Genre']
+    def _entropy_subquery(self, results_args: List[int]) -> List[Tuple[float, str, List[Tuple[str, int]]]]:
+        """Calculate entropy of selected attributes for items from the catalog.
+
+        Parameters:
+            results_args: items id to consider
+
+        Returns:
+            entropies: entropy score with attribute name and corresponding values
+        """
+
         ent_fields: Dict = {}
 
         for idx in results_args:
-            for field in fields:
+            for field in self.entropy_fields:
                 if field in self.ec_data[idx]:
                     if field not in ent_fields:
                         ent_fields[field] = []
