@@ -18,6 +18,7 @@ import numpy as np
 from pathlib import Path
 from sklearn.model_selection import KFold
 from collections import OrderedDict
+from typing import Union, Dict
 
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
@@ -79,15 +80,11 @@ def generate_train_valid(data, n_folds=5, is_loo=False):
             yield data_i
 
 
-def calc_cv_score(config=None, pipeline_config_path=None, data=None, n_folds=5, is_loo=False):
-    if config is None:
-        if pipeline_config_path is not None:
-            config = read_json(pipeline_config_path)
-        else:
-            raise ValueError('Both \"config\" and \"pipeline_config_path\" are None')
+def calc_cv_score(config=Union[Dict, str], n_folds=5, is_loo=False) -> OrderedDict:
+    if isinstance(config, str):
+        config = read_json(config)
 
-    if data is None:
-        data = read_data_by_config(config)
+    data = read_data_by_config(config)
 
     config, dirs_for_saved_models = change_savepath_for_model(config)
 
@@ -98,7 +95,9 @@ def calc_cv_score(config=None, pipeline_config_path=None, data=None, n_folds=5, 
         iterator = get_iterator_from_config(config, data_i)
         create_dirs_to_save_models(dirs_for_saved_models)
         score = train_evaluate_model_from_config(config, iterator=iterator)
+        # TODO this command del all checkpoints, it need to be fixed
         delete_dir_for_saved_models(dirs_for_saved_models)
+
         for key, value in score['valid'].items():
             cv_score[key].append(value)
 

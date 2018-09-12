@@ -17,6 +17,7 @@ import numpy as np
 from os.path import join
 from itertools import product
 from copy import deepcopy
+from typing import Union, Dict
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
@@ -27,11 +28,12 @@ from deeppavlov.pipeline_manager.utils import HyperPar
 log = get_logger(__name__)
 
 
+# TODO go on refactor
 class PipeGen:
     """
     The class implements the generator of standard DeepPavlov configs.
     """
-    def __init__(self, config_path: str, save_path: str, stype: str ='grid', n=10, test_mode=False):
+    def __init__(self, config: Union[Dict, str], save_path: str, stype: str ='grid', n=10, test_mode=False):
         """
         Initialize generator with input params.
 
@@ -41,21 +43,37 @@ class PipeGen:
             stype: str; random or grid - the trigger that determines type of hypersearch
             n: int; determines the number of generated pipelines, if hyper_search == random.
         """
+        if isinstance(config, dict):
+            self.main_config = config
+        else:
+            self.main_config = read_json(config)
+
+        if 'chainer' not in self.main_config:
+            raise ConfigError("Main config file not contain 'chainer' component."
+                              "Structure search can not be started without this component.")
+
+        self.dataset_reader = self.main_config.pop("dataset_reader")
+        self.dataset_iterator = self.main_config.pop("dataset_iterator")
+        if not isinstance(self.dataset_iterator, dict):
+            raise ConfigError("Dataset iterator must be one for hole experiment.")
+        self.train_config = self.main_config.pop("train")
+        self.chainer = self.main_config.pop('chainer')
+        self.structure = self.chainer['pipe']
+
         self.test_mode = test_mode
         self.save_path = save_path
-        self.config_path = config_path
-        self.N = n
         self.stype = stype
         self.pipes = []
-        self.main_config = None
-        self.chainer = None
-        self.structure = None
-        self.get_structure()
+        self.N = n
+
+        self.enumerator = self.pipeline_enumeration()
+
         self._check_component_name()
 
         if self.stype not in ['grid', 'random']:
             raise ValueError("Sorry {0} search not implemented."
                              " At the moment you can use only 'random' and 'grid' search.".format(self.stype))
+
         elif self.stype == 'random':
             self.len = 0
             self.random_get_len()
@@ -74,21 +92,33 @@ class PipeGen:
                                           "don't contain the 'component_name' key.".format(i+1, j+1))
         return None
 
-    def get_structure(self):
-        """
-        Read search pattern from config (json) file.
+    def pipeline_enumeration(self):
+        if isinstance(self.dataset_reader, list):
+            drs = []
+            for dr in self.dataset_reader:
+                drs.append(dr)
+        else:
+            drs = [self.dataset_reader]
 
-        Returns:
-            self
-        """
-        self.main_config = read_json(self.config_path)
-        if 'chainer' not in self.main_config:
-            raise ConfigError("Main config file not contain 'chainer' component."
-                              "Structure search can not be started without this component.")
+        if 'batch_size' in self.train_config.keys():
+            bs_conf = deepcopy(self.train_config)
+            if isinstance(self.train_config['batch_size'], list):
+                bss = []
+                for bs in self.train_config['batch_size']:
+                    bs_conf['batch_size'] = bs
+                    bss.append(bs_conf)
+            else:
+                bss = [self.train_config]
+        else:
+            bss = [self.train_config]
 
-        self.chainer = self.main_config.pop('chainer')
-        self.structure = self.chainer['pipe']
-        return self
+        self.pipes.append(drs)
+        self.pipes.append(bss)
+
+        for components in self.structure:
+            self.pipes.append(components)
+
+        return product(*self.pipes)
 
     def random_get_len(self):
         """
@@ -322,6 +352,7 @@ class PipeGen:
                     pipe.remove(conf)
             yield pipe
 
+    # TODO this method shoud be write as free method
     def change_load_path(self, config, n):
         """
         Change save_path and load_path attributes in standard config.
