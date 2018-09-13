@@ -215,66 +215,134 @@ def build_report(log, target_metric=None, save_path='./'):
 
 # ________________________________________________Generate new table___________________________________________________
 def get_data(log):
-    pipelines = []
+    dataset_names = {}
     max_com = 0
-    for model_name, val in log['experiments'].items():
-        for num, conf in val.items():
-            pipe = dict(index=int(num), components=[], res={})
-            # max amount of components
-            if max_com < len(conf['config']):
-                max_com = len(conf['config'])
 
-            for component in conf['config']:
-                comp_data = {}
-                comp_data['name'] = component.pop('component_name')
+    for dataset_name, batch_val in log['experiments'].items():
+        dataset_names[dataset_name] = []
+        batch_sizes = {}
+        for batch_size, models_val in batch_val.items():
+            pipelines = []
+            for model_name, val in models_val.items():
+                for num, conf in val.items():
+                    pipe = dict(index=int(num), components=[], res={})
+                    # max amount of components
+                    if max_com < len(conf['config']):
+                        max_com = len(conf['config'])
 
-                if 'save_path' in component.keys():
-                    del component['save_path']
-                if 'load_path' in component.keys():
-                    del component['load_path']
-                if 'scratch_init' in component.keys():
-                    del component['scratch_init']
-                if 'name' in component.keys():
-                    del component['name']
-                if 'id' in component.keys():
-                    del component['id']
-                if 'in' in component.keys():
-                    del component['in']
-                if 'in_y' in component.keys():
-                    del component['in_y']
-                if 'out' in component.keys():
-                    del component['out']
-                if 'main' in component.keys():
-                    del component['main']
-                if 'out' in component.keys():
-                    del component['out']
-                if 'fit_on' in component.keys():
-                    del component['fit_on']
+                    for component in conf['config']:
+                        comp_data = {}
+                        comp_data['name'] = component.pop('component_name')
 
-                comp_data['conf'] = component
-                pipe['components'].append(comp_data)
+                        if 'save_path' in component.keys():
+                            del component['save_path']
+                        if 'load_path' in component.keys():
+                            del component['load_path']
+                        if 'scratch_init' in component.keys():
+                            del component['scratch_init']
+                        if 'name' in component.keys():
+                            del component['name']
+                        if 'id' in component.keys():
+                            del component['id']
+                        if 'in' in component.keys():
+                            del component['in']
+                        if 'in_y' in component.keys():
+                            del component['in_y']
+                        if 'out' in component.keys():
+                            del component['out']
+                        if 'main' in component.keys():
+                            del component['main']
+                        if 'out' in component.keys():
+                            del component['out']
+                        if 'fit_on' in component.keys():
+                            del component['fit_on']
 
-            for name, val_ in conf['results'].items():
-                pipe['res'][name] = val_
-            pipelines.append(pipe)
+                        comp_data['conf'] = component
+                        pipe['components'].append(comp_data)
 
-    return max_com, pipelines
+                    for name, val_ in conf['results'].items():
+                        pipe['res'][name] = val_
+                    pipelines.append(pipe)
+            batch_sizes[batch_size] = pipelines
+        dataset_names[dataset_name].append(batch_sizes)
+
+    return max_com, dataset_names
 
 
-def write_legend(sheet, num, target_metric, metric_names, max_com, cell_format):
+def write_info(sheet, num, target_metric, cell_format):
     # Start from the first cell. Rows and columns are zero indexed.
     # write info
     sheet.write(0, 0, "Number of pipelines:", cell_format)
     sheet.write(0, 1, num, cell_format)
     sheet.write(0, 2, "Target metric:", cell_format)
     sheet.write(0, 3, target_metric, cell_format)
+    return 2, 0
+
+
+def write_legend(sheet, row, col, metric_names, max_com, cell_format):
     # write legend
-    sheet.write(2, 0, "Pipeline", cell_format)
-    sheet.merge_range(2, 1, 2, max_com - 1, "Preprocessing", cell_format)
-    sheet.write(2, max_com, "Model", cell_format)
+    sheet.write(row, col, "Pipeline", cell_format)
+    sheet.merge_range(row, col + 1, row, max_com - 1, "Preprocessing", cell_format)
+    sheet.write(row, max_com, "Model", cell_format)
     for k, met in enumerate(metric_names):
-        sheet.write(2, max_com + 1 + k, met, cell_format)
-    return 3, 0
+        sheet.write(row, max_com + 1 + k, met, cell_format)
+
+    return row + 1, col
+
+
+def write_dataset_name(sheet, sheet_2, row_1, row_2, col, name, dataset_list, format, max_l, target_metric,
+                       metric_names):
+    # write dataset name
+    sheet.write(row_1, col, "Dataset name", format)
+    sheet.write(row_1, col + 1, name, format)
+    row_1 += 2
+
+    # write dataset name
+    sheet_2.write(row_2, col, "Dataset name", format)
+    sheet_2.write(row_2, col + 1, name, format)
+    row_2 += 2
+
+    for bs_dict in dataset_list:
+        row_1, row_2 = write_batch_size(row_1, row_2, col, bs_dict, sheet, sheet_2, format, max_l, target_metric,
+                                        metric_names)
+
+    return row_1 + 2, row_2 + 2
+
+
+def write_batch_size(row1, row2, col, bs_dict, sheet, sheet_2, format, max_l, target_metric, metric_names):
+    row_1 = row1
+    row_2 = row2
+
+    for bs, val_ in bs_dict.items():
+        # write batch size
+        sheet.write(row_1, col, "Batch size", format)
+        sheet.write(row_1, col + 1, bs, format)
+        row_1 += 1
+
+        row_1, col = write_legend(sheet, row_1, col, metric_names, max_l, format)
+
+        sheet_2.write(row_2, col, "Batch size", format)
+        sheet_2.write(row_2, col + 1, bs, format)
+        row_2 += 1
+
+        row_2, col = write_legend(sheet_2, row_2, col, metric_names, max_l, format)
+
+        # Write pipelines table
+        row_1 = write_table(sheet, val_, row_1, col, format, max_l)
+        # Get the best pipelines
+        best_pipelines = get_best(val_, target_metric)
+        # Sorting pipelines
+        best_pipelines = sort_pipes(best_pipelines, target_metric)
+        # Write sort pipelines table
+        row_2 = write_table(sheet_2, best_pipelines, row_2, col, format, max_l, write_conf=False)
+
+        row_1 += 2
+        row_2 += 2
+
+    row_1 += 2
+    row_2 += 2
+
+    return row_1, row_2
 
 
 def write_metrics(sheet, comp_dict, start_x, start_y, cell_format):
@@ -324,7 +392,7 @@ def write_table(worksheet, pipelines, row, col, cell_format, max_l, write_conf=T
     for pipe in pipelines:
         write_pipe(worksheet, pipe, row, col, cell_format, max_l, write_conf)
         row += 1
-    return None
+    return row
 
 
 def get_best(data, target):
@@ -386,17 +454,7 @@ def sort_pipes(pipes, target_metric):
     return sort_pipes_
 
 
-def build_pipeline_table(log, target_metric=None, save_path='./'):
-    if isinstance(log, str):
-        with open(log, 'r') as lgd:
-            log_data = json.load(lgd)
-            lgd.close()
-    elif isinstance(log, dict):
-        log_data = log
-    else:
-        raise ValueError("Input must be a strings (path to the json logfile) or a dict with log data,"
-                         " but {} was found.".format(type(log)))
-
+def build_pipeline_table(log_data, target_metric=None, save_path='./'):
     exp_name = log_data['experiment_info']['exp_name']
     date = log_data['experiment_info']['date']
     metrics = log_data['experiment_info']['metrics']
@@ -415,21 +473,20 @@ def build_pipeline_table(log, target_metric=None, save_path='./'):
                                        'border': 1,
                                        'align': 'center',
                                        'valign': 'vcenter'})
-
     # write legend to tables
-    row, col = write_legend(worksheet_1, num_p, target_metric, metrics, max_l, cell_format)
-    row, col = write_legend(worksheet_2, num_p, target_metric, metrics, max_l, cell_format)
+    row, col = write_info(worksheet_1, num_p, target_metric, cell_format)
+    row, col = write_info(worksheet_2, num_p, target_metric, cell_format)
 
-    # Write pipelines table
-    write_table(worksheet_2, pipe_data, row, col, cell_format, max_l)
-    # Get the best pipelines
-    best_pipelines = get_best(pipe_data, target_metric)
-    # Sorting pipelines
-    best_pipelines = sort_pipes(best_pipelines, target_metric)
-    # Write sort pipelines table
-    write_table(worksheet_1, best_pipelines, row, col, cell_format, max_l, write_conf=False)
+    row1 = row
+    row2 = row
+
+    for dataset_name, dataset_dict in pipe_data.items():
+        row1, row2 = write_dataset_name(worksheet_2, worksheet_1, row1, row2, col, dataset_name, dataset_dict,
+                                        cell_format, max_l, target_metric, metrics)
+
     workbook.close()
     return None
+
 
 # ___________________________________________________Generate plots___________________________________________________
 

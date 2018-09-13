@@ -128,6 +128,8 @@ class PipelineManager:
 
             self.logger.pipe_ind = i + 1
             self.logger.pipe_conf = copy(pipe['chainer']['pipe'])
+            self.logger.dataset = copy(pipe['dataset_reader']['data_path'])
+            self.logger.batch_size = pipe['train'].get('batch_size', "None")
 
             # start pipeline time
             pipe_start = time()

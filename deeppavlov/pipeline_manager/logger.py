@@ -48,6 +48,8 @@ class Logger(object):
         self.model = None
         self.pipe_res = None
         self.pipe_time = None
+        self.batch_size = None
+        self.dataset = None
 
         # build folder dependencies
         self.log_path = join(self.root, date, self.exp_name)
@@ -70,6 +72,8 @@ class Logger(object):
     def tmp_reset(self):
         # tmp parameters
         self.pipe_ind = 0
+        self.batch_size = None
+        self.dataset = None
         self.pipe_conf = None
         self.model = None
         self.pipe_res = None
@@ -135,19 +139,27 @@ class Logger(object):
 
         pipe_name = '-->'.join([x['name'] for x in self.pipe_conf])
 
-        if self.model not in self.log['experiments'].keys():
-            self.log['experiments'][self.model] = OrderedDict()
-            self.log['experiments'][self.model][self.pipe_ind] = {'config': self.pipe_conf,
-                                                                  'light_config': pipe_name,
-                                                                  'time': self.pipe_time,
-                                                                  'ops_time': ops_times,
-                                                                  'results': self.pipe_res}
+        if self.dataset not in self.log['experiments'].keys():
+            self.log['experiments'][self.dataset] = OrderedDict()
+
+        if self.batch_size not in self.log['experiments'][self.dataset].keys():
+            self.log['experiments'][self.dataset][str(self.batch_size)] = OrderedDict()
+
+        if self.model not in self.log['experiments'][self.dataset][str(self.batch_size)].keys():
+            self.log['experiments'][self.dataset][str(self.batch_size)][self.model] = OrderedDict()
+            self.log['experiments'][self.dataset][str(self.batch_size)][self.model][self.pipe_ind] =\
+                {'config': self.pipe_conf,
+                 'light_config': pipe_name,
+                 'time': self.pipe_time,
+                 'ops_time': ops_times,
+                 'results': self.pipe_res}
         else:
-            self.log['experiments'][self.model][self.pipe_ind] = {'config': self.pipe_conf,
-                                                                  'light_config': pipe_name,
-                                                                  'time': self.pipe_time,
-                                                                  'ops_time': ops_times,
-                                                                  'results': self.pipe_res}
+            self.log['experiments'][self.dataset][str(self.batch_size)][self.model][self.pipe_ind] =\
+                {'config': self.pipe_conf,
+                 'light_config': pipe_name,
+                 'time': self.pipe_time,
+                 'ops_time': ops_times,
+                 'results': self.pipe_res}
 
         self.tmp_reset()
         return self

@@ -1,10 +1,18 @@
 {
-  "dataset_reader": {
-    "name": "basic_classification_reader",
-    "x": "text",
-    "y": "target",
-    "data_path": "sber_faq"
-  },
+  "dataset_reader": [
+    {
+      "name": "basic_classification_reader",
+      "x": "text",
+      "y": "target",
+      "data_path": "sber_faq"
+    },
+    {
+      "name": "basic_classification_reader",
+      "x": "text",
+      "y": "target",
+      "data_path": "new_sber"
+    }
+  ],
   "dataset_iterator": {
     "name": "basic_classification_iterator",
     "seed": 42,
