@@ -25,10 +25,16 @@ node('gpu') {
                     make clean
                     make html
                 """
+                currentBuild.result = 'SUCCESS'
             }
-        } finally {
+        }
+        catch(e) {
+            currentBuild.result = 'FAILURE'
+            throw e
+        }
+        finally {
             emailext to: '${DEFAULT_RECIPIENTS}',
-                subject: '${PROJECT_NAME} - Build # ${BUILD_NUMBER} - ${BUILD_STATUS}!',
+                subject: "${env.JOB_NAME} - Build # ${currentBuild.number} - ${currentBuild.result}!",
                 body: '${BRANCH_NAME} - ${BUILD_URL}',
                 attachLog: true
         }
