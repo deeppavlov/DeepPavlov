@@ -59,6 +59,9 @@ class FasttextEmbedder(Component, Serializable):
         self.pad_zero = pad_zero
         self.model = self.load()
 
+    def destroy(self):
+        del self.model
+
     def save(self, *args, **kwargs) -> None:
         """
         Class do not save loaded model again as it is not trained during usage

@@ -77,7 +77,6 @@ class SiameseModel(NNModel):
         train_parameters_names = list(inspect.signature(self._net.train_on_batch).parameters)
         self.train_parameters = {par: kwargs[par] for par in train_parameters_names if par in kwargs}
 
-
     def load(self):
         """Load the model from the last checkpoint if it exists. Otherwise instantiate a new model."""
         self._net = SiameseNetwork(num_context_turns=self.num_context_turns, **self.network_parameters)

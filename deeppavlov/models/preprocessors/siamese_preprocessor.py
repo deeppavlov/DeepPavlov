@@ -20,6 +20,7 @@ import random
 import copy
 
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.estimator import Estimator
 from typing import List, Callable
 from deeppavlov.core.data.utils import mark_done, is_done, zero_pad_truncate
@@ -72,6 +73,7 @@ class SiamesePreprocessor(Estimator):
                  load_path: str,
                  max_sequence_length: int,
                  use_matrix: bool,
+                 embedder: Component,
                  max_token_length: int = None,
                  padding: str = 'post',
                  truncating: str = 'post',
@@ -85,7 +87,6 @@ class SiamesePreprocessor(Estimator):
                  num_ranking_samples: int = 10,
                  num_context_turns: int = 1,
                  tokenizer: Callable = None,
-                 embedder: Callable = "random",
                  vocab: Callable = "dialog_vocab",
                  embedding_dim: int = 300,
                  **kwargs):
@@ -118,6 +119,8 @@ class SiamesePreprocessor(Estimator):
         self.len_char_vocab = 0
         self.emb_matrix = None
 
+    def destroy(self):
+        self.embedder.destroy()
 
     def fit(self, x):
             x_tok = [self.tokenizer(el) for el in x]
