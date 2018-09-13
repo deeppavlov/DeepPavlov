@@ -22,7 +22,7 @@ from typing import Union, Dict
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.pipeline_manager.utils import HyperPar
+from deeppavlov.core.common.params_search import ParamsSearch
 
 
 log = get_logger(__name__)
@@ -215,12 +215,11 @@ class PipeGen:
                     if key not in self.stop_keys:
                         if isinstance(val, (dict, list)):
                             search_conf = deepcopy(conf)
-
-                            sample_gen = HyperPar(stop_keys=self.stop_keys, **search_conf)
-
+                            sample_gen = ParamsSearch()
                             ops_samples[str(i)] = list()
                             for j in range(self.N):
-                                conf_j = sample_gen.sample_params()
+                                conf_j = sample_gen.sample_params(**search_conf)
+
                                 # fix dtype for json dump
                                 for key_ in conf_j.keys():
                                     if isinstance(conf_j[key_], np.int64):
@@ -317,7 +316,6 @@ class PipeGen:
                     pipe.remove(conf)
             yield pipe
 
-    # TODO this method shoud be write as free method
     @staticmethod
     def change_load_path(config, n, save_path, test_mode=False):
         """
