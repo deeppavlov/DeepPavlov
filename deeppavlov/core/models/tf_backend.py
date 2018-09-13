@@ -20,6 +20,7 @@ import tensorflow as tf
 
 
 def _graph_wrap(func, graph):
+    """Constructs function encapsulated in the graph."""
     @wraps(func)
     def _wrapped(*args, **kwargs):
         with graph.as_default():
@@ -28,6 +29,7 @@ def _graph_wrap(func, graph):
 
 
 def _keras_wrap(func, graph, session):
+    """Constructs function encapsulated in the graph and the session."""
     import keras.backend as K
 
     @wraps(func)
@@ -39,7 +41,7 @@ def _keras_wrap(func, graph, session):
 
 
 class TfModelMeta(with_metaclass(type, ABCMeta)):
-    """Metaclass that helps all child classes to have their own graph."""
+    """Metaclass that helps all child classes to have their own graph and session."""
     def __call__(cls, *args, **kwargs):
         obj = cls.__new__(cls)
 
