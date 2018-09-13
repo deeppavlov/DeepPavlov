@@ -2,7 +2,7 @@
 #
 
 # You can set these variables from the command line.
-SPHINXOPTS    =
+SPHINXOPTS    = -WT
 SPHINXBUILD   = sphinx-build
 SPHINXPROJ    = DeepPavlov
 SOURCEDIR     = .

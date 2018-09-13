@@ -62,6 +62,12 @@ embeddings trained on DSTC-2 dataset that is not the best choice for
 this task. Train set is divided to train and validation sets to
 illustrate ``basic_classification_iterator`` work.
 
+**Detecting Insults in Social Commentary** dataset
+(https://www.kaggle.com/c/detecting-insults-in-social-commentary)
+contains binary classification task for **detecting insults** for
+participants of conversation. Train, valid and test division is the same
+as for the Kaggle challenge.
+
 **AG News** dataset
 (https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html)
 contains **topic classification** task for 5 classes (range from 0
@@ -69,35 +75,53 @@ to 4 points scale). Test set is initial one from a web-site, valid is a
 Stratified division 1/5 from the train set from web-site with 42 seed,
 and the train set is the rest.
 
-**Detecting Insults in Social Commentary** dataset
-(https://www.kaggle.com/c/detecting-insults-in-social-commentary)
-contains binary classification task for **detecting insults** for
-participants of conversation. Train, valid and test division is the same
-as for the Kaggle challenge.
-
 **Twitter mokoron** dataset (http://study.mokoron.com/) contains
 **sentiment classification** of Russian tweets for positive and negative
-replies [5]. Train, valid and test division is made by hands (Stratified
+replies [5]. It was automatically labeled.
+Train, valid and test division is made by hands (Stratified
 division: 1/5 from all dataset for test set with 42 seed, then 1/5 from
-the rest for validation set with 42 seed). Attention! The pre-trained
-model was trained on ``sentiment_twitter_data/no_smiles_data`` -- the
-same dataset but with removed "(" and ")".
+the rest for validation set with 42 seed). Two provided pre-trained
+models were trained on the same dataset but with and without preprocessing.
+The main difference between scores is caused by the fact that some symbols
+(deleted during preprocessing) were used for automatic labelling. Therefore,
+it can be considered that model trained on preprocessed data is
+based on semantics while model trained on unprocessed data
+is based on punctuation and syntax.
 
-+---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| Model                                                                           | Dataset           | Valid accuracy                              | Test accuracy                               |
-+=================================================================================+===================+=============================================+=============================================+
-| :config:`intents_dstc2.json <classifiers/intents_dstc2.json>`                   | DSTC 2            | 0.8744                                      | 0.8801                                      |
-+---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| :config:`intents_dstc2_big.json <classifiers/intents_dstc2_big.json>`           | DSTC 2            | 0.9682                                      | 0.9684                                      |
-+---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| :config:`intents_snips.json <classifiers/intents_snips.json>`                   | SNIPS             | 0.8829                                      | --                                          |
-+---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| :config:`insults_kaggle.json <classifiers/insults_kaggle.json>`                 | InsultsKaggle     | 0.8757                                      | 0.7503                                      |
-+---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| :config:`topic_ag_news.json <classifiers/topic_ag_news.json>`                   | AG News           | 0.8735                                      | 0.8859                                      |
-+---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
-| :config:`sentiment_twitter.json <classifiers/sentiment_twitter.json>`           | Twitter.mokoron   | 0.8021 (with smiles), 0.8008 (no\_smiles)   | 0.7949 (with smiles), 0.7943 (no\_smiles)   |
-+---------------------------------------------------------------------------------+-------------------+---------------------------------------------+---------------------------------------------+
+**RuSentiment** dataset (http://text-machine.cs.uml.edu/projects/rusentiment/) contains
+**sentiment classification** of social media posts for Russian language within 5 classes 'positive', 'negative',
+'neutral', 'speech', 'skip'.
+
+
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+| Dataset           | Model                                                                                                        | Task             | Lang | Metric   | Valid  | Test   |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+| `DSTC 2`_         | :config:`DSTC 2 on DSTC 2 embeddings <classifiers/intents_dstc2.json>`                                       | 28 intents       | En   | Accuracy | 0.8554 | 0.8658 |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+| `DSTC 2`_         | :config:`DSTC 2 on Wiki embeddings <classifiers/intents_dstc2_big.json>`                                     | 28 intents       | En   | Accuracy | 0.9659 | 0.9659 |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+| `SNIPS-2017`_     | :config:`SNIPS on DSTC 2 embeddings <classifiers/intents_snips.json>`                                        | 7 intents        | En   | F1       | 0.8821 |    --  |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+| `SNIPS-2017`_     | :config:`SNIPS on Wiki embeddings <classifiers/intents_snips_big.json>`                                      | 7 intents        | En   | F1       | 0.9852 |    --  |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+| `Insults`_        | :config:`InsultsKaggle on Reddit embeddings <classifiers/insults_kaggle.json>`                               | Insult detection | En   | ROC-AUC  | 0.9287 | 0.8602 |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+| `AG News`_        | :config:`AG News on Wiki embeddings <classifiers/topic_ag_news.json>`                                        | 5 topics         | En   | Accuracy | 0.8735 | 0.8859 |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+|`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings without any preprocessing <classifiers/sentiment_twitter.json>`  | Sentiment        | Ru   | Accuracy | 0.9968 | 0.9971 |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+|`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings with preprocessing <classifiers/sentiment_twitter_preproc.json>` | Sentiment        | Ru   | Accuracy | 0.7944 | 0.7879 |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+|`RuSentiment`_     | :config:`RuSentiment on RuWiki+Lenta embeddings <classifiers/rusentiment_cnn.json>`                          | Sentiment        | Ru   | F1       | 0.7843 | 0.6556 |
++-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
+
+.. _`DSTC 2`: http://camdial.org/~mh521/dstc/
+.. _`SNIPS-2017`: https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines
+.. _`Insults`: https://www.kaggle.com/c/detecting-insults-in-social-commentary
+.. _`AG News`: https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html
+.. _`Twitter mokoron`: http://study.mokoron.com/
+.. _`RuSentiment`: http://text-machine.cs.uml.edu/projects/rusentiment/
+
 
 Download pre-trained model
 --------------------------
@@ -409,7 +433,7 @@ trained on Reddit dataset.
 +------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
 | wit.ai                 | 0.9877          | 0.9913           | 0.9921        | 0.9766       | 0.9977       | 0.9458               | 0.9673                 |
 +------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
-| snips.ai               | 0.9873          | 0.9921           | 0.9939        | 0.9729       | 0.9985       | 0.9455               | 0.9613                 |
+| snips.ai               | 0.9873          |       0.9921     | 0.9939        | 0.9729       | 0.9985       | 0.9455               | 0.9613                 |
 +------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
 | recast.ai              | 0.9894          | 0.9943           | 0.9910        | 0.9660       | 0.9981       | 0.9424               | 0.9539                 |
 +------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+

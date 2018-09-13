@@ -51,3 +51,10 @@ Chit-chat bot with DeepPavlov
 
 Implement in DeepPavlov sequence-to-sequence encoder-decoder model with
 attention mechanism and teacher forcing for chit-chat.
+
+FAQ with DeepPavlov
+-------------------
+
+`Jupyter notebook <https://github.com/deepmipt/DeepPavlov/tree/master/examples/tutorials/faq_tutorial_tfidf_logreg.ipynb>`__
+
+Implement FAQ model in DeepPavlov based on sentence vectorizers and classifiers.
