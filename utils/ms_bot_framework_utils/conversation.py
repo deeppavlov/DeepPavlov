@@ -1,4 +1,5 @@
 import threading
+from copy import deepcopy
 from urllib.parse import urljoin
 
 import requests
@@ -9,13 +10,10 @@ log = get_logger(__name__)
 
 
 class Conversation:
-    def __init__(self, bot, model, activity: dict, conversation_key
-                 # , conversation_lifetime: int
-                 ):
+    def __init__(self, bot, model, activity: dict, conversation_key):
         self.bot = bot
         self.model = model
         self.key = conversation_key
-        self.out_gateway = OutGateway(self)
 
         self.bot_id = activity['recipient']['id']
         self.bot_name = activity['recipient']['name']
@@ -23,9 +21,10 @@ class Conversation:
         self.channel_id = activity['channelId']
         self.conversation_id = activity['conversation']['id']
 
+        self.out_gateway = OutGateway(self)
+
         self.rich_content = self.bot.config['rich_content']
         self.stateful = self.bot.config['stateful']
-        self.state = None
         self.in_x = self.model.in_x[1:] if self.stateful else self.model.in_x
 
         self.buffer = []
@@ -61,9 +60,6 @@ class Conversation:
         activity_id = activity['id']
         log.debug(f'Received activity. Type: {activity_type}, id: {activity_id}')
 
-        # REMOVE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        log.debug(f'\nACTIVITY:\n{activity}\n')
-
         if activity_type in self.handled_activities.keys():
             self.handled_activities[activity_type](activity)
         else:
@@ -71,139 +67,78 @@ class Conversation:
 
         self._rearm_self_destruct()
 
-    def _handle_usupported(self, activity: dict):
-        activity_type = activity['type']
-        self.out_gateway.send_message(f'Unsupported kind of {activity_type} activity!')
-        log.warn(f'Recived message with unsupported type: {str(in_activity)}')
+    def _infer(self, raw_observation: [tuple, str]):
+        if self.stateful:
+            content = tuple([raw_observation]) if not isinstance(raw_observation, tuple) else raw_observation
+            observation = [tuple([self.key]) + content]
+        else:
+            observation = [raw_observation]
 
-    def _send_infer_results(self, pre):
+        prediction = self.model(observation)
+
+        return prediction
+
+    def _send_infer_results(self, prediction: list, in_activity: dict):
+        pred = prediction[0]
+
+        if self.rich_content:
+            for rich_message in pred:
+                if rich_message['type'] == 'text':
+                    self.out_gateway.send_plain_text(rich_message['value'], in_activity)
+                elif rich_message['type'] == 'button':
+                    self.out_gateway.send_buttons(rich_message['value'], in_activity)
+        else:
+            self.out_gateway.send_plain_text(str(pred), in_activity)
+
+    def _handle_usupported(self, in_activity: dict):
+        activity_type = in_activity['type']
+        self.out_gateway.send_plain_text(f'Unsupported kind of {activity_type} activity!')
+        log.warn(f'Recived message with unsupported type: {str(in_activity)}')
 
     def _handle_message(self, in_activity: dict):
         if 'text' in in_activity.keys():
-            in_text = in_activity['text']
-        else:
-            self._handle_usupported(in_activity)
-
-
-
-        """
-        def infer(content: [tuple, str]):
-            if self.stateful:
-                content = tuple([content]) if isinstance(content, str) else content
-                observation = [tuple([self.state]) + content]
-            else:
-                observation = [content]
-            return self.model.infer(observation)
-
-        def handle_text():
             in_text = in_activity['text']
 
             if len(self.in_x) > 1:
                 if not self.multiargument_initiated:
                     self.multiargument_initiated = True
                     self.expect[:] = list(self.in_x)
-                    self.out_gateway.send_message(f'Please, send {self.expect.pop(0)}')
+                    self.out_gateway.send_plain_text(f'Please, send {self.expect.pop(0)}')
                 else:
                     self.buffer.append(in_text)
 
                     if self.expect:
-                        self.out_gateway.send_message(f'Please, send {self.expect.pop(0)}', in_activity)
+                        self.out_gateway.send_plain_text(f'Please, send {self.expect.pop(0)}', in_activity)
                     else:
-                        pred = infer(tuple(self.buffer))
-                        out_text = str(pred[0])
-                        self.out_gateway.send_message(out_text, in_activity)
+                        prediction = self._infer(tuple(self.buffer))
+                        self._send_infer_results(prediction, in_activity)
 
                         self.buffer = []
                         self.expect[:] = list(self.in_x)
-                        self.out_gateway.send_message(f'Please, send {self.expect.pop(0)}', in_activity)
+                        self.out_gateway.send_plain_text(f'Please, send {self.expect.pop(0)}', in_activity)
             else:
-                pred = infer(in_text)
-                out_text = str(pred[0])
-                self.out_gateway.send_message(out_text, in_activity)
-
-        def handle_unsupported():
-            self.out_gateway.send_message('Unsupported message type!', in_activity)
-            log.warn(f'Recived message with unsupported type: {str(in_activity)}')
-
-        if 'text' in in_activity.keys():
-            handle_text()
+                prediction = self._infer(in_text)
+                self._send_infer_results(prediction, in_activity)
         else:
-            handle_unsupported()
-        """
-
-    def _infer(self, content: [tuple, str]):
-        if self.stateful:
-            content = tuple([content]) if not isinstance(content, tuple) else content
-            observation = [tuple([self.state]) + content]
-        else:
-            observation = [content]
-
-        prediction = self.model(observation)
-
-        if self.stateful:
-            self.state = prediction['state']
-
-        return prediction
+            self._handle_usupported(in_activity)
 
 
 class OutGateway:
     def __init__(self, conversation: Conversation):
         self.conversation = conversation
-
-    def _send_activity(self, url: str, out_activity: dict):
-        authorization = f"{self.conversation.bot.access_info['token_type']} " \
-                        f"{self.conversation.bot.access_info['access_token']}"
-        headers = {
-            'Authorization': authorization,
-            'Content-Type': 'application/json'
-        }
-
-        response = self.conversation.http_session.post(
-            url=url,
-            json=out_activity,
-            headers=headers)
-
-        log.debug(f'Sent activity to the MSBotFramework server. '
-                  f'Response code: {response.status_code}, response contents: {response.json()}')
-
-    def send_message(self, message_text: str, in_activity: dict = None):
-        service_url = self.conversation.service_url
-
-        card_action_1 = {
-            "title": "Test_1",
-            "type": "imBack",
-            "value": "Test_a_button_1"
-        }
-
-        card_action_2 = {
-            "title": "Test_2",
-            "type": "imBack",
-            "value": "Test_a_button_2"
-        }
-
-        rich_card = {
-            "buttons": [card_action_1, card_action_2]
-        }
-
-        attachments = [
-            {
-                "contentType": "application/vnd.microsoft.card.thumbnail",
-                "content": rich_card
-            }
-        ]
-
-        out_activity = {
-            'type': 'message',
+        self.service_url = self.conversation.service_url
+        self.activity_template = {
             'from': {
                 'id': self.conversation.bot_id,
                 'name': self.conversation.bot_name
             },
             'conversation': {
                 'id': self.conversation.conversation_id
-            },
-            'text': message_text,
-            'attachments': attachments
+            }
         }
+
+    def _send_activity(self, out_activity: dict, in_activity: dict = None):
+        service_url = self.service_url
 
         if in_activity:
             try:
@@ -228,4 +163,49 @@ class OutGateway:
 
         url = urljoin(service_url, f"v3/conversations/{self.conversation.conversation_id}/activities")
 
-        self._send_activity(url, out_activity)
+        authorization = f"{self.conversation.bot.access_info['token_type']} " \
+                        f"{self.conversation.bot.access_info['access_token']}"
+        headers = {
+            'Authorization': authorization,
+            'Content-Type': 'application/json'
+        }
+
+        response = self.conversation.http_session.post(
+            url=url,
+            json=out_activity,
+            headers=headers)
+
+        log.debug(f'Sent activity to the MSBotFramework server. '
+                  f'Response code: {response.status_code}, response contents: {response.json()}')
+
+    def send_plain_text(self, text: str, in_activity: dict = None):
+        out_activity = deepcopy(self.activity_template)
+        out_activity['type'] = 'message'
+        out_activity['text'] = text
+        self._send_activity(out_activity, in_activity)
+
+    def send_buttons(self, buttons: list, in_activity: dict = None):
+        out_activity = deepcopy(self.activity_template)
+        out_activity['type'] = 'message'
+
+        # Creating RichCard with CardActions(buttons) with postBack value return
+        rich_card = {
+            'buttons': []
+        }
+
+        for button in buttons:
+            card_action = {}
+            card_action['type'] = 'postBack'
+            card_action['title'] = button['name']
+            card_action['value'] = button['callback']
+            rich_card['buttons'].append(card_action)
+
+        attachments = [
+            {
+                "contentType": "application/vnd.microsoft.card.thumbnail",
+                "content": rich_card
+            }
+        ]
+
+        out_activity['attachments'] = attachments
+        self._send_activity(out_activity, in_activity)

@@ -86,13 +86,10 @@ class Bot(Thread):
             else:
                 conv_model = self.model
 
-            #conversation_lifetime = self.config['conversation_lifetime']
-
             self.conversations[conversation_key] = Conversation(bot=self,
                                                                 model=conv_model,
                                                                 activity=activity,
-                                                                conversation_key=conversation_key #,conversation_lifetime=conversation_lifetime
-                                                                )
+                                                                conversation_key=conversation_key)
 
             log.info(f'Created new conversation, key: {str(conversation_key)}')
 
