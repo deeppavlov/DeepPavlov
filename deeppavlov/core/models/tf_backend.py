@@ -59,7 +59,6 @@ class TfModelMeta(with_metaclass(type, ABCMeta)):
                     obj.sess = cls._config_session()
                 else:
                     obj.sess = tf.Session()
-                K.set_session(obj.sess)
         else:
             obj.graph = tf.Graph()
 
