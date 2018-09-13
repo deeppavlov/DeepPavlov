@@ -25,15 +25,10 @@ node('gpu') {
                 make html
             """
         }
-    } catch (e) {
+    } finally {
         emailext to: '${DEFAULT_RECIPIENTS}',
-            subject: '${PROJECT_NAME} - Build # ${BUILD_NUMBER} - FAILED!',
+            subject: '${PROJECT_NAME} - Build # ${BUILD_NUMBER} - ${BUILD_STATUS}!',
             body: '${BRANCH_NAME} - ${BUILD_URL}',
             attachLog: true
-        throw e
     }
-    emailext to: '${DEFAULT_RECIPIENTS}',
-        subject: '${PROJECT_NAME} - Build # ${BUILD_NUMBER} - ${BUILD_STATUS}!',
-        body: '${BRANCH_NAME} - ${BUILD_URL}',
-        attachLog: true
 }
