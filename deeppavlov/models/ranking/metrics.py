@@ -42,7 +42,7 @@ def rank_response(y_true, y_pred):
             if x == 0:
                 rank_tot += i
                 break
-    return float(sum(rank_tot))/num_examples
+    return float(rank_tot)/num_examples
 
 @register_metric('r@1_insQA')
 def r_at_1_insQA(y_true, y_pred):

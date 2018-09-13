@@ -6,7 +6,7 @@
   "dataset_iterator": {
     "name": "siamese_iterator",
     "random_batches": true,
-    "batches_per_epoch": 200,
+    "batches_per_epoch": 10,
     "seed": 243
   },
   "chainer": {
@@ -19,7 +19,7 @@
         "save_path": "vocabs/tok.dict",
         "load_path": "vocabs/tok.dict",
         "use_matrix": false,
-        "num_ranking_samples": 500,
+        "num_ranking_samples": 10,
         "max_sequence_length": 200,
         "update_embeddings": false,
         "fit_on": ["x"],
@@ -88,13 +88,12 @@
   },
   "train": {
     "epochs": 200,
-    "batch_size": 128,
+    "batch_size": 32,
     "pytest_max_batches": 2,
     "train_metrics": [],
     "metrics": ["r@1_insQA", "rank_response"],
     "validation_patience": 5,
-    "val_every_n_epochs": 5,
-    "log_every_n_batches": 100
+    "val_every_n_epochs": 5
   },
   "metadata": {
     "requirements": [
