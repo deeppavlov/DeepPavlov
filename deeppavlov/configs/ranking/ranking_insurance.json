@@ -112,7 +112,7 @@
         "subdir": "insurance_data"
       },
       {
-        "url": "http://lnsigo.mipt.ru/export/embeddings/wiki.en.bin",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "insurance_embeddings"
       }
     ]
