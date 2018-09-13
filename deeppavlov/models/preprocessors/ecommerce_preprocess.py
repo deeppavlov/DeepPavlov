@@ -22,7 +22,7 @@ class EcommercePreprocess(Component):
     """Class to process strings for EcommerceBot skill
 
     Parameters:
-        spacy_model: SpaCy model
+        spacy_model: SpaCy model name
         disable: SpaCy pipeline to disable
     """
 
@@ -41,15 +41,17 @@ class EcommercePreprocess(Component):
         self.matcher = Matcher(self.model.vocab)
 
         self.matcher.add('below', None, [{BELOW: True}, {'LOWER': 'than', 'OP': '?'},
-                        {'LOWER': 'from', 'OP': '?'}, {'ORTH': '$', 'OP': '?'}, {'ENT_TYPE': 'MONEY', 'LIKE_NUM': True}])
+                        {'LOWER': 'from', 'OP': '?'}, {'ORTH': '$', 'OP': '?'},
+                        {'ENT_TYPE': 'MONEY', 'LIKE_NUM': True}])
 
         self.matcher.add('above', None, [{ABOVE: True}, {'LOWER': 'than', 'OP': '?'},
-                                    {'LOWER': 'from', 'OP': '?'}, {'ORTH': '$', 'OP': '?'}, {'ENT_TYPE': 'MONEY', 'LIKE_NUM': True}])
+                        {'LOWER': 'from', 'OP': '?'}, {'ORTH': '$', 'OP': '?'},
+                        {'ENT_TYPE': 'MONEY', 'LIKE_NUM': True}])
 
     def __call__(self, **kwargs):
         pass
 
-    def extract_money(self, doc) -> Tuple[Any, Tuple[float, float]]:
+    def extract_money(self, doc) -> Tuple[List, Tuple[float, float]]:
         """Extract money entities and money related tokens from `doc`.
 
         Parameters:
@@ -59,8 +61,6 @@ class EcommercePreprocess(Component):
             doc_no_money: doc with no money related tokens.
             money_range: money range from `money_range[0]` to `money_range[1]` extracted from the doc.
         """
-        for ent in doc.ents:
-            print(str(ent.text)+" "+str(ent.start_char)+" "+str(ent.end_char)+" "+str(ent.label_))
 
         matches = self.matcher(doc)
         money_range: Tuple = ()
@@ -68,18 +68,13 @@ class EcommercePreprocess(Component):
         negated = False
 
         for match_id, start, end in matches:
-            print('MATCH', match_id)
             string_id = self.model.vocab.strings[match_id]
             span = doc[start:end]
             for child in doc[start].children:
                 if child.dep_ == 'neg':
                     negated = True
 
-            print(match_id, string_id, start, end, span.text, negated)
             num_token = [token for token in span if token.like_num == True]
-            if len(num_token) != 1:
-                print("Error", str(num_token))
-
             if (string_id == 'below' and negated == False) or (string_id == 'above' and negated == True):
                 money_range = (0, float(num_token[0].text))                
 
