@@ -22,7 +22,34 @@ def r_at_10(labels, predictions):
     return recall_at_k(labels, predictions, k=10)
 
 def recall_at_k(y_true, y_pred, k):
-    labels = np.array(y_true)
+    num_examples = float(len(y_pred))
+    predictions = np.array(y_pred)
+    predictions = np.argsort(predictions, -1)[:, :k][::-1]
+    num_correct = 0
+    for el in predictions:
+        if 0 in el:
+            num_correct += 1
+    return num_correct / num_examples
+
+@register_metric('rank_response')
+def rank_response(y_true, y_pred):
+    num_examples = float(len(y_pred))
+    predictions = np.array(y_pred)
+    predictions = np.argsort(predictions, -1)
+    rank_tot = 0
+    for el in predictions:
+        for i, x in enumerate(el):
+            if x == 0:
+                rank_tot += i
+                break
+    return float(sum(rank_tot))/num_examples
+
+@register_metric('r@1_insQA')
+def r_at_1_insQA(y_true, y_pred):
+    return recall_at_k_insQA(y_true, y_pred, k=1)
+
+def recall_at_k_insQA(y_true, y_pred, k):
+    labels = np.repeat(np.expand_dims(np.asarray(y_true), axis=1), k, axis=1)
     predictions = np.array(y_pred)
     predictions = np.argsort(predictions, -1)[:, :k]
     flags = np.zeros_like(predictions)
@@ -31,27 +58,3 @@ def recall_at_k(y_true, y_pred, k):
             if predictions[i][j] in np.arange(labels[i][j]):
                 flags[i][j] = 1.
     return np.mean((np.sum(flags, -1) >= 1.).astype(float))
-
-
-@register_metric('rank_response')
-def rank_response(y_true, y_pred):
-    labels = np.array(y_true)
-    predictions = np.array(y_pred)
-    predictions = np.argsort(predictions, -1)
-    ranks = []
-    for i in range(predictions.shape[0]):
-        for j in range(predictions.shape[1]):
-            if predictions[i][j] in np.arange(labels[i][j]):
-                ranks.append(j)
-                break
-    return np.mean(np.asarray(ranks).astype(float))
-
-
-@register_metric('loss')
-def triplet_loss(y_true, y_pred):
-    margin = 0.1
-    predictions = np.array(y_pred)
-    pos_scores = predictions[:, 0]
-    neg_scores = predictions[:, -1]
-    return np.mean(np.maximum(margin + pos_scores - neg_scores, np.zeros(len(y_pred))), axis=-1)
-
