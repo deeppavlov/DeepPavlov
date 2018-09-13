@@ -6,7 +6,7 @@
   "dataset_iterator": {
     "name": "siamese_iterator",
     "random_batches": true,
-    "batches_per_epoch": 10,
+    "batches_per_epoch": 200,
     "seed": 243
   },
   "chainer": {
@@ -88,12 +88,13 @@
   },
   "train": {
     "epochs": 200,
-    "batch_size": 32,
+    "batch_size": 128,
     "pytest_max_batches": 2,
     "train_metrics": [],
     "metrics": ["r@1_insQA", "rank_response"],
     "validation_patience": 5,
-    "val_every_n_epochs": 5
+    "val_every_n_epochs": 5,
+    "val_every_n_batches": 100
   },
   "metadata": {
     "requirements": [

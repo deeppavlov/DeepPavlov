@@ -128,6 +128,9 @@ class SiamesePreprocessor(Estimator):
 
     def __call__(self, x):
         x_cut = [el[:self.num_context_turns+self.num_ranking_samples] for el in x]
+        # contexts = [el[:self.num_context_turns] for el in x]
+        # questions = [el[self.num_context_turns:self.num_context_turns+self.num_ranking_samples] for el in x]
+        # new_batch = [[list(zip(context, q)) for q in zip(*questions)] for context in contexts]
         x_reshape = []
         for i in range(len(x_cut[0])):
             x_reshape.append([el[i] for el in x_cut])

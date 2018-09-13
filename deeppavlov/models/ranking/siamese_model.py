@@ -95,6 +95,7 @@ class SiameseModel(NNModel):
         """Train the model on a batch."""
         b = self.make_batch(batch)
         loss = self._net.train_on_batch(b, y)
+        # loss = self._net.train_on_batch(batch, y)
         return loss
 
     def __call__(self, batch):
@@ -108,6 +109,12 @@ class SiameseModel(NNModel):
                     yp = np.expand_dims(yp, 1)
                 y_pred.append(yp)
             y_pred = np.hstack(y_pred)
+            # for el in batch[self.num_context_turns:]:
+            #     yp = self._net.predict_score_on_batch(batch[:self.num_context_turns] + [el])
+            #     if len(batch[self.num_context_turns:]) > 1:
+            #         yp = np.expand_dims(yp, 1)
+            #     y_pred.append(yp)
+            # y_pred = np.hstack(y_pred)
             return y_pred
 
         # else:
