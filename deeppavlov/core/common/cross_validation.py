@@ -36,7 +36,7 @@ log = get_logger(__name__)
 
 def change_savepath_for_model(config):
     params_helper = ParamsSearch()
-    dirs_for_saved_models=set()
+    dirs_for_saved_models = set()
     for p in params_helper.find_model_path(config, SAVE_PATH_ELEMENT_NAME):
         p.append(SAVE_PATH_ELEMENT_NAME)
         save_path = Path(params_helper.get_value_from_config(config, p))

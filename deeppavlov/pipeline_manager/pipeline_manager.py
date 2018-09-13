@@ -55,8 +55,8 @@ class PipelineManager:
         pipeline_generator: A special class that generates configs for training.
     """
     def __init__(self, config_path: str, exp_name: str, date: Union[str, None] = None, mode: str = 'train',
-                 info: Dict = None, root: str = './experiments/', hyper_search: str = 'grid', sample_num: int = 10,
-                 target_metric: str = None, plot: bool = True):
+                 info: Dict = None, root: str = './experiments/', search: bool = True, hyper_search: str = 'grid',
+                 sample_num: int = 10, target_metric: str = None, plot: bool = True):
         """
         Initialize logger, read input args, builds a directory tree, initialize date.
         """
@@ -64,6 +64,7 @@ class PipelineManager:
         self.exp_name = exp_name
         self.mode = mode
         self.info = info
+        self.search = search
         self.hyper_search = hyper_search
         self.sample_num = sample_num
         self.target_metric = target_metric
@@ -88,20 +89,21 @@ class PipelineManager:
         Initializes the pipeline generator and runs the experiment. Creates a report after the experiments.
         """
         # create the pipeline generator
-        self.pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, stype=self.hyper_search)
+        self.pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, search=self.search,
+                                          search_type=self.hyper_search, test_mode=False)
 
         # Start generating pipelines configs
-        print('[ Experiment start - {0} pipes, will be run]'.format(self.pipeline_generator.len))
-        self.logger.log['experiment_info']['number_of_pipes'] = self.pipeline_generator.len
+        print('[ Experiment start - {0} pipes, will be run]'.format(self.pipeline_generator.length))
+        self.logger.log['experiment_info']['number_of_pipes'] = self.pipeline_generator.length
         exp_start_time = time()
         for i, pipe in enumerate(self.pipeline_generator()):
             # print progress
             if i != 0:
-                itime = normal_time(((time() - exp_start_time) / i) * (self.pipeline_generator.len - i))
+                itime = normal_time(((time() - exp_start_time) / i) * (self.pipeline_generator.length - i))
                 ptime = normal_time(time() - exp_start_time)
                 print('\n')
                 print('[ Progress: pipe {0}/{1}; Time pass: {2} ;'
-                      ' Time left: {3}; ]'.format(i+1, self.pipeline_generator.len, ptime, itime))
+                      ' Time left: {3}; ]'.format(i+1, self.pipeline_generator.length, ptime, itime))
 
             self.logger.log['experiment_info']['metrics'] = copy(pipe['train']['metrics'])
             self.logger.log['experiment_info']['target_metric'] = self.target_metric
@@ -141,18 +143,19 @@ class PipelineManager:
         Initializes the pipeline generator with tiny data and runs the test of experiment.
         """
         # create the pipeline generator
-        pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, stype=self.hyper_search,
-                                     test_mode=True)
+        pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, search=self.search,
+                                     search_type=self.hyper_search, test_mode=True)
 
         # Start generating pipelines configs
-        print('[ Test start - {0} pipes, will be run]'.format(pipeline_generator.len))
+        print('[ Test start - {0} pipes, will be run]'.format(pipeline_generator.length))
         exp_start_time = time()
         for i, pipe in enumerate(pipeline_generator()):
             # print progress
             if i != 0:
-                itime = normal_time(((time() - exp_start_time) / i) * (pipeline_generator.len - i))
+                itime = normal_time(((time() - exp_start_time) / i) * (pipeline_generator.length - i))
                 print('\n')
-                print('[ Test progress: pipe {0}/{1}; Time left: {2}; ]'.format(i + 1, pipeline_generator.len, itime))
+                print('[ Test progress: pipe {0}/{1}; Time left: {2}; ]'.format(i + 1,
+                                                                                pipeline_generator.length, itime))
 
             if pipe['dataset_reader']['name'] == 'basic_classification_reader':
                 pipe['dataset_reader'] = {

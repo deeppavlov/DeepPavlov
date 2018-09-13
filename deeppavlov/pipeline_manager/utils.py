@@ -36,7 +36,7 @@ def normal_time(z):
 
 # ---------------------------------------------------Hyperparameters search----------------------------------------
 class HyperPar:
-    def __init__(self, stop_keys: list = ['in', 'in_x', 'in_y', 'out'], **kwargs):
+    def __init__(self, stop_keys, **kwargs):
         np.random.seed(int(time.time()))
         self.params = kwargs
         self.stop_keys = stop_keys
