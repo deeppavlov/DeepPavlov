@@ -86,6 +86,8 @@
     "epochs": 200,
     "batch_size": 4,
 
+    "pytest_max_batches": 2,
+
     "metrics": ["per_item_dialog_accuracy"],
     "validation_patience": 30,
     "val_every_n_epochs": 1,
