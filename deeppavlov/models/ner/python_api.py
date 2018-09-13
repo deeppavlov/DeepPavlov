@@ -59,9 +59,12 @@ def parse_model_description(model_description: Union[str, dict]):
         or config dictionary
     """
     if isinstance(model_description, str):
-        if model_description not in CONFIGS:
+        if model_description.endswith('.json'):
+            return read_json(model_description)
+        elif model_description not in CONFIGS:
             raise RuntimeError('The name of the model must be in {}'.format(set(CONFIGS)))
-        return read_json(CONFIGS[model_description])
+        else:
+            return read_json(CONFIGS[model_description])
     elif isinstance(model_description, dict):
         return model_description
     else:
