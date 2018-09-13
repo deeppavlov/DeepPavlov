@@ -18,6 +18,34 @@ from typing import List, Tuple
 import numpy as np
 
 from deeppavlov.core.common.metrics_registry import register_metric
+from deeppavlov.core.common.log import get_logger
+
+
+def prepare_for_accuracy_computation(y_true, y_predicted):
+    log = get_logger(__name__)
+    if not isinstance(y_true, np.ndarray):
+        y_true = np.array(y_true)
+    if not isinstance(y_predicted, np.ndarray):
+        y_predicted = np.array(y_predicted)
+    num_examples = y_true.size
+    if y_true.size != y_predicted.size:
+        num_examples = min(y_true.size, y_predicted.size)
+        log.warning(
+            "Number of elements in y_true and in y_predicted are not equal\n"
+            "y_true.size = {}, y_predicted.size = {}\n"
+            "Using first {} elements of y_true and y_predicted".format(
+                y_true.size, y_predicted.size, num_examples,
+            )
+        )
+        y_true, y_predicted = np.reshape(y_true, (-1)), np.reshape(y_predicted, (-1))
+        y_true, y_predicted = y_true[:num_examples], y_predicted[:num_examples]
+    if y_true.shape != y_predicted.shape:
+        log.warning(
+            "y_true and y_predicted have different shapes\ny_true.shape = {}, y_predicted.shape = {}\n"
+            "Reshaping y_true to y_predicted.shape".format(y_true.shape, y_predicted.shape)
+        )
+        y_true = np.reshape(y_true, y_predicted.shape)
+    return y_true, y_predicted, num_examples
 
 
 @register_metric('accuracy')
@@ -32,9 +60,10 @@ def accuracy(y_true, y_predicted):
     Returns:
         portion of absolutely coincidental samples
     """
-    examples_len = len(y_true)
-    correct = sum([y1 == y2 for y1, y2 in zip(y_true, y_predicted)])
-    return correct / examples_len if examples_len else 0
+
+    y_true, y_predicted, num_examples = prepare_for_accuracy_computation(y_true, y_predicted)
+    correct = np.sum(y_true == y_predicted)
+    return correct / num_examples if num_examples else 0
 
 
 @register_metric('sets_accuracy')
