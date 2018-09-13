@@ -355,7 +355,6 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                     if losses:
                         report['loss'] = sum(losses)/len(losses)
                         losses = []
-                    report = {'train': report}
 
                     if train_config['tensorboard_log_dir'] is not None:
                         for name, score in metrics:
@@ -363,11 +362,12 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                                                                             simple_value=score), ])
                             tb_train_writer.add_summary(metric_sum, i)
 
-                        if losses:
+                        if 'loss' in report:
                             loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + 'loss',
                                                                             simple_value=report['loss']), ])
                             tb_train_writer.add_summary(loss_sum, i)
 
+                    report = {'train': report}
                     print(json.dumps(report, ensure_ascii=False))
                     train_y_true.clear()
                     train_y_predicted.clear()
@@ -427,7 +427,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                                                                         simple_value=score), ])
                         tb_train_writer.add_summary(metric_sum, epochs)
 
-                    if losses:
+                    if 'loss' in report:
                         loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + 'loss',
                                                                         simple_value=report['loss']), ])
                         tb_train_writer.add_summary(loss_sum, epochs)
