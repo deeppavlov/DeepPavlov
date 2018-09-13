@@ -22,8 +22,9 @@ from deeppavlov.core.common.metrics_registry import register_metric
 SMOOTH = SmoothingFunction()
 
 @register_metric('bleu_advanced')
-def bleu_advanced(y_true: List[Any], y_predicted: List[Any], weights: Tuple = (1,), 
-                  smoothing_function = SMOOTH.method1, auto_reweigh = False, penalty =True) -> float:
+def bleu_advanced(y_true: List[Any], y_predicted: List[Any],
+                  weights: Tuple=(1,), smoothing_function=SMOOTH.method1,
+                  auto_reweigh=False, penalty=True) -> float:
     """Calculate BLEU score
 
     Parameters:
@@ -44,12 +45,12 @@ def bleu_advanced(y_true: List[Any], y_predicted: List[Any], weights: Tuple = (1
     hyp_lengths = hyp_len
     ref_lengths = closest_ref_length([y_true], hyp_len)
 
-    bp = brevity_penalty(ref_lengths, hyp_lengths)
-    
-    if penalty is True or bp == 0:
+    bpenalty = brevity_penalty(ref_lengths, hyp_lengths)
+
+    if penalty is True or bpenalty == 0:
         return bleu_measure
-    
-    return bleu_measure/bp
+
+    return bleu_measure/bpenalty
 
 @register_metric('bleu')
 def bleu(y_true, y_predicted):
