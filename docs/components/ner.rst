@@ -43,6 +43,165 @@ prefixes identifying beginnings and continuations of the entities.
 Without such prefixes, it is impossible to separate Bernhard Riemann
 from Carl Friedrich Gauss.
 
+Train and use the model
+-----------------------
+
+Please see an example of training a NER model and using it for
+prediction:
+
+.. code:: python
+
+    from deeppavlov.models import ner
+    ner_model = ner.train_model('ontonotes', 'path/to/the/dataset/')
+    ner_model(['Your example to tag'])
+
+In general it is not necessary to provide the path to the dataset if config
+already refers to the correct data path.
+
+It is also possible to preform training by calling the code from the command
+line:
+
+.. code:: bash
+
+    python -m deeppavlov train ner_ontonotes
+
+After training the model can be used by the following command:
+
+.. code:: bash
+
+    python -m deeppavlov interact ner_ontonotes
+
+OntoNotes NER
+-------------
+
+A pre-trained model for solving OntoNotes task can be used as following:
+
+.. code:: python
+
+    from deeppavlov.models import ner
+    ner_model = ner.load_model('ontonotes')
+    ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates.'])
+
+Or from command line:
+
+.. code:: bash
+
+    python -m deeppavlov interact ner_ontonotes -d
+
+NOTE: the key -d is used for downloading the model files and is necessary only
+for the first run of the model
+
+Since the model is built with cuDNN version of LSTM, the GPU along with
+installed cuDNN library needed to run this model. The F1 scores of this
+model on test part of OntoNotes is presented in table below.
+
++--------------------------------+--------------------+
+| Model                          | F1 score           |
++================================+====================+
+| DeepPavlov                     | **87.07** ± 0.21   |
++--------------------------------+--------------------+
+| Strubell at al. (2017) [1]     | 86.84 ± 0.19       |
++--------------------------------+--------------------+
+| Chiu and Nichols (2016) [2]    | 86.19 ± 0.25       |
++--------------------------------+--------------------+
+| Spacy                          | 85.85              |
++--------------------------------+--------------------+
+| Durrett and Klein (2014) [3]   | 84.04              |
++--------------------------------+--------------------+
+| Ratinov and Roth (2009) [4]    | 83.45              |
++--------------------------------+--------------------+
+
+Scores by entity type are presented in the table below:
+
++-----------------+------------+
+| Tag             | F1 score   |
++=================+============+
+| TOTAL           | 87.07      |
++-----------------+------------+
+| CARDINAL        | 82.80      |
++-----------------+------------+
+| DATE            | 84.87      |
++-----------------+------------+
+| EVENT           | 68.39      |
++-----------------+------------+
+| FAC             | 68.07      |
++-----------------+------------+
+| GPE             | 94.61      |
++-----------------+------------+
+| LANGUAGE        | 62.91      |
++-----------------+------------+
+| LAW             | 48.27      |
++-----------------+------------+
+| LOC             | 72.39      |
++-----------------+------------+
+| MONEY           | 87.79      |
++-----------------+------------+
+| NORP            | 94.27      |
++-----------------+------------+
+| ORDINAL         | 79.53      |
++-----------------+------------+
+| ORG             | 85.59      |
++-----------------+------------+
+| PERCENT         | 89.41      |
++-----------------+------------+
+| PERSON          | 91.67      |
++-----------------+------------+
+| PRODUCT         | 58.90      |
++-----------------+------------+
+| QUANTITY        | 77.93      |
++-----------------+------------+
+| TIME            | 62.50      |
++-----------------+------------+
+| WORK\_OF\_ART   | 53.17      |
++-----------------+------------+
+
+Russian NER
+-------
+
+The NER network component reproduces the architecture from the paper
+"*Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named
+Entity Recognition*\ " https://arxiv.org/pdf/1709.09686.pdf, which is
+inspired by LSTM+CRF architecture from
+https://arxiv.org/pdf/1603.01360.pdf.
+
+Bi-LSTM architecture of NER network was tested on three datasets:
+
+-  Gareev corpus [5] (obtainable by request to authors)
+-  FactRuEval 2016 [6]
+-  Persons-1000 [7]
+
+The F1 measure for our model along with the results of other published
+solutions are provided in the table below:
+
++-------------------------------------------------------+--------------------+----------------+-------------------+
+| Models                                                | Gareev’s dataset   | Persons-1000   | FactRuEval 2016   |
++=======================================================+====================+================+===================+
+| Gareev et al.  [5]   (Linguistic features + CRF)      | 75.05              |                |                   |
++-------------------------------------------------------+--------------------+----------------+-------------------+
+| Malykh et al. [8] (Character level CNN)               | 62.49              |                |                   |
++-------------------------------------------------------+--------------------+----------------+-------------------+
+| Trofimov [13] (regex and dictionaries)                |                    | 95.57          |                   |
++-------------------------------------------------------+--------------------+----------------+-------------------+
+| Sysoev et al. [10] (dictionaries and embeddings + SVM)|                    |                | 74.67             |
++-------------------------------------------------------+--------------------+----------------+-------------------+
+| Ivanitsky et al. [11] (SVM + embeddings)              |                    |                | **87.88**         |
++-------------------------------------------------------+--------------------+----------------+-------------------+
+| Mozharova et al.  [12] (two stage CRF)                |                    | 97.21          |                   |
++-------------------------------------------------------+--------------------+----------------+-------------------+
+| Our (Bi-LSTM+CRF)                                     | **87.17**          | **99.26**      | 82.10             |
++-------------------------------------------------------+--------------------+----------------+-------------------+
+
+To run Russian NER model use the following code:
+
+.. code:: python
+
+    from deeppavlov.models import ner
+    ner_model = ner.load_model('collection_rus')
+    ner_model(['Глава администрации посёлка Большие Пепяки Фёдор Мжвячни заявил, что ОАО ЪЕЧОЖЖА будет пущено с молотка.'])
+
+The model is trained on the collection 5 dataset which is actually the Persons-1000 dataset with
+additional markup for Locations and Organizations.
+
 Training data
 -------------
 
@@ -372,170 +531,6 @@ to the vocab, it convert them into indices. When the indices are passed
 to the vocab, they are converted to the tag strings.
 
 You can see all parts together in ``deeeppavlov/configs/ner/ner_conll2003.json``.
-
-Train and use the model
------------------------
-
-Please see an example of training a NER model and using it for
-prediction:
-
-.. code:: python
-
-    import json
-    from deeppavlov.core.commands.infer import build_model_from_config
-    from deeppavlov.core.commands.train import train_evaluate_model_from_config
-
-    PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_ontonotes.json'
-    with open(PIPELINE_CONFIG_PATH) as f:
-        config = json.load(f)
-    train_evaluate_model_from_config(PIPELINE_CONFIG_PATH)
-    ner_model = build_model_from_config(config)
-    ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates'])
-
-This example assumes that the working directory is deeppavlov.
-
-OntoNotes NER
--------------
-
-A pre-trained model for solving OntoNotes task can be used as following:
-
-.. code:: python
-
-    import json
-    from deeppavlov.core.commands.infer import build_model_from_config
-    from deeppavlov.core.commands.train import train_evaluate_model_from_config
-
-    PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_ontonotes.json'
-    with open(PIPELINE_CONFIG_PATH) as f:
-        config = json.load(f)
-    train_evaluate_model_from_config(PIPELINE_CONFIG_PATH)
-    ner_model = build_model_from_config(config)
-    ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates'])
-
-Or from command line:
-
-.. code:: bash
-
-    python deeppavlov/deep.py interact deeppavlov/configs/ner/ner_ontonotes.json
-
-Since the model is built with cuDNN version of LSTM, the GPU along with
-installed cuDNN library needed to run this model. The F1 scores of this
-model on test part of OntoNotes is presented in table below.
-
-+--------------------------------+--------------------+
-| Model                          | F1 score           |
-+================================+====================+
-| DeepPavlov                     | **87.07** ± 0.21   |
-+--------------------------------+--------------------+
-| Strubell at al. (2017) [1]     | 86.84 ± 0.19       |
-+--------------------------------+--------------------+
-| Chiu and Nichols (2016) [2]    | 86.19 ± 0.25       |
-+--------------------------------+--------------------+
-| Spacy                          | 85.85              |
-+--------------------------------+--------------------+
-| Durrett and Klein (2014) [3]   | 84.04              |
-+--------------------------------+--------------------+
-| Ratinov and Roth (2009) [4]    | 83.45              |
-+--------------------------------+--------------------+
-
-Scores by entity type are presented in the table below:
-
-+-----------------+------------+
-| Tag             | F1 score   |
-+=================+============+
-| TOTAL           | 87.07      |
-+-----------------+------------+
-| CARDINAL        | 82.80      |
-+-----------------+------------+
-| DATE            | 84.87      |
-+-----------------+------------+
-| EVENT           | 68.39      |
-+-----------------+------------+
-| FAC             | 68.07      |
-+-----------------+------------+
-| GPE             | 94.61      |
-+-----------------+------------+
-| LANGUAGE        | 62.91      |
-+-----------------+------------+
-| LAW             | 48.27      |
-+-----------------+------------+
-| LOC             | 72.39      |
-+-----------------+------------+
-| MONEY           | 87.79      |
-+-----------------+------------+
-| NORP            | 94.27      |
-+-----------------+------------+
-| ORDINAL         | 79.53      |
-+-----------------+------------+
-| ORG             | 85.59      |
-+-----------------+------------+
-| PERCENT         | 89.41      |
-+-----------------+------------+
-| PERSON          | 91.67      |
-+-----------------+------------+
-| PRODUCT         | 58.90      |
-+-----------------+------------+
-| QUANTITY        | 77.93      |
-+-----------------+------------+
-| TIME            | 62.50      |
-+-----------------+------------+
-| WORK\_OF\_ART   | 53.17      |
-+-----------------+------------+
-
-Results
--------
-
-The NER network component reproduces the architecture from the paper
-"*Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named
-Entity Recognition*\ " https://arxiv.org/pdf/1709.09686.pdf, which is
-inspired by LSTM+CRF architecture from
-https://arxiv.org/pdf/1603.01360.pdf.
-
-Bi-LSTM architecture of NER network was tested on three datasets:
-
--  Gareev corpus [5] (obtainable by request to authors)
--  FactRuEval 2016 [6]
--  Persons-1000 [7]
-
-The F1 measure for our model along with the results of other published
-solutions are provided in the table below:
-
-+-------------------------+--------------------+----------------+-------------------+
-| Models                  | Gareev’s dataset   | Persons-1000   | FactRuEval 2016   |
-+=========================+====================+================+===================+
-| Gareev et al. [5]       | 75.05              |                |                   |
-+-------------------------+--------------------+----------------+-------------------+
-| Malykh et al. [8]       | 62.49              |                |                   |
-+-------------------------+--------------------+----------------+-------------------+
-| Trofimov [13]           |                    | 95.57          |                   |
-+-------------------------+--------------------+----------------+-------------------+
-| Rubaylo et al. [9]      |                    |                | 78.13             |
-+-------------------------+--------------------+----------------+-------------------+
-| Sysoev et al. [10]      |                    |                | 74.67             |
-+-------------------------+--------------------+----------------+-------------------+
-| Ivanitsky et al. [11]   |                    |                | **87.88**         |
-+-------------------------+--------------------+----------------+-------------------+
-| Mozharova et al. [12]   |                    | 97.21          |                   |
-+-------------------------+--------------------+----------------+-------------------+
-| Our (Bi-LSTM+CRF)       | **87.17**          | **99.26**      | 82.10             |
-+-------------------------+--------------------+----------------+-------------------+
-
-To run Russian NER model use the following code:
-
-.. code:: python
-
-    from deeppavlov.core.commands.infer import build_model_from_config
-    from deeppavlov.download import deep_download
-    import json
-    PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_rus.json'
-    with open(PIPELINE_CONFIG_PATH) as f:
-        config = json.load(f)
-    deep_download(['-c', PIPELINE_CONFIG_PATH])
-    ner_model = build_model_from_config(config)
-    ner_model(['Компания « Андэк » , специализирующаяся на решениях для обеспечения безопасности бизнеса , сообщила о том , что Вячеслав Максимов , заместитель генерального директора компании , возглавил направление по оптимизации процессов управления информационной безопасностью '])
-
-Since the model is built with cuDNN version of LSTM, the GPU along with
-installed cuDNN library needed to run this model.
 
 Literature
 ----------
