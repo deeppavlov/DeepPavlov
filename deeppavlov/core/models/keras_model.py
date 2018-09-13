@@ -67,10 +67,8 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
                          url=url,
                          mode=kwargs['mode'])
 
-        self.sess = self._config_session()
-        K.set_session(self.sess)
-
-    def _config_session(self):
+    @staticmethod
+    def _config_session():
         """
         Configure session for particular device
         Returns:
