@@ -106,12 +106,12 @@ class EcommerceBot(Component):
 
         Parameters:
             queries: list of queries
-            states: list of dialogs state
+            states: list of dialog state
 
         Returns:
-            response:   items: list of retrieved items 
-                        total: total number of relevant items
-                        entropies: list of entropy attributes with corresponding values
+            response:   items:      list of retrieved items 
+                        total:      total number of relevant items
+                        entropies:  list of entropy attributes with corresponding values
 
             confidence: list of similarity scores
             state: dialog state
