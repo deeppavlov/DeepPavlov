@@ -23,6 +23,7 @@ from typing import Union, Dict
 
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.pipeline_manager.pipegen import PipeGen
 from deeppavlov.pipeline_manager.utils import normal_time
 from deeppavlov.pipeline_manager.logger import Logger
@@ -54,9 +55,20 @@ class PipelineManager:
                 the collected data in a separate log.
         pipeline_generator: A special class that generates configs for training.
     """
-    def __init__(self, config_path: str, exp_name: str, date: Union[str, None] = None, mode: str = 'train',
-                 info: Dict = None, root: str = './experiments/', search: bool = True, hyper_search: str = 'grid',
-                 sample_num: int = 10, target_metric: str = None, plot: bool = True):
+    def __init__(self,
+                 config_path: str,
+                 exp_name: str,
+                 date: Union[str, None] = None,
+                 mode: str = 'train',
+                 info: Dict = None,
+                 root: str = './experiments/',
+                 cross_val: bool = False,
+                 k_fold: Union[int, None] = 5,
+                 search: bool = False,
+                 hyper_search: str = 'random',
+                 sample_num: int = 10,
+                 target_metric: str = None,
+                 plot: bool = True):
         """
         Initialize logger, read input args, builds a directory tree, initialize date.
         """
@@ -64,6 +76,8 @@ class PipelineManager:
         self.exp_name = exp_name
         self.mode = mode
         self.info = info
+        self.cross_validation = cross_val
+        self.k_fold = k_fold
         self.search = search
         self.hyper_search = hyper_search
         self.sample_num = sample_num
@@ -90,10 +104,14 @@ class PipelineManager:
         """
         # create the pipeline generator
         self.pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, search=self.search,
-                                          search_type=self.hyper_search, test_mode=False)
+                                          search_type=self.hyper_search, test_mode=False,
+                                          cross_val=self.cross_validation)
 
         # Start generating pipelines configs
         print('[ Experiment start - {0} pipes, will be run]'.format(self.pipeline_generator.length))
+        if self.cross_validation:
+            print("[ WARNING: Cross validation is active! Every pipeline will be run {0} times! ]".format(self.k_fold))
+
         self.logger.log['experiment_info']['number_of_pipes'] = self.pipeline_generator.length
         exp_start_time = time()
         for i, pipe in enumerate(self.pipeline_generator()):
@@ -105,21 +123,26 @@ class PipelineManager:
                 print('[ Progress: pipe {0}/{1}; Time pass: {2} ;'
                       ' Time left: {3}; ]'.format(i+1, self.pipeline_generator.length, ptime, itime))
 
-            self.logger.log['experiment_info']['metrics'] = copy(pipe['train']['metrics'])
-            self.logger.log['experiment_info']['target_metric'] = self.target_metric
+                self.logger.log['experiment_info']['metrics'] = copy(pipe['train']['metrics'])
+                self.logger.log['experiment_info']['target_metric'] = self.target_metric
 
             self.logger.pipe_ind = i + 1
             self.logger.pipe_conf = copy(pipe['chainer']['pipe'])
 
             # start pipeline time
             pipe_start = time()
-
-            if self.mode == 'train':
-                results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
-            elif self.mode == 'evaluate':
-                results = train_evaluate_model_from_config(pipe, to_train=False, to_validate=False)
+            if self.cross_validation:
+                cv_score = calc_cv_score(pipe, n_folds=self.k_fold)
+                results = {"test": cv_score}
             else:
-                raise ValueError("Only 'train' and 'evaluate' mode are available, but {0} was found.".format(self.mode))
+                if self.mode == 'train':
+                    results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
+
+                elif self.mode == 'evaluate':
+                    results = train_evaluate_model_from_config(pipe, to_train=False, to_validate=False)
+                else:
+                    raise ValueError("Only 'train' and 'evaluate' mode are available,"
+                                     " but {0} was found.".format(self.mode))
 
             # update logger
             self.logger.pipe_time = normal_time(time() - pipe_start)
@@ -127,7 +150,8 @@ class PipelineManager:
             self.logger.get_pipe_log()
 
             # save config in checkpoint folder
-            self.save_config(pipe, i)
+            if not self.cross_validation:
+                self.save_config(pipe, i)
 
         # save log
         self.logger.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)

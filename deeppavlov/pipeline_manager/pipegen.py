@@ -33,7 +33,7 @@ class PipeGen:
     The class implements the generator of standard DeepPavlov configs.
     """
     def __init__(self, config: Union[Dict, str], save_path: str, search: bool = False, search_type: str ='grid', n=10,
-                 test_mode=False):
+                 test_mode=False, cross_val: bool = False):
         """
         Initialize generator with input params.
 
@@ -64,6 +64,7 @@ class PipeGen:
         self.test_mode = test_mode
         self.save_path = save_path
         self.search = search
+        self.cross_val = cross_val
         self.search_type = search_type
         self.length = None
         self.pipes = []
@@ -172,23 +173,33 @@ class PipeGen:
                     new_config['chainer'] = deepcopy(self.chainer)
 
                     chainer_components = list(pipe)
-                    chainer_components = self.change_load_path(chainer_components, p, self.save_path, self.test_mode)
-                    new_config['chainer']['pipe'] = chainer_components
-                    p += 1
-                    yield new_config
+                    if self.cross_val:
+                        new_config['chainer']['pipe'] = chainer_components
+                        p += 1
+                        yield new_config
+                    else:
+                        chainer_components = self.change_load_path(chainer_components, p, self.save_path, self.test_mode)
+                        new_config['chainer']['pipe'] = chainer_components
+                        p += 1
+                        yield new_config
             else:
                 new_config = deepcopy(self.main_config)
                 new_config['dataset_reader'] = deepcopy(dr_config)
                 new_config['train'] = deepcopy(train_config)
                 new_config['chainer'] = deepcopy(self.chainer)
 
-                chainer_components = self.change_load_path(pipe_var, p, self.save_path, self.test_mode)
-                new_config['chainer']['pipe'] = chainer_components
-                p += 1
-                yield new_config
+                if self.cross_val:
+                    new_config['chainer']['pipe'] = pipe_var
+                    p += 1
+                    yield new_config
+                else:
+                    chainer_components = self.change_load_path(pipe_var, p, self.save_path, self.test_mode)
+                    new_config['chainer']['pipe'] = chainer_components
+                    p += 1
+                    yield new_config
 
     # random generation
-    # TODO optimize he process
+    # TODO optimize the process
     def random_conf_gen(self, pipe_components: list):
         """
         Creates generator that return all possible pipelines.

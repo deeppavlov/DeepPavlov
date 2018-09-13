@@ -25,6 +25,7 @@ sys.path.append(str(p))
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.pipeline_manager.pipeline_manager import PipelineManager
 from deeppavlov.core.commands.infer import interact_model, predict_on_stream
+from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.download import deep_download
 from utils.telegram_utils.telegram_ui import interact_model_by_telegram
@@ -39,12 +40,14 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
                     choices={'train', 'evaluate', 'interact', 'predict', 'interactbot', 'riseapi', 'download',
-                             'install', 'interactmsbot', 'sort_out'})
+                             'install', 'interactmsbot', 'sort_out', 'crossval'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 parser.add_argument("-e", "--exp_name", help="name of experiment", type=str)
 parser.add_argument("-b", "--batch-size", dest="batch_size", default=1, help="inference batch size", type=int)
 parser.add_argument("-f", "--input-file", dest="file_path", default=None, help="Path to the input file", type=str)
 parser.add_argument("-d", "--download", action="store_true", help="download model components")
+
+parser.add_argument("--folds", dest='folds', help="number of folds", type=int, default=5)
 
 parser.add_argument("-t", "--token", help="telegram bot token", type=str)
 parser.add_argument("-i", "--ms-id", help="microsoft bot framework app id", type=str)
@@ -61,6 +64,7 @@ parser.add_argument("-np", "--not-plot", dest="plot", help="plot a image if true
 parser.add_argument("-sr", "--search", dest="search", default=False, help="search trigger", type=bool)
 parser.add_argument("-hp", "--hyper", dest="hyper_search", default='grid',
                     help="type of hyper search 'grid' or 'random'", type=str)
+parser.add_argument("-cv", "--cross-val", dest="cross_val", default=False, help="cross validation", type=bool)
 parser.add_argument("-sn", "--sample-num", dest="sample_num", default=10,
                     help="Number of generated samples if you use random search", type=int)
 parser.add_argument("-tm", "--target-metric", dest="target_metric", default=None,
@@ -124,11 +128,18 @@ def main():
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'sort_out':
         manager = PipelineManager(config_path=pipeline_config_path, exp_name=args.exp_name, mode='train',
-                                  root=args.root, search=args.search, hyper_search=args.hyper_search,
-                                  sample_num=args.sample_num, target_metric=args.target_metric, plot=args.plot)
+                                  root=args.root, cross_val=args.cross_val, k_fold=args.folds, search=args.search,
+                                  hyper_search=args.hyper_search, sample_num=args.sample_num,
+                                  target_metric=args.target_metric, plot=args.plot)
         manager.run()
     elif args.mode == 'install':
         install_from_config(pipeline_config_path)
+    elif args.mode == 'crossval':
+        if args.folds < 2:
+            log.error('Minimum number of Folds is 2')
+        else:
+            n_folds = args.folds
+            calc_cv_score(pipeline_config_path, n_folds=n_folds, is_loo=False)
 
 
 if __name__ == "__main__":

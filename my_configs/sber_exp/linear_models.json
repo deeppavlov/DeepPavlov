@@ -44,7 +44,6 @@
           "name": "tfidf_vectorizer",
           "id": "tf-idf",
           "save_path": "vocabs/tf-idf.pkl",
-          "load_path": "vocabs/tf-idf.pkl",
           "component_name": "Sklearn tf-idf vectorizer"
         },
         {
@@ -54,7 +53,6 @@
           "name": "count_vectorizer",
           "id": "count",
           "save_path": "vocabs/count.pkl",
-          "load_path": "vocabs/count.pkl",
           "component_name": "Sklearn count vectorizer"
         }
       ],
@@ -66,7 +64,6 @@
           "name": "support_vector_classifier",
           "main": true,
           "save_path": "new_sber/checkpoints/svm.pkl",
-          "load_path": "new_sber/checkpoints/svm.pkl",
           "component_name": "SVC"
         },
         {
@@ -76,7 +73,6 @@
           "name": "logistic_regression",
           "main": true,
           "save_path": "new_sber/checkpoints/logreg.pkl",
-          "load_path": "new_sber/checkpoints/logreg.pkl",
           "component_name": "Log Reg"
         },
         {
@@ -86,7 +82,6 @@
           "name": "random_forest",
           "main": true,
           "save_path": "new_sber/checkpoints/rf.pkl",
-          "load_path": "new_sber/checkpoints/rf.pkl",
           "component_name": "Random Forest"
         }
       ]

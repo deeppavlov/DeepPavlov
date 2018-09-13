@@ -20,6 +20,7 @@ from deeppavlov.core.common import paths
 
 import os
 
+
 def set_deeppavlov_root(config: dict) -> None:
     """Make a serialization user dir."""
     try:
@@ -48,6 +49,7 @@ def make_all_dirs(path: Union[str, Path]) -> None:
     directory = os.path.dirname(path)
     if not os.path.exists(directory):
         os.makedirs(directory)
+
 
 def is_file_exist(path: Union[str, Path]):
     if path is None:

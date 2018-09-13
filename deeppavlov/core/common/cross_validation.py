@@ -95,7 +95,6 @@ def calc_cv_score(config=Union[Dict, str], n_folds=5, is_loo=False) -> OrderedDi
         iterator = get_iterator_from_config(config, data_i)
         create_dirs_to_save_models(dirs_for_saved_models)
         score = train_evaluate_model_from_config(config, iterator=iterator)
-        # TODO this command del all checkpoints, it need to be fixed
         delete_dir_for_saved_models(dirs_for_saved_models)
 
         for key, value in score['valid'].items():
