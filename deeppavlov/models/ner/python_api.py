@@ -35,7 +35,7 @@ def load_model(model_description: Union[str, dict],
 
 
 def train_model(model_description: Union[str, dict],
-                data_path: Union[str, Path]):
+                data_path: Union[str, Path] = None):
     """ This function construct and train the model from existing config.
 
     Args:
