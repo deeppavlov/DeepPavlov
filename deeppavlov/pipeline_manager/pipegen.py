@@ -178,7 +178,8 @@ class PipeGen:
                         p += 1
                         yield new_config
                     else:
-                        chainer_components = self.change_load_path(chainer_components, p, self.save_path, self.test_mode)
+                        chainer_components = self.change_load_path(chainer_components, p, self.save_path,
+                                                                   self.test_mode)
                         new_config['chainer']['pipe'] = chainer_components
                         p += 1
                         yield new_config

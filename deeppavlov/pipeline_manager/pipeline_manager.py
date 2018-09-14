@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import json
+import os
+import shutil
 
 from time import time
 from datetime import datetime
@@ -68,12 +70,14 @@ class PipelineManager:
                  hyper_search: str = 'random',
                  sample_num: int = 10,
                  target_metric: str = None,
-                 plot: bool = True):
+                 plot: bool = True,
+                 save_best=True):
         """
         Initialize logger, read input args, builds a directory tree, initialize date.
         """
         self.config_path = config_path
         self.exp_name = exp_name
+        self.save_best = save_best
         self.mode = mode
         self.info = info
         self.cross_validation = cross_val
@@ -114,17 +118,23 @@ class PipelineManager:
 
         self.logger.log['experiment_info']['number_of_pipes'] = self.pipeline_generator.length
         exp_start_time = time()
+
+        best_pipe_ind = 0
+        best_score = -1
+
         for i, pipe in enumerate(self.pipeline_generator()):
+            if i == 0:
+                self.logger.log['experiment_info']['metrics'] = copy(pipe['train']['metrics'])
+                if self.target_metric is None:
+                    self.target_metric = pipe['train']['metrics'][0]
+                self.logger.log['experiment_info']['target_metric'] = self.target_metric
             # print progress
-            if i != 0:
+            else:
                 itime = normal_time(((time() - exp_start_time) / i) * (self.pipeline_generator.length - i))
                 ptime = normal_time(time() - exp_start_time)
                 print('\n')
                 print('[ Progress: pipe {0}/{1}; Time pass: {2} ;'
                       ' Time left: {3}; ]'.format(i+1, self.pipeline_generator.length, ptime, itime))
-
-                self.logger.log['experiment_info']['metrics'] = copy(pipe['train']['metrics'])
-                self.logger.log['experiment_info']['target_metric'] = self.target_metric
 
             self.logger.pipe_ind = i + 1
             self.logger.pipe_conf = copy(pipe['chainer']['pipe'])
@@ -146,6 +156,16 @@ class PipelineManager:
                     raise ValueError("Only 'train' and 'evaluate' mode are available,"
                                      " but {0} was found.".format(self.mode))
 
+            if self.save_best:
+                if 'test' in results.keys():
+                    if results['test'][self.target_metric] > best_score:
+                        best_score = results['test'][self.target_metric]
+                        best_pipe_ind = i + 1
+                else:
+                    if results['valid'][self.target_metric] > best_score:
+                        best_score = results['valid'][self.target_metric]
+                        best_pipe_ind = i + 1
+
             # update logger
             self.logger.pipe_time = normal_time(time() - pipe_start)
             self.logger.pipe_res = results
@@ -158,6 +178,22 @@ class PipelineManager:
         # save log
         self.logger.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)
         self.logger.save()
+
+        # delete all checkpoints and save only best pipe
+        if self.save_best:
+            source = join(self.save_path, 'pipe_{}'.format(best_pipe_ind))
+            dest1 = join(self.save_path, 'best_pipe')
+            os.makedirs(join(self.save_path, 'best_pipe'))
+
+            files = os.listdir(source)
+            for f in files:
+                shutil.move(join(source, f), dest1)
+
+            # del all tmp files in save path
+            folders = os.listdir(self.save_path)
+            for f in folders:
+                if f.startswith('pipe_'):
+                    rmtree(join(self.save_path, f))
 
         # visualization of results
         path = join(self.root, self.date, self.exp_name)
