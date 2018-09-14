@@ -48,8 +48,8 @@ class FasttextEmbedder(Component, Serializable):
         pad_zero: whether to pad sequence of tokens with zeros or not
         load_path: path with pre-trained fastText binary model
     """
-    def __init__(self, load_path: [str, Path], save_path: [str, Path] = None, dim: int = 100, pad_zero: bool = False,
-                 **kwargs) -> None:
+    def __init__(self, load_path: Union[str, Path], save_path: Union[str, Path] = None, dim: int = 100,
+                 pad_zero: bool = False, **kwargs) -> None:
         """
         Initialize embedder with given parameters
         """

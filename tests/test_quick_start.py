@@ -51,7 +51,7 @@ PARAMS = {
                 ("helllo", "hello"),
                 ("datha", "data")
             ],
-        ("spelling_correction/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES):
+        ("spelling_correction/brillmoore_kartaslov_ru.json", "error_model", ('IP',)):
             [
                 ("я джва года дду эту игру", "я два года жду эту игру")
             ],
@@ -263,7 +263,7 @@ class TestQuickStart(object):
 
     @staticmethod
     def interact_api(conf_file):
-        server_conf_file = Path(utils.__path__[0]) / "server_utils" / SERVER_CONFIG_FILENAME
+        server_conf_file = Path(utils.__path__[0]) / SERVER_CONFIG_FILENAME
 
         server_params = get_server_params(server_conf_file, conf_file)
         model_args_names = server_params['model_args_names']
