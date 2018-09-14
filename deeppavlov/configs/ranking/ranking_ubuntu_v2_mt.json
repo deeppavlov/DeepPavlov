@@ -67,7 +67,6 @@
           "hidden_dim": 300
         },
         "batch_size": 256,
-        "num_ranking_samples": "#preproc.num_ranking_samples",
         "use_matrix": "#preproc.use_matrix",
         "emb_matrix": "#embeddings.emb_mat",
         "num_context_turns": "#preproc.num_context_turns",

@@ -43,7 +43,6 @@ class SiameseModel(NNModel):
 
     def __init__(self,
                  batch_size: int,
-                 num_ranking_samples: int,
                  num_context_turns: int = 1,
                  preprocess: Callable = None,
                  context2emb_vocab: dict = None,
@@ -62,7 +61,6 @@ class SiameseModel(NNModel):
                          train_now=train_now, mode=mode)
 
         self.batch_size = batch_size
-        self.num_ranking_samples = num_ranking_samples
         self.num_context_turns = num_context_turns
         self.preprocess = preprocess
         self.interact_pred_num = interact_pred_num
