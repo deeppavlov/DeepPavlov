@@ -36,17 +36,12 @@ class EcommerceBot(Component):
     in sorted order according to entropy.
 
     Parameters:
+        preprocess: text preprocessing component
+        save_path: path to save a model
+        load_path: path to load a model
+        entropy_fields: the specification attributes of the catalog items
         min_similarity: similarity threshold for ranking
         min_entropy: min entropy threshold for specifying
-        entropy_fields: the specification attributes of the catalog items
-        preprocess: text preprocessing component
-
-    Returns:
-        items: product items in sorted order from `start` till `end` (from the dialog state)
-        entropies: attributes with corresponding values in sorted order
-        total: total number of retrieved results that satisfy min_similarity
-        confidence: similarity score
-        state: dialog state
     """
 
     def __init__(self, preprocess: Component, save_path: str, load_path: str, 
@@ -101,7 +96,7 @@ class EcommerceBot(Component):
 
         log.info(f"Loaded items {len(self.ec_data)}")
 
-    def __call__(self, queries: List[str], states: List[Dict[Any, Any]], **kwargs) -> Tuple[Dict[str, Dict[Any, Any]], List[float], Dict[Any, Any]]:
+    def __call__(self, queries: List[str], states: List[Dict[Any, Any]], **kwargs) -> Tuple[Tuple[List[Dict[Any, Any]], List[Any], int], List[float], Dict[Any, Any]]:
         """Retrieve catalog items according to the BLEU measure
 
         Parameters:
@@ -206,7 +201,7 @@ class EcommerceBot(Component):
             entropies = self._entropy_subquery(results_args_sim)
             log.debug(f"Total number of relevant answers {len(results_args_sim)}")
 
-        return json.dumps(({'items': response, 'entropy': entropies, 'total':len(results_args_sim)}, confidence, state))
+        return (response, entropies, len(results_args_sim)), confidence, state
 
     def _entropy_subquery(self, results_args: List[int]) -> List[Tuple[float, str, List[Tuple[str, int]]]]:
         """Calculate entropy of selected attributes for items from the catalog.
