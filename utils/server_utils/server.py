@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 from flask import Flask, request, jsonify, redirect
-from flasgger import Swagger
+from flasgger import Swagger, swag_from
 from flask_cors import CORS
 
 from deeppavlov.core.common.file import read_json
@@ -96,21 +96,30 @@ def start_model_server(model_config_path):
     model_endpoint = server_params['model_endpoint']
     model_args_names = server_params['model_args_names']
 
+    endpoind_description = {
+        'description': 'A model endpoint',
+        'parameters': [
+            {
+                'name': 'data',
+                'in': 'body',
+                'required': 'true',
+                'example': {arg: ['value'] for arg in model_args_names}
+            }
+        ],
+        'responses': {
+            "200": {
+                "description": "A model response"
+            }
+        }
+    }
+
     @app.route('/')
     def index():
         return redirect('/apidocs/')
 
     @app.route(model_endpoint, methods=['POST'])
+    @swag_from(endpoind_description)
     def answer():
-        """
-        Skill
-        ---
-        parameters:
-         - name: data
-           in: body
-           required: true
-           type: json
-        """
         return interact(model, model_args_names)
 
     app.run(host=host, port=port)
