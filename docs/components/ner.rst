@@ -156,7 +156,7 @@ Scores by entity type are presented in the table below:
 +-----------------+------------+
 
 Russian NER
--------
+-----------
 
 The NER network component reproduces the architecture from the paper
 "*Application of a Hybrid Bi-LSTM-CRF model to the task of Russian Named
