@@ -491,53 +491,61 @@ def build_pipeline_table(log_data, target_metric=None, save_path='./'):
 # ___________________________________________________Generate plots___________________________________________________
 
 
-def results_analizator(log, target_metric='f1_weighted', num_best=5):
-    models_names = list(log['experiments'].keys())
-    metrics = log['experiment_info']['metrics']
-    if target_metric not in metrics:
-        print("Warning: Target metric '{}' not in log. The fisrt metric in log will be use as target metric.".format(
-            target_metric))
-        target_metric = metrics[0]
+def results_analizator(log_, target_met='f1_weighted', num_best_=5):
 
-    main = {'models': {}, 'best_model': {}}
-    for name in models_names:
-        main['models'][name] = {}
-        for met in metrics:
-            main['models'][name][met] = []
-        main['models'][name]['pipe_conf'] = []
+    def analize(log, target_metric, num_best, metrics):
+        models_names = list(log.keys())
+        # if target_metric not in metrics:
+        #     print("Warning: Target metric '{}' not in log."
+        #           " The fisrt metric in log will be use as target metric.".format(target_metric))
+        #     target_metric = metrics[0]
 
-    for name in models_names:
-        for key, val in log['experiments'][name].items():
+        main = {'models': {}, 'best_model': {}}
+        for name in models_names:
+            main['models'][name] = {}
             for met in metrics:
-                if val['results'].get('test') is not None:
-                    main['models'][name][met].append(val['results']['test']['metrics'][met])
-                else:
-                    main['models'][name][met].append(val['results']['valid']['metrics'][met])
-            main['models'][name]['pipe_conf'].append(val['config'])
+                main['models'][name][met] = []
+            main['models'][name]['pipe_conf'] = []
 
-    m = 0
-    mxname = ''
-    best_pipeline = None
-    sort_met = {}
+        for name in models_names:
+            for key, val in log[name].items():
+                for met in metrics:
+                    if val['results'].get('test') is not None:
+                        main['models'][name][met].append(val['results']['test'][met])
+                    else:
+                        main['models'][name][met].append(val['results']['valid'][met])
+                main['models'][name]['pipe_conf'].append(val['config'])
 
-    for name in models_names:
-        sort_met[name] = {}
-        for met in metrics:
-            tmp = np.sort(main['models'][name][met])[-num_best:]
-            sort_met[name][met] = tmp[::-1]
-            if tmp[0] > m:
-                m = tmp[0]
-                mxname = name
-                best_pipeline = main['models'][name]['pipe_conf'][main['models'][name][met].index(m)]
+        m = 0
+        mxname = ''
+        best_pipeline = None
+        sort_met = {}
 
-    main['sorted'] = sort_met
+        for name in models_names:
+            sort_met[name] = {}
+            for met in metrics:
+                tmp = np.sort(main['models'][name][met])[-num_best:]
+                sort_met[name][met] = tmp[::-1]
+                if tmp[0] > m:
+                    m = tmp[0]
+                    mxname = name
+                    best_pipeline = main['models'][name]['pipe_conf'][main['models'][name][met].index(m)]
 
-    main['best_model']['name'] = mxname
-    main['best_model']['score'] = m
-    main['best_model']['target_metric'] = target_metric
-    main['best_model']['best_pipeline'] = best_pipeline
+        main['sorted'] = sort_met
 
-    return main
+        main['best_model']['name'] = mxname
+        main['best_model']['score'] = m
+        main['best_model']['target_metric'] = target_metric
+        main['best_model']['best_pipeline'] = best_pipeline
+        return main
+
+    data = {}
+    metrics = log_['experiment_info']['metrics']
+    for dataset_name, batch_val in log_['experiments'].items():
+        data[dataset_name] = {}
+        for batch_size, models_val in batch_val.items():
+            data[dataset_name][batch_size] = analize(models_val, target_met, num_best_, metrics)
+    return data
 
 
 def plot_bar(book, data, metrics_):
@@ -592,7 +600,7 @@ def plot_bar(book, data, metrics_):
     return book
 
 
-def plot_res(info, save=True, savepath='./', width=0.2, fheight=8, fwidth=12, ext='png'):
+def plot_res(info, name, savepath='./', save=True, width=0.2, fheight=8, fwidth=12, ext='png'):
     # prepeare data
     info = info['sorted']
 
@@ -658,7 +666,7 @@ def plot_res(info, save=True, savepath='./', width=0.2, fheight=8, fwidth=12, ex
     else:
         if not isdir(savepath):
             mkdir(savepath)
-        adr = join(savepath, '{0}.{1}'.format('main_hist', ext))
+        adr = join(savepath, '{0}.{1}'.format(name, ext))
         fig.savefig(adr, dpi=100)
         plt.close(fig)
 
@@ -678,8 +686,12 @@ def results_visualization(root, savepath, plot, target_metric=None):
     # build_report(log, target_metric=target_metric, save_path=root)
     if plot:
         # scrub data from log for image creating
-        info = results_analizator(log, target_metric=target_metric)
-        # plot histogram
-        plot_res(info, savepath=savepath)
-
+        info = results_analizator(log, target_metric)
+        # plot histograms
+        for dataset_name, batch_val in info.items():
+            for batch, info_val in batch_val.items():
+                if batch == "None":
+                    plot_res(info_val, dataset_name, savepath)
+                else:
+                    plot_res(info_val, dataset_name + str(batch), savepath)
     return None

@@ -59,10 +59,10 @@ parser.add_argument("--use-history", action="store_true", help="feed model with 
 
 parser.add_argument("-r", "--root", dest="root", default='./download/experiments',
                     help="folder where you will save the results and control points", type=str)
-parser.add_argument("-p", "--plot", dest="plot", help="plot a image if true", action='store_true')
-parser.add_argument("-np", "--not-plot", dest="plot", help="plot a image if true", action='store_false')
+parser.add_argument("-p", "--plot", dest="plot", default=True,
+                    help="If true it is plot a histograms with results", type=bool)
 parser.add_argument("-sr", "--search", dest="search", default=False, help="search trigger", type=bool)
-parser.add_argument("-hp", "--hyper", dest="hyper_search", default='grid',
+parser.add_argument("-hp", "--hyper", dest="hyper_search", default='random',
                     help="type of hyper search 'grid' or 'random'", type=str)
 parser.add_argument("-cv", "--cross-val", dest="cross_val", default=False, help="cross validation", type=bool)
 parser.add_argument("-sn", "--sample-num", dest="sample_num", default=10,
@@ -70,7 +70,7 @@ parser.add_argument("-sn", "--sample-num", dest="sample_num", default=10,
 parser.add_argument("-tm", "--target-metric", dest="target_metric", default=None,
                     help="If you use more than one metric then target metric will be used"
                          " for results sortings", type=str)
-parser.add_argument("-sb", "--save-best", dest="save_best", default=False,
+parser.add_argument("-sb", "--save-best", dest="save_best", default=True,
                     help="If true then algorithm saved only one best pipeline checkpoint for each dataset", type=bool)
 
 

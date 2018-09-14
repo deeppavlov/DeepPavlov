@@ -186,15 +186,20 @@ class PipelineManager:
         if self.save_best:
             for name in dataset_res.keys():
                 source = join(self.save_path, name)  # , 'pipe_{}'.format(dataset_res[name]["best_ind"])
-                dest1 = join(self.save_path, name + 'best_pipe')
-                os.makedirs(dest1)
+                dest1 = join(self.save_path, name + '_best_pipe')
+                if not os.path.isdir(dest1):
+                    os.makedirs(dest1)
 
                 files = os.listdir(source)
                 for f in files:
-                    if not f.startswith('pipe'):
+                    if not f.startswith('pipe') and not os.path.isfile(join(dest1, f)):
                         shutil.move(join(source, f), dest1)
                     elif f == 'pipe_{}'.format(dataset_res[name]["best_ind"]):
-                        shutil.move(join(source, f), dest1)
+                        if os.path.isdir(join(dest1, f)):
+                            rmtree(join(dest1, f))
+                            shutil.move(join(source, f), dest1)
+                        else:
+                            shutil.move(join(source, f), dest1)
 
                 # del all tmp files in save path
                 rmtree(join(self.save_path, name))

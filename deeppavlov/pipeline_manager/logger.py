@@ -98,26 +98,35 @@ class Logger(object):
     @staticmethod
     def merge_logs(old_log, new_log):
         """ Combines two logs into one """
-        new_models_names = list(new_log['experiments'].keys())
 
-        for name in new_models_names:
-            if name not in old_log['experiments'].keys():
-                old_log['experiments'][name] = new_log['experiments'][name]
+        for dataset_name, dataset_val in new_log['experiments'].items():
+            if dataset_name not in old_log['experiments'].keys():
+                old_log['experiments'][dataset_name] = dataset_val
             else:
-                old_npipe = len(old_log['experiments'][name])  # - 1
-                k = 0
-                for nkey, nval in new_log['experiments'][name].items():
-                    match = False
-                    for okey, oval in old_log['experiments'][name].items():
-                        if nval['config'] == oval['config']:
-                            old_log['experiments'][name][okey] = new_log['experiments'][name][nkey]
-                            match = True
-                        else:
-                            pass
+                for batch, batch_val in dataset_val.items():
+                    if batch not in old_log['experiments'][dataset_name].keys():
+                        old_log['experiments'][dataset_name][batch] = batch_val
+                    else:
+                        for name, val in batch_val.items():
+                            if name not in old_log['experiments'][dataset_name][batch].keys():
+                                old_log['experiments'][dataset_name][batch][name] = val
+                            else:
+                                old_npipe = len(old_log['experiments'][dataset_name][batch][name])  # - 1
+                                k = 0
+                                for nkey, nval in new_log['experiments'][dataset_name][batch][name].items():
+                                    match = False
+                                    for okey, oval in old_log['experiments'][dataset_name][batch][name].items():
+                                        if nval['config'] == oval['config']:
+                                            old_log['experiments'][dataset_name][batch][name][okey] = \
+                                                new_log['experiments'][dataset_name][batch][name][nkey]
+                                            match = True
+                                        else:
+                                            pass
 
-                    if not match:
-                        k += 1
-                        old_log['experiments'][name][str(old_npipe+k)] = new_log['experiments'][name][nkey]
+                                    if not match:
+                                        k += 1
+                                        old_log['experiments'][dataset_name][batch][name][str(old_npipe + k)] = \
+                                            new_log['experiments'][dataset_name][batch][name][nkey]
 
         # addition time
         t_old = old_log['experiment_info']['full_time'].split(':')

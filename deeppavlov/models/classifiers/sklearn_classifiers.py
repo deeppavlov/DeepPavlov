@@ -142,7 +142,8 @@ class LogReg(Estimator):
                                                 self.solver, self.max_iter, self.multi_class, self.verbose,
                                                 self.warm_start, self.n_jobs)
         else:
-            log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
+            log.warning("No `load_path` is provided for {0}. "
+                        "Initializing `{0}` from scratch".format(self.__class__.__name__))
             self.model = LogisticRegression(self.penalty, self.dual, self.tol, self.C, self.fit_intercept,
                                             self.intercept_scaling, self.class_weight, self.random_state,
                                             self.solver, self.max_iter, self.multi_class, self.verbose,
@@ -256,7 +257,8 @@ class Svm(Estimator):
                                        self.fit_intercept, self.intercept_scaling, self.class_weight, self.verbose,
                                        self.random_state, self.max_iter)
         else:
-            log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
+            log.warning("No `load_path` is provided for {0}. "
+                        "Initializing `{0}` from scratch".format(self.__class__.__name__))
             self.model = LinearSVC(self.penalty, self.loss, self.dual, self.tol, self.C, self.multi_class,
                                    self.fit_intercept, self.intercept_scaling, self.class_weight, self.verbose,
                                    self.random_state, self.max_iter)
@@ -392,7 +394,8 @@ class RandomForest(Estimator):
                                                     self.n_jobs, self.random_state, self.verbose, self.warm_start,
                                                     self.class_weight)
         else:
-            log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
+            log.warning("No `load_path` is provided for {0}. "
+                        "Initializing `{0}` from scratch".format(self.__class__.__name__))
             self.model = RandomForestClassifier(self.n_estimators, self.criterion, self.max_depth,
                                                 self.min_samples_split, self.min_samples_leaf,
                                                 self.min_weight_fraction_leaf, self.max_features,
