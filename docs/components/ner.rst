@@ -197,7 +197,7 @@ To run Russian NER model use the following code:
 
     from deeppavlov.models import ner
     ner_model = ner.load_model('collection_rus')
-    ner_model(['Глава администрации посёлка Большие Пепяки Фёдор Мжвячни заявил, что ОАО ЪЕЧОЖЖА будет пущено с молотка.'])
+    ner_model(['Глава администрации посёлка Большие Куздры Фёдор Штеко заявил, что ОАО Бокрёнок будет пущено с молотка.'])
 
 The model is trained on the collection 5 dataset which is actually the Persons-1000 dataset with
 additional markup for Locations and Organizations.
