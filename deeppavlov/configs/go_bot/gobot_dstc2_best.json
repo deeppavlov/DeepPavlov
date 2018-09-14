@@ -33,6 +33,8 @@
         "out": ["y_predicted"],
         "main": true,
         "name": "go_bot",
+        "load_path": "gobot_dstc2_best/model",
+        "save_path": "gobot_dstc2_best/model",
         "debug": false,
         "word_vocab": "#token_vocab",
         "template_path": "dstc2/dstc2-templates.txt",
@@ -41,8 +43,6 @@
         "api_call_action": "api_call",
         "use_action_mask": false,
         "network_parameters": {
-          "load_path": "gobot_dstc2_best/model",
-          "save_path": "gobot_dstc2_best/model",
           "learning_rate": 0.002,
           "end_learning_rate": 0.00002,
           "decay_steps": 10,
@@ -85,6 +85,8 @@
   "train": {
     "epochs": 200,
     "batch_size": 4,
+
+    "pytest_max_batches": 2,
 
     "metrics": ["per_item_dialog_accuracy"],
     "validation_patience": 30,
