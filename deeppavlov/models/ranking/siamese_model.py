@@ -129,8 +129,10 @@ class SiameseModel(NNModel):
                     yp = self._net.predict_score_on_batch(b)
                     y_pred += list(yp)
                 break
+
         y_pred = np.asarray(y_pred)
-        y_pred = np.reshape(y_pred, (j, self.num_ranking_samples))
+        if len(responses) > 1:
+            y_pred = np.reshape(y_pred, (j, len(responses)))
         return y_pred
 
         # else:
