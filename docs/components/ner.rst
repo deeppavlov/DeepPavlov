@@ -76,7 +76,7 @@ To evaluate pretrained model the following code can be used:
 .. code:: python
 
     from deeppavlov.models import ner
-    ner.train_model('ner_ontonotes', 'path/to/the/dataset/')
+    ner.evaluate_model('ner_ontonotes', 'path/to/the/dataset/')
 
 The path to the dataset is unnecessary if the config already refers to the correct data path.
 
@@ -85,6 +85,18 @@ It is also possible to evaluate model from the command line:
 .. code:: bash
 
     python -m deeppavlov evaluate ner_ontonotes
+
+There is a collection of configs in the module that can be modified and passed to the train functions:
+
+.. code:: python
+
+    from deeppavlov.models import ner
+    from deeppavlov.core.common.file import read_json
+    config = read_json(ner.CONFIGS['ner_dstc2'])
+    config['train']['epochs'] = 10
+    config['chainer']['
+
+
 
 OntoNotes NER
 -------------
