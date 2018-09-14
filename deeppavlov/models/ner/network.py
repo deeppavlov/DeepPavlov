@@ -257,7 +257,7 @@ class NerNetwork(TFModel):
             self._transition_params = transition_params
         else:
             ground_truth_labels = tf.one_hot(self._y_ph, n_tags)
-            loss_tensor = tf.nn.softmax_cross_entropy_with_logits(labels=ground_truth_labels, logits=logits)
+            loss_tensor = tf.nn.softmax_cross_entropy_with_logits_v2(labels=ground_truth_labels, logits=logits)
             loss_tensor = loss_tensor * mask
             self._y_pred = tf.argmax(logits, axis=-1)
 
