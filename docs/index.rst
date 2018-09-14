@@ -12,8 +12,7 @@ Welcome to DeepPavlov's documentation!
    Features <intro/features>
    Configuration files <intro/config_description>
    Pre-trained embeddings <intro/pretrained_vectors>
-   Parameters search <intro/parameters_search>
-   Parameters evolution <intro/parameters_evolution>
+   AutoML <intro/hypersearch>
    Tutorials <intro/tutorials>
 
 
