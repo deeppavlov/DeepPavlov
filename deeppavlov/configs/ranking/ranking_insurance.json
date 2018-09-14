@@ -6,7 +6,7 @@
   "dataset_iterator": {
     "name": "siamese_iterator",
     "random_batches": true,
-    "batches_per_epoch": 200,
+    "batches_per_epoch": 72,
     "seed": 243
   },
   "chainer": {
@@ -70,7 +70,7 @@
           "shared_weights": true,
           "hidden_dim": 300
         },
-        "batch_size": 128,
+        "batch_size": 256,
         "use_matrix": "#preproc.use_matrix",
         "emb_matrix": "#embeddings.emb_mat",
         "learning_rate": 1e-3,
@@ -95,7 +95,7 @@
     "metrics": ["r@1_insQA", "rank_response"],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
-    "log_every_n_batches": 100
+    "log_every_n_batches": 24
   },
   "metadata": {
     "requirements": [
