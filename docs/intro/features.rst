@@ -252,7 +252,7 @@ contains word and sentence accuracy on UD2.0 datasets.
 .. _`Basic model`: :config:<morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict.json>
 .. _`Pymorphy-enhanced model`: :config:<morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict_pymorphy.json>
 
-- :doc:`Frequently Asked Questions (FAQ) component </components/faq>`
+- :doc:`Frequently Asked Questions (FAQ) component </skills/faq>`
 
 Set of pipelines for FAQ task: classifying incoming question into set of known questions and return prepared answer.
 You can build different pipelines based on: tf-idf, weighted fasttext, cosine similarity, logistic regression.

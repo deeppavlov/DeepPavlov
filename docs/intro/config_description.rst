@@ -75,7 +75,7 @@ unsupervised settings). This process takes multiple epochs with periodic validat
 :meth:`~deeppavlov.core.models.nn_model.NNModel.train_on_batch` method has to be implemented for each
 :class:`~deeppavlov.core.models.nn_model.NNModel`.
 
-Training is triggered by :func:`~deeppavlov.core.commands.train.train_model_from_config` function.
+Training is triggered by :func:`~deeppavlov.core.commands.train.train_evaluate_model_from_config` function.
 
 
 Train config
