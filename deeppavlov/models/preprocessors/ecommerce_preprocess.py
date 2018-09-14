@@ -51,7 +51,7 @@ class EcommercePreprocess(Component):
     def __call__(self, **kwargs):
         pass
 
-    def extract_money(self, doc) -> Tuple[List, Tuple[float, float]]:
+    def extract_money(self, doc: spacy.tokens.Doc) -> Tuple[List, Tuple[float, float]]:
         """Extract money entities and money related tokens from `doc`.
 
         Parameters:
@@ -88,8 +88,10 @@ class EcommercePreprocess(Component):
         """SpaCy `text` preprocessing"""
         return self.model(text)
 
-    def spacy2dict(self, doc, fields: List[str] = ['tag_', 'like_num', 'lemma_', 'text']) -> List[Dict[Any, Any]]:
+    def spacy2dict(self, doc: spacy.tokens.Doc, fields: List[str] = None) -> List[Dict[Any, Any]]:
         """Convert SpaCy doc into list of tokens with `fields` properties only"""
+        if fields is None:
+            fields = ['tag_', 'like_num', 'lemma_', 'text']
         return [{field: getattr(token, field) for field in fields} for token in doc]
 
     def filter_nlp(self, tokens: Iterable) -> List[Any]:
