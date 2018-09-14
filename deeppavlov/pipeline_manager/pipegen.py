@@ -178,7 +178,8 @@ class PipeGen:
                         p += 1
                         yield new_config
                     else:
-                        chainer_components = self.change_load_path(chainer_components, p, self.save_path,
+                        dataset_name = dr_config['data_path']
+                        chainer_components = self.change_load_path(chainer_components, p, self.save_path, dataset_name,
                                                                    self.test_mode)
                         new_config['chainer']['pipe'] = chainer_components
                         p += 1
@@ -194,7 +195,9 @@ class PipeGen:
                     p += 1
                     yield new_config
                 else:
-                    chainer_components = self.change_load_path(pipe_var, p, self.save_path, self.test_mode)
+                    dataset_name = dr_config['data_path']
+                    chainer_components = self.change_load_path(pipe_var, p, self.save_path, dataset_name,
+                                                               self.test_mode)
                     new_config['chainer']['pipe'] = chainer_components
                     p += 1
                     yield new_config
@@ -318,7 +321,7 @@ class PipeGen:
             yield pipe
 
     @staticmethod
-    def change_load_path(config, n, save_path, test_mode=False):
+    def change_load_path(config, n, save_path, dataset_name, test_mode=False):
         """
         Change save_path and load_path attributes in standard config.
         Args:
@@ -335,22 +338,22 @@ class PipeGen:
                 if component.get('save_path', None) is not None:
                     sp = component['save_path'].split('/')[-1]
                     if not test_mode:
-                        component['save_path'] = join('..', save_path, 'pipe_{}'.format(n+1), sp)
+                        component['save_path'] = join('..', save_path, dataset_name, 'pipe_{}'.format(n+1), sp)
                     else:
-                        component['save_path'] = join('..', save_path, "tmp", 'pipe_{}'.format(n + 1), sp)
+                        component['save_path'] = join('..', save_path, "tmp", dataset_name, 'pipe_{}'.format(n + 1), sp)
                 if component.get('load_path', None) is not None:
                     lp = component['load_path'].split('/')[-1]
                     if not test_mode:
-                        component['load_path'] = join('..', save_path, 'pipe_{}'.format(n+1), lp)
+                        component['load_path'] = join('..', save_path, dataset_name, 'pipe_{}'.format(n+1), lp)
                     else:
-                        component['load_path'] = join('..', save_path, "tmp", 'pipe_{}'.format(n + 1), lp)
+                        component['load_path'] = join('..', save_path, "tmp", dataset_name, 'pipe_{}'.format(n + 1), lp)
             else:
                 if component.get('save_path', None) is not None:
                     sp = component['save_path'].split('/')[-1]
                     if not test_mode:
-                        component['save_path'] = join('..', save_path, sp)
+                        component['save_path'] = join('..', save_path, dataset_name, sp)
                     else:
-                        component['save_path'] = join('..', save_path, "tmp", sp)
+                        component['save_path'] = join('..', save_path, "tmp", dataset_name, sp)
         return config
 
     def __call__(self, *args, **kwargs):

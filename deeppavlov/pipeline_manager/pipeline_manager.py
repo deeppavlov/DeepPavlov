@@ -118,9 +118,7 @@ class PipelineManager:
 
         self.logger.log['experiment_info']['number_of_pipes'] = self.pipeline_generator.length
         exp_start_time = time()
-
-        best_pipe_ind = 0
-        best_score = -1
+        dataset_res = {}
 
         for i, pipe in enumerate(self.pipeline_generator()):
             if i == 0:
@@ -157,23 +155,28 @@ class PipelineManager:
                                      " but {0} was found.".format(self.mode))
 
             if self.save_best:
-                if 'test' in results.keys():
-                    if results['test'][self.target_metric] > best_score:
-                        best_score = results['test'][self.target_metric]
-                        best_pipe_ind = i + 1
-                else:
-                    if results['valid'][self.target_metric] > best_score:
-                        best_score = results['valid'][self.target_metric]
-                        best_pipe_ind = i + 1
+                if self.logger.dataset not in dataset_res.keys():
+                    dataset_res[self.logger.dataset] = dict(best_score=-1, best_ind=None)
 
-            # update logger
+                if 'test' in results.keys():
+                    if results['test'][self.target_metric] > dataset_res[self.logger.dataset]["best_score"]:
+                        dataset_res[self.logger.dataset]["best_score"] = results['test'][self.target_metric]
+                        dataset_res[self.logger.dataset]["best_ind"] = i + 1
+
+                else:
+                    if results['valid'][self.target_metric] > dataset_res[self.logger.dataset]["best_score"]:
+                        dataset_res[self.logger.dataset]["best_score"] = results['valid'][self.target_metric]
+                        dataset_res[self.logger.dataset]["best_ind"] = i + 1
+
+            # add results and pipe time to log
             self.logger.pipe_time = normal_time(time() - pipe_start)
             self.logger.pipe_res = results
-            self.logger.get_pipe_log()
 
             # save config in checkpoint folder
             if not self.cross_validation:
-                self.save_config(pipe, i)
+                self.save_config(pipe, self.logger.dataset, i)
+            # update logger
+            self.logger.get_pipe_log()
 
         # save log
         self.logger.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)
@@ -181,19 +184,20 @@ class PipelineManager:
 
         # delete all checkpoints and save only best pipe
         if self.save_best:
-            source = join(self.save_path, 'pipe_{}'.format(best_pipe_ind))
-            dest1 = join(self.save_path, 'best_pipe')
-            os.makedirs(join(self.save_path, 'best_pipe'))
+            for name in dataset_res.keys():
+                source = join(self.save_path, name)  # , 'pipe_{}'.format(dataset_res[name]["best_ind"])
+                dest1 = join(self.save_path, name + 'best_pipe')
+                os.makedirs(dest1)
 
-            files = os.listdir(source)
-            for f in files:
-                shutil.move(join(source, f), dest1)
+                files = os.listdir(source)
+                for f in files:
+                    if not f.startswith('pipe'):
+                        shutil.move(join(source, f), dest1)
+                    elif f == 'pipe_{}'.format(dataset_res[name]["best_ind"]):
+                        shutil.move(join(source, f), dest1)
 
-            # del all tmp files in save path
-            folders = os.listdir(self.save_path)
-            for f in folders:
-                if f.startswith('pipe_'):
-                    rmtree(join(self.save_path, f))
+                # del all tmp files in save path
+                rmtree(join(self.save_path, name))
 
         # visualization of results
         path = join(self.root, self.date, self.exp_name)
@@ -245,10 +249,10 @@ class PipelineManager:
         print('[ The test was successful ]')
         return None
 
-    def save_config(self, conf, i) -> None:
+    def save_config(self, conf, dataset_name, i) -> None:
         """
         Save train config in checkpoint folder.
         """
-        with open(join(self.save_path, "pipe_{}".format(i+1), 'config.json'), 'w') as cf:
+        with open(join(self.save_path, dataset_name, "pipe_{}".format(i+1), 'config.json'), 'w') as cf:
             json.dump(conf, cf)
             cf.close()
