@@ -24,12 +24,12 @@ def r_at_10(labels, predictions):
 def recall_at_k(y_true, y_pred, k):
     num_examples = float(len(y_pred))
     predictions = np.array(y_pred)
-    predictions = np.argsort(predictions, -1)[:, :k][::-1]
+    predictions = np.argsort(predictions, -1)[::-1][:, :k]
     num_correct = 0
     for el in predictions:
         if 0 in el:
             num_correct += 1
-    return num_correct / num_examples
+    return float(num_correct) / num_examples
 
 @register_metric('rank_response')
 def rank_response(y_true, y_pred):

@@ -182,7 +182,7 @@ class SiameseNetwork(metaclass=TfModelMeta):
             score = Dense(1, activation='sigmoid', name="score_model")(dist)
             score = Lambda(lambda x: 1. - K.squeeze(x, -1))(score)
         score = Lambda(lambda x: 1. - x)(score)
-        model = Model(c +[r], score)
+        model = Model(c + [r], score)
         return model
 
     def loss_model(self):

@@ -42,6 +42,8 @@ class SiameseModel(NNModel):
     """
 
     def __init__(self,
+                 batch_size: int,
+                 num_ranking_samples: int,
                  num_context_turns: int = 1,
                  preprocess: Callable = None,
                  context2emb_vocab: dict = None,
@@ -59,6 +61,8 @@ class SiameseModel(NNModel):
         super().__init__(save_path=save_path, load_path=load_path,
                          train_now=train_now, mode=mode)
 
+        self.batch_size = batch_size
+        self.num_ranking_samples = num_ranking_samples
         self.num_context_turns = num_context_turns
         self.preprocess = preprocess
         self.interact_pred_num = interact_pred_num
@@ -88,34 +92,46 @@ class SiameseModel(NNModel):
         if self.update_embeddings:
             self.update_sen_embs(self.context2emb_vocab, "context")
             self.update_sen_embs(self.response2emb_vocab, "response")
-        # self.embdict.save()
 
     @check_attr_true('train_now')
     def train_on_batch(self, batch, y):
         """Train the model on a batch."""
         b = self.make_batch(batch)
         loss = self._net.train_on_batch(b, y)
-        # loss = self._net.train_on_batch(batch, y)
         return loss
 
     def __call__(self, batch):
         """Make a prediction on a batch."""
-        if len(batch) > 1:
-            y_pred = []
-            b = self.make_batch(batch)
-            for el in b[self.num_context_turns:]:
-                yp = self._net.predict_score_on_batch(b[:self.num_context_turns] + [el])
-                if len(b[self.num_context_turns:]) > 1:
-                    yp = np.expand_dims(yp, 1)
-                y_pred.append(yp)
-            y_pred = np.hstack(y_pred)
-            # for el in batch[self.num_context_turns:]:
-            #     yp = self._net.predict_score_on_batch(batch[:self.num_context_turns] + [el])
-            #     if len(batch[self.num_context_turns:]) > 1:
-            #         yp = np.expand_dims(yp, 1)
-            #     y_pred.append(yp)
-            # y_pred = np.hstack(y_pred)
-            return y_pred
+        # if len(batch) > 1:
+        y_pred = []
+        buf = []
+        j = 0
+        while True:
+            try:
+                el = next(batch)
+                j += 1
+                context = el[:self.num_context_turns]
+                responses = el[self.num_context_turns:]
+                buf += [context + [el] for el in responses]
+                if len(buf) >= self.batch_size:
+                    for i in range(len(buf) // self.batch_size):
+                        b = self.make_batch(buf[i*self.batch_size:(i+1)*self.batch_size])
+                        yp = self._net.predict_score_on_batch(b)
+                        y_pred += list(yp)
+                    lenb = len(buf) % self.batch_size
+                    if lenb != 0:
+                        buf = buf[-lenb:]
+                    else:
+                        buf = []
+            except StopIteration:
+                if len(buf) != 0:
+                    b = self.make_batch(buf)
+                    yp = self._net.predict_score_on_batch(b)
+                    y_pred += list(yp)
+                break
+        y_pred = np.asarray(y_pred)
+        y_pred = np.reshape(y_pred, (j, self.num_ranking_samples))
+        return y_pred
 
         # else:
         #     c_input = tokenize(batch)

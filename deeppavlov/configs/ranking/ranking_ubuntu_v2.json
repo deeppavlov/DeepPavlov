@@ -16,7 +16,7 @@
         "name": "siamese_preprocessor",
         "save_path": "vocabs/int_tok.dict",
         "load_path": "vocabs/int_tok.dict",
-        "use_matrix": false,
+        "use_matrix": true,
         "num_ranking_samples": 10,
         "max_sequence_length": 50,
         "update_embeddings": false,
@@ -30,7 +30,7 @@
         "vocab":
         {
           "id": "siam_vocab",
-          "name":"dialog_vocab",
+          "name":"simple_vocab",
           "save_path": "ubuntu_v2_vocabs/tok.dict",
           "load_path": "ubuntu_v2_vocabs/tok.dict"
         },
@@ -65,6 +65,8 @@
           "seed": 243,
           "hidden_dim": 300
         },
+        "batch_size": 256,
+        "num_ranking_samples": "#preproc.num_ranking_samples",
         "use_matrix": "#preproc.use_matrix",
         "emb_matrix": "#embeddings.emb_mat",
         "learning_rate": 1e-3,
@@ -82,7 +84,7 @@
     "batch_size": 256,
     "pytest_max_batches": 2,
     "train_metrics": [],
-    "metrics": ["r@1_insQA", "rank_response"],
+    "metrics": ["r@1", "rank_response"],
     "validation_patience": 10,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 1000

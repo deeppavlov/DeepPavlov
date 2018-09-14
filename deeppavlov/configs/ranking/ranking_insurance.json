@@ -32,7 +32,7 @@
         "vocab":
         {
           "id": "siam_vocab",
-          "name":"dialog_vocab",
+          "name":"simple_vocab",
           "save_path": "insurance_vocabs/int_tok.dict",
           "load_path": "insurance_vocabs/int_tok.dict"
         },
@@ -70,6 +70,8 @@
           "shared_weights": true,
           "hidden_dim": 300
         },
+        "batch_size": 128,
+        "num_ranking_samples": "#preproc.num_ranking_samples",
         "use_matrix": "#preproc.use_matrix",
         "emb_matrix": "#embeddings.emb_mat",
         "learning_rate": 1e-3,
@@ -94,7 +96,7 @@
     "metrics": ["r@1_insQA", "rank_response"],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
-    "val_every_n_batches": 100
+    "log_every_n_batches": 100
   },
   "metadata": {
     "requirements": [
