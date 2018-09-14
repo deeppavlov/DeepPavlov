@@ -169,6 +169,8 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train: bool =
         elif not isinstance(model, Chainer):
             log.warning('Nothing to train')
 
+        model.destroy()
+
     if train_config['validate_best'] or train_config['test_best']:
         # try:
         #     model_config['load_path'] = model_config['save_path']
@@ -194,6 +196,8 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train: bool =
             }
 
             print(json.dumps(report, ensure_ascii=False))
+
+        model.destroy()
 
 
 def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],

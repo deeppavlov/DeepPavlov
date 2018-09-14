@@ -23,3 +23,6 @@ class Component(metaclass=ABCMeta):
 
     def reset(self):
         pass
+
+    def destroy(self):
+        pass
