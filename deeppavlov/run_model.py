@@ -39,7 +39,8 @@ from deeppavlov.core.commands.infer import interact_model
 # PIPELINE_CONFIG_PATH = 'configs/odqa/ru_odqa_infer_prod.json'
 # PIPELINE_CONFIG_PATH = 'configs/odqa/ranker_test.json'
 # PIPELINE_CONFIG_PATH = find_config('morpho_ru_syntagrus_train')
-PIPELINE_CONFIG_PATH = find_config('morpho_ru_syntagrus_train_pymorphy')
+# PIPELINE_CONFIG_PATH = find_config('morpho_ru_syntagrus_train_pymorphy')
+PIPELINE_CONFIG_PATH = find_config('intents_dstc2_big')
 
 
 if __name__ == '__main__':
