@@ -194,6 +194,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], to_train: bool =
             }
 
             print(json.dumps(report, ensure_ascii=False))
+    return model
 
 
 def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
