@@ -52,10 +52,10 @@ prediction:
 .. code:: python
 
     from deeppavlov.models import ner
-    ner_model = ner.train_model('ontonotes', 'path/to/the/dataset/')
+    ner_model = ner.train_model('ner_ontonotes', 'path/to/the/dataset/')
     ner_model(['Your example to tag'])
 
-In general it is not necessary to provide the path to the dataset if config
+In general it is not necessary to provide the path to the dataset if the config
 already refers to the correct data path.
 
 It is also possible to preform training by calling the code from the command
@@ -71,6 +71,21 @@ After training the model can be used by the following command:
 
     python -m deeppavlov interact ner_ontonotes
 
+To evaluate pretrained model the following code can be used:
+
+.. code:: python
+
+    from deeppavlov.models import ner
+    ner.train_model('ner_ontonotes', 'path/to/the/dataset/')
+
+The path to the dataset is unnecessary if the config already refers to the correct data path.
+
+It is also possible to evaluate model from the command line:
+
+.. code:: bash
+
+    python -m deeppavlov evaluate ner_ontonotes
+
 OntoNotes NER
 -------------
 
@@ -79,7 +94,7 @@ A pre-trained model for solving OntoNotes task can be used as following:
 .. code:: python
 
     from deeppavlov.models import ner
-    ner_model = ner.load_model('ontonotes')
+    ner_model = ner.load_model('ner_ontonotes')
     ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates.'])
 
 Or from command line:
@@ -196,7 +211,7 @@ To run Russian NER model use the following code:
 .. code:: python
 
     from deeppavlov.models import ner
-    ner_model = ner.load_model('collection_rus')
+    ner_model = ner.load_model('ner_rus')
     ner_model(['Глава администрации посёлка Большие Куздры Фёдор Штеко заявил, что ОАО Бокрёнок будет пущено с молотка.'])
 
 The model is trained on the collection 5 dataset which is actually the Persons-1000 dataset with
