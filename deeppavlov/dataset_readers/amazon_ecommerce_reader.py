@@ -28,7 +28,7 @@ class AmazonEcommerceReader(DatasetReader):
         Parameters:
             data_path: path where to store the dataset
             catalog: name of the specific part of the catalog
-        
+
         Returns:
             dataset: loaded dataset
         """
@@ -42,12 +42,14 @@ class AmazonEcommerceReader(DatasetReader):
         if data_path.is_dir():
             for fname in data_path.rglob("*.txt"):
                 if catalog in fname.name:
-                    ec_data_global = self._load_amazon_ecommerce_file(fname)
+                    ec_data_global += self._load_amazon_ecommerce_file(fname)
 
-        dataset = {'train': None, 'valid': None, 'test': None}
-        dataset["train"] = [((item, {}), ) for item in ec_data_global]
-        dataset["valid"] = []
-        dataset["test"] = []
+        dataset = {
+            'train': [((item, {}), ) for item in ec_data_global],
+            'valid': [],
+            'test':  []
+            }
+
         return dataset
 
     def _download_data(self, data_path: str) -> None:
