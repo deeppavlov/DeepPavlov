@@ -249,6 +249,8 @@ contains word and sentence accuracy on UD2.0 datasets.
 |                 |`Pymorphy-enhanced model`_                   |     96.23     |     58.00      |
 +-----------------+---------------------------------------------+---------------+----------------+
 
+.. _`Pymorphy`: https://pymorphy2.readthedocs.io/en/latest/
+.. _`russian_tagsets`: https://github.com/kmike/russian-tagsets
 .. _`UD2.0 Russian`: https://lindat.mff.cuni.cz/repository/xmlui/handle/11234/1-1983
 .. _`UD Pipe 1.2`: http://ufal.mff.cuni.cz/udpipe
 .. _`Basic model`: :config:<morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict.json>
