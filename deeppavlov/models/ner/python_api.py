@@ -8,8 +8,9 @@ from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
 
 
-CONFIGS = {'ontonotes': find_config('ner_ontonotes'),
-           'collection_rus': find_config('ner_rus')}
+CONFIGS = {'ner_ontonotes': find_config('ner_ontonotes'),
+           'ner_rus': find_config('ner_rus'),
+           'ner_dstc2': find_config('ner_dstc2')}
 
 
 def load_model(model_description: Union[str, dict],
@@ -52,6 +53,25 @@ def train_model(model_description: Union[str, dict],
     config['dataset_reader']['data_path'] = data_path or config['dataset_reader']['data_path']
     model = train_evaluate_model_from_config(config)
     return model
+
+
+def evaluate_model(model_description: Union[str, dict],
+                   data_path: Union[str, Path] = None):
+    """ This function construct and train the model from existing config.
+
+    Args:
+        model_description: either a string with model name or a config dictionary.
+            Possible model names are: {'ontonotes', 'collection_rus'}.
+        data_path: path to the data in the CoNLL-2003 format on which the model
+            will be trained
+
+    Returns:
+        model: the whole pipeline (preprocessing + Neural Network). Which is
+            a callable object
+    """
+    config = parse_model_description(model_description)
+    config['dataset_reader']['data_path'] = data_path or config['dataset_reader']['data_path']
+    train_evaluate_model_from_config(config, to_train=False, to_validate=False)
 
 
 def parse_model_description(model_description: Union[str, dict]):
