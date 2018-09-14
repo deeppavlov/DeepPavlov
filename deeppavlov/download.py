@@ -18,12 +18,14 @@ import argparse
 from collections import defaultdict
 from pathlib import Path
 import sys
+from typing import Union
 
 import deeppavlov
 from deeppavlov.core.commands.utils import get_deeppavlov_root, set_deeppavlov_root, expand_path
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.data.utils import download, download_decompress, get_all_elems_from_json
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.common import paths
 
 
 log = get_logger(__name__)
@@ -37,10 +39,15 @@ parser.add_argument('-all', action='store_true',
                          " available on disk.")
 
 
-def get_config_downloads(config_path):
+def get_config_downloads(config: Union[str, dict]):
     dp_root_back = get_deeppavlov_root()
-    config = read_json(config_path)
-    set_deeppavlov_root(config)
+    if isinstance(config, (str, Path)):
+        config = read_json(config)
+        set_deeppavlov_root(config)
+    else:
+        deeppavlov_root = Path('download/')
+        deeppavlov_root.mkdir(exist_ok=True)
+        paths.deeppavlov_root = deeppavlov_root
 
     downloads = set()
     if 'metadata' in config and 'download' in config['metadata']:
