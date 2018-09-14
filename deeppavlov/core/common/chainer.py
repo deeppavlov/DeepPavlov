@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import inspect
+from typing import Union
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
@@ -24,8 +25,8 @@ class Chainer(Component):
     Builds an agent/component pipeline from heterogeneous components (Rule-based/ML/DL). It allows to train
     and infer models in a pipeline as a whole.
     """
-    def __init__(self, in_x: [str, list] = None, out_params: [str, list] = None, in_y: [str, list] = None,
-                 *args, as_component: bool = False, **kwargs):
+    def __init__(self, in_x: Union[str, list] = None, out_params: Union[str, list] = None,
+                 in_y: Union[str, list] = None, *args, as_component: bool = False, **kwargs):
         self.pipe = []
         self.train_pipe = []
         if isinstance(in_x, str):
