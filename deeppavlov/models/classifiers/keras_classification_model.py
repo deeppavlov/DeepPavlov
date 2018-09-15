@@ -117,7 +117,9 @@ class KerasClassificationModel(KerasModel):
                                       confident_threshold=confident_threshold,
                                       **kwargs)
 
-        print("Model was successfully initialized!\nModel summary:\n{}".format(self.model.summary()))
+        summary = ['Model was successfully initialized!', 'Model summary:']
+        self.model.summary(print_fn=summary.append)
+        log.info('\n'.join(summary))
 
     def _change_not_fixed_params(self, **kwargs) -> None:
         """
