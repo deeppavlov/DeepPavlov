@@ -93,7 +93,7 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
 
 
 def read_data_by_config(config: dict):
-
+    """Read data by dataset_reader from specified config."""
     dataset_config = config.get('dataset', None)
 
     if dataset_config:
@@ -137,6 +137,7 @@ def read_data_by_config(config: dict):
 
 
 def get_iterator_from_config(config: dict, data: dict):
+    """Create iterator (from config) for specified data."""
     iterator_config = config['dataset_iterator']
     iterator: Union[DataLearningIterator, DataFittingIterator] = from_params(iterator_config,
                                                                              data=data)
@@ -181,6 +182,8 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
         elif not isinstance(model, Chainer):
             log.warning('Nothing to train')
 
+        model.destroy()
+
     res = {}
 
     if train_config['validate_best'] or train_config['test_best']:
@@ -200,7 +203,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
 
             res['valid'] = report['valid']['metrics']
 
-            log.info(json.dumps(report, ensure_ascii=False))
+            print(json.dumps(report, ensure_ascii=False))
 
         if train_config['test_best']:
             report = {
@@ -211,7 +214,9 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
 
             res['test'] = report['test']['metrics']
 
-            log.info(json.dumps(report, ensure_ascii=False))
+            print(json.dumps(report, ensure_ascii=False))
+        
+        model.destroy()
 
     return res
 

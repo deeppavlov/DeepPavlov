@@ -11,8 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import shutil
 from pathlib import Path
+from collections import OrderedDict
 
 import numpy as np
 from sklearn.model_selection import KFold
@@ -31,7 +33,7 @@ log = get_logger(__name__)
 def change_savepath_for_model(config):
     params_helper = ParamsSearch()
 
-    dirs_for_saved_models=set()
+    dirs_for_saved_models = set()
     for p in params_helper.find_model_path(config, SAVE_PATH_ELEMENT_NAME):
         p.append(SAVE_PATH_ELEMENT_NAME)
         save_path = Path(params_helper.get_value_from_config(config, p))
@@ -92,17 +94,18 @@ def calc_cv_score(config=None, pipeline_config_path=None, data=None, n_folds=5, 
 
     config, dirs_for_saved_models = change_savepath_for_model(config)
 
-    all_scores = []
-    target_metric = config['train']['metrics'][0]
+    target_metrics = config['train']['metrics']
+    cv_score = OrderedDict((k, []) for k in target_metrics)
     for data_i in generate_train_valid(data, n_folds=n_folds, is_loo=is_loo):
         iterator = get_iterator_from_config(config, data_i)
         create_dirs_to_save_models(dirs_for_saved_models)
         score = train_evaluate_model_from_config(config, iterator=iterator)
         delete_dir_for_saved_models(dirs_for_saved_models)
-        all_scores.append(score['valid'][target_metric])
+        for key, value in score['valid'].items():
+            cv_score[key].append(value)
 
-    cv_score = np.mean(all_scores)
-    log.info('Cross-Validation \"{}\" is: {}'.format(target_metric, cv_score))
+    for key, value in cv_score.items():
+        cv_score[key] = np.mean(value)
+        log.info('Cross-Validation \"{}\" is: {}'.format(key, cv_score[key]))
 
     return cv_score
-

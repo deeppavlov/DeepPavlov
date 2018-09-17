@@ -1,18 +1,16 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import argparse
 from pathlib import Path
@@ -20,8 +18,7 @@ import sys
 import numpy as np
 from itertools import product
 
-p = (Path(__file__) / ".." / "..").resolve()
-sys.path.append(str(p))
+from sklearn.model_selection import train_test_split
 
 from deeppavlov.core.common.file import read_json, save_json
 from deeppavlov.core.common.log import get_logger
@@ -29,8 +26,9 @@ from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.core.commands.train import train_evaluate_model_from_config, get_iterator_from_config, read_data_by_config
 from deeppavlov.core.common.params_search import ParamsSearch
 from deeppavlov.deep import find_config
-from sklearn.model_selection import train_test_split
 
+p = (Path(__file__) / ".." / "..").resolve()
+sys.path.append(str(p))
 
 log = get_logger(__name__)
 
@@ -39,12 +37,14 @@ parser.add_argument("config_path", help="path to a pipeline json config", type=s
 parser.add_argument("--folds", help="number of folds", type=str, default=None)
 parser.add_argument("--search_type", help="search type: grid or random search", type=str, default='grid')
 
+
 def get_best_params(combinations, scores, param_names, target_metric):
     max_id = np.argmax(scores)
     best_params = dict(zip(param_names, combinations[max_id]))
     best_params[target_metric] = scores[max_id]
 
     return best_params
+
 
 def main():
     params_helper = ParamsSearch()
@@ -70,8 +70,8 @@ def main():
 
     # get all params for search
     param_paths = list(params_helper.find_model_path(config, 'search_choice'))
-    param_values=[]
-    param_names=[]
+    param_values = []
+    param_names = []
     for path in param_paths:
         value = params_helper.get_value_from_config(config, path)
         param_name = path[-1]
@@ -85,20 +85,21 @@ def main():
         combinations = list(product(*param_values))
 
         # calculate cv scores
-        scores=[]
+        scores = []
         for comb in combinations:
             config = config_init.copy()
             for i, param_value in enumerate(comb):
                 config = params_helper.insert_value_or_dict_into_config(config, param_paths[i], param_value)
 
-            if ((n_folds is not None) | (is_loo)):
+            if (n_folds is not None) | is_loo:
                 # CV for model evaluation
-                score = calc_cv_score(config=config, data=data, n_folds=n_folds, is_loo=is_loo)
+                score_dict = calc_cv_score(config=config, data=data, n_folds=n_folds, is_loo=is_loo)
+                score = score_dict[next(iter(score_dict))]
             else:
                 # train/valid for model evaluation
                 data_to_evaluate = data.copy()
-                if len(data_to_evaluate['valid'])==0:
-                    data_to_evaluate['train'], data_to_evaluate['valid'] = train_test_split(data_to_evaluate['train'], test_size = 0.2)
+                if len(data_to_evaluate['valid']) == 0:
+                    data_to_evaluate['train'], data_to_evaluate['valid'] = train_test_split(data_to_evaluate['train'], test_size=0.2)
                 iterator = get_iterator_from_config(config, data_to_evaluate)
                 score = train_evaluate_model_from_config(config, iterator=iterator)['valid'][target_metric]
 
@@ -125,4 +126,3 @@ def main():
 # --config_path path_to_config.json --folds 2
 if __name__ == "__main__":
     main()
-
