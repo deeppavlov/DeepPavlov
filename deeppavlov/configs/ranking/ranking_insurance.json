@@ -70,7 +70,7 @@
           "shared_weights": true,
           "hidden_dim": 300
         },
-        "batch_size": 256,
+        "batch_size": 128,
         "use_matrix": "#preproc.use_matrix",
         "emb_matrix": "#embeddings.emb_mat",
         "learning_rate": 1e-3,
@@ -89,7 +89,7 @@
   },
   "train": {
     "epochs": 200,
-    "batch_size": 256,
+    "batch_size": 128,
     "pytest_max_batches": 2,
     "train_metrics": [],
     "metrics": ["r@1_insQA", "rank_response"],
