@@ -1,7 +1,7 @@
 eCommerce Bot
 ======================
 
-The eCommerce bot intends to retrieve product items from catalog in sorted order according to the BLEU measure `[1] <#references>`__. In addition, it asks a client to provide additional information to specify the search (as on the example below). The order of attributes is based on information gain `[2] <#references>`__.
+The eCommerce bot intends to retrieve product items from catalog in sorted order according to the BLEU measure `[1] <#references>`__. In addition, it asks an user to provide additional information to specify the search (as on the example below). The order of attributes is based on information gain `[2] <#references>`__.
 
 Here is a simple example of interaction:
 
@@ -50,7 +50,7 @@ For a working config file example see
 Usage example
 ^^^^^^^^^^^^^
 
-To interact with a pretrained eCommerce\_bot model run:
+To interact with a pretrained model run:
 
 .. code:: bash
 
@@ -73,9 +73,9 @@ The eCommerce bot configuration consists of the following parts:
 -  **dataset_iterator**
 -  **chainer**
 
-You can use your own dataset_reader, dataset_iterator for specific data.
+You can use your own **dataset_reader**, **dataset_iterator** for specific data.
 
-Let's consider chainer in more details.
+Let's consider **chainer** in more details.
 
 Chainer
 ^^^^^^^^
@@ -87,8 +87,8 @@ Chainer
 
 -  **ecommerce_bot** - BLEU-based textual similarity ranker. 
 
-   -  ``min_similarity``: lower boundary for textual similarity for ranking (by default 0.5).
-   -  ``min_entropy``: lower boundary for entropy (by default 0.5). If the entropy of the attributes calculated on the candidate's distributes is less than ``min_entropy``, it's omitted from the specification list.
+   -  ``min_similarity``: lower boundary for textual similarity ranker (by default 0.5).
+   -  ``min_entropy``: lower boundary for entropy (by default 0.5). If the entropy is less than ``min_entropy``, it's omitted from the specification list.
    -  ``entropy_fields``: the specification attributes of the catalog items (by default "Size", "Brand", "Author", "Color", "Genre").
    -  ``preprocess``: text preprocessing component.
 
