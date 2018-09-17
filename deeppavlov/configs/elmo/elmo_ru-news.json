@@ -11,6 +11,7 @@
       },
       {
         "name": "elmo",
+        "elmo_output_names": ["lstm_outputs1", "lstm_outputs2", "word_emb"],
         "in": [
           "tokens"
         ],
