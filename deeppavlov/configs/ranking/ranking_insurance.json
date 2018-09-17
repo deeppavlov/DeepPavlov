@@ -94,7 +94,7 @@
     "train_metrics": [],
     "metrics": ["r@1_insQA", "rank_response"],
     "validation_patience": 5,
-    "val_every_n_epochs": 5,
+    "val_every_n_epochs": 1,
     "log_every_n_batches": 24
   },
   "metadata": {
