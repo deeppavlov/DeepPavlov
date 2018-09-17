@@ -156,9 +156,10 @@ class SentEmb(Component):
         self.use_pos = use_pos
 
         self.vocab_path = expand_path(vocab_path)
-        self.pos_vocab = self.load_pos_vocab(expand_path(pos_vocab_path))
         self.counter_vocab, self.min_count = self.load_counter_vocab(self.vocab_path)
         self.corpus_len = self.check_corpus_len(self.counter_vocab)
+        if self.use_pos:
+            self.pos_vocab = self.load_pos_vocab(expand_path(pos_vocab_path))
 
     @staticmethod
     def check_corpus_len(vocab):
