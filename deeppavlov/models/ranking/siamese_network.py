@@ -157,8 +157,7 @@ class SiameseNetwork(metaclass=TfModelMeta):
 
     def prediction_model(self):
         cr = self.embeddings.inputs
-        emb_c = self.embeddings.get_layer(name="pooling").get_output_at(0)
-        emb_r = self.embeddings.get_layer(name="pooling").get_output_at(1)
+        emb_c, emb_r = self.embeddings.outputs
         if self.triplet_mode:
             dist_score = Lambda(lambda x: self.euclidian_dist(x), name="score_model")
             score = dist_score([emb_c, emb_r])
@@ -172,8 +171,7 @@ class SiameseNetwork(metaclass=TfModelMeta):
 
     def loss_model(self):
         cr = self.embeddings.inputs
-        emb_c = self.embeddings.get_layer(name="pooling").get_output_at(0)
-        emb_r = self.embeddings.get_layer(name="pooling").get_output_at(1)
+        emb_c, emb_r = self.embeddings.outputs
         if self.triplet_mode:
             dist = Lambda(self._pairwise_distances)([emb_c, emb_r])
         else:
