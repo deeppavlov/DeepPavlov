@@ -408,8 +408,8 @@ class TestQuickStart(object):
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
             logfile = io.BytesIO(b'')
-            _, exitstatus = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.paramsearch {c} --folds 2",
-                                                           timeout=None, logfile=logfile)
+            p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.paramsearch {c} --folds 2",
+                                               timeout=None, logfile=logfile)
             if p.wait() != 0:
                 logfile.seek(0)
                 raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
