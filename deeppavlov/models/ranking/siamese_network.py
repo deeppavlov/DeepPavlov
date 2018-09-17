@@ -233,7 +233,7 @@ class SiameseNetwork(metaclass=TfModelMeta):
         return distances
 
     def triplet_loss(self, labels, pairwise_dist):
-        y_true = K.squeeze(labels, axis=1)
+        # y_true = K.squeeze(labels, axis=1)
         """Triplet loss function"""
         if self.hard_triplets:
             triplet_loss = self.batch_hard_triplet_loss(y_true, pairwise_dist)
