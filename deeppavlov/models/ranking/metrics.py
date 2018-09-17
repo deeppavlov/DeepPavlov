@@ -24,7 +24,7 @@ def r_at_10(labels, predictions):
 def recall_at_k(y_true, y_pred, k):
     num_examples = float(len(y_pred))
     predictions = np.array(y_pred)
-    predictions = np.argsort(predictions, -1)[::-1][:, :k]
+    predictions = np.flip(np.argsort(predictions, -1), -1)[:, :k]
     num_correct = 0
     for el in predictions:
         if 0 in el:
@@ -35,7 +35,7 @@ def recall_at_k(y_true, y_pred, k):
 def rank_response(y_true, y_pred):
     num_examples = float(len(y_pred))
     predictions = np.array(y_pred)
-    predictions = np.argsort(predictions, -1)
+    predictions = np.flip(np.argsort(predictions, -1), -1)
     rank_tot = 0
     for el in predictions:
         for i, x in enumerate(el):
@@ -51,7 +51,7 @@ def r_at_1_insQA(y_true, y_pred):
 def recall_at_k_insQA(y_true, y_pred, k):
     labels = np.repeat(np.expand_dims(np.asarray(y_true), axis=1), k, axis=1)
     predictions = np.array(y_pred)
-    predictions = np.argsort(predictions, -1)[:, :k]
+    predictions = np.flip(np.argsort(predictions, -1), -1)[:, :k]
     flags = np.zeros_like(predictions)
     for i in range(predictions.shape[0]):
         for j in range(predictions.shape[1]):
