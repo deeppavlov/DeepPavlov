@@ -3,7 +3,7 @@
     "name": "basic_classification_reader",
     "x": "text",
     "y": "target",
-    "data_path": "new_sber"
+    "data_path": "sber_faq"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator",
@@ -15,109 +15,135 @@
   "chainer": {
     "in": ["x"],
     "in_y": ["y"],
-    "search": true,
     "pipe": [
       [
         {
           "id": "classes_vocab",
           "name": "default_vocab",
-          "fit_on": [
-            "y"
-          ],
+          "fit_on": "y",
           "level": "token",
           "save_path": "vocabs/sber_classes.dict",
-          "load_path": "vocabs/sber_classes.dict"
+          "load_path": "vocabs/sber_classes.dict",
+          "component_name": "Vocab of classes"
         }
       ],
       [
         {
-          "in": "x",
-          "out": "x_tok"
-          "id": "my_tokenizer",
-          "name": "nltk_tokenizer",
-          "tokenizer": "wordpunct_tokenize"
+          "in": ["x"],
+          "name": "ru_tokenizer",
+          "id": "ru_tok",
+          "out": ["x_tok"],
+          "component_name": "Ru tokenizer"
         }
       ],
       [
         {
           "in": ["x_tok"],
+          "id": "embedder",
+          "name": "fasttext",
+          "save_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.bin",
+          "load_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.bin",
+          "dim": 300,
+          "out": "x_vec",
+          "component_name": "Fasttext_300"
+        },
+        {
+          "in": "x_tok",
+          "out": "x_vec",
+          "name": "glove",
+          "id": "embedder",
+          "save_path": "embeddings/sber_faq.txt",
+          "load_path": "embeddings/sber_faq.txt",
+          "dim": 100,
+          "component_name": "Word2vec_100"
+        },
+        {
+          "in": ["x_tok"],
           "out": ["x_vec"],
           "name": "elmo",
-          "id": "my_embedder",
-          "search": true,
-          "spec": [
-            "embeddings/sber_erp_unlem_epoches_n_1",
-            "embeddings/sber_erp_unlem_epoches_n_3",
-            "embeddings/sber_erp_unlem_epoches_n_5",
-            "embeddings/sber_erp_unlem_epoches_n_7",
-            "embeddings/sber_erp_unlem_epoches_n_8"
-          ]
+          "component_name": "ELMO_1024",
+          "id": "embedder",
+          "spec": {"search_choice": [
+            "/home/kuznetsov/models_env/ruwiki_pp_1.0_elmo/models/2018-06-09-16:38:34/hubs/sber-faq_epoches_n_0",
+            "/home/kuznetsov/models_env/ruwiki_pp_1.0_elmo/models/2018-06-09-16:38:34/hubs/sber-faq_epoches_n_1",
+            "/home/kuznetsov/models_env/ruwiki_pp_1.0_elmo/models/2018-06-09-16:38:34/hubs/sber-faq_epoches_n_2",
+            "/home/kuznetsov/models_env/ruwiki_pp_1.0_elmo/models/2018-06-09-16:38:34/hubs/sber-faq_epoches_n_3"
+          ]}
         }
       ],
       [
         {
           "in": ["x_vec"],
           "in_y": ["y"],
-          "out": [
-            "y_labels",
-            "y_probas_dict"
-          ],
+          "out": ["y_labels", "y_probas_dict"],
           "main": true,
-          "search": true,
           "name": "keras_classification_model",
+          "component_name": "CNN",
           "save_path": "new_sber/checkpoints/cnn",
           "classes": "#classes_vocab.keys()",
-          "kernel_sizes_cnn": [[
-            1,
-            2,
-            3
-          ]],
-          "filters_cnn": 256,
-          "confident_threshold": 1.0,
-          "optimizer": "Adam",
-          "lear_rate": 0.01,
-          "lear_rate_decay": 0.0,
+          "embedding_size": "#embedder.dim",
           "loss": "categorical_crossentropy",
+          "optimizer": "Adam",
+          "confident_threshold": 1.0,
+          "lear_rate": {"search_range": [0.0001, 0.01], "scale": "log"},
+          "lear_rate_decay": {"search_choice": [0.0, 0.1]},
           "text_size": 15,
+          "model_name": "cnn_model",
+          "kernel_sizes_cnn": [1, 2, 3],
+          "filters_cnn": {"search_range": [200, 300], "discrete": true},
           "coef_reg_cnn": 0.0,
           "coef_reg_den": 0.0,
-          "dropout_rate": 0.5,
-          "dense_size": 150,
-          "model_name": "cnn_model",
-          "embedder": "#my_embedder",
-          "tokenizer": "#my_tokenizer"
+          "dropout_rate": {"search_range": [0.3, 0.6]},
+          "dense_size": {"search_range": [130, 180], "discrete": true}
+
         },
         {
-          "in": [
-            "x_vec"
-          ],
-          "in_y": [
-            "y"
-          ],
-          "out": [
-            "y_labels",
-            "y_probas_dict"
-          ],
+          "in": ["x_vec"],
+          "in_y": ["y"],
+          "out": ["y_labels", "y_probas_dict"],
           "main": true,
-          "search": true,
           "name": "keras_classification_model",
-          "save_path": "new_sber/checkpoints/bilstm",
+          "component_name": "DCNN",
+          "save_path": "new_sber/checkpoints/cnn",
           "classes": "#classes_vocab.keys()",
-          "units_lstm": 256,
-          "rec_dropout_rate": 0.0,
-          "confident_threshold": 1.0,
-          "optimizer": "Adam",
-          "lear_rate": 0.001,
-          "lear_rate_decay": 0.0,
+          "embedding_size": "#embedder.dim",
           "loss": "categorical_crossentropy",
+          "optimizer": "Adam",
+          "confident_threshold": 1.0,
+          "lear_rate": {"search_range": [0.0001, 0.01], "scale": "log"},
+          "lear_rate_decay": {"search_choice": [0.0, 0.1]},
           "text_size": 15,
-          "coef_reg_lstm": 1e-4,
+          "model_name": "dcnn_model",
+          "kernel_sizes_cnn": [1, 2, 3],
+          "filters_cnn": {"search_choice": [[64, 128, 256], [128, 128, 256], [64, 64, 64]]},
+          "dense_size": {"search_range": [130, 180], "discrete": true},
+          "coef_reg_cnn": 0.0,
           "coef_reg_den": 0.0,
-          "dropout_rate": 0.3,
-          "dense_size": 150,
-          "model_name": "bilstm_model",
-          "embedder": "#my_embedder",
-          "tokenizer": "#my_tokenizer"
+          "dropout_rate": {"search_range": [0.3, 0.6]}
+        },
+        {
+          "in": ["x_vec"],
+          "in_y": ["y"],
+          "out": ["y_labels", "y_probas_dict"],
+          "main": true,
+          "name": "keras_classification_model",
+          "component_name": "CNN_max_aver_pool",
+          "save_path": "new_sber/checkpoints/dcnn",
+          "classes": "#classes_vocab.keys()",
+          "embedding_size": "#embedder.dim",
+          "loss": "categorical_crossentropy",
+          "optimizer": "Adam",
+          "confident_threshold": 1.0,
+          "lear_rate": {"search_range": [0.0001, 0.01], "scale": "log"},
+          "lear_rate_decay": {"search_choice": [0.0, 0.1]},
+          "text_size": 15,
+          "model_name": "cnn_model_max_and_aver_pool",
+          "kernel_sizes_cnn": [1, 2, 3],
+          "filters_cnn": {"search_range": [200, 300], "discrete": true},
+          "dense_size": {"search_range": [130, 180], "discrete": true},
+          "coef_reg_cnn": 0.0,
+          "coef_reg_den": 0.0,
+          "dropout_rate": {"search_range": [0.3, 0.6]}
         }
       ]
     ],
@@ -132,8 +158,7 @@
     "metrics": [
       "classification_accuracy",
       "classification_f1",
-      "simple_f1_macro",
-      "simple_f1_weighted"
+      "classification_f1_weighted"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 20,
@@ -146,8 +171,7 @@
     "requirements": [
       "../dp_requirements/tf.txt",
       "../dp_requirements/fasttext.txt",
-      "../dp_requirements/elmo.txt",
-      "../dp_requirements/gensim.txt"
+      "../dp_requirements/elmo.txt"
     ]
   }
 }

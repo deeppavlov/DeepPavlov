@@ -3,7 +3,7 @@
     "name": "basic_classification_reader",
     "x": "text",
     "y": "target",
-    "data_path": "new_sber"
+    "data_path": "sber_faq"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator",
@@ -24,7 +24,7 @@
           "level": "token",
           "save_path": "vocabs/sber_classes.dict",
           "load_path": "vocabs/sber_classes.dict",
-          "component_name": "Vocab"
+          "component_name": "Vocab of classes"
         }
       ],
       [
@@ -33,7 +33,7 @@
           "name": "ru_tokenizer",
           "id": "ru_tok",
           "out": ["x_tok"],
-          "component_name": "ru tokenizer"
+          "component_name": "Ru tokenizer"
         }
       ],
       [
@@ -70,11 +70,11 @@
           "component_name": "SVC",
           "penalty": "l2",
           "loss": "squared_hinge",
-          "dual": [true, false],
-          "tol": {"range": [0.00001, 0.005]},
-          "C": {"range": [0.5, 2.0]},
-          "fit_intercept": [true, false],
-          "class_weight": [null, "balanced"]
+          "dual": {"search_bool": true},
+          "tol": {"search_range": [0.00001, 0.005]},
+          "C": {"search_range": [0.5, 2.0]},
+          "fit_intercept": {"search_bool": true},
+          "class_weight": {"search_choice": [null, "balanced"]}
         },
         {
           "in": ["vec"],
@@ -88,10 +88,10 @@
           "penalty": "l2",
           "loss": "hinge",
           "dual": true,
-          "tol": {"range": [0.00001, 0.005]},
-          "C": {"range": [0.5, 2.0]},
-          "fit_intercept": [true, false],
-          "class_weight": [null, "balanced"]
+          "tol": {"search_range": [0.00001, 0.005]},
+          "C": {"search_range": [0.5, 2.0]},
+          "fit_intercept": {"search_bool": true},
+          "class_weight": {"search_choice": [null, "balanced"]}
         },
         {
           "in": ["vec"],
@@ -104,11 +104,11 @@
           "component_name": "Log Reg",
           "penalty": "l1",
           "dual": false,
-          "tol": {"range": [0.00001, 0.005]},
-          "C": {"range": [0.5, 2.0]},
-          "fit_intercept": [true, false],
-          "class_weight": [null, "balanced"],
-          "solver": ["liblinear", "saga"]
+          "tol": {"search_range": [0.00001, 0.005]},
+          "C": {"search_range": [0.5, 2.0]},
+          "fit_intercept": {"search_bool": true},
+          "class_weight": {"search_choice": [null, "balanced"]},
+          "solver": {"search_choice": ["liblinear", "saga"]}
         },
         {
           "in": ["vec"],
@@ -121,11 +121,11 @@
           "component_name": "Log Reg",
           "penalty": "l2",
           "dual": false,
-          "tol": {"range": [0.00001, 0.005]},
-          "C": {"range": [0.5, 2.0]},
-          "fit_intercept": [true, false],
-          "class_weight": [null, "balanced"],
-          "solver": ["lbfgs", "newton-cg"]
+          "tol": {"search_range": [0.00001, 0.005]},
+          "C": {"search_range": [0.5, 2.0]},
+          "fit_intercept": {"search_bool": true},
+          "class_weight": {"search_choice": [null, "balanced"]},
+          "solver": {"search_choice": ["lbfgs", "newton-cg"]}
         },
         {
           "in": ["vec"],
@@ -136,15 +136,15 @@
           "save_path": "new_sber/checkpoints/rf.pkl",
           "load_path": "new_sber/checkpoints/rf.pkl",
           "component_name": "Random Forest",
-          "n_estimators": {"range": [10, 100], "discrete": true},
-          "min_samples_split": {"range": [2, 10], "discrete": true},
-          "min_samples_leaf": {"range": [1, 5], "discrete": true},
-          "min_weight_fraction_leaf": {"range": [0.0, 0.5]},
-          "max_features": ["auto", "log2"],
+          "n_estimators": {"search_range": [10, 100], "discrete": true},
+          "min_samples_split": {"search_range": [2, 10], "discrete": true},
+          "min_samples_leaf": {"search_range": [1, 5], "discrete": true},
+          "min_weight_fraction_leaf": {"search_range": [0.0, 0.5]},
+          "max_features": {"search_choice": ["auto", "log2"]},
           "min_impurity_split": null,
           "bootstrap": true,
-          "oob_score": [false, true],
-          "class_weight": [null, "balanced"]
+          "oob_score": {"search_bool": true},
+          "class_weight": {"search_choice": [null, "balanced"]}
         }
       ]
     ],

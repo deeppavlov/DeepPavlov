@@ -203,38 +203,23 @@ class PipeGen:
                     yield new_config
 
     # random generation
-    # TODO optimize the process
-    def random_conf_gen(self, pipe_components: list):
+    def random_conf_gen(self, pipe_components: list) -> GeneratorExit:
         """
         Creates generator that return all possible pipelines.
         Returns:
             python generator
         """
-        for i, conf in enumerate(pipe_components):
-            ops_samples = {}
-            if conf is None:
-                pipe_components.remove(conf)
-            else:
-                for key, val in conf.items():
-                    if key not in self.stop_keys:
-                        if isinstance(val, (dict, list)):
-                            search_conf = deepcopy(conf)
-                            sample_gen = ParamsSearch()
-                            ops_samples[str(i)] = list()
-                            for j in range(self.N):
-                                conf_j = sample_gen.sample_params(**search_conf)
+        sample_gen = ParamsSearch()
+        for i in range(self.N):
+            new_pipe = []
+            for component in pipe_components:
+                if component is None:
+                    pass
+                else:
+                    new_component = sample_gen.sample_params(**component)
+                    new_pipe.append(new_component)
 
-                                # fix dtype for json dump
-                                for key_ in conf_j.keys():
-                                    if isinstance(conf_j[key_], np.int64):
-                                        conf_j[key_] = int(conf_j[key_])
-
-                                ops_samples[str(i)].append(conf_j)
-
-                for k in range(self.N):
-                    for key, item in ops_samples.items():
-                        pipe_components[int(key)] = item[k]
-                        yield pipe_components
+            yield new_pipe
 
     def grid_param_gen(self, conf):
         """
