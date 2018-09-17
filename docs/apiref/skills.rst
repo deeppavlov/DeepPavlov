@@ -7,3 +7,6 @@ Skill classes. Skills are dialog models.
 
 .. toctree::
    skills.pattern_matching_skill <skills/pattern_matching_skill>
+
+.. toctree::
+   skills.ecommerce_bot_skill <skills/ecommerce_bot_skill>
