@@ -77,7 +77,7 @@ You can use your own dataset_reader, dataset_iterator for specific data.
 
 Let's consider chainer in more details.
 
-Chainer:
+Chainer
 ^^^^^^^^
 
 -  **chainer** - pipeline manager
