@@ -19,7 +19,7 @@
         "save_path": "vocabs/tok.dict",
         "load_path": "vocabs/tok.dict",
         "use_matrix": false,
-        "num_ranking_samples": 500,
+        "num_ranking_samples": 10,
         "max_sequence_length": 200,
         "update_embeddings": false,
         "fit_on": ["x"],
