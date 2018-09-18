@@ -176,6 +176,16 @@ class Chainer(Component):
         self.get_main_component().save()
 
     def load(self):
-        for component in self.pipe:
+        for in_params, out_params, component in self.pipe:
             if inspect.ismethod(getattr(component, 'load', None)):
                 component.load()
+
+    def reset(self):
+        for in_params, out_params, component in self.pipe:
+            if inspect.ismethod(getattr(component, 'reset', None)):
+                component.reset()
+
+    def destroy(self):
+        for in_params, out_params, component in self.pipe:
+            if inspect.ismethod(getattr(component, 'destroy', None)):
+                component.destroy()

@@ -27,7 +27,9 @@ download_path = tests_dir / "download"
 
 TEST_MODES = ['IP',  # test_interacting_pretrained_model
               'TI',  # test_consecutive_training_and_interacting
-              'E'    # test_evolving
+              'E',    # test_evolving
+              'CV',    # test_crossvalidation
+              'PS'    # test_paramsearch
               ]
 
 ALL_MODES = ('IP', 'TI')
@@ -53,6 +55,7 @@ PARAMS = {
             ],
         ("spelling_correction/brillmoore_kartaslov_ru.json", "error_model", ('IP',)):
             [
+                ("преведствую", "приветствую"),
                 ("я джва года дду эту игру", "я два года жду эту игру")
             ],
         ("spelling_correction/levenshtein_corrector_ru.json", "error_model", ('IP',)):
@@ -88,6 +91,12 @@ PARAMS = {
     },
     "evolution": {
         ("evolution/evolve_intents_snips.json", "evolution", ('E',)): None
+    },
+    "cross-validation": {
+        ("cv/cv_tfidf_autofaq.json", "cross-validation-faq", ('CV',)): None
+    },
+    "paramsearch": {
+        ("paramsearch/tfidf_logreg_autofaq_psearch.json", "paramsearch", ('PS',)): None
     },
     "sample": {
         ("classifiers/intents_sample_csv.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -364,3 +373,51 @@ class TestQuickStart(object):
             shutil.rmtree(str(download_path), ignore_errors=True)
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
+
+    def test_crossvalidation(self, model, conf_file, model_dir, mode):
+        if 'CV' in mode:
+            c = test_configs_path / conf_file
+            model_path = download_path / model_dir
+
+            if 'IP' not in mode and 'TI' not in mode:
+                config_path = str(test_configs_path.joinpath(conf_file))
+                deep_download(['-c', config_path])
+            shutil.rmtree(str(model_path),  ignore_errors=True)
+
+            logfile = io.BytesIO(b'')
+            _, exitstatus = pexpect.run(sys.executable + f" -m deeppavlov crossval {c} --folds 2",
+                                        timeout=None, withexitstatus=True,
+                                        logfile=logfile)
+            if exitstatus != 0:
+                logfile.seek(0)
+                raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
+                                   .format(model_dir, ''.join((line.decode() for line in logfile.readlines()))))
+
+            shutil.rmtree(str(download_path), ignore_errors=True)
+        else:
+            pytest.skip("Unsupported mode: {}".format(mode))
+
+    def test_param_search(self, model, conf_file, model_dir, mode):
+        if 'PS' in mode:
+            c = test_configs_path / conf_file
+            model_path = download_path / model_dir
+
+            if 'IP' not in mode and 'TI' not in mode:
+                config_path = str(test_configs_path.joinpath(conf_file))
+                deep_download(['-c', config_path])
+            shutil.rmtree(str(model_path),  ignore_errors=True)
+
+            logfile = io.BytesIO(b'')
+            _, exitstatus = pexpect.run(sys.executable + f" -m deeppavlov.paramsearch {c} --folds 2",
+                                        timeout=None, withexitstatus=True,
+                                        logfile=logfile)
+            if exitstatus != 0:
+                logfile.seek(0)
+                raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
+                                   .format(model_dir, ''.join((line.decode() for line in logfile.readlines()))))
+
+            shutil.rmtree(str(download_path), ignore_errors=True)
+        else:
+            pytest.skip("Unsupported mode: {}".format(mode))
+
+
