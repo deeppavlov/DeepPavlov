@@ -186,7 +186,6 @@ class BiLSTMNetwork(SiameseNetwork, metaclass=TfModelMeta):
     def save(self, save_path):
         log.info("[saving `{}`]".format(self.__class__.__name__))
         self.obj_model.save_weights(str(save_path))
-        self.context_embedding.save(str(save_path.parent / 'sen_emb_model.h5'))
 
     def load_initial_emb_matrix(self):
         log.info("[initializing new `{}`]".format(self.__class__.__name__))
