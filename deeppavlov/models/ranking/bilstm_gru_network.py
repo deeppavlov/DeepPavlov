@@ -158,18 +158,17 @@ class BiLSTMGRUNetwork(SiameseNetwork, metaclass=TfModelMeta):
         K.set_session(self.sess)
 
         self.optimizer = Adam(lr=self.learning_rate)
-        self.embeddings = self.embeddings_model()
         if self.triplet_mode:
             self.loss = self.triplet_loss
         else:
             self.loss = losses.binary_crossentropy
-        self.obj_model = self.loss_model()
+        self.obj_model = self.bilstm_gru_model()
         self.obj_model.compile(loss=self.loss, optimizer=self.optimizer)
         self.score_model = self.prediction_model()
-        self.context_embedding = Model(inputs=self.embeddings.inputs,
-                                 outputs=self.embeddings.outputs[0])
-        self.response_embedding = Model(inputs=self.embeddings.inputs,
-                                 outputs=self.embeddings.outputs[1])
+        # self.context_embedding = Model(inputs=self.embeddings.inputs,
+        #                          outputs=self.embeddings.outputs[0])
+        # self.response_embedding = Model(inputs=self.embeddings.inputs,
+        #                          outputs=self.embeddings.outputs[1])
 
     def _config_session(self):
         """
@@ -196,10 +195,10 @@ class BiLSTMGRUNetwork(SiameseNetwork, metaclass=TfModelMeta):
         if self.use_matrix:
             if self.token_embeddings and not self.char_embeddings:
                 if self.shared_weights:
-                    self.embeddings.get_layer(name="embedding").set_weights([self.emb_matrix])
+                    self.obj_model.get_layer(name="embedding").set_weights([self.emb_matrix])
                 else:
-                    self.embeddings.get_layer(name="embedding_a").set_weights([self.emb_matrix])
-                    self.embeddings.get_layer(name="embedding_b").set_weights([self.emb_matrix])
+                    self.obj_model.get_layer(name="embedding_a").set_weights([self.emb_matrix])
+                    self.obj_model.get_layer(name="embedding_b").set_weights([self.emb_matrix])
 
     def embedding_layer(self):
         out = Embedding(self.toks_num,
@@ -219,7 +218,7 @@ class BiLSTMGRUNetwork(SiameseNetwork, metaclass=TfModelMeta):
                             return_sequences=True), merge_mode='concat')
         return out
 
-    def embeddings_model(self):
+    def bilstm_gru_model(self):
         input = []
         if self.use_matrix:
             for i in range(self.num_context_turns + 1):
@@ -241,39 +240,34 @@ class BiLSTMGRUNetwork(SiameseNetwork, metaclass=TfModelMeta):
         lstm_layer = self.lstm_layer()
         lstm_c = [lstm_layer(el) for el in emb_c]
         lstm_r = lstm_layer(emb_r)
-        pooling_layer = GlobalMaxPooling1D()
+        pooling_layer = GlobalMaxPooling1D(name="pooling")
         lstm_c = [pooling_layer(el) for el in lstm_c]
         lstm_r = pooling_layer(lstm_r)
         lstm_c = [Lambda(lambda x: K.expand_dims(x, 1))(el) for el in lstm_c]
         lstm_c = Lambda(lambda x: K.concatenate(x, 1))(lstm_c)
-        gru_layer = GRU(2 * self.hidden_dim)
+        gru_layer = GRU(2 * self.hidden_dim, name="gru")
         gru_c = gru_layer(lstm_c)
-        model = Model(input, [gru_c, lstm_r])
+
+        if self.triplet_mode:
+            dist = Lambda(self._pairwise_distances)([gru_c, lstm_r])
+        else:
+            dist = Lambda(self.diff_mult_dist)([gru_c, lstm_r])
+            dist = Dense(1, activation='sigmoid', name="score_model")(dist)
+        model = Model([context, response], dist)
         return model
 
     def prediction_model(self):
-        cr = self.embeddings.inputs
-        emb_c, emb_r = self.embeddings.outputs
+        cr = self.obj_model.inputs
         if self.triplet_mode:
+            emb_c = self.obj_model.get_layer("gru")
+            emb_r = self.obj_model.get_layer("pooling")
             dist_score = Lambda(lambda x: self.euclidian_dist(x), name="score_model")
             score = dist_score([emb_c, emb_r])
         else:
-            dist = Lambda(self.diff_mult_dist)([emb_c, emb_r])
-            score = Dense(1, activation='sigmoid', name="score_model")(dist)
+            score = self.obj_model.get_layer("score_model")
             score = Lambda(lambda x: 1. - K.squeeze(x, -1))(score)
         score = Lambda(lambda x: 1. - x)(score)
         model = Model(cr, score)
-        return model
-
-    def loss_model(self):
-        cr = self.embeddings.inputs
-        emb_c, emb_r = self.embeddings.outputs
-        if self.triplet_mode:
-            dist = Lambda(self._pairwise_distances)([emb_c, emb_r])
-        else:
-            dist = Lambda(self.diff_mult_dist)([emb_c, emb_r])
-            dist = Dense(1, activation='sigmoid', name="score_model")(dist)
-        model = Model(cr, dist)
         return model
 
     def diff_mult_dist(self, inputs):
