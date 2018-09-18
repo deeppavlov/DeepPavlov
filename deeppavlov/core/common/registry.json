@@ -62,6 +62,7 @@
   "siamese_model": "deeppavlov.models.ranking.siamese_model:SiameseModel",
   "bilstm_nn": "deeppavlov.models.ranking.bilstm_network:BiLSTMNetwork",
   "bilstm_gru_nn": "deeppavlov.models.ranking.bilstm_gru_network:BiLSTMGRUNetwork",
+  "qa_memnet": "deeppavlov.models.ranking.qa_memnet:QAMemnet",
   "siamese_preprocessor": "deeppavlov.models.preprocessors.siamese_preprocessor:SiamesePreprocessor",
   "response_tokenizer": "deeppavlov.models.tokenizers.response_tokenizer:ResponseTokenizer",
   "ru_sent_tokenizer": "deeppavlov.models.tokenizers.ru_sent_tokenizer:RuSentTokenizer",

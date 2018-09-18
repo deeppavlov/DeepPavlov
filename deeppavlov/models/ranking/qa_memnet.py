@@ -1,31 +1,27 @@
-from keras.layers import Input, LSTM, Embedding, GlobalMaxPooling1D, Lambda, subtract, Conv2D, Dropout
-from keras.layers import Dense, Activation, Reshape, CuDNNGRU, CuDNNLSTM, GRU, GlobalAveragePooling1D, GlobalMaxPooling1D
-from keras.layers.merge import Dot, Subtract, Add, Multiply, concatenate
+from keras.layers import Input, LSTM, Embedding, GlobalMaxPooling1D, Lambda, Dropout
+from keras.layers import Dense, Activation, Reshape, CuDNNGRU, CuDNNLSTM, GRU, GlobalAveragePooling1D
+from keras.layers.merge import concatenate
 from keras.layers.normalization import BatchNormalization
 from keras.models import Model
 from keras.layers.wrappers import Bidirectional
-from keras.optimizers import Adam
-from keras.initializers import glorot_uniform, Orthogonal
-from keras import losses
 from keras import backend as K
-import tensorflow as tf
 import numpy as np
 from deeppavlov.core.models.tf_backend import TfModelMeta
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.layers import keras_layers
-from pathlib import Path
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.ranking.siamese_network import SiameseEmbeddingsNetwork
+from deeppavlov.models.ranking.siamese_network import SiameseNetwork
 from keras.layers.advanced_activations import LeakyReLU
 
 
 log = get_logger(__name__)
 
 @register('qa_memnet')
-class QAMemnet(SiameseEmbeddingsNetwork):
+class QAMemnet(SiameseNetwork, metaclass=TfModelMeta):
 
     def __init__(self,
+                 emb_matrix: np.ndarray = None,
+                 voc_siz: int = None,
+                 emb_dim: int = 300,
                  bdr: bool = True,
                  pool: bool = True,
                  cudnn: bool = True,
@@ -33,7 +29,7 @@ class QAMemnet(SiameseEmbeddingsNetwork):
                  dsl: int = 2,
                  dsd: int = 300,
                  dsp: float = 0.3,
-                 dp: float = 0.0,
+                 edp: float = 0.0,
                  rdp: float = 0.1,
                  drp: float = 0.2,
                  lstm_dim: int = 300,
@@ -42,6 +38,9 @@ class QAMemnet(SiameseEmbeddingsNetwork):
                  dlrs = 1,
                  **kwargs):
 
+        self.emb_matrix = emb_matrix
+        self.voc_siz = voc_siz
+        self.emb_dim = emb_dim
         self.bdr = bdr
         self.pool = pool
         self.cudnn = cudnn
@@ -49,22 +48,35 @@ class QAMemnet(SiameseEmbeddingsNetwork):
         self.dsl = dsl
         self.dsd = dsd
         self.dsp = dsp
-        self.dp = dp
+        self. edp = edp
         self.rdp = rdp
-        self.drp = drp
+        self.dropout = drp
         self.lstm_dim = lstm_dim
         self.seq_len = seq_len
         self.layers = layers
-        self.dlrs = 1
+        self.dlrs = dlrs
+
+        self.dense_dim = self.lstm_dim
+
+        if self.pool:
+            self.dense_dim *= 3
+        if self.bdr:
+            self.dense_dim *= 2
+
+        self.model = self.get_qa_memnet_model()
+
+        self.model.compile(optimizer='adam',
+                      loss=self.contrastive_loss,
+                      metrics=['accuracy'])
 
     def pairwise_mul(self, vests):
         x, y = vests
         return x * y
 
-    def last_timestep(vests):
+    def last_timestep(self, vests):
         return vests[:, -1, :]
 
-    def last_timestep_rev(vests):
+    def last_timestep_rev(self, vests):
         rdim = int(K.int_shape(vests)[-1] / 2)
         return concatenate([vests[:, -1, :rdim], vests[:, 0, rdim:]], axis=-1)
 
@@ -73,6 +85,13 @@ class QAMemnet(SiameseEmbeddingsNetwork):
         x = K.l2_normalize(x, axis=-1)
         y = K.l2_normalize(y, axis=-1)
         return K.sum((x * y), axis=-1, keepdims=True)
+
+    def contrastive_loss(self, y_true, y_pred):
+        '''Contrastive loss from Hadsell-et-al.'06
+        http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
+        '''
+        margin = 1
+        return K.mean((1 - y_true) * K.square(y_pred) + y_true * K.square(K.maximum(margin - y_pred, 0)))
 
     def build_embedder(self, seqlen, voc_siz=None,
                        weighted=False, transformed=False, emb_dim=300, prefix='word'):
@@ -147,7 +166,7 @@ class QAMemnet(SiameseEmbeddingsNetwork):
         return mod
 
 
-    def embeddings_model(self):
+    def get_qa_memnet_model(self):
         dense_dim = self.lstm_dim
 
         if self.pool:
@@ -160,10 +179,10 @@ class QAMemnet(SiameseEmbeddingsNetwork):
         inp_rpl = Input(shape=(self.seq_len,), name='inp_reply')
 
         # word embedding model
-        embedder = self.build_embedder(self.seq_len)
+        self.embedder = self.build_embedder(self.seq_len, voc_siz=self.voc_siz, emb_dim=self.emb_dim)
 
         # shared sentence-level encoder
-        encoder_ctx = self.build_rnn_encoder(embedder.output_shape, return_sequences=False,
+        encoder_ctx = self.build_rnn_encoder(self.embedder.output_shape, return_sequences=False,
                                         lstm_dim=self.lstm_dim, bidirectional=self.bdr, cudnn=self.cudnn,
                                         dp=self.edp, rdp=self.rdp,
                                         prefix="sentence", layers=self.layers, use_pool=self.pool)
@@ -185,8 +204,8 @@ class QAMemnet(SiameseEmbeddingsNetwork):
 
         dm = dense_comb(self.dlrs)
 
-        emb_ctx = embedder(inp_ctx)
-        emb_rpl = embedder(inp_rpl)
+        emb_ctx = self.embedder(inp_ctx)
+        emb_rpl = self.embedder(inp_rpl)
 
         # encode contexts and reply
         enc_ctx, c1, c2, c3 = encoder_ctx(emb_ctx)
@@ -220,8 +239,23 @@ class QAMemnet(SiameseEmbeddingsNetwork):
         model = Model(inputs=[inp_ctx, inp_rpl], outputs=fc2)
         att_model = None  # Model(inputs=[inp_ctx, inp_rpl], outputs=[att_ctx, att_rpl])
 
-        model.compile(optimizer='adam',
-                      loss=contrastive_loss,
-                      metrics=['accuracy'])
-
         return model
+
+    def load(self, load_path):
+        log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
+        self.obj_model.load_weights(str(load_path))
+
+    def load_initial_emb_matrix(self):
+        log.info("[initializing new `{}`]".format(self.__class__.__name__))
+        self.embedder.get_layer(name="embedding").set_weights([self.emb_matrix])
+
+    def save(self, save_path):
+        log.info("[saving `{}`]".format(self.__class__.__name__))
+        self.obj_model.save_weights(str(save_path))
+
+    def train_on_batch(self, batch, y):
+        loss = self.model.train_on_batch(x=list(batch), y=np.asarray(y))
+        return loss
+
+    def predict_score_on_batch(self, batch):
+            return self.model.predict_on_batch(x=batch)
