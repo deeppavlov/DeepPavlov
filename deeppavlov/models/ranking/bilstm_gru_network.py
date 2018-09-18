@@ -253,7 +253,7 @@ class BiLSTMGRUNetwork(SiameseNetwork, metaclass=TfModelMeta):
         else:
             dist = Lambda(self.diff_mult_dist)([gru_c, lstm_r])
             dist = Dense(1, activation='sigmoid', name="score_model")(dist)
-        model = Model([context, response], dist)
+        model = Model(context + [response], dist)
         return model
 
     def prediction_model(self):
