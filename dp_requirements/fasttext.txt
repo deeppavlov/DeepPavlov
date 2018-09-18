@@ -1,2 +1,2 @@
 pybind11==2.2.3
-git+https://github.com/seliverstov/fastText.git#egg=fastText==0.8.22
+git+https://github.com/deepmipt/fastText.git#egg=fastText==0.8.22
