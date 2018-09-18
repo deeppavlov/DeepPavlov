@@ -103,7 +103,7 @@
         "subdir": "ubuntu_v2_data"
       },
       {
-        "url": "http://lnsigo.mipt.ru/export/embeddings/wiki.en.bin",
+        "url": "http://lnsigo.mipt.rufiles.deeppavlov.ai/deeppavlov_data/wiki.en.bin",
         "subdir": "ubuntu_v2_embeddings"
       }
     ]

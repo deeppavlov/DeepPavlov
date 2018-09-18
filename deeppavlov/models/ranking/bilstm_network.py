@@ -228,7 +228,7 @@ class BiLSTMNetwork(SiameseNetwork, metaclass=TfModelMeta):
                        return_sequences=ret_seq)
         return out
 
-    def embeddings_model(self):
+    def bilstm_model(self):
         if self.token_embeddings and not self.char_embeddings:
             if self.use_matrix:
                 context = Input(shape=(self.max_sequence_length,))

@@ -58,7 +58,7 @@
         "network": {
           "name": "qa_memnet",
           "voc_siz": "#siam_vocab.len",
-          "max_sequence_length": "#preproc.max_sequence_length",
+          "seq_len": "#preproc.max_sequence_length",
           "emb_dim": "#siam_embedder.dim",
           "emb_matrix": "#embeddings.emb_mat",
           "lstm_dim": 300
@@ -96,7 +96,7 @@
         "subdir": "ubuntu_v2_data"
       },
       {
-        "url": "http://lnsigo.mipt.ru/export/embeddings/wiki.en.bin",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "ubuntu_v2_embeddings"
       }
     ]
