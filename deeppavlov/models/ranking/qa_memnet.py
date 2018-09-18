@@ -66,8 +66,7 @@ class QAMemnet(SiameseNetwork, metaclass=TfModelMeta):
         self.model = self.get_qa_memnet_model()
 
         self.model.compile(optimizer='adam',
-                      loss=self.contrastive_loss,
-                      metrics=['accuracy'])
+                      loss=self.contrastive_loss)
 
     def pairwise_mul(self, vests):
         x, y = vests
@@ -243,7 +242,7 @@ class QAMemnet(SiameseNetwork, metaclass=TfModelMeta):
 
     def load(self, load_path):
         log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
-        self.obj_model.load_weights(str(load_path))
+        self.model.load_weights(str(load_path))
 
     def load_initial_emb_matrix(self):
         log.info("[initializing new `{}`]".format(self.__class__.__name__))
@@ -251,7 +250,7 @@ class QAMemnet(SiameseNetwork, metaclass=TfModelMeta):
 
     def save(self, save_path):
         log.info("[saving `{}`]".format(self.__class__.__name__))
-        self.obj_model.save_weights(str(save_path))
+        self.model.save_weights(str(save_path))
 
     def train_on_batch(self, batch, y):
         loss = self.model.train_on_batch(x=list(batch), y=np.asarray(y))

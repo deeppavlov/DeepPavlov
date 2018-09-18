@@ -1,8 +1,7 @@
 {
   "dataset_reader": {
-    "name": "ubuntu_v2_reader_mt",
-    "data_path": "./ubuntu_v2_data",
-    "num_context_turns": 3
+    "name": "ubuntu_v2_reader",
+    "data_path": "./ubuntu_v2_data"
   },
   "dataset_iterator": {
     "name": "siamese_iterator",
@@ -19,7 +18,6 @@
         "load_path": "vocabs/tok.dict",
         "use_matrix": true,
         "num_ranking_samples": 10,
-        "num_context_turns": 3,
         "max_sequence_length": 20,
         "fit_on": ["x"],
         "in": ["x"],
