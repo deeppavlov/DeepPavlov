@@ -307,11 +307,11 @@ class BiLSTMNetwork(SiameseNetwork, metaclass=TfModelMeta):
     def prediction_model(self):
         cr = self.obj_model.inputs
         if self.triplet_mode:
-            emb_c, emb_r = self.obj_model.get_layer("pooling")
+            emb_c, emb_r = self.obj_model.get_layer("pooling").outputs
             dist_score = Lambda(lambda x: self.euclidian_dist(x), name="score_model")
             score = dist_score([emb_c, emb_r])
         else:
-            score = self.obj_model.get_layer("score_model")
+            score = self.obj_model.get_layer("score_model").output
             score = Lambda(lambda x: 1. - K.squeeze(x, -1))(score)
         score = Lambda(lambda x: 1. - x)(score)
         model = Model(cr, score)
