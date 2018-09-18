@@ -15,15 +15,17 @@
 import sys
 from typing import Iterator, List, Union
 
+
 import numpy as np
 import tensorflow as tf
 import tensorflow_hub as hub
+from overrides import overrides
+
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import zero_pad
 from deeppavlov.core.models.component import Component
-from overrides import overrides
 
 log = get_logger(__name__)
 
@@ -38,10 +40,13 @@ class ELMoEmbedder(Component):
     Parameters:
         spec: A ``ModuleSpec`` defining the Module to instantiate or a path where to load a ``ModuleSpec`` from via
             ``tenserflow_hub.load_module_spec`` by using `TensorFlow Hub <https://www.tensorflow.org/hub/overview>`__.
-        elmo_output_names: A list of output ELMo. You can use combination of ``["word_emb", "lstm_outputs1", "lstm_outputs2","elmo"]`` and you can use separately ``["default"]``. See `TensorFlow Hub <https://www.tensorflow.org/hub/modules/google/elmo/2>`__ for more information about it.
+        elmo_output_names: A list of output ELMo. You can use combination of
+            ``["word_emb", "lstm_outputs1", "lstm_outputs2","elmo"]`` and you can use separately ``["default"]``.
+            See `TensorFlow Hub <https://www.tensorflow.org/hub/modules/google/elmo/2>`__ for more information about it.
         dim: Dimensionality of output token embeddings of ELMo model.
         pad_zero: Whether to use pad samples or not.
-        concat_last_axis: A boolean that enables/disables last axis concatenation. It is not used for ``elmo_output_names = ["default"]``.
+        concat_last_axis: A boolean that enables/disables last axis concatenation. It is not used for
+            ``elmo_output_names = ["default"]``.
         max_token: The number limitation of words per a batch line.
 
     Examples:
@@ -84,11 +89,14 @@ class ELMoEmbedder(Component):
         self.elmo_output_names = elmo_output_names if elmo_output_names else ['default']
         elmo_output_names_set = set(self.elmo_output_names)
         if elmo_output_names_set - set(self.elmo_output_dims.keys()):
-            log.error(f'Incorrect elmo_output_names = {elmo_output_names} . You can use either  ["default"] or some of ["word_emb", "lstm_outputs1", "lstm_outputs2","elmo"]')
+            log.error(f'Incorrect elmo_output_names = {elmo_output_names} . You can use either  ["default"] or some of'\
+                       '["word_emb", "lstm_outputs1", "lstm_outputs2","elmo"]')
             sys.exit(1)
 
-        if elmo_output_names_set - set(['default']) and elmo_output_names_set - set(["word_emb", "lstm_outputs1", "lstm_outputs2", "elmo"]):
-            log.error('Incompatible conditions: you can use either  ["default"] or list of ["word_emb", "lstm_outputs1", "lstm_outputs2","elmo"] ')
+        if elmo_output_names_set - set(['default']) and elmo_output_names_set - set(["word_emb", "lstm_outputs1",
+                                                                                     "lstm_outputs2", "elmo"]):
+            log.error('Incompatible conditions: you can use either  ["default"] or list of '\
+                      '["word_emb", "lstm_outputs1", "lstm_outputs2","elmo"] ')
             sys.exit(1)
 
         self.pad_zero = pad_zero
@@ -98,7 +106,7 @@ class ELMoEmbedder(Component):
         self.dim = self._get_dims(self.elmo_output_names, dim, concat_last_axis)
 
     def _get_dims(self, elmo_output_names, in_dim, concat_last_axis):
-        dims = list(map(lambda elmo_output_name: self.elmo_output_dims[elmo_output_name], elmo_output_names))
+        dims = [ self.elmo_output_dims[elmo_output_name] for elmo_output_name in elmo_output_names]
         if concat_last_axis:
             dims = in_dim if in_dim else sum(dims)
         else:
@@ -186,7 +194,7 @@ class ELMoEmbedder(Component):
                 shape = (dim0, self.dim if isinstance(self.dim, int) else self.dim[0])
                 elmo_output_values = np.resize(elmo_output_values, shape)
         else:
-            elmo_output_values = list(map(lambda elmo_output_name: elmo_outputs[elmo_output_name], self.elmo_output_names))
+            elmo_output_values = [elmo_outputs[elmo_output_name] for elmo_output_name in self.elmo_output_names]
             elmo_output_values = np.concatenate(elmo_output_values, axis=-1)
 
             dim0, dim1, dim2 = elmo_output_values.shape
@@ -194,20 +202,17 @@ class ELMoEmbedder(Component):
                 shape = (dim0, dim1, self.dim)
                 elmo_output_values = np.resize(elmo_output_values, shape)
 
-            elmo_output_values = [elmo_output_values_line[:length_line] for length_line, elmo_output_values_line in zip(tokens_length, elmo_output_values)]
+            elmo_output_values = [elmo_output_values_line[:length_line]
+                            for length_line, elmo_output_values_line in zip(tokens_length, elmo_output_values)]
 
             if self.pad_zero:
                 elmo_output_values = zero_pad(elmo_output_values)
 
             if not self.concat_last_axis:
                 slice_indexes = np.cumsum(self.dim).tolist()[:-1]
+                elmo_output_values = [[np.array_split(vec, slice_indexes) for vec in tokens]
+                                        for tokens in elmo_output_values]
 
-                def tok_f(vec):
-                    return np.array_split(vec, slice_indexes)
-
-                def batch_line_f(tokens):
-                    return list(map(tok_f, tokens))
-                elmo_output_values = list(map(batch_line_f, elmo_output_values))
 
         return elmo_output_values
 
