@@ -121,7 +121,7 @@ class SiameseNetwork(metaclass=TfModelMeta):
                                  outputs=self.embeddings.outputs[1])
 
         if self.load_path.exists():
-           self.load()
+            self.load()
         else:
             self.load_initial_emb_matrix()
 
