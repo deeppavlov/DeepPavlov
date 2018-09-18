@@ -51,8 +51,9 @@ def get_server_params(server_config_path, model_config_path):
 
 def interact(model, params_names):
     if not request.is_json:
+        log.error("request Content-Type header is not application/json")
         return jsonify({
-            "error": "request must contains json data"
+            "error": "request Content-Type header is not application/json"
         }), 400
 
     model_args = []
@@ -63,13 +64,16 @@ def interact(model, params_names):
         if param_value is None or (isinstance(param_value, list) and len(param_value) > 0):
             model_args.append(param_value)
         else:
+            log.error(f"nonempty array expected but got '{param_name}'={repr(param_value)}")
             return jsonify({'error': f"nonempty array expected but got '{param_name}'={repr(param_value)}"}), 400
 
     lengths = {len(i) for i in model_args if i is not None}
 
     if not lengths:
+        log.error('got empty request')
         return jsonify({'error': 'got empty request'}), 400
     elif len(lengths) > 1:
+        log.error('got several different batch sizes')
         return jsonify({'error': 'got several different batch sizes'}), 400
 
     if len(params_names) == 1:
