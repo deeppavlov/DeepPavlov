@@ -17,6 +17,7 @@ limitations under the License.
 from deeppavlov.deep import find_config
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.commands.infer import interact_model
+from utils.server_utils.server import start_model_server
 
 
 # PIPELINE_CONFIG_PATH = 'configs/classifiers/intents_dstc2.json'
@@ -45,4 +46,5 @@ PIPELINE_CONFIG_PATH = find_config('intents_dstc2_big')
 
 if __name__ == '__main__':
     train_evaluate_model_from_config(PIPELINE_CONFIG_PATH)
+    # start_model_server(PIPELINE_CONFIG_PATH)
     # interact_model(PIPELINE_CONFIG_PATH)
