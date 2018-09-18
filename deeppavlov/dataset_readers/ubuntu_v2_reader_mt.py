@@ -10,9 +10,10 @@ import re
 @register('ubuntu_v2_reader_mt')
 class UbuntuV2ReaderMT(DatasetReader):
     
-    def read(self, data_path):
+    def read(self, data_path, num_context_turns):
         # data_path = expand_path(data_path)
         # self.download_data(data_path)
+        self.num_turns = num_context_turns
         dataset = {'train': None, 'valid': None, 'test': None}
         train_fname = Path(data_path) / 'train.csv'
         valid_fname = Path(data_path) / 'valid.csv'
@@ -61,6 +62,6 @@ class UbuntuV2ReaderMT(DatasetReader):
         data = [(el, 1) for el in data]
         return data
 
-    def _expand_context(self, context, num_turns=10):
-        f = lambda x: x + (num_turns - len(x)) * [''] if len(x) < num_turns else x[:num_turns]
+    def _expand_context(self, context):
+        f = lambda x: x + (self.num_turns - len(x)) * [''] if len(x) < self.num_turns else x[:self.num_turns]
         return f(context)

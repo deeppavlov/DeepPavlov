@@ -63,26 +63,24 @@
           "len_vocab": "#siam_vocab.len",
           "use_matrix": "#preproc.use_matrix",
           "max_sequence_length": "#preproc.max_sequence_length",
+          "emb_matrix": "#embeddings.emb_mat",
           "embedding_dim": "#siam_embedder.dim",
           "seed": 243,
           "reccurent": "bilstm",
           "max_pooling": true,
           "shared_weights": true,
-          "hidden_dim": 300
+          "hidden_dim": 300,
+          "learning_rate": 1e-3,
+          "triplet_loss": true,
+          "hard_triplets": false,
+          "margin": 0.1
         },
         "batch_size": 256,
-        "use_matrix": "#preproc.use_matrix",
-        "emb_matrix": "#embeddings.emb_mat",
-        "learning_rate": 1e-3,
-        "triplet_loss": true,
-        "hard_triplets": false,
-        "distance": "euclidian",
-        "margin": 0.1,
+        "save_path": "insurance_ranking/model_weights.h5",
+        "load_path": "insurance_ranking/model_weights.h5",
         "update_embeddings": "#preproc.update_embeddings",
         "preprocess": "#preproc.__call__",
-        "interact_pred_num": 3,
-        "save_path": "insurance_ranking/model_weights.h5",
-        "load_path": "insurance_ranking/model_weights.h5"
+        "interact_pred_num": 3
       }
     ],
     "out": ["y_predicted"]

@@ -16,7 +16,7 @@ from deeppavlov.core.layers import keras_layers
 from pathlib import Path
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.ranking.siamese_embeddings_network import SiameseEmbeddingsNetwork
+from deeppavlov.models.ranking.siamese_network import SiameseEmbeddingsNetwork
 from keras.layers.advanced_activations import LeakyReLU
 
 

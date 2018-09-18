@@ -42,6 +42,7 @@ class SiameseModel(NNModel):
     """
 
     def __init__(self,
+                 network,
                  batch_size: int,
                  num_context_turns: int = 1,
                  preprocess: Callable = None,
@@ -52,12 +53,12 @@ class SiameseModel(NNModel):
                  **kwargs):
 
         # Parameters for parent classes
-        save_path = kwargs.get('save_path', None)
-        load_path = kwargs.get('load_path', None)
+        self.save_path = kwargs.get('save_path', None)
+        self.load_path = kwargs.get('load_path', None)
         train_now = kwargs.get('train_now', None)
         mode = kwargs.get('mode', None)
 
-        super().__init__(save_path=save_path, load_path=load_path,
+        super().__init__(save_path=self.save_path, load_path=self.load_path,
                          train_now=train_now, mode=mode)
 
         self.batch_size = batch_size
@@ -68,6 +69,7 @@ class SiameseModel(NNModel):
         self.update_embeddings = update_embeddings
         self.context2emb_vocab = context2emb_vocab
         self.response2emb_vocab = response2emb_vocab
+        self._net = network
 
         # opt = deepcopy(kwargs)
 
@@ -81,12 +83,16 @@ class SiameseModel(NNModel):
 
     def load(self):
         """Load the model from the last checkpoint if it exists. Otherwise instantiate a new model."""
-        self._net = SiameseNetwork(num_context_turns=self.num_context_turns, **self.network_parameters)
+        if self.load_path.exists():
+           self._net.load(self.load_path)
+        else:
+            self._net.load_initial_emb_matrix()
+
 
     def save(self):
         """Save the model."""
         log.info('[saving model to {}]'.format(self.save_path.resolve()))
-        self._net.save()
+        self._net.save(self.save_path)
         if self.update_embeddings:
             self.update_sen_embs(self.context2emb_vocab, "context")
             self.update_sen_embs(self.response2emb_vocab, "response")

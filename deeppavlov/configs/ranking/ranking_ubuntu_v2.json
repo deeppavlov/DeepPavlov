@@ -63,14 +63,12 @@
           "max_sequence_length": "#preproc.max_sequence_length",
           "embedding_dim": "#siam_embedder.dim",
           "seed": 243,
-          "hidden_dim": 300
+          "hidden_dim": 300,
+          "emb_matrix": "#embeddings.emb_mat",
+          "learning_rate": 1e-3,
+          "triplet_loss": false
         },
         "batch_size": 256,
-        "use_matrix": "#preproc.use_matrix",
-        "emb_matrix": "#embeddings.emb_mat",
-        "learning_rate": 1e-3,
-        "triplet_loss": false,
-        "margin": 0.1,
         "interact_pred_num": 3,
         "save_path": "ubuntu_v2_ranking/model_weights.h5",
         "load_path": "ubuntu_v2_ranking/model_weights.h5"

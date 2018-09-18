@@ -1,7 +1,8 @@
 {
   "dataset_reader": {
     "name": "ubuntu_v2_reader_mt",
-    "data_path": "./ubuntu_v2_data"
+    "data_path": "./ubuntu_v2_data",
+    "num_context_turns": 10
   },
   "dataset_iterator": {
     "name": "siamese_iterator",
@@ -63,15 +64,14 @@
           "len_vocab": "#siam_vocab.len",
           "max_sequence_length": "#preproc.max_sequence_length",
           "embedding_dim": "#siam_embedder.dim",
+          "emb_matrix": "#embeddings.emb_mat",
           "seed": 243,
-          "hidden_dim": 300
+          "hidden_dim": 300,
+          "learning_rate": 1e-3,
+          "triplet_loss": false
         },
         "batch_size": 256,
-        "use_matrix": "#preproc.use_matrix",
-        "emb_matrix": "#embeddings.emb_mat",
         "num_context_turns": "#preproc.num_context_turns",
-        "learning_rate": 1e-3,
-        "triplet_loss": false,
         "save_path": "ubuntu_v2_mt_ranking/model_weights.h5",
         "load_path": "ubuntu_v2_mt_ranking/model_weights.h5"
       }
