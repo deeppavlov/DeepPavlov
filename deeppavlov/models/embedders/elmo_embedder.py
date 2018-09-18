@@ -38,7 +38,7 @@ class ELMoEmbedder(Component):
     Parameters:
         spec: A ``ModuleSpec`` defining the Module to instantiate or a path where to load a ``ModuleSpec`` from via
             ``tenserflow_hub.load_module_spec`` by using `TensorFlow Hub <https://www.tensorflow.org/hub/overview>`__.
-        elmo_output_names: A list of output ELMo. You can use combination of ``["word_emb", "lstm_outputs1", "lstm_outputs2","elmo"]`` and you can use separately ``["default"]``. See `TensorFlow Hub <https://www.tensorflow.org/hub/overview>`__ for more information about it.
+        elmo_output_names: A list of output ELMo. You can use combination of ``["word_emb", "lstm_outputs1", "lstm_outputs2","elmo"]`` and you can use separately ``["default"]``. See `TensorFlow Hub <https://www.tensorflow.org/hub/modules/google/elmo/2>`__ for more information about it.
         dim: Dimensionality of output token embeddings of ELMo model.
         pad_zero: Whether to use pad samples or not.
         concat_last_axis: A boolean that enables/disables last axis concatenation. It is not used for ``elmo_output_names = ["default"]``.
