@@ -49,6 +49,7 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
         concat_last_axis: A boolean that enables/disables last axis concatenation. It is not used for
             ``elmo_output_names = ["default"]``.
         max_token: The number limitation of words per a batch line.
+        mini_batch_size: It is used to reduce the memory requirements of the device.
 
     Examples:
         You can use ELMo models from DeepPavlov as usual `TensorFlow Hub Module
@@ -77,7 +78,7 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
 
     """
     def __init__(self, spec: str, elmo_output_names: Optional[List] = None, dim: Optional[int] = None, pad_zero: bool = False,
-                 concat_last_axis: bool = True, max_token: Optional[int] = None, **kwargs) -> None:
+                 concat_last_axis: bool = True, max_token: Optional[int] = None, mini_batch_size: int = 32, **kwargs) -> None:
 
         self.spec = spec if '://' in spec else str(expand_path(spec))
 
@@ -103,6 +104,7 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
         self.pad_zero = pad_zero
         self.concat_last_axis = concat_last_axis
         self.max_token = max_token
+        self.mini_batch_size = mini_batch_size
         self.elmo_outputs, self.sess, self.tokens_ph, self.tokens_length_ph = self._load()
         self.dim = self._get_dims(self.elmo_output_names, dim, concat_last_axis)
 
@@ -170,8 +172,7 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
 
         return batch, tokens_length
 
-    @overrides
-    def __call__(self, batch: List[List[str]],
+    def _mini_batch_fit(self, batch: List[List[str]],
                  *args, **kwargs) -> Union[List[np.ndarray], np.ndarray]:
         """
         Embed sentences from a batch.
@@ -213,6 +214,35 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
                 slice_indexes = np.cumsum(self.dim).tolist()[:-1]
                 elmo_output_values = [[np.array_split(vec, slice_indexes) for vec in tokens]
                                         for tokens in elmo_output_values]
+
+
+        return elmo_output_values
+
+
+    @staticmethod
+    def chunk_generator(items_list, chunk_size):
+        for i in range(0, len(items_list), chunk_size):
+                        yield items_list[i:i + chunk_size]
+    @overrides
+    def __call__(self, batch: List[List[str]],
+                 *args, **kwargs) -> Union[List[np.ndarray], np.ndarray]:
+        """
+        Embed sentences from a batch.
+
+        Args:
+            batch: A list of tokenized text samples.
+
+        Returns:
+            A batch of ELMo embeddings.
+        """
+        if len(batch) > self.mini_batch_size:
+            batch_gen = self.chunk_generator(batch, self.mini_batch_size)
+            elmo_output_values = []
+            for mini_batch in batch_gen:
+                mini_batch_out = self._mini_batch_fit(mini_batch, *args, **kwargs)
+                elmo_output_values.extend(mini_batch_out)
+        else:
+            elmo_output_values = self._mini_batch_fit(batch, *args, **kwargs)
 
 
         return elmo_output_values
