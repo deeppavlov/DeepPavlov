@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 
 from flask import Flask, request, jsonify, redirect
-from flasgger import Swagger
+from flasgger import Swagger, swag_from
 from flask_cors import CORS
 
 from deeppavlov.core.common.file import read_json
@@ -51,8 +51,9 @@ def get_server_params(server_config_path, model_config_path):
 
 def interact(model, params_names):
     if not request.is_json:
+        log.error("request Content-Type header is not application/json")
         return jsonify({
-            "error": "request must contains json data"
+            "error": "request Content-Type header is not application/json"
         }), 400
 
     model_args = []
@@ -63,13 +64,16 @@ def interact(model, params_names):
         if param_value is None or (isinstance(param_value, list) and len(param_value) > 0):
             model_args.append(param_value)
         else:
+            log.error(f"nonempty array expected but got '{param_name}'={repr(param_value)}")
             return jsonify({'error': f"nonempty array expected but got '{param_name}'={repr(param_value)}"}), 400
 
     lengths = {len(i) for i in model_args if i is not None}
 
     if not lengths:
+        log.error('got empty request')
         return jsonify({'error': 'got empty request'}), 400
     elif len(lengths) > 1:
+        log.error('got several different batch sizes')
         return jsonify({'error': 'got several different batch sizes'}), 400
 
     if len(params_names) == 1:
@@ -85,8 +89,8 @@ def interact(model, params_names):
 
 
 def start_model_server(model_config_path):
-    server_config_dir = Path(__file__).resolve().parent
-    server_config_path = Path(server_config_dir, SERVER_CONFIG_FILENAME).resolve()
+    server_config_dir = Path(__file__).parent
+    server_config_path = server_config_dir.parent / SERVER_CONFIG_FILENAME
 
     model = init_model(model_config_path)
 
@@ -96,21 +100,30 @@ def start_model_server(model_config_path):
     model_endpoint = server_params['model_endpoint']
     model_args_names = server_params['model_args_names']
 
+    endpoind_description = {
+        'description': 'A model endpoint',
+        'parameters': [
+            {
+                'name': 'data',
+                'in': 'body',
+                'required': 'true',
+                'example': {arg: ['value'] for arg in model_args_names}
+            }
+        ],
+        'responses': {
+            "200": {
+                "description": "A model response"
+            }
+        }
+    }
+
     @app.route('/')
     def index():
         return redirect('/apidocs/')
 
     @app.route(model_endpoint, methods=['POST'])
+    @swag_from(endpoind_description)
     def answer():
-        """
-        Skill
-        ---
-        parameters:
-         - name: data
-           in: body
-           required: true
-           type: json
-        """
         return interact(model, model_args_names)
 
-    app.run(host=host, port=port)
+    app.run(host=host, port=port, threaded=False)

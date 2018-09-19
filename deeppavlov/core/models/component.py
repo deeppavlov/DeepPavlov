@@ -16,10 +16,13 @@ from abc import ABCMeta, abstractmethod
 
 
 class Component(metaclass=ABCMeta):
-
+    """Abstract class for all callables that could be used in Chainer's pipe."""
     @abstractmethod
     def __call__(self, *args, **kwargs):
         pass
 
     def reset(self):
+        pass
+
+    def destroy(self):
         pass

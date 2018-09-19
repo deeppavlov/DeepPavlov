@@ -1,19 +1,19 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
 import inspect
+from typing import Union
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
@@ -21,8 +21,12 @@ from deeppavlov.core.models.nn_model import NNModel
 
 
 class Chainer(Component):
-    def __init__(self, in_x: [str, list]=None, out_params: [str, list]=None, in_y: [str, list]=None,
-                 *args, as_component: bool=False, **kwargs):
+    """
+    Builds an agent/component pipeline from heterogeneous components (Rule-based/ML/DL). It allows to train
+    and infer models in a pipeline as a whole.
+    """
+    def __init__(self, in_x: Union[str, list] = None, out_params: Union[str, list] = None,
+                 in_y: Union[str, list] = None, *args, as_component: bool = False, **kwargs):
         self.pipe = []
         self.train_pipe = []
         if isinstance(in_x, str):
@@ -172,6 +176,16 @@ class Chainer(Component):
         self.get_main_component().save()
 
     def load(self):
-        for component in self.pipe:
+        for in_params, out_params, component in self.pipe:
             if inspect.ismethod(getattr(component, 'load', None)):
                 component.load()
+
+    def reset(self):
+        for in_params, out_params, component in self.pipe:
+            if inspect.ismethod(getattr(component, 'reset', None)):
+                component.reset()
+
+    def destroy(self):
+        for in_params, out_params, component in self.pipe:
+            if inspect.ismethod(getattr(component, 'destroy', None)):
+                component.destroy()

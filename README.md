@@ -54,6 +54,8 @@ print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 
 [Open Domain Questions Answering](http://docs.deeppavlov.ai/en/latest/skills/odqa.html)
 
+[Frequently Asked Questions Answering](http://docs.deeppavlov.ai/en/latest/skills/faq.html)
+
 **Embeddings**
 
 [ELMo embeddings for the Russian language](http://docs.deeppavlov.ai/en/master/apiref/models/embedders.html#deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder)
@@ -104,7 +106,7 @@ Then you can interact with the models or train them with the following command:
 python -m deeppavlov <mode> <path_to_config> [-d]
 ```
 
-* `<mode>` can be `train`, `predict`, `interact`, `interactbot` or `riseapi`
+* `<mode>` can be `train`, `predict`, `interact`, `interactbot`, `interactmsbot` or `riseapi`
 * `<path_to_config>` should be a path to an NLP pipeline json config (e.g. `deeppavlov/configs/ner/slotfill_dstc2.json`)
 or a name without the `.json` extension of one of the config files [provided](deeppavlov/configs) in this repository (e.g. `slotfill_dstc2`)
 
@@ -112,7 +114,11 @@ For the `interactbot` mode you should specify Telegram bot token in `-t` paramet
 * Add section to `utils/telegram_utils/model_info.json` with your custom Telegram messages
 * In model config file specify `metadata.labels.telegram_utils` parameter with name which refers to the added section of `utils/telegram_utils/model_info.json`
 
-For `riseapi` mode you should specify api settings (host, port, etc.) in [*utils/server_utils/server_config.json*](utils/server_utils/server_config.json) configuration file. If provided, values from *model_defaults* section override values for the same parameters from *common_defaults* section. Model names in *model_defaults* section should be similar to the class names of the models main component.
+For the `interactmsbot` mode you should specify **Microsoft app id** in `-i` and **Microsoft app secret** in `-s`. Also before launch you should specify api deployment settings (host, port) in [*utils/server_config.json*](utils/server_utils/server_config.json) configuration file. Note, that Microsoft Bot Framework requires `https` endpoint with valid certificate from CA.
+Here is [detailed info on the Microsoft Bot Framework integration](http://docs.deeppavlov.ai/en/latest/devguides/ms_bot_integration.html) 
+
+For `riseapi` mode you should specify api settings (host, port, etc.) in [*utils/server_config.json*](utils/server_utils/server_config.json) configuration file. If provided, values from *model_defaults* section override values for the same parameters from *common_defaults* section. Model names in *model_defaults* section should be similar to the class names of the models main component.
+Here is [detailed info on the DeepPavlov REST API](http://docs.deeppavlov.ai/en/latest/devguides/rest_api.html)
 
 For `predict` you can specify path to input file with `-f` or `--input-file` parameter, otherwise, data will be taken
 from stdin.  

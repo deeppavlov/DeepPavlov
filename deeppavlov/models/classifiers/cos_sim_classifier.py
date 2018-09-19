@@ -87,8 +87,8 @@ class CosineSimilarityClassifier(Estimator, Serializable):
         answers = []
         scores = []
         for i in range(len(answer_ids)):
-            answers.append([y_labels[id] for id in answer_ids[i, ::-1]])
-            scores.append([np.round(labels_scores[i, id], 2) for id in answer_ids[i, ::-1]])
+            answers.extend([y_labels[id] for id in answer_ids[i, ::-1]])
+            scores.extend([np.round(labels_scores[i, id], 2) for id in answer_ids[i, ::-1]])
 
         return answers, scores
 

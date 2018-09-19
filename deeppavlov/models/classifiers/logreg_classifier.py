@@ -70,8 +70,8 @@ class LogregClassifier(Estimator, Serializable):
         answers = []
         scores = []
         for i in range(len(answer_ids)):
-            answers.append([self.logreg.classes_[id] for id in answer_ids[i, ::-1]])
-            scores.append([np.round(probs[i, id], 2) for id in answer_ids[i, ::-1]])
+            answers.extend([self.logreg.classes_[id] for id in answer_ids[i, ::-1]])
+            scores.extend([np.round(probs[i, id], 2) for id in answer_ids[i, ::-1]])
 
         return answers, scores
 

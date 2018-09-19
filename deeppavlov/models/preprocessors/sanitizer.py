@@ -22,8 +22,17 @@ from deeppavlov.core.common.registry import register
 
 @register('sanitizer')
 class Sanitizer(Component):
-    """Remove all combining characters like diacritical marks from tokens"""
-    def __init__(self, diacritical=True, nums=False, *args, **kwargs):
+    """Remove all combining characters like diacritical marks from tokens
+
+    Args:
+        diacritical: whether to remove diacritical signs or not
+            diacritical signs are something like hats and stress marks
+        nums: whether to replace all digits with 1 or not
+    """
+    def __init__(self,
+                 diacritical: bool = True,
+                 nums: bool = False,
+                 *args, **kwargs) -> None:
         self.diacritical = diacritical
         self.nums = nums
         self.combining_characters = dict.fromkeys([c for c in range(sys.maxunicode)

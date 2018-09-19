@@ -2,7 +2,7 @@
 Frequently Asked Questions (FAQ)
 ================================
 
-This is implementation of FAQ component which helps to classify incoming questions.
+This is implementation of FAQ skillgit which helps to classify incoming questions.
 
 ::
 
@@ -139,7 +139,7 @@ As an example you can try pretrained models on FAQ dataset in English: MIPT FAQ 
 -  **tfidf_logreg_classifier_en_mipt_faq.pkl**  - pre-trained logistic regression classifier for classifying input question (vectorized by tfidf)
 -  **tfidf_vectorizer_en_mipt_faq.pkl**         - pre-trained model for TF-IDF vectorizer based on MIPT FAQ
 
-Example config - :download:`deeppavlov/configs/faq/tfidf_logreg_en_faq.json <../../deeppavlov/configs/faq/tfidf_logreg_en_faq.json>`
+Example config - :config:`tfidf_logreg_en_faq.json <faq/tfidf_logreg_en_faq.json>`
 
 
 Also you can use pretrained model on Russan FAQ dataset from school-site: http://www.ftl.name/page/989

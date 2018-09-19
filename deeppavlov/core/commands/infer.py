@@ -1,20 +1,19 @@
-"""
-Copyright 2017 Neural Networks and Deep Learning lab, MIPT
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from pathlib import Path
+from typing import Optional
 
 from deeppavlov.core.commands.utils import set_deeppavlov_root, import_packages
 from deeppavlov.core.common.chainer import Chainer
@@ -28,7 +27,9 @@ from deeppavlov.core.common.log import get_logger
 log = get_logger(__name__)
 
 
-def build_model_from_config(config: [str, Path, dict], mode='infer', load_trained=False, as_component=False):
+def build_model_from_config(config: [str, Path, dict], mode: str = 'infer', load_trained: bool = False,
+                            as_component: bool = False) -> Chainer:
+    """Build and return the model described in corresponding configuration file."""
     if isinstance(config, (str, Path)):
         config = read_json(config)
     set_deeppavlov_root(config)
@@ -58,14 +59,16 @@ def build_model_from_config(config: [str, Path, dict], mode='infer', load_traine
     return model
 
 
-def build_agent_from_config(config_path: str):
+def build_agent_from_config(config_path: str) -> Agent:
+    """Build and return the agent described in corresponding configuration file."""
     config = read_json(config_path)
     skill_configs = config['skills']
     commutator_config = config['commutator']
     return Agent(skill_configs, commutator_config)
 
 
-def interact_agent(config_path):
+def interact_agent(config_path: str) -> None:
+    """Start interaction with the agent described in corresponding configuration file."""
     a = build_agent_from_config(config_path)
     commutator = from_params(a.commutator_config)
 
@@ -89,7 +92,8 @@ def interact_agent(config_path):
         log.debug("Current history: {}".format(a.history))
 
 
-def interact_model(config_path):
+def interact_model(config_path: str) -> None:
+    """Start interaction with the model described in corresponding configuration file."""
     config = read_json(config_path)
     model = build_model_from_config(config)
 
@@ -109,7 +113,8 @@ def interact_model(config_path):
         print('>>', *pred)
 
 
-def predict_on_stream(config_path, batch_size=1, file_path=None):
+def predict_on_stream(config_path: str, batch_size: int = 1, file_path: Optional[str] = None) -> None:
+    """Make a prediction with the component described in corresponding configuration file."""
     import sys
     import json
     from itertools import islice

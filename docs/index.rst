@@ -12,7 +12,7 @@ Welcome to DeepPavlov's documentation!
    Features <intro/features>
    Configuration files <intro/config_description>
    Pre-trained embeddings <intro/pretrained_vectors>
-   Parameters evolution <intro/parameters_evolution>
+   AutoML <intro/hypersearch>
    Tutorials <intro/tutorials>
 
 
@@ -29,7 +29,6 @@ Welcome to DeepPavlov's documentation!
    Slot filling <components/slot_filling>
    Spelling Correction <components/spelling_correction>
    TF-IDF Ranking <components/tfidf_ranking>
-   FAQ <components/faq>
 
 
 .. toctree::
@@ -41,6 +40,7 @@ Welcome to DeepPavlov's documentation!
    Open-Domain Question Answering <skills/odqa>
    Pattern Matching <skills/pattern_matching>
    Sequence-To-Sequence Dialogue Bot <skills/seq2seq_go_bot>
+   Frequently Asked Questions Answering <skills/faq>
 
 
 .. toctree::
@@ -57,6 +57,7 @@ Welcome to DeepPavlov's documentation!
    :caption: Developer Guides
 
    REST API <devguides/rest_api>
+   Microsoft Bot Framework integration <devguides/ms_bot_integration>
    How to contribute <devguides/contribution>
 
 

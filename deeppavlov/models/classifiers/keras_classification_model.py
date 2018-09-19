@@ -34,7 +34,6 @@ from deeppavlov.models.tokenizers.nltk_tokenizer import NLTKTokenizer
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.layers.keras_layers import additive_self_attention, multiplicative_self_attention
 
-from keras import backend as K
 
 log = get_logger(__name__)
 
@@ -122,7 +121,9 @@ class KerasClassificationModel(KerasModel):
                                       reinit_lr_with_final_lr=reinit_lr_with_final_lr,
                                       **kwargs)
 
-        print("Model was successfully initialized!\nModel summary:\n{}".format(self.model.summary()))
+        summary = ['Model was successfully initialized!', 'Model summary:']
+        self.model.summary(print_fn=summary.append)
+        log.info('\n'.join(summary))
 
     def _change_not_fixed_params(self, **kwargs) -> None:
         """
@@ -179,7 +180,6 @@ class KerasClassificationModel(KerasModel):
         Returns:
             metrics values on the given batch
         """
-        K.set_session(self.sess)
         features = self.pad_texts(texts)
         onehot_labels = labels2onehot(labels, classes=self.classes)
         metrics_values = self.model.train_on_batch(features, onehot_labels)
@@ -197,7 +197,6 @@ class KerasClassificationModel(KerasModel):
             metrics values on the given batch, if labels are given
             predictions, otherwise
         """
-        K.set_session(self.sess)
         if labels:
             features = self.pad_texts(texts)
             onehot_labels = labels2onehot(labels, classes=self.classes)

@@ -14,7 +14,6 @@
 
 import numpy as np
 from typing import Dict
-# import itertools
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -55,10 +54,11 @@ class Seq2SeqGoalOrientedBot(NNModel):
                  start_of_sequence_token: str,
                  end_of_sequence_token: str,
                  knowledge_base_keys,
+                 save_path: str,
+                 load_path: str = None,
                  debug: bool = False,
-                 save_path: str = None,
                  **kwargs) -> None:
-        super().__init__(save_path=save_path, **kwargs)
+        super().__init__(save_path=save_path, load_path=load_path, **kwargs)
 
         self.embedder = embedder
         self.embedding_size = embedder.dim
@@ -71,6 +71,8 @@ class Seq2SeqGoalOrientedBot(NNModel):
         self.eos_token = end_of_sequence_token
         self.debug = debug
 
+        network_parameters['load_path'] = load_path
+        network_parameters['save_path'] = save_path
         self.network = self._init_network(network_parameters)
 
     def _init_network(self, params):
@@ -202,8 +204,6 @@ class Seq2SeqGoalOrientedBot(NNModel):
         # Sequence padding
         batch_size = len(b_enc_ins)
         max_src_len = max(b_src_lens)
-        # b_enc_ins_np = self.src_vocab[self.sos_token] * \
-        #    p.ones((batch_size, max_src_len), dtype=np.float32)
         b_enc_ins_np = np.zeros((batch_size, max_src_len, self.embedding_size),
                                 dtype=np.float32)
         b_kb_masks_np = np.zeros((batch_size, self.kb_size), dtype=np.float32)
@@ -225,3 +225,6 @@ class Seq2SeqGoalOrientedBot(NNModel):
 
     def load(self):
         pass
+
+    def destroy(self):
+        self.embedder.destroy()
