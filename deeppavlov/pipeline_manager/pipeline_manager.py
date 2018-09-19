@@ -91,8 +91,7 @@ class PipelineManager:
         if date is not None:
             self.date = date
         else:
-            date_ = datetime.now()
-            self.date = '{}-{}-{}'.format(date_.year, date_.month, date_.day)
+            self.date = datetime.now().strftime('%Y-%m-%d')
 
         self.root = root
         self.save_path = join(self.root, self.date, self.exp_name, 'checkpoints')

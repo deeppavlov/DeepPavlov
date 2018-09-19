@@ -59,7 +59,7 @@ parser.add_argument("--use-history", action="store_true", help="feed model with 
 
 parser.add_argument("-r", "--root", dest="root", default='./download/experiments',
                     help="folder where you will save the results and control points", type=str)
-parser.add_argument("-p", "--plot", dest="plot", default=True,
+parser.add_argument("-p", "--plot", dest="plot", default=False,
                     help="If true it is plot a histograms with results", type=bool)
 parser.add_argument("-sr", "--search", dest="search", default=True, help="search trigger", type=bool)
 parser.add_argument("-hp", "--hyper", dest="hyper_search", default='random',
