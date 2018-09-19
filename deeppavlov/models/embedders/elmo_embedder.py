@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import sys
-from typing import Iterator, List, Union
+from typing import Iterator, List, Union, Optional
 
 
 import numpy as np
@@ -76,8 +76,8 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
 
 
     """
-    def __init__(self, spec: str, elmo_output_names: List = None, dim: int = None, pad_zero: bool = False,
-                 concat_last_axis: bool = True, max_token: int = None, **kwargs) -> None:
+    def __init__(self, spec: str, elmo_output_names: Optional[List] = None, dim: Optional[int] = None, pad_zero: bool = False,
+                 concat_last_axis: bool = True, max_token: Optional[int] = None, **kwargs) -> None:
 
         self.spec = spec if '://' in spec else str(expand_path(spec))
 
