@@ -449,7 +449,7 @@ def _log(
                                                             simple_value=score), ])
             tb_train_writer.add_summary(metric_sum, epochs)
 
-        if losses:
+        if 'loss' in report:
             loss_sum = tf.Summary(value=[tf.Summary.Value(tag='{}/'.format(tag) + 'loss',
                                                           simple_value=report['loss']), ])
             tb_train_writer.add_summary(loss_sum, epochs)
