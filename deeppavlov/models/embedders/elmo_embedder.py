@@ -24,12 +24,13 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.data.utils import zero_pad
+from deeppavlov.core.models.tf_backend import TfModelMeta
 
 log = get_logger(__name__)
 
 
 @register('elmo')
-class ELMoEmbedder(Component):
+class ELMoEmbedder(Component, metaclass=TfModelMeta):
     """
     ``ELMo`` (Embeddings from Language Models) representations are pre-trained contextual representations from
     large-scale bidirectional language models. See a paper `Deep contextualized word representations
@@ -174,3 +175,6 @@ class ELMoEmbedder(Component):
         """
 
         yield from ['<S>', '</S>', '<UNK>']
+
+    def destroy(self):
+        self.sess.close()
