@@ -274,12 +274,13 @@ based on its Wikipedia knowledge.
 +------------------------------------------------------+-----------------------+--------+
 
 
-Parameters evolution
+AutoML
 --------------------
 
-- :doc:`Parameters evolution for models </intro/parameters_evolution>`
+- :doc:`Hyperparameters optimization </intro/hypersearch>`
 
-Implementation of parameters evolution for DeepPavlov models that requires only some small changes in a config file.
+Hyperparameters optimization (either by cross-validation or neural evolution) for DeepPavlov models
+that requires only some small changes in a config file.
 
 
 Embeddings
