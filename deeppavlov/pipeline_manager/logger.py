@@ -99,6 +99,17 @@ class Logger(object):
     def merge_logs(old_log, new_log):
         """ Combines two logs into one """
 
+        # update time
+        t_old = old_log['experiment_info']['full_time'].split(':')
+        t_new = new_log['experiment_info']['full_time'].split(':')
+        sec = int(t_old[2]) + int(t_new[2]) + (int(t_old[1]) + int(t_new[1])) * 60 + (
+                    int(t_old[0]) + int(t_new[0])) * 3600
+        old_log['experiment_info']['full_time'] = normal_time(sec)
+        # update num of pipes
+        n_old = int(old_log['experiment_info']['number_of_pipes'])
+        n_new = int(new_log['experiment_info']['number_of_pipes'])
+        old_log['experiment_info']['number_of_pipes'] = n_old + n_new
+
         for dataset_name, dataset_val in new_log['experiments'].items():
             if dataset_name not in old_log['experiments'].keys():
                 old_log['experiments'][dataset_name] = dataset_val
@@ -111,29 +122,15 @@ class Logger(object):
                             if name not in old_log['experiments'][dataset_name][batch].keys():
                                 old_log['experiments'][dataset_name][batch][name] = val
                             else:
-                                old_npipe = len(old_log['experiments'][dataset_name][batch][name])  # - 1
-                                k = 0
                                 for nkey, nval in new_log['experiments'][dataset_name][batch][name].items():
                                     match = False
                                     for okey, oval in old_log['experiments'][dataset_name][batch][name].items():
                                         if nval['config'] == oval['config']:
-                                            old_log['experiments'][dataset_name][batch][name][okey] = \
-                                                new_log['experiments'][dataset_name][batch][name][nkey]
                                             match = True
-                                        else:
-                                            pass
-
                                     if not match:
-                                        k += 1
-                                        old_log['experiments'][dataset_name][batch][name][str(old_npipe + k)] = \
+                                        n_old += 1
+                                        old_log['experiments'][dataset_name][batch][name][str(n_old)] = \
                                             new_log['experiments'][dataset_name][batch][name][nkey]
-
-        # addition time
-        t_old = old_log['experiment_info']['full_time'].split(':')
-        t_new = new_log['experiment_info']['full_time'].split(':')
-        sec = int(t_old[2]) + int(t_new[2]) + (int(t_old[1]) + int(t_new[1]))*60 + (int(t_old[0]) + int(t_new[0]))*3600
-
-        old_log['experiment_info']['full_time'] = normal_time(sec)
 
         return old_log
 
