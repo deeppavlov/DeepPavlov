@@ -129,7 +129,6 @@ def read_data_by_config(config: dict):
         else:
             data_path = expand_path(data_path)
         data = reader.read(data_path, **reader_config)
-
     else:
         log.warning("No dataset reader is provided in the JSON config.")
 
@@ -151,6 +150,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
         config = read_json(config)
     set_deeppavlov_root(config)
     import_packages(config.get('metadata', {}).get('imports', []))
+
     if iterator is None:
         data = read_data_by_config(config)
         iterator = get_iterator_from_config(config, data)
@@ -180,6 +180,8 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
             _fit(model, iterator, train_config)
         elif not isinstance(model, Chainer):
             log.warning('Nothing to train')
+
+        model.destroy()
 
     res = {}
 
@@ -212,6 +214,8 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
             res['test'] = report['test']['metrics']
 
             print(json.dumps(report, ensure_ascii=False))
+
+        model.destroy()
 
     return res
 
@@ -375,7 +379,6 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                     if losses:
                         report['loss'] = sum(losses)/len(losses)
                         losses = []
-                    report = {'train': report}
 
                     if train_config['tensorboard_log_dir'] is not None:
                         for name, score in metrics:
@@ -383,11 +386,12 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                                                                             simple_value=score), ])
                             tb_train_writer.add_summary(metric_sum, i)
 
-                        if losses:
+                        if 'loss' in report:
                             loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + 'loss',
                                                                           simple_value=report['loss']), ])
                             tb_train_writer.add_summary(loss_sum, i)
 
+                    report = {'train': report}
                     print(json.dumps(report, ensure_ascii=False))
                     train_y_true.clear()
                     train_y_predicted.clear()
@@ -447,7 +451,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                                                                         simple_value=score), ])
                         tb_train_writer.add_summary(metric_sum, epochs)
 
-                    if losses:
+                    if 'loss' in report:
                         loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + 'loss',
                                                                         simple_value=report['loss']), ])
                         tb_train_writer.add_summary(loss_sum, epochs)
