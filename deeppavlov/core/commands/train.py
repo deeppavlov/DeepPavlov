@@ -242,6 +242,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
 
         'validation_patience': 5,
         'val_every_n_epochs': 0,
+        'val_every_n_batches': 0,
 
         'log_every_n_batches': 0,
         'log_every_n_epochs': 0,
@@ -253,237 +254,255 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
 
     train_config = dict(default_train_config, **train_config)
 
-    if 'train_metrics' in train_config:
-        train_metrics_functions = list(zip(train_config['train_metrics'],
-                                           get_metrics_by_names(train_config['train_metrics'])))
-    else:
-        train_metrics_functions = metrics_functions
-
-    if train_config['metric_optimization'] == 'maximize':
-        def improved(score, best):
-            return score > best
-        best = float('-inf')
-    elif train_config['metric_optimization'] == 'minimize':
-        def improved(score, best):
-            return score < best
-        best = float('inf')
-    else:
-        raise ConfigError('metric_optimization has to be one of {}'.format(['maximize', 'minimize']))
-
-    i = 0
-    epochs = 0
-    examples = 0
-    saved = False
-    patience = 0
-    log_on = train_config['log_every_n_batches'] > 0 or train_config['log_every_n_epochs'] > 0
-    train_y_true = []
-    train_y_predicted = []
-    losses = []
-    start_time = time.time()
-    break_flag = False
-
     if train_config['tensorboard_log_dir'] is not None:
+        global tf
         import tensorflow as tf
-        tb_log_dir = expand_path(train_config['tensorboard_log_dir'])
-
-        tb_train_writer = tf.summary.FileWriter(str(tb_log_dir / 'train_log'))
-        tb_valid_writer = tf.summary.FileWriter(str(tb_log_dir / 'valid_log'))
+        
+    train_monitoring = _init_train_monitoring(train_config, metrics_functions)
 
     # validate first (important if model is pre-trained)
-    if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
-        report = _test_model(model, metrics_functions, iterator,
-                             train_config['batch_size'], 'valid', start_time, train_config['show_examples'])
-        report['epochs_done'] = epochs
-        report['batches_seen'] = i
-        report['train_examples_seen'] = examples
-
-        metrics = list(report['metrics'].items())
-
-        m_name, score = metrics[0]
-        if improved(score, best):
-            patience = 0
-            log.info('New best {} of {}'.format(m_name, score))
-            best = score
-            log.info('Saving model')
-            model.save()
-            saved = True
-        else:
-            patience += 1
-            log.info('Did not improve on the {} of {}'.format(m_name, best))
-
-        report['impatience'] = patience
-        if train_config['validation_patience'] > 0:
-            report['patience_limit'] = train_config['validation_patience']
-
-        model.process_event(event_name='after_validation', data=report)
-        report = {'valid': report}
-        print(json.dumps(report, ensure_ascii=False))
+    if train_config['val_every_n_epochs'] > 0 \
+            and train_monitoring['epochs'] % train_config['val_every_n_epochs'] == 0:
+        _validate(model, iterator, 'every_n_epochs', train_monitoring, add_summary=True,)
 
     try:
         while True:
             for x, y_true in iterator.gen_batches(train_config['batch_size']):
-                if log_on:
+                if train_monitoring['log_on']:
                     y_predicted = list(model(list(x)))
-                    train_y_true += y_true
-                    train_y_predicted += y_predicted
+                    train_monitoring['train_y_true'] += y_true
+                    train_monitoring['train_y_predicted'] += y_predicted
+                    last_run = dict(x=x, y_true=y_true, y_predicted=y_predicted, )
+                else:
+                    last_run = None
                 loss = model.train_on_batch(x, y_true)
                 if loss is not None:
-                    losses.append(loss)
-                i += 1
-                examples += len(x)
+                    train_monitoring['losses'].append(loss)
+                train_monitoring['batches_seen'] += 1
+                train_monitoring['examples_seen'] += len(x)
 
-                if train_config['log_every_n_batches'] > 0 and i % train_config['log_every_n_batches'] == 0:
-                    metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in train_metrics_functions]
-                    report = {
-                        'epochs_done': epochs,
-                        'batches_seen': i,
-                        'examples_seen': examples,
-                        'metrics': prettify_metrics(metrics),
-                        'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
-                    }
+                if train_config['log_every_n_batches'] > 0 \
+                        and train_monitoring['batches_seen'] % train_config['log_every_n_batches'] == 0:
+                    _log(model, 'every_n_batches', last_run, train_monitoring)
+                    train_monitoring = _clear_after_log(train_monitoring)
 
-                    if train_config['show_examples']:
-                        try:
-                            report['examples'] = [{
-                                'x': x_item,
-                                'y_predicted': y_predicted_item,
-                                'y_true': y_true_item
-                            } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
-                        except NameError:
-                            log.warning('Could not log examples as y_predicted is not defined')
+                if train_config['val_every_n_batches'] > 0 \
+                        and train_monitoring['batches_seen'] % train_config['val_every_n_batches'] == 0:
+                    _validate(model, iterator, 'every_n_batches', train_monitoring, add_summary=True,)
 
-                    if losses:
-                        report['loss'] = sum(losses)/len(losses)
-                        losses = []
-                    report = {'train': report}
-
-                    if train_config['tensorboard_log_dir'] is not None:
-                        for name, score in metrics:
-                            metric_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + name,
-                                                                            simple_value=score), ])
-                            tb_train_writer.add_summary(metric_sum, i)
-
-                        if losses:
-                            loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + 'loss',
-                                                                            simple_value=report['loss']), ])
-                            tb_train_writer.add_summary(loss_sum, i)
-
-                    print(json.dumps(report, ensure_ascii=False))
-                    train_y_true.clear()
-                    train_y_predicted.clear()
-
-                if i >= train_config['max_batches'] > 0:
-                    break_flag = True
+                if train_monitoring['batches_seen'] >= train_config['max_batches'] > 0:
+                    train_monitoring['break_flag'] = True
                     break
 
                 report = {
-                    'epochs_done': epochs,
-                    'batches_seen': i,
-                    'train_examples_seen': examples,
-                    'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
+                    'epochs_done': train_monitoring['epochs'],
+                    'batches_seen': train_monitoring['batches_seen'],
+                    'train_examples_seen': train_monitoring['examples_seen'],
+                    'time_spent': str(
+                        datetime.timedelta(seconds=round(time.time() - train_monitoring['start_time'] + 0.5))
+                    )
                 }
                 model.process_event(event_name='after_batch', data=report)
-            if break_flag:
+            if train_monitoring['break_flag']:
                 break
 
-            epochs += 1
+            train_monitoring['epochs'] += 1
 
             report = {
-                'epochs_done': epochs,
-                'batches_seen': i,
-                'train_examples_seen': examples,
-                'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
+                'epochs_done': train_monitoring['epochs'],
+                'batches_seen': train_monitoring['batches_seen'],
+                'train_examples_seen': train_monitoring['examples_seen'],
+                'time_spent': str(datetime.timedelta(seconds=round(time.time() - train_monitoring['start_time'] + 0.5)))
             }
             model.process_event(event_name='after_epoch', data=report)
 
-            if train_config['log_every_n_epochs'] > 0 and epochs % train_config['log_every_n_epochs'] == 0\
-                    and train_y_true:
-                metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in train_metrics_functions]
-                report = {
-                    'epochs_done': epochs,
-                    'batches_seen': i,
-                    'train_examples_seen': examples,
-                    'metrics': prettify_metrics(metrics),
-                    'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
-                }
+            if train_config['log_every_n_epochs'] > 0 \
+                    and train_config['log_every_n_batches'] < 1 \
+                    and train_monitoring['epochs'] % train_config['log_every_n_epochs'] == 0 \
+                    and train_monitoring['train_y_true']:
+                _log(model, 'every_n_epochs', last_run, train_monitoring)
+                train_monitoring = _clear_after_log(train_monitoring)
 
-                if train_config['show_examples']:
-                    try:
-                        report['examples'] = [{
-                            'x': x_item,
-                            'y_predicted': y_predicted_item,
-                            'y_true': y_true_item
-                        } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
-                    except NameError:
-                        log.warning('Could not log examples')
-
-                if losses:
-                    report['loss'] = sum(losses)/len(losses)
-                    losses = []
-
-                if train_config['tensorboard_log_dir'] is not None:
-                    for name, score in metrics:
-                        metric_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + name,
-                                                                        simple_value=score), ])
-                        tb_train_writer.add_summary(metric_sum, epochs)
-
-                    if losses:
-                        loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + 'loss',
-                                                                        simple_value=report['loss']), ])
-                        tb_train_writer.add_summary(loss_sum, epochs)
-
-                model.process_event(event_name='after_train_log', data=report)
-                report = {'train': report}
-                print(json.dumps(report, ensure_ascii=False))
-                train_y_true.clear()
-                train_y_predicted.clear()
-
-            if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
-                report = _test_model(model, metrics_functions, iterator,
-                                     train_config['batch_size'], 'valid', start_time, train_config['show_examples'])
-                report['epochs_done'] = epochs
-                report['batches_seen'] = i
-                report['train_examples_seen'] = examples
-
-                metrics = list(report['metrics'].items())
-
-                if train_config['tensorboard_log_dir'] is not None:
-                    for name, score in metrics:
-                        metric_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + name,
-                                                                        simple_value=score), ])
-                        tb_valid_writer.add_summary(metric_sum, epochs)
-
-                m_name, score = metrics[0]
-                if improved(score, best):
-                    patience = 0
-                    log.info('New best {} of {}'.format(m_name, score))
-                    best = score
-                    log.info('Saving model')
-                    model.save()
-                    saved = True
-                else:
-                    patience += 1
-                    log.info('Did not improve on the {} of {}'.format(m_name, best))
-
-                report['impatience'] = patience
-                if train_config['validation_patience'] > 0:
-                    report['patience_limit'] = train_config['validation_patience']
-
-                model.process_event(event_name='after_validation', data=report)
-                report = {'valid': report}
-                print(json.dumps(report, ensure_ascii=False))
-
-                if patience >= train_config['validation_patience'] > 0:
-                    log.info('Ran out of patience')
-                    break
-
-            if epochs >= train_config['epochs'] > 0:
+            if train_config['val_every_n_epochs'] > 0 \
+                    and train_monitoring['epochs'] % train_config['val_every_n_epochs'] == 0:
+                _validate(model, iterator, 'every_n_epochs', train_monitoring, add_summary=True,)
+            if train_monitoring['epochs'] >= train_config['epochs'] > 0 or train_monitoring['break_flag']:
                 break
     except KeyboardInterrupt:
         log.info('Stopped training')
 
-    if not saved:
+    if not train_monitoring['saved']:
         log.info('Saving model')
         model.save()
 
     return model
+
+
+def _init_train_monitoring(train_config, metrics_functions):
+    train_monitoring = dict(
+        batch_size=train_config['batch_size'],
+        train_y_true=[],
+        train_y_predicted=[],
+        epochs=0,
+        batches_seen=0,
+        examples_seen=0,
+        losses=[],
+        start_time=time.time(),
+        tb_train_writer=None,
+        tb_valid_writer=None,
+        train_metrics_functions=None,
+        metrics_functions=metrics_functions,
+        show_examples=train_config['show_examples'],
+        saved=False,
+        best=None,
+        improved=None,
+        validation_patience=train_config['validation_patience'],
+        impatience=0,
+        break_flag=False,
+        log_on=train_config['log_every_n_batches'] > 0 or train_config['log_every_n_epochs'] > 0,
+    )
+
+    if 'train_metrics' in train_config:
+        train_monitoring['train_metrics_functions'] = list(
+            zip(
+                train_config['train_metrics'],
+                get_metrics_by_names(train_config['train_metrics'])
+            )
+        )
+    else:
+        train_monitoring['train_metrics_functions'] = metrics_functions
+
+    if train_config['metric_optimization'] == 'maximize':
+        def improved(score, best):
+            return score > best
+
+        train_monitoring['best'] = float('-inf')
+    elif train_config['metric_optimization'] == 'minimize':
+        def improved(score, best):
+            return score < best
+
+        train_monitoring['best'] = float('inf')
+    else:
+        raise ConfigError('metric_optimization has to be one of {}'.format(['maximize', 'minimize']))
+    train_monitoring['improved'] = improved
+
+    if train_config['tensorboard_log_dir'] is not None:
+        tb_log_dir = expand_path(train_config['tensorboard_log_dir'])
+
+        train_monitoring['tb_train_writer'] = tf.summary.FileWriter(str(tb_log_dir / 'train_log'))
+        train_monitoring['tb_valid_writer'] = tf.summary.FileWriter(str(tb_log_dir / 'valid_log'))
+    return train_monitoring
+
+
+def _clear_after_log(train_monitoring):
+    train_monitoring['losses'].clear()
+    train_monitoring['train_y_predicted'].clear()
+    train_monitoring['train_y_true'].clear()
+    return train_monitoring
+
+
+def _log(
+        model,
+        tag,
+        last_run,
+        train_monitoring,
+):
+    epochs = train_monitoring['epochs']
+
+    metrics = [
+        (s, f(train_monitoring['train_y_true'], train_monitoring['train_y_predicted']))
+        for s, f in train_monitoring['train_metrics_functions']
+    ]
+    report = dict(
+        epochs_done=epochs,
+        batches_seen=train_monitoring['batches_seen'],
+        train_examples_seen=train_monitoring['examples_seen'],
+        metrics=prettify_metrics(metrics),
+        time_spent=str(datetime.timedelta(seconds=round(time.time() - train_monitoring['start_time'] + 0.5)))
+    )
+
+    if train_monitoring['show_examples']:
+        try:
+            report['examples'] = [
+                dict(
+                    x=x_item,
+                    y_predicted=y_predicted_item,
+                    y_true=y_true_item
+                )
+                for x_item, y_predicted_item, y_true_item in zip(
+                    last_run['x'],
+                    last_run['y_predicted'],
+                    last_run['y_true'],
+                )
+            ]
+        except NameError:
+            log.warning('Could not log examples')
+
+    losses = train_monitoring['losses']
+    if train_monitoring['losses']:
+        report['loss'] = sum(losses) / len(losses)
+
+    tb_train_writer = train_monitoring['tb_train_writer']
+    if train_monitoring['tb_train_writer'] is not None:
+        for name, score in metrics:
+            metric_sum = tf.Summary(value=[tf.Summary.Value(tag='{}/'.format(tag) + name,
+                                                            simple_value=score), ])
+            tb_train_writer.add_summary(metric_sum, epochs)
+
+        if losses:
+            loss_sum = tf.Summary(value=[tf.Summary.Value(tag='{}/'.format(tag) + 'loss',
+                                                          simple_value=report['loss']), ])
+            tb_train_writer.add_summary(loss_sum, epochs)
+
+    model.process_event(event_name='after_train_log', data=report)
+    report = {'train': report}
+    print(json.dumps(report, ensure_ascii=False))
+
+
+def _validate(
+        model,
+        iterator,
+        tag,
+        train_monitoring,
+        add_summary=True,
+):
+    report = _test_model(
+        model, train_monitoring['metrics_functions'], iterator,
+        train_monitoring['batch_size'], 'valid',
+        train_monitoring['start_time'], train_monitoring['show_examples']
+    )
+    report['epochs_done'] = train_monitoring['epochs']
+    report['batches_seen'] = train_monitoring['batches_seen']
+    report['train_examples_seen'] = train_monitoring['examples_seen']
+
+    metrics = list(report['metrics'].items())
+
+    if train_monitoring['tb_valid_writer'] is not None and add_summary:
+        for name, score in metrics:
+            metric_sum = tf.Summary(value=[tf.Summary.Value(tag='{}/'.format(tag) + name,
+                                                            simple_value=score), ])
+            train_monitoring['tb_valid_writer'].add_summary(metric_sum, train_monitoring['epochs'])
+
+    m_name, score = metrics[0]
+    if train_monitoring['improved'](score, train_monitoring['best']):
+        train_monitoring['impatience'] = 0
+        log.info('New best {} of {}'.format(m_name, score))
+        train_monitoring['best'] = score
+        log.info('Saving model')
+        model.save()
+        train_monitoring['saved'] = True
+    else:
+        train_monitoring['impatience'] += 1
+        log.info('Did not improve on the {} of {}'.format(m_name, train_monitoring['best']))
+
+    report['impatience'] = train_monitoring['impatience']
+    if train_monitoring['validation_patience'] > 0:
+        report['patience_limit'] = train_monitoring['validation_patience']
+
+    model.process_event(event_name='after_validation', data=report)
+    report = {'valid': report}
+    print(json.dumps(report, ensure_ascii=False))
+
+    if train_monitoring['impatience'] >= train_monitoring['validation_patience'] > 0:
+        log.info('Ran out of patience')
+        train_monitoring['break_flag'] = True
