@@ -32,7 +32,7 @@
       [
         {
           "in": "x",
-          "out": "x_tok"
+          "out": "x_tok",
           "id": "my_tokenizer",
           "name": "nltk_tokenizer",
           "tokenizer": "wordpunct_tokenize"
