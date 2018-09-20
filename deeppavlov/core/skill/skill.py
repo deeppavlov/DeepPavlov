@@ -30,15 +30,18 @@ class Skill(Component, metaclass=ABCMeta):
 
         Args:
             utterances_batch (list): A batch of utterances of any type
-            history_batch (list): A batch of list typed histories for each utterance
-            states_batch (list): Optional. A batch of arbitrary typed states for each utterance
+            history_batch (list): A batch of list typed histories
+                for each utterance
+            states_batch (list): Optional. A batch of arbitrary typed states
+                for each utterance
 
         Returns:
             response (list): A batch of arbitrary typed skill inference results
             confidence (list): A batch of float typed confidence levels for
                 each of skill inference result
             history (list): A batch of list typed histories for each response
-            states (list): Optional. A batch of arbitrary typed states for each response
+            states (list): Optional. A batch of arbitrary typed states
+                for each response
 
         """
         return
