@@ -18,8 +18,8 @@ from deeppavlov.core.models.component import Component
 
 
 class Skill(Component, metaclass=ABCMeta):
-    """Abstract class for all skills. Skill is a DeepPavlov component,
-    which provides handling dialog state, dialog history and rich content
+    """Abstract class for skills. Skill is a DeepPavlov component,
+    which provides handling dialog state, dialog history and rich content.
     """
     @abstractmethod
     def __call__(self, utterances_batch: list, history_batch: list, states_batch: list = None):
