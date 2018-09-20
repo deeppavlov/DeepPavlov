@@ -26,7 +26,7 @@ from keras.regularizers import l2
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.keras_model import KerasModel
+from deeppavlov.core.models.keras_model_with_load_save_compile import KerasModelWithLoadSaveCompile
 from deeppavlov.models.classifiers.utils import labels2onehot, proba2labels
 from deeppavlov.models.classifiers.utils import md5_hashsum
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
@@ -39,7 +39,7 @@ log = get_logger(__name__)
 
 
 @register('keras_classification_model')
-class KerasClassificationModel(KerasModel):
+class KerasClassificationModel(KerasModelWithLoadSaveCompile):
     """
     Class implements Keras model for classification task for multi-class multi-labeled data.
 
