@@ -8,6 +8,7 @@
   "dataset_iterator": {
     "name": "basic_classification_iterator",
     "seed": 42,
+    "split_seed": 42,
     "field_to_split": "train",
     "split_fields": [
       "train",
