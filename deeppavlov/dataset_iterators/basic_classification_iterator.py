@@ -92,7 +92,7 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
             None
         """
         if split_seed is None:
-            split_seed = self.random
+            split_seed = self.random.seed()
         data_to_div = self.data[field_to_split].copy()
         data_size = len(self.data[field_to_split])
         for i in range(len(split_fields) - 1):
