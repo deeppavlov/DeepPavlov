@@ -22,17 +22,18 @@ class Skill(Component, metaclass=ABCMeta):
     which provides handling dialog state, dialog history and rich content.
     """
     @abstractmethod
-    def __call__(self, utterances_batch: list, history_batch: list, states_batch: list = None):
+    def __call__(self, utterances_batch: [list, tuple], history_batch: [list, tuple],
+                 states_batch: [list, tuple] = None):
         """Returns skill inference result.
 
         Returns skill inference result along with estimated confidence level,
         up to date conversation history and state for each utterance in the batch.
 
         Args:
-            utterances_batch (list): A batch of utterances of any type
-            history_batch (list): A batch of list typed histories
+            utterances_batch ([list, tuple]): A batch of utterances of any type
+            history_batch ([list, tuple]): A batch of list typed histories
                 for each utterance
-            states_batch (list): Optional. A batch of arbitrary typed states
+            states_batch ([list, tuple]): Optional. A batch of arbitrary typed states
                 for each utterance
 
         Returns:
