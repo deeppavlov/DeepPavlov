@@ -21,7 +21,7 @@ from deeppavlov.models.ranking.siamese_network import SiameseNetwork
 log = get_logger(__name__)
 
 @register('bilstm_nn')
-class BiLSTMNetwork(SiameseNetwork, metaclass=TfModelMeta):
+class BiLSTMNetwork(KerasModel, metaclass=TfModelMeta):
 
     """Class to perform context-response matching with neural networks.
 
@@ -152,9 +152,6 @@ class BiLSTMNetwork(SiameseNetwork, metaclass=TfModelMeta):
         else:
             self.max_token_length = max_token_length
 
-        self.sess = self._config_session()
-        K.set_session(self.sess)
-
         self.optimizer = Adam(lr=self.learning_rate)
         if self.triplet_mode:
             self.loss = self.triplet_loss
@@ -167,17 +164,6 @@ class BiLSTMNetwork(SiameseNetwork, metaclass=TfModelMeta):
         #                          outputs=self.embeddings.outputs[0])
         # self.response_embedding = Model(inputs=self.embeddings.inputs,
         #                          outputs=self.embeddings.outputs[1])
-
-    def _config_session(self):
-        """
-        Configure session for particular device
-        Returns:
-            tensorflow.Session
-        """
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth = True
-        config.gpu_options.visible_device_list = str(self.device_num)
-        return tf.Session(config=config)
 
     def load(self, load_path):
         log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
@@ -434,7 +420,7 @@ class BiLSTMNetwork(SiameseNetwork, metaclass=TfModelMeta):
                 loss = self.obj_model.train_on_batch(x=b, y=np.asarray(y))
         return loss
 
-    def predict_score_on_batch(self, batch):
+    def __call__(self, batch):
         if self.token_embeddings and not self.char_embeddings:
             return self.score_model.predict_on_batch(x=batch)
         elif not self.token_embeddings and self.char_embeddings:
@@ -464,3 +450,5 @@ class BiLSTMNetwork(SiameseNetwork, metaclass=TfModelMeta):
                 b = [np.concatenate([b[i], batch[i][:,:,1:]], axis=2) for i in range(len(batch))]
                 return embedding.predict_on_batch(x=b)
 
+    def reset(self):
+        pass

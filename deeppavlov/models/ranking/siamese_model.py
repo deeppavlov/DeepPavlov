@@ -120,7 +120,7 @@ class SiameseModel(NNModel):
                 if len(buf) >= self.batch_size:
                     for i in range(len(buf) // self.batch_size):
                         b = self.make_batch(buf[i*self.batch_size:(i+1)*self.batch_size])
-                        yp = self._net.predict_score_on_batch(b)
+                        yp = self._net(b)
                         y_pred += list(yp)
                     lenb = len(buf) % self.batch_size
                     if lenb != 0:
@@ -130,7 +130,7 @@ class SiameseModel(NNModel):
             except StopIteration:
                 if len(buf) != 0:
                     b = self.make_batch(buf)
-                    yp = self._net.predict_score_on_batch(b)
+                    yp = self._net(b)
                     y_pred += list(yp)
                 break
 
