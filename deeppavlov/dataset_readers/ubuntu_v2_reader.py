@@ -7,7 +7,7 @@ import random
 import csv
 import re
 
-@register('ubuntu_v2_reader_mt')
+@register('ubuntu_v2_reader')
 class UbuntuV2Reader(DatasetReader):
     
     def read(self, data_path):
