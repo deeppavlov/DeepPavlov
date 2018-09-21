@@ -61,30 +61,19 @@ class Logger(object):
             if not isdir(join(self.log_path, 'images')):
                 os.makedirs(join(self.log_path, 'images'))
 
-        self.old_num_pipes = None
-        self.old_full_time = None
-
+        self.old_log = None
         if isfile(self.log_file):
             with open(self.log_file, 'r') as log_file:
-                self.log = json.load(log_file)
+                self.old_log = json.load(log_file)
                 log_file.close()
 
-            if "number_of_pipes" in self.log['experiment_info'].keys() and \
-                    (self.log['experiment_info']['number_of_pipes'] is not None):
-                self.old_num_pipes = self.log['experiment_info']['number_of_pipes']
-                self.log['experiment_info']['number_of_pipes'] = None
-            if "full_time" in self.log['experiment_info'].keys() and \
-                    (self.log['experiment_info']['full_time'] is not None):
-                self.old_full_time = self.log['experiment_info']['full_time']
-                self.log['experiment_info']['full_time'] = None
-        else:
-            self.log = OrderedDict(experiment_info=OrderedDict(date=date,
-                                                               exp_name=self.exp_name,
-                                                               root=self.root,
-                                                               info=self.exp_inf,
-                                                               number_of_pipes=None),
-                                   dataset={},
-                                   experiments=OrderedDict())
+        self.log = OrderedDict(experiment_info=OrderedDict(date=date,
+                                                           exp_name=self.exp_name,
+                                                           root=self.root,
+                                                           info=self.exp_inf,
+                                                           number_of_pipes=None),
+                               dataset={},
+                               experiments=OrderedDict())
 
     def tmp_reset(self):
         # tmp parameters
@@ -96,27 +85,18 @@ class Logger(object):
         self.pipe_res = None
         self.pipe_time = None
 
-    def save(self):
+    def write(self):
         """save log in file"""
         with open(self.log_file, 'w') as log_file:
             json.dump(self.log, log_file)
             log_file.close()
 
-    def update_times(self):
-        # update time
-        if self.old_full_time:
-            t_old = self.old_full_time.split(':')
-            t_new = self.log['experiment_info']['full_time'].split(':')
-            sec = int(t_old[2]) + int(t_new[2]) + (int(t_old[1]) + int(t_new[1])) * 60 + (
-                    int(t_old[0]) + int(t_new[0])) * 3600
-            self.log['experiment_info']['full_time'] = normal_time(sec)
-
-    def update_pipes(self):
-        # update num of pipes
-        if self.old_num_pipes:
-            n_old = int(self.old_num_pipes)
-            n_new = int(self.log['experiment_info']['number_of_pipes'])
-            self.log['experiment_info']['number_of_pipes'] = n_old + n_new
+    def save(self):
+        if self.old_log is not None:
+            self.log = self.merge_logs(self.old_log, self.log)
+        with open(self.log_file, 'w') as log_file:
+            json.dump(self.log, log_file)
+            log_file.close()
 
     @staticmethod
     def merge_logs(old_log, new_log):
@@ -137,23 +117,19 @@ class Logger(object):
             if dataset_name not in old_log['experiments'].keys():
                 old_log['experiments'][dataset_name] = dataset_val
             else:
-                for batch, batch_val in dataset_val.items():
-                    if batch not in old_log['experiments'][dataset_name].keys():
-                        old_log['experiments'][dataset_name][batch] = batch_val
+                for name, val in dataset_val.items():
+                    if name not in old_log['experiments'][dataset_name].keys():
+                        old_log['experiments'][dataset_name][name] = val
                     else:
-                        for name, val in batch_val.items():
-                            if name not in old_log['experiments'][dataset_name][batch].keys():
-                                old_log['experiments'][dataset_name][batch][name] = val
-                            else:
-                                for nkey, nval in new_log['experiments'][dataset_name][batch][name].items():
-                                    match = False
-                                    for okey, oval in old_log['experiments'][dataset_name][batch][name].items():
-                                        if nval['config'] == oval['config']:
-                                            match = True
-                                    if not match:
-                                        n_old += 1
-                                        old_log['experiments'][dataset_name][batch][name][str(n_old)] = \
-                                            new_log['experiments'][dataset_name][batch][name][nkey]
+                        for nkey, nval in new_log['experiments'][dataset_name][name].items():
+                            match = False
+                            for okey, oval in old_log['experiments'][dataset_name][name].items():
+                                if nval['config'] == oval['config']:
+                                    match = True
+                            if not match:
+                                n_old += 1
+                                old_log['experiments'][dataset_name][name][str(n_old)] = \
+                                    new_log['experiments'][dataset_name][name][nkey]
 
         return old_log
 
