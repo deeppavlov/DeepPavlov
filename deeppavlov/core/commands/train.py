@@ -19,6 +19,7 @@ import time
 from collections import OrderedDict
 from pathlib import Path
 from typing import List, Callable, Tuple, Dict, Union
+from functools import reduce
 
 from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root, import_packages
 from deeppavlov.core.commands.infer import build_model_from_config
@@ -280,6 +281,11 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
 
     train_config = dict(default_train_config, **train_config)
 
+    if isinstance(train_config['batch_size'], int):
+        num_elem_in_batch = train_config['batch_size']
+    else:
+        num_elem_in_batch = reduce(lambda x, y: x*y, train_config['batch_size'])
+
     if train_config['tensorboard_log_dir'] is not None:
         global tf
         import tensorflow as tf
@@ -305,7 +311,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                 if loss is not None:
                     train_monitoring.losses.append(loss)
                 train_monitoring.batches_seen += 1
-                train_monitoring.examples_seen += len(x)
+                train_monitoring.examples_seen += num_elem_in_batch
 
                 if train_config['log_every_n_batches'] > 0 \
                         and train_monitoring.batches_seen % train_config['log_every_n_batches'] == 0:
