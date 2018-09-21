@@ -141,9 +141,9 @@ class Logger(object):
         if (self.model is None) and (self.pipe_conf is not None):
             for component in self.pipe_conf:
                 if component.get('main') is True:
-                    self.model = component['name']
+                    self.model = component['component_name']
 
-        pipe_name = '-->'.join([x['name'] for x in self.pipe_conf])
+        pipe_name = '-->'.join([x['component_name'] for x in self.pipe_conf])
 
         if self.dataset not in self.log['experiments'].keys():
             self.log['experiments'][self.dataset] = OrderedDict()
