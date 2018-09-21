@@ -214,15 +214,7 @@ class PipelineManager:
 
         # Start generating pipelines configs
         print('[ Test start - {0} pipes, will be run]'.format(len_gen))
-        exp_start_time = time()
         for i, pipe in enumerate(tqdm(pipeline_generator(), total=len_gen)):
-            # print progress
-            if i != 0:
-                itime = normal_time(((time() - exp_start_time) / i) * (len_gen - i))
-                print('\n')
-                print('[ Test progress: pipe {0}/{1}; Time left: {2}; ]'.format(i + 1,
-                                                                                len_gen, itime))
-
             if pipe['dataset_reader']['name'] == 'basic_classification_reader':
                 pipe['dataset_reader'] = {"name": "basic_classification_reader",
                                           "x": "text",
