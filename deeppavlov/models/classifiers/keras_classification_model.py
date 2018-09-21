@@ -63,7 +63,7 @@ class KerasClassificationModel(KerasModel):
                 If `last_layer_activation` is `softmax` (not multi-label classification), assign to 1.
         classes: list of classes names presented in the dataset
                 (in config it is determined as keys of vocab over `y`)
-        reinit_lr_with_final_lr: in case of loading pre-trained model \
+        restore_lr: in case of loading pre-trained model \
                 whether to init learning rate with the final learning rate value from saved opt
 
     Attributes:
@@ -85,7 +85,7 @@ class KerasClassificationModel(KerasModel):
                  lear_rate: float = 0.01, lear_rate_decay: float = 0.,
                  last_layer_activation="sigmoid",
                  confident_threshold: float = 0.5,
-                 reinit_lr_with_final_lr: bool = False,
+                 restore_lr: bool = False,
                  **kwargs):
         """
         Initialize and train vocabularies, initializes embedder, tokenizer, and then initialize model using parameters
@@ -95,7 +95,7 @@ class KerasClassificationModel(KerasModel):
                          optimizer=optimizer, loss=loss,
                          lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,
                          last_layer_activation=last_layer_activation, confident_threshold=confident_threshold,
-                         reinit_lr_with_final_lr=reinit_lr_with_final_lr, **kwargs)
+                         restore_lr=restore_lr, **kwargs)
 
         self.classes = list(np.sort(np.array(list(self.opt.get('classes')))))
         self.opt['classes'] = self.classes
@@ -105,8 +105,8 @@ class KerasClassificationModel(KerasModel):
 
         self.model = self.load(model_name=model_name)
         # in case of pre-trained after loading in self.opt we have stored parameters
-        # now we can reinit lear rate if needed
-        if reinit_lr_with_final_lr:
+        # now we can restore lear rate if needed
+        if restore_lr:
             lear_rate = self.opt.get("final_lear_rate", lear_rate)
 
         self.model = self.compile(self.model, optimizer_name=optimizer, loss_name=loss,
@@ -118,7 +118,7 @@ class KerasClassificationModel(KerasModel):
                                       lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,
                                       last_layer_activation=last_layer_activation,
                                       confident_threshold=confident_threshold,
-                                      reinit_lr_with_final_lr=reinit_lr_with_final_lr,
+                                      restore_lr=restore_lr,
                                       **kwargs)
 
         summary = ['Model was successfully initialized!', 'Model summary:']
