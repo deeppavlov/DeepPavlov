@@ -38,7 +38,7 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
         split_proportions: list of corresponding proportions for splitting
         seed: random seed for iterating
         shuffle: whether to shuffle examples in batches
-        split_seed: random seed for splitting dataset
+        split_seed: random seed for splitting dataset, if `split_seed` is None, division is based on `seed`.
         *args: arguments
         **kwargs: arguments
 
