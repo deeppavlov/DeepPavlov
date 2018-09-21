@@ -6,20 +6,19 @@ from keras.models import Model
 from keras.layers.wrappers import Bidirectional
 from keras import backend as K
 import numpy as np
-from deeppavlov.core.models.tf_backend import TfModelMeta
+from keras.optimizers import Adam
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.ranking.siamese_network import SiameseNetwork
+from deeppavlov.models.ranking.siamese_keras_model import SiameseKerasModel
 from keras.layers.advanced_activations import LeakyReLU
 
 
 log = get_logger(__name__)
 
 @register('qa_memnet')
-class QAMemnet(SiameseNetwork, metaclass=TfModelMeta):
+class QAMemnet(SiameseKerasModel):
 
     def __init__(self,
-                 emb_matrix: np.ndarray = None,
                  voc_siz: int = None,
                  emb_dim: int = 300,
                  bdr: bool = True,
@@ -36,9 +35,9 @@ class QAMemnet(SiameseNetwork, metaclass=TfModelMeta):
                  seq_len: int = 20,
                  layers: int = 2,
                  dlrs = 1,
+                 *args,
                  **kwargs):
 
-        self.emb_matrix = emb_matrix
         self.voc_siz = voc_siz
         self.emb_dim = emb_dim
         self.bdr = bdr
@@ -63,10 +62,17 @@ class QAMemnet(SiameseNetwork, metaclass=TfModelMeta):
         if self.bdr:
             self.dense_dim *= 2
 
-        self.model = self.get_qa_memnet_model()
+        super(QAMemnet, self).__init__(*args, **kwargs)
 
-        self.model.compile(optimizer='adam',
-                      loss=self.contrastive_loss)
+    def compile(self):
+        optimizer = Adam(lr=self.learning_rate)
+        loss = self.contrastive_loss
+        self.model.compile(loss=loss, optimizer=optimizer)
+
+    def load_initial_emb_matrix(self):
+        log.info("[initializing new `{}`]".format(self.__class__.__name__))
+        if self.use_matrix:
+            self.model.get_layer("word_embedding_model").get_layer(name="embedding").set_weights([self.emb_matrix])
 
     def pairwise_mul(self, vests):
         x, y = vests
@@ -165,7 +171,7 @@ class QAMemnet(SiameseNetwork, metaclass=TfModelMeta):
         return mod
 
 
-    def get_qa_memnet_model(self):
+    def create_model(self):
         dense_dim = self.lstm_dim
 
         if self.pool:
@@ -239,22 +245,3 @@ class QAMemnet(SiameseNetwork, metaclass=TfModelMeta):
         att_model = None  # Model(inputs=[inp_ctx, inp_rpl], outputs=[att_ctx, att_rpl])
 
         return model
-
-    def load(self, load_path):
-        log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
-        self.model.load_weights(str(load_path))
-
-    def load_initial_emb_matrix(self):
-        log.info("[initializing new `{}`]".format(self.__class__.__name__))
-        self.embedder.get_layer(name="embedding").set_weights([self.emb_matrix])
-
-    def save(self, save_path):
-        log.info("[saving `{}`]".format(self.__class__.__name__))
-        self.model.save_weights(str(save_path))
-
-    def train_on_batch(self, batch, y):
-        loss = self.model.train_on_batch(x=list(batch), y=np.asarray(y))
-        return loss
-
-    def predict_score_on_batch(self, batch):
-            return self.model.predict_on_batch(x=batch)

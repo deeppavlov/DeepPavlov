@@ -59,7 +59,6 @@
   "pymorphy_vectorizer": "deeppavlov.models.vectorizers.word_vectorizer:PymorphyVectorizer",
   "random_emb_mat": "deeppavlov.models.preprocessors.random_embeddings_matrix:RandomEmbeddingsMatrix",
   "siamese_iterator": "deeppavlov.dataset_iterators.siamese_iterator:SiameseIterator",
-  "siamese_model": "deeppavlov.models.ranking.siamese_model:SiameseModel",
   "bilstm_nn": "deeppavlov.models.ranking.bilstm_network:BiLSTMNetwork",
   "bilstm_gru_nn": "deeppavlov.models.ranking.bilstm_gru_network:BiLSTMGRUNetwork",
   "qa_memnet": "deeppavlov.models.ranking.qa_memnet:QAMemnet",

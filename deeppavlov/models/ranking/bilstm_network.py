@@ -1,27 +1,21 @@
-from keras.layers import Input, LSTM, Embedding, GlobalMaxPooling1D, Lambda, subtract, Conv2D, Dense, Activation
-from keras.layers.merge import Dot, Subtract, Add, Multiply
+from keras.layers import Input, LSTM, Embedding, GlobalMaxPooling1D, Lambda, Dense
+from keras.layers.merge import Multiply
 from keras.models import Model
 from keras.layers.wrappers import Bidirectional
 from keras.optimizers import Adam
 from keras.initializers import glorot_uniform, Orthogonal
 from keras import losses
 from keras import backend as K
-import tensorflow as tf
 import numpy as np
-from deeppavlov.core.models.tf_backend import TfModelMeta
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.layers import keras_layers
-from pathlib import Path
-from deeppavlov.core.commands.utils import expand_path
-from typing import List, Callable
-from deeppavlov.core.models.keras_model import KerasModel
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.ranking.siamese_network import SiameseNetwork
+from deeppavlov.models.ranking.siamese_keras_model import SiameseKerasModel
 
 log = get_logger(__name__)
 
 @register('bilstm_nn')
-class BiLSTMNetwork(KerasModel, metaclass=TfModelMeta):
+class BiLSTMNetwork(SiameseKerasModel):
 
     """Class to perform context-response matching with neural networks.
 
@@ -98,7 +92,6 @@ class BiLSTMNetwork(KerasModel, metaclass=TfModelMeta):
     """
 
     def __init__(self,
-                 use_matrix: bool,
                  len_vocab: int,
                  max_sequence_length: int,
                  len_char_vocab: int = None,
@@ -114,17 +107,15 @@ class BiLSTMNetwork(KerasModel, metaclass=TfModelMeta):
                  reccurent: str = "bilstm",
                  hidden_dim: int = 300,
                  max_pooling: bool = True,
-                 emb_matrix: np.ndarray = None,
-                 learning_rate: float = 1e-3,
                  device_num: int = 0,
                  triplet_loss: bool = True,
                  margin: float = 0.1,
                  highway_on_top: bool = False,
                  hard_triplets: bool = False,
+                 *args,
                  **kwargs):
 
         self.toks_num = len_vocab
-        self.use_matrix = use_matrix
         self.seed = seed
         self.hidden_dim = hidden_dim
         self.shared_weights = shared_weights
@@ -134,8 +125,6 @@ class BiLSTMNetwork(KerasModel, metaclass=TfModelMeta):
         self.char_embeddings = char_embeddings
         self.chars_num = len_char_vocab
         self.char_emb_dim = char_emb_dim
-        self.emb_matrix = emb_matrix
-        self.learning_rate = learning_rate
         self.margin = margin
         self.embedding_dim = embedding_dim
         self.device_num = device_num
@@ -152,36 +141,30 @@ class BiLSTMNetwork(KerasModel, metaclass=TfModelMeta):
         else:
             self.max_token_length = max_token_length
 
-        self.optimizer = Adam(lr=self.learning_rate)
+        super(BiLSTMNetwork, self).__init__(*args, **kwargs)
+
+    def compile(self):
+        optimizer = Adam(lr=self.learning_rate)
         if self.triplet_mode:
-            self.loss = self.triplet_loss
+            loss = self.triplet_loss
         else:
-            self.loss = losses.binary_crossentropy
-        self.obj_model = self.bilstm_model()
-        self.obj_model.compile(loss=self.loss, optimizer=self.optimizer)
-        self.score_model = self.prediction_model()
+            loss = losses.binary_crossentropy
+        self.model.compile(loss=loss, optimizer=optimizer)
+        self.score_model = self.create_score_model()
         # self.context_embedding = Model(inputs=self.embeddings.inputs,
         #                          outputs=self.embeddings.outputs[0])
         # self.response_embedding = Model(inputs=self.embeddings.inputs,
         #                          outputs=self.embeddings.outputs[1])
-
-    def load(self, load_path):
-        log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
-        self.obj_model.load_weights(str(load_path))
-
-    def save(self, save_path):
-        log.info("[saving `{}`]".format(self.__class__.__name__))
-        self.obj_model.save_weights(str(save_path))
 
     def load_initial_emb_matrix(self):
         log.info("[initializing new `{}`]".format(self.__class__.__name__))
         if self.use_matrix:
             if self.token_embeddings and not self.char_embeddings:
                 if self.shared_weights:
-                    self.obj_model.get_layer(name="embedding").set_weights([self.emb_matrix])
+                    self.model.get_layer(name="embedding").set_weights([self.emb_matrix])
                 else:
-                    self.obj_model.get_layer(name="embedding_a").set_weights([self.emb_matrix])
-                    self.obj_model.get_layer(name="embedding_b").set_weights([self.emb_matrix])
+                    self.model.get_layer(name="embedding_a").set_weights([self.emb_matrix])
+                    self.model.get_layer(name="embedding_b").set_weights([self.emb_matrix])
 
     def embedding_layer(self):
         out = Embedding(self.toks_num,
@@ -212,7 +195,7 @@ class BiLSTMNetwork(KerasModel, metaclass=TfModelMeta):
                        return_sequences=ret_seq)
         return out
 
-    def bilstm_model(self):
+    def create_model(self):
         if self.token_embeddings and not self.char_embeddings:
             if self.use_matrix:
                 context = Input(shape=(self.max_sequence_length,))
@@ -289,14 +272,14 @@ class BiLSTMNetwork(KerasModel, metaclass=TfModelMeta):
         model = Model([context, response], dist)
         return model
 
-    def prediction_model(self):
-        cr = self.obj_model.inputs
+    def create_score_model(self):
+        cr = self.model.inputs
         if self.triplet_mode:
-            emb_c, emb_r = self.obj_model.get_layer("pooling").outputs
+            emb_c, emb_r = self.model.get_layer("pooling").outputs
             dist_score = Lambda(lambda x: self.euclidian_dist(x), name="score_model")
             score = dist_score([emb_c, emb_r])
         else:
-            score = self.obj_model.get_layer("score_model").output
+            score = self.model.get_layer("score_model").output
             score = Lambda(lambda x: 1. - K.squeeze(x, -1))(score)
         score = Lambda(lambda x: 1. - x)(score)
         model = Model(cr, score)
@@ -405,22 +388,20 @@ class BiLSTMNetwork(KerasModel, metaclass=TfModelMeta):
         mask = mask_negative * (1 - mask_semihard) + mask * mask_semihard
         return mask
 
-    def train_on_batch(self, batch, y):
-        # b = [x for el in batch for x in el]
+    def _train_on_batch(self, batch, y):
         if self.token_embeddings and not self.char_embeddings:
-            # self.obj_model.train_on_batch(x=[np.asarray(x) for x in batch], y=np.asarray(y))
-            loss = self.obj_model.train_on_batch(x=list(batch), y=np.asarray(y))
+            loss = self.model.train_on_batch(x=list(batch), y=np.asarray(y))
         elif not self.token_embeddings and self.char_embeddings:
-            loss = self.obj_model.train_on_batch(x=[np.asarray(x) for x in batch], y=np.asarray(y))
+            loss = self.model.train_on_batch(x=[np.asarray(x) for x in batch], y=np.asarray(y))
         elif self.token_embeddings and self.char_embeddings:
             if self.use_matrix:
-                loss = self.obj_model.train_on_batch(x=[np.asarray(x) for x in batch], y=np.asarray(y))
+                loss = self.model.train_on_batch(x=[np.asarray(x) for x in batch], y=np.asarray(y))
             else:
                 b = [x[0] for x in batch]
-                loss = self.obj_model.train_on_batch(x=b, y=np.asarray(y))
+                loss = self.model.train_on_batch(x=b, y=np.asarray(y))
         return loss
 
-    def __call__(self, batch):
+    def _predict_on_batch(self, batch):
         if self.token_embeddings and not self.char_embeddings:
             return self.score_model.predict_on_batch(x=batch)
         elif not self.token_embeddings and self.char_embeddings:
@@ -450,5 +431,19 @@ class BiLSTMNetwork(KerasModel, metaclass=TfModelMeta):
                 b = [np.concatenate([b[i], batch[i][:,:,1:]], axis=2) for i in range(len(batch))]
                 return embedding.predict_on_batch(x=b)
 
-    def reset(self):
-        pass
+    def update_sen_embs(self, sen2emb_vocab, type):
+        bs = self.batch_size
+        r = list(sen2emb_vocab.keys())
+        num_batches = len(r) // bs
+        sen_embeddings = []
+        for i in range(num_batches):
+            sen = r[i * bs: (i+1) * bs]
+            batch = self.preprocess(list(zip([sen, sen])))
+            sen_embeddings.append(self._net.predict_embedding_on_batch(batch, type=type))
+        if len(r) % bs != 0:
+            sen = r[num_batches * bs:]
+            batch = self.preprocess(zip([sen, sen]))
+            sen_embeddings.append(self._net.predict_embedding_on_batch(batch, type=type))
+        sen_embeddings = np.vstack(sen_embeddings)
+        for i, el in enumerate(r):
+            sen2emb_vocab[el] = sen_embeddings[i]
