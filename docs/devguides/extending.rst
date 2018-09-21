@@ -1,5 +1,5 @@
-Contribution guide
-==================
+Extending the library
+=====================
 
 In order to extend the library, you need to register your classes and functions; it is done in two steps.
 
