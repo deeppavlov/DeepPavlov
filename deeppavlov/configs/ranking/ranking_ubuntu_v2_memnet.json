@@ -14,8 +14,6 @@
       {
         "id": "preproc",
         "name": "siamese_preprocessor",
-        "save_path": "vocabs/tok.dict",
-        "load_path": "vocabs/tok.dict",
         "use_matrix": true,
         "num_ranking_samples": 10,
         "max_sequence_length": 50,

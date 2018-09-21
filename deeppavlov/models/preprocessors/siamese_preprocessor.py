@@ -30,20 +30,24 @@ log = get_logger(__name__)
 
 @register('siamese_preprocessor')
 class SiamesePreprocessor(Estimator):
-    """Class to encode characters, tokens, whole contexts and responses with vocabularies, to pad and truncate.
+    """Class is intended for preprocessing data samples containing few text strings to use them in siamese networks.
 
     Args:
-        max_sequence_length: A maximum length of a sequence in tokens.
+        save_path: The parameter is only needed to initialize the base class
+            :class:`deeppavlov.core.models.Serializable`.
+        load_path: The parameter is only needed to initialize the base class
+            :class:`deeppavlov.core.models.Serializable`.
+        token_embeddings: Whether to use token embeddins or not.
+        char_embeddings: Whether to use character embeddings or not.
+        max_sequence_length: a maximum length of text sequences in tokens.
             Longer sequences will be truncated and shorter ones will be padded.
-        max_token_length: A maximum length of a token for representing it by a character-level embedding.
+        max_token_length: A maximum length of tokens for representing it by a character-level embedding.
         padding: Padding. Possible values are ``pre`` and ``post``.
             If set to ``pre`` a sequence will be padded at the beginning.
             If set to ``post`` it will padded at the end.
         truncating: Truncating. Possible values are ``pre`` and ``post``.
             If set to ``pre`` a sequence will be truncated at the beginning.
             If set to ``post`` it will truncated at the end.
-        token_embeddings: Whether to use token embeddins or not.
-        char_embeddings: Whether to use character embeddings or not.
         char_pad: Character-level padding. Possible values are ``pre`` and ``post``.
             If set to ``pre`` a token will be padded at the beginning.
             If set to ``post`` it will padded at the end.
@@ -69,16 +73,16 @@ class SiamesePreprocessor(Estimator):
     """
 
     def __init__(self,
-                 save_path: str,
-                 load_path: str,
-                 max_sequence_length: int,
-                 use_matrix: bool,
-                 embedder: Component,
-                 max_token_length: int = None,
-                 padding: str = 'post',
-                 truncating: str = 'post',
+                 save_path: str = './tok.dict',
+                 load_path: str = './tok.dict',
                  token_embeddings: bool = True,
                  char_embeddings: bool = False,
+                 max_sequence_length: int = None,
+                 max_token_length: int = None,
+                 use_matrix: bool = True,
+                 embedder: Component = "fasttext",
+                 padding: str = 'post',
+                 truncating: str = 'post',
                  char_pad: str = 'post',
                  char_trunc: str = 'post',
                  tok_dynamic_batch: bool = False,
@@ -142,7 +146,6 @@ class SiamesePreprocessor(Estimator):
 
     def load(self):
         pass
-        # self.vocab.load()
 
     def save(self):
         self.vocab.save()
