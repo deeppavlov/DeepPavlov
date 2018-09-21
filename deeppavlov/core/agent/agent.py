@@ -3,6 +3,7 @@ from typing import List
 import random
 
 from deeppavlov.core.models.component import Component
+from deeppavlov.core.skill.skill import Skill
 
 
 class RandomSelector(Component):
@@ -32,7 +33,7 @@ class TransparentFilter(Component):
 
 
 class Agent(Component):
-    def __init__(self, skills: List[Component], skills_selector=None, skills_filter=None, *args, **kwargs):
+    def __init__(self, skills: List[Skill], skills_selector=None, skills_filter=None, *args, **kwargs):
         self.skills = skills
         self.skills_filter = skills_filter or TransparentFilter(len(skills))
         self.skills_selector = skills_selector or HighestConfidenceSelector()
