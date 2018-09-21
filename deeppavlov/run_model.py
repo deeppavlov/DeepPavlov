@@ -41,7 +41,7 @@ from utils.server_utils.server import start_model_server
 # PIPELINE_CONFIG_PATH = 'configs/odqa/ranker_test.json'
 # PIPELINE_CONFIG_PATH = find_config('morpho_ru_syntagrus_train')
 # PIPELINE_CONFIG_PATH = find_config('morpho_ru_syntagrus_train_pymorphy')
-# PIPELINE_CONFIG_PATH = find_config('linear_models_avr')
+PIPELINE_CONFIG_PATH = find_config('test_neural.json')
 
 
 if __name__ == '__main__':

@@ -228,12 +228,15 @@ class PipelineManager:
                                                                                 pipeline_generator.length, itime))
 
             if pipe['dataset_reader']['name'] == 'basic_classification_reader':
-                pipe['dataset_reader'] = {
-                    "name": "basic_classification_reader",
-                    "x": "text",
-                    "y": "target",
-                    "data_path": '../tests/test_data/classification_data/'
-                }
+                pipe['dataset_reader'] = {"name": "basic_classification_reader",
+                                          "x": "text",
+                                          "y": "target",
+                                          "data_path": '../tests/test_data/classification_data/'}
+                pipe['dataset_iterator'] = {"name": "basic_classification_iterator",
+                                            "seed": 42,
+                                            "field_to_split": "train",
+                                             "split_fields": ["train", "valid"],
+                                            "split_proportions": [0.9, 0.1]}
             else:
                 raise ConfigError("Dataset reader is not intended for classification task."
                                   "Name of dataset_reader must be 'basic_classification_reader',"
