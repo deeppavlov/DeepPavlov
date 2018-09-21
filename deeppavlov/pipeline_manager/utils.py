@@ -276,13 +276,15 @@ def write_info(sheet, num, target_metric, cell_format):
     return 2, 0
 
 
-def write_legend(sheet, row, col, metric_names, max_com, cell_format):
+def write_legend(sheet, row, col, data_tipe, metric_names, max_com, cell_format):
     # write legend
     sheet.write(row, col, "Pipeline", cell_format)
     sheet.merge_range(row, col + 1, row, max_com - 1, "Preprocessing", cell_format)
     sheet.write(row, max_com, "Model", cell_format)
-    for k, met in enumerate(metric_names):
-        sheet.write(row, max_com + 1 + k, met, cell_format)
+    for j in range(len(data_tipe)):
+        p = j*len(metric_names)
+        for k, met in enumerate(metric_names):
+            sheet.write(row, max_com + p + k + 1, met, cell_format)
 
     return row + 1, col
 
@@ -292,11 +294,17 @@ def write_dataset_name(sheet, sheet_2, row_1, row_2, col, name, dataset_list, fo
     # write dataset name
     sheet.write(row_1, col, "Dataset name", format)
     sheet.write(row_1, col + 1, name, format)
+    for l, type_d in enumerate(dataset_list[0][0]['res'].keys()):
+        p = l*len(metric_names)
+        sheet.merge_range(row_1, max_l + p + 1, row_1, max_l + p + len(metric_names), type_d, format)
     row_1 += 1
 
     # write dataset name
     sheet_2.write(row_2, col, "Dataset name", format)
     sheet_2.write(row_2, col + 1, name, format)
+    for l, type_d in enumerate(dataset_list[0][0]['res'].keys()):
+        p = l * len(metric_names)
+        sheet_2.merge_range(row_2, max_l + p + 1, row_2, max_l + p + len(metric_names), type_d, format)
     row_2 += 1
 
     row_1, row_2 = write_batch_size(row_1, row_2, col, dataset_list, sheet, sheet_2, format, max_l, target_metric,
@@ -310,8 +318,8 @@ def write_batch_size(row1, row2, col, model_list, sheet, sheet_2, format, max_l,
     row_2 = row2
 
     for val_ in model_list:
-        row_1, col = write_legend(sheet, row_1, col, metric_names, max_l, format)
-        row_2, col = write_legend(sheet_2, row_2, col, metric_names, max_l, format)
+        row_1, col = write_legend(sheet, row_1, col, list(val_[0]['res'].keys()), metric_names, max_l, format)
+        row_2, col = write_legend(sheet_2, row_2, col, list(val_[0]['res'].keys()), metric_names, max_l, format)
 
         # Write pipelines table
         row_1 = write_table(sheet, val_, row_1, col, format, max_l)
@@ -333,8 +341,9 @@ def write_metrics(sheet, comp_dict, start_x, start_y, cell_format):
     metric_names = list(comp_dict['res'][data_names[-1]].keys())
 
     for j, tp in enumerate(data_names):
+        p = j*len(comp_dict['res'][tp])
         for k, met in enumerate(metric_names):
-            sheet.write(start_x, start_y + k + 1, comp_dict['res'][tp][met], cell_format)
+            sheet.write(start_x, start_y + p + k + 1, comp_dict['res'][tp][met], cell_format)
     return None
 
 
@@ -366,7 +375,7 @@ def write_pipe(sheet, pipe_dict, start_x, start_y, cell_format, max_, write_conf
     sheet.write(x, max_, pipe_dict['components'][-1]['name'], cell_format)
     write_metrics(sheet, pipe_dict, x, max_, cell_format)
     if write_conf:
-        write_config(sheet, pipe_dict, x, max_ + len(metric_names) + 1, cell_format)
+        write_config(sheet, pipe_dict, x, max_ + len(data_names)*len(metric_names) + 1, cell_format)
     return None
 
 
