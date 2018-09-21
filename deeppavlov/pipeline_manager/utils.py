@@ -218,53 +218,50 @@ def get_data(log):
     dataset_names = {}
     max_com = 0
 
-    for dataset_name, batch_val in log['experiments'].items():
+    for dataset_name, models_val in log['experiments'].items():
         dataset_names[dataset_name] = []
-        batch_sizes = {}
-        for batch_size, models_val in batch_val.items():
-            pipelines = []
-            for model_name, val in models_val.items():
-                for num, conf in val.items():
-                    pipe = dict(index=int(num), components=[], res={})
-                    # max amount of components
-                    if max_com < len(conf['config']):
-                        max_com = len(conf['config'])
+        pipelines = []
+        for model_name, val in models_val.items():
+            for num, conf in val.items():
+                pipe = dict(index=int(num), components=[], res={})
+                # max amount of components
+                if max_com < len(conf['config']):
+                    max_com = len(conf['config'])
 
-                    for component in conf['config']:
-                        comp_data = {}
-                        comp_data['name'] = component.pop('component_name')
+                for component in conf['config']:
+                    comp_data = {}
+                    comp_data['name'] = component.pop('component_name')
 
-                        if 'save_path' in component.keys():
-                            del component['save_path']
-                        if 'load_path' in component.keys():
-                            del component['load_path']
-                        if 'scratch_init' in component.keys():
-                            del component['scratch_init']
-                        if 'name' in component.keys():
-                            del component['name']
-                        if 'id' in component.keys():
-                            del component['id']
-                        if 'in' in component.keys():
-                            del component['in']
-                        if 'in_y' in component.keys():
-                            del component['in_y']
-                        if 'out' in component.keys():
-                            del component['out']
-                        if 'main' in component.keys():
-                            del component['main']
-                        if 'out' in component.keys():
-                            del component['out']
-                        if 'fit_on' in component.keys():
-                            del component['fit_on']
+                    if 'save_path' in component.keys():
+                        del component['save_path']
+                    if 'load_path' in component.keys():
+                        del component['load_path']
+                    if 'scratch_init' in component.keys():
+                        del component['scratch_init']
+                    if 'name' in component.keys():
+                        del component['name']
+                    if 'id' in component.keys():
+                        del component['id']
+                    if 'in' in component.keys():
+                        del component['in']
+                    if 'in_y' in component.keys():
+                        del component['in_y']
+                    if 'out' in component.keys():
+                        del component['out']
+                    if 'main' in component.keys():
+                        del component['main']
+                    if 'out' in component.keys():
+                        del component['out']
+                    if 'fit_on' in component.keys():
+                        del component['fit_on']
 
-                        comp_data['conf'] = component
-                        pipe['components'].append(comp_data)
+                    comp_data['conf'] = component
+                    pipe['components'].append(comp_data)
 
-                    for name, val_ in conf['results'].items():
-                        pipe['res'][name] = val_
-                    pipelines.append(pipe)
-            batch_sizes[batch_size] = pipelines
-        dataset_names[dataset_name].append(batch_sizes)
+                for name, val_ in conf['results'].items():
+                    pipe['res'][name] = val_
+                pipelines.append(pipe)
+        dataset_names[dataset_name].append(pipelines)
 
     return max_com, dataset_names
 
@@ -295,36 +292,25 @@ def write_dataset_name(sheet, sheet_2, row_1, row_2, col, name, dataset_list, fo
     # write dataset name
     sheet.write(row_1, col, "Dataset name", format)
     sheet.write(row_1, col + 1, name, format)
-    row_1 += 2
+    row_1 += 1
 
     # write dataset name
     sheet_2.write(row_2, col, "Dataset name", format)
     sheet_2.write(row_2, col + 1, name, format)
-    row_2 += 2
+    row_2 += 1
 
-    for bs_dict in dataset_list:
-        row_1, row_2 = write_batch_size(row_1, row_2, col, bs_dict, sheet, sheet_2, format, max_l, target_metric,
-                                        metric_names)
+    row_1, row_2 = write_batch_size(row_1, row_2, col, dataset_list, sheet, sheet_2, format, max_l, target_metric,
+                                    metric_names)
 
-    return row_1 + 2, row_2 + 2
+    return row_1, row_2
 
 
-def write_batch_size(row1, row2, col, bs_dict, sheet, sheet_2, format, max_l, target_metric, metric_names):
+def write_batch_size(row1, row2, col, model_list, sheet, sheet_2, format, max_l, target_metric, metric_names):
     row_1 = row1
     row_2 = row2
 
-    for bs, val_ in bs_dict.items():
-        # write batch size
-        sheet.write(row_1, col, "Batch size", format)
-        sheet.write(row_1, col + 1, bs, format)
-        row_1 += 1
-
+    for val_ in model_list:
         row_1, col = write_legend(sheet, row_1, col, metric_names, max_l, format)
-
-        sheet_2.write(row_2, col, "Batch size", format)
-        sheet_2.write(row_2, col + 1, bs, format)
-        row_2 += 1
-
         row_2, col = write_legend(sheet_2, row_2, col, metric_names, max_l, format)
 
         # Write pipelines table
@@ -338,9 +324,6 @@ def write_batch_size(row1, row2, col, bs_dict, sheet, sheet_2, format, max_l, ta
 
         row_1 += 2
         row_2 += 2
-
-    row_1 += 2
-    row_2 += 2
 
     return row_1, row_2
 
