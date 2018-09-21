@@ -19,9 +19,11 @@ from copy import deepcopy, copy
 import tensorflow as tf
 import keras.metrics
 import keras.optimizers
+from typing import Dict
 from overrides import overrides
 from keras import backend as K
 from keras.models import Model
+from keras.layers import Dense, Input
 
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.file import save_json, read_json
@@ -50,6 +52,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
     def __init__(self, **kwargs) -> None:
         """
         Initialize model using parameters from opt
+
         Args:
             kwargs (dict): Dictionary with model parameters
         """
@@ -71,6 +74,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
     def _config_session():
         """
         Configure session for particular device
+
         Returns:
             tensorflow.Session
         """
@@ -79,17 +83,12 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         config.gpu_options.visible_device_list = '0'
         return tf.Session(config=config)
 
-    def init_model_from_scratch(self, model_name: str, optimizer_name: str,
-                                loss_name: str,
-                                lear_rate: float = 0.01, lear_rate_decay: float = 0.) -> Model:
+    def init_model_from_scratch(self, model_name: str):
         """
-        Initialize model from scratch with given params
+        Initialize uncompiled model from scratch with given params
+
         Args:
             model_name: name of model function described as a method of this class
-            optimizer_name: name of optimizer from keras.optimizers
-            loss_name: loss function name (from keras.losses)
-            lear_rate: learning rate.
-            lear_rate_decay: learning rate decay.
 
         Returns:
             compiled model with given network and learning parameters
@@ -101,40 +100,15 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         else:
             raise AttributeError("Model {} is not defined".format(model_name))
 
-        optimizer_func = getattr(keras.optimizers, optimizer_name, None)
-        if callable(optimizer_func):
-            if not(lear_rate is None):
-                if not(lear_rate_decay is None):
-                    self.optimizer = optimizer_func(lr=lear_rate, decay=lear_rate_decay)
-                else:
-                    self.optimizer = optimizer_func(lr=lear_rate)
-            elif not(lear_rate_decay is None):
-                self.optimizer = optimizer_func(decay=lear_rate_decay)
-            else:
-                self.optimizer = optimizer_func()
-        else:
-            raise AttributeError("Optimizer {} is not defined in `keras.optimizers`".format(optimizer_name))
-
-        loss_func = getattr(keras.losses, loss_name, None)
-        if callable(loss_func):
-            loss = loss_func
-        else:
-            raise AttributeError("Loss {} is not defined in `keras.losses`".format(loss_name))
-
-        model.compile(optimizer=self.optimizer, loss=loss)
         return model
 
     @overrides
-    def load(self, model_name: str, optimizer_name: str, loss_name: str,
-             lear_rate: float = 0.01, lear_rate_decay: float = 0.) -> Model:
+    def load(self, model_name: str):
         """
-        Initialize model from saved params and weights
+        Initialize uncompiled model from saved params and weights
+
         Args:
             model_name: name of model function described as a method of this class
-            optimizer_name: name of optimizer from keras.optimizers
-            loss_name: loss function name (from keras.losses)
-            lear_rate: learning rate.
-            lear_rate_decay: learning rate decay.
 
         Returns:
             model with loaded weights and network parameters from files
@@ -162,34 +136,51 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
                 log.info("[loading weights from {}]".format(weights_path.name))
                 model.load_weights(str(weights_path))
 
-                optimizer_func = getattr(keras.optimizers, optimizer_name, None)
-                if callable(optimizer_func):
-                    if not (lear_rate is None):
-                        if not (lear_rate_decay is None):
-                            self.optimizer = optimizer_func(lr=lear_rate, decay=lear_rate_decay)
-                        else:
-                            self.optimizer = optimizer_func(lr=lear_rate)
-                    elif not (lear_rate_decay is None):
-                        self.optimizer = optimizer_func(decay=lear_rate_decay)
-                    else:
-                        self.optimizer = optimizer_func()
-                else:
-                    raise AttributeError("Optimizer {} is not defined in `keras.optimizers`".format(optimizer_name))
-
-                loss_func = getattr(keras.losses, loss_name, None)
-                if callable(loss_func):
-                    loss = loss_func
-                else:
-                    raise AttributeError("Loss {} is not defined".format(loss_name))
-
-                model.compile(optimizer=self.optimizer,
-                              loss=loss)
                 return model
             else:
-                return self.init_model_from_scratch(model_name, optimizer_name, loss_name, lear_rate, lear_rate_decay)
+                return self.init_model_from_scratch(model_name)
         else:
             log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
-            return self.init_model_from_scratch(model_name, optimizer_name, loss_name, lear_rate, lear_rate_decay)
+            return self.init_model_from_scratch(model_name)
+
+    def compile(self, model: Model, optimizer_name: str, loss_name: str,
+                lear_rate: float = 0.01, lear_rate_decay: float = 0.):
+        """
+        Compile model with given optimizer and loss
+
+        Args:
+            model: keras uncompiled model
+            optimizer_name: name of optimizer from keras.optimizers
+            loss_name: loss function name (from keras.losses)
+            lear_rate: learning rate.
+            lear_rate_decay: learning rate decay.
+
+        Returns:
+
+        """
+        optimizer_func = getattr(keras.optimizers, optimizer_name, None)
+        if callable(optimizer_func):
+            if not (lear_rate is None):
+                if not (lear_rate_decay is None):
+                    self.optimizer = optimizer_func(lr=lear_rate, decay=lear_rate_decay)
+                else:
+                    self.optimizer = optimizer_func(lr=lear_rate)
+            elif not (lear_rate_decay is None):
+                self.optimizer = optimizer_func(decay=lear_rate_decay)
+            else:
+                self.optimizer = optimizer_func()
+        else:
+            raise AttributeError("Optimizer {} is not defined in `keras.optimizers`".format(optimizer_name))
+
+        loss_func = getattr(keras.losses, loss_name, None)
+        if callable(loss_func):
+            loss = loss_func
+        else:
+            raise AttributeError("Loss {} is not defined".format(loss_name))
+
+        model.compile(optimizer=self.optimizer,
+                      loss=loss)
+        return model
 
     @overrides
     def save(self, fname: str = None) -> None:
