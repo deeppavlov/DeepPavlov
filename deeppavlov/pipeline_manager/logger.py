@@ -98,12 +98,6 @@ class Logger(object):
 
     def save(self):
         """save log in file"""
-        # # update log info
-        # if self.log['experiment_info']['number_of_pipes'] is not None:
-        #     self.update_pipes()
-        # elif self.log['experiment_info']['full_time'] is not None:
-        #     self.update_times()
-        # write log in file
         with open(self.log_file, 'w') as log_file:
             json.dump(self.log, log_file)
             log_file.close()
@@ -177,22 +171,21 @@ class Logger(object):
         if self.dataset not in self.log['experiments'].keys():
             self.log['experiments'][self.dataset] = OrderedDict()
 
-        if self.batch_size not in self.log['experiments'][self.dataset].keys():
-            self.log['experiments'][self.dataset][str(self.batch_size)] = OrderedDict()
-
-        if self.model not in self.log['experiments'][self.dataset][str(self.batch_size)].keys():
-            self.log['experiments'][self.dataset][str(self.batch_size)][self.model] = OrderedDict()
-            self.log['experiments'][self.dataset][str(self.batch_size)][self.model][self.pipe_ind] =\
+        if self.model not in self.log['experiments'][self.dataset].keys():
+            self.log['experiments'][self.dataset][self.model] = OrderedDict()
+            self.log['experiments'][self.dataset][self.model][self.pipe_ind] =\
                 {'config': self.pipe_conf,
                  'light_config': pipe_name,
                  'time': self.pipe_time,
+                 'batch_size': self.batch_size,
                  'ops_time': ops_times,
                  'results': self.pipe_res}
         else:
-            self.log['experiments'][self.dataset][str(self.batch_size)][self.model][self.pipe_ind] =\
+            self.log['experiments'][self.dataset][self.model][self.pipe_ind] =\
                 {'config': self.pipe_conf,
                  'light_config': pipe_name,
                  'time': self.pipe_time,
+                 'batch_size': self.batch_size,
                  'ops_time': ops_times,
                  'results': self.pipe_res}
 

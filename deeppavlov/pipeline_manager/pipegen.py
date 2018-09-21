@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
-
 from os.path import join
 from itertools import product
 from copy import deepcopy
