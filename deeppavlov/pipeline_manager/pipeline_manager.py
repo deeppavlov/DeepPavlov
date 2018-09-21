@@ -119,8 +119,9 @@ class PipelineManager:
             print("[ WARNING: Cross validation is active! Every pipeline will be run {0} times! ]".format(self.k_fold))
 
         self.logger.log['experiment_info']['number_of_pipes'] = self.gen_len
-        dataset_res = {}
+        self.logger.update_pipes()
 
+        dataset_res = {}
         for i, pipe in enumerate(tqdm(self.pipeline_generator(), total=self.gen_len)):
             if i == 0:
                 self.logger.log['experiment_info']['metrics'] = copy(pipe['train']['metrics'])
@@ -171,9 +172,11 @@ class PipelineManager:
                 self.save_config(pipe, self.logger.dataset, i)
             # update logger
             self.logger.get_pipe_log()
+            self.logger.save()
 
         # save log
         self.logger.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)
+        self.logger.update_times()
         self.logger.save()
 
         # delete all checkpoints and save only best pipe
