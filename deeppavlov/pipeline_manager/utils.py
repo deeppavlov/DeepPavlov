@@ -17,6 +17,7 @@ import json
 import xlsxwriter
 import matplotlib.pyplot as plt
 
+from collections import OrderedDict
 from os.path import join, isdir
 from os import mkdir
 
@@ -30,6 +31,60 @@ def normal_time(z):
     else:
         t = '{0:.2}'.format(z)
     return t
+
+
+def merge_logs(old_log, new_log):
+    """ Combines two logs into one """
+    # update time
+    t_old = old_log['experiment_info']['full_time'].split(':')
+    t_new = new_log['experiment_info']['full_time'].split(':')
+    sec = int(t_old[2]) + int(t_new[2]) + (int(t_old[1]) + int(t_new[1])) * 60 + (
+            int(t_old[0]) + int(t_new[0])) * 3600
+    old_log['experiment_info']['full_time'] = normal_time(sec)
+    # update num of pipes
+    n_old = int(old_log['experiment_info']['number_of_pipes'])
+    n_new = int(new_log['experiment_info']['number_of_pipes'])
+    old_log['experiment_info']['number_of_pipes'] = n_old + n_new
+
+    new_datasets = []
+    new_models = {}
+    for dataset_name, dataset_val in new_log['experiments'].items():
+        if dataset_name not in old_log['experiments'].keys():
+            new_datasets.append(dataset_name)
+        else:
+            new_models[dataset_name] = []
+            for name, val in dataset_val.items():
+                if name not in old_log['experiments'][dataset_name].keys():
+                    new_models[dataset_name].append(name)
+
+    for dataset_name, dataset_val in new_log['experiments'].items():
+        if dataset_name not in new_datasets:
+            for name, val in dataset_val.items():
+                if name not in new_models[dataset_name]:
+                    for nkey, nval in new_log['experiments'][dataset_name][name].items():
+                        match = False
+                        for okey, oval in old_log['experiments'][dataset_name][name].items():
+                            if nval['config'] == oval['config']:
+                                match = True
+                        if not match:
+                            n_old += 1
+                            old_log['experiments'][dataset_name][name][str(n_old)] = nval
+
+    for dataset_name in new_models.keys():
+        if len(new_models[dataset_name]) != 0:
+            for model_name in new_models[dataset_name]:
+                old_log['experiments'][dataset_name][model_name] = OrderedDict()
+                for nkey, nval in new_log['experiments'][dataset_name][model_name].items():
+                    n_old += 1
+                    old_log['experiments'][dataset_name][model_name][str(n_old)] = nval
+
+    for dataset_name in new_datasets:
+        for model_name, model_val in new_log['experiments'][dataset_name].items():
+            for nkey, nval in new_log['experiments'][dataset_name][model_name].items():
+                n_old += 1
+                old_log['experiments'][dataset_name][model_name][str(n_old)] = nval
+
+    return old_log
 
 
 # ------------------------------------------------Generate reports-----------------------------------------------------
@@ -487,10 +542,6 @@ def results_analizator(log_, target_met='f1_weighted', num_best_=5):
 
     def analize(log, target_metric, num_best, metrics):
         models_names = list(log.keys())
-        # if target_metric not in metrics:
-        #     print("Warning: Target metric '{}' not in log."
-        #           " The fisrt metric in log will be use as target metric.".format(target_metric))
-        #     target_metric = metrics[0]
 
         main = {'models': {}, 'best_model': {}}
         for name in models_names:
@@ -533,10 +584,8 @@ def results_analizator(log_, target_met='f1_weighted', num_best_=5):
 
     data = {}
     metrics = log_['experiment_info']['metrics']
-    for dataset_name, batch_val in log_['experiments'].items():
-        data[dataset_name] = {}
-        for batch_size, models_val in batch_val.items():
-            data[dataset_name][batch_size] = analize(models_val, target_met, num_best_, metrics)
+    for dataset_name, models_val in log_['experiments'].items():
+        data[dataset_name] = analize(models_val, target_met, num_best_, metrics)
     return data
 
 
@@ -600,8 +649,6 @@ def plot_res(info, name, savepath='./', save=True, width=0.2, fheight=8, fwidth=
     models = list(info.keys())
     metrics = list(info[models[0]].keys())
     n = len(metrics)
-
-    # print(models)
 
     for met in metrics:
         tmp = []
@@ -680,10 +727,7 @@ def results_visualization(root, savepath, plot, target_metric=None):
         # scrub data from log for image creating
         info = results_analizator(log, target_metric)
         # plot histograms
-        for dataset_name, batch_val in info.items():
-            for batch, info_val in batch_val.items():
-                if batch == "None":
-                    plot_res(info_val, dataset_name, savepath)
-                else:
-                    plot_res(info_val, dataset_name + str(batch), savepath)
+        for dataset_name, dataset_val in info.items():
+            plot_res(dataset_val, dataset_name, savepath)
+
     return None

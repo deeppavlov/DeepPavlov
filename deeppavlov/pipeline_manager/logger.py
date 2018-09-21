@@ -18,7 +18,7 @@ import os
 from collections import OrderedDict
 from os.path import join, isdir, isfile
 
-from deeppavlov.pipeline_manager.utils import normal_time
+from deeppavlov.pipeline_manager.utils import merge_logs
 
 
 class Logger(object):
@@ -93,45 +93,10 @@ class Logger(object):
 
     def save(self):
         if self.old_log is not None:
-            self.log = self.merge_logs(self.old_log, self.log)
+            self.log = merge_logs(self.old_log, self.log)
         with open(self.log_file, 'w') as log_file:
             json.dump(self.log, log_file)
             log_file.close()
-
-    @staticmethod
-    def merge_logs(old_log, new_log):
-        """ Combines two logs into one """
-
-        # update time
-        t_old = old_log['experiment_info']['full_time'].split(':')
-        t_new = new_log['experiment_info']['full_time'].split(':')
-        sec = int(t_old[2]) + int(t_new[2]) + (int(t_old[1]) + int(t_new[1])) * 60 + (
-                    int(t_old[0]) + int(t_new[0])) * 3600
-        old_log['experiment_info']['full_time'] = normal_time(sec)
-        # update num of pipes
-        n_old = int(old_log['experiment_info']['number_of_pipes'])
-        n_new = int(new_log['experiment_info']['number_of_pipes'])
-        old_log['experiment_info']['number_of_pipes'] = n_old + n_new
-
-        for dataset_name, dataset_val in new_log['experiments'].items():
-            if dataset_name not in old_log['experiments'].keys():
-                old_log['experiments'][dataset_name] = dataset_val
-            else:
-                for name, val in dataset_val.items():
-                    if name not in old_log['experiments'][dataset_name].keys():
-                        old_log['experiments'][dataset_name][name] = val
-                    else:
-                        for nkey, nval in new_log['experiments'][dataset_name][name].items():
-                            match = False
-                            for okey, oval in old_log['experiments'][dataset_name][name].items():
-                                if nval['config'] == oval['config']:
-                                    match = True
-                            if not match:
-                                n_old += 1
-                                old_log['experiments'][dataset_name][name][str(n_old)] = \
-                                    new_log['experiments'][dataset_name][name][nkey]
-
-        return old_log
 
     def get_pipe_log(self):
         """ Updates the log with information about the new pipeline """
