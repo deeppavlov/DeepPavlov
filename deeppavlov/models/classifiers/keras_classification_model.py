@@ -60,7 +60,8 @@ class KerasClassificationModel(KerasModel):
                 The value is from 0 to 1.
                 If all probabilities are lower than confident_threshold,
                 label with the highest probability is assigned.
-                If `last_layer_activation` is `softmax` (not multi-label classification), assign to 1.
+                By default, assigned to 1 which corresponds to one-label classification
+                (`last_layer_activation` should be assigned to `softmax`).
         classes: list of classes names presented in the dataset
                 (in config it is determined as keys of vocab over `y`)
         restore_lr: in case of loading pre-trained model \
@@ -84,7 +85,7 @@ class KerasClassificationModel(KerasModel):
                  model_name: str, optimizer: str = "Adam", loss: str = "binary_crossentropy",
                  lear_rate: float = 0.01, lear_rate_decay: float = 0.,
                  last_layer_activation="sigmoid",
-                 confident_threshold: float = 0.5,
+                 confident_threshold: float = 1.,
                  restore_lr: bool = False,
                  **kwargs):
         """
