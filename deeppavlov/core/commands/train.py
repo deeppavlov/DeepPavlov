@@ -271,6 +271,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
 
         'log_every_n_batches': 0,
         'log_every_n_epochs': 0,
+        'smooth_train': False,
 
         'validate_best': True,
         'test_best': True,
@@ -371,6 +372,7 @@ class TrainMonitoring:
         self.batches_seen = 0
         self.examples_seen = 0
         self.losses = []
+        self.smooth_train = train_config['smooth_train']
         self.start_time = time.time()
         self.tb_train_writer = None
         self.tb_valid_writer = None
@@ -430,8 +432,13 @@ def _log(
 ):
     epochs = train_monitoring.epochs
 
+    if train_monitoring.smooth_train:
+        train_y_true, train_y_predicted = train_monitoring.train_y_true, train_monitoring.train_y_predicted
+    else:
+        train_y_true, train_y_predicted = train_monitoring.train_y_true[-1:], train_monitoring.train_y_predicted[-1:]
+
     metrics = [
-        (s, f(train_monitoring.train_y_true, train_monitoring.train_y_predicted))
+        (s, f(train_y_true, train_y_predicted))
         for s, f in train_monitoring.train_metrics_functions
     ]
     report = dict(
@@ -460,8 +467,11 @@ def _log(
             log.warning('Could not log examples')
 
     losses = train_monitoring.losses
-    if train_monitoring.losses:
-        report['loss'] = sum(losses) / len(losses)
+    if losses:
+        if train_monitoring.smooth_train:
+            report['loss'] = sum(losses) / len(losses)
+        else:
+            report['loss'] = float(losses[-1])
 
     tb_train_writer = train_monitoring.tb_train_writer
     if train_monitoring.tb_train_writer is not None:
