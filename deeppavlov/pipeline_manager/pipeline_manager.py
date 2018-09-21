@@ -17,6 +17,7 @@ import os
 import shutil
 
 from time import time
+from tqdm import tqdm
 from datetime import datetime
 from os.path import join
 from copy import copy
@@ -88,6 +89,7 @@ class PipelineManager:
         self.target_metric = target_metric
         self.plot = plot
         self.pipeline_generator = None
+        self.gen_len = 0
         if date is not None:
             self.date = date
         else:
@@ -109,29 +111,22 @@ class PipelineManager:
         self.pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, search=self.search,
                                           search_type=self.hyper_search, test_mode=False,
                                           cross_val=self.cross_validation)
+        self.gen_len = self.pipeline_generator.length
 
         # Start generating pipelines configs
-        print('[ Experiment start - {0} pipes, will be run]'.format(self.pipeline_generator.length))
+        print('[ Experiment start - {0} pipes, will be run]'.format(self.gen_len))
         if self.cross_validation:
             print("[ WARNING: Cross validation is active! Every pipeline will be run {0} times! ]".format(self.k_fold))
 
-        self.logger.log['experiment_info']['number_of_pipes'] = self.pipeline_generator.length
-        exp_start_time = time()
+        self.logger.log['experiment_info']['number_of_pipes'] = self.gen_len
         dataset_res = {}
 
-        for i, pipe in enumerate(self.pipeline_generator()):
+        for i, pipe in enumerate(tqdm(self.pipeline_generator(), total=self.gen_len)):
             if i == 0:
                 self.logger.log['experiment_info']['metrics'] = copy(pipe['train']['metrics'])
                 if self.target_metric is None:
                     self.target_metric = pipe['train']['metrics'][0]
                 self.logger.log['experiment_info']['target_metric'] = self.target_metric
-            # print progress
-            else:
-                itime = normal_time(((time() - exp_start_time) / i) * (self.pipeline_generator.length - i))
-                ptime = normal_time(time() - exp_start_time)
-                print('\n')
-                print('[ Progress: pipe {0}/{1}; Time pass: {2} ;'
-                      ' Time left: {3}; ]'.format(i+1, self.pipeline_generator.length, ptime, itime))
 
             self.logger.pipe_ind = i + 1
             self.logger.pipe_conf = copy(pipe['chainer']['pipe'])
@@ -215,17 +210,18 @@ class PipelineManager:
         # create the pipeline generator
         pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, search=self.search,
                                      search_type=self.hyper_search, test_mode=True)
+        len_gen = pipeline_generator.length
 
         # Start generating pipelines configs
-        print('[ Test start - {0} pipes, will be run]'.format(pipeline_generator.length))
+        print('[ Test start - {0} pipes, will be run]'.format(len_gen))
         exp_start_time = time()
-        for i, pipe in enumerate(pipeline_generator()):
+        for i, pipe in enumerate(tqdm(pipeline_generator(), total=len_gen)):
             # print progress
             if i != 0:
-                itime = normal_time(((time() - exp_start_time) / i) * (pipeline_generator.length - i))
+                itime = normal_time(((time() - exp_start_time) / i) * (len_gen - i))
                 print('\n')
                 print('[ Test progress: pipe {0}/{1}; Time left: {2}; ]'.format(i + 1,
-                                                                                pipeline_generator.length, itime))
+                                                                                len_gen, itime))
 
             if pipe['dataset_reader']['name'] == 'basic_classification_reader':
                 pipe['dataset_reader'] = {"name": "basic_classification_reader",
@@ -235,7 +231,7 @@ class PipelineManager:
                 pipe['dataset_iterator'] = {"name": "basic_classification_iterator",
                                             "seed": 42,
                                             "field_to_split": "train",
-                                             "split_fields": ["train", "valid"],
+                                            "split_fields": ["train", "valid"],
                                             "split_proportions": [0.9, 0.1]}
             else:
                 raise ConfigError("Dataset reader is not intended for classification task."
