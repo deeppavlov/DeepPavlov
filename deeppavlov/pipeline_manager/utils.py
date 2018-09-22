@@ -17,10 +17,13 @@ import json
 import xlsxwriter
 import matplotlib.pyplot as plt
 
+from typing import List
 from collections import OrderedDict
 from os.path import join, isdir
 from os import mkdir
 
+
+# --------------------------------------------------- Common ----------------------------------------------------------
 
 def normal_time(z):
     if z > 1:
@@ -88,185 +91,6 @@ def merge_logs(old_log, new_log):
 
 
 # ------------------------------------------------Generate reports-----------------------------------------------------
-# ________________________________________________Generate old table___________________________________________________
-def get_pipe_sq(pipe_dict):
-    names = list(pipe_dict['res'].keys())
-    m = 0
-    for comp in pipe_dict['components']:
-        if m < len(comp['conf']):
-            m = len(comp['conf'])
-
-    height = 1 + m
-    width = 1 + 2 * len(pipe_dict['components']) + len(pipe_dict['res']) * len(pipe_dict['res'][names[0]])
-    return height, width
-
-
-def write_component(sheet, comp_dict, start_x, start_y, mx_height, cell_format):
-    delta = mx_height - len(comp_dict['conf'])
-    sheet.merge_range(start_x, start_y, start_x + 1, start_y + 1, comp_dict['name'], cell_format=cell_format)
-
-    x = start_x + 2
-    for par, value in comp_dict['conf'].items():
-        sheet.write(x, start_y, par, cell_format)
-        sheet.write(x, start_y + 1, str(value), cell_format)
-        x += 1
-
-    for i in range(delta):
-        sheet.write(x, start_y, '-', cell_format)
-        sheet.write(x, start_y + 1, '-', cell_format)
-        x += 1
-
-    return None
-
-
-def write_old_metrics(sheet, comp_dict, start_x, start_y, mx_height, cell_format):
-    data_names = list(comp_dict['res'].keys())
-    metric_names = list(comp_dict['res'][data_names[-1]].keys())
-
-    for j, tp in enumerate(data_names):
-        sheet.merge_range(start_x, start_y + j * len(metric_names), start_x + 1,
-                          start_y + j * len(metric_names) + len(metric_names) - 1, tp, cell_format=cell_format)
-        for k, met in enumerate(metric_names):
-            sheet.write(start_x + 2, start_y + j * len(metric_names) + k, met, cell_format)
-
-            sheet.merge_range(start_x + 3, start_y + j * len(comp_dict['res']) + k, start_x + mx_height,
-                              start_y + j * len(comp_dict['res']) + k, comp_dict['res'][tp][met],
-                              cell_format=cell_format)
-    return None
-
-
-def write_old_pipe(sheet, pipe_dict, start_x, start_y, cell_format, max_):
-    height, width = get_pipe_sq(pipe_dict)
-    # height = height - 1
-
-    sheet.merge_range(start_x, start_y, start_x + 1, start_y, 'pipeline_index', cell_format)
-    sheet.merge_range(start_x + 2, start_y, start_x + height, start_y, pipe_dict['index'],
-                      cell_format=cell_format)
-
-    x = start_x
-    y = start_y + 1
-    for conf in pipe_dict['components']:
-        write_component(sheet, conf, x, y, height - 1, cell_format)
-        y += 2
-
-    dy = 2*(max_ - len(pipe_dict['components']))  # + 2
-    write_old_metrics(sheet, pipe_dict, x, y + dy, height, cell_format)
-
-    return height
-
-
-def sort_old_pipes(pipes, target_metric):
-    ind_val = []
-    sort_pipes_ = []
-    dtype = [('value', 'float'), ('index', 'int')]
-    for pipe in pipes:
-        if 'test' not in pipe['res'].keys():
-            name = list(pipe['res'].keys())[0]
-        else:
-            name = 'test'
-        rm = pipe['res'][name]
-        ind_val.append((rm[target_metric], pipe['index']))
-
-    ind_val = np.sort(np.array(ind_val, dtype=dtype), order='value')
-    for com in ind_val:
-        ind = com[1]
-        for pipe in pipes:
-            if pipe['index'] == ind:
-                sort_pipes_.append(pipe)
-
-    del pipes, ind_val
-
-    sort_pipes_.reverse()
-
-    return sort_pipes_
-
-
-def build_report(log, target_metric=None, save_path='./'):
-    if isinstance(log, str):
-        with open(log, 'r') as lgd:
-            log_data = json.load(lgd)
-            lgd.close()
-    elif isinstance(log, dict):
-        log_data = log
-    else:
-        raise ValueError("Input must be a strings (path to the json logfile) or a dict with log data,"
-                         " but {} was found.".format(type(log)))
-
-    exp_name = log_data['experiment_info']['exp_name']
-    date = log_data['experiment_info']['date']
-    metrics = log_data['experiment_info']['metrics']
-    if target_metric is None:
-        target_metric = metrics[0]
-
-    workbook = xlsxwriter.Workbook(join(save_path, 'Old_report_{0}_{1}.xlsx'.format(exp_name, date)))
-    worksheet = workbook.add_worksheet("Pipelines_table")
-
-    pipelines = []
-    max_com = 0
-    for model_name, val in log_data['experiments'].items():
-        for num, conf in val.items():
-            pipe = dict(index=int(num), components=[], res={})
-            # max amount of components
-            if max_com < len(conf['config']):
-                max_com = len(conf['config'])
-
-            for component in conf['config']:
-                comp_data = dict()
-                comp_data['name'] = component.pop('component_name')
-
-                if 'save_path' in component.keys():
-                    del component['save_path']
-                if 'load_path' in component.keys():
-                    del component['load_path']
-                if 'scratch_init' in component.keys():
-                    del component['scratch_init']
-                if 'name' in component.keys():
-                    del component['name']
-                if 'id' in component.keys():
-                    del component['id']
-                if 'in' in component.keys():
-                    del component['in']
-                if 'in_y' in component.keys():
-                    del component['in_y']
-                if 'out' in component.keys():
-                    del component['out']
-                if 'main' in component.keys():
-                    del component['main']
-                if 'out' in component.keys():
-                    del component['out']
-                if 'fit_on' in component.keys():
-                    del component['fit_on']
-
-                comp_data['conf'] = component
-                pipe['components'].append(comp_data)
-
-            for name, val_ in conf['results'].items():
-                pipe['res'][name] = val_
-            pipelines.append(pipe)
-
-    # Sorting pipelines
-    pipelines = sort_old_pipes(pipelines, target_metric)
-
-    # Create a format to use in the merged range.
-    cell_format = workbook.add_format({'bold': 1,
-                                       'border': 1,
-                                       'align': 'center',
-                                       'valign': 'vcenter'})
-
-    # Start from the first cell. Rows and columns are zero indexed.
-    row = 0
-    col = 0
-    # Write pipelines table
-    for pipe in pipelines:
-        h = write_old_pipe(worksheet, pipe, row, col, cell_format, max_com)
-        row += h + 1
-
-    # Write graphs (bars)
-    workbook = plot_bar(workbook, pipelines, metrics)
-    workbook.close()
-
-    return None
-
 
 # ________________________________________________Generate new table___________________________________________________
 def get_data(log):
@@ -344,46 +168,46 @@ def write_legend(sheet, row, col, data_tipe, metric_names, max_com, cell_format)
     return row + 1, col
 
 
-def write_dataset_name(sheet, sheet_2, row_1, row_2, col, name, dataset_list, format, max_l, target_metric,
+def write_dataset_name(sheet, sheet_2, row_1, row_2, col, name, dataset_list, format_, max_l, target_metric,
                        metric_names):
     # write dataset name
-    sheet.write(row_1, col, "Dataset name", format)
-    sheet.write(row_1, col + 1, name, format)
+    sheet.write(row_1, col, "Dataset name", format_)
+    sheet.write(row_1, col + 1, name, format_)
     for l, type_d in enumerate(dataset_list[0][0]['res'].keys()):
         p = l*len(metric_names)
-        sheet.merge_range(row_1, max_l + p + 1, row_1, max_l + p + len(metric_names), type_d, format)
+        sheet.merge_range(row_1, max_l + p + 1, row_1, max_l + p + len(metric_names), type_d, format_)
     row_1 += 1
 
     # write dataset name
-    sheet_2.write(row_2, col, "Dataset name", format)
-    sheet_2.write(row_2, col + 1, name, format)
+    sheet_2.write(row_2, col, "Dataset name", format_)
+    sheet_2.write(row_2, col + 1, name, format_)
     for l, type_d in enumerate(dataset_list[0][0]['res'].keys()):
         p = l * len(metric_names)
-        sheet_2.merge_range(row_2, max_l + p + 1, row_2, max_l + p + len(metric_names), type_d, format)
+        sheet_2.merge_range(row_2, max_l + p + 1, row_2, max_l + p + len(metric_names), type_d, format_)
     row_2 += 1
 
-    row_1, row_2 = write_batch_size(row_1, row_2, col, dataset_list, sheet, sheet_2, format, max_l, target_metric,
+    row_1, row_2 = write_batch_size(row_1, row_2, col, dataset_list, sheet, sheet_2, format_, max_l, target_metric,
                                     metric_names)
 
     return row_1, row_2
 
 
-def write_batch_size(row1, row2, col, model_list, sheet, sheet_2, format, max_l, target_metric, metric_names):
+def write_batch_size(row1, row2, col, model_list, sheet, sheet_2, _format, max_l, target_metric, metric_names):
     row_1 = row1
     row_2 = row2
 
     for val_ in model_list:
-        row_1, col = write_legend(sheet, row_1, col, list(val_[0]['res'].keys()), metric_names, max_l, format)
-        row_2, col = write_legend(sheet_2, row_2, col, list(val_[0]['res'].keys()), metric_names, max_l, format)
+        row_1, col = write_legend(sheet, row_1, col, list(val_[0]['res'].keys()), metric_names, max_l, _format)
+        row_2, col = write_legend(sheet_2, row_2, col, list(val_[0]['res'].keys()), metric_names, max_l, _format)
 
         # Write pipelines table
-        row_1 = write_table(sheet, val_, row_1, col, format, max_l)
+        row_1 = write_table(sheet, val_, row_1, col, _format, max_l)
         # Get the best pipelines
         best_pipelines = get_best(val_, target_metric)
         # Sorting pipelines
         best_pipelines = sort_pipes(best_pipelines, target_metric)
         # Write sort pipelines table
-        row_2 = write_table(sheet_2, best_pipelines, row_2, col, format, max_l, write_conf=False)
+        row_2 = write_table(sheet_2, best_pipelines, row_2, col, _format, max_l, write_conf=False)
 
         row_1 += 2
         row_2 += 2
@@ -538,112 +362,35 @@ def build_pipeline_table(log_data, target_metric=None, save_path='./'):
 # ___________________________________________________Generate plots___________________________________________________
 
 
-def results_analizator(log_, target_met='f1_weighted', num_best_=5):
+def get_met_info(log_):
 
-    def analize(log, target_metric, num_best, metrics):
-        models_names = list(log.keys())
+    def analize(log, metrics_: List[str]):
+        main = dict()
 
-        main = {'models': {}, 'best_model': {}}
-        for name in models_names:
-            main['models'][name] = {}
-            for met in metrics:
-                main['models'][name][met] = []
-            main['models'][name]['pipe_conf'] = []
-
-        for name in models_names:
-            for key, val in log[name].items():
-                for met in metrics:
+        for name in list(log.keys()):
+            print(name)
+            main[name] = dict()
+            for met in metrics_:
+                met_max = -np.inf
+                for key, val in log[name].items():
                     if val['results'].get('test') is not None:
-                        main['models'][name][met].append(val['results']['test'][met])
+                        if val['results']['test'][met] > met_max:
+                            met_max = val['results']['test'][met]
                     else:
-                        main['models'][name][met].append(val['results']['valid'][met])
-                main['models'][name]['pipe_conf'].append(val['config'])
-
-        m = 0
-        mxname = ''
-        best_pipeline = None
-        sort_met = {}
-
-        for name in models_names:
-            sort_met[name] = {}
-            for met in metrics:
-                tmp = np.sort(main['models'][name][met])[-num_best:]
-                sort_met[name][met] = tmp[::-1]
-                if tmp[0] > m:
-                    m = tmp[0]
-                    mxname = name
-                    best_pipeline = main['models'][name]['pipe_conf'][main['models'][name][met].index(m)]
-
-        main['sorted'] = sort_met
-
-        main['best_model']['name'] = mxname
-        main['best_model']['score'] = m
-        main['best_model']['target_metric'] = target_metric
-        main['best_model']['best_pipeline'] = best_pipeline
+                        print("Warning pipe with number {} not contain 'test' key in results, and it will not "
+                              "participate in comparing the results to display the final plot.")
+                main[name][met] = met_max
         return main
 
     data = {}
     metrics = log_['experiment_info']['metrics']
     for dataset_name, models_val in log_['experiments'].items():
-        data[dataset_name] = analize(models_val, target_met, num_best_, metrics)
+        data[dataset_name] = analize(models_val, metrics)
     return data
-
-
-def plot_bar(book, data, metrics_):
-    graph_worksheet = book.add_worksheet('Plots')
-    chart = book.add_chart({'type': 'bar'})
-
-    # TODO fix this constrains on numbers of colors
-    colors = ['#FF9900', '#e6ff00', '#ff1a00', '#00ff99', '#9900ff', '#0066ff']
-    pipe_ind = []
-    metric = {}
-    x = 0
-    y = 0
-    for met in metrics_:
-        metric[met] = []
-        for pipe in data:
-            ind = int(pipe['index'])
-            if ind not in pipe_ind:
-                pipe_ind.append(ind)
-
-            if 'test' not in pipe['res']:
-                name_ = list(pipe['res'].keys())[0]
-                metric[met].append(pipe['res'][name_][met])
-            else:
-                metric[met].append(pipe['res']['test'][met])
-
-        # write in book
-        graph_worksheet.merge_range(x, y, x, y+1, met)
-        graph_worksheet.write_column(x+1, y, pipe_ind)
-        graph_worksheet.write_column(x+1, y+1, metric[met])
-
-        # Add a series to the chart.
-        chart.add_series({'name': ['Plots', x, y, x, y+1],
-                          'categories': ['Plots', x+1, y, x+len(pipe_ind), y],
-                          'values': ['Plots', x+1, y+1, x+len(pipe_ind), y+1],
-                          'data_labels': {'value': True, 'legend_key': True, 'position': 'center', 'leader_lines': True,
-                                          'num_format': '#,##0.00', 'font': {'name': 'Consolas'}},
-                          'border': {'color': 'black'},
-                          'fill': {'colors': colors}})
-
-        y += 2
-
-    # Add a chart title and some axis labels.
-    chart.set_title({'name': 'Results bar'})
-    chart.set_x_axis({'name': 'Scores'})
-    chart.set_y_axis({'name': 'Pipelines'})
-
-    # Set an Excel chart style.
-    chart.set_style(11)
-
-    # Insert the chart into the worksheet.
-    graph_worksheet.insert_chart('H1', chart)  # , {'x_offset': 25, 'y_offset': 10}
-    return book
 
 
 def plot_res(info, name, savepath='./', save=True, width=0.2, fheight=8, fwidth=12, ext='png'):
     # prepeare data
-    info = info['sorted']
 
     bar_list = []
     models = list(info.keys())
@@ -653,7 +400,7 @@ def plot_res(info, name, savepath='./', save=True, width=0.2, fheight=8, fwidth=
     for met in metrics:
         tmp = []
         for model in models:
-            tmp.append(info[model][met][0])
+            tmp.append(info[model][met])
         bar_list.append(tmp)
 
     x = np.arange(len(models))
@@ -725,7 +472,7 @@ def results_visualization(root, savepath, plot, target_metric=None):
     # build_report(log, target_metric=target_metric, save_path=root)
     if plot:
         # scrub data from log for image creating
-        info = results_analizator(log, target_metric)
+        info = get_met_info(log)
         # plot histograms
         for dataset_name, dataset_val in info.items():
             plot_res(dataset_val, dataset_name, savepath)
