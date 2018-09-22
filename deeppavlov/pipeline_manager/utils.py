@@ -211,7 +211,7 @@ def build_report(log, target_metric=None, save_path='./'):
                 max_com = len(conf['config'])
 
             for component in conf['config']:
-                comp_data = {}
+                comp_data = dict()
                 comp_data['name'] = component.pop('component_name')
 
                 if 'save_path' in component.keys():
