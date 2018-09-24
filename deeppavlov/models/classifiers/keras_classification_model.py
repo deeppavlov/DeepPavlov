@@ -34,7 +34,6 @@ from deeppavlov.models.tokenizers.nltk_tokenizer import NLTKTokenizer
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.layers.keras_layers import additive_self_attention, multiplicative_self_attention
 
-from keras import backend as K
 
 log = get_logger(__name__)
 
@@ -64,6 +63,8 @@ class KerasClassificationModel(KerasModel):
                 If `last_layer_activation` is `softmax` (not multi-label classification), assign to 1.
         classes: list of classes names presented in the dataset
                 (in config it is determined as keys of vocab over `y`)
+        restore_lr: in case of loading pre-trained model \
+                whether to init learning rate with the final learning rate value from saved opt
 
     Attributes:
         opt: dictionary with all model parameters
@@ -84,6 +85,7 @@ class KerasClassificationModel(KerasModel):
                  lear_rate: float = 0.01, lear_rate_decay: float = 0.,
                  last_layer_activation="sigmoid",
                  confident_threshold: float = 0.5,
+                 restore_lr: bool = False,
                  **kwargs):
         """
         Initialize and train vocabularies, initializes embedder, tokenizer, and then initialize model using parameters
@@ -93,7 +95,7 @@ class KerasClassificationModel(KerasModel):
                          optimizer=optimizer, loss=loss,
                          lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,
                          last_layer_activation=last_layer_activation, confident_threshold=confident_threshold,
-                         **kwargs)  # self.opt = copy(kwargs) initialized in here
+                         restore_lr=restore_lr, **kwargs)
 
         self.classes = list(np.sort(np.array(list(self.opt.get('classes')))))
         self.opt['classes'] = self.classes
@@ -101,24 +103,27 @@ class KerasClassificationModel(KerasModel):
         if self.n_classes == 0:
             ConfigError("Please, provide vocabulary with considered intents.")
 
-        self.opt['embedding_size'] = embedding_size
+        self.model = self.load(model_name=model_name)
+        # in case of pre-trained after loading in self.opt we have stored parameters
+        # now we can restore lear rate if needed
+        if restore_lr:
+            lear_rate = self.opt.get("final_lear_rate", lear_rate)
 
-        # Parameters required to init model
-        params = {"model_name": self.opt.get('model_name'),
-                  "optimizer_name": self.opt.get('optimizer'),
-                  "loss_name": self.opt.get('loss'),
-                  "lear_rate": self.opt.get('lear_rate'),
-                  "lear_rate_decay": self.opt.get('lear_rate_decay')}
+        self.model = self.compile(self.model, optimizer_name=optimizer, loss_name=loss,
+                                  lear_rate=lear_rate, lear_rate_decay=lear_rate_decay)
 
-        self.model = self.load(**params)
-        self._change_not_fixed_params(text_size=text_size, embedding_size=embedding_size, model_name=model_name,
+        self._change_not_fixed_params(text_size=text_size, embedding_size=embedding_size,
+                                      model_name=model_name,
                                       optimizer=optimizer, loss=loss,
                                       lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,
                                       last_layer_activation=last_layer_activation,
                                       confident_threshold=confident_threshold,
+                                      restore_lr=restore_lr,
                                       **kwargs)
 
-        print("Model was successfully initialized!\nModel summary:\n{}".format(self.model.summary()))
+        summary = ['Model was successfully initialized!', 'Model summary:']
+        self.model.summary(print_fn=summary.append)
+        log.info('\n'.join(summary))
 
     def _change_not_fixed_params(self, **kwargs) -> None:
         """
@@ -175,7 +180,6 @@ class KerasClassificationModel(KerasModel):
         Returns:
             metrics values on the given batch
         """
-        K.set_session(self.sess)
         features = self.pad_texts(texts)
         onehot_labels = labels2onehot(labels, classes=self.classes)
         metrics_values = self.model.train_on_batch(features, onehot_labels)
@@ -193,7 +197,6 @@ class KerasClassificationModel(KerasModel):
             metrics values on the given batch, if labels are given
             predictions, otherwise
         """
-        K.set_session(self.sess)
         if labels:
             features = self.pad_texts(texts)
             onehot_labels = labels2onehot(labels, classes=self.classes)

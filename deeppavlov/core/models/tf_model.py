@@ -91,13 +91,11 @@ class TFModel(NNModel, metaclass=TfModelMeta):
             opt_scope = tf.variable_scope(optimizer_scope_name)
         with opt_scope:
             if learnable_scopes is None:
-                variables_to_train = tf.global_variables()
+                variables_to_train = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
             else:
                 variables_to_train = []
                 for scope_name in learnable_scopes:
-                    for var in tf.global_variables():
-                        if scope_name in var.name:
-                            variables_to_train.append(var)
+                    variables_to_train.extend(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope_name))
 
             if optimizer is None:
                 optimizer = tf.train.AdamOptimizer
