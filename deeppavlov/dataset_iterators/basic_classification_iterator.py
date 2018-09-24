@@ -36,8 +36,9 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
         field_to_split: name of field (out of ``"train", "valid", "test"``) to split
         split_fields: list of fields (out of ``"train", "valid", "test"``) to which save splitted field
         split_proportions: list of corresponding proportions for splitting
-        seed: random seed
+        seed: random seed for iterating
         shuffle: whether to shuffle examples in batches
+        split_seed: random seed for splitting dataset, if ``split_seed`` is None, division is based on `seed`.
         *args: arguments
         **kwargs: arguments
 
@@ -47,7 +48,7 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
     def __init__(self, data: dict,
                  fields_to_merge: List[str] = None, merged_field: str = None,
                  field_to_split: str = None, split_fields: List[str] = None, split_proportions: List[float] = None,
-                 seed: int = None, shuffle: bool = True,
+                 seed: int = None, shuffle: bool = True, split_seed: int=None,
                  *args, **kwargs):
         """
         Initialize dataset using data from DatasetReader,
@@ -71,12 +72,13 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
                 self._split_data(field_to_split=field_to_split,
                                  split_fields=split_fields,
                                  split_proportions=[float(s) for s in
-                                                    split_proportions])
+                                                    split_proportions],
+                                 split_seed=split_seed)
             else:
                 raise IOError("Given field to split BUT not given names of split fields")
 
     def _split_data(self, field_to_split: str = None, split_fields: List[str] = None,
-                    split_proportions: List[float] = None) -> bool:
+                    split_proportions: List[float] = None, split_seed: int=None) -> bool:
         """
         Split given field of dataset to the given list of fields with corresponding proportions
 
@@ -84,16 +86,20 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
             field_to_split: field name (out of ``"train", "valid", "test"``) which to split
             split_fields: list of names (out of ``"train", "valid", "test"``) of fields to which split
             split_proportions: corresponding proportions
+            split_seed: random seed for splitting dataset
 
         Returns:
             None
         """
+        if split_seed is None:
+            split_seed = self.random.randint(0, 10000)
         data_to_div = self.data[field_to_split].copy()
         data_size = len(self.data[field_to_split])
         for i in range(len(split_fields) - 1):
             self.data[split_fields[i]], data_to_div = train_test_split(
                 data_to_div,
-                test_size=len(data_to_div) - int(data_size * split_proportions[i]))
+                test_size=len(data_to_div) - int(data_size * split_proportions[i]),
+                random_state=split_seed)
             self.data[split_fields[-1]] = data_to_div
         return True
 
