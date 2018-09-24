@@ -225,3 +225,6 @@ class Seq2SeqGoalOrientedBot(NNModel):
 
     def load(self):
         pass
+
+    def destroy(self):
+        self.embedder.destroy()

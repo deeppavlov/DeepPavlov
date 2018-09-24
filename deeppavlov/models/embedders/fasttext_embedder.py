@@ -153,3 +153,6 @@ class FasttextEmbedder(Component, Serializable):
             return np.zeros(self.dim, dtype=np.float32)
 
         return embedded_tokens
+
+    def destroy(self):
+        del self.model

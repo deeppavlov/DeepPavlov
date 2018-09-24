@@ -1,2 +1,2 @@
 pybind11==2.2.3
-git+https://github.com/facebookresearch/fastText.git@25d0bb04bf43d8b674fe9ae5722ef65a0856f5d6#egg=fastText==0.8.22
+git+https://github.com/deepmipt/fastText.git#egg=fastText==0.8.22
