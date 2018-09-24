@@ -79,12 +79,12 @@ def interact_alice(model, params_names):
             memory[session_id] = params
             response['response']['text'] = 'Пожалуйста, введите параметр ' + params_names[len(params)]
             response['response']['end_session'] = False
-            return response, 200
+            return jsonify(response), 200
     else:
         params = text
 
     response['response']['text'] = str(model([params])[0])
-    return response, 200
+    return jsonify(response), 200
 
 
 def interact(model, params_names):
