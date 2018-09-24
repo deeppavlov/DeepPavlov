@@ -54,9 +54,7 @@ parser.add_argument("-s", "--ms-secret", help="microsoft bot framework app secre
 
 parser.add_argument("--multi-instance", action="store_true", help="allow rising of several instances of the model")
 parser.add_argument("--stateful", action="store_true", help="interact with a stateful model")
-parser.add_argument("--use-history", action="store_true", help="feed model with an interaction history")
-
-
+parser.add_argument("--rich-content", action="store_true", help="enable rich content exchange with model")
 
 
 def find_config(pipeline_config_path: str):
@@ -82,7 +80,7 @@ def main():
 
     multi_instance = args.multi_instance
     stateful = args.stateful
-    use_history = args.use_history
+    rich_content = args.rich_content
 
     if args.mode == 'train':
         train_evaluate_model_from_config(pipeline_config_path)
@@ -108,7 +106,7 @@ def main():
                                        app_secret=ms_secret,
                                        multi_instance=multi_instance,
                                        stateful=stateful,
-                                       use_history=use_history)
+                                       rich_content=rich_content)
     elif args.mode == 'riseapi':
         start_model_server(pipeline_config_path)
     elif args.mode == 'predict':

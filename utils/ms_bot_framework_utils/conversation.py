@@ -1,19 +1,16 @@
 import threading
-from collections import namedtuple
+from copy import deepcopy
 from urllib.parse import urljoin
 
 import requests
 
 from deeppavlov.core.common.log import get_logger
 
-
 log = get_logger(__name__)
-
-Observation = namedtuple('Observation', ['content', 'state', 'conversation_id'])
 
 
 class Conversation:
-    def __init__(self, bot, model, activity: dict, conversation_key, conversation_lifetime: int):
+    def __init__(self, bot, model, activity: dict, conversation_key):
         self.bot = bot
         self.model = model
         self.key = conversation_key
@@ -24,11 +21,17 @@ class Conversation:
         self.channel_id = activity['channelId']
         self.conversation_id = activity['conversation']['id']
 
+        self.out_gateway = OutGateway(self)
+
+        self.rich_content = self.bot.config['rich_content']
+        self.stateful = self.bot.config['stateful']
+        self.in_x = self.model.in_x[1:] if self.stateful else self.model.in_x
+
         self.buffer = []
         self.expect = []
         self.multiargument_initiated = False
 
-        self.conversation_lifetime = conversation_lifetime
+        self.conversation_lifetime = self.bot.config['conversation_lifetime']
         self.timer = None
         self._start_timer()
 
@@ -40,7 +43,6 @@ class Conversation:
         self.handled_activities = {
             'message': self._handle_message
         }
-
 
     def _start_timer(self):
         self.timer = threading.Timer(self.conversation_lifetime, self._self_destruct)
@@ -60,36 +62,83 @@ class Conversation:
 
         if activity_type in self.handled_activities.keys():
             self.handled_activities[activity_type](activity)
+        else:
+            log.warning(f'Unsupported activity type: {activity_type}, activity id: {activity_id}')
 
-    def _send_activity(self, url: str, out_activity: dict):
-        authorization = f"{self.bot.access_info['token_type']} {self.bot.access_info['access_token']}"
-        headers = {
-            'Authorization': authorization,
-            'Content-Type': 'application/json'
-        }
+        self._rearm_self_destruct()
 
-        response = self.http_session.post(
-            url=url,
-            json=out_activity,
-            headers=headers)
+    def _infer(self, raw_observation: [tuple, str]):
+        if self.stateful:
+            content = tuple([raw_observation]) if not isinstance(raw_observation, tuple) else raw_observation
+            observation = [tuple([self.key]) + content]
+        else:
+            observation = [raw_observation]
 
-        log.debug(f'Sent activity to the MSBotFramework server. '
-                  f'Response code: {response.status_code}, response contents: {response.json()}')
+        prediction = self.model(observation)
 
-    def _send_message(self, message_text: str, in_activity: dict = None):
-        service_url = self.service_url
+        return prediction
 
-        out_activity = {
-            'type': 'message',
+    def _send_infer_results(self, prediction: list, in_activity: dict):
+        pred = prediction[0]
+
+        if self.rich_content:
+            for rich_message in pred:
+                if rich_message['type'] == 'text':
+                    self.out_gateway.send_plain_text(rich_message['value'], in_activity)
+                elif rich_message['type'] == 'button':
+                    self.out_gateway.send_buttons(rich_message['value'], in_activity)
+        else:
+            self.out_gateway.send_plain_text(str(pred), in_activity)
+
+    def _handle_usupported(self, in_activity: dict):
+        activity_type = in_activity['type']
+        self.out_gateway.send_plain_text(f'Unsupported kind of {activity_type} activity!')
+        log.warn(f'Recived message with unsupported type: {str(in_activity)}')
+
+    def _handle_message(self, in_activity: dict):
+        if 'text' in in_activity.keys():
+            in_text = in_activity['text']
+
+            if len(self.in_x) > 1:
+                if not self.multiargument_initiated:
+                    self.multiargument_initiated = True
+                    self.expect[:] = list(self.in_x)
+                    self.out_gateway.send_plain_text(f'Please, send {self.expect.pop(0)}')
+                else:
+                    self.buffer.append(in_text)
+
+                    if self.expect:
+                        self.out_gateway.send_plain_text(f'Please, send {self.expect.pop(0)}', in_activity)
+                    else:
+                        prediction = self._infer(tuple(self.buffer))
+                        self._send_infer_results(prediction, in_activity)
+
+                        self.buffer = []
+                        self.expect[:] = list(self.in_x)
+                        self.out_gateway.send_plain_text(f'Please, send {self.expect.pop(0)}', in_activity)
+            else:
+                prediction = self._infer(in_text)
+                self._send_infer_results(prediction, in_activity)
+        else:
+            self._handle_usupported(in_activity)
+
+
+class OutGateway:
+    def __init__(self, conversation: Conversation):
+        self.conversation = conversation
+        self.service_url = self.conversation.service_url
+        self.activity_template = {
             'from': {
-                'id': self.bot_id,
-                'name': self.bot_name
+                'id': self.conversation.bot_id,
+                'name': self.conversation.bot_name
             },
             'conversation': {
-                'id': self.conversation_id
-            },
-            'text': message_text
+                'id': self.conversation.conversation_id
+            }
         }
+
+    def _send_activity(self, out_activity: dict, in_activity: dict = None):
+        service_url = self.service_url
 
         if in_activity:
             try:
@@ -112,51 +161,51 @@ class Conversation:
             except KeyError:
                 pass
 
-        url = urljoin(service_url, f"v3/conversations/{self.conversation_id}/activities")
+        url = urljoin(service_url, f"v3/conversations/{self.conversation.conversation_id}/activities")
 
-        self._send_activity(url, out_activity)
+        authorization = f"{self.conversation.bot.access_info['token_type']} " \
+                        f"{self.conversation.bot.access_info['access_token']}"
+        headers = {
+            'Authorization': authorization,
+            'Content-Type': 'application/json'
+        }
 
-    def _handle_message(self, in_activity: dict):
+        response = self.conversation.http_session.post(
+            url=url,
+            json=out_activity,
+            headers=headers)
 
-        def infer(content):
-            observation = Observation(content=content,
-                                      state=None,
-                                      conversation_id=None)
-            return self.model.infer(observation)
+        log.debug(f'Sent activity to the MSBotFramework server. '
+                  f'Response code: {response.status_code}, response contents: {response.json()}')
 
-        def handle_text():
-            in_text = in_activity['text']
+    def send_plain_text(self, text: str, in_activity: dict = None):
+        out_activity = deepcopy(self.activity_template)
+        out_activity['type'] = 'message'
+        out_activity['text'] = text
+        self._send_activity(out_activity, in_activity)
 
-            if len(self.model.in_x) > 1:
-                if not self.multiargument_initiated:
-                    self.multiargument_initiated = True
-                    self.expect[:] = list(self.model.in_x)
-                    self._send_message(f'Please, send {self.expect.pop(0)}')
-                else:
-                    self.buffer.append(in_text)
+    def send_buttons(self, buttons: list, in_activity: dict = None):
+        out_activity = deepcopy(self.activity_template)
+        out_activity['type'] = 'message'
 
-                    if self.expect:
-                        self._send_message(f'Please, send {self.expect.pop(0)}', in_activity)
-                    else:
-                        pred = infer([tuple(self.buffer)])
-                        out_text = str(pred[0])
-                        self._send_message(out_text, in_activity)
+        # Creating RichCard with CardActions(buttons) with postBack value return
+        rich_card = {
+            'buttons': []
+        }
 
-                        self.buffer = []
-                        self.expect[:] = list(self.model.in_x)
-                        self._send_message(f'Please, send {self.expect.pop(0)}', in_activity)
-            else:
-                pred = infer([in_text])
-                out_text = str(pred[0])
-                self._send_message(out_text, in_activity)
+        for button in buttons:
+            card_action = {}
+            card_action['type'] = 'postBack'
+            card_action['title'] = button['name']
+            card_action['value'] = button['callback']
+            rich_card['buttons'].append(card_action)
 
-        def handle_unsupported():
-            self._send_message('Unsupported message type!', in_activity)
-            log.warn(f'Recived message with unsupported type: {str(in_activity)}')
+        attachments = [
+            {
+                "contentType": "application/vnd.microsoft.card.thumbnail",
+                "content": rich_card
+            }
+        ]
 
-        self._rearm_self_destruct()
-
-        if 'text' in in_activity.keys():
-            handle_text()
-        else:
-            handle_unsupported()
+        out_activity['attachments'] = attachments
+        self._send_activity(out_activity, in_activity)
