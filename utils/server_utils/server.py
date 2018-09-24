@@ -49,6 +49,41 @@ def get_server_params(server_config_path, model_config_path):
     return server_params
 
 
+memory = {}
+
+
+def interact_alice(model, params_names):
+    data = request.get_json()
+    text = data['request']['command']
+
+    session_id = data['session']['session_id']
+    message_id = data['session']['message_id']
+    user_id = data['session']['user_id']
+
+    response = {
+        'response': {
+            'end_session': False
+        },
+        "session": {
+            'session_id': session_id,
+            'message_id': message_id,
+            'user_id': user_id
+        },
+        'version': '1.0'
+    }
+
+    if len(params_names) > 1:
+        params = memory.pop(session_id, []) + [text]
+
+        if len(params) < len(params_names):
+            memory[session_id] = params
+            response['response']['text'] = 'Пожалуйста, введите параметр ' + params_names[len(params)]
+            return response, 200
+
+        response['response']['text'] = str(model([params])[0])
+        return response, 200
+
+
 def interact(model, params_names):
     if not request.is_json:
         log.error("request Content-Type header is not application/json")
