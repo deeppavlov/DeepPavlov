@@ -194,7 +194,7 @@ class PipelineManager:
 
         # visualization of results
         path = join(self.root, self.date, self.exp_name)
-        results_visualization(path, join(path, 'images'), self.plot, self.target_metric)
+        results_visualization(path, self.plot, target_metric=self.target_metric)
         return None
 
     def test(self):
