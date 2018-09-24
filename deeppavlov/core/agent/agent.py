@@ -1,35 +1,9 @@
 from collections import defaultdict
 from typing import List
-import random
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.skill.skill import Skill
-
-
-class RandomProcessor(Component):
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def __call__(self, utterances, batch_history, *responses):
-        return [random.choice([t for t, sc in r if t]) for r in zip(*responses)]
-
-
-class HighestConfidenceProcessor(Component):
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def __call__(self, utterances, batch_history, *responses):
-        responses, confidences = zip(*[zip(*r) for r in responses])
-        indexes = [c.index(max(c)) for c in zip(*confidences)]
-        return [responses[i] for i, *responses in zip(indexes, *responses)]
-
-
-class TransparentFilter(Component):
-    def __init__(self, skills_count, *args, **kwargs):
-        self.size = skills_count
-
-    def __call__(self, utterances, batch_history):
-        return [[True] * self.size] * len(utterances)
+from deeppavlov.agents.default_agent import TransparentFilter, HighestConfidenceProcessor
 
 
 class Agent(Component):
