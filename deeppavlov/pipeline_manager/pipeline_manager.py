@@ -25,6 +25,8 @@ from shutil import rmtree
 from typing import Union, Dict
 
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
+from deeppavlov.core.commands.train import read_data_by_config, get_iterator_from_config
+from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.pipeline_manager.pipegen import PipeGen
@@ -41,7 +43,6 @@ class PipelineManager:
             config_path: path to config file.
             exp_name: name of the experiment.
             date: date of the experiment.
-            mode: train or evaluate - the trigger that determines the operation of the algorithm
             info: some additional information that you want to add to the log, the content of the dictionary
                   does not affect the algorithm
             root: root path, the root path where the report will be generated and saved checkpoints
@@ -62,7 +63,6 @@ class PipelineManager:
                  config_path: str,
                  exp_name: str,
                  date: Union[str, None] = None,
-                 mode: str = 'train',
                  info: Dict = None,
                  root: str = './experiments/',
                  cross_val: bool = False,
@@ -79,7 +79,6 @@ class PipelineManager:
         self.config_path = config_path
         self.exp_name = exp_name
         self.save_best = save_best
-        self.mode = mode
         self.info = info
         self.cross_validation = cross_val
         self.k_fold = k_fold
@@ -101,6 +100,7 @@ class PipelineManager:
         self.logger = Logger(exp_name, root, self.info, self.date, self.plot)
         self.start_exp = time()
         # start test
+        self.dataset_composition = dict(train=False, valid=False, test=False)
         self.test()
 
     def run(self):
@@ -139,14 +139,7 @@ class PipelineManager:
                 cv_score = calc_cv_score(pipe, n_folds=self.k_fold)
                 results = {"test": cv_score}
             else:
-                if self.mode == 'train':
-                    results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
-
-                elif self.mode == 'evaluate':
-                    results = train_evaluate_model_from_config(pipe, to_train=False, to_validate=False)
-                else:
-                    raise ValueError("Only 'train' and 'evaluate' mode are available,"
-                                     " but {0} was found.".format(self.mode))
+                results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
 
             if self.save_best:
                 if self.logger.dataset not in dataset_res.keys():
@@ -216,34 +209,74 @@ class PipelineManager:
         # Start generating pipelines configs
         print('[ Test start - {0} pipes, will be run]'.format(len_gen))
         for i, pipe in enumerate(tqdm(pipeline_generator(), total=len_gen)):
-            if pipe['dataset_reader']['name'] == 'basic_classification_reader':
-                pipe['dataset_reader'] = {"name": "basic_classification_reader",
-                                          "x": "text",
-                                          "y": "target",
-                                          "data_path": '../tests/test_data/classification_data/'}
-                pipe['dataset_iterator'] = {"name": "basic_classification_iterator",
-                                            "seed": 42,
-                                            "field_to_split": "train",
-                                            "split_fields": ["train", "valid"],
-                                            "split_proportions": [0.9, 0.1]}
-            else:
-                raise ConfigError("Dataset reader is not intended for classification task."
-                                  "Name of dataset_reader must be 'basic_classification_reader',"
-                                  "but {} was found in config.".format(pipe['dataset_reader']['name']))
-
-            if self.mode == 'train':
-                results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=False)
-            elif self.mode == 'evaluate':
-                results = train_evaluate_model_from_config(pipe, to_train=False, to_validate=False)
-            else:
-                raise ValueError("Only 'train' and 'evaluate' mode are available, but {0} was found.".format(self.mode))
-
+            data_iterator_i = self.test_dataset_reader_and_iterator(pipe, i)
+            results = train_evaluate_model_from_config(pipe, iterator=data_iterator_i, to_train=True, to_validate=False)
             del results
 
         # del all tmp files in save path
         rmtree(join(self.save_path, "tmp"))
         print('[ The test was successful ]')
         return None
+
+    def test_dataset_reader_and_iterator(self, config, i):
+        # create and test data generator and data iterator
+        data = read_data_by_config(config)
+        if i == 0:
+            for dtype in self.dataset_composition.keys():
+                if len(data.get(dtype, [])) != 0:
+                    self.dataset_composition[dtype] = True
+        else:
+            for dtype in self.dataset_composition.keys():
+                if len(data.get(dtype, [])) == 0 and self.dataset_composition[dtype]:
+                    raise ConfigError("The file structure in the {0} dataset differs "
+                                      "from the rest datasets.".format(config['dataset_reader']['data_path']))
+
+        iterator = get_iterator_from_config(config, data)
+        if isinstance(iterator, DataFittingIterator):
+            raise ConfigError("Instance of a class 'DataFittingIterator' is not supported.")
+        else:
+            if config.get('train', None):
+                if config['train']['test_best'] and len(iterator.data['test']) == 0:
+                    raise ConfigError("The 'test' part of dataset is empty, but 'test_best' in train config is 'True'."
+                                      " Please check the dataset_iterator config.")
+
+                if (config['train']['validate_best'] or config['train'].get('val_every_n_epochs', False) > 0) and \
+                        len(iterator.data['valid']) == 0:
+                    raise ConfigError("The 'valid' part of dataset is empty, but 'valid_best' in train config is 'True'"
+                                      " or 'val_every_n_epochs' > 0. Please check the dataset_iterator config.")
+            else:
+                if len(iterator.data['test']) == 0:
+                    raise ConfigError("The 'test' part of dataset is empty as a 'train' part of config file, "
+                                      "but default value of 'test_best' is 'True'. "
+                                      "Please check the dataset_iterator config.")
+
+        # get a tiny data from dataset
+        if len(iterator.data['train']) <= 100:
+            print("!!!!!!!!!!!!! WARNING !!!!!!!!!!!!! Length of 'train' part dataset <= 100. "
+                  "Please check the dataset_iterator config")
+            tiny_train = copy(iterator.data['train'])
+        else:
+            tiny_train = copy(iterator.data['train'][:100])
+        iterator.train = tiny_train
+
+        if len(iterator.data['valid']) <= 20:
+            tiny_valid = copy(iterator.data['valid'])
+        else:
+            tiny_valid = copy(iterator.data['valid'][:20])
+        iterator.valid = tiny_valid
+
+        if len(iterator.data['test']) <= 20:
+            tiny_test = copy(iterator.data['test'])
+        else:
+            tiny_test = copy(iterator.data['test'][:20])
+        iterator.test = tiny_test
+
+        iterator.data = {'train': tiny_train,
+                         'valid': tiny_valid,
+                         'test': tiny_test,
+                         'all': tiny_train + tiny_valid + tiny_test}
+
+        return iterator
 
     def save_config(self, conf, dataset_name, i) -> None:
         """

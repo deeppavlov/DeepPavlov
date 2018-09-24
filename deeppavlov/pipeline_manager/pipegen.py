@@ -311,6 +311,7 @@ class PipeGen:
             config: dict; the chainer content.
             n: int; pipeline number
             save_path: str; path to root folder where will be saved all checkpoints
+            dataset_name: str; name of dataset
             test_mode: bool; trigger that determine a regime of pipeline manager work
 
         Returns:

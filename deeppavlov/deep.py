@@ -129,8 +129,8 @@ def main():
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'enumerate':
-        manager = PipelineManager(config_path=pipeline_config_path, exp_name=args.exp_name, mode='train',
-                                  root=args.root, cross_val=args.cross_val, k_fold=args.folds, search=args.search,
+        manager = PipelineManager(config_path=pipeline_config_path, exp_name=args.exp_name, root=args.root,
+                                  cross_val=args.cross_val, k_fold=args.folds, search=args.search,
                                   hyper_search=args.hyper_search, sample_num=args.sample_num,
                                   target_metric=args.target_metric, plot=args.plot, save_best=args.save_best)
         manager.run()
