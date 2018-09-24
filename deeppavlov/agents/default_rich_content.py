@@ -11,10 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 
 
 class RichItem(metaclass=ABCMeta):
+    @abstractmethod
     def json(self) -> [list, dict]:
         return None
 
@@ -30,9 +31,6 @@ class RichControl(RichItem, metaclass=ABCMeta):
         self.control_type = control_type
         self.content = None
         self.control_json = {'type': control_type}
-
-    def json(self) -> [list, dict]:
-        return self.control_json
 
 
 class RichMessage(RichItem):
@@ -72,8 +70,10 @@ class Button(RichControl):
         self.callback = callback
 
     def json(self):
-        self.control_json['name'] = self.name
-        self.control_json['callback'] = self.callback
+        content = {}
+        content['name'] = self.name
+        content['callback'] = self.callback
+        self.control_json['content'] = content
         return self.control_json
 
 
