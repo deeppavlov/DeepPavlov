@@ -61,9 +61,6 @@ parser.add_argument("-r", "--root", dest="root", default='./download/experiments
                     help="folder where you will save the results and control points", type=str)
 parser.add_argument("-p", "--plot", dest="plot", default=False,
                     help="If true it is plot a histograms with results", type=bool)
-parser.add_argument("-sr", "--search", dest="search", default=True, help="search trigger", type=bool)
-parser.add_argument("-hp", "--hyper", dest="hyper_search", default='random',
-                    help="type of hyper search 'grid' or 'random'", type=str)
 parser.add_argument("-cv", "--cross-val", dest="cross_val", default=False, help="cross validation", type=bool)
 parser.add_argument("-sn", "--sample-num", dest="sample_num", default=10,
                     help="Number of generated samples if you use random search", type=int)
@@ -130,8 +127,7 @@ def main():
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'enumerate':
         manager = PipelineManager(config_path=pipeline_config_path, exp_name=args.exp_name, root=args.root,
-                                  cross_val=args.cross_val, k_fold=args.folds, search=args.search,
-                                  hyper_search=args.hyper_search, sample_num=args.sample_num,
+                                  cross_val=args.cross_val, k_fold=args.folds, sample_num=args.sample_num,
                                   target_metric=args.target_metric, plot=args.plot, save_best=args.save_best)
         manager.run()
     elif args.mode == 'install':
