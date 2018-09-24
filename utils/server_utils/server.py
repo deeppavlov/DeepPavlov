@@ -62,7 +62,7 @@ def interact_alice(model, params_names):
 
     response = {
         'response': {
-            'end_session': False
+            'end_session': True
         },
         "session": {
             'session_id': session_id,
@@ -78,10 +78,13 @@ def interact_alice(model, params_names):
         if len(params) < len(params_names):
             memory[session_id] = params
             response['response']['text'] = 'Пожалуйста, введите параметр ' + params_names[len(params)]
+            response['response']['end_session'] = False
             return response, 200
+    else:
+        params = text
 
-        response['response']['text'] = str(model([params])[0])
-        return response, 200
+    response['response']['text'] = str(model([params])[0])
+    return response, 200
 
 
 def interact(model, params_names):
@@ -123,7 +126,7 @@ def interact(model, params_names):
     return jsonify(result), 200
 
 
-def start_model_server(model_config_path):
+def start_model_server(model_config_path, alice=False):
     server_config_dir = Path(__file__).parent
     server_config_path = server_config_dir.parent / SERVER_CONFIG_FILENAME
 
@@ -135,7 +138,11 @@ def start_model_server(model_config_path):
     model_endpoint = server_params['model_endpoint']
     model_args_names = server_params['model_args_names']
 
-    endpoind_description = {
+    @app.route('/')
+    def index():
+        return redirect('/apidocs/')
+
+    endpoint_description = {
         'description': 'A model endpoint',
         'parameters': [
             {
@@ -152,13 +159,35 @@ def start_model_server(model_config_path):
         }
     }
 
-    @app.route('/')
-    def index():
-        return redirect('/apidocs/')
+    if alice:
+        endpoint_description['parameters'][0]['example'] = {
+            'meta': {
+                'locale': 'ru-RU',
+                'timezone': 'Europe/Moscow',
+                "client_id": 'ru.yandex.searchplugin/5.80 (Samsung Galaxy; Android 4.4)'
+            },
+            'request': {
+                'command': 'где ближайшее отделение',
+                'original_utterance': 'Алиса спроси у Сбербанка где ближайшее отделение',
+                'type': 'SimpleUtterance',
+                'markup': {
+                    'dangerous_context': True
+                },
+                'payload': {}
+            },
+            'session': {
+                'new': True,
+                'message_id': 4,
+                'session_id': '2eac4854-fce721f3-b845abba-20d60',
+                'skill_id': '3ad36498-f5rd-4079-a14b-788652932056',
+                'user_id': 'AC9WC3DF6FCE052E45A4566A48E6B7193774B84814CE49A922E163B8B29881DC'
+            },
+            'version': '1.0'
+        }
 
     @app.route(model_endpoint, methods=['POST'])
-    @swag_from(endpoind_description)
+    @swag_from(endpoint_description)
     def answer():
-        return interact(model, model_args_names)
+        return interact_alice(model, model_args_names) if alice else interact(model, model_args_names)
 
     app.run(host=host, port=port, threaded=False)
