@@ -54,7 +54,7 @@ memory = {}
 
 def interact_alice(model, params_names):
     data = request.get_json()
-    text = data['request']['command']
+    text = data['request']['command'].strip()
 
     session_id = data['session']['session_id']
     message_id = data['session']['message_id']
@@ -72,16 +72,18 @@ def interact_alice(model, params_names):
         'version': '1.0'
     }
 
-    if len(params_names) > 1:
-        params = memory.pop(session_id, []) + [text]
+    params = memory.pop(session_id, [])
+    if text:
+        params += [text]
 
-        if len(params) < len(params_names):
-            memory[session_id] = params
-            response['response']['text'] = 'Пожалуйста, введите параметр ' + params_names[len(params)]
-            response['response']['end_session'] = False
-            return jsonify(response), 200
-    else:
-        params = text
+    if len(params) < len(params_names):
+        memory[session_id] = params
+        response['response']['text'] = 'Пожалуйста, введите параметр ' + params_names[len(params)]
+        response['response']['end_session'] = False
+        return jsonify(response), 200
+
+    if len(params) == 1:
+        params = params[0]
 
     response['response']['text'] = str(model([params])[0])
     return jsonify(response), 200
