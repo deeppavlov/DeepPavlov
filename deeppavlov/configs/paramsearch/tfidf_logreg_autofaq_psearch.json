@@ -1,0 +1,64 @@
+{
+  "dataset_reader": {
+    "name": "faq_reader",
+    "x_col_name": "Question",
+    "y_col_name": "Answer",
+    "data_url": "http://files.deeppavlov.ai/faq/school/faq_school.csv"
+  },
+  "dataset_iterator": {
+    "name": "data_learning_iterator"
+  },
+
+  "chainer": {
+    "in": "q",
+    "pipe": [
+      {
+        "name": "ru_tokenizer",
+        "in": "q",
+        "lemmas": true,
+        "out": "q_token_lemmas"
+      },
+      {
+        "id": "vectorizer",
+        "name": "tfidf_vectorizer",
+        "in": "q_token_lemmas",
+        "load_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "out": "q_vect"
+      },
+      {
+        "name": "logreg_classifier",
+        "in": "q_vect",
+        "fit_on": ["q_vect", "y"],
+        "top_n": 1,
+        "c": {"search_choice": [1, 10, 100, 1000]},
+        "penalty": {"search_choice": ["l1", "l2"]},
+        "save_path": "faq/tfidf_logreg_classifier.pkl",
+        "load_path": "faq/tfidf_logreg_classifier.pkl",
+        "out": ["answer", "score"]
+      }
+    ],
+    "out": "answer"
+  },
+
+  "train": {
+    "validate_best": true,
+    "metrics": ["accuracy"],
+    "test_best": false
+ },
+  "metadata": {
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/faq/school/tfidf_logreg_classifier.pkl",
+        "subdir": "faq"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "subdir": "vectorizer"
+      }
+    ]
+  }
+
+}
+
+
+
