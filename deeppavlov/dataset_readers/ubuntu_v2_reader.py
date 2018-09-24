@@ -41,9 +41,9 @@ class UbuntuV2Reader(DatasetReader):
         self.classes_vocab_train = {}
         self.classes_vocab_valid = {}
         self.classes_vocab_test = {}
-        dataset["train"] = self.preprocess_data_train(train_fname)[:1024]
-        dataset["valid"] = self.preprocess_data_validation(valid_fname)[:1024]
-        dataset["test"] = self.preprocess_data_validation(test_fname)[:1024]
+        dataset["train"] = self.preprocess_data_train(train_fname)
+        dataset["valid"] = self.preprocess_data_validation(valid_fname)
+        dataset["test"] = self.preprocess_data_validation(test_fname)
         return dataset
     
     def preprocess_data_train(self, train_fname: Path) -> List[Tuple[List[str], int]]:
