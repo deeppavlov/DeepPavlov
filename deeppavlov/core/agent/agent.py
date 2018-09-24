@@ -6,7 +6,7 @@ from deeppavlov.core.models.component import Component
 from deeppavlov.core.skill.skill import Skill
 
 
-class RandomSelector(Component):
+class RandomProcessor(Component):
     def __init__(self, *args, **kwargs):
         pass
 
@@ -14,7 +14,7 @@ class RandomSelector(Component):
         return [random.choice([t for t, sc in r if t]) for r in zip(*responses)]
 
 
-class HighestConfidenceSelector(Component):
+class HighestConfidenceProcessor(Component):
     def __init__(self, *args, **kwargs):
         pass
 
@@ -33,10 +33,10 @@ class TransparentFilter(Component):
 
 
 class Agent(Component):
-    def __init__(self, skills: List[Skill], skills_selector=None, skills_filter=None, *args, **kwargs):
+    def __init__(self, skills: List[Skill], skills_processor=None, skills_filter=None, *args, **kwargs):
         self.skills = skills
         self.skills_filter = skills_filter or TransparentFilter(len(skills))
-        self.skills_selector = skills_selector or HighestConfidenceSelector()
+        self.skills_processor = skills_processor or HighestConfidenceProcessor()
         self.history = defaultdict(list)
         self.states = defaultdict(lambda: [None] * len(self.skills))
 
@@ -49,6 +49,7 @@ class Agent(Component):
         responses = []
         for skill_i, (m, skill) in enumerate(zip(zip(*filtered), self.skills)):
             m = [i for i, m in enumerate(m) if m]
+            # TODO: utterances, batch_history and batch_states batches should be lists, not tuples
             batch = tuple(zip(*[(utterances[i], batch_history[i], batch_states[i][skill_i]) for i in m]))
             res = [(None, 0.)] * batch_size
             if batch:
@@ -58,7 +59,7 @@ class Agent(Component):
                     res[i] = (predicted, confidence)
                     batch_states[i][skill_i] = state
             responses.append(res)
-        responses = self.skills_selector(utterances, batch_history, *responses)
+        responses = self.skills_processor(utterances, batch_history, *responses)
         for history, utterance, response in zip(batch_history, utterances, responses):
             history.append(utterance)
             history.append(response)
