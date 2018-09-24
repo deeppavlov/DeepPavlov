@@ -10,6 +10,11 @@ class DefaultStatelessSkill(Skill):
 
     def __call__(self, utterances_batch: [list, tuple], history_batch: [list, tuple],
                  states_batch: [list, tuple] = None):
+        # TODO: methods inputs should be lists, not tuples
+        utterances_batch = list(utterances_batch)
+        history_batch = list(history_batch)
+        states_batch = list(states_batch)
+
         batch_len = len(utterances_batch)
         confidence_batch = [1.0] * batch_len
 
@@ -43,31 +48,4 @@ class DefaultStatelessSkill(Skill):
         else:
             response_batch = self.model(utterances_batch)
 
-        return response_batch, confidence_batch, history_batch, states_batch
-
-
-if __name__ == '__main__':
-    from pprint import pprint
-    from deeppavlov.core.common.file import read_json
-    from deeppavlov.core.commands.infer import build_model_from_config
-
-    #config = '/home/litinsky/repo/DeepPavlov/deeppavlov/configs/ner/ner_rus.json'
-    config = '/home/litinsky/repo/DeepPavlov/deeppavlov/configs/squad/squad.json'
-
-    ner_infer = ['Элон Маск запустил в космос Tesla.', 'В Долгопе у меня отжали мобильник и новые кеды.']
-    squad_infer_1 = ['Elon Musk launched his cherry Tesla roadster to the Mars orbit',
-                     'I want Doshirac with mayonnaise']
-
-    squad_infer_2 = ['Where cherry Tesla roadster was launched?',
-                     'What I want?']
-
-
-
-    model = build_model_from_config(read_json(config))
-    skill = DefaultStatelessSkill(model)
-
-    result1 = skill(squad_infer_1, [], [])
-    pprint(result1)
-
-    result2 = skill(squad_infer_2, [], result1[3])
-    pprint(result2)
+        return response_batch, confidence_batch, states_batch

@@ -40,7 +40,6 @@ class Skill(Component, metaclass=ABCMeta):
             response (list): A batch of arbitrary typed skill inference results
             confidence (list): A batch of float typed confidence levels for
                 each of skill inference result
-            history (list): A batch of list typed histories for each response
             states (list): Optional. A batch of arbitrary typed states
                 for each response
 
