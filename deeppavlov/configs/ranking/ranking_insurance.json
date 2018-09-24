@@ -54,7 +54,6 @@
         "in_y": ["y"],
         "out": ["y_predicted"],
         "name": "bilstm_nn",
-        "device_num": 0,
         "train_now": true,
         "len_vocab": "#siam_vocab.len",
         "use_matrix": "#preproc.use_matrix",

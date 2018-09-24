@@ -1,18 +1,38 @@
-from deeppavlov.core.data.dataset_reader import DatasetReader
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+from typing import List, Dict, Tuple
 from pathlib import Path
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.utils import download_decompress, mark_done, is_done
-from deeppavlov.core.commands.utils import get_deeppavlov_root, expand_path
-import random
 import csv
-import re
+
+from deeppavlov.core.data.dataset_reader import DatasetReader
+from deeppavlov.core.common.registry import register
+from deeppavlov.core.commands.utils import expand_path
 
 @register('ubuntu_v2_reader')
 class UbuntuV2Reader(DatasetReader):
-    
-    def read(self, data_path):
-        # data_path = expand_path(data_path)
-        # self.download_data(data_path)
+    """The class to read the Ubuntu V2 dataset from  *.csv files.
+
+    Please, see https://github.com/rkadlec/ubuntu-ranking-dataset-creator.
+
+    Args:
+        data_path: A path to a folder with dataset *.csv files.
+    """
+
+    def read(self, data_path: Path) -> Dict[str, List[Tuple[List[str], int]]]:
+        data_path = expand_path(data_path)
         dataset = {'train': None, 'valid': None, 'test': None}
         train_fname = Path(data_path) / 'train.csv'
         valid_fname = Path(data_path) / 'valid.csv'
@@ -21,19 +41,12 @@ class UbuntuV2Reader(DatasetReader):
         self.classes_vocab_train = {}
         self.classes_vocab_valid = {}
         self.classes_vocab_test = {}
-        dataset["train"] = self.preprocess_data_train(train_fname)
-        dataset["valid"] = self.preprocess_data_validation(valid_fname)
-        dataset["test"] = self.preprocess_data_validation(test_fname)
+        dataset["train"] = self.preprocess_data_train(train_fname)[:1024]
+        dataset["valid"] = self.preprocess_data_validation(valid_fname)[:1024]
+        dataset["test"] = self.preprocess_data_validation(test_fname)[:1024]
         return dataset
     
-    def download_data(self, data_path):
-        # if not is_done(Path(data_path)):
-        #     download_decompress(url="http://lnsigo.mipt.ru/export/datasets/insuranceQA-master.zip",
-        #                         download_path=data_path)
-        #     mark_done(data_path)
-        pass
-
-    def preprocess_data_train(self, train_fname):
+    def preprocess_data_train(self, train_fname: Path) -> List[Tuple[List[str], int]]:
         contexts = []
         responses = []
         labels = []
@@ -48,7 +61,7 @@ class UbuntuV2Reader(DatasetReader):
         data = list(zip(data, labels))
         return data
 
-    def preprocess_data_validation(self, fname):
+    def preprocess_data_validation(self, fname: Path) -> List[Tuple[List[str], int]]:
         contexts = []
         responses = []
         with open(fname, 'r') as f:

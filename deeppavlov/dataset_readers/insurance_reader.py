@@ -1,29 +1,39 @@
-from deeppavlov.core.data.dataset_reader import DatasetReader
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 from pathlib import Path
+from typing import Dict, List, Tuple
+
+from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import download_decompress, mark_done, is_done
-from deeppavlov.core.commands.utils import get_deeppavlov_root, expand_path
-from typing import Dict, List, Union
+from deeppavlov.core.commands.utils import expand_path
 
 
 @register('insurance_reader')
 class InsuranceReader(DatasetReader):
+    """The class to read the InsuranceQA V1 dataset from files.
 
-    def read(self, data_path: str, num_ranking_samples: int = 10, **kwargs) -> Dict[
-        str, List[Dict[str, Union[int, List[int]]]]]:
-        """Read the InsuranceQA data from files and forms the dataset.
+    Please, see https://github.com/shuzi/insuranceQA.
 
-        Args:
-            data_path: A path to a folder where dataset files are stored.
-            **kwargs: Other parameters.
+    Args:
+        data_path: A path to a folder with dataset files.
+    """
 
-        Returns:
-        data: A dictionary containing training, validation and test parts of the dataset obtainable via
-            ``train``, ``valid`` and ``test`` keys.
-        """
-        self.num_ranking_samples = num_ranking_samples
+    def read(self, data_path: str, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
         data_path = expand_path(data_path)
-        self._download_data(data_path)
         dataset = {'train': None, 'valid': None, 'test': None}
         train_fname = Path(data_path) / 'insuranceQA-master/V1/question.train.token_idx.label'
         valid_fname = Path(data_path) / 'insuranceQA-master/V1/question.dev.label.token_idx.pool'
@@ -39,18 +49,7 @@ class InsuranceReader(DatasetReader):
 
         return dataset
 
-    def _download_data(self, data_path):
-        """Download archive with the InsuranceQA dataset files and decompress if there is no dataset files in `data_path`.
-
-        Args:
-            data_path: A path to a folder where dataset files are stored.
-        """
-        if not is_done(Path(data_path)):
-            download_decompress(url="http://lnsigo.mipt.ru/export/datasets/insuranceQA-master.zip",
-                                download_path=data_path)
-            mark_done(data_path)
-
-    def _build_context2toks_vocab(self, train_f, val_f, test_f):
+    def _build_context2toks_vocab(self, train_f: Path, val_f: Path, test_f: Path) -> Dict[int, str]:
         contexts = []
         with open(train_f, 'r') as f:
             data = f.readlines()
@@ -73,13 +72,13 @@ class InsuranceReader(DatasetReader):
         idxs2cont_vocab = {el[1]: el[0] for el in enumerate(contexts)}
         return idxs2cont_vocab
 
-    def _build_int2tok_vocab(self, fname):
+    def _build_int2tok_vocab(self, fname: Path) -> Dict[int, str]:
         with open(fname, 'r') as f:
             data = f.readlines()
         int2tok_vocab = {int(el.split('\t')[0].split('_')[1]): el.split('\t')[1][:-1] for el in data}
         return int2tok_vocab
 
-    def _build_response2str_vocab(self, fname):
+    def _build_response2str_vocab(self, fname: Path) -> Dict[int, str]:
         with open(fname, 'r') as f:
             data = f.readlines()
             response2idxs_vocab = {int(el.split('\t')[0]) - 1:
@@ -88,7 +87,7 @@ class InsuranceReader(DatasetReader):
                                                for x in el[1]]) for el in response2idxs_vocab.items()}
         return response2str_vocab
 
-    def _preprocess_data_train(self, fname):
+    def _preprocess_data_train(self, fname: Path) -> List[Tuple[List[str], int]]:
         positive_responses_pool = []
         contexts = []
         responses = []
@@ -110,7 +109,7 @@ class InsuranceReader(DatasetReader):
         train_data = list(zip(train_data, labels))
         return train_data
 
-    def _preprocess_data_valid_test(self, fname):
+    def _preprocess_data_valid_test(self, fname: Path) -> List[Tuple[List[str], int]]:
         pos_responses_pool = []
         neg_responses_pool = []
         contexts = []

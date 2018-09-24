@@ -51,7 +51,6 @@
         "in_y": ["y"],
         "out": ["y_predicted"],
         "name": "qa_memnet",
-        "device_num": 0,
         "train_now": true,
         "voc_siz": "#siam_vocab.len",
         "seq_len": "#preproc.max_sequence_length",

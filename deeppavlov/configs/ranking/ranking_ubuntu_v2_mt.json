@@ -53,7 +53,6 @@
         "in_y": ["y"],
         "out": ["y_predicted"],
         "name": "bilstm_gru_nn",
-        "device_num": 0,
         "train_now": true,
         "use_matrix": "#preproc.use_matrix",
         "num_context_turns": "#preproc.num_context_turns",
@@ -97,7 +96,7 @@
         "subdir": "ubuntu_v2_data"
       },
       {
-        "url": "http://lnsigo.mipt.rufiles.deeppavlov.ai/deeppavlov_data/wiki.en.bin",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/wiki.en.bin",
         "subdir": "ubuntu_v2_embeddings"
       }
     ]
