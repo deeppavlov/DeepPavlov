@@ -10,6 +10,9 @@ from .conversation import Conversation
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.commands.infer import build_model_from_config
+from deeppavlov.core.agent.agent import Agent
+from deeppavlov.agents.default_agent import DefaultRichContentProcessor
+from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
 
 log = get_logger(__name__)
 
@@ -26,10 +29,10 @@ class Bot(Thread):
         self.http_sessions = {}
         self.input_queue = input_queue
 
-        self.model = None
+        self.agent = None
         if not self.config['multi_instance']:
-            self.model = self._init_model()
-            log.info('New bot instance level model initiated')
+            self.agent = self._init_agent()
+            log.info('New bot instance level agent initiated')
 
         polling_interval = self.config['auth_polling_interval']
         self.timer = threading.Timer(polling_interval, self._update_access_info)
@@ -45,10 +48,12 @@ class Bot(Thread):
         del self.conversations[conversation_key]
         log.info(f'Deleted conversation, key: {str(conversation_key)}')
 
-    def _init_model(self):
+    def _init_agent(self):
         model_config = read_json(self.config['model_config_path'])
         model = build_model_from_config(model_config)
-        return model
+        skill = DefaultStatelessSkill(model)
+        agent = Agent([skill], skills_processor=DefaultRichContentProcessor())
+        return agent
 
     def _update_access_info(self):
         polling_interval = self.config['auth_polling_interval']
@@ -81,13 +86,13 @@ class Bot(Thread):
 
         if conversation_key not in self.conversations.keys():
             if self.config['multi_instance']:
-                conv_model = self._init_model()
-                log.info('New conversation instance level model initiated')
+                conv_agent = self._init_agent()
+                log.info('New conversation instance level agent initiated')
             else:
-                conv_model = self.model
+                conv_agent = self.agent
 
             self.conversations[conversation_key] = Conversation(bot=self,
-                                                                model=conv_model,
+                                                                agent=conv_agent,
                                                                 activity=activity,
                                                                 conversation_key=conversation_key)
 

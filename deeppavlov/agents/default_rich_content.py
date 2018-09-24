@@ -64,6 +64,7 @@ class PlainText(RichControl):
 
     def ms_bot_framework(self):
         out_activity = {}
+        out_activity['type'] = 'message'
         out_activity['text'] = self.content
         return out_activity
 

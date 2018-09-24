@@ -4,15 +4,16 @@ from urllib.parse import urljoin
 
 import requests
 
+from deeppavlov.agents.default_rich_content import RichMessage
 from deeppavlov.core.common.log import get_logger
 
 log = get_logger(__name__)
 
 
 class Conversation:
-    def __init__(self, bot, model, activity: dict, conversation_key):
+    def __init__(self, bot, agent, activity: dict, conversation_key):
         self.bot = bot
-        self.model = model
+        self.agent = agent
         self.key = conversation_key
 
         self.bot_id = activity['recipient']['id']
@@ -22,14 +23,7 @@ class Conversation:
         self.conversation_id = activity['conversation']['id']
 
         self.out_gateway = OutGateway(self)
-
-        self.rich_content = self.bot.config['rich_content']
         self.stateful = self.bot.config['stateful']
-        self.in_x = self.model.in_x[1:] if self.stateful else self.model.in_x
-
-        self.buffer = []
-        self.expect = []
-        self.multiargument_initiated = False
 
         self.conversation_lifetime = self.bot.config['conversation_lifetime']
         self.timer = None
@@ -67,28 +61,21 @@ class Conversation:
 
         self._rearm_self_destruct()
 
-    def _infer(self, raw_observation: [tuple, str]):
+    def _act(self, utterance: str):
         if self.stateful:
-            content = tuple([raw_observation]) if not isinstance(raw_observation, tuple) else raw_observation
-            observation = [tuple([self.key]) + content]
+            utterance = [[utterance], [self.key]]
         else:
-            observation = [raw_observation]
+            utterance = [[utterance]]
 
-        prediction = self.model(observation)
+        prediction = self.agent(*utterance)
 
         return prediction
 
-    def _send_infer_results(self, prediction: list, in_activity: dict):
-        pred = prediction[0]
-
-        if self.rich_content:
-            for rich_message in pred:
-                if rich_message['type'] == 'text':
-                    self.out_gateway.send_plain_text(rich_message['value'], in_activity)
-                elif rich_message['type'] == 'button':
-                    self.out_gateway.send_buttons(rich_message['value'], in_activity)
-        else:
-            self.out_gateway.send_plain_text(str(pred), in_activity)
+    def _send_infer_results(self, response: RichMessage, in_activity: dict):
+        ms_bf_response = response.ms_bot_framework()
+        for out_activity in ms_bf_response:
+            if out_activity:
+                self.out_gateway.send_activity(out_activity, in_activity)
 
     def _handle_usupported(self, in_activity: dict):
         activity_type = in_activity['type']
@@ -98,27 +85,8 @@ class Conversation:
     def _handle_message(self, in_activity: dict):
         if 'text' in in_activity.keys():
             in_text = in_activity['text']
-
-            if len(self.in_x) > 1:
-                if not self.multiargument_initiated:
-                    self.multiargument_initiated = True
-                    self.expect[:] = list(self.in_x)
-                    self.out_gateway.send_plain_text(f'Please, send {self.expect.pop(0)}')
-                else:
-                    self.buffer.append(in_text)
-
-                    if self.expect:
-                        self.out_gateway.send_plain_text(f'Please, send {self.expect.pop(0)}', in_activity)
-                    else:
-                        prediction = self._infer(tuple(self.buffer))
-                        self._send_infer_results(prediction, in_activity)
-
-                        self.buffer = []
-                        self.expect[:] = list(self.in_x)
-                        self.out_gateway.send_plain_text(f'Please, send {self.expect.pop(0)}', in_activity)
-            else:
-                prediction = self._infer(in_text)
-                self._send_infer_results(prediction, in_activity)
+            response = self._act(in_text)[0]
+            self._send_infer_results(response, in_activity)
         else:
             self._handle_usupported(in_activity)
 
@@ -137,8 +105,11 @@ class OutGateway:
             }
         }
 
-    def _send_activity(self, out_activity: dict, in_activity: dict = None):
+    def send_activity(self, out_activity: dict, in_activity: dict = None):
         service_url = self.service_url
+
+        for key, value in self.activity_template.items():
+            out_activity[key] = value
 
         if in_activity:
             try:
@@ -182,7 +153,7 @@ class OutGateway:
         out_activity = deepcopy(self.activity_template)
         out_activity['type'] = 'message'
         out_activity['text'] = text
-        self._send_activity(out_activity, in_activity)
+        self.send_activity(out_activity, in_activity)
 
     def send_buttons(self, buttons: list, in_activity: dict = None):
         out_activity = deepcopy(self.activity_template)
@@ -208,4 +179,4 @@ class OutGateway:
         ]
 
         out_activity['attachments'] = attachments
-        self._send_activity(out_activity, in_activity)
+        self.send_activity(out_activity, in_activity)
