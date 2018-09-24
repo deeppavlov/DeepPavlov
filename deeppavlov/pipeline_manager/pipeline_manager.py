@@ -67,8 +67,6 @@ class PipelineManager:
                  root: str = './experiments/',
                  cross_val: bool = False,
                  k_fold: Union[int, None] = 5,
-                 search: bool = False,
-                 hyper_search: str = 'random',
                  sample_num: int = 10,
                  target_metric: str = None,
                  plot: bool = True,
@@ -82,8 +80,6 @@ class PipelineManager:
         self.info = info
         self.cross_validation = cross_val
         self.k_fold = k_fold
-        self.search = search
-        self.hyper_search = hyper_search
         self.sample_num = sample_num
         self.target_metric = target_metric
         self.plot = plot
@@ -108,8 +104,7 @@ class PipelineManager:
         Initializes the pipeline generator and runs the experiment. Creates a report after the experiments.
         """
         # create the pipeline generator
-        self.pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, search=self.search,
-                                          search_type=self.hyper_search, test_mode=False,
+        self.pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, test_mode=False,
                                           cross_val=self.cross_validation)
         self.gen_len = self.pipeline_generator.length
 
@@ -202,8 +197,7 @@ class PipelineManager:
         Initializes the pipeline generator with tiny data and runs the test of experiment.
         """
         # create the pipeline generator
-        pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, search=self.search,
-                                     search_type=self.hyper_search, test_mode=True)
+        pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, test_mode=True)
         len_gen = pipeline_generator.length
 
         # Start generating pipelines configs

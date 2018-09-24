@@ -15,7 +15,7 @@
 from os.path import join
 from itertools import product
 from copy import deepcopy
-from typing import Union, Dict
+from typing import Union, Dict, Generator
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
@@ -30,15 +30,14 @@ class PipeGen:
     """
     The class implements the generator of standard DeepPavlov configs.
     """
-    def __init__(self, config: Union[Dict, str], save_path: str, search: bool = False, search_type: str ='grid', n=10,
-                 test_mode=False, cross_val: bool = False):
+
+    def __init__(self, config: Union[Dict, str], save_path: str, n=10, test_mode=False, cross_val: bool = False):
         """
         Initialize generator with input params.
 
         Args:
             config: str or dict; path to config file with search pattern, or dict with it config.
             save_path: str; path to folder with pipelines checkpoints.
-            search_type: str; random or grid - the trigger that determines type of hypersearch
             n: int; determines the number of generated pipelines, if hyper_search == random.
             test_mode: bool; trigger that determine logic of changing save and loads paths in config.
         """
@@ -58,25 +57,16 @@ class PipeGen:
         self.chainer = self.main_config.pop('chainer')
         self.structure = self.chainer['pipe']
 
-        self.stop_keys = ['in', 'in_x', 'in_y', 'out', 'fit_on', 'name', 'main']
         self.test_mode = test_mode
         self.save_path = save_path
-        self.search = search
         self.cross_val = cross_val
-        self.search_type = search_type
         self.length = None
         self.pipes = []
         self.N = n
 
         self._check_component_name()
-        self.get_len(deepcopy(self.dataset_reader), deepcopy(self.train_config), deepcopy(self.pipes),
-                     deepcopy(self.structure))
-
-        if self.search_type not in ['grid', 'random']:
-            raise ValueError("Sorry {0} search not implemented."
-                             " At the moment you can use only 'random' and 'grid' search.".format(self.search_type))
-
-        self.enumerator = self.pipeline_enumeration(self.dataset_reader, self.train_config, self.pipes, self.structure)
+        self.get_len()
+        self.enumerator = self.pipeline_enumeration()
         self.generator = self.pipeline_gen()
 
     def _check_component_name(self) -> None:
@@ -85,62 +75,46 @@ class PipeGen:
                 if example is not None:
                     if "component_name" not in example.keys():
                         raise ConfigError("The pipeline element in config file, on position {0} and with number {1}"
-                                          "don't contain the 'component_name' key.".format(i+1, j+1))
+                                          "don't contain the 'component_name' key.".format(i + 1, j + 1))
         return None
 
-    def get_len(self, dataset_reader, train_config, pipes, structure):
-        q = 0
-        enumerator = self.pipeline_enumeration(dataset_reader, train_config, pipes, structure)
-        for variant_ in enumerator:
-            variant_ = list(variant_)
-            pipe_var_ = variant_[2:]
-            if self.search:
-                if self.search_type == 'random':
-                    search_gen = self.random_conf_gen(pipe_var_)
-                elif self.search_type == 'grid':
-                    search_gen = self.grid_conf_gen(pipe_var_)
-                else:
-                    raise ValueError("Sorry '{0}' search not implemented. "
-                                     "At the moment you can use only 'random'"
-                                     " and 'grid' search.".format(self.search_type))
+    def get_len(self):
+        self.enumerator = self.pipeline_enumeration()
+        generator = self.pipeline_gen()
+        self.length = len(list(generator))
+        self.pipes = []
+        del generator
 
-                for pipe_ in search_gen:
-                    q += 1
-                del search_gen
-            else:
-                q += 1
+    def __len__(self):
+        return self.length
 
-        del enumerator
-        self.length = q
-
-    @staticmethod
-    def pipeline_enumeration(dataset_reader, train_config, pipes, structure):
-        if isinstance(dataset_reader, list):
+    def pipeline_enumeration(self):
+        if isinstance(self.dataset_reader, list):
             drs = []
-            for dr in dataset_reader:
+            for dr in self.dataset_reader:
                 drs.append(dr)
         else:
-            drs = [dataset_reader]
+            drs = [self.dataset_reader]
 
-        if 'batch_size' in train_config.keys():
-            bs_conf = deepcopy(train_config)
-            if isinstance(train_config['batch_size'], list):
+        if 'batch_size' in self.train_config.keys():
+            bs_conf = deepcopy(self.train_config)
+            if isinstance(self.train_config['batch_size'], list):
                 bss = []
-                for bs in train_config['batch_size']:
+                for bs in self.train_config['batch_size']:
                     bs_conf['batch_size'] = bs
                     bss.append(bs_conf)
             else:
-                bss = [train_config]
+                bss = [self.train_config]
         else:
-            bss = [train_config]
+            bss = [self.train_config]
 
-        pipes.append(drs)
-        pipes.append(bss)
+        self.pipes.append(drs)
+        self.pipes.append(bss)
 
-        for components in structure:
-            pipes.append(components)
+        for components in self.structure:
+            self.pipes.append(components)
 
-        return product(*pipes)
+        return product(*self.pipes)
 
     def pipeline_gen(self):
         """
@@ -154,54 +128,36 @@ class PipeGen:
             dr_config = variant[0]
             train_config = variant[1]
             pipe_var = variant[2:]
-            if self.search:
-                if self.search_type == 'random':
-                    search_gen = self.random_conf_gen(pipe_var)
-                elif self.search_type == 'grid':
-                    search_gen = self.grid_conf_gen(pipe_var)
-                else:
-                    raise ValueError("Sorry '{0}' search not implemented. "
-                                     "At the moment you can use only 'random'"
-                                     " and 'grid' search.".format(self.search_type))
 
-                for k, pipe in enumerate(search_gen):
-                    new_config = deepcopy(self.main_config)
-                    new_config['dataset_reader'] = deepcopy(dr_config)
-                    new_config['train'] = deepcopy(train_config)
-                    new_config['chainer'] = deepcopy(self.chainer)
+            for grid_pipe in self.grid_conf_gen(pipe_var):
+                grid_pipe = list(grid_pipe)
+                for pipe in self.random_conf_gen(grid_pipe):
+
+                    # new_config = deepcopy(self.main_config)
+                    # new_config['dataset_reader'] = deepcopy(dr_config)
+                    # new_config['train'] = deepcopy(train_config)
+                    # new_config['chainer'] = deepcopy(self.chainer)
+
+                    new_config = dict(dataset_reader=deepcopy(dr_config),
+                                      dataset_iterator=self.main_config['dataset_iterator'],
+                                      chainer=self.chainer, train=train_config)
+                    if 'metadata' in self.main_config.keys():
+                        new_config['metadata'] = self.main_config['metadata']
 
                     chainer_components = list(pipe)
-                    if self.cross_val:
-                        new_config['chainer']['pipe'] = chainer_components
-                        p += 1
-                        yield new_config
-                    else:
+                    if not self.cross_val:
                         dataset_name = dr_config['data_path']
                         chainer_components = self.change_load_path(chainer_components, p, self.save_path, dataset_name,
                                                                    self.test_mode)
                         new_config['chainer']['pipe'] = chainer_components
                         p += 1
                         yield new_config
-            else:
-                new_config = deepcopy(self.main_config)
-                new_config['dataset_reader'] = deepcopy(dr_config)
-                new_config['train'] = deepcopy(train_config)
-                new_config['chainer'] = deepcopy(self.chainer)
-
-                if self.cross_val:
-                    new_config['chainer']['pipe'] = pipe_var
-                    p += 1
-                    yield new_config
-                else:
-                    dataset_name = dr_config['data_path']
-                    chainer_components = self.change_load_path(pipe_var, p, self.save_path, dataset_name,
-                                                               self.test_mode)
-                    new_config['chainer']['pipe'] = chainer_components
-                    p += 1
-                    yield new_config
+                    else:
+                        new_config['chainer']['pipe'] = chainer_components
+                        yield new_config
 
     # random generation
-    def random_conf_gen(self, pipe_components: list) -> GeneratorExit:
+    def random_conf_gen(self, pipe_components: list) -> Generator:
         """
         Creates generator that return all possible pipelines.
         Returns:
@@ -219,89 +175,41 @@ class PipeGen:
 
             yield new_pipe
 
-    def grid_param_gen(self, conf):
+    # grid generation
+    @staticmethod
+    def grid_conf_gen(pipe_components: list) -> Generator:
         """
         Compute cartesian product of config parameters.
         Args:
-            conf: dict; component of search pattern
+            pipe_components: list of dicts; config if components
 
         Returns:
             list
         """
-        search_conf = deepcopy(conf)
-        list_of_var = []
-
-        # delete "search" key and element
-        del search_conf['search']
-
-        values = list()
-        keys = list()
-
-        static_keys = list()
-        static_values = list()
-
-        for key, item in search_conf.items():
-            if key not in self.stop_keys:
-                if isinstance(search_conf[key], list):
-                    values.append(item)
-                    keys.append(key)
-                elif isinstance(search_conf[key], dict):
-                    raise ValueError("Grid search is not supported params description by 'dict'.")
-                elif isinstance(search_conf[key], tuple):
-                    raise ValueError("Grid search is not supported params description by 'tuple'.")
-                else:
-                    static_values.append(search_conf[key])
-                    static_keys.append(key)
+        list_of_variants = []
+        # find in config keys for grid search
+        for i, component in enumerate(pipe_components):
+            if component is not None:
+                for key, item in component.items():
+                    if isinstance(item, dict):
+                        if 'search_grid' in item.keys():
+                            var_list = list()
+                            for var in item['search_grid']:
+                                var_dict = dict()
+                                var_dict[var] = [i, key]
+                                var_list.append(var_dict)
+                            list_of_variants.append(var_list)
             else:
-                static_values.append(search_conf[key])
-                static_keys.append(key)
-
-        valgen = product(*values)
-
-        config = {}
-        for i in range(len(static_keys)):
-            config[static_keys[i]] = static_values[i]
-
-        for val in valgen:
-            cop = deepcopy(config)
-            for i, v in enumerate(val):
-                cop[keys[i]] = v
-            list_of_var.append(cop)
-
-        return list_of_var
-
-    # grid generation
-    def grid_conf_gen(self, pipe_components):
-        """
-        Creates generator that return all possible pipelines.
-        Returns:
-            python generator
-        """
-        def update(el):
-            lst = []
-            if el is not None:
-                if 'search' not in el.keys():
-                    lst.append(el)
-                else:
-                    lst.extend(self.grid_param_gen(el))
-            else:
-                lst.append(el)
-            return lst
-
-        pipes = list()
-        for i, x in enumerate(pipe_components):
-            ln = []
-            for y in x:
-                ln.extend(update(y))
-            pipes.append(ln)
-
-        lgen = product(*pipes)
-        for pipe in lgen:
-            pipe = list(pipe)
-            for conf in pipe:
-                if conf is None:
-                    pipe.remove(conf)
-            yield pipe
+                pass
+        # create generator
+        valgen = product(*list_of_variants)
+        # run generator
+        for variant in valgen:
+            search_conf = deepcopy(pipe_components)
+            for val in variant:
+                for value, item in val.items():
+                    search_conf[item[0]][item[1]] = value
+            yield search_conf
 
     @staticmethod
     def change_load_path(config, n, save_path, dataset_name, test_mode=False):
@@ -322,13 +230,13 @@ class PipeGen:
                 if component.get('save_path', None) is not None:
                     sp = component['save_path'].split('/')[-1]
                     if not test_mode:
-                        component['save_path'] = join('..', save_path, dataset_name, 'pipe_{}'.format(n+1), sp)
+                        component['save_path'] = join('..', save_path, dataset_name, 'pipe_{}'.format(n + 1), sp)
                     else:
                         component['save_path'] = join('..', save_path, "tmp", dataset_name, 'pipe_{}'.format(n + 1), sp)
                 if component.get('load_path', None) is not None:
                     lp = component['load_path'].split('/')[-1]
                     if not test_mode:
-                        component['load_path'] = join('..', save_path, dataset_name, 'pipe_{}'.format(n+1), lp)
+                        component['load_path'] = join('..', save_path, dataset_name, 'pipe_{}'.format(n + 1), lp)
                     else:
                         component['load_path'] = join('..', save_path, "tmp", dataset_name, 'pipe_{}'.format(n + 1), lp)
             else:
