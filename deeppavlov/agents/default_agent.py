@@ -15,6 +15,7 @@ import random
 
 from deeppavlov.core.agent.filter import Filter
 from deeppavlov.core.agent.processor import Processor
+from deeppavlov.agents.default_rich_content import RichMessage, PlainText
 
 
 class RandomProcessor(Processor):
@@ -33,6 +34,22 @@ class HighestConfidenceProcessor(Processor):
         responses, confidences = zip(*[zip(*r) for r in responses])
         indexes = [c.index(max(c)) for c in zip(*confidences)]
         return [responses[i] for i, *responses in zip(indexes, *responses)]
+
+
+class DefaultRichContentProcessor(Processor):
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, utterances, batch_history, *responses):
+        responses, confidences = zip(*[zip(*r) for r in responses])
+        indexes = [c.index(max(c)) for c in zip(*confidences)]
+        result = []
+        for i, *responses in zip(indexes, *responses):
+            rich_message = RichMessage()
+            plain_text = PlainText(str(responses[i]))
+            rich_message.add_control(plain_text)
+            result.append(rich_message)
+        return result
 
 
 class TransparentFilter(Filter):
