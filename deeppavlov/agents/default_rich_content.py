@@ -62,6 +62,11 @@ class PlainText(RichControl):
         self.control_json['content'] = self.content
         return self.control_json
 
+    def ms_bot_framework(self):
+        out_activity = {}
+        out_activity['text'] = self.content
+        return out_activity
+
 
 class Button(RichControl):
     def __init__(self, name: str, callback: str):
