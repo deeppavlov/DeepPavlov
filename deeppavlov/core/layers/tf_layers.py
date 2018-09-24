@@ -544,7 +544,7 @@ def cudnn_gru(units, n_hidden, n_layers=1, trainable_initial_states=False,
 
         # Extract last states if they are provided
         if seq_lengths is not None:
-            indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths], axis=1)
+            indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths-1], axis=1)
             h_last = tf.gather_nd(h, indices)
 
         return h, h_last
@@ -599,7 +599,7 @@ def cudnn_compatible_gru(units, n_hidden, n_layers=1, trainable_initial_states=F
 
             # Extract last states if they are provided
             if seq_lengths is not None:
-                indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths], axis=1)
+                indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths-1], axis=1)
                 h_last = tf.gather_nd(h, indices)
 
             return h, h_last
@@ -673,7 +673,7 @@ def cudnn_lstm(units, n_hidden, n_layers=1, trainable_initial_states=None, seq_l
 
         # Extract last states if they are provided
         if seq_lengths is not None:
-            indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths], axis=1)
+            indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths-1], axis=1)
             h_last = tf.gather_nd(h, indices)
 
         return h, (h_last, c_last)
@@ -741,7 +741,7 @@ def cudnn_compatible_lstm(units, n_hidden, n_layers=1, trainable_initial_states=
 
             # Extract last states if they are provided
             if seq_lengths is not None:
-                indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths], axis=1)
+                indices = tf.stack([tf.range(tf.shape(h)[0]), seq_lengths-1], axis=1)
                 h_last = tf.gather_nd(h, indices)
 
             return h, (h_last, c_last)
