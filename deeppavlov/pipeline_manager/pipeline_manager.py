@@ -250,25 +250,27 @@ class PipelineManager:
                   "Please check the dataset_iterator config")
             tiny_train = copy(iterator.data['train'])
         else:
-            tiny_train = copy(iterator.data['train'][:100])
+            tiny_train = copy(iterator.data['train'][:10])
         iterator.train = tiny_train
 
         if len(iterator.data['valid']) <= 20:
             tiny_valid = copy(iterator.data['valid'])
         else:
-            tiny_valid = copy(iterator.data['valid'][:20])
+            tiny_valid = copy(iterator.data['valid'][:5])
         iterator.valid = tiny_valid
 
         if len(iterator.data['test']) <= 20:
             tiny_test = copy(iterator.data['test'])
         else:
-            tiny_test = copy(iterator.data['test'][:20])
+            tiny_test = copy(iterator.data['test'][:5])
         iterator.test = tiny_test
 
         iterator.data = {'train': tiny_train,
                          'valid': tiny_valid,
                          'test': tiny_test,
                          'all': tiny_train + tiny_valid + tiny_test}
+
+        print("Len of data: {}".format(len(iterator.data['all'])))
 
         return iterator
 
