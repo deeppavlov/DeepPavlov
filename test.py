@@ -45,7 +45,7 @@ def find_config(pipeline_config_path: str):
 
 
 def main():
-    args = {'config_path': 'my_configs/test_comp/check_time.json',
+    args = {'config_path': 'my_configs/tests/check_time.json',
             'mode': 'train',
             'download': '', 'token': '', 'batch_size': '', 'file_path': ''}
     pipeline_config_path = find_config(args['config_path'])

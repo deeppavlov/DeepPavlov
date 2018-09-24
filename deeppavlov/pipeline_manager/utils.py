@@ -90,6 +90,34 @@ def merge_logs(old_log, new_log):
     return old_log
 
 
+def rename_met(log, gold_metrics=None):
+    if gold_metrics is None:
+        gold_metrics = {'Accuracy': ["classification_accuracy", "simple_accuracy"],
+                        'F1': ["simple_f1_macro", "classification_f1"],
+                        'F1 weighted': ["classification_f1_weighted", "simple_f1_weighted"]}
+    # rename exp info
+    log['experiment_info']['metrics'] = list(gold_metrics.keys())
+    # rename target metric
+    for gold_name, gold_val in gold_metrics.items():
+        if log['experiment_info']['target_metric'] in gold_val:
+            log['experiment_info']['target_metric'] = gold_name
+    # rename metrics in pipe logs
+    for dataset_name, dataset_val in log['experiments'].items():
+        for model_name, model_val in dataset_val.items():
+            for n_pipe, pipe_log in model_val.items():
+                new_res = dict()
+                for data_type, data_val in pipe_log['results'].items():
+                    new_res[data_type] = dict()
+                    for met_name, met_val in data_val.items():
+                        for gold_name, gold_val in gold_metrics.items():
+                            if met_name in gold_val:
+                                new_res[data_type][gold_name] = met_val
+
+                pipe_log['results'] = new_res
+
+    return log
+
+
 # ------------------------------------------------Generate reports-----------------------------------------------------
 
 # ________________________________________________Generate new table___________________________________________________
@@ -102,7 +130,7 @@ def get_data(log):
         pipelines = []
         for model_name, val in models_val.items():
             for num, conf in val.items():
-                pipe = dict(index=int(num), components=[], res={})
+                pipe = dict(index=int(num), components=[], res={}, time=conf['time'])
                 # max amount of components
                 if max_com < len(conf['config']):
                     max_com = len(conf['config'])
@@ -164,6 +192,8 @@ def write_legend(sheet, row, col, data_tipe, metric_names, max_com, cell_format)
         p = j*len(metric_names)
         for k, met in enumerate(metric_names):
             sheet.write(row, max_com + p + k + 1, met, cell_format)
+    # write pipeline run time
+    sheet.write(row, max_com + len(metric_names)*len(data_tipe) + 1, "Time", cell_format)
 
     return row + 1, col
 
@@ -253,8 +283,11 @@ def write_pipe(sheet, pipe_dict, start_x, start_y, cell_format, max_, write_conf
         sheet.write(x, y, pipe_dict['components'][-2]['name'], cell_format)
     sheet.write(x, max_, pipe_dict['components'][-1]['name'], cell_format)
     write_metrics(sheet, pipe_dict, x, max_, cell_format)
+    # write pipeline time
+    sheet.write(x, max_ + len(data_names) * len(metric_names) + 1, pipe_dict['time'], cell_format)
+    # write config in second table
     if write_conf:
-        write_config(sheet, pipe_dict, x, max_ + len(data_names)*len(metric_names) + 1, cell_format)
+        write_config(sheet, pipe_dict, x, max_ + len(data_names)*len(metric_names) + 2, cell_format)
     return None
 
 
@@ -469,7 +502,6 @@ def results_visualization(root, savepath, plot, target_metric=None):
 
     # create the xlsx file with results of experiments
     build_pipeline_table(log, target_metric=target_metric, save_path=root)
-    # build_report(log, target_metric=target_metric, save_path=root)
     if plot:
         # scrub data from log for image creating
         info = get_met_info(log)
