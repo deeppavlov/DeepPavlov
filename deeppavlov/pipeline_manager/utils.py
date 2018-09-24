@@ -12,18 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
+import os
 import json
 import xlsxwriter
+import numpy as np
 import matplotlib.pyplot as plt
 
-from typing import List
+from typing import List, Union
 from collections import OrderedDict
 from os.path import join, isdir
 from os import mkdir
 
 
 # --------------------------------------------------- Common ----------------------------------------------------------
+
+GOLD_METRICS = {'Accuracy': ["classification_accuracy", "simple_accuracy"],
+                'F1': ["simple_f1_macro", "classification_f1"],
+                'F1 weighted': ["classification_f1_weighted", "simple_f1_weighted"]}
+
 
 def normal_time(z):
     if z > 1:
@@ -401,7 +407,6 @@ def get_met_info(log_):
         main = dict()
 
         for name in list(log.keys()):
-            print(name)
             main[name] = dict()
             for met in metrics_:
                 met_max = -np.inf
@@ -495,18 +500,55 @@ def plot_res(info, name, savepath='./', save=True, width=0.2, fheight=8, fwidth=
 # _________________________________________________Built report_______________________________________________________
 
 
-def results_visualization(root, savepath, plot, target_metric=None):
-    with open(join(root, root.split('/')[-1] + '.json'), 'r') as log_file:
-        log = json.load(log_file)
-        log_file.close()
+def results_visualization(root: str, plot: bool, merge: bool = False,
+                          target_metric: Union[str, None] = None) -> None:
 
-    # create the xlsx file with results of experiments
-    build_pipeline_table(log, target_metric=target_metric, save_path=root)
-    if plot:
-        # scrub data from log for image creating
-        info = get_met_info(log)
-        # plot histograms
-        for dataset_name, dataset_val in info.items():
-            plot_res(dataset_val, dataset_name, savepath)
+    if not merge:
+        with open(join(root, root.split('/')[-1] + '.json'), 'r') as log_file:
+            log = json.load(log_file)
+            log_file.close()
+        # create the xlsx file with results of experiments
+        build_pipeline_table(log, target_metric=target_metric, save_path=root)
+
+        if plot:
+            if not isdir(join(root, 'images')):
+                os.makedirs(join(root, 'images'))
+            # scrub data from log for image creating
+            info = get_met_info(log)
+            # plot histograms
+            for dataset_name, dataset_val in info.items():
+                plot_res(dataset_val, dataset_name, join(root, 'images'))
+    else:
+        logs_names = os.listdir(root)
+        logs = []
+        # read logs
+        for name in logs_names:
+            with open(join(root, name), 'r') as f:
+                log = json.load(f)
+                f.close()
+            logs.append(log)
+        # rename metrics
+        for i, log in enumerate(logs):
+            logs[i] = rename_met(log, GOLD_METRICS)
+        # merge logs
+        old_log = logs[0]
+        for log in logs:
+            old_log = merge_logs(old_log, log)
+
+        # chose new metric
+        if target_metric:
+            for key, metrics in GOLD_METRICS.items():
+                if target_metric in metrics:
+                    target_metric = key
+
+        build_pipeline_table(old_log, target_metric, root)
+        if plot:
+            if not isdir(join(root, 'images')):
+                os.makedirs(join(root, 'images'))
+            # scrub data from log for image creating
+            info = get_met_info(old_log)
+            # plot histograms
+            for dataset_name, dataset_val in info.items():
+                plot_res(dataset_val, dataset_name, join(root, 'images'))
 
     return None
