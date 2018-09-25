@@ -133,10 +133,14 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
         tokens_ph = tf.placeholder(shape=(None, None), dtype=tf.string, name='tokens')
         tokens_length_ph = tf.placeholder(shape=(None,), dtype=tf.int32, name='tokens_length')
 
-        elmo_outputs = elmo_module(inputs={"tokens": tokens_ph,
-                                           "sequence_len": tokens_length_ph},
-                                   signature="tokens",
-                                   as_dict=True)
+        elmo_outputs = elmo_module(
+                                    inputs={
+                                        "tokens": tokens_ph,
+                                        "sequence_len": tokens_length_ph
+                                    },
+                                    signature="tokens",
+                                    as_dict=True
+                                   )
 
         sess.run(tf.global_variables_initializer())
 
