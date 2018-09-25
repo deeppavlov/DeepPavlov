@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 import os
 
-from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.commands.utils import set_deeppavlov_root, expand_path
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
 
