@@ -13,7 +13,7 @@ class PatternMatchingSkill(Component):
             patterns = [patterns]
         self.regex = regex
         self.ignore_case = ignore_case
-        if self.ignore_case:
+        if self.ignore_case and (patterns is not None):
             patterns = [pattern.lower() for pattern in patterns]
         if patterns and regex:
             patterns = [re.compile(pattern) for pattern in patterns]
