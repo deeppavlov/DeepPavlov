@@ -11,7 +11,7 @@ from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.agent.agent import Agent
-from deeppavlov.agents.default_agent import DefaultRichContentWrapper
+from deeppavlov.agents.default_agent.default_processors import DefaultRichContentWrapper
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
 
 log = get_logger(__name__)

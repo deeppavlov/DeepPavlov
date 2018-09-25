@@ -13,9 +13,8 @@
 # limitations under the License.
 import random
 
-from deeppavlov.core.agent.filter import Filter
 from deeppavlov.core.agent.processor import Processor
-from deeppavlov.agents.default_rich_content import RichMessage, PlainText
+from deeppavlov.agents.default_agent.default_rich_content import RichMessage, PlainText
 
 
 class RandomSelector(Processor):
@@ -50,11 +49,3 @@ class DefaultRichContentWrapper(Processor):
             rich_message.add_control(plain_text)
             result.append(rich_message)
         return result
-
-
-class TransparentFilter(Filter):
-    def __init__(self, skills_count, *args, **kwargs):
-        self.size = skills_count
-
-    def __call__(self, utterances, batch_history):
-        return [[True] * self.size] * len(utterances)

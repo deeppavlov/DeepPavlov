@@ -3,7 +3,7 @@ from urllib.parse import urljoin
 
 import requests
 
-from deeppavlov.agents.default_rich_content import RichMessage
+from deeppavlov.agents.default_agent.default_rich_content import RichMessage
 from deeppavlov.core.common.log import get_logger
 
 log = get_logger(__name__)
