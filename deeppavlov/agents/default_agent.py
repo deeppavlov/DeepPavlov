@@ -18,7 +18,7 @@ from deeppavlov.core.agent.processor import Processor
 from deeppavlov.agents.default_rich_content import RichMessage, PlainText
 
 
-class RandomProcessor(Processor):
+class RandomSelector(Processor):
     def __init__(self, *args, **kwargs):
         pass
 
@@ -26,7 +26,7 @@ class RandomProcessor(Processor):
         return [random.choice([t for t, sc in r if t]) for r in zip(*responses)]
 
 
-class HighestConfidenceProcessor(Processor):
+class HighestConfidenceSelector(Processor):
     def __init__(self, *args, **kwargs):
         pass
 
@@ -36,7 +36,7 @@ class HighestConfidenceProcessor(Processor):
         return [responses[i] for i, *responses in zip(indexes, *responses)]
 
 
-class DefaultRichContentProcessor(Processor):
+class DefaultRichContentWrapper(Processor):
     def __init__(self, *args, **kwargs):
         pass
 

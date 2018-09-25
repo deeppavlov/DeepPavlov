@@ -11,7 +11,7 @@ from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.agent.agent import Agent
-from deeppavlov.agents.default_agent import DefaultRichContentProcessor
+from deeppavlov.agents.default_agent import DefaultRichContentWrapper
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
 
 log = get_logger(__name__)
@@ -52,7 +52,7 @@ class Bot(Thread):
         model_config = read_json(self.config['model_config_path'])
         model = build_model_from_config(model_config)
         skill = DefaultStatelessSkill(model)
-        agent = Agent([skill], skills_processor=DefaultRichContentProcessor())
+        agent = Agent([skill], skills_processor=DefaultRichContentWrapper())
         return agent
 
     def _update_access_info(self):

@@ -3,14 +3,14 @@ from typing import List
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.skill.skill import Skill
-from deeppavlov.agents.default_agent import TransparentFilter, HighestConfidenceProcessor
+from deeppavlov.agents.default_agent import TransparentFilter, HighestConfidenceSelector
 
 
 class Agent(Component):
     def __init__(self, skills: List[Skill], skills_processor=None, skills_filter=None, *args, **kwargs):
         self.skills = skills
         self.skills_filter = skills_filter or TransparentFilter(len(skills))
-        self.skills_processor = skills_processor or HighestConfidenceProcessor()
+        self.skills_processor = skills_processor or HighestConfidenceSelector()
         self.history = defaultdict(list)
         self.states = defaultdict(lambda: [None] * len(self.skills))
 
