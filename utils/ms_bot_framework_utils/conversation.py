@@ -148,35 +148,3 @@ class OutGateway:
 
         log.debug(f'Sent activity to the MSBotFramework server. '
                   f'Response code: {response.status_code}, response contents: {response.json()}')
-
-    def send_plain_text(self, text: str, in_activity: dict = None):
-        out_activity = deepcopy(self.activity_template)
-        out_activity['type'] = 'message'
-        out_activity['text'] = text
-        self.send_activity(out_activity, in_activity)
-
-    def send_buttons(self, buttons: list, in_activity: dict = None):
-        out_activity = deepcopy(self.activity_template)
-        out_activity['type'] = 'message'
-
-        # Creating RichCard with CardActions(buttons) with postBack value return
-        rich_card = {
-            'buttons': []
-        }
-
-        for button in buttons:
-            card_action = {}
-            card_action['type'] = 'postBack'
-            card_action['title'] = button['name']
-            card_action['value'] = button['callback']
-            rich_card['buttons'].append(card_action)
-
-        attachments = [
-            {
-                "contentType": "application/vnd.microsoft.card.thumbnail",
-                "content": rich_card
-            }
-        ]
-
-        out_activity['attachments'] = attachments
-        self.send_activity(out_activity, in_activity)
