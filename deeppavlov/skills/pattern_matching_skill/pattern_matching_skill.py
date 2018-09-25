@@ -11,11 +11,13 @@ class PatternMatchingSkill(Component):
         self.responses = responses
         if isinstance(patterns, str):
             patterns = [patterns]
+        self.regex = regex
+        self.ignore_case = ignore_case
+        if self.ignore_case:
+            patterns = [pattern.lower() for pattern in patterns]
         if patterns and regex:
             patterns = [re.compile(pattern) for pattern in patterns]
         self.patterns = patterns
-        self.regex = regex
-        self.ignore_case = ignore_case
 
     def __call__(self, utterances_batch, history_batch, states_batch):
         response = [random.choice(self.responses) for _ in utterances_batch]
