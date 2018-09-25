@@ -62,6 +62,23 @@
           "C": {"search_range": [0.5, 2.0]},
           "fit_intercept": {"search_bool": true},
           "class_weight": {"search_choice": [null, "balanced"]}
+        },
+        {
+          "in": ["avr_x"],
+          "fit_on": ["avr_x", "y"],
+          "out": ["y_labels"],
+          "name": "logistic_regression",
+          "main": true,
+          "save_path": "new_sber/checkpoints/logreg.pkl",
+          "load_path": "new_sber/checkpoints/logreg.pkl",
+          "component_name": "Log Reg",
+          "penalty": "l1",
+          "dual": false,
+          "tol": {"search_range": [0.00001, 0.005]},
+          "C": {"search_range": [0.5, 2.0]},
+          "fit_intercept": {"search_bool": true},
+          "class_weight": {"search_choice": [null, "balanced"]},
+          "solver": {"search_choice": ["liblinear", "saga"]}
         }
       ]
     ],

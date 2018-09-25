@@ -32,7 +32,6 @@ TEST_MODES = ['IP',  # test_interacting_pretrained_model
               'E',    # test_evolving
               'CV',    # test_crossvalidation
               'PS'    # test_paramsearch
-              'PM'  # test pipeline manager
               ]
 
 ALL_MODES = ('IP', 'TI')
@@ -100,11 +99,6 @@ PARAMS = {
     },
     "paramsearch": {
         ("paramsearch/tfidf_logreg_autofaq_psearch.json", "paramsearch", ('PS',)): None
-    },
-    "pipeline_manager": {
-        ("pipeline_manager/test_linear.json", "pipeline_manager", ('PM',)): None,
-        ("pipeline_manager/test_linear_avr.json", "pipeline_manager", ('PM',)): None,
-        ("pipeline_manager/test_neural.json", "pipeline_manager", ('PM',)): None
     },
     "sample": {
         ("classifiers/intents_sample_csv.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -234,6 +228,29 @@ def teardown_module():
 
     global cache_dir
     cache_dir.cleanup()
+
+
+# test pipeline manager
+def test_pipeline_manager():
+    modeldir = 'pipeline_manager'
+    pm_configs = "pipeline_manager/test_linear.json"
+
+    c = test_src_dir / pm_configs
+    model_path = download_path / modeldir
+
+    config_path = str(test_src_dir.joinpath(pm_configs))
+    deep_download(['-c', config_path])
+    shutil.rmtree(str(model_path),  ignore_errors=True)
+
+    logfile = io.BytesIO(b'')
+    p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov enumerate {c} -e test -sn 5",
+                                       timeout=None, logfile=logfile)
+    if p.wait() != 0:
+        logfile.seek(0)
+        raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
+                           .format(modeldir, ''.join((line.decode() for line in logfile.readlines()))))
+
+    shutil.rmtree(str(download_path), ignore_errors=True)
 
 
 @pytest.mark.parametrize("model,conf_file,model_dir,mode", TEST_GRID, scope='class')
@@ -417,27 +434,4 @@ class TestQuickStart(object):
             shutil.rmtree(str(download_path), ignore_errors=True)
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
-
-    def test_pipeline_manager(self, model, conf_file, model_dir, mode):
-        if 'PM' in mode:
-            c = test_configs_path / conf_file
-            model_path = download_path / model_dir
-
-            if 'IP' not in mode and 'TI' not in mode:
-                config_path = str(test_configs_path.joinpath(conf_file))
-                deep_download(['-c', config_path])
-            shutil.rmtree(str(model_path),  ignore_errors=True)
-
-            logfile = io.BytesIO(b'')
-            p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.enumerate {c} -e test -sn 5",
-                                               timeout=None, logfile=logfile)
-            if p.wait() != 0:
-                logfile.seek(0)
-                raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
-                                   .format(model_dir, ''.join((line.decode() for line in logfile.readlines()))))
-
-            shutil.rmtree(str(download_path), ignore_errors=True)
-        else:
-            pytest.skip("Unsupported mode: {}".format(mode))
-
 

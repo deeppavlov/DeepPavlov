@@ -14,22 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-from pathlib import Path
 import sys
-import os
+
+from pathlib import Path
+from deeppavlov.core.commands.train import train_evaluate_model_from_config
+from deeppavlov.core.common.log import get_logger
 
 p = (Path(__file__) / ".." / "..").resolve()
 sys.path.append(str(p))
-
-from deeppavlov.core.commands.train import train_evaluate_model_from_config
-from deeppavlov.pipeline_manager.pipeline_manager import PipelineManager
-from deeppavlov.core.commands.infer import interact_model, predict_on_stream
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.download import deep_download
-from utils.telegram_utils.telegram_ui import interact_model_by_telegram
-from utils.server_utils.server import start_model_server
-from utils.pip_wrapper import install_from_config
-
 
 log = get_logger(__name__)
 
