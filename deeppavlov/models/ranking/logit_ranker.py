@@ -35,8 +35,9 @@ class LogitRanker(Component):
 
     """
 
-    def __init__(self, squad_model, **kwargs):
+    def __init__(self, squad_model, batch_size=50, **kwargs):
         self.squad_model = squad_model
+        self.batch_size = batch_size
 
     def __call__(self, contexts_batch: List[List[str]], questions_batch: List[List[str]]) -> List[str]:
         """
@@ -53,7 +54,14 @@ class LogitRanker(Component):
 
         batch_best_answers = []
         for contexts, questions in zip(contexts_batch, questions_batch):
-            results = zip(*self.squad_model(contexts, questions))
+            predicted = []
+            for i in range(len(contexts) // self.batch_size + 1):
+                c_batch = contexts[i * self.batch_size: (i + 1) * self.batch_size]
+                q_batch = questions[i * self.batch_size: (i + 1) * self.batch_size]
+                if len(c_batch) > 0:
+                    batch_predict = self.squad_model(c_batch, q_batch)
+                    predicted.extend(batch_predict)
+            results = zip(*predicted)
             best_answer = sorted(results, key=itemgetter(2), reverse=True)[0][0]
             batch_best_answers.append(best_answer)
 
