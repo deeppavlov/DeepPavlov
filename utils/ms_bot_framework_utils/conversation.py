@@ -1,5 +1,4 @@
 import threading
-from copy import deepcopy
 from urllib.parse import urljoin
 
 import requests

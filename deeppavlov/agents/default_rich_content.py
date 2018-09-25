@@ -63,6 +63,7 @@ class PlainText(RichControl):
         return self.control_json
 
     def ms_bot_framework(self):
+        # Creating MS Bot Framework activity blank with "text" populated
         out_activity = {}
         out_activity['type'] = 'message'
         out_activity['text'] = self.content
@@ -82,15 +83,55 @@ class Button(RichControl):
         self.control_json['content'] = content
         return self.control_json
 
+    def ms_bot_framework(self):
+        # Creating MS Bot Framework CardAction (button) with postBack value return
+        card_action = {}
+        card_action['type'] = 'postBack'
+        card_action['title'] = self.name
+        card_action['value'] = self.callback = self.callback
+        return card_action
+
 
 class ButtonsFrame(RichControl):
-    def __init__(self):
+    def __init__(self, text: [str, None] = None):
         super(ButtonsFrame, self).__init__('buttons_frame')
+        self.text = text
         self.content = []
 
     def add_button(self, button: Button):
         self.content.append(button)
 
     def json(self):
-        json_content = [control.json() for control in self.content]
-        return json_content
+        content = {}
+
+        if self.text:
+            content['text'] = self.text
+
+        content['controls'] = [control.json() for control in self.content]
+
+        self.control_json['content'] = content
+
+        return self.control_json
+
+    def ms_bot_framework(self):
+        # Creating MS Bot Framework activity blank with RichCard in "attachments" populated with CardActions
+        rich_card = {}
+
+        buttons = [button.ms_bot_framework() for button in self.content]
+        rich_card['buttons'] = buttons
+
+        if self.text:
+            rich_card['title'] = self.text
+
+        attachments = [
+            {
+                "contentType": "application/vnd.microsoft.card.thumbnail",
+                "content": rich_card
+            }
+        ]
+
+        out_activity = {}
+        out_activity['type'] = 'message'
+        out_activity['attachments'] = attachments
+
+        return out_activity
