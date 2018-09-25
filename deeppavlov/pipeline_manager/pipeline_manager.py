@@ -46,7 +46,6 @@ class PipelineManager:
             info: some additional information that you want to add to the log, the content of the dictionary
                   does not affect the algorithm
             root: root path, the root path where the report will be generated and saved checkpoints
-            hyper_search: grid or random - the trigger that determines type of hypersearch
             sample_num: determines the number of generated pipelines, if hyper_search == random.
             target_metric: The metric name on the basis of which the results will be sorted when the report
                            is generated. The default value is None, in this case the target metric is taken the
