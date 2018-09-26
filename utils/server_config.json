@@ -57,6 +57,12 @@
       "port": "",
       "model_endpoint": "/ranker",
       "model_args_names": ""
+    },
+    "Embedder": {
+      "host": "",
+      "port": "",
+      "model_endpoint": "/embedder",
+      "model_args_names": ""
     }
   }
 }
