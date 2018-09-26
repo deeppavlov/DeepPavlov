@@ -3,8 +3,8 @@ from typing import List
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.skill.skill import Skill
-from deeppavlov.agents.default_agent.default_filters import TransparentFilter
-from deeppavlov.agents.default_agent.default_processors import HighestConfidenceSelector
+from deeppavlov.agents.filters.transparent_filter import TransparentFilter
+from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
 
 
 class Agent(Component):

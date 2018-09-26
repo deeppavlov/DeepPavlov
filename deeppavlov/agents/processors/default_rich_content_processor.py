@@ -11,28 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import random
-
 from deeppavlov.core.agent.processor import Processor
-from deeppavlov.agents.default_agent.default_rich_content import RichMessage, PlainText
-
-
-class RandomSelector(Processor):
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def __call__(self, utterances, batch_history, *responses):
-        return [random.choice([t for t, sc in r if t]) for r in zip(*responses)]
-
-
-class HighestConfidenceSelector(Processor):
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def __call__(self, utterances, batch_history, *responses):
-        responses, confidences = zip(*[zip(*r) for r in responses])
-        indexes = [c.index(max(c)) for c in zip(*confidences)]
-        return [responses[i] for i, *responses in zip(indexes, *responses)]
+from deeppavlov.core.agent.rich_content import RichMessage
+from deeppavlov.agents.rich_content.default_rich_content import PlainText
 
 
 class DefaultRichContentWrapper(Processor):
