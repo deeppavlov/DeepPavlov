@@ -12,7 +12,6 @@
   "cos_sim_classifier": "deeppavlov.models.classifiers.cos_sim_classifier:CosineSimilarityClassifier",
   "data_fitting_iterator": "deeppavlov.core.data.data_fitting_iterator:DataFittingIterator",
   "data_learning_iterator": "deeppavlov.core.data.data_learning_iterator:DataLearningIterator",
-  "data_sum_operator": "deeppavlov.models.preprocessors.data_sum_operator:DataSumOperator",
   "default_vocab": "deeppavlov.core.data.vocab:DefaultVocabulary",
   "dialog_db_result_iterator": "deeppavlov.dataset_iterators.dialog_iterator:DialogDBResultDatasetIterator",
   "dialog_iterator": "deeppavlov.dataset_iterators.dialog_iterator:DialogDatasetIterator",

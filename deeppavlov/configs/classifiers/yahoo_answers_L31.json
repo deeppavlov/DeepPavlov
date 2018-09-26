@@ -1,9 +1,10 @@
 {
   "dataset_reader": {
-    "name": "basic_dataset_reader",
+    "name": "basic_classification_reader",
     "x": [
       "Title",
       "Description",
+      "FullText",
       "Category",
       "Top"
     ],
@@ -31,6 +32,7 @@
     "in": [
       "x_title",
       "x_description",
+      "x_fulltext",
       "x_category",
       "x_top"
     ],
@@ -49,16 +51,27 @@
         "load_path": "YahooAnswers/models/yahoo_answers_classes.dict"
       },
       {
-        "in": [
-          "x_title",
-          "x_description"
+        "id": "categories_vocab",
+        "name": "default_vocab",
+        "fit_on": [
+          "x_category"
         ],
-        "out": "x_title_descr",
-        "id": "title_descr_summator",
-        "name": "data_sum_operator"
+        "level": "token",
+        "save_path": "YahooAnswers/models/yahoo_answers_categories.dict",
+        "load_path": "YahooAnswers/models/yahoo_answers_categories.dict"
       },
       {
-        "in": "x_title_descr",
+        "id": "tops_vocab",
+        "name": "default_vocab",
+        "fit_on": [
+          "x_top"
+        ],
+        "level": "token",
+        "save_path": "YahooAnswers/models/yahoo_answers_tops.dict",
+        "load_path": "YahooAnswers/models/yahoo_answers_tops.dict"
+      },
+      {
+        "in": "x_fulltext",
         "out": "x_title_descr_tok",
         "id": "my_tokenizer",
         "name": "nltk_tokenizer",
@@ -101,7 +114,7 @@
         "lear_rate": 0.01,
         "lear_rate_decay": 0.1,
         "loss": "categorical_crossentropy",
-        "text_size": 15,
+        "text_size": 150,
         "coef_reg_cnn": 1e-4,
         "coef_reg_den": 1e-4,
         "dropout_rate": 0.5,
@@ -127,7 +140,7 @@
     "log_every_n_epochs": 1,
     "show_examples": true,
     "validate_best": true,
-    "test_best": false
+    "test_best": true
   },
   "metadata": {
     "requirements": [
