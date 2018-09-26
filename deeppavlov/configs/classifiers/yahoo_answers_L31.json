@@ -99,27 +99,25 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "YahooAnswers/models/model_v0",
-        "load_path": "YahooAnswers/models/model_v0",
+        "save_path": "YahooAnswers/models/model_v2",
+        "load_path": "YahooAnswers/models/model_v2",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
-        "kernel_sizes_cnn": [
-          1,
-          2,
-          3
-        ],
-        "filters_cnn": 256,
+        "units_lstm": 128,
+        "self_att_out": 256,
+        "self_att_hid": 256,
         "confident_threshold": 1,
         "optimizer": "Adam",
-        "lear_rate": 0.01,
-        "lear_rate_decay": 0.1,
+        "lear_rate": 0.001,
+        "lear_rate_decay": 0.01,
         "loss": "categorical_crossentropy",
         "text_size": 150,
-        "coef_reg_cnn": 1e-4,
-        "coef_reg_den": 1e-4,
+        "coef_reg_lstm": 1e-2,
+        "coef_reg_den": 1e-2,
         "dropout_rate": 0.5,
+        "rec_dropout_rate": 0.5,
         "dense_size": 100,
-        "model_name": "cnn_model"
+        "model_name": "bilstm_self_mult_attention_model"
       }
     ],
     "out": [
@@ -128,17 +126,17 @@
     ]
   },
   "train": {
-    "epochs": 10,
+    "epochs": 100,
     "batch_size": 64,
     "metrics": [
+      "classification_roc_auc",
       "classification_accuracy",
-      "classification_f1",
-      "classification_roc_auc"
+      "classification_f1"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
-    "show_examples": true,
+    "show_examples": false,
     "validate_best": true,
     "test_best": true
   },
