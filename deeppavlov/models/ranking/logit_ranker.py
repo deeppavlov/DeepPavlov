@@ -37,7 +37,7 @@ class LogitRanker(Component):
 
     """
 
-    def __init__(self, squad_model: Component, batch_size: int =50, **kwargs):
+    def __init__(self, squad_model: Component, batch_size: int = 50, **kwargs):
         self.squad_model = squad_model
         self.batch_size = batch_size
 
