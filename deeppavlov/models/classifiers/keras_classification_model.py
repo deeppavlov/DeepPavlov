@@ -168,7 +168,7 @@ class KerasClassificationModel(KerasModel):
         """
         pad = np.zeros(self.opt['embedding_size'])
         cutted_batch = [sen[:self.opt['text_size']] for sen in sentences]
-        cutted_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + list(tokens) for tokens in cutted_batch]
+        cutted_batch = [list(tokens) + [pad] * (self.opt['text_size'] - len(tokens)) for tokens in cutted_batch]
         if return_lengths:
             lengths = np.array([min(len(sen), self.opt['text_size']) for sen in sentences], dtype='int')
             return np.asarray(cutted_batch), lengths
@@ -680,7 +680,7 @@ class KerasClassificationModel(KerasModel):
         model = Model(inputs=inp, outputs=act_output)
         return model
 
-    def bigru_model(self, units_lstm: int, dense_size: int,
+    def bigru_model(self, units_gru: int, dense_size: int,
                     coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
                     dropout_rate: float = 0., rec_dropout_rate: float = 0.,
                     **kwargs) -> Model:
@@ -688,7 +688,7 @@ class KerasClassificationModel(KerasModel):
         Method builds uncompiled model BiGRU.
 
         Args:
-            units_lstm: number of units for GRU.
+            units_gru: number of units for GRU.
             dense_size: number of units for dense layer.
             coef_reg_lstm: l2-regularization coefficient for GRU. Default: ``0.0``.
             coef_reg_den: l2-regularization coefficient for dense layers. Default: ``0.0``.
@@ -702,7 +702,7 @@ class KerasClassificationModel(KerasModel):
 
         inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
 
-        output = Bidirectional(GRU(units_lstm, activation='tanh',
+        output = Bidirectional(GRU(units_gru, activation='tanh',
                                    return_sequences=True,
                                    kernel_regularizer=l2(coef_reg_lstm),
                                    dropout=dropout_rate,
