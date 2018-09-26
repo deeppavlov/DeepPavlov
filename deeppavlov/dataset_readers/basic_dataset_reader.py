@@ -87,8 +87,12 @@ class BasicDatasetReader(DatasetReader):
                 x = kwargs.get("x", "text")
                 y = kwargs.get('y', "text")
 
-                if isinstance(x, list):
+                if isinstance(x, list) and isinstance(y, list):
                     data[data_type] = [([row[x_] for x_ in x], [row[y_] for y_ in y]) for _, row in df.iterrows()]
+                elif isinstance(x, list) and not(isinstance(x, list)):
+                    data[data_type] = [([row[x_] for x_ in x], row[y]) for _, row in df.iterrows()]
+                elif not(isinstance(x, list)) and isinstance(x, list):
+                    data[data_type] = [(row[x], [row[y_] for y_ in y]) for _, row in df.iterrows()]
                 else:
                     data[data_type] = [(row[x], row[y]) for _, row in df.iterrows()]
             else:
