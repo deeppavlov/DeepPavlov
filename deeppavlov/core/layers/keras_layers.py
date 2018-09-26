@@ -19,6 +19,7 @@ from keras.engine.topology import Layer
 from keras.layers.merge import Multiply, Add
 from keras.activations import softmax
 import numpy as np
+import tensorflow as tf
 
 
 def expand_tile(units, axis):
@@ -107,6 +108,7 @@ def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, 
     output = Dense(n_output_features, activation=activation)(attended_units)
     return output
 
+
 def multiplicative_self_attention_init(n_hidden, n_output_features, activation):
     layers = {}
     layers["queries"] = Dense(n_hidden)
@@ -127,11 +129,12 @@ def multiplicative_self_attention_get_output(units, layers):
     output = layers["output"](attended_units)
     return output
 
+
 def char_emb_cnn_func(n_characters: int,
                       char_embedding_dim: int,
                       emb_mat: np.array = None,
-                        filter_widths=(3, 4, 5, 7),
-                        highway_on_top=False):
+                      filter_widths=(3, 4, 5, 7),
+                      highway_on_top=False):
 
     emb_layer = Embedding(n_characters,
                           char_embedding_dim)
@@ -166,3 +169,19 @@ def char_emb_cnn_func(n_characters: int,
         return emb_c
 
     return result
+
+
+def masking_sequences(sequences, seq_lengths):
+    """
+    Function extracts seq_lengths[i] element for each sequences[i].
+    Useful for extracting corresponding hidden state of RNN output.
+
+    Args:
+        sequences: tensor of size (batch_size, timesteps, dim)
+        seq_lengths: tensor of integers of size (batch_size, 2).
+            Each row is a pair (i, length) where length is a number of element of sequences[i] to extract
+
+    Returns:
+        tensor of shape (batch_size, dim)
+    """
+    return Lambda(lambda x: tf.gather_nd(x[0], K.cast(x[1], "int32")))([sequences, seq_lengths])
