@@ -29,13 +29,15 @@ class LogitRanker(Component):
 
      Args:
         squad_model: a loaded squad model
+        batch_size: batch size to use with squad model
 
      Attributes:
         squad_model: a loaded squad model
+        batch_size: batch size to use with squad model
 
     """
 
-    def __init__(self, squad_model, batch_size=50, **kwargs):
+    def __init__(self, squad_model: Component, batch_size: int =50, **kwargs):
         self.squad_model = squad_model
         self.batch_size = batch_size
 
