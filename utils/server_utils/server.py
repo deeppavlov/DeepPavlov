@@ -1,3 +1,17 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import sys
 from pathlib import Path
 
@@ -9,7 +23,7 @@ from deeppavlov.core.common.file import read_json
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.data.utils import check_nested_dict_keys, jsonify_data
 from deeppavlov.core.common.log import get_logger
-
+from deeppavlov.core.models.component import Component
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
 
@@ -52,7 +66,11 @@ def get_server_params(server_config_path, model_config_path):
 memory = {}
 
 
-def interact_alice(model, params_names):
+def interact_alice(model: Component, params_names: list):
+    """
+    Exchange messages between basic pipelines and the Yandex.Dialogs service.
+    If the pipeline returns multiple values, only the first one is forwarded to Yandex.
+    """
     data = request.get_json()
     text = data['request']['command'].strip()
 
@@ -85,7 +103,14 @@ def interact_alice(model, params_names):
     if len(params) == 1:
         params = params[0]
 
-    response['response']['text'] = str(model([params])[0])
+    response_text = model([params])[0]
+    if not isinstance(response_text, str) and isinstance(response_text, (list, tuple)):
+        try:
+            response_text = response_text[0]
+        except Exception as e:
+            log.warning(f'Could not get the first element of `{repr(response_text)}` because of `{e}`')
+
+    response['response']['text'] = str(response_text)
     return jsonify(response), 200
 
 
