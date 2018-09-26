@@ -145,7 +145,7 @@
   "metadata": {
     "requirements": [
       "../dp_requirements/gensim.txt",
-      "../dp_requirements/tf-gpu.txt"
+      "../dp_requirements/tf.txt"
     ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",
