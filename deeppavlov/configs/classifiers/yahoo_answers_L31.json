@@ -103,21 +103,19 @@
         "load_path": "YahooAnswers/models/model_v2",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
-        "units_lstm": 128,
-        "self_att_out": 256,
-        "self_att_hid": 256,
+        "units_gru": 128,
         "confident_threshold": 1,
         "optimizer": "Adam",
-        "lear_rate": 0.001,
+        "lear_rate": 0.01,
         "lear_rate_decay": 0.01,
         "loss": "categorical_crossentropy",
         "text_size": 150,
-        "coef_reg_lstm": 1e-2,
-        "coef_reg_den": 1e-2,
+        "coef_reg_lstm": 1e-4,
+        "coef_reg_den": 1e-4,
         "dropout_rate": 0.5,
         "rec_dropout_rate": 0.5,
         "dense_size": 100,
-        "model_name": "bilstm_self_mult_attention_model"
+        "model_name": "gru_with_masking_model"
       }
     ],
     "out": [

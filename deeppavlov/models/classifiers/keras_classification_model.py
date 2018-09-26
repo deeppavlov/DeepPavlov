@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple
+from typing import List, Tuple, Union
 import numpy as np
 from keras.layers import Dense, Input, concatenate, Activation, Concatenate, Reshape
 from keras.layers.wrappers import Bidirectional
@@ -33,6 +33,7 @@ from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.tokenizers.nltk_tokenizer import NLTKTokenizer
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.layers.keras_layers import additive_self_attention, multiplicative_self_attention
+from deeppavlov.core.layers.keras_layers import masking_sequences
 
 
 log = get_logger(__name__)
@@ -154,7 +155,8 @@ class KerasClassificationModel(KerasModel):
                 self.opt[param] = kwargs.get(param)
         return
 
-    def pad_texts(self, sentences: List[List[np.ndarray]]) -> np.ndarray:
+    def pad_texts(self, sentences: List[List[np.ndarray]],
+                  return_lengths=False) -> Union[np.ndarray, Tuple[np.ndarray, np.ndarray]]:
         """
         Cut and pad tokenized texts to self.opt["text_size"] tokens
 
@@ -167,6 +169,10 @@ class KerasClassificationModel(KerasModel):
         pad = np.zeros(self.opt['embedding_size'])
         cutted_batch = [sen[:self.opt['text_size']] for sen in sentences]
         cutted_batch = [[pad] * (self.opt['text_size'] - len(tokens)) + list(tokens) for tokens in cutted_batch]
+        if return_lengths:
+            lengths = np.array([min(len(sen), self.opt['text_size']) for sen in sentences], dtype='int')
+            return np.asarray(cutted_batch), lengths
+
         return np.asarray(cutted_batch)
 
     def train_on_batch(self, texts: List[List[np.ndarray]], labels: list) -> [float, List[float]]:
@@ -180,7 +186,14 @@ class KerasClassificationModel(KerasModel):
         Returns:
             metrics values on the given batch
         """
-        features = self.pad_texts(texts)
+        if "masking" in self.opt["model_name"]:
+            features, lengths = self.pad_texts(texts, return_lengths=True)
+            lengths = np.hstack((np.arange(len(lengths)).reshape(-1, 1),
+                                 lengths.reshape(-1, 1)))
+            features = [features, lengths]
+        else:
+            features = self.pad_texts(texts)
+
         onehot_labels = labels2onehot(labels, classes=self.classes)
         metrics_values = self.model.train_on_batch(features, onehot_labels)
         return metrics_values
@@ -197,13 +210,19 @@ class KerasClassificationModel(KerasModel):
             metrics values on the given batch, if labels are given
             predictions, otherwise
         """
-        if labels:
+        if "masking" in self.opt["model_name"]:
+            features, lengths = self.pad_texts(texts, return_lengths=True)
+            lengths = np.hstack((np.arange(len(lengths)).reshape(-1, 1),
+                                 lengths.reshape(-1, 1)))
+            features = [features, lengths]
+        else:
             features = self.pad_texts(texts)
+
+        if labels:
             onehot_labels = labels2onehot(labels, classes=self.classes)
             metrics_values = self.model.test_on_batch(features, onehot_labels)
             return metrics_values
         else:
-            features = self.pad_texts(texts)
             predictions = self.model.predict(features)
             return predictions
 
@@ -699,4 +718,47 @@ class KerasClassificationModel(KerasModel):
                        kernel_regularizer=l2(coef_reg_den))(output)
         act_output = Activation(self.opt.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=inp, outputs=act_output)
+        return model
+
+    def gru_with_masking_model(self, units_gru: int, dense_size: int,
+                               coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
+                               dropout_rate: float = 0., rec_dropout_rate: float = 0.,
+                               **kwargs) -> Model:
+        """
+        Method builds uncompiled model GRU.
+
+        Args:
+            units_gru: number of units for GRU.
+            dense_size: number of units for dense layer.
+            coef_reg_lstm: l2-regularization coefficient for GRU. Default: ``0.0``.
+            coef_reg_den: l2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate: dropout rate to be used after BiGRU and between dense layers. Default: ``0.0``.
+            rec_dropout_rate: dropout rate for GRU. Default: ``0.0``.
+            kwargs: other non-used parameters
+
+        Returns:
+            keras.models.Model: uncompiled instance of Keras Model
+        """
+
+        inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
+        inp_lengths = Input(shape=(2,), dtype='int32')
+
+        outputs, states = GRU(units_gru, activation='tanh',
+                              return_sequences=True,
+                              return_state=True,
+                              kernel_regularizer=l2(coef_reg_lstm),
+                              dropout=dropout_rate,
+                              recurrent_dropout=rec_dropout_rate)(inp)
+
+        output = masking_sequences(outputs, inp_lengths)
+
+        output = Dropout(rate=dropout_rate)(output)
+        output = Dense(dense_size, activation=None,
+                       kernel_regularizer=l2(coef_reg_den))(output)
+        output = Activation('relu')(output)
+        output = Dropout(rate=dropout_rate)(output)
+        output = Dense(self.n_classes, activation=None,
+                       kernel_regularizer=l2(coef_reg_den))(output)
+        act_output = Activation(self.opt.get("last_layer_activation", "sigmoid"))(output)
+        model = Model(inputs=[inp, inp_lengths], outputs=act_output)
         return model
