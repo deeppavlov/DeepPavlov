@@ -1,6 +1,7 @@
 {
   "dataset_reader": {
     "name": "insurance_reader",
+    "num_samples": null,
     "data_path": "./insurance_data"
   },
   "dataset_iterator": {
@@ -16,15 +17,19 @@
       {
         "id": "preproc",
         "name": "siamese_preprocessor",
-        "save_path": "vocabs/tok.dict",
-        "load_path": "vocabs/tok.dict",
         "use_matrix": false,
         "num_ranking_samples": 500,
         "max_sequence_length": 200,
-        "update_embeddings": false,
         "fit_on": ["x"],
         "in": ["x"],
         "out": ["x_proc"],
+        "sent_vocab":
+        {
+          "id": "siam_sent_vocab",
+          "name":"simple_vocab",
+          "save_path": "insurance_vocabs/sent.dict",
+          "load_path": "insurance_vocabs/sent.dict"
+        },
         "tokenizer":
         {
           "name": "split_tokenizer"
@@ -33,8 +38,8 @@
         {
           "id": "siam_vocab",
           "name":"simple_vocab",
-          "save_path": "insurance_vocabs/int_tok.dict",
-          "load_path": "insurance_vocabs/int_tok.dict"
+          "save_path": "insurance_vocabs/tok.dict",
+          "load_path": "insurance_vocabs/ctok.dict"
         },
         "embedder":
         {
@@ -55,30 +60,24 @@
         "in": ["x_proc"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "name": "siamese_model",
-        "device_num": 0,
-        "train_now": true,
-        "network": {
-          "name": "bilstm_nn",
-          "len_vocab": "#siam_vocab.len",
-          "use_matrix": "#preproc.use_matrix",
-          "max_sequence_length": "#preproc.max_sequence_length",
-          "emb_matrix": "#embeddings.emb_mat",
-          "embedding_dim": "#siam_embedder.dim",
-          "seed": 243,
-          "reccurent": "bilstm",
-          "max_pooling": true,
-          "shared_weights": true,
-          "hidden_dim": 300,
-          "learning_rate": 1e-3,
-          "triplet_loss": true,
-          "hard_triplets": false,
-          "margin": 0.1
-        },
+        "name": "bilstm_nn",
+        "len_vocab": "#siam_vocab.len",
+        "use_matrix": "#preproc.use_matrix",
+        "max_sequence_length": "#preproc.max_sequence_length",
+        "emb_matrix": "#embeddings.emb_mat",
+        "embedding_dim": "#siam_embedder.dim",
+        "seed": 243,
+        "reccurent": "bilstm",
+        "max_pooling": true,
+        "shared_weights": true,
+        "hidden_dim": 300,
+        "learning_rate": 1e-3,
+        "triplet_loss": true,
+        "hard_triplets": false,
+        "margin": 0.1,
         "batch_size": 256,
-        "save_path": "insurance_ranking/model_weights.h5",
-        "load_path": "insurance_ranking/model_weights.h5",
-        "update_embeddings": "#preproc.update_embeddings",
+        "save_path": "insurance_model/model_weights.h5",
+        "load_path": "insurance_model/model_weights.h5",
         "preprocess": "#preproc.__call__",
         "interact_pred_num": 3
       }
@@ -105,9 +104,8 @@
       "server_utils": "Ranker"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/insurance_ranking.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/datasets/insuranceQA-master.zip",
+        "url": "http://files.deeppavlov.ai/datasets/insuranceQA-master.zip",
         "subdir": "insurance_data"
       },
       {
