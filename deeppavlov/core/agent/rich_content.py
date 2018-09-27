@@ -28,7 +28,7 @@ class RichItem(metaclass=ABCMeta):
         its nested controls.
 
         Returns:
-            control (list, dict): json representation of control state
+            control (list, dict): Json representation of control state.
         """
         return None
 
@@ -37,7 +37,7 @@ class RichItem(metaclass=ABCMeta):
         including its nested controls.
 
         Returns:
-            control: MS Bot Framework representation of control state
+            control: MS Bot Framework representation of control state.
         """
         return None
 
@@ -46,7 +46,7 @@ class RichItem(metaclass=ABCMeta):
         including its nested controls.
 
         Returns:
-            control: Telegram representation of control state
+            control: Telegram representation of control state.
         """
         return None
 
@@ -63,7 +63,7 @@ class RichControl(RichItem, metaclass=ABCMeta):
     Attributes:
         control_type (str): Name of the rich control type.
         content: Arbitrary used control content holder.
-        control_json (dict): control json representation template, which
+        control_json (dict): Control json representation template, which
             contains control type and content fields.
     """
     def __init__(self, control_type: str):
@@ -87,40 +87,42 @@ class RichMessage(RichItem):
         self.controls = []
 
     def add_control(self, control: RichControl):
-        """Adds RichControl to RichMessage.
+        """Adds RichControl instance to RichMessage.
 
         Args:
-            control (RichControl): Rich control instance.
+            control (RichControl): RichControl instance.
         """
         self.controls.append(control)
 
     def json(self):
-        """Returns json compatible state of the RichMessage instance including
-        its nested controls.
+        """Returns list of json compatible states of the RichMessage instance
+        nested controls.
 
         Returns:
-            json_controls (list): json representation of RichMessage and
-            embedded rich controls.
+            json_controls (list): Json representation of RichMessage instance
+                nested controls.
         """
         json_controls = [control.json() for control in self.controls]
         return json_controls
 
     def ms_bot_framework(self):
-        """Returns MS Bot Framework compatible state of the RichMessage instance
-        including its nested controls.
+        """Returns list of MS Bot Framework compatible states of the
+        RichMessage instance nested controls.
 
         Returns:
-            control: MS Bot Framework representation of RichMessage state
+            control: MS Bot Framework representation of RichMessage instance
+                nested controls.
         """
         ms_bf_controls = [control.ms_bot_framework() for control in self.controls]
         return ms_bf_controls
 
     def telegram(self):
-        """Returns Telegram compatible state of the RichMessage instance
-        including its nested controls.
+        """Returns list of Telegram compatible states of the RichMessage
+        instance nested controls.
 
         Returns:
-            control: Telegram representation of RichMessage state
+            control: Telegram representation of RichMessage instance nested
+                controls.
         """
         telegram_controls = [control.telegram() for control in self.controls]
         return telegram_controls
