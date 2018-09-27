@@ -5,14 +5,40 @@ EXPECTING_ARG_MESSAGE = 'expecting_arg:{}'
 
 
 class DefaultStatelessSkill(Skill):
+    """Default stateless skill class.
+
+    The class is intended to be used for as a default skill wrapping
+    DeepPavlov models.
+
+    Attributes:
+        model: DeepPavlov model to be wrapped into default skill instance.
+    """
     def __init__(self, model: Component):
-        self.model = model
+        self.model: Component = model
 
     def __call__(self, utterances_batch: [list, tuple], history_batch: [list, tuple],
-                 states_batch: [list, tuple] = None):
+                 states_batch: [list, tuple] = None) -> (list, list, list):
         # TODO: methods inputs should be lists, not tuples
+        """Returns skill inference result.
+
+        Returns batches of skill inference results, estimated confidence
+            levels and up to date states corresponding to incoming utterance
+            batch. Also handles interaction with multiargument models using
+            skill states.
+
+        Args:
+            utterances_batch: A batch of utterances of any type.
+            history_batch: Not used. A batch of list typed histories for each
+                utterance.
+            states_batch: A batch of states for each utterance.
+
+        Returns:
+            response: A batch of arbitrary typed skill inference results.
+            confidence: A batch of float typed confidence levels for each of
+                skill inference result.
+            states: Optional. A batch of states for each response.
+        """
         utterances_batch = list(utterances_batch)
-        history_batch = list(history_batch)
         states_batch = list(states_batch)
 
         batch_len = len(utterances_batch)

@@ -18,30 +18,32 @@ from deeppavlov.core.models.component import Component
 
 
 class Skill(Component, metaclass=ABCMeta):
-    """Abstract class for skills. Skill is a DeepPavlov component,
-    which provides handling dialog state, dialog history and rich content.
+    """Abstract class for skills.
+
+    Skill is a DeepPavlov component, which provides handling dialog state,
+    dialog history and rich content.
     """
     @abstractmethod
     def __call__(self, utterances_batch: [list, tuple], history_batch: [list, tuple],
-                 states_batch: [list, tuple] = None):
+                 states_batch: [list, tuple] = None) -> (list, list, list):
+        # TODO: methods inputs should be lists, not tuples
         """Returns skill inference result.
 
-        Returns skill inference result along with estimated confidence level,
-        up to date conversation history and state for each utterance in the batch.
+        Returns batches of skill inference results, estimated confidence
+            levels and up to date states corresponding to incoming utterance
+            batch.
 
         Args:
-            utterances_batch ([list, tuple]): A batch of utterances of any type
-            history_batch ([list, tuple]): A batch of list typed histories
-                for each utterance
-            states_batch ([list, tuple]): Optional. A batch of arbitrary typed states
-                for each utterance
+            utterances_batch: A batch of utterances of any type.
+            history_batch: A batch of list typed histories for each utterance.
+            states_batch: Optional. A batch of arbitrary typed states for
+                each utterance.
 
         Returns:
-            response (list): A batch of arbitrary typed skill inference results
-            confidence (list): A batch of float typed confidence levels for
-                each of skill inference result
-            states (list): Optional. A batch of arbitrary typed states
-                for each response
-
+            response: A batch of arbitrary typed skill inference results.
+            confidence: A batch of float typed confidence levels for each of
+                skill inference result.
+            states: Optional. A batch of arbitrary typed states for each
+                response.
         """
         return
