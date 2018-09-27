@@ -17,8 +17,6 @@ from abc import ABCMeta, abstractmethod
 
 from deeppavlov.core.models.component import Component
 
-AgentResponse = namedtuple('AgentResponse', ['response', 'confidence'])
-
 
 class Processor(Component, metaclass=ABCMeta):
     """Abstract class for processors. Processor is a DeepPavlov component,
@@ -39,10 +37,10 @@ class Processor(Component, metaclass=ABCMeta):
                 for each utterance
             responses (list): Each response positional argument corresponds to
                 response of one of Agent skills and is represented by
-                batch (list) of AgentResponse objects.
+                batch (list) of (response, confidence) tuple structures.
 
         Returns:
-            responses (list): A batch of AgentResponse typed responses for
-                each utterance
+            responses (list): A batch of responses corresponding to the
+                utterance batch received by agent.
         """
         return

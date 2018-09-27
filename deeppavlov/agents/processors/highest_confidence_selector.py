@@ -15,10 +15,25 @@ from deeppavlov.core.agent.processor import Processor
 
 
 class HighestConfidenceSelector(Processor):
+    """Returns for each utterance response with highest confidence.
+    """
     def __init__(self, *args, **kwargs):
         pass
 
     def __call__(self, utterances, batch_history, *responses):
+        """Selects for each utterance response with highest confidence.
+
+        Args:
+            utterances_batch (list): Not used.
+            history_batch (list): Not used.
+            responses (list): Each response positional argument corresponds to
+                response of one of Agent skills and is represented by
+                batch (list) of (response, confidence) tuple structures.
+
+        Returns:
+            responses (list): A batch of responses corresponding to the
+                utterance batch received by agent.
+        """
         responses, confidences = zip(*[zip(*r) for r in responses])
         indexes = [c.index(max(c)) for c in zip(*confidences)]
         return [responses[i] for i, *responses in zip(indexes, *responses)]

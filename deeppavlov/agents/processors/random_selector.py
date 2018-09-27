@@ -17,8 +17,23 @@ from deeppavlov.core.agent.processor import Processor
 
 
 class RandomSelector(Processor):
+    """Returns response of a random skill for each utterance.
+    """
     def __init__(self, *args, **kwargs):
         pass
 
     def __call__(self, utterances, batch_history, *responses):
+        """Selects result of a random skill for each utterance.
+
+        Args:
+            utterances_batch (list): Not used.
+            history_batch (list): Not used.
+            responses (list): Each response positional argument corresponds to
+                response of one of Agent skills and is represented by
+                batch (list) of (response, confidence) tuple structures.
+
+        Returns:
+            responses (list): A batch of responses corresponding to the
+                utterance batch received by agent.
+        """
         return [random.choice([t for t, sc in r if t]) for r in zip(*responses)]
