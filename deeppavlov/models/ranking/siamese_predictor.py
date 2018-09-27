@@ -19,14 +19,14 @@ from typing import List, Iterable, Callable, Union
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.component import Component
-from deeppavlov.models.ranking.siamese_keras_model import SiameseKerasModel
+from deeppavlov.models.ranking.keras_siamese_model import SiameseModel
 from deeppavlov.core.data.simple_vocab import SimpleVocabulary
 from deeppavlov.core.common.registry import register
 
 log = get_logger(__name__)
 
 @register('siamese_predictor')
-class SiameseKerasPredictor(Component):
+class SiamesePredictor(Component):
     """The class for ranking or paraphrase identification using the trained siamese network  in the ``interact`` mode.
 
     Args:
@@ -51,7 +51,7 @@ class SiameseKerasPredictor(Component):
     """
 
     def __init__(self,
-                 model: SiameseKerasModel,
+                 model: SiameseModel,
                  batch_size: int,
                  num_context_turns: int = 1,
                  ranking: bool = True,
