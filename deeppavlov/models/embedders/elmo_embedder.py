@@ -78,7 +78,10 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
 
     """
     def __init__(self, spec: str, elmo_output_names: Optional[List] = None, dim: Optional[int] = None, pad_zero: bool = False,
-                 concat_last_axis: bool = True, max_token: Optional[int] = None, mini_batch_size: int = 32, **kwargs) -> None:
+                 concat_last_axis: bool = True, max_token: Optional[int] = None, mini_batch_size: int = 32, cache=False,
+                 **kwargs) -> None:
+
+        self.cache = cache
 
         self.spec = spec if '://' in spec else str(expand_path(spec))
 
@@ -264,4 +267,5 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
 
 
     def destroy(self):
-        self.sess.close()
+        if not self.chache:
+            self.sess.close()

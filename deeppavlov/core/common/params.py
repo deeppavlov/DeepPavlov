@@ -71,6 +71,10 @@ def from_params(params: Dict, mode: str = 'infer', **kwargs) -> Component:
             log.exception(e)
             raise e
 
+    if config_params.get('cache', False) and config_params.get('id') in _refs:
+        log.info(f"loading cached {config_params['id']}")
+        return _refs[config_params['id']]
+
     elif 'config_path' in config_params:
         from deeppavlov.core.commands.infer import build_model_from_config
         deeppavlov_root = get_deeppavlov_root()
