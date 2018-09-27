@@ -49,11 +49,12 @@ class FasttextEmbedder(Component, Serializable):
         load_path: path with pre-trained fastText binary model
     """
     def __init__(self, load_path: Union[str, Path], save_path: Union[str, Path] = None, dim: int = 100,
-                 pad_zero: bool = False, **kwargs) -> None:
+                 pad_zero: bool = False, cache=False, **kwargs) -> None:
         """
         Initialize embedder with given parameters
         """
         super().__init__(save_path=save_path, load_path=load_path)
+        self.cache = cache
         self.tok2emb = {}
         self.dim = dim
         self.pad_zero = pad_zero
@@ -155,4 +156,8 @@ class FasttextEmbedder(Component, Serializable):
         return embedded_tokens
 
     def destroy(self):
-        del self.model
+        if not self.cache:
+            try:
+                del self.model
+            except AttributeError:
+                pass

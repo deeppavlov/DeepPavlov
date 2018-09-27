@@ -133,11 +133,6 @@ class PipeGen:
                 grid_pipe = list(grid_pipe)
                 for pipe in self.random_conf_gen(grid_pipe):
 
-                    # new_config = deepcopy(self.main_config)
-                    # new_config['dataset_reader'] = deepcopy(dr_config)
-                    # new_config['train'] = deepcopy(train_config)
-                    # new_config['chainer'] = deepcopy(self.chainer)
-
                     new_config = dict(dataset_reader=deepcopy(dr_config),
                                       dataset_iterator=self.main_config['dataset_iterator'],
                                       chainer=self.chainer, train=train_config)

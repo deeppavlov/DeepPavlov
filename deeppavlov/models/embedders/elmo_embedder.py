@@ -37,6 +37,7 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
     ``ELMo`` (Embeddings from Language Models) representations are pre-trained contextual representations from
     large-scale bidirectional language models. See a paper `Deep contextualized word representations
     <https://arxiv.org/abs/1802.05365>`__ for more information about the algorithm and a detailed analysis.
+
     Parameters:
         spec: A ``ModuleSpec`` defining the Module to instantiate or a path where to load a ``ModuleSpec`` from via
             ``tenserflow_hub.load_module_spec`` by using `TensorFlow Hub <https://www.tensorflow.org/hub/overview>`__.
@@ -53,6 +54,7 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
     Examples:
         You can use ELMo models from DeepPavlov as usual `TensorFlow Hub Module
         <https://www.tensorflow.org/hub/modules/google/elmo/2>`_.
+
         >>> import tensorflow_hub as hub
         >>> elmo = hub.Module("http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz",
         trainable=True)
@@ -76,7 +78,10 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
 
     """
     def __init__(self, spec: str, elmo_output_names: Optional[List] = None, dim: Optional[int] = None, pad_zero: bool = False,
-                 concat_last_axis: bool = True, max_token: Optional[int] = None, mini_batch_size: int = 32, **kwargs) -> None:
+                 concat_last_axis: bool = True, max_token: Optional[int] = None, mini_batch_size: int = 32, cache=False,
+                 **kwargs) -> None:
+
+        self.cache = cache
 
         self.spec = spec if '://' in spec else str(expand_path(spec))
 
@@ -262,4 +267,5 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
 
 
     def destroy(self):
-        self.sess.close()
+        if not self.chache:
+            self.sess.close()
