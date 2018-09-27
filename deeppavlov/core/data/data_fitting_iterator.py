@@ -27,7 +27,7 @@ class DataFittingIterator:
     Data is passed as a list of strings(documents).
     Generate batches (for large datasets).
 
-     Args:
+    Args:
         data: list of documents
         doc_ids: provided document ids
         seed: random seed for data shuffling

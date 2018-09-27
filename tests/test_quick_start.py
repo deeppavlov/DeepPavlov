@@ -242,10 +242,10 @@ class TestQuickStart(object):
         logfile = io.BytesIO(b'')
         p = pexpect.popen_spawn.PopenSpawn(sys.executable + " -m deeppavlov install " + str(conf_file), timeout=None,
                                            logfile=logfile)
+        p.readlines()
         if p.wait() != 0:
-            logfile.seek(0)
             raise RuntimeError('Installing process of {} returned non-zero exit code: \n{}'
-                               .format(conf_file, ''.join((line.decode() for line in logfile.readlines()))))
+                               .format(conf_file, logfile.getvalue().decode()))
 
     @staticmethod
     def interact(conf_file, model_dir, qr_list=None):
@@ -267,14 +267,11 @@ class TestQuickStart(object):
 
             p.expect("::")
             p.sendline("quit")
+            p.readlines()
             if p.wait() != 0:
-                logfile.seek(0)
-                raise RuntimeError('Error in quitting from deep.py: \n{}'
-                                   .format(''.join((line.decode() for line in logfile.readlines()))))
+                raise RuntimeError('Error in quitting from deep.py: \n{}'.format(logfile.getvalue().decode()))
         except pexpect.exceptions.EOF:
-            logfile.seek(0)
-            raise RuntimeError('Got unexpected EOF: \n{}'
-                               .format(''.join((line.decode() for line in logfile.readlines()))))
+            raise RuntimeError('Got unexpected EOF: \n{}'.format(logfile.getvalue().decode()))
 
     @staticmethod
     def interact_api(conf_file):
@@ -303,17 +300,13 @@ class TestQuickStart(object):
             assert response_code == 200, f"POST request returned error code {response_code} with {conf_file}"
 
         except pexpect.exceptions.EOF:
-            logfile.seek(0)
-            raise RuntimeError('Got unexpected EOF: \n{}'
-                               .format(''.join((line.decode() for line in logfile.readlines()))))
+            raise RuntimeError('Got unexpected EOF: \n{}'.format(logfile.getvalue().decode()))
 
         finally:
             p.kill(signal.SIGTERM)
             p.wait()
             # if p.wait() != 0:
-            #     logfile.seek(0)
-            #     raise RuntimeError('Error in shutting down API server: \n{}'
-            #                        .format(''.join((line.decode() for line in logfile.readlines()))))
+            #     raise RuntimeError('Error in shutting down API server: \n{}'.format(logfile.getvalue().decode()))
 
     def test_interacting_pretrained_model(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
@@ -348,10 +341,10 @@ class TestQuickStart(object):
             logfile = io.BytesIO(b'')
             p = pexpect.popen_spawn.PopenSpawn(sys.executable + " -m deeppavlov train " + str(c), timeout=None,
                                                logfile=logfile)
+            p.readlines()
             if p.wait() != 0:
-                logfile.seek(0)
                 raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
-                                   .format(model_dir, ''.join((line.decode() for line in logfile.readlines()))))
+                                   .format(model_dir, logfile.getvalue().decode()))
             self.interact(c, model_dir)
 
             shutil.rmtree(str(download_path), ignore_errors=True)
@@ -371,10 +364,10 @@ class TestQuickStart(object):
             logfile = io.BytesIO(b'')
             p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.evolve {c} --iterations 1 --p_size 1",
                                                timeout=None, logfile=logfile)
+            p.readlines()
             if p.wait() != 0:
-                logfile.seek(0)
                 raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
-                                   .format(model_dir, ''.join((line.decode() for line in logfile.readlines()))))
+                                   .format(model_dir, logfile.getvalue().decode()))
 
             shutil.rmtree(str(download_path), ignore_errors=True)
         else:
@@ -393,10 +386,10 @@ class TestQuickStart(object):
             logfile = io.BytesIO(b'')
             p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov crossval {c} --folds 2",
                                                timeout=None, logfile=logfile)
+            p.readlines()
             if p.wait() != 0:
-                logfile.seek(0)
                 raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
-                                   .format(model_dir, ''.join((line.decode() for line in logfile.readlines()))))
+                                   .format(model_dir, logfile.getvalue().decode()))
 
             shutil.rmtree(str(download_path), ignore_errors=True)
         else:
@@ -415,10 +408,10 @@ class TestQuickStart(object):
             logfile = io.BytesIO(b'')
             p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.paramsearch {c} --folds 2",
                                                timeout=None, logfile=logfile)
+            p.readlines()
             if p.wait() != 0:
-                logfile.seek(0)
                 raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
-                                   .format(model_dir, ''.join((line.decode() for line in logfile.readlines()))))
+                                   .format(model_dir, logfile.getvalue().decode()))
 
             shutil.rmtree(str(download_path), ignore_errors=True)
         else:
