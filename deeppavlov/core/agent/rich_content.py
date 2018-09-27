@@ -15,7 +15,7 @@ from abc import ABCMeta, abstractmethod
 
 
 class RichItem(metaclass=ABCMeta):
-    """Parent class for rich content elements.
+    """Base class for rich content elements.
 
     Every rich content element
     is presumed to return its state (including state of nested controls)
@@ -52,11 +52,10 @@ class RichItem(metaclass=ABCMeta):
 
 
 class RichControl(RichItem, metaclass=ABCMeta):
-    """Parent class for rich controls.
+    """Base class for rich controls.
 
-    Rich control can be a button, buttons
-    box, plain text, image, etc. Each control class should be derived from
-    RichControl.
+    Rich control can be a button, buttons box, plain text, image, etc.
+    All rich control classes should be derived from RichControl.
 
     Args:
         control_type (str): Name of the rich control type.
