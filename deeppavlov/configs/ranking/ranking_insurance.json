@@ -105,7 +105,7 @@
     },
     "download": [
       {
-        "url": "http://lnsigo.mipt.ru/export/datasets/insuranceQA-master.zip",
+        "url": "http://files.deeppavlov.ai/datasets/insuranceQA-master.zip",
         "subdir": "insurance_data"
       },
       {
