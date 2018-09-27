@@ -43,6 +43,7 @@ class BasicDatasetReader(DatasetReader):
         Reading files are all data_types + extension
         (i.e for data_types=["train", "valid"] files "train.csv" and "valid.csv" form
         data_path will be read)
+
         Args:
             data_path: directory with files
             url: download data files if data_path not exists or empty
@@ -52,6 +53,7 @@ class BasicDatasetReader(DatasetReader):
             names (array): list of column names to use
             orient (str): indication of expected JSON string format
             lines (boolean): read the file as a json object per line. Default: ``False``
+
         Returns:
             dictionary with types from data_types.
             Each field of dictionary is a list of tuples (x_i, y_i)
@@ -87,8 +89,12 @@ class BasicDatasetReader(DatasetReader):
                 x = kwargs.get("x", "text")
                 y = kwargs.get('y', "text")
 
-                if isinstance(x, list):
+                if isinstance(x, list) and isinstance(y, list):
                     data[data_type] = [([row[x_] for x_ in x], [row[y_] for y_ in y]) for _, row in df.iterrows()]
+                elif isinstance(x, list) and not(isinstance(y, list)):
+                    data[data_type] = [([row[x_] for x_ in x], row[y]) for _, row in df.iterrows()]
+                elif not(isinstance(x, list)) and isinstance(y, list):
+                    data[data_type] = [(row[x], [row[y_] for y_ in y]) for _, row in df.iterrows()]
                 else:
                     data[data_type] = [(row[x], row[y]) for _, row in df.iterrows()]
             else:
