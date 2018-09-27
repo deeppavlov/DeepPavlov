@@ -15,8 +15,29 @@ from deeppavlov.core.agent.filter import Filter
 
 
 class TransparentFilter(Filter):
+    """Filer applies each agent skill to all of batch utterances.
+
+    Args:
+        skills_count (int): Number of agent skills.
+
+    Attributes:
+        size (int): Number of agent skills.
+    """
     def __init__(self, skills_count, *args, **kwargs):
         self.size = skills_count
 
-    def __call__(self, utterances, batch_history):
-        return [[True] * self.size] * len(utterances)
+    def __call__(self, utterances_batch, history_batch):
+        """Returns skills-utterances application matrix.
+
+        Generates skills-utterances application matrix with all True
+        elements.
+
+        Args:
+            utterances_batch (list): A batch of utterances of any type.
+            history_batch (list): Not used.
+
+        Returns:
+            response (list): Skills-utterances application matrix with
+                all True elements.
+        """
+        return [[True] * self.size] * len(utterances_batch)

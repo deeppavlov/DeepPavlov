@@ -31,9 +31,9 @@ class Filter(Component, metaclass=ABCMeta):
         from incoming batch.
 
         Args:
-            utterances_batch (list): A batch of utterances of any type
+            utterances_batch (list): A batch of utterances of any type.
             history_batch (list): A batch of list typed histories
-                for each utterance
+                for each utterance.
 
         Returns:
             response (list): Skills-utterances application matrix,
