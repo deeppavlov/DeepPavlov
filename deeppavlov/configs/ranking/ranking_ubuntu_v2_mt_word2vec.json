@@ -9,9 +9,40 @@
     "seed": 243
   },
   "chainer": {
-    "in": ["x"],
-    "in_y": ["y"],
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
     "pipe": [
+      {
+        "name": "twokenize_tokenizer",
+        "id": "tok_1"
+      },
+      {
+        "name": "simple_vocab",
+        "id": "vocab_1",
+        "save_path": "ubuntu_v2_mt_vocabs/int_tok.dict",
+        "load_path": "ubuntu_v2_mt_vocabs/int_tok.dict"
+      },
+      {
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_proc_vect_unused"
+        ],
+        "fit_on": [
+          "x"
+        ],
+        "retrain": false,
+        "id": "word2vec_vectorizer",
+        "name": "word2vec_vectorizer",
+        "save_path": "ubuntu_v2_mt_word2vec/w2v.model",
+        "load_path": "ubuntu_v2_mt_word2vec/w2v.model",
+        "notes": "We need to train word2vec embeddings before using in emb_mat_assembler"
+      },
       {
         "id": "preproc",
         "name": "siamese_preprocessor",
@@ -21,39 +52,45 @@
         "num_ranking_samples": 10,
         "num_context_turns": 10,
         "max_sequence_length": 10,
-        "fit_on": ["x"],
-        "in": ["x"],
-        "out": ["x_proc"],
-        "tokenizer":
-        {
-          "name": "split_tokenizer"
+        "embedding_dim": "#word2vec_vectorizer.dim",
+        "fit_on": [
+          "x"
+        ],
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_proc"
+        ],
+        "tokenizer": {
+          "ref": "tok_1",
+          "notes": "use 'twokenizer'"
         },
-        "vocab":
-        {
-          "id": "siam_vocab",
-          "name":"simple_vocab",
-          "save_path": "ubuntu_v2_mt_vocabs/int_tok.dict",
-          "load_path": "ubuntu_v2_mt_vocabs/int_tok.dict"
+        "vocab": {
+          "ref": "vocab_1",
+          "notes": "use vocab built for 'twokenized' data"
         },
-        "embedder":
-        {
-          "id": "siam_embedder",
-          "name": "fasttext",
-          "load_path": "ubuntu_v2_embeddings/wiki.en.bin",
-          "save_path": "ubuntu_v2_embeddings/wiki.en.bin",
-          "dim": 300
+        "embedder": {
+          "ref": "word2vec_vectorizer",
+          "notes": "use prepared word2vec embeddings"
         }
       },
       {
         "id": "embeddings",
         "name": "emb_mat_assembler",
-        "embedder": "#siam_embedder",
+        "embedder": "#word2vec_vectorizer",
         "vocab": "#siam_vocab"
       },
       {
-        "in": ["x_proc"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
+        "in": [
+          "x_proc"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_predicted"
+        ],
         "name": "siamese_model",
         "device_num": 0,
         "train_now": true,
@@ -63,7 +100,7 @@
           "num_context_turns": "#preproc.num_context_turns",
           "len_vocab": "#siam_vocab.len",
           "max_sequence_length": "#preproc.max_sequence_length",
-          "embedding_dim": "#siam_embedder.dim",
+          "embedding_dim": "#word2vec_vectorizer.dim",
           "emb_matrix": "#embeddings.emb_mat",
           "seed": 243,
           "hidden_dim": 300,
@@ -76,14 +113,19 @@
         "load_path": "ubuntu_v2_mt_ranking/model_weights.h5"
       }
     ],
-    "out": ["y_predicted"]
+    "out": [
+      "y_predicted"
+    ]
   },
   "train": {
     "epochs": 200,
     "batch_size": 256,
     "pytest_max_batches": 2,
     "train_metrics": [],
-    "metrics": ["r@1", "rank_response"],
+    "metrics": [
+      "r@1",
+      "rank_response"
+    ],
     "validation_patience": 10,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 1000

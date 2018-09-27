@@ -102,5 +102,8 @@
   "ubuntu_v2_reader": "deeppavlov.dataset_readers.ubuntu_v2_reader:UbuntuV2Reader",
   "ubuntu_v2_reader_mt": "deeppavlov.dataset_readers.ubuntu_v2_reader_mt:UbuntuV2ReaderMT",
   "wiki_sqlite_vocab": "deeppavlov.vocabs.wiki_sqlite:WikiSQLiteVocab",
-  "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary"
+  "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary",
+  "word2vec_vectorizer": "deeppavlov.models.vectorizers.word2vec_vectorizer:Word2vecVectorizer",
+  "siamese_preprocessor_word2vec": "deeppavlov.models.preprocessors.siamese_preprocessor_word2vec:SiamesePreprocessorWord2vec",
+  "twokenize_tokenizer": "deeppavlov.models.tokenizers.twokenize_tokenizer:TwokenizeTokenizer"
 }
