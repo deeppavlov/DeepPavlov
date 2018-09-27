@@ -1,6 +1,6 @@
 {
   "dataset_reader": {
-    "name": "basic_classification_reader",
+    "name": "basic_dataset_reader",
     "x": [
       "Title",
       "Description",
