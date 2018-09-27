@@ -55,7 +55,7 @@
   },
   "metadata": {
     "requirements": [
-      "../dp_requirements/tf-gpu.txt",
+      "../dp_requirements/tf.txt",
       "../dp_requirements/spacy.txt",
       "../dp_requirements/en_core_web_sm.txt"
     ],
