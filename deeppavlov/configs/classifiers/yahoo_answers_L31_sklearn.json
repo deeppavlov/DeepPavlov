@@ -80,25 +80,25 @@
         ],
         "out": [
           "answer",
-          "score"
+          "probas"
         ],
         "main": true,
         "name": "logreg_classifier",
         "save_path": "YahooAnswers/models/model_v2.pkl",
         "load_path": "YahooAnswers/models/model_v2.pkl",
-        "c": 1,
+        "c": 10,
         "penalty": "l2"
       }
     ],
     "out": [
-      "answer"
+      "probas"
     ]
   },
   "train": {
     "epochs": 100,
     "batch_size": 64,
     "metrics": [
-      "accuracy"
+      "roc_auc"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,

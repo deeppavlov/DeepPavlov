@@ -21,6 +21,7 @@ from deeppavlov.core.common.metrics_registry import register_metric
 from deeppavlov.models.classifiers.utils import labels2onehot
 
 
+@register_metric("roc_auc")
 def roc_auc_score_np(y_true: [list, np.ndarray], y_pred: [list, np.ndarray]) -> float:
     """
     Compute Area Under the Curve (AUC) from prediction scores.

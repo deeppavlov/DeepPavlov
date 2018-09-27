@@ -20,6 +20,7 @@
   "r@2": "deeppavlov.models.ranking.metrics:r_at_2",
   "r@5": "deeppavlov.models.ranking.metrics:r_at_5",
   "rank_response": "deeppavlov.models.ranking.metrics:rank_response",
+  "roc_auc": "deeppavlov.metrics.roc_auc_score:roc_auc_score_np",
   "sets_accuracy": "deeppavlov.metrics.accuracy:sets_accuracy",
   "slots_accuracy": "deeppavlov.metrics.accuracy:slots_accuracy",
   "squad_f1": "deeppavlov.metrics.squad_metrics:squad_f1"

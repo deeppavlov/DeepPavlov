@@ -73,7 +73,7 @@ class LogregClassifier(Estimator, Serializable):
             answers.extend([self.logreg.classes_[id] for id in answer_ids[i, ::-1]])
             scores.extend([np.round(probs[i, id], 2) for id in answer_ids[i, ::-1]])
 
-        return answers, scores
+        return answers, probs[:, 1]
 
     def fit(self, x_train_vects: Tuple[Union[csr_matrix, List]], y_train: Tuple[str]) -> None:
         """Train classifier
