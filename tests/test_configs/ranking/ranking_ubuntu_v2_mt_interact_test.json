@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
-    "name": "ubuntu_v2_reader_mt",
-    "num_samples": null,
+    "name": "ubuntu_v2_mt_reader",
+    "num_samples": 1024,
     "data_path": "./ubuntu_v2_data",
     "num_context_turns": 10
   },
@@ -17,7 +17,7 @@
         "id": "preproc",
         "name": "siamese_preprocessor",
         "use_matrix": true,
-        "num_ranking_samples": 10,
+        "num_ranking_samples": 2,
         "num_context_turns": 10,
         "max_sequence_length": 50,
         "fit_on": ["x"],
@@ -45,8 +45,8 @@
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "ubuntu_v2_embeddings/wiki.en.bin",
-          "save_path": "ubuntu_v2_embeddings/wiki.en.bin",
+          "load_path": "embeddings/ft_dummy_300.bin",
+          "save_path": "embeddings/ft_dummy_300.bin",
           "dim": 300
         }
       },
@@ -57,9 +57,7 @@
         "vocab": "#siam_vocab"
       },
       {
-        "in": ["x_proc"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
+        "id": "model",
         "name": "bilstm_gru_nn",
         "use_matrix": "#preproc.use_matrix",
         "num_context_turns": "#preproc.num_context_turns",
@@ -74,6 +72,18 @@
         "batch_size": 256,
         "save_path": "ubuntu_v2_mt_model/model_weights.h5",
         "load_path": "ubuntu_v2_mt_model/model_weights.h5"
+      },
+      {
+        "in": ["x_proc"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "name": "siamese_scorer",
+        "model": "#model",
+        "num_context_turns": "#model.num_context_turns",
+        "batch_size": "#model.batch_size",
+        "interact_pred_num": 3,
+        "responses": "#siam_sent_vocab",
+        "preproc_func": "#preproc.__call__"
       }
     ],
     "out": ["y_predicted"]
@@ -98,13 +108,14 @@
       "server_utils": "Ranker"
     },
     "download": [
+      "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_mt_ranking.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/datasets/ubuntu_v2_data.tar.gz",
         "subdir": "ubuntu_v2_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
-        "subdir": "ubuntu_v2_embeddings"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/ft_dummy_300.bin",
+        "subdir": "embeddings"
       }
     ]
   }

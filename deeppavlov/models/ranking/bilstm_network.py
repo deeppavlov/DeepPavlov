@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Union
+from typing import List
 from keras.layers import Input, LSTM, Embedding, GlobalMaxPooling1D, Lambda, Dense, Layer
 from keras.layers.merge import Multiply
 from keras.models import Model
@@ -28,13 +28,12 @@ class BiLSTMNetwork(SiameseKerasModel):
     Args:
         len_vocab: A size of the vocabulary to build embedding layer.
         seed: Random seed.
-        shared_weights: Whether to use shared weights in the model to encode contexts and responses.
-            Longer sequences will be truncated and shorter ones will be padded.
+        shared_weights: Whether to use shared weights in the model to encode ``contexts`` and ``responses``.
         embedding_dim: Dimensionality of token (word) embeddings.
         reccurent: A type of the RNN cell. Possible values are ``lstm`` and ``bilstm``.
         hidden_dim: Dimensionality of the hidden state of the RNN cell. If ``reccurent`` equals ``bilstm``
-            to get the actual dimensionality ``hidden_dim`` should be doubled.
-        max_pooling: Whether to use max-pooling operation to get context (response) vector representation.
+            ``hidden_dim`` should be doubled to get the actual dimensionality.
+        max_pooling: Whether to use max-pooling operation to get ``context`` (``response``) vector representation.
             If ``False``, the last hidden state of the RNN will be used.
         triplet_loss: Whether to use a model with triplet loss.
             If ``False``, a model with crossentropy loss will be used.
@@ -42,6 +41,7 @@ class BiLSTMNetwork(SiameseKerasModel):
         hard_triplets: Whether to use hard triplets sampling to train the model
             i.e. to choose negative samples close to positive ones.
             If set to ``False`` random sampling will be used.
+            Only required if ``triplet_loss`` is set to ``True``.
     """
 
     def __init__(self,
@@ -144,7 +144,7 @@ class BiLSTMNetwork(SiameseKerasModel):
         lstm_c = lstm_layer_a(emb_c)
         lstm_r = lstm_layer_b(emb_r)
         if self.pooling:
-            pooling_layer = GlobalMaxPooling1D(name="pooling")
+            pooling_layer = GlobalMaxPooling1D(name="sentence_embedding")
             lstm_c = pooling_layer(lstm_c)
             lstm_r = pooling_layer(lstm_r)
 
@@ -159,7 +159,8 @@ class BiLSTMNetwork(SiameseKerasModel):
     def create_score_model(self) -> Model:
         cr = self.model.inputs
         if self.triplet_mode:
-            emb_c, emb_r = self.model.get_layer("pooling").outputs
+            emb_c = self.model.get_layer("sentence_embedding").get_output_at(0)
+            emb_r = self.model.get_layer("sentence_embedding").get_output_at(1)
             dist_score = Lambda(lambda x: self._euclidian_dist(x), name="score_model")
             score = dist_score([emb_c, emb_r])
         else:
@@ -169,23 +170,23 @@ class BiLSTMNetwork(SiameseKerasModel):
         model = Model(cr, score)
         return model
 
-    def _diff_mult_dist(self, inputs: List[Tensor, Tensor]) -> Tensor:
+    def _diff_mult_dist(self, inputs: List[Tensor]) -> Tensor:
         input1, input2 = inputs
         a = K.abs(input1-input2)
         b = Multiply()(inputs)
         return K.concatenate([input1, input2, a, b])
 
-    def _euclidian_dist(self, x_pair: List[Tensor, Tensor]) -> Tensor:
+    def _euclidian_dist(self, x_pair: List[Tensor]) -> Tensor:
         x1_norm = K.l2_normalize(x_pair[0], axis=1)
         x2_norm = K.l2_normalize(x_pair[1], axis=1)
         diff = x1_norm - x2_norm
         square = K.square(diff)
         sum = K.sum(square, axis=1)
         sum = K.clip(sum, min_value=1e-12, max_value=None)
-        dist = K.sqrt(sum)
+        dist = K.sqrt(sum) / 2.
         return dist
 
-    def _pairwise_distances(self, inputs: List[Tensor, Tensor]) -> Tensor:
+    def _pairwise_distances(self, inputs: List[Tensor]) -> Tensor:
         emb_c, emb_r = inputs
         bs = K.shape(emb_c)[0]
         embeddings = K.concatenate([emb_c, emb_r], 0)

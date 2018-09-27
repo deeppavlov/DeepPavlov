@@ -62,7 +62,7 @@ class QAMemnet(SiameseKerasModel):
         if self.bdr:
             self.dense_dim *= 2
 
-        super(QAMemnet, self).__init__(*args, **kwargs)
+        super(QAMemnet, self).__init__(attention=True, *args, **kwargs)
 
     def compile(self):
         optimizer = Adam(lr=self.learning_rate)

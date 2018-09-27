@@ -1,9 +1,8 @@
 {
   "dataset_reader": {
-    "name": "ubuntu_v2_reader_mt",
-    "num_samples": null,
-    "data_path": "./ubuntu_v2_data",
-    "num_context_turns": 10
+    "name": "ubuntu_v2_reader",
+    "num_samples": 1024,
+    "data_path": "./ubuntu_v2_data"
   },
   "dataset_iterator": {
     "name": "siamese_iterator",
@@ -17,8 +16,7 @@
         "id": "preproc",
         "name": "siamese_preprocessor",
         "use_matrix": true,
-        "num_ranking_samples": 10,
-        "num_context_turns": 10,
+        "num_ranking_samples": 2,
         "max_sequence_length": 50,
         "fit_on": ["x"],
         "in": ["x"],
@@ -38,15 +36,15 @@
         {
           "id": "siam_vocab",
           "name":"simple_vocab",
-          "save_path": "ubuntu_v2_mt_vocabs/tok.dict",
-          "load_path": "ubuntu_v2_mt_vocabs/tok.dict"
+          "save_path": "ubuntu_v2_vocabs/tok.dict",
+          "load_path": "ubuntu_v2_vocabs/tok.dict"
         },
         "embedder":
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "ubuntu_v2_embeddings/wiki.en.bin",
-          "save_path": "ubuntu_v2_embeddings/wiki.en.bin",
+          "load_path": "embeddings/ft_dummy_300.bin",
+          "save_path": "embeddings/ft_dummy_300.bin",
           "dim": 300
         }
       },
@@ -60,20 +58,20 @@
         "in": ["x_proc"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "name": "bilstm_gru_nn",
-        "use_matrix": "#preproc.use_matrix",
-        "num_context_turns": "#preproc.num_context_turns",
+        "name": "bilstm_nn",
         "len_vocab": "#siam_vocab.len",
+        "use_matrix": "#preproc.use_matrix",
         "max_sequence_length": "#preproc.max_sequence_length",
         "embedding_dim": "#siam_embedder.dim",
-        "emb_matrix": "#embeddings.emb_mat",
         "seed": 243,
         "hidden_dim": 300,
+        "emb_matrix": "#embeddings.emb_mat",
         "learning_rate": 1e-3,
         "triplet_loss": false,
         "batch_size": 256,
-        "save_path": "ubuntu_v2_mt_model/model_weights.h5",
-        "load_path": "ubuntu_v2_mt_model/model_weights.h5"
+        "interact_pred_num": 3,
+        "save_path": "ubuntu_v2_model/model_weights.h5",
+        "load_path": "ubuntu_v2_model/model_weights.h5"
       }
     ],
     "out": ["y_predicted"]
@@ -103,8 +101,8 @@
         "subdir": "ubuntu_v2_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
-        "subdir": "ubuntu_v2_embeddings"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/ft_dummy_300.bin",
+        "subdir": "embeddings"
       }
     ]
   }

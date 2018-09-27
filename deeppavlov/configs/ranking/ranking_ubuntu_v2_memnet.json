@@ -1,6 +1,7 @@
 {
   "dataset_reader": {
     "name": "ubuntu_v2_reader",
+    "num_samples": null,
     "data_path": "./ubuntu_v2_data"
   },
   "dataset_iterator": {
@@ -20,6 +21,13 @@
         "fit_on": ["x"],
         "in": ["x"],
         "out": ["x_proc"],
+        "sent_vocab":
+        {
+          "id": "siam_sent_vocab",
+          "name":"simple_vocab",
+          "save_path": "ubuntu_v2_vocabs/sent.dict",
+          "load_path": "ubuntu_v2_vocabs/sent.dict"
+        },
         "tokenizer":
         {
           "name": "split_tokenizer"
@@ -28,8 +36,8 @@
         {
           "id": "siam_vocab",
           "name":"simple_vocab",
-          "save_path": "ubuntu_v2_memnet_vocabs/int_tok.dict",
-          "load_path": "ubuntu_v2_memnet_vocabs/int_tok.dict"
+          "save_path": "ubuntu_v2_memnet_vocabs/tok.dict",
+          "load_path": "ubuntu_v2_memnet_vocabs/tok.dict"
         },
         "embedder":
         {
@@ -51,7 +59,6 @@
         "in_y": ["y"],
         "out": ["y_predicted"],
         "name": "qa_memnet",
-        "train_now": true,
         "voc_siz": "#siam_vocab.len",
         "seq_len": "#preproc.max_sequence_length",
         "emb_dim": "#siam_embedder.dim",
@@ -86,7 +93,7 @@
     },
     "download": [
       {
-        "url": "http://lnsigo.mipt.ru/export/datasets/ubuntu_v2_data.tar.gz",
+        "url": "http://files.deeppavlov.ai/datasets/ubuntu_v2_data.tar.gz",
         "subdir": "ubuntu_v2_data"
       },
       {

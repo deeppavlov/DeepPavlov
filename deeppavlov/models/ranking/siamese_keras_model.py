@@ -18,10 +18,9 @@ import numpy as np
 from keras import losses
 from keras.optimizers import Adam
 from keras.models import Model
-from typing import List, Iterable
+from typing import List, Iterable, Union
 from abc import abstractmethod
 
-from deeppavlov.core.common.attributes import check_attr_true
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.keras_model import KerasModel
 
@@ -34,7 +33,7 @@ class SiameseKerasModel(KerasModel):
     Args:
         batch_size: A size of a batch.
         learning_rate: Learning rate.
-        use_matrix: Whether to use trainable matrix with token (word) embeddings.
+        use_matrix: Whether to use a trainable matrix with token (word) embeddings.
         emb_matrix: An embeddings matrix to initialize an embeddings layer of a model.
             Only used if ``use_matrix`` is set to ``True``.
         max_sequence_length: A maximum length of text sequences in tokens.
@@ -42,7 +41,9 @@ class SiameseKerasModel(KerasModel):
         dynamic_batch:  Whether to use dynamic batching. If ``True``, the maximum length of a sequence for a batch
             will be equal to the maximum of all sequences lengths from this batch,
             but not higher than ``max_sequence_length``.
-        num_context_turns: A number of context turns in data samples.
+        num_context_turns: A number of ``context`` turns in data samples.
+        attention: Whether any attention mechanism is used in the siamese network.
+        *args: Other parameters.
         **kwargs: Other parameters.
     """
 
@@ -54,20 +55,20 @@ class SiameseKerasModel(KerasModel):
                  max_sequence_length: int = None,
                  dynamic_batch: bool = False,
                  num_context_turns: int = 1,
+                 attention: bool = False,
+                 *args,
                  **kwargs):
 
         self.save_path = kwargs.get('save_path', None)
         self.load_path = kwargs.get('load_path', None)
-        train_now = kwargs.get('train_now', None)
         mode = kwargs.get('mode', None)
 
-        super().__init__(save_path=self.save_path, load_path=self.load_path,
-                         train_now=train_now, mode=mode)
+        super().__init__(save_path=self.save_path, load_path=self.load_path, mode=mode)
 
         self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.num_context_turns = num_context_turns
-        self.train_now = train_now
+        self.attention = attention
         self.use_matrix = use_matrix
         self.emb_matrix = emb_matrix
         if dynamic_batch:
@@ -80,6 +81,10 @@ class SiameseKerasModel(KerasModel):
            self.load()
         else:
             self.load_initial_emb_matrix()
+
+        if not self.attention:
+            self.context_model = self.create_context_model()
+            self.response_model = self.create_response_model()
 
     def compile(self) -> None:
         optimizer = Adam(lr=self.learning_rate)
@@ -99,13 +104,12 @@ class SiameseKerasModel(KerasModel):
         if self.use_matrix:
             self.model.get_layer(name="embedding").set_weights([self.emb_matrix])
 
-    @check_attr_true('train_now')
     def train_on_batch(self, batch: List[List[List[np.ndarray]]], y: List[int]) -> float:
-        b = self.make_batch(batch)
+        b = self._make_batch(batch)
         loss = self._train_on_batch(b, y)
         return loss
 
-    def __call__(self, batch: Iterable[List[List[np.ndarray]]]) -> np.ndarray:
+    def __call__(self, batch: Iterable[List[np.ndarray]]) -> Union[np.ndarray, List[str]]:
         y_pred = []
         buf = []
         j = 0
@@ -118,7 +122,7 @@ class SiameseKerasModel(KerasModel):
                 buf += [context + [el] for el in responses]
                 if len(buf) >= self.batch_size:
                     for i in range(len(buf) // self.batch_size):
-                        b = self.make_batch(buf[i*self.batch_size:(i+1)*self.batch_size])
+                        b = self._make_batch(buf[i*self.batch_size:(i+1)*self.batch_size])
                         yp = self._predict_on_batch(b)
                         y_pred += list(yp)
                     lenb = len(buf) % self.batch_size
@@ -127,8 +131,10 @@ class SiameseKerasModel(KerasModel):
                     else:
                         buf = []
             except StopIteration:
+                if j == 1:
+                    return ["Error! It is not intended to use the model in the interact mode."]
                 if len(buf) != 0:
-                    b = self.make_batch(buf)
+                    b = self._make_batch(buf)
                     yp = self._predict_on_batch(b)
                     y_pred += list(yp)
                 break
@@ -141,6 +147,16 @@ class SiameseKerasModel(KerasModel):
     def create_model(self) -> Model:
         pass
 
+    def create_context_model(self) -> Model:
+        m = Model(self.model.inputs[:-1],
+              self.model.get_layer("sentence_embedding").get_output_at(0))
+        return m
+
+    def create_response_model(self) -> Model:
+        m = Model(self.model.inputs[-1],
+              self.model.get_layer("sentence_embedding").get_output_at(1))
+        return m
+
     def _train_on_batch(self, batch: List[np.ndarray], y: List[int]) -> float:
         loss = self.model.train_on_batch(batch, np.asarray(y))
         return loss
@@ -149,12 +165,19 @@ class SiameseKerasModel(KerasModel):
         y_pred = self.model.predict_on_batch(batch)
         return y_pred
 
+    def _predict_context_on_batch(self, batch: List[np.ndarray]) -> np.ndarray:
+        return self.context_model.predict_on_batch(batch)
+
+    def _predict_response_on_batch(self, batch: List[np.ndarray]) -> np.ndarray:
+        return self.response_model.predict_on_batch(batch)
+
     def reset(self) -> None:
         pass
 
-    def make_batch(self, x: List[List[List[np.ndarray]]]) -> List[np.ndarray]:
+    def _make_batch(self, x: List[List[np.ndarray]]) -> List[np.ndarray]:
         b = []
         for i in range(len(x[0])):
             z = [el[i] for el in x]
             b.append(np.asarray(z))
         return b
+

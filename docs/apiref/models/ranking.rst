@@ -7,7 +7,11 @@ Ranking classes.
 
 .. autoclass:: deeppavlov.models.ranking.siamese_keras_model.SiameseKerasModel
 
+.. autoclass:: deeppavlov.models.ranking.siamese_keras_scorer.SiameseKerasScorer
+
 .. autoclass:: deeppavlov.models.ranking.bilstm_network.BiLSTMNetwork
+
+.. autoclass:: deeppavlov.models.ranking.bilstm_gru_network.BiLSTMGRUNetwork
 
 .. autoclass:: deeppavlov.models.ranking.tfidf_ranker.TfidfRanker
     :members:

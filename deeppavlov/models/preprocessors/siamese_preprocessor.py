@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import numpy as np
-from typing import List, Iterable
+from typing import List, Union, Iterable
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.log import get_logger
@@ -29,11 +29,14 @@ log = get_logger(__name__)
 class SiamesePreprocessor(Estimator):
     """ Preprocessing of data samples containing few text strings to feed them in siamese networks.
 
+    First ``num_context_turns`` strings in each data sample corresponds to the dialogue ``context``
+    and the rest string(s) in the sample is (are) ``response(s)``.
+
     Args:
         save_path: The parameter is only needed to initialize the base class
-            :class:`deeppavlov.core.models.Serializable`.
+            :class:`~deeppavlov.core.models.serializable.Serializable`.
         load_path: The parameter is only needed to initialize the base class
-            :class:`deeppavlov.core.models.Serializable`.
+            :class:`~deeppavlov.core.models.serializable.Serializable`.
         max_sequence_length: A maximum length of text sequences in tokens.
             Longer sequences will be truncated and shorter ones will be padded.
         dynamic_batch:  Whether to use dynamic batching. If ``True``, the maximum length of a sequence for a batch
@@ -45,13 +48,15 @@ class SiamesePreprocessor(Estimator):
         truncating: Truncating. Possible values are ``pre`` and ``post``.
             If set to ``pre`` a sequence will be truncated at the beginning.
             If set to ``post`` it will truncated at the end.
-        use_matrix: Whether to use trainable matrix with token (word) embeddings.
-        num_context_turns: A number of context turns in data samples.
+        use_matrix: Whether to use a trainable matrix with token (word) embeddings.
+        num_context_turns: A number of ``context`` turns in data samples.
         num_ranking_samples: A number of condidates for ranking including positive one.
         tokenizer: An instance of one of the :class:`deeppavlov.models.tokenizers`.
         vocab: An instance of :class:`deeppavlov.core.data.simple_vocab.SimpleVocabulary`.
         embedder: an instance of one of the :class:`deeppavlov.models.embedders`.
-        update_embeddings: Whether to store and update context and response embeddings or not.
+        sent_vocab: An instance of of :class:`deeppavlov.core.data.simple_vocab.SimpleVocabulary`.
+            It is used to store all ``responces`` and to find the best ``response``
+            to the user ``context`` in the ``interact`` mode.
     """
 
     def __init__(self,
@@ -63,24 +68,24 @@ class SiamesePreprocessor(Estimator):
                  truncating: str = 'post',
                  use_matrix: bool = True,
                  num_context_turns: int = 1,
-                 num_ranking_samples: int = 10,
-                 embedder: Component = "fasttext",
+                 num_ranking_samples: int = 1,
                  tokenizer: Component = None,
-                 vocab: Estimator = "dialog_vocab",
-                 update_embeddings: bool = False,
+                 vocab: Estimator = "simple_vocab",
+                 embedder: Component = "fasttext",
+                 sent_vocab: Estimator = "simple_vocab",
                  **kwargs):
 
         self.max_sequence_length = max_sequence_length
         self.padding = padding
         self.truncating = truncating
         self.dynamic_batch = dynamic_batch
-        self.update_embeddings = update_embeddings
         self.use_matrix = use_matrix
         self.num_ranking_samples = num_ranking_samples
         self.num_context_turns = num_context_turns
         self.tokenizer = tokenizer
         self.embedder = embedder
         self.vocab = vocab
+        self.sent_vocab = sent_vocab
         self.save_path = expand_path(save_path).resolve()
         self.load_path = expand_path(load_path).resolve()
 
@@ -90,12 +95,21 @@ class SiamesePreprocessor(Estimator):
         self.embedder.destroy()
 
     def fit(self, x: List[List[str]]) -> None:
+            self.sent_vocab.fit([el[self.num_context_turns:] for el in x])
             x_tok = [self.tokenizer(el) for el in x]
             self.vocab.fit([el for x in x_tok for el in x])
 
-    def __call__(self, x: List[List[str]]) -> Iterable[List[List[np.ndarray]]]:
-        x_cut = [el[:self.num_context_turns+self.num_ranking_samples] for el in x]
-        for el in x_cut:
+    def __call__(self, x: Union[List[List[str]], List[str]]) -> Iterable[List[List[np.ndarray]]]:
+        if len(x) == 0 or isinstance(x[0], str):
+            if len(x) == 1:
+                x_preproc = [el.split('&')for el in x]
+            elif len(x) == 0:
+                x_preproc = [['']]
+            else:
+                x_preproc = [[el] for el in x]
+        else:
+            x_preproc = [el[:self.num_context_turns+self.num_ranking_samples] for el in x]
+        for el in x_preproc:
             x_tok = self.tokenizer(el)
             x_ctok = [y if len(y) != 0 else [''] for y in x_tok]
             if self.use_matrix:
@@ -114,4 +128,5 @@ class SiamesePreprocessor(Estimator):
         pass
 
     def save(self) -> None:
+        self.sent_vocab.save()
         self.vocab.save()

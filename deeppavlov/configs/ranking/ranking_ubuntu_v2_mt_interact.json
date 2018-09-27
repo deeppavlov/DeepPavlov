@@ -1,6 +1,6 @@
 {
   "dataset_reader": {
-    "name": "ubuntu_v2_reader_mt",
+    "name": "ubuntu_v2_mt_reader",
     "num_samples": null,
     "data_path": "./ubuntu_v2_data",
     "num_context_turns": 10
@@ -57,9 +57,7 @@
         "vocab": "#siam_vocab"
       },
       {
-        "in": ["x_proc"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
+        "id": "model",
         "name": "bilstm_gru_nn",
         "use_matrix": "#preproc.use_matrix",
         "num_context_turns": "#preproc.num_context_turns",
@@ -74,6 +72,18 @@
         "batch_size": 256,
         "save_path": "ubuntu_v2_mt_model/model_weights.h5",
         "load_path": "ubuntu_v2_mt_model/model_weights.h5"
+      },
+      {
+        "in": ["x_proc"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "name": "siamese_scorer",
+        "model": "#model",
+        "num_context_turns": "#model.num_context_turns",
+        "batch_size": "#model.batch_size",
+        "interact_pred_num": 3,
+        "responses": "#siam_sent_vocab",
+        "preproc_func": "#preproc.__call__"
       }
     ],
     "out": ["y_predicted"]
@@ -98,6 +108,7 @@
       "server_utils": "Ranker"
     },
     "download": [
+      "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_mt_ranking.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/datasets/ubuntu_v2_data.tar.gz",
         "subdir": "ubuntu_v2_data"
