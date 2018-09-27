@@ -2,13 +2,42 @@ from collections import defaultdict
 from typing import List
 
 from deeppavlov.core.models.component import Component
+from deeppavlov.core.agent.filter import Filter
+from deeppavlov.core.agent.processor import Processor
 from deeppavlov.core.skill.skill import Skill
 from deeppavlov.agents.filters.transparent_filter import TransparentFilter
 from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
 
 
 class Agent(Component):
-    def __init__(self, skills: List[Skill], skills_processor=None, skills_filter=None, *args, **kwargs):
+    """Class for agent entity.
+
+    Agent is an entity which receives inputs from outer word, processes them
+    and returns response to each input. Usually agent implements real-life
+    task, business or user case. To define Agent means to define a) set of
+    skills it uses, b) skills selector which is used to route agent inputs
+    to agent certain skills, c) skills processor which is used to process
+    skills output and general agent's response for each incoming utterance.
+    Agent encapsulate management both for history and state for each
+    utterance and uses only utterances IDs to distinguish them.
+
+    Args:
+        skill (list[Skill]): List of initiated agent skills instances.
+        skills_processor (Processor): Initiated agent processor.
+        skills_filter (Filter): Initiated agent filter.
+
+    Attributes:
+        skill (list[Skill]): List of initiated agent skills instances.
+        skills_processor (Processor): Initiated agent processor.
+        skills_filter (Filter): Initiated agent filter.
+        history (dict): Histories for each each dialog with agent indexed
+            by dialog ID. Each history is represented by list of incoming
+            and outcoming replicas of the dialog.
+        states (dict): States for each each dialog with agent indexed by
+            dialog ID.
+    """
+    def __init__(self, skills: List[Skill], skills_processor: Processor=None,
+                 skills_filter: Filter=None, *args, **kwargs):
         self.skills = skills
         self.skills_filter = skills_filter or TransparentFilter(len(skills))
         self.skills_processor = skills_processor or HighestConfidenceSelector()
@@ -16,6 +45,20 @@ class Agent(Component):
         self.states = defaultdict(lambda: [None] * len(self.skills))
 
     def __call__(self, utterances, ids=None):
+        """Processes batch of utterances and returns corresponding responses batch.
+
+        Each call of Agent passes incoming utterances batch through skills filter,
+        agent skills, skills processor. Batch of dialog IDs can be provided, in
+        other case utterances indexes in incoming batch are used as dialog IDs.
+
+        Args:
+            utterances (list): Batch of incoming utterances.
+            ids (list): Batch of dialog IDs corresponding to incoming utterances.
+
+        Returns:
+            responses (list): A batch of responses corresponding to the
+                utterance batch received by agent.
+        """
         batch_size = len(utterances)
         ids = ids or list(range(batch_size))
         batch_history = [self.history[id] for id in ids]
