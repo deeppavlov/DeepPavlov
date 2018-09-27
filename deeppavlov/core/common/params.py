@@ -71,9 +71,9 @@ def from_params(params: Dict, mode: str = 'infer', **kwargs) -> Component:
             log.exception(e)
             raise e
 
-    if config_params.get('cache', False) and config_params.get('id') in _refs:
-        log.info(f"loading cached {config_params['id']}")
-        return _refs[config_params['id']]
+    if config_params.get('cache', False) and config_params.get('component_name') in _refs:
+        log.info(f"loading cached {config_params['component_name']}")
+        return _refs[config_params['component_name']]
 
     elif 'config_path' in config_params:
         from deeppavlov.core.commands.infer import build_model_from_config
@@ -107,9 +107,14 @@ def from_params(params: Dict, mode: str = 'infer', **kwargs) -> Component:
 
         component = cls(**dict(config_params, **kwargs))
         try:
+            _refs[config_params['component_name']] = component
+        except KeyError:
+            pass
+        try:
             _refs[config_params['id']] = component
         except KeyError:
             pass
+
     except Exception:
         log.exception("Exception in {}".format(cls))
         raise

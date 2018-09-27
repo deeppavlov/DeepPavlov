@@ -269,8 +269,6 @@ class PipelineManager:
                          'test': tiny_test,
                          'all': tiny_train + tiny_valid + tiny_test}
 
-        print("Len of data: {}".format(len(iterator.data['all'])))
-
         return iterator
 
     def save_config(self, conf, dataset_name, i) -> None:
