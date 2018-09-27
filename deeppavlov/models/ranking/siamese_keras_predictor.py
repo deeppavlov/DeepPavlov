@@ -25,8 +25,8 @@ from deeppavlov.core.common.registry import register
 
 log = get_logger(__name__)
 
-@register('siamese_scorer')
-class SiameseKerasScorer(Component):
+@register('siamese_predictor')
+class SiameseKerasPredictor(Component):
     """The class for ranking or paraphrase identification using the trained siamese network  in the ``interact`` mode.
 
     Args:

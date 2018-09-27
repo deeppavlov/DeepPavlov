@@ -77,7 +77,7 @@
         "in": ["x_proc"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "name": "siamese_scorer",
+        "name": "siamese_predictor",
         "model": "#model",
         "num_context_turns": "#model.num_context_turns",
         "batch_size": "#model.batch_size",

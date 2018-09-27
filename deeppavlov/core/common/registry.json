@@ -72,7 +72,7 @@
   "seq2seq_go_bot_nn": "deeppavlov.models.seq2seq_go_bot.network:Seq2SeqGoalOrientedBotNetwork",
   "siamese_iterator": "deeppavlov.dataset_iterators.siamese_iterator:SiameseIterator",
   "siamese_preprocessor": "deeppavlov.models.preprocessors.siamese_preprocessor:SiamesePreprocessor",
-  "siamese_scorer": "deeppavlov.models.ranking.siamese_keras_scorer:SiameseKerasScorer",
+  "siamese_predictor": "deeppavlov.models.ranking.siamese_keras_predictor:SiameseKerasPredictor",
   "simple_vocab": "deeppavlov.core.data.simple_vocab:SimpleVocabulary",
   "slotfill_raw": "deeppavlov.models.slotfill.slotfill_raw:SlotFillingComponent",
   "spelling_error_model": "deeppavlov.models.spelling_correction.brillmoore.error_model:ErrorModel",
