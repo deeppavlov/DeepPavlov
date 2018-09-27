@@ -743,14 +743,15 @@ class KerasClassificationModel(KerasModel):
         inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
         inp_lengths = Input(shape=(2,), dtype='int32')
 
-        outputs, states = GRU(units_gru, activation='tanh',
-                              return_sequences=True,
-                              return_state=True,
-                              kernel_regularizer=l2(coef_reg_lstm),
-                              dropout=dropout_rate,
-                              recurrent_dropout=rec_dropout_rate)(inp)
+        output = GRU(units_gru, activation='tanh',
+                     return_sequences=True,
+                     kernel_regularizer=l2(coef_reg_lstm),
+                     dropout=dropout_rate,
+                     recurrent_dropout=rec_dropout_rate)(inp)
 
-        output = masking_sequences(outputs, inp_lengths)
+        # output = masking_sequences(outputs, inp_lengths)
+
+        output = GlobalMaxPooling1D()(output)
 
         output = Dropout(rate=dropout_rate)(output)
         output = Dense(dense_size, activation=None,
