@@ -18,26 +18,26 @@ class TransparentFilter(Filter):
     """Filer applies each agent skill to all of batch utterances.
 
     Args:
-        skills_count (int): Number of agent skills.
+        skills_count: Number of agent skills.
 
     Attributes:
-        size (int): Number of agent skills.
+        size: Number of agent skills.
     """
-    def __init__(self, skills_count, *args, **kwargs):
-        self.size = skills_count
+    def __init__(self, skills_count: int, *args, **kwargs):
+        self.size: int = skills_count
 
-    def __call__(self, utterances_batch, history_batch):
+    def __call__(self, utterances_batch: list, history_batch: list) -> list:
         """Returns skills-utterances application matrix.
 
         Generates skills-utterances application matrix with all True
         elements.
 
         Args:
-            utterances_batch (list): A batch of utterances of any type.
-            history_batch (list): Not used.
+            utterances_batch: A batch of utterances of any type.
+            history_batch: Not used.
 
         Returns:
-            response (list): Skills-utterances application matrix with
-                all True elements.
+            response: Skills-utterances application matrix with all True
+                elements.
         """
         return [[True] * self.size] * len(utterances_batch)

@@ -25,22 +25,22 @@ class Processor(Component, metaclass=ABCMeta):
     """
     # TODO: change *responses to [[], [], ...] argument
     @abstractmethod
-    def __call__(self, utterances_batch: list, history_batch: list, *responses: list):
+    def __call__(self, utterances_batch: list, history_batch: list, *responses: list) -> list:
         """Returns final response for each incoming utterance.
 
         Processes Agent skills and generates one final response for each
         utterance in incoming batch.
 
         Args:
-            utterances_batch (list): A batch of utterances of any type
-            history_batch (list): A batch of list typed histories
+            utterances_batch: A batch of utterances of any type
+            history_batch: A batch of list typed histories
                 for each utterance
-            responses (list): Each response positional argument corresponds to
+            responses: Each response positional argument corresponds to
                 response of one of Agent skills and is represented by
                 batch (list) of (response, confidence) tuple structures.
 
         Returns:
-            responses (list): A batch of responses corresponding to the
+            responses: A batch of responses corresponding to the
                 utterance batch received by agent.
         """
         return

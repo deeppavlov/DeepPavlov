@@ -23,7 +23,7 @@ class Filter(Component, metaclass=ABCMeta):
     and Agent skills to be applied to each of the selected utterances.
     """
     @abstractmethod
-    def __call__(self, utterances_batch: list, history_batch: list):
+    def __call__(self, utterances_batch: list, history_batch: list) -> list:
         """Returns skills-utterances application matrix.
 
         Returns skills-utterances application matrix which contains
@@ -31,12 +31,12 @@ class Filter(Component, metaclass=ABCMeta):
         from incoming batch.
 
         Args:
-            utterances_batch (list): A batch of utterances of any type.
-            history_batch (list): A batch of list typed histories
+            utterances_batch: A batch of utterances of any type.
+            history_batch: A batch of list typed histories
                 for each utterance.
 
         Returns:
-            response (list): Skills-utterances application matrix,
+            response: Skills-utterances application matrix,
             for example:
             [[True, False, True, True],
              [False, True, True, True]]

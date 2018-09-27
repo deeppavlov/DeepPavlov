@@ -22,29 +22,28 @@ class Agent(Component):
     utterance and uses only utterances IDs to distinguish them.
 
     Args:
-        skill (list[Skill]): List of initiated agent skills instances.
-        skills_processor (Processor): Initiated agent processor.
-        skills_filter (Filter): Initiated agent filter.
+        skill: List of initiated agent skills instances.
+        skills_processor: Initiated agent processor.
+        skills_filter: Initiated agent filter.
 
     Attributes:
-        skill (list[Skill]): List of initiated agent skills instances.
-        skills_processor (Processor): Initiated agent processor.
-        skills_filter (Filter): Initiated agent filter.
-        history (dict): Histories for each each dialog with agent indexed
+        skill: List of initiated agent skills instances.
+        skills_processor: Initiated agent processor.
+        skills_filter: Initiated agent filter.
+        history: Histories for each each dialog with agent indexed
             by dialog ID. Each history is represented by list of incoming
             and outcoming replicas of the dialog.
-        states (dict): States for each each dialog with agent indexed by
-            dialog ID.
+        states: States for each each dialog with agent indexed by dialog ID.
     """
     def __init__(self, skills: List[Skill], skills_processor: Processor=None,
                  skills_filter: Filter=None, *args, **kwargs):
-        self.skills = skills
-        self.skills_filter = skills_filter or TransparentFilter(len(skills))
-        self.skills_processor = skills_processor or HighestConfidenceSelector()
-        self.history = defaultdict(list)
-        self.states = defaultdict(lambda: [None] * len(self.skills))
+        self.skills: List[Skill] = skills
+        self.skills_filter: Filter = skills_filter or TransparentFilter(len(skills))
+        self.skills_processor: Processor = skills_processor or HighestConfidenceSelector()
+        self.history: dict = defaultdict(list)
+        self.states: dict = defaultdict(lambda: [None] * len(self.skills))
 
-    def __call__(self, utterances, ids=None):
+    def __call__(self, utterances: list, ids: list=None) -> list:
         """Processes batch of utterances and returns corresponding responses batch.
 
         Each call of Agent passes incoming utterances batch through skills filter,
@@ -52,11 +51,11 @@ class Agent(Component):
         other case utterances indexes in incoming batch are used as dialog IDs.
 
         Args:
-            utterances (list): Batch of incoming utterances.
-            ids (list): Batch of dialog IDs corresponding to incoming utterances.
+            utterances: Batch of incoming utterances.
+            ids: Batch of dialog IDs corresponding to incoming utterances.
 
         Returns:
-            responses (list): A batch of responses corresponding to the
+            responses: A batch of responses corresponding to the
                 utterance batch received by agent.
         """
         batch_size = len(utterances)

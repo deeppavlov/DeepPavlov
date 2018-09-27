@@ -18,32 +18,31 @@ class PlainText(RichControl):
     """Plain text message as a rich control.
 
     Args:
-        text (str): Text of the message.
+        text: Text of the message.
 
     Attributes:
-        content (str): Text of the message.
+        content: Text of the message.
     """
     def __init__(self, text):
         super(PlainText, self).__init__('plain_text')
-        self.content = text
+        self.content: str = text
 
-    def json(self):
+    def json(self) -> dict:
         """Returns json compatible state of the PlainText instance.
 
         Returns:
-            control_json (dict): Json representation of PlainText state.
+            control_json: Json representation of PlainText state.
         """
         self.control_json['content'] = self.content
         return self.control_json
 
-    def ms_bot_framework(self):
+    def ms_bot_framework(self)-> dict:
         """Returns MS Bot Framework compatible state of the PlainText instance.
 
         Creating MS Bot Framework activity blank with "text" field populated.
 
         Returns:
-            control_json (dict):  MS Bot Framework representation of PlainText
-                state.
+            control_json: MS Bot Framework representation of PlainText state.
         """
         out_activity = {}
         out_activity['type'] = 'message'
@@ -55,23 +54,23 @@ class Button(RichControl):
     """Button with plain text callback.
 
     Args:
-        name (str): Displayed name of the button.
-        callback (str): Plain text returned as callback when button pressed.
+        name: Displayed name of the button.
+        callback: Plain text returned as callback when button pressed.
 
     Attributes:
-        name (str): Displayed name of the button.
-        callback (str): Plain text returned as callback when button pressed.
+        name: Displayed name of the button.
+        callback: Plain text returned as callback when button pressed.
     """
     def __init__(self, name: str, callback: str):
         super(Button, self).__init__('button')
-        self.name = name
-        self.callback = callback
+        self.name: str = name
+        self.callback: str = callback
 
-    def json(self):
+    def json(self) -> dict:
         """Returns json compatible state of the Button instance.
 
         Returns:
-            control_json (dict): Json representation of Button state.
+            control_json: Json representation of Button state.
         """
         content = {}
         content['name'] = self.name
@@ -79,14 +78,13 @@ class Button(RichControl):
         self.control_json['content'] = content
         return self.control_json
 
-    def ms_bot_framework(self):
+    def ms_bot_framework(self) -> dict:
         """Returns MS Bot Framework compatible state of the Button instance.
 
         Creates MS Bot Framework CardAction (button) with postBack value return.
 
         Returns:
-            control_json (dict):  MS Bot Framework representation of Button
-                state.
+            control_json: MS Bot Framework representation of Button state.
         """
         card_action = {}
         card_action['type'] = 'postBack'
@@ -102,33 +100,33 @@ class ButtonsFrame(RichControl):
     in one channel message.
 
     Args:
-        text (str): Text displayed with embedded buttons.
+        text: Text displayed with embedded buttons.
 
     Attributes:
-        text (str): Text displayed with embedded buttons.
-        content (list): Container with Button objects.
+        text: Text displayed with embedded buttons.
+        content: Container with Button objects.
     """
     def __init__(self, text: [str, None] = None):
         super(ButtonsFrame, self).__init__('buttons_frame')
-        self.text = text
-        self.content = []
+        self.text: [str, None] = text
+        self.content: list = []
 
     def add_button(self, button: Button):
         """Adds Button instance to RichMessage.
 
         Args:
-            button (Button): Button instance.
+            button: Button instance.
         """
         self.content.append(button)
 
-    def json(self):
+    def json(self) -> dict:
         """Returns json compatible state of the ButtonsFrame instance.
 
         Returns json compatible state of the ButtonsFrame instance including
         all nested buttons.
 
         Returns:
-            control_json (dict): Json representation of ButtonsFrame state.
+            control_json: Json representation of ButtonsFrame state.
         """
         content = {}
 
@@ -141,14 +139,14 @@ class ButtonsFrame(RichControl):
 
         return self.control_json
 
-    def ms_bot_framework(self):
+    def ms_bot_framework(self) -> dict:
         """Returns MS Bot Framework compatible state of the ButtonsFrame instance.
 
         Creating MS Bot Framework activity blank with RichCard in "attachments". RichCard
         is populated with CardActions corresponding buttons embedded in ButtonsFrame.
 
         Returns:
-            control_json (dict): MS Bot Framework representation of ButtonsFrame state.
+            control_json: MS Bot Framework representation of ButtonsFrame state.
         """
         rich_card = {}
 

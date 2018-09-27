@@ -22,18 +22,19 @@ class RandomSelector(Processor):
     def __init__(self, *args, **kwargs):
         pass
 
-    def __call__(self, utterances, batch_history, *responses):
+    def __call__(self, utterances: list, batch_history: list, *responses: list) -> list:
         """Selects result of a random skill for each utterance.
 
         Args:
-            utterances_batch (list): Not used.
-            history_batch (list): Not used.
-            responses (list): Each response positional argument corresponds to
+            utterances_batch: Not used.
+            history_batch: Not used.
+            responses: Each response positional argument corresponds to
                 response of one of Agent skills and is represented by
                 batch (list) of (response, confidence) tuple structures.
 
         Returns:
-            responses (list): A batch of responses corresponding to the
-                utterance batch received by agent.
+            result: A batch of responses corresponding to the utterance
+                batch received by agent.
         """
-        return [random.choice([t for t, sc in r if t]) for r in zip(*responses)]
+        result = [random.choice([t for t, sc in r if t]) for r in zip(*responses)]
+        return result
