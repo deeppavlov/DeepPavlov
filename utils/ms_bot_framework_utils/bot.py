@@ -8,11 +8,6 @@ from requests.exceptions import HTTPError
 
 from .conversation import Conversation
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.common.file import read_json
-from deeppavlov.core.commands.infer import build_model_from_config
-from deeppavlov.core.agent.agent import Agent
-from deeppavlov.agents.processors.default_rich_content_processor import DefaultRichContentWrapper
-from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
 
 log = get_logger(__name__)
 
@@ -20,7 +15,7 @@ ConvKey = namedtuple('ConvKey', ['channel_id', 'conversation_id'])
 
 
 class Bot(Thread):
-    def __init__(self, config: dict, input_queue: Queue):
+    def __init__(self, agent_generator: callable, config: dict, input_queue: Queue):
         super(Bot, self).__init__()
         self.config = config
 
@@ -30,6 +25,8 @@ class Bot(Thread):
         self.input_queue = input_queue
 
         self.agent = None
+        self.agent_generator = agent_generator
+
         if not self.config['multi_instance']:
             self.agent = self._init_agent()
             log.info('New bot instance level agent initiated')
@@ -49,10 +46,7 @@ class Bot(Thread):
         log.info(f'Deleted conversation, key: {str(conversation_key)}')
 
     def _init_agent(self):
-        model_config = read_json(self.config['model_config_path'])
-        model = build_model_from_config(model_config)
-        skill = DefaultStatelessSkill(model)
-        agent = Agent([skill], skills_processor=DefaultRichContentWrapper())
+        agent = self.agent_generator()
         return agent
 
     def _update_access_info(self):
