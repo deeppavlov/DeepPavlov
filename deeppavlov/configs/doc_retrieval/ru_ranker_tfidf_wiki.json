@@ -1,9 +1,15 @@
 {
+  "dataset_reader": {
+    "class": "deeppavlov.dataset_readers.odqa_reader:ODQADataReader",
+    "data_path": "odqa/ruwiki.db",
+    "save_path": "odqa/ruwiki.db",
+    "dataset_format": "sqlite"
+  },
   "dataset_iterator": {
     "name": "sqlite_iterator",
     "data_dir": "odqa",
     "shuffle": false,
-    "data_url": "http://files.deeppavlov.ai/datasets/wikipedia/ruwiki.db"
+    "data_url": "odqa/ruwiki.db"
   },
   "chainer": {
     "in": [
