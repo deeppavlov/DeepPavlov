@@ -56,11 +56,6 @@ class KerasClassificationModel(KerasModel):
         last_layer_activation: parameter that determines activation function after classification layer.
                 For multi-label classification use `sigmoid`,
                 otherwise, `softmax`.
-        confident_threshold: boundary value of probability for converting probabilities to labels.
-                The value is from 0 to 1.
-                If all probabilities are lower than confident_threshold,
-                label with the highest probability is assigned.
-                If `last_layer_activation` is `softmax` (not multi-label classification), assign to 1.
         classes: list of classes names presented in the dataset
                 (in config it is determined as keys of vocab over `y`)
         restore_lr: in case of loading pre-trained model \
@@ -84,7 +79,6 @@ class KerasClassificationModel(KerasModel):
                  model_name: str, optimizer: str = "Adam", loss: str = "binary_crossentropy",
                  lear_rate: float = 0.01, lear_rate_decay: float = 0.,
                  last_layer_activation="sigmoid",
-                 confident_threshold: float = 0.5,
                  restore_lr: bool = False,
                  **kwargs):
         """
@@ -94,7 +88,7 @@ class KerasClassificationModel(KerasModel):
         super().__init__(text_size=text_size, embedding_size=embedding_size, model_name=model_name,
                          optimizer=optimizer, loss=loss,
                          lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,
-                         last_layer_activation=last_layer_activation, confident_threshold=confident_threshold,
+                         last_layer_activation=last_layer_activation,
                          restore_lr=restore_lr, **kwargs)
 
         self.classes = list(np.sort(np.array(list(self.opt.get('classes')))))
@@ -117,7 +111,6 @@ class KerasClassificationModel(KerasModel):
                                       optimizer=optimizer, loss=loss,
                                       lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,
                                       last_layer_activation=last_layer_activation,
-                                      confident_threshold=confident_threshold,
                                       restore_lr=restore_lr,
                                       **kwargs)
 
@@ -222,8 +215,7 @@ class KerasClassificationModel(KerasModel):
         """
         preds = np.array(self.infer_on_batch(data), dtype="float64")
 
-        labels = proba2labels(preds, confident_threshold=self.opt['confident_threshold'], classes=self.classes)
-        return labels, [dict(zip(self.classes, preds[i])) for i in range(preds.shape[0])]
+        return preds
 
     def reset(self) -> None:
         pass

@@ -60,8 +60,7 @@
           "y"
         ],
         "out": [
-          "y_labels",
-          "y_probas_dict"
+          "y_probas"
         ],
         "main": true,
         "name": "keras_classification_model",
@@ -86,11 +85,14 @@
         "dropout_rate": 0.5,
         "dense_size": 100,
         "model_name": "cnn_model"
-      }
+      },
+      {"in": "y_probas",
+      "out": "y_labels",
+      "name": "probas2labels"}
     ],
     "out": [
       "y_labels",
-      "y_probas_dict"
+      "y_probas"
     ]
   },
   "train": {
