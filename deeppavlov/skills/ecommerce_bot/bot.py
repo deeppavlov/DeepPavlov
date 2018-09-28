@@ -24,12 +24,13 @@ from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import save_pickle, load_pickle
 from deeppavlov.core.commands.utils import expand_path, make_all_dirs, is_file_exist
 from deeppavlov.core.models.estimator import Component
+from deeppavlov.core.skill.skill import Skill
 from deeppavlov.metrics.bleu import bleu_advanced
 
 log = get_logger(__name__)
 
 @register("ecommerce_bot")
-class EcommerceBot(Component):
+class EcommerceBot(Skill):
     """Class to retrieve product items from `load_path` catalogs
     in sorted order according to the similarity measure
     Retrieve the specification attributes with corresponding values
