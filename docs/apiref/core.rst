@@ -11,3 +11,5 @@ DeepPavlov Core
    core.common <core/common>
    core.data <core/data>
    core.models <core/models>
+   core.agent <core/agent>
+   core.skill <core/skill>
