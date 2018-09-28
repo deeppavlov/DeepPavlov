@@ -4,7 +4,7 @@ import sys
 from pathlib import Path
 import os
 
-from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.commands.utils import set_deeppavlov_root, expand_path
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
 
@@ -29,6 +29,7 @@ def install(*packages):
 def install_from_config(config: [str, Path, dict]):
     if isinstance(config, (str, Path)):
         config: dict = read_json(config)
+    set_deeppavlov_root(config)
     requirements_files = config.get('metadata', {}).get('requirements', [])
 
     if not requirements_files:
