@@ -86,14 +86,14 @@ Run the following to fit the ranker on **English** Wikipedia:
 .. code:: bash
 
     cd deeppavlov/
-    python deep.py train deeppavlov/configs/doc_retrieval/en_ranker_tfidf_wiki.json
+    python deep.py train configs/doc_retrieval/en_ranker_tfidf_wiki.json
 
 Run the following to fit the ranker on **Russian** Wikipedia:
 
 .. code:: bash
 
     cd deeppavlov/
-    python deep.py train deeppavlov/configs/doc_retrieval/ru_ranker_tfidf_wiki.json
+    python deep.py train configs/doc_retrieval/ru_ranker_tfidf_wiki.json
 
 Interacting
 -----------
@@ -106,14 +106,14 @@ Run the following to interact with the **English** ranker:
 .. code:: bash
 
     cd deeppavlov/
-    python deep.py interact deeppavlov/configs/doc_retrieval/en_ranker_tfidf_wiki.json -d
+    python deep.py interact configs/doc_retrieval/en_ranker_tfidf_wiki.json -d
 
 Run the following to interact with the **Russian** ranker:
 
 .. code:: bash
 
     cd deeppavlov/
-    python deep.py interact deeppavlov/configs/doc_retrieval/ru_ranker_tfidf_wiki.json -d
+    python deep.py interact configs/doc_retrieval/ru_ranker_tfidf_wiki.json -d
 
 As a result of ranker training, a SQLite database and tf-idf matrix are created.
 
@@ -135,7 +135,7 @@ and is built by the following steps:
 #. Unpack and extract the articles with `WikiExtractor`_
    (with ``--json``, ``--no-templates``, ``--filter_disambig_pages``
    options)
-#. Build a database during :ref:_ranker_training:.
+#. Build a database during :ref:`ranker_training`.
 
 enwiki_tfidf_matrix.npz
 -------------------------
@@ -159,7 +159,7 @@ and is built by the following steps:
    `WikiExtractor <https://github.com/attardi/wikiextractor>`__
    (with ``--json``, ``--no-templates``, ``--filter_disambig_pages``
    options)
-#. Build a database during :ref:_ranker_training:.
+#. Build a database during :ref:`ranker_training`.
 
 ruwiki_tfidf_matrix.npz
 -------------------------
