@@ -1,6 +1,6 @@
 {
   "dataset_reader": {
-    "class": "deeppavlov.dataset_readers.odqa_reader:ODQADataReader",
+    "name": "odqa_reader",
     "data_path": "odqa/ruwiki.db",
     "save_path": "odqa/ruwiki.db",
     "dataset_format": "sqlite"
