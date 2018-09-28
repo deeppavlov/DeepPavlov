@@ -1,0 +1,70 @@
+{
+  "dataset_reader": {
+    "name": "amazon_ecommerce_reader",
+    "data_path": "./amazon_ecommerce",
+    "catalog": "Phones"
+  },
+  "dataset_iterator": {
+    "name": "data_learning_iterator"
+  },
+ "chainer": {
+    "in": ["query", "state"],
+    "out": ["response"],
+    "pipe": [
+      {
+        "name": "ecommerce_bot",
+        "in": ["query", "state"],
+        "fit_on": ["query"],
+        "min_similarity": 0.5,
+        "min_entropy": 0.5,
+        "entropy_fields": ["Size", "Brand", "Author", "Color", "Genre"],
+        "save_path": "ecommerce_bot/ecommerce_Phones_model.pkl",
+        "load_path": ["ecommerce_bot/ecommerce_Phones_model.pkl","ecommerce_bot/ecommerce_Electronics_model.pkl"],
+        "preprocess": {
+          "name": "ecommerce_preprocess",
+          "spacy_model": "en_core_web_sm",
+          "disable": ["parser"]
+        },
+        "out": ["response"]
+      }
+    ]
+   },
+   "train":{
+   },
+   "metadata": {
+    "labels": {
+      "telegram_utils": "EcommerceBot",
+      "server_utils": "EcommerceBot"
+    },
+    "requirements": [
+        "../dp_requirements/spacy.txt",
+        "../dp_requirements/en_core_web_sm.txt"
+      ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Phones_model.pkl",
+        "subdir": "ecommerce_bot"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Books_model.pkl",
+        "subdir": "ecommerce_bot"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Movies_model.pkl",
+        "subdir": "ecommerce_bot"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Electronics_model.pkl",
+        "subdir": "ecommerce_bot"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Home_model.pkl",
+        "subdir": "ecommerce_bot"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Automotive_model.pkl",
+        "subdir": "ecommerce_bot"
+      }
+    ]
+  }
+}
