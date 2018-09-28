@@ -23,6 +23,11 @@ from collections import OrderedDict
 from os.path import join, isdir
 from os import mkdir
 
+from py3nvml import py3nvml
+from deeppavlov.core.common.errors import GpuError
+from deeppavlov.core.common.log import get_logger
+
+logger = get_logger(__name__)
 
 # --------------------------------------------------- Common ----------------------------------------------------------
 
@@ -124,9 +129,128 @@ def rename_met(log, gold_metrics=None):
     return log
 
 
-# ------------------------------------------------Generate reports-----------------------------------------------------
+# -------------------------------------------------Work with gpus------------------------------------------------------
+def get_available_gpus(num_gpus=None, gpu_select=None, gpu_fraction=1.0):
+    """
+    Checks for idle gpu.
 
-# ________________________________________________Generate new table___________________________________________________
+    Args:
+        num_gpus : int; How many gpus you need (optional)
+        gpu_select : iterable; A single int or an iterable of ints indicating gpu numbers to search through.
+         If left blank, will search through all gpus.
+        gpu_fraction : float; The fractional of a gpu memory that must be free for the script to see the gpu as free.
+         Defaults to 1. Useful if someone has grabbed a tiny amount of memory on a gpu but isn't using it.
+
+    Returns:
+        available_gpu: list of ints; List with available gpu numbers
+    """
+    # check that num_gpus is not 0
+    if num_gpus == 0:
+        raise GpuError("The number of required cards is equal to zero. Please check 'num_gpus' parameter")
+
+    # Try connect with NVIDIA drivers
+    try:
+        py3nvml.nvmlInit()
+    except Exception:
+        raise GpuError("Couldn't connect to nvml drivers. Check they are installed correctly.")
+
+    numdevices = py3nvml.nvmlDeviceGetCount()
+    gpu_free = [False] * numdevices
+
+    if num_gpus is None:
+        num_gpus = numdevices
+    elif num_gpus > numdevices:
+        print("GpuWarning: Device have only {0} gpu cards, "
+              "but parameter 'max_num_workers' = {1}.".format(numdevices, num_gpus))
+
+    # Flag which gpus we can check
+    if gpu_select is None:
+        gpu_check = [True] * numdevices
+    else:
+        gpu_check = [False] * numdevices
+        try:
+            gpu_check[gpu_select] = True
+        except TypeError:
+            try:
+                for i in gpu_select:
+                    gpu_check[i] = True
+            except Exception:
+                raise GpuError("Please provide an int or an iterable of ints for 'gpu_select' parameter.")
+
+    # Print out GPU device info. Useful for debugging.
+    for i in range(numdevices):
+        # If the gpu was specified, examine it
+        if not gpu_check[i]:
+            continue
+
+        handle = py3nvml.nvmlDeviceGetHandleByIndex(i)
+        info = py3nvml.nvmlDeviceGetMemoryInfo(handle)
+
+        str_ = "GPU {}:\t".format(i) + \
+               "Used Mem: {:>6}MB\t".format(info.used / (1024 ** 2)) + \
+               "Total Mem: {:>6}MB".format(info.total / (1024 ** 2))
+        logger.debug(str_)
+
+    # Now check if any devices are suitable
+    for i in range(numdevices):
+        # If the gpu was specified, examine it
+        if not gpu_check[i]:
+            continue
+
+        handle = py3nvml.nvmlDeviceGetHandleByIndex(i)
+        info = py3nvml.nvmlDeviceGetMemoryInfo(handle)
+
+        # Sometimes GPU has a few MB used when it is actually free
+        if (info.free + 10) / info.total >= gpu_fraction:
+            gpu_free[i] = True
+        else:
+            logger.info('GPU {} has processes on it. Skipping.'.format(i))
+
+    py3nvml.nvmlShutdown()
+
+    # get available gpu numbers
+    available_gpu = [i for i, x in enumerate(gpu_free) if x]
+    if num_gpus > len(available_gpu):
+        print("GpuWarning: only {0} of {1} gpu is available.".format(len(available_gpu), numdevices))
+    else:
+        available_gpu = available_gpu[0:num_gpus]
+
+    return available_gpu
+
+
+def check_gpu_available(number: int, gpu_fraction=1.0):
+    # Try connect with NVIDIA drivers
+    try:
+        py3nvml.nvmlInit()
+    except Exception:
+        raise GpuError("Couldn't connect to nvml drivers. Check they are installed correctly.")
+
+    handle = py3nvml.nvmlDeviceGetHandleByIndex(number)
+    info = py3nvml.nvmlDeviceGetMemoryInfo(handle)
+
+    # Sometimes GPU has a few MB used when it is actually free
+    if (info.free + 10) / info.total >= gpu_fraction:
+        py3nvml.nvmlShutdown()
+        return True
+    else:
+        py3nvml.nvmlShutdown()
+        return False
+
+
+def get_num_gpu():
+    # Try connect with NVIDIA drivers
+    try:
+        py3nvml.nvmlInit()
+    except Exception:
+        raise GpuError("Couldn't connect to nvml drivers. Check they are installed correctly.")
+
+    numdevices = py3nvml.nvmlDeviceGetCount()
+    py3nvml.nvmlShutdown()
+    return numdevices
+# ------------------------------------------------Generate reports-----------------------------------------------------
+# _______________________________________________Generate new table____________________________________________________
+
+
 def get_data(log):
     dataset_names = {}
     max_com = 0
@@ -384,8 +508,8 @@ def build_pipeline_table(log_data, target_metric=None, save_path='./'):
                                        'align': 'center',
                                        'valign': 'vcenter'})
     # write legend to tables
-    row, col = write_info(worksheet_1, num_p, target_metric, cell_format)
-    row, col = write_info(worksheet_2, num_p, target_metric, cell_format)
+    for wsheet in [worksheet_1, worksheet_2]:
+        row, col = write_info(wsheet, num_p, target_metric, cell_format)
 
     row1 = row
     row2 = row
@@ -453,7 +577,8 @@ def plot_res(info, name, savepath='./', save=True, width=0.2, fheight=8, fwidth=
     fig.set_figheight(fheight)
     fig.set_figwidth(fwidth)
 
-    colors = plt.cm.Paired(np.linspace(0, 0.5, len(bar_list)))
+    colors = plt.get_cmap('Paired')
+    colors = colors(np.linspace(0, 0.5, len(bar_list)))
     # add some text for labels, title and axes ticks
     ax.set_ylabel('Scores').set_fontsize(20)
     ax.set_title('Scores by metric').set_fontsize(20)

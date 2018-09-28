@@ -20,3 +20,5 @@ rusenttokenize==0.0.4
 sortedcontainers==2.0.2
 matplotlib
 xlsxwriter
+psutil
+py3nvml
