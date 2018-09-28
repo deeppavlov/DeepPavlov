@@ -15,17 +15,20 @@
 import copy
 import inspect
 
+import tensorflow as tf
+import keras.backend as kb
+
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.models.morpho_tagger.network import CharacterTagger
-
+from deeppavlov.core.models.tf_backend import TfModelMeta
 
 log = get_logger(__name__)
 
 
 @register("morpho_tagger")
-class MorphoTaggerWrapper(NNModel):
+class MorphoTaggerWrapper(NNModel, metaclass=TfModelMeta):
     """A wrapper over morphological tagger, implemented in
     :class:~deeppavlov.models.morpho_tagger.network.CharacterTagger.
     A subclass of :class:`~deeppavlov.core.models.nn_model.NNModel`
@@ -64,6 +67,19 @@ class MorphoTaggerWrapper(NNModel):
         # Tries to load the model from model `load_path`, if it is available
         self.load()
 
+    @staticmethod
+    def _config_session():
+        """
+        Configure session for particular device
+
+        Returns:
+            tensorflow.Session
+        """
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        config.gpu_options.visible_device_list = '0'
+        return tf.Session(config=config)
+
     def load(self):
         """Checks existence of the model file, loads the model if the file exists"""
 
@@ -101,5 +117,7 @@ class MorphoTaggerWrapper(NNModel):
         Args:
             instance: a batch to predict answers on
         """
-        return self._net.predict_on_batch(x_batch, **kwargs)
+        with self.graph.as_default():
+            kb.set_session(self.sess)
+            return self._net.predict_on_batch(x_batch, **kwargs)
 
