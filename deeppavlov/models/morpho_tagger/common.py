@@ -12,7 +12,7 @@ from deeppavlov.core.models.component import Component
 
 from deeppavlov.dataset_iterators.morphotagger_iterator import MorphoTaggerDatasetIterator
 from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag
-
+from deeppavlov.models.tokenizers.nltk_moses_tokenizer import NLTKMosesTokenizer
 
 def predict_with_model(config_path: [Path, str]) -> List[List[str]]:
     """Returns predictions of morphotagging model given in config :config_path:.
@@ -84,7 +84,7 @@ def prettify(sent: Union[str, List[str]], tags: List[str], return_string: bool =
         7  .    SENT
     """
     if isinstance(sent, str):
-        words = [x for x in re.split("(\w+|[,.])", sent) if x.strip() != ""]
+        words = NLTKMosesTokenizer()([sent])[0]
     else:
         words = sent
     answer = []
