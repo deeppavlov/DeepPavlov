@@ -12,13 +12,13 @@ from tensorflow.python.framework.ops import Tensor
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.ranking.siamese_keras_model import SiameseKerasModel
+from deeppavlov.models.ranking.keras_siamese_model import KerasSiameseModel
 
 log = get_logger(__name__)
 
 
 @register('bilstm_nn')
-class BiLSTMNetwork(SiameseKerasModel):
+class BiLSTMNetwork(KerasSiameseModel):
 
     """The class implementing a siamese neural network with BiLSTM and max pooling.
 
