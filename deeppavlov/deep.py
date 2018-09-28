@@ -25,7 +25,7 @@ from deeppavlov.download import deep_download
 from deeppavlov.core.common.cross_validation import calc_cv_score
 from utils.telegram_utils.telegram_ui import interact_model_by_telegram
 from utils.server_utils.server import start_model_server
-from utils.ms_bot_framework_utils.server import start_bot_framework_server
+from utils.ms_bot_framework_utils.server import run_ms_bf_default_agent
 from utils.pip_wrapper import install_from_config
 
 
@@ -50,8 +50,6 @@ parser.add_argument("-s", "--ms-secret", help="microsoft bot framework app secre
 
 parser.add_argument("--multi-instance", action="store_true", help="allow rising of several instances of the model")
 parser.add_argument("--stateful", action="store_true", help="interact with a stateful model")
-parser.add_argument("--rich-content", action="store_true", help="enable rich content exchange with model")
-parser.add_argument("--use-history", action="store_true", help="feed model with an interaction history")
 
 parser.add_argument("--api-mode", help="rest api mode: 'basic' with batches or 'alice' for  Yandex.Dialogs format",
                     type=str, default='basic', choices={'basic', 'alice'})
@@ -80,7 +78,6 @@ def main():
 
     multi_instance = args.multi_instance
     stateful = args.stateful
-    rich_content = args.rich_content
 
     if args.mode == 'train':
         train_evaluate_model_from_config(pipeline_config_path)
@@ -101,12 +98,11 @@ def main():
             log.error('Microsoft Bot Framework app secret required: initiate -s param '
                       'or MS_APP_SECRET env var with Microsoft app secret')
         else:
-            start_bot_framework_server(model_config_path=pipeline_config_path,
-                                       app_id=ms_id,
-                                       app_secret=ms_secret,
-                                       multi_instance=multi_instance,
-                                       stateful=stateful,
-                                       rich_content=rich_content)
+            run_ms_bf_default_agent(model_config_path=pipeline_config_path,
+                                    app_id=ms_id,
+                                    app_secret=ms_secret,
+                                    multi_instance=multi_instance,
+                                    stateful=stateful)
     elif args.mode == 'riseapi':
         alice = args.api_mode == 'alice'
         start_model_server(pipeline_config_path, alice)

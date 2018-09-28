@@ -28,8 +28,8 @@ Swagger(app)
 CORS(app)
 
 
-def start_bot_framework_server(model_config_path: str, app_id: str, app_secret: str,
-                               multi_instance: bool = False, stateful: bool = False, rich_content: bool = False):
+def run_ms_bf_default_agent(model_config_path: str, app_id: str, app_secret: str,
+                            multi_instance: bool = False, stateful: bool = False):
     def get_default_agent():
         model_config = read_json(model_config_path)
         model = build_model_from_config(model_config)
