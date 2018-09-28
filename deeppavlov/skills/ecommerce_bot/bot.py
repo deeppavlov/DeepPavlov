@@ -96,7 +96,8 @@ class EcommerceBot(Component):
 
         log.info(f"Loaded items {len(self.ec_data)}")
 
-    def __call__(self, queries: List[str], states: List[Dict[Any, Any]], **kwargs) -> Tuple[Tuple[List[Dict[Any, Any]], List[Any], int], List[float], Dict[Any, Any]]:
+    def __call__(self, queries: List[str], history: List[list], states: List[Dict[Any, Any]], **kwargs) -> \
+            Tuple[Tuple[List[Dict[Any, Any]], List[Any], int], List[float], Dict[Any, Any]]:
         """Retrieve catalog items according to the BLEU measure
 
         Parameters:
@@ -128,6 +129,9 @@ class EcommerceBot(Component):
                     state = json.loads(state)
                 except:
                     state = self.preprocess.parse_input(state)
+
+            if not state:
+                state = {}
 
             start = state['start'] if 'start' in state else 0
             stop = state['stop'] if 'stop' in state else 5
