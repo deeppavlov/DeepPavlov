@@ -20,13 +20,3 @@ Ranking classes.
 .. autoclass:: deeppavlov.models.ranking.ranking_dict.RankingDict
 
 .. autoclass:: deeppavlov.models.ranking.emb_dict.EmbDict
-
-.. autoclass:: deeppavlov.models.ranking.tfidf_ranker.TfidfRanker
-    :members:
-
-    .. automethod:: __call__
-
-.. autoclass:: deeppavlov.models.ranking.logit_ranker.LogitRanker
-    :members:
-
-    .. automethod:: __call__
