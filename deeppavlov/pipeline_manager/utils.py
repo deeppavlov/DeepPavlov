@@ -409,14 +409,19 @@ def get_met_info(log_):
         for name in list(log.keys()):
             main[name] = dict()
             for met in metrics_:
-                met_max = -np.inf
+                met_max = -1
                 for key, val in log[name].items():
                     if val['results'].get('test') is not None:
                         if val['results']['test'][met] > met_max:
                             met_max = val['results']['test'][met]
                     else:
-                        print("Warning pipe with number {} not contain 'test' key in results, and it will not "
-                              "participate in comparing the results to display the final plot.")
+                        if val['results'].get('valid'):
+                            if val['results']['valid'][met] > met_max:
+                                met_max = val['results']['valid'][met]
+                        else:
+                            raise ValueError("Pipe with number {0} not contain 'test' or 'valid' keys in results, "
+                                             "and it will not participate in comparing the results to display "
+                                             "the final plot.".format(key))
                 main[name][met] = met_max
         return main
 
