@@ -16,11 +16,7 @@ limitations under the License.
 
 import argparse
 from pathlib import Path
-import sys
 import os
-
-p = (Path(__file__) / ".." / "..").resolve()
-sys.path.append(str(p))
 
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.commands.infer import interact_model, predict_on_stream
@@ -56,7 +52,8 @@ parser.add_argument("--multi-instance", action="store_true", help="allow rising 
 parser.add_argument("--stateful", action="store_true", help="interact with a stateful model")
 parser.add_argument("--use-history", action="store_true", help="feed model with an interaction history")
 
-
+parser.add_argument("--api-mode", help="rest api mode: 'basic' with batches or 'alice' for  Yandex.Dialogs format",
+                    type=str, default='basic', choices={'basic', 'alice'})
 
 
 def find_config(pipeline_config_path: str):
@@ -110,7 +107,8 @@ def main():
                                        stateful=stateful,
                                        use_history=use_history)
     elif args.mode == 'riseapi':
-        start_model_server(pipeline_config_path)
+        alice = args.api_mode == 'alice'
+        start_model_server(pipeline_config_path, alice)
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'install':
