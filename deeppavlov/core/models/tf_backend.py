@@ -46,8 +46,8 @@ class TfModelMeta(with_metaclass(type, ABCMeta)):
         obj = cls.__new__(cls)
 
         from .keras_model import KerasModel
-        from deeppavlov.models.morpho_tagger.tagger import MorphoTaggerWrapper
-        if issubclass(cls, KerasModel) or issubclass(cls, MorphoTaggerWrapper):
+        from deeppavlov.models.morpho_tagger.tagger import ExternalKerasWrapper
+        if issubclass(cls, KerasModel) or issubclass(cls, ExternalKerasWrapper):
             import keras.backend as K
             if K.backend() != 'tensorflow':
                 obj.__init__(*args, **kwargs)
@@ -68,7 +68,7 @@ class TfModelMeta(with_metaclass(type, ABCMeta)):
                 continue
             attr = getattr(obj, meth)
             if callable(attr):
-                if issubclass(cls, KerasModel) or issubclass(cls, MorphoTaggerWrapper):
+                if issubclass(cls, KerasModel) or issubclass(cls, ExternalKerasWrapper):
                     wrapped_attr = _keras_wrap(attr, obj.graph, obj.sess)
                 else:
                     wrapped_attr = _graph_wrap(attr, obj.graph)
