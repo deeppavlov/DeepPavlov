@@ -45,7 +45,7 @@
   "logreg_classifier": "deeppavlov.models.classifiers.logreg_classifier:LogregClassifier",
   "lowercase_preprocessor": "deeppavlov.models.preprocessors.capitalization:LowercasePreprocessor",
   "mask": "deeppavlov.models.preprocessors.mask:Mask",
-  "morpho_tagger": "deeppavlov.models.morpho_tagger.tagger:MorphoTaggerWrapper",
+  "morpho_tagger": "deeppavlov.models.morpho_tagger.network:MorphoTaggerWrapper",
   "morphotagger_dataset": "deeppavlov.dataset_iterators.morphotagger_iterator:MorphoTaggerDatasetIterator",
   "morphotagger_dataset_reader": "deeppavlov.dataset_readers.morphotagging_dataset_reader:MorphotaggerDatasetReader",
   "ner": "deeppavlov.models.ner.network:NerNetwork",

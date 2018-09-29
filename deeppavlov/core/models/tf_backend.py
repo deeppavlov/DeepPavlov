@@ -40,14 +40,17 @@ def _keras_wrap(func, graph, session):
     return _wrapped
 
 
+def _is_keras_model(cls):
+    # may be, exists a way to avoid these ugly imports?
+    from .keras_model import KerasModel, ExternalKerasWrapper
+    return issubclass(cls, KerasModel) or issubclass(cls, ExternalKerasWrapper)
+
+
 class TfModelMeta(with_metaclass(type, ABCMeta)):
     """Metaclass that helps all child classes to have their own graph and session."""
     def __call__(cls, *args, **kwargs):
         obj = cls.__new__(cls)
-
-        from .keras_model import KerasModel
-        from deeppavlov.models.morpho_tagger.tagger import ExternalKerasWrapper
-        if issubclass(cls, KerasModel) or issubclass(cls, ExternalKerasWrapper):
+        if _is_keras_model(cls):
             import keras.backend as K
             if K.backend() != 'tensorflow':
                 obj.__init__(*args, **kwargs)
@@ -68,7 +71,7 @@ class TfModelMeta(with_metaclass(type, ABCMeta)):
                 continue
             attr = getattr(obj, meth)
             if callable(attr):
-                if issubclass(cls, KerasModel) or issubclass(cls, ExternalKerasWrapper):
+                if _is_keras_model(cls):
                     wrapped_attr = _keras_wrap(attr, obj.graph, obj.sess)
                 else:
                     wrapped_attr = _graph_wrap(attr, obj.graph)

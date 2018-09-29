@@ -19,15 +19,16 @@ import keras.optimizers as ko
 import keras.regularizers as kreg
 from keras import Model
 
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.models.keras_model import ExternalKerasWrapper
 from deeppavlov.core.data.vocab import DefaultVocabulary
 from .common_tagger import *
 from .cells import Highway
 
-
 log = get_logger(__name__)
-MAX_WORD_LENGTH = 30
 
+MAX_WORD_LENGTH = 30
 
 class CharacterTagger:
     """A class for character-based neural morphological tagger
@@ -282,7 +283,7 @@ class CharacterTagger:
         """Transforms a sentence of tags to Numpy array, which will be the network target.
 
         Args:
-            sent: input sentence of tags
+            tags: input sentence of tags
             bucket_length: the width of the bucket
 
         Returns:
@@ -309,3 +310,10 @@ class CharacterTagger:
             infile: file to load model weights from
         """
         self.model_.load_weights(infile)
+
+
+@register("morpho_tagger")
+class MorphoTaggerWrapper(ExternalKerasWrapper):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(CharacterTagger, *args, **kwargs)
