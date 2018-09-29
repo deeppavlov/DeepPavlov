@@ -15,8 +15,9 @@
 import json
 import os
 import shutil
+
 from psutil import cpu_count
-from multiprocessing import Pool
+from concurrent.futures import ProcessPoolExecutor
 
 from time import time
 from tqdm import tqdm
@@ -167,7 +168,7 @@ class PipelineManager:
         else:
             self.max_num_workers = self.max_num_workers_
 
-    def train_pipe(self, pipe_config: dict) -> None:
+    def train_pipe(self, pipe_config: dict):
         if self.pipe_number == 0:
             self.logger.log['experiment_info']['metrics'] = copy(pipe_config['train']['metrics'])
             if self.target_metric is None:
@@ -212,6 +213,10 @@ class PipelineManager:
         self.logger.write()
         self.pipe_number += 1
 
+        # # TODO ???????
+        # z = self.pipe_number
+        # return z
+
     def run(self):
         """
         Initializes the pipeline generator and runs the experiment. Creates a report after the experiments.
@@ -229,10 +234,21 @@ class PipelineManager:
         self.logger.log['experiment_info']['number_of_pipes'] = self.gen_len
 
         # Multiprocess train pipeline
-        # TODO need to automatic determine a number of workers
-        # TODO
-        p = Pool(5)
-        p.map(self.train_pipe, self.pipeline_generator())
+        # TODO write gpu logic
+        if not self.available_gpu:
+            with ProcessPoolExecutor(self.max_num_workers) as executor:
+                for pipe_conf in self.pipeline_generator():
+                    executor.submit(self.train_pipe, pipe_conf)
+        else:
+            pipes_configs = list(self.pipeline_generator())
+            with ProcessPoolExecutor(self.max_num_workers) as executor:
+                for k in range(self.gen_len // len(self.available_gpu) + 1):
+                    for j in range(len(self.available_gpu)):
+                        i = k * len(self.available_gpu) + j
+                        if i < self.gen_len:
+                            env = dict(os.environ)  # TODO it real need to reinitialize every i
+                            env['CUDA_VISIBLE_DEVICES'] = str(self.available_gpu[j])
+                            executor.submit(self.train_pipe, pipes_configs[i])
 
         # save log
         self.logger.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)
