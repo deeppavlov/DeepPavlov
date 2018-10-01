@@ -11,9 +11,9 @@ Ranking classes.
 
 .. autoclass:: deeppavlov.models.ranking.siamese_predictor.SiamesePredictor
 
-.. autoclass:: deeppavlov.models.ranking.bilstm_network.BiLSTMNetwork
+.. autoclass:: deeppavlov.models.ranking.bilstm_siamese_network.BiLSTMSiameseNetwork
 
-.. autoclass:: deeppavlov.models.ranking.bilstm_gru_network.BiLSTMGRUNetwork
+.. autoclass:: deeppavlov.models.ranking.bilstm_gru_siamese_network.BiLSTMGRUSiameseNetwork
 
 .. autoclass:: deeppavlov.models.ranking.tfidf_ranker.TfidfRanker
     :members:
