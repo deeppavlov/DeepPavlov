@@ -22,6 +22,7 @@ from multiprocessing import Pool
 
 from tqdm import tqdm
 
+from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.commands.utils import expand_path
 
@@ -29,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 @register('odqa_reader')
-class ODQADataReader:
+class ODQADataReader(DatasetReader):
     """Build a SQLite database from folder with txt files, json files or
     `Wiki Extractor <https://github.com/attardi/wikiextractor>`_ files.
 
