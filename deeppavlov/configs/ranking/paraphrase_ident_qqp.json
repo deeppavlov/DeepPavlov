@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "qqp_reader",
-    "num_samples": 1024,
+    "num_samples": null,
     "data_path": "./qqp_data"
   },
   "dataset_iterator": {
@@ -44,8 +44,8 @@
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "qqp_embeddings/wiki.en.bin",
-          "save_path": "qqp_embeddings/wiki.en.bin",
+          "load_path": "wiki.en.bin",
+          "save_path": "wiki.en.bin",
           "dim": 300
         }
       },
@@ -102,10 +102,7 @@
         "url": "http://files.deeppavlov.ai/datasets/quora_question_pairs.zip",
         "subdir": "qqp_data"
       },
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
-        "subdir": "qqp_embeddings"
-      }
+      "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin"
     ]
   }
 }
