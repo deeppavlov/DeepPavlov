@@ -17,7 +17,6 @@ from typing import Dict, List, Tuple
 
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.utils import download_decompress, mark_done, is_done
 from deeppavlov.core.commands.utils import expand_path
 
 

@@ -17,7 +17,9 @@ import random
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
+from deeppavlov.core.common.log import get_logger
 
+log = get_logger(__name__)
 
 @register('siamese_iterator')
 class SiameseIterator(DataLearningIterator):
@@ -75,7 +77,9 @@ class SiameseIterator(DataLearningIterator):
         data = self.data[data_type]
         if self.random_batches and self.batches_per_epoch is not None and data_type == "train":
             num_steps = self.batches_per_epoch
-            assert(batch_size <= len(data))
+            if batch_size > len(data):
+                batch_size = len(data)
+                log.warning("The batch size exceeds the dataset size. Setting it equal to the dataset size.")
         else:
             num_steps = len(data) // batch_size
         if data_type == "train":
