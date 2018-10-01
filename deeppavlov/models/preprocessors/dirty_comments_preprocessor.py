@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import re
+import string
 from typing import List, Union
 
 from deeppavlov.core.common.registry import register
@@ -57,7 +58,22 @@ class DirtyCommentsPreprocessor(Component):
         f = [re.sub("ies( |$)", "y ", x) for x in f]
         f = [re.sub("s( |$)", " ", x) for x in f]
         f = [re.sub("ing( |$)", " ", x) for x in f]
-        f = [x.replace("tard ", " ") for x in f]
+
+        f = [x.replace(" u ", " you ") for x in f]
+        f = [x.replace(" em ", " them ") for x in f]
+        f = [x.replace(" da ", " the ") for x in f]
+        f = [x.replace(" yo ", " you ") for x in f]
+        f = [x.replace(" ur ", " your ") for x in f]
+        f = [x.replace(" u r ", " you are ") for x in f]
+        f = [x.replace("yo\'re", "you are") for x in f]
+        f = [x.replace("yu\'re", "you are") for x in f]
+        f = [x.replace("u\'re", "you are") for x in f]
+        f = [x.replace(" urs ", " yours ") for x in f]
+        f = [x.replace("y'all", "you all") for x in f]
+
+        f = [x.replace(" r u ", " are you ") for x in f]
+        f = [x.replace(" r you", " are you") for x in f]
+        f = [x.replace(" are u ", " are you ") for x in f]
 
         f = [x.replace("\\n", " ") for x in f]
         f = [x.replace("\\t", " ") for x in f]
@@ -70,7 +86,11 @@ class DirtyCommentsPreprocessor(Component):
         f = [re.sub('\.\.+', '..', x) for x in f]
 
         f = [re.sub("[*$%&#@()]", " ", x) for x in f]
-        f = [re.sub(" [0-9]+ ", " DD ", x) for x in f]
+        f = [re.sub("[0-9]+", " 0 ", x) for x in f]
         f = [re.sub("<\S*>", "", x) for x in f]
         f = [re.sub('\s+', ' ', x) for x in f]
+
+        for letter in string.printable:
+            f = [re.sub(letter * 3 + '+', letter * 2, x).strip() for x in f]
+
         return f
