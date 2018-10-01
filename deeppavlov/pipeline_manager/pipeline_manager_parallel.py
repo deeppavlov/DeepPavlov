@@ -124,7 +124,7 @@ class PipelineManager:
     def prepare_multiprocess(self):
         cpu_num = cpu_count()
         gpu_num = get_num_gpu()
-        if self.max_num_workers_ > cpu_num:
+        if self.max_num_workers_ is not None and self.max_num_workers_ > cpu_num:
             print("PipelineManagerWarning: parameter 'max_num_workers'={0}, "
                   "but amounts of cpu is {1}. The {1} will be assigned to 'max_num_workers' "
                   "as default.".format(self.max_num_workers_, cpu_num))
@@ -213,10 +213,6 @@ class PipelineManager:
         self.logger.write()
         self.pipe_number += 1
 
-        # # TODO ???????
-        # z = self.pipe_number
-        # return z
-
     def run(self):
         """
         Initializes the pipeline generator and runs the experiment. Creates a report after the experiments.
@@ -234,7 +230,6 @@ class PipelineManager:
         self.logger.log['experiment_info']['number_of_pipes'] = self.gen_len
 
         # Multiprocess train pipeline
-        # TODO write gpu logic
         if not self.available_gpu:
             with ProcessPoolExecutor(self.max_num_workers) as executor:
                 for pipe_conf in self.pipeline_generator():
