@@ -49,6 +49,9 @@ class ODQADataReader(DatasetReader):
         Args:
             path: path to a folder or a file
 
+        Raises:
+            RuntimeError if the provided `path` doesn't exist
+
         Yields:
             file paths one by one
 
@@ -77,6 +80,7 @@ class ODQADataReader(DatasetReader):
 
         Raises:
             sqlite3.OperationalError if `save_path` doesn't exist.
+            RuntimeError if dataset_format is not in ['sqlite', 'txt', 'json', 'wiki']
 
         Returns:
             None
