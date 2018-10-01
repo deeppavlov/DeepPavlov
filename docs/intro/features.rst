@@ -261,6 +261,10 @@ You can build different pipelines based on: tf-idf, weighted fasttext, cosine si
 Skills
 ------
 
+- :doc:`eCommerce bot </skills/ecommerce_bot_skill>`
+
+The eCommerce bot intends to retrieve product items from catalog in sorted order. In addition, it asks an user to provide additional information to specify the search.
+
 - :doc:`ODQA </skills/odqa>`
 
 An open domain question answering skill. The skill accepts free-form questions about the world and outputs an answer

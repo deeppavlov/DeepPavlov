@@ -5,6 +5,24 @@ from deeppavlov.core.models.component import Component
 
 
 class PatternMatchingSkill(Component):
+    """
+    Create skills as pre-defined responses for a user's input containing specific keywords or regular expressions.
+    Every skill returns response and confidence.
+
+    Examples:
+
+        >>> # Import key components to build HelloBot.
+        >>> from deeppavlov.skills.pattern_matching_skill import PatternMatchingSkill
+        >>> from deeppavlov.core.agent import Agent, HighestConfidenceSelector
+        >>> hello = PatternMatchingSkill(responses=['Hello world!'], patterns=["hi", "hello", "good day"])
+        >>> bye = PatternMatchingSkill(['Goodbye world!', 'See you around'], patterns=["bye", "chao", "see you"])
+        >>> fallback = PatternMatchingSkill(["I don't understand, sorry", 'I can say "Hello world!"'])
+        >>> # Agent executes skills and then takes response from the skill with the highest confidence.
+        >>> agent = Agent([hello, bye, fallback], skills_selector=HighestConfidenceSelector())
+        >>> agent(['Hello', 'Bye', 'Or not'])
+        ['Hello world!', 'Goodbye world!', 'I can say "Hello world!"']
+
+    """
     def __init__(self, responses, patterns=None, regex=False, ignore_case=True):
         if isinstance(responses, str):
             responses = [responses]
