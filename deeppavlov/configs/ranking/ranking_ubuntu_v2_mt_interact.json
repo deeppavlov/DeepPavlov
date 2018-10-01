@@ -45,8 +45,8 @@
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "wiki.en.bin",
-          "save_path": "wiki.en.bin",
+          "load_path": "embeddings/wiki.en.bin",
+          "save_path": "embeddings/wiki.en.bin",
           "dim": 300
         }
       },
@@ -113,7 +113,10 @@
         "url": "http://files.deeppavlov.ai/datasets/ubuntu_v2_data.tar.gz",
         "subdir": "ubuntu_v2_data"
       },
-      "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin"
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
+        "subdir": "embeddings"
+      }
     ]
   }
 }
