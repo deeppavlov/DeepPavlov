@@ -8,7 +8,7 @@
     "shuffle": false
   },
   "chainer": {
-    "in": ["x_text", "dialog_id"],
+    "in": ["x_text", "dialog_id", "history", "kb_columns", "kb_items"],
     "in_y": ["y_text", "y_domain"],
     "out": ["prediction_text"],
     "pipe": [
@@ -21,23 +21,41 @@
         "out": ["x_tokens"]
       },
       {
-        "id": "dialog_history",
-        "name": "dialog_state",
-        "in": ["dialog_id"],
+        "ref": "stream_spacy",
+        "in": ["y_text"],
+        "out": ["y_tokens"]
+      },
+      {
+        "ref": "stream_spacy",
+        "in": ["history"],
         "out": ["history_tokens"]
       },
       {
         "id": "kb",
         "name": "knowledge_base",
+        "fit_on": ["dialog_id", "kb_columns", "kb_items"],
         "tokenizer": "#stream_spacy",
-        "in": ["dialog_id"],
+        "in": ["dialog_id", "kb_columns", "kb_items"],
         "out": ["kb_entries"],
         "save_path": "seq2seq_go_bot/kvret_kb.json",
         "load_path": "seq2seq_go_bot/kvret_kb.json"
       },
       {
+        "name": "knowledge_base_entity_normalizer",
+        "in": ["y_tokens", "kb_entries"],
+        "out": ["y_norm_tokens"]
+      },
+      {
+        "name": "knowledge_base_entity_normalizer",
+        "remove": true,
+        "in": ["y_tokens", "kb_entries"],
+        "out": ["y_without_entities_tokens"]
+      },
+      {
         "id": "src_token_vocab",
+        "fit_on": ["x_tokens", "y_tokens"],
         "name": "simple_vocab",
+        "min_freq": 2,
         "default_token": "<UNK>",
         "special_tokens": ["<UNK>", "<SOS>"],
         "save_path": "vocabs/kvret_src_tokens.dict",
@@ -45,6 +63,7 @@
       },
       {
         "id": "tgt_token_vocab",
+        "fit_on": ["y_without_entities_tokens"],
         "name": "simple_vocab",
         "default_token": "<UNK>",
         "special_tokens": ["<UNK>", "<SOS>", "<EOS>"],
@@ -60,6 +79,7 @@
       },
       {
         "in": ["x_tokens", "history_tokens", "kb_entries"],
+        "in_y": ["y_norm_tokens"],
         "out": ["prediction_norm_tokens"],
         "main": true,
         "name": "seq2seq_go_bot",
@@ -96,20 +116,21 @@
         "ref": "stream_spacy",
         "in": ["prediction_tokens"],
         "out": ["prediction_text"]
-      },
-      {
-        "ref": "dialog_history",
-        "in": ["dialog_id", "x_tokens"],
-        "out": ["history_tokens"]
-      },
-      {
-        "ref": "dialog_history",
-        "in": ["dialog_id", "prediction_tokens"],
-        "out": ["history_tokens"]
       }
     ]
   },
-  "train": {},
+  "train": {
+    "epochs": 200,
+    "batch_size": 16,
+
+    "metrics": ["google_bleu", "bleu", "accuracy"],
+    "validation_patience": 30,
+    "val_every_n_epochs": 1,
+
+    "log_every_n_batches": -1,
+    "log_every_n_epochs": 1,
+    "show_examples": false
+  },
   "metadata": {
     "requirements": [
       "../dp_requirements/tf.txt",
