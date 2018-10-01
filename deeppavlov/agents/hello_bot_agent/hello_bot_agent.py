@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from deeppavlov.core.agent import Agent
+from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
 from deeppavlov.skills.pattern_matching_skill import PatternMatchingSkill
 
 
-def make_hello_bot_agent() -> Agent:
+def make_hello_bot_agent() -> DefaultAgent:
     """Builds agent based on PatternMatchingSkill and HighestConfidenceSelector.
 
     This is agent building tutorial. You can this .py file to check how hello-bot agent works.
@@ -29,7 +29,7 @@ def make_hello_bot_agent() -> Agent:
     skill_bye = PatternMatchingSkill(['Goodbye world', 'See you around'], patterns=['bye', 'chao', 'see you'])
     skill_fallback = PatternMatchingSkill(['I don\'t understand, sorry', 'I can say "Hello world"'])
 
-    agent = Agent([skill_hello, skill_bye, skill_fallback], skills_processor=HighestConfidenceSelector())
+    agent = DefaultAgent([skill_hello, skill_bye, skill_fallback], skills_processor=HighestConfidenceSelector())
 
     return agent
 

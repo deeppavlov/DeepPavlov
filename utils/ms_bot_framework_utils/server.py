@@ -9,7 +9,7 @@ from utils.ms_bot_framework_utils.bot import Bot
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.commands.infer import build_model_from_config
-from deeppavlov.core.agent.agent import Agent
+from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.default_rich_content_processor import DefaultRichContentWrapper
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
 
@@ -34,7 +34,7 @@ def run_ms_bf_default_agent(model_config_path: str, app_id: str, app_secret: str
         model_config = read_json(model_config_path)
         model = build_model_from_config(model_config)
         skill = DefaultStatelessSkill(model)
-        agent = Agent([skill], skills_processor=DefaultRichContentWrapper())
+        agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
         return agent
 
     run_ms_bot_framework_server(get_default_agent, app_id, app_secret, multi_instance, stateful)

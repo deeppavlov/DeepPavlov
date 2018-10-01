@@ -1,7 +1,7 @@
+from typing import Tuple
+
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.skill.skill import Skill
-
-EXPECTING_ARG_MESSAGE = 'expecting_arg:{}'
 
 
 class DefaultStatelessSkill(Skill):
@@ -17,7 +17,7 @@ class DefaultStatelessSkill(Skill):
         self.model: Component = model
 
     def __call__(self, utterances_batch: [list, tuple], history_batch: [list, tuple],
-                 states_batch: [list, tuple] = None) -> (list, list, list):
+                 states_batch: [list, tuple] = None) -> Tuple[list, list, list]:
         # TODO: methods inputs should be lists, not tuples
         """Returns skill inference result.
 
@@ -59,7 +59,7 @@ class DefaultStatelessSkill(Skill):
                 states_batch[utt_i]['received_values'].append(utterance)
 
                 if states_batch[utt_i]['expected_args']:
-                    response = EXPECTING_ARG_MESSAGE.format(states_batch[utt_i]['expected_args'][0])
+                    response = 'expecting_arg:{}'.format(states_batch[utt_i]['expected_args'][0])
                     response_batch[utt_i] = response
                 else:
                     infer_indexes.append(utt_i)

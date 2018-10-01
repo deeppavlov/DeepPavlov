@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import namedtuple
 from abc import ABCMeta, abstractmethod
 
 from deeppavlov.core.models.component import Component
@@ -43,4 +42,3 @@ class Processor(Component, metaclass=ABCMeta):
             responses: A batch of responses corresponding to the
                 utterance batch received by agent.
         """
-        return

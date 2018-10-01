@@ -46,6 +46,8 @@ class Bot(Thread):
         log.info(f'Deleted conversation, key: {str(conversation_key)}')
 
     def _init_agent(self):
+        # TODO: Decide about multi-instance mode necessity.
+        # If model multi-instancing is still necessary - refactor and remove
         agent = self.agent_generator()
         return agent
 

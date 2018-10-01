@@ -46,4 +46,3 @@ class Skill(Component, metaclass=ABCMeta):
             states: Optional. A batch of arbitrary typed states for each
                 response.
         """
-        return
