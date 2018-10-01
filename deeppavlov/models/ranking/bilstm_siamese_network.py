@@ -1,5 +1,20 @@
-import numpy as np
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from typing import List
+
+import numpy as np
 from keras.layers import Input, LSTM, Embedding, GlobalMaxPooling1D, Lambda, Dense, Layer
 from keras.layers.merge import Multiply
 from keras.models import Model
@@ -18,7 +33,7 @@ log = get_logger(__name__)
 
 
 @register('bilstm_nn')
-class BiLSTMNetwork(KerasSiameseModel):
+class BiLSTMSiameseNetwork(KerasSiameseModel):
 
     """The class implementing a siamese neural network with BiLSTM and max pooling.
 
@@ -69,7 +84,7 @@ class BiLSTMNetwork(KerasSiameseModel):
         self.hard_triplets = hard_triplets
         self.triplet_mode = triplet_loss
 
-        super(BiLSTMNetwork, self).__init__(*args, **kwargs)
+        super(BiLSTMSiameseNetwork, self).__init__(*args, **kwargs)
 
     def compile(self) -> None:
         optimizer = Adam(lr=self.learning_rate)
