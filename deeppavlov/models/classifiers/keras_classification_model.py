@@ -215,7 +215,7 @@ class KerasClassificationModel(KerasModel):
         """
         preds = np.array(self.infer_on_batch(data), dtype="float64")
 
-        return preds
+        return [dict(zip(self.classes, preds[i])) for i in range(preds.shape[0])]
 
     def reset(self) -> None:
         pass
