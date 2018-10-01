@@ -57,7 +57,7 @@
         "in": ["x_proc"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "name": "bistm_nn",
+        "name": "bilstm_nn",
         "len_vocab": "#siam_vocab.len",
         "use_matrix": "#preproc.use_matrix",
         "attention": true,
