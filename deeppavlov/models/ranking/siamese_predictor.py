@@ -56,7 +56,7 @@ class SiamesePredictor(Component):
                  attention: bool = False,
                  responses: SimpleVocabulary = None,
                  preproc_func: Callable = None,
-                 interact_pred_num: int = 3,
+                 interact_pred_num: int = 1,
                  **kwargs):
 
         super().__init__()
@@ -65,13 +65,14 @@ class SiamesePredictor(Component):
         self.num_context_turns = num_context_turns
         self.ranking = ranking
         self.attention = attention
-        self.responses = {el[1]: el[0] for el in responses.items()}
         self.preproc_responses = []
         self.response_embeddings = None
         self.preproc_func = preproc_func
         self.interact_pred_num = interact_pred_num
         self.model = model
-        self._build_preproc_responses()
+        if self.ranking:
+            self.responses = {el[1]: el[0] for el in responses.items()}
+            self._build_preproc_responses()
         if not self.attention:
             self._build_response_embeddings()
 
