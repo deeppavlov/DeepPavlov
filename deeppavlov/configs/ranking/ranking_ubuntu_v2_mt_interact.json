@@ -32,7 +32,7 @@
         },
         "tokenizer":
         {
-          "name": "split_tokenizer"
+          "name": "nltk_tokenizer"
         },
         "vocab":
         {

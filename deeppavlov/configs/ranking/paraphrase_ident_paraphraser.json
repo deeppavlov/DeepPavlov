@@ -31,7 +31,7 @@
         },
         "tokenizer":
         {
-          "name": "split_tokenizer"
+          "name": "nltk_tokenizer"
         },
         "vocab":
         {
@@ -44,8 +44,8 @@
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "paraphraser_embeddings/ft_dummy_300.bin",
-          "save_path": "paraphraser_embeddings/ft_dummy_300.bin",
+          "load_path": "paraphraser_embeddings/ft_native_300_ru_wiki_lenta_lower_case.bin",
+          "save_path": "paraphraser_embeddings/ft_native_300_ru_wiki_lenta_lower_case.bin",
           "dim": 300
         }
       },
@@ -83,9 +83,9 @@
     "batch_size": 256,
     "pytest_max_batches": 2,
     "train_metrics": [],
-    "metrics": ["r@1_insQA", "rank_response"],
+    "metrics": ["accuracy"],
     "validation_patience": 5,
-    "val_every_n_epochs": 5,
+    "val_every_n_epochs": 1,
     "log_every_n_batches": 24
   },
   "metadata": {
@@ -99,11 +99,15 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/datasets/insuranceQA-master.zip",
+        "url": "http://files.deeppavlov.ai/datasets/paraphraser.zip",
         "subdir": "paraphraser_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
+        "url": "http://files.deeppavlov.ai/datasets/paraphraser_gold.zip",
+        "subdir": "paraphraser_data"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_lower_case/ft_native_300_ru_wiki_lenta_lower_case.bin",
         "subdir": "paraphraser_embeddings"
       }
     ]

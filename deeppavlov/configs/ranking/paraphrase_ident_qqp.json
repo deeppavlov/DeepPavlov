@@ -31,7 +31,7 @@
         },
         "tokenizer":
         {
-          "name": "split_tokenizer"
+          "name": "nltk_tokenizer"
         },
         "vocab":
         {
@@ -44,8 +44,8 @@
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "qqp_embeddings/ft_dummy_300.bin",
-          "save_path": "qqp_embeddings/ft_dummy_300.bin",
+          "load_path": "qqp_embeddings/wiki.en.bin",
+          "save_path": "qqp_embeddings/wiki.en.bin",
           "dim": 300
         }
       },
@@ -85,7 +85,7 @@
     "train_metrics": [],
     "metrics": ["accuracy"],
     "validation_patience": 5,
-    "val_every_n_epochs": 5,
+    "val_every_n_epochs": 1,
     "log_every_n_batches": 525
   },
   "metadata": {
@@ -103,7 +103,7 @@
         "subdir": "qqp_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/ft_dummy_300.bin",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "qqp_embeddings"
       }
     ]
