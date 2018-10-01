@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple, Union
-import numpy as np
+from typing import List, Union
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
@@ -48,8 +47,8 @@ class Proba2Labels(Component):
         self.max_proba = max_proba
         self.confident_threshold = confident_threshold
 
-    def __call__(self, data: Union[List[List[float]], np.ndarray],
-                 *args, **kwargs) -> Union[List[List[int]], List[int]]:
+    def __call__(self, data: List[dict],
+                 *args, **kwargs) -> Union[List[List[str]], List[str]]:
         """
         Process probabilities to labels
 
@@ -62,10 +61,10 @@ class Proba2Labels(Component):
             list of labels (only label classification) or list of lists of labels (multi-label classification)
         """
         if self.confident_threshold:
-            return [list(np.array(data[i])[np.where(np.array(data[i]) > self.confident_threshold)[0]])
-                    for i in range(len(data))]
+            return [[key for key, val in d.items() if val > self.confident_threshold]
+                    for d in data]
         elif self.max_proba:
-            return list(np.argmax(data, axis=1))
+            return [max(d, key=d.get) for d in data]
         else:
             ConfigError("Proba2Labels requires one of two arguments: bool `max_proba` or "
                         "float `confident_threshold` for multi-label classification")

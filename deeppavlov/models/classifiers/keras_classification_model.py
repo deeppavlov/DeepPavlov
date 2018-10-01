@@ -27,10 +27,7 @@ from keras.regularizers import l2
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.keras_model import KerasModel
-from deeppavlov.models.classifiers.utils import labels2onehot, proba2labels
-from deeppavlov.models.classifiers.utils import md5_hashsum
-from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
-from deeppavlov.models.tokenizers.nltk_tokenizer import NLTKTokenizer
+from deeppavlov.models.classifiers.utils import labels2onehot
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.layers.keras_layers import additive_self_attention, multiplicative_self_attention
 
@@ -63,8 +60,6 @@ class KerasClassificationModel(KerasModel):
 
     Attributes:
         opt: dictionary with all model parameters
-        tokenizer: tokenizer class instance
-        fasttext_model: fasttext model instance
         classes: list of considered classes
         n_classes: number of considered classes
         model: keras model itself
@@ -82,7 +77,7 @@ class KerasClassificationModel(KerasModel):
                  restore_lr: bool = False,
                  **kwargs):
         """
-        Initialize and train vocabularies, initializes embedder, tokenizer, and then initialize model using parameters
+        Initialize model using parameters
         from opt dictionary (from config), if model is being initialized from saved.
         """
         super().__init__(text_size=text_size, embedding_size=embedding_size, model_name=model_name,
