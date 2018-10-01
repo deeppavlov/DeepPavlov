@@ -21,7 +21,7 @@ from keras import backend as K
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.ranking.bilstm_network import BiLSTMNetwork
+from deeppavlov.models.ranking.bilstm_siamese_network import BiLSTMSiameseNetwork
 from deeppavlov.core.layers.keras_layers import FullMatchingLayer, MaxpoolingMatchingLayer
 from deeppavlov.core.layers.keras_layers import AttentiveMatchingLayer, MaxattentiveMatchingLayer
 
@@ -29,7 +29,7 @@ log = get_logger(__name__)
 
 
 @register('mpm_nn')
-class MPMNetwork(BiLSTMNetwork):
+class MPMNetwork(BiLSTMSiameseNetwork):
 
     """The class implementing a siamese neural network with BiLSTM and max pooling.
 
