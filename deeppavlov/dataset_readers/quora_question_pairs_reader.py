@@ -44,8 +44,8 @@ class QuoraQuestionPairsReader(DatasetReader):
             reader = csv.reader(f)
             next(reader)
             for el in reader:
-                contexts.append(el[-3].lower())
-                responses.append(el[-2].lower())
+                contexts.append(el[-3].strip().lower())
+                responses.append(el[-2].strip().lower())
                 labels.append(int(el[-1]))
         data = list(zip(contexts, responses))
         data = list(zip(data, labels))
