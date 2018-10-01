@@ -71,7 +71,6 @@
           "y"
         ],
         "out": [
-          "y_labels",
           "y_probas_dict"
         ],
         "main": true,
@@ -91,12 +90,6 @@
             100
           ],
           "discrete": true
-        },
-        "confident_threshold": {
-          "evolve_choice": [
-            0.5,
-            1
-          ]
         },
         "optimizer": "Adam",
         "lear_rate": {
@@ -144,6 +137,12 @@
         "check_bool": {
           "evolve_bool": true
         }
+      },
+      {
+        "in": "y_probas_dict",
+        "out": "y_labels",
+        "name": "proba2labels",
+        "confident_threshold": 0.5
       }
     ],
     "out": [
