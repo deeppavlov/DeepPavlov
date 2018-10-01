@@ -61,7 +61,6 @@
           "y"
         ],
         "out": [
-          "y_labels",
           "y_probas_dict"
         ],
         "main": true,
@@ -77,7 +76,6 @@
           3
         ],
         "filters_cnn": 256,
-        "confident_threshold": 0.5,
         "optimizer": "Adam",
         "lear_rate": 0.01,
         "lear_rate_decay": 0.1,
@@ -90,6 +88,12 @@
         "rec_dropout_rate": 0.5,
         "dense_size": 100,
         "model_name": "cnn_bilstm_model"
+      },
+      {
+        "in": "y_probas_dict",
+        "out": "y_labels",
+        "name": "proba2labels",
+        "max_proba": true
       }
     ],
     "out": [

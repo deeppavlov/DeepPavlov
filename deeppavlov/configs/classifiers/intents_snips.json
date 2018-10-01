@@ -28,7 +28,7 @@
     "pipe": [
       {
         "id": "classes_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "fit_on": [
           "y"
         ],
@@ -60,7 +60,7 @@
           "y"
         ],
         "out": [
-          "y_probas"
+          "y_probas_dict"
         ],
         "main": true,
         "name": "keras_classification_model",
@@ -74,7 +74,6 @@
           3
         ],
         "filters_cnn": 256,
-        "confident_threshold": 0.5,
         "optimizer": "Adam",
         "lear_rate": 0.01,
         "lear_rate_decay": 0.1,
@@ -86,13 +85,16 @@
         "dense_size": 100,
         "model_name": "cnn_model"
       },
-      {"in": "y_probas",
-      "out": "y_labels",
-      "name": "probas2labels"}
+      {
+        "in": "y_probas_dict",
+        "out": "y_labels",
+        "name": "proba2labels",
+        "max_proba": true
+      }
     ],
     "out": [
       "y_labels",
-      "y_probas"
+      "y_probas_dict"
     ]
   },
   "train": {
@@ -100,8 +102,9 @@
     "batch_size": 64,
     "metrics": [
       "classification_accuracy",
+      "classification_roc_auc",
       "classification_f1",
-      "classification_roc_auc"
+      "classification_log_loss"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
