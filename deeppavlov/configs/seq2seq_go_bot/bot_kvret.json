@@ -100,12 +100,12 @@
       {
         "ref": "dialog_history",
         "in": ["dialog_id", "x_tokens"],
-        "out": ["history_tokens"]
+        "out": ["x_history_tokens"]
       },
       {
         "ref": "dialog_history",
         "in": ["dialog_id", "prediction_tokens"],
-        "out": ["history_tokens"]
+        "out": ["x_pred_history_tokens"]
       }
     ]
   },
