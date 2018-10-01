@@ -83,7 +83,7 @@
     "batch_size": 256,
     "pytest_max_batches": 2,
     "train_metrics": [],
-    "metrics": ["accuracy", "classification_f1", "classification_log_loss"],
+    "metrics": ["accuracy"],
     "validation_patience": 5,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 24

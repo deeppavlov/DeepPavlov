@@ -44,8 +44,8 @@
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "wiki.en.bin",
-          "save_path": "wiki.en.bin",
+          "load_path": "embeddings/wiki.en.bin",
+          "save_path": "embeddings/wiki.en.bin",
           "dim": 300
         }
       },
@@ -83,7 +83,7 @@
     "batch_size": 256,
     "pytest_max_batches": 2,
     "train_metrics": [],
-    "metrics": ["accuracy", "classification_f1", "classification_log_loss"],
+    "metrics": ["accuracy"],
     "validation_patience": 5,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 525
@@ -102,7 +102,10 @@
         "url": "http://files.deeppavlov.ai/datasets/quora_question_pairs.zip",
         "subdir": "qqp_data"
       },
-      "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin"
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
+        "subdir": "embeddings"
+      }
     ]
   }
 }
