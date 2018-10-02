@@ -19,6 +19,16 @@ from pathlib import Path
 from scipy.sparse import vstack
 import inspect
 from scipy.sparse import csr_matrix
+from sklearn.linear_model import *
+from sklearn.svm import *
+from sklearn.ensemble import *
+from sklearn.multiclass import *
+from sklearn.multioutput import *
+from sklearn.naive_bayes import *
+from sklearn.neighbors import *
+from sklearn.neural_network import *
+from sklearn.tree import *
+from sklearn.semi_supervised import *
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
@@ -26,6 +36,7 @@ from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.estimator import Estimator
 
 log = get_logger(__name__)
+
 
 @register("sklearn_classifier")
 class SklearnClassier(Estimator):
@@ -86,7 +97,11 @@ class SklearnClassier(Estimator):
         return predictions
 
     def init_from_scratch(self, model_name: str, **kwargs) -> Any:
+        log.warning("Initializing model {} from scratch".format(model_name))
         model_function = globals().get(model_name, None)
+
+        if model_function is None:
+            ConfigError("Model with {} model_name was not found".format(model_name))
 
         given_params = {}
         if kwargs:
@@ -107,9 +122,11 @@ class SklearnClassier(Estimator):
             fname = str(Path(fname).stem) + ".pkl"
 
         if fname.exists():
+            log.warning("Loading model {} from {}".format(model_name, fname))
             with open(fname, "rb") as f:
                 model = pickle.load(f)
         else:
+            log.warning("Cannot load model from {}".format(fname))
             model = self.init_from_scratch(model_name=model_name, **kwargs)
 
         return model
@@ -121,6 +138,7 @@ class SklearnClassier(Estimator):
         if Path(fname).suffix != ".pkl":
             fname = str(Path(fname).stem) + ".pkl"
 
+        log.warning("Saving model to {}".format(fname))
         with open(fname, "wb") as f:
             pickle.dump(self.model, f)
         return
