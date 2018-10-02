@@ -23,7 +23,7 @@ import keras.metrics
 import keras.optimizers
 from typing import Dict
 from overrides import overrides
-from keras import backend as K, backend as kb
+from keras import backend as K
 from keras.models import Model
 from keras.layers import Dense, Input
 
@@ -332,5 +332,5 @@ class ExternalKerasWrapper(NNModel, metaclass=TfModelMeta):
             instance: a batch to predict answers on
         """
         with self.graph.as_default():
-            kb.set_session(self.sess)
+            K.set_session(self.sess)
             return self._net.predict_on_batch(x_batch, **kwargs)
