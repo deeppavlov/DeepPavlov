@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "qqp_reader",
-    "num_samples": null,
+    "num_samples": 1024,
     "seed": 243,
     "data_path": "./qqp_data"
   },
@@ -43,8 +43,8 @@
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "embeddings/wiki.en.bin",
-          "save_path": "embeddings/wiki.en.bin",
+          "load_path": "embeddings/ft_dummy_300.bin",
+          "save_path": "embeddings/ft_dummy_300.bin",
           "dim": 300
         }
       },
@@ -103,7 +103,7 @@
         "subdir": "qqp_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/ft_dummy_300.bin",
         "subdir": "embeddings"
       }
     ]

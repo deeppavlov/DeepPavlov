@@ -1,9 +1,9 @@
 {
   "dataset_reader": {
-    "name": "qqp_reader",
-    "num_samples": null,
+    "name": "paraphraser_reader",
+    "num_samples": 1024,
     "seed": 243,
-    "data_path": "./qqp_data"
+    "data_path": "./paraphraser_data"
   },
   "dataset_iterator": {
     "name": "siamese_iterator",
@@ -25,8 +25,8 @@
         {
           "id": "siam_sent_vocab",
           "name":"simple_vocab",
-          "save_path": "qqp_vocabs/sent.dict",
-          "load_path": "qqp_vocabs/sent.dict"
+          "save_path": "paraphraser_vocabs/sent.dict",
+          "load_path": "paraphraser_vocabs/sent.dict"
         },
         "tokenizer":
         {
@@ -36,15 +36,15 @@
         {
           "id": "siam_vocab",
           "name":"simple_vocab",
-          "save_path": "qqp_vocabs/tok.dict",
-          "load_path": "qqp_vocabs/ctok.dict"
+          "save_path": "paraphraser_vocabs/tok.dict",
+          "load_path": "paraphraser_vocabs/ctok.dict"
         },
         "embedder":
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "embeddings/wiki.en.bin",
-          "save_path": "embeddings/wiki.en.bin",
+          "load_path": "paraphraser_embeddings/ft_dummy_300.bin",
+          "save_path": "paraphraser_embeddings/ft_dummy_300.bin",
           "dim": 300
         }
       },
@@ -55,9 +55,7 @@
         "vocab": "#siam_vocab"
       },
       {
-        "in": ["x_proc"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
+        "id": "model",
         "name": "mpm_nn",
         "len_vocab": "#siam_vocab.len",
         "use_matrix": "#preproc.use_matrix",
@@ -70,9 +68,20 @@
         "learning_rate": 1e-3,
         "triplet_loss": false,
         "batch_size": 256,
-        "save_path": "qqp_model/model_weights.h5",
-        "load_path": "qqp_model/model_weights.h5",
+        "save_path": "paraphraser_model/model_weights.h5",
+        "load_path": "paraphraser_model/model_weights.h5",
         "preprocess": "#preproc.__call__"
+      },
+      {
+        "in": ["x_proc"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "name": "siamese_predictor",
+        "model": "#model",
+        "ranking": false,
+        "attention": true,
+        "batch_size": "#model.batch_size",
+        "preproc_func": "#preproc.__call__"
       }
     ],
     "out": ["y_predicted"]
@@ -81,12 +90,11 @@
     "epochs": 200,
     "batch_size": 256,
     "pytest_max_batches": 2,
-    "metric_optimization": "minimize",
-    "train_metrics": ["s_log_loss", "s_acc", "s_f1"],
-    "metrics": ["s_log_loss", "s_acc", "s_f1"],
+    "train_metrics": ["s_f1", "s_acc", "s_log_loss"],
+    "metrics": ["s_f1", "s_acc", "s_log_loss"],
     "validation_patience": 10,
-    "val_every_n_epochs": 1,
-    "log_every_n_batches": 525
+    "val_every_n_epochs": 5,
+    "log_every_n_batches": 12
   },
   "metadata": {
     "requirements": [
@@ -99,12 +107,16 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/datasets/quora_question_pairs.zip",
-        "subdir": "qqp_data"
+        "url": "http://files.deeppavlov.ai/datasets/paraphraser.zip",
+        "subdir": "paraphraser_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
-        "subdir": "embeddings"
+        "url": "http://files.deeppavlov.ai/datasets/paraphraser_gold.zip",
+        "subdir": "paraphraser_data"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/ft_dummy_300.bin",
+        "subdir": "paraphraser_embeddings"
       }
     ]
   }

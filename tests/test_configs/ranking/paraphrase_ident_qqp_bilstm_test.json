@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "qqp_reader",
-    "num_samples": null,
+    "num_samples": 1024,
     "seed": 243,
     "data_path": "./qqp_data"
   },
@@ -25,8 +25,8 @@
         {
           "id": "siam_sent_vocab",
           "name":"simple_vocab",
-          "save_path": "qqp_vocabs/sent.dict",
-          "load_path": "qqp_vocabs/sent.dict"
+          "save_path": "qqp_vocabs_bilstm/sent.dict",
+          "load_path": "qqp_vocabs_bilstm/sent.dict"
         },
         "tokenizer":
         {
@@ -36,15 +36,15 @@
         {
           "id": "siam_vocab",
           "name":"simple_vocab",
-          "save_path": "qqp_vocabs/tok.dict",
-          "load_path": "qqp_vocabs/ctok.dict"
+          "save_path": "qqp_vocabs_bilstm/tok.dict",
+          "load_path": "qqp_vocabs_bilstm/ctok.dict"
         },
         "embedder":
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "embeddings/wiki.en.bin",
-          "save_path": "embeddings/wiki.en.bin",
+          "load_path": "embeddings/ft_dummy_300.bin",
+          "save_path": "embeddings/ft_dummy_300.bin",
           "dim": 300
         }
       },
@@ -58,7 +58,7 @@
         "in": ["x_proc"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "name": "mpm_nn",
+        "name": "bilstm_nn",
         "len_vocab": "#siam_vocab.len",
         "use_matrix": "#preproc.use_matrix",
         "attention": true,
@@ -70,8 +70,8 @@
         "learning_rate": 1e-3,
         "triplet_loss": false,
         "batch_size": 256,
-        "save_path": "qqp_model/model_weights.h5",
-        "load_path": "qqp_model/model_weights.h5",
+        "save_path": "qqp_model_bilstm/model_weights.h5",
+        "load_path": "qqp_model_bilstm/model_weights.h5",
         "preprocess": "#preproc.__call__"
       }
     ],
@@ -103,7 +103,7 @@
         "subdir": "qqp_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/ft_dummy_300.bin",
         "subdir": "embeddings"
       }
     ]

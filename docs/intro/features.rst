@@ -187,15 +187,32 @@ on Automatic Spelling Correction for Russian:
 Based on `LSTM-based deep learning models for non-factoid answer selection <https://arxiv.org/abs/1511.04108>`__. The
 model performs ranking of responses or contexts from some database by their relevance for the given context.
 
-Available pre-trained model(s):
+Available pre-trained models for ranking:
 
-+-------------------+-------------------------------------------------------------+-----------------------+------------------+
-|    Dataset        | Model config                                                | Validation (Recall@1) | Test1 (Recall@1) |
-+-------------------+-------------------------------------------------------------+-----------------------+------------------+
-| `InsuranceQA V1`_ | :config:`ranking_insurance <ranking/ranking_insurance.json>`|   67.6                |   67.6           |
-+-------------------+-------------------------------------------------------------+-----------------------+------------------+
++-------------------+----------------------------------------------------------------+-----------------------+------------------+
+|    Dataset        | Model config                                                   | Validation (Recall@1) | Test1 (Recall@1) |
++-------------------+----------------------------------------------------------------+-----------------------+------------------+
+| `InsuranceQA V1`_ | :config:`ranking_insurance_interact`_   |   67.6                |   67.6           |
++-------------------+----------------------------------------------------------------+-----------------------+------------------+
+| `Ubuntu V2`_      |:config:`ranking_ubuntu_v2_interact`_   |   67.6                |   67.6           |
++-------------------+----------------------------------------------------------------+-----------------------+------------------+
+| `Ubuntu V2`_      |:config:`ranking_ubuntu_v2_mt_interact`_ |   67.6                |   67.6           |
++-------------------+----------------------------------------------------------------+-----------------------+------------------+
+
+Available pre-trained models for paraphrase identification:
++-------------------+----------------------------------------------------------------+-----------------------+------------------+
+| `paraphraser.ru`_ | :config:`ranking_insurance <ranking/ranking_insurance.json>`   |   67.6                |   67.6           |
++-------------------+----------------------------------------------------------------+-----------------------+------------------+
+|`Quora Question Pairs`_ | :config:`ranking_insurance <ranking/paraphrase_ident_qqp.json>`   |   67.6                |   67.6           |
++-------------------+----------------------------------------------------------------+-----------------------+------------------+
+|`Quora Question Pairs`_ | :config:`ranking_insurance <ranking/paraphrase_ident_qqp.json>`   |   67.6                |   67.6           |
++-------------------+----------------------------------------------------------------+-----------------------+------------------+
 
 .. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
+.. _`Ubuntu V2: https://github.com/rkadlec/ubuntu-ranking-dataset-creator`
+.. _`ranking_insurance_interact:<ranking/ranking_insurance_interact.json>`
+.. _`ranking_ubuntu_v2_interact:<ranking/ranking_ubuntu_v2_interact.json>`
+.. _`ranking_ubuntu_v2_mt_interact:<ranking/ranking_ubuntu_v2_mt_interact.json>`
 
 Comparison with other models on the `InsuranceQA V1 <https://github.com/shuzi/insuranceQA>`__:
 

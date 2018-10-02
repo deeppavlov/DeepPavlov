@@ -2,6 +2,7 @@
   "dataset_reader": {
     "name": "qqp_reader",
     "num_samples": null,
+    "seed": 243,
     "data_path": "./qqp_data"
   },
   "dataset_iterator": {

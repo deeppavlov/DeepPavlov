@@ -31,6 +31,7 @@ class ParaphraserReader(DatasetReader):
     Args:
         data_path: A path to a folder with dataset files.
         num_samples: A number of data samples to use in ``train``, ``validation`` and ``test`` mode.
+        seed: Random seed.
     """
 
     def read(self,

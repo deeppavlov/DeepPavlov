@@ -32,9 +32,13 @@ class QuoraQuestionPairsReader(DatasetReader):
     Args:
         data_path: A path to a folder with dataset files.
         num_samples: A number of data samples to use in ``train``, ``validation`` and ``test`` mode.
+        seed: Random seed.
     """
 
-    def read(self, data_path: str, num_samples: int = None, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
+    def read(self, data_path: str,
+             num_samples: int = None,
+             seed: int = None, *args, **kwargs) -> Dict[str, List[Tuple[Tuple[str, str], int]]]:
+        random.seed(seed)
         data_path = expand_path(data_path)
         fname = Path(data_path) / 'train.csv'
         contexts = []

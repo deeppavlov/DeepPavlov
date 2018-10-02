@@ -29,27 +29,30 @@ log = get_logger(__name__)
 
 
 @register('mpm_nn')
-class MPMNetwork(BiLSTMSiameseNetwork):
+class MPMSiameseNetwork(BiLSTMSiameseNetwork):
 
     """The class implementing a siamese neural network with bilateral multi-Perspective matching.
 
     The network architecture is based on https://arxiv.org/abs/1702.03814.
     
     Args:
-        dense_dim:
-        perspective_num:
-
+        dense_dim: Dimensionality of the dense layer.
+        perspective_num: Number of perspectives in multi-perspective matching layers.
+        aggregation dim: Dimensionality of the hidden state in the second BiLSTM layer.
+        inpdrop_val: Float between 0 and 1. A dropout value for the linear transformation of the inputs.
+        recdrop_val: Float between 0 and 1. A dropout value for the linear transformation of the recurrent state.
+        ldrop_val: A dropout value of the dropout layer before the second BiLSTM layer.
+        dropout_val:  A dropout value of the dropout layer after the second BiLSTM layer.
     """
 
     def __init__(self,
                  dense_dim: int = 50,
                  perspective_num: int = 20,
                  aggregation_dim: int = 200,
-                 ldrop_val: float = 0.0,
                  recdrop_val: float = 0.0,
                  inpdrop_val: float = 0.0,
+                 ldrop_val: float = 0.0,
                  dropout_val: float = 0.0,
-                 seed: int = None,
                  *args,
                  **kwargs):
 
@@ -60,10 +63,10 @@ class MPMNetwork(BiLSTMSiameseNetwork):
         self.recdrop_val = recdrop_val
         self.inpdrop_val = inpdrop_val
         self.dropout_val = dropout_val
-        self.seed = seed
+        self.seed = kwargs.get("triplet_loss")
         self.triplet_mode = kwargs.get("triplet_loss")
 
-        super(MPMNetwork, self).__init__(*args, **kwargs)
+        super(MPMSiameseNetwork, self).__init__(*args, **kwargs)
 
     def create_lstm_layer_1(self):
         ker_in = glorot_uniform(seed=self.seed)
