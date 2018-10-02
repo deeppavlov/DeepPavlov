@@ -40,6 +40,8 @@ class DirtyCommentsPreprocessor(Component):
             list of preprocessed text samples
         """
         f = [x.lower() for x in batch]
+        f = [re.sub("<\S*>", " ", x) for x in f]
+        f = [re.sub('\s+', ' ', x) for x in f]
 
         f = [x.replace("won't", "will not") for x in f]
         f = [x.replace("can't", "cannot") for x in f]
@@ -87,8 +89,6 @@ class DirtyCommentsPreprocessor(Component):
 
         f = [re.sub("[*$%&#@()]", " ", x) for x in f]
         f = [re.sub("[0-9]+", " 0 ", x) for x in f]
-        f = [re.sub("<\S*>", "", x) for x in f]
-        f = [re.sub('\s+', ' ', x) for x in f]
 
         for letter in string.printable:
             f = [re.sub(letter * 3 + '+', letter * 2, x).strip() for x in f]
