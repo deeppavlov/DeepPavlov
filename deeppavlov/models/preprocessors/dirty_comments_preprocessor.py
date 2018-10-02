@@ -25,8 +25,8 @@ class DirtyCommentsPreprocessor(Component):
     """
     Class implements preprocessing of english texts with low level of literacy such as comments
     """
-    def __init__(self, *args, **kwargs):
-        pass
+    def __init__(self, remove_punctuation: bool = True, *args, **kwargs):
+        self.remove_punctuation = remove_punctuation
 
     def __call__(self, batch: List[str], **kwargs) -> List[str]:
         """
@@ -76,15 +76,12 @@ class DirtyCommentsPreprocessor(Component):
         f = [x.replace("\\t", " ") for x in f]
         f = [x.replace("\\xa0", " ") for x in f]
         f = [x.replace("\\xc2", " ") for x in f]
-
-        f = [re.sub('!!+', ' !! ', x) for x in f]
-        f = [re.sub('\?\?+', ' ?? ', x) for x in f]
-        f = [re.sub('\?!+', ' ?! ', x) for x in f]
-        f = [re.sub('\.\.+', '..', x) for x in f]
-
-        f = [re.sub("[*$%&#@()]", " ", x) for x in f]
         f = [re.sub("[0-9]+", " 0 ", x) for x in f]
 
         f = [re.sub(r'([' + string.printable + r'])\1{3,}', r'\1\1', x).strip() for x in f]
 
+        if self.remove_punctuation:
+            f = [re.sub(r'([' + string.punctuation + '])', ' ', x) for x in f]
+
+        f = [re.sub(' +', ' ', x) for x in f]
         return f
