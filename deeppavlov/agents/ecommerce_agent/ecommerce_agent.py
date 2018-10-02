@@ -3,7 +3,7 @@ import argparse
 from deeppavlov.deep import find_config
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.agent.processor import Processor
-from deeppavlov.core.agent.agent import Agent
+from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.agents.rich_content.default_rich_content import PlainText, ButtonsFrame, Button
 from utils.ms_bot_framework_utils.server import run_ms_bot_framework_server
@@ -45,7 +45,7 @@ class TestRichContentWrapper(Processor):
 def make_agent():
     config_path = find_config('ecommerce_bot')
     skill = build_model_from_config(config_path, as_component=True)
-    agent = Agent(skills=[skill], skills_processor=TestRichContentWrapper())
+    agent = DefaultAgent(skills=[skill], skills_processor=TestRichContentWrapper())
     return agent
 
 
