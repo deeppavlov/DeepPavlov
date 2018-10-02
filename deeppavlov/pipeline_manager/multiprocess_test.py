@@ -21,15 +21,41 @@ def find_config(pipeline_config_path: str):
 
 
 if __name__ == '__main__':
-    args = parser.parse_args()
-    pipeline_config_path = find_config(args.config_path)
-    target_metric = args.target_metric
+    # args = parser.parse_args()
+    # pipeline_config_path = find_config(args.config_path)
+    # target_metric = args.target_metric
+    pipeline_config_path = "/home/mks/projects/DeepPavlov/my_configs/vlad/linear_classifiers.json"
+    target_metric = 'simple_f1_weighted'
 
     exp_name = 'multiprocess_test'
-    root = './download/experiments'
-    sample_num = 10
+    root = './../../download/experiments'
+    sample_num = 1
 
     manager = PipelineManager(config_path=pipeline_config_path, exp_name=exp_name, root=root, cross_val=False,
-                              sample_num=sample_num, target_metric=target_metric, plot=False, save_best=True,
-                              multiprocessing=True, use_all_gpus=True, use_multi_gpus=None, max_num_workers=None)
+                              do_test=False, sample_num=sample_num, target_metric=target_metric, plot=False,
+                              save_best=True, multiprocessing=True, use_all_gpus=False, use_multi_gpus=None,
+                              max_num_workers=4)
     manager.run()
+
+
+
+# from multiprocessing import Pool
+#
+#
+# def f(x, y):
+#     return x*y
+#
+#
+# def process_helper(args):
+#     return f(*args)
+#
+#
+# def gen(a):
+#     for i in range(a):
+#         yield (i, i+1)
+#
+#
+# if __name__ == '__main__':
+#     p = Pool(5)
+#     jobs = [x for x in gen(5)]
+#     print(p.map(insert_and_process_helper, jobs))

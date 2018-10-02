@@ -12,31 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 import os
+import json
 import shutil
-
-from psutil import cpu_count
-from concurrent.futures import ProcessPoolExecutor
 
 from time import time
 from tqdm import tqdm
-from datetime import datetime
 from os.path import join
-from copy import copy
 from shutil import rmtree
+from psutil import cpu_count
+from datetime import datetime
+from copy import copy, deepcopy
+from multiprocessing import Pool
 from typing import Union, Dict, List
 
-from deeppavlov.core.commands.train import train_evaluate_model_from_config
-from deeppavlov.core.commands.train import read_data_by_config, get_iterator_from_config
-from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
+from deeppavlov.pipeline_manager.logger import Logger
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.pipeline_manager.pipegen import PipeGen
 from deeppavlov.pipeline_manager.utils import normal_time
-from deeppavlov.pipeline_manager.logger import Logger
-from deeppavlov.pipeline_manager.utils import results_visualization, get_available_gpus, check_gpu_available
 from deeppavlov.pipeline_manager.utils import get_num_gpu
+from deeppavlov.core.common.cross_validation import calc_cv_score
+from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
+from deeppavlov.core.commands.train import train_evaluate_model_from_config
+from deeppavlov.core.commands.train import read_data_by_config, get_iterator_from_config
+from deeppavlov.pipeline_manager.utils import results_visualization, get_available_gpus, check_gpu_available
 
 
 class PipelineManager:
@@ -68,6 +67,7 @@ class PipelineManager:
                  date: Union[str, None] = None,
                  info: Dict = None,
                  root: str = './experiments/',
+                 do_test: bool=True,
                  cross_val: bool = False,
                  k_fold: Union[int, None] = 5,
                  sample_num: int = 10,
@@ -81,45 +81,46 @@ class PipelineManager:
         """
         Initialize logger, read input args, builds a directory tree, initialize date.
         """
-        self.config_path = config_path
+        self.info = info
+        self.plot = plot
+        self.k_fold = k_fold
         self.exp_name = exp_name
         self.save_best = save_best
-        self.info = info
-        self.cross_validation = cross_val
-        self.k_fold = k_fold
         self.sample_num = sample_num
+        self.config_path = config_path
+        self.cross_validation = cross_val
         self.target_metric = target_metric
-        self.plot = plot
+
         self.pipeline_generator = None
         self.gen_len = 0
-        self.dataset_res = {}
-        self.pipe_number = 0
+
+        if date is not None:
+            self.date = date
+        else:
+            self.date = datetime.now().strftime('%Y-%m-%d')
+
+        # Logger initialization
+        self.root = root
+        self.save_path = join(self.root, self.date, self.exp_name, 'checkpoints')
+        self.logger = Logger(exp_name, root, self.info, self.date, self.plot)
 
         # multiprocessing
+        self.use_all_gpus = use_all_gpus
+        self.use_multi_gpus = use_multi_gpus
         self.multiprocessing = multiprocessing
         self.max_num_workers_ = max_num_workers
-        self.use_multi_gpus = use_multi_gpus
-        self.use_all_gpus = use_all_gpus
         # main multiprocessing attribute
         self.max_num_workers = None
         self.available_gpu = None
         if self.multiprocessing:
             self.prepare_multiprocess()
 
-        # date
-        if date is not None:
-            self.date = date
-        else:
-            self.date = datetime.now().strftime('%Y-%m-%d')
-
-        self.root = root
-        self.save_path = join(self.root, self.date, self.exp_name, 'checkpoints')
-
-        self.logger = Logger(exp_name, root, self.info, self.date, self.plot)
+        # write time of experiment start
         self.start_exp = time()
         # start test
-        self.dataset_composition = dict(train=False, valid=False, test=False)
-        self.test()
+        if do_test:
+            self.dataset_composition = dict(train=False, valid=False, test=False)
+            self.test()
 
     def prepare_multiprocess(self):
         cpu_num = cpu_count()
@@ -168,50 +169,62 @@ class PipelineManager:
         else:
             self.max_num_workers = self.max_num_workers_
 
-    def train_pipe(self, pipe_config: dict):
-        if self.pipe_number == 0:
-            self.logger.log['experiment_info']['metrics'] = copy(pipe_config['train']['metrics'])
-            if self.target_metric is None:
-                self.target_metric = pipe_config['train']['metrics'][0]
-            self.logger.log['experiment_info']['target_metric'] = self.target_metric
-
-        self.logger.pipe_ind = self.pipe_number + 1
-        self.logger.pipe_conf = copy(pipe_config['chainer']['pipe'])
-        self.logger.dataset = copy(pipe_config['dataset_reader']['data_path'])
-        self.logger.batch_size = pipe_config['train'].get('batch_size', "None")
-
+    @staticmethod
+    def train_pipe(pipe_config):
         # start pipeline time
         pipe_start = time()
+        # TODO dell self
         if self.cross_validation:
             cv_score = calc_cv_score(pipe_config, n_folds=self.k_fold)
             results = {"test": cv_score}
         else:
             results = train_evaluate_model_from_config(pipe_config, to_train=True, to_validate=True)
 
-        if self.save_best:
-            if self.logger.dataset not in self.dataset_res.keys():
-                self.dataset_res[self.logger.dataset] = dict(best_score=-1, best_ind=None)
+        # TODO return copy of pipe
+        return dict(results=results, pipe_time=(time() - pipe_start), pipe_conf=pipe_config)
 
-            if 'test' in results.keys():
-                if results['test'][self.target_metric] > self.dataset_res[self.logger.dataset]["best_score"]:
-                    self.dataset_res[self.logger.dataset]["best_score"] = results['test'][self.target_metric]
-                    self.dataset_res[self.logger.dataset]["best_ind"] = self.pipe_number + 1
-            else:
-                if results['valid'][self.target_metric] > self.dataset_res[self.logger.dataset]["best_score"]:
-                    self.dataset_res[self.logger.dataset]["best_score"] = results['valid'][self.target_metric]
-                    self.dataset_res[self.logger.dataset]["best_ind"] = self.pipe_number + 1
+    def update_logger(self, res_list: List[dict]):
+        dataset_res = {}
+        for i, res in enumerate(res_list):
+            pipe = res['pipe_conf']
+            results = res['results']
 
-        # add results and pipe time to log
-        self.logger.pipe_time = normal_time(time() - pipe_start)
-        self.logger.pipe_res = results
+            if i == 0:
+                self.logger.log['experiment_info']['metrics'] = copy(pipe['train']['metrics'])
+                if self.target_metric is None:
+                    self.target_metric = pipe['train']['metrics'][0]
+                self.logger.log['experiment_info']['target_metric'] = self.target_metric
 
-        # save config in checkpoint folder
-        if not self.cross_validation:
-            self.save_config(pipe_config, self.logger.dataset, self.pipe_number)
-        # update logger
-        self.logger.get_pipe_log()
-        self.logger.write()
-        self.pipe_number += 1
+            self.logger.pipe_ind = i + 1
+            self.logger.pipe_conf = copy(pipe['chainer']['pipe'])
+            self.logger.dataset = copy(pipe['dataset_reader']['data_path'])
+            self.logger.batch_size = pipe['train'].get('batch_size', "None")
+
+            # add results and pipe time to log
+            self.logger.pipe_time = normal_time(res['pipe_time'])
+            self.logger.pipe_res = results
+            # update logger
+            self.logger.get_pipe_log()
+            self.logger.write()
+            # save config in checkpoint folder
+            if not self.cross_validation:
+                self.save_config(pipe, self.logger.dataset, i)
+
+            if self.save_best:
+                if self.logger.dataset not in dataset_res.keys():
+                    dataset_res[self.logger.dataset] = dict(best_score=-1, best_ind=None)
+
+                if 'test' in results.keys():
+                    if results['test'][self.target_metric] > dataset_res[self.logger.dataset]["best_score"]:
+                        dataset_res[self.logger.dataset]["best_score"] = results['test'][self.target_metric]
+                        dataset_res[self.logger.dataset]["best_ind"] = i + 1
+
+                else:
+                    if results['valid'][self.target_metric] > dataset_res[self.logger.dataset]["best_score"]:
+                        dataset_res[self.logger.dataset]["best_score"] = results['valid'][self.target_metric]
+                        dataset_res[self.logger.dataset]["best_ind"] = i + 1
+
+        return dataset_res
 
     def run(self):
         """
@@ -229,29 +242,35 @@ class PipelineManager:
 
         self.logger.log['experiment_info']['number_of_pipes'] = self.gen_len
 
-        # Multiprocess train pipeline
-        if not self.available_gpu:
-            with ProcessPoolExecutor(self.max_num_workers) as executor:
-                for pipe_conf in self.pipeline_generator():
-                    executor.submit(self.train_pipe, pipe_conf)
-        else:
-            pipes_configs = list(self.pipeline_generator())
-            with ProcessPoolExecutor(self.max_num_workers) as executor:
-                for k in range(self.gen_len // len(self.available_gpu) + 1):
-                    for j in range(len(self.available_gpu)):
-                        i = k * len(self.available_gpu) + j
-                        if i < self.gen_len:
-                            env = dict(os.environ)  # TODO it real need to reinitialize every i
-                            env['CUDA_VISIBLE_DEVICES'] = str(self.available_gpu[j])
-                            executor.submit(self.train_pipe, pipes_configs[i])
+        ################################################################################################################
+        configs = [deepcopy(x) for x in self.pipeline_generator()]
+        workers = Pool(self.max_num_workers)
 
+        if self.available_gpu is None:
+            # TODO refactor for function of multiple variables
+            # TODO map and apply -> async
+            pipes_results = tqdm(workers.map(self.train_pipe, configs))
+        else:
+            pipes_results = []
+
+            for i, pipe_conf in enumerate(configs):
+                env = dict(os.environ)
+                j = i - (i//len(self.available_gpu))*len(self.available_gpu)
+                env['CUDA_VISIBLE_DEVICES'] = str(self.available_gpu[j])
+                pipes_results.append(workers.apply(self.train_pipe, (pipe_conf, )))
+            # workers.close()
+            # workers.join()
+
+        # TODO fix 'datapath' error
+        dataset_res = self.update_logger(pipes_results)
+        ################################################################################################################
         # save log
         self.logger.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)
         self.logger.save()
 
         # delete all checkpoints and save only best pipe
         if self.save_best:
-            for name in self.dataset_res.keys():
+            for name in dataset_res.keys():
                 source = join(self.save_path, name)  # , 'pipe_{}'.format(dataset_res[name]["best_ind"])
                 dest1 = join(self.save_path, name + '_best_pipe')
                 if not os.path.isdir(dest1):
@@ -261,7 +280,7 @@ class PipelineManager:
                 for f in files:
                     if not f.startswith('pipe') and not os.path.isfile(join(dest1, f)):
                         shutil.move(join(source, f), dest1)
-                    elif f == 'pipe_{}'.format(self.dataset_res[name]["best_ind"]):
+                    elif f == 'pipe_{}'.format(dataset_res[name]["best_ind"]):
                         if os.path.isdir(join(dest1, f)):
                             rmtree(join(dest1, f))
                             shutil.move(join(source, f), dest1)
