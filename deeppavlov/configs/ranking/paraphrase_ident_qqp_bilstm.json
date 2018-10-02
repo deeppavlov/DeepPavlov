@@ -80,6 +80,7 @@
     "epochs": 200,
     "batch_size": 256,
     "pytest_max_batches": 2,
+    "metric_optimization": "minimize",
     "train_metrics": ["s_log_loss", "s_acc", "s_f1"],
     "metrics": ["s_log_loss", "s_acc", "s_f1"],
     "validation_patience": 10,
