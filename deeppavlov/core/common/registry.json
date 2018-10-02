@@ -105,5 +105,6 @@
   "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary",
   "word2vec_vectorizer": "deeppavlov.models.vectorizers.word2vec_vectorizer:Word2vecVectorizer",
   "siamese_preprocessor_word2vec": "deeppavlov.models.preprocessors.siamese_preprocessor_word2vec:SiamesePreprocessorWord2vec",
-  "twokenize_tokenizer": "deeppavlov.models.tokenizers.twokenize_tokenizer:TwokenizeTokenizer"
+  "twokenize_tokenizer": "deeppavlov.models.tokenizers.twokenize_tokenizer:TwokenizeTokenizer",
+  "dam_nn": "deeppavlov.models.ranking.matching_models.deep_attention_matching_network:DAMNetwork"
 }

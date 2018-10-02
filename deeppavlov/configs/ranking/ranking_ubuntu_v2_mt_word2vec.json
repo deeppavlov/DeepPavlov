@@ -1,6 +1,6 @@
 {
   "dataset_reader": {
-    "name": "ubuntu_v2_reader_mt",
+    "name": "ubuntu_v2_mt_reader",
     "data_path": "./ubuntu_v2_data",
     "num_context_turns": 10
   },
@@ -17,7 +17,7 @@
     ],
     "pipe": [
       {
-        "name": "twokenize_tokenizer",
+        "name": "split_tokenizer",
         "id": "tok_1"
       },
       {
@@ -51,7 +51,7 @@
         "use_matrix": true,
         "num_ranking_samples": 10,
         "num_context_turns": 10,
-        "max_sequence_length": 10,
+        "max_sequence_length": 50,
         "embedding_dim": "#word2vec_vectorizer.dim",
         "fit_on": [
           "x"
@@ -64,69 +64,62 @@
         ],
         "tokenizer": {
           "ref": "tok_1",
-          "notes": "use 'twokenizer'"
+          "notes": "use defined tokenizer"
         },
         "vocab": {
           "ref": "vocab_1",
-          "notes": "use vocab built for 'twokenized' data"
+          "notes": "use vocab built for tokenized data"
         },
         "embedder": {
           "ref": "word2vec_vectorizer",
           "notes": "use prepared word2vec embeddings"
+        },
+        "sent_vocab":
+        {
+          "id": "siam_sent_vocab",
+          "name":"simple_vocab",
+          "save_path": "ubuntu_v2_vocabs/sent.dict",
+          "load_path": "ubuntu_v2_vocabs/sent.dict"
         }
       },
       {
         "id": "embeddings",
         "name": "emb_mat_assembler",
         "embedder": "#word2vec_vectorizer",
-        "vocab": "#siam_vocab"
+        "vocab": "#vocab_1"
       },
       {
-        "in": [
-          "x_proc"
-        ],
-        "in_y": [
-          "y"
-        ],
-        "out": [
-          "y_predicted"
-        ],
-        "name": "siamese_model",
-        "device_num": 0,
-        "train_now": true,
-        "network": {
-          "name": "bilstm_gru_nn",
-          "use_matrix": "#preproc.use_matrix",
-          "num_context_turns": "#preproc.num_context_turns",
-          "len_vocab": "#siam_vocab.len",
-          "max_sequence_length": "#preproc.max_sequence_length",
-          "embedding_dim": "#word2vec_vectorizer.dim",
-          "emb_matrix": "#embeddings.emb_mat",
-          "seed": 243,
-          "hidden_dim": 300,
-          "learning_rate": 1e-3,
-          "triplet_loss": false
-        },
-        "batch_size": 256,
+        "in": ["x_proc"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "name": "dam_nn",
         "num_context_turns": "#preproc.num_context_turns",
-        "save_path": "ubuntu_v2_mt_ranking/model_weights.h5",
-        "load_path": "ubuntu_v2_mt_ranking/model_weights.h5"
+        "len_vocab": "#vocab_1.len",
+        "max_sequence_length": "#preproc.max_sequence_length",
+        "embedding_dim": "#word2vec_vectorizer.dim",
+        "emb_matrix": "#embeddings.emb_mat",
+        "seed": 243,
+        "learning_rate": 1e-3,
+        "batch_size": 100,
+        "save_path": "ubuntu_v2_mt_model/model",
+        "load_path": "ubuntu_v2_mt_model/model"
       }
+
     ],
     "out": [
       "y_predicted"
     ]
   },
   "train": {
-    "epochs": 200,
-    "batch_size": 256,
+    "epochs": 10,
+    "batch_size": 100,
     "pytest_max_batches": 2,
     "train_metrics": [],
     "metrics": [
       "r@1",
       "rank_response"
     ],
-    "validation_patience": 10,
+    "validation_patience": 3,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 1000
   },

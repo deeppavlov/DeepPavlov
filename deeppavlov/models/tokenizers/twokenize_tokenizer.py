@@ -437,8 +437,6 @@ def process_line(s, clean_string=True):
 
 # #################################################################################
 
-from multiprocessing import Pool
-
 
 @register("twokenize_tokenizer")
 class TwokenizeTokenizer(Component):
@@ -448,7 +446,7 @@ class TwokenizeTokenizer(Component):
     Doesn't have any parameters.
     """
     def __init__(self, **kwargs) -> None:
-        self.pool = Pool()
+        pass
 
     def map_process_line(self, sample):
         return remove_punctuation(" ".join(process_line(sample, clean_string=True))).split()
@@ -464,7 +462,7 @@ class TwokenizeTokenizer(Component):
             tokenized batch
         """
         if isinstance(batch, (list, tuple)):
-            return [*self.pool.map(self.map_process_line, batch)]
+            return [self.map_process_line(x) for x in batch]
         else:
             raise NotImplementedError('not implemented for types other than'
                                       ' list or tuple')
