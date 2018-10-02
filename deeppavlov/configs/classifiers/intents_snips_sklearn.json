@@ -28,13 +28,15 @@
     "pipe": [
       {
         "id": "classes_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "fit_on": [
           "y"
         ],
         "level": "token",
         "save_path": "vocabs/snips_classes.dict",
-        "load_path": "vocabs/snips_classes.dict"
+        "load_path": "vocabs/snips_classes.dict",
+        "in": "y",
+        "out": "y_ids"
       },
       {
         "in": "x",
@@ -48,23 +50,28 @@
         "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
-        "save_path": "embeddings/dstc2_fastText_model.bin",
-        "load_path": "embeddings/dstc2_fastText_model.bin",
-        "dim": 100
+        "save_path": "embeddings/wiki.en.bin",
+        "load_path": "embeddings/wiki.en.bin",
+        "dim": 100,
+        "mean": true
       },
       {
         "in": [
           "x_emb"
         ],
         "in_y": [
-          "y"
+          "y_ids"
         ],
         "out": [
           "y_labels",
           "y_probas_dict"
         ],
+        "fit_on": [
+          "x_emb",
+          "y_onehot"
+        ],
         "main": true,
-        "name": "keras_classification_model",
+        "name": "sklearn_classifier",
         "save_path": "snips/intents_snips_v6.pkl",
         "load_path": "snips/intents_snips_v6.pkl",
         "embedding_size": "#my_embedder.dim",

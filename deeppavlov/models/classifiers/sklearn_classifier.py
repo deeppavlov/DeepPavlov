@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple, Any, Union
+from typing import List, Tuple, Any, Union, Generator
 import numpy as np
 import pickle
 from pathlib import Path
@@ -29,6 +29,7 @@ from sklearn.neighbors import *
 from sklearn.neural_network import *
 from sklearn.tree import *
 from sklearn.semi_supervised import *
+from sklearn.exceptions import NotFittedError
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
@@ -40,13 +41,18 @@ log = get_logger(__name__)
 
 @register("sklearn_classifier")
 class SklearnClassier(Estimator):
-    def __init__(self, model_name: str,
+    def __init__(self, model_name: str, classes: Union[list, np.ndarray, Generator],
                  save_path: Union[str, Path] = None,
                  load_path: Union[str, Path] = None,
                  infer_method: str = "predict", **kwargs) -> None:
         super().__init__(save_path=save_path, load_path=load_path, **kwargs)
         self.model = self.load(model_name=model_name, **kwargs)
         self.infer_method = infer_method
+        self.epochs_done = 0
+        self.batches_seen = 0
+        self.train_examples_seen = 0
+        self.classes = list(np.sort(np.array(list(classes))))
+        self.n_classes = len(self.classes)
 
     def fit(self, x: Union[List[List[float]], np.ndarray, List[np.ndarray], Tuple[np.ndarray]],
             y: Union[np.ndarray, List[list]], *args, **kwargs) -> None:
@@ -71,7 +77,8 @@ class SklearnClassier(Estimator):
                 if param_name in available_params:
                     given_params[param_name] = kwargs[param_name]
 
-        self.model.fit(x_features, y, **given_params)
+        y_ = np.array(y).reshape(-1, 1)
+        self.model.fit(x_features, y_, **given_params)
         return
 
     def __call__(self, x, **kwargs) -> np.ndarray:
@@ -92,8 +99,14 @@ class SklearnClassier(Estimator):
                 ConfigError('Not implemented this type of vectors')
         else:
             ConfigError("Input vectors cannot be empty")
+        try:
+            predictions = getattr(self.model, self.infer_method)(x_features)
+        except NotFittedError:
+            x_random = np.random.random(size=(100, len(x[0])))
+            y_random = np.zeros((100, self.n_classes))
+            self.model.fit(x_random, y_random)
+            predictions = getattr(self.model, self.infer_method)(x_features)
 
-        predictions = getattr(self.model, self.infer_method)(x_features)
         return predictions
 
     def init_from_scratch(self, model_name: str, **kwargs) -> Any:
@@ -141,6 +154,26 @@ class SklearnClassier(Estimator):
         log.warning("Saving model to {}".format(fname))
         with open(fname, "wb") as f:
             pickle.dump(self.model, f)
+        return
+
+    def reset(self) -> None:
+        del self.model
+
+    def process_event(self, event_name: str, data: dict):
+        """
+        Process event after epoch
+        Args:
+            event_name: whether event is send after epoch or batch.
+                    Set of values: ``"after_epoch", "after_batch"``
+            data: event data (dictionary)
+
+        Returns:
+            None
+        """
+        if event_name == "after_epoch":
+            self.epochs_done = data["epochs_done"]
+            self.batches_seen = data["batches_seen"]
+            self.train_examples_seen = data["train_examples_seen"]
         return
 
     @staticmethod
