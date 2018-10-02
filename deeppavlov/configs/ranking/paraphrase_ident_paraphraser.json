@@ -83,8 +83,8 @@
     "train_metrics": [],
     "metrics": ["accuracy"],
     "validation_patience": 10,
-    "val_every_n_epochs": 1,
-    "log_every_n_batches": 24
+    "val_every_n_epochs": 5,
+    "log_every_n_batches": 12
   },
   "metadata": {
     "requirements": [
