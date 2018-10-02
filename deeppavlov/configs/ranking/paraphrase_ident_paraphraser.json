@@ -2,6 +2,7 @@
   "dataset_reader": {
     "name": "paraphraser_reader",
     "num_samples": null,
+    "seed": 243,
     "data_path": "./paraphraser_data"
   },
   "dataset_iterator": {
@@ -57,7 +58,7 @@
         "in": ["x_proc"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "name": "parlai_nn",
+        "name": "mpm_nn",
         "len_vocab": "#siam_vocab.len",
         "use_matrix": "#preproc.use_matrix",
         "attention": true,

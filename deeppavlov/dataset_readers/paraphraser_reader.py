@@ -33,7 +33,11 @@ class ParaphraserReader(DatasetReader):
         num_samples: A number of data samples to use in ``train``, ``validation`` and ``test`` mode.
     """
 
-    def read(self, data_path: str, num_samples: int = None, *args, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
+    def read(self,
+             data_path: str,
+             num_samples: int = None,
+             seed: int = None, *args, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
+        random.seed(seed)
         data_path = expand_path(data_path)
         train_fname = Path(data_path) / 'paraphrases.xml'
         test_fname =  Path(data_path) / 'paraphrases_gold.xml'
