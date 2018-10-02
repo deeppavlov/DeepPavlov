@@ -147,11 +147,19 @@ class SentEmb(Component):
         corpus_len: a number of words in corpus
     """
 
-    def __init__(self, vocab_path: str, sklearn: bool = False, use_pos: bool = False,
-                 pos_vocab_path: Union[str, None] = None, **kwargs):
+    def __init__(self,
+                 vocab_path: str,
+                 sklearn: bool=False,
+                 use_pos: bool=False,
+                 pos_vocab_path: Union[str, None]=None,
+                 idf_base_count: int=100,
+                 log_base: int=10,
+                 **kwargs):
         """
         Initialize counter vocab from vocab_path.
         """
+        self.idf_base_count = idf_base_count
+        self.log_base = log_base
         self.sklearn = sklearn
         self.use_pos = use_pos
 
@@ -244,18 +252,20 @@ class SentEmb(Component):
         return np.array(weights)
 
     def tf_idf_weights(self, sent):
-        threshold = self.min_count
         weights = []
         for word in sent:
-            w = self.counter_vocab.get(word, None)
+            w = max(self.counter_vocab.get(word, 0), self.idf_base_count)
             if w is not None:
                 if self.sklearn:
                     tf = int(w) / self.corpus_len
                     idf = np.log(float(self.corpus_len) / tf) + 1.0
                     weights.append(tf*idf)
                 else:
-                    weights.append(1.0 / (1.0 + np.log(int(w))))
+                    log_count = np.log(w) / np.log(self.log_base)
+                    log_base_count = np.log(self.idf_base_count) / np.log(self.log_base)
+                    weight = max(1.0 / (1.0 + log_count - log_base_count), self.min_idf_weight)
+                    weights.append(weight)
             else:
-                weights.append(1.0 / (1.0 + np.log(int(threshold))))
+                weights.append(1.0 / (1.0 + np.log(int(self.idf_base_count))))
 
         return np.array(weights)
