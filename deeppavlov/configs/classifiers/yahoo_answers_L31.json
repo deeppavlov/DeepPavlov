@@ -67,13 +67,19 @@
         "tokenizer": "wordpunct_tokenize"
       },
       {
-        "in": "x_title_descr_tok",
-        "out": "x_title_descr_emb",
+        "in": [
+          "x_title_descr_tok"
+        ],
+        "out": [
+          "x_title_descr_emb"
+        ],
         "id": "my_embedder",
-        "name": "fasttext",
-        "save_path": "embeddings/wiki.en.bin",
-        "load_path": "embeddings/wiki.en.bin",
-        "dim": 300
+        "name": "elmo",
+        "elmo_output_names": [
+          "elmo"
+        ],
+        "mini_batch_size": 8,
+        "spec": "https://tfhub.dev/google/elmo/2"
       },
       {
         "in": [
@@ -138,10 +144,7 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
-        "subdir": "embeddings"
-      }
+      "http://files.deeppavlov.ai/deeppavlov_data/YahooAnswers.tar.gz"
     ]
   }
 }
