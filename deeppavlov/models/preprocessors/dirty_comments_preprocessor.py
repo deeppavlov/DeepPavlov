@@ -85,7 +85,6 @@ class DirtyCommentsPreprocessor(Component):
         f = [re.sub("[*$%&#@()]", " ", x) for x in f]
         f = [re.sub("[0-9]+", " 0 ", x) for x in f]
 
-        for letter in string.printable:
-            f = [re.sub(letter * 3 + '+', letter * 2, x).strip() for x in f]
+        f = [re.sub(r'([' + string.printable + r'])\1{3,}', r'\1\1', x).strip() for x in f]
 
         return f
