@@ -86,8 +86,11 @@ class MorphotaggerDatasetReader(DatasetReader):
 
     URL = 'http://files.deeppavlov.ai/datasets/UD2.0_source/'
 
-    def read(self, data_path: Union[List, str], language: Union[str, None] = None,
-             data_types: Union[List[str], None] = None, **kwargs) -> Dict[str, List]:
+    def read(self, data_path: Union[List, str],
+             language: Union[str, None] = None,
+             data_types: Union[List[str], None] = None,
+             min_train_fraction: float = 0.0,
+             **kwargs) -> Dict[str, List]:
         """Reads UD dataset from data_path.
 
         Args:
@@ -97,6 +100,8 @@ class MorphotaggerDatasetReader(DatasetReader):
                 2. a list of files, containing the same number of items as data_types
             language: a language to detect filename when it is not given
             data_types: which dataset parts among 'train', 'dev', 'test' are returned
+            min_train_fraction: minimal fraction of train data in train+dev dataset,
+                For fair comparison with UD Pipe it is set to 0.9 for UD experiments.
 
         Returns:
             a dictionary containing dataset fragments (see ``read_infile``) for given data types
@@ -155,4 +160,12 @@ class MorphotaggerDatasetReader(DatasetReader):
             if mode == "dev":
                 mode = "valid"
             data[mode] = read_infile(filepath, **kwargs)
+        if min_train_fraction > 0.0:
+            if "train" in data and "valid" in data:
+                train_length = len(data["train"])
+                valid_length = len(data["valid"])
+                gap = int(min_train_fraction * (train_length + valid_length)) - train_length
+                if gap > 0:
+                    data["train"] += data["valid"][:gap]
+                    data["valid"] = data["valid"][gap:]
         return data
