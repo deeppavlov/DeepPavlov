@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from typing import List, Dict, Tuple, Union
 from pathlib import Path
 import csv
@@ -29,6 +28,7 @@ class UbuntuV2Reader(DatasetReader):
 
     Args:
         data_path: A path to a folder with dataset csv files.
+        num_samples: A number of data samples to use in ``train``, ``validation`` and ``test`` mode.
     """
 
     def read(self, data_path: str,

@@ -1,14 +1,29 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from keras.layers import Input, GlobalMaxPooling1D, Lambda, Dense, GRU
 from keras.models import Model
 from keras import backend as K
+
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.ranking.bilstm_network import BiLSTMNetwork
+from deeppavlov.models.ranking.bilstm_siamese_network import BiLSTMSiameseNetwork
 
 log = get_logger(__name__)
 
 @register('bilstm_gru_nn')
-class BiLSTMGRUNetwork(BiLSTMNetwork):
+class BiLSTMGRUSiameseNetwork(BiLSTMSiameseNetwork):
 
     """The class implementing a siamese neural network with BiLSTM, GRU and max pooling.
 
@@ -34,7 +49,7 @@ class BiLSTMGRUNetwork(BiLSTMNetwork):
     """
 
     def __init__(self, *args, **kwargs):
-        super(BiLSTMGRUNetwork, self).__init__(*args, **kwargs)
+        super(BiLSTMGRUSiameseNetwork, self).__init__(*args, **kwargs)
 
     def create_model(self) -> Model:
         input = []

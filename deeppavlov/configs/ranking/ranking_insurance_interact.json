@@ -45,8 +45,8 @@
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "insurance_embeddings/wiki.en.bin",
-          "save_path": "insurance_embeddings/wiki.en.bin",
+          "load_path": "embeddings/wiki.en.bin",
+          "save_path": "embeddings/wiki.en.bin",
           "dim": 300
         }
       },
@@ -120,7 +120,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
-        "subdir": "insurance_embeddings"
+        "subdir": "embeddings"
       }
     ]
   }
