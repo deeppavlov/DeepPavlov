@@ -31,24 +31,14 @@ log = get_logger(__name__)
 @register('mpm_nn')
 class MPMNetwork(BiLSTMSiameseNetwork):
 
-    """The class implementing a siamese neural network with BiLSTM and max pooling.
+    """The class implementing a siamese neural network with bilateral multi-Perspective matching.
 
-    There is a possibility to use a binary cross-entropy loss as well as
-    a triplet loss with random or hard negative sampling.
-
+    The network architecture is based on https://arxiv.org/abs/1702.03814.
+    
     Args:
-        len_vocab: A size of the vocabulary to build embedding layer.
-        seed: Random seed.
-        embedding_dim: Dimensionality of token (word) embeddings.
-            ``hidden_dim`` should be doubled to get the actual dimensionality.
-            If ``False``, the last hidden state of the RNN will be used.
-        triplet_loss: Whether to use a model with triplet loss.
-            If ``False``, a model with crossentropy loss will be used.
-        margin: A margin parameter for triplet loss. Only required if ``triplet_loss`` is set to ``True``.
-        hard_triplets: Whether to use hard triplets sampling to train the model
-            i.e. to choose negative samples close to positive ones.
-            If set to ``False`` random sampling will be used.
-            Only required if ``triplet_loss`` is set to ``True``.
+        dense_dim:
+        perspective_num:
+
     """
 
     def __init__(self,

@@ -25,9 +25,9 @@ from deeppavlov.core.commands.utils import expand_path
 
 @register('qqp_reader')
 class QuoraQuestionPairsReader(DatasetReader):
-    """The class to read the InsuranceQA V1 dataset from files.
+    """The class to read the Quora Question Pairs dataset from files.
 
-    Please, see https://github.com/shuzi/insuranceQA.
+    Please, see https://www.kaggle.com/c/quora-question-pairs/data.
 
     Args:
         data_path: A path to a folder with dataset files.

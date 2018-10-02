@@ -24,6 +24,14 @@ from deeppavlov.core.commands.utils import expand_path
 
 @register('paraphraser_reader')
 class ParaphraserReader(DatasetReader):
+    """The class to read the paraphraser.ru dataset from files.
+
+    Please, see https://paraphraser.ru/.
+
+    Args:
+        data_path: A path to a folder with dataset files.
+        num_samples: A number of data samples to use in ``train``, ``validation`` and ``test`` mode.
+    """
 
     def read(self, data_path: str, num_samples: int = None, *args, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
         data_path = expand_path(data_path)
