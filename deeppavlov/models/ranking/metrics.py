@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from deeppavlov.core.common.metrics_registry import register_metric
-
 import numpy as np
+from sklearn.metrics import f1_score, log_loss
+
+from deeppavlov.core.common.metrics_registry import register_metric
 
 
 @register_metric('r@1')
@@ -72,3 +73,50 @@ def recall_at_k_insQA(y_true, y_pred, k):
             if predictions[i][j] in np.arange(labels[i][j]):
                 flags[i][j] = 1.
     return np.mean((np.sum(flags, -1) >= 1.).astype(float))
+
+@register_metric('s_acc')
+def siamese_acc(y_true, y_predicted):
+    """
+    Calculate accuracy in terms of absolute coincidence
+
+    Args:
+        y_true: array of true values
+        y_predicted: array of predicted values
+
+    Returns:
+        portion of absolutely coincidental samples
+    """
+    predictions = list(map(lambda x: round(x), list(np.squeeze(y_predicted, 1))))
+    examples_len = len(y_true)
+    correct = sum([y1 == y2 for y1, y2 in zip(y_true, predictions)])
+    return correct / examples_len if examples_len else 0
+
+@register_metric('s_f1')
+def siamese_f1(y_true, y_predicted):
+    """
+    Calculate accuracy in terms of absolute coincidence
+
+    Args:
+        y_true: array of true values
+        y_predicted: array of predicted values
+
+    Returns:
+        F1 score of the positive class in binary classification
+    """
+    predictions = list(map(lambda x: round(x), list(np.squeeze(y_predicted, 1))))
+    return f1_score(y_true, predictions)
+
+@register_metric('s_log_loss')
+def siamese_log_loss(y_true, y_predicted):
+    """
+    Calculate accuracy in terms of absolute coincidence
+
+    Args:
+        y_true: array of true values
+        y_predicted: array of predicted values
+
+    Returns:
+        Log loss in binary classification
+    """
+    predictions = list(np.squeeze(y_predicted, 1))
+    return log_loss(y_true, predictions)
