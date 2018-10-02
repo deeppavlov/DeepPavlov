@@ -93,9 +93,5 @@ class SiameseIterator(DataLearningIterator):
                 yield tuple(zip(*context_response_data))
         if data_type in ["valid", "test"]:
             for i in range(num_steps + 1):
-                if i < num_steps:
-                    context_response_data = data[i * batch_size:(i + 1) * batch_size]
-                else:
-                    if len(data[i * batch_size:len(data)]) > 0:
-                        context_response_data = data[i * batch_size:len(data)]
+                context_response_data = data[i * batch_size:(i + 1) * batch_size]
                 yield tuple(zip(*context_response_data))
