@@ -19,8 +19,8 @@ from deeppavlov.core.models.component import Component
 
 class Filter(Component, metaclass=ABCMeta):
     """Abstract class for filters. Filter is a DeepPavlov component,
-    which is used in Agent to select utterances from incoming batches
-    and Agent skills to be applied to each of the selected utterances.
+    which is used in Agent to select utterances from incoming batch
+    to be processed for each Agent skill.
     """
     @abstractmethod
     def __call__(self, utterances_batch: list, history_batch: list) -> list:

@@ -40,4 +40,4 @@ class TransparentFilter(Filter):
             response: Skills-utterances application matrix with all True
                 elements.
         """
-        return [[True] * self.size] * len(utterances_batch)
+        return [[True] * len(utterances_batch)] * self.size

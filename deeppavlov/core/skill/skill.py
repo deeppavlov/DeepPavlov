@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from abc import ABCMeta, abstractmethod
+from typing import Tuple
 
 from deeppavlov.core.models.component import Component
 
@@ -24,9 +25,8 @@ class Skill(Component, metaclass=ABCMeta):
     dialog history and rich content.
     """
     @abstractmethod
-    def __call__(self, utterances_batch: [list, tuple], history_batch: [list, tuple],
-                 states_batch: [list, tuple] = None) -> (list, list, list):
-        # TODO: methods inputs should be lists, not tuples
+    def __call__(self, utterances_batch: list, history_batch: list,
+                 states_batch: list = None) -> Tuple[list, list, list]:
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence

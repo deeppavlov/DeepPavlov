@@ -16,8 +16,8 @@ class DefaultStatelessSkill(Skill):
     def __init__(self, model: Component):
         self.model: Component = model
 
-    def __call__(self, utterances_batch: [list, tuple], history_batch: [list, tuple],
-                 states_batch: [list, tuple] = None) -> Tuple[list, list, list]:
+    def __call__(self, utterances_batch: list, history_batch: list,
+                 states_batch: list = None) -> Tuple[list, list, list]:
         # TODO: methods inputs should be lists, not tuples
         """Returns skill inference result.
 

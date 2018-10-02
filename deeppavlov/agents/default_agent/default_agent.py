@@ -29,7 +29,7 @@ class DefaultAgent(Agent):
     Default Agent is an implementation of agent template, which following
     pipeline for each utterance batch received by agent:
         1) Utterance batch is processed through agent Filter which selects
-            agent skills to be applied to each utterance of the batch;
+            utterances to be processed with each agent skill;
         2) Utterances are processed through skills selected for them;
         3) Utterances and skill responses are processed through agent
             Processor which generate agent's response to the outer world.
@@ -80,22 +80,42 @@ class DefaultAgent(Agent):
         ids = utterances_ids or list(range(batch_size))
         batch_history = [self.history[id] for id in ids]
         batch_states = [self.states[id] for id in ids]
-        filtered = self.skills_filter(utterances_batch, batch_history)
         responses = []
-        for skill_i, (m, skill) in enumerate(zip(zip(*filtered), self.skills)):
-            m = [i for i, m in enumerate(m) if m]
-            # TODO: utterances, batch_history and batch_states batches should be lists, not tuples
-            batch = tuple(zip(*[(utterances_batch[i], batch_history[i], batch_states[i][skill_i]) for i in m]))
-            res = [(None, 0.)] * batch_size
-            if batch:
+
+        # Filter utterances to be processed with each skills
+        filtered = self.skills_filter(utterances_batch, batch_history)
+
+        for skill_i, (filtered_utterances, skill) in enumerate(zip(filtered, self.skills)):
+            # get batch of indexes for utterances to which skill_i will be applied
+            skill_i_utt_indexes = [utt_index for utt_index, utt_filter in enumerate(filtered_utterances) if utt_filter]
+
+            if skill_i_utt_indexes:
+                # make batches of utterances and corresponding histories and states to which skill will be applied
+                batch = [[], [], []]
+                for i in skill_i_utt_indexes:
+                    batch[0].append(utterances_batch[i])
+                    batch[1].append(batch_history[i])
+                    batch[2].append(batch_states[i][skill_i])
+
+                # make blank response vector for all utterances in incoming batch (including not processed by skill)
+                res = [(None, 0.)] * batch_size
+
+                # infer skill with utterances/histories/states batches
                 predicted, confidence, *state = skill(*batch)
+
+                # populate elements of response vector which correspond processes utterances
                 state = state[0] if state else [None] * len(predicted)
-                for i, predicted, confidence, state in zip(m, predicted, confidence, state):
+                for i, predicted, confidence, state in zip(skill_i_utt_indexes, predicted, confidence, state):
                     res[i] = (predicted, confidence)
+
+                    # update utterances/skills states
                     batch_states[i][skill_i] = state
-            responses.append(res)
+
+                responses.append(res)
+
         responses = self.skills_processor(utterances_batch, batch_history, *responses)
         for history, utterance, response in zip(batch_history, utterances_batch, responses):
             history.append(utterance)
             history.append(response)
+
         return responses
