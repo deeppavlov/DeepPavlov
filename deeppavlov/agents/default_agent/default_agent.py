@@ -79,7 +79,6 @@ class DefaultAgent(Agent):
         batch_size = len(utterances_batch)
         ids = utterances_ids or list(range(batch_size))
         batch_history = [self.history[utt_id] for utt_id in ids]
-        batch_states = [self.states[utt_id] for utt_id in ids]
         responses = []
 
         # Filter utterances to be processed with each skills
@@ -90,26 +89,18 @@ class DefaultAgent(Agent):
             skill_i_utt_indexes = [utt_index for utt_index, utt_filter in enumerate(filtered_utterances) if utt_filter]
 
             if skill_i_utt_indexes:
-                # make batches of utterances and corresponding histories and states to which skill will be applied
-                batch = [[], [], []]
-                for i in skill_i_utt_indexes:
-                    batch[0].append(utterances_batch[i])
-                    batch[1].append(batch_history[i])
-                    batch[2].append(batch_states[i][skill_i])
+                # make batch of utterances to which skill will be applied
+                skill_i_utt_batch = [utterances_batch[i] for i in skill_i_utt_indexes]
 
                 # make blank response vector for all utterances in incoming batch (including not processed by skill)
                 res = [(None, 0.)] * batch_size
 
                 # infer skill with utterances/histories/states batches
-                predicted, confidence, *state = skill(*batch)
+                predicted, confidence, *state = skill(skill_i_utt_batch, skill_i_utt_indexes)
 
                 # populate elements of response vector which correspond processes utterances
-                state = state[0] if state else [None] * len(predicted)
-                for i, predicted, confidence, state in zip(skill_i_utt_indexes, predicted, confidence, state):
+                for i, predicted, confidence in zip(skill_i_utt_indexes, predicted, confidence):
                     res[i] = (predicted, confidence)
-
-                    # update utterances/skills states
-                    batch_states[i][skill_i] = state
 
                 responses.append(res)
 

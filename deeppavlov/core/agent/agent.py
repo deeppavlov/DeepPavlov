@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from abc import ABCMeta, abstractmethod
-from typing import List
+from typing import List, Dict
 from collections import defaultdict
 
 from deeppavlov.core.models.component import Component
@@ -40,6 +40,24 @@ class Agent(Component, metaclass=ABCMeta):
         self.skills: List[Skill] = skills
         self.history: dict = defaultdict(list)
         self.states: dict = defaultdict(lambda: [None] * len(self.skills))
+
+        def wrap_skill(skill_id: int, skill: Skill):
+            def callable_template(utterances_batch: list, utterances_ids: list=None):
+                history_batch = [self.skills[utt_id] for utt_id in utterances_ids]
+                states_batch = [self.states[utt_id][skill_id] for utt_id in utterances_ids]
+
+                predicted, confidence, *states = skill(utterances_batch, history_batch, states_batch)
+
+                states = states[0] if states else [None] * len(predicted)
+                for utt_id, state in zip(utterances_ids, states):
+                    self.states[utt_id][skill_id] = state
+
+                return predicted, confidence, states
+
+            return callable_template
+
+        for skill_id, skill in enumerate(self.skills):
+            self.skills[skill_id] = wrap_skill(skill_id, skill)
 
     def __call__(self, utterances_batch: list, utterances_ids: list=None) -> list:
         """Wraps _call method and updates utterances history.
