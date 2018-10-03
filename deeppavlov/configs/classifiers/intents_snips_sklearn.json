@@ -56,19 +56,22 @@
         "mean": true
       },
       {
+        "name": "one_hotter",
+        "id": "onehotter",
+        "depth": "#classes_vocab.len",
+        "in": "y_ids",
+        "out": "y_onehot"
+      },
+      {
         "in": [
           "x_emb"
         ],
-        "in_y": [
-          "y_ids"
-        ],
         "out": [
-          "y_labels",
-          "y_probas_dict"
+          "y_pred_ids"
         ],
         "fit_on": [
           "x_emb",
-          "y_onehot"
+          "y_ids"
         ],
         "main": true,
         "name": "sklearn_classifier",
@@ -76,26 +79,24 @@
         "load_path": "snips/intents_snips_v6.pkl",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
-        "confident_threshold": 0.5,
-        "model_name": "LogisticRegression"
+        "model_name": "SVC",
+        "infer_method": "predict"
+      },
+      {
+        "ref": "classes_vocab",
+        "in": "y_pred_ids",
+        "out": "y_pred_labels"
       }
     ],
     "out": [
-      "y_labels",
-      "y_probas_dict"
+      "y_pred_labels"
     ]
   },
   "train": {
-    "epochs": 1000,
     "batch_size": 64,
     "metrics": [
-      "classification_accuracy",
-      "classification_f1",
-      "classification_roc_auc"
+      "accuracy"
     ],
-    "validation_patience": 5,
-    "val_every_n_epochs": 5,
-    "log_every_n_epochs": 5,
     "show_examples": true,
     "validate_best": true,
     "test_best": false
