@@ -27,7 +27,6 @@ from keras.regularizers import l2
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.keras_model import KerasModel
-from deeppavlov.models.classifiers.utils import labels2onehot
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.layers.keras_layers import additive_self_attention, multiplicative_self_attention
 
@@ -169,8 +168,7 @@ class KerasClassificationModel(KerasModel):
             metrics values on the given batch
         """
         features = self.pad_texts(texts)
-        onehot_labels = labels2onehot(labels, classes=self.classes)
-        metrics_values = self.model.train_on_batch(features, onehot_labels)
+        metrics_values = self.model.train_on_batch(features, np.squeeze(np.array(labels)))
         return metrics_values
 
     def infer_on_batch(self, texts: List[List[np.ndarray]], labels: list = None) -> [float, List[float], np.ndarray]:
@@ -187,8 +185,7 @@ class KerasClassificationModel(KerasModel):
         """
         if labels:
             features = self.pad_texts(texts)
-            onehot_labels = labels2onehot(labels, classes=self.classes)
-            metrics_values = self.model.test_on_batch(features, onehot_labels)
+            metrics_values = self.model.test_on_batch(features, np.squeeze(np.array(labels)))
             return metrics_values
         else:
             features = self.pad_texts(texts)

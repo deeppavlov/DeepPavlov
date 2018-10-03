@@ -34,7 +34,9 @@
         ],
         "level": "token",
         "save_path": "vocabs/snips_classes.dict",
-        "load_path": "vocabs/snips_classes.dict"
+        "load_path": "vocabs/snips_classes.dict",
+        "in": "y",
+        "out": "y_ids"
       },
       {
         "in": "x",
@@ -53,11 +55,17 @@
         "dim": 100
       },
       {
+        "in": "y_ids",
+        "out": "y_onehot",
+        "name": "one_hotter",
+        "depth": "#classes_vocab.len"
+      },
+      {
         "in": [
           "x_emb"
         ],
         "in_y": [
-          "y"
+          "y_onehot"
         ],
         "out": [
           "y_probas_dict"
