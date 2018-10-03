@@ -183,8 +183,19 @@ class PipelineManager:
 
     @staticmethod
     @unpack_args
-    def train_pipe(pipe_config, cross_validation, k_fold):
-        # start pipeline time
+    def train_pipe(pipe_config, cross_validation, k_fold, gpu=False, gpu_ind=None, env=None):
+        # modify project environment
+        if gpu:
+            if not isinstance(gpu_ind, int) or env is None:
+                # TODO write normal error
+                raise ConfigError("Check your multiprocess config idiot!")
+            else:
+                env['CUDA_VISIBLE_DEVICES'] = str(gpu_ind)
+        else:
+            if env:
+                env['CUDA_VISIBLE_DEVICES'] = ''
+
+        # start pipeline
         pipe_start = time()
         res = dict(pipe_conf=deepcopy(pipe_config))
 
@@ -242,6 +253,11 @@ class PipelineManager:
 
         return dataset_res
 
+    def gpu_gen(self, env_):
+        for i, pipe_conf in enumerate(self.pipeline_generator()):
+            j = i - (i // len(self.available_gpu)) * len(self.available_gpu)
+            yield (deepcopy(pipe_conf), self.cross_validation, self.k_fold, True, j, env_)
+
     def run(self):
         """
         Initializes the pipeline generator and runs the experiment. Creates a report after the experiments.
@@ -258,21 +274,17 @@ class PipelineManager:
 
         self.logger.log['experiment_info']['number_of_pipes'] = self.gen_len
 
-        configs = [(deepcopy(x), self.cross_validation, self.k_fold) for x in self.pipeline_generator()]
+        # start multiprocessing
         workers = Pool(self.max_num_workers)
 
         if self.available_gpu is None:
+            configs = [(deepcopy(x), self.cross_validation, self.k_fold) for x in self.pipeline_generator()]
             pipes_results = workers.imap_unordered(self.train_pipe, configs)
             workers.close()
             workers.join()
         else:
-            pipes_results = []
-
-            for i, pipe_conf in enumerate(configs):
-                env = dict(os.environ)
-                j = i - (i//len(self.available_gpu))*len(self.available_gpu)
-                env['CUDA_VISIBLE_DEVICES'] = str(self.available_gpu[j])
-                pipes_results.append(workers.apply(self.train_pipe, configs))
+            env = dict(os.environ.copy())
+            pipes_results = workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(env)])
             workers.close()
             workers.join()
 
