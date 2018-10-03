@@ -149,16 +149,18 @@ class PipelineManager:
             else:
                 if self.max_num_workers_ is None:
                     self.available_gpu = get_available_gpus()
-                    if int(cpu_count() * 0.7) > len(self.available_gpu):
+                    if int(cpu_num * 0.7) > len(self.available_gpu):
                         self.max_num_workers = len(self.available_gpu)
                     else:
-                        self.max_num_workers = int(cpu_count() * 0.7)
+                        self.max_num_workers = int(cpu_num * 0.7)
                 else:
                     if self.max_num_workers_ > gpu_num:
                         self.max_num_workers = gpu_num
                         self.available_gpu = get_available_gpus()
                     else:
                         self.available_gpu = get_available_gpus(num_gpus=self.max_num_workers_)
+                        self.max_num_workers = len(self.available_gpu)
+
         elif self.use_multi_gpus:
             if self.use_all_gpus:
                 raise ValueError("Parameters 'use_all_gpus' and 'use_multi_gpus' can not simultaneously be not None.")
@@ -178,6 +180,7 @@ class PipelineManager:
                     else:
                         self.max_num_workers = self.max_num_workers_
                         self.available_gpu = self.available_gpu[0:self.max_num_workers_]
+
         else:
             self.max_num_workers = self.max_num_workers_
 
