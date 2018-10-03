@@ -106,6 +106,7 @@
       "server_utils": "Ranker"
     },
     "download": [
+      "http://files.deeppavlov.ai/deeppavlov_data/paraphrase_ident_qqp_bilstm.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/datasets/quora_question_pairs.zip",
         "subdir": "qqp_data"

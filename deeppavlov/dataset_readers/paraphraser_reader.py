@@ -26,7 +26,7 @@ from deeppavlov.core.commands.utils import expand_path
 class ParaphraserReader(DatasetReader):
     """The class to read the paraphraser.ru dataset from files.
 
-    Please, see https://paraphraser.ru/.
+    Please, see https://paraphraser.ru.
 
     Args:
         data_path: A path to a folder with dataset files.

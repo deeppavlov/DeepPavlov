@@ -106,6 +106,7 @@
       "server_utils": "Ranker"
     },
     "download": [
+      "http://files.deeppavlov.ai/deeppavlov_data/paraphrase_ident_paraphraser.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/datasets/paraphraser.zip",
         "subdir": "paraphraser_data"

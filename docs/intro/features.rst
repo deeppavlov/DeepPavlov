@@ -189,30 +189,39 @@ model performs ranking of responses or contexts from some database by their rele
 
 Available pre-trained models for ranking:
 
-+-------------------+----------------------------------------------------------------+-----------------------+------------------+
-|    Dataset        | Model config                                                   | Validation (Recall@1) | Test1 (Recall@1) |
-+-------------------+----------------------------------------------------------------+-----------------------+------------------+
-| `InsuranceQA V1`_ | :config:`ranking_insurance_interact`_   |   67.6                |   67.6           |
-+-------------------+----------------------------------------------------------------+-----------------------+------------------+
-| `Ubuntu V2`_      |:config:`ranking_ubuntu_v2_interact`_   |   67.6                |   67.6           |
-+-------------------+----------------------------------------------------------------+-----------------------+------------------+
-| `Ubuntu V2`_      |:config:`ranking_ubuntu_v2_mt_interact`_ |   67.6                |   67.6           |
-+-------------------+----------------------------------------------------------------+-----------------------+------------------+
+.. table::
+   :widths: auto
 
-Available pre-trained models for paraphrase identification:
-+-------------------+----------------------------------------------------------------+-----------------------+------------------+
-| `paraphraser.ru`_ | :config:`ranking_insurance <ranking/ranking_insurance.json>`   |   67.6                |   67.6           |
-+-------------------+----------------------------------------------------------------+-----------------------+------------------+
-|`Quora Question Pairs`_ | :config:`ranking_insurance <ranking/paraphrase_ident_qqp.json>`   |   67.6                |   67.6           |
-+-------------------+----------------------------------------------------------------+-----------------------+------------------+
-|`Quora Question Pairs`_ | :config:`ranking_insurance <ranking/paraphrase_ident_qqp.json>`   |   67.6                |   67.6           |
-+-------------------+----------------------------------------------------------------+-----------------------+------------------+
+   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+
+   |    Dataset        | Model config                                                                        | Validation (Recall@1) | Test1 (Recall@1) |
+   +===================+=====================================================================================+=======================+==================+
+   | `InsuranceQA V1`_ | :config:`ranking_insurance_interact <ranking/ranking_insurance_interact.json>`      |   72.0                |   72.2           |
+   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+
+   | `Ubuntu V2`_      |:config:`ranking_ubuntu_v2_interact <ranking/ranking_ubuntu_v2_interact.json>`       |   52.9                |   52.4           |
+   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+
+   | `Ubuntu V2`_      |:config:`ranking_ubuntu_v2_mt_interact <ranking/ranking_ubuntu_v2_mt_interact.json>` |   59.2                |   58.7           |
+   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+
 
 .. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
-.. _`Ubuntu V2: https://github.com/rkadlec/ubuntu-ranking-dataset-creator`
-.. _`ranking_insurance_interact:<ranking/ranking_insurance_interact.json>`
-.. _`ranking_ubuntu_v2_interact:<ranking/ranking_ubuntu_v2_interact.json>`
-.. _`ranking_ubuntu_v2_mt_interact:<ranking/ranking_ubuntu_v2_mt_interact.json>`
+.. _`Ubuntu V2`: https://github.com/rkadlec/ubuntu-ranking-dataset-creator
+
+Available pre-trained models for paraphrase identification:
+
+.. table::
+   :widths: auto
+
+   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+
+   |    Dataset             |Model config                                                                                 | Val (accuracy)| Test (accuracy)| Val (F1)| Test (F1)| Val (log_loss)| Test (log_loss)|
+   +========================+=============================================================================================+===============+================+=========+==========+===============+================+
+   |`paraphraser.ru`_       |:config:`paraphrase_ident_paraphraser <ranking/paraphrase_ident_paraphraser_interact.json>`  |   83.8        |   75.4         |   87.9  |  80.9    |   0.468       |   0.616        |
+   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+
+   |`Quora Question Pairs`_ |:config:`paraphrase_ident_qqp <ranking/paraphrase_ident_qqp_bilstm_interact.json>`           |   87.1        |   87.0         |   83.0  |  82.6    |   0.300       |   0.305        |
+   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+
+   |`Quora Question Pairs`_ |:config:`paraphrase_ident_qqp <ranking/paraphrase_ident_qqp_interact.json>`                  |   87.7        |   87.5         |   84.0  |  83.8    |   0.287       |   0.298        |
+   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+
+
+.. _`paraphraser.ru`: https://paraphraser.ru/
+.. _`Quora Question Pairs`: https://www.kaggle.com/c/quora-question-pairs/data
 
 Comparison with other models on the `InsuranceQA V1 <https://github.com/shuzi/insuranceQA>`__:
 
@@ -223,7 +232,7 @@ Comparison with other models on the `InsuranceQA V1 <https://github.com/shuzi/in
 +---------------------------------------------------------------+-------------------------+--------------------+
 | `QA-LSTM basic-model(max pooling)`_                           | 64.3                    | 63.1               |
 +---------------------------------------------------------------+-------------------------+--------------------+
-| :config:`ranking_insurance <ranking/ranking_insurance.json>`  | **67.6**                | **67.6**           |
+| :config:`ranking_insurance <ranking/ranking_insurance.json>`  | **72.0**                | **72.2**           |
 +---------------------------------------------------------------+-------------------------+--------------------+
 
 .. _`Architecture II (HLQA(200) CNNQA(4000) 1-MaxPooling Tanh)`: https://arxiv.org/pdf/1508.01585.pdf
