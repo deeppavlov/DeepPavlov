@@ -40,12 +40,12 @@ class DefaultAgent(Agent):
     You can refer Skill, Processor, Selector base classes to get more info.
 
     Args:
-        skill: List of initiated agent skills instances.
+        skills: List of initiated agent skills instances.
         skills_processor: Initiated agent processor.
         skills_filter: Initiated agent filter.
 
     Attributes:
-        skill: List of initiated agent skills instances.
+        skills: List of initiated agent skills instances.
         skills_processor: Initiated agent processor.
         skills_filter: Initiated agent filter.
         history: Histories for each each dialog with agent indexed
@@ -54,7 +54,7 @@ class DefaultAgent(Agent):
         states: States for each each dialog with agent indexed by dialog ID.
     """
     def __init__(self, skills: List[Skill], skills_processor: Processor=None,
-                 skills_filter: Filter=None, *args, **kwargs):
+                 skills_filter: Filter=None):
         super(DefaultAgent, self).__init__(skills=skills)
         self.skills_filter: Filter = skills_filter or TransparentFilter(len(skills))
         self.skills_processor: Processor = skills_processor or HighestConfidenceSelector()
@@ -69,8 +69,8 @@ class DefaultAgent(Agent):
         other case utterances indexes in incoming batch are used as dialog IDs.
 
         Args:
-            utterances: Batch of incoming utterances.
-            ids: Batch of dialog IDs corresponding to incoming utterances.
+            utterances_batch: Batch of incoming utterances.
+            utterances_ids: Batch of dialog IDs corresponding to incoming utterances.
 
         Returns:
             responses: A batch of responses corresponding to the
@@ -78,8 +78,8 @@ class DefaultAgent(Agent):
         """
         batch_size = len(utterances_batch)
         ids = utterances_ids or list(range(batch_size))
-        batch_history = [self.history[id] for id in ids]
-        batch_states = [self.states[id] for id in ids]
+        batch_history = [self.history[utt_id] for utt_id in ids]
+        batch_states = [self.states[utt_id] for utt_id in ids]
         responses = []
 
         # Filter utterances to be processed with each skills
