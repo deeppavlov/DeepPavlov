@@ -69,26 +69,19 @@ def classification_accuracy(y_true: List[list], y_predicted: List[Tuple[list, di
     Returns:
         portion of samples with absolutely coincidental sets of predicted values
     """
+    y_pred_labels = [y_predicted[i][0] for i in range(len(y_predicted))]
+    examples_len = len(y_true)
     if isinstance(y_predicted[0][0], list) and isinstance(y_true[0], list):
-        y_pred_labels = [y_predicted[i][0] for i in range(len(y_predicted))]
-        examples_len = len(y_true)
-        correct = sum([set(y1) == set(y2) for y1, y2 in zip(y_true, y_pred_labels)])
-        return correct / examples_len if examples_len else 0
+        y_pair = [(set(y1), set(y2)) for y1, y2 in zip(y_true, y_pred_labels)]
     elif isinstance(y_true[0], list):
-        y_pred_labels = [y_predicted[i][0] for i in range(len(y_predicted))]
-        examples_len = len(y_true)
-        correct = sum([set(y1) == set([y2]) for y1, y2 in zip(y_true, y_pred_labels)])
-        return correct / examples_len if examples_len else 0
+        y_pair = [(set(y1), set([y2])) for y1, y2 in zip(y_true, y_pred_labels)]
     elif isinstance(y_predicted[0][0], list):
-        y_pred_labels = [y_predicted[i][0] for i in range(len(y_predicted))]
-        examples_len = len(y_true)
-        correct = sum([set([y1]) == set(y2) for y1, y2 in zip(y_true, y_pred_labels)])
-        return correct / examples_len if examples_len else 0
+        y_pair = [(set([y1]), set(y2)) for y1, y2 in zip(y_true, y_pred_labels)]
     else:
-        y_pred_labels = [y_predicted[i][0] for i in range(len(y_predicted))]
-        examples_len = len(y_true)
-        correct = sum([y1 == y2 for y1, y2 in zip(y_true, y_pred_labels)])
-        return correct / examples_len if examples_len else 0
+        y_pair = [(y1, y2) for y1, y2 in zip(y_true, y_pred_labels)]
+
+    correct = sum([y1 == y2 for y1, y2 in y_pair])
+    return correct / examples_len if examples_len else 0
 
 
 @register_metric('slots_accuracy')
