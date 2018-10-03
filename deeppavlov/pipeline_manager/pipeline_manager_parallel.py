@@ -183,17 +183,16 @@ class PipelineManager:
 
     @staticmethod
     @unpack_args
-    def train_pipe(pipe_config, cross_validation, k_fold, gpu=False, gpu_ind=None, env=None):
+    def train_pipe(pipe_config, cross_validation, k_fold, gpu=False, gpu_ind=None):
         # modify project environment
         if gpu:
-            if not isinstance(gpu_ind, int) or env is None:
+            if not isinstance(gpu_ind, int):
                 # TODO write normal error
                 raise ConfigError("Check your multiprocess config idiot!")
             else:
-                env['CUDA_VISIBLE_DEVICES'] = str(gpu_ind)
+                os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_ind)
         else:
-            if env:
-                env['CUDA_VISIBLE_DEVICES'] = ''
+            os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
         # start pipeline
         pipe_start = time()
@@ -253,10 +252,10 @@ class PipelineManager:
 
         return dataset_res
 
-    def gpu_gen(self, env_):
+    def gpu_gen(self):
         for i, pipe_conf in enumerate(self.pipeline_generator()):
             j = i - (i // len(self.available_gpu)) * len(self.available_gpu)
-            yield (deepcopy(pipe_conf), self.cross_validation, self.k_fold, True, j, env_)
+            yield (deepcopy(pipe_conf), self.cross_validation, self.k_fold, True, j)
 
     def run(self):
         """
@@ -283,8 +282,7 @@ class PipelineManager:
             workers.close()
             workers.join()
         else:
-            env = dict(os.environ.copy())
-            pipes_results = workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(env)])
+            pipes_results = workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen()])
             workers.close()
             workers.join()
 
