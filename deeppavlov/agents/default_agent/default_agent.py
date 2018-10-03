@@ -54,7 +54,7 @@ class DefaultAgent(Agent):
         states: States for each each dialog with agent indexed by dialog ID.
     """
     def __init__(self, skills: List[Skill], skills_processor: Processor=None,
-                 skills_filter: Filter=None):
+                 skills_filter: Filter=None, *args, **kwargs):
         super(DefaultAgent, self).__init__(skills=skills)
         self.skills_filter: Filter = skills_filter or TransparentFilter(len(skills))
         self.skills_processor: Processor = skills_processor or HighestConfidenceSelector()

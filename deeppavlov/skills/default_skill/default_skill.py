@@ -27,7 +27,7 @@ class DefaultStatelessSkill(Skill):
     Attributes:
         model: DeepPavlov model to be wrapped into default skill instance.
     """
-    def __init__(self, model: Chainer):
+    def __init__(self, model: Chainer, *args, **kwargs):
         self.model: Chainer = model
 
     def __call__(self, utterances_batch: list, history_batch: list,
