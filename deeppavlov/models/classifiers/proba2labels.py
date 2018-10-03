@@ -66,5 +66,5 @@ class Proba2Labels(Component):
         elif self.max_proba:
             return [max(d, key=d.get) for d in data]
         else:
-            ConfigError("Proba2Labels requires one of two arguments: bool `max_proba` or "
-                        "float `confident_threshold` for multi-label classification")
+            raise ConfigError("Proba2Labels requires one of two arguments: bool `max_proba` or "
+                              "float `confident_threshold` for multi-label classification")
