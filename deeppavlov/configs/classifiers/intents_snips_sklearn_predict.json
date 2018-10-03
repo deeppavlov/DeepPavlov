@@ -80,7 +80,8 @@
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "model_name": "SVC",
-        "infer_method": "predict"
+        "infer_method": "predict",
+        "warm_start": false
       },
       {
         "ref": "classes_vocab",
