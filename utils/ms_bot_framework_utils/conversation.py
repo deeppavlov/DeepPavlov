@@ -84,8 +84,10 @@ class Conversation:
     def _handle_message(self, in_activity: dict):
         if 'text' in in_activity.keys():
             in_text = in_activity['text']
-            response = self._act(in_text)[0]
-            self._send_infer_results(response, in_activity)
+            agent_response = self._act(in_text)
+            if agent_response:
+                response = agent_response[0]
+                self._send_infer_results(response, in_activity)
         else:
             self._handle_usupported(in_activity)
 
