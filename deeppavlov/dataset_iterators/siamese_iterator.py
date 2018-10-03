@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from typing import Dict, List, Tuple
-import random
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
@@ -82,4 +81,5 @@ class SiameseIterator(DataLearningIterator):
         if data_type in ["valid", "test"]:
             for i in range(num_steps + 1):
                 context_response_data = data[i * batch_size:(i + 1) * batch_size]
-                yield tuple(zip(*context_response_data))
+                if context_response_data != []:
+                    yield tuple(zip(*context_response_data))

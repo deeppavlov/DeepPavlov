@@ -34,11 +34,11 @@ class InsuranceReader(DatasetReader):
     def read(self, data_path: str, num_samples: int = None, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
         data_path = expand_path(data_path)
         dataset = {'train': None, 'valid': None, 'test': None}
-        train_fname = Path(data_path) / 'insuranceQA-master/V1/question.train.token_idx.label'
-        valid_fname = Path(data_path) / 'insuranceQA-master/V1/question.dev.label.token_idx.pool'
-        test_fname = Path(data_path) / 'insuranceQA-master/V1/question.test1.label.token_idx.pool'
-        int2tok_fname = Path(data_path) / 'insuranceQA-master/V1/vocabulary'
-        response2ints_fname = Path(data_path) / 'insuranceQA-master/V1/answers.label.token_idx'
+        train_fname = data_path / 'insuranceQA-master/V1/question.train.token_idx.label'
+        valid_fname = data_path / 'insuranceQA-master/V1/question.dev.label.token_idx.pool'
+        test_fname = data_path / 'insuranceQA-master/V1/question.test1.label.token_idx.pool'
+        int2tok_fname = data_path / 'insuranceQA-master/V1/vocabulary'
+        response2ints_fname = data_path / 'insuranceQA-master/V1/answers.label.token_idx'
         self.int2tok_vocab = self._build_int2tok_vocab(int2tok_fname)
         self.idxs2cont_vocab = self._build_context2toks_vocab(train_fname, valid_fname, test_fname)
         self.response2str_vocab = self._build_response2str_vocab(response2ints_fname)
