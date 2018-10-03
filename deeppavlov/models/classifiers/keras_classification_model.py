@@ -101,7 +101,7 @@ class KerasClassificationModel(KerasModel):
         self.opt['classes'] = self.classes
         self.n_classes = len(self.classes)
         if self.n_classes == 0:
-            ConfigError("Please, provide vocabulary with considered intents.")
+            raise ConfigError("Please, provide vocabulary with considered intents.")
 
         self.model = self.load(model_name=model_name)
         # in case of pre-trained after loading in self.opt we have stored parameters
