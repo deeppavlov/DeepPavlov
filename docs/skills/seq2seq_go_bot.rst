@@ -185,4 +185,4 @@ References
 
 [2] `Mihail Eric, Lakshmi Krishnan, Francois Charette, and Christopher D. Manning, "Key-Value Retrieval Networks for Task-Oriented Dialogue – 2017 <https://arxiv.org/abs/1705.05414>`_
 
-.. |alt text| image:: ../_static/kvret_diagram.pn
+.. |alt text| image:: ../_static/kvret_diagram.png
