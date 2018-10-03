@@ -22,9 +22,9 @@ Now a user can enter a text of context and get and responses:
 ::
 
     :: how much to pay for auto insurance?
-    >> {'contexts': ['how much can I expect pay for auto insurance', 'how much will insurance pay for my total car', 'how much can I expect pay in car insurance'], 'responses': ['the cost of auto insurance be based on several factor include your driving record , claim history , type of vehicle , credit score where you live and how far you travel to and from work I will recommend work with an independent agent who can shop several company find the good policy for you', 'there be not any absolute answer to this question rate for auto insurance coverage can vary greatly from carrier to carrier and from area to area contact local agent in your area find out about coverage availablity and pricing within your area look for an agent that you be comfortable working with as they will be the first last point of contact in most instance', 'the cost of auto insurance coverage for any vehicle or driver can vary greatly thing that effect your auto insurance rate be geographical location , vehicle , age (s) of driver (s) , type of coverage desire , motor vehicle record of all driver , credit rating of all driver and more contact a local agent get a quote a quote cost nothing but will let you know where your rate will']}
+    >> ['the cost of auto insurance be based on several factor include your driving record , claim history , type of vehicle , credit score where you live and how far you travel to and from work I will recommend work with an independent agent who can shop several company find the good policy for you', 'there be not any absolute answer to this question rate for auto insurance coverage can vary greatly from carrier to carrier and from area to area contact local agent in your area find out about coverage availablity and pricing within your area look for an agent that you be comfortable working with as they will be the first last point of contact in most instance', 'the cost of auto insurance coverage for any vehicle or driver can vary greatly thing that effect your auto insurance rate be geographical location , vehicle , age (s) of driver (s) , type of coverage desire , motor vehicle record of all driver , credit rating of all driver and more contact a local agent get a quote a quote cost nothing but will let you know where your rate will']
 
-To train the model on the InsuranceQA dataset one should run the
+To train the model on the `InsuranceQA V1`_ dataset one should run the
 command:
 
 ::
@@ -45,22 +45,21 @@ the following command:
 
     python -m deeppavlov interact deeppavlov/configs/ranking/paraphrase_ident_qqp_interact.json
 
-Now a user can enter a two sentences
+Now a user can enter a two sentences and the model will make a prediction whether these sentences are paraphrases or not.
 
 ::
 
-    ::
-    >> {'contexts': ['how much can I expect pay for auto insurance', 'how much will insurance pay for my total car', 'how much can I expect pay in car insurance'], 'responses': ['the cost of auto insurance be based on several factor include your driving record , claim history , type of vehicle , credit score where you live and how far you travel to and from work I will recommend work with an independent agent who can shop several company find the good policy for you', 'there be not any absolute answer to this question rate for auto insurance coverage can vary greatly from carrier to carrier and from area to area contact local agent in your area find out about coverage availablity and pricing within your area look for an agent that you be comfortable working with as they will be the first last point of contact in most instance', 'the cost of auto insurance coverage for any vehicle or driver can vary greatly thing that effect your auto insurance rate be geographical location , vehicle , age (s) of driver (s) , type of coverage desire , motor vehicle record of all driver , credit rating of all driver and more contact a local agent get a quote a quote cost nothing but will let you know where your rate will']}
+    :: How can I be a good geologist?&What should I do to be a great geologist?
+    >> This is a paraphrase.
 
-To train the model on the InsuranceQA dataset one should run the
-command:
+To train the model on the `Quora Question Pairs`_ dataset one should run the command:
 
 ::
 
-    python -m deeppavlov interact deeppavlov/configs/ranking/ranking_insurance.json
+    python -m deeppavlov interact deeppavlov/configs/ranking/paraphrase_ident_qqp.json
 
 As an example of configuration file see
-:config:`ranking_insurance.json <ranking/ranking_insurance.json>`.
+:config:`ranking_insurance.json <ranking/paraphrase_ident_qqp.json>`.
 
 References
 ==========
