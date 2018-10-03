@@ -1,6 +1,20 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from typing import Tuple
 
-from deeppavlov.core.models.component import Component
+from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.skill.skill import Skill
 
 
@@ -13,12 +27,11 @@ class DefaultStatelessSkill(Skill):
     Attributes:
         model: DeepPavlov model to be wrapped into default skill instance.
     """
-    def __init__(self, model: Component):
-        self.model: Component = model
+    def __init__(self, model: Chainer):
+        self.model: Chainer = model
 
     def __call__(self, utterances_batch: list, history_batch: list,
                  states_batch: list = None) -> Tuple[list, list, list]:
-        # TODO: methods inputs should be lists, not tuples
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence
@@ -38,9 +51,6 @@ class DefaultStatelessSkill(Skill):
                 skill inference result.
             states: Optional. A batch of states for each response.
         """
-        utterances_batch = list(utterances_batch)
-        states_batch = list(states_batch)
-
         batch_len = len(utterances_batch)
         confidence_batch = [1.0] * batch_len
 
