@@ -43,8 +43,8 @@
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "paraphraser_embeddings/ft_dummy_300.bin",
-          "save_path": "paraphraser_embeddings/ft_dummy_300.bin",
+          "load_path": "paraphraser_embeddings/ft_dummy_ru_300.bin",
+          "save_path": "paraphraser_embeddings/ft_dummy_ru_300.bin",
           "dim": 300
         }
       },
@@ -116,7 +116,7 @@
         "subdir": "paraphraser_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/embeddings/ft_dummy_300.bin",
+        "url": "http://files.deeppavlov.ai/embeddings/ft_dummy_ru_300.bin",
         "subdir": "paraphraser_embeddings"
       }
     ]
