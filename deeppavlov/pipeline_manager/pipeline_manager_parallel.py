@@ -38,6 +38,18 @@ from deeppavlov.core.commands.train import read_data_by_config, get_iterator_fro
 from deeppavlov.pipeline_manager.utils import results_visualization, get_available_gpus, check_gpu_available
 
 
+def unpack_args(func):
+    from functools import wraps
+
+    @wraps(func)
+    def wrapper(args):
+        if isinstance(args, dict):
+            return func(**args)
+        else:
+            return func(*args)
+    return wrapper
+
+
 class PipelineManager:
     """
     The class implements the functions of automatic pipeline search and search for hyperparameters.
@@ -67,15 +79,15 @@ class PipelineManager:
                  date: Union[str, None] = None,
                  info: Dict = None,
                  root: str = './experiments/',
-                 do_test: bool=True,
+                 do_test: bool=False,
                  cross_val: bool = False,
                  k_fold: Union[int, None] = 5,
-                 sample_num: int = 10,
+                 sample_num: int = 1,
                  target_metric: str = None,
                  plot: bool = True,
                  save_best=True,
-                 multiprocessing=False,
-                 max_num_workers: Union[int, None]=None,
+                 multiprocessing=True,
+                 max_num_workers: Union[int, None]=4,
                  use_all_gpus: bool=False,
                  use_multi_gpus: Union[List[int], None]=None):
         """
@@ -170,24 +182,28 @@ class PipelineManager:
             self.max_num_workers = self.max_num_workers_
 
     @staticmethod
-    def train_pipe(pipe_config):
+    @unpack_args
+    def train_pipe(pipe_config, cross_validation, k_fold):
         # start pipeline time
         pipe_start = time()
-        # TODO dell self
-        if self.cross_validation:
-            cv_score = calc_cv_score(pipe_config, n_folds=self.k_fold)
+        res = dict(pipe_conf=deepcopy(pipe_config))
+
+        if cross_validation:
+            cv_score = calc_cv_score(pipe_config, n_folds=k_fold)
             results = {"test": cv_score}
         else:
             results = train_evaluate_model_from_config(pipe_config, to_train=True, to_validate=True)
 
-        # TODO return copy of pipe
-        return dict(results=results, pipe_time=(time() - pipe_start), pipe_conf=pipe_config)
+        res['results'] = results
+        res['pipe_time'] = time() - pipe_start
+        return res
 
     def update_logger(self, res_list: List[dict]):
         dataset_res = {}
         for i, res in enumerate(res_list):
             pipe = res['pipe_conf']
             results = res['results']
+            dataset_name = copy(pipe['dataset_reader']['data_path'])
 
             if i == 0:
                 self.logger.log['experiment_info']['metrics'] = copy(pipe['train']['metrics'])
@@ -197,7 +213,7 @@ class PipelineManager:
 
             self.logger.pipe_ind = i + 1
             self.logger.pipe_conf = copy(pipe['chainer']['pipe'])
-            self.logger.dataset = copy(pipe['dataset_reader']['data_path'])
+            self.logger.dataset = dataset_name
             self.logger.batch_size = pipe['train'].get('batch_size', "None")
 
             # add results and pipe time to log
@@ -208,21 +224,21 @@ class PipelineManager:
             self.logger.write()
             # save config in checkpoint folder
             if not self.cross_validation:
-                self.save_config(pipe, self.logger.dataset, i)
+                self.save_config(pipe, dataset_name, i)
 
             if self.save_best:
-                if self.logger.dataset not in dataset_res.keys():
-                    dataset_res[self.logger.dataset] = dict(best_score=-1, best_ind=None)
+                if dataset_name not in dataset_res.keys():
+                    dataset_res[dataset_name] = dict(best_score=-1, best_ind=None)
 
                 if 'test' in results.keys():
-                    if results['test'][self.target_metric] > dataset_res[self.logger.dataset]["best_score"]:
-                        dataset_res[self.logger.dataset]["best_score"] = results['test'][self.target_metric]
-                        dataset_res[self.logger.dataset]["best_ind"] = i + 1
+                    if results['test'][self.target_metric] > dataset_res[dataset_name]["best_score"]:
+                        dataset_res[dataset_name]["best_score"] = results['test'][self.target_metric]
+                        dataset_res[dataset_name]["best_ind"] = i + 1
 
                 else:
-                    if results['valid'][self.target_metric] > dataset_res[self.logger.dataset]["best_score"]:
-                        dataset_res[self.logger.dataset]["best_score"] = results['valid'][self.target_metric]
-                        dataset_res[self.logger.dataset]["best_ind"] = i + 1
+                    if results['valid'][self.target_metric] > dataset_res[dataset_name]["best_score"]:
+                        dataset_res[dataset_name]["best_score"] = results['valid'][self.target_metric]
+                        dataset_res[dataset_name]["best_ind"] = i + 1
 
         return dataset_res
 
@@ -242,14 +258,13 @@ class PipelineManager:
 
         self.logger.log['experiment_info']['number_of_pipes'] = self.gen_len
 
-        ################################################################################################################
-        configs = [deepcopy(x) for x in self.pipeline_generator()]
+        configs = [(deepcopy(x), self.cross_validation, self.k_fold) for x in self.pipeline_generator()]
         workers = Pool(self.max_num_workers)
 
         if self.available_gpu is None:
-            # TODO refactor for function of multiple variables
-            # TODO map and apply -> async
-            pipes_results = tqdm(workers.map(self.train_pipe, configs))
+            pipes_results = workers.imap_unordered(self.train_pipe, configs)
+            workers.close()
+            workers.join()
         else:
             pipes_results = []
 
@@ -257,13 +272,12 @@ class PipelineManager:
                 env = dict(os.environ)
                 j = i - (i//len(self.available_gpu))*len(self.available_gpu)
                 env['CUDA_VISIBLE_DEVICES'] = str(self.available_gpu[j])
-                pipes_results.append(workers.apply(self.train_pipe, (pipe_conf, )))
-            # workers.close()
-            # workers.join()
+                pipes_results.append(workers.apply(self.train_pipe, configs))
+            workers.close()
+            workers.join()
 
-        # TODO fix 'datapath' error
         dataset_res = self.update_logger(pipes_results)
-        ################################################################################################################
+
         # save log
         self.logger.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)
         self.logger.save()
