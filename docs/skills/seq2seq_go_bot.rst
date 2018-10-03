@@ -112,9 +112,9 @@ Dialog with ``dialog_id="0b144470-faa8-4e71-98c7-a9b645fffab0"`` had entry:
 Configs
 -------
 
-Config :config:`configs/seq2seq_go_bot/bot_kvret_infer.json <seq2seq_go_bot/bot_kvret_infer.json>` is recommended to be used for inference (interaction) of a pretrained model.
+Config :config:`configs/seq2seq_go_bot/bot_kvret.json <seq2seq_go_bot/bot_kvret.json>` is recommended to be used for inference (interaction) of a pretrained model.
 
-Config :config:`configs/seq2seq_go_bot/bot_kvret.json <seq2seq_go_bot/bot_kvret.json>` is recommended to be used for training a new model.
+Config :config:`configs/seq2seq_go_bot/bot_kvret_train.json <seq2seq_go_bot/bot_kvret_train.json>` is recommended to be used for training a new model.
 
 Usage
 -----
@@ -135,7 +135,7 @@ You can also train your own model by running:
 
 The ``-d`` parameter downloads:
     - data required to train your model (embeddings, etc.);
-    - a pretrained model when you use :config:`configs/seq2seq_go_bot/bot_kvret_infer.json <seq2seq_go_bot/bot_kvret_infer.json>` or :config:`configs/seq2seq_go_bot/bot_kvret.json <seq2seq_go_bot/bot_kvret.json>`.
+    - a pretrained model when you use :config:`configs/seq2seq_go_bot/bot_kvret.json <seq2seq_go_bot/bot_kvret.json>` or :config:`configs/seq2seq_go_bot/bot_kvret_train.json <seq2seq_go_bot/bot_kvret_train.json>`.
 
 After downloading required files you can use the configs in your python code.
 
