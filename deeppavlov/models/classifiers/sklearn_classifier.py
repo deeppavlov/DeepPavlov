@@ -142,6 +142,11 @@ class SklearnClassier(Estimator):
             log.info("Loading model {} from {}".format(model_name, fname))
             with open(fname, "rb") as f:
                 model = pickle.load(f)
+            if kwargs.get("warm_start", None):
+                log.info("Fitting of loaded model can be continued as `warm_start` is set to True")
+            else:
+                log.warning("Fitting of loaded model can not be continued. Model can be fitted from scratch."
+                            "If one needs to continue fitting, please, look at `warm_start` parameter")
         else:
             log.warning("Cannot load model from {}".format(fname))
             model = self.init_from_scratch(model_name=model_name, **kwargs)
