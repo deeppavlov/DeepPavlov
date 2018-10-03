@@ -31,10 +31,10 @@ class Agent(Component, metaclass=ABCMeta):
     only incoming utterances IDs to distinguish them.
 
     Args:
-        skill: List of initiated agent skills instances.
+        skills: List of initiated agent skills instances.
 
     Attributes:
-        skill: List of initiated agent skills instances.
+        skills: List of initiated agent skills instances.
     """
     def __init__(self, skills: List[Skill]):
         self.skills: List[Skill] = skills
@@ -42,15 +42,11 @@ class Agent(Component, metaclass=ABCMeta):
         self.states: dict = defaultdict(lambda: [None] * len(self.skills))
 
     def __call__(self, utterances_batch: list, utterances_ids: list=None) -> list:
-        """Processes batch of utterances and returns corresponding responses batch.
-
-        Each call of Agent processes incoming utterances and returns response
-        for each utterance Batch of dialog IDs can be provided, in other case
-        utterances indexes in incoming batch are used as dialog IDs.
+        """Wraps _call method and updates utterances history.
 
         Args:
-            utterances: Batch of incoming utterances.
-            ids: Batch of dialog IDs corresponding to incoming utterances.
+            utterances_batch: Batch of incoming utterances.
+            utterances_ids: Batch of dialog IDs corresponding to incoming utterances.
 
         Returns:
             responses: A batch of responses corresponding to the
@@ -76,8 +72,8 @@ class Agent(Component, metaclass=ABCMeta):
         utterances indexes in incoming batch are used as dialog IDs.
 
         Args:
-            utterances: Batch of incoming utterances.
-            ids: Batch of dialog IDs corresponding to incoming utterances.
+            utterances_batch: Batch of incoming utterances.
+            utterances_ids: Batch of dialog IDs corresponding to incoming utterances.
 
         Returns:
             responses: A batch of responses corresponding to the
