@@ -61,7 +61,7 @@ class DefaultAgent(Agent):
         self.history: dict = defaultdict(list)
         self.states: dict = defaultdict(lambda: [None] * len(self.skills))
 
-    def __call__(self, utterances_batch: list, utterances_ids: list=None) -> list:
+    def _call(self, utterances_batch: list, utterances_ids: list=None) -> list:
         """Processes batch of utterances and returns corresponding responses batch.
 
         Each call of Agent passes incoming utterances batch through skills filter,
@@ -114,8 +114,5 @@ class DefaultAgent(Agent):
                 responses.append(res)
 
         responses = self.skills_processor(utterances_batch, batch_history, *responses)
-        for history, utterance, response in zip(batch_history, utterances_batch, responses):
-            history.append(utterance)
-            history.append(response)
 
         return responses
