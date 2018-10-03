@@ -1,0 +1,124 @@
+{
+  "dataset_reader": {
+    "name": "basic_classification_reader",
+    "x": "text",
+    "y": "intents",
+    "data_path": "snips"
+  },
+  "dataset_iterator": {
+    "name": "basic_classification_iterator",
+    "seed": 42,
+    "field_to_split": "train",
+    "split_fields": [
+      "train",
+      "valid"
+    ],
+    "split_proportions": [
+      0.9,
+      0.1
+    ]
+  },
+  "chainer": {
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
+    "pipe": [
+      {
+        "id": "classes_vocab",
+        "name": "simple_vocab",
+        "fit_on": [
+          "y"
+        ],
+        "level": "token",
+        "save_path": "vocabs/snips_classes.dict",
+        "load_path": "vocabs/snips_classes.dict",
+        "in": "y",
+        "out": "y_ids"
+      },
+      {
+        "in": "x",
+        "out": "x_tok",
+        "id": "my_tokenizer",
+        "name": "nltk_tokenizer",
+        "tokenizer": "wordpunct_tokenize"
+      },
+      {
+        "in": "x_tok",
+        "out": "x_emb",
+        "id": "my_embedder",
+        "name": "fasttext",
+        "save_path": "embeddings/wiki.en.bin",
+        "load_path": "embeddings/wiki.en.bin",
+        "dim": 100,
+        "mean": true
+      },
+      {
+        "name": "one_hotter",
+        "id": "onehotter",
+        "depth": "#classes_vocab.len",
+        "in": "y_ids",
+        "out": "y_onehot"
+      },
+      {
+        "in": [
+          "x_emb"
+        ],
+        "out": [
+          "y_pred_probas"
+        ],
+        "fit_on": [
+          "x_emb",
+          "y_ids"
+        ],
+        "main": true,
+        "name": "sklearn_classifier",
+        "save_path": "snips/intents_snips_v7.pkl",
+        "load_path": "snips/intents_snips_v7.pkl",
+        "embedding_size": "#my_embedder.dim",
+        "classes": "#classes_vocab.keys()",
+        "model_name": "SVC",
+        "probability": true,
+        "infer_method": "predict_proba",
+        "warm_start": true
+      },
+      {
+        "ref": "classes_vocab",
+        "in": "y_pred_probas",
+        "out": "y_pred_labels"
+      }
+    ],
+    "out": [
+      "y_pred_labels"
+    ]
+  },
+  "train": {
+    "batch_size": 64,
+    "metrics": [
+      "accuracy"
+    ],
+    "show_examples": true,
+    "validate_best": true,
+    "test_best": false
+  },
+  "metadata": {
+    "requirements": [
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/fasttext.txt"
+    ],
+    "labels": {
+      "telegram_utils": "IntentModel",
+      "server_utils": "KerasIntentModel"
+    },
+    "download": [
+      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+      {
+        "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
+        "subdir": "snips"
+      }
+    ]
+  }
+}
