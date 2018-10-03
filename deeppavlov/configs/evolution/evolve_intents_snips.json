@@ -99,12 +99,6 @@
           ],
           "discrete": true
         },
-        "confident_threshold": {
-          "evolve_choice": [
-            0.5,
-            1
-          ]
-        },
         "optimizer": "Adam",
         "lear_rate": {
           "evolve_range": [
