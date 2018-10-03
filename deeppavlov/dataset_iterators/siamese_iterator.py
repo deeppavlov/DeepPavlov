@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from typing import Dict, List, Tuple
-import random
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
@@ -42,22 +41,10 @@ class SiameseIterator(DataLearningIterator):
                  random_batches: bool = False,
                  batches_per_epoch: int = None):
 
+        super().__init__(data, seed=seed, shuffle=shuffle)
+
         self.random_batches = random_batches
         self.batches_per_epoch = batches_per_epoch
-
-        random.seed(seed)
-        self.train = data.get('train', [])
-        self.valid = data.get('valid', [])
-        self.test = data.get('test', [])
-        self.data = {
-            'train': self.train,
-            'valid': self.valid,
-            'test': self.test,
-            'all': self.train + self.test + self.valid
-        }
-
-        super().__init__(self.data, seed=seed, shuffle=shuffle)
-
 
     def gen_batches(self, batch_size: int, data_type: str = "train", shuffle: bool = True)->\
             Tuple[List[List[Tuple[int, int]]], List[int]]:
@@ -84,18 +71,15 @@ class SiameseIterator(DataLearningIterator):
             num_steps = len(data) // batch_size
         if data_type == "train":
             if shuffle:
-                random.shuffle(data)
+                self.random.shuffle(data)
             for i in range(num_steps):
                 if self.random_batches:
-                    context_response_data = random.sample(data, k=batch_size)
+                    context_response_data = self.random.sample(data, k=batch_size)
                 else:
                     context_response_data = data[i * batch_size:(i + 1) * batch_size]
                 yield tuple(zip(*context_response_data))
         if data_type in ["valid", "test"]:
             for i in range(num_steps + 1):
-                if i < num_steps:
-                    context_response_data = data[i * batch_size:(i + 1) * batch_size]
-                else:
-                    if len(data[i * batch_size:len(data)]) > 0:
-                        context_response_data = data[i * batch_size:len(data)]
-                yield tuple(zip(*context_response_data))
+                context_response_data = data[i * batch_size:(i + 1) * batch_size]
+                if context_response_data != []:
+                    yield tuple(zip(*context_response_data))

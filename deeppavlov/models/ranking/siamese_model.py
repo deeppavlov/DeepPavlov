@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 from typing import List, Iterable, Union
+
+import numpy as np
 
 from deeppavlov.core.models.nn_model import NNModel
 
@@ -34,11 +35,7 @@ class SiameseModel(NNModel):
                  *args,
                  **kwargs):
 
-        self.save_path = kwargs.get('save_path', None)
-        self.load_path = kwargs.get('load_path', None)
-        mode = kwargs.get('mode', None)
-
-        super(SiameseModel, self).__init__(save_path=self.save_path, load_path=self.load_path, mode=mode)
+        super().__init__(*args, **kwargs)
 
         self.batch_size = batch_size
         self.num_context_turns = num_context_turns
@@ -57,32 +54,24 @@ class SiameseModel(NNModel):
     def __call__(self, batch: Iterable[List[np.ndarray]]) -> Union[np.ndarray, List[str]]:
         y_pred = []
         buf = []
-        j = 0
-        while True:
-            try:
-                el = next(batch)
-                j += 1
-                context = el[:self.num_context_turns]
-                responses = el[self.num_context_turns:]
-                buf += [context + [el] for el in responses]
-                if len(buf) >= self.batch_size:
-                    for i in range(len(buf) // self.batch_size):
-                        b = self._make_batch(buf[i*self.batch_size:(i+1)*self.batch_size])
-                        yp = self._predict_on_batch(b)
-                        y_pred += list(yp)
-                    lenb = len(buf) % self.batch_size
-                    if lenb != 0:
-                        buf = buf[-lenb:]
-                    else:
-                        buf = []
-            except StopIteration:
-                if j == 1:
-                    return ["Error! It is not intended to use the model in the interact mode."]
-                if len(buf) != 0:
-                    b = self._make_batch(buf)
+        for j, el in enumerate(batch, start=1):
+            context = el[:self.num_context_turns]
+            responses = el[self.num_context_turns:]
+            buf += [context + [el] for el in responses]
+            if len(buf) >= self.batch_size:
+                for i in range(len(buf) // self.batch_size):
+                    b = self._make_batch(buf[i*self.batch_size:(i+1)*self.batch_size])
                     yp = self._predict_on_batch(b)
                     y_pred += list(yp)
-                break
+                lenb = len(buf) % self.batch_size
+                if lenb != 0:
+                    buf = buf[-lenb:]
+                else:
+                    buf = []
+        if len(buf) != 0:
+            b = self._make_batch(buf)
+            yp = self._predict_on_batch(b)
+            y_pred += list(yp)
         y_pred = np.asarray(y_pred)
         if len(responses) > 1:
             y_pred = np.reshape(y_pred, (j, len(responses)))
