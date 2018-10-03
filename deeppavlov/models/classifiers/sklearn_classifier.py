@@ -46,6 +46,7 @@ class SklearnClassier(Estimator):
                  load_path: Union[str, Path] = None,
                  infer_method: str = "predict", **kwargs) -> None:
         super().__init__(save_path=save_path, load_path=load_path, **kwargs)
+        self.model_name = model_name
         self.model = self.load(model_name=model_name, **kwargs)
         self.infer_method = infer_method
         self.epochs_done = 0
@@ -59,16 +60,14 @@ class SklearnClassier(Estimator):
         if len(x) != 0:
             if isinstance(x[0], csr_matrix):
                 x_features = vstack(list(x))
-            elif isinstance(x[0], np.ndarray):
+            elif isinstance(x[0], np.ndarray) or isinstance(x[0], list):
                 x_features = np.vstack(list(x))
-            elif isinstance(x, list) and isinstance(x[0], list):
-                x_features = x
             elif isinstance(x, np.ndarray):
                 x_features = x
             else:
-                ConfigError('Not implemented this type of vectors')
+                raise ConfigError('Not implemented this type of vectors')
         else:
-            ConfigError("Input vectors cannot be empty")
+            raise ConfigError("Input vectors cannot be empty")
 
         given_params = {}
         if kwargs:
@@ -77,8 +76,13 @@ class SklearnClassier(Estimator):
                 if param_name in available_params:
                     given_params[param_name] = kwargs[param_name]
 
-        y_ = np.array(y).reshape(-1, 1)
-        self.model.fit(x_features, y_, **given_params)
+        y_ = np.squeeze(np.array(y))
+        try:
+            log.info("Fitting model {}".format(self.model_name))
+            self.model.fit(x_features, y_, **given_params)
+        except ValueError:
+            raise ConfigError("Incompatible dimensions, check parameters of model. "
+                              "Got X of shape {}, y of shape {}".format(x_features.shape, y_.shape))
         return
 
     def __call__(self, x, **kwargs) -> np.ndarray:
@@ -89,16 +93,14 @@ class SklearnClassier(Estimator):
         if len(x) != 0:
             if isinstance(x[0], csr_matrix):
                 x_features = vstack(list(x))
-            elif isinstance(x[0], np.ndarray):
+            elif isinstance(x[0], np.ndarray) or isinstance(x[0], list):
                 x_features = np.vstack(list(x))
-            elif isinstance(x, list) and isinstance(x[0], list):
-                x_features = x
             elif isinstance(x, np.ndarray):
                 x_features = x
             else:
-                ConfigError('Not implemented this type of vectors')
+                raise ConfigError('Not implemented this type of vectors')
         else:
-            ConfigError("Input vectors cannot be empty")
+            raise ConfigError("Input vectors cannot be empty")
         try:
             predictions = getattr(self.model, self.infer_method)(x_features)
         except NotFittedError:
@@ -107,14 +109,16 @@ class SklearnClassier(Estimator):
             self.model.fit(x_random, y_random)
             predictions = getattr(self.model, self.infer_method)(x_features)
 
+        if len(predictions.shape) == 1:
+            predictions = predictions.reshape(predictions.shape[0], 1)
         return predictions
 
     def init_from_scratch(self, model_name: str, **kwargs) -> Any:
-        log.warning("Initializing model {} from scratch".format(model_name))
+        log.info("Initializing model {} from scratch".format(model_name))
         model_function = globals().get(model_name, None)
 
         if model_function is None:
-            ConfigError("Model with {} model_name was not found".format(model_name))
+            raise ConfigError("Model with {} model_name was not found".format(model_name))
 
         given_params = {}
         if kwargs:
@@ -135,7 +139,7 @@ class SklearnClassier(Estimator):
             fname = str(Path(fname).stem) + ".pkl"
 
         if fname.exists():
-            log.warning("Loading model {} from {}".format(model_name, fname))
+            log.info("Loading model {} from {}".format(model_name, fname))
             with open(fname, "rb") as f:
                 model = pickle.load(f)
         else:
@@ -151,7 +155,7 @@ class SklearnClassier(Estimator):
         if Path(fname).suffix != ".pkl":
             fname = str(Path(fname).stem) + ".pkl"
 
-        log.warning("Saving model to {}".format(fname))
+        log.info("Saving model to {}".format(fname))
         with open(fname, "wb") as f:
             pickle.dump(self.model, f)
         return
