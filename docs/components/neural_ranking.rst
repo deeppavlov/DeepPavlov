@@ -45,7 +45,7 @@ the following command:
 
     python -m deeppavlov interact deeppavlov/configs/ranking/paraphrase_ident_qqp_interact.json
 
-Now a user can enter a two sentences and the model will make a prediction whether these sentences are paraphrases or not.
+Now a user can enter two sentences and the model will make a prediction whether these sentences are paraphrases or not.
 
 ::
 
@@ -59,7 +59,7 @@ To train the model on the `Quora Question Pairs`_ dataset one should run the com
     python -m deeppavlov interact deeppavlov/configs/ranking/paraphrase_ident_qqp.json
 
 As an example of configuration file see
-:config:`ranking_insurance.json <ranking/paraphrase_ident_qqp.json>`.
+:config:`paraphrase_ident_qqp.json <ranking/paraphrase_ident_qqp.json>`.
 
 References
 ==========
