@@ -52,7 +52,7 @@
         "name": "fasttext",
         "save_path": "embeddings/wiki.en.bin",
         "load_path": "embeddings/wiki.en.bin",
-        "dim": 100,
+        "dim": 300,
         "mean": true
       },
       {

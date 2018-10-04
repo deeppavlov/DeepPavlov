@@ -17,9 +17,8 @@ import numpy as np
 import pickle
 from pathlib import Path
 from scipy.sparse import issparse
-from scipy.sparse import vstack
+from scipy.sparse import vstack, hstack
 import inspect
-from scipy.sparse import csr_matrix
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register, cls_from_str
@@ -49,9 +48,9 @@ class SklearnComponent(Estimator):
         self.batches_seen = 0
         self.train_examples_seen = 0
 
-    def fit(self, x, y, **kwargs) -> None:
-        x_features = self.compose_input_data(x)
-        y_ = np.squeeze(np.array(y))
+    def fit(self, *args, **kwargs) -> None:
+        x_features = self.compose_input_data(args[:-1])
+        y_ = np.squeeze(np.array(args[-1]))
 
         try:
             log.info("Fitting model {}".format(self.model_name))
@@ -61,8 +60,8 @@ class SklearnComponent(Estimator):
                               "Got X of shape {}, y of shape {}".format(x_features.shape, y_.shape))
         return
 
-    def __call__(self, x, **kwargs) -> np.ndarray:
-        predictions = self.infer_on_batch(x)
+    def __call__(self, *args, **kwargs) -> np.ndarray:
+        predictions = self.infer_on_batch(args)
         return predictions
 
     def infer_on_batch(self, x):
@@ -132,20 +131,30 @@ class SklearnComponent(Estimator):
         return
 
     def compose_input_data(self, x):
-        if isinstance(self.pipe_params["in"], list) and len(self.pipe_params["in"]) > 1:
-            x = np.hstack(list(x))
-        if ((isinstance(x, tuple) or isinstance(x, list) or isinstance(x, np.ndarray) and len(x))
-                or (issparse(x) and x.shape[0])):
-            if issparse(x[0]):
-                x_features = vstack(list(x))
-            elif isinstance(x[0], np.ndarray) or isinstance(x[0], list):
-                x_features = np.vstack(list(x))
-            elif isinstance(x[0], str):
-                x_features = np.array(x)
+        x_features = []
+        for i in range(len(x)):
+            if ((isinstance(x[i], tuple) or isinstance(x[i], list) or isinstance(x[i], np.ndarray) and len(x[i]))
+                    or (issparse(x[i]) and x[i].shape[0])):
+                if issparse(x[i][0]):
+                    x_features.append(vstack(list(x[i])))
+                elif isinstance(x[i][0], np.ndarray) or isinstance(x[i][0], list):
+                    x_features.append(np.vstack(list(x[i])))
+                elif isinstance(x[i][0], str):
+                    x_features.append(np.array(x[i]))
+                else:
+                    raise ConfigError('Not implemented this type of vectors')
             else:
-                raise ConfigError('Not implemented this type of vectors')
+                raise ConfigError("Input vectors cannot be empty")
+
+        sparse = False
+        for inp in x_features:
+            if issparse(inp):
+                sparse = True
+        if sparse:
+            x_features = hstack(list(x_features))
         else:
-            raise ConfigError("Input vectors cannot be empty")
+            x_features = np.hstack(list(x_features))
+
         return x_features
 
     def reset(self) -> None:
