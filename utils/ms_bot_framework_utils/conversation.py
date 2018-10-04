@@ -79,7 +79,7 @@ class Conversation:
     def _handle_usupported(self, in_activity: dict):
         activity_type = in_activity['type']
         self.out_gateway.send_plain_text(f'Unsupported kind of {activity_type} activity!')
-        log.warn(f'Recived message with unsupported type: {str(in_activity)}')
+        log.warn(f'Received message with unsupported type: {str(in_activity)}')
 
     def _handle_message(self, in_activity: dict):
         if 'text' in in_activity.keys():
@@ -147,5 +147,10 @@ class OutGateway:
             json=out_activity,
             headers=headers)
 
+        try:
+            response_json_str = str(response.json())
+        except Exception:
+            response_json_str = ''
+
         log.debug(f'Sent activity to the MSBotFramework server. '
-                  f'Response code: {response.status_code}, response contents: {response.json()}')
+                  f'Response code: {response.status_code}, response contents: {response_json_str}')
