@@ -161,7 +161,7 @@ class SklearnComponent(Estimator):
 
         return x_features
 
-    def reset(self) -> None:
+    def destroy(self) -> None:
         del self.model
 
     def process_event(self, event_name: str, data: dict):
