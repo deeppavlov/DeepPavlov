@@ -24,5 +24,8 @@
   "rank_response": "deeppavlov.models.ranking.metrics:rank_response",
   "sets_accuracy": "deeppavlov.metrics.accuracy:sets_accuracy",
   "slots_accuracy": "deeppavlov.metrics.accuracy:slots_accuracy",
-  "squad_f1": "deeppavlov.metrics.squad_metrics:squad_f1"
+  "squad_f1": "deeppavlov.metrics.squad_metrics:squad_f1",
+  "s_acc": "deeppavlov.models.ranking.metrics:siamese_acc",
+  "s_f1": "deeppavlov.models.ranking.metrics:siamese_f1",
+  "s_log_loss": "deeppavlov.models.ranking.metrics:siamese_log_loss"
 }
