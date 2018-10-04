@@ -134,7 +134,8 @@ class SklearnComponent(Estimator):
             pickle.dump(self.model, f)
         return
 
-    def compose_input_data(self, x):
+    @staticmethod
+    def compose_input_data(x):
         x_features = []
         for i in range(len(x)):
             if ((isinstance(x[i], tuple) or isinstance(x[i], list) or isinstance(x[i], np.ndarray) and len(x[i]))
