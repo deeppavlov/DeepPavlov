@@ -30,8 +30,8 @@ class Skill(Component, metaclass=ABCMeta):
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence
-            levels and up to date states corresponding to incoming utterance
-            batch.
+        levels and up to date states corresponding to incoming utterance
+        batch.
 
         Args:
             utterances_batch: A batch of utterances of any type.
