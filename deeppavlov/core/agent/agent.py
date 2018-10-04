@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from abc import ABCMeta, abstractmethod
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from collections import defaultdict
 
 from deeppavlov.core.models.component import Component
@@ -35,29 +35,25 @@ class Agent(Component, metaclass=ABCMeta):
 
     Attributes:
         skills: List of initiated agent skills instances.
+        history: Histories for each each dialog with agent indexed
+            by dialog ID. Each history is represented by list of incoming
+            and outcoming replicas of the dialog and updated automatically.
+        states: States for each skill with agent indexed by dialog ID. Each
+            state updated automatically after each wrapped skill inference.
+            So we highly recommend use this attribute only for reading and
+            not to use it for your custom skills management.
+        wrapped_skills: Skills wrapped to SkillWrapper objects. SkillWrapper
+            object gives to Skill __call__ signature of Agent __call__ and
+            handles automatic state management for skill. All skills are
+            wrapped to SkillsWrapper automatically during agent initialisation.
+            We highly recommend to use wrapped skills for skills inference.
     """
     def __init__(self, skills: List[Skill]):
         self.skills: List[Skill] = skills
-        self.history: dict = defaultdict(list)
-        self.states: dict = defaultdict(lambda: [None] * len(self.skills))
-
-        def wrap_skill(skill_id: int, skill: Skill):
-            def callable_template(utterances_batch: list, utterances_ids: list=None):
-                history_batch = [self.skills[utt_id] for utt_id in utterances_ids]
-                states_batch = [self.states[utt_id][skill_id] for utt_id in utterances_ids]
-
-                predicted, confidence, *states = skill(utterances_batch, history_batch, states_batch)
-
-                states = states[0] if states else [None] * len(predicted)
-                for utt_id, state in zip(utterances_ids, states):
-                    self.states[utt_id][skill_id] = state
-
-                return predicted, confidence, states
-
-            return callable_template
-
-        for skill_id, skill in enumerate(self.skills):
-            self.skills[skill_id] = wrap_skill(skill_id, skill)
+        self.history: Dict = defaultdict(list)
+        self.states: Dict = defaultdict(lambda: [None] * len(self.skills))
+        self.wrapped_skills: List[SkillWrapper] = \
+            [SkillWrapper(skill, skill_id, self) for skill_id, skill in enumerate(self.skills)]
 
     def __call__(self, utterances_batch: list, utterances_ids: list=None) -> list:
         """Wraps _call method and updates utterances history.
@@ -97,3 +93,53 @@ class Agent(Component, metaclass=ABCMeta):
             responses: A batch of responses corresponding to the
                 utterance batch received by agent.
         """
+
+
+class SkillWrapper:
+    """Skill instances wrapper for internal use in Agent.
+
+    SkillWrapper gives to skill interface of Agent and handles automatic state
+    management for skill.
+
+    Args:
+        skill: Wrapped skill.
+        skill_id: Skill index in Agent.skills list.
+        agent: Agent instance.
+
+    Attributes:
+        skill: Wrapped skill.
+        skill_id: Skill index in Agent.skills list.
+        agent: Agent instance.
+    """
+    def __init__(self, skill: Skill, skill_id: int, agent: Agent):
+        self.skill = skill
+        self.skill_id = skill_id
+        self.agent = agent
+
+    def __call__(self, utterances_batch: list, utterances_ids: list=None) -> Tuple[list, list, list]:
+        """Wraps __call__ method of Skill instance.
+
+            Provides skill __call__ with signature of Agent __call__ and handles
+            automatic state management for skill.
+
+        Args:
+            utterances_batch: Batch of incoming utterances.
+            utterances_ids: Batch of dialog IDs corresponding to incoming utterances.
+
+        Returns:
+            response: A batch of arbitrary typed skill inference results.
+            confidence: A batch of float typed confidence levels for each of
+                skill inference result.
+            states: Optional. A batch of arbitrary typed states for each
+                response.
+        """
+        history_batch = [self.agent.skills[utt_id] for utt_id in utterances_ids]
+        states_batch = [self.agent.states[utt_id][self.skill_id] for utt_id in utterances_ids]
+
+        predicted, confidence, *states = self.skill(utterances_batch, history_batch, states_batch)
+
+        states = states[0] if states else [None] * len(predicted)
+        for utt_id, state in zip(utterances_ids, states):
+            self.agent.states[utt_id][self.skill_id] = state
+
+        return predicted, confidence, states

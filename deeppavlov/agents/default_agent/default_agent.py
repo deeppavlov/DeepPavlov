@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import defaultdict
 from typing import List
 
 from deeppavlov.core.agent.agent import Agent
@@ -48,18 +47,12 @@ class DefaultAgent(Agent):
         skills: List of initiated agent skills instances.
         skills_processor: Initiated agent processor.
         skills_filter: Initiated agent filter.
-        history: Histories for each each dialog with agent indexed
-            by dialog ID. Each history is represented by list of incoming
-            and outcoming replicas of the dialog.
-        states: States for each each dialog with agent indexed by dialog ID.
     """
     def __init__(self, skills: List[Skill], skills_processor: Processor=None,
                  skills_filter: Filter=None, *args, **kwargs):
         super(DefaultAgent, self).__init__(skills=skills)
         self.skills_filter: Filter = skills_filter or TransparentFilter(len(skills))
         self.skills_processor: Processor = skills_processor or HighestConfidenceSelector()
-        self.history: dict = defaultdict(list)
-        self.states: dict = defaultdict(lambda: [None] * len(self.skills))
 
     def _call(self, utterances_batch: list, utterances_ids: list=None) -> list:
         """Processes batch of utterances and returns corresponding responses batch.
@@ -81,24 +74,16 @@ class DefaultAgent(Agent):
         batch_history = [self.history[utt_id] for utt_id in ids]
         responses = []
 
-        # Filter utterances to be processed with each skills
         filtered = self.skills_filter(utterances_batch, batch_history)
 
-        for skill_i, (filtered_utterances, skill) in enumerate(zip(filtered, self.skills)):
-            # get batch of indexes for utterances to which skill_i will be applied
+        for skill_i, (filtered_utterances, skill) in enumerate(zip(filtered, self.wrapped_skills)):
             skill_i_utt_indexes = [utt_index for utt_index, utt_filter in enumerate(filtered_utterances) if utt_filter]
 
             if skill_i_utt_indexes:
-                # make batch of utterances to which skill will be applied
                 skill_i_utt_batch = [utterances_batch[i] for i in skill_i_utt_indexes]
-
-                # make blank response vector for all utterances in incoming batch (including not processed by skill)
                 res = [(None, 0.)] * batch_size
-
-                # infer skill with utterances/histories/states batches
                 predicted, confidence, *state = skill(skill_i_utt_batch, skill_i_utt_indexes)
 
-                # populate elements of response vector which correspond processes utterances
                 for i, predicted, confidence in zip(skill_i_utt_indexes, predicted, confidence):
                     res[i] = (predicted, confidence)
 
