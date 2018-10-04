@@ -119,7 +119,7 @@ class SimpleVocabulary(Estimator):
         return list(range(self.len))
 
     def items(self):
-        return self.freqs.most_common()
+        return zip(self.keys(), self.values())
 
     def __getitem__(self, key):
         if isinstance(key, (int, np.integer)):

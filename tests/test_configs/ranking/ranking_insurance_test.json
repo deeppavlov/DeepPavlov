@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "insurance_reader",
-    "num_samples": null,
+    "num_samples": 1024,
     "data_path": "./insurance_data"
   },
   "dataset_iterator": {
@@ -18,7 +18,7 @@
         "id": "preproc",
         "name": "siamese_preprocessor",
         "use_matrix": false,
-        "num_ranking_samples": 500,
+        "num_ranking_samples": 2,
         "max_sequence_length": 200,
         "fit_on": ["x"],
         "in": ["x"],
@@ -45,8 +45,8 @@
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "embeddings/wiki.en.bin",
-          "save_path": "embeddings/wiki.en.bin",
+          "load_path": "embeddings/ft_dummy_300.bin",
+          "save_path": "embeddings/ft_dummy_300.bin",
           "dim": 300
         }
       },
@@ -105,11 +105,11 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/datasets/insuranceQA-master.zip",
+        "url": "http://lnsigo.mipt.ru/export/datasets/insuranceQA-master.zip",
         "subdir": "insurance_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/ft_dummy_300.bin",
         "subdir": "embeddings"
       }
     ]

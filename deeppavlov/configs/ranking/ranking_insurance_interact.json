@@ -57,9 +57,7 @@
         "vocab": "#siam_vocab"
       },
       {
-        "in": ["x_proc"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
+        "id": "model",
         "name": "bilstm_nn",
         "len_vocab": "#siam_vocab.len",
         "use_matrix": "#preproc.use_matrix",
@@ -80,6 +78,17 @@
         "load_path": "insurance_model/model_weights.h5",
         "preprocess": "#preproc.__call__",
         "interact_pred_num": 3
+      },
+      {
+        "in": ["x_proc"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "name": "siamese_predictor",
+        "model": "#model",
+        "batch_size": "#model.batch_size",
+        "interact_pred_num": 3,
+        "responses": "#siam_sent_vocab",
+        "preproc_func": "#preproc.__call__"
       }
     ],
     "out": ["y_predicted"]
@@ -104,6 +113,7 @@
       "server_utils": "Ranker"
     },
     "download": [
+      "http://files.deeppavlov.ai/deeppavlov_data/insurance_ranking.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/datasets/insuranceQA-master.zip",
         "subdir": "insurance_data"

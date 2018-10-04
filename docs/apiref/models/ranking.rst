@@ -3,20 +3,14 @@ deeppavlov.models.ranking
 
 Ranking classes.
 
-.. automodule:: deeppavlov.models.ranking.ranking_model
+.. automodule:: deeppavlov.models.ranking.keras_siamese_model
 
-.. autoclass:: deeppavlov.models.ranking.ranking_model.RankingModel
+.. autoclass:: deeppavlov.models.ranking.siamese_model.SiameseModel
 
-   .. automethod:: load
+.. autoclass:: deeppavlov.models.ranking.keras_siamese_model.KerasSiameseModel
 
-   .. automethod:: save
+.. autoclass:: deeppavlov.models.ranking.siamese_predictor.SiamesePredictor
 
-   .. automethod:: train_on_batch
+.. autoclass:: deeppavlov.models.ranking.bilstm_siamese_network.BiLSTMSiameseNetwork
 
-   .. automethod:: __call__
-
-.. autoclass:: deeppavlov.models.ranking.ranking_network.RankingNetwork
-
-.. autoclass:: deeppavlov.models.ranking.ranking_dict.RankingDict
-
-.. autoclass:: deeppavlov.models.ranking.emb_dict.EmbDict
+.. autoclass:: deeppavlov.models.ranking.bilstm_gru_siamese_network.BiLSTMGRUSiameseNetwork

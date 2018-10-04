@@ -1,13 +1,11 @@
 {
   "dataset_reader": {
-    "name": "insurance_reader",
-    "num_samples": null,
-    "data_path": "./insurance_data"
+    "name": "ubuntu_v2_reader",
+    "num_samples": 1024,
+    "data_path": "./ubuntu_v2_data"
   },
   "dataset_iterator": {
     "name": "siamese_iterator",
-    "random_batches": true,
-    "batches_per_epoch": 72,
     "seed": 243
   },
   "chainer": {
@@ -17,9 +15,9 @@
       {
         "id": "preproc",
         "name": "siamese_preprocessor",
-        "use_matrix": false,
-        "num_ranking_samples": 500,
-        "max_sequence_length": 200,
+        "use_matrix": true,
+        "num_ranking_samples": 2,
+        "max_sequence_length": 50,
         "fit_on": ["x"],
         "in": ["x"],
         "out": ["x_proc"],
@@ -27,8 +25,8 @@
         {
           "id": "siam_sent_vocab",
           "name":"simple_vocab",
-          "save_path": "insurance_vocabs/sent.dict",
-          "load_path": "insurance_vocabs/sent.dict"
+          "save_path": "ubuntu_v2_vocabs/sent.dict",
+          "load_path": "ubuntu_v2_vocabs/sent.dict"
         },
         "tokenizer":
         {
@@ -38,15 +36,15 @@
         {
           "id": "siam_vocab",
           "name":"simple_vocab",
-          "save_path": "insurance_vocabs/tok.dict",
-          "load_path": "insurance_vocabs/ctok.dict"
+          "save_path": "ubuntu_v2_vocabs/tok.dict",
+          "load_path": "ubuntu_v2_vocabs/tok.dict"
         },
         "embedder":
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "embeddings/wiki.en.bin",
-          "save_path": "embeddings/wiki.en.bin",
+          "load_path": "embeddings/ft_dummy_300.bin",
+          "save_path": "embeddings/ft_dummy_300.bin",
           "dim": 300
         }
       },
@@ -64,22 +62,16 @@
         "len_vocab": "#siam_vocab.len",
         "use_matrix": "#preproc.use_matrix",
         "max_sequence_length": "#preproc.max_sequence_length",
-        "emb_matrix": "#embeddings.emb_mat",
         "embedding_dim": "#siam_embedder.dim",
         "seed": 243,
-        "reccurent": "bilstm",
-        "max_pooling": true,
-        "shared_weights": true,
         "hidden_dim": 300,
+        "emb_matrix": "#embeddings.emb_mat",
         "learning_rate": 1e-3,
-        "triplet_loss": true,
-        "hard_triplets": false,
-        "margin": 0.1,
+        "triplet_loss": false,
         "batch_size": 256,
-        "save_path": "insurance_model/model_weights.h5",
-        "load_path": "insurance_model/model_weights.h5",
-        "preprocess": "#preproc.__call__",
-        "interact_pred_num": 3
+        "interact_pred_num": 3,
+        "save_path": "ubuntu_v2_model/model_weights.h5",
+        "load_path": "ubuntu_v2_model/model_weights.h5"
       }
     ],
     "out": ["y_predicted"]
@@ -89,10 +81,10 @@
     "batch_size": 256,
     "pytest_max_batches": 2,
     "train_metrics": [],
-    "metrics": ["r@1_insQA", "rank_response"],
-    "validation_patience": 5,
-    "val_every_n_epochs": 5,
-    "log_every_n_batches": 24
+    "metrics": ["r@1", "rank_response"],
+    "validation_patience": 10,
+    "val_every_n_epochs": 1,
+    "log_every_n_batches": 1000
   },
   "metadata": {
     "requirements": [
@@ -105,11 +97,11 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/datasets/insuranceQA-master.zip",
-        "subdir": "insurance_data"
+        "url": "http://files.deeppavlov.ai/datasets/ubuntu_v2_data.tar.gz",
+        "subdir": "ubuntu_v2_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/ft_dummy_300.bin",
         "subdir": "embeddings"
       }
     ]
