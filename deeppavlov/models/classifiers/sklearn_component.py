@@ -38,6 +38,7 @@ class SklearnComponent(Estimator):
         super().__init__(save_path=save_path, load_path=load_path, **kwargs)
         self.model_name = model_name
         self.model_params = kwargs
+        self.model = None
         self.pipe_params = {}
         for required in ["in", "out", "fit_on", "main", "name"]:
             self.pipe_params[required] = self.model_params.pop(required, None)
@@ -84,7 +85,10 @@ class SklearnComponent(Estimator):
             available_params = self.get_function_params(model_function)
             for param_name in self.model_params.keys():
                 if param_name in available_params:
-                    given_params[param_name] = self.model_params[param_name]
+                    try:
+                        given_params[param_name] = cls_from_str(self.model_params[param_name])
+                    except:
+                        given_params[param_name] = self.model_params[param_name]
 
         self.model = model_function(**given_params)
         return
