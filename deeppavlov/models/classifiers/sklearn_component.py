@@ -19,32 +19,22 @@ from pathlib import Path
 from scipy.sparse import vstack
 import inspect
 from scipy.sparse import csr_matrix
-from sklearn.linear_model import *
-from sklearn.svm import *
-from sklearn.ensemble import *
-from sklearn.multiclass import *
-from sklearn.multioutput import *
-from sklearn.naive_bayes import *
-from sklearn.neighbors import *
-from sklearn.neural_network import *
-from sklearn.tree import *
-from sklearn.semi_supervised import *
-from sklearn.exceptions import NotFittedError
 
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.registry import register
+from deeppavlov.core.common.registry import register, cls_from_str
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.estimator import Estimator
 
 log = get_logger(__name__)
 
 
-@register("sklearn_classifier")
-class SklearnClassier(Estimator):
-    def __init__(self, model_name: str, classes: Union[list, np.ndarray, Generator],
+@register("sklearn_component")
+class SklearnComponent(Estimator):
+    def __init__(self, model_name: str,
                  save_path: Union[str, Path] = None,
                  load_path: Union[str, Path] = None,
                  infer_method: str = "predict", **kwargs) -> None:
+
         super().__init__(save_path=save_path, load_path=load_path, **kwargs)
         self.model_name = model_name
         self.model = self.load(model_name=model_name, **kwargs)
@@ -52,8 +42,6 @@ class SklearnClassier(Estimator):
         self.epochs_done = 0
         self.batches_seen = 0
         self.train_examples_seen = 0
-        self.classes = list(np.sort(np.array(list(classes))))
-        self.n_classes = len(self.classes)
 
     def fit(self, x: Union[List[List[float]], np.ndarray, List[np.ndarray], Tuple[np.ndarray]],
             y: Union[np.ndarray, List[list]], *args, **kwargs) -> None:
@@ -101,24 +89,19 @@ class SklearnClassier(Estimator):
                 raise ConfigError('Not implemented this type of vectors')
         else:
             raise ConfigError("Input vectors cannot be empty")
-        try:
-            predictions = getattr(self.model, self.infer_method)(x_features)
-        except NotFittedError:
-            x_random = np.random.random(size=(100, len(x[0])))
-            y_random = np.zeros((100, self.n_classes))
-            self.model.fit(x_random, y_random)
-            predictions = getattr(self.model, self.infer_method)(x_features)
+
+        predictions = getattr(self.model, self.infer_method)(x_features)
 
         if len(predictions.shape) == 1:
-            predictions = predictions.reshape(predictions.shape[0], 1)
+            predictions = predictions.reshape(-1, 1)
         return predictions
 
     def init_from_scratch(self, model_name: str, **kwargs) -> Any:
         log.info("Initializing model {} from scratch".format(model_name))
-        model_function = globals().get(model_name, None)
+        model_function = cls_from_str(model_name)
 
         if model_function is None:
-            raise ConfigError("Model with {} model_name was not found".format(model_name))
+            raise ConfigError("Model with {} model_name was not found. Please, add import in code".format(model_name))
 
         given_params = {}
         if kwargs:
@@ -130,8 +113,7 @@ class SklearnClassier(Estimator):
         model = model_function(**given_params)
         return model
 
-    def load(self, fname: str = None,
-             model_name: str = None, **kwargs) -> Any:
+    def load(self, fname: str = None, model_name: str = None, **kwargs) -> Any:
         if fname is None:
             fname = self.load_path
 
@@ -143,7 +125,7 @@ class SklearnClassier(Estimator):
             with open(fname, "rb") as f:
                 model = pickle.load(f)
             if kwargs.get("warm_start", None):
-                log.info("Fitting of loaded model can be continued as `warm_start` is set to True")
+                log.info("Fitting of loaded model can be continued because `warm_start` is set to True")
             else:
                 log.warning("Fitting of loaded model can not be continued. Model can be fitted from scratch."
                             "If one needs to continue fitting, please, look at `warm_start` parameter")

@@ -77,9 +77,7 @@
         "name": "sklearn_classifier",
         "save_path": "snips/intents_snips_v6.pkl",
         "load_path": "snips/intents_snips_v6.pkl",
-        "embedding_size": "#my_embedder.dim",
-        "classes": "#classes_vocab.keys()",
-        "model_name": "SVC",
+        "model_name": "sklearn.svm:SVC",
         "infer_method": "predict",
         "warm_start": false
       },
