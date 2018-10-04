@@ -17,6 +17,7 @@ from typing import List, Tuple
 
 import argparse
 from deeppavlov.core.agent.agent import Agent
+from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.skill.skill import Skill
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.agent.rich_content import RichMessage
@@ -28,6 +29,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-i", "--ms-id", help="microsoft bot framework app id", type=str)
 parser.add_argument("-s", "--ms-secret", help="microsoft bot framework app secret", type=str)
 
+log = get_logger(__name__)
 
 class EcommerceAgent(Agent):
     """DeepPavlov Ecommerce agent.
@@ -66,14 +68,14 @@ class EcommerceAgent(Agent):
 
         for utt, id_ in zip(utterances_batch, utterances_ids):
 
-            print("utt", utt)
+            log.debug(f'Utterance: {utt}')
 
             if id_ not in self.states:
                 self.states[id_] = {"start": 0, "stop": 5}
 
             if utt[0] == "@":
                 parts = utt.split(":")
-                print("actions", parts)
+                log.debug(f'Actions: {parts}')
 
                 if parts[0] == "@details":
                     return show_details(self.history[id_][int(parts[1])][0][int(parts[2])])
@@ -88,7 +90,6 @@ class EcommerceAgent(Agent):
 
                 if parts[0] == "@next":
                     state = self.history[id_][int(parts[1])]
-                    print(state)
                     state['start'] = state['stop']
                     state['stop'] = state['stop']+5
                     utt = state['query']
@@ -96,17 +97,12 @@ class EcommerceAgent(Agent):
 
                 if parts[0] == "@previous":
                     state = self.history[id_][int(parts[1])]
-                    print(state)
                     state['stop'] = state['start']
                     state['start'] = state['start']-5
                     utt = state['query']
                     self.states[id_] = state
             else:
-                self.states[id_]["start"] = 0
-                self.states[id_]["stop"] = 5
-
-            print('states', self.states[id_])
-            print('history', self.history[id_])
+                self.states[id_] = {"start": 0, "stop": 5}
 
             responses, confidences, state = self.skills[0]([utt], self.history[id_], [self.states[id_]])
 
@@ -118,6 +114,8 @@ class EcommerceAgent(Agent):
             items, entropy, total = responses
 
             self.history[id_].append(responses)
+            self.history[id_].append(self.states[id_])
+
             for idx, item in enumerate(items):
 
                 title = item['Title']
@@ -126,23 +124,17 @@ class EcommerceAgent(Agent):
 
                 rich_message.add_control(PlainText(title))
 
-                button_a = Button('Show details', "@details:"+str(len(self.history[id_])-1)+":"+str(idx))
                 buttons_frame = ButtonsFrame(text="")
-                buttons_frame.add_button(button_a)
+                buttons_frame.add_button(Button('Show details', "@details:"+str(len(self.history[id_])-2)+":"+str(idx)))
                 rich_message.add_control(buttons_frame)
 
-
-            if self.states[id_]["start"] > 0:
-                button_a = Button('Previous', "@previous:"+str(len(self.history[id_])-1))
-                buttons_frame.add_button(button_a)
-
-            button_b = Button('Next', "@next:"+str(len(self.history[id_])-1))
-            buttons_frame.add_button(button_b)
-
             buttons_frame = ButtonsFrame(text="")
+            if self.states[id_]["start"] > 0:
+                buttons_frame.add_button(Button('Previous', "@previous:"+str(len(self.history[id_])-1)))
+
+            buttons_frame.add_button(Button('Next', "@next:"+str(len(self.history[id_])-1)))
             rich_message.add_control(buttons_frame)
 
-            self.history[id_].append(self.states[id_])
             if entropy:
                 buttons_frame = ButtonsFrame(text="Please specify a "+entropy[0][1])
                 for ent_value in entropy[0][2][:3]:
