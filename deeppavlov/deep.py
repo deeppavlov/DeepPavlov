@@ -51,6 +51,10 @@ parser.add_argument("-s", "--ms-secret", help="microsoft bot framework app secre
 parser.add_argument("--multi-instance", action="store_true", help="allow rising of several instances of the model")
 parser.add_argument("--stateful", action="store_true", help="interact with a stateful model")
 
+parser.add_argument("--https", action="store_true", help="run model in https mode")
+parser.add_argument("--ssl-key", help="ssl key", type=str)
+parser.add_argument("--ssl-cert", help="ssl certificate", type=str)
+
 parser.add_argument("--api-mode", help="rest api mode: 'basic' with batches or 'alice' for  Yandex.Dialogs format",
                     type=str, default='basic', choices={'basic', 'alice'})
 
@@ -105,7 +109,10 @@ def main():
                                     stateful=stateful)
     elif args.mode == 'riseapi':
         alice = args.api_mode == 'alice'
-        start_model_server(pipeline_config_path, alice)
+        https = args.https
+        ssl_key = args.ssl_key
+        ssl_cert = args.ssl_cert
+        start_model_server(pipeline_config_path, alice, https, ssl_key, ssl_cert)
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'install':
