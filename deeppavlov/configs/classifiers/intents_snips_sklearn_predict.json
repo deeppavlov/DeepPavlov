@@ -39,21 +39,27 @@
         "out": "y_ids"
       },
       {
-        "in": "x",
-        "out": "x_tok",
-        "id": "my_tokenizer",
-        "name": "nltk_tokenizer",
-        "tokenizer": "wordpunct_tokenize"
-      },
-      {
-        "in": "x_tok",
-        "out": "x_emb",
-        "id": "my_embedder",
-        "name": "fasttext",
-        "save_path": "embeddings/wiki.en.bin",
-        "load_path": "embeddings/wiki.en.bin",
-        "dim": 100,
-        "mean": true
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_vec"
+        ],
+        "fit_on": [
+          "x",
+          "y_ids"
+        ],
+        "main": true,
+        "name": "sklearn_component",
+        "save_path": "snips/intents_snips_tfidf_v6.pkl",
+        "load_path": "snips/intents_snips_tfidf_v6.pkl",
+        "model_name": "sklearn.feature_extraction.text:TfidfVectorizer",
+        "infer_method": "transform",
+        "lowercase": true,
+        "analyzer": "char",
+        "ngram_range": [1, 5],
+        "max_features": 10000,
+        "norm": null
       },
       {
         "name": "one_hotter",
@@ -64,13 +70,13 @@
       },
       {
         "in": [
-          "x_emb"
+          "x_vec"
         ],
         "out": [
           "y_pred_ids"
         ],
         "fit_on": [
-          "x_emb",
+          "x_vec",
           "y_ids"
         ],
         "main": true,
@@ -96,7 +102,7 @@
     "metrics": [
       "accuracy"
     ],
-    "show_examples": true,
+    "show_examples": false,
     "validate_best": true,
     "test_best": false
   },

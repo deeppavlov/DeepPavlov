@@ -16,6 +16,7 @@ from typing import List, Tuple, Any, Union, Generator
 import numpy as np
 import pickle
 from pathlib import Path
+from scipy.sparse import issparse
 from scipy.sparse import vstack
 import inspect
 from scipy.sparse import csr_matrix
@@ -37,83 +38,59 @@ class SklearnComponent(Estimator):
 
         super().__init__(save_path=save_path, load_path=load_path, **kwargs)
         self.model_name = model_name
-        self.model = self.load(model_name=model_name, **kwargs)
+        self.model_params = kwargs
+        self.pipe_params = {}
+        for required in ["in", "out", "fit_on", "main", "name"]:
+            self.pipe_params[required] = self.model_params.pop(required, None)
+
+        self.load()
         self.infer_method = infer_method
         self.epochs_done = 0
         self.batches_seen = 0
         self.train_examples_seen = 0
 
-    def fit(self, x: Union[List[List[float]], np.ndarray, List[np.ndarray], Tuple[np.ndarray]],
-            y: Union[np.ndarray, List[list]], *args, **kwargs) -> None:
-        if len(x) != 0:
-            if isinstance(x[0], csr_matrix):
-                x_features = vstack(list(x))
-            elif isinstance(x[0], np.ndarray) or isinstance(x[0], list):
-                x_features = np.vstack(list(x))
-            elif isinstance(x, np.ndarray):
-                x_features = x
-            else:
-                raise ConfigError('Not implemented this type of vectors')
-        else:
-            raise ConfigError("Input vectors cannot be empty")
-
-        given_params = {}
-        if kwargs:
-            available_params = self.get_function_params(self.model.fit)
-            for param_name in kwargs.keys():
-                if param_name in available_params:
-                    given_params[param_name] = kwargs[param_name]
-
+    def fit(self, x, y, **kwargs) -> None:
+        x_features = self.compose_input_data(x)
         y_ = np.squeeze(np.array(y))
+
         try:
             log.info("Fitting model {}".format(self.model_name))
-            self.model.fit(x_features, y_, **given_params)
+            self.model.fit(x_features, y_)
         except ValueError:
             raise ConfigError("Incompatible dimensions, check parameters of model. "
                               "Got X of shape {}, y of shape {}".format(x_features.shape, y_.shape))
         return
 
     def __call__(self, x, **kwargs) -> np.ndarray:
-        predictions = self.infer_on_batch(x, **kwargs)
+        predictions = self.infer_on_batch(x)
         return predictions
 
-    def infer_on_batch(self, x, **kwargs):
-        if len(x) != 0:
-            if isinstance(x[0], csr_matrix):
-                x_features = vstack(list(x))
-            elif isinstance(x[0], np.ndarray) or isinstance(x[0], list):
-                x_features = np.vstack(list(x))
-            elif isinstance(x, np.ndarray):
-                x_features = x
-            else:
-                raise ConfigError('Not implemented this type of vectors')
-        else:
-            raise ConfigError("Input vectors cannot be empty")
-
+    def infer_on_batch(self, x):
+        x_features = self.compose_input_data(x)
         predictions = getattr(self.model, self.infer_method)(x_features)
 
         if len(predictions.shape) == 1:
             predictions = predictions.reshape(-1, 1)
         return predictions
 
-    def init_from_scratch(self, model_name: str, **kwargs) -> Any:
-        log.info("Initializing model {} from scratch".format(model_name))
-        model_function = cls_from_str(model_name)
+    def init_from_scratch(self) -> Any:
+        log.info("Initializing model {} from scratch".format(self.model_name))
+        model_function = cls_from_str(self.model_name)
 
         if model_function is None:
-            raise ConfigError("Model with {} model_name was not found. Please, add import in code".format(model_name))
+            raise ConfigError("Model with {} model_name was not found.".format(self.model_name))
 
         given_params = {}
-        if kwargs:
+        if self.model_params:
             available_params = self.get_function_params(model_function)
-            for param_name in kwargs.keys():
+            for param_name in self.model_params.keys():
                 if param_name in available_params:
-                    given_params[param_name] = kwargs[param_name]
+                    given_params[param_name] = self.model_params[param_name]
 
-        model = model_function(**given_params)
-        return model
+        self.model = model_function(**given_params)
+        return
 
-    def load(self, fname: str = None, model_name: str = None, **kwargs) -> Any:
+    def load(self, fname: str = None) -> Any:
         if fname is None:
             fname = self.load_path
 
@@ -121,19 +98,26 @@ class SklearnComponent(Estimator):
             fname = str(Path(fname).stem) + ".pkl"
 
         if fname.exists():
-            log.info("Loading model {} from {}".format(model_name, fname))
+            log.info("Loading model {} from {}".format(self.model_name, fname))
             with open(fname, "rb") as f:
-                model = pickle.load(f)
-            if kwargs.get("warm_start", None):
+                self.model = pickle.load(f)
+
+            warm_start = self.model_params.get("warm_start", None)
+            self.model_params = {param: getattr(self.model, param) for param in self.get_class_attributes(self.model)}
+            self.model_name = self.model.__module__ + self.model.__class__.__name__
+            log.info("Model {} loaded  with parameters: {}".format(self.model_name, self.model_params))
+
+            if warm_start and "warm_start" in self.model_params.keys():
+                self.model_params["warm_start"] = True
                 log.info("Fitting of loaded model can be continued because `warm_start` is set to True")
             else:
                 log.warning("Fitting of loaded model can not be continued. Model can be fitted from scratch."
                             "If one needs to continue fitting, please, look at `warm_start` parameter")
         else:
             log.warning("Cannot load model from {}".format(fname))
-            model = self.init_from_scratch(model_name=model_name, **kwargs)
+            self.init_from_scratch()
 
-        return model
+        return
 
     def save(self, fname: str = None) -> None:
         if fname is None:
@@ -146,6 +130,23 @@ class SklearnComponent(Estimator):
         with open(fname, "wb") as f:
             pickle.dump(self.model, f)
         return
+
+    def compose_input_data(self, x):
+        if isinstance(self.pipe_params["in"], list) and len(self.pipe_params["in"]) > 1:
+            x = np.hstack(list(x))
+        if ((isinstance(x, tuple) or isinstance(x, list) or isinstance(x, np.ndarray) and len(x))
+                or (issparse(x) and x.shape[0])):
+            if issparse(x[0]):
+                x_features = vstack(list(x))
+            elif isinstance(x[0], np.ndarray) or isinstance(x[0], list):
+                x_features = np.vstack(list(x))
+            elif isinstance(x[0], str):
+                x_features = np.array(x)
+            else:
+                raise ConfigError('Not implemented this type of vectors')
+        else:
+            raise ConfigError("Input vectors cannot be empty")
+        return x_features
 
     def reset(self) -> None:
         del self.model
@@ -170,3 +171,7 @@ class SklearnComponent(Estimator):
     @staticmethod
     def get_function_params(f) -> List[str]:
         return inspect.getfullargspec(f)[0]
+
+    @staticmethod
+    def get_class_attributes(cls) -> List[str]:
+        return list(cls.__dict__.keys())
