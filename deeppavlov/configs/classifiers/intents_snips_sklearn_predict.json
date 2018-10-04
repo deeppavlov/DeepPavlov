@@ -85,6 +85,24 @@
         "k": 1000
       },
       {
+        "in": [
+          "x_sel"
+        ],
+        "out": [
+          "x_pca"
+        ],
+        "fit_on": [
+          "x_sel"
+        ],
+        "id": "pca",
+        "name": "sklearn_component",
+        "save_path": "snips/intents_snips_pca_v7.pkl",
+        "load_path": "snips/intents_snips_pca_v7.pkl",
+        "model_name": "sklearn.decomposition:PCA",
+        "infer_method": "transform",
+        "n_components": 300
+      },
+      {
         "in": "x",
         "out": "x_tok",
         "id": "my_tokenizer",
@@ -110,14 +128,14 @@
       },
       {
         "in": [
-          "x_sel",
+          "x_pca",
           "x_emb"
         ],
         "out": [
           "y_pred_ids"
         ],
         "fit_on": [
-          "x_sel",
+          "x_pca",
           "x_emb",
           "y_ids"
         ],

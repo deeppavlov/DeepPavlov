@@ -16,7 +16,7 @@ from typing import List, Tuple, Any, Union, Generator, Iterable
 import numpy as np
 import pickle
 from pathlib import Path
-from scipy.sparse import issparse
+from scipy.sparse import issparse, csr_matrix
 from scipy.sparse import vstack, hstack
 import inspect
 
@@ -60,9 +60,17 @@ class SklearnComponent(Estimator):
         try:
             log.info("Fitting model {}".format(self.model_name))
             self.model.fit(x_features, y_)
-        except ValueError:
-            raise ConfigError("Incompatible dimensions, check parameters of model. "
-                              "Got X of shape {}, y of shape {}".format(x_features.shape, y_.shape))
+        except TypeError or ValueError:
+            try:
+                if issparse(x_features):
+                    log.info("Converting input for model {} to dense array".format(self.model_name))
+                    self.model.fit(x_features.todense(), y_)
+                else:
+                    log.info("Converting input for model {} to sparse array".format(self.model_name))
+                    self.model.fit(csr_matrix(x_features), y_)
+            except:
+                raise ConfigError("Can not fit on the given data".format(self.model_name))
+
         return
 
     def __call__(self, *args, **kwargs) -> np.ndarray:
@@ -71,7 +79,19 @@ class SklearnComponent(Estimator):
 
     def infer_on_batch(self, x):
         x_features = self.compose_input_data(x)
-        predictions = getattr(self.model, self.infer_method)(x_features)
+
+        try:
+            predictions = getattr(self.model, self.infer_method)(x_features)
+        except:
+            try:
+                if issparse(x_features):
+                    log.info("Converting input for model {} to dense array".format(self.model_name))
+                    predictions = getattr(self.model, self.infer_method)(x_features.todense())
+                else:
+                    log.info("Converting input for model {} to sparse array".format(self.model_name))
+                    predictions = getattr(self.model, self.infer_method)(csr_matrix(x_features))
+            except:
+                raise ConfigError("Can not infer on the given data".format(self.model_name))
 
         if len(predictions.shape) == 1:
             predictions = predictions.reshape(-1, 1)
