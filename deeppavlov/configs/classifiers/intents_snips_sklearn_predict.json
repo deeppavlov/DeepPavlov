@@ -51,8 +51,8 @@
         ],
         "id": "tfidf_vec",
         "name": "sklearn_component",
-        "save_path": "snips/intents_snips_tfidf_v6.pkl",
-        "load_path": "snips/intents_snips_tfidf_v6.pkl",
+        "save_path": "snips/intents_snips_tfidf_v7.pkl",
+        "load_path": "snips/intents_snips_tfidf_v7.pkl",
         "model_name": "sklearn.feature_extraction.text:TfidfVectorizer",
         "infer_method": "transform",
         "lowercase": true,
@@ -66,22 +66,22 @@
       },
       {
         "in": [
-          "x"
-        ],
-        "out": [
           "x_vec"
         ],
+        "out": [
+          "x_sel"
+        ],
         "fit_on": [
-          "x",
+          "x_vec",
           "y_ids"
         ],
         "id": "selector",
         "name": "sklearn_component",
-        "save_path": "snips/intents_snips_selectkbest_v6.pkl",
-        "load_path": "snips/intents_snips_selectkbest_v6.pkl",
+        "save_path": "snips/intents_snips_selectkbest_v7.pkl",
+        "load_path": "snips/intents_snips_selectkbest_v7.pkl",
         "model_name": "sklearn.feature_selection:SelectKBest",
         "infer_method": "transform",
-        "score_func": "chi2",
+        "score_func": "sklearn.feature_selection:chi2",
         "k": 1000
       },
       {
@@ -110,21 +110,21 @@
       },
       {
         "in": [
-          "x_vec",
+          "x_sel",
           "x_emb"
         ],
         "out": [
           "y_pred_ids"
         ],
         "fit_on": [
-          "x_vec",
+          "x_sel",
           "x_emb",
           "y_ids"
         ],
         "name": "sklearn_component",
         "main": true,
-        "save_path": "snips/intents_snips_v6.pkl",
-        "load_path": "snips/intents_snips_v6.pkl",
+        "save_path": "snips/intents_snips_v7.pkl",
+        "load_path": "snips/intents_snips_v7.pkl",
         "model_name": "sklearn.svm:SVC",
         "infer_method": "predict",
         "warm_start": false
