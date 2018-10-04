@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple, Any, Union, Generator
+from typing import List, Tuple, Any, Union, Generator, Iterable
 import numpy as np
 import pickle
 from pathlib import Path
@@ -50,8 +50,12 @@ class SklearnComponent(Estimator):
         self.train_examples_seen = 0
 
     def fit(self, *args, **kwargs) -> None:
-        x_features = self.compose_input_data(args[:-1])
-        y_ = np.squeeze(np.array(args[-1]))
+        n_inputs = len(self.pipe_params["in"]) if isinstance(self.pipe_params["in"], list) else 1
+        x_features = self.compose_input_data(args[:n_inputs])
+        if len(args) > n_inputs:
+            y_ = np.squeeze(np.array(args[-1]))
+        else:
+            y_ = None
 
         try:
             log.info("Fitting model {}".format(self.model_name))
