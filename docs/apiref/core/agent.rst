@@ -1,6 +1,6 @@
 core.agent
 ==========
-Basic training and inference functions.
+Basic classes for building DeepPavlov agents.
 
 .. automodule:: deeppavlov.core.agent.agent
    :members:

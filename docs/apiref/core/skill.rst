@@ -1,6 +1,6 @@
 core.skill
 ==========
-Basic training and inference functions.
+Basic class for building DeepPavlov skills.
 
 .. automodule:: deeppavlov.core.skill.skill
    :members:
