@@ -57,7 +57,9 @@
         },
         "embedder": null,
         "bow_embedder": {
-          "name": "bow"
+          "name": "bow",
+          "depth": "#token_vocab.__len__()",
+          "with_counts": true
         },
         "tokenizer": {
           "name": "stream_spacy_tokenizer",

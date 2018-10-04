@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import numpy as np
-from typing import List, Callable
+from typing import Union, Dict, List
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -24,27 +24,34 @@ class BoWEmbedder(Component):
     """
     Performs one-hot encoding of tokens based on a pre-built vocabulary of tokens.
 
+    Parameters:
+        depth: size of output numpy vector.
+        with_counts: flag denotes whether to use binary encoding (with zeros and ones),
+            or to use counts as token representation.
+
     Example:
         .. code:: python
 
-            >>> bow = BoWEmbedder()
+            >>> bow = BoWEmbedder(depth=3)
 
-            >>> bow(['a', 'b', 'c'], vocab={'a': 0, 'b': 1})
-            [array([1, 0], dtype=int32),
-             array([0, 1], dtype=int32),
-             array([0, 0], dtype=int32)]
+            >>> bow([[0, 1], [1], [])
+            [array([1, 1, 0], dtype=int32),
+             array([0, 1, 0], dtype=int32),
+             array([0, 0, 0], dtype=int32)]
     """
 
-    def __init__(self, **kwargs) -> None:
-        pass
+    def __init__(self, depth: int, with_counts: bool = False, **kwargs) -> None:
+        self.depth = depth
+        self.with_counts = with_counts
 
-    def _encode(self, tokens, vocab):
-        bow = np.zeros([len(vocab)], dtype=np.int32)
-        for token in tokens:
-            if token in vocab:
-                idx = vocab[token]
+    def _encode(self, token_indices: List[int]) -> np.ndarray:
+        bow = np.zeros([self.depth], dtype=np.int32)
+        for idx in token_indices:
+            if self.with_counts:
                 bow[idx] += 1
+            else:
+                bow[idx] = 1
         return bow
 
-    def __call__(self, batch: List[List[str]], vocab: Component) -> List[List[int]]:
-        return [self._encode(sample, vocab) for sample in batch]
+    def __call__(self, batch: List[List[int]]) -> List[np.ndarray]:
+        return [self._encode(sample) for sample in batch]
