@@ -65,6 +65,26 @@
         "norm": null
       },
       {
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_vec"
+        ],
+        "fit_on": [
+          "x",
+          "y_ids"
+        ],
+        "id": "selector",
+        "name": "sklearn_component",
+        "save_path": "snips/intents_snips_selectkbest_v6.pkl",
+        "load_path": "snips/intents_snips_selectkbest_v6.pkl",
+        "model_name": "sklearn.feature_selection:SelectKBest",
+        "infer_method": "transform",
+        "score_func": "chi2",
+        "k": 1000
+      },
+      {
         "in": "x",
         "out": "x_tok",
         "id": "my_tokenizer",
