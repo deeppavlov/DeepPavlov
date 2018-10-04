@@ -74,7 +74,7 @@
           "y_ids"
         ],
         "main": true,
-        "name": "sklearn_classifier",
+        "name": "sklearn_component",
         "save_path": "snips/intents_snips_v6.pkl",
         "load_path": "snips/intents_snips_v6.pkl",
         "model_name": "sklearn.svm:SVC",
