@@ -78,6 +78,7 @@
         "model": "#model",
         "batch_size": "#model.batch_size",
         "interact_pred_num": 3,
+        "attention": true,
         "responses": "#siam_sent_vocab",
         "preproc_func": "#preproc.__call__"
       }
