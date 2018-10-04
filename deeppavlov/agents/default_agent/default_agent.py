@@ -82,7 +82,7 @@ class DefaultAgent(Agent):
             if skill_i_utt_indexes:
                 skill_i_utt_batch = [utterances_batch[i] for i in skill_i_utt_indexes]
                 res = [(None, 0.)] * batch_size
-                predicted, confidence, *state = skill(skill_i_utt_batch, skill_i_utt_indexes)
+                predicted, confidence = skill(skill_i_utt_batch, skill_i_utt_indexes)
 
                 for i, predicted, confidence in zip(skill_i_utt_indexes, predicted, confidence):
                     res[i] = (predicted, confidence)

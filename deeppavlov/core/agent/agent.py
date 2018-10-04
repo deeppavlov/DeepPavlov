@@ -116,7 +116,7 @@ class SkillWrapper:
         self.skill_id = skill_id
         self.agent = agent
 
-    def __call__(self, utterances_batch: list, utterances_ids: list=None) -> Tuple[list, list, list]:
+    def __call__(self, utterances_batch: list, utterances_ids: list=None) -> Tuple[list, list]:
         """Wraps __call__ method of Skill instance.
 
             Provides skill __call__ with signature of Agent __call__ and handles
@@ -142,4 +142,4 @@ class SkillWrapper:
         for utt_id, state in zip(utterances_ids, states):
             self.agent.states[utt_id][self.skill_id] = state
 
-        return predicted, confidence, states
+        return predicted, confidence
