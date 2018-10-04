@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from deeppavlov.core.agent.processor import Processor
 from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.agents.rich_content.default_rich_content import PlainText
