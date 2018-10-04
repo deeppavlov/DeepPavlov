@@ -40,6 +40,7 @@ class GloVeEmbedder(Component, Serializable):
         save_path: is not used because model is not trainable; therefore, it is unchangable
         dim: dimensionality of fastText model
         pad_zero: whether to pad samples or not
+        mean: whether to return mean token embedding
         **kwargs: additional arguments
 
     Attributes:
@@ -48,9 +49,10 @@ class GloVeEmbedder(Component, Serializable):
         dim: dimension of embeddings
         pad_zero: whether to pad sequence of tokens with zeros or not
         load_path: path with pre-trained GloVe model
+        mean: whether to return mean token embedding
     """
     def __init__(self, load_path: [str, Path], save_path: [str, Path] = None, dim: int = 100, pad_zero: bool = False,
-                 **kwargs) -> None:
+                 mean: bool = False, **kwargs) -> None:
         """
         Initialize embedder with given parameters
         """
@@ -113,7 +115,7 @@ class GloVeEmbedder(Component, Serializable):
         yield from self.model.vocab
 
     @overrides
-    def __call__(self, batch: List[List[str]], mean: bool = False, *args, **kwargs) -> List[Union[list, np.ndarray]]:
+    def __call__(self, batch: List[List[str]], *args, **kwargs) -> List[Union[list, np.ndarray]]:
         """
         Embed sentences from batch
 
@@ -128,12 +130,12 @@ class GloVeEmbedder(Component, Serializable):
         """
         embedded = []
         for n, sample in enumerate(batch):
-            embedded.append(self._encode(sample, mean))
+            embedded.append(self._encode(sample))
         if self.pad_zero:
             embedded = zero_pad(embedded)
         return embedded
 
-    def _encode(self, tokens: List[str], mean: bool) -> Union[List[np.ndarray], np.ndarray]:
+    def _encode(self, tokens: List[str]) -> Union[List[np.ndarray], np.ndarray]:
         """
         Embed one text sample
 
@@ -156,7 +158,7 @@ class GloVeEmbedder(Component, Serializable):
                 self.tok2emb[t] = emb
             embedded_tokens.append(emb)
 
-        if mean:
+        if self.mean:
             filtered = [et for et in embedded_tokens if np.any(et)]
             if filtered:
                 return np.mean(filtered, axis=0)

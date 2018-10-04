@@ -111,7 +111,7 @@ class FasttextEmbedder(Component, Serializable):
         Returns:
             embedded batch
         """
-        batch = [self._encode(sample, self.mean) for sample in batch]
+        batch = [self._encode(sample) for sample in batch]
         if self.pad_zero:
             batch = zero_pad(batch)
         return batch
@@ -125,7 +125,7 @@ class FasttextEmbedder(Component, Serializable):
         """
         yield from self.model.get_words()
 
-    def _encode(self, tokens: List[str], mean: bool) -> Union[List[np.ndarray], np.ndarray]:
+    def _encode(self, tokens: List[str]) -> Union[List[np.ndarray], np.ndarray]:
         """
         Embed one text sample
 
@@ -148,7 +148,7 @@ class FasttextEmbedder(Component, Serializable):
                 self.tok2emb[t] = emb
             embedded_tokens.append(emb)
 
-        if mean:
+        if self.mean:
             filtered = [et for et in embedded_tokens if np.any(et)]
             if filtered:
                 return np.mean(filtered, axis=0)
