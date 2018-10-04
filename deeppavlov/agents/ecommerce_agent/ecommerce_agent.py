@@ -17,8 +17,6 @@ from typing import List, Tuple
 
 import argparse
 from deeppavlov.core.agent.agent import Agent
-from deeppavlov.core.agent.filter import Filter
-from deeppavlov.core.agent.processor import Processor
 from deeppavlov.core.skill.skill import Skill
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.agent.rich_content import RichMessage
@@ -34,19 +32,6 @@ parser.add_argument("-s", "--ms-secret", help="microsoft bot framework app secre
 class EcommerceAgent(Agent):
     """DeepPavlov Ecommerce agent.
 
-    Default Agent is an implementation of agent template, which following
-    pipeline for each utterance batch received by agent:
-        1) Utterance batch is processed through agent Filter which selects
-            agent skills to be applied to each utterance of the batch;
-        2) Utterances are processed through skills selected for them;
-        3) Utterances and skill responses are processed through agent
-            Processor which generate agent's response to the outer world.
-    Defining DefaultAgent means:
-        a) To define set of skills it uses;
-        b) To implement skills Selector;
-        c) To implement Processor.
-    You can refer Skill, Processor, Selector base classes to get more info.
-
     Args:
         skill: List of initiated agent skills instances.
 
@@ -57,8 +42,7 @@ class EcommerceAgent(Agent):
             and outcoming replicas of the dialog.
         states: States for each each dialog with agent indexed by dialog ID.
     """
-    def __init__(self, skills: List[Skill], skills_processor: Processor=None,
-                 skills_filter: Filter=None, *args, **kwargs):
+    def __init__(self, skills: List[Skill], *args, **kwargs) -> None:
 
         super(EcommerceAgent, self).__init__(skills=skills)
         self.history: dict = defaultdict(list)
@@ -82,8 +66,10 @@ class EcommerceAgent(Agent):
 
         for utt, id_ in zip(utterances_batch, utterances_ids):
 
+            print("utt", utt)
+
             if id_ not in self.states:
-                self.states[id_] = {"start":0, "stop": 5}
+                self.states[id_] = {"start": 0, "stop": 5}
 
             if utt[0] == "@":
                 parts = utt.split(":")
@@ -169,6 +155,7 @@ class EcommerceAgent(Agent):
 
 
 def show_details(item_data):
+    """Formate catalog item output"""
     txt = ""
     cats = ['Title', 'Manufacturer', 'Model', 'ListPrice', 'Binding', 'Color',
             'Genre', 'Author', 'Brand', 'Size', 'Feature']
@@ -185,12 +172,14 @@ def show_details(item_data):
     return [rich_message]
 
 def make_agent():
+    """Run skill"""
     config_path = find_config('ecommerce_bot')
     skill = build_model_from_config(config_path, as_component=True)
     agent = EcommerceAgent(skills=[skill])
     return agent
 
 def main():
+    """Parse parameters and run ms bot framework"""
     args = parser.parse_args()
     run_ms_bot_framework_server(agent_generator=make_agent,
                                 app_id=args.ms_id,
