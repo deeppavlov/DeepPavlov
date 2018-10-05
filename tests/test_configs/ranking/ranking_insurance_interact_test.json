@@ -39,7 +39,7 @@
           "id": "siam_vocab",
           "name":"simple_vocab",
           "save_path": "insurance_vocabs/tok.dict",
-          "load_path": "insurance_vocabs/ctok.dict"
+          "load_path": "insurance_vocabs/tok.dict"
         },
         "embedder":
         {

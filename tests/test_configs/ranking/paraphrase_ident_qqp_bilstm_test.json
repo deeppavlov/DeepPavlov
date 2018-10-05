@@ -37,7 +37,7 @@
           "id": "siam_vocab",
           "name":"simple_vocab",
           "save_path": "qqp_vocabs_bilstm/tok.dict",
-          "load_path": "qqp_vocabs_bilstm/ctok.dict"
+          "load_path": "qqp_vocabs_bilstm/tok.dict"
         },
         "embedder":
         {

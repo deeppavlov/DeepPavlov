@@ -40,8 +40,8 @@ class ParaphraserReader(DatasetReader):
              seed: int = None, *args, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
         random.seed(seed)
         data_path = expand_path(data_path)
-        train_fname = Path(data_path) / 'paraphrases.xml'
-        test_fname =  Path(data_path) / 'paraphrases_gold.xml'
+        train_fname = data_path / 'paraphrases.xml'
+        test_fname =  data_path / 'paraphrases_gold.xml'
         data = self.build_data(train_fname)
         random.shuffle(data)
         train_data = data[:-1000][:num_samples]

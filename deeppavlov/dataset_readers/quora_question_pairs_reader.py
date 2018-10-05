@@ -40,7 +40,7 @@ class QuoraQuestionPairsReader(DatasetReader):
              seed: int = None, *args, **kwargs) -> Dict[str, List[Tuple[Tuple[str, str], int]]]:
         random.seed(seed)
         data_path = expand_path(data_path)
-        fname = Path(data_path) / 'train.csv'
+        fname = data_path / 'train.csv'
         contexts = []
         responses = []
         labels = []
