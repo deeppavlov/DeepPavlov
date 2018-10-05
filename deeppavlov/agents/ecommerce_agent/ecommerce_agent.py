@@ -26,10 +26,8 @@ from deeppavlov.deep import find_config
 from utils.ms_bot_framework_utils.server import run_ms_bot_framework_server
 
 parser = argparse.ArgumentParser()
-parser.add_argument(
-    "-i", "--ms-id", help="microsoft bot framework app id", type=str)
-parser.add_argument("-s", "--ms-secret",
-                    help="microsoft bot framework app secret", type=str)
+parser.add_argument("-i", "--ms-id", help="microsoft bot framework app id", type=str)
+parser.add_argument("-s", "--ms-secret", help="microsoft bot framework app secret", type=str)
 
 log = get_logger(__name__)
 
@@ -166,7 +164,7 @@ def say_hello() -> List[RichMessage]:
 
 
 def show_details(item_data: Dict[Any, Any]) -> List[RichMessage]:
-    """Formate catalog item output
+    """Format catalog item output
 
         Parameters:
             item_data: item's attributes values
