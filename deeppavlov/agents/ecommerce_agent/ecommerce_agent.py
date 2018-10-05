@@ -78,7 +78,7 @@ class EcommerceAgent(Agent):
                 self.states[id_] = {"start": 0, "stop": 5}
 
             if utt == "/start":
-                say_hello()
+                return say_hello()
 
             if utt[0] == "@":
                 parts = utt.split(":")
@@ -162,8 +162,7 @@ class EcommerceAgent(Agent):
 def say_hello():
     """Formate a hello message"""
     rich_message = RichMessage()
-    welcome = """I am new e-commerce bot. I will help you to find products 
-        that you are looking for. Please choose one of the action. Or type your request in plain text."""
+    welcome = "I am a new e-commerce bot. I will help you to find products that you are looking for. Please type your request in plain text."
     rich_message.add_control(PlainText(welcome))
     return [rich_message]
 
