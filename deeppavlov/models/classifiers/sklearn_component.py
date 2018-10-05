@@ -30,10 +30,42 @@ log = get_logger(__name__)
 
 @register("sklearn_component")
 class SklearnComponent(Estimator):
+    """
+    Class implements wrapper for sklearn components for feature extraction,
+    feature selection, classification, regression etc.
+
+    Args:
+        model_name: string with full name of sklearn model to use, e.g. ``sklearn.linear_model:LogisticRegression``
+        save_path: save path for model, e.g. full name ``model_path/model.pkl`` \
+            or prefix ``model_path/model`` (still model will be saved to ``model_path/model.pkl``)
+        load_path: load path for model, e.g. full name ``model_path/model.pkl`` \
+            or prefix ``model_path/model`` (still model will be loaded from ``model_path/model.pkl``)
+        infer_method: string name of class method to use for infering model, \
+            e.g. ``predict``, ``predict_proba``, ``predict_log_proba``, ``transform``
+        kwargs: dictionary with parameters for the sklearn model
+
+    Attributes:
+        model: sklearn model instance
+        model_name: string with full name of sklearn model to use, e.g. ``sklearn.linear_model:LogisticRegression``
+        model_params: dictionary with parameters for the sklearn model without pipe parameters
+        pipe_params: dictionary with parameters for pipe: ``in``, ``out``, ``fit_on``, ``main``, ``name``
+        save_path: save path for model, e.g. full name ``model_path/model.pkl`` \
+            or prefix ``model_path/model`` (still model will be saved to ``model_path/model.pkl``)
+        load_path: load path for model, e.g. full name ``model_path/model.pkl`` \
+            or prefix ``model_path/model`` (still model will be loaded from ``model_path/model.pkl``)
+        infer_method: string name of class method to use for infering model, \
+            e.g. ``predict``, ``predict_proba``, ``predict_log_proba``, ``transform``
+        epochs_done: number of epochs done
+        batches_seen: number of batches seen
+        train_examples_seen: number of train examples seen
+    """
     def __init__(self, model_name: str,
                  save_path: Union[str, Path] = None,
                  load_path: Union[str, Path] = None,
                  infer_method: str = "predict", **kwargs) -> None:
+        """
+        Initialize component with given parameters
+        """
 
         super().__init__(save_path=save_path, load_path=load_path, **kwargs)
         self.model_name = model_name
@@ -50,6 +82,20 @@ class SklearnComponent(Estimator):
         self.train_examples_seen = 0
 
     def fit(self, *args, **kwargs) -> None:
+        """
+        Fit model on the given data
+
+        Args:
+            *args: data to fit on. Possible input (x0, ..., xK, y) or (x0, ..., xK) '
+                where K is the number of input data elements (the length of list ``in`` from config). \
+                In case of several inputs (K > 1) input features will be stacked. \
+                For example, one has x0: (n_samples, n_features0), ..., xK: (n_samples, n_featuresK), \
+                then model will be trained on x: (n_samples, n_features0 + ... + n_featuresK).
+            **kwargs: additional parameters
+
+        Returns:
+            None
+        """
         n_inputs = len(self.pipe_params["in"]) if isinstance(self.pipe_params["in"], list) else 1
         x_features = self.compose_input_data(args[:n_inputs])
         if len(args) > n_inputs:
