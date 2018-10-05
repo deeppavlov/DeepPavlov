@@ -81,7 +81,7 @@ class EcommerceAgent(Agent):
                 log.debug(f'Actions: {parts}')
 
                 if command == "@details":
-                    rich_message.add_control(show_details(self.history[id_][int(parts[0])][0][int(parts[1])]))
+                    rich_message.add_control(PlainText(show_details(self.history[id_][int(parts[0])][0][int(parts[1])])))
                     continue
 
                 if command == "@entropy":
