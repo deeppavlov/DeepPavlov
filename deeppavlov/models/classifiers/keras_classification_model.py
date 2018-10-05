@@ -51,8 +51,8 @@ class KerasClassificationModel(KerasModel):
         model_name: particular method of this class to initialize model configuration
         optimizer: function name from keras.optimizers
         loss: function name from keras.losses.
-        lear_rate: learning rate for optimizer.
-        lear_rate_decay: learning rate decay for optimizer
+        learning_rate: learning rate for optimizer.
+        learning_rate_decay: learning rate decay for optimizer
         last_layer_activation: parameter that determines activation function after classification layer.
                 For multi-label classification use `sigmoid`,
                 otherwise, `softmax`.
@@ -82,7 +82,7 @@ class KerasClassificationModel(KerasModel):
 
     def __init__(self, text_size: int, embedding_size: int,
                  model_name: str, optimizer: str = "Adam", loss: str = "binary_crossentropy",
-                 lear_rate: float = 0.01, lear_rate_decay: float = 0.,
+                 learning_rate: float = 0.01, learning_rate_decay: float = 0.,
                  last_layer_activation="sigmoid",
                  confident_threshold: float = 0.5,
                  restore_lr: bool = False,
@@ -93,7 +93,7 @@ class KerasClassificationModel(KerasModel):
         """
         super().__init__(text_size=text_size, embedding_size=embedding_size, model_name=model_name,
                          optimizer=optimizer, loss=loss,
-                         lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,
+                         learning_rate=learning_rate, learning_rate_decay=learning_rate_decay,
                          last_layer_activation=last_layer_activation, confident_threshold=confident_threshold,
                          restore_lr=restore_lr, **kwargs)
 
@@ -107,15 +107,15 @@ class KerasClassificationModel(KerasModel):
         # in case of pre-trained after loading in self.opt we have stored parameters
         # now we can restore lear rate if needed
         if restore_lr:
-            lear_rate = self.opt.get("final_lear_rate", lear_rate)
+            learning_rate = self.opt.get("final_lear_rate", learning_rate)
 
         self.model = self.compile(self.model, optimizer_name=optimizer, loss_name=loss,
-                                  lear_rate=lear_rate, lear_rate_decay=lear_rate_decay)
+                                  learning_rate=learning_rate, learning_rate_decay=learning_rate_decay)
 
         self._change_not_fixed_params(text_size=text_size, embedding_size=embedding_size,
                                       model_name=model_name,
                                       optimizer=optimizer, loss=loss,
-                                      lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,
+                                      learning_rate=learning_rate, learning_rate_decay=learning_rate_decay,
                                       last_layer_activation=last_layer_activation,
                                       confident_threshold=confident_threshold,
                                       restore_lr=restore_lr,

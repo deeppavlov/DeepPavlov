@@ -147,7 +147,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
             return self.init_model_from_scratch(model_name)
 
     def compile(self, model: Model, optimizer_name: str, loss_name: str,
-                lear_rate: float = 0.01, lear_rate_decay: float = 0.):
+                learning_rate: float = 0.01, learning_rate_decay: float = 0.):
         """
         Compile model with given optimizer and loss
 
@@ -155,21 +155,21 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
             model: keras uncompiled model
             optimizer_name: name of optimizer from keras.optimizers
             loss_name: loss function name (from keras.losses)
-            lear_rate: learning rate.
-            lear_rate_decay: learning rate decay.
+            learning_rate: learning rate.
+            learning_rate_decay: learning rate decay.
 
         Returns:
 
         """
         optimizer_func = getattr(keras.optimizers, optimizer_name, None)
         if callable(optimizer_func):
-            if not (lear_rate is None):
-                if not (lear_rate_decay is None):
-                    self.optimizer = optimizer_func(lr=lear_rate, decay=lear_rate_decay)
+            if not (learning_rate is None):
+                if not (learning_rate_decay is None):
+                    self.optimizer = optimizer_func(lr=learning_rate, decay=learning_rate_decay)
                 else:
-                    self.optimizer = optimizer_func(lr=lear_rate)
-            elif not (lear_rate_decay is None):
-                self.optimizer = optimizer_func(decay=lear_rate_decay)
+                    self.optimizer = optimizer_func(lr=learning_rate)
+            elif not (learning_rate_decay is None):
+                self.optimizer = optimizer_func(decay=learning_rate_decay)
             else:
                 self.optimizer = optimizer_func()
         else:
