@@ -1,12 +1,11 @@
 {
   "dataset_reader": {
     "name": "paraphraser_reader",
-    "num_samples": 1024,
-    "seed": 243,
     "data_path": "./paraphraser_data"
   },
   "dataset_iterator": {
     "name": "siamese_iterator",
+    "num_samples": 1024,
     "seed": 243
   },
   "chainer": {

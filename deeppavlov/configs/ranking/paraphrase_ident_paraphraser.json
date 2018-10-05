@@ -1,8 +1,6 @@
 {
   "dataset_reader": {
     "name": "paraphraser_reader",
-    "num_samples": null,
-    "seed": 243,
     "data_path": "./paraphraser_data"
   },
   "dataset_iterator": {

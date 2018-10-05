@@ -1,12 +1,12 @@
 {
   "dataset_reader": {
     "name": "qqp_reader",
-    "num_samples": null,
-    "seed": 243,
     "data_path": "./qqp_data"
   },
   "dataset_iterator": {
     "name": "siamese_iterator",
+    "len_valid": 20000,
+    "len_test": 20000,
     "seed": 243
   },
   "chainer": {

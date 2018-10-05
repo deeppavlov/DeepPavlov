@@ -1,7 +1,6 @@
 {
   "dataset_reader": {
     "name": "ubuntu_v2_mt_reader",
-    "num_samples": null,
     "data_path": "./ubuntu_v2_data",
     "num_context_turns": 10
   },

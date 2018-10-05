@@ -1,7 +1,6 @@
 {
   "dataset_reader": {
     "name": "insurance_reader",
-    "num_samples": null,
     "data_path": "./insurance_data"
   },
   "dataset_iterator": {

@@ -1,13 +1,13 @@
 {
   "dataset_reader": {
     "name": "insurance_reader",
-    "num_samples": 1024,
     "data_path": "./insurance_data"
   },
   "dataset_iterator": {
     "name": "siamese_iterator",
     "random_batches": true,
     "batches_per_epoch": 72,
+    "num_samples": 1024,
     "seed": 243
   },
   "chainer": {

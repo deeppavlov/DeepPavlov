@@ -13,10 +13,8 @@
 # limitations under the License.
 
 
-from pathlib import Path
 from typing import Dict, List, Tuple
 import csv
-import random
 
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.common.registry import register
@@ -31,14 +29,11 @@ class QuoraQuestionPairsReader(DatasetReader):
 
     Args:
         data_path: A path to a folder with dataset files.
-        num_samples: A number of data samples to use in ``train``, ``validation`` and ``test`` mode.
         seed: Random seed.
     """
 
     def read(self, data_path: str,
-             num_samples: int = None,
              seed: int = None, *args, **kwargs) -> Dict[str, List[Tuple[Tuple[str, str], int]]]:
-        random.seed(seed)
         data_path = expand_path(data_path)
         fname = data_path / 'train.csv'
         contexts = []
@@ -53,8 +48,7 @@ class QuoraQuestionPairsReader(DatasetReader):
                 labels.append(int(el[-1]))
         data = list(zip(contexts, responses))
         data = list(zip(data, labels))
-        random.shuffle(data)
-        data = {"train": data[:-40000][:num_samples],
-                "valid": data[-40000:-20000][:num_samples],
-                "test": data[-20000:][:num_samples]}
+        data = {"train": data,
+                "valid": [],
+                "test": []}
         return data
