@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from collections import defaultdict
-from typing import List, Dict
+from typing import List, Dict, Any
 import argparse
 
 from deeppavlov.core.agent.agent import Agent
@@ -128,11 +128,6 @@ class EcommerceAgent(Agent):
 
                 rich_message.add_control(PlainText(title))
 
-                buttons_frame = ButtonsFrame(text="")
-                buttons_frame.add_button(
-                    Button('Show details', "@details:"+str(len(self.history[id_])-2)+":"+str(idx)))
-                rich_message.add_control(buttons_frame)
-
             buttons_frame = ButtonsFrame(text="")
             if self.states[id_]["start"] > 0:
                 buttons_frame.add_button(
@@ -190,8 +185,11 @@ def show_details(item_data: Dict[Any, Any]):
             else:
                 txt += "**"+cat+"**" + ': ' + item_data[cat] + "  \n"
 
-    rich_message = RichMessage()
-    rich_message.add_control(PlainText(txt))
+    buttons_frame = ButtonsFrame(text = txt)
+    buttons_frame.add_button(
+        Button('Show details', "@details:"+str(len(self.history[id_])-2)+":"+str(idx)))
+    rich_message.add_control(buttons_frame)
+
     return [rich_message]
 
 
