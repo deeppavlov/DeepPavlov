@@ -143,9 +143,8 @@
         "main": true,
         "save_path": "snips/intents_snips_v7.pkl",
         "load_path": "snips/intents_snips_v7.pkl",
-        "model_name": "sklearn.multioutput:MultiOutputClassifier",
-        "infer_method": "predict",
-        "estimator": "sklearn.linear_model:LogisticRegression"
+        "model_name": "sklearn.linear_model:LogisticRegression",
+        "infer_method": "predict"
       },
       {
         "ref": "classes_vocab",
