@@ -144,7 +144,7 @@
         "save_path": "snips/intents_snips_v7.pkl",
         "load_path": "snips/intents_snips_v7.pkl",
         "model_name": "sklearn.neighbors:KNeighborsClassifier",
-        "infer_method": "predict"
+        "infer_method": "predict_proba"
       },
       {
         "name": "proba2labels",
