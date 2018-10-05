@@ -38,10 +38,6 @@ def expand_tile(units, axis):
     return K.tile(expanded, repetitions)
 
 
-def softvaxaxis2(x):
-    return softmax(x, axis=2)
-
-
 def additive_self_attention(units, n_hidden=None, n_output_features=None, activation=None):
     """
     Compute additive self attention for time series of vectors (with batch dimension)
@@ -67,7 +63,8 @@ def additive_self_attention(units, n_hidden=None, n_output_features=None, activa
     exp2 = Lambda(lambda x: expand_tile(x, axis=2))(units)
     units_pairs = Concatenate(axis=3)([exp1, exp2])
     query = Dense(n_hidden, activation="tanh")(units_pairs)
-    attention = Dense(1, activation=softvaxaxis2)(query)
+    attention = Dense(1, activation=None)(query)
+    attention = Lambda(lambda x: softmax(x, axis=2))(attention)
     attended_units = Lambda(lambda x: K.sum(attention * x, axis=2))(exp1)
     output = Dense(n_output_features, activation=activation)(attended_units)
     return output
@@ -98,7 +95,7 @@ def multiplicative_self_attention(units, n_hidden=None, n_output_features=None, 
     queries = Dense(n_hidden)(exp1)
     keys = Dense(n_hidden)(exp2)
     scores = Lambda(lambda x: K.sum(queries * x, axis=3, keepdims=True))(keys)
-    attention = Lambda(lambda x: softvaxaxis2(x))(scores)
+    attention = Lambda(lambda x: softmax(x, axis=2))(scores)
     mult = Multiply()([attention, exp1])
     attended_units = Lambda(lambda x: K.sum(x, axis=2))(mult)
     output = Dense(n_output_features, activation=activation)(attended_units)
