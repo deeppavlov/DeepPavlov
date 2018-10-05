@@ -143,9 +143,9 @@
         "main": true,
         "save_path": "snips/intents_snips_v7.pkl",
         "load_path": "snips/intents_snips_v7.pkl",
-        "model_name": "sklearn.svm:SVC",
+        "model_name": "sklearn.multioutput:MultiOutputClassifier",
         "infer_method": "predict",
-        "warm_start": false
+        "estimator": "sklearn.linear_model:LogisticRegression"
       },
       {
         "ref": "classes_vocab",
