@@ -143,13 +143,18 @@
         "main": true,
         "save_path": "snips/intents_snips_v7.pkl",
         "load_path": "snips/intents_snips_v7.pkl",
-        "model_name": "sklearn.multioutput:MultiOutputClassifier",
-        "infer_method": "predict",
-        "estimator": "sklearn.linear_model:SGDClassifier"
+        "model_name": "sklearn.neighbors:KNeighborsClassifier",
+        "infer_method": "predict"
       },
       {
         "name": "proba2labels",
         "in": "y_pred_onehot",
+        "out": "y_pred_ids",
+        "max_proba": true
+      },
+      {
+        "ref": "classes_vocab",
+        "in": "y_pred_ids",
         "out": "y_pred_labels"
       }
     ],
@@ -162,7 +167,7 @@
     "metrics": [
       "accuracy"
     ],
-    "show_examples": false,
+    "show_examples": true,
     "validate_best": true,
     "test_best": false
   },
