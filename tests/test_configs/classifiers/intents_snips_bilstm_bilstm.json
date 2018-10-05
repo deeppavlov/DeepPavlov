@@ -69,7 +69,7 @@
           "y_onehot"
         ],
         "out": [
-          "y_probas_dict"
+          "y_pred_probas"
         ],
         "main": true,
         "name": "keras_classification_model",
@@ -92,24 +92,26 @@
         "model_name": "bilstm_bilstm_model"
       },
       {
-        "in": "y_probas_dict",
-        "out": "y_labels",
+        "in": "y_pred_probas",
+        "out": "y_pred_ids",
         "name": "proba2labels",
         "max_proba": true
+      },
+      {
+        "in": "y_pred_ids",
+        "out": "y_pred_labels",
+        "ref": "classes_vocab"
       }
     ],
     "out": [
-      "y_labels",
-      "y_probas_dict"
+      "y_pred_labels"
     ]
   },
   "train": {
     "epochs": 1,
     "batch_size": 64,
     "metrics": [
-      "classification_accuracy",
-      "classification_f1",
-      "classification_roc_auc"
+      "accuracy"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
