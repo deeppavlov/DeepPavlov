@@ -13,9 +13,9 @@
 # limitations under the License.
 
 from collections import defaultdict
-from typing import List, Tuple
-
+from typing import List
 import argparse
+
 from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.skill.skill import Skill
@@ -26,10 +26,13 @@ from deeppavlov.deep import find_config
 from utils.ms_bot_framework_utils.server import run_ms_bot_framework_server
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-i", "--ms-id", help="microsoft bot framework app id", type=str)
-parser.add_argument("-s", "--ms-secret", help="microsoft bot framework app secret", type=str)
+parser.add_argument(
+    "-i", "--ms-id", help="microsoft bot framework app id", type=str)
+parser.add_argument("-s", "--ms-secret",
+                    help="microsoft bot framework app secret", type=str)
 
 log = get_logger(__name__)
+
 
 class EcommerceAgent(Agent):
     """DeepPavlov Ecommerce agent.
@@ -44,6 +47,7 @@ class EcommerceAgent(Agent):
             and outcoming replicas of the dialog.
         states: States for each each dialog with agent indexed by dialog ID.
     """
+
     def __init__(self, skills: List[Skill], *args, **kwargs) -> None:
 
         super(EcommerceAgent, self).__init__(skills=skills)
@@ -72,6 +76,9 @@ class EcommerceAgent(Agent):
 
             if id_ not in self.states:
                 self.states[id_] = {"start": 0, "stop": 5}
+
+            if utt == "/start":
+                say_hello()
 
             if utt[0] == "@":
                 parts = utt.split(":")
@@ -104,7 +111,8 @@ class EcommerceAgent(Agent):
             else:
                 self.states[id_] = {"start": 0, "stop": 5}
 
-            responses, confidences, state = self.skills[0]([utt], self.history[id_], [self.states[id_]])
+            responses, confidences, state = self.skills[0](
+                [utt], self.history[id_], [self.states[id_]])
 
             # update `self.states` with retrieved results
             self.states[id_] = state
@@ -125,25 +133,39 @@ class EcommerceAgent(Agent):
                 rich_message.add_control(PlainText(title))
 
                 buttons_frame = ButtonsFrame(text="")
-                buttons_frame.add_button(Button('Show details', "@details:"+str(len(self.history[id_])-2)+":"+str(idx)))
+                buttons_frame.add_button(
+                    Button('Show details', "@details:"+str(len(self.history[id_])-2)+":"+str(idx)))
                 rich_message.add_control(buttons_frame)
 
             buttons_frame = ButtonsFrame(text="")
             if self.states[id_]["start"] > 0:
-                buttons_frame.add_button(Button('Previous', "@previous:"+str(len(self.history[id_])-1)))
+                buttons_frame.add_button(
+                    Button('Previous', "@previous:"+str(len(self.history[id_])-1)))
 
-            buttons_frame.add_button(Button('Next', "@next:"+str(len(self.history[id_])-1)))
+            buttons_frame.add_button(
+                Button('Next', "@next:"+str(len(self.history[id_])-1)))
             rich_message.add_control(buttons_frame)
 
             if entropy:
-                buttons_frame = ButtonsFrame(text="Please specify a "+entropy[0][1])
+                buttons_frame = ButtonsFrame(
+                    text="Please specify a "+entropy[0][1])
                 for ent_value in entropy[0][2][:3]:
-                    button_a = Button(ent_value[0], "@entropy:"+str(len(self.history[id_])-1)+":"+str(entropy[0][1])+":"+str(ent_value[0]))
+                    button_a = Button(ent_value[0], "@entropy:"+str(
+                        len(self.history[id_])-1)+":"+str(entropy[0][1])+":"+str(ent_value[0]))
                     buttons_frame.add_button(button_a)
 
                 rich_message.add_control(buttons_frame)
 
         return [rich_message]
+
+
+def say_hello():
+    """Formate a hello message"""
+    rich_message = RichMessage()
+    welcome = """I am new e-commerce bot. I will help you to find products 
+        that you are looking for. Please choose one of the action. Or type your request in plain text."""
+    rich_message.add_control(PlainText(welcome))
+    return [rich_message]
 
 
 def show_details(item_data):
@@ -155,13 +177,15 @@ def show_details(item_data):
     for cat in cats:
         if cat in item_data:
             if cat == 'ListPrice':
-                txt += "**"+cat+"**" + ': $' + item_data[cat].split('$')[1] + "  \n"
+                txt += "**"+cat+"**" + ': $' + \
+                    item_data[cat].split('$')[1] + "  \n"
             else:
-                txt += "**"+cat+"**" +  ': ' + item_data[cat] + "  \n"
+                txt += "**"+cat+"**" + ': ' + item_data[cat] + "  \n"
 
     rich_message = RichMessage()
     rich_message.add_control(PlainText(txt))
     return [rich_message]
+
 
 def make_agent():
     """Run skill"""
@@ -169,6 +193,7 @@ def make_agent():
     skill = build_model_from_config(config_path, as_component=True)
     agent = EcommerceAgent(skills=[skill])
     return agent
+
 
 def main():
     """Parse parameters and run ms bot framework"""
