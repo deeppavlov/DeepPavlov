@@ -126,7 +126,10 @@ class EcommerceAgent(Agent):
                 if 'ListPrice' in item:
                     title += " - **$" + item['ListPrice'].split('$')[1]+"**"
 
-                rich_message.add_control(PlainText(title))
+                buttons_frame = ButtonsFrame(text=title)
+                buttons_frame.add_button(
+                    Button('Show details', "@details:"+str(len(self.history[id_])-2)+":"+str(idx)))
+                rich_message.add_control(buttons_frame)
 
             buttons_frame = ButtonsFrame(text="")
             if self.states[id_]["start"] > 0:
@@ -185,11 +188,8 @@ def show_details(item_data: Dict[Any, Any]):
             else:
                 txt += "**"+cat+"**" + ': ' + item_data[cat] + "  \n"
 
-    buttons_frame = ButtonsFrame(text = txt)
-    buttons_frame.add_button(
-        Button('Show details', "@details:"+str(len(self.history[id_])-2)+":"+str(idx)))
-    rich_message.add_control(buttons_frame)
-
+    rich_message = RichMessage()
+    rich_message.add_control(PlainText(txt))
     return [rich_message]
 
 
