@@ -25,18 +25,18 @@ from deeppavlov.agents.processors.highest_confidence_selector import HighestConf
 class DefaultAgent(Agent):
     """DeepPavlov default implementation of Agent abstraction.
 
-    Default Agent is an implementation of agent template, which following
+    Default Agent is an implementation of agent template, with following
     pipeline for each utterance batch received by agent:
         1) Utterance batch is processed through agent Filter which selects
             utterances to be processed with each agent skill;
         2) Utterances are processed through skills selected for them;
         3) Utterances and skill responses are processed through agent
-            Processor which generate agent's response to the outer world.
+            Processor which generates agent's response for the outer world.
     Defining DefaultAgent means:
         a) To define set of skills it uses;
-        b) To implement skills Selector;
+        b) To implement skills Filter;
         c) To implement Processor.
-    You can refer Skill, Processor, Selector base classes to get more info.
+    You can refer to Skill, Filter, Processor base classes to get more info.
 
     Args:
         skills: List of initiated agent skills instances.
