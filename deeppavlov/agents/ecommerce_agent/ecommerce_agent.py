@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from collections import defaultdict
-from typing import List
+from typing import List, Dict
 import argparse
 
 from deeppavlov.core.agent.agent import Agent
@@ -56,10 +56,6 @@ class EcommerceAgent(Agent):
 
     def _call(self, utterances_batch: list, utterances_ids: list=None) -> list:
         """Processes batch of utterances and returns corresponding responses batch.
-
-        Each call of Agent passes incoming utterances batch through skills filter,
-        agent skills, skills processor. Batch of dialog IDs can be provided, in
-        other case utterances indexes in incoming batch are used as dialog IDs.
 
         Args:
             utterances: Batch of incoming utterances.
@@ -160,7 +156,12 @@ class EcommerceAgent(Agent):
 
 
 def say_hello():
-    """Formate a hello message"""
+    """Embed and output hello message
+
+        Returns:
+            [rich_message]: formatted hello message
+    """
+
     rich_message = RichMessage()
     welcome = """I am new e-commerce bot. I will help you to find products 
         that you are looking for. Please choose one of the action. Or type your request in plain text."""
@@ -168,8 +169,16 @@ def say_hello():
     return [rich_message]
 
 
-def show_details(item_data):
-    """Formate catalog item output"""
+def show_details(item_data: Dict[Any, Any]):
+    """Formate catalog item output
+
+        Parameters:
+            item_data: item's attributes values
+
+        Returns:
+            [rich_message]: list of formatted rich message
+    """
+
     txt = ""
     cats = ['Title', 'Manufacturer', 'Model', 'ListPrice', 'Binding', 'Color',
             'Genre', 'Author', 'Brand', 'Size', 'Feature']
@@ -188,7 +197,12 @@ def show_details(item_data):
 
 
 def make_agent():
-    """Run skill"""
+    """Make an agent
+
+        Returns:
+            agent: created Ecommerce agent
+    """
+
     config_path = find_config('ecommerce_bot')
     skill = build_model_from_config(config_path, as_component=True)
     agent = EcommerceAgent(skills=[skill])
@@ -197,6 +211,7 @@ def make_agent():
 
 def main():
     """Parse parameters and run ms bot framework"""
+
     args = parser.parse_args()
     run_ms_bot_framework_server(agent_generator=make_agent,
                                 app_id=args.ms_id,
