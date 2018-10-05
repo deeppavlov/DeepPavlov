@@ -16,7 +16,7 @@ from deeppavlov.core.agent.filter import Filter
 
 
 class TransparentFilter(Filter):
-    """Filer applies each agent skill to all of batch utterances.
+    """Filer that applies each agent skill to all of batch utterances.
 
     Args:
         skills_count: Number of agent skills.
