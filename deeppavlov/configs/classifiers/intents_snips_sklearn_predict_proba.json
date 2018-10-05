@@ -135,6 +135,7 @@
           "y_pred_probas"
         ],
         "fit_on": [
+          "x_pca",
           "x_emb",
           "y_ids"
         ],
