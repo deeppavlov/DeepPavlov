@@ -30,13 +30,15 @@
     "pipe": [
       {
         "id": "classes_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "fit_on": [
           "y"
         ],
         "level": "token",
         "save_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_classes.dict",
-        "load_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_classes.dict"
+        "load_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_classes.dict",
+        "in": "y",
+        "out": "y_ids"
       },
       {
         "in": [
@@ -64,14 +66,19 @@
         "dim": 300
       },
       {
+        "in": "y_ids",
+        "out": "y_onehot",
+        "name": "one_hotter",
+        "depth": "#classes_vocab.len"
+      },
+      {
         "in": [
           "x_emb"
         ],
         "in_y": [
-          "y"
+          "y_onehot"
         ],
         "out": [
-          "y_labels",
           "y_probas_dict"
         ],
         "main": true,
@@ -92,7 +99,6 @@
           ],
           "discrete": true
         },
-        "confident_threshold": 1,
         "optimizer": "Adam",
         "lear_rate": {
           "evolve_range": [
@@ -135,6 +141,12 @@
           "discrete": true
         },
         "model_name": "cnn_model"
+      },
+      {
+        "in": "y_probas_dict",
+        "out": "y_labels",
+        "name": "proba2labels",
+        "max_proba": true
       }
     ],
     "out": [

@@ -19,13 +19,15 @@
     "pipe": [
       {
         "id": "classes_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "fit_on": [
           "y"
         ],
         "level": "token",
         "save_path": "vocabs/insults_kaggle_classes.dict",
-        "load_path": "vocabs/insults_kaggle_classes.dict"
+        "load_path": "vocabs/insults_kaggle_classes.dict",
+        "in": "y",
+        "out": "y_ids"
       },
       {
         "in": [
@@ -53,14 +55,19 @@
         "dim": 300
       },
       {
+        "in": "y_ids",
+        "out": "y_onehot",
+        "name": "one_hotter",
+        "depth": "#classes_vocab.len"
+      },
+      {
         "in": [
           "x_emb"
         ],
         "in_y": [
-          "y"
+          "y_onehot"
         ],
         "out": [
-          "y_labels",
           "y_probas_dict"
         ],
         "main": true,
@@ -75,7 +82,6 @@
           3
         ],
         "filters_cnn": 256,
-        "confident_threshold": 0.5,
         "optimizer": "Adam",
         "lear_rate": 0.01,
         "lear_rate_decay": 0.1,
@@ -87,6 +93,12 @@
         "dropout_rate": 0.5,
         "dense_size": 100,
         "model_name": "cnn_model"
+      },
+      {
+        "in": "y_probas_dict",
+        "out": "y_labels",
+        "name": "proba2labels",
+        "max_proba": true
       }
     ],
     "out": [

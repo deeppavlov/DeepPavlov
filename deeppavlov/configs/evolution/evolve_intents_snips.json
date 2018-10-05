@@ -34,13 +34,15 @@
     "pipe": [
       {
         "id": "classes_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "fit_on": [
           "y"
         ],
         "level": "token",
         "save_path": "vocabs/snips_classes.dict",
-        "load_path": "vocabs/snips_classes.dict"
+        "load_path": "vocabs/snips_classes.dict",
+        "in": "y",
+        "out": "y_ids"
       },
       {
         "in": "x",
@@ -64,14 +66,19 @@
         "dim": 300
       },
       {
+        "in": "y_ids",
+        "out": "y_onehot",
+        "name": "one_hotter",
+        "depth": "#classes_vocab.len"
+      },
+      {
         "in": [
           "x_emb"
         ],
         "in_y": [
-          "y"
+          "y_onehot"
         ],
         "out": [
-          "y_labels",
           "y_probas_dict"
         ],
         "main": true,
@@ -91,12 +98,6 @@
             100
           ],
           "discrete": true
-        },
-        "confident_threshold": {
-          "evolve_choice": [
-            0.5,
-            1
-          ]
         },
         "optimizer": "Adam",
         "lear_rate": {
@@ -144,6 +145,12 @@
         "check_bool": {
           "evolve_bool": true
         }
+      },
+      {
+        "in": "y_probas_dict",
+        "out": "y_labels",
+        "name": "proba2labels",
+        "max_proba": true
       }
     ],
     "out": [

@@ -27,10 +27,6 @@ from keras.regularizers import l2
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.keras_model import KerasModel
-from deeppavlov.models.classifiers.utils import labels2onehot, proba2labels
-from deeppavlov.models.classifiers.utils import md5_hashsum
-from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
-from deeppavlov.models.tokenizers.nltk_tokenizer import NLTKTokenizer
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.layers.keras_layers import additive_self_attention, multiplicative_self_attention
 
@@ -56,11 +52,6 @@ class KerasClassificationModel(KerasModel):
         last_layer_activation: parameter that determines activation function after classification layer.
                 For multi-label classification use `sigmoid`,
                 otherwise, `softmax`.
-        confident_threshold: boundary value of probability for converting probabilities to labels.
-                The value is from 0 to 1.
-                If all probabilities are lower than confident_threshold,
-                label with the highest probability is assigned.
-                If `last_layer_activation` is `softmax` (not multi-label classification), assign to 1.
         classes: list of classes names presented in the dataset
                 (in config it is determined as keys of vocab over `y`)
         restore_lr: in case of loading pre-trained model \
@@ -68,8 +59,6 @@ class KerasClassificationModel(KerasModel):
 
     Attributes:
         opt: dictionary with all model parameters
-        tokenizer: tokenizer class instance
-        fasttext_model: fasttext model instance
         classes: list of considered classes
         n_classes: number of considered classes
         model: keras model itself
@@ -84,17 +73,16 @@ class KerasClassificationModel(KerasModel):
                  model_name: str, optimizer: str = "Adam", loss: str = "binary_crossentropy",
                  lear_rate: float = 0.01, lear_rate_decay: float = 0.,
                  last_layer_activation="sigmoid",
-                 confident_threshold: float = 0.5,
                  restore_lr: bool = False,
                  **kwargs):
         """
-        Initialize and train vocabularies, initializes embedder, tokenizer, and then initialize model using parameters
+        Initialize model using parameters
         from opt dictionary (from config), if model is being initialized from saved.
         """
         super().__init__(text_size=text_size, embedding_size=embedding_size, model_name=model_name,
                          optimizer=optimizer, loss=loss,
                          lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,
-                         last_layer_activation=last_layer_activation, confident_threshold=confident_threshold,
+                         last_layer_activation=last_layer_activation,
                          restore_lr=restore_lr, **kwargs)
 
         self.classes = list(np.sort(np.array(list(self.opt.get('classes')))))
@@ -117,7 +105,6 @@ class KerasClassificationModel(KerasModel):
                                       optimizer=optimizer, loss=loss,
                                       lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,
                                       last_layer_activation=last_layer_activation,
-                                      confident_threshold=confident_threshold,
                                       restore_lr=restore_lr,
                                       **kwargs)
 
@@ -181,8 +168,7 @@ class KerasClassificationModel(KerasModel):
             metrics values on the given batch
         """
         features = self.pad_texts(texts)
-        onehot_labels = labels2onehot(labels, classes=self.classes)
-        metrics_values = self.model.train_on_batch(features, onehot_labels)
+        metrics_values = self.model.train_on_batch(features, np.squeeze(np.array(labels)))
         return metrics_values
 
     def infer_on_batch(self, texts: List[List[np.ndarray]], labels: list = None) -> [float, List[float], np.ndarray]:
@@ -199,8 +185,7 @@ class KerasClassificationModel(KerasModel):
         """
         if labels:
             features = self.pad_texts(texts)
-            onehot_labels = labels2onehot(labels, classes=self.classes)
-            metrics_values = self.model.test_on_batch(features, onehot_labels)
+            metrics_values = self.model.test_on_batch(features, np.squeeze(np.array(labels)))
             return metrics_values
         else:
             features = self.pad_texts(texts)
@@ -222,8 +207,7 @@ class KerasClassificationModel(KerasModel):
         """
         preds = np.array(self.infer_on_batch(data), dtype="float64")
 
-        labels = proba2labels(preds, confident_threshold=self.opt['confident_threshold'], classes=self.classes)
-        return labels, [dict(zip(self.classes, preds[i])) for i in range(preds.shape[0])]
+        return [dict(zip(self.classes, preds[i])) for i in range(preds.shape[0])]
 
     def reset(self) -> None:
         pass
