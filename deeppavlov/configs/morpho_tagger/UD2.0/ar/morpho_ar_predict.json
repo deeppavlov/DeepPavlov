@@ -2,7 +2,7 @@
   "dataset_reader": {
     "name": "morphotagger_dataset_reader",
     "data_path": "UD2.0_source",
-    "language": "hu", "data_types": ["test"]
+    "language": "ar", "data_types": ["test"]
   },
   "dataset_iterator": {
     "name": "morphotagger_dataset"
@@ -22,8 +22,8 @@
         "name": "default_vocab",
         "level": "token",
         "special_tokens": ["PAD", "BEGIN", "END"],
-        "load_path": "morpho_tagger/UD2.0/hu/tag.dict",
-        "save_path": "morpho_tagger/UD2.0/hu/tag.dict"
+        "load_path": "morpho_tagger/UD2.0/ar/tag.dict",
+        "save_path": "morpho_tagger/UD2.0/ar/tag.dict"
       },
       {
         "id": "char_vocab",
@@ -31,8 +31,8 @@
         "min_freq": 3,
         "special_tokens": ["PAD", "BEGIN", "END"],
 		"level": "char",
-        "save_path": "morpho_tagger/UD2.0/hu/char.dict",
-        "load_path": "morpho_tagger/UD2.0/hu/char.dict"
+        "save_path": "morpho_tagger/UD2.0/ar/char.dict",
+        "load_path": "morpho_tagger/UD2.0/ar/char.dict"
       },
       {
         "in": ["x_processed"],
@@ -40,8 +40,8 @@
         "out": ["y_predicted"],
         "name": "morpho_tagger",
         "main": true,
-        "save_path": "morpho_tagger/UD2.0/hu/model.hdf5",
-        "load_path": "morpho_tagger/UD2.0/hu/model.hdf5",
+        "save_path": "morpho_tagger/UD2.0/ar/model.hdf5",
+        "load_path": "morpho_tagger/UD2.0/ar/model.hdf5",
         "tags": "#tag_vocab",
         "symbols": "#char_vocab",
         "verbose": 1,
@@ -62,7 +62,7 @@
   },
   "predict": {
     "batch_size": 32,
-    "outfile": "results/ud_hu_test.res"
+    "outfile": "results/ud_ar_test.res"
   },
   "metadata": {
     "requirements": [
@@ -71,8 +71,8 @@
     "download": [
       "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger.tar.gz",
       {
-        "url": "http://files.deeppavlov.ai/datasets/UD2.0_source/hu.tar.gz",
-        "subdir": "UD2.0_source/hu"
+        "url": "http://files.deeppavlov.ai/datasets/UD2.0_source/ar.tar.gz",
+        "subdir": "UD2.0_source/ar"
       }
     ],
   "telegram_utils": "MorphoTaggerModel"
