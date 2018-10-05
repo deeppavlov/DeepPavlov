@@ -51,8 +51,9 @@ class EcommerceAgent(Agent):
     def __init__(self, skills: List[Skill], *args, **kwargs) -> None:
 
         super(EcommerceAgent, self).__init__(skills=skills)
-        self.history: dict = defaultdict(list)
-        self.states: dict = defaultdict(lambda: {} * len(self.skills))
+        # self.history: dict = defaultdict(list)
+        self.states: dict = defaultdict(lambda: [{"start": 0, "stop": 5} for _ in self.skills])
+
 
     def _call(self, utterances_batch: list, utterances_ids: list=None) -> list:
         """Processes batch of utterances and returns corresponding responses batch.
@@ -70,36 +71,33 @@ class EcommerceAgent(Agent):
 
             log.debug(f'Utterance: {utt}')
 
-            if id_ not in self.states:
-                self.states[id_] = {"start": 0, "stop": 5}
-
             if utt == "/start":
                 return say_hello()
 
             if utt[0] == "@":
-                parts = utt.split(":")
+                command, *parts = utt.split(":")
                 log.debug(f'Actions: {parts}')
 
-                if parts[0] == "@details":
-                    return show_details(self.history[id_][int(parts[1])][0][int(parts[2])])
+                if command == "@details":
+                    return show_details(self.history[id_][int(parts[0])][0][int(parts[1])])
 
-                if parts[0] == "@entropy":
-                    state = self.history[id_][int(parts[1])]
-                    state[parts[2]] = parts[3]
+                if command == "@entropy":
+                    state = self.history[id_][int(parts[0])]
+                    state[parts[1]] = parts[2]
                     state["start"] = 0
                     state["stop"] = 5
                     utt = state['query']
                     self.states[id_] = state
 
-                if parts[0] == "@next":
-                    state = self.history[id_][int(parts[1])]
+                if command == "@next":
+                    state = self.history[id_][int(parts[0])]
                     state['start'] = state['stop']
                     state['stop'] = state['stop']+5
                     utt = state['query']
                     self.states[id_] = state
 
-                if parts[0] == "@previous":
-                    state = self.history[id_][int(parts[1])]
+                if command == "@previous":
+                    state = self.history[id_][int(parts[0])]
                     state['stop'] = state['start']
                     state['start'] = state['start']-5
                     utt = state['query']
@@ -144,8 +142,9 @@ class EcommerceAgent(Agent):
                 buttons_frame = ButtonsFrame(
                     text="Please specify a "+entropy[0][1])
                 for ent_value in entropy[0][2][:3]:
-                    button_a = Button(ent_value[0], "@entropy:"+str(
-                        len(self.history[id_])-1)+":"+str(entropy[0][1])+":"+str(ent_value[0]))
+                    button_a = Button(ent_value[0], 
+                        f'@entropy:{len(self.history[id_])-1}:{entropy[0][1]}:{ent_value[0]}')
+
                     buttons_frame.add_button(button_a)
 
                 rich_message.add_control(buttons_frame)
@@ -153,7 +152,7 @@ class EcommerceAgent(Agent):
         return [rich_message]
 
 
-def say_hello():
+def say_hello() -> List[RichMessage]:
     """Embed and output hello message
 
         Returns:
@@ -166,7 +165,7 @@ def say_hello():
     return [rich_message]
 
 
-def show_details(item_data: Dict[Any, Any]):
+def show_details(item_data: Dict[Any, Any]) -> List[RichMessage]:
     """Formate catalog item output
 
         Parameters:
@@ -193,7 +192,7 @@ def show_details(item_data: Dict[Any, Any]):
     return [rich_message]
 
 
-def make_agent():
+def make_agent() -> EcommerceAgent:
     """Make an agent
 
         Returns:
