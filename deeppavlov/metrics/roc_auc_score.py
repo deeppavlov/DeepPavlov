@@ -15,13 +15,15 @@
 
 import sklearn.metrics
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from deeppavlov.core.common.metrics_registry import register_metric
 from deeppavlov.models.classifiers.utils import labels2onehot
 
 
-def roc_auc_score_np(y_true: [list, np.ndarray], y_pred: [list, np.ndarray]) -> float:
+@register_metric('roc_auc_score')
+def roc_auc_score(y_true: Union[List[List[float]], List[List[int]], np.ndarray],
+                  y_pred: Union[List[List[float]], List[List[int]], np.ndarray]) -> float:
     """
     Compute Area Under the Curve (AUC) from prediction scores.
 
