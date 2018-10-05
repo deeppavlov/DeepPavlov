@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from typing import List, Union
+import numpy as np
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
@@ -26,7 +27,7 @@ log = get_logger(__name__)
 class Proba2Labels(Component):
     """
     Class implements probability to labels processing using two different ways: \
-     choosing label with maximal probability or choosing any number of labels \
+     choosing indices with maximal probability or choosing any number of indices \
       which probabilities to belong with are higher than given confident threshold
 
     Args:
@@ -47,7 +48,7 @@ class Proba2Labels(Component):
         self.max_proba = max_proba
         self.confident_threshold = confident_threshold
 
-    def __call__(self, data: List[dict],
+    def __call__(self, data: Union[np.ndarray, List[List[float]], List[List[int]]],
                  *args, **kwargs) -> Union[List[List[str]], List[str]]:
         """
         Process probabilities to labels
@@ -61,10 +62,13 @@ class Proba2Labels(Component):
             list of labels (only label classification) or list of lists of labels (multi-label classification)
         """
         if self.confident_threshold:
-            return [[key for key, val in d.items() if val > self.confident_threshold]
+            # return [[key for key, val in d.items() if val > self.confident_threshold]
+            #         for d in data]
+            return [list(np.where(np.array(d) > self.confident_threshold)[0])
                     for d in data]
         elif self.max_proba:
-            return [max(d, key=d.get) for d in data]
+            # return [max(d, key=d.get) for d in data]
+            return [[np.argmax(d)] for d in data]
         else:
             raise ConfigError("Proba2Labels requires one of two arguments: bool `max_proba` or "
                               "float `confident_threshold` for multi-label classification")
