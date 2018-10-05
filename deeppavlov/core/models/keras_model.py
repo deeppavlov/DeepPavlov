@@ -243,11 +243,12 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
 
 
 class ExternalKerasWrapper(NNModel, metaclass=TfModelMeta):
-    """A wrapper over morphological tagger, implemented in
-    :class:~deeppavlov.models.morpho_tagger.network.CharacterTagger.
+    """A wrapper over external Keras models. It is used, for example,
+    to wrap :class:~deeppavlov.models.morpho_tagger.network.CharacterTagger.
     A subclass of :class:`~deeppavlov.core.models.nn_model.NNModel`
 
     Args:
+        cls: the class to be wrapped
         save_path: the path where model is saved
         load_path: the path from where model is loaded
         mode: usage mode

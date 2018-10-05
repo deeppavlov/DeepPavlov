@@ -1,10 +1,7 @@
 deeppavlov.models.morpho_tagger
 ===============================
 
-.. autoclass:: deeppavlov.models.morpho_tagger.tagger.ExternalKerasWrapper
-    :members:
-
-    .. automethod:: __call__
+.. autoclass:: deeppavlov.models.morpho_tagger.network.MorphoTaggerWrapper
 
 .. autofunction:: deeppavlov.models.morpho_tagger.common.predict_with_model
 

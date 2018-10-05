@@ -158,7 +158,7 @@ Comparison of deeppavlov pretrained model with others:
 
 Pipelines that use candidates search in a static dictionary and an ARPA language model to correct spelling errors.
 
-Compariosn on the `test set <http://www.dialog-21.ru/media/3838/test_sample_testset.txt>`__ for the `SpellRuEval
+Comparison on the `test set <http://www.dialog-21.ru/media/3838/test_sample_testset.txt>`__ for the `SpellRuEval
 competition <http://www.dialog-21.ru/en/evaluation/2016/spelling_correction/>`__
 on Automatic Spelling Correction for Russian:
 
@@ -237,24 +237,25 @@ model for Russian and several other languages. Model takes as input tokenized se
 sequence of morphological labels in `UD format <http://universaldependencies.org/format.html>`__. The table below
 contains word and sentence accuracy on UD2.0 datasets.
 
-+-----------------+---------------------------------------------+---------------+----------------+
-|    Dataset      | Model                                       | Word accuracy | Sent. accuracy |
-+-----------------+---------------------------------------------+---------------+----------------+
-|                 |`Pymorphy`_ + `russian_tagsets`_ (first tag) |     60.93     |      0.00      |
-+                 +---------------------------------------------+---------------+----------------+
-| `UD2.0 Russian`_|`UD Pipe 1.2`_ (Straka et al., 2017)         |     93.57     |     43.04      |
-+                 +---------------------------------------------+---------------+----------------+
-|                 |`Basic model`_                               |     95.17     |     50.58      |
-+                 +---------------------------------------------+---------------+----------------+
-|                 |`Pymorphy-enhanced model`_                   |     96.23     |     58.00      |
-+-----------------+---------------------------------------------+---------------+----------------+
+.. table::
+    :widths: auto
+
+    +-----------------+--------------------------------------------------------------------------------------------------------------+---------------+----------------+
+    |    Dataset      | Model                                                                                                        | Word accuracy | Sent. accuracy |
+    +-----------------+--------------------------------------------------------------------------------------------------------------+---------------+----------------+
+    |                 |`Pymorphy`_ + `russian_tagsets`_ (first tag)                                                                  |     60.93     |      0.00      |
+    +                 +--------------------------------------------------------------------------------------------------------------+---------------+----------------+
+    | `UD2.0 Russian`_|`UD Pipe 1.2`_ (Straka et al., 2017)                                                                          |     93.57     |     43.04      |
+    +                 +--------------------------------------------------------------------------------------------------------------+---------------+----------------+
+    |                 |:config:`Basic model <morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict.json>`                     |     95.17     |     50.58      |
+    +                 +--------------------------------------------------------------------------------------------------------------+---------------+----------------+
+    |                 |:config:`Pymorphy-enhanced model <morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict_pymorphy.json>`|     96.23     |     58.00      |
+    +-----------------+--------------------------------------------------------------------------------------------------------------+---------------+----------------+
 
 .. _`Pymorphy`: https://pymorphy2.readthedocs.io/en/latest/
 .. _`russian_tagsets`: https://github.com/kmike/russian-tagsets
 .. _`UD2.0 Russian`: https://lindat.mff.cuni.cz/repository/xmlui/handle/11234/1-1983
 .. _`UD Pipe 1.2`: http://ufal.mff.cuni.cz/udpipe
-.. _`Basic model`: :config:<morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict.json>
-.. _`Pymorphy-enhanced model`: :config:<morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict_pymorphy.json>
 
 - :doc:`Frequently Asked Questions (FAQ) component </skills/faq>`
 

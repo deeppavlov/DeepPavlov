@@ -314,6 +314,11 @@ class CharacterTagger:
 
 @register("morpho_tagger")
 class MorphoTaggerWrapper(ExternalKerasWrapper):
-
+    """
+    A wrapper over :class:`CharacterTagger`.
+    It is inherited from :class:`~deeppavlov.core.keras_model.ExternalKerasWrapper`.
+    It accepts initialization parameters of :class:`CharacterTagger`
+    and arguments of :func:`CharacterTagger.train_on_batch`
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(CharacterTagger, *args, **kwargs)
