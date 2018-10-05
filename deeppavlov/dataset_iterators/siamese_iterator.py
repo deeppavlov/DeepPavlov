@@ -42,7 +42,7 @@ class SiameseIterator(DataLearningIterator):
                  num_samples: int = None,
                  random_batches: bool = False,
                  batches_per_epoch: int = None,
-                 *args, **kwargs):
+                 *args, **kwargs) -> None:
 
         self.len_valid = kwargs.get("len_valid", 1000)
         self.len_test = kwargs.get("len_test", 1000)

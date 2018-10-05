@@ -52,7 +52,7 @@ class KerasSiameseModel(SiameseModel, KerasModel):
                  dynamic_batch: bool = False,
                  attention: bool = False,
                  *args,
-                 **kwargs):
+                 **kwargs) -> None:
 
         super(KerasSiameseModel, self).__init__(*args, **kwargs)
 

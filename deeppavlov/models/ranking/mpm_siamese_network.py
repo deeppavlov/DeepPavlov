@@ -54,7 +54,7 @@ class MPMSiameseNetwork(BiLSTMSiameseNetwork):
                  ldrop_val: float = 0.0,
                  dropout_val: float = 0.0,
                  *args,
-                 **kwargs):
+                 **kwargs) -> None:
 
         self.dense_dim = dense_dim
         self.perspective_num = perspective_num
