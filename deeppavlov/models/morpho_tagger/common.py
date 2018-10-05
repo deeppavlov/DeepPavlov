@@ -64,11 +64,11 @@ class TagOutputPrettifier(Component):
     """Wrapper to :func:`~deeppavlov.models.morpho_tagger.common.` function.
 
     Args:
-        mode: output format,
+        format_mode: output format,
             in `basic` mode output data contains 4 columns (id, word, pos, features),
             in `conllu` or `ud` mode it contains 10 columns:
-                id, word, lemma, pos, xpos, feats, head, deprel, deps, misc
-                (see http://universaldependencies.org/format.html for details)
+            id, word, lemma, pos, xpos, feats, head, deprel, deps, misc
+            (see http://universaldependencies.org/format.html for details)
             Only id, word, tag and pos values are present in current version,
             other columns are filled by `_` value.
         return_string: whether to return a list of strings or a single string
@@ -77,9 +77,9 @@ class TagOutputPrettifier(Component):
         sep: separator between word analyses
     """
 
-    def __init__(self, mode: str = "basic", return_string: bool = True,
+    def __init__(self, format_mode: str = "basic", return_string: bool = True,
                  begin: str = "", end: str = "", sep: str = "\n", **kwargs):
-        self.mode = mode
+        self.format_mode = format_mode
         self.return_string = return_string
         self._make_format_string()
         self.begin = begin
@@ -87,9 +87,9 @@ class TagOutputPrettifier(Component):
         self.sep = sep
 
     def _make_format_string(self) -> None:
-        if self.mode == "basic":
+        if self.format_mode == "basic":
             self.format_string =  "{}\t{}\t{}\t{}"
-        elif self.mode in ["conllu", "ud"]:
+        elif self.format_mode in ["conllu", "ud"]:
             self.format_string = "{}\t{}\t_\t{}\t_\t{}\t_\t_\t_\t_"
         else:
             raise ValueError("Wrong mode for TagOutputPrettifier: {}, "
