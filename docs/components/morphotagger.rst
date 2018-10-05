@@ -5,22 +5,39 @@ It is an implementation of neural morphological tagger from
 `Heigold et al., 2017. An extensive empirical evaluation of
 character-based morphological tagging for 14
 languages <http://www.aclweb.org/anthology/E17-1048>`__.
-We distribute the model trained on ru\_syntagrus corpus of `Universal
-Dependencies project <www.universaldependencies.org>`__.
+We distribute the models for 11 languages trained on `Universal
+Dependencies corpora <www.universaldependencies.org>`__.
 Our model achieves the state-of-the-art performance among open source
-systems:
+systems.
 
-+-------------------+----------------+---------------------+
-| Model             | Tag accuracy   | Sentence accuracy   |
-+===================+================+=====================+
-| UD1.2             | 93.57          | 43.04               |
-+-------------------+----------------+---------------------+
-| Our (basic)       | 95.17          | 50.58               |
-+-------------------+----------------+---------------------+
-| Our (+Pymorphy)   | 96.23          | 58.00               |
-+-------------------+----------------+---------------------+
++----------------+--------------+-----------------+------------------+
+|    Language    | Code         | UDPipe accuracy | Our top accuracy |
++----------------+--------------+-----------------+------------------+
+| Arabic         | ar           | 88.31           | 90.85            |
++----------------+--------------+-----------------+------------------+
+| Czech          | cs           | 91.86           | 94.35            |
++----------------+--------------+-----------------+------------------+
+| English        | en           | 92.53           | 93.00            |
++----------------+--------------+-----------------+------------------+
+| French         | fr           | 95.25           | 95.45            |
++----------------+--------------+-----------------+------------------+
+| German         | de           | 76.65           | 83.83            |
++----------------+--------------+-----------------+------------------+
+| Hindi          | ar           | 87.74           | 90.01            |
++----------------+--------------+-----------------+------------------+
+| Hungarian      | ar           | 69.52           | 75.34            |
++----------------+--------------+-----------------+------------------+
+| Italian        | it           | 96.33           | 96.47            |
++----------------+--------------+-----------------+------------------+
+| Russian        | ru_syntagrus | 93.57           | 96.23            |
++----------------+--------------+-----------------+------------------+
+| Spanish        | es_ancora    | 96.88           | 97.00            |
++----------------+--------------+-----------------+------------------+
+| Turkish        | tr           | 86.98           | 88.03            |
++----------------+--------------+-----------------+------------------+
 
-If you want to use our models from scratch, do the following:
+If you want to use our models from scratch, do the following
+(all the examples are for ru\_syntagrus corpus, change the filenames accordingly to invoke models for other languages):
 
 #. Download data
 
@@ -43,7 +60,7 @@ If you want to use our models from scratch, do the following:
 
        python -m deeppavlov.models.morpho_tagger morpho_ru_syntagrus_predict_pymorphy
 
-   to invoke a model which additionally utilizes information from
+   to apply a model which additionally utilizes information from
    `Pymorphy2 <http://pymorphy2.readthedocs.io>`__ library.
 
 A subdirectory ``results`` will be created in your current working
@@ -196,8 +213,7 @@ Model configuration.
 Training configuration
 ~~~~~~~~~~~~~~~~~~~~~~
 
-We distribute pre-trained models for Russian (ru\_syntagrus corpus)
-and Hungarian language.
+We distribute pre-trained models for 11 languages trained on Universal Dependencies data.
 Configuration files for reproducible training are also available in
 ``deeppavlov/configs/morpho_tagger/UD2.0``, for
 example
@@ -208,7 +224,7 @@ Dataset Reader
 ^^^^^^^^^^^^^^
 
 The dataset reader describes the instance of
-``MorphotaggerDatasetReader`` class.
+:class:`~deeppavlov.dataset_readers.morphotagging_dataset_reader.MorphotaggerDatasetReader` class.
 
 ::
 
@@ -218,8 +234,8 @@ The dataset reader describes the instance of
         "language": "hu", "data_types": ["train", "dev", "test"]
       }
 
-"name" field refers to the class MorphotaggerDatasetReader,
-"data\_path" contains the path to data directory, the "language"
+``name`` field refers to the class MorphotaggerDatasetReader,
+``data\_path`` contains the path to data directory, the ``language``
 field is used to derive the name of training and development file.
 Alternatively, you can specify these files separately by full paths
 like
@@ -245,8 +261,8 @@ Iterator <#dataset-iterator>`__ section.
 Dataset iterator
 ^^^^^^^^^^^^^^^^
 
-Dataset iterator class ``dataset_iterators/morphotagger_iterator.py`` performs
-simple batching and shuffling.
+:class:`Dataset iterator <deeppavlov.dataset_iterators.morphotagger_iterator.MorphoTaggerDatasetIterator>` class
+performs simple batching and shuffling.
 
 ::
 
@@ -269,8 +285,8 @@ Chainer
 ^^^^^^^
 
 The ``chainer`` part of the configuration file contains the
-specification of the neural network
-model and supplementary things such as vocabularies. Chainer should be
+specification of the neural network model and supplementary things such as vocabularies.
+Chainer refers to an instance of :class:`~deeppavlov.core.common.chainer.Chainer` and should be
 defined as follows:
 
 ::
@@ -284,20 +300,19 @@ defined as follows:
         "out": ["y_predicted"]
       }
 
-The inputs and outputs must be specified in the pipe. "in" means
+The inputs and outputs must be specified in the pipe. ``in`` means
 regular input that is used
-for inference and train mode. "in\_y" is used for training and usually
+for inference and train mode. ``in\_y`` is used for training and usually
 contains ground truth answers.
 "out" field stands for model prediction. The model inside the pipe
 must have output variable with
-name "y\_predicted" so that "out" knows where to get
+name ``y\_predicted`` so that ``out`` knows where to get
 predictions.
 
-The major part of "chainer" is "pipe". The "pipe" contains
+The major part of ``chainer`` is ``pipe``. The ``pipe`` contains
 vocabularies and the network itself as well
 as some pre- and post- processors. The first part lowercases the input
-and normalizes it (see
-``deeppavlov/models/preprocessors/capitalization.py``).
+and normalizes it (see :class:`~deeppavlov.models.preprocessors.capitalization.CapitalizationPreprocessor`).
 
 ::
 
@@ -325,7 +340,7 @@ model should predict to tag indexes.
       },
 
  The third part is the character vocabulary used to represent words as sequences of indexes. Only the
- symbols which occur at least "min_freq" times in the training set are kept.
+ symbols which occur at least ``min_freq`` times in the training set are kept.
 
 ::
 
@@ -342,10 +357,11 @@ model should predict to tag indexes.
 
 
 If you want to utilize external morphological knowledge, you can do it in two ways.
-The first is to use [DictionaryVectorizer](../vectorizers/word_vectorizer.py#L18).
-DictionaryVectorizer is instantiated from a dictionary file. Each line of a dictionary file contains two columns:
+The first is to use :class:`~deeppavlov.models.vectorizers.word_vectorizer.DictionaryVectorizer`.
+:class:`~deeppavlov.models.vectorizers.word_vectorizer.DictionaryVectorizer` is instantiated from a dictionary file.
+Each line of a dictionary file contains two columns:
 a word and a space-separated list of its possible tags. Tags can be in any possible format. The config part for
-DictionaryVectorizer looks as
+:class:`~deeppavlov.models.vectorizers.word_vectorizer.DictionaryVectorizer` looks as
 
 ::
 
@@ -360,11 +376,11 @@ DictionaryVectorizer looks as
 
 
 The second variant for external morphological dictionary, available only for Russian,
-is [Pymorphy2](http://pymorphy2.readthedocs.io). In this case the vectorizer list all Pymorphy2 tags
+is `Pymorphy2 <http://pymorphy2.readthedocs.io>`_. In this case the vectorizer list all Pymorphy2 tags
 for a given word and transforms them to UD2.0 format using
-[russian-tagsets](https://github.com/kmike/russian-tagsets) library. Possible UD2.0 tags
+`russian-tagsets <https://github.com/kmike/russian-tagsets>`_ library. Possible UD2.0 tags
 are listed in a separate distributed with the library. This part of the config look as
-(see [config example](deeppavlov/configs/morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_train_pymorphy.json))
+(see :config:`~deeppavlov/configs/morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_train_pymorphy.json`))
 
 ::
 
@@ -379,7 +395,7 @@ are listed in a separate distributed with the library. This part of the config l
       }
 
 The next part performs the tagging itself. Together with general parameters it describes
-the input parameters of [CharacterTagger](deeppavlov/models/morpho_tagger/network.py) class.
+the input parameters of :class:`~deeppavlov.models.morpho_tagger.network.CharacterTagger`) class.
 
 ::
 
@@ -413,7 +429,7 @@ General parameters are:
   "x_possible_tags" refers to the output of external morphological dictionary.
 - `in_y` - the target to be used as gold labels during training.
 - `out` - the name of the model output.
-- `name` - registered name of the class ``CharacterTagger`` (deeppavlov/models/morpho_tagger/network.py).
+- `name` - registered name of the class :class:`~deeppavlov.models.morpho_tagger.network.CharacterTagger`).
 - `main` - (reserved for future use) a boolean parameter defining whether this is the main model.
 - `save_path` - where the model is saved after training.
 - `load_path` - from where the pretrained model can be loaded if it exists.
@@ -426,7 +442,7 @@ Model parameters are:
 - `char_conv_layers` - number of convolution layers applied to character embeddings (default=1)
 - `char_window_size` - width of convolution filters (default=5). It can be a list if several parallel filters
   are applied, for example, [2, 3, 4, 5].
-- `char_filters` - number of convolution filters (default=**None**). It can be a number, a list (when
+- `char_filters` - number of convolution filters (default = **None** ). It can be a number, a list (when
   there are several windows of different width on a single convolution layer), a list of lists, if there
   are more than 1 convolution layers, or **None**. If **None**, a layer with width *width* contains
   min(self.char_filter_multiple * *width*, 200) filters.
@@ -503,6 +519,9 @@ and produces the output of the format
     6 were AUX Mood=Ind\|Tense=Past\|VerbForm=Fin
     7 married VERB Tense=Past\|VerbForm=Part\|Voice=Pass
     8 . PUNCT \_
+
+You can also generate output in 10 column CONLL-U format.
+For this purpose add ``format_mode`` = ``ud`` to the **prettifier** section.
 
 The **train** section of the config is replaced by the **predict** section:
 
