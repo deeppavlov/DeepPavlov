@@ -65,19 +65,24 @@ class EcommerceAgent(Agent):
                 utterance batch received by agent.
         """
 
+        rich_message = RichMessage()
+
         for utt, id_ in zip(utterances_batch, utterances_ids):
 
             log.debug(f'Utterance: {utt}')
 
             if utt == "/start":
-                return say_hello()
+                welcome = "I am a new e-commerce bot. I will help you to find products that you are looking for. Please type your request in plain text."
+                rich_message.add_control(PlainText(welcome))
+                continue
 
             if utt[0] == "@":
                 command, *parts = utt.split(":")
                 log.debug(f'Actions: {parts}')
 
                 if command == "@details":
-                    return show_details(self.history[id_][int(parts[0])][0][int(parts[1])])
+                    rich_message.add_control(show_details(self.history[id_][int(parts[0])][0][int(parts[1])]))
+                    continue
 
                 if command == "@entropy":
                     state = self.history[id_][int(parts[0])]
@@ -110,7 +115,6 @@ class EcommerceAgent(Agent):
             self.states[id_] = state
             self.states[id_]["query"] = utt
 
-            rich_message = RichMessage()
             items, entropy, total = responses
 
             self.history[id_].append(responses)
@@ -150,19 +154,6 @@ class EcommerceAgent(Agent):
         return [rich_message]
 
 
-def say_hello() -> List[RichMessage]:
-    """Embed and output hello message
-
-        Returns:
-            [rich_message]: formatted hello message
-    """
-
-    rich_message = RichMessage()
-    welcome = "I am a new e-commerce bot. I will help you to find products that you are looking for. Please type your request in plain text."
-    rich_message.add_control(PlainText(welcome))
-    return [rich_message]
-
-
 def show_details(item_data: Dict[Any, Any]) -> List[RichMessage]:
     """Format catalog item output
 
@@ -185,9 +176,7 @@ def show_details(item_data: Dict[Any, Any]) -> List[RichMessage]:
             else:
                 txt += "**"+cat+"**" + ': ' + item_data[cat] + "  \n"
 
-    rich_message = RichMessage()
-    rich_message.add_control(PlainText(txt))
-    return [rich_message]
+    return txt
 
 
 def make_agent() -> EcommerceAgent:
