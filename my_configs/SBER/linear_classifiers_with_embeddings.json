@@ -11,7 +11,7 @@
     "seed": 42,
     "field_to_split": "train",
     "split_fields": ["train", "valid"],
-    "split_proportions": [0.7, 0.3]
+    "split_proportions": [0.8, 0.2]
   },
   "chainer": {
     "in": [
@@ -23,114 +23,38 @@
     "pipe": [
       [
         {
-          "id": "classes_vocab",
-          "name": "default_vocab",
+          "in": "y",
+          "out": "y_ids",
           "fit_on": ["y"],
+          "name": "simple_vocab",
+          "component_name": "Vocab of classes",
+          "id": "classes_vocab",
           "level": "token",
           "save_path": "vocabs/sber_classes.dict",
-          "load_path": "vocabs/sber_classes.dict",
-          "component_name": "Vocab of classes"
+          "load_path": "vocabs/sber_classes.dict"
         }
       ],
       [
         {
           "in": ["x"],
-          "name": "ru_tokenizer",
-          "id": "ru_tok",
           "out": ["x_tok"],
+          "name": "ru_tokenizer",
           "component_name": "Ru tokenizer"
         }
       ],
       [
         {
-          "fit_on": ["x_tok"],
-          "name": "tfidf_vectorizer",
-          "id": "tf-idf",
-          "save_path": "vocabs/tf-idf.pkl",
-          "load_path": "vocabs/tf-idf.pkl",
-          "component_name": "Sklearn tf-idf vectorizer"
-        }
-      ],
-      [
-        {
-          "in": ["x_tok"],
-          "name": "fasttext",
-          "save_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.bin",
-          "load_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.bin",
-          "dim": 300,
-          "out": "x_vec",
-          "cache": true,
-          "component_name": "Fasttext_300"
-        },
-        {
           "in": ["x_tok"],
           "out": ["x_vec"],
           "name": "elmo",
-          "elmo_output_names": ["elmo"],
-          "mini_batch_size": 32,
-          "component_name": "ELMO_1024_0",
-          "cache": true,
-          "spec": "/home/kuznetsov/models_env/ruwiki_pp_1.0_elmo/models/2018-06-09-16:38:34/hubs/sber-faq_epoches_n_0"
-        },
-        {
-          "in": ["x_tok"],
-          "out": ["x_vec"],
-          "name": "elmo",
-          "elmo_output_names": ["elmo"],
-          "mini_batch_size": 32,
-          "component_name": "ELMO_1024_2",
-          "cache": true,
-          "spec": "/home/kuznetsov/models_env/ruwiki_pp_1.0_elmo/models/2018-06-09-16:38:34/hubs/sber-faq_epoches_n_2"
-        },
-        {
-          "in": ["x_tok"],
-          "out": ["x_vec"],
-          "name": "elmo",
-          "elmo_output_names": ["elmo"],
-          "mini_batch_size": 32,
-          "component_name": "ELMO_1024_3",
-          "cache": true,
-          "spec": "/home/kuznetsov/models_env/ruwiki_pp_1.0_elmo/models/2018-06-09-16:38:34/hubs/sber-faq_epoches_n_3"
-        },
-        {
-          "in": ["x_tok"],
-          "out": ["x_vec"],
-          "name": "elmo",
-          "elmo_output_names": ["elmo"],
-          "mini_batch_size": 32,
-          "component_name": "ELMO_1024_5",
-          "cache": true,
-          "spec": "/home/kuznetsov/models_env/ruwiki_pp_1.0_elmo/models/2018-06-09-16:38:34/hubs/sber-faq_epoches_n_5"
-        },
-        {
-          "in": ["x_tok"],
-          "out": ["x_vec"],
-          "name": "elmo",
-          "elmo_output_names": ["elmo"],
-          "mini_batch_size": 32,
           "component_name": "ELMO_1024_7",
+          "elmo_output_names": ["elmo"],
+          "mini_batch_size": 32,
           "cache": true,
           "spec": "/home/kuznetsov/models_env/ruwiki_pp_1.0_elmo/models/2018-06-09-16:38:34/hubs/sber-faq_epoches_n_7"
         }
       ],
       [
-        {
-          "in": ["x_vec", "x"],
-          "out": "avr_x",
-          "name": "avr_emb",
-          "tokenizer": "#ru_tok",
-          "vectorizer": "#tf-idf",
-          "id": "tf-idf_average",
-          "component_name": "Avr_sklearn"
-        },
-        {
-          "in": ["x_vec", "x_tok"],
-          "out": "avr_x",
-          "id": "tf-idf_average",
-          "name": "sent_emb_vocab",
-          "vocab_path": "vocabs/counts_wiki_lenta.txt",
-          "component_name": "Avr_vocab"
-        },
         {
           "in": ["x_vec"],
           "out": "avr_x",
@@ -142,45 +66,16 @@
       [
         {
           "in": ["avr_x"],
-          "fit_on": ["avr_x", "y"],
-          "out": ["y_labels"],
-          "name": "support_vector_classifier",
-          "main": true,
-          "save_path": "new_sber/checkpoints/svm.pkl",
-          "load_path": "new_sber/checkpoints/svm.pkl",
-          "component_name": "SVC",
-          "penalty": "l2",
-          "loss": "squared_hinge",
-          "dual": {"search_bool": true},
-          "C": {"search_range": [0.01, 2.0]},
-          "fit_intercept": {"search_bool": true},
-          "class_weight": {"search_choice": [null, "balanced"]}
-        },
-        {
-          "in": ["avr_x"],
-          "fit_on": ["avr_x", "y"],
-          "out": ["y_labels"],
-          "name": "support_vector_classifier",
-          "main": true,
-          "save_path": "new_sber/checkpoints/svm.pkl",
-          "load_path": "new_sber/checkpoints/svm.pkl",
-          "component_name": "SVC",
-          "penalty": "l2",
-          "loss": "hinge",
-          "dual": true,
-          "C": {"search_range": [0.01, 2.0]},
-          "fit_intercept": {"search_bool": true},
-          "class_weight": {"search_choice": [null, "balanced"]}
-        },
-        {
-          "in": ["avr_x"],
-          "fit_on": ["avr_x", "y"],
-          "out": ["y_labels"],
-          "name": "logistic_regression",
-          "main": true,
-          "save_path": "new_sber/checkpoints/logreg.pkl",
-          "load_path": "new_sber/checkpoints/logreg.pkl",
+          "out": ["y_pred_probas"],
+          "fit_on": ["avr_x", "y_ids"],
+          "name": "sklearn_component",
           "component_name": "Log Reg",
+          "main": true,
+          "save_path": "linm/checkpoints/logreg.pkl",
+          "load_path": "linm/checkpoints/logreg.pkl",
+          "model_name": "sklearn.linear_model:LogisticRegression",
+          "infer_method": "predict_proba",
+          "warm_start": false,
           "penalty": "l1",
           "dual": false,
           "C": {"search_range": [0.01, 2.0]},
@@ -190,41 +85,43 @@
         },
         {
           "in": ["avr_x"],
-          "fit_on": ["avr_x", "y"],
-          "out": ["y_labels"],
-          "name": "logistic_regression",
-          "main": true,
-          "save_path": "new_sber/checkpoints/logreg.pkl",
-          "load_path": "new_sber/checkpoints/logreg.pkl",
+          "out": ["y_pred_probas"],
+          "fit_on": ["avr_x", "y_ids"],
+          "name": "sklearn_component",
           "component_name": "Log Reg",
+          "main": true,
+          "save_path": "linm/checkpoints/logreg.pkl",
+          "load_path": "linm/checkpoints/logreg.pkl",
+          "model_name": "sklearn.linear_model:LogisticRegression",
+          "infer_method": "predict_proba",
+          "warm_start": false,
           "penalty": "l2",
           "dual": false,
           "C": {"search_range": [0.01, 2.0]},
           "fit_intercept": {"search_bool": true},
           "class_weight": {"search_choice": [null, "balanced"]},
           "solver": {"search_choice": ["lbfgs", "newton-cg"]}
-        },
-        {
-          "in": ["avr_x"],
-          "fit_on": ["avr_x", "y"],
-          "out": ["y_labels"],
-          "name": "random_forest",
-          "main": true,
-          "save_path": "new_sber/checkpoints/rf.pkl",
-          "load_path": "new_sber/checkpoints/rf.pkl",
-          "component_name": "Random Forest",
-          "n_estimators": {"search_range": [10, 100], "discrete": true},
-          "min_samples_split": {"search_range": [2, 10], "discrete": true},
-          "min_samples_leaf": {"search_range": [1, 5], "discrete": true},
-          "max_features": {"search_choice": ["auto", "log2"]},
-          "min_impurity_split": null,
-          "bootstrap": true,
-          "oob_score": false,
-          "class_weight": {"search_choice": [null, "balanced"]}
-          }
-        ]
+        }
       ],
-    "out": ["y_labels"]
+      [
+        {
+          "in": "y_pred_probas",
+          "out": "y_pred_ids",
+          "name": "proba2labels",
+          "component_name": "prob2ind",
+          "max_proba": true
+        }
+      ],
+      [
+        {
+          "in": "y_pred_ids",
+          "out": "y_pred_labels",
+          "component_name": "vocab",
+          "ref": "classes_vocab"
+        }
+      ]
+      ],
+    "out": ["y_pred_labels"]
   },
   "train": {
     "metrics": [
