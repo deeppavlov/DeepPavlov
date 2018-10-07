@@ -23,19 +23,18 @@ from deeppavlov.agents.processors.highest_confidence_selector import HighestConf
 
 
 class DefaultAgent(Agent):
-    """DeepPavlov default implementation of Agent abstraction.
+    """
+    DeepPavlov default implementation of Agent abstraction.
 
     Default Agent is an implementation of agent template, with following
     pipeline for each utterance batch received by agent:
-        1) Utterance batch is processed through agent Filter which selects
-            utterances to be processed with each agent skill;
-        2) Utterances are processed through skills selected for them;
-        3) Utterances and skill responses are processed through agent
-            Processor which generates agent's response for the outer world.
+    1) Utterance batch is processed through agent Filter which selects utterances to be processed with each agent skill;
+    2) Utterances are processed through skills selected for them;
+    3) Utterances and skill responses are processed through agent Processor which generates agent's response for the outer world.
     Defining DefaultAgent means:
-        a) To define set of skills it uses;
-        b) To implement skills Filter;
-        c) To implement Processor.
+    a) To define set of skills it uses;
+    b) To implement skills Filter;
+    c) To implement Processor.
     You can refer to Skill, Filter, Processor base classes to get more info.
 
     Args:
@@ -55,7 +54,8 @@ class DefaultAgent(Agent):
         self.skills_processor: Processor = skills_processor or HighestConfidenceSelector()
 
     def _call(self, utterances_batch: list, utterances_ids: list=None) -> list:
-        """Processes batch of utterances and returns corresponding responses batch.
+        """
+        Processes batch of utterances and returns corresponding responses batch.
 
         Each call of Agent passes incoming utterances batch through skills filter,
         agent skills, skills processor. Batch of dialog IDs can be provided, in
