@@ -288,7 +288,7 @@ def is_str_batch(batch):
             if isinstance(batch, str):
                 return True
             elif isinstance(batch, np.ndarray):
-                return batch.dtype.kind not in {'i', 'f'}
+                return batch.dtype.kind == 'U'
             else:
                 batch = next(chain(*batch))
         else:
