@@ -131,7 +131,6 @@ class FasttextEmbedder(Component, Serializable):
 
         Args:
             tokens: tokenized text sample
-            mean: whether to return mean embedding of tokens per sample
 
         Returns:
             list of embedded tokens or array of mean values
