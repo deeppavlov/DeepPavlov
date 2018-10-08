@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional
+
 from deeppavlov.core.agent.rich_content import RichControl
 
 
@@ -107,7 +109,7 @@ class ButtonsFrame(RichControl):
         text: Text displayed with embedded buttons.
         content: Container with Button objects.
     """
-    def __init__(self, text: [str, None] = None):
+    def __init__(self, text: Optional[str] = None) -> None:
         super(ButtonsFrame, self).__init__('buttons_frame')
         self.text: [str, None] = text
         self.content: list = []
