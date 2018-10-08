@@ -104,6 +104,7 @@ class DecayScheduler():
             self.end_val = 0
 
     def calc_val(self, iters):
+        iters = min(iters, self.nb)
         if self.dec_type == DecayType.NO:
             return self.start_val
         elif self.dec_type == DecayType.LINEAR:
