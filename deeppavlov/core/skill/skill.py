@@ -26,7 +26,7 @@ class Skill(Component, metaclass=ABCMeta):
     """
     @abstractmethod
     def __call__(self, utterances_batch: list, history_batch: list,
-                 states_batch: Optional[list] = None) -> Tuple[list, list, Optional[list]]:
+                 states_batch: Optional[list]=None) -> Tuple[list, list, Optional[list]]:
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence

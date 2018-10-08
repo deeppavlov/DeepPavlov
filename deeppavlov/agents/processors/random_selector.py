@@ -18,8 +18,7 @@ from deeppavlov.core.agent.processor import Processor
 
 
 class RandomSelector(Processor):
-    """Returns response of a random skill for each utterance.
-    """
+    """Returns response of a random skill for each utterance."""
     def __init__(self, *args, **kwargs) -> None:
         pass
 
