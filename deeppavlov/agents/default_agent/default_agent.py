@@ -35,7 +35,7 @@ class DefaultAgent(Agent):
     a) To define set of skills it uses;
     b) To implement skills Filter;
     c) To implement Processor.
-    You can refer to :class: ~deeppavlov.core.skill.Skill, :class: ~deeppavlov.core.agent.Filter, :class: ~deeppavlov.core.agent.Processor base classes to get more info.
+    You can refer to :class:`deeppavlov.core.skill.Skill`, :class:`deeppavlov.core.agent.Filter`, :class:`deeppavlov.core.agent.Processor` base classes to get more info.
 
     Args:
         skills: List of initiated agent skills instances.
