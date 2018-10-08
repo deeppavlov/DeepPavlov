@@ -29,13 +29,14 @@ Config Structure
 
    -  **data_path** - a directory/file with texts to create a database from
    -  **save_path** - a path where the ready SQLite database should be stored
-   -  **dataset_format** - a data format, should be selected from ['sqlite', 'txt', 'json', 'wiki']
+   -  **dataset_format** - a data format, should be selected from ['txt', 'json', 'wiki']
 
 -  **dataset_iterator** - downloads Wikipidia DB, creates batches for
    ranker fitting
 
-   -  **data_dir** - a directory to download DB to
-   -  **data_url** - an URL to download Wikipedia DB from
+   -  **load_path** - a path to URL or local DB file
+   -  **batch_size** - a number of samples in a single batch
+   -  **seed** - random seed for data shuffling
    -  **shuffle** - whether to perform shuffling when iterating over DB or not
 
 -  **chainer** - pipeline manager
