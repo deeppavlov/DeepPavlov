@@ -1,5 +1,5 @@
-core.agent
-==========
+deeppavlov.core.agent
+=====================
 Basic classes for building DeepPavlov agents.
 
 .. automodule:: deeppavlov.core.agent.agent

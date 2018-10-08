@@ -1,5 +1,5 @@
-agents.processors
-=================
+deeppavlov.agents.processors
+============================
 Processors for default agent.
 
 .. automodule:: deeppavlov.agents.processors.default_rich_content_processor
