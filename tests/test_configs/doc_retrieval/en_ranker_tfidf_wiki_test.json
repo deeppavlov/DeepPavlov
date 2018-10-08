@@ -7,9 +7,8 @@
   },
   "dataset_iterator": {
     "name": "sqlite_iterator",
-    "data_dir": "odqa",
     "shuffle": false,
-    "data_url": "odqa/enwiki_test.db"
+    "load_path": "odqa/enwiki_test.db"
   },
   "chainer": {
     "in": [

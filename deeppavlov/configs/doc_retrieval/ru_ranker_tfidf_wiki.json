@@ -3,13 +3,12 @@
     "name": "odqa_reader",
     "data_path": "odqa/ruwiki.db",
     "save_path": "odqa/ruwiki.db",
-    "dataset_format": "sqlite"
+    "dataset_format": "wiki"
   },
   "dataset_iterator": {
     "name": "sqlite_iterator",
-    "data_dir": "odqa",
     "shuffle": false,
-    "data_url": "odqa/ruwiki.db"
+    "load_path": "odqa/ruwiki.db"
   },
   "chainer": {
     "in": [
