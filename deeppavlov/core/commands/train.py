@@ -216,7 +216,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
             res['test'] = report['test']['metrics']
 
             print(json.dumps(report, ensure_ascii=False))
-        
+
         model.destroy()
 
     return res
@@ -295,15 +295,40 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
         best = float('inf')
     else:
         raise ConfigError('metric_optimization has to be one of {}'.format(['maximize', 'minimize']))
-    if 'learning_rate_schedule' in train_config:
-        lr_params = train_config['learning_rate_schedule']
-        if 'update_every_batch' in lr_params:
-            lr_update_every_batch = lr_params.pop('update_every_batch')
+
+    if 'learning_rate' in train_config:
+        end_val, num_it, dec_type, extra = None, None, "no", None
+        if isinstance(train_config['learning_rate'], (tuple, list)):
+            start_val = train_config['learning_rate'][0]
+            end_val = train_config['learning_rate'][1]
         else:
-            lr_update_every_batch = False
-        lear_rate_schedule = DecayScheduler(**lr_params)
+            start_val = train_config['learning_rate']
+        if 'learning_rate_decay' in train_config:
+            if isinstance(train_config['learning_rate_decay'], (tuple, list)):
+                dec_type = train_config['learning_rate_decay'][0]
+                extra = train_config['learning_rate_decay'][1]
+            else:
+                dec_type = train_config['learning_rate_decay']
+        update_lr_every_batch = train_config.get('update_lr_every_batch', False)
+        if 'learning_rate_decay_epochs' not in train_config:
+            train_config['learning_rate_decay_epochs'] = train_config['epochs']
+        if train_config['learning_rate_decay_epochs'] > 0:
+            num_it = train_config['learning_rate_decay_epochs']
+            if update_lr_every_batch:
+                batches_per_epoch = (len(iterator.data['train']) - 1)\
+                    // train_config['batch_size'] + 1
+                num_it *= batches_per_epoch
+        elif train_config['max_batches'] > 0:
+            num_it = train_config['max_batches']
+            update_lr_every_batch = True
+
+        log.info(f"start_val={start_val},end_val={end_val},num_it={num_it}"
+                 f",dec_type={dec_type},extra={extra},batch_update={update_lr_every_batch}")
+        lear_rate_schedule = DecayScheduler(start_val=start_val, end_val=end_val,
+                                            num_it=num_it, dec_type=dec_type, extra=extra)
     else:
         lear_rate_schedule = None
+        update_lr_every_batch = False
 
     i = 0
     epochs = 0
@@ -363,7 +388,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                     train_y_true += y_true
                     train_y_predicted += y_predicted
                 if lear_rate_schedule is not None:
-                    lr_iteration = i if lr_update_every_batch else epochs
+                    lr_iteration = i if update_lr_every_batch else epochs
                     lear_rates.append(lear_rate_schedule.calc_val(lr_iteration))
                     loss = model.train_on_batch(x, y_true, learning_rate=lear_rates[-1])
                 else:
@@ -414,8 +439,8 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                         if 'learning_rate' in report:
                             lr_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' +
                                                                         'learning_rate',
-                                                                        simple_value=report['learnin_rate']), ])
-                            tb_train_writer.add_summart(lr_sum, i)
+                                                                        simple_value=report['learning_rate']), ])
+                            tb_train_writer.add_summary(lr_sum, i)
 
                     report = {'train': report}
                     print(json.dumps(report, ensure_ascii=False))
