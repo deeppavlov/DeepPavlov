@@ -20,7 +20,7 @@ from deeppavlov.skills.pattern_matching_skill import PatternMatchingSkill
 def make_hello_bot_agent() -> DefaultAgent:
     """Builds agent based on PatternMatchingSkill and HighestConfidenceSelector.
 
-    This is agent building tutorial. You can this .py file to check how hello-bot agent works.
+    This is agent building tutorial. You can use this .py file to check how hello-bot agent works.
 
     Returns:
         agent: Agent capable of handling several simple greetings.
