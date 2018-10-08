@@ -43,6 +43,6 @@ def round_f1(y_true, y_predicted):
     Returns:
         F1 score
     """
-    predictions = list(map(lambda x: round(x), y_predicted))
+    predictions = [round(x) for x in y_predicted]
     return f1_score(y_true, predictions)
 
