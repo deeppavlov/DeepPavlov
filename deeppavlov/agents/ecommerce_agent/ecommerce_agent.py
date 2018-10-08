@@ -157,11 +157,11 @@ class EcommerceAgent(Agent):
 def show_details(item_data: Dict[Any, Any]) -> List[RichMessage]:
     """Format catalog item output
 
-        Parameters:
-            item_data: item's attributes values
+    Parameters:
+        item_data: item's attributes values
 
-        Returns:
-            [rich_message]: list of formatted rich message
+    Returns:
+        [rich_message]: list of formatted rich message
     """
 
     txt = ""
@@ -182,8 +182,8 @@ def show_details(item_data: Dict[Any, Any]) -> List[RichMessage]:
 def make_agent() -> EcommerceAgent:
     """Make an agent
 
-        Returns:
-            agent: created Ecommerce agent
+    Returns:
+        agent: created Ecommerce agent
     """
 
     config_path = find_config('ecommerce_bot')
