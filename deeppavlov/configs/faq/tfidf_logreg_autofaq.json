@@ -8,10 +8,21 @@
   "dataset_iterator": {
     "name": "data_learning_iterator"
   },
-
   "chainer": {
     "in": "q",
     "pipe": [
+      {
+        "id": "classes_vocab",
+        "name": "simple_vocab",
+        "fit_on": [
+          "y"
+        ],
+        "level": "token",
+        "save_path": "vocabs/snips_classes.dict",
+        "load_path": "vocabs/snips_classes.dict",
+        "in": "y",
+        "out": "y_ids"
+      },
       {
         "name": "ru_tokenizer",
         "id": "my_tokenizer",
@@ -42,24 +53,33 @@
         "infer_method": "transform"
       },
       {
-        "name": "logreg_classifier",
         "in": "q_vect",
-        "fit_on": ["q_vect", "y"],
-        "top_n": 1,
-        "c": 1000,
+        "fit_on": [
+          "q_vect",
+          "y"
+        ],
+        "out": [
+          "answer"
+        ],
+        "C": 1000,
         "penalty": "l2",
+        "name": "sklearn_component",
+        "main": true,
         "save_path": "faq/tfidf_logreg_classifier.pkl",
         "load_path": "faq/tfidf_logreg_classifier.pkl",
-        "out": ["answer", "score"]
+        "model_name": "sklearn.linear_model:LogisticRegression",
+        "infer_method": "predict"
       }
     ],
-    "out": ["answer", "score"]
+    "out": [
+      "answer",
+      "score"
+    ]
   },
-
   "train": {
     "validate_best": false,
     "test_best": false
- },
+  },
   "metadata": {
     "download": [
       {
@@ -72,7 +92,6 @@
       }
     ]
   }
-
 }
 
 
