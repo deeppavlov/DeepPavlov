@@ -21,8 +21,7 @@ from deeppavlov.core.skill.skill import Skill
 class DefaultStatelessSkill(Skill):
     """Default stateless skill class.
 
-    The class is intended to be used for as a default skill wrapping
-    DeepPavlov models.
+    The class is intended to be used for as a default skill wrapping DeepPavlov models.
 
     Attributes:
         model: DeepPavlov model to be wrapped into default skill instance.
