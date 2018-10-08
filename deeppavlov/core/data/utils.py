@@ -296,6 +296,13 @@ def is_str_batch(batch):
             return False
 
 
+def flatten_str_batch(batch):
+    if isinstance(batch, str):
+        return [batch]
+    else:
+        return chain(*[flatten_str_batch(sample) for sample in batch])
+
+
 def zero_pad_truncate(batch, max_len, pad='post', trunc='post', dtype=np.float32):
     batch_size = len(batch)
     if isinstance(batch[0][0], (int, np.int)):
