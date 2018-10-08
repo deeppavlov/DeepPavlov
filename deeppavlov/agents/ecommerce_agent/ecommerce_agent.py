@@ -165,16 +165,9 @@ def show_details(item_data: Dict[Any, Any]) -> List[RichMessage]:
     """
 
     txt = ""
-    cats = ['Title', 'Manufacturer', 'Model', 'ListPrice', 'Binding', 'Color',
-            'Genre', 'Author', 'Brand', 'Size', 'Feature']
-
-    for cat in cats:
-        if cat in item_data:
-            if cat == 'ListPrice':
-                txt += "**"+cat+"**" + ': $' + \
-                    item_data[cat].split('$')[1] + "  \n"
-            else:
-                txt += "**"+cat+"**" + ': ' + item_data[cat] + "  \n"
+    
+    for key, value in item_data.items():
+        txt += "**" + str(key) + "**" + ': ' + str(value) + "  \n"
 
     return txt
 
