@@ -178,7 +178,7 @@ class SklearnComponent(Estimator):
             warm_start = self.model_params.get("warm_start", None)
             self.model_params = {param: getattr(self.model, param) for param in self.get_class_attributes(self.model)}
             self.model_name = self.model.__module__ + self.model.__class__.__name__
-            log.info("Model {} loaded  with parameters: {}".format(self.model_name, self.model_params))
+            log.info("Model {} loaded  with parameters".format(self.model_name))
 
             if warm_start and "warm_start" in self.model_params.keys():
                 self.model_params["warm_start"] = True
