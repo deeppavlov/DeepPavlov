@@ -16,12 +16,6 @@
       "model_endpoint": "/slot-fill",
       "model_args_names": ""
     },
-    "EcommerceBot": {
-      "host": "",
-      "port": "",
-      "model_endpoint": "/ecommerce_bot",
-      "model_args_names": ["query", "state", "history"]
-    },
     "ErrorModel": {
       "host": "",
       "port": "",
