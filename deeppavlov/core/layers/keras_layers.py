@@ -13,9 +13,8 @@
 # limitations under the License.
 
 from keras import backend as K
-from keras.models import Model
-from keras.layers import Dense, Reshape, Concatenate, Lambda, Embedding, Conv2D, Activation, Input
 from keras.engine.topology import Layer
+from keras.layers import Dense, Reshape, Concatenate, Lambda, Embedding, Conv2D, Activation
 from keras.layers.merge import Multiply, Add
 from keras.activations import softmax
 import numpy as np
@@ -166,3 +165,180 @@ def char_emb_cnn_func(n_characters: int,
         return emb_c
 
     return result
+
+
+class FullMatchingLayer(Layer):
+
+    def __init__(self, output_dim, **kwargs):
+        self.output_dim = output_dim
+        super(FullMatchingLayer, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        assert isinstance(input_shape, list)
+        self.W = []
+        for i in range(self.output_dim):
+            self.W.append(self.add_weight(name='kernel',
+                                  shape=(1, input_shape[0][-1]),
+                                      initializer='uniform',
+                                      trainable=True))
+        super(FullMatchingLayer, self).build(input_shape)  # Be sure to call this at the end
+
+    def call(self, x):
+        assert isinstance(x, list)
+        inp_a, inp_b = x
+        last_state = K.expand_dims(inp_b[:, -1, :], 1)
+        m = []
+        for i in range(self.output_dim):
+            outp_a = inp_a * self.W[i]
+            outp_last = last_state * self.W[i]
+            outp_a = K.l2_normalize(outp_a, -1)
+            outp_last = K.l2_normalize(outp_last, -1)
+            outp = K.batch_dot(outp_a, outp_last, axes=[2, 2])
+            m.append(outp)
+        if self.output_dim > 1:
+            persp = K.concatenate(m, 2)
+        else:
+            persp = m
+        return [persp, persp]
+
+    def compute_output_shape(self, input_shape):
+        assert isinstance(input_shape, list)
+        shape_a, shape_b = input_shape
+        return [(shape_a[0], shape_a[1], self.output_dim), (shape_a[0], shape_a[1], self.output_dim)]
+
+
+class MaxpoolingMatchingLayer(Layer):
+
+    def __init__(self, output_dim, **kwargs):
+        self.output_dim = output_dim
+        super(MaxpoolingMatchingLayer, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        assert isinstance(input_shape, list)
+        self.W = []
+        for i in range(self.output_dim):
+            self.W.append(self.add_weight(name='kernel',
+                                  shape=(1, input_shape[0][-1]),
+                                      initializer='uniform',
+                                      trainable=True))
+        super(MaxpoolingMatchingLayer, self).build(input_shape)  # Be sure to call this at the end
+
+    def call(self, x):
+        assert isinstance(x, list)
+        inp_a, inp_b = x
+        m = []
+        for i in range(self.output_dim):
+            outp_a = inp_a * self.W[i]
+            outp_b = inp_b * self.W[i]
+            outp_a = K.l2_normalize(outp_a, -1)
+            outp_b = K.l2_normalize(outp_b, -1)
+            outp = K.batch_dot(outp_a, outp_b, axes=[2, 2])
+            outp = K.max(outp, -1, keepdims=True)
+            m.append(outp)
+        if self.output_dim > 1:
+            persp = K.concatenate(m, 2)
+        else:
+            persp = m
+        return [persp, persp]
+
+    def compute_output_shape(self, input_shape):
+        assert isinstance(input_shape, list)
+        shape_a, shape_b = input_shape
+        return [(shape_a[0], shape_a[1], self.output_dim), (shape_a[0], shape_a[1], self.output_dim)]
+
+
+class AttentiveMatchingLayer(Layer):
+
+    def __init__(self, output_dim, **kwargs):
+        self.output_dim = output_dim
+        super(AttentiveMatchingLayer, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        assert isinstance(input_shape, list)
+        self.W = []
+        for i in range(self.output_dim):
+            self.W.append(self.add_weight(name='kernel',
+                                  shape=(1, input_shape[0][-1]),
+                                      initializer='uniform',
+                                      trainable=True))
+        super(AttentiveMatchingLayer, self).build(input_shape)  # Be sure to call this at the end
+
+    def call(self, x):
+        assert isinstance(x, list)
+        inp_a, inp_b = x
+
+        outp_a = K.l2_normalize(inp_a, -1)
+        outp_b = K.l2_normalize(inp_b, -1)
+        alpha = K.batch_dot(outp_b, outp_a, axes=[1, 1])
+        alpha = K.l2_normalize(alpha, 1)
+        hmean = K.batch_dot(outp_b, alpha, axes=[2, 1])
+        kcon = K.eye(K.int_shape(inp_a)[1], dtype='float32')
+
+        m = []
+        for i in range(self.output_dim):
+            outp_a = inp_a * self.W[i]
+            outp_hmean = hmean * self.W[i]
+            outp_a = K.l2_normalize(outp_a, -1)
+            outp_hmean = K.l2_normalize(outp_hmean, -1)
+            outp = K.batch_dot(outp_hmean, outp_a, axes=[2, 2])
+            outp = K.sum(outp * kcon, -1, keepdims=True)
+            m.append(outp)
+        if self.output_dim > 1:
+            persp = K.concatenate(m, 2)
+        else:
+            persp = m
+        return [persp, persp]
+
+    def compute_output_shape(self, input_shape):
+        assert isinstance(input_shape, list)
+        shape_a, shape_b = input_shape
+        return [(shape_a[0], shape_a[1], self.output_dim), (shape_a[0], shape_a[1], self.output_dim)]
+
+
+class MaxattentiveMatchingLayer(Layer):
+
+    def __init__(self, output_dim, **kwargs):
+        self.output_dim = output_dim
+        super(MaxattentiveMatchingLayer, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        assert isinstance(input_shape, list)
+        self.W = []
+        for i in range(self.output_dim):
+            self.W.append(self.add_weight(name='kernel',
+                                  shape=(1, input_shape[0][-1]),
+                                      initializer='uniform',
+                                      trainable=True))
+        super(MaxattentiveMatchingLayer, self).build(input_shape)  # Be sure to call this at the end
+
+    def call(self, x):
+        assert isinstance(x, list)
+        inp_a, inp_b = x
+
+        outp_a = K.l2_normalize(inp_a, -1)
+        outp_b = K.l2_normalize(inp_b, -1)
+        alpha = K.batch_dot(outp_b, outp_a, axes=[2, 2])
+        alpha = K.l2_normalize(alpha, 1)
+        alpha = K.one_hot(K.argmax(alpha, 1), K.int_shape(inp_a)[1])
+        hmax = K.batch_dot(alpha, outp_b, axes=[1, 1])
+        kcon = K.eye(K.int_shape(inp_a)[1], dtype='float32')
+
+        m = []
+        for i in range(self.output_dim):
+            outp_a = inp_a * self.W[i]
+            outp_hmax = hmax * self.W[i]
+            outp_a = K.l2_normalize(outp_a, -1)
+            outp_hmax = K.l2_normalize(outp_hmax, -1)
+            outp = K.batch_dot(outp_hmax, outp_a, axes=[2, 2])
+            outp = K.sum(outp * kcon, -1, keepdims=True)
+            m.append(outp)
+        if self.output_dim > 1:
+            persp = K.concatenate(m, 2)
+        else:
+            persp = m
+        return [persp, persp]
+
+    def compute_output_shape(self, input_shape):
+        assert isinstance(input_shape, list)
+        shape_a, shape_b = input_shape
+        return [(shape_a[0], shape_a[1], self.output_dim), (shape_a[0], shape_a[1], self.output_dim)]

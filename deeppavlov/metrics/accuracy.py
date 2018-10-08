@@ -109,3 +109,21 @@ def per_item_dialog_accuracy(y_true, y_predicted):
     examples_len = len(y_true)
     correct = sum([y1.strip().lower() == y2.strip().lower() for y1, y2 in zip(y_true, y_predicted)])
     return correct / examples_len if examples_len else 0
+
+
+@register_metric('acc')
+def round_accuracy(y_true, y_predicted):
+    """
+    Rounds predictions and calculates accuracy in terms of absolute coincidence.
+
+    Args:
+        y_true: list of true values
+        y_predicted: list of predicted values
+
+    Returns:
+        portion of absolutely coincidental samples
+    """
+    predictions = [round(x) for x in y_predicted]
+    examples_len = len(y_true)
+    correct = sum([y1 == y2 for y1, y2 in zip(y_true, predictions)])
+    return correct / examples_len if examples_len else 0

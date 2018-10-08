@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from itertools import chain
+
+from sklearn.metrics import f1_score
+
 from deeppavlov.core.common.metrics_registry import register_metric
 from deeppavlov.models.ner.evaluation import precision_recall_f1
-from itertools import chain
 
 
 @register_metric('ner_f1')
@@ -27,3 +30,19 @@ def ner_f1(y_true, y_predicted):
                                   print_results=False)
     f1 = results['__total__']['f1']
     return f1
+
+@register_metric('f1')
+def round_f1(y_true, y_predicted):
+    """
+    Calculates F1 measure.
+
+    Args:
+        y_true: list of true values
+        y_predicted: list of predicted values
+
+    Returns:
+        F1 score
+    """
+    predictions = [round(x) for x in y_predicted]
+    return f1_score(y_true, predictions)
+
