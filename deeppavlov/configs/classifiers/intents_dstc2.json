@@ -86,7 +86,11 @@
     "epochs": 1000,
     "batch_size": 64,
     "metrics": [
-      "classification_accuracy",
+      {
+        "name": "sets_accuracy",
+        "y_true": "y",
+        "y_predicted": "y_labels"
+      },
       "classification_f1",
       "classification_roc_auc"
     ],
