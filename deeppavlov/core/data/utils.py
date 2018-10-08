@@ -257,7 +257,7 @@ def tokenize_reg(s):
 
 def get_dimensions(batch):
     """"""
-    if len(batch) > 0 and isinstance(batch[0], Iterable):
+    if len(batch) > 0 and isinstance(batch[0], Iterable) and not isinstance(batch, str):
         max_list = [get_dimensions(sample) for sample in batch]
         print(max_list)
         max_depth = max(len(m) for m in max_list)
@@ -291,6 +291,7 @@ def is_str_batch(batch):
                 return batch.dtype.kind == 'U'
             else:
                 batch = next(chain(*batch))
+
         else:
             return False
 
