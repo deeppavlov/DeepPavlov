@@ -20,7 +20,7 @@ from deeppavlov.agents.rich_content.default_rich_content import PlainText
 class DefaultRichContentWrapper(Processor):
     """Returns RichControl wrapped responses with highest confidence.
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         pass
 
     def __call__(self, utterances: list, batch_history: list, *responses: list) -> list:

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from abc import ABCMeta, abstractmethod
-from typing import Tuple
+from typing import Tuple, Optional
 
 from deeppavlov.core.models.component import Component
 
@@ -26,7 +26,7 @@ class Skill(Component, metaclass=ABCMeta):
     """
     @abstractmethod
     def __call__(self, utterances_batch: list, history_batch: list,
-                 states_batch: list = None) -> Tuple[list, list, list]:
+                 states_batch: Optional[list] = None) -> Tuple[list, list, Optional[list]]:
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence

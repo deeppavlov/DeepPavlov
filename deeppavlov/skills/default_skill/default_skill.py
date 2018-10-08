@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple
+from typing import Tuple, Optional
 
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.skill.skill import Skill
@@ -27,11 +27,11 @@ class DefaultStatelessSkill(Skill):
     Attributes:
         model: DeepPavlov model to be wrapped into default skill instance.
     """
-    def __init__(self, model: Chainer, *args, **kwargs):
+    def __init__(self, model: Chainer, *args, **kwargs) -> None:
         self.model: Chainer = model
 
     def __call__(self, utterances_batch: list, history_batch: list,
-                 states_batch: list = None) -> Tuple[list, list, list]:
+                 states_batch: Optional[list]=None) -> Tuple[list, list, list]:
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence

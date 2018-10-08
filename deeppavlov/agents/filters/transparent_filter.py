@@ -24,7 +24,7 @@ class TransparentFilter(Filter):
     Attributes:
         size: Number of agent skills.
     """
-    def __init__(self, skills_count: int, *args, **kwargs):
+    def __init__(self, skills_count: int, *args, **kwargs) -> None:
         self.size: int = skills_count
 
     def __call__(self, utterances_batch: list, history_batch: list) -> list:

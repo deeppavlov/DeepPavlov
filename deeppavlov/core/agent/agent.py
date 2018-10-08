@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from abc import ABCMeta, abstractmethod
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from collections import defaultdict
 
 from deeppavlov.core.models.component import Component
@@ -48,14 +48,14 @@ class Agent(Component, metaclass=ABCMeta):
             wrapped to SkillsWrapper automatically during agent initialisation.
             We highly recommend to use wrapped skills for skills inference.
     """
-    def __init__(self, skills: List[Skill]):
+    def __init__(self, skills: List[Skill]) -> None:
         self.skills: List[Skill] = skills
         self.history: Dict = defaultdict(list)
         self.states: Dict = defaultdict(lambda: [None] * len(self.skills))
         self.wrapped_skills: List[SkillWrapper] = \
             [SkillWrapper(skill, skill_id, self) for skill_id, skill in enumerate(self.skills)]
 
-    def __call__(self, utterances_batch: list, utterances_ids: list=None) -> list:
+    def __call__(self, utterances_batch: list, utterances_ids: Optional[list] = None) -> list:
         """Wraps _call method and updates utterances history.
 
         Args:
@@ -78,7 +78,7 @@ class Agent(Component, metaclass=ABCMeta):
         return responses_batch
 
     @abstractmethod
-    def _call(self, utterances_batch: list, utterances_ids: list=None) -> list:
+    def _call(self, utterances_batch: list, utterances_ids: Optional[list] = None) -> list:
         """Processes batch of utterances and returns corresponding responses batch.
 
         Each call of Agent processes incoming utterances and returns response
@@ -112,12 +112,12 @@ class SkillWrapper:
         skill_id: Skill index in Agent.skills list.
         agent: Agent instance.
     """
-    def __init__(self, skill: Skill, skill_id: int, agent: Agent):
+    def __init__(self, skill: Skill, skill_id: int, agent: Agent) -> None:
         self.skill = skill
         self.skill_id = skill_id
         self.agent = agent
 
-    def __call__(self, utterances_batch: list, utterances_ids: list=None) -> Tuple[list, list]:
+    def __call__(self, utterances_batch: list, utterances_ids: Optional[list] = None) -> Tuple[list, list]:
         """Wraps __call__ method of Skill instance.
 
             Provides skill __call__ with signature of Agent __call__ and handles

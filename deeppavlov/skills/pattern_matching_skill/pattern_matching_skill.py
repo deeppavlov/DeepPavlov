@@ -1,6 +1,6 @@
 import random
 import re
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 from deeppavlov.core.skill.skill import Skill
 
@@ -28,7 +28,8 @@ class PatternMatchingSkill(Skill):
         regex: Turns on regular expressions matching mode.
         ignore_case: Turns on utterances case ignoring.
     """
-    def __init__(self, responses: List[str], patterns: List[str]=None, regex: bool=False, ignore_case: bool=True):
+    def __init__(self, responses: List[str], patterns: Optional[List[str]]=None,
+                 regex: bool=False, ignore_case: bool=True) -> None:
         if isinstance(responses, str):
             responses = [responses]
         self.responses = responses
@@ -45,7 +46,8 @@ class PatternMatchingSkill(Skill):
                 patterns = [pattern.lower() for pattern in patterns]
         self.patterns = patterns
 
-    def __call__(self, utterances_batch: list, history_batch: list, states_batch: list = None) -> Tuple[list, list]:
+    def __call__(self, utterances_batch: list, history_batch: list,
+                 states_batch: Optional[list]=None) -> Tuple[list, list]:
         """Returns skill inference result.
 
         Returns batches of skill inference results, estimated confidence

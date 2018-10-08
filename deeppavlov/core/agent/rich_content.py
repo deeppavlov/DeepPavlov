@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Union
 from abc import ABCMeta, abstractmethod
 
 
@@ -24,14 +25,14 @@ class RichItem(metaclass=ABCMeta):
     with other channels.
     """
     @abstractmethod
-    def json(self) -> [list, dict]:
+    def json(self) -> Union[list, dict]:
         """Returns json compatible state of the control instance including
         its nested controls.
 
         Returns:
-            control (list, dict): Json representation of control state.
+            control: Json representation of control state.
         """
-        return None
+        pass
 
     def ms_bot_framework(self):
         """Returns MS Bot Framework compatible state of the control instance
@@ -67,7 +68,7 @@ class RichControl(RichItem, metaclass=ABCMeta):
         control_json: Control json representation template, which
             contains control type and content fields.
     """
-    def __init__(self, control_type: str):
+    def __init__(self, control_type: str) -> None:
         self.control_type: str = control_type
         self.content = None
         self.control_json: dict = {'type': control_type, 'content': None}
@@ -84,7 +85,7 @@ class RichMessage(RichItem):
         controls: Container for RichControl instances.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.controls: list = []
 
     def add_control(self, control: RichControl):

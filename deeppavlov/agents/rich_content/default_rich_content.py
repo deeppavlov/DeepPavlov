@@ -26,7 +26,7 @@ class PlainText(RichControl):
     Attributes:
         content: Text of the message.
     """
-    def __init__(self, text):
+    def __init__(self, text) -> None:
         super(PlainText, self).__init__('plain_text')
         self.content: str = text
 
@@ -64,7 +64,7 @@ class Button(RichControl):
         name: Displayed name of the button.
         callback: Plain text returned as callback when button pressed.
     """
-    def __init__(self, name: str, callback: str):
+    def __init__(self, name: str, callback: str) -> None:
         super(Button, self).__init__('button')
         self.name: str = name
         self.callback: str = callback
@@ -109,7 +109,7 @@ class ButtonsFrame(RichControl):
         text: Text displayed with embedded buttons.
         content: Container with Button objects.
     """
-    def __init__(self, text: Optional[str] = None) -> None:
+    def __init__(self, text: Optional[str]=None) -> None:
         super(ButtonsFrame, self).__init__('buttons_frame')
         self.text: [str, None] = text
         self.content: list = []
