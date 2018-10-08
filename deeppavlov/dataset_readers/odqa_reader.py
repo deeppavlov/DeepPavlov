@@ -38,9 +38,10 @@ class ODQADataReader(DatasetReader):
 
     def read(self, data_path: Union[Path, str], *args, **kwargs) -> None:
         logger.info('Reading files...')
-        if kwargs['dataset_format'] == 'sqlite':
-            return
         save_path = expand_path(kwargs['save_path'])
+        if save_path.exists() and Path(save_path.parent / '.done').exists():
+            return
+        save_path = expand_path(save_path)
         self._build_db(save_path, kwargs['dataset_format'], data_path)
 
     def iter_files(self, path: Union[Path, str]) -> Generator[Path, Any, Any]:
@@ -74,19 +75,27 @@ class ODQADataReader(DatasetReader):
 
         Args:
             save_path: a path where the ready database should be saved
-            dataset_format: a data format, should be selected from ['sqlite', 'txt', 'json', 'wiki']
+            dataset_format: a data format, should be selected from ['txt', 'json', 'wiki']
             data_path: path to a folder/file from which to build a database
             num_workers: a number of workers for parallel database building
 
         Raises:
             sqlite3.OperationalError if `save_path` doesn't exist.
-            RuntimeError if dataset_format is not in ['sqlite', 'txt', 'json', 'wiki']
+            RuntimeError if dataset_format is not in ['txt', 'json', 'wiki']
 
         Returns:
             None
 
         """
+        done_path = Path(save_path.parent / '.done')
+
+        if Path(save_path).exists():
+            Path(save_path).unlink()
+        if done_path.exists():
+            done_path.unlink()
+
         logger.info('Building the database...')
+
         try:
             conn = sqlite3.connect(str(save_path))
         except sqlite3.OperationalError as e:
@@ -118,6 +127,7 @@ class ODQADataReader(DatasetReader):
 
         conn.commit()
         conn.close()
+        done_path.touch()
 
     @staticmethod
     def _get_file_contents(fpath: Union[Path, str]) -> List[Tuple[str, str]]:
