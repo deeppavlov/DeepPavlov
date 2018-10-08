@@ -42,14 +42,6 @@ Vectorizers
 
 Vectorizers produce numeric vectors of input sentences
 
--  **tfidf_vectorizer** - TF-IDF vectorizer
-
-   -  **in** - input data: question
-   -  **fit_on** - train data:   token lemmas of question
-   -  **save_path** - path where to save model
-   -  **load_path** - path where to load model
-   -  **out** - output data: vectorized sentence
-
 -  **sentence2vector_v2w_tfidf** - Sentence vectorizer: weighted sum of word embeddings from sentence
 
    -  **in** - input data: question
@@ -57,11 +49,6 @@ Vectorizers produce numeric vectors of input sentences
    -  **save_path** - path where to save model
    -  **load_path** - path where to load model
    -  **out** - output data: vectorized sentence
-
--  **sentence2vector_v2w_avg** - Sentence vectorizer: average sum of word embeddings from sentence
-   -  **in** - input data: question
-   -  **out** - output data: vectorized sentence
-
 
 
 Classifiers for FAQ
