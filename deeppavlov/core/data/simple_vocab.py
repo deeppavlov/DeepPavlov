@@ -51,6 +51,7 @@ class SimpleVocabulary(Estimator):
             self.load()
 
     def fit(self, *args):
+        # return None
         self.reset()
         tokens = chain(*args)
         # filter(None, <>) -- to filter empty tokens
@@ -74,13 +75,12 @@ class SimpleVocabulary(Estimator):
                 self._i2t.append(token)
                 self.count += 1
 
-    def __call__(self, batch, **kwargs):
+    def __call__(self, batch, is_top=True, **kwargs):
         if isinstance(batch, Iterable) and not isinstance(batch, str):
-            looked_up_batch = [self(sample) for sample in batch]
+            looked_up_batch = [self(sample, is_top=False) for sample in batch]
         else:
             return self[batch]
-
-        if self._pad_with_zeros and not is_str_batch(looked_up_batch):
+        if is_top and self._pad_with_zeros and not is_str_batch(looked_up_batch):
             looked_up_batch = zero_pad(looked_up_batch)
 
         return looked_up_batch
