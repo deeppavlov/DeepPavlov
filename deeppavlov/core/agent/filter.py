@@ -46,3 +46,4 @@ class Filter(Component, metaclass=ABCMeta):
             with the same position in the utterances_batch.
 
         """
+        pass

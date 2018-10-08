@@ -42,3 +42,4 @@ class Processor(Component, metaclass=ABCMeta):
             responses: A batch of responses corresponding to the
                 utterance batch received by agent.
         """
+        pass
