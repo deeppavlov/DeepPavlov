@@ -15,6 +15,7 @@
 import sqlite3
 from typing import List, Any, Dict, Optional
 from random import Random
+from pathlib import Path
 
 from overrides import overrides
 
@@ -26,8 +27,6 @@ from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 
 logger = get_logger(__name__)
 
-DB_URL = 'http://files.deeppavlov.ai/datasets/wikipedia/enwiki.db'
-
 
 @register('sqlite_iterator')
 class SQLiteDataIterator(DataFittingIterator):
@@ -36,8 +35,7 @@ class SQLiteDataIterator(DataFittingIterator):
     Get document ids and document.
 
     Args:
-        data_dir: a directory where to save downloaded DB to
-        data_url: an URL where to download a DB from
+        load_path: a path to URL or local DB file
         batch_size: a number of samples in a single batch
         shuffle: whether to shuffle data during batching
         seed: random seed for data shuffling
@@ -53,15 +51,34 @@ class SQLiteDataIterator(DataFittingIterator):
 
     """
 
-    def __init__(self, data_dir: str = '', data_url: str = DB_URL, batch_size: int = None,
+    def __init__(self, load_path: str, batch_size: int = None,
                  shuffle: bool = None, seed: int = None, **kwargs):
 
-        download_dir = expand_path(data_dir)
-        download_path = download_dir.joinpath(data_url.split("/")[-1])
-        download(download_path, data_url, force_download=False)
+        if load_path is not None:
+            if load_path.startswith('http'):
+                logger.info("Downloading database from url: {}".format(load_path))
+                download_dir = expand_path(Path(load_path)).parent
+                download_path = download_dir.joinpath(load_path.split("/")[-1])
+                download(download_path, load_path, force_download=False)
+            else:
+                download_path = expand_path(load_path)
+                logger.warn("{} load_path yet doesn't exist".format(self.__class__.__name__))
+        else:
+            raise ValueError('String path expected, got None.')
 
-        self.connect = sqlite3.connect(str(download_path), check_same_thread=False)
-        self.db_name = self.get_db_name()
+        logger.info("Connecting to database, path: {}".format(download_path))
+        try:
+            self.connect = sqlite3.connect(str(download_path), check_same_thread=False)
+        except sqlite3.OperationalError as e:
+            e.args = e.args + ("Check that DB path exists and is a valid DB file",)
+            raise e
+        try:
+            self.db_name = self.get_db_name()
+        except TypeError as e:
+            e.args = e.args + (
+                'Check that DB path was created correctly and is not empty. '
+                'Check that a correct dataset_format is passed to the ODQAReader config',)
+            raise e
         self.doc_ids = self.get_doc_ids()
         self.doc2index = self.map_doc2idx()
         self.batch_size = batch_size
