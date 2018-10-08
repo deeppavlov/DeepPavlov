@@ -16,9 +16,9 @@ import datetime
 import importlib
 import json
 import time
-from collections import OrderedDict
+from collections import OrderedDict, namedtuple
 from pathlib import Path
-from typing import List, Callable, Tuple, Dict, Union
+from typing import List, Tuple, Dict, Union
 
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root, import_packages
@@ -31,11 +31,34 @@ from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
-from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.nn_model import NNModel
 
 log = get_logger(__name__)
+
+Metric = namedtuple('Metric', ['name', 'fn', 'y_true', 'y_predicted'])
+
+
+def _parse_metrics(metrics, in_y, out_vars):
+    metrics_functions = []
+    for metric in metrics:
+        if isinstance(metric, str):
+            metric = {'name': metric}
+
+        metric_name = metric['name']
+
+        f = get_metrics_by_names(metric_name)
+
+        y_true_names = metric.get('y_true', in_y)
+        if isinstance(y_true_names, str):
+            y_true_names = [y_true_names]
+
+        y_predicted_names = metric.get('y_predicted', out_vars)
+        if isinstance(y_predicted_names, str):
+            y_predicted_names = [y_predicted_names]
+
+        metrics_functions.append(Metric(metric_name, f, y_true_names, y_predicted_names))
+    return metrics_functions
 
 
 def prettify_metrics(metrics: List[Tuple[str, float]], precision: int = 4) -> OrderedDict:
@@ -167,26 +190,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
     except KeyError:
         log.warning('Train config is missing. Populating with default values')
 
-    metrics_functions = []
-    for metric in train_config['metrics']:
-        if isinstance(metric, str):
-            metric = {'name': metric}
-
-        metric_name = metric['name']
-
-        f = get_metrics_by_names(metric_name)
-
-        y_true_names = metric.get('y_true', config['chainer']['in_y'])
-        if isinstance(y_true_names, str):
-            y_true_names = [y_true_names]
-
-        y_predicted_names = metric.get('y_predicted', config['chainer']['out'])
-        if isinstance(y_predicted_names, str):
-            y_predicted_names = [y_predicted_names]
-
-        metrics_functions.append((metric_name, f, y_true_names, y_predicted_names))
-
-    # metrics_functions = list(zip(train_config['metrics'], get_metrics_by_names(train_config['metrics'])))
+    metrics_functions = _parse_metrics(train_config['metrics'], config['chainer']['in_y'], config['chainer']['out'])
 
     if to_train:
         model = fit_chainer(config, iterator)
@@ -239,18 +243,24 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
     return res
 
 
-def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
+def _test_model(model: Chainer, metrics_functions: List[Metric],
                 iterator: DataLearningIterator, batch_size=-1, data_type='valid',
                 start_time: float=None, show_examples=False) -> Dict[str, Union[int, OrderedDict, str]]:
     if start_time is None:
         start_time = time.time()
 
-    val_y_true = []
-    val_y_predicted = []
+    expected_outputs = {}
+    for m in metrics_functions:
+        expected_outputs |= set(m.y_true) | set(m.y_predicted)
+    expected_outputs = list(expected_outputs)
+
+    outputs = []
     for x, y_true in iterator.gen_batches(batch_size, data_type, shuffle=False):
-        y_predicted = list(model(list(x)))
-        val_y_true += y_true
-        val_y_predicted += y_predicted
+        outputs += list(model(list(x), list(y_true), to_return=expected_outputs))
+    if len(expected_outputs) == 1:
+        outputs = [outputs]
+    else:
+        outputs = zip(*outputs)
 
     metrics = [(s, f(val_y_true, val_y_predicted)) for s, f in metrics_functions]
 
@@ -273,8 +283,8 @@ def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
     return report
 
 
-def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config: dict,
-                   metrics_functions: List[Tuple[str, Callable]]) -> NNModel:
+def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config: dict,
+                   metrics_functions: List[Metric]) -> NNModel:
 
     default_train_config = {
         'epochs': 0,
@@ -297,8 +307,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
     train_config = dict(default_train_config, **train_config)
 
     if 'train_metrics' in train_config:
-        train_metrics_functions = list(zip(train_config['train_metrics'],
-                                           get_metrics_by_names(train_config['train_metrics'])))
+        train_metrics_functions = _parse_metrics(train_config['train_metrics'], model.in_y, model.out_params)
     else:
         train_metrics_functions = metrics_functions
 
