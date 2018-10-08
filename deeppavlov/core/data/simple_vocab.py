@@ -22,7 +22,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.estimator import Estimator
-from deeppavlov.core.data.utils import zero_pad, is_str_batch
+from deeppavlov.core.data.utils import zero_pad, is_str_batch, flatten_str_batch
 
 log = get_logger(__name__)
 
@@ -54,7 +54,7 @@ class SimpleVocabulary(Estimator):
         self.reset()
         tokens = chain(*args)
         # filter(None, <>) -- to filter empty tokens
-        self.freqs = Counter(filter(None, chain(*tokens)))
+        self.freqs = Counter(filter(None, flatten_str_batch(tokens)))
         for special_token in self.special_tokens:
             self._t2i[special_token] = self.count
             self._i2t.append(special_token)
