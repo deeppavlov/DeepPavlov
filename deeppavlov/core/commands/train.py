@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import List, Callable, Tuple, Dict, Union
 
 from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root, import_packages
+from deeppavlov.core.commands.utils import DecayScheduler
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.errors import ConfigError
@@ -294,6 +295,15 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
         best = float('inf')
     else:
         raise ConfigError('metric_optimization has to be one of {}'.format(['maximize', 'minimize']))
+    if 'learning_rate_schedule' in train_config:
+        lr_params = train_config['learning_rate_schedule']
+        if 'update_every_batch' in lr_params:
+            lr_update_every_batch = lr_params.pop('update_every_batch')
+        else:
+            lr_update_every_batch = False
+        lear_rate_schedule = DecayScheduler(**lr_params)
+    else:
+        lear_rate_schedule = None
 
     i = 0
     epochs = 0
@@ -304,6 +314,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
     train_y_true = []
     train_y_predicted = []
     losses = []
+    lear_rates = []
     start_time = time.time()
     break_flag = False
 
@@ -351,7 +362,12 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                     y_predicted = list(model(list(x)))
                     train_y_true += y_true
                     train_y_predicted += y_predicted
-                loss = model.train_on_batch(x, y_true)
+                if lear_rate_schedule is not None:
+                    lr_iteration = i if lr_update_every_batch else epochs
+                    lear_rates.append(lear_rate_schedule.calc_val(lr_iteration))
+                    loss = model.train_on_batch(x, y_true, learning_rate=lear_rates[-1])
+                else:
+                    loss = model.train_on_batch(x, y_true)
                 if loss is not None:
                     losses.append(loss)
                 i += 1
@@ -366,6 +382,9 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                         'metrics': prettify_metrics(metrics),
                         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                     }
+
+                    if lear_rates:
+                        report['learning_rate'] = lear_rates[-1]
 
                     if train_config['show_examples']:
                         try:
@@ -389,8 +408,14 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
 
                         if 'loss' in report:
                             loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + 'loss',
-                                                                            simple_value=report['loss']), ])
+                                                                          simple_value=report['loss']), ])
                             tb_train_writer.add_summary(loss_sum, i)
+
+                        if 'learning_rate' in report:
+                            lr_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' +
+                                                                        'learning_rate',
+                                                                        simple_value=report['learnin_rate']), ])
+                            tb_train_writer.add_summart(lr_sum, i)
 
                     report = {'train': report}
                     print(json.dumps(report, ensure_ascii=False))
@@ -432,6 +457,9 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                     'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                 }
 
+                if lear_rates:
+                    report['learning_rate'] = lear_rates[-1]
+
                 if train_config['show_examples']:
                     try:
                         report['examples'] = [{
@@ -454,8 +482,14 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
 
                     if 'loss' in report:
                         loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + 'loss',
-                                                                        simple_value=report['loss']), ])
+                                                                      simple_value=report['loss']), ])
                         tb_train_writer.add_summary(loss_sum, epochs)
+
+                    if 'learning_rate' in report:
+                        lr_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' +
+                                                                    'learning_rate',
+                                                                    simple_value=report['learning_rate']), ])
+                        tb_train_writer.add_summary(lr_sum, epochs)
 
                 model.process_event(event_name='after_train_log', data=report)
                 report = {'train': report}
