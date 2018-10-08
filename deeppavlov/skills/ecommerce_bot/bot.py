@@ -30,6 +30,7 @@ from deeppavlov.metrics.bleu import bleu_advanced
 log = get_logger(__name__)
 
 @register("ecommerce_bot")
+
 class EcommerceBot(Skill):
     """Class to retrieve product items from `load_path` catalogs
     in sorted order according to the similarity measure
