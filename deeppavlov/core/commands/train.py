@@ -20,21 +20,20 @@ from collections import OrderedDict
 from pathlib import Path
 from typing import List, Callable, Tuple, Dict, Union
 
-from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root, import_packages
 from deeppavlov.core.commands.infer import build_model_from_config
+from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root, import_packages
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.registry import get_model
+from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.metrics_registry import get_metrics_by_names
 from deeppavlov.core.common.params import from_params
-from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
+from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
+from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.nn_model import NNModel
-from deeppavlov.core.common.log import get_logger
-
 
 log = get_logger(__name__)
 
@@ -168,7 +167,26 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
     except KeyError:
         log.warning('Train config is missing. Populating with default values')
 
-    metrics_functions = list(zip(train_config['metrics'], get_metrics_by_names(train_config['metrics'])))
+    metrics_functions = []
+    for metric in train_config['metrics']:
+        if isinstance(metric, str):
+            metric = {'name': metric}
+
+        metric_name = metric['name']
+
+        f = get_metrics_by_names(metric_name)
+
+        y_true_names = metric.get('y_true', config['chainer']['in_y'])
+        if isinstance(y_true_names, str):
+            y_true_names = [y_true_names]
+
+        y_predicted_names = metric.get('y_predicted', config['chainer']['out'])
+        if isinstance(y_predicted_names, str):
+            y_predicted_names = [y_predicted_names]
+
+        metrics_functions.append((metric_name, f, y_true_names, y_predicted_names))
+
+    # metrics_functions = list(zip(train_config['metrics'], get_metrics_by_names(train_config['metrics'])))
 
     if to_train:
         model = fit_chainer(config, iterator)
