@@ -26,7 +26,7 @@ class PlainText(RichControl):
     Attributes:
         content: Text of the message.
     """
-    def __init__(self, text) -> None:
+    def __init__(self, text: str) -> None:
         super(PlainText, self).__init__('plain_text')
         self.content: str = text
 
