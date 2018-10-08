@@ -259,7 +259,6 @@ def get_dimensions(batch):
     """"""
     if len(batch) > 0 and isinstance(batch[0], Iterable) and not isinstance(batch, str):
         max_list = [get_dimensions(sample) for sample in batch]
-        print(max_list)
         max_depth = max(len(m) for m in max_list)
         max_lens = np.zeros(max_depth, dtype=np.int32)
         for m in max_list:
@@ -290,8 +289,7 @@ def is_str_batch(batch):
             elif isinstance(batch, np.ndarray):
                 return batch.dtype.kind == 'U'
             else:
-                batch = next(chain(*batch))
-
+                batch = batch[0]
         else:
             return False
 
