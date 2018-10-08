@@ -52,8 +52,8 @@ parser.add_argument("--multi-instance", action="store_true", help="allow rising 
 parser.add_argument("--stateful", action="store_true", help="interact with a stateful model")
 
 parser.add_argument("--https", action="store_true", help="run model in https mode")
-parser.add_argument("--ssl-key", help="ssl key", type=str)
-parser.add_argument("--ssl-cert", help="ssl certificate", type=str)
+parser.add_argument("--key", help="ssl key", type=str)
+parser.add_argument("--cert", help="ssl certificate", type=str)
 
 parser.add_argument("--api-mode", help="rest api mode: 'basic' with batches or 'alice' for  Yandex.Dialogs format",
                     type=str, default='basic', choices={'basic', 'alice'})
@@ -110,8 +110,8 @@ def main():
     elif args.mode == 'riseapi':
         alice = args.api_mode == 'alice'
         https = args.https
-        ssl_key = args.ssl_key
-        ssl_cert = args.ssl_cert
+        ssl_key = args.key
+        ssl_cert = args.cert
         start_model_server(pipeline_config_path, alice, https, ssl_key, ssl_cert)
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
