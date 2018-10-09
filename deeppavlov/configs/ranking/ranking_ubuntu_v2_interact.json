@@ -1,7 +1,6 @@
 {
   "dataset_reader": {
     "name": "ubuntu_v2_reader",
-    "num_samples": null,
     "data_path": "./ubuntu_v2_data"
   },
   "dataset_iterator": {
@@ -30,7 +29,7 @@
         },
         "tokenizer":
         {
-          "name": "split_tokenizer"
+          "name": "nltk_tokenizer"
         },
         "vocab":
         {

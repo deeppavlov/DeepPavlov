@@ -28,10 +28,9 @@ class InsuranceReader(DatasetReader):
 
     Args:
         data_path: A path to a folder with dataset files.
-        num_samples: A number of data samples to use in ``train``, ``validation`` and ``test`` mode.
     """
 
-    def read(self, data_path: str, num_samples: int = None, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
+    def read(self, data_path: str, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
         data_path = expand_path(data_path)
         dataset = {'train': None, 'valid': None, 'test': None}
         train_fname = data_path / 'insuranceQA-master/V1/question.train.token_idx.label'
@@ -42,9 +41,9 @@ class InsuranceReader(DatasetReader):
         self.int2tok_vocab = self._build_int2tok_vocab(int2tok_fname)
         self.idxs2cont_vocab = self._build_context2toks_vocab(train_fname, valid_fname, test_fname)
         self.response2str_vocab = self._build_response2str_vocab(response2ints_fname)
-        dataset["valid"] = self._preprocess_data_valid_test(valid_fname)[:num_samples]
-        dataset["train"] = self._preprocess_data_train(train_fname)[:num_samples]
-        dataset["test"] = self._preprocess_data_valid_test(test_fname)[:num_samples]
+        dataset["valid"] = self._preprocess_data_valid_test(valid_fname)
+        dataset["train"] = self._preprocess_data_train(train_fname)
+        dataset["test"] = self._preprocess_data_valid_test(test_fname)
 
         return dataset
 

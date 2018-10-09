@@ -29,6 +29,7 @@ class SiameseIterator(DataLearningIterator):
             ``train``, ``valid`` and ``test`` keys.
         seed: Random seed.
         shuffle: Whether to shuffle data.
+        num_samples: A number of data samples to use in ``train``, ``validation`` and ``test`` mode.
         random_batches: Whether to choose batches randomly or iterate over data sequentally in training mode.
         batches_per_epoch: A number of batches to choose per each epoch in training mode.
             Only required if ``random_batches`` is set to ``True``.
@@ -38,13 +39,30 @@ class SiameseIterator(DataLearningIterator):
                  data: Dict[str, List],
                  seed: int = None,
                  shuffle: bool = False,
+                 num_samples: int = None,
                  random_batches: bool = False,
-                 batches_per_epoch: int = None):
+                 batches_per_epoch: int = None,
+                 *args, **kwargs) -> None:
 
-        super().__init__(data, seed=seed, shuffle=shuffle)
-
+        self.len_valid = kwargs.get("len_valid", 1000)
+        self.len_test = kwargs.get("len_test", 1000)
+        super().__init__(data, seed=seed, shuffle=shuffle, *args, **kwargs)
         self.random_batches = random_batches
         self.batches_per_epoch = batches_per_epoch
+        self.data["train"] = self.train[:num_samples]
+        self.data["valid"] = self.valid[:num_samples]
+        self.data["test"] = self.test[:num_samples]
+        self.data["all"] = self.train + self.valid + self.test
+
+    def split(self, *args, **kwargs) -> None:
+        if len(self.valid) == 0:
+            self.random.shuffle(self.train)
+            self.valid = self.train[-1000:]
+            self.train = self.train[:-1000]
+        if len(self.test) == 0:
+            self.random.shuffle(self.train)
+            self.test = self.train[-1000:]
+            self.train = self.train[:-1000]
 
     def gen_batches(self, batch_size: int, data_type: str = "train", shuffle: bool = True)->\
             Tuple[List[List[Tuple[int, int]]], List[int]]:
