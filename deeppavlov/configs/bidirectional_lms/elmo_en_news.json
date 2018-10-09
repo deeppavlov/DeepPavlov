@@ -32,7 +32,7 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo_en_news.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/lm_elmo_en_news.tar.gz",
         "subdir": "bidirectional_lms/"
       }
     ]
