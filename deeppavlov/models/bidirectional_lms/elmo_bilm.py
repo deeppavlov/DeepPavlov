@@ -19,7 +19,6 @@ from typing import Iterator, List, Union, Optional
 import json
 import numpy as np
 import tensorflow as tf
-import tensorflow_hub as hub
 from overrides import overrides
 
 from deeppavlov.core.commands.utils import expand_path
