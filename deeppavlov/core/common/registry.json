@@ -12,6 +12,7 @@
   "char_vocab": "deeppavlov.core.data.simple_vocab:CharacterVocab",
   "conll2003_reader": "deeppavlov.dataset_readers.conll2003_reader:Conll2003DatasetReader",
   "cos_sim_classifier": "deeppavlov.models.classifiers.cos_sim_classifier:CosineSimilarityClassifier",
+  "dam_nn": "deeppavlov.models.ranking.matching_models.deep_attention_matching_network:DAMNetwork",
   "data_fitting_iterator": "deeppavlov.core.data.data_fitting_iterator:DataFittingIterator",
   "data_learning_iterator": "deeppavlov.core.data.data_learning_iterator:DataLearningIterator",
   "default_vocab": "deeppavlov.core.data.vocab:DefaultVocabulary",
@@ -104,10 +105,8 @@
   "typos_wikipedia_reader": "deeppavlov.dataset_readers.typos_reader:TyposWikipedia",
   "ubuntu_v2_reader": "deeppavlov.dataset_readers.ubuntu_v2_reader:UbuntuV2Reader",
   "ubuntu_v2_mt_reader": "deeppavlov.dataset_readers.ubuntu_v2_mt_reader:UbuntuV2MTReader",
+  "ubuntu_v2_preprocessor": "deeppavlov.models.preprocessors.ubuntu_v2_preprocessor:UbuntuV2Preprocessor",
   "wiki_sqlite_vocab": "deeppavlov.vocabs.wiki_sqlite:WikiSQLiteVocab",
   "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary",
-  "word2vec_vectorizer": "deeppavlov.models.vectorizers.word2vec_vectorizer:Word2vecVectorizer",
-  "siamese_preprocessor_word2vec": "deeppavlov.models.preprocessors.siamese_preprocessor_word2vec:SiamesePreprocessorWord2vec",
-  "twokenize_tokenizer": "deeppavlov.models.tokenizers.twokenize_tokenizer:TwokenizeTokenizer",
-  "dam_nn": "deeppavlov.models.ranking.matching_models.deep_attention_matching_network:DAMNetwork"
+  "word2vec_vectorizer": "deeppavlov.models.vectorizers.word2vec_vectorizer:Word2vecVectorizer"
 }

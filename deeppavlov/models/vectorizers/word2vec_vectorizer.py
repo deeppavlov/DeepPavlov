@@ -13,10 +13,9 @@
 # limitations under the License.
 
 from typing import List, Generator
-import sys
 
 # ##########################################
-# custom imports:
+# module imports:
 import numpy as np
 from gensim.models.word2vec import Word2Vec
 from keras.preprocessing.text import text_to_word_sequence
@@ -25,7 +24,7 @@ from keras.preprocessing.text import text_to_word_sequence
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.commands.utils import expand_path, make_all_dirs, is_file_exist
+from deeppavlov.core.commands.utils import is_file_exist
 
 
 TOKENIZER = None
@@ -38,6 +37,7 @@ class Word2vecVectorizer(Estimator):
     Word2vec vectorizer
 
     Parameters:
+        # TODO: add args descriptions
         save_path: path to save the model
         load_path: path to load the model
 
@@ -50,10 +50,10 @@ class Word2vecVectorizer(Estimator):
                  load_path: str = None,
                  retrain: str = False,
                  filters: str = "\t\n,",
-                 iter: int = 1,
+                 iter: int = 10,
                  dim: int = 200,
                  sg: int = 1,
-                 window: int = 5,
+                 window: int = 10,
                  min_count: int = 1,
                  workers: int = 8,
                  *args, **kwargs) -> None:
@@ -72,47 +72,27 @@ class Word2vecVectorizer(Estimator):
         self.workers = workers
         self.retrain = retrain
 
+        self.model = None
+
         if is_file_exist(self.load_path):
             self.load()
-        # else:
-        #     if kwargs['mode'] == 'train':
-        #         self.model = None
-        #     else:
-        #         self.load()  # load existing Word2vec model
-
-        # if self.load_path and self.load_path.is_file():
-        #     logger.info("[loading embeddings from `{}`]".format(self.load_path))
-        #     model_file = str(self.load_path)
-        #     self.model = Word2Vec.load(model_file)
-        # else:
-        #     logger.error('No pretrained word2vec model provided or provided load_path "{}" is incorrect.'
-        #               .format(self.load_path))
-        #     sys.exit(1)
-
-
 
     def __call__(self, inputs: List[str]) -> List[List[float]]:
         """
-        Vectorize sentence into TF-IDF values
+        Convert words into vectors
 
         Parameters:
-            sentences: list of sentences
+            inputs: list of words
 
         Returns:
-            list of vectorized sentences
+            list of vectorized words
         """
         if isinstance(inputs[0], list):
             inputs = [' '.join(q) for q in inputs]
 
-        # logger.info("Loading word2vec model from {}".format(self.load_path))
-        # self.model = Word2Vec.load(self.load_path)
-
         # the model is already loaded
-
-
         sentences = []
         for line in inputs:
-
             sentences.append(text_to_word_sequence(line, filters=self.filters, split=" "))
 
         vecs = []
@@ -128,7 +108,7 @@ class Word2vecVectorizer(Estimator):
 
     def fit(self, x_train: List[str]) -> None:
         """
-        Train word2vec
+        Train word2vec model
 
         Parameters:
             x_train: list of sentences for train
@@ -136,7 +116,7 @@ class Word2vecVectorizer(Estimator):
         Returns:
             None
         """
-        if self.model and not self.retrain:
+        if self.model is not None and not self.retrain:
             logger.info("No need to retrain existing Word2vec model")
             return
 

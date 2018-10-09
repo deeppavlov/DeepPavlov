@@ -34,7 +34,6 @@ class DAMNetwork(TensorflowBaseMatchingModel):
         self.max_num_utterance = max_num_utterance
         self.max_sentence_len = max_sequence_length
         self.word_embedding_size = embedding_dim
-        self.total_words = len_vocab + 1
         self.trainable = trainable_embeddings
         self.is_positional = is_positional
         self.stack_num = stack_num
@@ -66,17 +65,13 @@ class DAMNetwork(TensorflowBaseMatchingModel):
             # Labels
             self.y_true = tf.placeholder(tf.int32, shape=(None,))
 
-            # Embeddings
-            self.embedding_ph = tf.placeholder(tf.float32, shape=(self.total_words, self.word_embedding_size))
-
     def _init_graph(self):
         self._init_placeholders()
 
         with tf.variable_scope('embedding_matrix_init'):
-            word_embeddings = tf.get_variable('word_embeddings_v', shape=(self.total_words,
-                                                                          self.word_embedding_size),
-                                              dtype=tf.float32, trainable=self.trainable)
-            self.embedding_init = word_embeddings.assign(self.embedding_ph)
+            word_embeddings = tf.get_variable("word_embeddings_v",
+                                              initializer=tf.constant(self.emb_matrix, dtype=tf.float32),
+                                              trainable=self.trainable)
         with tf.variable_scope('embedding_lookup'):
             response_embeddings = tf.nn.embedding_lookup(word_embeddings, self.response_ph)
 
@@ -215,3 +210,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
             tf.summary.scalar('max', tf.reduce_max(var))
             tf.summary.scalar('min', tf.reduce_min(var))
             tf.summary.histogram('histogram', var)
+
+    def process_event(self, event_name, data):
+        if event_name is "":
+            pass

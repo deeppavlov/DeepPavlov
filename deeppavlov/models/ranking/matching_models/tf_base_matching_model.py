@@ -26,6 +26,7 @@ log = get_logger(__name__)
 
 class TensorflowBaseMatchingModel(TFModel, SiameseModel):
     # TODO: docstrings
+
     def __init__(self,
                  *args,
                  **kwargs):
@@ -66,7 +67,6 @@ class TensorflowBaseMatchingModel(TFModel, SiameseModel):
 
                 if len(batch_buffer_context) >= self.batch_size:
                     for i in range(len(batch_buffer_context) // self.batch_size):
-                        # b = self._make_batch(batch_buffer[i*self.batch_size:(i+1)*self.batch_size])
                         feed_dict = {
                             self.utterance_ph: np.array(batch_buffer_context[i*self.batch_size:(i+1)*self.batch_size]),
                             self.all_utterance_len_ph: np.array(batch_buffer_context_len[i*self.batch_size:(i+1)*self.batch_size]),
