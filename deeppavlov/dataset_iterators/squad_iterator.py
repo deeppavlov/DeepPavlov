@@ -123,7 +123,7 @@ class MultiSquadIterator(DataLearningIterator):
                 # sample context with answer or without answer
                 if random.rand() < self.with_answer_rate or len(noans_contexts) == 0:
                     # select random context with answer
-                    context = self.random.choice(ans_contexts)
+                    context = random.choice(ans_contexts)
                 else:
                     # select random context without answer
                     # prob ~ context tfidf score
