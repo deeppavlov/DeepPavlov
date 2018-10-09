@@ -28,6 +28,7 @@ Config Structure
 -  **dataset_reader** - downloads data, creates SQLite database from data
 
    -  **data_path** - a directory/file with texts to create a database from
+   -  **db_url** - an optional URL to download a database file from
    -  **save_path** - a path where the ready SQLite database should be stored
    -  **dataset_format** - a data format, should be selected from ['txt', 'json', 'wiki']
 

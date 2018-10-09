@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import sqlite3
-from typing import List, Any, Dict, Optional
+from typing import List, Any, Dict, Optional, Union
 from random import Random
 from pathlib import Path
 
@@ -21,9 +21,8 @@ from overrides import overrides
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.utils import download
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
+from deeppavlov.core.commands.utils import expand_path
 
 logger = get_logger(__name__)
 
@@ -51,24 +50,13 @@ class SQLiteDataIterator(DataFittingIterator):
 
     """
 
-    def __init__(self, load_path: str, batch_size: int = None,
+    def __init__(self, load_path: Union[str, Path], batch_size: int = None,
                  shuffle: bool = None, seed: int = None, **kwargs):
 
-        if load_path is not None:
-            if load_path.startswith('http'):
-                logger.info("Downloading database from url: {}".format(load_path))
-                download_dir = expand_path(Path(load_path)).parent
-                download_path = download_dir.joinpath(load_path.split("/")[-1])
-                download(download_path, load_path, force_download=False)
-            else:
-                download_path = expand_path(load_path)
-                logger.warn("{} load_path yet doesn't exist".format(self.__class__.__name__))
-        else:
-            raise ValueError('String path expected, got None.')
-
-        logger.info("Connecting to database, path: {}".format(download_path))
+        load_path = str(expand_path(load_path))
+        logger.info("Connecting to database, path: {}".format(load_path))
         try:
-            self.connect = sqlite3.connect(str(download_path), check_same_thread=False)
+            self.connect = sqlite3.connect(load_path, check_same_thread=False)
         except sqlite3.OperationalError as e:
             e.args = e.args + ("Check that DB path exists and is a valid DB file",)
             raise e

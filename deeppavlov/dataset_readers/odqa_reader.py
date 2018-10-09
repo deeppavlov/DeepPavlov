@@ -17,7 +17,7 @@ import logging
 from pathlib import Path
 import unicodedata
 import sqlite3
-from typing import Union, List, Tuple, Generator, Any
+from typing import Union, List, Tuple, Generator, Any, Optional
 from multiprocessing import Pool
 
 from tqdm import tqdm
@@ -25,6 +25,7 @@ from tqdm import tqdm
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.data.utils import download
 
 logger = logging.getLogger(__name__)
 
@@ -36,13 +37,32 @@ class ODQADataReader(DatasetReader):
 
     """
 
-    def read(self, data_path: Union[Path, str], *args, **kwargs) -> None:
+    def read(self, data_path: Union[Path, str], db_url: Optional[str] = None, *args, **kwargs) -> None:
+        """Build a SQLite database from provided files, download SQLite database from a provided URL, or do nothing.
+
+        Args:
+            data_path: a directory/file with texts to create a database from
+            db_url: path to a database url
+
+        Returns:
+            None
+
+        """
         logger.info('Reading files...')
         save_path = expand_path(kwargs['save_path'])
         if save_path.exists() and Path(save_path.parent / '.done').exists():
             return
-        save_path = expand_path(save_path)
-        self._build_db(save_path, kwargs['dataset_format'], data_path)
+
+        if db_url:
+            if Path(save_path).is_file():
+                download_dir = save_path.parent
+            else:
+                download_dir = save_path
+            logger.info(f'Downloading database from {db_url} to {download_dir}')
+            download(download_dir, db_url, force_download=False)
+            return
+
+        self._build_db(save_path, kwargs['dataset_format'], expand_path(data_path))
 
     def iter_files(self, path: Union[Path, str]) -> Generator[Path, Any, Any]:
         """Iterate over folder with files or a single file and generate file paths.
