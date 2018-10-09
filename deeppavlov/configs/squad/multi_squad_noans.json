@@ -42,7 +42,7 @@
         "context_limit": "#squad_prepr.context_limit",
         "question_limit": "#squad_prepr.question_limit",
         "char_limit": "#squad_prepr.char_limit",
-        "fit_lol": ["context_tokens", "question_tokens"],
+        "fit_on": ["context_tokens", "question_tokens"],
         "in": ["context_tokens", "question_tokens"],
         "out": ["context_tokens_idxs", "question_tokens_idxs"]
       },
@@ -57,7 +57,7 @@
         "context_limit": "#squad_prepr.context_limit",
         "question_limit": "#squad_prepr.question_limit",
         "char_limit": "#squad_prepr.char_limit",
-        "fit_lol": ["context_chars", "question_chars"],
+        "fit_on": ["context_chars", "question_chars"],
         "in": ["context_chars", "question_chars"],
         "out": ["context_chars_idxs", "question_chars_idxs"]
       },
@@ -73,7 +73,7 @@
         "char_hidden_size": 100,
         "encoder_hidden_size": 75,
         "attention_hidden_size": 75,
-        "learning_rate": 0.5,
+        "learning_rate": 0.1,
         "min_learning_rate": 0.001,
         "learning_rate_patience": 5,
         "keep_prob": 0.7,
@@ -121,7 +121,7 @@
       "server_utils": "SquadModel"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/multi_squad_model_noans.tar.gz",
+      "http://lnsigo.mipt.ru/export/deeppavlov_data/multi_squad_model_noans_1.1.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M.vec",
         "subdir": "embeddings"
