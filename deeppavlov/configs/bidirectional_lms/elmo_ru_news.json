@@ -15,7 +15,7 @@
         "in": [
           "tokens"
         ],
-        "model_dir": "bidirectional_lms/elmo_en_news",
+        "model_dir": "bidirectional_lms/elmo_ru_news",
         "out": [
           "pred_tokens"
         ]
@@ -32,7 +32,7 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/lm_elmo_en_news.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/lm_elmo_ru_news.tar.gz",
         "subdir": "bidirectional_lms/"
       }
     ]

@@ -147,7 +147,7 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
             output_batch[batch_no] = individual_output_softmaxes[0][:batch.shape[1]]
             output_batch_reverse[batch_no] =  individual_output_softmaxes[1][:batch.shape[1]]
 
-        # remove a prediction of </S> and previous token
+        # remove a prediction of </S> and next token
         output_batch = output_batch[:-2]
         output_batch_reverse = output_batch_reverse[:-2]
 
@@ -185,8 +185,6 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
         Returns:
             A  batch of lm predictions.
         """
-        # batch = [['sad213', 'ashfgjd', '<zx'], ['1213', 'asd'], ['2213', 'asd'], ['3213', 'asd'], ['4213', 'asd'], ['5213', 'asd']]
-        # # batch = batch * 3
 
         init_state_tensors, init_state_values, final_state_tensors = self.init_states
 
@@ -204,10 +202,6 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
                                                                             final_state_tensors, *args, **kwargs)
         
         self.init_states = (init_state_tensors, init_state_values, final_state_tensors)
-        # print(output_batch)
-        # print([i.shape for i in output_batch])
-        # print(output_batch_reverse.shape)
-        # input()
         return output_batch
 
     def get_vocab_size(self) -> int:
