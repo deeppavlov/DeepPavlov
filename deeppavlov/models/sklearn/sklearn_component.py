@@ -14,6 +14,7 @@
 
 from typing import List, Tuple, Any, Union, Generator, Iterable
 import numpy as np
+from scipy.sparse import spmatrix
 import pickle
 from pathlib import Path
 from scipy.sparse import issparse, csr_matrix
@@ -86,7 +87,8 @@ class SklearnComponent(Estimator):
         Fit model on the given data
 
         Args:
-            *args: data to fit on. Possible input (x0, ..., xK, y) or (x0, ..., xK) '
+            *args: list of x-inputs and, optionally, one y-input (the last one) to fit on.
+                Possible input (x0, ..., xK, y) or (x0, ..., xK) '
                 where K is the number of input data elements (the length of list ``in`` from config). \
                 In case of several inputs (K > 1) input features will be stacked. \
                 For example, one has x0: (n_samples, n_features0), ..., xK: (n_samples, n_featuresK), \
@@ -120,10 +122,32 @@ class SklearnComponent(Estimator):
         return
 
     def __call__(self, *args, **kwargs) -> np.ndarray:
+        """
+        Infer on the given data according to given in the config infer method, \
+            e.g. ``"predict", "predict_proba", "transform"``
+
+        Args:
+            *args: list of inputs
+            **kwargs: additional arguments
+
+        Returns:
+            predictions, e.g. list of labels, array of probability distribution, sparse array of vectorized samples
+        """
         predictions = self.infer_on_batch(args)
         return predictions
 
     def infer_on_batch(self, x):
+        """
+        Infer on the given data according to given in the config infer method, \
+            e.g. ``"predict", "predict_proba", "transform"``
+
+        Args:
+            *args: list of inputs
+            **kwargs: additional arguments
+
+        Returns:
+            predictions, e.g. list of labels, array of probability distribution, sparse array of vectorized samples
+        """
         x_features = self.compose_input_data(x)
 
         try:
@@ -143,7 +167,13 @@ class SklearnComponent(Estimator):
             predictions = predictions.reshape(-1, 1)
         return predictions
 
-    def init_from_scratch(self) -> Any:
+    def init_from_scratch(self) -> None:
+        """
+        Initialize ``self.model`` as some sklearn model from scratch with given in ``self.model_params`` parameters.
+
+        Returns:
+            None
+        """
         log.info("Initializing model {} from scratch".format(self.model_name))
         model_function = cls_from_str(self.model_name)
 
@@ -163,7 +193,18 @@ class SklearnComponent(Estimator):
         self.model = model_function(**given_params)
         return
 
-    def load(self, fname: str = None) -> Any:
+    def load(self, fname: str = None) -> None:
+        """
+        Initialize ``self.model`` as some sklearn model from saved re-initializing ``self.model_params`` parameters. \
+            If in new given parameters ``warm_start`` is set to True and given model admits ``warm_start`` parameter, \
+            model will be initilized from saved with opportunity to continue fitting.
+
+        Args:
+            fname: string name of path to model to load from
+
+        Returns:
+            None
+        """
         if fname is None:
             fname = self.load_path
 
@@ -193,6 +234,17 @@ class SklearnComponent(Estimator):
         return
 
     def save(self, fname: str = None) -> None:
+        """
+        Save ``self.model`` to the file from ``fname`` or, if not given, ``self.save_path``. \
+            If ``self.save_path`` does not have ``.pkl`` extension, then it will be replaced \
+            to ``str(Path(self.save_path).stem) + ".pkl"``
+
+        Args:
+            fname:  string name of path to model to save to
+
+        Returns:
+            None
+        """
         if fname is None:
             fname = self.save_path
 
@@ -205,7 +257,19 @@ class SklearnComponent(Estimator):
         return
 
     @staticmethod
-    def compose_input_data(x):
+    def compose_input_data(x: List[Union[Tuple[np.ndarray, list, spmatrix, str],
+                                         List[np.ndarray, list, spmatrix, str],
+                                         np.ndarray, spmatrix]]) -> Union[spmatrix, np.ndarray]:
+        """
+        Stack given list of different types of inputs to the one matrix. If one of the inputs is a sparse matrix, \
+            then output will be also a sparse matrix
+
+        Args:
+            x: list of data elements
+
+        Returns:
+            sparse or dense array of stacked data
+        """
         x_features = []
         for i in range(len(x)):
             if ((isinstance(x[i], tuple) or isinstance(x[i], list) or isinstance(x[i], np.ndarray) and len(x[i]))
@@ -233,7 +297,14 @@ class SklearnComponent(Estimator):
         return x_features
 
     def destroy(self) -> None:
+        """
+        Delete ``self.model`` from memory
+
+        Returns:
+            None
+        """
         del self.model
+        return
 
     def process_event(self, event_name: str, data: dict):
         """
@@ -254,8 +325,26 @@ class SklearnComponent(Estimator):
 
     @staticmethod
     def get_function_params(f) -> List[str]:
+        """
+        Get list of names of given function's parameters
+
+        Args:
+            f: function
+
+        Returns:
+            list of names of given function's parameters
+        """
         return inspect.getfullargspec(f)[0]
 
     @staticmethod
     def get_class_attributes(cls) -> List[str]:
+        """
+        Get list of names of given class' attributes
+
+        Args:
+            cls: class
+
+        Returns:
+            list of names of given class' attributes
+        """
         return list(cls.__dict__.keys())
