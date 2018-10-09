@@ -10,11 +10,12 @@
   },
   "chainer": {
     "in": "question",
+    "in_y": "y",
     "pipe": [
       {
         "name": "ru_tokenizer",
         "id": "my_tokenizer",
-        "in": "q",
+        "in": "question",
         "lemmas": true,
         "out": "q_token_lemmas"
       },
@@ -31,7 +32,8 @@
           "question_vector"
         ],
         "fit_on": [
-          "q_lem"
+          "q_lem",
+          "y"
         ],
         "id": "tfidf_vec",
         "name": "sklearn_component",

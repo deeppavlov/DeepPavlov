@@ -34,18 +34,20 @@ class TfidfWeightedEmbedder(Component):
     Args:
         embedder: embedder instance
         vectorizer: vectorizer instance should be trained with ``analyzer="word"``
+        tokenizer: tokenizer instance, should be able to detokenize sentence
         pad_zero: whether to pad samples or not
         mean: whether to return mean token embedding
 
     Attributes:
         embedder: embedder instance
         vectorizer: vectorizer instance
+        tokenizer: tokenizer instance, should be able to detokenize sentence
         dim: dimension of embeddings
         pad_zero: whether to pad samples or not
         mean: whether to return mean token embedding
     """
 
-    def __init__(self, embedder: Component, vectorizer: Component,
+    def __init__(self, embedder: Component, vectorizer: Component, tokenizer: Component = None,
                  pad_zero: bool = False, mean: bool = False, **kwargs) -> None:
         """
         Initialize embedder with given parameters.
@@ -54,8 +56,18 @@ class TfidfWeightedEmbedder(Component):
         self.dim = self.embedder.dim
         self.mean = mean
         self.pad_zero = pad_zero
+
+        if tokenizer is None:
+            self.tokenizer = self.space_detokenizer
+        else:
+            self.tokenizer = tokenizer
+
         self.vectorizer = vectorizer
-        self.vocabulary = self.vectorizer.model.get_feature_names()
+        self.vocabulary = np.array(self.vectorizer.model.get_feature_names())
+
+    @staticmethod
+    def space_detokenizer(batch: List[List[str]]) -> List[str]:
+        return [" ".join(tokens) for tokens in batch]
 
     @overrides
     def __call__(self, batch: List[List[str]], *args, **kwargs) -> List[Union[list, np.ndarray]]:
@@ -77,39 +89,6 @@ class TfidfWeightedEmbedder(Component):
 
         return batch
 
-    def weigh_tfidf(self, data, text):
-        """
-        Weighted averaging of the tokens embeddings by tf-idf coefficients.
-
-        Args:
-            data:  list of tokenized and vectorized text samples
-            text: text samples
-            res: list for sentence embeddings
-
-        Returns:
-             list of sentence embeddings
-        """
-        res = []
-        feature_names = self.vec.get_feature_names()
-        x_test = self.vec.transform(text)
-        text = self.tokenizer(text)
-
-        for i in range(len(text)):
-            info = {}
-            feature_index = x_test[i, :].nonzero()[1]
-            tfidf_scores = zip(feature_index, [x_test[i, x] for x in feature_index])
-
-            for w, s in [(feature_names[i], s) for (i, s) in tfidf_scores]:
-                info[w] = s
-
-            if len(text[i]) == 0:
-                res.append(np.zeros((len(data[0][0]),)))
-            else:
-                weights = np.array([info[w] if w in info.keys() else 0.05 for w in text[i]])
-                matrix = np.array(data[i])
-                res.append(np.dot(weights, matrix))
-        return res
-
     def _encode(self, tokens: List[str]) -> Union[List[np.ndarray], np.ndarray]:
         """
         Embed one text sample
@@ -120,23 +99,18 @@ class TfidfWeightedEmbedder(Component):
         Returns:
             list of embedded tokens or array of mean values
         """
-        embedded_tokens = []
-        for t in tokens:
-            try:
-                emb = self.tok2emb[t]
-            except KeyError:
-                try:
-                    emb = self.model.get_word_vector(t)[:self.dim]
-                except KeyError:
-                    emb = np.zeros(self.dim, dtype=np.float32)
-                self.tok2emb[t] = emb
-            embedded_tokens.append(emb)
+        detokenized_sample = self.tokenizer([tokens])[0]  # str
+        vectorized_sample = self.vectorizer([detokenized_sample])  # (voc_size,)
+
+        weights = np.array([vectorized_sample[0, np.where(self.vocabulary == token)[0][0]]
+                            if len(np.where(self.vocabulary == token)[0]) else 0.
+                            for token in tokens])
+        embedded_tokens = np.array(self.embedder([tokens]))[0, :, :]
 
         if self.mean:
-            filtered = [et for et in embedded_tokens if np.any(et)]
-            if filtered:
-                return np.mean(filtered, axis=0)
-            return np.zeros(self.dim, dtype=np.float32)
+            embedded_tokens = np.average(embedded_tokens, weights=weights, axis=0)
+        else:
+            embedded_tokens = np.array([weights[i] * embedded_tokens[i] for i in range(len(tokens))])
 
         return embedded_tokens
 
