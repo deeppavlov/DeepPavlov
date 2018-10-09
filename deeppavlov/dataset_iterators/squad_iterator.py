@@ -127,7 +127,7 @@ class MultiSquadIterator(DataLearningIterator):
                 else:
                     # select random context without answer
                     # prob ~ context tfidf score
-                    noans_scores = np.array(list(map(lambda x: x['score'], noans_contexts)))
+                    noans_scores = np.array([x['score'] for x in noans_contexts])
                     noans_scores = noans_scores / np.sum(noans_scores)
                     context = noans_contexts[np.argmax(random.multinomial(1, noans_scores))]
 
