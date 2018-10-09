@@ -99,12 +99,15 @@ class MultiSquadIterator(DataLearningIterator):
 
     def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: bool = None):
 
+        if shuffle is None:
+            shuffle = self.shuffle
+
         if data_type == 'train':
             random = self.np_random
         else:
             random = np.random.RandomState(self.seed)
 
-        if self.shuffle:
+        if shuffle:
             random.shuffle(self.data[data_type])
 
         data = self.data[data_type]
@@ -112,14 +115,11 @@ class MultiSquadIterator(DataLearningIterator):
 
         for i in range((data_len - 1) // batch_size + 1):
             batch = []
-            for j in range(i * batch_size, (i+1) * batch_size):
-                if data_len <= j:
-                    break
+            for j in range(i * batch_size, min((i+1) * batch_size, data_len)):
                 q = data[j]['question']
                 contexts = data[j]['contexts']
                 ans_contexts = [c for c in contexts if len(c['answer']) > 0]
                 noans_contexts = [c for c in contexts if len(c['answer']) == 0]
-                context = None
                 # sample context with answer or without answer
                 if random.rand() < self.with_answer_rate or len(noans_contexts) == 0:
                     # select random context with answer
