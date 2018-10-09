@@ -24,12 +24,14 @@ from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import save_pickle, load_pickle
 from deeppavlov.core.commands.utils import expand_path, make_all_dirs, is_file_exist
 from deeppavlov.core.models.estimator import Component
+from deeppavlov.core.skill.skill import Skill
 from deeppavlov.metrics.bleu import bleu_advanced
 
 log = get_logger(__name__)
 
+
 @register("ecommerce_bot")
-class EcommerceBot(Component):
+class EcommerceBot(Skill):
     """Class to retrieve product items from `load_path` catalogs
     in sorted order according to the similarity measure
     Retrieve the specification attributes with corresponding values
@@ -96,7 +98,8 @@ class EcommerceBot(Component):
 
         log.info(f"Loaded items {len(self.ec_data)}")
 
-    def __call__(self, queries: List[str], states: List[Dict[Any, Any]], **kwargs) -> Tuple[Tuple[List[Dict[Any, Any]], List[Any], int], List[float], Dict[Any, Any]]:
+    def __call__(self, queries: List[str], history: List[list], states: List[Dict[Any, Any]], **kwargs) -> \
+            Tuple[Tuple[List[Dict[Any, Any]], List[Any], int], List[float], Dict[Any, Any]]:
         """Retrieve catalog items according to the BLEU measure
 
         Parameters:
@@ -128,6 +131,9 @@ class EcommerceBot(Component):
                     state = json.loads(state)
                 except:
                     state = self.preprocess.parse_input(state)
+
+            if not state:
+                state = {}
 
             start = state['start'] if 'start' in state else 0
             stop = state['stop'] if 'stop' in state else 5
