@@ -24,6 +24,7 @@ from tensorflow.python.ops import variables
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.registry import cls_from_str
 from .tf_backend import TfModelMeta
 
 
@@ -232,12 +233,12 @@ class AnhancedTFModel(TFModel):
                                            num_it=num_it, dec_type=dec_type,
                                            extra=extra)
 
-        self._optimizer = None
-        if hasattr(tf.train, optimizer):
-            self._optimizer = getattr(tf.train, optimizer)
+        try:
+            self._optimizer = cls_from_str(optimizer)
+        except (ImportError, ValueError):
+            self._optimizer = getattr(tf.train, optimizer.split(':')[-1])
         if not issubclass(self._optimizer, tf.train.Optimizer):
-            raise ConfigError("`optimizer` parameter should be a name od"
-                              " tf.train.Optimizer subclass")
+            raise ConfigError("`optimizer` should be tensorflow.train.Optimizer subclass")
 
     def process_event(self, event_name, data):
         if self._lr_update_on_batch:

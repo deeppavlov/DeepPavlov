@@ -46,7 +46,7 @@
           "learning_rate": [0.1, 0.01],
           "learning_rate_decay": ["polynomial", 0.5],
           "learning_rate_decay_epochs": 10,
-          "optimizer": "AdamOptimizer",
+          "optimizer": "tf.train:AdamOptimizer",
           "dropout_rate": 0.9,
           "l2_reg_coef": 1e-4,
           "hidden_size": 128,

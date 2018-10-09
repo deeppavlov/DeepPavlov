@@ -331,9 +331,6 @@ class GoalOrientedBotNetwork(AnhancedTFModel):
 
     def process_event(self, event_name, data):
         super().process_event(event_name, data)
-        if event_name == "after_epoch":
-            log.info("Updating global step, learning rate = {:.6f}."
-                     .format(self.get_learning_rate()))
 
     def reset_state(self):
         # set zero state
