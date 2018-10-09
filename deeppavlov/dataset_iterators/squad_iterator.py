@@ -94,14 +94,18 @@ class MultiSquadIterator(DataLearningIterator):
     def __init__(self, data, seed: int = None, shuffle: bool = True, with_answer_rate: float = 0.666, *args, **kwargs):
         self.with_answer_rate = with_answer_rate
         self.seed = seed
+        self.np_random = np.random.RandomState(seed)
         super().__init__(data, seed, shuffle, *args, **kwargs)
 
     def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: bool = None):
 
-        np.random.seed(self.seed)
+        if data_type == 'train':
+            random = self.np_random
+        else:
+            random = np.random.RandomState(self.seed)
 
         if self.shuffle:
-            self.random.shuffle(self.data[data_type])
+            random.shuffle(self.data[data_type])
 
         data = self.data[data_type]
         data_len = len(data)
@@ -117,7 +121,7 @@ class MultiSquadIterator(DataLearningIterator):
                 noans_contexts = [c for c in contexts if len(c['answer']) == 0]
                 context = None
                 # sample context with answer or without answer
-                if np.random.rand() < self.with_answer_rate or len(noans_contexts) == 0:
+                if random.rand() < self.with_answer_rate or len(noans_contexts) == 0:
                     # select random context with answer
                     context = self.random.choice(ans_contexts)
                 else:
@@ -125,7 +129,7 @@ class MultiSquadIterator(DataLearningIterator):
                     # prob ~ context tfidf score
                     noans_scores = np.array(list(map(lambda x: x['score'], noans_contexts)))
                     noans_scores = noans_scores / np.sum(noans_scores)
-                    context = noans_contexts[np.argmax(np.random.multinomial(1, noans_scores))]
+                    context = noans_contexts[np.argmax(random.multinomial(1, noans_scores))]
 
                 answer_text = [ans['text'] for ans in context['answer']] if len(context['answer']) > 0 else ['']
                 answer_start = [ans['answer_start'] for ans in context['answer']] if len(context['answer']) > 0 else [-1]
