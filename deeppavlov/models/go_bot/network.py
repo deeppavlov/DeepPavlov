@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import copy
 from typing import Dict
 import collections
 import json
@@ -24,7 +23,7 @@ from deeppavlov.core.layers import tf_attention_mechanisms as am
 from deeppavlov.core.layers import tf_layers
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.models.tf_model import TFModel
+from deeppavlov.core.models.tf_model import AnhancedTFModel
 from deeppavlov.core.common.log import get_logger
 
 
@@ -32,7 +31,7 @@ log = get_logger(__name__)
 
 
 @register('go_bot_rnn')
-class GoalOrientedBotNetwork(TFModel):
+class GoalOrientedBotNetwork(AnhancedTFModel):
     """
     The ``GoalOrientedBotNetwork`` is a recurrent network that handles dialogue policy
     management.
@@ -49,15 +48,9 @@ class GoalOrientedBotNetwork(TFModel):
             ``bow_embedder``, ``embedder``, ``intent_classifier``,
             ``tracker.num_features`` plus size of context features(=6) and
             ``action_size``).
-        learning_rate: learning rate during training.
-        end_learning_rate: if set, learning rate starts from ``learning rate`` value and
-            decays polynomially to the value of ``end_learning_rate``.
-        decay_steps: number of steps for learning rate to decay.
-        decay_power: power used to calculate learning rate decay for polynomial strategy.
         dropout_rate: probability of weights dropping out.
         l2_reg_coef: l2 regularization weight (applied to input and output layer).
         dense_size: rnn input size.
-        optimizer: one of tf.train.Optimizer subclasses as a string.
         attention_mechanism: describes attention applied to embeddings of input tokens.
 
             * **type** – type of attention mechanism, possible values are ``'general'``, ``'bahdanau'``, ``'light_general'``, ``'light_bahdanau'``, ``'cs_general'`` and ``'cs_bahdanau'``.
@@ -77,18 +70,13 @@ class GoalOrientedBotNetwork(TFModel):
                  hidden_size: int,
                  action_size: int,
                  obs_size: int,
-                 learning_rate: float,
-                 end_learning_rate: float = None,
-                 decay_steps: int = 1000,
-                 decay_power: float = 1.,
                  dropout_rate: float = 0.,
                  l2_reg_coef: float = 0.,
                  dense_size: int = None,
-                 optimizer: str = 'AdamOptimizer',
                  attention_mechanism: Dict = None,
                  **kwargs):
-        end_learning_rate = end_learning_rate or learning_rate
         dense_size = dense_size or hidden_size
+        super().__init__(**kwargs)
 
         # specify model options
         self.opt = {
@@ -96,13 +84,8 @@ class GoalOrientedBotNetwork(TFModel):
             'action_size': action_size,
             'obs_size': obs_size,
             'dense_size': dense_size,
-            'learning_rate': learning_rate,
-            'end_learning_rate': end_learning_rate,
-            'decay_steps': decay_steps,
-            'decay_power': decay_power,
             'dropout_rate': dropout_rate,
             'l2_reg_coef': l2_reg_coef,
-            'optimizer': optimizer,
             'attention_mechanism': attention_mechanism
         }
 
@@ -115,7 +98,6 @@ class GoalOrientedBotNetwork(TFModel):
 
         self.sess.run(tf.global_variables_initializer())
 
-        super().__init__(**kwargs)
         if tf.train.checkpoint_exists(str(self.save_path.resolve())):
             log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
             self.load()
@@ -149,7 +131,7 @@ class GoalOrientedBotNetwork(TFModel):
     def train_on_batch(self, features, emb_context, key, utter_mask, action_mask, action):
         feed_dict = {
             self._dropout_keep_prob: 1 - self.dropout_rate,
-            self._learning_rate: self.get_learning_rate(), 
+            self._learning_rate: self.get_learning_rate(),
             self._utterance_mask: utter_mask,
             self._features: features,
             self._action: action,
@@ -162,26 +144,16 @@ class GoalOrientedBotNetwork(TFModel):
         _, loss_value, prediction = \
             self.sess.run([self._train_op, self._loss, self._prediction],
                           feed_dict=feed_dict)
-        return loss_value, prediction
+        report = {'loss': loss_value, 'learning_rate': self.get_learning_rate()}
+        return report
 
     def _init_params(self):
-        self.learning_rate = self.opt['learning_rate']
-        self.end_learning_rate = self.opt['end_learning_rate']
-        self.decay_steps = self.opt['decay_steps']
-        self.decay_power = self.opt['decay_power']
         self.dropout_rate = self.opt['dropout_rate']
         self.hidden_size = self.opt['hidden_size']
         self.action_size = self.opt['action_size']
         self.obs_size = self.opt['obs_size']
         self.dense_size = self.opt['dense_size']
         self.l2_reg = self.opt['l2_reg_coef']
-
-        self._optimizer = None
-        if hasattr(tf.train, self.opt['optimizer']):
-            self._optimizer = getattr(tf.train, self.opt['optimizer'])
-        if not issubclass(self._optimizer, tf.train.Optimizer):
-            raise ConfigError("`optimizer` parameter should be a name of"
-                              " tf.train.Optimizer subclass")
 
         attn = self.opt.get('attention_mechanism')
         if attn:
@@ -225,7 +197,7 @@ class GoalOrientedBotNetwork(TFModel):
         self._loss += self.l2_reg * tf.losses.get_regularization_loss()
         self._train_op = self.get_train_op(self._loss,
                                            learning_rate=self._learning_rate,
-                                           optimizer=self._optimizer,
+                                           optimizer=self.get_optimizer(),
                                            clip_norm=2.)
 
     def _add_placeholders(self):
@@ -332,15 +304,6 @@ class GoalOrientedBotNetwork(TFModel):
                                   kernel_initializer=xav(), name='logits')
         return _logits, _state
 
-    def get_learning_rate(self):
-        # polynomial decay
-        global_step = min(self.global_step, self.decay_steps)
-        decayed_learning_rate = \
-            (self.learning_rate - self.end_learning_rate) *\
-            (1 - global_step / self.decay_steps) ** self.decay_power +\
-            self.end_learning_rate
-        return decayed_learning_rate
-
     def load(self, *args, **kwargs):
         self.load_params()
         super().load(*args, **kwargs)
@@ -367,17 +330,15 @@ class GoalOrientedBotNetwork(TFModel):
                                   .format(p, params.get(p), self.opt.get(p)))
 
     def process_event(self, event_name, data):
+        super().process_event(event_name, data)
         if event_name == "after_epoch":
             log.info("Updating global step, learning rate = {:.6f}."
                      .format(self.get_learning_rate()))
-            self.global_step += 1
 
     def reset_state(self):
         # set zero state
         self.state_c = np.zeros([1, self.hidden_size], dtype=np.float32)
         self.state_h = np.zeros([1, self.hidden_size], dtype=np.float32)
-        # setting global step number to 0
-        self.global_step = 0
 
     def shutdown(self):
         self.sess.close()

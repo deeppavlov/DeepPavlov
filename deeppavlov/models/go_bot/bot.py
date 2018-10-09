@@ -340,8 +340,8 @@ class GoalOrientedBot(NNModel):
             b_a_masks.append(d_a_masks)
             b_actions.append(d_actions)
 
-        self.network.train_on_batch(b_features, b_emb_context, b_keys, b_u_masks,
-                                    b_a_masks, b_actions)
+        return self.network.train_on_batch(b_features, b_emb_context, b_keys, b_u_masks,
+                                           b_a_masks, b_actions)
 
     def _infer(self, context, db_result=None, prob=False):
         if db_result is not None:
