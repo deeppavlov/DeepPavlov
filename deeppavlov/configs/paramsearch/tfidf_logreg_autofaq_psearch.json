@@ -8,7 +8,6 @@
   "dataset_iterator": {
     "name": "data_learning_iterator"
   },
-
   "chainer": {
     "in": "q",
     "pipe": [
@@ -42,25 +41,47 @@
         "infer_method": "transform"
       },
       {
-        "name": "logreg_classifier",
-        "in": "q_vect",
-        "fit_on": ["q_vect", "y"],
-        "top_n": 1,
-        "c": {"search_choice": [1, 10, 100, 1000]},
-        "penalty": {"search_choice": ["l1", "l2"]},
+        "in": [
+          "q_vect"
+        ],
+        "out": [
+          "answer"
+        ],
+        "fit_on": [
+          "q_vect",
+          "y"
+        ],
+        "name": "sklearn_component",
+        "main": true,
         "save_path": "faq/tfidf_logreg_classifier.pkl",
         "load_path": "faq/tfidf_logreg_classifier.pkl",
-        "out": ["answer", "score"]
+        "model_name": "sklearn.linear_model:LogisticRegression",
+        "infer_method": "predict",
+        "C": {
+          "search_choice": [
+            1,
+            10,
+            100,
+            1000
+          ]
+        },
+        "penalty": {
+          "search_choice": [
+            "l1",
+            "l2"
+          ]
+        }
       }
     ],
     "out": "answer"
   },
-
   "train": {
     "validate_best": true,
-    "metrics": ["accuracy"],
+    "metrics": [
+      "accuracy"
+    ],
     "test_best": false
- },
+  },
   "metadata": {
     "download": [
       {
@@ -73,7 +94,6 @@
       }
     ]
   }
-
 }
 
 
