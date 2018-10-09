@@ -57,7 +57,7 @@ class SiamesePredictor(Component):
                  responses: SimpleVocabulary = None,
                  preproc_func: Callable = None,
                  interact_pred_num: int = 3,
-                 *args, **kwargs):
+                 *args, **kwargs) -> None:
 
         super().__init__()
 

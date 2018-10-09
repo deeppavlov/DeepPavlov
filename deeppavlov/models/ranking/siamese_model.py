@@ -32,9 +32,7 @@ class SiameseModel(NNModel):
     def __init__(self,
                  batch_size: int,
                  num_context_turns: int = 1,
-                 *args,
-                 **kwargs):
-
+                 *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.batch_size = batch_size

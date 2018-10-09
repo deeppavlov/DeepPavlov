@@ -12,38 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from deeppavlov.core.common.metrics_registry import register_metric
-
 import numpy as np
 
-
-@register_metric('r@1')
-def r_at_1(y_true, y_pred):
-    return recall_at_k(y_true, y_pred, k=1)
+from deeppavlov.core.common.metrics_registry import register_metric
 
 
-@register_metric('r@2')
-def r_at_2(y_true, y_pred):
-    return recall_at_k(y_true, y_pred, k=2)
-
-
-@register_metric('r@5')
-def r_at_5(labels, predictions):
-    return recall_at_k(labels, predictions, k=5)
-
-@register_metric('r@10')
-def r_at_10(labels, predictions):
-    return recall_at_k(labels, predictions, k=10)
-
-def recall_at_k(y_true, y_pred, k):
-    num_examples = float(len(y_pred))
-    predictions = np.array(y_pred)
-    predictions = np.flip(np.argsort(predictions, -1), -1)[:, :k]
-    num_correct = 0
-    for el in predictions:
-        if 0 in el:
-            num_correct += 1
-    return float(num_correct) / num_examples
 
 @register_metric('rank_response')
 def rank_response(y_true, y_pred):
@@ -72,3 +45,4 @@ def recall_at_k_insQA(y_true, y_pred, k):
             if predictions[i][j] in np.arange(labels[i][j]):
                 flags[i][j] = 1.
     return np.mean((np.sum(flags, -1) >= 1.).astype(float))
+
