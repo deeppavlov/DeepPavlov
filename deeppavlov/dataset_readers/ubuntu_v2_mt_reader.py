@@ -1,4 +1,4 @@
-# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2018 Neural Networks and Deep Learning lab, MIPT
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,13 +29,11 @@ class UbuntuV2MTReader(DatasetReader):
     Args:
         data_path: A path to a folder with dataset csv files.
         num_context_turns: A maximum number of dialogue ``context`` turns.
-        num_samples: A number of data samples to use in ``train``, ``validation`` and ``test`` mode.
         padding: "post" or "pre" context sentences padding
     """
     
     def read(self, data_path: str,
              num_context_turns: int = 1,
-             num_samples: int = None,
              padding: str = "post",
              *args, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
         self.num_turns = num_context_turns
@@ -48,9 +46,9 @@ class UbuntuV2MTReader(DatasetReader):
         self.classes_vocab_train = {}
         self.classes_vocab_valid = {}
         self.classes_vocab_test = {}
-        dataset["train"] = self.preprocess_data_train(train_fname)[:num_samples]
-        dataset["valid"] = self.preprocess_data_validation(valid_fname)[:num_samples]
-        dataset["test"] = self.preprocess_data_validation(test_fname)[:num_samples]
+        dataset["train"] = self.preprocess_data_train(train_fname)
+        dataset["valid"] = self.preprocess_data_validation(valid_fname)
+        dataset["test"] = self.preprocess_data_validation(test_fname)
         return dataset
     
     def preprocess_data_train(self, train_fname: Union[Path, str]) -> List[Tuple[List[str], int]]:

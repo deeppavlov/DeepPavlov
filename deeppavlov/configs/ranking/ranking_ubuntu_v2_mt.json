@@ -1,7 +1,6 @@
 {
   "dataset_reader": {
     "name": "ubuntu_v2_mt_reader",
-    "num_samples": null,
     "data_path": "./ubuntu_v2_data",
     "num_context_turns": 10
   },
@@ -91,8 +90,7 @@
   "metadata": {
     "requirements": [
       "../dp_requirements/tf.txt",
-      "../dp_requirements/gensim.txt",
-      "../dp_requirements/fasttext.txt"
+      "../dp_requirements/gensim.txt"
     ],
     "labels": {
       "telegram_utils": "SiameseModel",

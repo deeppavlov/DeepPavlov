@@ -57,7 +57,7 @@ class SiamesePredictor(Component):
                  responses: SimpleVocabulary = None,
                  preproc_func: Callable = None,
                  interact_pred_num: int = 3,
-                 **kwargs):
+                 *args, **kwargs) -> None:
 
         super().__init__()
 
@@ -65,18 +65,26 @@ class SiamesePredictor(Component):
         self.num_context_turns = num_context_turns
         self.ranking = ranking
         self.attention = attention
-        self.responses = {el[1]: el[0] for el in responses.items()}
         self.preproc_responses = []
         self.response_embeddings = None
         self.preproc_func = preproc_func
         self.interact_pred_num = interact_pred_num
         self.model = model
-        self._build_preproc_responses()
-        if not self.attention:
-            self._build_response_embeddings()
+        if self.ranking:
+            self.responses = {el[1]: el[0] for el in responses.items()}
+            self._build_preproc_responses()
+            if not self.attention:
+                self._build_response_embeddings()
 
     def __call__(self, batch: Iterable[List[np.ndarray]]) -> List[Union[List[str],str]]:
         context = next(batch)
+        try:
+            next(batch)
+            log.error("It is not intended to use the `%s` with the batch size greater then 1." % self.__class__)
+        except StopIteration:
+            pass
+
+
         if self.ranking:
             if len(context) == self.num_context_turns:
                 scores = []
