@@ -44,10 +44,9 @@
         "out": [
           "context_raw"
         ],
-        "data_dir": "odqa",
         "join_docs": false,
         "shuffle": false,
-        "data_url": "http://files.deeppavlov.ai/datasets/wikipedia/wiki_test.db"
+        "load_path": "odqa/wiki_test.db"
       },
       {
         "name": "document_chunker",

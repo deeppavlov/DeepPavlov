@@ -36,8 +36,8 @@ class WikiSQLiteVocab(SQLiteDataIterator):
 
     """
 
-    def __init__(self, data_url: str, data_dir: str = '', join_docs: bool=True, shuffle: bool=False, **kwargs):
-        super().__init__(data_dir=data_dir, data_url=data_url, shuffle=shuffle)
+    def __init__(self, load_path: str, join_docs: bool=True, shuffle: bool=False, **kwargs):
+        super().__init__(load_path=load_path, shuffle=shuffle)
         self.join_docs = join_docs
 
     def __call__(self, doc_ids: Optional[List[List[Any]]] = None, *args, **kwargs) -> List[Union[str, List[str]]]:
