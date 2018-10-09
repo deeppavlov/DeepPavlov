@@ -8,44 +8,65 @@
   "dataset_iterator": {
     "name": "data_learning_iterator"
   },
-
   "chainer": {
     "in": "q",
     "pipe": [
       {
         "name": "stream_spacy_tokenizer",
         "in": "q",
+        "id": "my_tokenizer",
         "lemmas": true,
         "out": "q_token_lemmas"
       },
       {
-        "id": "vectorizer",
-        "name": "tfidf_vectorizer",
+        "ref": "my_tokenizer",
         "in": "q_token_lemmas",
-        "fit_on": ["q_token_lemmas"],
-        "save_path": "faq/tfidf_vectorizer_en_mipt_faq.pkl",
-        "load_path": "faq/tfidf_vectorizer_en_mipt_faq.pkl",
-        "out": "q_vect"
+        "out": "q_lem"
       },
       {
-        "name": "logreg_classifier",
+        "in": [
+          "q_lem"
+        ],
+        "out": [
+          "q_vect"
+        ],
+        "fit_on": [
+          "q_lem"
+        ],
+        "id": "tfidf_vec",
+        "name": "sklearn_component",
+        "save_path": "faq/tfidf_vectorizer_en_mipt_faq.pkl",
+        "load_path": "faq/tfidf_vectorizer_en_mipt_faq.pkl",
+        "model_name": "sklearn.feature_extraction.text:TfidfVectorizer",
+        "infer_method": "transform"
+      },
+      {
         "in": "q_vect",
-        "fit_on": ["q_vect", "y"],
-        "top_n": 2,
-        "c": 1000,
-        "penalty": "l2",
-        "save_path": "faq/tfidf_logreg_classifier_en_mipt_faq.pkl",
-        "load_path": "faq/tfidf_logreg_classifier_en_mipt_faq.pkl",
-        "out": ["answer", "score"]
+        "fit_on": [
+          "q_vect",
+          "y"
+        ],
+        "out": [
+          "answer"
+        ],
+        "name": "sklearn_component",
+        "main": true,
+        "save_path": "faq/tfidf_logreg_classifier.pkl",
+        "load_path": "faq/tfidf_logreg_classifier.pkl",
+        "model_name": "sklearn.linear_model:LogisticRegression",
+        "infer_method": "predict",
+        "C": 1000,
+        "penalty": "l2"
       }
     ],
-    "out": ["answer", "score"]
+    "out": [
+      "answer"
+    ]
   },
-
   "train": {
     "validate_best": false,
     "test_best": false
- },
+  },
   "metadata": {
     "requirements": [
       "../dp_requirements/spacy.txt",
@@ -62,7 +83,6 @@
       }
     ]
   }
-
 }
 
 
