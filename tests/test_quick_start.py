@@ -122,6 +122,9 @@ PARAMS = {
     "elmo": {
         ("elmo/elmo_ru-news.json", "elmo_ru-news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
     },
+    "elmo_bilm": {
+        ("bidirectional_lms/elmo_ru_news.json", "bilm", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+    },
 
     "ranking": {("ranking/ranking_insurance_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
                 ("ranking/ranking_insurance_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
