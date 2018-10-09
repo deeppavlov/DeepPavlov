@@ -38,7 +38,8 @@
         "save_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
         "load_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
         "model_name": "sklearn.feature_extraction.text:TfidfVectorizer",
-        "infer_method": "transform"
+        "infer_method": "transform",
+        "analyzer": "word"
       },
       {
         "name": "fasttext",
@@ -52,6 +53,7 @@
         "in": "q_token_lemmas",
         "vectorizer": "#tfidf_vec",
         "embedder": "#my_embedder",
+        "tokenizer": "#my_tokenizer",
         "mean": true,
         "out": "question_vector"
       },
