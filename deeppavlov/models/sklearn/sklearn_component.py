@@ -257,8 +257,8 @@ class SklearnComponent(Estimator):
         return
 
     @staticmethod
-    def compose_input_data(x: List[Union[Tuple[np.ndarray, list, spmatrix, str],
-                                         List[np.ndarray, list, spmatrix, str],
+    def compose_input_data(x: List[Union[Tuple[Union[np.ndarray, list, spmatrix, str]],
+                                         List[Union[np.ndarray, list, spmatrix, str]],
                                          np.ndarray, spmatrix]]) -> Union[spmatrix, np.ndarray]:
         """
         Stack given list of different types of inputs to the one matrix. If one of the inputs is a sparse matrix, \
