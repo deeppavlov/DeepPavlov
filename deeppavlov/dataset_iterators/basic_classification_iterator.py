@@ -99,10 +99,10 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
             split_seed = self.random.randint(0, 10000)
         data_to_div = self.data[field_to_split].copy()
         data_size = len(self.data[field_to_split])
-        if stratify:
-            stratify = [sample[1] for sample in data_to_div]
 
         for i in range(len(split_fields) - 1):
+            if stratify:
+                stratify = [sample[1] for sample in data_to_div]
             self.data[split_fields[i]], data_to_div = train_test_split(
                 data_to_div,
                 test_size=len(data_to_div) - int(data_size * split_proportions[i]),
