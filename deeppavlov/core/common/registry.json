@@ -68,7 +68,6 @@
   "ru_tokenizer": "deeppavlov.models.tokenizers.ru_tokenizer:RussianTokenizer",
   "russian_words_vocab": "deeppavlov.vocabs.typos:RussianWordsVocab",
   "sanitizer": "deeppavlov.models.preprocessors.sanitizer:Sanitizer",
-  "sentence2vector_w2v_tfidf": "deeppavlov.models.vectorizers.sentence2vector_w2v_tfidf:SentenceW2vVectorizerTfidfWeights",
   "seq2seq_go_bot": "deeppavlov.models.seq2seq_go_bot.bot:Seq2SeqGoalOrientedBot",
   "seq2seq_go_bot_nn": "deeppavlov.models.seq2seq_go_bot.network:Seq2SeqGoalOrientedBotNetwork",
   "simple_vocab": "deeppavlov.core.data.simple_vocab:SimpleVocabulary",
