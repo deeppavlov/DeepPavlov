@@ -16,7 +16,7 @@
         "in": [
           "tokens"
         ],
-        "spec": "embeddings/elmo_ru",
+        "spec": "embeddings/elmo_ru_news",
         "out": [
           "tokens_emb"
         ]
@@ -29,7 +29,7 @@
   "metadata": {
     "requirements": [
       "../dp_requirements/tf.txt",
-      "../dp_requirements/elmo.txt"
+      "../dp_requirements/tf-hub.txt"
     ],
     "download": [
       {

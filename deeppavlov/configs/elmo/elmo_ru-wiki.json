@@ -16,7 +16,7 @@
         "in": [
           "tokens"
         ],
-        "spec": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-wiki_600k_steps.tar.gz",
+        "spec": "embeddings/elmo_ru_wiki",
         "out": [
           "tokens_emb"
         ]
@@ -29,7 +29,13 @@
   "metadata": {
     "requirements": [
       "../dp_requirements/tf.txt",
-      "../dp_requirements/elmo.txt"
+      "../dp_requirements/tf-hub.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-wiki_600k_steps.tar.gz",
+        "subdir": "embeddings/elmo_ru_wiki"
+      }
     ]
   }
 }

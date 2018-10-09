@@ -29,7 +29,7 @@
   "metadata": {
     "requirements": [
       "../dp_requirements/tf.txt",
-      "../dp_requirements/elmo.txt"
+      "../dp_requirements/tf-hub.txt"
     ]
   }
 }

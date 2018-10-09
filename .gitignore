@@ -106,6 +106,9 @@ ENV/
 #Atom IDE
 .ftpconfig
 
+#vscode IDE
+.vscode
+
 #GIT
 .git/
 
