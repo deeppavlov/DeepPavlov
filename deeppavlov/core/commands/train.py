@@ -21,7 +21,6 @@ from pathlib import Path
 from typing import List, Callable, Tuple, Dict, Union
 
 from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root, import_packages
-from deeppavlov.core.commands.utils import DecayScheduler
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.errors import ConfigError
@@ -296,40 +295,6 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
     else:
         raise ConfigError('metric_optimization has to be one of {}'.format(['maximize', 'minimize']))
 
-    if 'learning_rate' in train_config:
-        end_val, num_it, dec_type, extra = None, None, "no", None
-        if isinstance(train_config['learning_rate'], (tuple, list)):
-            start_val = train_config['learning_rate'][0]
-            end_val = train_config['learning_rate'][1]
-        else:
-            start_val = train_config['learning_rate']
-        if 'learning_rate_decay' in train_config:
-            if isinstance(train_config['learning_rate_decay'], (tuple, list)):
-                dec_type = train_config['learning_rate_decay'][0]
-                extra = train_config['learning_rate_decay'][1]
-            else:
-                dec_type = train_config['learning_rate_decay']
-        update_lr_every_batch = train_config.get('update_lr_every_batch', False)
-        if 'learning_rate_decay_epochs' not in train_config:
-            train_config['learning_rate_decay_epochs'] = train_config['epochs']
-        if train_config['learning_rate_decay_epochs'] > 0:
-            num_it = train_config['learning_rate_decay_epochs']
-            if update_lr_every_batch:
-                batches_per_epoch = (len(iterator.data['train']) - 1)\
-                    // train_config['batch_size'] + 1
-                num_it *= batches_per_epoch
-        elif train_config['max_batches'] > 0:
-            num_it = train_config['max_batches']
-            update_lr_every_batch = True
-
-        log.info(f"start_val={start_val},end_val={end_val},num_it={num_it}"
-                 f",dec_type={dec_type},extra={extra},batch_update={update_lr_every_batch}")
-        lear_rate_schedule = DecayScheduler(start_val=start_val, end_val=end_val,
-                                            num_it=num_it, dec_type=dec_type, extra=extra)
-    else:
-        lear_rate_schedule = None
-        update_lr_every_batch = False
-
     i = 0
     epochs = 0
     examples = 0
@@ -339,7 +304,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
     train_y_true = []
     train_y_predicted = []
     losses = []
-    lear_rates = []
+    learning_rates = []
     start_time = time.time()
     break_flag = False
 
@@ -387,14 +352,12 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                     y_predicted = list(model(list(x)))
                     train_y_true += y_true
                     train_y_predicted += y_predicted
-                if lear_rate_schedule is not None:
-                    lr_iteration = i if update_lr_every_batch else epochs
-                    lear_rates.append(lear_rate_schedule.calc_val(lr_iteration))
-                    loss = model.train_on_batch(x, y_true, learning_rate=lear_rates[-1])
-                else:
-                    loss = model.train_on_batch(x, y_true)
-                if loss is not None:
-                    losses.append(loss)
+                result = model.train_on_batch(x, y_true)
+                result = result if isinstance(result, dict) else {'loss': result}
+                if result['loss'] is not None:
+                    losses.append(result['loss'])
+                if 'learning_rate' in result:
+                    learning_rates.append(result['learning_rate'])
                 i += 1
                 examples += len(x)
 
@@ -408,9 +371,6 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                     }
 
-                    if lear_rates:
-                        report['learning_rate'] = lear_rates[-1]
-
                     if train_config['show_examples']:
                         try:
                             report['examples'] = [{
@@ -420,6 +380,9 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                             } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
                         except NameError:
                             log.warning('Could not log examples as y_predicted is not defined')
+
+                    if learning_rates:
+                        report['learning_rate'] = learning_rates[-1]
 
                     if losses:
                         report['loss'] = sum(losses)/len(losses)
@@ -431,16 +394,10 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                                                                             simple_value=score), ])
                             tb_train_writer.add_summary(metric_sum, i)
 
-                        if 'loss' in report:
-                            loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + 'loss',
-                                                                          simple_value=report['loss']), ])
-                            tb_train_writer.add_summary(loss_sum, i)
-
-                        if 'learning_rate' in report:
-                            lr_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' +
-                                                                        'learning_rate',
-                                                                        simple_value=report['learning_rate']), ])
-                            tb_train_writer.add_summary(lr_sum, i)
+                        for name, score in result.items():
+                            res_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + name,
+                                                                         simple_value=score), ])
+                            tb_train_writer.add_summary(res_sum, i)
 
                     report = {'train': report}
                     print(json.dumps(report, ensure_ascii=False))
@@ -482,9 +439,6 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                     'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                 }
 
-                if lear_rates:
-                    report['learning_rate'] = lear_rates[-1]
-
                 if train_config['show_examples']:
                     try:
                         report['examples'] = [{
@@ -494,6 +448,9 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                         } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
                     except NameError:
                         log.warning('Could not log examples')
+
+                if learning_rates:
+                    report['learning_rate'] = learning_rates[-1]
 
                 if losses:
                     report['loss'] = sum(losses)/len(losses)
@@ -505,16 +462,10 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                                                                         simple_value=score), ])
                         tb_train_writer.add_summary(metric_sum, epochs)
 
-                    if 'loss' in report:
-                        loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + 'loss',
-                                                                      simple_value=report['loss']), ])
-                        tb_train_writer.add_summary(loss_sum, epochs)
-
-                    if 'learning_rate' in report:
-                        lr_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' +
-                                                                    'learning_rate',
-                                                                    simple_value=report['learning_rate']), ])
-                        tb_train_writer.add_summary(lr_sum, epochs)
+                    for name, score in result.items():
+                        res_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + name,
+                                                                     simple_value=score), ])
+                        tb_train_writer.add_summary(res_sum, epochs)
 
                 model.process_event(event_name='after_train_log', data=report)
                 report = {'train': report}

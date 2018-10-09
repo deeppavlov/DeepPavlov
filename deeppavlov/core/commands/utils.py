@@ -16,9 +16,6 @@ from pathlib import Path
 from typing import Union
 import os
 
-from enum import IntEnum
-import math
-
 from deeppavlov.core.common import paths
 
 
@@ -68,54 +65,3 @@ def import_packages(packages: list) -> None:
     """Simple function to import packages from list."""
     for package in packages:
         __import__(package)
-
-
-class DecayType(IntEnum):
-    ''' Data class, each decay type is assigned a number. '''
-    NO = 1
-    LINEAR = 2
-    COSINE = 3
-    EXPONENTIAL = 4
-    POLYNOMIAL = 5
-
-    @classmethod
-    def from_str(cls, label: str):
-        if label.upper() in cls.__members__:
-            return DecayType[label.upper()]
-        else:
-            raise NotImplementedError
-
-
-class DecayScheduler():
-    '''
-    Given initial and endvalue, this class generates the next value
-    depending on decay type and number of iterations. (by calling calc_val().)
-    '''
-
-    def __init__(self, dec_type: Union[str, DecayType], start_val: float,
-                 num_it: int = None, end_val: float = None, extra: float = None):
-        if isinstance(dec_type, DecayType):
-            self.dec_type = dec_type
-        else:
-            self.dec_type = DecayType.from_str(dec_type)
-        self.nb, self.extra = num_it, extra
-        self.start_val, self.end_val = start_val, end_val
-        if self.end_val is None and not (self.dec_type in [1, 4]):
-            self.end_val = 0
-
-    def calc_val(self, iters):
-        iters = min(iters, self.nb)
-        if self.dec_type == DecayType.NO:
-            return self.start_val
-        elif self.dec_type == DecayType.LINEAR:
-            pct = iters/self.nb
-            return self.start_val + pct * (self.end_val-self.start_val)
-        elif self.dec_type == DecayType.COSINE:
-            cos_out = math.cos(math.pi * iters / self.nb) + 1
-            return self.end_val + (self.start_val-self.end_val) / 2 * cos_out
-        elif self.dec_type == DecayType.EXPONENTIAL:
-            ratio = self.end_val / self.start_val
-            return self.start_val * (ratio ** (iters/self.nb))
-        elif self.dec_type == DecayType.POLYNOMIAL:
-            delta_val = self.start_val - self.end_val
-            return self.end_val + delta_val * (1 - iters / self.nb) ** self.extra

@@ -13,7 +13,9 @@
 # limitations under the License.
 
 from collections import defaultdict
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Any, Union, List
+from enum import IntEnum
+import math
 
 import numpy as np
 import tensorflow as tf
@@ -21,6 +23,7 @@ from tensorflow.python.ops import variables
 
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.common.errors import ConfigError
 from .tf_backend import TfModelMeta
 
 
@@ -30,13 +33,13 @@ log = get_logger(__name__)
 class TFModel(NNModel, metaclass=TfModelMeta):
     """Parent class for all components using TensorFlow."""
     def __init__(self, *args, **kwargs) -> None:
-        if not hasattr(self, 'sess'):
-            raise RuntimeError('Your TensorFlow model {} must'
-                               ' have sess attribute!'.format(self.__class__.__name__))
         super().__init__(*args, **kwargs)
 
     def load(self, exclude_scopes: Optional[Iterable] = ('Optimizer',)) -> None:
         """Load model parameters from self.load_path"""
+        if not hasattr(self, 'sess'):
+            raise RuntimeError('Your TensorFlow model {} must'
+                               ' have sess attribute!'.format(self.__class__.__name__))
         path = str(self.load_path.resolve())
         # Check presence of the model files
         if tf.train.checkpoint_exists(path):
@@ -48,6 +51,9 @@ class TFModel(NNModel, metaclass=TfModelMeta):
 
     def save(self, exclude_scopes: Optional[Iterable] = ('Optimizer',)) -> None:
         """Save model parameters to self.save_path"""
+        if not hasattr(self, 'sess'):
+            raise RuntimeError('Your TensorFlow model {} must'
+                               ' have sess attribute!'.format(self.__class__.__name__))
         path = str(self.save_path.resolve())
         log.info('[saving model to {}]'.format(path))
         var_list = self._get_saveable_variables(exclude_scopes)
@@ -133,3 +139,115 @@ class TFModel(NNModel, metaclass=TfModelMeta):
             log.info("{} - {}.".format(block_name, cnt))
         total_num_parameters = np.sum(list(blocks.values()))
         log.info('Total number of parameters equal {}'.format(total_num_parameters))
+
+
+class DecayType(IntEnum):
+    ''' Data class, each decay type is assigned a number. '''
+    NO = 1
+    LINEAR = 2
+    COSINE = 3
+    EXPONENTIAL = 4
+    POLYNOMIAL = 5
+
+    @classmethod
+    def from_str(cls, label: str):
+        if label.upper() in cls.__members__:
+            return DecayType[label.upper()]
+        else:
+            raise NotImplementedError
+
+
+class DecayScheduler():
+    '''
+    Given initial and endvalue, this class generates the next value
+    depending on decay type and number of iterations. (by calling next_val().)
+    '''
+
+    def __init__(self, dec_type: Union[str, DecayType], start_val: float,
+                 num_it: int = None, end_val: float = None, extra: float = None):
+        if isinstance(dec_type, DecayType):
+            self.dec_type = dec_type
+        else:
+            self.dec_type = DecayType.from_str(dec_type)
+        self.nb, self.extra = num_it, extra
+        self.start_val, self.end_val = start_val, end_val
+        self.iters = 0
+        if self.end_val is None and not (self.dec_type in [1, 4]):
+            self.end_val = 0
+
+    def next_val(self):
+        self.iters = min(self.iters + 1, self.nb)
+        if self.dec_type == DecayType.NO:
+            return self.start_val
+        elif self.dec_type == DecayType.LINEAR:
+            pct = self.iters / self.nb
+            return self.start_val + pct * (self.end_val - self.start_val)
+        elif self.dec_type == DecayType.COSINE:
+            cos_out = math.cos(math.pi * self.iters / self.nb) + 1
+            return self.end_val + (self.start_val - self.end_val) / 2 * cos_out
+        elif self.dec_type == DecayType.EXPONENTIAL:
+            ratio = self.end_val / self.start_val
+            return self.start_val * (ratio ** (self.iters / self.nb))
+        elif self.dec_type == DecayType.POLYNOMIAL:
+            delta_val = self.start_val - self.end_val
+            return self.end_val + delta_val * (1 - self.iters / self.nb) ** self.extra
+
+
+class AnhancedTFModel(TFModel):
+    """TFModel anhanced with optimizer, learning rate and momentum configuration"""
+    def __init__(self,
+                 learning_rate: Union[float, List[float]],
+                 learning_rate_decay: Union[str, List[Any]] = DecayType.NO,
+                 learning_rate_decay_epochs: int = 0,
+                 learning_rate_decay_batches: int = 0,
+                 optimizer: str = 'AdamOptimizer',
+                 *args, **kwargs) -> None:
+        if learning_rate_decay_epochs and learning_rate_decay_batches:
+            raise ConfigError("isn't able to update learning rate every batch"
+                              " and every epoch sumalteniously")
+        super().__init__(*args, **kwargs)
+
+        end_val, num_it, dec_type, extra = None, None, DecayType.NO, None
+        if isinstance(learning_rate, (tuple, list)):
+            start_val, end_val = learning_rate
+        else:
+            start_val = learning_rate
+        if learning_rate_decay is not None:
+            if isinstance(learning_rate_decay, (tuple, list)):
+                dec_type, extra = learning_rate_decay
+            else:
+                dec_type = learning_rate_decay
+
+        self._lr = start_val
+        self._lr_update_on_batch = False
+        if learning_rate_decay_epochs > 0:
+            num_it = learning_rate_decay_epochs
+        elif learning_rate_decay_batches > 0:
+            num_it = learning_rate_decay_batches
+            self._lr_update_on_batch = True
+
+        log.info(f"start_val={start_val},end_val={end_val},num_it={num_it}"
+                 f",dec_type={dec_type},extra={extra}")
+        self._lr_schedule = DecayScheduler(start_val=start_val, end_val=end_val,
+                                           num_it=num_it, dec_type=dec_type,
+                                           extra=extra)
+
+        self._optimizer = None
+        if hasattr(tf.train, optimizer):
+            self._optimizer = getattr(tf.train, optimizer)
+        if not issubclass(self._optimizer, tf.train.Optimizer):
+            raise ConfigError("`optimizer` parameter should be a name od"
+                              " tf.train.Optimizer subclass")
+
+    def process_event(self, event_name, data):
+        if self._lr_update_on_batch:
+            if event_name == 'after_batch':
+                self._lr = self._lr_schedule.next_val()
+        elif event_name == 'after_epoch':
+            self._lr = self._lr_schedule.next_val()
+
+    def get_learning_rate(self):
+        return self._lr
+
+    def get_optimizer(self):
+        return self._optimizer
