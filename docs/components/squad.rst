@@ -130,6 +130,22 @@ with contexts without an answer.
 Special trainable `no_answer` token is added to output of self-attention layer and it makes model able to select
 `no_answer` token in cases, when answer is not present in given context.
 
+We got 57.88 EM and 65.91 F-1 on ground truth Wikipedia article (we used the same Wiki dump as `DrQA`_):
+
++---------------+-----------------------------------------------+----------------+-----------------+
+| Model config                                                  |    EM (dev)    |    F-1 (dev)    |
++---------------------------------------------------------------+----------------+-----------------+
+| :config:`DeepPavlov <squad/multi_squad_noans.json>`           |     57.88      |     65.91       |
++---------------------------------------------------------------+----------------+-----------------+
+| `Simple and Effective Multi-Paragraph Reading Comprehension`_ |     59.14      |     67.34       |
++---------------------------------------------------------------+----------------+-----------------+
+| `DrQA`_                                                       |     49.7       |     --          |
++---------------------------------------------------------------+----------------+-----------------+
+
+
+.. _`DrQA`: https://arxiv.org/abs/1704.00051
+.. _`Simple and Effective Multi-Paragraph Reading Comprehension`: https://arxiv.org/abs/1710.10723
+
 SDSJ Task B
 ~~~~~~~~~~~
 
