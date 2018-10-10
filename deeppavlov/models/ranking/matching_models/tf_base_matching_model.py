@@ -33,7 +33,6 @@ class TensorflowBaseMatchingModel(TFModel, SiameseModel):
         super(TensorflowBaseMatchingModel, self).__init__(*args, **kwargs)
 
     def __call__(self, samples_generator: Iterable[List[np.ndarray]]) -> Union[np.ndarray, List[str]]:
-        # return np.asarray([[np.random.random() for j in range(10)] for i in range(256)])   # stub
         y_pred = []
         batch_buffer_context = []       # [batch_size, 10, 50]
         batch_buffer_context_len = []   # [batch_size, 10]

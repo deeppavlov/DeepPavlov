@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "ubuntu_v2_mt_reader",
-    "data_path": "./ubuntu_v2_data",
+    "data_path": "./ubuntu_v2_data_clean",
     "num_context_turns": 10,
     "padding": "pre"
   },
@@ -31,7 +31,7 @@
         "id": "word2vec_vectorizer",
         "name": "word2vec_vectorizer",
         "iter": 10,
-        "window": 1,
+        "window": 10,
         "sg": 1,
         "filters": "\t\n,",
         "workers": 8,
@@ -45,7 +45,6 @@
         "save_path": "ubuntu_v2_mt_word2vec/preproc/tok.dict",
         "load_path": "ubuntu_v2_mt_word2vec/preproc/tok.dict",
         "use_matrix": true,
-        "shuffle": true,
         "num_ranking_samples": 10,
         "num_context_turns": 10,
         "max_sequence_length": 50,
@@ -86,8 +85,8 @@
         "seed": 243,
         "learning_rate": 1e-3,
         "batch_size": 100,
-        "save_path": "ubuntu_v2_mt_word2vec/model/model",
-        "load_path": "ubuntu_v2_mt_word2vec/model/model"
+        "save_path": "ubuntu_v2_mt_word2vec/model_dam/model",
+        "load_path": "ubuntu_v2_mt_word2vec/model_dam/model"
       }
     ],
     "out": [
@@ -108,7 +107,7 @@
     "validation_patience": 1,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 100,
-    "tensorboard_log_dir": "ubuntu_v2_mt_word2vec/logs"
+    "tensorboard_log_dir": "ubuntu_v2_mt_word2vec/logs_dam/"
   },
   "metadata": {
     "requirements": [
@@ -121,8 +120,8 @@
     },
     "download": [
       {
-        "url": "http://lnsigo.mipt.ru/export/datasets/ubuntu_v2_data.tar.gz",
-        "subdir": "ubuntu_v2_data",
+        "url": "http://lnsigo.mipt.ru/export/datasets/ubuntu_v2_data_clean.tar.gz",
+        "subdir": "ubuntu_v2_data_clean",
         "todo": "replace it"
       }
     ]
