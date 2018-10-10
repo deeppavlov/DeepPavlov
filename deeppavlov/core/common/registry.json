@@ -80,6 +80,7 @@
   "siamese_preprocessor": "deeppavlov.models.preprocessors.siamese_preprocessor:SiamesePreprocessor",
   "siamese_predictor": "deeppavlov.models.ranking.siamese_predictor:SiamesePredictor",
   "simple_vocab": "deeppavlov.core.data.simple_vocab:SimpleVocabulary",
+  "smn_nn": "deeppavlov.models.ranking.matching_models.sequential_matching_network:SMNNetwork",
   "slotfill_raw": "deeppavlov.models.slotfill.slotfill_raw:SlotFillingComponent",
   "spelling_error_model": "deeppavlov.models.spelling_correction.brillmoore.error_model:ErrorModel",
   "spelling_levenshtein": "deeppavlov.models.spelling_correction.levenshtein.searcher_component:LevenshteinSearcherComponent",
