@@ -26,7 +26,7 @@ class Chainer(Component):
     and infer models in a pipeline as a whole.
     """
     def __init__(self, in_x: Union[str, list] = None, out_params: Union[str, list] = None,
-                 in_y: Union[str, list] = None, *args, as_component: bool = False, **kwargs):
+                 in_y: Union[str, list] = None, *args, **kwargs):
         self.pipe = []
         self.train_pipe = []
         if isinstance(in_x, str):
@@ -43,9 +43,6 @@ class Chainer(Component):
         self.train_map = self.forward_map.union(self.in_y)
 
         self.main = None
-
-        if as_component:
-            self._predict = self._predict_as_component
 
     def append(self, component: Component, in_x: [str, list, dict]=None, out_params: [str, list]=None,
                in_y: [str, list, dict]=None, main=False):
@@ -102,36 +99,43 @@ class Chainer(Component):
         else:
             raise ConfigError('Arguments {} are expected but only {} are set'.format(in_x, self.train_map))
 
-    def __call__(self, *args, **kwargs):
-        return self._predict(*args, **kwargs)
-
-    def _predict(self, x, y=None, to_return=None):
+    def compute(self, x, y=None, targets=None):
         in_params = list(self.in_x)
         if len(in_params) == 1:
             args = [x]
         else:
             args = list(zip(*x))
 
-        if to_return is None:
-            to_return = self.out_params
-        if self.forward_map.issuperset(to_return):
+        if y is None:
             pipe = self.pipe
-        elif y is None:
-            raise RuntimeError('Expected to return {} but only {} are set in memory'
-                               .format(to_return, self.forward_map))
-        elif self.train_map.issuperset(to_return):
+        else:
             pipe = self.train_pipe
             if len(self.in_y) == 1:
                 args.append(y)
             else:
                 args += list(zip(*y))
             in_params += self.in_y
-        else:
-            raise RuntimeError('Expected to return {} but only {} are set in memory'
-                               .format(to_return, self.train_map))
+
+        return self._compute(*args, pipe=pipe, in_params=in_params, targets=targets)
+
+    def __call__(self, *args):
+        return self._compute(*args, in_params=self.in_x, pipe=self.pipe, targets=self.out_params)
+
+    @staticmethod
+    def _compute(*args, in_params, pipe, targets):
+        expected = set(targets)
+        final_pipe = []
+        for (in_keys, in_params), out_params, component in reversed(pipe):
+            if expected.intersection(out_params):
+                expected = expected - set(out_params) | set(in_params)
+                final_pipe.append(((in_keys, in_params), out_params, component))
+        final_pipe.reverse()
+        if not expected.issubset(in_params):
+            raise RuntimeError(f'{expected} are required to compute {targets} but were not found in memory or inputs')
+        pipe = final_pipe
 
         mem = dict(zip(in_params, args))
-        del args, x, y
+        del args
 
         for (in_keys, in_params), out_params, component in pipe:
             x = [mem[k] for k in in_params]
@@ -144,27 +148,7 @@ class Chainer(Component):
             else:
                 mem.update(zip(out_params, res))
 
-        res = [mem[k] for k in to_return]
-        if len(res) == 1:
-            return res[0]
-        return list(zip(*res))
-
-    def _predict_as_component(self, *args):
-        mem = dict(zip(self.in_x, args))
-
-        for (in_keys, in_params), out_params, component in self.pipe:
-            x = [mem[k] for k in in_params]
-            if in_keys:
-                res = component(**dict(zip(in_keys, x)))
-            else:
-                res = component(*x)
-
-            if len(out_params) == 1:
-                mem[out_params[0]] = res
-            else:
-                mem.update(zip(out_params, res))
-
-        res = [mem[k] for k in self.out_params]
+        res = [mem[k] for k in targets]
         if len(res) == 1:
             res = res[0]
         return res

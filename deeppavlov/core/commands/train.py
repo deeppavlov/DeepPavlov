@@ -36,7 +36,7 @@ from deeppavlov.core.models.nn_model import NNModel
 
 log = get_logger(__name__)
 
-Metric = namedtuple('Metric', ['name', 'fn', 'y_true', 'y_predicted'])
+Metric = namedtuple('Metric', ['name', 'fn', 'inputs'])
 
 
 def _parse_metrics(metrics, in_y, out_vars):
@@ -49,15 +49,11 @@ def _parse_metrics(metrics, in_y, out_vars):
 
         f = get_metrics_by_names(metric_name)
 
-        y_true_names = metric.get('y_true', in_y)
-        if isinstance(y_true_names, str):
-            y_true_names = [y_true_names]
+        inputs = metric.get('inputs', in_y + out_vars)
+        if isinstance(inputs, str):
+            inputs = [inputs]
 
-        y_predicted_names = metric.get('y_predicted', out_vars)
-        if isinstance(y_predicted_names, str):
-            y_predicted_names = [y_predicted_names]
-
-        metrics_functions.append(Metric(metric_name, f, y_true_names, y_predicted_names))
+        metrics_functions.append(Metric(metric_name, f, inputs))
     return metrics_functions
 
 
@@ -251,21 +247,23 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
 
     expected_outputs = {}
     for m in metrics_functions:
-        expected_outputs |= set(m.y_true) | set(m.y_predicted)
+        expected_outputs |= set(m.inputs)
     expected_outputs = list(expected_outputs)
 
     outputs = []
     for x, y_true in iterator.gen_batches(batch_size, data_type, shuffle=False):
-        outputs += list(model(list(x), list(y_true), to_return=expected_outputs))
+        y_predicted = list(model.compute(list(x), list(y_true), targets=expected_outputs))
+        outputs += y_predicted
+
     if len(expected_outputs) == 1:
         outputs = [outputs]
-    else:
-        outputs = zip(*outputs)
 
-    metrics = [(s, f(val_y_true, val_y_predicted)) for s, f in metrics_functions]
+    outputs = dict(zip(expected_outputs, outputs))
+
+    metrics = [m.fn(*[outputs[i] for i in m.inputs]) for m in metrics_functions]
 
     report = {
-        'eval_examples_count': len(val_y_true),
+        'eval_examples_count': len(outputs),
         'metrics': prettify_metrics(metrics),
         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
     }

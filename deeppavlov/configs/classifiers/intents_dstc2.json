@@ -12,14 +12,14 @@
       "x"
     ],
     "in_y": [
-      "y"
+      "y_true"
     ],
     "pipe": [
       {
         "id": "classes_vocab",
         "name": "default_vocab",
         "fit_on": [
-          "y"
+          "y_true"
         ],
         "level": "token",
         "save_path": "vocabs/dstc2_classes.dict",
@@ -46,7 +46,7 @@
           "x_emb"
         ],
         "in_y": [
-          "y"
+          "y_true"
         ],
         "out": [
           "y_labels",
@@ -88,8 +88,7 @@
     "metrics": [
       {
         "name": "sets_accuracy",
-        "y_true": "y",
-        "y_predicted": "y_labels"
+        "inputs": ["y_true", "y_labels"]
       },
       "classification_f1",
       "classification_roc_auc"
