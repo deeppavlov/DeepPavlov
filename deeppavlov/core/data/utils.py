@@ -282,8 +282,6 @@ def zero_pad(batch, zp_batch=None, dtype=np.float32, padding=0):
 
 
 def is_str_batch(batch):
-    if len(batch) == 0:
-        return True
     while True:
         if isinstance(batch, Iterable):
             if isinstance(batch, str):
@@ -291,7 +289,10 @@ def is_str_batch(batch):
             elif isinstance(batch, np.ndarray):
                 return batch.dtype.kind == 'U'
             else:
-                batch = batch[0]
+                if len(batch) > 0:
+                    batch = batch[0]
+                else:
+                    return True
         else:
             return False
 
