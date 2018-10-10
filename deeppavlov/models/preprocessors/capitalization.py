@@ -14,7 +14,7 @@
 
 
 import re
-from typing import Union, Tuple, List
+from typing import Union, Tuple, List, Optional
 
 import numpy as np
 
@@ -74,7 +74,7 @@ class CapitalizationPreprocessor(Component):
 
 
 def process_word(word: str, to_lower: bool = False,
-                 append_case: str = None) -> Tuple[str]:
+                 append_case: Optional[str] = None) -> Tuple[str]:
     """Converts word to a tuple of symbols, optionally converts it to lowercase
     and adds capitalization label.
 

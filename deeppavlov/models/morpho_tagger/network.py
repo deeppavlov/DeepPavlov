@@ -21,7 +21,7 @@ from keras import Model
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.models.keras_model import ExternalKerasWrapper
+from deeppavlov.core.models.keras_model import KerasWrapper
 from deeppavlov.core.data.vocab import DefaultVocabulary
 from .common_tagger import *
 from .cells import Highway
@@ -223,7 +223,7 @@ class CharacterTagger:
         else:
             return X
 
-    def train_on_batch(self, data: List[Iterable], labels: Iterable[list]):
+    def train_on_batch(self, data: List[Iterable], labels: Iterable[list]) -> None:
         """Trains model on a single batch
 
         Args:
@@ -233,7 +233,7 @@ class CharacterTagger:
             the trained model
         """
         X, Y = self._transform_batch(data, labels)
-        return self.model_.train_on_batch(X, Y)
+        self.model_.train_on_batch(X, Y)
 
     def predict_on_batch(self, data: Union[list, tuple],
                          return_indexes: bool = False) -> List[List[str]]:
@@ -257,7 +257,7 @@ class CharacterTagger:
             answer[i] = elem if return_indexes else self.tags.idxs2toks(elem)
         return answer
 
-    def _make_sent_vector(self, sent: List, bucket_length: int =None) -> np.array:
+    def _make_sent_vector(self, sent: List, bucket_length: int =None) -> np.ndarray:
         """Transforms a sentence to Numpy array, which will be the network input.
 
         Args:
@@ -295,7 +295,7 @@ class CharacterTagger:
             answer[i] = self.tags.tok2idx(tag)
         return answer
 
-    def save(self, outfile):
+    def save(self, outfile) -> None:
         """Saves model weights to a file
 
         Args:
@@ -303,7 +303,7 @@ class CharacterTagger:
         """
         self.model_.save_weights(outfile)
 
-    def load(self, infile):
+    def load(self, infile) -> None:
         """Loads model weights from a file
 
         Args:
@@ -313,12 +313,11 @@ class CharacterTagger:
 
 
 @register("morpho_tagger")
-class MorphoTaggerWrapper(ExternalKerasWrapper):
+class MorphoTaggerWrapper(KerasWrapper):
     """
     A wrapper over :class:`CharacterTagger`.
-    It is inherited from :class:`~deeppavlov.core.keras_model.ExternalKerasWrapper`.
+    It is inherited from :class:`~deeppavlov.core.keras_model.KerasWrapper`.
     It accepts initialization parameters of :class:`CharacterTagger`
-    and arguments of :func:`CharacterTagger.train_on_batch`
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(CharacterTagger, *args, **kwargs)

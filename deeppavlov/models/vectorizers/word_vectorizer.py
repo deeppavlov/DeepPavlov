@@ -45,7 +45,7 @@ class WordIndexVectorizer(Serializable):
         raise NotImplementedError("You should implement get_word_indexes function "
                                   "in your WordIndexVectorizer subclass.")
 
-    def __call__(self, data: List) -> np.array:
+    def __call__(self, data: List) -> np.ndarray:
         """
         Transforms words to one-hot encoding according to the dictionary.
 
@@ -71,10 +71,11 @@ class DictionaryVectorizer(WordIndexVectorizer):
     Transforms words into 0-1 vector of its possible tags, read from a vocabulary file.
     The format of the vocabulary must be word<TAB>tag_1<SPACE>...<SPACE>tag_k
 
-    save_path: path to save the vocabulary,
-    load_path: path to the vocabulary(-ies),
-    min_freq: minimal frequency of tag to memorize this tag,
-    unk_token: unknown token to be yielded for unknown words
+    Args:
+        save_path: path to save the vocabulary,
+        load_path: path to the vocabulary(-ies),
+        min_freq: minimal frequency of tag to memorize this tag,
+        unk_token: unknown token to be yielded for unknown words
     """
     def __init__(self, save_path: str, load_path: Union[str, List[str]],
                  min_freq: int = 1, unk_token: str = None, **kwargs):
@@ -87,16 +88,15 @@ class DictionaryVectorizer(WordIndexVectorizer):
     def dim(self):
         return len(self._t2i)
 
-    def save(self):
+    def save(self) -> None:
         """Saves the dictionary to self.save_path"""
         with self.save_path.open("w", encoding="utf8") as fout:
             for word, curr_labels in sorted(self.word_tag_mapping.items()):
                 curr_labels = [self._i2t[index] for index in curr_labels]
                 curr_labels = [x for x in curr_labels if x != self.unk_token]
                 fout.write("{}\t{}".format(word, " ".join(curr_labels)))
-        return self
 
-    def load(self):
+    def load(self) -> None:
         """Loads the dictionary from self.load_path"""
         if not isinstance(self.load_path, list):
             self.load_path = [self.load_path]
@@ -113,7 +113,6 @@ class DictionaryVectorizer(WordIndexVectorizer):
                     word, labels = line.split("\t")
                     labels_by_words[word].update(labels.split())
         self._initialize(labels_by_words)
-        return self
 
     def _initialize(self, labels_by_words : Dict):
         self._i2t = [self.unk_token] if self.unk_token is not None else []
@@ -141,17 +140,18 @@ class DictionaryVectorizer(WordIndexVectorizer):
 @register("pymorphy_vectorizer")
 class PymorphyVectorizer(WordIndexVectorizer):
     """
-        Transforms russian words into 0-1 vector of its possible Universal Dependencies tags.
-        Tags are obtained using Pymorphy analyzer (pymorphy2.readthedocs.io)
-        and transformed to UD2.0 format using russian-tagsets library (https://github.com/kmike/russian-tagsets).
-        All UD2.0 tags that are compatible with produced tags are memorized.
-        The list of possible Universal Dependencies tags is read from a file,
-        which contains all the labels that occur in UD2.0 SynTagRus dataset.
+    Transforms russian words into 0-1 vector of its possible Universal Dependencies tags.
+    Tags are obtained using Pymorphy analyzer (pymorphy2.readthedocs.io)
+    and transformed to UD2.0 format using russian-tagsets library (https://github.com/kmike/russian-tagsets).
+    All UD2.0 tags that are compatible with produced tags are memorized.
+    The list of possible Universal Dependencies tags is read from a file,
+    which contains all the labels that occur in UD2.0 SynTagRus dataset.
 
+    Args:
         save_path: path to save the tags list,
         load_path: path to load the list of tags,
         max_pymorphy_variants: maximal number of pymorphy parses to be used. If -1, all parses are used.
-        """
+    """
 
     USELESS_KEYS = ["Abbr"]
     VALUE_MAP = {"Ptan": "Plur", "Brev": "Short"}
@@ -169,12 +169,12 @@ class PymorphyVectorizer(WordIndexVectorizer):
     def dim(self):
         return len(self._t2i)
 
-    def save(self):
+    def save(self) -> None:
         """Saves the dictionary to self.save_path"""
         with self.save_path.open("w", encoding="utf8") as fout:
             fout.write("\n".join(self._i2t))
 
-    def load(self):
+    def load(self) -> None:
         """Loads the dictionary from self.load_path"""
         self._i2t = []
         with self.load_path.open("r", encoding="utf8") as fin:
@@ -185,7 +185,6 @@ class PymorphyVectorizer(WordIndexVectorizer):
                 self._i2t.append(line)
         self._t2i = {tag: i for i, tag in enumerate(self._i2t)}
         self._make_tag_trie()
-        return self
 
     def _make_tag_trie(self):
         self._nodes = [defaultdict(dict)]
@@ -216,6 +215,7 @@ class PymorphyVectorizer(WordIndexVectorizer):
     def find_compatible(self, tag: str) -> List[int]:
         """
         Transforms a Pymorphy tag to a list of indexes of compatible UD tags.
+
         Args:
             tag: input Pymorphy tag
 

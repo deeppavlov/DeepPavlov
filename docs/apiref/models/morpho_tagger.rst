@@ -9,8 +9,9 @@ deeppavlov.models.morpho_tagger
     :members:
 
 .. autoclass:: deeppavlov.models.morpho_tagger.common.TagOutputPrettifier
+    :members:
 
     .. automethod:: __call__
 
-    :members:
+
 

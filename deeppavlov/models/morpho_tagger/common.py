@@ -56,12 +56,10 @@ def predict_with_model(config_path: [Path, str]) -> List[List[str]]:
     return answers
 
 
-
-
-
 @register('tag_output_prettifier')
 class TagOutputPrettifier(Component):
-    """Wrapper to :func:`~deeppavlov.models.morpho_tagger.common.` function.
+    """Class which prettifies morphological tagger output to 4-column
+    or 10-column (Universal Dependencies) format.
 
     Args:
         format_mode: output format,
@@ -78,7 +76,7 @@ class TagOutputPrettifier(Component):
     """
 
     def __init__(self, format_mode: str = "basic", return_string: bool = True,
-                 begin: str = "", end: str = "", sep: str = "\n", **kwargs):
+                 begin: str = "", end: str = "", sep: str = "\n", **kwargs) -> None:
         self.format_mode = format_mode
         self.return_string = return_string
         self._make_format_string()
@@ -120,9 +118,9 @@ class TagOutputPrettifier(Component):
 
         Examples:
             >>> sent = "John really likes pizza"
-            >>> tags = ["PROPN,Number=Sing", "ADV", \
-                        "VERB,Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin", \
-                        "NOUN,Number=Sing", "PUNCT"]
+            >>> tags = ["PROPN,Number=Sing", "ADV",
+            >>>         "VERB,Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin",
+            >>>         "NOUN,Number=Sing", "PUNCT"]
             >>> prettifier = TagOutputPrettifier(mode='basic')
             >>> self.prettify(sent, tags)
                 1	John	PROPN	Number=Sing

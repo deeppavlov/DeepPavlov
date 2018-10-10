@@ -41,9 +41,9 @@ def _keras_wrap(func, graph, session):
 
 
 def _is_keras_model(cls):
-    # may be, exists a way to avoid these ugly imports?
-    from .keras_model import KerasModel, ExternalKerasWrapper
-    return issubclass(cls, KerasModel) or issubclass(cls, ExternalKerasWrapper)
+    # may be, there exists a way to avoid this ugly import?
+    from .keras_model import KerasModel
+    return issubclass(cls, KerasModel)
 
 
 class TfModelMeta(with_metaclass(type, ABCMeta)):

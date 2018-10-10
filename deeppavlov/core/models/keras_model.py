@@ -15,7 +15,9 @@
 import inspect
 from abc import abstractmethod
 from copy import deepcopy
+from typing import Optional, List, Union
 
+import numpy as np
 import tensorflow as tf
 from keras import backend as K
 
@@ -75,10 +77,6 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
     def save(self, *args, **kwargs):
         pass
 
-    @abstractmethod
-    def reset(self):
-        pass
-
     def process_event(self, event_name: str, data: dict):
         """
         Process event after epoch
@@ -97,7 +95,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         return
 
 
-class ExternalKerasWrapper(NNModel, metaclass=TfModelMeta):
+class KerasWrapper(KerasModel):
     """A wrapper over external Keras models. It is used, for example,
     to wrap :class:~deeppavlov.models.morpho_tagger.network.CharacterTagger.
     A subclass of :class:`~deeppavlov.core.models.nn_model.NNModel`
@@ -110,7 +108,9 @@ class ExternalKerasWrapper(NNModel, metaclass=TfModelMeta):
         **kwargs: a dictionary containing model parameters specified in the main part
             of json config that corresponds to the model
     """
-    def __init__(self, cls: type, save_path: str = None, load_path: str = None, mode: str = None, **kwargs):
+    def __init__(self, cls: type, save_path: Optional[str] = None,
+                 load_path: Optional[str] = None, mode: str = None,
+                 **kwargs) -> None:
         # Calls parent constructor. Results in creation of save_folder if it doesn't exist
         super().__init__(save_path=save_path, load_path=load_path, mode=mode)
 
@@ -123,7 +123,6 @@ class ExternalKerasWrapper(NNModel, metaclass=TfModelMeta):
         # Fills all provided parameters from opt (opt is a dictionary formed from the model
         # json config file, except the "name" field)
         network_parameters = {par: opt[par] for par in network_parameter_names if par in opt}
-
         self._net = cls(**network_parameters)
 
         # Finds all parameters for network train to pass them into train method later
@@ -137,39 +136,23 @@ class ExternalKerasWrapper(NNModel, metaclass=TfModelMeta):
         # Tries to load the model from model `load_path`, if it is available
         self.load()
 
-    @staticmethod
-    def _config_session():
-        """
-        Configure session for particular device
-
-        Returns:
-            tensorflow.Session
-        """
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth = True
-        config.gpu_options.visible_device_list = '0'
-        return tf.Session(config=config)
-
-    def load(self):
+    def load(self) -> None:
         """Checks existence of the model file, loads the model if the file exists"""
 
-        # General way (load path from config assumed to be the path
-        # to the file including extension of the file model)
-        model_file_exist = self.load_path.exists()
-        path = str(self.load_path.resolve())
-        # Check presence of the model files
-        if model_file_exist:
+        # Checks presence of the model files
+        if self.load_path.exists():
+            path = str(self.load_path.resolve())
             log.info('[loading model from {}]'.format(path))
             self._net.load(path)
 
-    def save(self):
+    def save(self) -> None:
         """Saves model to the save_path, provided in config. The directory is
         already created by super().__init__, which is called in __init__ of this class"""
         path = str(self.save_path.absolute())
         log.info('[saving model to {}]'.format(path))
         self._net.save(path)
 
-    def train_on_batch(self, *args):
+    def train_on_batch(self, *args) -> None:
         """Trains the model on a single batch.
 
         Args:
@@ -180,7 +163,7 @@ class ExternalKerasWrapper(NNModel, metaclass=TfModelMeta):
         *data, labels = args
         self._net.train_on_batch(data, labels)
 
-    def __call__(self, *x_batch, **kwargs):
+    def __call__(self, *x_batch, **kwargs) -> Union[List, np.ndarray]:
         """
         Predicts answers on batch elements.
 
