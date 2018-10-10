@@ -1,6 +1,7 @@
 import io
 import json
 import os
+import signal
 from pathlib import Path
 import shutil
 import sys
@@ -8,6 +9,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 import pexpect
+import pexpect.popen_spawn
 import requests
 from urllib.parse import urljoin
 
@@ -27,7 +29,9 @@ download_path = tests_dir / "download"
 
 TEST_MODES = ['IP',  # test_interacting_pretrained_model
               'TI',  # test_consecutive_training_and_interacting
-              'E'    # test_evolving
+              'E',    # test_evolving
+              'CV',    # test_crossvalidation
+              'PS'    # test_paramsearch
               ]
 
 ALL_MODES = ('IP', 'TI')
@@ -38,6 +42,9 @@ FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_t
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
+    "ecommerce_bot": {
+        ("ecommerce_bot/ecommerce_bot.json", "ecommerce_bot", ALL_MODES): [('Dummy text', '{}', '{}', None)]
+    },
     "faq": {
         ("faq/tfidf_logreg_en_faq.json", "faq_tfidf_logreg_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("faq/tfidf_autofaq.json", "faq_tfidf_cos", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
@@ -51,8 +58,9 @@ PARAMS = {
                 ("helllo", "hello"),
                 ("datha", "data")
             ],
-        ("spelling_correction/brillmoore_kartaslov_ru.json", "error_model", ALL_MODES):
+        ("spelling_correction/brillmoore_kartaslov_ru.json", "error_model", ('IP',)):
             [
+                ("преведствую", "приветствую"),
                 ("я джва года дду эту игру", "я два года жду эту игру")
             ],
         ("spelling_correction/levenshtein_corrector_ru.json", "error_model", ('IP',)):
@@ -89,6 +97,12 @@ PARAMS = {
     "evolution": {
         ("evolution/evolve_intents_snips.json", "evolution", ('E',)): None
     },
+    "cross-validation": {
+        ("cv/cv_tfidf_autofaq.json", "cross-validation-faq", ('CV',)): None
+    },
+    "paramsearch": {
+        ("paramsearch/tfidf_logreg_autofaq_psearch.json", "paramsearch", ('PS',)): None
+    },
     "sample": {
         ("classifiers/intents_sample_csv.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_sample_json.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
@@ -109,14 +123,30 @@ PARAMS = {
         ("elmo/elmo_ru-news.json", "elmo_ru-news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
     },
 
-    "ranking": {("ranking/ranking_insurance.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/en_ranker_tfidf_wiki_test.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
+    "ranking": {("ranking/ranking_insurance_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/ranking_insurance_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/ranking_ubuntu_v2_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/ranking_ubuntu_v2_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/ranking_ubuntu_v2_mt_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/ranking_ubuntu_v2_mt_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/paraphrase_ident_paraphraser_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/paraphrase_ident_paraphraser_interact_test.json", "ranking",
+                 ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/paraphrase_ident_qqp_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/paraphrase_ident_qqp_bilstm_interact_test.json", "ranking",
+                 ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/paraphrase_ident_qqp_bilstm_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/paraphrase_ident_qqp_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "doc_retrieval": {
+        ("doc_retrieval/en_ranker_tfidf_wiki_test.json", "doc_retrieval", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+    },
     "squad": {
         ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "seq2seq_go_bot": {
-        ("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ('TI',)):
+        ("seq2seq_go_bot/bot_kvret_train.json", "seq2seq_go_bot", ('TI',)):
         [
            ("will it snow on tuesday?",
             "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
@@ -125,7 +155,7 @@ PARAMS = {
             "",
             None)
         ],
-        ("seq2seq_go_bot/bot_kvret_infer.json", "seq2seq_go_bot", ('IP',)):
+        ("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ('IP',)):
         [
            ("will it snow on tuesday?",
             "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
@@ -224,20 +254,19 @@ class TestQuickStart(object):
     @staticmethod
     def install(conf_file):
         logfile = io.BytesIO(b'')
-        _, exitstatus = pexpect.run(sys.executable + " -m deeppavlov install " + str(conf_file), timeout=None,
-                                    withexitstatus=True,
-                                    logfile=logfile)
-        if exitstatus != 0:
-            logfile.seek(0)
+        p = pexpect.popen_spawn.PopenSpawn(sys.executable + " -m deeppavlov install " + str(conf_file), timeout=None,
+                                           logfile=logfile)
+        p.readlines()
+        if p.wait() != 0:
             raise RuntimeError('Installing process of {} returned non-zero exit code: \n{}'
-                               .format(conf_file, ''.join((line.decode() for line in logfile.readlines()))))
+                               .format(conf_file, logfile.getvalue().decode()))
 
     @staticmethod
     def interact(conf_file, model_dir, qr_list=None):
         qr_list = qr_list or []
         logfile = io.BytesIO(b'')
-        p = pexpect.spawn(sys.executable, ["-m", "deeppavlov", "interact", str(conf_file)], timeout=None,
-                          logfile=logfile)
+        p = pexpect.popen_spawn.PopenSpawn(' '.join([sys.executable, "-m", "deeppavlov", "interact", str(conf_file)]),
+                                           timeout=None, logfile=logfile)
         try:
             for *query, expected_response in qr_list:  # works until the first failed query
                 for q in query:
@@ -252,24 +281,21 @@ class TestQuickStart(object):
 
             p.expect("::")
             p.sendline("quit")
-            if p.expect(pexpect.EOF) != 0:
-                logfile.seek(0)
-                raise RuntimeError('Error in quitting from deep.py: \n{}'
-                                   .format(''.join((line.decode() for line in logfile.readlines()))))
+            p.readlines()
+            if p.wait() != 0:
+                raise RuntimeError('Error in quitting from deep.py: \n{}'.format(logfile.getvalue().decode()))
         except pexpect.exceptions.EOF:
-            logfile.seek(0)
-            raise RuntimeError('Got unexpected EOF: \n{}'
-                               .format(''.join((line.decode() for line in logfile.readlines()))))
+            raise RuntimeError('Got unexpected EOF: \n{}'.format(logfile.getvalue().decode()))
 
     @staticmethod
     def interact_api(conf_file):
-        server_conf_file = Path(utils.__path__[0]) / "server_utils" / SERVER_CONFIG_FILENAME
+        server_conf_file = Path(utils.__path__[0]) / SERVER_CONFIG_FILENAME
 
         server_params = get_server_params(server_conf_file, conf_file)
         model_args_names = server_params['model_args_names']
 
         url_base = 'http://{}:{}/'.format(server_params['host'], server_params['port'])
-        url = urljoin(url_base, server_params['model_endpoint'])
+        url = urljoin(url_base.replace('http://0.0.0.0:', 'http://127.0.0.1:'), server_params['model_endpoint'])
 
         post_headers = {'Accept': 'application/json'}
 
@@ -279,8 +305,8 @@ class TestQuickStart(object):
             post_payload[arg_name] = [arg_value]
 
         logfile = io.BytesIO(b'')
-        p = pexpect.spawn(sys.executable, ["-m", "deeppavlov", "riseapi", str(conf_file)], timeout=None,
-                          logfile=logfile)
+        p = pexpect.popen_spawn.PopenSpawn(' '.join([sys.executable, "-m", "deeppavlov", "riseapi", str(conf_file)]),
+                                           timeout=None, logfile=logfile)
         try:
             p.expect(url_base)
             post_response = requests.post(url, json=post_payload, headers=post_headers)
@@ -288,16 +314,13 @@ class TestQuickStart(object):
             assert response_code == 200, f"POST request returned error code {response_code} with {conf_file}"
 
         except pexpect.exceptions.EOF:
-            logfile.seek(0)
-            raise RuntimeError('Got unexpected EOF: \n{}'
-                               .format(''.join((line.decode() for line in logfile.readlines()))))
+            raise RuntimeError('Got unexpected EOF: \n{}'.format(logfile.getvalue().decode()))
 
         finally:
-            p.send(chr(3))
-            if p.expect(pexpect.EOF) != 0:
-                logfile.seek(0)
-                raise RuntimeError('Error in shutting down API server: \n{}'
-                                   .format(''.join((line.decode() for line in logfile.readlines()))))
+            p.kill(signal.SIGTERM)
+            p.wait()
+            # if p.wait() != 0:
+            #     raise RuntimeError('Error in shutting down API server: \n{}'.format(logfile.getvalue().decode()))
 
     def test_interacting_pretrained_model(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
@@ -330,12 +353,12 @@ class TestQuickStart(object):
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
             logfile = io.BytesIO(b'')
-            _, exitstatus = pexpect.run(sys.executable + " -m deeppavlov train " + str(c), timeout=None, withexitstatus=True,
-                                        logfile=logfile)
-            if exitstatus != 0:
-                logfile.seek(0)
+            p = pexpect.popen_spawn.PopenSpawn(sys.executable + " -m deeppavlov train " + str(c), timeout=None,
+                                               logfile=logfile)
+            p.readlines()
+            if p.wait() != 0:
                 raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
-                                   .format(model_dir, ''.join((line.decode() for line in logfile.readlines()))))
+                                   .format(model_dir, logfile.getvalue().decode()))
             self.interact(c, model_dir)
 
             shutil.rmtree(str(download_path), ignore_errors=True)
@@ -353,14 +376,59 @@ class TestQuickStart(object):
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
             logfile = io.BytesIO(b'')
-            _, exitstatus = pexpect.run(sys.executable + f" -m deeppavlov.evolve {c} --iterations 1 --p_size 1",
-                                        timeout=None, withexitstatus=True,
-                                        logfile=logfile)
-            if exitstatus != 0:
-                logfile.seek(0)
+            p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.evolve {c} --iterations 1 --p_size 1",
+                                               timeout=None, logfile=logfile)
+            p.readlines()
+            if p.wait() != 0:
                 raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
-                                   .format(model_dir, ''.join((line.decode() for line in logfile.readlines()))))
+                                   .format(model_dir, logfile.getvalue().decode()))
 
             shutil.rmtree(str(download_path), ignore_errors=True)
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
+
+    def test_crossvalidation(self, model, conf_file, model_dir, mode):
+        if 'CV' in mode:
+            c = test_configs_path / conf_file
+            model_path = download_path / model_dir
+
+            if 'IP' not in mode and 'TI' not in mode:
+                config_path = str(test_configs_path.joinpath(conf_file))
+                deep_download(['-c', config_path])
+            shutil.rmtree(str(model_path),  ignore_errors=True)
+
+            logfile = io.BytesIO(b'')
+            p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov crossval {c} --folds 2",
+                                               timeout=None, logfile=logfile)
+            p.readlines()
+            if p.wait() != 0:
+                raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
+                                   .format(model_dir, logfile.getvalue().decode()))
+
+            shutil.rmtree(str(download_path), ignore_errors=True)
+        else:
+            pytest.skip("Unsupported mode: {}".format(mode))
+
+    def test_param_search(self, model, conf_file, model_dir, mode):
+        if 'PS' in mode:
+            c = test_configs_path / conf_file
+            model_path = download_path / model_dir
+
+            if 'IP' not in mode and 'TI' not in mode:
+                config_path = str(test_configs_path.joinpath(conf_file))
+                deep_download(['-c', config_path])
+            shutil.rmtree(str(model_path),  ignore_errors=True)
+
+            logfile = io.BytesIO(b'')
+            p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.paramsearch {c} --folds 2",
+                                               timeout=None, logfile=logfile)
+            p.readlines()
+            if p.wait() != 0:
+                raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
+                                   .format(model_dir, logfile.getvalue().decode()))
+
+            shutil.rmtree(str(download_path), ignore_errors=True)
+        else:
+            pytest.skip("Unsupported mode: {}".format(mode))
+
+

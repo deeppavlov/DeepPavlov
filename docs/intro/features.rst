@@ -187,27 +187,53 @@ on Automatic Spelling Correction for Russian:
 Based on `LSTM-based deep learning models for non-factoid answer selection <https://arxiv.org/abs/1511.04108>`__. The
 model performs ranking of responses or contexts from some database by their relevance for the given context.
 
-Available pre-trained model(s):
+Available pre-trained models for ranking:
 
-+-------------------+-------------------------------------------------------------+-----------------------+------------------+
-|    Dataset        | Model config                                                | Validation (Recall@1) | Test1 (Recall@1) |
-+-------------------+-------------------------------------------------------------+-----------------------+------------------+
-| `InsuranceQA V1`_ | :config:`ranking_insurance <ranking/ranking_insurance.json>`|   67.6                |   67.6           |
-+-------------------+-------------------------------------------------------------+-----------------------+------------------+
+.. table::
+   :widths: auto
+
+   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+
+   |    Dataset        | Model config                                                                        | Validation (Recall@1) | Test1 (Recall@1) |
+   +===================+=====================================================================================+=======================+==================+
+   | `InsuranceQA V1`_ | :config:`ranking_insurance_interact <ranking/ranking_insurance_interact.json>`      |   72.0                |   72.2           |
+   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+
+   | `Ubuntu V2`_      |:config:`ranking_ubuntu_v2_interact <ranking/ranking_ubuntu_v2_interact.json>`       |   52.9                |   52.4           |
+   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+
+   | `Ubuntu V2`_      |:config:`ranking_ubuntu_v2_mt_interact <ranking/ranking_ubuntu_v2_mt_interact.json>` |   59.2                |   58.7           |
+   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+
 
 .. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
+.. _`Ubuntu V2`: https://github.com/rkadlec/ubuntu-ranking-dataset-creator
+
+Available pre-trained models for paraphrase identification:
+
+.. table::
+   :widths: auto
+
+   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+
+   |    Dataset             |Model config                                                                                 | Val (accuracy)| Test (accuracy)| Val (F1)| Test (F1)| Val (log_loss)| Test (log_loss)|
+   +========================+=============================================================================================+===============+================+=========+==========+===============+================+
+   |`paraphraser.ru`_       |:config:`paraphrase_ident_paraphraser <ranking/paraphrase_ident_paraphraser_interact.json>`  |   83.8        |   75.4         |   87.9  |  80.9    |   0.468       |   0.616        |
+   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+
+   |`Quora Question Pairs`_ |:config:`paraphrase_ident_qqp <ranking/paraphrase_ident_qqp_bilstm_interact.json>`           |   87.1        |   87.0         |   83.0  |  82.6    |   0.300       |   0.305        |
+   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+
+   |`Quora Question Pairs`_ |:config:`paraphrase_ident_qqp <ranking/paraphrase_ident_qqp_interact.json>`                  |   87.7        |   87.5         |   84.0  |  83.8    |   0.287       |   0.298        |
+   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+
+
+.. _`paraphraser.ru`: https://paraphraser.ru/
+.. _`Quora Question Pairs`: https://www.kaggle.com/c/quora-question-pairs/data
 
 Comparison with other models on the `InsuranceQA V1 <https://github.com/shuzi/insuranceQA>`__:
 
-+---------------------------------------------------------------+-------------------------+--------------------+
-| Model                                                         | Validation (Recall@1)   | Test1 (Recall@1)   |
-+===============================================================+=========================+====================+
-| `Architecture II (HLQA(200) CNNQA(4000) 1-MaxPooling Tanh)`_  | 61.8                    | 62.8               |
-+---------------------------------------------------------------+-------------------------+--------------------+
-| `QA-LSTM basic-model(max pooling)`_                           | 64.3                    | 63.1               |
-+---------------------------------------------------------------+-------------------------+--------------------+
-| :config:`ranking_insurance <ranking/ranking_insurance.json>`  | **67.6**                | **67.6**           |
-+---------------------------------------------------------------+-------------------------+--------------------+
++------------------------------------------------------------------------+-------------------------+--------------------+
+| Model                                                                  | Validation (Recall@1)   | Test1 (Recall@1)   |
++========================================================================+=========================+====================+
+| `Architecture II (HLQA(200) CNNQA(4000) 1-MaxPooling Tanh)`_           | 61.8                    | 62.8               |
++------------------------------------------------------------------------+-------------------------+--------------------+
+| `QA-LSTM basic-model(max pooling)`_                                    | 64.3                    | 63.1               |
++------------------------------------------------------------------------+-------------------------+--------------------+
+| :config:`ranking_insurance <ranking/ranking_insurance_interact.json>`  | **72.0**                | **72.2**           |
++------------------------------------------------------------------------+-------------------------+--------------------+
 
 .. _`Architecture II (HLQA(200) CNNQA(4000) 1-MaxPooling Tanh)`: https://arxiv.org/pdf/1508.01585.pdf
 .. _`QA-LSTM basic-model(max pooling)`: https://arxiv.org/pdf/1511.04108.pdf
@@ -252,7 +278,7 @@ contains word and sentence accuracy on UD2.0 datasets.
 .. _`Basic model`: :config:<morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict.json>
 .. _`Pymorphy-enhanced model`: :config:<morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict_pymorphy.json>
 
-- :doc:`Frequently Asked Questions (FAQ) component </components/faq>`
+- :doc:`Frequently Asked Questions (FAQ) component </skills/faq>`
 
 Set of pipelines for FAQ task: classifying incoming question into set of known questions and return prepared answer.
 You can build different pipelines based on: tf-idf, weighted fasttext, cosine similarity, logistic regression.
@@ -260,6 +286,10 @@ You can build different pipelines based on: tf-idf, weighted fasttext, cosine si
 
 Skills
 ------
+
+- :doc:`eCommerce bot </skills/ecommerce_bot_skill>`
+
+The eCommerce bot intends to retrieve product items from catalog in sorted order. In addition, it asks an user to provide additional information to specify the search.
 
 - :doc:`ODQA </skills/odqa>`
 
@@ -274,12 +304,13 @@ based on its Wikipedia knowledge.
 +------------------------------------------------------+-----------------------+--------+
 
 
-Parameters evolution
+AutoML
 --------------------
 
-- :doc:`Parameters evolution for models </intro/parameters_evolution>`
+- :doc:`Hyperparameters optimization </intro/hypersearch>`
 
-Implementation of parameters evolution for DeepPavlov models that requires only some small changes in a config file.
+Hyperparameters optimization (either by cross-validation or neural evolution) for DeepPavlov models
+that requires only some small changes in a config file.
 
 
 Embeddings

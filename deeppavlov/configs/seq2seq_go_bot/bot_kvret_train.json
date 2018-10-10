@@ -1,0 +1,154 @@
+{
+  "dataset_reader": {
+    "name": "kvret_reader",
+    "data_path": "kvret"
+  },
+  "dataset_iterator": {
+    "name": "kvret_dialog_iterator",
+    "shuffle": false
+  },
+  "chainer": {
+    "in": ["x_text", "dialog_id", "history", "kb_columns", "kb_items"],
+    "in_y": ["y_text", "y_domain"],
+    "out": ["prediction_text"],
+    "pipe": [
+      {
+        "id": "stream_spacy",
+        "name": "stream_spacy_tokenizer",
+        "lowercase": true,
+        "alphas_only": false,
+        "in": ["x_text"],
+        "out": ["x_tokens"]
+      },
+      {
+        "ref": "stream_spacy",
+        "in": ["y_text"],
+        "out": ["y_tokens"]
+      },
+      {
+        "ref": "stream_spacy",
+        "in": ["history"],
+        "out": ["history_tokens"]
+      },
+      {
+        "id": "kb",
+        "name": "knowledge_base",
+        "fit_on": ["dialog_id", "kb_columns", "kb_items"],
+        "tokenizer": "#stream_spacy",
+        "in": ["dialog_id", "kb_columns", "kb_items"],
+        "out": ["kb_entries"],
+        "save_path": "seq2seq_go_bot/kvret_kb.json",
+        "load_path": "seq2seq_go_bot/kvret_kb.json"
+      },
+      {
+        "name": "knowledge_base_entity_normalizer",
+        "in": ["y_tokens", "kb_entries"],
+        "out": ["y_norm_tokens"]
+      },
+      {
+        "name": "knowledge_base_entity_normalizer",
+        "remove": true,
+        "in": ["y_tokens", "kb_entries"],
+        "out": ["y_without_entities_tokens"]
+      },
+      {
+        "id": "src_token_vocab",
+        "fit_on": ["x_tokens", "y_tokens"],
+        "name": "simple_vocab",
+        "min_freq": 2,
+        "default_token": "<UNK>",
+        "special_tokens": ["<UNK>", "<SOS>"],
+        "save_path": "vocabs/kvret_src_tokens.dict",
+        "load_path": "vocabs/kvret_src_tokens.dict"
+      },
+      {
+        "id": "tgt_token_vocab",
+        "fit_on": ["y_without_entities_tokens"],
+        "name": "simple_vocab",
+        "default_token": "<UNK>",
+        "special_tokens": ["<UNK>", "<SOS>", "<EOS>"],
+        "save_path": "vocabs/kvret_tgt_tokens.dict",
+        "load_path": "vocabs/kvret_tgt_tokens.dict"
+      },
+      {
+        "id": "token_embedder",
+        "name": "fasttext",
+        "dim": 300,
+        "save_path": "embeddings/wiki.en.bin",
+        "load_path": "embeddings/wiki.en.bin"
+      },
+      {
+        "in": ["x_tokens", "history_tokens", "kb_entries"],
+        "in_y": ["y_norm_tokens"],
+        "out": ["prediction_norm_tokens"],
+        "main": true,
+        "name": "seq2seq_go_bot",
+        "load_path": "seq2seq_go_bot/model",
+        "save_path": "seq2seq_go_bot/model",
+        "start_of_sequence_token": "<SOS>",
+        "end_of_sequence_token": "<EOS>",
+        "embedder": "#token_embedder",
+        "network_parameters": {
+          "learning_rate": 0.0002,
+          "dropout_rate": 0.2,
+          "state_dropout_rate": 0.07,
+          "beam_width": 1,
+          "target_start_of_sequence_index": "#tgt_token_vocab.__getitem__('<SOS>')",
+          "target_end_of_sequence_index": "#tgt_token_vocab.__getitem__('<EOS>')",
+          "source_vocab_size": "#src_token_vocab.__len__()",
+          "target_vocab_size": "#tgt_token_vocab.__len__()",
+          "hidden_size": 256,
+          "kb_attention_hidden_sizes": [64, 32]
+        },
+        "debug": true,
+        "debug": false,
+        "source_vocab": "#src_token_vocab",
+        "target_vocab": "#tgt_token_vocab",
+        "knowledge_base_keys": "#kb.primary_keys"
+      },
+      {
+        "name": "knowledge_base_entity_normalizer",
+        "denormalize": true,
+        "in": ["prediction_norm_tokens", "kb_entries"],
+        "out": ["prediction_tokens"]
+      },
+      {
+        "ref": "stream_spacy",
+        "in": ["prediction_tokens"],
+        "out": ["prediction_text"]
+      }
+    ]
+  },
+  "train": {
+    "epochs": 200,
+    "batch_size": 16,
+
+    "metrics": ["google_bleu", "bleu", "accuracy"],
+    "validation_patience": 30,
+    "val_every_n_epochs": 1,
+
+    "log_every_n_batches": -1,
+    "log_every_n_epochs": 1,
+    "show_examples": false
+  },
+  "metadata": {
+    "requirements": [
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/spacy.txt",
+      "../dp_requirements/en_core_web_sm.txt",
+      "../dp_requirements/fasttext.txt"
+    ],
+    "labels": {
+      "telegram_utils": "Seq2SeqGoalOrientedBot",
+      "server_utils": "GoalOrientedBot"
+    },
+    "download": [
+      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/seq2seq_go_bot_v2.tar.gz",
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
+        "subdir": "embeddings"
+      }
+    ]
+  }
+}

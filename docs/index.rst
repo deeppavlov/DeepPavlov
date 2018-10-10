@@ -12,7 +12,7 @@ Welcome to DeepPavlov's documentation!
    Features <intro/features>
    Configuration files <intro/config_description>
    Pre-trained embeddings <intro/pretrained_vectors>
-   Parameters evolution <intro/parameters_evolution>
+   AutoML <intro/hypersearch>
    Tutorials <intro/tutorials>
 
 
@@ -41,6 +41,7 @@ Welcome to DeepPavlov's documentation!
    Pattern Matching <skills/pattern_matching>
    Sequence-To-Sequence Dialogue Bot <skills/seq2seq_go_bot>
    Frequently Asked Questions Answering <skills/faq>
+   eCommerce Bot <skills/ecommerce_bot_skill>
 
 
 .. toctree::
@@ -56,8 +57,7 @@ Welcome to DeepPavlov's documentation!
    :maxdepth: 3
    :caption: Developer Guides
 
-   REST API <devguides/rest_api>
-   How to contribute <devguides/contribution>
+   devguides/*
 
 
 

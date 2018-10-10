@@ -33,6 +33,8 @@
         "out": ["y_predicted"],
         "main": true,
         "name": "go_bot",
+        "load_path": "gobot_dstc2_minimal/model",
+        "save_path": "gobot_dstc2_minimal/model",
         "debug": false,
         "word_vocab": "#token_vocab",
         "template_path": "dstc2/dstc2-templates.txt",
@@ -41,10 +43,8 @@
         "api_call_action": "api_call",
         "use_action_mask": false,
         "network_parameters": {
-          "load_path": "gobot_dstc2_minimal/model",
-          "save_path": "gobot_dstc2_minimal/model",
           "learning_rate": 0.005,
-          "dropout_rate": 0.1,
+          "dropout_rate": 0.9,
           "l2_reg_coef": 1e-4,
           "hidden_size": 128,
           "dense_size": 64

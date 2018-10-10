@@ -20,6 +20,7 @@ import tensorflow as tf
 
 
 def _graph_wrap(func, graph):
+    """Constructs function encapsulated in the graph."""
     @wraps(func)
     def _wrapped(*args, **kwargs):
         with graph.as_default():
@@ -27,21 +28,49 @@ def _graph_wrap(func, graph):
     return _wrapped
 
 
+def _keras_wrap(func, graph, session):
+    """Constructs function encapsulated in the graph and the session."""
+    import keras.backend as K
+
+    @wraps(func)
+    def _wrapped(*args, **kwargs):
+        with graph.as_default():
+            K.set_session(session)
+            return func(*args, **kwargs)
+    return _wrapped
+
+
 class TfModelMeta(with_metaclass(type, ABCMeta)):
-    """Metaclass that helps all child classes to have their own graph."""
+    """Metaclass that helps all child classes to have their own graph and session."""
     def __call__(cls, *args, **kwargs):
+        obj = cls.__new__(cls)
+
         from .keras_model import KerasModel
         if issubclass(cls, KerasModel):
             import keras.backend as K
-            K.clear_session()
+            if K.backend() != 'tensorflow':
+                obj.__init__(*args, **kwargs)
+                return obj
 
-        obj = cls.__new__(cls)
-        obj.graph = tf.Graph()
+            K.clear_session()
+            obj.graph = tf.Graph()
+            with obj.graph.as_default():
+                if hasattr(cls, '_config_session'):
+                    obj.sess = cls._config_session()
+                else:
+                    obj.sess = tf.Session()
+        else:
+            obj.graph = tf.Graph()
+
         for meth in dir(obj):
             if meth == '__class__':
                 continue
             attr = getattr(obj, meth)
             if callable(attr):
-                setattr(obj, meth, _graph_wrap(attr, obj.graph))
+                if issubclass(cls, KerasModel):
+                    wrapped_attr = _keras_wrap(attr, obj.graph, obj.sess)
+                else:
+                    wrapped_attr = _graph_wrap(attr, obj.graph)
+                setattr(obj, meth, wrapped_attr)
         obj.__init__(*args, **kwargs)
         return obj
