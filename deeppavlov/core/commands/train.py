@@ -304,7 +304,6 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
     train_y_true = []
     train_y_predicted = []
     losses = []
-    learning_rates = []
     start_time = time.time()
     break_flag = False
 
@@ -353,11 +352,10 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                     train_y_true += y_true
                     train_y_predicted += y_predicted
                 result = model.train_on_batch(x, y_true)
-                result = result if isinstance(result, dict) else {'loss': result}
-                if result['loss'] is not None:
+                if not isinstance(result, dict):
+                    result = {'loss': result} if result is not None else {}
+                if 'loss' in result:
                     losses.append(result['loss'])
-                if 'learning_rate' in result:
-                    learning_rates.append(result['learning_rate'])
                 i += 1
                 examples += len(x)
 
@@ -370,6 +368,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                         'metrics': prettify_metrics(metrics),
                         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                     }
+                    report.update(result)
 
                     if train_config['show_examples']:
                         try:
@@ -380,9 +379,6 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                             } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
                         except NameError:
                             log.warning('Could not log examples as y_predicted is not defined')
-
-                    if learning_rates:
-                        report['learning_rate'] = learning_rates[-1]
 
                     if losses:
                         report['loss'] = sum(losses)/len(losses)
@@ -438,6 +434,7 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                     'metrics': prettify_metrics(metrics),
                     'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
                 }
+                report.update(result)
 
                 if train_config['show_examples']:
                     try:
@@ -448,9 +445,6 @@ def _train_batches(model: NNModel, iterator: DataLearningIterator, train_config:
                         } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
                     except NameError:
                         log.warning('Could not log examples')
-
-                if learning_rates:
-                    report['learning_rate'] = learning_rates[-1]
 
                 if losses:
                     report['loss'] = sum(losses)/len(losses)
