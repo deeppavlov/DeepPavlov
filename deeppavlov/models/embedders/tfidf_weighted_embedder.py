@@ -221,6 +221,9 @@ class TfidfWeightedEmbedder(Component):
             weights = np.array([self.get_weight(max(self.counter_vocab.get(token, 0), self.idf_base_count))
                                 for token in tokens])
 
+        if sum(weights) == 0:
+            weights = np.ones(len(tokens))
+
         embedded_tokens = np.array(self.embedder([tokens]))[0, :, :]
 
         if self.mean:
@@ -273,7 +276,9 @@ class TfidfWeightedEmbedder(Component):
                                 for token in tokens])
 
         weights = np.multiply(weights, tags_weights)
-
+        if sum(weights) == 0:
+            weights = np.ones(len(tokens))
+            
         if self.mean:
             embedded_tokens = np.average(embedded_tokens, weights=weights, axis=0)
         else:
