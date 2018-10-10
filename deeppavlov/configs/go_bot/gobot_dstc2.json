@@ -44,6 +44,7 @@
         "use_action_mask": false,
         "network_parameters": {
           "learning_rate": 0.005,
+          "optimizer": "tensorflow.train:AdamOptimizer",
           "dropout_rate": 0.85,
           "l2_reg_coef": 7e-4,
           "hidden_size": 128,

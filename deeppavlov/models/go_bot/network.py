@@ -110,7 +110,8 @@ class GoalOrientedBotNetwork(AnhancedTFModel):
         feed_dict = {
             self._features: features,
             self._dropout_keep_prob: 1.,
-            self._learning_rate: 1.,
+            self.get_learning_rate_ph(): 1.,
+            self.get_momentum_ph(): self.get_momentum(),
             self._utterance_mask: [[1.]],
             self._initial_state: (self.state_c, self.state_h),
             self._action_mask: action_mask
@@ -131,7 +132,8 @@ class GoalOrientedBotNetwork(AnhancedTFModel):
     def train_on_batch(self, features, emb_context, key, utter_mask, action_mask, action):
         feed_dict = {
             self._dropout_keep_prob: 1 - self.dropout_rate,
-            self._learning_rate: self.get_learning_rate(),
+            self.get_learning_rate_ph(): self.get_learning_rate(),
+            self.get_momentum_ph(): self.get_momentum(),
             self._utterance_mask: utter_mask,
             self._features: features,
             self._action: action,
@@ -145,6 +147,8 @@ class GoalOrientedBotNetwork(AnhancedTFModel):
             self.sess.run([self._train_op, self._loss, self._prediction],
                           feed_dict=feed_dict)
         report = {'loss': loss_value, 'learning_rate': self.get_learning_rate()}
+        if self.get_momentum() is not None:
+            report['momentum'] = self.get_momentum()
         return report
 
     def _init_params(self):
@@ -195,18 +199,12 @@ class GoalOrientedBotNetwork(AnhancedTFModel):
         # _loss_tensor = tf.multiply(_loss_tensor, self._utterance_mask)
         self._loss = tf.reduce_mean(_loss_tensor, name='loss')
         self._loss += self.l2_reg * tf.losses.get_regularization_loss()
-        self._train_op = self.get_train_op(self._loss,
-                                           learning_rate=self._learning_rate,
-                                           optimizer=self.get_optimizer(),
-                                           clip_norm=2.)
+        self._train_op = self.get_train_op(self._loss, clip_norm=2.)
 
     def _add_placeholders(self):
         self._dropout_keep_prob = tf.placeholder_with_default(1.0,
                                                               shape=[],
                                                               name='dropout_prob')
-        self._learning_rate = tf.placeholder(tf.float32,
-                                             shape=[],
-                                             name='learning_rate')
         self._features = tf.placeholder(tf.float32,
                                         [None, None, self.obs_size],
                                         name='features')
