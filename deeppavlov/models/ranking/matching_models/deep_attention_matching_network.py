@@ -13,14 +13,41 @@ log = get_logger(__name__)
 
 @register('dam_nn')
 class DAMNetwork(TensorflowBaseMatchingModel):
-    # TODO: docstrings
+    """
+    Tensorflow implementation of Deep Attention Matching Network (DAM)
+
+    ```
+    @inproceedings{ ,
+      title={Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network},
+      author={Xiangyang Zhou, Lu Li, Daxiang Dong, Yi Liu, Ying Chen, Wayne Xin Zhao, Dianhai Yu and Hua Wu},
+      booktitle={Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
+      volume={1},
+      pages={  --  },
+      year={2018}
+    }
+    ```
+    http://aclweb.org/anthology/P18-1103
+
+    Based on authors' Tensorflow code: https://github.com/baidu/Dialogue/tree/master/DAM
+
+    Args:
+        max_num_utterance (int): A number of ``context`` turns in data samples.
+        max_sequence_length(int): A maximum length of text sequences in tokens.
+            Longer sequences will be truncated and shorter ones will be padded.
+        learning_rate (float): Initial learning rate.
+        emb_matrix (np.ndarray): An embeddings matrix to initialize an embeddings layer of a model.
+        trainable_embeddings (bool): Whether train embeddings matrix or not.
+        embedding_dim (int): Dimensionality of token (word) embeddings.
+        seed (int): Random seed.
+        is_positional (bool): Adds a bunch of sinusoids of different frequencies to an embeddings
+        stack_num (int): Number of stack layers, default is 5.
+    """
 
     def __init__(self,
-                 len_vocab: int,
                  seed: int = None,
                  embedding_dim: int = 200,
                  max_num_utterance: int = 10,
-                 max_sequence_length: int = None,
+                 max_sequence_length: int = 50,
                  learning_rate: float = 1e-3,
                  emb_matrix: np.ndarray = None,
                  trainable_embeddings: bool = False,
@@ -165,8 +192,6 @@ class DAMNetwork(TensorflowBaseMatchingModel):
             # for douban
             # final_info = layers.CNN_3d(sim, 16, 16)
 
-        self.variable_summaries(final_info, 'flatten/')
-
         # loss and train
         with tf.variable_scope('loss'):
             self.loss, self.logits = layers.loss(final_info, self.y_true, clip_value=1e10)
@@ -196,21 +221,3 @@ class DAMNetwork(TensorflowBaseMatchingModel):
 
         # Debug
         self.print_number_of_parameters()
-
-    def variable_summaries(self, var, parent_scope=None):
-        """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
-        if parent_scope is None:
-            parent_scope = ""
-        with tf.name_scope(parent_scope + 'summaries'):
-            mean = tf.reduce_mean(var)
-            tf.summary.scalar('mean', mean)
-            with tf.name_scope('stddev'):
-                stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
-            tf.summary.scalar('stddev', stddev)
-            tf.summary.scalar('max', tf.reduce_max(var))
-            tf.summary.scalar('min', tf.reduce_min(var))
-            tf.summary.histogram('histogram', var)
-
-    def process_event(self, event_name, data):
-        if event_name is "":
-            pass

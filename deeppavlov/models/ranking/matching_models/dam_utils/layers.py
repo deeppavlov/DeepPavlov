@@ -1,3 +1,16 @@
+# @inproceedings{ ,
+#   title={Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network},
+#   author={Xiangyang Zhou, Lu Li, Daxiang Dong, Yi Liu, Ying Chen, Wayne Xin Zhao, Dianhai Yu and Hua Wu},
+#   booktitle={Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
+#   volume={1},
+#   pages={  --  },
+#   year={2018}
+# }
+# ```
+# http://aclweb.org/anthology/P18-1103
+#
+# Based on authors' Tensorflow code: https://github.com/baidu/Dialogue/tree/master/DAM
+
 import tensorflow as tf
 import deeppavlov.models.ranking.matching_models.dam_utils.operations as op
 def similarity(x, y, x_lengths, y_lengths):

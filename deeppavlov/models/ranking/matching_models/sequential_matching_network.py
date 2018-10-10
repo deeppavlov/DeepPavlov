@@ -12,13 +12,13 @@ log = get_logger(__name__)
 @register('smn_nn')
 class SMNNetwork(TensorflowBaseMatchingModel):
     """
-    Implementation of Sequential Matching Network
+    Tensorflow implementation of Sequential Matching Network
 
     Wu, Yu, et al. "Sequential Matching Network: A New Architecture for Multi-turn Response Selection in
     Retrieval-based Chatbots." ACL. 2017.
     https://arxiv.org/abs/1612.01627
 
-    Based on author's Tensorflow code: https://github.com/MarkWuNLP/MultiTurnResponseSelection
+    Based on authors' Tensorflow code: https://github.com/MarkWuNLP/MultiTurnResponseSelection
 
     Args:
         max_num_utterance (int): A number of ``context`` turns in data samples.

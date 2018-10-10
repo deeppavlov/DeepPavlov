@@ -25,7 +25,13 @@ log = get_logger(__name__)
 
 
 class TensorflowBaseMatchingModel(TFModel, SiameseModel):
-    # TODO: docstrings
+    """
+    Base class for ranking models that uses context-response matching schemes.
+
+    Args:
+        none
+
+    """
 
     def __init__(self,
                  *args,

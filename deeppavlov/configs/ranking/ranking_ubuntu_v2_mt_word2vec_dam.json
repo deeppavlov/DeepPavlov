@@ -78,7 +78,6 @@
         "name": "dam_nn",
         "stack_num": 5,
         "num_context_turns": "#preproc.num_context_turns",
-        "len_vocab": "#vocab_1.len",
         "max_sequence_length": "#preproc.max_sequence_length",
         "embedding_dim": "#word2vec_vectorizer.dim",
         "emb_matrix": "#embeddings.emb_mat",

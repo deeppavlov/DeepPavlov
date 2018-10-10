@@ -1,3 +1,16 @@
+# @inproceedings{ ,
+#   title={Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network},
+#   author={Xiangyang Zhou, Lu Li, Daxiang Dong, Yi Liu, Ying Chen, Wayne Xin Zhao, Dianhai Yu and Hua Wu},
+#   booktitle={Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers)},
+#   volume={1},
+#   pages={  --  },
+#   year={2018}
+# }
+# ```
+# http://aclweb.org/anthology/P18-1103
+#
+# Based on authors' Tensorflow code: https://github.com/baidu/Dialogue/tree/master/DAM
+
 import math
 import numpy as np
 from scipy.stats import multivariate_normal
