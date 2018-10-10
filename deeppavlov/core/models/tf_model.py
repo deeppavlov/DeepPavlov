@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from collections import defaultdict
-from typing import Iterable, Optional, Any, Union, List
+from typing import Iterable, Optional, Any, Union, List, Tuple
 from enum import IntEnum
 import math
 
@@ -79,15 +79,19 @@ class TFModel(NNModel, metaclass=TfModelMeta):
                      optimizer=None,
                      clip_norm=None,
                      learnable_scopes=None,
-                     optimizer_scope_name=None):
-        """ Get train operation for given loss
+                     optimizer_scope_name=None,
+                     **kwargs):
+        """
+        Get train operation for given loss
 
         Args:
             loss: loss, tf tensor or scalar
-            learning_rate: scalar or placeholder
-            clip_norm: clip gradients norm by clip_norm
-            learnable_scopes: which scopes are trainable (None for all)
-            optimizer: instance of tf.train.Optimizer, default Adam
+            learning_rate: scalar or placeholder.
+            clip_norm: clip gradients norm by clip_norm.
+            learnable_scopes: which scopes are trainable (None for all).
+            optimizer: instance of tf.train.Optimizer, default Adam.
+            **kwargs: parameters passed to tf.train.Optimizer object
+               (scalars or placeholders).
 
         Returns:
             train_op
@@ -115,7 +119,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
                     if grad is not None:
                         return tf.clip_by_norm(grad, clip_norm)
 
-                opt = optimizer(learning_rate)
+                opt = optimizer(learning_rate, **kwargs)
                 grads_and_vars = opt.compute_gradients(loss, var_list=variables_to_train)
                 if clip_norm is not None:
                     grads_and_vars = [(clip_if_not_none(grad), var)
@@ -197,41 +201,56 @@ class DecayScheduler():
 class AnhancedTFModel(TFModel):
     """TFModel anhanced with optimizer, learning rate and momentum configuration"""
     def __init__(self,
-                 learning_rate: Union[float, List[float]],
+                 learning_rate: Union[float, Tuple[float, float]],
                  learning_rate_decay: Union[str, List[Any]] = DecayType.NO,
                  learning_rate_decay_epochs: int = 0,
                  learning_rate_decay_batches: int = 0,
+                 momentum: Union[float, Tuple[float, float]] = None,
+                 momentum_decay: Union[str, List[Any]] = DecayType.NO,
+                 momentum_decay_epochs: int = 0,
+                 momentum_decay_batches: int = 0,
                  optimizer: str = 'AdamOptimizer',
                  *args, **kwargs) -> None:
         if learning_rate_decay_epochs and learning_rate_decay_batches:
             raise ConfigError("isn't able to update learning rate every batch"
                               " and every epoch sumalteniously")
+        if momentum_decay_epochs and momentum_decay_batches:
+            raise ConfigError("isn't able to update momentum every batch"
+                              " and every epoch sumalteniously")
         super().__init__(*args, **kwargs)
 
-        end_val, num_it, dec_type, extra = None, None, DecayType.NO, None
+        start_val, end_val = learning_rate, None
         if isinstance(learning_rate, (tuple, list)):
             start_val, end_val = learning_rate
-        else:
-            start_val = learning_rate
-        if learning_rate_decay is not None:
-            if isinstance(learning_rate_decay, (tuple, list)):
-                dec_type, extra = learning_rate_decay
-            else:
-                dec_type = learning_rate_decay
+        dec_type, extra = learning_rate_decay, None
+        if isinstance(learning_rate_decay, (tuple, list)):
+            dec_type, extra = learning_rate_decay
 
         self._lr = start_val
-        self._lr_update_on_batch = False
-        if learning_rate_decay_epochs > 0:
-            num_it = learning_rate_decay_epochs
-        elif learning_rate_decay_batches > 0:
-            num_it = learning_rate_decay_batches
-            self._lr_update_on_batch = True
+        num_it, self._lr_update_on_batch = learning_rate_decay_epochs, False
+        if learning_rate_decay_batches > 0:
+            num_it, self._lr_update_on_batch = learning_rate_decay_batches, True
 
-        log.info(f"start_val={start_val},end_val={end_val},num_it={num_it}"
-                 f",dec_type={dec_type},extra={extra}")
         self._lr_schedule = DecayScheduler(start_val=start_val, end_val=end_val,
-                                           num_it=num_it, dec_type=dec_type,
-                                           extra=extra)
+                                           num_it=num_it, dec_type=dec_type, extra=extra)
+        self._lr_ph = tf.placeholder(tf.float32, shape=[], name='learning_rate')
+
+        start_val, end_val = momentum, None
+        if isinstance(momentum, (tuple, list)):
+            start_val, end_val = momentum
+        dec_type, extra = momentum_decay, None
+        if isinstance(momentum_decay, (tuple, list)):
+            dec_type, extra = momentum_decay
+
+        self._mom = start_val
+        num_it, self._mom_update_on_batch = momentum_decay_epochs, False
+        if momentum_decay_batches > 0:
+            num_it, self._mom_update_on_batch = momentum_decay_batches, True
+
+        self._mom_schedule = DecayScheduler(start_val=start_val, end_val=end_val,
+                                            num_it=num_it, dec_type=dec_type,
+                                            extra=extra)
+        self._mom_ph = tf.placeholder(tf.float32, shape=[], name='momentum')
 
         try:
             self._optimizer = cls_from_str(optimizer)
@@ -240,15 +259,41 @@ class AnhancedTFModel(TFModel):
         if not issubclass(self._optimizer, tf.train.Optimizer):
             raise ConfigError("`optimizer` should be tensorflow.train.Optimizer subclass")
 
+    def get_train_op(self,
+                     *args,
+                     learning_rate: Union[float, tf.placeholder] = None,
+                     optimizer: tf.train.Optimizer = None,
+                     momentum: Union[float, tf.placeholder] = None,
+                     **kwargs):
+        kwargs['learning_rate'] = learning_rate or self.get_learning_rate_ph()
+        kwargs['optimizer'] = optimizer or self.get_optimizer()
+        if (momentum is None) and (self.get_momentum() is not None):
+            kwargs['momentum'] = self.get_momentum_ph()
+        return super().get_train_op(*args, **kwargs)
+
     def process_event(self, event_name, data):
-        if self._lr_update_on_batch:
-            if event_name == 'after_batch':
+        if event_name == 'after_batch':
+            if self._lr_update_on_batch:
                 self._lr = self._lr_schedule.next_val()
-        elif event_name == 'after_epoch':
-            self._lr = self._lr_schedule.next_val()
+            if self._mom_update_on_batch and (self.get_momentum() is not None):
+                self._mom = self._mom_schedule.next_val()
+        if event_name == 'after_epoch':
+            if not self._lr_update_on_batch:
+                self._lr = self._lr_schedule.next_val()
+            if not self._mom_update_on_batch and (self.get_momentum() is not None):
+                self._mom = self._mom_schedule.next_val()
 
     def get_learning_rate(self):
         return self._lr
+
+    def get_learning_rate_ph(self):
+        return self._lr_ph
+
+    def get_momentum(self):
+        return self._mom
+
+    def get_momentum_ph(self):
+        return self._mom_ph
 
     def get_optimizer(self):
         return self._optimizer
