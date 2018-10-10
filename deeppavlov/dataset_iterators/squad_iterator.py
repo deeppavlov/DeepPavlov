@@ -141,7 +141,7 @@ class MultiSquadIterator(DataLearningIterator):
         for qcas in self.data[data_type]:  # question, contexts, answers
             question = qcas['question']
             for context in qcas['contexts']:
-                answer_text = list(map(lambda x: x['text'], context['answer']))
-                answer_start = list(map(lambda x: x['answer_start'], context['answer']))
+                answer_text = [x['text'] for x in context['answer']]
+                answer_start = [x['answer_start'] for x in context['answer']]
                 data_examples.append(((context['context'], question), (answer_text, answer_start)))
         return tuple(zip(*data_examples))

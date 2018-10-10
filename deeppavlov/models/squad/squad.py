@@ -277,8 +277,8 @@ class SquadModel(TFModel):
         """
         # TODO: filter examples in batches with answer position greater self.context_limit
         # select one answer from list of correct answers
-        y1s = np.array(list(map(lambda x: x[0], y1s)))
-        y2s = np.array(list(map(lambda x: x[0], y2s)))
+        y1s = np.array([x[0] for x in y1s])
+        y2s = np.array([x[0] for x in y2s])
         if self.noans_token:
             noans_mask = ((y1s != -1) * (y2s != -1))
             y1s = (y1s + 1) * noans_mask
