@@ -61,6 +61,7 @@ class GloVeEmbedder(Component, Serializable):
         self.dim = dim
         self.pad_zero = pad_zero
         self.model = self.load()
+        self.mean = mean
 
     def save(self, *args, **kwargs) -> None:
         """
