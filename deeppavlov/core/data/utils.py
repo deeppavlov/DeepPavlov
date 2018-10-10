@@ -282,6 +282,8 @@ def zero_pad(batch, zp_batch=None, dtype=np.float32, padding=0):
 
 
 def is_str_batch(batch):
+    if len(batch) == 0:
+        return True
     while True:
         if isinstance(batch, Iterable):
             if isinstance(batch, str):
