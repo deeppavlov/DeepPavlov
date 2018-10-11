@@ -237,7 +237,7 @@ def _test_model(model: Component, metrics_functions: List[Tuple[str, Callable]],
 
     report = {
         'eval_examples_count': len(val_y_true),
-        'metrics': prettify_metrics(metrics),
+        'metrics': prettify_metrics(metrics, 8),
         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
     }
 

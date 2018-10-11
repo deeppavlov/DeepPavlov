@@ -73,6 +73,8 @@
   "russian_words_vocab": "deeppavlov.vocabs.typos:RussianWordsVocab",
   "sanitizer": "deeppavlov.models.preprocessors.sanitizer:Sanitizer",
   "sklearn_component": "deeppavlov.models.classifiers.sklearn_component:SklearnComponent",
+  "tfidf_vocab_weighted_embedder": "deeppavlov.models.embedders.tfidf_weighted_embedder:TfidfVocabWeightedEmbedder",
+  "tfidf_weighted_embedder": "deeppavlov.models.embedders.tfidf_weighted_embedder:TfidfWeightedEmbedder",
   "sentence2vector_w2v_avg": "deeppavlov.models.vectorizers.sentence2vector_w2v_avg:SentenceAvgW2vVectorizer",
   "sentence2vector_w2v_tfidf": "deeppavlov.models.vectorizers.sentence2vector_w2v_tfidf:SentenceW2vVectorizerTfidfWeights",
   "support_vector_classifier": "deeppavlov.models.classifiers.sklearn_classifiers:Svm",
