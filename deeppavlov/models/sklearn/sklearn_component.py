@@ -142,8 +142,7 @@ class SklearnComponent(Estimator):
             e.g. ``"predict", "predict_proba", "transform"``
 
         Args:
-            *args: list of inputs
-            **kwargs: additional arguments
+            x: list of inputs
 
         Returns:
             predictions, e.g. list of labels, array of probability distribution, sparse array of vectorized samples
