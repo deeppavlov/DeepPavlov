@@ -91,7 +91,10 @@
         "inputs": ["y_true", "y_labels"]
       },
       "classification_f1",
-      "classification_roc_auc"
+      {
+        "name": "classification_roc_auc",
+        "inputs": ["y_true", "y_probas_dict"]
+      }
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
