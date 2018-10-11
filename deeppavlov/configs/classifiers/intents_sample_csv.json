@@ -104,9 +104,15 @@
     "epochs": 100,
     "batch_size": 64,
     "metrics": [
-      "classification_accuracy",
+      {
+        "name": "sets_accuracy",
+        "inputs": ["y", "y_labels"]
+      },
       "classification_f1",
-      "classification_roc_auc"
+      {
+        "name": "classification_roc_auc",
+        "inputs": ["y", "y_probas_dict"]
+      }
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,
