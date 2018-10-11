@@ -101,7 +101,16 @@
     "batch_size": 50,
     "pytest_max_batches": 2,
     "validation_patience": 10,
-    "metrics": ["squad_f1", "exact_match"]
+    "metrics": [
+      {
+        "name": "squad_f1",
+        "inputs": ["ans_raw", "ans_predicted"]
+      },
+      {
+        "name": "exact_match",
+        "inputs": ["ans_raw", "ans_predicted"]
+      }
+    ]
   },
   "metadata": {
     "requirements": [

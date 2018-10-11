@@ -123,7 +123,20 @@
     "epochs": 200,
     "batch_size": 16,
 
-    "metrics": ["google_bleu", "bleu", "accuracy"],
+    "metrics": [
+      {
+        "name": "google_bleu",
+        "inputs": ["y_text", "prediction_text"]
+      },
+      {
+        "name": "bleu",
+        "inputs": ["y_text", "prediction_text"]
+      },
+      {
+        "name": "accuracy",
+        "inputs": ["y_text", "prediction_text"]
+      }
+    ],
     "validation_patience": 30,
     "val_every_n_epochs": 1,
 
