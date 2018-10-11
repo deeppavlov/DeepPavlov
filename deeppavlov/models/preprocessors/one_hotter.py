@@ -15,6 +15,7 @@
 import numpy as np
 from typing import List, Union
 
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import zero_pad
@@ -35,7 +36,9 @@ class OneHotter(Component):
                  multi_label=False, *args, **kwargs):
         self._depth = depth
         self._pad_zeros = pad_zeros
-        self.multi_label = multi_label
+        self._multi_label = multi_label
+        if self._pad_zeros and self._multi_label:
+            raise ConfigError("Cannot perform multi-labelling with zero padding for OneHotter")
 
     def __call__(self, batch: List[List[int]], **kwargs) -> Union[List[List[np.ndarray]], List[np.ndarray]]:
         """
@@ -52,9 +55,17 @@ class OneHotter(Component):
         one_hotted_batch = []
 
         for utt in batch:
-            one_hotted_utt = self._to_one_hot(utt, self._depth)
-            if self.multi_label:
+            if isinstance(utt, list):
+                one_hotted_utt = self._to_one_hot(utt, self._depth)
+            elif isinstance(utt, int):
+                if self._pad_zeros or self._multi_label:
+                    one_hotted_utt = self._to_one_hot([utt], self._depth)
+                else:
+                    one_hotted_utt = self._to_one_hot([utt], self._depth).reshape(-1)
+
+            if self._multi_label:
                 one_hotted_utt = np.sum(one_hotted_utt, axis=0)
+
             one_hotted_batch.append(one_hotted_utt)
 
         if self._pad_zeros:
