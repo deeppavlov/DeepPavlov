@@ -105,7 +105,7 @@ class TfidfWeightedEmbedder(Component):
                               " Set one of them, please")
 
         if tags_vocab_path:
-            self.tags_vocab = self.load_pos_vocab(expand_path(tags_vocab_path))
+            self.tags_vocab = self.load_tags_vocab(expand_path(tags_vocab_path))
         else:
             self.tags_vocab = None
 
