@@ -12,18 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
 import ssl
+import sys
 from pathlib import Path
 
-from flask import Flask, request, jsonify, redirect
 from flasgger import Swagger, swag_from
+from flask import Flask, request, jsonify, redirect
 from flask_cors import CORS
 
-from deeppavlov.core.common.file import read_json
 from deeppavlov.core.commands.infer import build_model_from_config
-from deeppavlov.core.data.utils import check_nested_dict_keys, jsonify_data
+from deeppavlov.core.common.chainer import Chainer
+from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.data.utils import check_nested_dict_keys, jsonify_data
 from deeppavlov.core.models.component import Component
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
@@ -93,7 +94,7 @@ def interact_alice(model: Component, params_names: list):
 
     params = memory.pop(session_id, [])
     if text:
-        params += [text]
+        params.append([text])
 
     if len(params) < len(params_names):
         memory[session_id] = params
@@ -101,10 +102,7 @@ def interact_alice(model: Component, params_names: list):
         response['response']['end_session'] = False
         return jsonify(response), 200
 
-    if len(params) == 1:
-        params = params[0]
-
-    response_text = model([params])[0]
+    response_text = model(*params)[0]
     if not isinstance(response_text, str) and isinstance(response_text, (list, tuple)):
         try:
             response_text = response_text[0]
@@ -115,7 +113,7 @@ def interact_alice(model: Component, params_names: list):
     return jsonify(response), 200
 
 
-def interact(model, params_names):
+def interact(model: Chainer, params_names):
     if not request.is_json:
         log.error("request Content-Type header is not application/json")
         return jsonify({
@@ -142,14 +140,13 @@ def interact(model, params_names):
         log.error('got several different batch sizes')
         return jsonify({'error': 'got several different batch sizes'}), 400
 
-    if len(params_names) == 1:
-        model_args = model_args[0]
-    else:
-        batch_size = list(lengths)[0]
-        model_args = [arg or [None] * batch_size for arg in model_args]
-        model_args = list(zip(*model_args))
+    batch_size = list(lengths)[0]
+    model_args = [arg or [None] * batch_size for arg in model_args]
 
-    prediction = model(model_args)
+    prediction = model(*model_args)
+    if len(model.out_params) == 1:
+        prediction = [prediction]
+    prediction = list(zip(*prediction))
     result = jsonify_data(prediction)
     return jsonify(result), 200
 

@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 from collections import defaultdict
 from typing import List, Dict, Any
-import argparse
 
+from deeppavlov.agents.rich_content.default_rich_content import PlainText, ButtonsFrame, Button
 from deeppavlov.core.agent.agent import Agent
+from deeppavlov.core.agent.rich_content import RichMessage
+from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.skill.skill import Skill
-from deeppavlov.core.commands.infer import build_model_from_config
-from deeppavlov.core.agent.rich_content import RichMessage
-from deeppavlov.agents.rich_content.default_rich_content import PlainText, ButtonsFrame, Button
 from deeppavlov.deep import find_config
 from utils.ms_bot_framework_utils.server import run_ms_bot_framework_server
 
@@ -144,8 +144,8 @@ class EcommerceAgent(Agent):
                 buttons_frame = ButtonsFrame(
                     text="Please specify a "+entropy[0][1])
                 for ent_value in entropy[0][2][:3]:
-                    button_a = Button(ent_value[0], 
-                        f'@entropy:{len(self.history[id_])-1}:{entropy[0][1]}:{ent_value[0]}')
+                    button_a = Button(ent_value[0],
+                                      f'@entropy:{len(self.history[id_])-1}:{entropy[0][1]}:{ent_value[0]}')
 
                     buttons_frame.add_button(button_a)
 
@@ -180,7 +180,7 @@ def make_agent() -> EcommerceAgent:
     """
 
     config_path = find_config('ecommerce_bot')
-    skill = build_model_from_config(config_path, as_component=True)
+    skill = build_model_from_config(config_path)
     agent = EcommerceAgent(skills=[skill])
     return agent
 
