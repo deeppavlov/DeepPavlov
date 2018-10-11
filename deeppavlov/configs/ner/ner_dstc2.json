@@ -83,7 +83,16 @@
     "epochs": 100,
     "batch_size": 64,
 
-    "metrics": ["ner_f1", "per_token_accuracy"],
+    "metrics": [
+      {
+        "name": "ner_f1",
+        "inputs": ["y", "tags"]
+      },
+      {
+        "name": "per_token_accuracy",
+        "inputs": ["y", "tags"]
+      }
+    ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
 
