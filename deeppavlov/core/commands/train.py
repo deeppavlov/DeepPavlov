@@ -247,20 +247,20 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
 
     expected_outputs = list(set().union(*[m.inputs for m in metrics_functions]))
 
-    outputs = []
+    outputs = {out: [] for out in expected_outputs}
+    examples = 0
     for x, y_true in iterator.gen_batches(batch_size, data_type, shuffle=False):
+        examples += len(x)
         y_predicted = list(model.compute(list(x), list(y_true), targets=expected_outputs))
-        outputs += y_predicted
-
-    if len(expected_outputs) == 1:
-        outputs = [outputs]
-
-    outputs = dict(zip(expected_outputs, outputs))
+        if len(expected_outputs) == 1:
+            y_predicted = [y_predicted]
+        for out, val in zip(outputs.values(), y_predicted):
+            out += val
 
     metrics = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in metrics_functions]
 
     report = {
-        'eval_examples_count': len(outputs),
+        'eval_examples_count': examples,
         'metrics': prettify_metrics(metrics),
         'time_spent': str(datetime.timedelta(seconds=round(time.time() - start_time + 0.5)))
     }
@@ -371,6 +371,8 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
             for x, y_true in iterator.gen_batches(train_config['batch_size']):
                 if log_on:
                     y_predicted = list(model.compute(list(x), list(y_true), targets=expected_outputs))
+                    if len(expected_outputs) == 1:
+                        y_predicted = [y_predicted]
                     for out, val in zip(outputs.values(), y_predicted):
                         out += val
                 loss = model.train_on_batch(x, y_true)
