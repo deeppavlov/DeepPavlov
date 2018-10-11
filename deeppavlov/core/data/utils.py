@@ -271,6 +271,40 @@ def zero_pad(batch, dtype=np.float32):
                 padded_batch[n, k] = token_features
     return padded_batch
 
+def zero_pad_truncate(batch, max_len, pad='post', trunc='post', dtype=np.float32):
+    batch_size = len(batch)
+    if isinstance(batch[0][0], (int, np.int)):
+        padded_batch = np.zeros([batch_size, max_len], dtype=np.int32)
+        for n, utterance in enumerate(batch):
+            if len(utterance) > max_len:
+                if trunc == 'post':
+                    padded_batch[n, :] = utterance[:max_len]
+                elif trunc == 'pre':
+                    padded_batch[n, :] = utterance[-max_len:]
+            else:
+                if pad == 'post':
+                    padded_batch[n, :len(utterance)] = utterance
+                elif pad == 'pre':
+                    padded_batch[n, -len(utterance):] = utterance
+    else:
+        n_features = len(batch[0][0])
+        padded_batch = np.zeros([batch_size, max_len, n_features], dtype=dtype)
+        for n, utterance in enumerate(batch):
+            if len(utterance) > max_len:
+                if trunc == 'post':
+                    for k, token_features in enumerate(utterance[:max_len]):
+                        padded_batch[n, k] = token_features
+                elif trunc == 'pre':
+                    for k, token_features in enumerate(utterance[-max_len:]):
+                        padded_batch[n, k] = token_features
+            else:
+                if pad == 'post':
+                    for k, token_features in enumerate(utterance):
+                        padded_batch[n, k] = token_features
+                elif pad == 'pre':
+                    for k, token_features in enumerate(utterance):
+                        padded_batch[n, k + max_len - len(utterance)] = token_features
+    return padded_batch
 
 def zero_pad_char(batch, dtype=np.float32):
     if len(batch) == 1 and len(batch[0]) == 0:

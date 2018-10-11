@@ -20,7 +20,7 @@
       "host": "",
       "port": "",
       "model_endpoint": "/ecommerce_bot",
-      "model_args_names": ["query", "state"]
+      "model_args_names": ["query", "history", "state"]
     },
     "ErrorModel": {
       "host": "",

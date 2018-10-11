@@ -62,6 +62,9 @@ class FasttextEmbedder(Component, Serializable):
         self.model = self.load()
         self.mean = mean
 
+    def destroy(self):
+        del self.model
+
     def save(self, *args, **kwargs) -> None:
         """
         Class do not save loaded model again as it is not trained during usage
@@ -154,6 +157,3 @@ class FasttextEmbedder(Component, Serializable):
             return np.zeros(self.dim, dtype=np.float32)
 
         return embedded_tokens
-
-    def destroy(self):
-        del self.model

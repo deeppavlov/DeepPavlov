@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sys
+import ssl
 from pathlib import Path
 
 from flask import Flask, request, jsonify, redirect
@@ -153,9 +154,17 @@ def interact(model, params_names):
     return jsonify(result), 200
 
 
-def start_model_server(model_config_path, alice=False):
+def start_model_server(model_config_path, alice=False, https=False, ssl_key=None, ssl_cert=None):
     server_config_dir = Path(__file__).parent
     server_config_path = server_config_dir.parent / SERVER_CONFIG_FILENAME
+
+    if https:
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+        ssh_key_path = Path(ssl_key).resolve()
+        ssh_cert_path = Path(ssl_cert).resolve()
+        ssl_context.load_cert_chain(ssh_cert_path, ssh_key_path)
+    else:
+        ssl_context = None
 
     model = init_model(model_config_path)
 
@@ -217,4 +226,4 @@ def start_model_server(model_config_path, alice=False):
     def answer():
         return interact_alice(model, model_args_names) if alice else interact(model, model_args_names)
 
-    app.run(host=host, port=port, threaded=False)
+    app.run(host=host, port=port, threaded=False, ssl_context=ssl_context)
