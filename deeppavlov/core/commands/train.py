@@ -26,7 +26,7 @@ from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.common.metrics_registry import get_metrics_by_names
+from deeppavlov.core.common.metrics_registry import get_metric_by_name
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
@@ -39,7 +39,7 @@ log = get_logger(__name__)
 Metric = namedtuple('Metric', ['name', 'fn', 'inputs'])
 
 
-def _parse_metrics(metrics, in_y, out_vars):
+def _parse_metrics(metrics, in_y, out_vars) -> List[Metric]:
     metrics_functions = []
     for metric in metrics:
         if isinstance(metric, str):
@@ -47,7 +47,7 @@ def _parse_metrics(metrics, in_y, out_vars):
 
         metric_name = metric['name']
 
-        f = get_metrics_by_names(metric_name)
+        f = get_metric_by_name(metric_name)
 
         inputs = metric.get('inputs', in_y + out_vars)
         if isinstance(inputs, str):
@@ -88,7 +88,7 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
         if 'fit_on' in component_config:
             component: Estimator
 
-            preprocessed = chainer(*iterator.get_instances('train'), to_return=component_config['fit_on'])
+            preprocessed = chainer.compute(*iterator.get_instances('train'), targets=component_config['fit_on'])
             if len(component_config['fit_on']) == 1:
                 preprocessed = [preprocessed]
             else:
@@ -245,10 +245,7 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
     if start_time is None:
         start_time = time.time()
 
-    expected_outputs = {}
-    for m in metrics_functions:
-        expected_outputs |= set(m.inputs)
-    expected_outputs = list(expected_outputs)
+    expected_outputs = list(set().union(*[m.inputs for m in metrics_functions]))
 
     outputs = []
     for x, y_true in iterator.gen_batches(batch_size, data_type, shuffle=False):
@@ -260,7 +257,7 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
 
     outputs = dict(zip(expected_outputs, outputs))
 
-    metrics = [m.fn(*[outputs[i] for i in m.inputs]) for m in metrics_functions]
+    metrics = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in metrics_functions]
 
     report = {
         'eval_examples_count': len(outputs),
@@ -308,6 +305,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
         train_metrics_functions = _parse_metrics(train_config['train_metrics'], model.in_y, model.out_params)
     else:
         train_metrics_functions = metrics_functions
+    expected_outputs = list(set().union(*[m.inputs for m in train_metrics_functions]))
 
     if train_config['metric_optimization'] == 'maximize':
         def improved(score, best):
@@ -326,8 +324,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
     saved = False
     patience = 0
     log_on = train_config['log_every_n_batches'] > 0 or train_config['log_every_n_epochs'] > 0
-    train_y_true = []
-    train_y_predicted = []
+    outputs = {key: [] for key in expected_outputs}
     losses = []
     start_time = time.time()
     break_flag = False
@@ -373,9 +370,9 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
         while True:
             for x, y_true in iterator.gen_batches(train_config['batch_size']):
                 if log_on:
-                    y_predicted = list(model(list(x)))
-                    train_y_true += y_true
-                    train_y_predicted += y_predicted
+                    y_predicted = list(model.compute(list(x), list(y_true), targets=expected_outputs))
+                    for out, val in zip(outputs.values(), y_predicted):
+                        out += val
                 loss = model.train_on_batch(x, y_true)
                 if loss is not None:
                     losses.append(loss)
@@ -383,7 +380,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
                 examples += len(x)
 
                 if train_config['log_every_n_batches'] > 0 and i % train_config['log_every_n_batches'] == 0:
-                    metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in train_metrics_functions]
+                    metrics = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in train_metrics_functions]
                     report = {
                         'epochs_done': epochs,
                         'batches_seen': i,
@@ -419,8 +416,8 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
 
                     report = {'train': report}
                     print(json.dumps(report, ensure_ascii=False))
-                    train_y_true.clear()
-                    train_y_predicted.clear()
+                    for out in outputs.values():
+                        out.clear()
 
                 if i >= train_config['max_batches'] > 0:
                     break_flag = True
@@ -447,8 +444,8 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
             model.process_event(event_name='after_epoch', data=report)
 
             if train_config['log_every_n_epochs'] > 0 and epochs % train_config['log_every_n_epochs'] == 0\
-                    and train_y_true:
-                metrics = [(s, f(train_y_true, train_y_predicted)) for s, f in train_metrics_functions]
+                    and outputs:
+                metrics = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in train_metrics_functions]
                 report = {
                     'epochs_done': epochs,
                     'batches_seen': i,
@@ -479,14 +476,14 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
 
                     if 'loss' in report:
                         loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_epochs/' + 'loss',
-                                                                        simple_value=report['loss']), ])
+                                                                      simple_value=report['loss']), ])
                         tb_train_writer.add_summary(loss_sum, epochs)
 
                 model.process_event(event_name='after_train_log', data=report)
                 report = {'train': report}
                 print(json.dumps(report, ensure_ascii=False))
-                train_y_true.clear()
-                train_y_predicted.clear()
+                for out in outputs.values():
+                    out.clear()
 
             if train_config['val_every_n_epochs'] > 0 and epochs % train_config['val_every_n_epochs'] == 0:
                 report = _test_model(model, metrics_functions, iterator,

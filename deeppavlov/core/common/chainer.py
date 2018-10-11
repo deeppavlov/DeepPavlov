@@ -80,7 +80,9 @@ class Chainer(Component):
                 preprocessor.append(t_component, t_in_x, t_out)
 
             def train_on_batch(*args, **kwargs):
-                preprocessed = zip(*preprocessor(*args, **kwargs))
+                preprocessed = preprocessor.compute(*args, **kwargs)
+                if len(in_x+in_y) == 1:
+                    preprocessed = [preprocessed]
                 if keys:
                     return component.train_on_batch(**dict(zip(keys, preprocessed)))
                 else:
@@ -100,6 +102,8 @@ class Chainer(Component):
             raise ConfigError('Arguments {} are expected but only {} are set'.format(in_x, self.train_map))
 
     def compute(self, x, y=None, targets=None):
+        if targets is None:
+            targets = self.out_params
         in_params = list(self.in_x)
         if len(in_params) == 1:
             args = [x]
@@ -116,13 +120,13 @@ class Chainer(Component):
                 args += list(zip(*y))
             in_params += self.in_y
 
-        return self._compute(*args, pipe=pipe, in_params=in_params, targets=targets)
+        return self._compute(*args, pipe=pipe, param_names=in_params, targets=targets)
 
     def __call__(self, *args):
-        return self._compute(*args, in_params=self.in_x, pipe=self.pipe, targets=self.out_params)
+        return self._compute(*args, param_names=self.in_x, pipe=self.pipe, targets=self.out_params)
 
     @staticmethod
-    def _compute(*args, in_params, pipe, targets):
+    def _compute(*args, param_names, pipe, targets):
         expected = set(targets)
         final_pipe = []
         for (in_keys, in_params), out_params, component in reversed(pipe):
@@ -130,11 +134,11 @@ class Chainer(Component):
                 expected = expected - set(out_params) | set(in_params)
                 final_pipe.append(((in_keys, in_params), out_params, component))
         final_pipe.reverse()
-        if not expected.issubset(in_params):
+        if not expected.issubset(param_names):
             raise RuntimeError(f'{expected} are required to compute {targets} but were not found in memory or inputs')
         pipe = final_pipe
 
-        mem = dict(zip(in_params, args))
+        mem = dict(zip(param_names, args))
         del args
 
         for (in_keys, in_params), out_params, component in pipe:
