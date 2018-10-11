@@ -153,11 +153,13 @@ class DecayType(IntEnum):
     COSINE = 3
     EXPONENTIAL = 4
     POLYNOMIAL = 5
+    ONECYCLE = 6
 
     @classmethod
     def from_str(cls, label: str):
-        if label.upper() in cls.__members__:
-            return DecayType[label.upper()]
+        label_norm = label.replace('1', 'one').upper()
+        if label_norm in cls.__members__:
+            return DecayType[label_norm]
         else:
             raise NotImplementedError
 
@@ -179,6 +181,10 @@ class DecayScheduler():
         self.iters = 0
         if self.end_val is None and not (self.dec_type in [1, 4]):
             self.end_val = 0
+        if self.dec_type == DecayType.ONECYCLE:
+            self.extra = extra or 0.
+            self.cycle_nb = int(self.nb * (1 - self.extra) / 2)
+            self.div = self.end_val / self.start_val
 
     def next_val(self):
         self.iters = min(self.iters + 1, self.nb)
@@ -196,6 +202,19 @@ class DecayScheduler():
         elif self.dec_type == DecayType.POLYNOMIAL:
             delta_val = self.start_val - self.end_val
             return self.end_val + delta_val * (1 - self.iters / self.nb) ** self.extra
+        elif self.dec_type == DecayType.ONECYCLE:
+            if self.iters > self.cycle_nb * 2:
+                # decaying from start_val to start_val/div for extra*num_it steps
+                pct = (self.iters - 2 * self.cycle_nb) / (self.nb - 2 * self.cycle_nb)
+                return self.start_val * (1 + pct * (1 / self.div - 1))
+            elif self.iters > self.cycle_nb:
+                # decaying from end_val to start_val for cycle_nb steps
+                pct = 1 - (self.iters - self.cycle_nb) / self.cycle_nb
+                return self.start_val * (1 + pct * (self.div - 1))
+            else:
+                # raising from start_val to end_val for cycle_nb steps
+                pct = self.iters / self.cycle_nb
+                return self.start_val * (1 + pct * (self.div - 1))
 
 
 class AnhancedTFModel(TFModel):
