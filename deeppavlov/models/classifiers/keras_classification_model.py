@@ -124,7 +124,7 @@ class KerasClassificationModel(KerasModel):
         # in case of pre-trained after loading in self.opt we have stored parameters
         # now we can restore lear rate if needed
         if restore_lr:
-            learning_rate = self.opt.get("final_lear_rate", learning_rate)
+            learning_rate = self.opt.get("final_learning_rate", learning_rate)
 
         self.model = self.compile(self.model, optimizer_name=optimizer, loss_name=loss,
                                   learning_rate=learning_rate, learning_rate_decay=learning_rate_decay)
@@ -371,7 +371,7 @@ class KerasClassificationModel(KerasModel):
         # if model was loaded from one path and saved to another one
         # then change load_path to save_path for config
         self.opt["epochs_done"] = self.epochs_done
-        self.opt["final_lear_rate"] = K.eval(self.optimizer.lr) / (1. +
+        self.opt["final_learning_rate"] = K.eval(self.optimizer.lr) / (1. +
                                                                    K.eval(self.optimizer.decay) * self.batches_seen)
 
         if self.opt.get("load_path") and self.opt.get("save_path"):
