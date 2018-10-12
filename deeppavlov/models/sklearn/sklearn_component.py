@@ -195,8 +195,8 @@ class SklearnComponent(Estimator):
         if Path(fname).suffix != ".pkl":
             fname = str(Path(fname).stem) + ".pkl"
 
-        if fname.exists():
-            log.info("Loading model {} from {}".format(self.model_name, fname))
+        if Path(fname).exists():
+            log.info("Loading model {} from {}".format(self.model_name, str(fname)))
             with open(fname, "rb") as f:
                 self.model = pickle.load(f)
 
@@ -212,7 +212,7 @@ class SklearnComponent(Estimator):
                 log.warning("Fitting of loaded model can not be continued. Model can be fitted from scratch."
                             "If one needs to continue fitting, please, look at `warm_start` parameter")
         else:
-            log.warning("Cannot load model from {}".format(fname))
+            log.warning("Cannot load model from {}".format(str(fname)))
             self.init_from_scratch()
 
         return
@@ -235,7 +235,7 @@ class SklearnComponent(Estimator):
         if Path(fname).suffix != ".pkl":
             fname = str(Path(fname).stem) + ".pkl"
 
-        log.info("Saving model to {}".format(fname))
+        log.info("Saving model to {}".format(str(fname)))
         with open(fname, "wb") as f:
             pickle.dump(self.model, f)
         return
