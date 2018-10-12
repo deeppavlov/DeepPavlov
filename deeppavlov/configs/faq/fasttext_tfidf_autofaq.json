@@ -39,7 +39,7 @@
         "name": "sklearn_component",
         "save_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
         "load_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
-        "model_name": "sklearn.feature_extraction.text:TfidfVectorizer",
+        "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
         "infer_method": "transform",
         "analyzer": "word"
       },

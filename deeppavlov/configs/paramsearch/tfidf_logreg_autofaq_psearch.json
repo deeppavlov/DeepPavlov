@@ -37,7 +37,7 @@
         "name": "sklearn_component",
         "save_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
         "load_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
-        "model_name": "sklearn.feature_extraction.text:TfidfVectorizer",
+        "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
         "infer_method": "transform"
       },
       {
@@ -55,7 +55,7 @@
         "main": true,
         "save_path": "faq/tfidf_logreg_classifier.pkl",
         "load_path": "faq/tfidf_logreg_classifier.pkl",
-        "model_name": "sklearn.linear_model:LogisticRegression",
+        "model_class": "sklearn.linear_model:LogisticRegression",
         "infer_method": "predict",
         "C": {
           "search_choice": [

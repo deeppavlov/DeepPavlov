@@ -36,7 +36,7 @@ class SklearnComponent(Estimator):
     feature selection, classification, regression etc.
 
     Args:
-        model_name: string with full name of sklearn model to use, e.g. ``sklearn.linear_model:LogisticRegression``
+        model_class: string with full name of sklearn model to use, e.g. ``sklearn.linear_model:LogisticRegression``
         save_path: save path for model, e.g. full name ``model_path/model.pkl`` \
             or prefix ``model_path/model`` (still model will be saved to ``model_path/model.pkl``)
         load_path: load path for model, e.g. full name ``model_path/model.pkl`` \
@@ -47,7 +47,7 @@ class SklearnComponent(Estimator):
 
     Attributes:
         model: sklearn model instance
-        model_name: string with full name of sklearn model to use, e.g. ``sklearn.linear_model:LogisticRegression``
+        model_class: string with full name of sklearn model to use, e.g. ``sklearn.linear_model:LogisticRegression``
         model_params: dictionary with parameters for the sklearn model without pipe parameters
         pipe_params: dictionary with parameters for pipe: ``in``, ``out``, ``fit_on``, ``main``, ``name``
         save_path: save path for model, e.g. full name ``model_path/model.pkl`` \
@@ -57,7 +57,7 @@ class SklearnComponent(Estimator):
         infer_method: string name of class method to use for infering model, \
             e.g. ``predict``, ``predict_proba``, ``predict_log_proba``, ``transform``
     """
-    def __init__(self, model_name: str,
+    def __init__(self, model_class: str,
                  save_path: Union[str, Path] = None,
                  load_path: Union[str, Path] = None,
                  infer_method: str = "predict", **kwargs) -> None:
@@ -66,7 +66,7 @@ class SklearnComponent(Estimator):
         """
 
         super().__init__(save_path=save_path, load_path=load_path, **kwargs)
-        self.model_name = model_name
+        self.model_class = model_class
         self.model_params = kwargs
         self.model = None
         self.pipe_params = {}
@@ -99,18 +99,18 @@ class SklearnComponent(Estimator):
             y_ = None
 
         try:
-            log.info("Fitting model {}".format(self.model_name))
+            log.info("Fitting model {}".format(self.model_class))
             self.model.fit(x_features, y_)
         except TypeError or ValueError:
             try:
                 if issparse(x_features):
-                    log.info("Converting input for model {} to dense array".format(self.model_name))
+                    log.info("Converting input for model {} to dense array".format(self.model_class))
                     self.model.fit(x_features.todense(), y_)
                 else:
-                    log.info("Converting input for model {} to sparse array".format(self.model_name))
+                    log.info("Converting input for model {} to sparse array".format(self.model_class))
                     self.model.fit(csr_matrix(x_features), y_)
             except:
-                raise ConfigError("Can not fit on the given data".format(self.model_name))
+                raise ConfigError("Can not fit on the given data".format(self.model_class))
 
         return
 
@@ -132,13 +132,13 @@ class SklearnComponent(Estimator):
         except:
             try:
                 if issparse(x_features):
-                    log.info("Converting input for model {} to dense array".format(self.model_name))
+                    log.info("Converting input for model {} to dense array".format(self.model_class))
                     predictions = getattr(self.model, self.infer_method)(x_features.todense())
                 else:
-                    log.info("Converting input for model {} to sparse array".format(self.model_name))
+                    log.info("Converting input for model {} to sparse array".format(self.model_class))
                     predictions = getattr(self.model, self.infer_method)(csr_matrix(x_features))
             except:
-                raise ConfigError("Can not infer on the given data".format(self.model_name))
+                raise ConfigError("Can not infer on the given data".format(self.model_class))
 
         if isinstance(predictions, list):
             #  ``predict_proba`` sometimes returns list of n_outputs (each output corresponds to a label)
@@ -158,11 +158,11 @@ class SklearnComponent(Estimator):
         Returns:
             None
         """
-        log.info("Initializing model {} from scratch".format(self.model_name))
-        model_function = cls_from_str(self.model_name)
+        log.info("Initializing model {} from scratch".format(self.model_class))
+        model_function = cls_from_str(self.model_class)
 
         if model_function is None:
-            raise ConfigError("Model with {} model_name was not found.".format(self.model_name))
+            raise ConfigError("Model with {} model_class was not found.".format(self.model_class))
 
         given_params = {}
         if self.model_params:
@@ -195,14 +195,14 @@ class SklearnComponent(Estimator):
         fname = Path(fname).with_suffix('.pkl')
 
         if Path(fname).exists():
-            log.info("Loading model {} from {}".format(self.model_name, str(fname)))
+            log.info("Loading model {} from {}".format(self.model_class, str(fname)))
             with open(fname, "rb") as f:
                 self.model = pickle.load(f)
 
             warm_start = self.model_params.get("warm_start", None)
             self.model_params = {param: getattr(self.model, param) for param in self.get_class_attributes(self.model)}
-            self.model_name = self.model.__module__ + self.model.__class__.__name__
-            log.info("Model {} loaded  with parameters".format(self.model_name))
+            self.model_class = self.model.__module__ + self.model.__class__.__name__
+            log.info("Model {} loaded  with parameters".format(self.model_class))
 
             if warm_start and "warm_start" in self.model_params.keys():
                 self.model_params["warm_start"] = True

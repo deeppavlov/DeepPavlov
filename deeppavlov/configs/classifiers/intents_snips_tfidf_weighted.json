@@ -53,7 +53,7 @@
         "name": "sklearn_component",
         "save_path": "classifiers/intents_snips_sklearn_v8/intents_snips_tfidf_v8.pkl",
         "load_path": "classifiers/intents_snips_sklearn_v8/intents_snips_tfidf_v8.pkl",
-        "model_name": "sklearn.feature_extraction.text:TfidfVectorizer",
+        "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
         "infer_method": "transform",
         "lowercase": true,
         "analyzer": "word"
@@ -73,7 +73,7 @@
         "name": "sklearn_component",
         "save_path": "classifiers/intents_snips_sklearn_v8/intents_snips_selectkbest_v8.pkl",
         "load_path": "classifiers/intents_snips_sklearn_v8/intents_snips_selectkbest_v8.pkl",
-        "model_name": "sklearn.feature_selection:SelectKBest",
+        "model_class": "sklearn.feature_selection:SelectKBest",
         "infer_method": "transform",
         "score_func": "sklearn.feature_selection:chi2",
         "k": 1000
@@ -92,7 +92,7 @@
         "name": "sklearn_component",
         "save_path": "classifiers/intents_snips_sklearn_v8/intents_snips_pca_v8.pkl",
         "load_path": "classifiers/intents_snips_sklearn_v8/intents_snips_pca_v8.pkl",
-        "model_name": "sklearn.decomposition:PCA",
+        "model_class": "sklearn.decomposition:PCA",
         "infer_method": "transform",
         "n_components": 300
       },
@@ -145,7 +145,7 @@
         "main": true,
         "save_path": "classifiers/intents_snips_sklearn_v8/intents_snips_v8.pkl",
         "load_path": "classifiers/intents_snips_sklearn_v8/intents_snips_v8.pkl",
-        "model_name": "sklearn.linear_model:LogisticRegression",
+        "model_class": "sklearn.linear_model:LogisticRegression",
         "infer_method": "predict"
       },
       {

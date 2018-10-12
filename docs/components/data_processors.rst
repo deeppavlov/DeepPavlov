@@ -69,7 +69,7 @@ Vectorizers
 
 Vectorizer is a component that converts batch of text samples to batch of vectors.
 
-    - **SklearnComponent** (registered as ``sklearn_component``) is a DeepPavlov wrapper for most of sklearn estimators, vectorizers etc. For example, to get TFIDF-vecotrizer one should assign in config ``model_name`` to ``sklearn.feature_extraction.text:TfidfVectorizer``, ``infer_method`` to ``transform``, pass ``load_path``, ``save_path`` and other sklearn model parameters.
+    - **SklearnComponent** (registered as ``sklearn_component``) is a DeepPavlov wrapper for most of sklearn estimators, vectorizers etc. For example, to get TFIDF-vecotrizer one should assign in config ``model_class`` to ``sklearn.feature_extraction.text:TfidfVectorizer``, ``infer_method`` to ``transform``, pass ``load_path``, ``save_path`` and other sklearn model parameters.
 
     - **HashingTfIdfVectorizer** (registered as ``hashing_tfidf_vectorizer``) implements hashing version of usual TFIDF-vecotrizer. It creates a TFIDF matrix from collection of documents of size ``[n_documents X n_features(hash_size)]``.
 
