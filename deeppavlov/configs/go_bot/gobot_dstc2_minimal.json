@@ -28,33 +28,32 @@
         "save_path": "dstc2/resto.sqlite"
       },
       {
-        "in": ["x"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
         "main": true,
-        "name": "go_bot",
+        "id": "go_bot_network",
+        "name": "go_bot_rnn",
         "load_path": "gobot_dstc2_minimal/model",
         "save_path": "gobot_dstc2_minimal/model",
         "debug": false,
+        "fit_batch_size": 8,
+        "fit_valid_rate": 0.3,
+        "fit_learning_rate_div": 10.0,
+        "learning_rate": [0.01, 0.1],
+        "learning_rate_decay": ["1cycle", 0.5],
+        "learning_rate_decay_epochs": 30,
+        "momentum": [0.95, 0.85],
+        "momentum_decay": "1cycle",
+        "momentum_decay_epochs": 15,
+        "optimizer": "tensorflow.train:MomentumOptimizer",
+        "dropout_rate": 0.3,
+        "l2_reg_coef": 1e-4,
+        "hidden_size": 128,
+        "dense_size": 64,
         "word_vocab": "#token_vocab",
         "template_path": "dstc2/dstc2-templates.txt",
         "template_type": "DualTemplate",
         "database": "#restaurant_database",
         "api_call_action": "api_call",
         "use_action_mask": false,
-        "network_parameters": {
-          "learning_rate": [0.01, 0.1],
-          "learning_rate_decay": ["1cycle", 0.5],
-          "learning_rate_decay_epochs": 30,
-          "momentum": [0.95, 0.85],
-          "momentum_decay": "1cycle",
-          "momentum_decay_epochs": 15,
-          "optimizer": "tensorflow.train:MomentumOptimizer",
-          "dropout_rate": 0.3,
-          "l2_reg_coef": 1e-4,
-          "hidden_size": 128,
-          "dense_size": 64
-        },
         "slot_filler": null,
         "intent_classifier": null,
         "embedder": null,
@@ -69,6 +68,16 @@
           "name": "featurized_tracker",
           "slot_names": ["pricerange", "this", "area", "food", "name"]
         }
+      },
+      {
+        "ref": "go_bot_network",
+        "fit_on": ["x", "y"]
+      },
+      {
+        "ref": "go_bot_network",
+        "in": ["x"],
+        "in_y": ["y"],
+        "out": ["y_predicted"]
       }
     ]
   },

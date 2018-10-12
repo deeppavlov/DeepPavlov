@@ -14,6 +14,7 @@
 
 from collections import defaultdict
 from typing import Iterable, Optional, Any, Union, List, Tuple
+from abc import abstractmethod
 from enum import IntEnum
 import math
 
@@ -22,6 +23,7 @@ import tensorflow as tf
 from tensorflow.python.ops import variables
 
 from deeppavlov.core.models.nn_model import NNModel
+from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import cls_from_str
@@ -217,7 +219,7 @@ class DecayScheduler():
                 return self.start_val * (1 + pct * (self.div - 1))
 
 
-class AnhancedTFModel(TFModel):
+class AnhancedTFModel(TFModel, Estimator):
     """TFModel anhanced with optimizer, learning rate and momentum configuration"""
     def __init__(self,
                  learning_rate: Union[float, Tuple[float, float]],
@@ -229,6 +231,9 @@ class AnhancedTFModel(TFModel):
                  momentum_decay_epochs: int = 0,
                  momentum_decay_batches: int = 0,
                  optimizer: str = 'AdamOptimizer',
+                 fit_batch_size: int = None,
+                 fit_valid_rate: float = 0.3,
+                 fit_learning_rate_div: float = 10.,
                  *args, **kwargs) -> None:
         if learning_rate_decay_epochs and learning_rate_decay_batches:
             raise ConfigError("isn't able to update learning rate every batch"
@@ -277,6 +282,50 @@ class AnhancedTFModel(TFModel):
             self._optimizer = getattr(tf.train, optimizer.split(':')[-1])
         if not issubclass(self._optimizer, tf.train.Optimizer):
             raise ConfigError("`optimizer` should be tensorflow.train.Optimizer subclass")
+
+        self.fit_batch_size = fit_batch_size
+        self.fit_valid_rate = fit_valid_rate
+        self.fit_learning_rate_div = fit_learning_rate_div
+
+    def fit(self, x, y, **kwargs):
+        self.save()
+        if self.fit_batch_size is None:
+            raise ConfigError("in order to use fit() method"
+                              " set `fit_batch_size` parameter")
+        bs, valid_rate = self.fit_batch_size, self.fit_valid_rate
+        lr_div = self.fit_learning_rate_div
+
+        train_len = int(len(x) * (1 - valid_rate))
+        train_x, train_y = x[:train_len], y[:train_len]
+        valid_x, valid_y = x[train_len:], y[train_len:]
+        best_loss = 1e9
+        best_lr = self._lr
+        for i in range((train_len - 1) // bs + 1):
+            self.train_on_batch(train_x[i * bs: (i+1) * bs], train_y[i * bs: (i+1) * bs])
+            valid_report = self.calc_loss(valid_x, valid_y)
+            if not isinstance(valid_report, dict):
+                valid_report = {'loss': valid_report}
+            if math.isnan(valid_report['loss']) or (valid_report['loss'] > best_loss * 4):
+                continue
+            if (valid_report['loss'] < best_loss) and (i > 10):
+                best_loss = valid_report['loss']
+                best_lr = self._lr
+            self._lr = self._lr_schedule.next_val()
+
+        log.info(f"Found best learning rate value = {best_lr}"
+                 f", setting new learning rate schedule with"
+                 f" start_val={best_lr / lr_div}, end_val = {best_lr}")
+        self._lr_schedule = DecayScheduler(start_val=best_lr / lr_div,
+                                           end_val=best_lr,
+                                           num_it=self._lr_schedule.nb,
+                                           dec_type=self._lr_schedule.dec_type,
+                                           extra=self._lr_schedule.extra)
+        self._lr = best_lr / lr_div
+        self.load()
+
+    @abstractmethod
+    def calc_loss(self, *args, **kwargs):
+        pass
 
     def get_train_op(self,
                      *args,
