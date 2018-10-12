@@ -234,6 +234,7 @@ class AnhancedTFModel(TFModel, Estimator):
                  fit_batch_size: int = None,
                  fit_valid_rate: float = 0.3,
                  fit_learning_rate_div: float = 10.,
+                 fit_min_batches: int = 10,
                  *args, **kwargs) -> None:
         if learning_rate_decay_epochs and learning_rate_decay_batches:
             raise ConfigError("isn't able to update learning rate every batch"
@@ -286,6 +287,7 @@ class AnhancedTFModel(TFModel, Estimator):
         self.fit_batch_size = fit_batch_size
         self.fit_valid_rate = fit_valid_rate
         self.fit_learning_rate_div = fit_learning_rate_div
+        self.fit_min_batches = fit_min_batches
 
     def fit(self, x, y, **kwargs):
         self.save()
@@ -293,24 +295,31 @@ class AnhancedTFModel(TFModel, Estimator):
             raise ConfigError("in order to use fit() method"
                               " set `fit_batch_size` parameter")
         bs, valid_rate = self.fit_batch_size, self.fit_valid_rate
-        lr_div = self.fit_learning_rate_div
+        lr_div, min_batches = self.fit_learning_rate_div, self.fit_min_batches
 
         train_len = int(len(x) * (1 - valid_rate))
+        num_train_batches = (train_len - 1) // bs + 1
         train_x, train_y = x[:train_len], y[:train_len]
         valid_x, valid_y = x[train_len:], y[train_len:]
         best_loss = 1e9
+        self._lr_schedule = DecayScheduler(start_val=self._lr_schedule.start_val,
+                                           end_val=self._lr_schedule.end_val,
+                                           dec_type=DecayType.LINEAR,
+                                           num_it=num_train_batches)
         best_lr = self._lr
-        for i in range((train_len - 1) // bs + 1):
+        for i in range(num_train_batches):
             self.train_on_batch(train_x[i * bs: (i+1) * bs], train_y[i * bs: (i+1) * bs])
             valid_report = self.calc_loss(valid_x, valid_y)
             if not isinstance(valid_report, dict):
                 valid_report = {'loss': valid_report}
             if math.isnan(valid_report['loss']) or (valid_report['loss'] > best_loss * 4):
                 continue
-            if (valid_report['loss'] < best_loss) and (i > 10):
+            if (valid_report['loss'] < best_loss) and (i > min_batches):
                 best_loss = valid_report['loss']
                 best_lr = self._lr
             self._lr = self._lr_schedule.next_val()
+            log.info(f"valid_loss = {valid_report['loss']}, lr = {self._lr}"
+                     f", best_lr = {best_lr}")
 
         log.info(f"Found best learning rate value = {best_lr}"
                  f", setting new learning rate schedule with"
