@@ -173,13 +173,14 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
     if to_train:
         model = fit_chainer(config, iterator)
 
+        if callable(getattr(model, 'fit', None)):
+            _fit(model, iterator, train_config)
         if callable(getattr(model, 'train_on_batch', None)):
             _train_batches(model, iterator, train_config, metrics_functions)
-        elif callable(getattr(model, 'fit_batches', None)):
+        if callable(getattr(model, 'fit_batches', None)):
             _fit_batches(model, iterator, train_config)
-        elif callable(getattr(model, 'fit', None)):
-            _fit(model, iterator, train_config)
-        elif not isinstance(model, Chainer):
+        if not any(getattr(model, m) for m in ('fit', 'train_on_batch', 'fit_batches'))\
+                and not isinstance(model, Chainer):
             log.warning('Nothing to train')
 
         model.destroy()
