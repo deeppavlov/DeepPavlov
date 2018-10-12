@@ -62,7 +62,7 @@ As an example of configuration file see
 :config:`paraphrase_ident_qqp.json <ranking/paraphrase_ident_qqp.json>`.
 
 References
-==========
+----------
 
 .. target-notes::
 
