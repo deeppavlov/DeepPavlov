@@ -183,7 +183,7 @@ class DecayScheduler():
             self.end_val = 0
         if self.dec_type == DecayType.ONECYCLE:
             self.extra = extra or 0.
-            self.cycle_nb = int(self.nb * (1 - self.extra) / 2)
+            self.cycle_nb = math.ceil(self.nb * (1 - self.extra) / 2)
             self.div = self.end_val / self.start_val
 
     def next_val(self):
@@ -295,12 +295,12 @@ class AnhancedTFModel(TFModel):
             if self._lr_update_on_batch:
                 self._lr = self._lr_schedule.next_val()
             if self._mom_update_on_batch and (self.get_momentum() is not None):
-                self._mom = self._mom_schedule.next_val()
+                self._mom = min(1., max(0., self._mom_schedule.next_val()))
         if event_name == 'after_epoch':
             if not self._lr_update_on_batch:
                 self._lr = self._lr_schedule.next_val()
             if not self._mom_update_on_batch and (self.get_momentum() is not None):
-                self._mom = self._mom_schedule.next_val()
+                self._mom = min(1., max(0., self._mom_schedule.next_val()))
 
     def get_learning_rate(self):
         return self._lr
