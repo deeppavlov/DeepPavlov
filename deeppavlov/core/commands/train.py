@@ -88,9 +88,14 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
         if 'fit_on' in component_config:
             component: Estimator
 
-            preprocessed = chainer.compute(*iterator.get_instances('train'), targets=component_config['fit_on'])
+            targets = component_config['fit_on']
+            if isinstance(targets, str):
+                targets = [targets]
+
+            preprocessed = chainer.compute(*iterator.get_instances('train'), targets=targets)
             if len(component_config['fit_on']) == 1:
                 preprocessed = [preprocessed]
+
             component.fit(*preprocessed)
             component.save()
 
