@@ -28,7 +28,7 @@ from deeppavlov.core.data.utils import zero_pad
 log = get_logger(__name__)
 
 
-@register('tfidf_weighted_embedder')
+@register('tfidf_weighted')
 class TfidfWeightedEmbedder(Component, Serializable):
     """
     The class implements the functional of embedding the sentence \
