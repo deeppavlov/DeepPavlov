@@ -65,10 +65,12 @@ def interact_model(config_path: str) -> None:
         for in_x in model.in_x:
             args.append([input('{}::'.format(in_x))])
             # check for exit command
-            if args[-1] == 'exit' or args[-1] == 'stop' or args[-1] == 'quit' or args[-1] == 'q':
+            if args[-1][0] in {'exit', 'stop', 'quit', 'q'}:
                 return
 
         pred = model(*args)
+        if len(model.out_params) > 1:
+            pred = zip(*pred)
 
         print('>>', *pred)
 
