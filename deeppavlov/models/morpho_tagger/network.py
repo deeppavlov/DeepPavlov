@@ -31,6 +31,7 @@ log = get_logger(__name__)
 MAX_WORD_LENGTH = 30
 
 class CharacterTagger:
+
     """A class for character-based neural morphological tagger
 
     Parameters:
@@ -39,8 +40,15 @@ class CharacterTagger:
         word_rnn: the type of character-level network (only `cnn` implemented)
         char_embeddings_size: the size of character embeddings
         char_conv_layers: the number of convolutional layers on character level
-        char_window_size: the width of convolutional filter (filters)
-        char_filters: the number of convolutional filters for each window width
+        char_window_size: the width of convolutional filter (filters).
+            It can be a list if several parallel filters are applied, for example, [2, 3, 4, 5].
+        char_filters: the number of convolutional filters for each window width.
+            It can be a number, a list (when there are several windows of different width
+            on a single convolution layer), a list of lists, if there
+            are more than 1 convolution layers, or **None**.
+            If **None**, a layer with width **width** contains
+            min(**char_filter_multiple** * **width**, 200) filters.
+
         char_filter_multiple: the ratio between filters number and window width
         char_highway_layers: the number of highway layers on character level
         conv_dropout: the ratio of dropout between convolutional layers
@@ -313,7 +321,7 @@ class CharacterTagger:
 
 
 @register("morpho_tagger")
-class MorphoTaggerWrapper(KerasWrapper):
+class MorphoTagger(KerasWrapper):
     """
     A wrapper over :class:`CharacterTagger`.
     It is inherited from :class:`~deeppavlov.core.keras_model.KerasWrapper`.

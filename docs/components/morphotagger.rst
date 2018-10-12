@@ -286,28 +286,8 @@ Chainer
 
 The ``chainer`` part of the configuration file contains the
 specification of the neural network model and supplementary things such as vocabularies.
-Chainer refers to an instance of :class:`~deeppavlov.core.common.chainer.Chainer` and should be
-defined as follows:
-
-::
-
-    "chainer": {
-        "in": ["x"],
-        "in_y": ["y"],
-        "pipe": [
-          ...
-        ],
-        "out": ["y_predicted"]
-      }
-
-The inputs and outputs must be specified in the pipe. ``in`` means
-regular input that is used
-for inference and train mode. ``in\_y`` is used for training and usually
-contains ground truth answers.
-"out" field stands for model prediction. The model inside the pipe
-must have output variable with
-name ``y\_predicted`` so that ``out`` knows where to get
-predictions.
+Chainer refers to an instance of :class:`~deeppavlov.core.common.chainer.Chainer`, see
+<intro/config_description> for a complete description.
 
 The major part of ``chainer`` is ``pipe``. The ``pipe`` contains
 vocabularies and the network itself as well
@@ -422,46 +402,14 @@ When an additional vectorizer is used, the first line is changed to
 `"in": ["x_processed", "x_possible_tags"]` and an additional parameter
 `"word_vectorizers": [["#pymorphy_vectorizer.dim", 128]]` is appended.
 
-General parameters are:
-
-- `in` - data to be used during training. "x_processed" means
-  that network obtains the output of the lowercase_preprocessor as its input.
-  "x_possible_tags" refers to the output of external morphological dictionary.
-- `in_y` - the target to be used as gold labels during training.
-- `out` - the name of the model output.
-- `name` - registered name of the class :class:`~deeppavlov.models.morpho_tagger.network.CharacterTagger`).
-- `main` - (reserved for future use) a boolean parameter defining whether this is the main model.
-- `save_path` - where the model is saved after training.
-- `load_path` - from where the pretrained model can be loaded if it exists.
-
-Model parameters are:
+Config includes general parameters of :class:`~deeppavlov.core.models.component.Component` class,
+described in <intro/config_description> and specific `~deeppavlov.models.morpho_tagger.network.CharacterTagger`
+parameters. The latter include
 
 - `tags` - tag vocabulary. `#tag_vocab` refers to an already defined model with "id" = "tag_vocab".
 - `symbols` - character vocabulary. `#char_vocab` refers to an already defined model with "id" = "char_vocab".
-- `char_embeddings_size` - the dimensionality of character embeddings (default=16)
-- `char_conv_layers` - number of convolution layers applied to character embeddings (default=1)
-- `char_window_size` - width of convolution filters (default=5). It can be a list if several parallel filters
-  are applied, for example, [2, 3, 4, 5].
-- `char_filters` - number of convolution filters (default = **None** ). It can be a number, a list (when
-  there are several windows of different width on a single convolution layer), a list of lists, if there
-  are more than 1 convolution layers, or **None**. If **None**, a layer with width *width* contains
-  min(self.char_filter_multiple * *width*, 200) filters.
-- `char_filter_multiple` - a coefficient used to calculate number of filters depending on window size.
-- `char_highway layer` - number of highway layers on the top of convolutions (default=1).
-- `conv_dropout` - ratio of dropout between convolutional layers (default=0.0).
-- `highway_dropout` - ratio of dropout between highway layers (default=0.0).
-- `intermediate_dropout` - ratio of dropout between last convolutional and first highway layer (default=0.0).
-- `lstm_dropout` - ratio of dropout inside word-level LSTM (default=0.0).
-- `word_lstm_layers` - number of word-level LSTM layers (default=1).
-- `word_lstm_units` - number of units in word-level LSTM (default=128). It can be a list if there
-  are multiple layers.
-- `word_dropout` - ratio of dropout before word-level LSTM (default=0.0).
-- `word_vectorizers` - the list of word vectorizers specified in the previous sections of the **chainer**.
-  Each item in the list contains a reference to the dimension of the corresponding vectorizer and the size of
-  output embedding.
-- `regularizer` - the weight of l2-regularizer for output probabilities (default=None). None means
-  that no regularizer is applied.
-- `verbose` - the level of verbosity during training. If it is positive, prints model summary.
+
+and other specific parameters of the network, available in :class:`~deeppavlov.models.morpho_tagger.network.CharacterTagger` documentation.
 
 The `"train"` section of `"chainer"` contains training parameters, such as number of epochs,
 batch_size and logging frequency, see general readme for more details.

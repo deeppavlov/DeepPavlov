@@ -16,7 +16,7 @@ import pathlib
 from collections import defaultdict
 import re
 from typing import List, Dict, Generator, Tuple, Any, AnyStr, Union
-
+from abc import abstractmethod
 import numpy as np
 
 from pymorphy2 import MorphAnalyzer
@@ -31,10 +31,11 @@ class WordIndexVectorizer(Serializable):
     A basic class for custom word-level vectorizers
     """
 
-    def __init__(self, save_path : str, load_path: Union[str, List[str]], **kwargs):
+    def __init__(self, save_path : str, load_path: Union[str, List[str]], **kwargs) -> None:
         super().__init__(save_path, load_path, **kwargs)
 
     @property
+    @abstractmethod
     def dim(self):
         raise NotImplementedError("You should implement dim property in your WordIndexVectorizer subclass.")
 
@@ -78,7 +79,7 @@ class DictionaryVectorizer(WordIndexVectorizer):
         unk_token: unknown token to be yielded for unknown words
     """
     def __init__(self, save_path: str, load_path: Union[str, List[str]],
-                 min_freq: int = 1, unk_token: str = None, **kwargs):
+                 min_freq: int = 1, unk_token: str = None, **kwargs) -> None:
         super().__init__(save_path, load_path, **kwargs)
         self.min_freq = min_freq
         self.unk_token = unk_token
@@ -156,7 +157,7 @@ class PymorphyVectorizer(WordIndexVectorizer):
     USELESS_KEYS = ["Abbr"]
     VALUE_MAP = {"Ptan": "Plur", "Brev": "Short"}
 
-    def __init__(self, save_path: str, load_path: str, max_pymorphy_variants: int = -1, **kwargs):
+    def __init__(self, save_path: str, load_path: str, max_pymorphy_variants: int = -1, **kwargs) -> None:
         super().__init__(save_path, load_path, **kwargs)
         self.max_pymorphy_variants = max_pymorphy_variants
         self.load()

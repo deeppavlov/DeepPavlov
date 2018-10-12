@@ -1,7 +1,7 @@
 deeppavlov.models.morpho_tagger
 ===============================
 
-.. autoclass:: deeppavlov.models.morpho_tagger.network.MorphoTaggerWrapper
+.. autoclass:: deeppavlov.models.morpho_tagger.network.MorphoTagger
 
 .. autofunction:: deeppavlov.models.morpho_tagger.common.predict_with_model
 

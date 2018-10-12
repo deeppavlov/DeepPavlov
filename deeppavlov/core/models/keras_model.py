@@ -52,8 +52,7 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         self.train_examples_seen = 0
 
         super().__init__(save_path=kwargs.get("save_path"),
-                         load_path=kwargs.get("save_path"),
-                         url=kwargs.get("url"),
+                         load_path=kwargs.get("load_path"),
                          mode=kwargs.get("mode"))
 
     @staticmethod
@@ -70,14 +69,14 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         return tf.Session(config=config)
 
     @abstractmethod
-    def load(self, *args, **kwargs):
+    def load(self, *args, **kwargs) -> None:
         pass
 
     @abstractmethod
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         pass
 
-    def process_event(self, event_name: str, data: dict):
+    def process_event(self, event_name: str, data: dict) -> None:
         """
         Process event after epoch
         Args:
@@ -97,10 +96,10 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
 
 class KerasWrapper(KerasModel):
     """A wrapper over external Keras models. It is used, for example,
-    to wrap :class:~deeppavlov.models.morpho_tagger.network.CharacterTagger.
-    A subclass of :class:`~deeppavlov.core.models.nn_model.NNModel`
+    to wrap :class:`~deeppavlov.models.morpho_tagger.network.CharacterTagger`.
+    A subclass of :class:`~deeppavlov.core.models.keras_model.KerasModel`
 
-    Args:
+    Attributes:
         cls: the class to be wrapped
         save_path: the path where model is saved
         load_path: the path from where model is loaded

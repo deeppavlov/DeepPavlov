@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from pathlib import Path
-from typing import Dict, List, Union, Tuple
+from typing import Dict, List, Union, Tuple, Optional
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.utils import download_decompress, mark_done
@@ -87,8 +87,8 @@ class MorphotaggerDatasetReader(DatasetReader):
     URL = 'http://files.deeppavlov.ai/datasets/UD2.0_source/'
 
     def read(self, data_path: Union[List, str],
-             language: Union[str, None] = None,
-             data_types: Union[List[str], None] = None,
+             language: Optional[None] = None,
+             data_types: Optional[List[str]] = None,
              min_train_fraction: float = 0.0,
              **kwargs) -> Dict[str, List]:
         """Reads UD dataset from data_path.
