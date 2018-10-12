@@ -56,9 +56,6 @@ class SklearnComponent(Estimator):
             or prefix ``model_path/model`` (still model will be loaded from ``model_path/model.pkl``)
         infer_method: string name of class method to use for infering model, \
             e.g. ``predict``, ``predict_proba``, ``predict_log_proba``, ``transform``
-        epochs_done: number of epochs done
-        batches_seen: number of batches seen
-        train_examples_seen: number of train examples seen
     """
     def __init__(self, model_name: str,
                  save_path: Union[str, Path] = None,
@@ -79,7 +76,7 @@ class SklearnComponent(Estimator):
         self.load()
         self.infer_method = infer_method
 
-    def fit(self, *args, **kwargs) -> None:
+    def fit(self, *args) -> None:
         """
         Fit model on the given data
 
@@ -90,7 +87,6 @@ class SklearnComponent(Estimator):
                 In case of several inputs (K > 1) input features will be stacked. \
                 For example, one has x0: (n_samples, n_features0), ..., xK: (n_samples, n_featuresK), \
                 then model will be trained on x: (n_samples, n_features0 + ... + n_featuresK).
-            **kwargs: additional parameters
 
         Returns:
             None
@@ -118,14 +114,13 @@ class SklearnComponent(Estimator):
 
         return
 
-    def __call__(self, *args, **kwargs) -> np.ndarray:
+    def __call__(self, *args) -> np.ndarray:
         """
         Infer on the given data according to given in the config infer method, \
             e.g. ``"predict", "predict_proba", "transform"``
 
         Args:
             *args: list of inputs
-            **kwargs: additional arguments
 
         Returns:
             predictions, e.g. list of labels, array of probability distribution, sparse array of vectorized samples
