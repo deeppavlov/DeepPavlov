@@ -51,7 +51,7 @@ class GloVeEmbedder(Component, Serializable):
         load_path: path with pre-trained GloVe model
         mean: whether to return mean token embedding
     """
-    def __init__(self, load_path: [str, Path], save_path: [str, Path] = None, dim: int = 100, pad_zero: bool = False,
+    def __init__(self, load_path: Union[str, Path], save_path: Union[str, Path] = None, dim: int = 100, pad_zero: bool = False,
                  mean: bool = False, **kwargs) -> None:
         """
         Initialize embedder with given parameters
