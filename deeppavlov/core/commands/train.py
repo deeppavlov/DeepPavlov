@@ -258,7 +258,7 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
         if len(expected_outputs) == 1:
             y_predicted = [y_predicted]
         for out, val in zip(outputs.values(), y_predicted):
-            out += val
+            out += list(val)
 
     metrics = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in metrics_functions]
 
@@ -377,7 +377,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
                     if len(expected_outputs) == 1:
                         y_predicted = [y_predicted]
                     for out, val in zip(outputs.values(), y_predicted):
-                        out += val
+                        out += list(val)
                 loss = model.train_on_batch(x, y_true)
                 if loss is not None:
                     losses.append(loss)
