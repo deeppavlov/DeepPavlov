@@ -1,9 +1,19 @@
-Neural Model for Classification
-===============================
+Classification models in DeepPavlov
+===================================
 
 In this repository one can find code for training and using classification models
-which are implemented as a number of different neural networks (for example, shallow-and-wide Convolutional
-Neural Network [1]). The model can be used for binary, multi-class or multi-label classification.
+which are implemented as a number of different **neural networks** (for example, shallow-and-wide Convolutional
+Neural Network [1]) or **sklearn models**.
+Models can be used for binary, multi-class or multi-label classification.
+
+Available classifiers are:
+
+* **deeppavlov.models.classifiers.KerasClassificationModel** (registered as ``keras_classification_model``) builds neural network on Keras with tensorflow backend. One of the available network configurations can be chosen in ``model_name`` parameter in config. List of implemented networks can be found bellow.
+
+* **deeppavlov.models.sklearn.SklearnComponent** (registered as ``sklearn_component``) builds most of sklearn classifiers. Chosen model should be passed to ``model_name``, e.g. ``"model_name": "sklearn.neighbors:KNeighborsClassifier"``, as well as ``infer_method`` can be assigned to any sklearn model's prediction methods (e.g. ``predict`` or ``predict_proba``).
+
+Pre-trained models
+------------------
 
 We also provide with **pre-trained models** for classification on DSTC 2 dataset, SNIPS dataset, "AG News" dataset,
 "Detecting Insults in Social Commentary", Twitter sentiment in Russian dataset.
@@ -191,8 +201,8 @@ and an example of interacting the model from
 Train model
 -----------
 
-Available models
-~~~~~~~~~~~~~~~~
+Available Neural models
+~~~~~~~~~~~~~~~~~~~~~~~
 
 DeepPavlov contains a number of different model configurations for
 classification task. Below the list of available models is presented:
