@@ -287,7 +287,7 @@ class CharacterTagger:
             answer[i, m+2:] = self.tags.tok2idx("PAD")
         return answer
 
-    def _make_tags_vector(self, tags, bucket_length=None):
+    def _make_tags_vector(self, tags, bucket_length=None) -> np.ndarray:
         """Transforms a sentence of tags to Numpy array, which will be the network target.
 
         Args:
