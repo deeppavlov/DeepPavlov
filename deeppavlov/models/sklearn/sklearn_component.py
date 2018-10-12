@@ -114,7 +114,7 @@ class SklearnComponent(Estimator):
 
         return
 
-    def __call__(self, *args) -> np.ndarray:
+    def __call__(self, *args):
         """
         Infer on the given data according to given in the config infer method, \
             e.g. ``"predict", "predict_proba", "transform"``
@@ -125,21 +125,7 @@ class SklearnComponent(Estimator):
         Returns:
             predictions, e.g. list of labels, array of probability distribution, sparse array of vectorized samples
         """
-        predictions = self.infer_on_batch(args)
-        return predictions
-
-    def infer_on_batch(self, x):
-        """
-        Infer on the given data according to given in the config infer method, \
-            e.g. ``"predict", "predict_proba", "transform"``
-
-        Args:
-            x: list of inputs
-
-        Returns:
-            predictions, e.g. list of labels, array of probability distribution, sparse array of vectorized samples
-        """
-        x_features = self.compose_input_data(x)
+        x_features = self.compose_input_data(args)
 
         try:
             predictions = getattr(self.model, self.infer_method)(x_features)
