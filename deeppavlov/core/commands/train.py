@@ -184,7 +184,12 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
     except KeyError:
         log.warning('Train config is missing. Populating with default values')
 
-    metrics_functions = _parse_metrics(train_config['metrics'], config['chainer']['in_y'], config['chainer']['out'])
+    in_y = config['chainer'].get('in_y', ['y'])
+    if isinstance(in_y, str):
+        in_y = [in_y]
+    if isinstance(config['chainer']['out'], str):
+        config['chainer']['out'] = [config['chainer']['out']]
+    metrics_functions = _parse_metrics(train_config['metrics'], in_y, config['chainer']['out'])
 
     if to_train:
         model = fit_chainer(config, iterator)
