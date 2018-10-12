@@ -103,7 +103,7 @@
       "classification_f1",
       {
         "name": "classification_roc_auc",
-        "inputs": ["y_tyrue", "y_probas_dict"]
+        "inputs": ["y", "y_probas_dict"]
       }
     ],
     "validation_patience": 5,
