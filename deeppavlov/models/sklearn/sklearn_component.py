@@ -162,6 +162,13 @@ class SklearnComponent(Estimator):
             except:
                 raise ConfigError("Can not infer on the given data".format(self.model_name))
 
+        if isinstance(predictions, list):
+            #  ``predict_proba`` sometimes returns list of n_outputs (each output corresponds to a label)
+            #  but we will return (n_samples, n_labels)
+            #  where each value is a probability of a sample to belong with the label
+            predictions_ = [[predictions[j][i][1] for j in range(len(predictions))] for i in range(x_features.shape[0])]
+            predictions = np.array(predictions_)
+
         if len(predictions.shape) == 1:
             predictions = predictions.reshape(-1, 1)
         return predictions
