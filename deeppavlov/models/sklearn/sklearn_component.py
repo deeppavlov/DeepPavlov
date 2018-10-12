@@ -308,6 +308,7 @@ class SklearnComponent(Estimator):
     def process_event(self, event_name: str, data: dict):
         """
         Process event after epoch
+
         Args:
             event_name: whether event is send after epoch or batch.
                     Set of values: ``"after_epoch", "after_batch"``

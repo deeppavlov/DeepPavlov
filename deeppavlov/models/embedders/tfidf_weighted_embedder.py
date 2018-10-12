@@ -21,6 +21,7 @@ from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
+from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.data.utils import zero_pad
 
@@ -28,7 +29,7 @@ log = get_logger(__name__)
 
 
 @register('tfidf_weighted_embedder')
-class TfidfWeightedEmbedder(Component):
+class TfidfWeightedEmbedder(Component, Serializable):
     """
     The class implements the functional of embedding the sentence \
         as a weighted by special coefficients average of tokens embeddings. \

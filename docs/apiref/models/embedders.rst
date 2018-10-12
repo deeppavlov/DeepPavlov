@@ -21,4 +21,3 @@ deeppavlov.models.embedders
 .. autoclass:: deeppavlov.models.embedders.tfidf_weighted_embedder.TfidfWeightedEmbedder
 
    .. automethod:: __call__
-   .. automethod:: __iter__
