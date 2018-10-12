@@ -192,8 +192,7 @@ class SklearnComponent(Estimator):
         if fname is None:
             fname = self.load_path
 
-        if Path(fname).suffix != ".pkl":
-            fname = str(Path(fname).stem) + ".pkl"
+        fname = Path(fname).with_suffix('.pkl')
 
         if Path(fname).exists():
             log.info("Loading model {} from {}".format(self.model_name, str(fname)))
@@ -232,8 +231,7 @@ class SklearnComponent(Estimator):
         if fname is None:
             fname = self.save_path
 
-        if Path(fname).suffix != ".pkl":
-            fname = str(Path(fname).stem) + ".pkl"
+        fname = Path(fname).with_suffix('.pkl')
 
         log.info("Saving model to {}".format(str(fname)))
         with open(fname, "wb") as f:
