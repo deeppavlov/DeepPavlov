@@ -78,9 +78,6 @@ class SklearnComponent(Estimator):
 
         self.load()
         self.infer_method = infer_method
-        self.epochs_done = 0
-        self.batches_seen = 0
-        self.train_examples_seen = 0
 
     def fit(self, *args, **kwargs) -> None:
         """
@@ -310,24 +307,6 @@ class SklearnComponent(Estimator):
             None
         """
         del self.model
-        return
-
-    def process_event(self, event_name: str, data: dict):
-        """
-        Process event after epoch
-
-        Args:
-            event_name: whether event is send after epoch or batch.
-                    Set of values: ``"after_epoch", "after_batch"``
-            data: event data (dictionary)
-
-        Returns:
-            None
-        """
-        if event_name == "after_epoch":
-            self.epochs_done = data["epochs_done"]
-            self.batches_seen = data["batches_seen"]
-            self.train_examples_seen = data["train_examples_seen"]
         return
 
     @staticmethod
