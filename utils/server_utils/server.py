@@ -143,6 +143,9 @@ def interact(model: Chainer, params_names):
     batch_size = list(lengths)[0]
     model_args = [arg or [None] * batch_size for arg in model_args]
 
+    # in case when some parameters were not described in model_args
+    model_args += [[None] * batch_size for _ in range(len(model.in_x) - len(model_args))]
+
     prediction = model(*model_args)
     if len(model.out_params) == 1:
         prediction = [prediction]
