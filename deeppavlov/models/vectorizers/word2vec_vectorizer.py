@@ -124,7 +124,9 @@ class Word2vecVectorizer(Estimator):
         sentences = []
         for sample in x_train:
             for line in sample:
-                sentences.append(text_to_word_sequence(line, filters=self.filters, split=" "))
+                words_seq = text_to_word_sequence(line, filters=self.filters, split=" ")
+                if len(words_seq) > 0:
+                    sentences.append(words_seq)
         logger.info('Training word2vec')
         self.model = Word2Vec(sentences,
                          iter=self.iter,

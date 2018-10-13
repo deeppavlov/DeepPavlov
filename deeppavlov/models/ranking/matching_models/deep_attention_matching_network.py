@@ -194,7 +194,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
 
         # loss and train
         with tf.variable_scope('loss'):
-            self.loss, self.logits = layers.loss(final_info, self.y_true, clip_value=1e10)
+            self.loss, self.logits = layers.loss(final_info, self.y_true, clip_value=10.)
             self.y_pred = tf.nn.softmax(self.logits, name="y_pred")
             tf.summary.scalar('loss', self.loss)
 
@@ -214,7 +214,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
                 if grad is None:
                     print(var)
 
-            self.capped_gvs = [(tf.clip_by_value(grad, -1e10, 1e10), var) for grad, var in self.grads_and_vars]
+            self.capped_gvs = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in self.grads_and_vars]
             self.train_op = Optimizer.apply_gradients(
                 self.capped_gvs,
                 global_step=self.global_step)

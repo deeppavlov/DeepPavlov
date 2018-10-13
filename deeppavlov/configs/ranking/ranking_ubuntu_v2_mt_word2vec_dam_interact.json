@@ -67,19 +67,27 @@
         "vocab": "#vocab_1"
       },
       {
-        "in": ["x_proc"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
-        "name": "smn_nn",
+        "id": "model",
+        "name": "dam_nn",
+        "stack_num": 5,
         "num_context_turns": "#preproc.num_context_turns",
         "max_sequence_length": "#preproc.max_sequence_length",
         "embedding_dim": "#word2vec_vectorizer.dim",
         "emb_matrix": "#embeddings.emb_mat",
         "seed": 243,
         "learning_rate": 1e-3,
-        "batch_size": 500,
-        "save_path": "ubuntu_v2_mt_word2vec/model_smn/model",
-        "load_path": "ubuntu_v2_mt_word2vec/model_smn/model"
+        "batch_size": 100,
+        "save_path": "ubuntu_v2_mt_word2vec/model_dam/model",
+        "load_path": "ubuntu_v2_mt_word2vec/model_dam/model"
+      },
+      {
+        "in": ["x_proc"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "name": "matching_predictor",
+        "model": "#model",
+        "num_context_turns": "#model.num_context_turns",
+        "max_sequence_length": "#model.max_sequence_length"
       }
     ],
     "out": [
@@ -88,7 +96,7 @@
   },
   "train": {
     "epochs": 8,
-    "batch_size": 500,
+    "batch_size": 100,
     "pytest_max_batches": 2,
     "train_metrics": [],
     "metrics": [
@@ -100,7 +108,7 @@
     "validation_patience": 3,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 100,
-    "tensorboard_log_dir": "ubuntu_v2_mt_word2vec/logs_smn/"
+    "tensorboard_log_dir": "ubuntu_v2_mt_word2vec/logs_dam/"
   },
   "metadata": {
     "requirements": [
@@ -112,6 +120,7 @@
       "server_utils": "Ranker"
     },
     "download": [
+      "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_mt_ranking_dam.tar.gz",
       {
         "url": "http://lnsigo.mipt.ru/export/datasets/ubuntu_v2_data_clean.tar.gz",
         "subdir": "ubuntu_v2_data_clean"

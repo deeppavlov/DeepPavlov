@@ -28,6 +28,10 @@ class TensorflowBaseMatchingModel(TFModel, SiameseModel):
     """
     Base class for ranking models that uses context-response matching schemes.
 
+    Note:
+        Tensorflow session variable already presents as self.sess attribute
+        (derived from TFModel and initialized by Chainer)
+
     Args:
         none
 

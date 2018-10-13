@@ -27,7 +27,7 @@ log = get_logger(__name__)
 
 @register('ubuntu_v2_preprocessor')
 class UbuntuV2Preprocessor(Estimator):
-    """ Preprocessing of data samples containing few text strings to feed them in siamese networks.
+    """ Preprocessing of data samples containing few text strings to feed them in SMN or DAM ranking neural models.
 
     First ``num_context_turns`` strings in each data sample corresponds to the dialogue ``context``
     and the rest string(s) in the sample is (are) ``response(s)``.
@@ -48,12 +48,10 @@ class UbuntuV2Preprocessor(Estimator):
         truncating: Truncating. Possible values are ``pre`` and ``post``.
             If set to ``pre`` a sequence will be truncated at the beginning.
             If set to ``post`` it will truncated at the end.
-        use_matrix: Whether to use a trainable matrix with token (word) embeddings.
         num_context_turns: A number of ``context`` turns in data samples.
         num_ranking_samples: A number of condidates for ranking including positive one.
         tokenizer: An instance of one of the :class:`deeppavlov.models.tokenizers`.
         vocab: An instance of :class:`deeppavlov.core.data.simple_vocab.SimpleVocabulary`.
-        embedder: an instance of one of the :class:`deeppavlov.models.embedders`.
     """
 
     def __init__(self,
@@ -63,31 +61,24 @@ class UbuntuV2Preprocessor(Estimator):
                  dynamic_batch: bool = False,
                  padding: str = 'post',
                  truncating: str = 'post',
-                 use_matrix: bool = True,
                  num_context_turns: int = 1,
                  num_ranking_samples: int = 1,
                  tokenizer: Component = None,
                  vocab: Estimator = "simple_vocab",
-                 embedder: Component = "fasttext",
                  **kwargs):
 
         self.max_sequence_length = max_sequence_length
         self.padding = padding
         self.truncating = truncating
         self.dynamic_batch = dynamic_batch
-        self.use_matrix = use_matrix
         self.num_ranking_samples = num_ranking_samples
         self.num_context_turns = num_context_turns
         self.tokenizer = tokenizer
-        self.embedder = embedder
         self.vocab = vocab
         self.save_path = expand_path(save_path).resolve()
         self.load_path = expand_path(load_path).resolve()
 
         super().__init__(load_path=self.load_path, save_path=self.save_path, **kwargs)
-
-    def destroy(self) -> None:
-        self.embedder.destroy()
 
     def fit(self, x: List[List[str]]) -> None:
             x_tok = [self.tokenizer(el) for el in x]
@@ -106,10 +97,7 @@ class UbuntuV2Preprocessor(Estimator):
         for el in x_preproc:
             x_tok = self.tokenizer(el)
             x_ctok = [y if len(y) != 0 else [''] for y in x_tok]
-            if self.use_matrix:
-                x_proc = self.vocab(x_ctok)
-            else:
-                x_proc = self.embedder(x_ctok)
+            x_proc = self.vocab(x_ctok)
             if self.dynamic_batch:
                 msl = min((max([len(y) for el in x_tok for y in el]), self.max_sequence_length))
             else:

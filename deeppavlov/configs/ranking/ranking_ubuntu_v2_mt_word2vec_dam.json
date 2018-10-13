@@ -44,7 +44,6 @@
         "name": "ubuntu_v2_preprocessor",
         "save_path": "ubuntu_v2_mt_word2vec/preproc/tok.dict",
         "load_path": "ubuntu_v2_mt_word2vec/preproc/tok.dict",
-        "use_matrix": true,
         "num_ranking_samples": 10,
         "num_context_turns": 10,
         "max_sequence_length": 50,
@@ -59,10 +58,6 @@
         "vocab": {
           "ref": "vocab_1",
           "notes": "use vocab built for tokenized data"
-        },
-        "embedder": {
-          "ref": "word2vec_vectorizer",
-          "notes": "use prepared word2vec embeddings"
         }
       },
       {
@@ -93,7 +88,7 @@
     ]
   },
   "train": {
-    "epochs": 6,
+    "epochs": 8,
     "batch_size": 100,
     "pytest_max_batches": 2,
     "train_metrics": [],
@@ -103,7 +98,7 @@
       "r@5",
       "rank_response"
     ],
-    "validation_patience": 1,
+    "validation_patience": 3,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 100,
     "tensorboard_log_dir": "ubuntu_v2_mt_word2vec/logs_dam/"
@@ -120,8 +115,7 @@
     "download": [
       {
         "url": "http://lnsigo.mipt.ru/export/datasets/ubuntu_v2_data_clean.tar.gz",
-        "subdir": "ubuntu_v2_data_clean",
-        "todo": "replace it"
+        "subdir": "ubuntu_v2_data_clean"
       }
     ]
   }

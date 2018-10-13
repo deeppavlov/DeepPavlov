@@ -22,7 +22,7 @@ class SMNNetwork(TensorflowBaseMatchingModel):
 
     Args:
         max_num_utterance (int): A number of ``context`` turns in data samples.
-        max_sequence_length(int): A maximum length of text sequences in tokens.
+        max_sequence_length (int): A maximum length of text sequences in tokens.
             Longer sequences will be truncated and shorter ones will be padded.
         learning_rate (float): Initial learning rate.
         emb_matrix (np.ndarray): An embeddings matrix to initialize an embeddings layer of a model.
@@ -85,13 +85,13 @@ class SMNNetwork(TensorflowBaseMatchingModel):
 
         all_utterance_embeddings = tf.nn.embedding_lookup(word_embeddings, self.utterance_ph)
         response_embeddings = tf.nn.embedding_lookup(word_embeddings, self.response_ph)
-        sentence_GRU = tf.nn.rnn_cell.GRUCell(self.rnn_units, kernel_initializer=tf.orthogonal_initializer())
+        sentence_GRU = tf.nn.rnn_cell.GRUCell(self.word_embedding_size, kernel_initializer=tf.orthogonal_initializer())
         all_utterance_embeddings = tf.unstack(all_utterance_embeddings, num=self.max_num_utterance,
                                               axis=1)  # list of self.max_num_utterance tensors with shape (?, 200)
         all_utterance_len = tf.unstack(self.all_utterance_len_ph, num=self.max_num_utterance, axis=1)
-        A_matrix = tf.get_variable('A_matrix_v', shape=(self.rnn_units, self.rnn_units),
+        A_matrix = tf.get_variable('A_matrix_v', shape=(self.word_embedding_size, self.word_embedding_size),
                                    initializer=tf.contrib.layers.xavier_initializer(), dtype=tf.float32)
-        final_GRU = tf.nn.rnn_cell.GRUCell(self.rnn_units, kernel_initializer=tf.orthogonal_initializer())
+        final_GRU = tf.nn.rnn_cell.GRUCell(self.word_embedding_size, kernel_initializer=tf.orthogonal_initializer())
         reuse = None
 
         response_GRU_embeddings, _ = tf.nn.dynamic_rnn(sentence_GRU,
