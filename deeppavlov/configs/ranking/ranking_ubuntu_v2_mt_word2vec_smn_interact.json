@@ -87,7 +87,7 @@
         "name": "matching_predictor",
         "model": "#model",
         "num_context_turns": "#model.num_context_turns",
-        "max_sequence_length": "#model.max_sequence_length"
+        "max_sequence_length": 50
       }
     ],
     "out": [

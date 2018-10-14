@@ -40,7 +40,7 @@ class MatchingPredictor(Component):
                  max_sequence_length: int = 50,
                  *args, **kwargs) -> None:
 
-        super(MatchingPredictor, self).__init__(*args, **kwargs)
+        super(MatchingPredictor, self).__init__()
 
         self.num_context_turns = num_context_turns
         self.max_sequence_length = max_sequence_length
@@ -103,15 +103,12 @@ class MatchingPredictor(Component):
             lens.append(len(context[context != 0]))
         batch_buffer_response_len += lens
 
-        print( batch_buffer_context, batch_buffer_context_len, batch_buffer_response, batch_buffer_response_len)
-
         feed_dict = {
             self.model.utterance_ph: np.array(batch_buffer_context),
             self.model.all_utterance_len_ph: np.array(batch_buffer_context_len),
             self.model.response_ph: np.array(batch_buffer_response),
             self.model.response_len_ph: np.array(batch_buffer_response_len)
         }
-        print(feed_dict)
         yp = self.model.sess.run(self.model.y_pred, feed_dict=feed_dict)
         y_pred = yp[:, 1]
 
