@@ -1,0 +1,122 @@
+{
+  "dataset_reader": {
+    "name": "ubuntu_v2_mt_reader",
+    "data_path": "./ubuntu_v2_data_clean",
+    "num_context_turns": 10,
+    "padding": "pre"
+  },
+  "dataset_iterator": {
+    "name": "siamese_iterator",
+    "seed": 243
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "name": "split_tokenizer",
+        "id": "tok_1"
+      },
+      {
+        "name": "simple_vocab",
+        "special_tokens": ["<PAD>"],
+        "fit_on": ["x"],
+        "id": "vocab_1",
+        "save_path": "ubuntu_v2_mt_word2vec/vocabs/int_tok.dict",
+        "load_path": "ubuntu_v2_mt_word2vec/vocabs/int_tok.dict"
+      },
+      {
+        "fit_on": ["x"],
+        "retrain": false,
+        "id": "word2vec_vectorizer",
+        "name": "word2vec_vectorizer",
+        "iter": 10,
+        "window": 10,
+        "sg": 1,
+        "filters": "\t\n,",
+        "workers": 8,
+        "save_path": "ubuntu_v2_mt_word2vec/embeddings/w2v.model",
+        "load_path": "ubuntu_v2_mt_word2vec/embeddings/w2v.model",
+        "notes": "We need to train word2vec embeddings before using in emb_mat_assembler"
+      },
+      {
+        "id": "preproc",
+        "name": "ubuntu_v2_preprocessor",
+        "save_path": "ubuntu_v2_mt_word2vec/preproc/tok.dict",
+        "load_path": "ubuntu_v2_mt_word2vec/preproc/tok.dict",
+        "num_ranking_samples": 10,
+        "num_context_turns": 10,
+        "max_sequence_length": 50,
+        "embedding_dim": 200,
+        "fit_on": ["x"],
+        "in": ["x"],
+        "out": ["x_proc"],
+        "tokenizer": {
+          "ref": "tok_1",
+          "notes": "use defined tokenizer"
+        },
+        "vocab": {
+          "ref": "vocab_1",
+          "notes": "use vocab built for tokenized data"
+        }
+      },
+      {
+        "id": "embeddings",
+        "name": "emb_mat_assembler",
+        "embedder": "#word2vec_vectorizer",
+        "vocab": "#vocab_1"
+      },
+      {
+        "in": ["x_proc"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "name": "dam_nn",
+        "stack_num": 5,
+        "num_context_turns": "#preproc.num_context_turns",
+        "max_sequence_length": "#preproc.max_sequence_length",
+        "embedding_dim": "#word2vec_vectorizer.dim",
+        "emb_matrix": "#embeddings.emb_mat",
+        "seed": 243,
+        "learning_rate": 1e-3,
+        "batch_size": 100,
+        "save_path": "ubuntu_v2_mt_word2vec/model_dam/model",
+        "load_path": "ubuntu_v2_mt_word2vec/model_dam/model"
+      }
+    ],
+    "out": [
+      "y_predicted"
+    ]
+  },
+  "train": {
+    "epochs": 8,
+    "batch_size": 100,
+    "pytest_max_batches": 2,
+    "train_metrics": [],
+    "metrics": [
+      "r@1",
+      "r@2",
+      "r@5",
+      "rank_response"
+    ],
+    "validation_patience": 3,
+    "val_every_n_epochs": 1,
+    "log_every_n_batches": 100,
+    "tensorboard_log_dir": "ubuntu_v2_mt_word2vec/logs_dam/"
+  },
+  "metadata": {
+    "requirements": [
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/gensim.txt"
+    ],
+    "labels": {
+      "telegram_utils": "SiameseModel",
+      "server_utils": "Ranker"
+    },
+    "download": [
+      {
+        "url": "http://lnsigo.mipt.ru/export/datasets/ubuntu_v2_data_clean.tar.gz",
+        "subdir": "ubuntu_v2_data_clean"
+      }
+    ]
+  }
+}
