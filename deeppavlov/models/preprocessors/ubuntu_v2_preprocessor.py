@@ -80,9 +80,12 @@ class UbuntuV2Preprocessor(Estimator):
 
         super().__init__(load_path=self.load_path, save_path=self.save_path, **kwargs)
 
+    def destroy(self) -> None:
+        pass
+
     def fit(self, x: List[List[str]]) -> None:
-            x_tok = [self.tokenizer(el) for el in x]
-            self.vocab.fit([el for x in x_tok for el in x])
+        x_tok = [self.tokenizer(el) for el in x]
+        self.vocab.fit([el for x in x_tok for el in x])
 
     def __call__(self, x: Union[List[List[str]], List[str]]) -> Iterable[List[List[np.ndarray]]]:
         if len(x) == 0 or isinstance(x[0], str):

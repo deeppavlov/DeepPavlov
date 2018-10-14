@@ -151,3 +151,6 @@ class Word2vecVectorizer(Estimator):
 
     def __iter__(self) -> Generator:
         yield from self.model.wv.vocab
+
+    def destroy(self):
+        del self.model
