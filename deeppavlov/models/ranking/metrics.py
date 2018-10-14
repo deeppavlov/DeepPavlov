@@ -45,3 +45,4 @@ def recall_at_k_insQA(y_true, y_pred, k):
             if predictions[i][j] in np.arange(labels[i][j]):
                 flags[i][j] = 1.
     return np.mean((np.sum(flags, -1) >= 1.).astype(float))
+
