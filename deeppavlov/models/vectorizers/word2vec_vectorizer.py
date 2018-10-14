@@ -37,7 +37,14 @@ class Word2vecVectorizer(Estimator):
     Word2vec vectorizer
 
     Parameters:
-        # TODO: add args descriptions
+        retrain (bool): True if needed to retrain existing embeddings, False otherwise.
+        filters (str): a string where each element is a character that will be filtered from the texts.
+        iter (int): Number of iterations (epochs) over the corpus.
+        dim (int): Dimensionality of the word vectors.
+        sg (int): Training algorithm: 1 for skip-gram; otherwise CBOW.
+        window (int): Maximum distance between the current and predicted word within a sentence.
+        min_count (int): Ignores all words with total frequency lower than this.
+        workers (int): Use these many worker threads to train the model (=faster training with multicore machines).
         save_path: path to save the model
         load_path: path to load the model
 
