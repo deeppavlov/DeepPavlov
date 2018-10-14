@@ -119,7 +119,7 @@ Leadearboad <https://rajpurkar.github.io/SQuAD-explorer/>`__.
 .. _`BiDAF + Self Attention + ELMo`: https://arxiv.org/abs/1802.05365
 
 SQuAD with contexts without correct answers
-~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In the case when answer is not necessary present in given context we have :config:`squad_noans <squad/multi_squad_noans.json>`
 config with pretrained model. This model outputs empty string in case if there is no answer in context.
