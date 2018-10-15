@@ -14,28 +14,12 @@
 
 
 import numpy as np
-from typing import List, Tuple, Union
+from typing import List, Tuple
 
-import sklearn.metrics
+from sklearn.metrics import log_loss
 
 from deeppavlov.core.common.metrics_registry import register_metric
 from deeppavlov.models.classifiers.utils import labels2onehot
-
-
-@register_metric('log_loss')
-def log_loss(y_true: Union[List[List[float]], List[List[int]], np.ndarray],
-             y_predicted: Union[List[List[float]], List[List[int]], np.ndarray]) -> float:
-    """
-    Calculate log loss
-
-    Args:
-        y_true:  true binary labels (one-hotted)
-        y_predicted: predicted probabilities
-
-    Returns:
-        log loss
-    """
-    return sklearn.metrics.log_loss(y_true, y_predicted)
 
 
 @register_metric('classification_log_loss')
@@ -57,4 +41,19 @@ def classification_log_loss(y_true: List[list], y_predicted: List[Tuple[list, di
     y_true_one_hot = labels2onehot(y_true, classes)
     y_pred_probas = [list(y_predicted[i][1].values()) for i in range(len(y_predicted))]
 
-    return sklearn.metrics.log_loss(y_true_one_hot, y_pred_probas)
+    return log_loss(y_true_one_hot, y_pred_probas)
+
+
+@register_metric('log_loss')
+def sk_log_loss(y_true, y_predicted):
+    """
+    Calculates log loss.
+
+    Args:
+        y_true: list of true values
+        y_predicted: list of predicted values
+
+    Returns:
+        Log loss
+    """
+    return log_loss(y_true, y_predicted)
