@@ -102,19 +102,20 @@ class FasttextEmbedder(Component, Serializable):
         return model
 
     @overrides
-    def __call__(self, batch: List[List[str]], *args, **kwargs) -> List[Union[list, np.ndarray]]:
+    def __call__(self, batch: List[List[str]], mean: bool = None, *args, **kwargs) -> List[Union[list, np.ndarray]]:
         """
         Embed sentences from batch
 
         Args:
             batch: list of tokenized text samples
+            mean: whether to return mean token embedding (valid only for this call)
             *args: arguments
             **kwargs: arguments
 
         Returns:
             embedded batch
         """
-        batch = [self._encode(sample) for sample in batch]
+        batch = [self._encode(sample, mean) for sample in batch]
         if self.pad_zero:
             batch = zero_pad(batch)
         return batch
@@ -128,12 +129,13 @@ class FasttextEmbedder(Component, Serializable):
         """
         yield from self.model.get_words()
 
-    def _encode(self, tokens: List[str]) -> Union[List[np.ndarray], np.ndarray]:
+    def _encode(self, tokens: List[str], mean: bool) -> Union[List[np.ndarray], np.ndarray]:
         """
         Embed one text sample
 
         Args:
             tokens: tokenized text sample
+            mean: whether to return mean token embedding (valid only for this call)
 
         Returns:
             list of embedded tokens or array of mean values
@@ -150,10 +152,17 @@ class FasttextEmbedder(Component, Serializable):
                 self.tok2emb[t] = emb
             embedded_tokens.append(emb)
 
-        if self.mean:
-            filtered = [et for et in embedded_tokens if np.any(et)]
-            if filtered:
-                return np.mean(filtered, axis=0)
-            return np.zeros(self.dim, dtype=np.float32)
+        if mean is None:
+            if self.mean:
+                filtered = [et for et in embedded_tokens if np.any(et)]
+                if filtered:
+                    return np.mean(filtered, axis=0)
+                return np.zeros(self.dim, dtype=np.float32)
+        else:
+            if mean:
+                filtered = [et for et in embedded_tokens if np.any(et)]
+                if filtered:
+                    return np.mean(filtered, axis=0)
+                return np.zeros(self.dim, dtype=np.float32)
 
         return embedded_tokens

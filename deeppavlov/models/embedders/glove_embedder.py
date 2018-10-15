@@ -116,7 +116,7 @@ class GloVeEmbedder(Component, Serializable):
         yield from self.model.vocab
 
     @overrides
-    def __call__(self, batch: List[List[str]], *args, **kwargs) -> List[Union[list, np.ndarray]]:
+    def __call__(self, batch: List[List[str]], mean: bool = None, *args, **kwargs) -> List[Union[list, np.ndarray]]:
         """
         Embed sentences from batch
 
@@ -131,12 +131,12 @@ class GloVeEmbedder(Component, Serializable):
         """
         embedded = []
         for n, sample in enumerate(batch):
-            embedded.append(self._encode(sample))
+            embedded.append(self._encode(sample, mean))
         if self.pad_zero:
             embedded = zero_pad(embedded)
         return embedded
 
-    def _encode(self, tokens: List[str]) -> Union[List[np.ndarray], np.ndarray]:
+    def _encode(self, tokens: List[str], mean) -> Union[List[np.ndarray], np.ndarray]:
         """
         Embed one text sample
 
@@ -159,10 +159,17 @@ class GloVeEmbedder(Component, Serializable):
                 self.tok2emb[t] = emb
             embedded_tokens.append(emb)
 
-        if self.mean:
-            filtered = [et for et in embedded_tokens if np.any(et)]
-            if filtered:
-                return np.mean(filtered, axis=0)
-            return np.zeros(self.dim, dtype=np.float32)
+        if mean is None:
+            if self.mean:
+                filtered = [et for et in embedded_tokens if np.any(et)]
+                if filtered:
+                    return np.mean(filtered, axis=0)
+                return np.zeros(self.dim, dtype=np.float32)
+        else:
+            if mean:
+                filtered = [et for et in embedded_tokens if np.any(et)]
+                if filtered:
+                    return np.mean(filtered, axis=0)
+                return np.zeros(self.dim, dtype=np.float32)
 
         return embedded_tokens
