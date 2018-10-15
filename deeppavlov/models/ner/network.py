@@ -101,6 +101,7 @@ class NerNetwork(TFModel):
                  seed: int = None,
                  lr_drop_patience: int = 5,
                  lr_drop_value: float = 0.1,
+                 train_from_scratch=False,
                  **kwargs) -> None:
         tf.set_random_seed(seed)
         np.random.seed(seed)
@@ -166,7 +167,8 @@ class NerNetwork(TFModel):
         self.sess = tf.Session()   # TODO: add sess_config
         self.sess.run(tf.global_variables_initializer())
         super().__init__(**kwargs)
-        self.load()
+        if not train_from_scratch:
+            self.load()
 
     def _add_training_placeholders(self, dropout_keep_prob, learning_rate):
         self.learning_rate_ph = tf.placeholder_with_default(learning_rate, shape=[], name='learning_rate')
