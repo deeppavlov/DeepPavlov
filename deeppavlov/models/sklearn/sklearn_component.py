@@ -74,7 +74,7 @@ class SklearnComponent(Estimator):
             self.pipe_params[required] = self.model_params.pop(required, None)
 
         self.load()
-        self.infer_method = infer_method
+        self.infer_method = getattr(self.model, infer_method)
 
     def fit(self, *args) -> None:
         """
@@ -128,15 +128,15 @@ class SklearnComponent(Estimator):
         x_features = self.compose_input_data(args)
 
         try:
-            predictions = getattr(self.model, self.infer_method)(x_features)
+            predictions = self.infer_method(x_features)
         except:
             try:
                 if issparse(x_features):
                     log.info("Converting input for model {} to dense array".format(self.model_class))
-                    predictions = getattr(self.model, self.infer_method)(x_features.todense())
+                    predictions = self.infer_method(x_features.todense())
                 else:
                     log.info("Converting input for model {} to sparse array".format(self.model_class))
-                    predictions = getattr(self.model, self.infer_method)(csr_matrix(x_features))
+                    predictions = self.infer_method(csr_matrix(x_features))
             except:
                 raise ConfigError("Can not infer on the given data".format(self.model_class))
 
