@@ -144,15 +144,11 @@ def get_available_gpus(num_gpus=None, gpu_select=None, gpu_fraction=1.0):
     Returns:
         available_gpu: list of ints; List with available gpu numbers
     """
-    # check that num_gpus is not 0
-    if num_gpus == 0:
-        raise GpuError("The number of required cards is equal to zero. Please check 'num_gpus' parameter")
-
     # Try connect with NVIDIA drivers
     try:
         py3nvml.nvmlInit()
     except Exception:
-        raise GpuError("Couldn't connect to nvml drivers. Check they are installed correctly.")
+        raise GpuError("Couldn't connect to nvidia drivers. Check they are installed correctly.")
 
     numdevices = py3nvml.nvmlDeviceGetCount()
     gpu_free = [False] * numdevices
