@@ -31,14 +31,15 @@ class PipeGen:
     The class implements the generator of standard DeepPavlov configs.
     """
 
-    def __init__(self, config: Union[Dict, str], save_path: str, n=10, test_mode=False, cross_val: bool = False):
+    def __init__(self, config: Union[Dict, str], save_path: str, sample_num=10, test_mode=False,
+                 cross_val: bool = False):
         """
         Initialize generator with input params.
 
         Args:
             config: str or dict; path to config file with search pattern, or dict with it config.
             save_path: str; path to folder with pipelines checkpoints.
-            n: int; determines the number of generated pipelines, if hyper_search == random.
+            sample_num: int; determines the number of generated pipelines, if hyper_search == random.
             test_mode: bool; trigger that determine logic of changing save and loads paths in config.
         """
         if isinstance(config, dict):
@@ -62,7 +63,7 @@ class PipeGen:
         self.cross_val = cross_val
         self.length = None
         self.pipes = []
-        self.N = n
+        self.N = sample_num
 
         self._check_component_name()
         self.get_len()

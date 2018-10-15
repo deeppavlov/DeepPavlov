@@ -291,7 +291,7 @@ class PipelineManager:
         Initializes the pipeline generator and runs the experiment. Creates a report after the experiments.
         """
         # create the pipeline generator
-        self.pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, test_mode=False,
+        self.pipeline_generator = PipeGen(self.config_path, self.save_path, sample_num=self.sample_num, test_mode=False,
                                           cross_val=self.cross_validation)
         self.gen_len = self.pipeline_generator.length
 
@@ -353,7 +353,7 @@ class PipelineManager:
         Initializes the pipeline generator with tiny data and runs the test of experiment.
         """
         # create the pipeline generator
-        pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, test_mode=True)
+        pipeline_generator = PipeGen(self.config_path, self.save_path, sample_num=self.sample_num, test_mode=True)
         len_gen = pipeline_generator.length
 
         # Start generating pipelines configs
