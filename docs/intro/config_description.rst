@@ -153,13 +153,13 @@ Train Parameters
 .. code:: python
 
     "metrics": [
-      "roc_auc",
+      "f1",
       {
         "name": "accuracy",
         "inputs": ["y", "y_labels"]
       },
       {
-        "name": "f1",
+        "name": "roc_auc",
         "inputs": ["y", "y_probabilities"]
       }
     ]
