@@ -26,6 +26,7 @@ from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.data.utils import download
+from deeppavlov.core.common.errors import ConfigError
 
 logger = logging.getLogger(__name__)
 
@@ -37,32 +38,47 @@ class ODQADataReader(DatasetReader):
 
     """
 
-    def read(self, data_path: Union[Path, str], db_url: Optional[str] = None, *args, **kwargs) -> None:
-        """Build a SQLite database from provided files, download SQLite database from a provided URL, or do nothing.
+    def read(self, data_path: Union[Path, str], db_url: Optional[str] = None, *args,
+             **kwargs) -> None:
+        """Build a SQLite database from provided files, download SQLite database from a provided URL,
+         or do nothing.
 
         Args:
             data_path: a directory/file with texts to create a database from
             db_url: path to a database url
+            kwargs:
+                save_path: a path where a database should be saved to, or path to a ready database
+                dataset_format: initial data format; should be selected from ['txt', 'wiki', 'json']
 
         Returns:
             None
 
         """
         logger.info('Reading files...')
-        save_path = expand_path(kwargs['save_path'])
-        if save_path.exists() and Path(save_path.parent / '.done').exists():
+        try:
+            save_path = expand_path(kwargs['save_path'])
+        except KeyError:
+            raise ConfigError(
+                f'\"save_path\" attribute should be set for {self.__class__.__name__}\
+                 in the JSON config.')
+        if save_path.exists() and save_path.with_suffix(f'{save_path.suffix}.done').exists():
             return
+        try:
+            dataset_format = kwargs['dataset_format']
+        except KeyError:
+            raise ConfigError(
+                f'\"dataset_format\" attribute should be set for {self.__class__.__name__}\
+                 in the JSON config.')
+
+        save_path.parent.mkdir(parents=True, exist_ok=True)
 
         if db_url:
-            if Path(save_path).is_file():
-                download_dir = save_path.parent
-            else:
-                download_dir = save_path
+            download_dir = save_path.parent
             logger.info(f'Downloading database from {db_url} to {download_dir}')
             download(download_dir, db_url, force_download=False)
             return
 
-        self._build_db(save_path, kwargs['dataset_format'], expand_path(data_path))
+        self._build_db(save_path, dataset_format, expand_path(data_path))
 
     def iter_files(self, path: Union[Path, str]) -> Generator[Path, Any, Any]:
         """Iterate over folder with files or a single file and generate file paths.
@@ -89,7 +105,8 @@ class ODQADataReader(DatasetReader):
         else:
             raise RuntimeError("Path doesn't exist: {}".format(path))
 
-    def _build_db(self, save_path: Union[Path, str], dataset_format: str, data_path: Union[Path, str],
+    def _build_db(self, save_path: Union[Path, str], dataset_format: str,
+                  data_path: Union[Path, str],
                   num_workers: int = 8) -> None:
         """Build a SQLite database in parallel and save it to a pointed path.
 
@@ -107,7 +124,7 @@ class ODQADataReader(DatasetReader):
             None
 
         """
-        done_path = Path(save_path.parent / '.done')
+        done_path = save_path.with_suffix(f'{save_path.suffix}.done')
 
         if Path(save_path).exists():
             Path(save_path).unlink()
@@ -160,7 +177,7 @@ class ODQADataReader(DatasetReader):
              a list with tuple of normalized file name and file contents
 
         """
-        with open(fpath) as fin:
+        with open(fpath, encoding='utf-8') as fin:
             text = fin.read()
             normalized_text = unicodedata.normalize('NFD', text)
             return [(fpath.name, normalized_text)]
@@ -178,7 +195,7 @@ class ODQADataReader(DatasetReader):
 
         """
         docs = []
-        with open(fpath) as fin:
+        with open(fpath, encoding='utf-8') as fin:
             for line in fin:
                 data = json.loads(line)
                 for doc in data:
@@ -201,7 +218,7 @@ class ODQADataReader(DatasetReader):
 
         """
         docs = []
-        with open(fpath) as fin:
+        with open(fpath, encoding='utf-8') as fin:
             for line in fin:
                 doc = json.loads(line)
                 if not doc:

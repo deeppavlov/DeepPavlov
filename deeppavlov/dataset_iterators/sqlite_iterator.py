@@ -34,7 +34,7 @@ class SQLiteDataIterator(DataFittingIterator):
     Get document ids and document.
 
     Args:
-        load_path: a path to URL or local DB file
+        load_path: a path to local DB file
         batch_size: a number of samples in a single batch
         shuffle: whether to shuffle data during batching
         seed: random seed for data shuffling
@@ -50,8 +50,8 @@ class SQLiteDataIterator(DataFittingIterator):
 
     """
 
-    def __init__(self, load_path: Union[str, Path], batch_size: int = None,
-                 shuffle: bool = None, seed: int = None, **kwargs):
+    def __init__(self, load_path: Union[str, Path], batch_size: Optional[int] = None,
+                 shuffle: Optional[bool] = None, seed: Optional[int] = None, **kwargs):
 
         load_path = str(expand_path(load_path))
         logger.info("Connecting to database, path: {}".format(load_path))

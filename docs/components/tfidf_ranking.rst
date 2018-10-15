@@ -13,63 +13,14 @@ The default ranker implementation takes a batch of queries as input and returns 
 
 Text for the output ids can be further extracted with :class:`~deeppavlov.vocabs.wiki_sqlite.WikiSQLiteVocab` class.
 
-Config
-======
+Configuration
+=============
 
 Default ranker config for **English** language is
 :config:`doc_retrieval/en_ranker_tfidf_wiki.json <doc_retrieval/en_ranker_tfidf_wiki.json>`
 
 Default ranker config for **Russian** language is
 :config:`doc_retrieval/ru_ranker_tfidf_wiki.json <doc_retrieval/ru_ranker_tfidf_wiki.json>`
-
-Config Structure
-----------------
-
--  **dataset_reader** - downloads data, creates SQLite database from data
-
-   -  **data_path** - a directory/file with texts to create a database from
-   -  **db_url** - an optional URL to download a database file from
-   -  **save_path** - a path where the ready SQLite database should be stored
-   -  **dataset_format** - a data format, should be selected from ['txt', 'json', 'wiki']
-
--  **dataset_iterator** - downloads Wikipidia DB, creates batches for
-   ranker fitting
-
-   -  **load_path** - a path to URL or local DB file
-   -  **batch_size** - a number of samples in a single batch
-   -  **seed** - random seed for data shuffling
-   -  **shuffle** - whether to perform shuffling when iterating over DB or not
-
--  **chainer** - pipeline manager
-
-   -  **in** - pipeline input data (questions)
-   -  **out** - pipeline output data (Wikipedia articles ids)
-
--  **vectorizer** - a vectorizer class
-
-  -  **fit_on_batch** - fit the vectorizer on batches of Wikipedia articles
-  -  **save_path** - a path to serialize a vectorizer to
-  -  **load_path** - a path to load a vectorizer from
-  -  **tokenizer** - a tokenizer class
-
-     -  **lemmas** - whether to lemmatize tokens or not
-     -  **ngram_range** - ngram range for **vectorizer** features
-
--  **tfidf_ranker** - the ranker class
-
-   -  **top_n** - a number of document to return (when n=1 the most
-      relevant document is returned)
-   -  **in** - ranker input data (queries)
-   -  **out** - ranker output data (Wikipedia articles ids)
-   -  **fit_on_batch** - pass method to a vectorizer
-
-
--  **train** - parameters for vectorizer fitting
-
-   -  **validate_best**- is ingnored, any value
-   -  **test_best** - is ignored, any value
-   -  **batch_size** - how many Wikipedia articles should return
-      the **dataset_iterator** in a single batch
 
 Running the Ranker
 ==================
@@ -144,7 +95,7 @@ enwiki_tfidf_matrix.npz
 
 **enwiki_tfidf_matrix.npz** is a full Wikipedia tf-idf matrix of
 size **hash_size x number of documents** which is
-**2**24 x 5180368**. This matrix is built with
+|2**24| x 5180368. This matrix is built with
 :class:`~deeppavlov.models.vectorizers.hashing_tfidf_vectorizer.HashingTfIdfVectorizer` class.
 
 ruwiki.db
@@ -168,7 +119,7 @@ ruwiki_tfidf_matrix.npz
 
 **ruwiki_tfidf_matrix.npz** is a full Wikipedia tf-idf matrix of
 size **hash_size x number of documents** which is
-**2**24 x 1463888**. This matrix is built with
+|2**24| x 1463888. This matrix is built with
 :class:`~deeppavlov.models.vectorizers.hashing_tfidf_vectorizer.HashingTfIdfVectorizer` class.
 class.
 
@@ -194,4 +145,6 @@ References
 
 .. _`DrQA`: https://github.com/facebookresearch/DrQA/
 .. _`WikiExtractor`: https://github.com/attardi/wikiextractor
+
+.. |2**24| replace:: 2\ :sup:`24`
 

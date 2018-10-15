@@ -26,8 +26,7 @@ class WikiSQLiteVocab(SQLiteDataIterator):
     """Get content from SQLite database by document ids.
 
     Args:
-        data_url: an URL where to download a DB from
-        data_dir:  a directory where to save downloaded DB to
+        load_path: a path to local DB file
         join_docs: whether to join extracted docs with ' ' or not
         shuffle: whether to shuffle data or not
 
