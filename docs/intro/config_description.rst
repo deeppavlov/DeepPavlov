@@ -177,14 +177,13 @@ _______
 
 | The first metric in the list is used for early stopping.
 |
-| Each metric can be described as a json object with ``name`` and ``inputs`` parameters, where ``name``
+| Each metric can be described as a JSON object with ``name`` and ``inputs`` properties, where ``name``
   is a registered name of a metric function and ``inputs`` is a list of parameter names from chainer's
   inner memory that will be passed to the metric function.
 |
 | If a metric is described as a single string, this string is interpreted as a registered name.
 |
 | Default value for ``inputs`` parameter is a concatenation of chainer's ``in_y`` and ``out`` parameters.
-
 
 
 DatasetReader
