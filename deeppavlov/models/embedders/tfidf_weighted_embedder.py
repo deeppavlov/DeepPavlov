@@ -172,7 +172,7 @@ class TfidfWeightedEmbedder(Component):
         return [" ".join(tokens) for tokens in batch]
 
     @overrides
-    def __call__(self, batch: List[List[str]], tags_batch: Optional[List[List[str]]] = None,
+    def __call__(self, batch: List[List[str]], tags_batch: Optional[List[List[str]]] = None, mean: bool = None,
                  *args, **kwargs) -> List[Union[list, np.ndarray]]:
         """
         Infer on the given data
@@ -180,6 +180,7 @@ class TfidfWeightedEmbedder(Component):
         Args:
             batch: tokenized text samples
             tags_batch: optional batch of corresponding tags
+            mean: whether to return mean token embedding (does not depend on self.mean)
             *args: additional arguments
             **kwargs: additional arguments
 
@@ -190,23 +191,24 @@ class TfidfWeightedEmbedder(Component):
         if self.tags_vocab:
             if tags_batch is None:
                 raise ConfigError("TfidfWeightedEmbedder got 'tags_vocab_path' but did not get batch woith tags.")
-            batch = [self._tags_encode(sample, tags_sample) for sample, tags_sample in zip(batch, tags_batch)]
+            batch = [self._tags_encode(sample, tags_sample, mean=mean) for sample, tags_sample in zip(batch, tags_batch)]
         else:
             if tags_batch:
                 raise ConfigError("TfidfWeightedEmbedder got tags batch, but 'tags_vocab_path' is empty.")
-            batch = [self._encode(sample) for sample in batch]
+            batch = [self._encode(sample, mean=mean) for sample in batch]
 
         if self.pad_zero:
             batch = zero_pad(batch)
 
         return batch
 
-    def _encode(self, tokens: List[str]) -> Union[List[np.ndarray], np.ndarray]:
+    def _encode(self, tokens: List[str], mean: bool) -> Union[List[np.ndarray], np.ndarray]:
         """
         Embed one text sample
 
         Args:
             tokens: tokenized text sample
+            mean: whether to return mean token embedding (does not depend on self.mean)
 
         Returns:
             list of embedded tokens or array of mean values
@@ -227,10 +229,16 @@ class TfidfWeightedEmbedder(Component):
 
         embedded_tokens = np.array(self.embedder([tokens]))[0, :, :]
 
-        if self.mean:
-            embedded_tokens = np.average(embedded_tokens, weights=weights, axis=0)
+        if mean is None:
+            if self.mean:
+                embedded_tokens = np.average(embedded_tokens, weights=weights, axis=0)
+            else:
+                embedded_tokens = np.array([weights[i] * embedded_tokens[i] for i in range(len(tokens))])
         else:
-            embedded_tokens = np.array([weights[i] * embedded_tokens[i] for i in range(len(tokens))])
+            if mean:
+                embedded_tokens = np.average(embedded_tokens, weights=weights, axis=0)
+            else:
+                embedded_tokens = np.array([weights[i] * embedded_tokens[i] for i in range(len(tokens))])
 
         return embedded_tokens
 
@@ -249,13 +257,14 @@ class TfidfWeightedEmbedder(Component):
         weight = max(1.0 / (1.0 + log_count - log_base_count), self.min_idf_weight)
         return weight
 
-    def _tags_encode(self, tokens: List[str], tags: List[str]) -> Union[List[np.ndarray], np.ndarray]:
+    def _tags_encode(self, tokens: List[str], tags: List[str], mean: bool) -> Union[List[np.ndarray], np.ndarray]:
         """
         Embed one text sample
 
         Args:
             tokens: tokenized text sample
-            pos: tokenized pos sample
+            tags: tokenized tags sample
+            mean: whether to return mean token embedding (does not depend on self.mean)
 
         Returns:
             list of embedded tokens or array of mean values
@@ -279,11 +288,17 @@ class TfidfWeightedEmbedder(Component):
         weights = np.multiply(weights, tags_weights)
         if sum(weights) == 0:
             weights = np.ones(len(tokens))
-            
-        if self.mean:
-            embedded_tokens = np.average(embedded_tokens, weights=weights, axis=0)
+
+        if mean is None:
+            if self.mean:
+                embedded_tokens = np.average(embedded_tokens, weights=weights, axis=0)
+            else:
+                embedded_tokens = np.array([weights[i] * embedded_tokens[i] for i in range(len(tokens))])
         else:
-            embedded_tokens = np.array([weights[i] * embedded_tokens[i] for i in range(len(tokens))])
+            if mean:
+                embedded_tokens = np.average(embedded_tokens, weights=weights, axis=0)
+            else:
+                embedded_tokens = np.array([weights[i] * embedded_tokens[i] for i in range(len(tokens))])
 
         return embedded_tokens
 

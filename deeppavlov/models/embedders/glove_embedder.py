@@ -122,7 +122,7 @@ class GloVeEmbedder(Component, Serializable):
 
         Args:
             batch: list of tokenized text samples
-            mean: whether to return mean embedding of tokens per sample
+            mean: whether to return mean token embedding (does not depend on self.mean)
             *args: arguments
             **kwargs: arguments
 
@@ -142,7 +142,7 @@ class GloVeEmbedder(Component, Serializable):
 
         Args:
             tokens: tokenized text sample
-            mean: whether to return mean embedding of tokens per sample
+            mean: whether to return mean token embedding (does not depend on self.mean)
 
         Returns:
             list of embedded tokens or array of mean values

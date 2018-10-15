@@ -108,7 +108,7 @@ class FasttextEmbedder(Component, Serializable):
 
         Args:
             batch: list of tokenized text samples
-            mean: whether to return mean token embedding (valid only for this call)
+            mean: whether to return mean token embedding (does not depend on self.mean)
             *args: arguments
             **kwargs: arguments
 
@@ -135,7 +135,7 @@ class FasttextEmbedder(Component, Serializable):
 
         Args:
             tokens: tokenized text sample
-            mean: whether to return mean token embedding (valid only for this call)
+            mean: whether to return mean token embedding (does not depend on self.mean)
 
         Returns:
             list of embedded tokens or array of mean values
