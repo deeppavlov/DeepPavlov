@@ -22,10 +22,13 @@ from deeppavlov.core.common.metrics_registry import register_metric
 
 
 @register_metric('exact_match')
-def exact_match(y_true: List[Tuple[List[str], List[int]]], y_predicted: List[Tuple[str, int, float]]):
-    """ Calculates Exact Match score between y_true and y_predicted
-        EM score uses the best matching y_true answer:
-            if y_pred equal at least to one answer in y_true then EM = 1, else EM = 0
+def exact_match(y_true: List[Tuple[List[str], List[int]]], y_predicted: List[Tuple[str, int, float]]) -> float:
+    """Calculates Exact Match score between y_true and y_predicted
+
+    EM score uses the best matching y_true answer:
+       if y_pred equal at least to one answer in y_true then EM = 1, else EM = 0
+
+    The same as in SQuAD-v2.0
 
     Args:
         y_true: list of tuples (y_true_text, y_true_start), y_true_text and y_true_start are lists of len num_answers
@@ -42,9 +45,12 @@ def exact_match(y_true: List[Tuple[List[str], List[int]]], y_predicted: List[Tup
 
 
 @register_metric('squad_f1')
-def squad_f1(y_true: List[Tuple[List[str], List[int]]], y_predicted: List[Tuple[str, int, float]]):
-    """ Calculates F-1 score between y_true and y_predicted
-        F-1 score uses the best matching y_true answer
+def squad_f1(y_true: List[Tuple[List[str], List[int]]], y_predicted: List[Tuple[str, int, float]]) -> float:
+    """Calculates F-1 score between y_true and y_predicted
+
+    F-1 score uses the best matching y_true answer
+
+    The same as in SQuAD-v2.0
 
     Args:
         y_true: list of tuples (y_true_text, y_true_start), y_true_text and y_true_start are lists of len num_answers
@@ -59,6 +65,9 @@ def squad_f1(y_true: List[Tuple[List[str], List[int]]], y_predicted: List[Tuple[
         f1s = []
         for gt in ground_truth:
             gt_tokens = normalize_answer(gt).split()
+            if len(gt_tokens) == 0 or len(prediction_tokens) == 0:
+                f1s.append(float(gt_tokens == prediction_tokens))
+                continue
             common = Counter(prediction_tokens) & Counter(gt_tokens)
             num_same = sum(common.values())
             if num_same == 0:

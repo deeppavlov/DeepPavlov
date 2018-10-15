@@ -248,10 +248,13 @@ question in a given context (`SQuAD <https://rajpurkar.github.io/SQuAD-explorer/
 +---------------+-----------------------------------------------------+----------------+-----------------+
 |    Dataset    | Model config                                        |    EM (dev)    |    F-1 (dev)    |
 +---------------+-----------------------------------------------------+----------------+-----------------+
-| `SQuAD-v1.1`_ | :config:`squad <squad/squad.json>`                  |     71.41      |     80.26       |
+| `SQuAD-v1.1`_ | :config:`squad <squad/squad.json>`                  |     71.49      |     80.34       |
 +---------------+-----------------------------------------------------+----------------+-----------------+
-|  SDSJ Task B  | :config:`squad_ru <squad/squad_ru.json>`            |     60.58      |     80.22       |
+|  SDSJ Task B  | :config:`squad_ru <squad/squad_ru.json>`            |     60.62      |     80.04       |
 +---------------+-----------------------------------------------------+----------------+-----------------+
+
+In the case when answer is not necessary present in given context we have :config:`squad_noans <squad/multi_squad_noans.json>`
+model. This model outputs empty string in case if there is no answer in context.
 
 .. _`SQuAD-v1.1`: https://arxiv.org/abs/1606.05250
 

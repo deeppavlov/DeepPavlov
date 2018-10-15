@@ -35,6 +35,9 @@ class SquadModel(TFModel):
     High level architecture:
     Word embeddings -> Contextual embeddings -> Question-Context Attention -> Self-attention -> Pointer Network
 
+    If noans_token flag is True, then special noans_token is added to output of self-attention layer.
+    Pointer Network can select noans_token if there is no answer in given context.
+
     Parameters:
         word_emb: pretrained word embeddings
         char_emb: pretrained char embeddings
@@ -49,13 +52,13 @@ class SquadModel(TFModel):
         min_learning_rate: min learning rate, is used in learning rate decay
         learning_rate_patience: number of epochs without score improvements to decay learning rate
         grad_clip: gradient clipping value
-        weight_decay: weight decay value
+        noans_token: boolean, flags whether to use special no_ans token to make model able not to answer on question
     """
     def __init__(self, word_emb: np.ndarray, char_emb: np.ndarray, context_limit: int = 450, question_limit: int = 150,
                  char_limit: int = 16, train_char_emb: bool = True, char_hidden_size: int = 100,
                  encoder_hidden_size: int = 75, attention_hidden_size: int = 75, keep_prob: float = 0.7,
                  learning_rate: float = 0.5, min_learning_rate: float = 0.001, learning_rate_patience: int = 1,
-                 grad_clip: float = 5.0, weight_decay: float = 1.0, **kwargs):
+                 grad_clip: float = 5.0, noans_token: bool = False, **kwargs) -> None:
 
         self.init_word_emb = word_emb
         self.init_char_emb = char_emb
@@ -71,7 +74,7 @@ class SquadModel(TFModel):
         self.min_learning_rate = min_learning_rate
         self.learning_rate_patience = learning_rate_patience
         self.grad_clip = grad_clip
-        self.weight_decay = weight_decay
+        self.noans_token = noans_token
 
         self.word_emb_dim = self.init_word_emb.shape[1]
         self.char_emb_dim = self.init_char_emb.shape[1]
@@ -98,8 +101,6 @@ class SquadModel(TFModel):
         # Try to load the model (if there are some model files the model will be loaded from them)
         if self.load_path is not None:
             self.load()
-            if self.weight_decay < 1.0:
-                 self.sess.run(self.assign_vars)
 
     def _init_graph(self):
         self._init_placeholders()
@@ -132,6 +133,14 @@ class SquadModel(TFModel):
         self.y2 = tf.one_hot(self.y2_ph, depth=self.context_limit)
         self.y1 = tf.slice(self.y1, [0, 0], [bs, self.c_maxlen])
         self.y2 = tf.slice(self.y2, [0, 0], [bs, self.c_maxlen])
+
+        if self.noans_token:
+            # we use additional 'no answer' token to allow model not to answer on question
+            # later we will add 'no answer' token as first token in context question-aware representation
+            self.y1 = tf.one_hot(self.y1_ph, depth=self.context_limit + 1)
+            self.y2 = tf.one_hot(self.y2_ph, depth=self.context_limit + 1)
+            self.y1 = tf.slice(self.y1, [0, 0], [bs, self.c_maxlen + 1])
+            self.y2 = tf.slice(self.y2, [0, 0], [bs, self.c_maxlen + 1])
 
         with tf.variable_scope("emb"):
             with tf.variable_scope("char"):
@@ -186,36 +195,29 @@ class SquadModel(TFModel):
         with tf.variable_scope("pointer"):
             init = simple_attention(q, self.hidden_size, mask=self.q_mask, keep_prob=self.keep_prob_ph)
             pointer = PtrNet(cell_size=init.get_shape().as_list()[-1], keep_prob=self.keep_prob_ph)
+            if self.noans_token:
+                noans_token = tf.Variable(tf.random_uniform((match.get_shape().as_list()[-1],), -0.1, 0.1), tf.float32)
+                noans_token = tf.nn.dropout(noans_token, keep_prob=self.keep_prob_ph)
+                noans_token = tf.expand_dims(tf.tile(tf.expand_dims(noans_token, axis=0), [bs, 1]), axis=1)
+                match = tf.concat([noans_token, match], axis=1)
+                self.c_mask = tf.concat([tf.ones(shape=(bs, 1), dtype=tf.bool), self.c_mask], axis=1)
             logits1, logits2 = pointer(init, match, self.hidden_size, self.c_mask)
 
         with tf.variable_scope("predict"):
+            max_ans_length = tf.cast(tf.minimum(15, self.c_maxlen), tf.int64)
             outer_logits = tf.exp(tf.expand_dims(logits1, axis=2) + tf.expand_dims(logits2, axis=1))
+            outer_logits = tf.matrix_band_part(outer_logits, 0, max_ans_length)
             outer = tf.matmul(tf.expand_dims(tf.nn.softmax(logits1), axis=2),
                               tf.expand_dims(tf.nn.softmax(logits2), axis=1))
-            outer = tf.matrix_band_part(outer, 0, tf.cast(tf.minimum(15, self.c_maxlen), tf.int64))
+            outer = tf.matrix_band_part(outer, 0, max_ans_length)
             self.yp1 = tf.argmax(tf.reduce_max(outer, axis=2), axis=1)
             self.yp2 = tf.argmax(tf.reduce_max(outer, axis=1), axis=1)
             self.yp_logits = tf.reduce_max(tf.reduce_max(outer_logits, axis=2), axis=1)
+            if self.noans_token:
+                self.yp_score = 1 - tf.nn.softmax(logits1)[:, 0] * tf.nn.softmax(logits2)[:, 0]
             loss_1 = tf.nn.softmax_cross_entropy_with_logits(logits=logits1, labels=self.y1)
             loss_2 = tf.nn.softmax_cross_entropy_with_logits(logits=logits2, labels=self.y2)
             self.loss = tf.reduce_mean(loss_1 + loss_2)
-
-        if self.weight_decay < 1.0:
-            self.var_ema = tf.train.ExponentialMovingAverage(self.weight_decay)
-            ema_op = self.var_ema.apply(tf.trainable_variables())
-            with tf.control_dependencies([ema_op]):
-                self.loss = tf.identity(self.loss)
-
-                self.shadow_vars = []
-                self.global_vars = []
-                for var in tf.global_variables():
-                    v = self.var_ema.average(var)
-                    if v:
-                        self.shadow_vars.append(v)
-                        self.global_vars.append(var)
-                self.assign_vars = []
-                for g, v in zip(self.global_vars, self.shadow_vars):
-                    self.assign_vars.append(tf.assign(g, v))
 
     def _init_placeholders(self):
         self.c_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='c_ph')
@@ -275,8 +277,13 @@ class SquadModel(TFModel):
         """
         # TODO: filter examples in batches with answer position greater self.context_limit
         # select one answer from list of correct answers
-        y1s = list(map(lambda x: x[0], y1s))
-        y2s = list(map(lambda x: x[0], y2s))
+        y1s = np.array([x[0] for x in y1s])
+        y2s = np.array([x[0] for x in y2s])
+        if self.noans_token:
+            noans_mask = ((y1s != -1) * (y2s != -1))
+            y1s = (y1s + 1) * noans_mask
+            y2s = (y2s + 1) * noans_mask
+
         feed_dict = self._build_feed_dict(c_tokens, c_chars, q_tokens, q_chars, y1s, y2s)
         loss, _ = self.sess.run([self.loss, self.train_op], feed_dict=feed_dict)
         return loss
@@ -298,11 +305,23 @@ class SquadModel(TFModel):
         if any(np.sum(c_tokens, axis=-1) == 0) or any(np.sum(q_tokens, axis=-1) == 0):
             logger.info('SQuAD model: Warning! Empty question or context was found.')
             noanswers = -np.ones(shape=(c_tokens.shape[0]), dtype=np.int32)
-            return noanswers, noanswers
+            zero_probs = np.zeros(shape=(c_tokens.shape[0]), dtype=np.float32)
+            if self.noans_token:
+                return noanswers, noanswers, zero_probs, zero_probs
+            return noanswers, noanswers, zero_probs
 
         feed_dict = self._build_feed_dict(c_tokens, c_chars, q_tokens, q_chars)
+
+        if self.noans_token:
+            yp1, yp2, logits, score = self.sess.run([self.yp1, self.yp2, self.yp_logits, self.yp_score],
+                                                    feed_dict=feed_dict)
+            noans_mask = (yp1 * yp2).astype(bool)
+            yp1 = yp1 * noans_mask - 1
+            yp2 = yp2 * noans_mask - 1
+            return yp1, yp2, logits.tolist(), score.tolist()
+
         yp1, yp2, logits = self.sess.run([self.yp1, self.yp2, self.yp_logits], feed_dict=feed_dict)
-        return yp1, yp2, [float(logit) for logit in logits]
+        return yp1, yp2, logits.tolist()
 
     def process_event(self, event_name: str, data) -> None:
         """
@@ -325,6 +344,3 @@ class SquadModel(TFModel):
                 self.learning_rate = max(self.learning_rate / 2, self.min_learning_rate)
                 logger.info('SQuAD model: learning_rate changed to {}'.format(self.learning_rate))
             logger.info('SQuAD model: lr_impatience: {}, learning_rate: {}'.format(self.lr_impatience, self.learning_rate))
-
-    def shutdown(self):
-        pass
