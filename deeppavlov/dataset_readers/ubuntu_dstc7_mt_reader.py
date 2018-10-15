@@ -76,8 +76,8 @@ class UbuntuDSTC7MTReader(DatasetReader):
              list of contexts and responses with their labels. More details about the format are provided above
         """
         data = []
-        with open(filename, 'rb') as f:
-            json_data = json.load(open(filename, 'rt'))
+        with open(filename, 'rb', encoding='utf-8') as f:
+            json_data = json.load(f)
             for entry in json_data:
 
                 dialog = entry
