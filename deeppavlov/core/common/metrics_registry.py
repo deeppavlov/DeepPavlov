@@ -40,7 +40,7 @@ def register_metric(metric_name: str) -> Callable[..., Any]:
 
 
 def get_metric_by_name(name: str) -> Callable[..., Any]:
-    """Returns a list of metric callables with corresponding names."""
+    """Returns a metric callable with a corresponding name."""
     if name not in _REGISTRY:
         raise ConfigError(f'"{name}" is not registered as a metric')
     return fn_from_str(_REGISTRY[name])
