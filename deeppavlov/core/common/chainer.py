@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import inspect
-from typing import Union
+from typing import Union, Tuple, List
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
@@ -24,10 +24,25 @@ class Chainer(Component):
     """
     Builds an agent/component pipeline from heterogeneous components (Rule-based/ML/DL). It allows to train
     and infer models in a pipeline as a whole.
+
+    Attributes:
+        pipe: list of components and their input and output variable names for inference
+        train_pipe: list of components and their input and output variable names for training and evaluation
+        in_x: names of inputs for pipeline inference mode
+        out_params: names of pipeline inference outputs
+        in_y: names of additional inputs for pipeline training and evaluation modes
+        forward_map: list of all variables in chainer's memory after  running every component in ``self.pipe``
+        train_map: list of all variables in chainer's memory after  running every component in ``train_pipe.pipe``
+        main: reference to the main component
+
+    Args:
+        in_x: names of inputs for pipeline inference mode
+        out_params: names of pipeline inference outputs
+        in_y: names of additional inputs for pipeline training and evaluation modes
     """
     def __init__(self, in_x: Union[str, list] = None, out_params: Union[str, list] = None,
-                 in_y: Union[str, list] = None, *args, **kwargs):
-        self.pipe = []
+                 in_y: Union[str, list] = None, *args, **kwargs) -> None:
+        self.pipe: List[Tuple[Tuple[List[str], List[str]], List[str], Component]] = []
         self.train_pipe = []
         if isinstance(in_x, str):
             in_x = [in_x]
