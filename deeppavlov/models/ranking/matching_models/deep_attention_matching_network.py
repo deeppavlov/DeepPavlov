@@ -13,12 +13,11 @@
 # limitations under the License.
 
 import numpy as np
+import tensorflow as tf
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 from deeppavlov.models.ranking.matching_models .tf_base_matching_model import TensorflowBaseMatchingModel
-
-import tensorflow as tf
 from deeppavlov.models.ranking.matching_models.dam_utils import layers
 from deeppavlov.models.ranking.matching_models.dam_utils import operations as op
 

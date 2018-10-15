@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import numpy as np
-from typing import List, Iterable, Union
+from typing import List, Iterable
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.component import Component
@@ -21,6 +21,7 @@ from deeppavlov.models.ranking.matching_models.tf_base_matching_model import Ten
 from deeppavlov.core.common.registry import register
 
 log = get_logger(__name__)
+
 
 @register('matching_predictor')
 class MatchingPredictor(Component):
