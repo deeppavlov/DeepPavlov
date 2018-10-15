@@ -230,15 +230,12 @@ class TfidfWeightedEmbedder(Component):
         embedded_tokens = np.array(self.embedder([tokens]))[0, :, :]
 
         if mean is None:
-            if self.mean:
-                embedded_tokens = np.average(embedded_tokens, weights=weights, axis=0)
-            else:
-                embedded_tokens = np.array([weights[i] * embedded_tokens[i] for i in range(len(tokens))])
+            mean = self.mean
+
+        if mean:
+            embedded_tokens = np.average(embedded_tokens, weights=weights, axis=0)
         else:
-            if mean:
-                embedded_tokens = np.average(embedded_tokens, weights=weights, axis=0)
-            else:
-                embedded_tokens = np.array([weights[i] * embedded_tokens[i] for i in range(len(tokens))])
+            embedded_tokens = np.array([weights[i] * embedded_tokens[i] for i in range(len(tokens))])
 
         return embedded_tokens
 
@@ -290,15 +287,12 @@ class TfidfWeightedEmbedder(Component):
             weights = np.ones(len(tokens))
 
         if mean is None:
-            if self.mean:
-                embedded_tokens = np.average(embedded_tokens, weights=weights, axis=0)
-            else:
-                embedded_tokens = np.array([weights[i] * embedded_tokens[i] for i in range(len(tokens))])
+            mean = self.mean
+
+        if mean:
+            embedded_tokens = np.average(embedded_tokens, weights=weights, axis=0)
         else:
-            if mean:
-                embedded_tokens = np.average(embedded_tokens, weights=weights, axis=0)
-            else:
-                embedded_tokens = np.array([weights[i] * embedded_tokens[i] for i in range(len(tokens))])
+            embedded_tokens = np.array([weights[i] * embedded_tokens[i] for i in range(len(tokens))])
 
         return embedded_tokens
 

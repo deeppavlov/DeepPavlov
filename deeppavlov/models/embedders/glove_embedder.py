@@ -160,16 +160,12 @@ class GloVeEmbedder(Component, Serializable):
             embedded_tokens.append(emb)
 
         if mean is None:
-            if self.mean:
-                filtered = [et for et in embedded_tokens if np.any(et)]
-                if filtered:
-                    return np.mean(filtered, axis=0)
-                return np.zeros(self.dim, dtype=np.float32)
-        else:
-            if mean:
-                filtered = [et for et in embedded_tokens if np.any(et)]
-                if filtered:
-                    return np.mean(filtered, axis=0)
-                return np.zeros(self.dim, dtype=np.float32)
+            mean = self.mean
+
+        if mean:
+            filtered = [et for et in embedded_tokens if np.any(et)]
+            if filtered:
+                return np.mean(filtered, axis=0)
+            return np.zeros(self.dim, dtype=np.float32)
 
         return embedded_tokens
