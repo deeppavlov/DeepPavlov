@@ -14,7 +14,7 @@
 
 from typing import List, Tuple, Dict
 from pathlib import Path
-import ijson
+import json
 import numpy as np
 
 from deeppavlov.core.common.registry import register
@@ -29,7 +29,7 @@ class UbuntuDSTC7MTReader(DatasetReader):
     https://github.com/IBM/dstc7-noesis
 
     Args:
-        data_path (str): A path to a folder with dataset csv files.
+        data_path (str): A path to a folder with dataset json files.
         num_context_turns (int): A maximum number of dialogue ``context`` turns.
         num_responses (int): A number of responses for each context; default is equal to all 100 responses,
             it can be reduced to 10 (1 true response + 9 random wrong responses) to adapt with succeeding pipeline
@@ -68,13 +68,16 @@ class UbuntuDSTC7MTReader(DatasetReader):
         Where
         * label - label of the sample
 
-        :param filename: filename to read
-        :param mode: which dataset to return. Can be "train", "valid" or "test"
-        :return: list of contexts and responses with their labels. More details about the format are provided above
+        Args:
+            filename (Path): filename to read
+            mode (str): which dataset to return. Can be "train", "valid" or "test"
+
+        Returns:
+             list of contexts and responses with their labels. More details about the format are provided above
         """
         data = []
         with open(filename, 'rb') as f:
-            json_data = ijson.items(f, 'item')
+            json_data = json.load(open(filename, 'rt'))
             for entry in json_data:
 
                 dialog = entry

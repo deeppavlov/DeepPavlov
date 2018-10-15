@@ -55,8 +55,8 @@ class UbuntuV2Preprocessor(Estimator):
     """
 
     def __init__(self,
-                 save_path: str = './tok.dict',
-                 load_path: str = './tok.dict',
+                 save_path: str,
+                 load_path: str,
                  max_sequence_length: int = None,
                  dynamic_batch: bool = False,
                  padding: str = 'post',

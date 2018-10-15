@@ -111,6 +111,5 @@
   "ubuntu_v2_preprocessor": "deeppavlov.models.preprocessors.ubuntu_v2_preprocessor:UbuntuV2Preprocessor",
   "ubuntu_v2_reader": "deeppavlov.dataset_readers.ubuntu_v2_reader:UbuntuV2Reader",
   "wiki_sqlite_vocab": "deeppavlov.vocabs.wiki_sqlite:WikiSQLiteVocab",
-  "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary",
-  "word2vec_vectorizer": "deeppavlov.models.vectorizers.word2vec_vectorizer:Word2vecVectorizer"
+  "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary"
 }

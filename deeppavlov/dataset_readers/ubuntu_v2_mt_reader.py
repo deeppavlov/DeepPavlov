@@ -76,7 +76,7 @@ class UbuntuV2MTReader(DatasetReader):
                 contexts.append(self._expand_context(el[0].split('__eot__'), padding=self.padding))
                 responses.append(el[1:])
         data = [el[0] + el[1] for el in zip(contexts, responses)]
-        data = [(el, 1) for index, el in enumerate(data)]   # NOTE: labels are useless here actually...
+        data = [(el, 1) for el in data]   # NOTE: labels are useless here actually...
         return data
 
     def _expand_context(self, context: List[str], padding: str) -> List[str]:
