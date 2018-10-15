@@ -15,9 +15,10 @@
 import ssl
 import sys
 from pathlib import Path
+from typing import List, Tuple
 
 from flasgger import Swagger, swag_from
-from flask import Flask, request, jsonify, redirect
+from flask import Flask, request, jsonify, redirect, Response
 from flask_cors import CORS
 
 from deeppavlov.core.commands.infer import build_model_from_config
@@ -113,7 +114,7 @@ def interact_alice(model: Component, params_names: list):
     return jsonify(response), 200
 
 
-def interact(model: Chainer, params_names):
+def interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
     if not request.is_json:
         log.error("request Content-Type header is not application/json")
         return jsonify({

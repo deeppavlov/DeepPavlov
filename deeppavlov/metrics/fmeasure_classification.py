@@ -24,7 +24,7 @@ from deeppavlov.models.classifiers.utils import labels2onehot
 
 @register_metric('classification_f1')
 def classification_fmeasure(y_true: List[list], predicted_labels: List[List[str]],
-                            predicted_probabilities: List[Dict[str, float]], average="macro") -> float:
+                            predicted_probabilities: List[Dict[str, float]], average: str="macro") -> float:
     """
     Calculate F1-measure
 
