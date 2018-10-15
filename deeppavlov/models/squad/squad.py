@@ -58,7 +58,7 @@ class SquadModel(TFModel):
                  char_limit: int = 16, train_char_emb: bool = True, char_hidden_size: int = 100,
                  encoder_hidden_size: int = 75, attention_hidden_size: int = 75, keep_prob: float = 0.7,
                  learning_rate: float = 0.5, min_learning_rate: float = 0.001, learning_rate_patience: int = 1,
-                 grad_clip: float = 5.0, noans_token: bool = False, **kwargs):
+                 grad_clip: float = 5.0, noans_token: bool = False, **kwargs) -> None:
 
         self.init_word_emb = word_emb
         self.init_char_emb = char_emb
@@ -344,6 +344,3 @@ class SquadModel(TFModel):
                 self.learning_rate = max(self.learning_rate / 2, self.min_learning_rate)
                 logger.info('SQuAD model: learning_rate changed to {}'.format(self.learning_rate))
             logger.info('SQuAD model: lr_impatience: {}, learning_rate: {}'.format(self.lr_impatience, self.learning_rate))
-
-    def shutdown(self):
-        pass

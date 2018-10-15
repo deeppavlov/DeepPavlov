@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Generator, Optional
 
 import numpy as np
 
@@ -23,7 +23,7 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 @register('squad_iterator')
 class SquadIterator(DataLearningIterator):
-    """ SquadIterator allows to iterate over examples in SQuAD-like datasets.
+    """SquadIterator allows to iterate over examples in SQuAD-like datasets.
     SquadIterator is used to train :class:`~deeppavlov.models.squad.squad.SquadModel`.
 
     It extracts ``context``, ``question``, ``answer_text`` and ``answer_start`` position from dataset.
@@ -42,7 +42,7 @@ class SquadIterator(DataLearningIterator):
 
     @staticmethod
     def _extract_cqas(data: Dict[str, Any]) -> List[Tuple[Tuple[str, str], Tuple[List[str], List[int]]]]:
-        """ Extracts context, question, answer, answer_start from SQuAD data
+        """Extracts context, question, answer, answer_start from SQuAD data
 
         Args:
             data: data in squad format
@@ -72,32 +72,34 @@ class SquadIterator(DataLearningIterator):
 class MultiSquadIterator(DataLearningIterator):
     """Dataset iterator for multiparagraph-SQuAD dataset.
 
-        With ``with_answer_rate`` rate samples context with answer and with ``1 - with_answer_rate`` samples context
-        from the same article, but without an answer. Contexts without an answer are sampled according to
-        their tfidf scores (tfidf score between question and context).
+    With ``with_answer_rate`` rate samples context with answer and with ``1 - with_answer_rate`` samples context
+    from the same article, but without an answer. Contexts without an answer are sampled according to
+    their tfidf scores (tfidf score between question and context).
 
-        It extracts ``context``, ``question``, ``answer_text`` and ``answer_start`` position from dataset.
-        Example from a dataset is a tuple of ``(context, question)`` and ``(answer_text, answer_start)``. If there is
-        no answer in context, then ``answer_text`` is empty string and `answer_start` is equal to -1.
+    It extracts ``context``, ``question``, ``answer_text`` and ``answer_start`` position from dataset.
+    Example from a dataset is a tuple of ``(context, question)`` and ``(answer_text, answer_start)``. If there is
+    no answer in context, then ``answer_text`` is empty string and `answer_start` is equal to -1.
 
-        Args:
-            data: dict with keys ``'train'``, ``'valid'`` and ``'test'`` and values
-            seed: random seed for data shuffling
-            shuffle: whether to shuffle data during batching
-            with_answer_rate: sampling rate of contexts with answer
+    Args:
+        data: dict with keys ``'train'``, ``'valid'`` and ``'test'`` and values
+        seed: random seed for data shuffling
+        shuffle: whether to shuffle data during batching
+        with_answer_rate: sampling rate of contexts with answer
 
-        Attributes:
-            shuffle: whether to shuffle data during batching
-            random: instance of ``Random`` initialized with a seed
-        """
+    Attributes:
+        shuffle: whether to shuffle data during batching
+        random: instance of ``Random`` initialized with a seed
+    """
 
-    def __init__(self, data, seed: int = None, shuffle: bool = True, with_answer_rate: float = 0.666, *args, **kwargs):
+    def __init__(self, data, seed: Optional[int] = None, shuffle: bool = True, with_answer_rate: float = 0.666,
+                 *args, **kwargs) -> None:
         self.with_answer_rate = with_answer_rate
         self.seed = seed
         self.np_random = np.random.RandomState(seed)
         super().__init__(data, seed, shuffle, *args, **kwargs)
 
-    def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: bool = None):
+    def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: bool = None)\
+            -> Generator[Tuple[Tuple[Tuple[str, str]], Tuple[List[str], List[int]]], None, None]:
 
         if shuffle is None:
             shuffle = self.shuffle
@@ -136,7 +138,7 @@ class MultiSquadIterator(DataLearningIterator):
                 batch.append(((context['context'], q), (answer_text, answer_start)))
             yield tuple(zip(*batch))
 
-    def get_instances(self, data_type: str = 'train'):
+    def get_instances(self, data_type: str = 'train') -> Tuple[Tuple[Tuple[str, str]], Tuple[List[str], List[int]]]:
         data_examples = []
         for qcas in self.data[data_type]:  # question, contexts, answers
             question = qcas['question']

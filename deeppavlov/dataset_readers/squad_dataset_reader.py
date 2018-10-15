@@ -52,6 +52,9 @@ class SquadDatasetReader(DatasetReader):
 
         Returns:
             dataset split on train/valid
+
+        Raises:
+            RuntimeError: if `dataset` is not one of these: ``'SQuAD'``, ``'SberSQuAD'``, ``'MultiSQuAD'``.
         """
         if dataset == 'SQuAD':
             self.url = self.url_squad
