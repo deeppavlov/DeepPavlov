@@ -167,7 +167,11 @@ class NerNetwork(TFModel):
         self.sess = tf.Session()   # TODO: add sess_config
         self.sess.run(tf.global_variables_initializer())
         super().__init__(**kwargs)
-        if not train_from_scratch:
+        if train_from_scratch:
+            load_path = str(self.load_path.resolve())
+            if tf.train.checkpoint_exists(load_path):
+                log.info('Warning! NerNetwork is trained from scratch. Existing model files will be overwritten!')
+        else:
             self.load()
 
     def _add_training_placeholders(self, dropout_keep_prob, learning_rate):
