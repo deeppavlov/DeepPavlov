@@ -40,12 +40,10 @@ class SMNNetwork(TensorflowBaseMatchingModel):
         learning_rate (float): Initial learning rate.
         emb_matrix (np.ndarray): An embeddings matrix to initialize an embeddings layer of a model.
         trainable_embeddings (bool): Whether train embeddings matrix or not.
-        embedding_dim (int): Dimensionality of token (word) embeddings
-        seed (int): Random seed
+        embedding_dim (int): Dimensionality of token (word) embeddings.
     """
 
     def __init__(self,
-                 seed: int = None,
                  embedding_dim: int = 200,
                  max_num_utterance: int = 10,
                  max_sequence_length: int = 50,
@@ -56,7 +54,6 @@ class SMNNetwork(TensorflowBaseMatchingModel):
                  **kwargs):
 
 
-        self.seed = seed
         self.max_num_utterance = max_num_utterance
         self.max_sentence_len = max_sequence_length
         self.word_embedding_size = embedding_dim

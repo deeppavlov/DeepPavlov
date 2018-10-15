@@ -17,7 +17,7 @@ import tensorflow as tf
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.ranking.matching_models .tf_base_matching_model import TensorflowBaseMatchingModel
+from deeppavlov.models.ranking.matching_models.tf_base_matching_model import TensorflowBaseMatchingModel
 from deeppavlov.models.ranking.matching_models.dam_utils import layers
 from deeppavlov.models.ranking.matching_models.dam_utils import operations as op
 
@@ -51,13 +51,11 @@ class DAMNetwork(TensorflowBaseMatchingModel):
         emb_matrix (np.ndarray): An embeddings matrix to initialize an embeddings layer of a model.
         trainable_embeddings (bool): Whether train embeddings matrix or not.
         embedding_dim (int): Dimensionality of token (word) embeddings.
-        seed (int): Random seed.
-        is_positional (bool): Adds a bunch of sinusoids of different frequencies to an embeddings
+        is_positional (bool): Adds a bunch of sinusoids of different frequencies to an embeddings.
         stack_num (int): Number of stack layers, default is 5.
     """
 
     def __init__(self,
-                 seed: int = None,
                  embedding_dim: int = 200,
                  max_num_utterance: int = 10,
                  max_sequence_length: int = 50,
@@ -70,7 +68,6 @@ class DAMNetwork(TensorflowBaseMatchingModel):
                  **kwargs):
 
 
-        self.seed = seed
         self.max_num_utterance = max_num_utterance
         self.max_sentence_len = max_sequence_length
         self.word_embedding_size = embedding_dim

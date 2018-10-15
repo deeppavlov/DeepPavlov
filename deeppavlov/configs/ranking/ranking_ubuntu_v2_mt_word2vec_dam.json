@@ -68,7 +68,6 @@
         "max_sequence_length": "#preproc.max_sequence_length",
         "embedding_dim": "#word2vec_embedder.dim",
         "emb_matrix": "#embeddings.emb_mat",
-        "seed": 243,
         "learning_rate": 1e-3,
         "batch_size": 100,
         "save_path": "ubuntu_v2_mt_word2vec/model_dam/model",
