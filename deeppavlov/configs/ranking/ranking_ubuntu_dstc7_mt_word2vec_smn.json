@@ -26,18 +26,10 @@
         "load_path": "ubuntu_dstc7_mt_word2vec/vocabs/int_tok.dict"
       },
       {
-        "fit_on": ["x"],
-        "retrain": false,
-        "id": "word2vec_vectorizer",
-        "name": "word2vec_vectorizer",
-        "iter": 10,
-        "window": 10,
-        "sg": 1,
-        "filters": "\t\n,",
-        "workers": 8,
-        "save_path": "ubuntu_dstc7_mt_word2vec/embeddings/w2v.model",
-        "load_path": "ubuntu_dstc7_mt_word2vec/embeddings/w2v.model",
-        "notes": "We need to train word2vec embeddings before using in emb_mat_assembler"
+        "id": "word2vec_embedder",
+        "name": "glove",
+        "dim": 200,
+        "load_path": "ubuntu_dstc7_mt_word2vec/embeddings_txt/ubuntu_v2_word2vec_embeddings.model"
       },
       {
         "id": "preproc",
@@ -63,7 +55,7 @@
       {
         "id": "embeddings",
         "name": "emb_mat_assembler",
-        "embedder": "#word2vec_vectorizer",
+        "embedder": "#word2vec_embedder",
         "vocab": "#vocab_1"
       },
       {
@@ -73,7 +65,7 @@
         "name": "smn_nn",
         "num_context_turns": "#preproc.num_context_turns",
         "max_sequence_length": "#preproc.max_sequence_length",
-        "embedding_dim": "#word2vec_vectorizer.dim",
+        "embedding_dim": "#word2vec_embedder.dim",
         "emb_matrix": "#embeddings.emb_mat",
         "seed": 243,
         "learning_rate": 1e-3,
@@ -115,6 +107,10 @@
       {
         "url": "http://lnsigo.mipt.ru/export/datasets/ubuntu_dstc7_data_clean.tar.gz",
         "subdir": "ubuntu_dstc7_data_clean"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/ubuntu_dstc7_word2vec_embeddings.model.tar.gz",
+        "subdir": "ubuntu_dstc7_mt_word2vec/embeddings_txt"
       }
     ]
   }
