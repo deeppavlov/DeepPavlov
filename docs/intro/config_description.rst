@@ -144,8 +144,29 @@ Train Parameters
 
 -  ``epochs`` — maximum number of epochs to train NNModel, defaults to   ``-1`` (infinite)
 -  ``batch_size``,
--  ``metrics`` — list of names of registered :mod:`~deeppavlov.metrics` to evaluate the model. The first metric in
-   the list is used for early stopping
+-  ``metrics`` — list of metrics which names of registered :mod:`~deeppavlov.metrics` to evaluate the model.
+   The first metric in the list is used for early stopping.
+   Each metric can be given either as registered name (then inputs for this metric function will be
+   the second element of the tuple from `dataset_iterator` as `y_true` and outputs of the chainer as `y_predicted`)
+   or as a dictionary with registered name of the metric (``name`` field) and ``inputs`` list that is a list of names of
+   any variables from chainer in a config. As an example:
+.. code:: python
+
+    "metrics": [
+      "roc_auc",
+      {
+        "name": "accuracy",
+        "inputs": ["y", "y_labels"]
+      },
+      {
+        "name": "f1",
+        "inputs": ["y", "y_probabilities"]
+      }
+    ]
+
+
+where ``y_labels`` and ``y_probabilities`` are names from ``out`` fields of two components in chainer.
+
 -  ``metric_optimization`` — ``maximize`` or ``minimize`` a metric, defaults to ``maximize``
 -  ``validation_patience`` — how many times in a row the validation metric has to not improve for early stopping,
    defaults to ``5``
