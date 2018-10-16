@@ -2,11 +2,11 @@
   "dataset_reader": {
     "name": "morphotagger_dataset_reader",
     "data_path": "UD2.0_source",
-    "language": "tr", "data_types": ["train", "dev", "test"],
-    "min_train_fraction": 0.9
+    "language": "tr", "data_types": ["train", "dev", "test"]
   },
   "dataset_iterator": {
-    "name": "morphotagger_dataset"
+    "name": "morphotagger_dataset",
+    "min_train_fraction": 0.9
   },
   "chainer": {
     "in": ["x"],
