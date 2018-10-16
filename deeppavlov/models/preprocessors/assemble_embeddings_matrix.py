@@ -12,16 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union
-
 import numpy as np
 from sklearn.decomposition import PCA
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.simple_vocab import SimpleVocabulary
 from deeppavlov.models.embedders.abstract_embedder import Embedder
-from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
-from deeppavlov.models.embedders.glove_embedder import GloVeEmbedder
 
 
 @register('emb_mat_assembler')
