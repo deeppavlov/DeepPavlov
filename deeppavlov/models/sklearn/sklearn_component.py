@@ -165,7 +165,7 @@ class SklearnComponent(Estimator):
                 if param_name in available_params:
                     try:
                         given_params[param_name] = cls_from_str(self.model_params[param_name])
-                    except AttributeError:
+                    except AttributeError or ConfigError:
                         given_params[param_name] = self.model_params[param_name]
 
         self.model = model_function(**given_params)
