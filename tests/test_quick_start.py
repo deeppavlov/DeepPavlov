@@ -251,8 +251,6 @@ def teardown_module():
 @pytest.mark.parametrize("model,conf_file,model_dir,mode", TEST_GRID, scope='class')
 class TestQuickStart(object):
     @staticmethod
-
-    @staticmethod
     def interact(conf_file, model_dir, qr_list=None):
         qr_list = qr_list or []
         logfile = io.BytesIO(b'')
