@@ -42,3 +42,17 @@ def classification_log_loss(y_true: List[list], y_predicted: List[Tuple[list, di
     y_pred_probas = [list(y_predicted[i][1].values()) for i in range(len(y_predicted))]
 
     return log_loss(y_true_one_hot, y_pred_probas)
+
+@register_metric('log_loss')
+def sk_log_loss(y_true, y_predicted):
+    """
+    Calculates log loss.
+
+    Args:
+        y_true: list of true values
+        y_predicted: list of predicted values
+
+    Returns:
+        Log loss
+    """
+    return log_loss(y_true, y_predicted)

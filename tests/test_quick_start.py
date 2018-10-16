@@ -42,6 +42,9 @@ FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_t
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
+    "ecommerce_bot": {
+        ("ecommerce_bot/ecommerce_bot.json", "ecommerce_bot", ALL_MODES): [('Dummy text', '{}', '{}', None)]
+    },
     "faq": {
         ("faq/tfidf_logreg_en_faq.json", "faq_tfidf_logreg_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("faq/tfidf_autofaq.json", "faq_tfidf_cos", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
@@ -120,14 +123,31 @@ PARAMS = {
         ("elmo/elmo_ru-news.json", "elmo_ru-news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
     },
 
-    "ranking": {("ranking/ranking_insurance.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/en_ranker_tfidf_wiki_test.json", "ranking", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]},
+    "ranking": {("ranking/ranking_insurance_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/ranking_insurance_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/ranking_ubuntu_v2_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/ranking_ubuntu_v2_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/ranking_ubuntu_v2_mt_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/ranking_ubuntu_v2_mt_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/paraphrase_ident_paraphraser_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/paraphrase_ident_paraphraser_interact_test.json", "ranking",
+                 ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/paraphrase_ident_qqp_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/paraphrase_ident_qqp_bilstm_interact_test.json", "ranking",
+                 ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/paraphrase_ident_qqp_bilstm_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/paraphrase_ident_qqp_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "doc_retrieval": {
+        ("doc_retrieval/en_ranker_tfidf_wiki_test.json", "doc_retrieval", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+    },
     "squad": {
         ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK]
+        ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/multi_squad_noans.json", "multi_squad_noans", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "seq2seq_go_bot": {
-        ("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ('TI',)):
+        ("seq2seq_go_bot/bot_kvret_train.json", "seq2seq_go_bot", ('TI',)):
         [
            ("will it snow on tuesday?",
             "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
@@ -136,7 +156,7 @@ PARAMS = {
             "",
             None)
         ],
-        ("seq2seq_go_bot/bot_kvret_infer.json", "seq2seq_go_bot", ('IP',)):
+        ("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ('IP',)):
         [
            ("will it snow on tuesday?",
             "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",

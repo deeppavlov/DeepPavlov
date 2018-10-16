@@ -17,10 +17,10 @@ Config
 ======
 
 Default ranker config for **English** language is
-:config:`ranking/en_ranker_tfidf_wiki.json <ranking/en_ranker_tfidf_wiki.json>`
+:config:`doc_retrieval/en_ranker_tfidf_wiki.json <ranking/en_ranker_tfidf_wiki.json>`
 
 Default ranker config for **Russian** language is
-:config:`ranking/ru_ranker_tfidf_wiki.json <ranking/ru_ranker_tfidf_wiki.json>`
+:config:`doc_retrieval/ru_ranker_tfidf_wiki.json <ranking/ru_ranker_tfidf_wiki.json>`
 
 Config Structure
 ----------------
@@ -78,14 +78,14 @@ Run the following to fit the ranker on **English** Wikipedia:
 .. code:: bash
 
     cd deeppavlov/
-    python deep.py train deeppavlov/configs/ranking/en_ranker_tfidf_wiki.json
+    python deep.py train deeppavlov/configs/doc_retrieval/en_ranker_tfidf_wiki.json
 
 Run the following to fit the ranker on **Russian** Wikipedia:
 
 .. code:: bash
 
     cd deeppavlov/
-    python deep.py train deeppavlov/configs/ranking/ru_ranker_tfidf_wiki.json
+    python deep.py train deeppavlov/configs/doc_retrieval/ru_ranker_tfidf_wiki.json
 
 Interacting
 -----------
@@ -98,14 +98,14 @@ Run the following to interact with the **English** ranker:
 .. code:: bash
 
     cd deeppavlov/
-    python deep.py interact deeppavlov/configs/ranking/en_ranker_tfidf_wiki.json -d
+    python deep.py interact deeppavlov/configs/doc_retrieval/en_ranker_tfidf_wiki.json -d
 
 Run the following to interact with the **Russian** ranker:
 
 .. code:: bash
 
     cd deeppavlov/
-    python deep.py interact deeppavlov/configs/ranking/ru_ranker_tfidf_wiki.json -d
+    python deep.py interact deeppavlov/configs/doc_retrieval/ru_ranker_tfidf_wiki.json -d
 
 Available Data and Pretrained Models
 ====================================
@@ -168,13 +168,13 @@ Comparison
 Scores for **TF-IDF Ranker** model:
 
 
-+-------------------------------------------------------+----------------+----------------------+-----------------+
-| Model                                                 | Dataset        |  Wiki dump           |  Recall (top 5) |
-+-------------------------------------------------------+----------------+----------------------+-----------------+
-| :config:`DeepPavlov <odqa/en_ranker_tfidf_wiki.json>` | SQuAD (dev)    |  enwiki (2018-02-11) |       75.6      |
-+-------------------------------------------------------+----------------+----------------------+-----------------+
-| `DrQA`_                                               | SQuAD (dev)    |  enwiki (2016-12-21) |       77.8      |
-+-------------------------------------------------------+----------------+----------------------+-----------------+
++-----------------------------------------------------------------+----------------+----------------------+-----------------+
+| Model                                                           | Dataset        |  Wiki dump           |  Recall (top 5) |
++-----------------------------------------------------------------+----------------+----------------------+-----------------+
+| :config:`DeepPavlov <doc_retrieval/en_ranker_tfidf_wiki.json>`  | SQuAD (dev)    |  enwiki (2018-02-11) |       75.6      |
++-----------------------------------------------------------------+----------------+----------------------+-----------------+
+| `DrQA`_                                                         | SQuAD (dev)    |  enwiki (2016-12-21) |       77.8      |
++-----------------------------------------------------------------+----------------+----------------------+-----------------+
 
 
 References

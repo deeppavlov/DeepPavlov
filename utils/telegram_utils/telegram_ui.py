@@ -17,9 +17,8 @@ from pathlib import Path
 
 import telebot
 
-from deeppavlov.core.common.file import read_json
 from deeppavlov.core.commands.infer import build_model_from_config
-
+from deeppavlov.core.common.file import read_json
 
 TELEGRAM_UI_CONFIG_FILENAME = 'models_info.json'
 
@@ -63,13 +62,15 @@ def init_bot_for_model(token, model):
             if chat_id not in buffer:
                 send_start_message(message)
             else:
-                buffer[chat_id].append(context)
+                buffer[chat_id].append([context])
 
                 if expect:
                     bot.send_message(chat_id, f'Please, send {expect.pop(0)}')
                 else:
-                    pred = model([tuple(buffer[chat_id])])
-                    reply_message = str(pred[0])
+                    pred = model(*buffer[chat_id])
+                    if len(model.out_params) == 0:
+                        pred = pred
+                    reply_message = str([item[0] for item in pred])
                     bot.send_message(chat_id, reply_message)
 
                     buffer[chat_id] = []
@@ -77,7 +78,9 @@ def init_bot_for_model(token, model):
                     bot.send_message(chat_id, f'Please, send {expect.pop(0)}')
         else:
             pred = model([context])
-            reply_message = str(pred[0])
+            if len(model.out_params) == 0:
+                pred = pred
+            reply_message = str([item[0] for item in pred])
             bot.send_message(chat_id, reply_message)
 
     bot.polling()

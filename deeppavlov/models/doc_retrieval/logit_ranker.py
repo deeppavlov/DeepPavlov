@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List
+from typing import List, Union
 from operator import itemgetter
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.estimator import Component
+from deeppavlov.core.common.chainer import Chainer
 
 logger = get_logger(__name__)
 
@@ -29,14 +30,17 @@ class LogitRanker(Component):
 
      Args:
         squad_model: a loaded squad model
+        batch_size: batch size to use with squad model
 
      Attributes:
         squad_model: a loaded squad model
+        batch_size: batch size to use with squad model
 
     """
 
-    def __init__(self, squad_model, **kwargs):
+    def __init__(self, squad_model: Union[Chainer, Component], batch_size: int = 50, **kwargs):
         self.squad_model = squad_model
+        self.batch_size = batch_size
 
     def __call__(self, contexts_batch: List[List[str]], questions_batch: List[List[str]]) -> List[str]:
         """
@@ -53,8 +57,12 @@ class LogitRanker(Component):
 
         batch_best_answers = []
         for contexts, questions in zip(contexts_batch, questions_batch):
-            results = zip(*self.squad_model(contexts, questions))
+            results = []
+            for i in range(0, len(contexts), self.batch_size):
+                c_batch = contexts[i: i + self.batch_size]
+                q_batch = questions[i: i + self.batch_size]
+                batch_predict = zip(*self.squad_model(c_batch, q_batch))
+                results += batch_predict
             best_answer = sorted(results, key=itemgetter(2), reverse=True)[0][0]
             batch_best_answers.append(best_answer)
-
         return batch_best_answers
