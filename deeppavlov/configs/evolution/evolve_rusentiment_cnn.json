@@ -169,7 +169,7 @@
     },
     "metrics": [
       "sets_accuracy",
-      "f1",
+      "f1_macro",
       {
         "name": "roc_auc",
         "inputs": ["y_onehot", "y_pred_probas"]
