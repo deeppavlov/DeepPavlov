@@ -302,7 +302,7 @@ class AnhancedTFModel(TFModel, Estimator):
         train_x, train_y = x[:train_len], y[:train_len]
         valid_x, valid_y = x[train_len:], y[train_len:]
         best_loss = 1e9
-        self._lr_schedule = DecayScheduler(start_val=self._lr_schedule.start_val,
+        _lr_find_schedule = DecayScheduler(start_val=self._lr_schedule.start_val,
                                            end_val=self._lr_schedule.end_val,
                                            dec_type=DecayType.LINEAR,
                                            num_it=num_train_batches)
@@ -317,7 +317,7 @@ class AnhancedTFModel(TFModel, Estimator):
             if (valid_report['loss'] < best_loss) and (i > min_batches):
                 best_loss = valid_report['loss']
                 best_lr = self._lr
-            self._lr = self._lr_schedule.next_val()
+            self._lr = _lr_find_schedule.next_val()
             log.info(f"valid_loss = {valid_report['loss']}, lr = {self._lr}"
                      f", best_lr = {best_lr}")
 

@@ -28,28 +28,33 @@
         "save_path": "dstc2/resto.sqlite"
       },
       {
-        "in": ["x"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
+        "id": "go_bot_network",
+        "name": "go_bot_rnn",
         "main": true,
-        "name": "go_bot",
         "load_path": "gobot_dstc2/model",
         "save_path": "gobot_dstc2/model",
         "debug": false,
+        "fit_batch_size": 16,
+        "fit_valid_rate": 0.2,
+        "fit_learning_rate_div": 10.0,
+        "fit_min_batches": 15,
+        "learning_rate": [1e-5, 1],
+        "learning_rate_decay": ["1cycle", 0.5],
+        "learning_rate_decay_epochs": 30,
+        "momentum": [0.95, 0.85],
+        "momentum_decay": "1cycle",
+        "momentum_decay_epochs": 15,
+        "optimizer": "tensorflow.train:MomentumOptimizer",
+        "dropout_rate": 0.85,
+        "l2_reg_coef": 7e-4,
+        "hidden_size": 128,
+        "dense_size": 160,
         "word_vocab": "#token_vocab",
         "template_path": "dstc2/dstc2-templates.txt",
         "template_type": "DualTemplate",
         "database": "#restaurant_database",
         "api_call_action": "api_call",
         "use_action_mask": false,
-        "network_parameters": {
-          "learning_rate": 0.005,
-          "optimizer": "tensorflow.train:AdamOptimizer",
-          "dropout_rate": 0.85,
-          "l2_reg_coef": 7e-4,
-          "hidden_size": 128,
-          "dense_size": 160
-        },
         "slot_filler": {
           "config_path": "../deeppavlov/configs/ner/slotfill_dstc2.json"
         },
@@ -68,6 +73,16 @@
           "name": "featurized_tracker",
           "slot_names": ["pricerange", "this", "area", "food", "name"]
         }
+      },
+      {
+        "ref": "go_bot_network",
+        "fit_on": ["x", "y"]
+      },
+      {
+        "ref": "go_bot_network",
+        "in": ["x"],
+        "in_y": ["y"],
+        "out": ["y_predicted"]
       }
     ]
   },

@@ -28,38 +28,41 @@
         "save_path": "dstc2/resto.sqlite"
       },
       {
-        "in": ["x"],
-        "in_y": ["y"],
-        "out": ["y_predicted"],
+        "id": "go_bot_network",
+        "name": "go_bot_rnn",
         "main": true,
-        "name": "go_bot",
         "load_path": "gobot_dstc2_best/model",
         "save_path": "gobot_dstc2_best/model",
         "debug": false,
+        "fit_batch_size": 16,
+        "fit_valid_rate": 0.2,
+        "fit_learning_rate_div": 10.0,
+        "fit_min_batches": 15,
+        "learning_rate": [0.000002, 0.02],
+        "learning_rate_decay": ["1cycle", 0.5],
+        "learning_rate_decay_epochs": 30,
+        "momentum": [0.95, 0.85],
+        "momentum_decay": "1cycle",
+        "momentum_decay_epochs": 15,
+        "optimizer": "tensorflow.train:MomentumOptimizer",
+        "dropout_rate": 0.55,
+        "l2_reg_coef": 2e-3,
+        "hidden_size": 128,
+        "dense_size": 128,
+        "attention_mechanism": {
+          "type": "cs_bahdanau",
+          "hidden_size": 32,
+          "depth": 3,
+          "action_as_key": true,
+          "max_num_tokens": 100,
+          "projected_align": false
+        },
         "word_vocab": "#token_vocab",
         "template_path": "dstc2/dstc2-templates.txt",
         "template_type": "DualTemplate",
         "database": "#restaurant_database",
         "api_call_action": "api_call",
         "use_action_mask": false,
-        "network_parameters": {
-          "learning_rate": [0.002, 0.00002],
-          "learning_rate_decay": ["polynomial", 0.5],
-          "learning_rate_decay_epochs": 10,
-          "optimizer": "tensorflow.train:AdamOptimizer",
-          "dropout_rate": 0.45,
-          "l2_reg_coef": 2e-3,
-          "hidden_size": 128,
-          "dense_size": 64,
-          "attention_mechanism": {
-            "type": "cs_bahdanau",
-            "hidden_size": 32,
-            "depth": 3,
-            "action_as_key": true,
-            "max_num_tokens": 100,
-            "projected_align": false
-          }
-        },
         "slot_filler": {
           "config_path": "../deeppavlov/configs/ner/slotfill_dstc2.json"
         },
@@ -79,6 +82,16 @@
           "name": "featurized_tracker",
           "slot_names": ["pricerange", "this", "area", "food", "name"]
         }
+      },
+      {
+        "ref": "go_bot_network",
+        "fit_on": ["x", "y"]
+      },
+      {
+        "ref": "go_bot_network",
+        "in": ["x"],
+        "in_y": ["y"],
+        "out": ["y_predicted"]
       }
     ]
   },
