@@ -31,7 +31,7 @@ from deeppavlov.core.models.tf_backend import TfModelMeta
 log = get_logger(__name__)
 
 
-@register('elmo')
+@register('elmo_embedder')
 class ELMoEmbedder(Component, metaclass=TfModelMeta):
     """
     ``ELMo`` (Embeddings from Language Models) representations are pre-trained contextual representations from
@@ -155,7 +155,7 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
 
         if not batch:
             empty_vec = np.zeros(self.dim, dtype=np.float32)
-            return [empty_vec] if self.mean else [[empty_vec]]
+            return [[empty_vec]]
 
         filled_batch = []
         for batch_line in batch:
