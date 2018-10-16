@@ -185,6 +185,10 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_snips_sklearn_v8.tar.gz",
         "subdir": "classifiers"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
+        "subdir": "embeddings"
       }
     ]
   }
