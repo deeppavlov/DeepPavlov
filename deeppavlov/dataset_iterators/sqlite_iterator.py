@@ -51,7 +51,7 @@ class SQLiteDataIterator(DataFittingIterator):
     """
 
     def __init__(self, load_path: Union[str, Path], batch_size: int = None,
-                 shuffle: bool = None, seed: int = None, **kwargs):
+                 shuffle: bool = None, seed: int = None, **kwargs) -> None:
 
         load_path = str(expand_path(load_path))
         logger.info("Connecting to database, path: {}".format(load_path))
