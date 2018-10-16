@@ -29,13 +29,15 @@
     "pipe": [
       {
         "id": "classes_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "fit_on": [
           "y"
         ],
         "level": "token",
         "save_path": "vocabs/snips_classes.dict",
-        "load_path": "vocabs/snips_classes.dict"
+        "load_path": "vocabs/snips_classes.dict",
+        "in": "y",
+        "out": "y_ids"
       },
       {
         "in": "x",
@@ -54,15 +56,20 @@
         "dim": 100
       },
       {
+        "in": "y_ids",
+        "out": "y_onehot",
+        "name": "one_hotter",
+        "depth": "#classes_vocab.len"
+      },
+      {
         "in": [
           "x_emb"
         ],
         "in_y": [
-          "y"
+          "y_onehot"
         ],
         "out": [
-          "y_labels",
-          "y_probas_dict"
+          "y_pred_probas"
         ],
         "main": true,
         "name": "keras_classification_model",
@@ -71,7 +78,6 @@
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "units_lstm": 64,
-        "confident_threshold": 0.5,
         "optimizer": "Adam",
         "lear_rate": 0.01,
         "lear_rate_decay": 0.1,
@@ -84,20 +90,33 @@
         "dense_size": 100,
         "input_projection_size": 64,
         "model_name": "bilstm_model"
+      },
+      {
+        "in": "y_pred_probas",
+        "out": "y_pred_ids",
+        "name": "proba2labels",
+        "max_proba": true
+      },
+      {
+        "in": "y_pred_ids",
+        "out": "y_pred_labels",
+        "ref": "classes_vocab"
       }
     ],
     "out": [
-      "y_labels",
-      "y_probas_dict"
+      "y_pred_labels"
     ]
   },
   "train": {
     "epochs": 1,
     "batch_size": 64,
     "metrics": [
-      "classification_accuracy",
-      "classification_f1",
-      "classification_roc_auc"
+      "sets_accuracy",
+      "f1",
+      {
+        "name": "roc_auc",
+        "inputs": ["y_onehot", "y_pred_probas"]
+      }
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
