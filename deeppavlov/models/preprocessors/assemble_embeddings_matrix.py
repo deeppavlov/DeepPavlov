@@ -65,8 +65,8 @@ class EmbeddingsMatrixAssembler:
             pca = PCA(n_components=emb_dim)
             pca.fit(estimation_matrix)
         elif emb_dim > embedder.dim:
-            raise RuntimeError(f'Model dimension must be greater then requsted embeddings '
-                               'dimension! model_dim = {embedder.dim}, requested_dim = {emb_dim}')
+            raise RuntimeError(f'Model dimension must be greater than requested embeddings '
+                               f'dimension! model_dim = {embedder.dim}, requested_dim = {emb_dim}')
         else:
             pca = None
         for n, token in enumerate(vocab):
@@ -82,7 +82,7 @@ class EmbeddingsMatrixAssembler:
             else:
                 try:
                     if pca is not None:
-                        self.emb_mat[n] = pca(embedder([[token]])[0])[0]
+                        self.emb_mat[n] = pca.transform(embedder([[token]])[0])[0]
                     else:
                         self.emb_mat[n] = embedder([[token]])[0][0]
                 except KeyError:
