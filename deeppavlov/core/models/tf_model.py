@@ -234,6 +234,7 @@ class AnhancedTFModel(TFModel, Estimator):
                  fit_batch_size: int = None,
                  fit_valid_rate: float = 0.3,
                  fit_learning_rate_div: float = 10.,
+                 fit_linear: bool = True,
                  fit_min_batches: int = 10,
                  *args, **kwargs) -> None:
         if learning_rate_decay_epochs and learning_rate_decay_batches:
@@ -284,27 +285,29 @@ class AnhancedTFModel(TFModel, Estimator):
         if not issubclass(self._optimizer, tf.train.Optimizer):
             raise ConfigError("`optimizer` should be tensorflow.train.Optimizer subclass")
 
-        self.fit_batch_size = fit_batch_size
-        self.fit_valid_rate = fit_valid_rate
-        self.fit_learning_rate_div = fit_learning_rate_div
-        self.fit_min_batches = fit_min_batches
+        self._fit_batch_size = fit_batch_size
+        self._fit_valid_rate = fit_valid_rate
+        self._fit_linear = fit_linear
+        self._fit_lr_div = fit_learning_rate_div
+        self._fit_min_batches = fit_min_batches
 
     def fit(self, x, y, **kwargs):
         self.save()
-        if self.fit_batch_size is None:
+        if self._fit_batch_size is None:
             raise ConfigError("in order to use fit() method"
                               " set `fit_batch_size` parameter")
-        bs, valid_rate = self.fit_batch_size, self.fit_valid_rate
-        lr_div, min_batches = self.fit_learning_rate_div, self.fit_min_batches
+        bs, valid_rate = self._fit_batch_size, self._fit_valid_rate
+        lr_div, min_batches = self._fit_lr_div, self._fit_min_batches
 
         train_len = int(len(x) * (1 - valid_rate))
         num_train_batches = (train_len - 1) // bs + 1
         train_x, train_y = x[:train_len], y[:train_len]
         valid_x, valid_y = x[train_len:], y[train_len:]
         best_loss = 1e9
+        _lr_find_dec_type = "linear" if self._fit_linear else "exponential"
         _lr_find_schedule = DecayScheduler(start_val=self._lr_schedule.start_val,
                                            end_val=self._lr_schedule.end_val,
-                                           dec_type=DecayType.LINEAR,
+                                           dec_type=_lr_find_dec_type,
                                            num_it=num_train_batches)
         best_lr = self._lr
         for i in range(num_train_batches):
