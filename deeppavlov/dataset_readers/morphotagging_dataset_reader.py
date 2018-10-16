@@ -32,7 +32,8 @@ def get_language(filepath: str) -> str:
     """
     return filepath.split("-")[0]
 
-def read_infile(infile: Union[Path, str], word_column: int = WORD_COLUMN, pos_column: int = POS_COLUMN,
+def read_infile(infile: Union[Path, str], from_words=False,
+                word_column: int = WORD_COLUMN, pos_column: int = POS_COLUMN,
                 tag_column: int = TAG_COLUMN, max_sents: int = -1,
                 read_only_words: bool = False) -> List[Tuple[List, Union[List, None]]]:
     """Reads input file in CONLL-U format
@@ -50,6 +51,8 @@ def read_infile(infile: Union[Path, str], word_column: int = WORD_COLUMN, pos_co
         in case ``read_only_words = True``
     """
     answer, curr_word_sent, curr_tag_sent = [], [], []
+    if from_words:
+        word_column, read_only_words = 0, True
     with open(infile, "r", encoding="utf8") as fin:
         for line in fin:
             line = line.strip()
@@ -66,7 +69,7 @@ def read_infile(infile: Union[Path, str], word_column: int = WORD_COLUMN, pos_co
                 continue
             splitted = line.split("\t")
             index = splitted[0]
-            if not index.isdigit():
+            if not from_words and not index.isdigit():
                 continue
             curr_word_sent.append(splitted[word_column])
             if not read_only_words:
