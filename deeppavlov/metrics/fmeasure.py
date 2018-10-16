@@ -15,6 +15,7 @@
 from itertools import chain
 
 from sklearn.metrics import f1_score
+import numpy as np
 
 from deeppavlov.core.common.metrics_registry import register_metric
 from deeppavlov.models.ner.evaluation import precision_recall_f1
@@ -43,6 +44,49 @@ def round_f1(y_true, y_predicted):
     Returns:
         F1 score
     """
-    predictions = [round(x) for x in y_predicted]
+    try:
+        predictions = [np.round(x) for x in y_predicted]
+    except TypeError:
+        predictions = y_predicted
+
     return f1_score(y_true, predictions)
 
+
+@register_metric('f1_macro')
+def round_f1_macro(y_true, y_predicted):
+    """
+    Calculates F1 measure.
+
+    Args:
+        y_true: list of true values
+        y_predicted: list of predicted values
+
+    Returns:
+        F1 score
+    """
+    try:
+        predictions = [np.round(x) for x in y_predicted]
+    except TypeError:
+        predictions = y_predicted
+
+    return f1_score(y_true, predictions, average="macro")
+
+
+@register_metric('f1_weighted')
+def round_f1_weighted(y_true, y_predicted):
+    """
+    Calculates F1 measure.
+
+    Args:
+        y_true: list of true values
+        y_predicted: list of predicted values
+
+    Returns:
+        F1 score
+    """
+    try:
+        predictions = [np.round(x) for x in y_predicted]
+    except TypeError:
+        predictions = y_predicted
+
+    return f1_score(y_true, predictions, average="weighted")
