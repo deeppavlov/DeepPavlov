@@ -118,7 +118,7 @@ class Embedder(Component, Serializable, metaclass=ABCMeta):
                 emb = self.tok2emb[t]
             except KeyError:
                 try:
-                    emb = self._get_word_vector(t)[:self.dim]
+                    emb = self._get_word_vector(t)
                 except KeyError:
                     emb = np.zeros(self.dim, dtype=np.float32)
                 self.tok2emb[t] = emb
