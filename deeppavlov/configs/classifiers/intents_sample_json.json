@@ -119,7 +119,7 @@
       "f1",
       {
         "name": "roc_auc",
-        "inputs": ["y_onehot", "y_probas"]
+        "inputs": ["y_onehot", "y_pred_probas"]
       }
     ],
     "validation_patience": 5,

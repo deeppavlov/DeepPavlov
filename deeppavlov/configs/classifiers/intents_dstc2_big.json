@@ -120,7 +120,7 @@
         "name": "roc_auc",
         "inputs": [
           "y_onehot",
-          "y_probas"
+          "y_pred_probas"
         ]
       }
     ],
