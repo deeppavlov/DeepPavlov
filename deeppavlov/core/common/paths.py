@@ -1,1 +1,66 @@
-deeppavlov_root = ''
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import shutil
+from pathlib import Path
+
+from deeppavlov.core.common.file import read_json, save_json
+
+
+root_path = Path(__file__, '..', '..', '..', '..').resolve()
+default_configs_path = root_path / 'configs' / '.default'
+
+
+def get_configs_path() -> Path:
+    """Returns DeepPavlov configs folder absolute path."""
+    paths = read_json(root_path / 'deeppavlov/paths.json')
+    configs_paths = Path(paths['configs_path']).resolve() if paths['configs_path'][0] == '/' \
+        else root_path / paths['configs_path']
+    return configs_paths
+
+
+def set_configs_path(configs_path: Path):
+    """Sets new DeepPavlov configs folder and moves configs from old one.
+
+    Args:
+        configs_path: New config path.
+    """
+    paths = read_json(root_path / 'deeppavlov/paths.json')
+    old_configs_path = Path(paths['configs_path']).resolve()
+
+    if configs_path.is_dir():
+        confirmation_message = 'Specified folder exists. Overwrite files in it? (y[es]/n[o]): '
+        confirm = input(confirmation_message)
+        confirm = True if str(confirm).lower() in {'y', 'yes'} else False
+    else:
+        configs_path.mkdir(parents=True)
+        confirm = True
+
+    if confirm:
+        for file in [file.name for file in default_configs_path.iterdir()]:
+            old_file = old_configs_path / file
+            shutil.copy(old_file, configs_path / file)
+            old_file.unlink()
+
+        paths['configs_path'] = str(configs_path)
+        save_json(paths, root_path / 'deeppavlov/paths.json')
+        print(f'New configs path was set and all config files were moved to: {str(configs_path)}')
+
+
+def set_configs_default():
+    """Sets ALL config files to DeepPavlov defaults."""
+    configs_path = get_configs_path()
+    for config_file in default_configs_path.iterdir():
+        shutil.copy(config_file, configs_path)
+    print('All DeepPavlov configs were set to default')
