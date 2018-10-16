@@ -51,7 +51,7 @@
         "out": "tokens_fasttext_vectors"
       },
       {
-        "name": "tfidf_weighted_embedder",
+        "name": "tfidf_weighted",
         "in": "q_token_lemmas",
         "vectorizer": "#tfidf_vec",
         "embedder": "#my_embedder",
