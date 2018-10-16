@@ -3,7 +3,8 @@
     "name": "basic_classification_reader",
     "x": "text",
     "y": "intents",
-    "data_path": "snips"
+    "data_path": "snips",
+    "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator",
@@ -28,15 +29,13 @@
     "pipe": [
       {
         "id": "classes_vocab",
-        "name": "simple_vocab",
+        "name": "default_vocab",
         "fit_on": [
           "y"
         ],
         "level": "token",
         "save_path": "vocabs/snips_classes.dict",
-        "load_path": "vocabs/snips_classes.dict",
-        "in": "y",
-        "out": "y_ids"
+        "load_path": "vocabs/snips_classes.dict"
       },
       {
         "in": "x",
@@ -55,75 +54,55 @@
         "dim": 100
       },
       {
-        "in": "y_ids",
-        "out": "y_onehot",
-        "name": "one_hotter",
-        "depth": "#classes_vocab.len"
-      },
-      {
         "in": [
           "x_emb"
         ],
         "in_y": [
-          "y_onehot"
+          "y"
         ],
         "out": [
-          "y_pred_probas"
+          "y_labels",
+          "y_probas_dict"
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/intents_snips_v4",
-        "load_path": "classifiers/intents_snips_v4",
+        "save_path": "classifiers/intent_cnn_snips_bistlm",
+        "load_path": "classifiers/intent_cnn_snips_bilstm",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
-        "kernel_sizes_cnn": [
-          1,
-          2,
-          3
-        ],
-        "filters_cnn": 256,
+        "units_lstm": 64,
+        "confident_threshold": 0.5,
         "optimizer": "Adam",
         "lear_rate": 0.01,
         "lear_rate_decay": 0.1,
         "loss": "binary_crossentropy",
         "text_size": 15,
-        "coef_reg_cnn": 1e-4,
+        "coef_reg_lstm": 1e-4,
         "coef_reg_den": 1e-4,
         "dropout_rate": 0.5,
+        "rec_dropout_rate": 0.5,
         "dense_size": 100,
-        "model_name": "cnn_model"
-      },
-      {
-        "in": "y_pred_probas",
-        "out": "y_pred_ids",
-        "name": "proba2labels",
-        "max_proba": true
-      },
-      {
-        "in": "y_pred_ids",
-        "out": "y_pred_labels",
-        "ref": "classes_vocab"
+        "input_projection_size": 64,
+        "model_name": "bilstm_model"
       }
     ],
     "out": [
-      "y_pred_labels"
+      "y_labels",
+      "y_probas_dict"
     ]
   },
   "train": {
-    "epochs": 1000,
+    "epochs": 1,
     "batch_size": 64,
     "metrics": [
-      "sets_accuracy",
-      "f1",
-      {
-        "name": "roc_auc",
-        "inputs": ["y_onehot", "y_probas"]
-      }
+      "classification_accuracy",
+      "classification_f1",
+      "classification_roc_auc"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
-    "log_every_n_epochs": 5,
-    "show_examples": true,
+    "log_every_n_epochs": 1,
+    "show_examples": false,
     "validate_best": true,
     "test_best": false
   },
@@ -133,11 +112,10 @@
       "../dp_requirements/fasttext.txt"
     ],
     "labels": {
-      "telegram_utils": "IntentModel",
-      "server_utils": "KerasIntentModel"
+      "telegram_utils": "IntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/intents.tar.gz",
       "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",

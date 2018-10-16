@@ -113,7 +113,12 @@
     "epochs": 1000,
     "batch_size": 64,
     "metrics": [
-      "accuracy"
+      "sets_accuracy",
+      "f1",
+      {
+        "name": "roc_auc",
+        "inputs": ["y_onehot", "y_pred_probas"]
+      }
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,

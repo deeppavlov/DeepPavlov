@@ -69,6 +69,7 @@
         "in": "y_ids",
         "out": "y_onehot",
         "name": "one_hotter",
+        "id": "my_one_hotter",
         "depth": "#classes_vocab.len"
       },
       {
@@ -178,7 +179,12 @@
       "discrete": true
     },
     "metrics": [
-      "accuracy"
+      "sets_accuracy",
+      "f1",
+      {
+        "name": "roc_auc",
+        "inputs": ["y_onehot", "y_pred_probas"]
+      }
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,

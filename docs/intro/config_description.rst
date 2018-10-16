@@ -118,14 +118,14 @@ and ``train``:
       "dataset_reader": {
         "name": ...,
         ...
-      }
+      },
       "dataset_iterator": {
         "name": ...,
         ...
       },
       "chainer": {
         ...
-      }
+      },
       "train": {
         ...
       }
@@ -144,8 +144,6 @@ Train Parameters
 
 -  ``epochs`` — maximum number of epochs to train NNModel, defaults to   ``-1`` (infinite)
 -  ``batch_size``,
--  ``metrics`` — list of names of registered :mod:`~deeppavlov.metrics` to evaluate the model. The first metric in
-   the list is used for early stopping
 -  ``metric_optimization`` — ``maximize`` or ``minimize`` a metric, defaults to ``maximize``
 -  ``validation_patience`` — how many times in a row the validation metric has to not improve for early stopping,
    defaults to ``5``
@@ -155,6 +153,37 @@ Train Parameters
 -  ``validate_best``, ``test_best`` flags to infer the best saved model on valid and test data, defaults to ``true``
 -  ``tensorboard_log_dir`` — path to write logged metrics during training. Use tensorboard to visualize metrics
    plots.
+-  ``metrics`` — list of :mod:`~deeppavlov.metrics` to evaluate the model.
+
+Metrics
+_______
+
+.. code:: python
+
+    "train": {
+      "metrics": [
+        "f1",
+        {
+          "name": "accuracy",
+          "inputs": ["y", "y_labels"]
+        },
+        {
+          "name": "roc_auc",
+          "inputs": ["y", "y_probabilities"]
+        }
+      ],
+      ...
+    }
+
+| The first metric in the list is used for early stopping.
+|
+| Each metric can be described as a JSON object with ``name`` and ``inputs`` properties, where ``name``
+  is a registered name of a metric function and ``inputs`` is a list of parameter names from chainer's
+  inner memory that will be passed to the metric function.
+|
+| If a metric is described as a single string, this string is interpreted as a registered name.
+|
+| Default value for ``inputs`` parameter is a concatenation of chainer's ``in_y`` and ``out`` parameters.
 
 
 DatasetReader

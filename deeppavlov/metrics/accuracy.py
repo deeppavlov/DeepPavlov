@@ -54,36 +54,6 @@ def sets_accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -
     return correct / examples_len if examples_len else 0
 
 
-@register_metric('classification_accuracy')
-def classification_accuracy(y_true: List[list], y_predicted: List[Tuple[list, dict]]) -> float:
-    """
-    Calculate accuracy in terms of sets coincidence for special case of predictions \
-            (from classification KerasIntentModel)
-
-    Args:
-        y_true: true labels
-        y_predicted: predictions. \
-            Each prediction is a tuple of two elements \
-            (predicted_labels, dictionary like {"label_i": probability_i} )
-
-    Returns:
-        portion of samples with absolutely coincidental sets of predicted values
-    """
-    y_pred_labels = [y_predicted[i][0] for i in range(len(y_predicted))]
-    examples_len = len(y_true)
-    if isinstance(y_predicted[0][0], list) and isinstance(y_true[0], list):
-        y_pair = [(set(y1), set(y2)) for y1, y2 in zip(y_true, y_pred_labels)]
-    elif isinstance(y_true[0], list):
-        y_pair = [(set(y1), set([y2])) for y1, y2 in zip(y_true, y_pred_labels)]
-    elif isinstance(y_predicted[0][0], list):
-        y_pair = [(set([y1]), set(y2)) for y1, y2 in zip(y_true, y_pred_labels)]
-    else:
-        y_pair = [(y1, y2) for y1, y2 in zip(y_true, y_pred_labels)]
-
-    correct = sum([y1 == y2 for y1, y2 in y_pair])
-    return correct / examples_len if examples_len else 0
-
-
 @register_metric('slots_accuracy')
 def slots_accuracy(y_true, y_predicted):
     y_true = [{tag.split('-')[-1] for tag in s if tag != 'O'} for s in y_true]

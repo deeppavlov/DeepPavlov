@@ -47,6 +47,7 @@
         "in": "y_ids",
         "out": "y_onehot",
         "name": "one_hotter",
+        "id": "my_one_hotter",
         "depth": "#classes_vocab.len"
       },
       {
@@ -92,6 +93,11 @@
         "in": "y_pred_ids",
         "out": "y_pred_labels",
         "ref": "classes_vocab"
+      },
+      {
+        "ref": "my_one_hotter",
+        "in": "y_pred_ids",
+        "out": "y_pred_onehot"
       }
     ],
     "out": [
@@ -102,7 +108,21 @@
     "epochs": 1000,
     "batch_size": 64,
     "metrics": [
-      "accuracy"
+      "sets_accuracy",
+      {
+        "name": "f1",
+        "inputs": [
+          "y_onehot",
+          "y_pred_onehot"
+        ]
+      },
+      {
+        "name": "roc_auc",
+        "inputs": [
+          "y_onehot",
+          "y_pred_probas"
+        ]
+      }
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
