@@ -25,7 +25,7 @@ TRACEBACK_LOGGER_ERRORS = True
 def get_logger(logger_name):
     try:
         config_dir = Path(__file__).resolve().parent
-        log_config_path = Path(config_dir, '..', '..', LOG_CONFIG_FILENAME).resolve()
+        log_config_path = Path(config_dir, '..', '..', '..', 'configs', LOG_CONFIG_FILENAME).resolve()
 
         with open(log_config_path, encoding='utf8') as log_config_json:
             log_config = json.load(log_config_json)

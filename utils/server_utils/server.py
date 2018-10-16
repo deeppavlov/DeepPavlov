@@ -157,7 +157,7 @@ def interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
 
 def start_model_server(model_config_path, alice=False, https=False, ssl_key=None, ssl_cert=None):
     server_config_dir = Path(__file__).parent
-    server_config_path = server_config_dir.parent / SERVER_CONFIG_FILENAME
+    server_config_path = server_config_dir.parent / '..' / 'configs' / SERVER_CONFIG_FILENAME
 
     if https:
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)

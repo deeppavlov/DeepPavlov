@@ -44,7 +44,7 @@ def run_ms_bot_framework_server(agent_generator: callable, app_id: str, app_secr
                                 multi_instance: bool = False, stateful: bool = False):
 
     server_config_dir = Path(__file__).resolve().parent
-    server_config_path = Path(server_config_dir, '..', SERVER_CONFIG_FILENAME).resolve()
+    server_config_path = Path(server_config_dir, '..', '..', 'configs', SERVER_CONFIG_FILENAME).resolve()
     server_params = read_json(server_config_path)
 
     host = server_params['common_defaults']['host']
