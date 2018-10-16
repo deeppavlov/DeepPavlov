@@ -19,6 +19,7 @@ from sklearn.decomposition import PCA
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.simple_vocab import SimpleVocabulary
+from deeppavlov.models.embedders.abstract_embedder import Embedder
 from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
 from deeppavlov.models.embedders.glove_embedder import GloVeEmbedder
 
@@ -50,7 +51,7 @@ class EmbeddingsMatrixAssembler:
     """
 
     def __init__(self,
-                 embedder: Union[FasttextEmbedder, GloVeEmbedder],
+                 embedder: Embedder,
                  vocab: SimpleVocabulary,
                  character_level: bool = False,
                  emb_dim: int = None,
