@@ -55,7 +55,7 @@
       {
         "id": "embeddings",
         "name": "emb_mat_assembler",
-        "embedder": "#word2vec_vectorizer",
+        "embedder": "#word2vec_embedder",
         "vocab": "#vocab_1"
       },
       {
@@ -64,7 +64,7 @@
         "stack_num": 5,
         "num_context_turns": "#preproc.num_context_turns",
         "max_sequence_length": "#preproc.max_sequence_length",
-        "embedding_dim": "#word2vec_vectorizer.dim",
+        "embedding_dim": "#word2vec_embedder.dim",
         "emb_matrix": "#embeddings.emb_mat",
         "learning_rate": 1e-3,
         "batch_size": 100,

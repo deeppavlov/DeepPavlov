@@ -34,6 +34,34 @@ command:
 As an example of configuration file see
 :config:`ranking_insurance.json <ranking/ranking_insurance.json>`.
 
+
+To use ether Sequential Matching Network (SMN) or Deep Attention Matching Network (DAM)
+on the `Ubuntu Dialogue Corpus v2`_ for inference, please run one of the following commands:
+
+::
+
+    python -m deeppavlov interact deeppavlov/configs/ranking/ranking_ubuntu_v2_mt_word2vec_smn_interact.json -d
+    python -m deeppavlov interact deeppavlov/configs/ranking/ranking_ubuntu_v2_mt_word2vec_dam_interact.json -d
+
+Now a user can enter a dialog consists of several context sentences and candidate response sentence separated by '&'
+and then get the probability that the response is proper continuation of the dialog:
+
+::
+
+    :: bonhoeffer  whar drives do you want to mount what &  i have an ext3 usb drive  & look with fdisk -l
+    >> The probability that the response is proper continuation of the dialog is 0.933
+
+To train the models on the `Ubuntu Dialogue Corpus v2`_ dataset please run one of the following commands:
+
+::
+
+    python -m deeppavlov train deeppavlov/configs/ranking/ranking_ubuntu_v2_mt_word2vec_smn.json -d
+    python -m deeppavlov train deeppavlov/configs/ranking/ranking_ubuntu_v2_mt_word2vec_dam.json -d
+
+As an example of configuration file see
+:config:`ranking_ubuntu_v2_mt_word2vec_smn.json <ranking/ranking_ubuntu_v2_mt_word2vec_smn.json>`.
+
+
 Paraphrase identification
 -------------------------
 
@@ -68,3 +96,4 @@ References
 
 .. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
 .. _`Quora Question Pairs`: https://www.kaggle.com/c/quora-question-pairs/data
+.. _`Ubuntu Dialogue Corpus v2`: https://github.com/rkadlec/ubuntu-ranking-dataset-creator

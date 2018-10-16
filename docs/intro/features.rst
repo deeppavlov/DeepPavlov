@@ -184,23 +184,37 @@ on Automatic Spelling Correction for Russian:
 
 - :doc:`Ranking component </components/neural_ranking>`
 
-Based on `LSTM-based deep learning models for non-factoid answer selection <https://arxiv.org/abs/1511.04108>`__. The
-model performs ranking of responses or contexts from some database by their relevance for the given context.
+The main neural ranking model based on `LSTM-based deep learning models for non-factoid answer selection
+<https://arxiv.org/abs/1511.04108>`__. The model performs ranking of responses or contexts from some database by their
+relevance for the given context.
+
+There are two alternative neural architectures available as well:
+
+Sequential Matching Network (SMN)
+   Based on the work `Wu, Yu, et al. "Sequential Matching Network: A New Architecture for Multi-turn Response Selection in Retrieval-based Chatbots". ACL. 2017. <https://arxiv.org/abs/1612.01627>`__
+
+Deep Attention Matching Network (DAM)
+   Based on the work `Xiangyang Zhou, et al. "Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network". Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers). 2018 <http://aclweb.org/anthology/P18-1103>`__
+
 
 Available pre-trained models for ranking:
 
 .. table::
    :widths: auto
 
-   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+
-   |    Dataset        | Model config                                                                        | Validation (Recall@1) | Test1 (Recall@1) |
-   +===================+=====================================================================================+=======================+==================+
-   | `InsuranceQA V1`_ | :config:`ranking_insurance_interact <ranking/ranking_insurance_interact.json>`      |   72.0                |   72.2           |
-   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+
-   | `Ubuntu V2`_      |:config:`ranking_ubuntu_v2_interact <ranking/ranking_ubuntu_v2_interact.json>`       |   52.9                |   52.4           |
-   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+
-   | `Ubuntu V2`_      |:config:`ranking_ubuntu_v2_mt_interact <ranking/ranking_ubuntu_v2_mt_interact.json>` |   59.2                |   58.7           |
-   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+
+   +-------------------+----------------------------------------------------------------------------------------------------------------+-----------------------+------------------+
+   |    Dataset        | Model config                                                                                                   | Validation (Recall@1) | Test1 (Recall@1) |
+   +===================+================================================================================================================+=======================+==================+
+   | `InsuranceQA V1`_ | :config:`ranking_insurance_interact <ranking/ranking_insurance_interact.json>`                                 |   72.0                |   72.2           |
+   +-------------------+----------------------------------------------------------------------------------------------------------------+-----------------------+------------------+
+   | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_mt_word2vec_dam_interact <ranking/ranking_ubuntu_v2_mt_word2vec_dam_interact.json>` |   70.3                |   69.8           |
+   +-------------------+----------------------------------------------------------------------------------------------------------------+-----------------------+------------------+
+   | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_mt_word2vec_smn_interact <ranking/ranking_ubuntu_v2_mt_word2vec_smn_interact.json>` |   66.9                |   66.5           |
+   +-------------------+----------------------------------------------------------------------------------------------------------------+-----------------------+------------------+
+   | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_mt_interact <ranking/ranking_ubuntu_v2_mt_interact.json>`                           |   59.2                |   58.7           |
+   +-------------------+----------------------------------------------------------------------------------------------------------------+-----------------------+------------------+
+   | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_interact <ranking/ranking_ubuntu_v2_interact.json>`                                 |   52.9                |   52.4           |
+   +-------------------+----------------------------------------------------------------------------------------------------------------+-----------------------+------------------+
 
 .. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
 .. _`Ubuntu V2`: https://github.com/rkadlec/ubuntu-ranking-dataset-creator
