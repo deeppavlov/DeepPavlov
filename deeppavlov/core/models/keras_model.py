@@ -41,12 +41,6 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
     """
 
     def __init__(self, **kwargs) -> None:
-        """
-        Initialize model using parameters from opt
-
-        Args:
-            kwargs (dict): Dictionary with model parameters
-        """
         self.epochs_done = 0
         self.batches_seen = 0
         self.train_examples_seen = 0
