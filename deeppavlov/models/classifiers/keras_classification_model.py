@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 import numpy as np
 from keras.layers import Dense, Input, concatenate, Activation, Concatenate, Reshape
 from keras.layers.wrappers import Bidirectional
