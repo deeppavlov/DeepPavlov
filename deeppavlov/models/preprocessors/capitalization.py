@@ -21,7 +21,7 @@ import numpy as np
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.data.utils import zero_pad
 from deeppavlov.core.common.registry import register
-
+from deeppavlov.models.tokenizers.nltk_moses_tokenizer import NLTKMosesTokenizer
 
 @register('capitalization_featurizer')
 class CapitalizationPreprocessor(Component):
@@ -122,7 +122,8 @@ class LowercasePreprocessor(Component):
     def __call__(self, tokens_batch: List[Union[List[str], str]], **kwargs) -> List[List[Tuple[str]]]:
         answer = []
         for elem in tokens_batch:
-            if isinstance(elem, str):
-                elem = [x for x in re.split("(\w+|[,.])", elem) if x.strip() != ""]
+            # if isinstance(elem, str):
+            #     elem = NLTKMosesTokenizer()([elem])[0]
+            #     # elem = [x for x in re.split("(\w+|[,.])", elem) if x.strip() != ""]
             answer.append([process_word(x, self.to_lower, self.append_case) for x in elem])
         return answer

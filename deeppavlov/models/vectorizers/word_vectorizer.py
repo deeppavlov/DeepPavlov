@@ -56,8 +56,8 @@ class WordIndexVectorizer(Serializable):
         Returns:
             a 3D array. answer[i][j][k] = 1 iff data[i][j] is the k-th word in the dictionary.
         """
-        if isinstance(data[0], str):
-            data = [[x for x in re.split("(\w+|[,.])", elem) if x.strip() != ""] for elem in data]
+        # if isinstance(data[0], str):
+        #     data = [[x for x in re.split("(\w+|[,.])", elem) if x.strip() != ""] for elem in data]
         max_length = max(len(x) for x in data)
         answer = np.zeros(shape=(len(data), max_length, self.dim), dtype=int)
         for i, sent in enumerate(data):

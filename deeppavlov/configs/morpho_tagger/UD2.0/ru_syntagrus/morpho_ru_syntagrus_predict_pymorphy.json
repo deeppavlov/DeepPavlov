@@ -12,9 +12,14 @@
     "in_y": ["y"],
     "pipe": [
       {
+        "in": ["x"],
+        "name": "lazy_tokenizer",
+        "out": ["x_tokens"]
+      },
+      {
         "id": "lowercase_preprocessor",
         "name": "lowercase_preprocessor",
-        "in": ["x"],
+        "in": ["x_tokens"],
         "out": ["x_processed"]
       },
       {
@@ -62,7 +67,7 @@
         "word_vectorizers": [["#pymorphy_vectorizer.dim", 128]]
       },
       {
-        "in": ["x", "y_predicted"],
+        "in": ["x_tokens", "y_predicted"],
         "out": ["y_prettified"],
         "name": "tag_output_prettifier",
         "end": "\n"

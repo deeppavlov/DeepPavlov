@@ -12,6 +12,11 @@
     "in_y": ["y"],
     "pipe": [
       {
+        "in": ["x"],
+        "name": "lazy_tokenizer",
+        "out": ["x_tokens"]
+      },
+      {
         "id": "lowercase_preprocessor",
         "name": "lowercase_preprocessor",
         "in": ["x"],

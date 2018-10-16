@@ -92,8 +92,7 @@ class TagOutputPrettifier(Component):
             raise ValueError("Wrong mode for TagOutputPrettifier: {}, "
                              "it must be 'basic', 'conllu' or 'ud'.".format(self.mode))
 
-    def __call__(self, X: List[Union[str, List[str]]],
-                 Y: List[Union[List[str], str]]) -> List[Union[List[str], str]]:
+    def __call__(self, X: List[List[str]], Y: List[List[str]]) -> List[Union[List[str], str]]:
         """Calls the ``prettify`` function for each input sentence.
 
         Args:
@@ -135,12 +134,12 @@ class TagOutputPrettifier(Component):
                 4	pizza	_	NOUN	_	Number=Sing	_	_	_	_
                 5	.	_	PUNCT	_	_	_	_	_	_
         """
-        if isinstance(sent, str):
-            words = NLTKMosesTokenizer()([sent])[0]
-        else:
-            words = sent
+        # if isinstance(sent, str):
+        #     words = NLTKMosesTokenizer()([sent])[0]
+        # else:
+        #     words = sent
         answer = []
-        for i, (word, tag) in enumerate(zip(words, tags)):
+        for i, (word, tag) in enumerate(zip(sent, tags)):
             answer.append(self.format_string.format(i + 1, word, *make_pos_and_tag(tag)))
         if self.return_string:
             answer = self.begin + self.sep.join(answer) + self.end
