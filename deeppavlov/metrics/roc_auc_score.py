@@ -35,6 +35,7 @@ def roc_auc_score(y_true: Union[List[List[float]], List[List[int]], np.ndarray],
         Area Under the Curve (AUC) from prediction scores
     """
     try:
-        return sklearn.metrics.roc_auc_score(np.array(y_true), np.array(y_pred), average="macro")
+        return sklearn.metrics.roc_auc_score(np.squeeze(np.array(y_true)),
+                                             np.squeeze(np.array(y_pred)), average="macro")
     except ValueError:
         return 0.
