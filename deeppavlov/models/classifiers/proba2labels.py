@@ -62,12 +62,9 @@ class Proba2Labels(Component):
             list of labels (only label classification) or list of lists of labels (multi-label classification)
         """
         if self.confident_threshold:
-            # return [[key for key, val in d.items() if val > self.confident_threshold]
-            #         for d in data]
             return [list(np.where(np.array(d) > self.confident_threshold)[0])
                     for d in data]
         elif self.max_proba:
-            # return [max(d, key=d.get) for d in data]
             return [[np.argmax(d)] for d in data]
         else:
             raise ConfigError("Proba2Labels requires one of two arguments: bool `max_proba` or "
