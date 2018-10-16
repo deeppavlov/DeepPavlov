@@ -32,7 +32,6 @@ class GloVeEmbedder(Embedder):
 
     Args:
         load_path: path where to load pre-trained embedding model from
-        dim: dimensionality of fastText model
         pad_zero: whether to pad samples or not
 
     Attributes:
@@ -52,6 +51,7 @@ class GloVeEmbedder(Embedder):
         """
         log.info(f"[loading GloVe embeddings from `{self.load_path}`]")
         self.model = KeyedVectors.load_word2vec_format(str(self.load_path))
+        self.dim = self.model.vector_size
 
     @overrides
     def __iter__(self) -> Iterator[str]:

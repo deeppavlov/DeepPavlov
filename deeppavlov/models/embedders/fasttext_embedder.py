@@ -32,7 +32,6 @@ class FasttextEmbedder(Embedder):
 
     Args:
         load_path: path where to load pre-trained embedding model from
-        dim: dimensionality of fastText model
         pad_zero: whether to pad samples or not
 
     Attributes:
@@ -52,6 +51,7 @@ class FasttextEmbedder(Embedder):
         """
         log.info(f"[loading fastText embeddings from `{self.load_path}`]")
         self.model = fastText.load_model(str(self.load_path))
+        self.dim = self.model.get_dimension()
 
     @overrides
     def __iter__(self) -> Iterator[str]:

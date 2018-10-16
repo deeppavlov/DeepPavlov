@@ -33,7 +33,6 @@ class Embedder(Component, Serializable, metaclass=ABCMeta):
 
     Args:
         load_path: path where to load pre-trained embedding model from
-        dim: dimensionality of the model
         pad_zero: whether to pad samples or not
 
     Attributes:
@@ -43,14 +42,14 @@ class Embedder(Component, Serializable, metaclass=ABCMeta):
         pad_zero: whether to pad sequence of tokens with zeros or not
         load_path: path with pre-trained fastText binary model
     """
-    def __init__(self, load_path: Union[str, Path], dim: int = 100, pad_zero: bool = False, **kwargs) -> None:
+    def __init__(self, load_path: Union[str, Path], pad_zero: bool = False, **kwargs) -> None:
         """
         Initialize embedder with given parameters
         """
         super().__init__(save_path=None, load_path=load_path)
         self.tok2emb = {}
-        self.dim = dim
         self.pad_zero = pad_zero
+        self.dim = None
         self.model = None
         self.load()
 
