@@ -58,7 +58,6 @@ class KerasClassificationModel(KerasModel):
 
     Attributes:
         opt: dictionary with all model parameters
-        classes: list of considered classes
         n_classes: number of considered classes
         model: keras model itself
         epochs_done: number of epochs that were done
@@ -84,7 +83,7 @@ class KerasClassificationModel(KerasModel):
                          last_layer_activation=last_layer_activation,
                          restore_lr=restore_lr, **kwargs)
 
-        self.n_classes = list(np.sort(np.array(list(self.opt.get('n_classes')))))
+        self.n_classes = self.opt.get('n_classes')
         if self.n_classes == 0:
             ConfigError("Please, provide vocabulary with considered intents.")
 
