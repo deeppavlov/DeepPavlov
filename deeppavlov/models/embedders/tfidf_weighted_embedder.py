@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import numpy as np
-from pathlib import Path
 
 from overrides import overrides
 from typing import List, Union, Optional, Tuple
@@ -24,12 +23,13 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.data.utils import zero_pad
+from deeppavlov.models.embedders.abstract_embedder import Embedder
 
 log = get_logger(__name__)
 
 
 @register('tfidf_weighted')
-class TfidfWeightedEmbedder(Component):
+class TfidfWeightedEmbedder(Embedder):
     """
     The class implements the functional of embedding the sentence \
         as a weighted by special coefficients average of tokens embeddings. \
