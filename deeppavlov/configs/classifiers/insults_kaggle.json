@@ -48,9 +48,7 @@
         "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
-        "save_path": "embeddings/wordpunct_tok_reddit_comments_2017_11_300.bin",
-        "load_path": "embeddings/wordpunct_tok_reddit_comments_2017_11_300.bin",
-        "dim": 300
+        "load_path": "embeddings/wordpunct_tok_reddit_comments_2017_11_300.bin"
       },
       {
         "in": [
