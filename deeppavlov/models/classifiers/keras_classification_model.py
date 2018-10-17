@@ -52,8 +52,7 @@ class KerasClassificationModel(KerasModel):
         last_layer_activation: parameter that determines activation function after classification layer.
                 For multi-label classification use `sigmoid`,
                 otherwise, `softmax`.
-        classes: list of classes names presented in the dataset
-                (in config it is determined as keys of vocab over `y`)
+        n_classes: number of considered classes
         restore_lr: in case of loading pre-trained model \
                 whether to init learning rate with the final learning rate value from saved opt
 
@@ -85,9 +84,7 @@ class KerasClassificationModel(KerasModel):
                          last_layer_activation=last_layer_activation,
                          restore_lr=restore_lr, **kwargs)
 
-        self.classes = list(np.sort(np.array(list(self.opt.get('classes')))))
-        self.opt['classes'] = self.classes
-        self.n_classes = len(self.classes)
+        self.n_classes = list(np.sort(np.array(list(self.opt.get('n_classes')))))
         if self.n_classes == 0:
             ConfigError("Please, provide vocabulary with considered intents.")
 
@@ -123,7 +120,7 @@ class KerasClassificationModel(KerasModel):
             None
         """
         fixed_params = [
-            "classes",
+            "n_classes",
             "model_name",
             "embedding_size",
             "fasttext_md5",
