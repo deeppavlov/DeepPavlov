@@ -69,7 +69,7 @@ def round_f1_macro(y_true, y_predicted):
     except TypeError:
         predictions = y_predicted
 
-    return f1_score(y_true, predictions, average="macro")
+    return f1_score(np.array(y_true), np.array(predictions), average="macro")
 
 
 @register_metric('f1_weighted')
@@ -89,4 +89,4 @@ def round_f1_weighted(y_true, y_predicted):
     except TypeError:
         predictions = y_predicted
 
-    return f1_score(y_true, predictions, average="weighted")
+    return f1_score(np.array(y_true), np.array(predictions), average="weighted")
