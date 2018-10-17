@@ -179,7 +179,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
             _train_batches(model, iterator, train_config, metrics_functions)
         if callable(getattr(model, 'fit_batches', None)):
             _fit_batches(model, iterator, train_config)
-        if not any(getattr(model, m) for m in ('fit', 'train_on_batch', 'fit_batches'))\
+        if not any(getattr(model, m, None) for m in ('fit', 'train_on_batch', 'fit_batches'))\
                 and not isinstance(model, Chainer):
             log.warning('Nothing to train')
 
