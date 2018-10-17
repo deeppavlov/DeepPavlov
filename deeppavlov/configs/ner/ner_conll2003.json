@@ -56,7 +56,7 @@
       {
         "in": ["x_char"],
         "id": "char_vocab",
-        "name": "char_vocab",
+        "name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["x_char"],
         "save_path": "ner_conll2003/char.dict",
