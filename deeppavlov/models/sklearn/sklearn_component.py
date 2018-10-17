@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple, Any, Union, Generator, Iterable
+from typing import List, Tuple, Any, Union, Callable
 import numpy as np
 from scipy.sparse import spmatrix
 import pickle
@@ -102,15 +102,12 @@ class SklearnComponent(Estimator):
             log.info("Fitting model {}".format(self.model_class))
             self.model.fit(x_features, y_)
         except TypeError or ValueError:
-            try:
-                if issparse(x_features):
-                    log.info("Converting input for model {} to dense array".format(self.model_class))
-                    self.model.fit(x_features.todense(), y_)
-                else:
-                    log.info("Converting input for model {} to sparse array".format(self.model_class))
-                    self.model.fit(csr_matrix(x_features), y_)
-            except:
-                raise ConfigError("Can not fit on the given data".format(self.model_class))
+            if issparse(x_features):
+                log.info("Converting input for model {} to dense array".format(self.model_class))
+                self.model.fit(x_features.todense(), y_)
+            else:
+                log.info("Converting input for model {} to sparse array".format(self.model_class))
+                self.model.fit(csr_matrix(x_features), y_)
 
         return
 
@@ -129,16 +126,13 @@ class SklearnComponent(Estimator):
 
         try:
             predictions = self.infer_method(x_features)
-        except:
-            try:
-                if issparse(x_features):
-                    log.info("Converting input for model {} to dense array".format(self.model_class))
-                    predictions = self.infer_method(x_features.todense())
-                else:
-                    log.info("Converting input for model {} to sparse array".format(self.model_class))
-                    predictions = self.infer_method(csr_matrix(x_features))
-            except:
-                raise ConfigError("Can not infer on the given data".format(self.model_class))
+        except TypeError or ValueError:
+            if issparse(x_features):
+                log.info("Converting input for model {} to dense array".format(self.model_class))
+                predictions = self.infer_method(x_features.todense())
+            else:
+                log.info("Converting input for model {} to sparse array".format(self.model_class))
+                predictions = self.infer_method(csr_matrix(x_features))
 
         if isinstance(predictions, list):
             #  ``predict_proba`` sometimes returns list of n_outputs (each output corresponds to a label)
@@ -175,7 +169,7 @@ class SklearnComponent(Estimator):
                 if param_name in available_params:
                     try:
                         given_params[param_name] = cls_from_str(self.model_params[param_name])
-                    except:
+                    except (AttributeError, ValueError, ConfigError):
                         given_params[param_name] = self.model_params[param_name]
 
         self.model = model_function(**given_params)
@@ -198,7 +192,7 @@ class SklearnComponent(Estimator):
 
         fname = Path(fname).with_suffix('.pkl')
 
-        if Path(fname).exists():
+        if fname.exists():
             log.info("Loading model {} from {}".format(self.model_class, str(fname)))
             with open(fname, "rb") as f:
                 self.model = pickle.load(f)
@@ -293,7 +287,7 @@ class SklearnComponent(Estimator):
         return
 
     @staticmethod
-    def get_function_params(f) -> List[str]:
+    def get_function_params(f: Callable) -> List[str]:
         """
         Get list of names of given function's parameters
 
@@ -306,7 +300,7 @@ class SklearnComponent(Estimator):
         return inspect.getfullargspec(f)[0]
 
     @staticmethod
-    def get_class_attributes(cls) -> List[str]:
+    def get_class_attributes(cls: type) -> List[str]:
         """
         Get list of names of given class' attributes
 

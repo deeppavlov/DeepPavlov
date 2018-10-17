@@ -62,10 +62,7 @@
     ]
   },
   "train": {
-    "metrics": [
-      "accuracy"
-    ],
-    "validate_best": true,
+    "validate_best": false,
     "test_best": false
   },
   "metadata": {
