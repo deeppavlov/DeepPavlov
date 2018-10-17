@@ -34,7 +34,6 @@
         "fit_on": [
           "y"
         ],
-        "level": "token",
         "save_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_classes.dict",
         "load_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_classes.dict",
         "in": "y",
@@ -172,7 +171,10 @@
       "f1_macro",
       {
         "name": "roc_auc",
-        "inputs": ["y_onehot", "y_pred_probas"]
+        "inputs": [
+          "y_onehot",
+          "y_pred_probas"
+        ]
       }
     ],
     "validation_patience": 5,

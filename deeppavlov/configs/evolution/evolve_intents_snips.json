@@ -38,7 +38,6 @@
         "fit_on": [
           "y"
         ],
-        "level": "token",
         "save_path": "vocabs/snips_classes.dict",
         "load_path": "vocabs/snips_classes.dict",
         "in": "y",
@@ -183,7 +182,10 @@
       "f1_macro",
       {
         "name": "roc_auc",
-        "inputs": ["y_onehot", "y_pred_probas"]
+        "inputs": [
+          "y_onehot",
+          "y_pred_probas"
+        ]
       }
     ],
     "validation_patience": 5,
