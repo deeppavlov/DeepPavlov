@@ -8,6 +8,7 @@ from flask_cors import CORS
 from utils.ms_bot_framework_utils.bot import Bot
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.paths import get_configs_path
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.default_rich_content_processor import DefaultRichContentWrapper
@@ -43,8 +44,7 @@ def run_ms_bf_default_agent(model_config_path: str, app_id: str, app_secret: str
 def run_ms_bot_framework_server(agent_generator: callable, app_id: str, app_secret: str,
                                 multi_instance: bool = False, stateful: bool = False):
 
-    server_config_dir = Path(__file__).resolve().parent
-    server_config_path = Path(server_config_dir, '..', '..', 'configs', SERVER_CONFIG_FILENAME).resolve()
+    server_config_path = Path(get_configs_path(), SERVER_CONFIG_FILENAME).resolve()
     server_params = read_json(server_config_path)
 
     host = server_params['common_defaults']['host']

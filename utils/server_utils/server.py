@@ -25,6 +25,7 @@ from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.common.paths import get_configs_path
 from deeppavlov.core.data.utils import check_nested_dict_keys, jsonify_data
 from deeppavlov.core.models.component import Component
 
@@ -156,8 +157,7 @@ def interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
 
 
 def start_model_server(model_config_path, alice=False, https=False, ssl_key=None, ssl_cert=None):
-    server_config_dir = Path(__file__).parent
-    server_config_path = server_config_dir.parent / '..' / 'configs' / SERVER_CONFIG_FILENAME
+    server_config_path = get_configs_path() / SERVER_CONFIG_FILENAME
 
     if https:
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)

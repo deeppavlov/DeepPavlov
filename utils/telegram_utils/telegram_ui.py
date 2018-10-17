@@ -19,6 +19,7 @@ import telebot
 
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.paths import get_configs_path
 
 TELEGRAM_UI_CONFIG_FILENAME = 'models_info.json'
 
@@ -26,8 +27,7 @@ TELEGRAM_UI_CONFIG_FILENAME = 'models_info.json'
 def init_bot_for_model(token, model):
     bot = telebot.TeleBot(token)
 
-    config_dir = Path(__file__).resolve().parent
-    config_path = Path(config_dir, '..', '..', 'configs', TELEGRAM_UI_CONFIG_FILENAME).resolve()
+    config_path = Path(get_configs_path(), TELEGRAM_UI_CONFIG_FILENAME).resolve()
     models_info = read_json(str(config_path))
 
     model_name = type(model.get_main_component()).__name__
