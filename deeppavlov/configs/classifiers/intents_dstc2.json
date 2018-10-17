@@ -21,7 +21,6 @@
         "fit_on": [
           "y"
         ],
-        "level": "token",
         "save_path": "vocabs/dstc2_classes.dict",
         "load_path": "vocabs/dstc2_classes.dict",
         "in": "y",
@@ -133,7 +132,6 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
       "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/dstc2_fastText_model.bin",
