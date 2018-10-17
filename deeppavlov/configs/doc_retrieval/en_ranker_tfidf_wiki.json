@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "odqa_reader",
-    "data_path": "odqa/enwiki.db",
+    "data_path": "odqa/enwiki",
     "save_path": "odqa/enwiki.db",
     "dataset_format": "wiki"
   },
