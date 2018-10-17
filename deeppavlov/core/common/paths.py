@@ -18,6 +18,7 @@ from pathlib import Path
 from deeppavlov.core.common.file import read_json, save_json
 
 
+deeppavlov_root = ''
 root_path = Path(__file__, '..', '..', '..', '..').resolve()
 default_configs_path = root_path / 'configs' / '.default'
 
