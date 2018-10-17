@@ -61,8 +61,8 @@ def run_ms_bot_framework_server(agent_generator: callable, app_id: str, app_secr
     server_params['auth_app_id'] = app_id
     server_params['auth_app_secret'] = app_secret
 
-    server_params['multi_instance'] = multi_instance if multi_instance else bool(server_params['multi_instance'])
-    server_params['stateful'] = stateful if stateful else bool(server_params['stateful'])
+    server_params['multi_instance'] = multi_instance or bool(server_params['multi_instance'])
+    server_params['stateful'] = stateful or bool(server_params['stateful'])
 
     input_q = Queue()
     bot = Bot(agent_generator, server_params, input_q)
