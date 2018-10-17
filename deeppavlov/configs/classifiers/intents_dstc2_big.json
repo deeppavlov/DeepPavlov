@@ -63,8 +63,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/intents_dstc2_v5",
-        "load_path": "classifiers/intents_dstc2_v5",
+        "save_path": "classifiers/intents_dstc2_v5/intents_dstc2_v5",
+        "load_path": "classifiers/intents_dstc2_v5/intents_dstc2_v5",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "kernel_sizes_cnn": [
@@ -139,6 +139,10 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "embeddings"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_dstc2_v5.tar.gz",
+        "subdir": "classifiers"
       }
     ]
   }
