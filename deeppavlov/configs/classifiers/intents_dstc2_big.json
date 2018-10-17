@@ -111,13 +111,6 @@
     "metrics": [
       "sets_accuracy",
       {
-        "name": "f1_macro",
-        "inputs": [
-          "y_onehot",
-          "y_pred_onehot"
-        ]
-      },
-      {
         "name": "roc_auc",
         "inputs": [
           "y_onehot",
