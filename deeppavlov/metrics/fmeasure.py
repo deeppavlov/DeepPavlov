@@ -22,7 +22,6 @@ from deeppavlov.models.ner.evaluation import precision_recall_f1
 
 @register_metric('ner_f1')
 def ner_f1(y_true, y_predicted):
-    _, y_predicted = zip(*y_predicted)
     y_true = list(chain(*y_true))
     y_predicted = list(chain(*y_predicted))
     results = precision_recall_f1(y_true,
@@ -30,6 +29,7 @@ def ner_f1(y_true, y_predicted):
                                   print_results=False)
     f1 = results['__total__']['f1']
     return f1
+
 
 @register_metric('f1')
 def round_f1(y_true, y_predicted):

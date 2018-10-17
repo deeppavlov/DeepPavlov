@@ -74,8 +74,8 @@ class DefaultStatelessSkill(Skill):
                     infer_indexes.append(utt_i)
 
             if infer_indexes:
-                infer_utterances = [tuple(states_batch[i]['received_values']) for i in infer_indexes]
-                infer_results = self.model(infer_utterances)
+                infer_utterances = zip(*[tuple(states_batch[i]['received_values']) for i in infer_indexes])
+                infer_results = self.model(*infer_utterances)
 
                 for infer_i, infer_result in zip(infer_indexes, infer_results):
                     response_batch[infer_i] = infer_result
