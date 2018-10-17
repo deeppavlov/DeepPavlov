@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Generator, Union
 import numpy as np
 from keras.layers import Dense, Input, concatenate, Activation, Concatenate, Reshape
 from keras.layers.wrappers import Bidirectional
@@ -44,6 +44,7 @@ class KerasClassificationModel(KerasModel):
                 longer texts are cutted,
                 shorter ones are padded by zeros (pre-padding)
         embedding_size: embedding_size from embedder in pipeline
+        n_classes: number of considered classes
         model_name: particular method of this class to initialize model configuration
         optimizer: function name from keras.optimizers
         loss: function name from keras.losses.
@@ -52,9 +53,9 @@ class KerasClassificationModel(KerasModel):
         last_layer_activation: parameter that determines activation function after classification layer.
                 For multi-label classification use `sigmoid`,
                 otherwise, `softmax`.
-        n_classes: number of considered classes
         restore_lr: in case of loading pre-trained model \
                 whether to init learning rate with the final learning rate value from saved opt
+        classes: list or generator of considered classes
 
     Attributes:
         opt: dictionary with all model parameters
@@ -65,24 +66,34 @@ class KerasClassificationModel(KerasModel):
         train_examples_seen: number of training samples that were seen
         sess: tf session
         optimizer: keras.optimizers instance
+        classes: list of considered classes
     """
 
-    def __init__(self, text_size: int, embedding_size: int,
+    def __init__(self, text_size: int, embedding_size: int, n_classes: int,
                  model_name: str, optimizer: str = "Adam", loss: str = "binary_crossentropy",
                  lear_rate: float = 0.01, lear_rate_decay: float = 0.,
                  last_layer_activation="sigmoid",
                  restore_lr: bool = False,
+                 classes: Optional[Union[list, Generator]] = None,
                  **kwargs):
         """
         Initialize model using parameters
         from opt dictionary (from config), if model is being initialized from saved.
         """
-        super().__init__(text_size=text_size, embedding_size=embedding_size, model_name=model_name,
-                         optimizer=optimizer, loss=loss,
-                         lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,
+        super().__init__(text_size=text_size,
+                         embedding_size=embedding_size,
+                         n_classes=n_classes,
+                         model_name=model_name,
+                         optimizer=optimizer,
+                         loss=loss,
+                         lear_rate=lear_rate,
+                         lear_rate_decay=lear_rate_decay,
                          last_layer_activation=last_layer_activation,
-                         restore_lr=restore_lr, **kwargs)
+                         restore_lr=restore_lr,
+                         classes=classes,
+                         **kwargs)
 
+        self.classes = list(self.opt.get("classes"))
         self.n_classes = self.opt.get('n_classes')
         if self.n_classes == 0:
             ConfigError("Please, provide vocabulary with considered intents.")
@@ -93,15 +104,23 @@ class KerasClassificationModel(KerasModel):
         if restore_lr:
             lear_rate = self.opt.get("final_lear_rate", lear_rate)
 
-        self.model = self.compile(self.model, optimizer_name=optimizer, loss_name=loss,
-                                  lear_rate=lear_rate, lear_rate_decay=lear_rate_decay)
+        self.model = self.compile(self.model,
+                                  optimizer_name=optimizer,
+                                  loss_name=loss,
+                                  lear_rate=lear_rate,
+                                  lear_rate_decay=lear_rate_decay)
 
-        self._change_not_fixed_params(text_size=text_size, embedding_size=embedding_size,
+        self._change_not_fixed_params(text_size=text_size,
+                                      embedding_size=embedding_size,
+                                      n_classes=n_classes,
                                       model_name=model_name,
-                                      optimizer=optimizer, loss=loss,
-                                      lear_rate=lear_rate, lear_rate_decay=lear_rate_decay,
+                                      optimizer=optimizer,
+                                      loss=loss,
+                                      lear_rate=lear_rate,
+                                      lear_rate_decay=lear_rate_decay,
                                       last_layer_activation=last_layer_activation,
                                       restore_lr=restore_lr,
+                                      classes=classes,
                                       **kwargs)
 
         summary = ['Model was successfully initialized!', 'Model summary:']
