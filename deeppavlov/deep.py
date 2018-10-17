@@ -52,8 +52,8 @@ parser.add_argument("--multi-instance", action="store_true", help="allow rising 
 parser.add_argument("--stateful", action="store_true", help="interact with a stateful model")
 
 parser.add_argument("--https", action="store_true", help="run model in https mode")
-parser.add_argument("--key", help="ssl key", type=str)
-parser.add_argument("--cert", help="ssl certificate", type=str)
+parser.add_argument("--key", default=None, help="ssl key", type=str)
+parser.add_argument("--cert", default=None, help="ssl certificate", type=str)
 
 parser.add_argument("--api-mode", help="rest api mode: 'basic' with batches or 'alice' for  Yandex.Dialogs format",
                     type=str, default='basic', choices={'basic', 'alice'})
@@ -77,9 +77,6 @@ def main():
         deep_download(['-c', pipeline_config_path])
     token = args.token or os.getenv('TELEGRAM_TOKEN')
 
-    ms_id = args.ms_id
-    ms_secret = args.ms_secret
-
     multi_instance = args.multi_instance
     stateful = args.stateful
 
@@ -95,6 +92,8 @@ def main():
         else:
             interact_model_by_telegram(pipeline_config_path, token)
     elif args.mode == 'interactmsbot':
+        ms_id = args.ms_id
+        ms_secret = args.ms_secret
         run_ms_bf_default_agent(model_config_path=pipeline_config_path,
                                 app_id=ms_id,
                                 app_secret=ms_secret,
