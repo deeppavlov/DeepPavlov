@@ -184,7 +184,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
             t_a_r = tf.stack(t_a_r_stack, axis=-1)
             r_a_t = tf.stack(r_a_t_stack, axis=-1)
 
-            print(t_a_r, r_a_t)  # debug
+            # log.info(t_a_r, r_a_t)  # debug
 
             # calculate similarity matrix
             with tf.variable_scope('similarity'):
@@ -196,7 +196,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
 
         # cnn and aggregation
         sim = tf.stack(sim_turns, axis=1)
-        print('sim shape: %s' % sim.shape)
+        log.info('sim shape: %s' % sim.shape)
         with tf.variable_scope('cnn_aggregation'):
             final_info = layers.CNN_3d(sim, 32, 16)
             # for douban
@@ -222,7 +222,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
 
             for grad, var in self.grads_and_vars:
                 if grad is None:
-                    print(var)
+                    log.info(var)
 
             self.capped_gvs = [(tf.clip_by_value(grad, -1., 1.), var) for grad, var in self.grads_and_vars]
             self.train_op = Optimizer.apply_gradients(

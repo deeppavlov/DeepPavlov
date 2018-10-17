@@ -27,7 +27,11 @@
 
 import tensorflow as tf
 
+from deeppavlov.core.common.log import get_logger
 import deeppavlov.models.ranking.matching_models.dam_utils.operations as op
+
+log = get_logger(__name__)
+
 
 def similarity(x, y, x_lengths, y_lengths):
     '''calculate similarity with two 3d tensor.
@@ -190,7 +194,7 @@ def attention(
     attention = tf.nn.softmax(logits)
 
     if drop_prob is not None:
-        print('use attention drop')
+        log.info('use attention drop')
         attention = tf.nn.dropout(attention, drop_prob)
 
     return op.weighted_sum(attention, V)
@@ -325,7 +329,7 @@ def CNN_3d(x, out_channels_0, out_channels_1, add_relu=True):
         initializer=tf.zeros_initializer())
 
     conv_0 = tf.nn.conv3d(x, weights_0, strides=[1, 1, 1, 1, 1], padding="SAME")
-    print('conv_0 shape: %s' %conv_0.shape)
+    log.info('conv_0 shape: %s' %conv_0.shape)
     conv_0 = conv_0 + bias_0
 
     if add_relu:
@@ -336,7 +340,7 @@ def CNN_3d(x, out_channels_0, out_channels_1, add_relu=True):
         ksize=[1, 3, 3, 3, 1],
         strides=[1, 3, 3, 3, 1], 
         padding="SAME")
-    print('pooling_0 shape: %s' %pooling_0.shape)
+    log.info('pooling_0 shape: %s' %pooling_0.shape)
 
     #layer_1
     weights_1 = tf.get_variable(
@@ -351,7 +355,7 @@ def CNN_3d(x, out_channels_0, out_channels_1, add_relu=True):
         initializer=tf.zeros_initializer())
 
     conv_1 = tf.nn.conv3d(pooling_0, weights_1, strides=[1, 1, 1, 1, 1], padding="SAME")
-    print('conv_1 shape: %s' %conv_1.shape)
+    log.info('conv_1 shape: %s' %conv_1.shape)
     conv_1 = conv_1 + bias_1
 
     if add_relu:
@@ -362,7 +366,7 @@ def CNN_3d(x, out_channels_0, out_channels_1, add_relu=True):
         ksize=[1, 3, 3, 3, 1],
         strides=[1, 3, 3, 3, 1], 
         padding="SAME")
-    print('pooling_1 shape: %s' %pooling_1.shape)
+    log.info('pooling_1 shape: %s' %pooling_1.shape)
 
     return tf.contrib.layers.flatten(pooling_1)
 
@@ -393,7 +397,7 @@ def CNN_3d_2d(x, out_channels_0, out_channels_1, add_relu=True):
         initializer=tf.zeros_initializer())
 
     conv_0 = tf.nn.conv3d(x, weights_0, strides=[1, 1, 1, 1, 1], padding="SAME")
-    print('conv_0 shape: %s' %conv_0.shape)
+    log.info('conv_0 shape: %s' %conv_0.shape)
     conv_0 = conv_0 + bias_0
 
     if add_relu:
@@ -404,7 +408,7 @@ def CNN_3d_2d(x, out_channels_0, out_channels_1, add_relu=True):
         ksize=[1, 1, 3, 3, 1],
         strides=[1, 1, 3, 3, 1], 
         padding="SAME")
-    print('pooling_0 shape: %s' %pooling_0.shape)
+    log.info('pooling_0 shape: %s' %pooling_0.shape)
 
     #layer_1
     weights_1 = tf.get_variable(
@@ -419,7 +423,7 @@ def CNN_3d_2d(x, out_channels_0, out_channels_1, add_relu=True):
         initializer=tf.zeros_initializer())
 
     conv_1 = tf.nn.conv3d(pooling_0, weights_1, strides=[1, 1, 1, 1, 1], padding="SAME")
-    print('conv_1 shape: %s' %conv_1.shape)
+    log.info('conv_1 shape: %s' %conv_1.shape)
     conv_1 = conv_1 + bias_1
 
     if add_relu:
@@ -430,7 +434,7 @@ def CNN_3d_2d(x, out_channels_0, out_channels_1, add_relu=True):
         ksize=[1, 1, 3, 3, 1],
         strides=[1, 1, 3, 3, 1], 
         padding="SAME")
-    print('pooling_1 shape: %s' %pooling_1.shape)
+    log.info('pooling_1 shape: %s' %pooling_1.shape)
 
     return tf.contrib.layers.flatten(pooling_1)
 
@@ -468,13 +472,13 @@ def CNN_3d_change(x, out_channels_0, out_channels_1, add_relu=True):
     weights_0 = tf.reshape(g_0, [1, 1, 1, out_channels_0]) * tf.nn.l2_normalize(weights_0, [0, 1, 2])
 
     conv_0 = tf.nn.conv3d(x, weights_0, strides=[1, 1, 1, 1, 1], padding="VALID")
-    print('conv_0 shape: %s' %conv_0.shape)
+    log.info('conv_0 shape: %s' %conv_0.shape)
     conv_0 = conv_0 + bias_0
     #######
     '''
     with tf.variable_scope('layer_0'):
         conv_0 = op.layer_norm(conv_0, axis=[1, 2, 3, 4])
-        print('layer_norm in cnn')
+        log.info('layer_norm in cnn')
     '''
     if add_relu:
         conv_0 = tf.nn.elu(conv_0)
@@ -484,7 +488,7 @@ def CNN_3d_change(x, out_channels_0, out_channels_1, add_relu=True):
         ksize=[1, 2, 3, 3, 1],
         strides=[1, 2, 3, 3, 1], 
         padding="VALID")
-    print('pooling_0 shape: %s' %pooling_0.shape)
+    log.info('pooling_0 shape: %s' %pooling_0.shape)
 
     #layer_1
     weights_1 = tf.get_variable(
@@ -506,7 +510,7 @@ def CNN_3d_change(x, out_channels_0, out_channels_1, add_relu=True):
     weights_1 = tf.reshape(g_1, [1, 1, 1, out_channels_1]) * tf.nn.l2_normalize(weights_1, [0, 1, 2])
 
     conv_1 = tf.nn.conv3d(pooling_0, weights_1, strides=[1, 1, 1, 1, 1], padding="VALID")
-    print('conv_1 shape: %s' %conv_1.shape)
+    log.info('conv_1 shape: %s' %conv_1.shape)
     conv_1 = conv_1 + bias_1
     #with tf.variable_scope('layer_1'):
     #    conv_1 = op.layer_norm(conv_1, axis=[1, 2, 3, 4])
@@ -519,7 +523,7 @@ def CNN_3d_change(x, out_channels_0, out_channels_1, add_relu=True):
         ksize=[1, 3, 3, 3, 1],
         strides=[1, 3, 3, 3, 1], 
         padding="VALID")
-    print('pooling_1 shape: %s' %pooling_1.shape)
+    log.info('pooling_1 shape: %s' %pooling_1.shape)
 
     return tf.contrib.layers.flatten(pooling_1)
 

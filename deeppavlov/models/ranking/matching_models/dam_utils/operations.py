@@ -31,6 +31,11 @@ import tensorflow as tf
 
 from scipy.stats import multivariate_normal
 
+from deeppavlov.core.common.log import get_logger
+
+log = get_logger(__name__)
+
+
 def learning_rate(step_num, d_model=512, warmup_steps=4000):
     a = step_num**(-0.5)
     b = step_num*warmup_steps**(-1.5)
@@ -39,7 +44,7 @@ def learning_rate(step_num, d_model=512, warmup_steps=4000):
 def selu(x):
     alpha = 1.6732632423543772848170429916717
     scale = 1.0507009873554804934193349852946
-    print('use selu')
+    log.info('use selu')
     return scale*tf.where(x>=0.0, x, alpha*tf.nn.elu(x))
 
 def bilinear_sim_4d(x, y, is_nor=True):
@@ -135,7 +140,7 @@ def layer_norm(x, axis=None, epsilon=1e-6):
 
     Raises:
     '''
-    print('wrong version of layer_norm')
+    log.info('wrong version of layer_norm')
     scale = tf.get_variable(
         name='scale',
         shape=[1],
@@ -236,15 +241,15 @@ def matmul_2d(x, out_dimension, drop_prob=None):
         initializer=tf.orthogonal_initializer())
     if drop_prob is not None:
         W = tf.nn.dropout(W, drop_prob)
-        print('W is dropout')
+        log.info('W is dropout')
 
     return tf.matmul(x, W)
 
 def gauss_positional_encoding_vector(x, role=0, value=0):
     position = int(x.shape[1])
     dimension = int(x.shape[2])
-    print('position: %s' %position)
-    print('dimension: %s' %dimension)
+    log.info('position: %s' %position)
+    log.info('dimension: %s' %dimension)
 
     _lambda = tf.get_variable(
         name='lambda',
@@ -271,7 +276,7 @@ def gauss_positional_encoding_vector(x, role=0, value=0):
     signal = tf.multiply(_lambda, signal)
     signal = tf.expand_dims(signal, axis=0)
 
-    print('gauss positional encoding')
+    log.info('gauss positional encoding')
 
     return x + _lambda * signal
 
