@@ -13,8 +13,8 @@
   "ms_bot_framework_defaults": {
     "auth_polling_interval": 3500,
     "conversation_lifetime": 3600,
-    "app_id": "",
-    "app_secret": "",
+    "auth_app_id": "",
+    "auth_app_secret": "",
     "stateful": 0,
     "multi_instance": 0
   },

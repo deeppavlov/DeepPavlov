@@ -58,8 +58,19 @@ def run_ms_bot_framework_server(agent_generator: callable, app_id: str, app_secr
     server_params['auth_grant_type'] = AUTH_GRANT_TYPE
     server_params['auth_scope'] = AUTH_SCOPE
 
-    server_params['auth_app_id'] = app_id
-    server_params['auth_app_secret'] = app_secret
+    server_params['auth_app_id'] = app_id or server_params['auth_app_id']
+    if not server_params['auth_app_id']:
+        e = ValueError('Microsoft Bot Framework app id required: initiate -i param '
+                       'or auth_app_id param in server configuration file')
+        log.error(e)
+        raise e
+
+    server_params['auth_app_secret'] = app_secret or server_params['auth_app_secret']
+    if not server_params['auth_app_secret']:
+        e = ValueError('Microsoft Bot Framework app secret required: initiate -s param '
+                       'or auth_app_secret param in server configuration file')
+        log.error(e)
+        raise e
 
     server_params['multi_instance'] = multi_instance or bool(server_params['multi_instance'])
     server_params['stateful'] = stateful or bool(server_params['stateful'])
