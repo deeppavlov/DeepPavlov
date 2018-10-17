@@ -34,7 +34,7 @@ class SMNNetwork(TensorflowBaseMatchingModel):
     Based on authors' Tensorflow code: https://github.com/MarkWuNLP/MultiTurnResponseSelection
 
     Args:
-        max_num_utterance (int): A number of ``context`` turns in data samples.
+        num_context_turns (int): A number of ``context`` turns in data samples.
         max_sequence_length (int): A maximum length of text sequences in tokens.
             Longer sequences will be truncated and shorter ones will be padded.
         learning_rate (float): Initial learning rate.
@@ -45,7 +45,7 @@ class SMNNetwork(TensorflowBaseMatchingModel):
 
     def __init__(self,
                  embedding_dim: int = 200,
-                 max_num_utterance: int = 10,
+                 num_context_turns: int = 10,
                  max_sequence_length: int = 50,
                  learning_rate: float = 1e-3,
                  emb_matrix: np.ndarray = None,
@@ -54,11 +54,10 @@ class SMNNetwork(TensorflowBaseMatchingModel):
                  **kwargs):
 
 
-        self.max_num_utterance = max_num_utterance
+        self.num_context_turns = num_context_turns
         self.max_sentence_len = max_sequence_length
         self.word_embedding_size = embedding_dim
         self.trainable = trainable_embeddings
-
         self.learning_rate = learning_rate
         self.emb_matrix = emb_matrix
 
@@ -76,8 +75,8 @@ class SMNNetwork(TensorflowBaseMatchingModel):
     def _init_placeholders(self):
         with tf.variable_scope('inputs'):
             # Utterances and their lengths
-            self.utterance_ph = tf.placeholder(tf.int32, shape=(None, self.max_num_utterance, self.max_sentence_len))
-            self.all_utterance_len_ph = tf.placeholder(tf.int32, shape=(None, self.max_num_utterance))
+            self.utterance_ph = tf.placeholder(tf.int32, shape=(None, self.num_context_turns, self.max_sentence_len))
+            self.all_utterance_len_ph = tf.placeholder(tf.int32, shape=(None, self.num_context_turns))
 
             # Responses and their lengths
             self.response_ph = tf.placeholder(tf.int32, shape=(None, self.max_sentence_len))
@@ -96,9 +95,9 @@ class SMNNetwork(TensorflowBaseMatchingModel):
         all_utterance_embeddings = tf.nn.embedding_lookup(word_embeddings, self.utterance_ph)
         response_embeddings = tf.nn.embedding_lookup(word_embeddings, self.response_ph)
         sentence_GRU = tf.nn.rnn_cell.GRUCell(self.word_embedding_size, kernel_initializer=tf.orthogonal_initializer())
-        all_utterance_embeddings = tf.unstack(all_utterance_embeddings, num=self.max_num_utterance,
-                                              axis=1)  # list of self.max_num_utterance tensors with shape (?, 200)
-        all_utterance_len = tf.unstack(self.all_utterance_len_ph, num=self.max_num_utterance, axis=1)
+        all_utterance_embeddings = tf.unstack(all_utterance_embeddings, num=self.num_context_turns,
+                                              axis=1)  # list of self.num_context_turns tensors with shape (?, 200)
+        all_utterance_len = tf.unstack(self.all_utterance_len_ph, num=self.num_context_turns, axis=1)
         A_matrix = tf.get_variable('A_matrix_v', shape=(self.word_embedding_size, self.word_embedding_size),
                                    initializer=tf.contrib.layers.xavier_initializer(), dtype=tf.float32)
         final_GRU = tf.nn.rnn_cell.GRUCell(self.word_embedding_size, kernel_initializer=tf.orthogonal_initializer())

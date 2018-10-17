@@ -77,7 +77,7 @@ class MatchingPredictor(Component):
         sent_list = preproc_sample[-(self.num_context_turns + 1):-1]
         if len(sent_list) <= self.num_context_turns:
             tmp = sent_list[:]
-            sent_list = [[0]*50] * (self.num_context_turns - len(sent_list))
+            sent_list = [[0]*self.max_sequence_length] * (self.num_context_turns - len(sent_list))
             sent_list.extend(tmp)
 
         # add response

@@ -44,7 +44,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
     Based on authors' Tensorflow code: https://github.com/baidu/Dialogue/tree/master/DAM
 
     Args:
-        max_num_utterance (int): A number of ``context`` turns in data samples.
+        num_context_turns (int): A number of ``context`` turns in data samples.
         max_sequence_length(int): A maximum length of text sequences in tokens.
             Longer sequences will be truncated and shorter ones will be padded.
         learning_rate (float): Initial learning rate.
@@ -57,7 +57,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
 
     def __init__(self,
                  embedding_dim: int = 200,
-                 max_num_utterance: int = 10,
+                 num_context_turns: int = 10,
                  max_sequence_length: int = 50,
                  learning_rate: float = 1e-3,
                  emb_matrix: np.ndarray = None,
@@ -68,7 +68,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
                  **kwargs):
 
 
-        self.max_num_utterance = max_num_utterance
+        self.num_context_turns = num_context_turns
         self.max_sentence_len = max_sequence_length
         self.word_embedding_size = embedding_dim
         self.trainable = trainable_embeddings
@@ -92,8 +92,8 @@ class DAMNetwork(TensorflowBaseMatchingModel):
     def _init_placeholders(self):
         with tf.variable_scope('inputs'):
             # Utterances and their lengths
-            self.utterance_ph = tf.placeholder(tf.int32, shape=(None, self.max_num_utterance, self.max_sentence_len))
-            self.all_utterance_len_ph = tf.placeholder(tf.int32, shape=(None, self.max_num_utterance))
+            self.utterance_ph = tf.placeholder(tf.int32, shape=(None, self.num_context_turns, self.max_sentence_len))
+            self.all_utterance_len_ph = tf.placeholder(tf.int32, shape=(None, self.num_context_turns))
 
             # Responses and their lengths
             self.response_ph = tf.placeholder(tf.int32, shape=(None, self.max_sentence_len))

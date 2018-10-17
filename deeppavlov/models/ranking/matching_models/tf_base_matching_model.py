@@ -18,13 +18,12 @@ import numpy as np
 from typing import List, Iterable, Union
 
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.models.ranking.siamese_model import SiameseModel
 from deeppavlov.core.models.tf_model import TFModel
 
 log = get_logger(__name__)
 
 
-class TensorflowBaseMatchingModel(TFModel, SiameseModel):
+class TensorflowBaseMatchingModel(TFModel):
     """
     Base class for ranking models that uses context-response matching schemes.
 
@@ -33,13 +32,15 @@ class TensorflowBaseMatchingModel(TFModel, SiameseModel):
         (derived from TFModel and initialized by Chainer)
 
     Args:
-        none
+        batch_size (int): a number of samples in a batch
 
     """
 
     def __init__(self,
+                 batch_size: int,
                  *args,
                  **kwargs):
+        self.batch_size = batch_size
         super(TensorflowBaseMatchingModel, self).__init__(*args, **kwargs)
 
     def __call__(self, samples_generator: Iterable[List[np.ndarray]]) -> Union[np.ndarray, List[str]]:

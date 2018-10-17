@@ -137,11 +137,11 @@ PARAMS = {
                  ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
                 ("ranking/paraphrase_ident_qqp_bilstm_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
                 ("ranking/paraphrase_ident_qqp_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_interact_test.json", "ranking", ('IP',)):
+                ("ranking/ranking_ubuntu_v2_mt_word2vec_dam.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_interact.json", "ranking", ('IP',)):
                     [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/ranking_ubuntu_v2_mt_word2vec_smn_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-                ("ranking/ranking_ubuntu_v2_mt_word2vec_smn_interact_test.json", "ranking", ('IP',)):
+                ("ranking/ranking_ubuntu_v2_mt_word2vec_smn.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+                ("ranking/ranking_ubuntu_v2_mt_word2vec_smn_interact.json", "ranking", ('IP',)):
                     [ONE_ARGUMENT_INFER_CHECK]
 
     },
