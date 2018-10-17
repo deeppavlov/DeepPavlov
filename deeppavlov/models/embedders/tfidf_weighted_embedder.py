@@ -23,13 +23,12 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.data.utils import zero_pad
-from deeppavlov.models.embedders.abstract_embedder import Embedder
 
 log = get_logger(__name__)
 
 
 @register('tfidf_weighted')
-class TfidfWeightedEmbedder(Embedder):
+class TfidfWeightedEmbedder(Component):
     """
     The class implements the functional of embedding the sentence \
         as a weighted by special coefficients average of tokens embeddings. \
@@ -298,21 +297,3 @@ class TfidfWeightedEmbedder(Embedder):
 
     def destroy(self):
         pass
-
-    @overrides
-    def load(self):
-        pass
-
-    @overrides
-    def __iter__(self) -> Iterator[str]:
-        """
-        Iterate over all words from embedder that is fastText model vocabulary
-
-        Returns:
-            iterator
-        """
-        yield from self.embedder.model.get_words()
-
-    @overrides
-    def _get_word_vector(self, w: str) -> np.ndarray:
-        return self.embedder.model.get_word_vector(w)
