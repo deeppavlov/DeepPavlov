@@ -359,12 +359,12 @@ def test_crossvalidation():
     model_dir = 'faq'
     conf_file = 'cv/cv_tfidf_autofaq.json'
 
-    install_config(conf_file)
     download_config(conf_file)
 
     c = test_configs_path / conf_file
     model_path = download_path / model_dir
 
+    install_config(c)
     deep_download(c)
     shutil.rmtree(str(model_path),  ignore_errors=True)
 
@@ -388,7 +388,7 @@ def test_param_search():
     c = test_configs_path / conf_file
     model_path = download_path / model_dir
 
-    install_config(conf_file)
+    install_config(c)
     deep_download(c)
 
     shutil.rmtree(str(model_path),  ignore_errors=True)
@@ -407,13 +407,12 @@ def test_param_search():
 def test_evolving():
     model_dir = 'evolution'
     conf_file = 'evolution/evolve_intents_snips.json'
-
-    install_config(conf_file)
     download_config(conf_file)
 
     c = test_configs_path / conf_file
     model_path = download_path / model_dir
 
+    install_config(c)
     deep_download(c)
 
     shutil.rmtree(str(model_path), ignore_errors=True)
