@@ -58,12 +58,6 @@ def get_server_params(server_config_path, model_config_path):
                 if model_defaults[param_name]:
                     server_params[param_name] = model_defaults[param_name]
 
-    for param_name in server_params.keys():
-        if not server_params[param_name]:
-            log.error('"{}" parameter should be set either in common_defaults '
-                      'or in model_defaults section of {}'.format(param_name, SERVER_CONFIG_FILENAME))
-            sys.exit(1)
-
     return server_params
 
 
@@ -158,22 +152,24 @@ def interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
 
 def start_model_server(model_config_path, alice=False, https=False, ssl_key=None, ssl_cert=None):
     server_config_path = get_configs_path() / SERVER_CONFIG_FILENAME
+    server_params = get_server_params(server_config_path, model_config_path)
+
+    host = server_params['host']
+    port = server_params['port']
+    model_endpoint = server_params['model_endpoint']
+    model_args_names = server_params['model_args_names']
+
+    https = https or bool(server_params['https'])
 
     if https:
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-        ssh_key_path = Path(ssl_key).resolve()
-        ssh_cert_path = Path(ssl_cert).resolve()
+        ssh_key_path = Path(ssl_key or server_params['https_key_path']).resolve()
+        ssh_cert_path = Path(ssl_cert or server_params['https_cert_path']).resolve()
         ssl_context.load_cert_chain(ssh_cert_path, ssh_key_path)
     else:
         ssl_context = None
 
     model = init_model(model_config_path)
-
-    server_params = get_server_params(server_config_path, model_config_path)
-    host = server_params['host']
-    port = server_params['port']
-    model_endpoint = server_params['model_endpoint']
-    model_args_names = server_params['model_args_names']
 
     @app.route('/')
     def index():
