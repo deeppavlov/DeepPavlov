@@ -24,10 +24,10 @@
           "fit_on_batch": [
             "questions_raw"
           ],
-          "save_path": "odqa/enwiki_test_tfidf.npz",
-          "load_path": "odqa/enwiki_test_tfidf.npz",
+          "save_path": "odqa/ruwiki_test_tfidf.npz",
+          "load_path": "odqa/ruwiki_test_tfidf.npz",
           "tokenizer": {
-            "name": "stream_spacy_tokenizer",
+            "name": "ru_tokenizer",
             "lemmas": true,
             "ngram_range": [
               1,
@@ -46,7 +46,7 @@
         ],
         "join_docs": false,
         "shuffle": false,
-        "load_path": "odqa/enwiki_test.db"
+        "load_path": "odqa/ruwiki_test.db"
       },
       {
         "name": "document_chunker",
@@ -71,7 +71,7 @@
       {
         "name": "logit_ranker",
         "squad_model": {
-          "config_path": "../deeppavlov/configs/squad/squad.json"
+          "config_path": "../deeppavlov/configs/squad/ru_squad.json"
         },
         "in": [
           "chunks",
@@ -84,11 +84,7 @@
     ]
   },
   "metadata": {
-    "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/spacy.txt",
-      "../dp_requirements/en_core_web_sm.txt"
-    ],
+    "requirements": [],
     "labels": {
       "server_utils": "ODQA"
     },
