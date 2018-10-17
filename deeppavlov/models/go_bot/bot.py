@@ -117,8 +117,8 @@ class GoalOrientedBot(NNModel):
 
         self.intents = []
         if callable(self.intent_classifier):
-            # intent_classifier returns (y_labels, y_probs)
-            self.intents = list(self.intent_classifier(["hi"])[1][0].keys())
+            # intent_classifier returns y_probas
+            self.intents = self.intent_classifier.classes
 
         network_parameters['load_path'] = load_path
         network_parameters['save_path'] = save_path
@@ -200,9 +200,12 @@ class GoalOrientedBot(NNModel):
         # Intent features
         intent_features = []
         if callable(self.intent_classifier):
-            intent, intent_probs = self.intent_classifier([context])
-            intent_features = np.array([intent_probs[0][i] for i in self.intents],
-                                       dtype=np.float32)
+            # intent, intent_probs = self.intent_classifier([context])
+            # intent_features = np.array([intent_probs[0][i] for i in self.intents],
+            #                            dtype=np.float32)
+            intent_features = np.array(self.intent_classifier([context]))
+            intent = [self.intents[np.argmax(intent_features[0])]]
+
             if self.debug:
                 log.debug("Predicted intent = `{}`".format(intent[0]))
 
