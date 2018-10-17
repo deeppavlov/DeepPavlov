@@ -8,33 +8,13 @@
     ],
     "pipe": [
       {
-        "name": "tfidf_ranker",
+        "config_path": "../deeppavlov/configs/doc_retrieval/en_ranker_tfidf_wiki_test.json",
         "in": [
           "question_raw"
         ],
         "out": [
-          "doc_ids",
-          "doc_scores"
-        ],
-        "fit_on_batch": [
-          "questions_raw"
-        ],
-        "vectorizer": {
-          "name": "hashing_tfidf_vectorizer",
-          "fit_on_batch": [
-            "questions_raw"
-          ],
-          "save_path": "odqa/enwiki_test_tfidf.npz",
-          "load_path": "odqa/enwiki_test_tfidf.npz",
-          "tokenizer": {
-            "name": "stream_spacy_tokenizer",
-            "lemmas": true,
-            "ngram_range": [
-              1,
-              2
-            ]
-          }
-        }
+          "doc_ids"
+        ]
       },
       {
         "name": "wiki_sqlite_vocab",

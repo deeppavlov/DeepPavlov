@@ -8,33 +8,13 @@
     ],
     "pipe": [
       {
-        "name": "tfidf_ranker",
+        "config_path": "../deeppavlov/configs/doc_retrieval/ru_ranker_tfidf_wiki_test.json",
         "in": [
           "question_raw"
         ],
         "out": [
-          "doc_ids",
-          "doc_scores"
-        ],
-        "fit_on_batch": [
-          "questions_raw"
-        ],
-        "vectorizer": {
-          "name": "hashing_tfidf_vectorizer",
-          "fit_on_batch": [
-            "questions_raw"
-          ],
-          "save_path": "odqa/ruwiki_test_tfidf.npz",
-          "load_path": "odqa/ruwiki_test_tfidf.npz",
-          "tokenizer": {
-            "name": "ru_tokenizer",
-            "lemmas": true,
-            "ngram_range": [
-              1,
-              2
-            ]
-          }
-        }
+          "doc_ids"
+        ]
       },
       {
         "name": "wiki_sqlite_vocab",
@@ -71,7 +51,7 @@
       {
         "name": "logit_ranker",
         "squad_model": {
-          "config_path": "../deeppavlov/configs/squad/ru_squad.json"
+          "config_path": "../deeppavlov/configs/squad/squad_ru.json"
         },
         "in": [
           "chunks",
