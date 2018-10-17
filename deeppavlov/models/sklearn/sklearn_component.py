@@ -147,9 +147,13 @@ class SklearnComponent(Estimator):
             predictions_ = [[predictions[j][i][1] for j in range(len(predictions))] for i in range(x_features.shape[0])]
             predictions = np.array(predictions_)
 
-        if len(predictions.shape) == 1:
-            predictions = predictions.reshape(-1, 1)
-        return predictions
+        # if len(predictions.shape) == 1:
+        #     predictions = predictions.reshape(-1, 1)
+
+        if issparse(predictions):
+            return predictions
+        else:
+            return predictions.tolist()
 
     def init_from_scratch(self) -> None:
         """

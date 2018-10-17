@@ -45,7 +45,7 @@
           "q_vect"
         ],
         "out": [
-          "answer"
+          "y_pred"
         ],
         "fit_on": [
           "q_vect",
@@ -73,7 +73,9 @@
         }
       }
     ],
-    "out": "answer"
+    "out": [
+      "y_pred"
+    ]
   },
   "train": {
     "validate_best": true,

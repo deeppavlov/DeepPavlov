@@ -6,23 +6,22 @@
     "data_url": "http://files.deeppavlov.ai/faq/school/faq_school.csv"
   },
   "dataset_iterator": {
-    "name": "data_learning_iterator"
+    "name": "basic_classification_iterator",
+    "seed": 42,
+    "field_to_split": "train",
+    "split_fields": [
+      "train",
+      "valid"
+    ],
+    "split_proportions": [
+      0.9,
+      0.1
+    ]
   },
   "chainer": {
     "in": "q",
+    "in_y": "y",
     "pipe": [
-      {
-        "id": "classes_vocab",
-        "name": "simple_vocab",
-        "fit_on": [
-          "y"
-        ],
-        "level": "token",
-        "save_path": "vocabs/snips_classes.dict",
-        "load_path": "vocabs/snips_classes.dict",
-        "in": "y",
-        "out": "y_ids"
-      },
       {
         "name": "ru_tokenizer",
         "id": "my_tokenizer",
@@ -59,7 +58,7 @@
           "y"
         ],
         "out": [
-          "answer"
+          "y_pred"
         ],
         "C": 1000,
         "penalty": "l2",
@@ -72,11 +71,14 @@
       }
     ],
     "out": [
-      "answer"
+      "y_pred"
     ]
   },
   "train": {
-    "validate_best": false,
+    "metrics": [
+      "accuracy"
+    ],
+    "validate_best": true,
     "test_best": false
   },
   "metadata": {
