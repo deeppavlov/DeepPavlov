@@ -35,7 +35,7 @@ class WikiSQLiteVocab(SQLiteDataIterator):
 
     """
 
-    def __init__(self, load_path: str, join_docs: bool=True, shuffle: bool=False, **kwargs):
+    def __init__(self, load_path: str, join_docs: bool=True, shuffle: bool=False, **kwargs) -> None:
         super().__init__(load_path=load_path, shuffle=shuffle)
         self.join_docs = join_docs
 
