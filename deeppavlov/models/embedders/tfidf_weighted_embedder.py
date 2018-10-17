@@ -15,7 +15,7 @@
 import numpy as np
 
 from overrides import overrides
-from typing import List, Union, Optional, Tuple
+from typing import List, Union, Optional, Tuple, Iterator
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
@@ -298,3 +298,21 @@ class TfidfWeightedEmbedder(Embedder):
 
     def destroy(self):
         pass
+
+    @overrides
+    def load(self):
+        pass
+
+    @overrides
+    def __iter__(self) -> Iterator[str]:
+        """
+        Iterate over all words from embedder that is fastText model vocabulary
+
+        Returns:
+            iterator
+        """
+        yield from self.embedder.model.get_words()
+
+    @overrides
+    def _get_word_vector(self, w: str) -> np.ndarray:
+        return self.embedder.model.get_word_vector(w)
