@@ -48,7 +48,8 @@
         "out": "y_onehot",
         "name": "one_hotter",
         "id": "my_one_hotter",
-        "depth": "#classes_vocab.len"
+        "depth": "#classes_vocab.len",
+        "multi_label": true
       },
       {
         "in": [
