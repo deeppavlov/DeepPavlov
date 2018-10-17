@@ -38,8 +38,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "vocabs/snips_classes.dict",
-        "load_path": "vocabs/snips_classes.dict",
+        "save_path": "classifiers/intents_snips_evolution/classes.dict",
+        "load_path": "classifiers/intents_snips_evolution/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -83,8 +83,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "evolution/classification/intents_snips",
-        "load_path": "evolution/classification/intents_snips",
+        "save_path": "classifiers/intents_snips_evolution/intents_snips",
+        "load_path": "classifiers/intents_snips_evolution/intents_snips",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -200,8 +200,6 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/intents.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
         "subdir": "snips"

@@ -23,8 +23,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "classifiers/sentiment_twitter_v3/sentiment_twitter_classes.dict",
-        "load_path": "classifiers/sentiment_twitter_v3/sentiment_twitter_classes.dict",
+        "save_path": "classifiers/sentiment_twitter_v3/classes.dict",
+        "load_path": "classifiers/sentiment_twitter_v3/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -62,8 +62,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/sentiment_twitter_v3/sentiment_twitter_v3",
-        "load_path": "classifiers/sentiment_twitter_v3/sentiment_twitter_v3",
+        "save_path": "classifiers/sentiment_twitter_v3/model",
+        "load_path": "classifiers/sentiment_twitter_v3/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
