@@ -23,9 +23,10 @@ import zipfile
 from hashlib import md5
 from itertools import chain
 from pathlib import Path
-import numpy as np
-from urllib.parse import urlparse
 from typing import List, Union, Iterable
+from urllib.parse import urlparse
+
+import numpy as np
 import requests
 from tqdm import tqdm
 
