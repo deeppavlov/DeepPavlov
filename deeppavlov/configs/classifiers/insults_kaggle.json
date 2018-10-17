@@ -23,9 +23,8 @@
         "fit_on": [
           "y"
         ],
-        "level": "token",
-        "save_path": "vocabs/insults_kaggle_classes.dict",
-        "load_path": "vocabs/insults_kaggle_classes.dict",
+        "save_path": "classifiers/insults_kaggle_v0/insults_kaggle_classes.dict",
+        "load_path": "classifiers/insults_kaggle_v0/insults_kaggle_classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -72,10 +71,10 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/insults_kaggle_v0",
-        "load_path": "classifiers/insults_kaggle_v0",
+        "save_path": "classifiers/insults_kaggle_v0/insults_kaggle_v0",
+        "load_path": "classifiers/insults_kaggle_v0/insults_kaggle_v0",
         "embedding_size": "#my_embedder.dim",
-        "classes": "#classes_vocab.keys()",
+        "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
           1,
           2,
@@ -138,12 +137,14 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
       "http://files.deeppavlov.ai/datasets/insults_data.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/embeddings/reddit_fastText/wordpunct_tok_reddit_comments_2017_11_300.bin",
         "subdir": "embeddings"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/insults_kaggle_v0.tar.gz",
+        "subdir": "classifiers"
       }
     ]
   }

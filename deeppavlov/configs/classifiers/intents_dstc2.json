@@ -21,8 +21,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "vocabs/dstc2_classes.dict",
-        "load_path": "vocabs/dstc2_classes.dict",
+        "save_path": "classifiers/intents_dstc2_v4/dstc2_classes.dict",
+        "load_path": "classifiers/intents_dstc2_v4/dstc2_classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -65,7 +65,7 @@
         "save_path": "classifiers/intents_dstc2_v4/intents_dstc2_v4",
         "load_path": "classifiers/intents_dstc2_v4/intents_dstc2_v4",
         "embedding_size": "#my_embedder.dim",
-        "classes": "#classes_vocab.keys()",
+        "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
           1,
           2,
@@ -101,14 +101,20 @@
       }
     ],
     "out": [
-      "y_pred_labels"
+      "y_pred_probas"
     ]
   },
   "train": {
     "epochs": 1000,
     "batch_size": 64,
     "metrics": [
-      "sets_accuracy",
+      {
+        "name": "sets_accuracy",
+        "inputs": [
+          "y",
+          "y_pred_labels"
+        ]
+      },
       {
         "name": "roc_auc",
         "inputs": [

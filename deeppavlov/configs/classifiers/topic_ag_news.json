@@ -22,9 +22,8 @@
         "fit_on": [
           "y"
         ],
-        "level": "token",
-        "save_path": "vocabs/ag_news_classes.dict",
-        "load_path": "vocabs/ag_news_classes.dict",
+        "save_path": "classifiers/topic_ag_news_v1/ag_news_classes.dict",
+        "load_path": "classifiers/topic_ag_news_v1/ag_news_classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -71,10 +70,10 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/topic_ag_news_v1",
-        "load_path": "classifiers/topic_ag_news_v1",
+        "save_path": "classifiers/topic_ag_news_v1/topic_ag_news_v1",
+        "load_path": "classifiers/topic_ag_news_v1/topic_ag_news_v1",
         "embedding_size": "#my_embedder.dim",
-        "classes": "#classes_vocab.keys()",
+        "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
           1,
           2,
@@ -137,12 +136,14 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
       "http://files.deeppavlov.ai/datasets/ag_news_data.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "embeddings"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/topic_ag_news_v1.tar.gz",
+        "subdir": "classifiers"
       }
     ]
   }

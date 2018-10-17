@@ -76,7 +76,7 @@
         "save_path": "classifiers/intent_cnn_snips_bistlm_bilstm",
         "load_path": "classifiers/intent_cnn_snips_bilstm_bilstm",
         "embedding_size": "#my_embedder.dim",
-        "classes": "#classes_vocab.keys()",
+        "n_classes": "#classes_vocab.len",
         "units_lstm_1": 64,
         "units_lstm_2": 64,
         "optimizer": "Adam",

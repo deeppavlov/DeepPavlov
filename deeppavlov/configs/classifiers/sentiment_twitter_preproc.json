@@ -23,9 +23,8 @@
         "fit_on": [
           "y"
         ],
-        "level": "token",
-        "save_path": "vocabs/sentiment_twitter_classes.dict",
-        "load_path": "vocabs/sentiment_twitter_classes.dict",
+        "save_path": "classifiers/sentiment_twitter_v2/sentiment_twitter_classes.dict",
+        "load_path": "classifiers/sentiment_twitter_v2/sentiment_twitter_classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -73,10 +72,10 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/sentiment_twitter_v2",
-        "load_path": "classifiers/sentiment_twitter_v2",
+        "save_path": "classifiers/sentiment_twitter_v2/sentiment_twitter_v2",
+        "load_path": "classifiers/sentiment_twitter_v2/sentiment_twitter_v2",
         "embedding_size": "#my_embedder.dim",
-        "classes": "#classes_vocab.keys()",
+        "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
           1,
           2,
@@ -119,7 +118,10 @@
       "f1_macro",
       {
         "name": "roc_auc",
-        "inputs": ["y_onehot", "y_pred_probas"]
+        "inputs": [
+          "y_onehot",
+          "y_pred_probas"
+        ]
       }
     ],
     "validation_patience": 5,
@@ -139,12 +141,14 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
       "http://files.deeppavlov.ai/datasets/sentiment_twitter_data.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
         "subdir": "embeddings"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/sentiment_twitter_v2.tar.gz",
+        "subdir": "classifiers"
       }
     ]
   }

@@ -34,9 +34,8 @@
         "fit_on": [
           "y"
         ],
-        "level": "token",
-        "save_path": "vocabs/snips_classes.dict",
-        "load_path": "vocabs/snips_classes.dict",
+        "save_path": "classifiers/intents_snips_v4/snips_classes.dict",
+        "load_path": "classifiers/intents_snips_v4/snips_classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -74,10 +73,10 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/intents_snips_v4",
-        "load_path": "classifiers/intents_snips_v4",
+        "save_path": "classifiers/intents_snips_v4/intents_snips_v4",
+        "load_path": "classifiers/intents_snips_v4/intents_snips_v4",
         "embedding_size": "#my_embedder.dim",
-        "classes": "#classes_vocab.keys()",
+        "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
           1,
           2,
@@ -139,8 +138,6 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.json",
         "subdir": "sample"
@@ -148,6 +145,10 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/dstc2_fastText_model.bin",
         "subdir": "embeddings"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_snips_v4.tar.gz",
+        "subdir": "classifiers"
       }
     ]
   }

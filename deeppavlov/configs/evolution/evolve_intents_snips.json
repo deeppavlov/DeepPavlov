@@ -87,7 +87,7 @@
         "save_path": "evolution/classification/intents_snips",
         "load_path": "evolution/classification/intents_snips",
         "embedding_size": "#my_embedder.dim",
-        "classes": "#classes_vocab.keys()",
+        "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
           1,
           2,

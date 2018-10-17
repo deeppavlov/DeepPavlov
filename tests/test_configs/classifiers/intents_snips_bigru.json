@@ -76,7 +76,7 @@
         "save_path": "classifiers/intent_cnn_snips_bigru",
         "load_path": "classifiers/intent_cnn_snips_bigru",
         "embedding_size": "#my_embedder.dim",
-        "classes": "#classes_vocab.keys()",
+        "n_classes": "#classes_vocab.len",
         "units_lstm": 64,
         "optimizer": "Adam",
         "lear_rate": 0.01,

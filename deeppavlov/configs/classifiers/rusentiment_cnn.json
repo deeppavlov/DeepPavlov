@@ -34,9 +34,8 @@
         "fit_on": [
           "y"
         ],
-        "level": "token",
-        "save_path": "vocabs/rusentiment_classes.dict",
-        "load_path": "vocabs/rusentiment_classes.dict",
+        "save_path": "classifiers/rusentiment_v0/rusentiment_classes.dict",
+        "load_path": "classifiers/rusentiment_v0/rusentiment_classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -83,10 +82,10 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/rusentiment_v0",
-        "load_path": "classifiers/rusentiment_v0",
+        "save_path": "classifiers/rusentiment_v0/rusentiment_v0",
+        "load_path": "classifiers/rusentiment_v0/rusentiment_v0",
         "embedding_size": "#my_embedder.dim",
-        "classes": "#classes_vocab.keys()",
+        "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
           1,
           2,
@@ -149,8 +148,6 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
       {
         "url": "https://github.com/text-machine-lab/rusentiment/raw/master/Dataset/rusentiment_random_posts.csv",
         "subdir": "rusentiment"
@@ -162,6 +159,10 @@
       {
         "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
         "subdir": "embeddings"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/rusentiment_v0.tar.gz",
+        "subdir": "classifiers"
       }
     ]
   }

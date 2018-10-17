@@ -86,7 +86,7 @@
         "save_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_v0",
         "load_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_v0",
         "embedding_size": "#my_embedder.dim",
-        "classes": "#classes_vocab.keys()",
+        "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
           1,
           2,
