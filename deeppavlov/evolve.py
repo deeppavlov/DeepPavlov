@@ -111,6 +111,7 @@ def main():
     considered_metrics = evolution.get_value_from_config(evolution.basic_config,
                                                          list(evolution.find_model_path(
                                                              evolution.basic_config, "metrics"))[0] + ["metrics"])
+    considered_metrics = [metric['name'] if isinstance(metric, dict) else metric for metric in considered_metrics]
 
     log.info(considered_metrics)
     evolve_metric = considered_metrics[0]

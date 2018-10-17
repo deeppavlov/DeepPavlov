@@ -1,7 +1,6 @@
 {
   "dataset_reader": {
     "name": "ubuntu_v2_mt_reader",
-    "num_samples": null,
     "data_path": "./ubuntu_v2_data",
     "num_context_turns": 10
   },
@@ -32,7 +31,7 @@
         },
         "tokenizer":
         {
-          "name": "split_tokenizer"
+          "name": "nltk_tokenizer"
         },
         "vocab":
         {
@@ -45,9 +44,7 @@
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "embeddings/wiki.en.bin",
-          "save_path": "embeddings/wiki.en.bin",
-          "dim": 300
+          "load_path": "embeddings/wiki.en.bin"
         }
       },
       {
@@ -81,7 +78,6 @@
         "model": "#model",
         "num_context_turns": "#model.num_context_turns",
         "batch_size": "#model.batch_size",
-        "interact_pred_num": 3,
         "responses": "#siam_sent_vocab",
         "preproc_func": "#preproc.__call__"
       }

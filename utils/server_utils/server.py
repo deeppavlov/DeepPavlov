@@ -12,17 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ssl
 import sys
 from pathlib import Path
+from typing import List, Tuple
 
-from flask import Flask, request, jsonify, redirect
 from flasgger import Swagger, swag_from
+from flask import Flask, request, jsonify, redirect, Response
 from flask_cors import CORS
 
-from deeppavlov.core.common.file import read_json
 from deeppavlov.core.commands.infer import build_model_from_config
-from deeppavlov.core.data.utils import check_nested_dict_keys, jsonify_data
+from deeppavlov.core.common.chainer import Chainer
+from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.data.utils import check_nested_dict_keys, jsonify_data
 from deeppavlov.core.models.component import Component
 
 SERVER_CONFIG_FILENAME = 'server_config.json'
@@ -92,7 +95,7 @@ def interact_alice(model: Component, params_names: list):
 
     params = memory.pop(session_id, [])
     if text:
-        params += [text]
+        params.append([text])
 
     if len(params) < len(params_names):
         memory[session_id] = params
@@ -100,10 +103,7 @@ def interact_alice(model: Component, params_names: list):
         response['response']['end_session'] = False
         return jsonify(response), 200
 
-    if len(params) == 1:
-        params = params[0]
-
-    response_text = model([params])[0]
+    response_text = model(*params)[0]
     if not isinstance(response_text, str) and isinstance(response_text, (list, tuple)):
         try:
             response_text = response_text[0]
@@ -114,7 +114,7 @@ def interact_alice(model: Component, params_names: list):
     return jsonify(response), 200
 
 
-def interact(model, params_names):
+def interact(model: Chainer, params_names: List[str]) -> Tuple[Response, int]:
     if not request.is_json:
         log.error("request Content-Type header is not application/json")
         return jsonify({
@@ -141,21 +141,31 @@ def interact(model, params_names):
         log.error('got several different batch sizes')
         return jsonify({'error': 'got several different batch sizes'}), 400
 
-    if len(params_names) == 1:
-        model_args = model_args[0]
-    else:
-        batch_size = list(lengths)[0]
-        model_args = [arg or [None] * batch_size for arg in model_args]
-        model_args = list(zip(*model_args))
+    batch_size = list(lengths)[0]
+    model_args = [arg or [None] * batch_size for arg in model_args]
 
-    prediction = model(model_args)
+    # in case when some parameters were not described in model_args
+    model_args += [[None] * batch_size for _ in range(len(model.in_x) - len(model_args))]
+
+    prediction = model(*model_args)
+    if len(model.out_params) == 1:
+        prediction = [prediction]
+    prediction = list(zip(*prediction))
     result = jsonify_data(prediction)
     return jsonify(result), 200
 
 
-def start_model_server(model_config_path, alice=False):
+def start_model_server(model_config_path, alice=False, https=False, ssl_key=None, ssl_cert=None):
     server_config_dir = Path(__file__).parent
     server_config_path = server_config_dir.parent / SERVER_CONFIG_FILENAME
+
+    if https:
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+        ssh_key_path = Path(ssl_key).resolve()
+        ssh_cert_path = Path(ssl_cert).resolve()
+        ssl_context.load_cert_chain(ssh_cert_path, ssh_key_path)
+    else:
+        ssl_context = None
 
     model = init_model(model_config_path)
 
@@ -217,4 +227,4 @@ def start_model_server(model_config_path, alice=False):
     def answer():
         return interact_alice(model, model_args_names) if alice else interact(model, model_args_names)
 
-    app.run(host=host, port=port, threaded=False)
+    app.run(host=host, port=port, threaded=False, ssl_context=ssl_context)

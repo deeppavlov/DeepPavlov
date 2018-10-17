@@ -1,12 +1,12 @@
 {
   "dataset_reader": {
     "name": "ubuntu_v2_mt_reader",
-    "num_samples": 1024,
     "data_path": "./ubuntu_v2_data",
     "num_context_turns": 10
   },
   "dataset_iterator": {
     "name": "siamese_iterator",
+    "num_samples": 1024,
     "seed": 243
   },
   "chainer": {

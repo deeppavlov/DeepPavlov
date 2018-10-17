@@ -13,27 +13,23 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import gzip
 import os
+import re
+import secrets
+import shutil
+import tarfile
+import zipfile
 from hashlib import md5
 from itertools import chain
 from pathlib import Path
+import numpy as np
 from urllib.parse import urlparse
 from typing import List, Union, Iterable
 import requests
 from tqdm import tqdm
-import tarfile
-import gzip
-import zipfile
-import re
-import shutil
-import secrets
-
-import requests
-from tqdm import tqdm
-import numpy as np
 
 from deeppavlov.core.common.log import get_logger
-
 
 log = get_logger(__name__)
 
@@ -389,9 +385,7 @@ def check_nested_dict_keys(check_dict: dict, keys: list):
 
 
 def jsonify_data(input):
-    if isinstance(input, list):
-        result = [jsonify_data(item) for item in input]
-    elif isinstance(input, tuple):
+    if isinstance(input, (list, tuple)):
         result = [jsonify_data(item) for item in input]
     elif isinstance(input, dict):
         result = {}

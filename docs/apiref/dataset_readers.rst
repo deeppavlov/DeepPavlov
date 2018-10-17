@@ -26,6 +26,10 @@ Concrete DatasetReader classes.
 
 .. autoclass:: deeppavlov.dataset_readers.ontonotes_reader.OntonotesReader
 
+.. autoclass:: deeppavlov.dataset_readers.paraphraser_reader.ParaphraserReader
+
+.. autoclass:: deeppavlov.dataset_readers.quora_question_pairs_reader.QuoraQuestionPairsReader
+
 .. autoclass:: deeppavlov.dataset_readers.squad_dataset_reader.SquadDatasetReader
    :members:
 
