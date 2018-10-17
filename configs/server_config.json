@@ -1,13 +1,22 @@
 {
   "common_defaults": {
     "host": "0.0.0.0",
-    "port": 5000,
+    "port": 5005,
     "model_endpoint": "/model",
-    "model_args_names": ["context"]
+    "model_args_names": ["context"],
+    "https_cert_path": "",
+    "https_key_path": ""
+  },
+  "telegram_defaults": {
+    "token": ""
   },
   "ms_bot_framework_defaults": {
     "auth_polling_interval": 3500,
-    "conversation_lifetime": 3600
+    "conversation_lifetime": 3600,
+    "app_id": "",
+    "app_secret": "",
+    "stateful": 0,
+    "multi_instance": 0
   },
   "model_defaults": {
     "DstcSlotFillingNetwork": {
