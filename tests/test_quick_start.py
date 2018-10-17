@@ -165,7 +165,8 @@ PARAMS = {
         ]
     },
     "odqa": {
-        ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("odqa/ru_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "morpho_tagger":{
         ("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger_hu", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
