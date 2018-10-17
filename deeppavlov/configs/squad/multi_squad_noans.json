@@ -36,7 +36,7 @@
         "id": "vocab_embedder",
         "level": "token",
         "emb_folder": "embeddings/",
-        "emb_url": "http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M.vec",
+        "emb_url": "http://files.deeppavlov.ai/embeddings/wiki-news-300d-1M.vec",
         "save_path": "multi_squad_model_noans/emb/vocab_embedder.pckl",
         "load_path": "multi_squad_model_noans/emb/vocab_embedder.pckl",
         "context_limit": "#squad_prepr.context_limit",
@@ -51,7 +51,7 @@
         "id": "char_vocab_embedder",
         "level": "char",
         "emb_folder": "embeddings/",
-        "emb_url": "http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M-char.vec",
+        "emb_url": "http://files.deeppavlov.ai/embeddings/wiki-news-300d-1M-char.vec",
         "save_path": "multi_squad_model_noans/emb/char_vocab_embedder.pckl",
         "load_path": "multi_squad_model_noans/emb/char_vocab_embedder.pckl",
         "context_limit": "#squad_prepr.context_limit",
@@ -130,13 +130,13 @@
       "server_utils": "SquadModel"
     },
     "download": [
-      "http://lnsigo.mipt.ru/export/deeppavlov_data/multi_squad_model_noans_1.1.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/multi_squad_model_noans_1.1.tar.gz",
       {
-        "url": "http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M.vec",
+        "url": "http://files.deeppavlov.ai/embeddings/wiki-news-300d-1M.vec",
         "subdir": "embeddings"
       },
       {
-        "url": "http://lnsigo.mipt.ru/export/embeddings/wiki-news-300d-1M-char.vec",
+        "url": "http://files.deeppavlov.ai/embeddings/wiki-news-300d-1M-char.vec",
         "subdir": "embeddings"
       }
       ]
