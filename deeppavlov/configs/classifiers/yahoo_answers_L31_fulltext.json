@@ -103,14 +103,14 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "YahooAnswers/models/model_v1",
-        "load_path": "YahooAnswers/models/model_v1",
+        "save_path": "YahooAnswers/models/model_v2",
+        "load_path": "YahooAnswers/models/model_v2",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "units_gru": 256,
         "confident_threshold": 1,
-        "optimizer": "Adam",
-        "lear_rate": 0.001,
+        "optimizer": "RMSprop",
+        "lear_rate": 0.01,
         "lear_rate_decay": 0.001,
         "loss": "categorical_crossentropy",
         "text_size": 100,
@@ -133,21 +133,22 @@
     "batch_size": 64,
     "metrics": [
       {
+        "name": "classification_roc_auc",
+        "inputs": ["y", "y_probas_dict"]
+      },
+      {
         "name": "sets_accuracy",
         "inputs": ["y", "y_labels"]
       },
-      "classification_f1",
-      {
-        "name": "classification_roc_auc",
-        "inputs": ["y", "y_probas_dict"]
-      }
+      "classification_f1"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
     "show_examples": false,
     "validate_best": true,
-    "test_best": false
+    "test_best": false,
+    "tensorboard_log_dir": "YahooAnswers/models/model_v2/"
   },
   "metadata": {
     "requirements": [
