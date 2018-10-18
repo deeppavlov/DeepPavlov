@@ -1,14 +1,14 @@
 {
   "dataset_reader": {
     "name": "odqa_reader",
-    "data_path": "odqa/enwiki",
-    "save_path": "odqa/enwiki.db",
-    "dataset_format": "wiki"
+    "data_path": "odqa/ruwiki_test",
+    "save_path": "odqa/ruwiki_test.db",
+    "dataset_format": "txt"
   },
   "dataset_iterator": {
     "name": "sqlite_iterator",
     "shuffle": false,
-    "load_path": "odqa/enwiki.db"
+    "load_path": "odqa/ruwiki_test.db"
   },
   "chainer": {
     "in": [
@@ -24,10 +24,10 @@
         "fit_on_batch": [
           "x"
         ],
-        "save_path": "odqa/enwiki_tfidf_matrix.npz",
-        "load_path": "odqa/enwiki_tfidf_matrix.npz",
+        "save_path": "odqa/ruwiki_test_tfidf.npz",
+        "load_path": "odqa/ruwiki_test_tfidf.npz",
         "tokenizer": {
-          "name": "stream_spacy_tokenizer",
+          "name": "ru_tokenizer",
           "lemmas": true,
           "ngram_range": [
             1,
@@ -52,19 +52,18 @@
   "train": {
     "validate_best": false,
     "test_best": false,
-    "batch_size": 10000
+    "batch_size": 2
   },
   "metadata": {
-    "requirements": [
-      "../dp_requirements/spacy.txt",
-      "../dp_requirements/en_core_web_sm.txt"
-    ],
+    "requirements": [],
     "labels": {
       "server_utils": "Ranker"
     },
     "download": [
-      "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/en_odqa.tar.gz"
+      {
+        "url": "http://files.deeppavlov.ai/datasets/wikipedia/ruwiki_test.tar.gz",
+        "subdir": "odqa"
+      }
     ]
   }
 }

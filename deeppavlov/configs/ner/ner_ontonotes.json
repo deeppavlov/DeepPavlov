@@ -120,7 +120,12 @@
     "epochs": 100,
     "batch_size": 64,
 
-    "metrics": ["ner_f1"],
+    "metrics": [
+      {
+        "name": "ner_f1",
+        "inputs": ["y", "tags"]
+      }
+    ],
     "validation_patience": 7,
     "val_every_n_epochs": 1,
 

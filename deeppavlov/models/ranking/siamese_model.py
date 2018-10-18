@@ -45,7 +45,7 @@ class SiameseModel(NNModel):
         pass
 
     def train_on_batch(self, batch: List[List[np.ndarray]], y: List[int]) -> float:
-        b = self._make_batch(batch)
+        b = self._make_batch(list(batch))
         loss = self._train_on_batch(b, y)
         return loss
 

@@ -59,9 +59,7 @@
         "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
-        "save_path": "embeddings/wiki.en.bin",
-        "load_path": "embeddings/wiki.en.bin",
-        "dim": 300
+        "load_path": "embeddings/wiki.en.bin"
       },
       {
         "in": [
@@ -167,9 +165,15 @@
       "discrete": true
     },
     "metrics": [
-      "classification_accuracy",
+      {
+        "name": "sets_accuracy",
+        "inputs": ["y", "y_labels"]
+      },
       "classification_f1",
-      "classification_roc_auc"
+      {
+        "name": "classification_roc_auc",
+        "inputs": ["y", "y_probas_dict"]
+      }
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,

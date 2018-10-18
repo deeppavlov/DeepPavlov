@@ -66,13 +66,11 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/intent_cnn_snips_bilstm_self_add_attention",
-        "load_path": "classifiers/intent_cnn_snips_bilstm_self_add_attention",
+        "save_path": "classifiers/intent_cnn_snips_bistlm",
+        "load_path": "classifiers/intent_cnn_snips_bilstm",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "units_lstm": 64,
-        "self_att_hid": 64,
-        "self_att_out": 64,
         "confident_threshold": 0.5,
         "optimizer": "Adam",
         "lear_rate": 0.01,
@@ -84,7 +82,8 @@
         "dropout_rate": 0.5,
         "rec_dropout_rate": 0.5,
         "dense_size": 100,
-        "model_name": "bilstm_self_add_attention_model"
+        "input_projection_size": 64,
+        "model_name": "bilstm_model"
       }
     ],
     "out": [
@@ -96,15 +95,9 @@
     "epochs": 1,
     "batch_size": 64,
     "metrics": [
-      {
-        "name": "sets_accuracy",
-        "inputs": ["y", "y_labels"]
-      },
+      "classification_accuracy",
       "classification_f1",
-      {
-        "name": "classification_roc_auc",
-        "inputs": ["y", "y_probas_dict"]
-      }
+      "classification_roc_auc"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,

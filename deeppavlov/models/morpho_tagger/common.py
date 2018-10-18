@@ -1,6 +1,6 @@
 import re
 from pathlib import Path
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Optional
 
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.commands.utils import set_deeppavlov_root, expand_path
@@ -9,12 +9,11 @@ from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-
 from deeppavlov.dataset_iterators.morphotagger_iterator import MorphoTaggerDatasetIterator
 from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag
 
 
-def predict_with_model(config_path: [Path, str]) -> List[List[str]]:
+def predict_with_model(config_path: [Path, str]) -> List[Optional[List[str]]]:
     """Returns predictions of morphotagging model given in config :config_path:.
 
     Args:
