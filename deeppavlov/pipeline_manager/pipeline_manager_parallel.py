@@ -98,6 +98,7 @@ class PipelineManager:
         self.max_num_workers_ = self.exp_config['enumerate'].get('max_num_workers')
         self.use_all_gpus = self.exp_config['enumerate'].get('use_all_gpus', False)
         self.use_multi_gpus = self.exp_config['enumerate'].get('use_multi_gpus')
+        self.memory_fraction = self.exp_config['enumerate'].get('gpu_memory_fraction', 1.0)
 
         self.pipeline_generator = None
         self.gen_len = 0
@@ -138,7 +139,7 @@ class PipelineManager:
 
         if self.use_all_gpus:
             if self.max_num_workers_ is None:
-                self.available_gpu = get_available_gpus()
+                self.available_gpu = get_available_gpus(gpu_fraction=self.memory_fraction)
                 self.available_gpu = list(set(self.available_gpu) & set(visible_gpu))
 
                 if len(self.available_gpu) == 0:
@@ -154,13 +155,14 @@ class PipelineManager:
             else:
                 if self.max_num_workers_ > gpu_num:
                     self.max_num_workers = gpu_num
-                    self.available_gpu = get_available_gpus()
+                    self.available_gpu = get_available_gpus(gpu_fraction=self.memory_fraction)
                     self.available_gpu = list(set(self.available_gpu) & set(visible_gpu))
 
                     if len(self.available_gpu) == 0:
                         raise ValueError("GPU with numbers: ({}) are busy.".format(set(visible_gpu)))
                 else:
-                    self.available_gpu = get_available_gpus(num_gpus=self.max_num_workers_)
+                    self.available_gpu = get_available_gpus(num_gpus=self.max_num_workers_,
+                                                            gpu_fraction=self.memory_fraction)
                     self.available_gpu = list(set(self.available_gpu) & set(visible_gpu))
 
                     if len(self.available_gpu) == 0:
@@ -174,7 +176,7 @@ class PipelineManager:
                 raise ValueError("GPU numbers in 'use_multi_gpus' and 'CUDA_VISIBLE_DEVICES' "
                                  "has not intersections".format(set(visible_gpu)))
 
-            self.available_gpu = get_available_gpus(gpu_select=self.use_multi_gpus)
+            self.available_gpu = get_available_gpus(gpu_select=self.use_multi_gpus, gpu_fraction=self.memory_fraction)
 
             if len(self.available_gpu) == 0:
                 raise ValueError("All GPU from 'use_multi_gpus' are busy. "

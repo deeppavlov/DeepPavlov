@@ -130,10 +130,11 @@
     "k_fold": 5,
     "sample_num": 1,
     "plot": false,
-    "save_best": false,
+    "save_best": true,
     "multiprocessing": false,
     "max_num_workers": null,
-    "use_all_gpus": false,
-    "use_multi_gpus": null
+    "use_all_gpus": true,
+    "use_multi_gpus": null,
+    "gpu_memory_fraction": 1.0
   }
 }
