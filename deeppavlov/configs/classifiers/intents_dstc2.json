@@ -125,7 +125,9 @@
     "validation_patience": 5,
     "val_every_n_epochs": 5,
     "log_every_n_batches": 100,
-    "show_examples": false
+    "show_examples": false,
+    "validate_best": true,
+    "test_best": true
   },
   "metadata": {
     "requirements": [
