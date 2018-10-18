@@ -12,87 +12,61 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict, List, Tuple
+import xml.etree.ElementTree as ET
 
-from pathlib import Path
-
-import pandas as pd
-from overrides import overrides
-
+from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.common.registry import register
-from deeppavlov.dataset_readers.basic_classification_reader import BasicClassificationDatasetReader
-from deeppavlov.core.data.utils import download
-from deeppavlov.core.common.log import get_logger
-
-
-log = get_logger(__name__)
+from deeppavlov.core.commands.utils import expand_path
 
 
 @register('paraphraser_reader')
-class ParaphraserReader(BasicClassificationDatasetReader):
+class ParaphraserReader(DatasetReader):
+    """The class to read the paraphraser.ru dataset from files.
+
+    Please, see https://paraphraser.ru.
+
+    Args:
+        data_path: A path to a folder with dataset files.
+        seed: Random seed.
     """
-    Class provides reading dataset in .csv format
-    """
 
-    @overrides
-    def read(self, data_path: str, url: str = None,
-             format: str = "csv", class_sep: str = ",",
-             *args, **kwargs) -> dict:
-        """
-        Read dataset from data_path directory.
-        Reading files are all data_types + extension
-        (i.e for data_types=["train", "valid"] files "train.csv" and "valid.csv" form
-        data_path will be read)
+    def read(self,
+             data_path: str,
+             seed: int = None, *args, **kwargs) -> Dict[str, List[Tuple[List[str], int]]]:
+        data_path = expand_path(data_path)
+        train_fname = data_path / 'paraphrases.xml'
+        test_fname =  data_path / 'paraphrases_gold.xml'
+        train_data = self.build_data(train_fname)
+        test_data = self.build_data(test_fname)
+        dataset = {"train": train_data, "valid": [], "test": test_data}
+        return dataset
 
-        Args:
-            data_path: directory with files
-            url: download data files if data_path not exists or empty
-            format: extension of files. Set of Values: ``"csv", "json"``
-            class_sep: string separator of labels in column with labels
-            sep (str): delimeter for ``"csv"`` files. Default: ``","``
-            header (int): row number to use as the column names
-            names (array): list of column names to use
-            orient (str): indication of expected JSON string format
-            lines (boolean): read the file as a json object per line. Default: ``False``
-
-        Returns:
-            dictionary with types from data_types.
-            Each field of dictionary is a list of tuples (x1_i, x2_i, y_i)
-        """
-        data_types = ["train", "valid", "test"]
-
-        train_file = kwargs.get('train', 'train.csv')
-
-        if not Path(data_path, train_file).exists():
-            if url is None:
-                raise Exception("data path {} does not exist or is empty, "
-                                "and download url parameter not specified!".format(data_path))
-            log.info("Loading train data from {} to {}".format(url, data_path))
-            download(source_url=url, dest_file_path=Path(data_path, train_file))
-
-        data = {"train": [],
-                "valid": [],
-                "test": []}
-        for data_type in data_types:
-            file_name = kwargs.get(data_type, '{}.{}'.format(data_type, format))
-            file = Path(data_path).joinpath(file_name)
-            if file.exists():
-                if format == 'csv':
-                    keys = ('sep', 'header', 'names')
-                    options = {k: kwargs[k] for k in keys if k in kwargs}
-                    df = pd.read_csv(file, **options)
-                elif format == 'json':
-                    keys = ('orient', 'lines')
-                    options = {k: kwargs[k] for k in keys if k in kwargs}
-                    df = pd.read_json(file, **options)
-                else:
-                    raise Exception('Unsupported file format: {}'.format(format))
-
-                x1, x2 = kwargs.get("x", ["text_1", "text_2"])
-                y = kwargs.get('y', 'targets')
-
-                sent = [[row[x1], row[x2]] for _, row in df.iterrows()]
-                data[data_type] = [sent, df[y]]
-            else:
-                log.warning("Cannot find {} file".format(file))
-
-        return data
+    def build_data(self, fname):
+        with open(fname, 'r') as labels_file:
+            context = ET.iterparse(labels_file, events=("start", "end"))
+            # turn it into an iterator
+            context = iter(context)
+            # get the root element
+            event, root = next(context)
+            same_set = set()
+            questions = []
+            labels = []
+            for event, elem in context:
+                if event == "end" and elem.tag == "paraphrase":
+                    question = []
+                    y = None
+                    for child in elem.iter():
+                        if child.get('name') == 'text_1':
+                            question.append(child.text.lower())
+                        if child.get('name') == 'text_2':
+                            question.append(child.text.lower())
+                        if child.get('name') == 'class':
+                            y = 1 if int(child.text) >= 0 else 0
+                    root.clear()
+                    check_string = "\n".join(question)
+                    if check_string not in same_set:
+                        same_set.add(check_string)
+                        questions.append(question)
+                        labels.append(y)
+            return list(zip(questions, labels))

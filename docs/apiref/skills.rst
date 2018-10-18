@@ -6,4 +6,7 @@ Skill classes. Skills are dialog models.
    :members:
 
 .. toctree::
-   skills.pattern_matching_skill <skills/pattern_matching_skill>
+   :glob:
+   :caption: Skills
+
+   skills/*

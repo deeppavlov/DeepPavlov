@@ -16,11 +16,7 @@ limitations under the License.
 
 import argparse
 from pathlib import Path
-import sys
 import os
-
-p = (Path(__file__) / ".." / "..").resolve()
-sys.path.append(str(p))
 
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.pipeline_manager.pipeline_manager_parallel import PipelineManager
@@ -30,7 +26,7 @@ from deeppavlov.core.common.log import get_logger
 from deeppavlov.download import deep_download
 from utils.telegram_utils.telegram_ui import interact_model_by_telegram
 from utils.server_utils.server import start_model_server
-from utils.ms_bot_framework_utils.server import start_bot_framework_server
+from utils.ms_bot_framework_utils.server import run_ms_bf_default_agent
 from utils.pip_wrapper import install_from_config
 
 
@@ -55,8 +51,13 @@ parser.add_argument("-s", "--ms-secret", help="microsoft bot framework app secre
 
 parser.add_argument("--multi-instance", action="store_true", help="allow rising of several instances of the model")
 parser.add_argument("--stateful", action="store_true", help="interact with a stateful model")
-parser.add_argument("--use-history", action="store_true", help="feed model with an interaction history")
 
+parser.add_argument("--https", action="store_true", help="run model in https mode")
+parser.add_argument("--key", help="ssl key", type=str)
+parser.add_argument("--cert", help="ssl certificate", type=str)
+
+parser.add_argument("--api-mode", help="rest api mode: 'basic' with batches or 'alice' for  Yandex.Dialogs format",
+                    type=str, default='basic', choices={'basic', 'alice'})
 parser.add_argument("-r", "--root", dest="root", default='./download/experiments',
                     help="folder where you will save the results and control points", type=str)
 parser.add_argument("-p", "--plot", dest="plot", default=False,
@@ -94,7 +95,6 @@ def main():
 
     multi_instance = args.multi_instance
     stateful = args.stateful
-    use_history = args.use_history
 
     if args.mode == 'train':
         train_evaluate_model_from_config(pipeline_config_path)
@@ -115,14 +115,17 @@ def main():
             log.error('Microsoft Bot Framework app secret required: initiate -s param '
                       'or MS_APP_SECRET env var with Microsoft app secret')
         else:
-            start_bot_framework_server(model_config_path=pipeline_config_path,
-                                       app_id=ms_id,
-                                       app_secret=ms_secret,
-                                       multi_instance=multi_instance,
-                                       stateful=stateful,
-                                       use_history=use_history)
+            run_ms_bf_default_agent(model_config_path=pipeline_config_path,
+                                    app_id=ms_id,
+                                    app_secret=ms_secret,
+                                    multi_instance=multi_instance,
+                                    stateful=stateful)
     elif args.mode == 'riseapi':
-        start_model_server(pipeline_config_path)
+        alice = args.api_mode == 'alice'
+        https = args.https
+        ssl_key = args.key
+        ssl_cert = args.cert
+        start_model_server(pipeline_config_path, alice, https, ssl_key, ssl_cert)
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'enumerate':
@@ -137,7 +140,7 @@ def main():
             log.error('Minimum number of Folds is 2')
         else:
             n_folds = args.folds
-            calc_cv_score(pipeline_config_path, n_folds=n_folds, is_loo=False)
+            calc_cv_score(pipeline_config_path=pipeline_config_path, n_folds=n_folds, is_loo=False)
 
 
 if __name__ == "__main__":

@@ -168,7 +168,8 @@ class GoalOrientedBot(NNModel):
         # Bag of words features
         bow_features = []
         if callable(self.bow_embedder):
-            bow_features = self.bow_embedder([tokens], self.word_vocab)[0]
+            tokens_idx = self.word_vocab(tokens)
+            bow_features = self.bow_embedder([tokens_idx])[0]
             bow_features = bow_features.astype(np.float32)
 
         # Embeddings

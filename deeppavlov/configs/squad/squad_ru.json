@@ -102,18 +102,27 @@
     "batch_size": 50,
     "pytest_max_batches": 2,
     "validation_patience": 10,
-    "metrics": ["squad_f1", "exact_match"]
+    "metrics": [
+      {
+        "name": "squad_f1",
+        "inputs": ["ans_raw", "ans_predicted"]
+      },
+      {
+        "name": "exact_match",
+        "inputs": ["ans_raw", "ans_predicted"]
+      }
+    ]
   },
   "metadata": {
     "requirements": [
-      "../dp_requirements/tf-gpu.txt"
+      "../dp_requirements/tf.txt"
     ],
     "labels": {
       "telegram_utils": "SquadModel",
       "server_utils": "SquadModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/squad_model_ru_1.3_cpu_compatible.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/squad_model_ru_1.4_cpu_compatible.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_word_tokenize/ft_native_300_ru_wiki_lenta_nltk_word_tokenize.vec",
         "subdir": "embeddings"
