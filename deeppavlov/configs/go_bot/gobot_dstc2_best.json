@@ -39,13 +39,11 @@
         "fit_learning_rate_div": 10.0,
         "fit_linear": false,
         "fit_min_batches": 15,
-        "learning_rate": [2e-6, 0.2],
-        "learning_rate_decay": ["1cycle", 0.5],
-        "learning_rate_decay_epochs": 30,
-        "momentum": [0.95, 0.85],
-        "momentum_decay": "1cycle",
-        "momentum_decay_epochs": 15,
-        "optimizer": "tensorflow.train:MomentumOptimizer",
+        "fit_num_batches": 256,
+        "learning_rate": [0.00185, 0.0185],
+        "learning_rate_decay": ["1cycle", 0.8],
+        "learning_rate_decay_epochs": 18,
+        "optimizer": "tensorflow.train:AdamOptimizer",
         "dropout_rate": 0.55,
         "l2_reg_coef": 2e-3,
         "hidden_size": 128,
@@ -85,8 +83,7 @@
         }
       },
       {
-        "ref": "go_bot_network",
-        "fit_on": ["x", "y"]
+        "ref": "go_bot_network"
       },
       {
         "ref": "go_bot_network",

@@ -111,7 +111,7 @@ class TFModel(NNModel, metaclass=TfModelMeta):
                     variables_to_train.extend(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=scope_name))
 
             if optimizer is None:
-                optimizer = tf.train.AdamOptimizer
+                optimizer = tf.train.AdamOptimizer(learning_rate)
 
             # For batch norm it is necessary to update running averages
             extra_update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
@@ -188,6 +188,10 @@ class DecayScheduler():
             self.cycle_nb = math.ceil(self.nb * (1 - self.extra) / 2)
             self.div = self.end_val / self.start_val
 
+    def __str__(self):
+        return f"DecayScheduler(start_val={self.start_val}, end_val={self.end_val}"\
+            f", dec_type={self.dec_type}, num_it={self.num_it}, extra={self.extra})"
+
     def next_val(self):
         self.iters = min(self.iters + 1, self.nb)
         if self.dec_type == DecayType.NO:
@@ -206,9 +210,9 @@ class DecayScheduler():
             return self.end_val + delta_val * (1 - self.iters / self.nb) ** self.extra
         elif self.dec_type == DecayType.ONECYCLE:
             if self.iters > self.cycle_nb * 2:
-                # decaying from start_val to start_val/div for extra*num_it steps
+                # decaying from start_val to start_val/(100*div) for extra*num_it steps
                 pct = (self.iters - 2 * self.cycle_nb) / (self.nb - 2 * self.cycle_nb)
-                return self.start_val * (1 + pct * (1 / self.div - 1))
+                return self.start_val * (1 + pct * (1 / 100 - self.div) / self.div)
             elif self.iters > self.cycle_nb:
                 # decaying from end_val to start_val for cycle_nb steps
                 pct = 1 - (self.iters - self.cycle_nb) / self.cycle_nb
@@ -219,15 +223,15 @@ class DecayScheduler():
                 return self.start_val * (1 + pct * (self.div - 1))
 
 
-class AnhancedTFModel(TFModel, Estimator):
+class EnhancedTFModel(TFModel, Estimator):
     """TFModel anhanced with optimizer, learning rate and momentum configuration"""
     def __init__(self,
                  learning_rate: Union[float, Tuple[float, float]],
-                 learning_rate_decay: Union[str, List[Any]] = DecayType.NO,
+                 learning_rate_decay: Union[str, DecayType, List[Any]] = DecayType.NO,
                  learning_rate_decay_epochs: int = 0,
                  learning_rate_decay_batches: int = 0,
                  momentum: Union[float, Tuple[float, float]] = None,
-                 momentum_decay: Union[str, List[Any]] = DecayType.NO,
+                 momentum_decay: Union[str, DecayType, List[Any]] = DecayType.NO,
                  momentum_decay_epochs: int = 0,
                  momentum_decay_batches: int = 0,
                  optimizer: str = 'AdamOptimizer',
@@ -236,6 +240,7 @@ class AnhancedTFModel(TFModel, Estimator):
                  fit_learning_rate_div: float = 10.,
                  fit_linear: bool = True,
                  fit_min_batches: int = 10,
+                 fit_num_batches: int = None,
                  *args, **kwargs) -> None:
         if learning_rate_decay_epochs and learning_rate_decay_batches:
             raise ConfigError("isn't able to update learning rate every batch"
@@ -280,7 +285,7 @@ class AnhancedTFModel(TFModel, Estimator):
 
         try:
             self._optimizer = cls_from_str(optimizer)
-        except (ImportError, ValueError):
+        except:
             self._optimizer = getattr(tf.train, optimizer.split(':')[-1])
         if not issubclass(self._optimizer, tf.train.Optimizer):
             raise ConfigError("`optimizer` should be tensorflow.train.Optimizer subclass")
@@ -290,8 +295,10 @@ class AnhancedTFModel(TFModel, Estimator):
         self._fit_linear = fit_linear
         self._fit_lr_div = fit_learning_rate_div
         self._fit_min_batches = fit_min_batches
+        self._fit_num_batches = fit_num_batches
 
-    def fit(self, x, y, **kwargs):
+    def fit(self, *args):
+        data = list(zip(*args))
         self.save()
         if self._fit_batch_size is None:
             raise ConfigError("in order to use fit() method"
@@ -299,40 +306,46 @@ class AnhancedTFModel(TFModel, Estimator):
         bs, valid_rate = self._fit_batch_size, self._fit_valid_rate
         lr_div, min_batches = self._fit_lr_div, self._fit_min_batches
 
-        train_len = int(len(x) * (1 - valid_rate))
+        train_len = int(len(data) * (1 - valid_rate))
+        train_data, valid_data = data[:train_len], data[train_len:]
         num_train_batches = (train_len - 1) // bs + 1
-        train_x, train_y = x[:train_len], y[:train_len]
-        valid_x, valid_y = x[train_len:], y[train_len:]
+        num_batches = self._fit_num_batches or num_train_batches
         best_loss = 1e9
+        self._mom = 0.9 if self._mom is not None else None
         _lr_find_dec_type = "linear" if self._fit_linear else "exponential"
         _lr_find_schedule = DecayScheduler(start_val=self._lr_schedule.start_val,
                                            end_val=self._lr_schedule.end_val,
                                            dec_type=_lr_find_dec_type,
-                                           num_it=num_train_batches)
-        best_lr = self._lr
-        for i in range(num_train_batches):
-            self.train_on_batch(train_x[i * bs: (i+1) * bs], train_y[i * bs: (i+1) * bs])
-            valid_report = self.calc_loss(valid_x, valid_y)
+                                           num_it=num_batches)
+        self._lr = _lr_find_schedule.start_val
+        best_lr = _lr_find_schedule.start_val
+        for i in range(num_batches):
+            batch_start = (i * bs) % train_len
+            batch_end = batch_start + bs
+            self.train_on_batch(*zip(*train_data[batch_start: batch_end]))
+            valid_report = self.calc_loss(*zip(*valid_data))
             if not isinstance(valid_report, dict):
                 valid_report = {'loss': valid_report}
+            log.info(f"Batch {i + 1}/{num_batches}: valid_loss = {valid_report['loss']}"
+                     f", lr = {self._lr}, best_lr = {best_lr}")
             if math.isnan(valid_report['loss']) or (valid_report['loss'] > best_loss * 4):
                 continue
+                # break
             if (valid_report['loss'] < best_loss) and (i > min_batches):
                 best_loss = valid_report['loss']
                 best_lr = self._lr
             self._lr = _lr_find_schedule.next_val()
-            log.info(f"valid_loss = {valid_report['loss']}, lr = {self._lr}"
-                     f", best_lr = {best_lr}")
+        best_lr /= 4
 
-        log.info(f"Found best learning rate value = {best_lr}"
-                 f", setting new learning rate schedule with"
-                 f" start_val={best_lr / lr_div}, end_val = {best_lr}")
         self._lr_schedule = DecayScheduler(start_val=best_lr / lr_div,
                                            end_val=best_lr,
                                            num_it=self._lr_schedule.nb,
                                            dec_type=self._lr_schedule.dec_type,
                                            extra=self._lr_schedule.extra)
-        self._lr = best_lr / lr_div
+        log.info(f"Found best learning rate value = {best_lr}"
+                 f", setting new learning rate schedule with {self._lr_schedule}.")
+        self._lr = self._lr_schedule.start_val
+        self._mom = self._mom_schedule.start_val
         self.load()
 
     @abstractmethod
@@ -347,7 +360,9 @@ class AnhancedTFModel(TFModel, Estimator):
                      **kwargs):
         kwargs['learning_rate'] = learning_rate or self.get_learning_rate_ph()
         kwargs['optimizer'] = optimizer or self.get_optimizer()
-        if (momentum is None) and (self.get_momentum() is not None):
+        if momentum is not None:
+            kwargs['momentum'] = momentum
+        elif self.get_momentum() is not None:
             kwargs['momentum'] = self.get_momentum_ph()
         return super().get_train_op(*args, **kwargs)
 

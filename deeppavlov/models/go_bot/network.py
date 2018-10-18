@@ -24,7 +24,7 @@ from deeppavlov.core.layers import tf_layers
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.tf_model import AnhancedTFModel
+from deeppavlov.core.models.tf_model import EnhancedTFModel
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.models.go_bot.tracker import Tracker
@@ -35,7 +35,7 @@ log = get_logger(__name__)
 
 
 @register("go_bot_rnn")
-class GoalOrientedBotNetwork(AnhancedTFModel):
+class GoalOrientedBotNetwork(EnhancedTFModel):
     """
     The dialogue bot is based on  https://arxiv.org/abs/1702.03274, which introduces
     Hybrid Code Networks that combine an RNN with domain-specific knowledge
@@ -489,8 +489,6 @@ class GoalOrientedBotNetwork(AnhancedTFModel):
         feed_dict = {
             self._features: features,
             self._dropout_keep_prob: 1.,
-            self.get_learning_rate_ph(): 1.,
-            self.get_momentum_ph(): self.get_momentum(),
             self._utterance_mask: [[1.]],
             self._initial_state: (self.state_c, self.state_h),
             self._action_mask: action_mask
@@ -511,7 +509,7 @@ class GoalOrientedBotNetwork(AnhancedTFModel):
     def network_train_on_batch(self, features, emb_context, key, utter_mask,
                                action_mask, action):
         feed_dict = {
-            self._dropout_keep_prob: 1 - self.dropout_rate,
+            self._dropout_keep_prob: 1.,
             self.get_learning_rate_ph(): self.get_learning_rate(),
             self.get_momentum_ph(): self.get_momentum(),
             self._utterance_mask: utter_mask,
@@ -535,9 +533,7 @@ class GoalOrientedBotNetwork(AnhancedTFModel):
         features, emb_context, key, utter_mask, action_mask, action = \
             self.prepare_data(x, y)
         feed_dict = {
-            self._dropout_keep_prob: 1 - self.dropout_rate,
-            self.get_learning_rate_ph(): self.get_learning_rate(),
-            self.get_momentum_ph(): self.get_momentum(),
+            self._dropout_keep_prob: 1.,
             self._utterance_mask: utter_mask,
             self._features: features,
             self._action: action,
@@ -548,10 +544,7 @@ class GoalOrientedBotNetwork(AnhancedTFModel):
             feed_dict[self._key] = key
 
         loss_value = self.sess.run(self._loss, feed_dict=feed_dict)
-        report = {'loss': loss_value, 'learning_rate': self.get_learning_rate()}
-        if self.get_momentum() is not None:
-            report['momentum'] = self.get_momentum()
-        return report
+        return {'loss': loss_value}
 
     def _init_network_params(self):
         self.dropout_rate = self.opt['dropout_rate']
