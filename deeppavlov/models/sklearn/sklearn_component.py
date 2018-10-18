@@ -60,7 +60,9 @@ class SklearnComponent(Estimator):
     def __init__(self, model_class: str,
                  save_path: Union[str, Path] = None,
                  load_path: Union[str, Path] = None,
-                 infer_method: str = "predict", **kwargs) -> None:
+                 infer_method: str = "predict",
+                 ensure_list_output: bool = False,
+                 **kwargs) -> None:
         """
         Initialize component with given parameters
         """
@@ -69,6 +71,7 @@ class SklearnComponent(Estimator):
         self.model_class = model_class
         self.model_params = kwargs
         self.model = None
+        self.ensure_list_output = ensure_list_output
         self.pipe_params = {}
         for required in ["in", "out", "fit_on", "main", "name"]:
             self.pipe_params[required] = self.model_params.pop(required, None)
@@ -141,8 +144,8 @@ class SklearnComponent(Estimator):
             predictions_ = [[predictions[j][i][1] for j in range(len(predictions))] for i in range(x_features.shape[0])]
             predictions = np.array(predictions_)
 
-        # if len(predictions.shape) == 1:
-        #     predictions = predictions.reshape(-1, 1)
+        if self.ensure_list_output and len(predictions.shape) == 1:
+            predictions = predictions.reshape(-1, 1)
 
         if issparse(predictions):
             return predictions
