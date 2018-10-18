@@ -97,7 +97,7 @@
     },
     "download": [
       "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_v5.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_v6.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/datasets/dstc2_v2.tar.gz",
         "subdir": "dstc2"
