@@ -19,7 +19,7 @@ from pathlib import Path
 import os
 
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
-from deeppavlov.pipeline_manager.pipeline_manager_parallel import PipelineManager
+from deeppavlov.pipeline_manager.pipeline_manager import PipelineManager
 from deeppavlov.core.commands.infer import interact_model, predict_on_stream
 from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.core.common.log import get_logger
@@ -58,18 +58,6 @@ parser.add_argument("--cert", help="ssl certificate", type=str)
 
 parser.add_argument("--api-mode", help="rest api mode: 'basic' with batches or 'alice' for  Yandex.Dialogs format",
                     type=str, default='basic', choices={'basic', 'alice'})
-parser.add_argument("-r", "--root", dest="root", default='./download/experiments',
-                    help="folder where you will save the results and control points", type=str)
-parser.add_argument("-p", "--plot", dest="plot", default=False,
-                    help="If true it is plot a histograms with results", type=bool)
-parser.add_argument("-cv", "--cross-val", dest="cross_val", default=False, help="cross validation", type=bool)
-parser.add_argument("-sn", "--sample-num", dest="sample_num", default=10,
-                    help="Number of generated samples if you use random search", type=int)
-parser.add_argument("-tm", "--target-metric", dest="target_metric", default=None,
-                    help="If you use more than one metric then target metric will be used"
-                         " for results sortings", type=str)
-parser.add_argument("-sb", "--save-best", dest="save_best", default=True,
-                    help="If true then algorithm saved only one best pipeline checkpoint for each dataset", type=bool)
 
 
 def find_config(pipeline_config_path: str):
@@ -129,9 +117,7 @@ def main():
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'enumerate':
-        manager = PipelineManager(config_path=pipeline_config_path, exp_name=args.exp_name, root=args.root,
-                                  cross_val=args.cross_val, k_fold=args.folds, sample_num=args.sample_num,
-                                  target_metric=args.target_metric, plot=args.plot, save_best=args.save_best)
+        manager = PipelineManager(config_path=pipeline_config_path, exp_name=args.exp_name)
         manager.run()
     elif args.mode == 'install':
         install_from_config(pipeline_config_path)

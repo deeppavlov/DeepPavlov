@@ -18,21 +18,22 @@ import shutil
 
 from time import time
 from tqdm import tqdm
-from datetime import datetime
-from os.path import join
 from copy import copy
+from os.path import join
 from shutil import rmtree
+from datetime import datetime
 from typing import Union, Dict
 
-from deeppavlov.core.commands.train import train_evaluate_model_from_config
-from deeppavlov.core.commands.train import read_data_by_config, get_iterator_from_config
-from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
+from deeppavlov.core.common.file import read_json
+from deeppavlov.pipeline_manager.logger import Logger
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.pipeline_manager.pipegen import PipeGen
 from deeppavlov.pipeline_manager.utils import normal_time
-from deeppavlov.pipeline_manager.logger import Logger
+from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.pipeline_manager.utils import results_visualization
+from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
+from deeppavlov.core.commands.train import train_evaluate_model_from_config
+from deeppavlov.core.commands.train import read_data_by_config, get_iterator_from_config
 
 
 class PipelineManager:
@@ -40,70 +41,67 @@ class PipelineManager:
     The class implements the functions of automatic pipeline search and search for hyperparameters.
 
     Args:
-            config_path: path to config file.
-            exp_name: name of the experiment.
-            date: date of the experiment.
-            info: some additional information that you want to add to the log, the content of the dictionary
-                  does not affect the algorithm
-            root: root path, the root path where the report will be generated and saved checkpoints
-            sample_num: determines the number of generated pipelines, if hyper_search == random.
-            target_metric: The metric name on the basis of which the results will be sorted when the report
-                           is generated. The default value is None, in this case the target metric is taken the
-                           first name from those names that are specified in the config file. If the specified metric
-                           is not contained in DeepPavlov will be called error.
-            plot: boolean trigger, which determines whether to draw a graph of results or not
+        config_path: path to config file.
+        exp_name: name of the experiment.
 
     Attributes:
+        date: date of the experiment.
+        info: some additional information that you want to add to the log, the content of the dictionary
+              does not affect the algorithm
+        root: root path, the root path where the report will be generated and saved checkpoints
+        sample_num: determines the number of generated pipelines, if hyper_search == random.
+        target_metric: The metric name on the basis of which the results will be sorted when the report
+                       is generated. The default value is None, in this case the target metric is taken the
+                       first name from those names that are specified in the config file. If the specified metric
+                       is not contained in DeepPavlov will be called error.
+        plot: boolean trigger, which determines whether to draw a graph of results or not
         logger: A special class that collects auxiliary statistics and results during training, and stores all
                 the collected data in a separate log.
         pipeline_generator: A special class that generates configs for training.
     """
-    def __init__(self,
-                 config_path: str,
-                 exp_name: str,
-                 date: Union[str, None] = None,
-                 info: Dict = None,
-                 root: str = './experiments/',
-                 cross_val: bool = False,
-                 k_fold: Union[int, None] = 5,
-                 sample_num: int = 10,
-                 target_metric: str = None,
-                 plot: bool = True,
-                 save_best=True):
+    def __init__(self, config_path: Union[str, Dict], exp_name: str):
         """
         Initialize logger, read input args, builds a directory tree, initialize date.
         """
-        self.config_path = config_path
-        self.exp_name = exp_name
-        self.save_best = save_best
-        self.info = info
-        self.cross_validation = cross_val
-        self.k_fold = k_fold
-        self.sample_num = sample_num
-        self.target_metric = target_metric
-        self.plot = plot
-        self.pipeline_generator = None
-        self.gen_len = 0
-        if date is not None:
-            self.date = date
+        if isinstance(config_path, str):
+            self.exp_config = read_json(config_path)
         else:
-            self.date = datetime.now().strftime('%Y-%m-%d')
+            self.exp_config = config_path
 
-        self.root = root
+        self.exp_name = exp_name
+        self.gen_len = 0
+        self.pipeline_generator = None
+
+        self.date = self.exp_config['enumerate'].get('date', datetime.now().strftime('%Y-%m-%d'))
+        self.info = self.exp_config['enumerate'].get('info')
+        self.root = self.exp_config['enumerate'].get('root', 'experiments/')
+        self.plot = self.exp_config['enumerate'].get('plot', False)
+        self.save_best = self.exp_config['enumerate'].get('save_best', False)
+        self.do_test = self.exp_config['enumerate'].get('save_best', False)
+        self.cross_validation = self.exp_config['enumerate'].get('cross_val', False)
+        self.k_fold = self.exp_config['enumerate'].get('cross_val', 5)
+        self.sample_num = self.exp_config['enumerate'].get('sample_num', 10)
+        self.target_metric = self.exp_config['enumerate'].get('target_metric')
+        self.multiprocessing = self.exp_config['enumerate'].get('multiprocessing', True)
+        self.max_num_workers_ = self.exp_config['enumerate'].get('max_num_workers')
+        self.use_all_gpus = self.exp_config['enumerate'].get('use_all_gpus', False)
+        self.use_multi_gpus = self.exp_config['enumerate'].get('use_multi_gpus')
+
         self.save_path = join(self.root, self.date, self.exp_name, 'checkpoints')
-
-        self.logger = Logger(exp_name, root, self.info, self.date, self.plot)
+        self.logger = Logger(exp_name, self.root, self.info, self.date, self.plot)
         self.start_exp = time()
+
         # start test
-        self.dataset_composition = dict(train=False, valid=False, test=False)
-        self.test()
+        if self.do_test:
+            self.dataset_composition = dict(train=False, valid=False, test=False)
+            self.test()
 
     def run(self):
         """
         Initializes the pipeline generator and runs the experiment. Creates a report after the experiments.
         """
         # create the pipeline generator
-        self.pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, test_mode=False,
+        self.pipeline_generator = PipeGen(self.exp_config, self.save_path, sample_num=self.sample_num, test_mode=False,
                                           cross_val=self.cross_validation)
         self.gen_len = self.pipeline_generator.length
 
@@ -119,7 +117,7 @@ class PipelineManager:
             if i == 0:
                 self.logger.log['experiment_info']['metrics'] = copy(pipe['train']['metrics'])
                 if self.target_metric is None:
-                    self.target_metric = pipe['train']['metrics'][0]
+                    self.target_metric = pipe['train']['metrics'][0]['name']
                 self.logger.log['experiment_info']['target_metric'] = self.target_metric
 
             self.logger.pipe_ind = i + 1
@@ -196,7 +194,7 @@ class PipelineManager:
         Initializes the pipeline generator with tiny data and runs the test of experiment.
         """
         # create the pipeline generator
-        pipeline_generator = PipeGen(self.config_path, self.save_path, n=self.sample_num, test_mode=True)
+        pipeline_generator = PipeGen(self.exp_config, self.save_path, sample_num=self.sample_num, test_mode=True)
         len_gen = pipeline_generator.length
 
         # Start generating pipelines configs

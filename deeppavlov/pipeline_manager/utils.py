@@ -317,7 +317,7 @@ def write_legend(sheet, row, col, data_tipe, metric_names, max_com, cell_format)
     for j in range(len(data_tipe)):
         p = j*len(metric_names)
         for k, met in enumerate(metric_names):
-            sheet.write(row, max_com + p + k + 1, met, cell_format)
+            sheet.write(row, max_com + p + k + 1, met['name'], cell_format)
     # write pipeline run time
     sheet.write(row, max_com + len(metric_names)*len(data_tipe) + 1, "Time", cell_format)
 
