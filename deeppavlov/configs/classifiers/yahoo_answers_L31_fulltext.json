@@ -36,8 +36,8 @@
           "y"
         ],
         "level": "token",
-        "save_path": "YahooAnswers/models/yahoo_answers_classes.dict",
-        "load_path": "YahooAnswers/models/yahoo_answers_classes.dict"
+        "save_path": "YahooAnswers/models/model_v2/yahoo_answers_classes.dict",
+        "load_path": "YahooAnswers/models/model_v2/yahoo_answers_classes.dict"
       },
       {
         "id": "categories_vocab",
@@ -46,8 +46,8 @@
           "x_category"
         ],
         "level": "token",
-        "save_path": "YahooAnswers/models/yahoo_answers_categories.dict",
-        "load_path": "YahooAnswers/models/yahoo_answers_categories.dict"
+        "save_path": "YahooAnswers/models/model_v2/yahoo_answers_categories.dict",
+        "load_path": "YahooAnswers/models/model_v2/yahoo_answers_categories.dict"
       },
       {
         "id": "tops_vocab",
@@ -56,8 +56,8 @@
           "x_top"
         ],
         "level": "token",
-        "save_path": "YahooAnswers/models/yahoo_answers_tops.dict",
-        "load_path": "YahooAnswers/models/yahoo_answers_tops.dict"
+        "save_path": "YahooAnswers/models/model_v2/yahoo_answers_tops.dict",
+        "load_path": "YahooAnswers/models/model_v2/yahoo_answers_tops.dict"
       },
       {
         "in": [
@@ -103,13 +103,13 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "YahooAnswers/models/model_v2",
-        "load_path": "YahooAnswers/models/model_v2",
+        "save_path": "YahooAnswers/models/model_v2/model_v2",
+        "load_path": "YahooAnswers/models/model_v2/model_v2",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "units_gru": 256,
         "confident_threshold": 1,
-        "optimizer": "RMSprop",
+        "optimizer": "Adam",
         "lear_rate": 0.01,
         "lear_rate_decay": 0.001,
         "loss": "categorical_crossentropy",
