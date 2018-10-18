@@ -63,6 +63,7 @@
         "save_path": "classifiers/intents_dstc2_v5/model",
         "load_path": "classifiers/intents_dstc2_v5/model",
         "embedding_size": "#my_embedder.dim",
+        "classes": "#classes_vocab.keys()",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
           1,
