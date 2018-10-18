@@ -134,7 +134,7 @@ class SkillWrapper:
             states: Optional. A batch of arbitrary typed states for each
                 response.
         """
-        history_batch = [self.agent.skills[utt_id] for utt_id in utterances_ids]
+        history_batch = [self.agent.history[utt_id] for utt_id in utterances_ids]
         states_batch = [self.agent.states[utt_id][self.skill_id] for utt_id in utterances_ids]
 
         predicted, confidence, *states = self.skill(utterances_batch, history_batch, states_batch)

@@ -8,7 +8,7 @@
     ],
     "pipe": [
       {
-        "config_path": "../deeppavlov/configs/doc_retrieval/en_ranker_tfidf_wiki.json",
+        "config_path": "../deeppavlov/configs/doc_retrieval/ru_ranker_tfidf_wiki_test.json",
         "in": [
           "question_raw"
         ],
@@ -26,22 +26,33 @@
         ],
         "join_docs": false,
         "shuffle": false,
-        "load_path": "odqa/enwiki.db"
+        "load_path": "odqa/ruwiki_test.db"
       },
       {
         "name": "document_chunker",
-        "in": ["context_raw"],
-        "out": ["chunks"],
+        "in": [
+          "context_raw"
+        ],
+        "out": [
+          "chunks"
+        ],
         "flatten_result": true
       },
       {
         "name": "string_multiplier",
-        "in": ["question_raw", "chunks"],
-        "out":["questions"]
+        "in": [
+          "question_raw",
+          "chunks"
+        ],
+        "out": [
+          "questions"
+        ]
       },
       {
         "name": "logit_ranker",
-        "squad_model": {"config_path": "../deeppavlov/configs/squad/squad.json"},
+        "squad_model": {
+          "config_path": "../deeppavlov/configs/squad/squad_ru.json"
+        },
         "in": [
           "chunks",
           "questions"
@@ -53,17 +64,12 @@
     ]
   },
   "metadata": {
-    "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/spacy.txt",
-      "../dp_requirements/en_core_web_sm.txt"
-    ],
+    "requirements": [],
     "labels": {
       "server_utils": "ODQA"
     },
     "download": [
-      "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/en_odqa.tar.gz"
+      "http://files.deeppavlov.ai/deeppavlov_data/odqa_test.tar.gz"
     ]
   }
 }

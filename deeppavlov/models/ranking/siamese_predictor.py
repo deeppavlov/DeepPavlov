@@ -99,10 +99,7 @@ class SiamesePredictor(Component):
                     b = self.model._make_batch([context])
                     context_emb = self.model._predict_context_on_batch(b)
                     context_emb = np.squeeze(context_emb, axis=0)
-                    norm = np.sqrt(context_emb @ context_emb) *\
-                           np.sqrt(np.diag(self.response_embeddings @ self.response_embeddings.T))
-                    scores = 1 - context_emb @ self.response_embeddings.T
-                    scores /= norm
+                    scores = context_emb @ self.response_embeddings.T
                 ids = np.flip(np.argsort(scores), -1)
                 return [[self.responses[el] for el in ids[:self.interact_pred_num]]]
             else:

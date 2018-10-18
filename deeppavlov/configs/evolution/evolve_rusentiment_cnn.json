@@ -59,9 +59,7 @@
         "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
-        "save_path": "/home/dilyara/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
-        "load_path": "/home/dilyara/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
-        "dim": 300
+        "load_path": "/home/dilyara/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin"
       },
       {
         "in": [
@@ -153,8 +151,14 @@
     },
     "metrics": [
       "classification_f1",
-      "classification_roc_auc",
-      "classification_accuracy"
+      {
+        "name": "sets_accuracy",
+        "inputs": ["y", "y_labels"]
+      },
+      {
+        "name": "classification_roc_auc",
+        "inputs": ["y", "y_probas_dict"]
+      }
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,

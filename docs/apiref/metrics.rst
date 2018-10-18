@@ -7,8 +7,6 @@ Different Metric functions.
 
 .. autofunction:: deeppavlov.metrics.accuracy.sets_accuracy
 
-.. autofunction:: deeppavlov.metrics.accuracy.classification_accuracy
-
 .. autofunction:: deeppavlov.metrics.fmeasure_classification.classification_fmeasure
 
 .. autofunction:: deeppavlov.metrics.fmeasure_classification.classification_fmeasure_weighted
