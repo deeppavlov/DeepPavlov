@@ -132,7 +132,7 @@ class PipelineManager:
         except KeyError:
             visible_gpu = []
 
-        if self.max_num_workers_ < 1:
+        if self.max_num_workers_ is not None and self.max_num_workers_ < 1:
             raise ConfigError("The number of workers must be at least equal to one. "
                               "Please check 'max_num_workers' parameter in config.")
 
@@ -286,18 +286,34 @@ class PipelineManager:
 
         self.logger.log['experiment_info']['number_of_pipes'] = self.gen_len
 
-        # start multiprocessing
-        workers = Pool(self.max_num_workers)
+        if self.multiprocessing:
+            # start multiprocessing
+            workers = Pool(self.max_num_workers)
 
-        if self.available_gpu is None:
-            configs = [(deepcopy(x), self.cross_validation, self.k_fold) for x in self.pipeline_generator()]
-            pipes_results = workers.imap_unordered(self.train_pipe, configs)
-            workers.close()
-            workers.join()
+            if self.available_gpu is None:
+                configs = [(deepcopy(x), self.cross_validation, self.k_fold) for x in self.pipeline_generator()]
+                pipes_results = workers.imap_unordered(self.train_pipe, configs)
+                workers.close()
+                workers.join()
+            else:
+                pipes_results = workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen()])
+                workers.close()
+                workers.join()
         else:
-            pipes_results = workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen()])
-            workers.close()
-            workers.join()
+            pipes_results = []
+            for i, pipe in enumerate(tqdm(self.pipeline_generator(), total=self.gen_len)):
+                res = dict(pipe_conf=deepcopy(pipe))
+                # start pipeline time
+                pipe_start = time()
+                if self.cross_validation:
+                    cv_score = calc_cv_score(pipe, n_folds=self.k_fold)
+                    results = {"test": cv_score}
+                else:
+                    results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
+                res['pipe_time'] = time() - pipe_start
+                res['results'] = results
+
+                pipes_results.append(res)
 
         dataset_res = self.update_logger(pipes_results)
 
