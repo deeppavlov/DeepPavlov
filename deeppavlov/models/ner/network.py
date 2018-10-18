@@ -146,7 +146,7 @@ class NerNetwork(TFModel):
         if net_type == 'rnn':
             if use_cudnn_rnn:
                 if l2_reg > 0:
-                    raise Warning('cuDNN RNN are not l2 regularizable')
+                    log.info('Warning! cuDNN RNN are not l2 regularizable')
                 units = self._build_cudnn_rnn(features, n_hidden_list, cell_type, intra_layer_dropout, self.mask_ph)
             else:
                 units = self._build_rnn(features, n_hidden_list, cell_type, intra_layer_dropout, self.mask_ph)
