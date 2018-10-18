@@ -43,6 +43,7 @@ class SklearnComponent(Estimator):
             or prefix ``model_path/model`` (still model will be loaded from ``model_path/model.pkl``)
         infer_method: string name of class method to use for infering model, \
             e.g. ``predict``, ``predict_proba``, ``predict_log_proba``, ``transform``
+        ensure_list_output: whether to ensure that output for each sample is iterable (but not string)
         kwargs: dictionary with parameters for the sklearn model
 
     Attributes:
@@ -56,6 +57,7 @@ class SklearnComponent(Estimator):
             or prefix ``model_path/model`` (still model will be loaded from ``model_path/model.pkl``)
         infer_method: string name of class method to use for infering model, \
             e.g. ``predict``, ``predict_proba``, ``predict_log_proba``, ``transform``
+        ensure_list_output: whether to ensure that output for each sample is iterable (but not string)
     """
     def __init__(self, model_class: str,
                  save_path: Union[str, Path] = None,
