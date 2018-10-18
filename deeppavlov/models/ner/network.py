@@ -149,7 +149,7 @@ class NerNetwork(TFModel):
                     raise Warning('cuDNN RNN are not l2 regularizable')
                 units = self._build_cudnn_rnn(features, n_hidden_list, cell_type, intra_layer_dropout, self.mask_ph)
             else:
-                units = self._build_rnn(features, n_hidden_list, cell_type, intra_layer_dropout, self.mask_ph,)
+                units = self._build_rnn(features, n_hidden_list, cell_type, intra_layer_dropout, self.mask_ph)
         elif net_type == 'cnn':
             units = self._build_cnn(features, n_hidden_list, cnn_filter_width, use_batch_norm)
         self._logits = self._build_top(units, n_tags, n_hidden_list[-1], top_dropout, two_dense_on_top)
@@ -231,9 +231,11 @@ class NerNetwork(TFModel):
                     units = variational_dropout(units, self._dropout_ph)
             return units
 
-    def _build_rnn(self, units, n_hidden_list, cell_type, intra_layer_dropout):
+    def _build_rnn(self, units, n_hidden_list, cell_type, intra_layer_dropout, mask):
+        sequence_lengths = tf.to_int32(tf.reduce_sum(mask, axis=1))
         for n, n_hidden in enumerate(n_hidden_list):
-            units, _ = bi_rnn(units, n_hidden, cell_type=cell_type, name='Layer_' + str(n))
+            units, _ = bi_rnn(units, n_hidden, cell_type=cell_type,
+                              seq_lengths=sequence_lengths, name='Layer_' + str(n))
             units = tf.concat(units, -1)
             if intra_layer_dropout and n != len(n_hidden_list) - 1:
                 units = variational_dropout(units, self._dropout_ph)
