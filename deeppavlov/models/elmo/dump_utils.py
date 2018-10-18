@@ -16,7 +16,6 @@
 
 
 import os
-import time
 import json
 import h5py
 import re
@@ -27,7 +26,7 @@ import numpy as np
 from deeppavlov.models.elmo.bilm_model import LanguageModel
 from deeppavlov.models.elmo.elmo_model import BidirectionalLanguageModel
 
-from deeppavlov.models.elmo.data import Vocabulary, UnicodeCharsVocabulary, Batcher
+from deeppavlov.models.elmo.data import UnicodeCharsVocabulary, Batcher
 
 DTYPE = 'float32'
 
@@ -48,7 +47,6 @@ def dump_weights(tf_save_dir, outfile):
     '''
     Dump the trained weights from a model to a HDF5 file.
     '''
-    import h5py
 
     def _get_outname(tf_name):
         outname = re.sub(':0$', '', tf_name)
@@ -75,7 +73,7 @@ def dump_weights(tf_save_dir, outfile):
             loader = tf.train.Saver()
             loader.restore(sess, ckpt_file)
 
-        with h5py.File(outfile, 'w') as fout:
+        with h5py.File(outfile, 'w') as fout:   
             for v in tf.trainable_variables():
                 if v.name.find('softmax') >= 0:
                     # don't dump these
@@ -162,4 +160,3 @@ def dump_bilm_embeddings(vocab_file, dataset_file, options_file,
                 )
 
                 sentence_id += 1
-

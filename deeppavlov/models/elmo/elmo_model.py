@@ -18,7 +18,6 @@ import numpy as np
 import tensorflow as tf
 import h5py
 import json
-import re
 
 from deeppavlov.models.elmo.data import InvalidNumberOfCharacters
 
@@ -283,7 +282,7 @@ class BidirectionalLanguageModelGraph(object):
             # get the vocab size
             with h5py.File(embedding_weight_file, 'r') as fin:
                 # +1 for padding
-                self._n_tokens_vocab = fin['embedding'].shape[0] + 1
+                self._n_tokens_vocab = fin ['embedding'].shape[0] + 1
         else:
             self._n_tokens_vocab = None
 
@@ -361,7 +360,7 @@ class BidirectionalLanguageModelGraph(object):
                     if cnn_options['activation'] == 'relu':
                         # He initialization for ReLU activation
                         # with char embeddings init between -1 and 1
-                        #w_init = tf.random_normal_initializer(
+                        # w_init = tf.random_normal_initializer(
                         #    mean=0.0,
                         #    stddev=np.sqrt(2.0 / (width * char_embed_dim))
                         #)

@@ -18,6 +18,7 @@ import tensorflow as tf
 import numpy as np
 
 from deeppavlov.models.elmo.data import InvalidNumberOfCharacters
+from deeppavlov.models.elmo.data import Batcher
 
 
 DTYPE = 'float32'
@@ -246,15 +247,15 @@ class LanguageModel(object):
         if use_proj:
             assert n_filters > projection_dim
             with tf.variable_scope('CNN_proj') as scope:
-                    W_proj_cnn = tf.get_variable(
-                        "W_proj", [n_filters, projection_dim],
-                        initializer=tf.random_normal_initializer(
-                            mean=0.0, stddev=np.sqrt(1.0 / n_filters)),
-                        dtype=DTYPE)
-                    b_proj_cnn = tf.get_variable(
-                        "b_proj", [projection_dim],
-                        initializer=tf.constant_initializer(0.0),
-                        dtype=DTYPE)
+                W_proj_cnn = tf.get_variable(
+                    "W_proj", [n_filters, projection_dim],
+                    initializer=tf.random_normal_initializer(
+                        mean=0.0, stddev=np.sqrt(1.0 / n_filters)),
+                    dtype=DTYPE)
+                b_proj_cnn = tf.get_variable(
+                    "b_proj", [projection_dim],
+                    initializer=tf.constant_initializer(0.0),
+                    dtype=DTYPE)
 
         # apply highways layers
         def high(x, ww_carry, bb_carry, ww_tr, bb_tr):
@@ -387,7 +388,7 @@ class LanguageModel(object):
                 # add dropout
                 if self.is_training:
                     lstm_cell = tf.nn.rnn_cell.DropoutWrapper(lstm_cell,
-                        input_keep_prob=keep_prob)
+                                                              input_keep_prob=keep_prob)
 
                 lstm_cells.append(lstm_cell)
 
