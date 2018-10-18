@@ -101,7 +101,6 @@ class NerNetwork(TFModel):
                  seed: int = None,
                  lr_drop_patience: int = 5,
                  lr_drop_value: float = 0.1,
-                 train_from_scratch=False,
                  **kwargs) -> None:
         tf.set_random_seed(seed)
         np.random.seed(seed)
@@ -167,12 +166,7 @@ class NerNetwork(TFModel):
         self.sess = tf.Session(config=sess_config)
         self.sess.run(tf.global_variables_initializer())
         super().__init__(**kwargs)
-        if train_from_scratch:
-            load_path = str(self.load_path.resolve())
-            if tf.train.checkpoint_exists(load_path):
-                log.info('Warning! NerNetwork is trained from scratch. Existing model files will be overwritten!')
-        else:
-            self.load()
+        self.load()
 
     def _add_training_placeholders(self, dropout_keep_prob, learning_rate):
         self.learning_rate_ph = tf.placeholder_with_default(learning_rate, shape=[], name='learning_rate')
