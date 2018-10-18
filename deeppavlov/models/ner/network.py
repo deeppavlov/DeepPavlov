@@ -328,7 +328,8 @@ class NerNetwork(TFModel):
     def train_on_batch(self, *args):
         *xs, y = args
         feed_dict = self._fill_feed_dict(xs, y, train=True, learning_rate=self._learning_rate)
-        self.sess.run(self.train_op, feed_dict)
+        _, loss = self.sess.run([self.train_op, self.loss], feed_dict)
+        return loss
 
     def process_event(self, event_name, data):
         if event_name == 'after_validation':
