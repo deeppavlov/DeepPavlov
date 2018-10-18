@@ -832,3 +832,50 @@ class KerasClassificationModel(KerasModel):
         act_output = Activation(self.opt.get("last_layer_activation", "sigmoid"))(output)
         model = Model(inputs=[inp, inp_lengths], outputs=act_output)
         return model
+
+    def self_mult_att_gru_with_masking_model(self, units_gru: int, dense_size: int,
+                                             self_att_hid: int, self_att_out: int,
+                                             coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
+                                             dropout_rate: float = 0., rec_dropout_rate: float = 0.,
+                                             **kwargs) -> Model:
+        """
+        Method builds uncompiled model GRU.
+
+        Args:
+            units_gru: number of units for GRU.
+            dense_size: number of units for dense layer.
+            coef_reg_lstm: l2-regularization coefficient for GRU. Default: ``0.0``.
+            coef_reg_den: l2-regularization coefficient for dense layers. Default: ``0.0``.
+            dropout_rate: dropout rate to be used after BiGRU and between dense layers. Default: ``0.0``.
+            rec_dropout_rate: dropout rate for GRU. Default: ``0.0``.
+            kwargs: other non-used parameters
+
+        Returns:
+            keras.models.Model: uncompiled instance of Keras Model
+        """
+
+        inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
+        inp_lengths = Input(shape=(2,), dtype='int32')
+
+        output = GRU(units_gru, activation='tanh',
+                     return_sequences=True,
+                     kernel_regularizer=l2(coef_reg_lstm),
+                     dropout=dropout_rate,
+                     recurrent_dropout=rec_dropout_rate)(inp)
+
+        output = multiplicative_self_attention(output, n_hidden=self_att_hid,
+                                               n_output_features=self_att_out)
+
+        output = masking_sequences(output, inp_lengths)
+        # output = GlobalMaxPooling1D()(output)
+
+        output = Dropout(rate=dropout_rate)(output)
+        output = Dense(dense_size, activation=None,
+                       kernel_regularizer=l2(coef_reg_den))(output)
+        output = Activation('relu')(output)
+        output = Dropout(rate=dropout_rate)(output)
+        output = Dense(self.n_classes, activation=None,
+                       kernel_regularizer=l2(coef_reg_den))(output)
+        act_output = Activation(self.opt.get("last_layer_activation", "sigmoid"))(output)
+        model = Model(inputs=[inp, inp_lengths], outputs=act_output)
+        return model
