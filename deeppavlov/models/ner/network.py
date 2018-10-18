@@ -164,7 +164,7 @@ class NerNetwork(TFModel):
         sess_config.gpu_options.allow_growth = True
         if gpu is not None:
             sess_config.gpu_options.visible_device_list = str(gpu)
-        self.sess = tf.Session()   # TODO: add sess_config
+        self.sess = tf.Session(config=sess_config)
         self.sess.run(tf.global_variables_initializer())
         super().__init__(**kwargs)
         if train_from_scratch:
