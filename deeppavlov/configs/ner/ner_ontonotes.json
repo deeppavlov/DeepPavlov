@@ -104,8 +104,17 @@
         "top_dropout": true,
         "intra_layer_dropout": false,
         "l2_reg": 0,
-        "learning_rate": 3e-3,
-        "dropout_keep_prob": 0.7
+        "fit_batch_size": 32,
+        "fit_valid_rate": 0.001,
+        "fir_learning_rate_div": 10.0,
+        "fit_linear": false,
+        "fit_num_batches": 512,
+        "learning_rate": [1e-6, 10],
+        "learning_rate_decay": ["1cycle", 0.8],
+        "learning_rate_decay_epochs": 18,
+        "optimizer": "tf.train:AdamOptimizer",
+        "dropout_keep_prob": 0.7,
+        "fit_on": ["x_emb", "mask", "x_char_ind", "cap", "y_ind"]
       },
       {
         "ref": "tag_vocab",
@@ -124,8 +133,10 @@
     "validation_patience": 7,
     "val_every_n_epochs": 1,
 
-    "log_every_n_epochs": -1,
-    "show_examples": false
+    "log_every_n_epochs": 1,
+    "show_examples": false,
+
+    "tensorboard_log_dir": "dp_logs_ner_ontonotes"
   },
   "metadata": {
     "requirements": [

@@ -19,7 +19,7 @@ from functools import partial
 
 from deeppavlov.core.layers.tf_layers import embedding_layer, character_embedding_network, variational_dropout
 from deeppavlov.core.layers.tf_layers import cudnn_bi_lstm, cudnn_bi_gru, bi_rnn, stacked_cnn, INITIALIZER
-from deeppavlov.core.models.tf_model import TFModel
+from deeppavlov.core.models.tf_model import EnhancedTFModel
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 
@@ -28,7 +28,7 @@ log = get_logger(__name__)
 
 
 @register('ner')
-class NerNetwork(TFModel):
+class NerNetwork(EnhancedTFModel):
     """
     The :class:`~deeppavlov.models.ner.network.NerNetwork` is for Neural Named Entity Recognition and Slot Filling.
 
@@ -56,7 +56,6 @@ class NerNetwork(TFModel):
         intra_layer_dropout: Whether to use dropout between layers or not.
         l2_reg: L2 norm regularization for all kernels.
         clip_grad_norm: Clip the gradients by norm.
-        learning_rate: Learning rate to use during the training (usually from 0.1 to 0.0001)
         gpu: Number of gpu to use.
         seed: Random seed.
         lr_drop_patience: How many epochs to wait until drop the learning rate.
@@ -96,7 +95,6 @@ class NerNetwork(TFModel):
                  intra_layer_dropout: bool = False,
                  l2_reg: float = 0.0,
                  clip_grad_norm: float = 5.0,
-                 learning_rate: float = 3e-3,
                  gpu: int = None,
                  seed: int = None,
                  lr_drop_patience: int = 5,
@@ -104,10 +102,11 @@ class NerNetwork(TFModel):
                  **kwargs) -> None:
         tf.set_random_seed(seed)
         np.random.seed(seed)
-        self._learning_rate = learning_rate
+
+        super().__init__(**kwargs)
         self._lr_drop_patience = lr_drop_patience
         self._lr_drop_value = lr_drop_value
-        self._add_training_placeholders(dropout_keep_prob, learning_rate)
+        self._add_training_placeholders(dropout_keep_prob)
         self._xs_ph_list = []
         self._y_ph = tf.placeholder(tf.int32, [None, None], name='y_ph')
         self._input_features = []
@@ -165,11 +164,9 @@ class NerNetwork(TFModel):
             sess_config.gpu_options.visible_device_list = str(gpu)
         self.sess = tf.Session()   # TODO: add sess_config
         self.sess.run(tf.global_variables_initializer())
-        super().__init__(**kwargs)
         self.load()
 
-    def _add_training_placeholders(self, dropout_keep_prob, learning_rate):
-        self.learning_rate_ph = tf.placeholder_with_default(learning_rate, shape=[], name='learning_rate')
+    def _add_training_placeholders(self, dropout_keep_prob):
         self._dropout_ph = tf.placeholder_with_default(dropout_keep_prob, shape=[], name='dropout')
         self.training_ph = tf.placeholder_with_default(False, shape=[], name='is_training')
 
@@ -267,9 +264,7 @@ class NerNetwork(TFModel):
         if l2_reg > 0:
             loss += l2_reg * tf.reduce_sum(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
 
-        # optimizer = partial(tf.train.MomentumOptimizer, momentum=0.9, use_nesterov=True)
-        optimizer = tf.train.AdamOptimizer
-        train_op = self.get_train_op(loss, self.learning_rate_ph, optimizer, clip_norm=clip_grad_norm)
+        train_op = self.get_train_op(loss, clip_norm=clip_grad_norm)
         return train_op, loss
 
     def predict_no_crf(self, xs):
@@ -298,15 +293,16 @@ class NerNetwork(TFModel):
             y_pred += [viterbi_seq]
         return y_pred
 
-    def _fill_feed_dict(self, xs, y=None, learning_rate=None, train=False):
+    def _fill_feed_dict(self, xs, y=None, train=False):
         assert len(xs) == len(self._xs_ph_list)
         xs = list(xs)
         xs[0] = np.array(xs[0])
         feed_dict = {ph: x for ph, x in zip(self._xs_ph_list, xs)}
         if y is not None:
             feed_dict[self._y_ph] = y
-        if learning_rate is not None:
-            feed_dict[self.learning_rate_ph] = learning_rate
+        if train:
+            feed_dict[self.get_learning_rate_ph()] = self.get_learning_rate()
+            feed_dict[self.get_momentum_ph()] = self.get_momentum()
         feed_dict[self.training_ph] = train
         if not train:
             feed_dict[self._dropout_ph] = 1.0
@@ -317,12 +313,22 @@ class NerNetwork(TFModel):
             return []
         return self.predict(args)
 
+    def calc_loss(self, *args):
+        *xs, y = args
+        feed_dict = self._fill_feed_dict(xs, y)
+        return {'loss': self.sess.run(self.loss, feed_dict)}
+
     def train_on_batch(self, *args):
         *xs, y = args
-        feed_dict = self._fill_feed_dict(xs, y, train=True, learning_rate=self._learning_rate)
-        self.sess.run(self.train_op, feed_dict)
+        feed_dict = self._fill_feed_dict(xs, y, train=True)
+        _, loss_value = self.sess.run([self.train_op, self.loss], feed_dict)
+        report = {'loss': loss_value, 'learning_rate': self.get_learning_rate()}
+        if self.get_momentum():
+            report['momentum'] = self.get_momentum()
+        return report
 
     def process_event(self, event_name, data):
+        super().process_event(event_name, data)
         if event_name == 'after_validation':
             if not hasattr(self, '_best_f1'):
                 self._best_f1 = 0
@@ -336,7 +342,6 @@ class NerNetwork(TFModel):
 
             if self._impatience >= self._lr_drop_patience:
                 self._impatience = 0
-                log.info('Dropping learning rate from {:.1e} to {:.1e}'.format(self._learning_rate,
-                                                                               self._learning_rate * self._lr_drop_value))
+                log.info('Dropping learning rate from {:.1e} to {:.1e}'.format(self.get_learning_rate(),
+                                                                               self.get_learning_rate() * self._lr_drop_value))
                 self.load()
-                self._learning_rate *= self._lr_drop_value
