@@ -80,7 +80,8 @@ class KerasClassificationModel(KerasModel):
         Initialize model using parameters
         from opt dictionary (from config), if model is being initialized from saved.
         """
-        classes = list(classes)
+        if classes is not None:
+            classes = list(classes)
 
         super().__init__(text_size=text_size,
                          embedding_size=embedding_size,
@@ -95,8 +96,9 @@ class KerasClassificationModel(KerasModel):
                          classes=classes,
                          **kwargs)
 
-        if not(classes is None):
+        if classes is not None:
             self.classes = self.opt.get("classes")
+            
         self.n_classes = self.opt.get('n_classes')
         if self.n_classes == 0:
             ConfigError("Please, provide vocabulary with considered intents.")
