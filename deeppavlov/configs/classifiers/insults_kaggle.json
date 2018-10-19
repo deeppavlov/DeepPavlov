@@ -48,9 +48,7 @@
         "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
-        "save_path": "embeddings/wordpunct_tok_reddit_comments_2017_11_300.bin",
-        "load_path": "embeddings/wordpunct_tok_reddit_comments_2017_11_300.bin",
-        "dim": 300
+        "load_path": "embeddings/wordpunct_tok_reddit_comments_2017_11_300.bin"
       },
       {
         "in": [
@@ -98,9 +96,15 @@
     "epochs": 1000,
     "batch_size": 64,
     "metrics": [
-      "classification_accuracy",
+      {
+        "name": "sets_accuracy",
+        "inputs": ["y", "y_labels"]
+      },
       "classification_f1",
-      "classification_roc_auc"
+      {
+        "name": "classification_roc_auc",
+        "inputs": ["y", "y_probas_dict"]
+      }
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,

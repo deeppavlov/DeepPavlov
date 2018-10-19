@@ -1,6 +1,6 @@
 import re
 from pathlib import Path
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Optional
 
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.commands.utils import set_deeppavlov_root, expand_path
@@ -13,7 +13,7 @@ from deeppavlov.dataset_iterators.morphotagger_iterator import MorphoTaggerDatas
 from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag
 from deeppavlov.models.tokenizers.nltk_moses_tokenizer import NLTKMosesTokenizer
 
-def predict_with_model(config_path: [Path, str]) -> List[List[str]]:
+def predict_with_model(config_path: [Path, str]) -> List[Optional[List[str]]]:
     """Returns predictions of morphotagging model given in config :config_path:.
 
     Args:
