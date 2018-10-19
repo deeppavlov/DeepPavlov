@@ -95,6 +95,7 @@ class KerasClassificationModel(KerasModel):
 
         if not(classes is None):
             self.classes = list(self.opt.get("classes"))
+            self.opt["classes"] = list(self.opt.get("classes"))
         self.n_classes = self.opt.get('n_classes')
         if self.n_classes == 0:
             ConfigError("Please, provide vocabulary with considered intents.")
