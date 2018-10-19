@@ -14,34 +14,30 @@
 
 from pathlib import Path
 from typing import List, Tuple, Optional
-import numpy as np
-from overrides import overrides
 
 import keras.metrics
 import keras.optimizers
-from keras.layers import Dense, Input, concatenate, Activation, Concatenate, Reshape
-from keras.layers.wrappers import Bidirectional
-from keras.layers.recurrent import LSTM, GRU
+import numpy as np
+from keras import backend as K
+from keras.layers import Dense, Input
+from keras.layers import concatenate, Activation, Concatenate, Reshape
 from keras.layers.convolutional import Conv1D
 from keras.layers.core import Dropout
 from keras.layers.normalization import BatchNormalization
 from keras.layers.pooling import GlobalMaxPooling1D, MaxPooling1D, GlobalAveragePooling1D
+from keras.layers.recurrent import LSTM, GRU
+from keras.layers.wrappers import Bidirectional
 from keras.models import Model
 from keras.regularizers import l2
-from keras import backend as K
-from keras.models import Model
-from keras.layers import Dense, Input
+from overrides import overrides
 
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.file import save_json, read_json
+from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.layers.keras_layers import additive_self_attention, multiplicative_self_attention
 from deeppavlov.core.models.keras_model import KerasModel
 from deeppavlov.models.classifiers.utils import labels2onehot, proba2labels
-from deeppavlov.core.layers.keras_layers import additive_self_attention, multiplicative_self_attention
-from deeppavlov.core.common.file import save_json, read_json
-from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.layers.keras_layers import additive_self_attention, multiplicative_self_attention
-
 
 log = get_logger(__name__)
 
@@ -228,7 +224,7 @@ class KerasClassificationModel(KerasModel):
             predictions = self.model.predict(features)
             return predictions
 
-    def __call__(self, data: List[List[str]], *args) -> Tuple[List[list], List[dict]]:
+    def __call__(self, data: List[List[np.ndarray]], *args) -> Tuple[List[list], List[dict]]:
         """
         Infer on the given data
 
@@ -245,9 +241,6 @@ class KerasClassificationModel(KerasModel):
 
         labels = proba2labels(preds, confident_threshold=self.opt['confident_threshold'], classes=self.classes)
         return labels, [dict(zip(self.classes, preds[i])) for i in range(preds.shape[0])]
-
-    def reset(self) -> None:
-        pass
 
     def init_model_from_scratch(self, model_name: str):
         """
@@ -269,7 +262,7 @@ class KerasClassificationModel(KerasModel):
         return model
 
     @overrides
-    def load(self, model_name: str):
+    def load(self, model_name: str) -> Model:
         """
         Initialize uncompiled model from saved params and weights
 
@@ -376,7 +369,7 @@ class KerasClassificationModel(KerasModel):
         # then change load_path to save_path for config
         self.opt["epochs_done"] = self.epochs_done
         self.opt["final_learning_rate"] = K.eval(self.optimizer.lr) / (1. +
-                                                                   K.eval(self.optimizer.decay) * self.batches_seen)
+                                                                       K.eval(self.optimizer.decay) * self.batches_seen)
 
         if self.opt.get("load_path") and self.opt.get("save_path"):
             if self.opt.get("save_path") != self.opt.get("load_path"):
