@@ -22,6 +22,7 @@ from typing import List, Union
 from collections import OrderedDict
 from os.path import join, isdir
 from os import mkdir
+from copy import copy
 
 from py3nvml import py3nvml
 from deeppavlov.core.common.errors import GpuError
@@ -251,6 +252,8 @@ def get_data(log):
     dataset_names = {}
     max_com = 0
 
+    stop_words = ['save_path', 'load_path', 'scratch_init', 'name', 'id', 'in', 'in_y', 'out', 'fit_on']
+
     for dataset_name, models_val in log['experiments'].items():
         dataset_names[dataset_name] = []
         pipelines = []
@@ -262,34 +265,17 @@ def get_data(log):
                     max_com = len(conf['config'])
 
                 for component in conf['config']:
+                    for key in copy(list(component.keys())):
+                        if key in stop_words:
+                            del component[key]  # dell = component.pop(key)
+
                     comp_data = dict()
                     comp_data['name'] = component.pop('component_name')
-
-                    if 'save_path' in component.keys():
-                        del component['save_path']
-                    if 'load_path' in component.keys():
-                        del component['load_path']
-                    if 'scratch_init' in component.keys():
-                        del component['scratch_init']
-                    if 'name' in component.keys():
-                        del component['name']
-                    if 'id' in component.keys():
-                        del component['id']
-                    if 'in' in component.keys():
-                        del component['in']
-                    if 'in_y' in component.keys():
-                        del component['in_y']
-                    if 'out' in component.keys():
-                        del component['out']
-                    if 'main' in component.keys():
-                        del component['main']
-                    if 'out' in component.keys():
-                        del component['out']
-                    if 'fit_on' in component.keys():
-                        del component['fit_on']
-
                     comp_data['conf'] = component
                     pipe['components'].append(comp_data)
+
+                    if 'main' in component.keys():
+                        break
 
                 for name, val_ in conf['results'].items():
                     pipe['res'][name] = val_

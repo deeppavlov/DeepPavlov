@@ -87,7 +87,7 @@ class PipelineManager:
         self.exp_name = exp_name
         self.date = self.exp_config['enumerate'].get('date', datetime.now().strftime('%Y-%m-%d'))
         self.info = self.exp_config['enumerate'].get('info')
-        self.root = self.exp_config['enumerate'].get('root', 'experiments/')
+        self.root = self.exp_config['enumerate'].get('root', 'download/experiments/')
         self.plot = self.exp_config['enumerate'].get('plot', False)
         self.save_best = self.exp_config['enumerate'].get('save_best', False)
         self.do_test = self.exp_config['enumerate'].get('do_test', False)
