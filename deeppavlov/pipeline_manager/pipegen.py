@@ -160,16 +160,30 @@ class PipeGen:
             python generator
         """
         sample_gen = ParamsSearch()
-        for i in range(self.N):
-            new_pipe = []
-            for component in pipe_components:
-                if component is None:
-                    pass
-                else:
-                    new_component = sample_gen.sample_params(**component)
-                    new_pipe.append(new_component)
+        new_pipes = []
+        for component in pipe_components:
+            new_components = []
+            if component:
+                search = False
+                for key, item in component.items():
+                    if isinstance(item, dict):
+                        for item_key in item.keys():
+                            if item_key.startswith('search_'):
+                                search = True
+                                break
 
-            yield new_pipe
+                if search:
+                    for i in range(self.N):
+                        new_components.append(sample_gen.sample_params(**component))
+                    new_pipes.append(new_components)
+                else:
+                    new_components.append(component)
+                    new_pipes.append(new_components)
+            else:
+                pass
+
+        for new_config in product(*new_pipes):
+            yield new_config
 
     # grid generation
     @staticmethod
