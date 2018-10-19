@@ -32,6 +32,7 @@ from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.pipeline_manager.pipegen import PipeGen
 from deeppavlov.pipeline_manager.utils import normal_time
 from deeppavlov.pipeline_manager.utils import get_num_gpu
+from deeppavlov.core.common.prints import RedirectedPrints
 from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
@@ -89,9 +90,9 @@ class PipelineManager:
         self.root = self.exp_config['enumerate'].get('root', 'experiments/')
         self.plot = self.exp_config['enumerate'].get('plot', False)
         self.save_best = self.exp_config['enumerate'].get('save_best', False)
-        self.do_test = self.exp_config['enumerate'].get('save_best', False)
+        self.do_test = self.exp_config['enumerate'].get('do_test', False)
         self.cross_validation = self.exp_config['enumerate'].get('cross_val', False)
-        self.k_fold = self.exp_config['enumerate'].get('cross_val', 5)
+        self.k_fold = self.exp_config['enumerate'].get('k_fold', 5)
         self.sample_num = self.exp_config['enumerate'].get('sample_num', 10)
         self.target_metric = self.exp_config['enumerate'].get('target_metric')
         self.multiprocessing = self.exp_config['enumerate'].get('multiprocessing', True)
@@ -202,7 +203,7 @@ class PipelineManager:
 
     @staticmethod
     @unpack_args
-    def train_pipe(pipe_config, cross_validation, k_fold, gpu=False, gpu_ind=None):
+    def train_pipe(pipe_config, cross_validation, k_fold, gpu, gpu_ind, pipe_ind, out_path):
         # modify project environment
         if gpu:
             os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_ind)
@@ -213,11 +214,17 @@ class PipelineManager:
         pipe_start = time()
         res = dict(pipe_conf=deepcopy(pipe_config))
 
-        if cross_validation:
-            cv_score = calc_cv_score(pipe_config, n_folds=k_fold)
-            results = {"test": cv_score}
-        else:
-            results = train_evaluate_model_from_config(pipe_config, to_train=True, to_validate=True)
+        #
+        dataset_name = copy(res['pipe_conf']['dataset_reader']['data_path'])
+        save_path = join(out_path, dataset_name, "pipe_{}".format(pipe_ind + 1))
+        os.makedirs(save_path)
+        #
+        with RedirectedPrints(out=open(join(save_path, "out.txt"), "w")):
+            if cross_validation:
+                cv_score = calc_cv_score(pipe_config, n_folds=k_fold)
+                results = {"test": cv_score}
+            else:
+                results = train_evaluate_model_from_config(pipe_config, to_train=True, to_validate=True)
 
         res['results'] = results
         res['pipe_time'] = time() - pipe_start
@@ -267,10 +274,14 @@ class PipelineManager:
 
         return dataset_res
 
-    def gpu_gen(self):
-        for i, pipe_conf in enumerate(self.pipeline_generator()):
-            j = i - (i // len(self.available_gpu)) * len(self.available_gpu)
-            yield (deepcopy(pipe_conf), self.cross_validation, self.k_fold, True, j)
+    def gpu_gen(self, gpu=False):
+        if gpu:
+            for i, pipe_conf in enumerate(self.pipeline_generator()):
+                j = i - (i // len(self.available_gpu)) * len(self.available_gpu)
+                yield (deepcopy(pipe_conf), self.cross_validation, self.k_fold, True, j, i, self.save_path)
+        else:
+            for i, pipe_conf in enumerate(self.pipeline_generator()):
+                yield (deepcopy(pipe_conf), self.cross_validation, self.k_fold, False, None, i, self.save_path)
 
     def run(self):
         """
@@ -293,12 +304,11 @@ class PipelineManager:
             workers = Pool(self.max_num_workers)
 
             if self.available_gpu is None:
-                configs = [(deepcopy(x), self.cross_validation, self.k_fold) for x in self.pipeline_generator()]
-                pipes_results = workers.imap_unordered(self.train_pipe, configs)
+                pipes_results = workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(gpu=False)])
                 workers.close()
                 workers.join()
             else:
-                pipes_results = workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen()])
+                pipes_results = workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(gpu=True)])
                 workers.close()
                 workers.join()
         else:
