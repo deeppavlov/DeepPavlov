@@ -40,15 +40,17 @@ class Embedder(Component, Serializable, metaclass=ABCMeta):
         tok2emb: dictionary with already embedded tokens
         dim: dimension of embeddings
         pad_zero: whether to pad sequence of tokens with zeros or not
+        mean: whether to return one mean embedding vector per sample
         load_path: path with pre-trained fastText binary model
     """
-    def __init__(self, load_path: Union[str, Path], pad_zero: bool = False, **kwargs) -> None:
+    def __init__(self, load_path: Union[str, Path], pad_zero: bool = False, mean: bool = False, **kwargs) -> None:
         """
         Initialize embedder with given parameters
         """
         super().__init__(save_path=None, load_path=load_path)
         self.tok2emb = {}
         self.pad_zero = pad_zero
+        self.mean = mean
         self.dim = None
         self.model = None
         self.load()
@@ -64,7 +66,7 @@ class Embedder(Component, Serializable, metaclass=ABCMeta):
         raise NotImplementedError
 
     @overrides
-    def __call__(self, batch: List[List[str]], mean: bool = False) -> List[Union[list, np.ndarray]]:
+    def __call__(self, batch: List[List[str]], mean: bool = None) -> List[Union[list, np.ndarray]]:
         """
         Embed sentences from batch
 
@@ -123,6 +125,9 @@ class Embedder(Component, Serializable, metaclass=ABCMeta):
                     emb = np.zeros(self.dim, dtype=np.float32)
                 self.tok2emb[t] = emb
             embedded_tokens.append(emb)
+
+        if mean is None:
+            mean = self.mean
 
         if mean:
             filtered = [et for et in embedded_tokens if np.any(et)]

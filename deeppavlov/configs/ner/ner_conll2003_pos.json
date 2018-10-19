@@ -53,6 +53,7 @@
         "in": ["pos_ind"],
         "name": "one_hotter",
         "depth": "#pos_vocab.len",
+        "pad_zeros": true,
         "out": ["pos_one_hot"]
       },
       {

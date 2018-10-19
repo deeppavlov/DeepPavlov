@@ -12,17 +12,32 @@
     "pipe": [
       {
         "name": "ru_tokenizer",
+        "id": "my_tokenizer",
         "in": "q",
         "lemmas": true,
         "out": "q_token_lemmas"
       },
       {
-        "id": "vectorizer",
-        "name": "tfidf_vectorizer",
+        "ref": "my_tokenizer",
         "in": "q_token_lemmas",
-        "fit_on": ["q_token_lemmas"],
+        "out": "q_lem"
+      },
+      {
+        "in": [
+          "q_lem"
+        ],
+        "out": [
+          "q_vect"
+        ],
+        "fit_on": [
+          "q_lem"
+        ],
+        "id": "tfidf_vec",
+        "name": "sklearn_component",
         "save_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
-        "out": "q_vect"
+        "load_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
+        "infer_method": "transform"
       }
     ],
     "out": "q_vect"
