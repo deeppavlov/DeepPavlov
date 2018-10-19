@@ -304,11 +304,13 @@ class PipelineManager:
             workers = Pool(self.max_num_workers)
 
             if self.available_gpu is None:
-                pipes_results = workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(gpu=False)])
+                pipes_results = list(tqdm(workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(gpu=False)]),
+                                          total=self.gen_len))
                 workers.close()
                 workers.join()
             else:
-                pipes_results = workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(gpu=True)])
+                pipes_results = list(tqdm(workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(gpu=True)]),
+                                          total=self.gen_len))
                 workers.close()
                 workers.join()
         else:
