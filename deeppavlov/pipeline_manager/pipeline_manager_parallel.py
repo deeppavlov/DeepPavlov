@@ -357,9 +357,12 @@ class PipelineManager:
                 # del all tmp files in save path
                 rmtree(join(self.save_path, name))
 
+        print("[ End of experiment ]")
         # visualization of results
+        print("[ Create an experiment report ... ]")
         path = join(self.root, self.date, self.exp_name)
         results_visualization(path, self.plot, target_metric=self.target_metric)
+        print("[ Report created ]")
         return None
 
     def test(self):
