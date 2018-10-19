@@ -8,11 +8,9 @@ deeppavlov.models.sklearn
 
     .. automethod:: __call__
     .. automethod:: fit
-    .. automethod:: infer_on_batch
     .. automethod:: init_from_scratch
     .. automethod:: load
     .. automethod:: save
     .. automethod:: compose_input_data
-    .. automethod:: process_event
     .. automethod:: get_class_attributes
     .. automethod:: get_function_params
