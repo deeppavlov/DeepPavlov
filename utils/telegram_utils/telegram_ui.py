@@ -20,15 +20,20 @@ import telebot
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_configs_path
+from deeppavlov.core.common.log import get_logger
 
-TELEGRAM_UI_CONFIG_FILENAME = 'models_info.json'
+log = get_logger(__name__)
+
+SERVER_CONFIG_FILENAME = 'server_config.json'
+TELEGRAM_MODELS_INFO_FILENAME = 'models_info.json'
 
 
+# TODO: refactor with default agent usage
 def init_bot_for_model(token, model):
     bot = telebot.TeleBot(token)
 
-    config_path = Path(get_configs_path(), TELEGRAM_UI_CONFIG_FILENAME).resolve()
-    models_info = read_json(str(config_path))
+    models_info_path = Path(get_configs_path(), TELEGRAM_MODELS_INFO_FILENAME).resolve()
+    models_info = read_json(str(models_info_path))
 
     model_name = type(model.get_main_component()).__name__
     model_info = models_info[model_name] if model_name in models_info else models_info['@default']
@@ -86,7 +91,16 @@ def init_bot_for_model(token, model):
     bot.polling()
 
 
-def interact_model_by_telegram(config_path, token):
+def interact_model_by_telegram(config_path, token=None):
+    server_config_path = Path(get_configs_path(), SERVER_CONFIG_FILENAME)
+    server_config = read_json(server_config_path)
+    token = token if token else server_config['telegram_defaults']['token']
+    if not token:
+        e = ValueError('Telegram token required: initiate -t param or telegram_defaults/token '
+                       'in server configuration file')
+        log.error(e)
+        raise e
+
     config = read_json(config_path)
     model = build_model_from_config(config)
     init_bot_for_model(token, model)
