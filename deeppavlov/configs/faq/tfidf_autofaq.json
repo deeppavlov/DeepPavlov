@@ -8,40 +8,63 @@
   "dataset_iterator": {
     "name": "data_learning_iterator"
   },
-
   "chainer": {
     "in": "q",
     "pipe": [
       {
         "name": "ru_tokenizer",
+        "id": "my_tokenizer",
         "in": "q",
         "lemmas": true,
         "out": "q_token_lemmas"
       },
       {
-        "id": "vectorizer",
-        "name": "tfidf_vectorizer",
+        "ref": "my_tokenizer",
         "in": "q_token_lemmas",
+        "out": "q_lem"
+      },
+      {
+        "in": [
+          "q_lem"
+        ],
+        "out": [
+          "q_vect"
+        ],
+        "fit_on": [
+          "q_lem"
+        ],
+        "id": "tfidf_vec",
+        "name": "sklearn_component",
+        "save_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
         "load_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
-        "out": "q_vect"
+        "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
+        "infer_method": "transform"
       },
       {
         "name": "cos_sim_classifier",
         "in": "q_vect",
-        "fit_on": ["q_vect", "y"],
+        "fit_on": [
+          "q_vect",
+          "y"
+        ],
         "top_n": 1,
         "save_path": "faq/tfidf_cos_sim_classifier.pkl",
         "load_path": "faq/tfidf_cos_sim_classifier.pkl",
-        "out": ["answer", "score"]
+        "out": [
+          "answer",
+          "score"
+        ]
       }
     ],
-    "out": ["answer", "score"]
+    "out": [
+      "answer",
+      "score"
+    ]
   },
-
   "train": {
     "validate_best": false,
     "test_best": false
- },
+  },
   "metadata": {
     "download": [
       {
@@ -54,7 +77,6 @@
       }
     ]
   }
-
 }
 
 
