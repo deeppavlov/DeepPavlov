@@ -528,7 +528,7 @@ To run Russian NER model use the following code:
     PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_rus.json'
     with open(PIPELINE_CONFIG_PATH) as f:
         config = json.load(f)
-    deep_download(['-c', PIPELINE_CONFIG_PATH])
+    deep_download(PIPELINE_CONFIG_PATH)
     ner_model = build_model_from_config(config)
     ner_model(['Компания « Андэк » , специализирующаяся на решениях для обеспечения безопасности бизнеса , сообщила о том , что Вячеслав Максимов , заместитель генерального директора компании , возглавил направление по оптимизации процессов управления информационной безопасностью '])
 

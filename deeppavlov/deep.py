@@ -75,7 +75,7 @@ def main():
     pipeline_config_path = find_config(args.config_path)
 
     if args.download or args.mode == 'download':
-        deep_download(['-c', pipeline_config_path])
+        deep_download(pipeline_config_path)
     token = args.token or os.getenv('TELEGRAM_TOKEN')
 
     ms_id = args.ms_id or os.getenv('MS_APP_ID')

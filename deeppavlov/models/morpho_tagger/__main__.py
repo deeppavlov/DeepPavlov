@@ -12,5 +12,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     config_path = find_config(args.config_path)
     if args.download:
-        deep_download(['-c', config_path])
+        deep_download(config_path)
     predict_with_model(config_path)

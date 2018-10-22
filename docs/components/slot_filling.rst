@@ -225,7 +225,7 @@ prediction:
     PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/slotfill_dstc2.json'
     with open(PIPELINE_CONFIG_PATH) as f:
         config = json.load(f)
-    deep_download(['-c', PIPELINE_CONFIG_PATH])
+    deep_download(PIPELINE_CONFIG_PATH)
     slotfill_model = build_model_from_config(config)
     slotfill_model(['I would like some chinese food', 'The west part of the city would be nice'])
 
@@ -255,6 +255,6 @@ Usage example:
     PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/slotfill_dstc2_raw.json'
     with open(PIPELINE_CONFIG_PATH) as f:
         config = json.load(f)
-    deep_download(['-c', PIPELINE_CONFIG_PATH])
+    deep_download(PIPELINE_CONFIG_PATH)
     slotfill_model = build_model_from_config(config)
     slotfill_model(['I would like some chinese food', 'The west part of the city would be nice'])
