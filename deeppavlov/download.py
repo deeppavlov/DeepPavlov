@@ -14,10 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import argparse
+import sys
+from argparse import ArgumentParser, Namespace
 from collections import defaultdict
 from pathlib import Path
-import sys
+from typing import Union, Optional, Dict, Iterable, Set, Tuple
 
 import deeppavlov
 from deeppavlov.core.commands.utils import get_deeppavlov_root, set_deeppavlov_root, expand_path
@@ -28,7 +29,7 @@ from deeppavlov.core.common.log import get_logger
 
 log = get_logger(__name__)
 
-parser = argparse.ArgumentParser()
+parser = ArgumentParser()
 
 parser.add_argument('--config', '-c', help="path to a pipeline json config", type=str,
                     default=None)
@@ -37,7 +38,7 @@ parser.add_argument('-all', action='store_true',
                          " available on disk.")
 
 
-def get_config_downloads(config_path):
+def get_config_downloads(config_path: Path) -> Set[Tuple[str, Path]]:
     dp_root_back = get_deeppavlov_root()
     config = read_json(config_path)
     set_deeppavlov_root(config)
@@ -64,7 +65,7 @@ def get_config_downloads(config_path):
     return downloads
 
 
-def get_configs_downloads(config_path=None):
+def get_configs_downloads(config_path=None) -> Dict[str, Set[Path]]:
     all_downloads = defaultdict(set)
 
     if config_path:
@@ -79,7 +80,7 @@ def get_configs_downloads(config_path=None):
     return all_downloads
 
 
-def download_resource(url, dest_paths):
+def download_resource(url: str, dest_paths: Iterable[Path]) -> None:
     dest_paths = list(dest_paths)
 
     if url.endswith(('.tar.gz', '.gz', '.zip')):
@@ -91,7 +92,7 @@ def download_resource(url, dest_paths):
         download(dest_files, url)
 
 
-def download_resources(args):
+def download_resources(args: Namespace) -> None:
     if not args.all and not args.config:
         log.error('You should provide either skill config path or -all flag')
         sys.exit(1)
@@ -105,7 +106,7 @@ def download_resources(args):
         download_resource(url, dest_paths)
 
 
-def deep_download(args: [str, Path, list]=None):
+def deep_download(args: Optional[Union[str, Path, list]]=None) -> None:
     if isinstance(args, (str, Path)):
         args = ['-c', str(args)]  # if args is a path to config
     args = parser.parse_args(args)
