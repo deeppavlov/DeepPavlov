@@ -55,10 +55,11 @@ def round_f1(y_true, y_predicted):
 
     return f1_score(y_true, predictions)
 
+
 @register_metric('f1_macro')
 def round_f1_macro(y_true, y_predicted):
     """
-    Calculates F1 measure.
+    Calculates F1 macro measure.
 
     Args:
         y_true: list of true values
@@ -78,7 +79,7 @@ def round_f1_macro(y_true, y_predicted):
 @register_metric('f1_weighted')
 def round_f1_weighted(y_true, y_predicted):
     """
-    Calculates F1 measure.
+    Calculates F1 weighted measure.
 
     Args:
         y_true: list of true values

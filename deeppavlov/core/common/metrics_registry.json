@@ -3,7 +3,6 @@
   "accuracy": "deeppavlov.metrics.accuracy:accuracy",
   "bleu": "deeppavlov.metrics.bleu:bleu",
   "bleu_advanced": "deeppavlov.metrics.bleu:bleu_advanced",
-  "classification_log_loss": "deeppavlov.metrics.log_loss:classification_log_loss",
   "exact_match": "deeppavlov.metrics.squad_metrics:exact_match",
   "f1": "deeppavlov.metrics.fmeasure:round_f1",
   "f1_macro": "deeppavlov.metrics.fmeasure:round_f1_macro",
