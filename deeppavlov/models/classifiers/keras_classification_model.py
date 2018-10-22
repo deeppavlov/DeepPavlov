@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import numpy as np
 from keras.layers import Dense, Input, concatenate, Activation, Concatenate, Reshape
 from keras.layers.wrappers import Bidirectional
@@ -101,7 +101,7 @@ class KerasClassificationModel(KerasModel):
         self.opt['classes'] = self.classes
         self.n_classes = len(self.classes)
         if self.n_classes == 0:
-            ConfigError("Please, provide vocabulary with considered intents.")
+            raise ConfigError("Please, provide vocabulary with considered intents.")
 
         self.model = self.load(model_name=model_name)
         # in case of pre-trained after loading in self.opt we have stored parameters
@@ -230,7 +230,7 @@ class KerasClassificationModel(KerasModel):
 
     def cnn_model(self, kernel_sizes_cnn: List[int], filters_cnn: int, dense_size: int,
                   coef_reg_cnn: float = 0., coef_reg_den: float = 0., dropout_rate: float = 0.,
-                  **kwargs) -> Model:
+                  input_projection_size: Optional[int] = None, **kwargs) -> Model:
         """
         Build un-compiled model of shallow-and-wide CNN.
 
@@ -241,19 +241,26 @@ class KerasClassificationModel(KerasModel):
             coef_reg_cnn: l2-regularization coefficient for convolutions.
             coef_reg_den: l2-regularization coefficient for dense layers.
             dropout_rate: dropout rate used after convolutions and between dense layers.
+            input_projection_size: if not None, adds Dense layer (with ``relu`` activation)
+                                   right after input layer to the size ``input_projection_size``.
+                                   Useful for input dimentionaliry recuction. Default: ``None``.
             kwargs: other non-used parameters
 
         Returns:
             keras.models.Model: uncompiled instance of Keras Model
         """
         inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
+        output = inp
+
+        if input_projection_size is not None:
+            output = Dense(input_projection_size, activation='relu')(output)
 
         outputs = []
         for i in range(len(kernel_sizes_cnn)):
             output_i = Conv1D(filters_cnn, kernel_size=kernel_sizes_cnn[i],
                               activation=None,
                               kernel_regularizer=l2(coef_reg_cnn),
-                              padding='same')(inp)
+                              padding='same')(output)
             output_i = BatchNormalization()(output_i)
             output_i = Activation('relu')(output_i)
             output_i = GlobalMaxPooling1D()(output_i)
@@ -274,9 +281,9 @@ class KerasClassificationModel(KerasModel):
         model = Model(inputs=inp, outputs=act_output)
         return model
 
-    def dcnn_model(self, kernel_sizes_cnn: List[int], filters_cnn: int, dense_size: int,
+    def dcnn_model(self, kernel_sizes_cnn: List[int], filters_cnn: List[int], dense_size: int,
                    coef_reg_cnn: float = 0., coef_reg_den: float = 0., dropout_rate: float = 0.,
-                   **kwargs) -> Model:
+                   input_projection_size: Optional[int] = None, **kwargs) -> Model:
         """
         Build un-compiled model of deep CNN.
 
@@ -287,14 +294,19 @@ class KerasClassificationModel(KerasModel):
             coef_reg_cnn: l2-regularization coefficient for convolutions.
             coef_reg_den: l2-regularization coefficient for dense layers.
             dropout_rate: dropout rate used after convolutions and between dense layers.
+            input_projection_size: if not None, adds Dense layer (with ``relu`` activation)
+                                   right after input layer to the size ``input_projection_size``.
+                                   Useful for input dimentionaliry recuction. Default: ``None``.
             kwargs: other non-used parameters
 
         Returns:
             keras.models.Model: uncompiled instance of Keras Model
         """
         inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
-
         output = inp
+
+        if input_projection_size is not None:
+            output = Dense(input_projection_size, activation='relu')(output)
 
         for i in range(len(kernel_sizes_cnn)):
             output = Conv1D(filters_cnn[i], kernel_size=kernel_sizes_cnn[i],
@@ -321,7 +333,7 @@ class KerasClassificationModel(KerasModel):
 
     def cnn_model_max_and_aver_pool(self, kernel_sizes_cnn: List[int], filters_cnn: int, dense_size: int,
                                     coef_reg_cnn: float = 0., coef_reg_den: float = 0., dropout_rate: float = 0.,
-                                    **kwargs) -> Model:
+                                    input_projection_size: Optional[int] = None, **kwargs) -> Model:
         """
         Build un-compiled model of shallow-and-wide CNN where average pooling after convolutions is replaced with
         concatenation of average and max poolings.
@@ -333,6 +345,9 @@ class KerasClassificationModel(KerasModel):
             coef_reg_cnn: l2-regularization coefficient for convolutions. Default: ``0.0``.
             coef_reg_den: l2-regularization coefficient for dense layers. Default: ``0.0``.
             dropout_rate: dropout rate used after convolutions and between dense layers. Default: ``0.0``.
+            input_projection_size: if not None, adds Dense layer (with ``relu`` activation)
+                                   right after input layer to the size ``input_projection_size``.
+                                   Useful for input dimentionaliry recuction. Default: ``None``.
             kwargs: other non-used parameters
 
         Returns:
@@ -340,13 +355,17 @@ class KerasClassificationModel(KerasModel):
         """
 
         inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
+        output = inp
+
+        if input_projection_size is not None:
+            output = Dense(input_projection_size, activation='relu')(output)
 
         outputs = []
         for i in range(len(kernel_sizes_cnn)):
             output_i = Conv1D(filters_cnn, kernel_size=kernel_sizes_cnn[i],
                               activation=None,
                               kernel_regularizer=l2(coef_reg_cnn),
-                              padding='same')(inp)
+                              padding='same')(output)
             output_i = BatchNormalization()(output_i)
             output_i = Activation('relu')(output_i)
             output_i_0 = GlobalMaxPooling1D()(output_i)
@@ -371,7 +390,8 @@ class KerasClassificationModel(KerasModel):
 
     def bilstm_model(self, units_lstm: int, dense_size: int,
                      coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
-                     dropout_rate: float = 0., rec_dropout_rate: float = 0., **kwargs) -> Model:
+                     dropout_rate: float = 0., rec_dropout_rate: float = 0.,
+                     input_projection_size: Optional[int] = None, **kwargs) -> Model:
         """
         Build un-compiled BiLSTM.
 
@@ -382,6 +402,9 @@ class KerasClassificationModel(KerasModel):
             coef_reg_den (float): l2-regularization coefficient for dense layers. Default: ``0.0``.
             dropout_rate (float): dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
             rec_dropout_rate (float): dropout rate for LSTM. Default: ``0.0``.
+            input_projection_size: if not None, adds Dense layer (with ``relu`` activation)
+                                   right after input layer to the size ``input_projection_size``.
+                                   Useful for input dimentionaliry recuction. Default: ``None``.
             kwargs: other non-used parameters
 
         Returns:
@@ -389,12 +412,16 @@ class KerasClassificationModel(KerasModel):
         """
 
         inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
+        output = inp
+
+        if input_projection_size is not None:
+            output = Dense(input_projection_size, activation='relu')(output)
 
         output = Bidirectional(LSTM(units_lstm, activation='tanh',
                                     return_sequences=True,
                                     kernel_regularizer=l2(coef_reg_lstm),
                                     dropout=dropout_rate,
-                                    recurrent_dropout=rec_dropout_rate))(inp)
+                                    recurrent_dropout=rec_dropout_rate))(output)
 
         output = GlobalMaxPooling1D()(output)
         output = Dropout(rate=dropout_rate)(output)
@@ -411,7 +438,7 @@ class KerasClassificationModel(KerasModel):
     def bilstm_bilstm_model(self, units_lstm_1: int, units_lstm_2: int, dense_size: int,
                             coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
                             dropout_rate: float = 0., rec_dropout_rate: float = 0.,
-                            **kwargs) -> Model:
+                            input_projection_size: Optional[int] = None, **kwargs) -> Model:
         """
         Build un-compiled two-layers BiLSTM.
 
@@ -423,6 +450,9 @@ class KerasClassificationModel(KerasModel):
             coef_reg_den: l2-regularization coefficient for dense layers. Default: ``0.0``.
             dropout_rate: dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
             rec_dropout_rate: dropout rate for LSTM. Default: ``0.0``.
+            input_projection_size: if not None, adds Dense layer (with ``relu`` activation)
+                                   right after input layer to the size ``input_projection_size``.
+                                   Useful for input dimentionaliry recuction. Default: ``None``.
             kwargs: other non-used parameters
 
         Returns:
@@ -430,12 +460,16 @@ class KerasClassificationModel(KerasModel):
         """
 
         inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
+        output = inp
+
+        if input_projection_size is not None:
+            output = Dense(input_projection_size, activation='relu')(output)
 
         output = Bidirectional(LSTM(units_lstm_1, activation='tanh',
                                     return_sequences=True,
                                     kernel_regularizer=l2(coef_reg_lstm),
                                     dropout=dropout_rate,
-                                    recurrent_dropout=rec_dropout_rate))(inp)
+                                    recurrent_dropout=rec_dropout_rate))(output)
 
         output = Dropout(rate=dropout_rate)(output)
 
@@ -460,7 +494,7 @@ class KerasClassificationModel(KerasModel):
     def bilstm_cnn_model(self, units_lstm: int, kernel_sizes_cnn: List[int], filters_cnn: int, dense_size: int,
                          coef_reg_lstm: float = 0., coef_reg_cnn: float = 0., coef_reg_den: float = 0.,
                          dropout_rate: float = 0., rec_dropout_rate: float = 0.,
-                         **kwargs) -> Model:
+                         input_projection_size: Optional[int] = None, **kwargs) -> Model:
         """
         Build un-compiled BiLSTM-CNN.
 
@@ -474,6 +508,9 @@ class KerasClassificationModel(KerasModel):
             coef_reg_den: l2-regularization coefficient for dense layers. Default: ``0.0``.
             dropout_rate: dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
             rec_dropout_rate: dropout rate for LSTM. Default: ``0.0``.
+            input_projection_size: if not None, adds Dense layer (with ``relu`` activation)
+                                   right after input layer to the size ``input_projection_size``.
+                                   Useful for input dimentionaliry recuction. Default: ``None``.
             kwargs: other non-used parameters
 
         Returns:
@@ -481,12 +518,16 @@ class KerasClassificationModel(KerasModel):
         """
 
         inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
+        output = inp
+
+        if input_projection_size is not None:
+            output = Dense(input_projection_size, activation='relu')(output)
 
         output = Bidirectional(LSTM(units_lstm, activation='tanh',
                                     return_sequences=True,
                                     kernel_regularizer=l2(coef_reg_lstm),
                                     dropout=dropout_rate,
-                                    recurrent_dropout=rec_dropout_rate))(inp)
+                                    recurrent_dropout=rec_dropout_rate))(output)
 
         output = Reshape(target_shape=(self.opt['text_size'], 2 * units_lstm))(output)
         outputs = []
@@ -516,7 +557,7 @@ class KerasClassificationModel(KerasModel):
     def cnn_bilstm_model(self, kernel_sizes_cnn: List[int], filters_cnn: int, units_lstm: int, dense_size: int,
                          coef_reg_cnn: float = 0., coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
                          dropout_rate: float = 0., rec_dropout_rate: float = 0.,
-                         **kwargs) -> Model:
+                         input_projection_size: Optional[int] = None, **kwargs) -> Model:
         """
         Build un-compiled BiLSTM-CNN.
 
@@ -530,6 +571,9 @@ class KerasClassificationModel(KerasModel):
             coef_reg_den: l2-regularization coefficient for dense layers. Default: ``0.0``.
             dropout_rate: dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
             rec_dropout_rate: dropout rate for LSTM. Default: ``0.0``.
+            input_projection_size: if not None, adds Dense layer (with ``relu`` activation)
+                                   right after input layer to the size ``input_projection_size``.
+                                   Useful for input dimentionaliry recuction. Default: ``None``.
             kwargs: other non-used parameters
 
         Returns:
@@ -537,13 +581,17 @@ class KerasClassificationModel(KerasModel):
         """
 
         inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
+        output = inp
+
+        if input_projection_size is not None:
+            output = Dense(input_projection_size, activation='relu')(output)
 
         outputs = []
         for i in range(len(kernel_sizes_cnn)):
             output_i = Conv1D(filters_cnn, kernel_size=kernel_sizes_cnn[i],
                               activation=None,
                               kernel_regularizer=l2(coef_reg_cnn),
-                              padding='same')(inp)
+                              padding='same')(output)
             output_i = BatchNormalization()(output_i)
             output_i = Activation('relu')(output_i)
             output_i = MaxPooling1D()(output_i)
@@ -573,7 +621,7 @@ class KerasClassificationModel(KerasModel):
     def bilstm_self_add_attention_model(self, units_lstm: int, dense_size: int, self_att_hid: int, self_att_out: int,
                                         coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
                                         dropout_rate: float = 0., rec_dropout_rate: float = 0.,
-                                        **kwargs) -> Model:
+                                        input_projection_size: Optional[int] = None, **kwargs) -> Model:
         """
         Method builds uncompiled model of BiLSTM with self additive attention.
 
@@ -586,6 +634,9 @@ class KerasClassificationModel(KerasModel):
             coef_reg_den: l2-regularization coefficient for dense layers. Default: ``0.0``.
             dropout_rate: dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
             rec_dropout_rate: dropout rate for LSTM. Default: ``0.0``.
+            input_projection_size: if not None, adds Dense layer (with ``relu`` activation)
+                                   right after input layer to the size ``input_projection_size``.
+                                   Useful for input dimentionaliry recuction. Default: ``None``.
             kwargs: other non-used parameters
 
         Returns:
@@ -593,11 +644,16 @@ class KerasClassificationModel(KerasModel):
         """
 
         inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
+        output = inp
+
+        if input_projection_size is not None:
+            output = Dense(input_projection_size, activation='relu')(output)
+
         output = Bidirectional(LSTM(units_lstm, activation='tanh',
                                     return_sequences=True,
                                     kernel_regularizer=l2(coef_reg_lstm),
                                     dropout=dropout_rate,
-                                    recurrent_dropout=rec_dropout_rate))(inp)
+                                    recurrent_dropout=rec_dropout_rate))(output)
 
         output = MaxPooling1D(pool_size=2, strides=3)(output)
 
@@ -618,7 +674,7 @@ class KerasClassificationModel(KerasModel):
     def bilstm_self_mult_attention_model(self, units_lstm: int, dense_size: int, self_att_hid: int, self_att_out: int,
                                          coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
                                          dropout_rate: float = 0., rec_dropout_rate: float = 0.,
-                                         **kwargs) -> Model:
+                                         input_projection_size: Optional[int] = None, **kwargs) -> Model:
         """
         Method builds uncompiled model of BiLSTM with self multiplicative attention.
 
@@ -631,6 +687,9 @@ class KerasClassificationModel(KerasModel):
             coef_reg_den: l2-regularization coefficient for dense layers. Default: ``0.0``.
             dropout_rate: dropout rate to be used after BiLSTM and between dense layers. Default: ``0.0``.
             rec_dropout_rate: dropout rate for LSTM. Default: ``0.0``.
+            input_projection_size: if not None, adds Dense layer (with ``relu`` activation)
+                                   right after input layer to the size ``input_projection_size``.
+                                   Useful for input dimentionaliry recuction. Default: ``None``.
             kwargs: other non-used parameters
 
         Returns:
@@ -638,12 +697,16 @@ class KerasClassificationModel(KerasModel):
         """
 
         inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
+        output = inp
+
+        if input_projection_size is not None:
+            output = Dense(input_projection_size, activation='relu')(output)
 
         output = Bidirectional(LSTM(units_lstm, activation='tanh',
                                     return_sequences=True,
                                     kernel_regularizer=l2(coef_reg_lstm),
                                     dropout=dropout_rate,
-                                    recurrent_dropout=rec_dropout_rate))(inp)
+                                    recurrent_dropout=rec_dropout_rate))(output)
 
         output = MaxPooling1D(pool_size=2, strides=3)(output)
 
@@ -664,7 +727,7 @@ class KerasClassificationModel(KerasModel):
     def bigru_model(self, units_lstm: int, dense_size: int,
                     coef_reg_lstm: float = 0., coef_reg_den: float = 0.,
                     dropout_rate: float = 0., rec_dropout_rate: float = 0.,
-                    **kwargs) -> Model:
+                    input_projection_size: Optional[int] = None, **kwargs) -> Model:
         """
         Method builds uncompiled model BiGRU.
 
@@ -675,6 +738,9 @@ class KerasClassificationModel(KerasModel):
             coef_reg_den: l2-regularization coefficient for dense layers. Default: ``0.0``.
             dropout_rate: dropout rate to be used after BiGRU and between dense layers. Default: ``0.0``.
             rec_dropout_rate: dropout rate for GRU. Default: ``0.0``.
+            input_projection_size: if not None, adds Dense layer (with ``relu`` activation)
+                                   right after input layer to the size ``input_projection_size``.
+                                   Useful for input dimentionaliry recuction. Default: ``None``.
             kwargs: other non-used parameters
 
         Returns:
@@ -682,12 +748,16 @@ class KerasClassificationModel(KerasModel):
         """
 
         inp = Input(shape=(self.opt['text_size'], self.opt['embedding_size']))
+        output = inp
+
+        if input_projection_size is not None:
+            output = Dense(input_projection_size, activation='relu')(output)
 
         output = Bidirectional(GRU(units_lstm, activation='tanh',
                                    return_sequences=True,
                                    kernel_regularizer=l2(coef_reg_lstm),
                                    dropout=dropout_rate,
-                                   recurrent_dropout=rec_dropout_rate))(inp)
+                                   recurrent_dropout=rec_dropout_rate))(output)
 
         output = GlobalMaxPooling1D()(output)
         output = Dropout(rate=dropout_rate)(output)

@@ -12,10 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.skill.skill import Skill
+
+proposals = {
+    'en': 'expecting_arg: {}',
+    'ru': 'Пожалуйста, введите параметр {}'
+}
 
 
 class DefaultStatelessSkill(Skill):
@@ -26,8 +31,9 @@ class DefaultStatelessSkill(Skill):
     Attributes:
         model: DeepPavlov model to be wrapped into default skill instance.
     """
-    def __init__(self, model: Chainer, *args, **kwargs) -> None:
-        self.model: Chainer = model
+    def __init__(self, model: Chainer, lang: str='en', *args, **kwargs) -> None:
+        self.model = model
+        self.proposal: str = proposals[lang]
 
     def __call__(self, utterances_batch: list, history_batch: list,
                  states_batch: Optional[list]=None) -> Tuple[list, list, list]:
@@ -53,34 +59,35 @@ class DefaultStatelessSkill(Skill):
         batch_len = len(utterances_batch)
         confidence_batch = [1.0] * batch_len
 
-        if len(self.model.in_x) > 1:
-            response_batch = [None] * batch_len
-            infer_indexes = []
+        response_batch: List[Optional[str]] = [None] * batch_len
+        infer_indexes = []
 
-            if not states_batch:
-                states_batch = [None] * batch_len
+        if not states_batch:
+            states_batch: List[Optional[dict]] = [None] * batch_len
 
-            for utt_i, utterance in enumerate(utterances_batch):
-                if not states_batch[utt_i]:
-                    states_batch[utt_i] = {'expected_args': list(self.model.in_x), 'received_values': []}
+        for utt_i, utterance in enumerate(utterances_batch):
+            if not states_batch[utt_i]:
+                states_batch[utt_i] = {'expected_args': list(self.model.in_x), 'received_values': []}
 
+            if utterance:
                 states_batch[utt_i]['expected_args'].pop(0)
                 states_batch[utt_i]['received_values'].append(utterance)
 
-                if states_batch[utt_i]['expected_args']:
-                    response = 'expecting_arg:{}'.format(states_batch[utt_i]['expected_args'][0])
-                    response_batch[utt_i] = response
-                else:
-                    infer_indexes.append(utt_i)
+            if states_batch[utt_i]['expected_args']:
+                response = self.proposal.format(states_batch[utt_i]['expected_args'][0])
+                response_batch[utt_i] = response
+            else:
+                infer_indexes.append(utt_i)
 
-            if infer_indexes:
-                infer_utterances = [tuple(states_batch[i]['received_values']) for i in infer_indexes]
-                infer_results = self.model(infer_utterances)
+        if infer_indexes:
+            infer_utterances = zip(*[tuple(states_batch[i]['received_values']) for i in infer_indexes])
+            infer_results = self.model(*infer_utterances)
 
-                for infer_i, infer_result in zip(infer_indexes, infer_results):
-                    response_batch[infer_i] = infer_result
-                    states_batch[infer_i] = None
-        else:
-            response_batch = self.model(utterances_batch)
+            if len(self.model.out_params) > 1:
+                infer_results = infer_results[0]
+
+            for infer_i, infer_result in zip(infer_indexes, infer_results):
+                response_batch[infer_i] = infer_result
+                states_batch[infer_i] = None
 
         return response_batch, confidence_batch, states_batch
