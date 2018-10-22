@@ -36,8 +36,8 @@
           "y"
         ],
         "level": "token",
-        "save_path": "YahooAnswers/models/model_v6/yahoo_answers_classes.dict",
-        "load_path": "YahooAnswers/models/model_v6/yahoo_answers_classes.dict"
+        "save_path": "YahooAnswers/models/model_v9/yahoo_answers_classes.dict",
+        "load_path": "YahooAnswers/models/model_v9/yahoo_answers_classes.dict"
       },
       {
         "id": "categories_vocab",
@@ -46,8 +46,8 @@
           "x_category"
         ],
         "level": "token",
-        "save_path": "YahooAnswers/models/model_v6/yahoo_answers_categories.dict",
-        "load_path": "YahooAnswers/models/model_v6/yahoo_answers_categories.dict"
+        "save_path": "YahooAnswers/models/model_v9/yahoo_answers_categories.dict",
+        "load_path": "YahooAnswers/models/model_v9/yahoo_answers_categories.dict"
       },
       {
         "id": "tops_vocab",
@@ -56,8 +56,8 @@
           "x_top"
         ],
         "level": "token",
-        "save_path": "YahooAnswers/models/model_v6/yahoo_answers_tops.dict",
-        "load_path": "YahooAnswers/models/model_v6/yahoo_answers_tops.dict"
+        "save_path": "YahooAnswers/models/model_v9/yahoo_answers_tops.dict",
+        "load_path": "YahooAnswers/models/model_v9/yahoo_answers_tops.dict"
       },
       {
         "in": [
@@ -103,23 +103,25 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "YahooAnswers/models/model_v6/model_v6",
-        "load_path": "YahooAnswers/models/model_v6/model_v6",
+        "save_path": "YahooAnswers/models/model_v9/model",
+        "load_path": "YahooAnswers/models/model_v9/model",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
-        "units_gru": 256,
+        "units_lstm": 256,
+        "self_att_hid": 512,
+        "self_att_out": 512,
         "confident_threshold": 1,
         "optimizer": "Adam",
         "lear_rate": 0.001,
         "lear_rate_decay": 0.001,
         "loss": "categorical_crossentropy",
         "text_size": 100,
-        "coef_reg_lstm": 1e-5,
-        "coef_reg_den": 1e-5,
+        "coef_reg_lstm": 1e-3,
+        "coef_reg_den": 1e-3,
         "dropout_rate": 0.5,
         "rec_dropout_rate": 0.5,
         "dense_size": 100,
-        "model_name": "gru_with_masking_model",
+        "model_name": "bilstm_self_mult_attention_model",
         "last_layer_activation": "softmax"
       }
     ],
@@ -154,7 +156,7 @@
     "show_examples": false,
     "validate_best": true,
     "test_best": false,
-    "tensorboard_log_dir": "YahooAnswers/models/model_v6/"
+    "tensorboard_log_dir": "YahooAnswers/models/model_v9/"
   },
   "metadata": {
     "requirements": [
