@@ -13,12 +13,10 @@
 # limitations under the License.
 
 from pathlib import Path
-
 from typing import Union
 
 from deeppavlov.core.common import paths
 
-import os
 
 def set_deeppavlov_root(config: dict) -> None:
     """Make a serialization user dir."""
@@ -40,28 +38,11 @@ def get_deeppavlov_root() -> Path:
 
 
 def expand_path(path: Union[str, Path]) -> Path:
-    """Make path expansion."""
+    """Treat a relative path as being relative to ``deeppavlov_root``."""
     return get_deeppavlov_root() / Path(path).expanduser()
 
 
-def make_all_dirs(path: Union[str, Path]) -> None:
-    directory = os.path.dirname(path)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-def is_file_exist(path: Union[str, Path]):
-    if path is None:
-        return False
-
-    return os.path.exists(expand_path(path))
-
-
-def is_empty(d: Path) -> bool:
-    """Check if directory is empty."""
-    return not bool(list(d.iterdir()))
-
-
 def import_packages(packages: list) -> None:
-    """Simple function to import packages from list."""
+    """Import packages from list to execute their code."""
     for package in packages:
         __import__(package)

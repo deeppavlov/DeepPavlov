@@ -24,7 +24,8 @@ from deeppavlov.core.common.params import from_params
 log = get_logger(__name__)
 
 
-def build_model_from_config(config: [str, Path, dict], mode: str = 'infer', load_trained: bool = False) -> Chainer:
+def build_model_from_config(config: [str, Path, dict], mode: str = 'infer',
+                            load_trained: bool = False, download=False) -> Chainer:
     """Build and return the model described in corresponding configuration file."""
     if isinstance(config, (str, Path)):
         config = read_json(config)

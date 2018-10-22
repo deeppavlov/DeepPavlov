@@ -17,6 +17,7 @@ from spacy.matcher import Matcher
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
 
+
 @register('ecommerce_preprocess')
 class EcommercePreprocess(Component):
     """Class to process strings for EcommerceBot skill

@@ -25,7 +25,7 @@ from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.common.file import save_pickle
 from deeppavlov.core.common.file import load_pickle
-from deeppavlov.core.commands.utils import expand_path, make_all_dirs
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.models.serializable import Serializable
 
 logger = get_logger(__name__)
@@ -121,7 +121,7 @@ class CosineSimilarityClassifier(Estimator, Serializable):
         """Save classifier parameters"""
         logger.info("Saving faq_model to {}".format(self.save_path))
         path = expand_path(self.save_path)
-        make_all_dirs(path)
+        path.parent.mkdir(parents=True, exist_ok=True)
         save_pickle((self.x_train_features, self.y_train), path)
 
     def load(self) -> None:
