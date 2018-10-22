@@ -1,0 +1,4 @@
+{
+  "log_path": "~/.deeppavlov/dialog_logs",
+  "logfile_max_size_kb": 1024
+}
