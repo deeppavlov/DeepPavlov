@@ -815,18 +815,19 @@ class KerasClassificationModel(KerasModel):
 
         output = Dropout(rate=dropout_rate)(inp)
 
-        output, output1 = Bidirectional(GRU(units_gru, activation='tanh',
-                                            return_sequences=True,
-                                            return_state=True,
-                                            kernel_regularizer=l2(coef_reg_lstm),
-                                            dropout=dropout_rate,
-                                            recurrent_dropout=rec_dropout_rate))(output)
+        output, state1, state2 = Bidirectional(GRU(units_gru, activation='tanh',
+                                                   return_sequences=True,
+                                                   return_state=True,
+                                                   kernel_regularizer=l2(coef_reg_lstm),
+                                                   dropout=dropout_rate,
+                                                   recurrent_dropout=rec_dropout_rate))(output)
 
         # output = masking_sequences(output, inp_lengths)
-        output2 = GlobalMaxPooling1D()(output)
-        output3 = GlobalAveragePooling1D()(output)
 
-        output = Concatenate()([output1, output2, output3])
+        output1 = GlobalMaxPooling1D()(output)
+        output2 = GlobalAveragePooling1D()(output)
+
+        output = Concatenate()([output1, output2, state1, state2])
 
         output = Dropout(rate=dropout_rate)(output)
         output = Dense(dense_size, activation=None,
