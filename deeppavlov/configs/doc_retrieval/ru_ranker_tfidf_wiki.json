@@ -1,0 +1,67 @@
+{
+  "dataset_reader": {
+    "name": "odqa_reader",
+    "data_path": "odqa/ruwiki",
+    "save_path": "odqa/ruwiki.db",
+    "dataset_format": "wiki"
+  },
+  "dataset_iterator": {
+    "name": "sqlite_iterator",
+    "shuffle": false,
+    "load_path": "odqa/ruwiki.db"
+  },
+  "chainer": {
+    "in": [
+      "x"
+    ],
+    "out": [
+      "y"
+    ],
+    "pipe": [
+      {
+        "name": "hashing_tfidf_vectorizer",
+        "id": "vectorizer",
+        "fit_on_batch": [
+          "x"
+        ],
+        "save_path": "odqa/ruwiki_tfidf_matrix.npz",
+        "load_path": "odqa/ruwiki_tfidf_matrix.npz",
+        "tokenizer": {
+          "name": "ru_tokenizer",
+          "lemmas": true,
+          "ngram_range": [
+            1,
+            2
+          ]
+        }
+      },
+      {
+        "name": "tfidf_ranker",
+        "top_n": 5,
+        "in": [
+          "x"
+        ],
+        "out": [
+          "y",
+          "score"
+        ],
+        "vectorizer": "#vectorizer"
+      }
+    ]
+  },
+  "train": {
+    "validate_best": false,
+    "test_best": false,
+    "batch_size": 10000
+  },
+  "metadata": {
+    "requirements": [],
+    "labels": {
+      "server_utils": "Ranker"
+    },
+    "download": [
+      "http://files.deeppavlov.ai/datasets/wikipedia/ruwiki.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/ru_odqa.tar.gz"
+    ]
+  }
+}

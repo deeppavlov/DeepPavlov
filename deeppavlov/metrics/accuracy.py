@@ -54,27 +54,6 @@ def sets_accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -
     return correct / examples_len if examples_len else 0
 
 
-@register_metric('classification_accuracy')
-def classification_accuracy(y_true: List[list], y_predicted: List[Tuple[list, dict]]) -> float:
-    """
-    Calculate accuracy in terms of sets coincidence for special case of predictions \
-            (from classification KerasIntentModel)
-
-    Args:
-        y_true: true labels
-        y_predicted: predictions. \
-            Each prediction is a tuple of two elements \
-            (predicted_labels, dictionary like {"label_i": probability_i} )
-
-    Returns:
-        portion of samples with absolutely coincidental sets of predicted values
-    """
-    y_pred_labels = [y_predicted[i][0] for i in range(len(y_predicted))]
-    examples_len = len(y_true)
-    correct = sum([set(y1) == set(y2) for y1, y2 in zip(y_true, y_pred_labels)])
-    return correct / examples_len if examples_len else 0
-
-
 @register_metric('slots_accuracy')
 def slots_accuracy(y_true, y_predicted):
     y_true = [{tag.split('-')[-1] for tag in s if tag != 'O'} for s in y_true]
@@ -108,4 +87,22 @@ def per_item_dialog_accuracy(y_true, y_predicted):
     y_predicted = itertools.chain(*y_predicted)
     examples_len = len(y_true)
     correct = sum([y1.strip().lower() == y2.strip().lower() for y1, y2 in zip(y_true, y_predicted)])
+    return correct / examples_len if examples_len else 0
+
+
+@register_metric('acc')
+def round_accuracy(y_true, y_predicted):
+    """
+    Rounds predictions and calculates accuracy in terms of absolute coincidence.
+
+    Args:
+        y_true: list of true values
+        y_predicted: list of predicted values
+
+    Returns:
+        portion of absolutely coincidental samples
+    """
+    predictions = [round(x) for x in y_predicted]
+    examples_len = len(y_true)
+    correct = sum([y1 == y2 for y1, y2 in zip(y_true, predictions)])
     return correct / examples_len if examples_len else 0

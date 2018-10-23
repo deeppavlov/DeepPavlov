@@ -1,5 +1,5 @@
-core.models
-===========
+deeppavlov.core.models
+======================
 Abstract model classes and interfaces.
 
 .. autoclass:: deeppavlov.core.models.component.Component

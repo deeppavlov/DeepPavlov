@@ -6,7 +6,6 @@ from collections import namedtuple
 import requests
 from requests.exceptions import HTTPError
 
-from .model import Model
 from .conversation import Conversation
 from deeppavlov.core.common.log import get_logger
 
@@ -16,7 +15,7 @@ ConvKey = namedtuple('ConvKey', ['channel_id', 'conversation_id'])
 
 
 class Bot(Thread):
-    def __init__(self, config: dict, input_queue: Queue):
+    def __init__(self, agent_generator: callable, config: dict, input_queue: Queue):
         super(Bot, self).__init__()
         self.config = config
 
@@ -25,10 +24,12 @@ class Bot(Thread):
         self.http_sessions = {}
         self.input_queue = input_queue
 
-        self.model = None
+        self.agent = None
+        self.agent_generator = agent_generator
+
         if not self.config['multi_instance']:
-            self.model = self._init_model(self.config)
-            log.info('New model bot instance level model initiated')
+            self.agent = self._init_agent()
+            log.info('New bot instance level agent initiated')
 
         polling_interval = self.config['auth_polling_interval']
         self.timer = threading.Timer(polling_interval, self._update_access_info)
@@ -44,9 +45,11 @@ class Bot(Thread):
         del self.conversations[conversation_key]
         log.info(f'Deleted conversation, key: {str(conversation_key)}')
 
-    def _init_model(self, server_config: dict):
-        model = Model(server_config)
-        return model
+    def _init_agent(self):
+        # TODO: Decide about multi-instance mode necessity.
+        # If model multi-instancing is still necessary - refactor and remove
+        agent = self.agent_generator()
+        return agent
 
     def _update_access_info(self):
         polling_interval = self.config['auth_polling_interval']
@@ -79,18 +82,15 @@ class Bot(Thread):
 
         if conversation_key not in self.conversations.keys():
             if self.config['multi_instance']:
-                conv_model = self._init_model(self.config)
-                log.info('New model conversation instance level model initiated')
+                conv_agent = self._init_agent()
+                log.info('New conversation instance level agent initiated')
             else:
-                conv_model = self.model
-
-            conversation_lifetime = self.config['conversation_lifetime']
+                conv_agent = self.agent
 
             self.conversations[conversation_key] = Conversation(bot=self,
-                                                                model=conv_model,
+                                                                agent=conv_agent,
                                                                 activity=activity,
-                                                                conversation_key=conversation_key,
-                                                                conversation_lifetime=conversation_lifetime)
+                                                                conversation_key=conversation_key)
 
             log.info(f'Created new conversation, key: {str(conversation_key)}')
 
