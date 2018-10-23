@@ -112,7 +112,8 @@ def process_word(word: str, to_lower: bool = False,
 @register('lowercase_preprocessor')
 class LowercasePreprocessor(Component):
     """A callable wrapper over :func:`process_word`.
-    Takes as input a batch of tokenized sentences and returns a batch of preprocessed sentences.
+    Takes as input a batch of tokenized sentences
+    and returns a batch of preprocessed sentences.
     """
 
     def __init__(self, to_lower: bool = True, append_case: str = "first", *args, **kwargs):

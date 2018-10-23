@@ -10,7 +10,8 @@
     ]
   },
   "dataset_iterator": {
-    "name": "morphotagger_dataset"
+    "name": "morphotagger_dataset",
+    "min_train_fraction": 0.9
   },
   "chainer": {
     "in": [

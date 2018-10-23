@@ -12,7 +12,7 @@ from deeppavlov.dataset_iterators.morphotagger_iterator import MorphoTaggerDatas
 from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag
 
 
-def predict_with_model(config_path: [Path, str]) -> List[List[str]]:
+def predict_with_model(config_path: [Path, str]) -> List[Optional[List[str]]]:
     """Returns predictions of morphotagging model given in config :config_path:.
 
     Args:
