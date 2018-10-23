@@ -16,9 +16,9 @@ from pathlib import Path
 from typing import List, Tuple, Optional
 from copy import deepcopy
 
+import numpy as np
 import keras.metrics
 import keras.optimizers
-import numpy as np
 from keras import backend as K
 from keras.layers import Dense, Input
 from keras.layers import concatenate, Activation, Concatenate, Reshape
@@ -93,7 +93,7 @@ class KerasClassificationModel(KerasModel):
                  restore_lr: bool = False,
                  **kwargs) -> None:
         """
-        Initialize and train vocabularies, initializes embedder, tokenizer, and then initialize model using parameters
+        Initialize model using parameters
         from opt dictionary (from config), if model is being initialized from saved.
         """
         given_opt = {"text_size": text_size,
