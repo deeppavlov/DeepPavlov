@@ -53,6 +53,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
         embedding_dim (int): Dimensionality of token (word) embeddings.
         is_positional (bool): Adds a bunch of sinusoids of different frequencies to an embeddings.
         stack_num (int): Number of stack layers, default is 5.
+        seed (int): Random seed.
     """
 
     def __init__(self,
@@ -64,9 +65,14 @@ class DAMNetwork(TensorflowBaseMatchingModel):
                  trainable_embeddings: bool = False,
                  is_positional: bool = True,
                  stack_num: int = 5,
+                 seed: int = 65,
                  *args,
                  **kwargs):
 
+        self.seed = seed
+
+        np.random.seed(self.seed)
+        tf.set_random_seed(self.seed)
 
         self.num_context_turns = num_context_turns
         self.max_sentence_len = max_sequence_length
