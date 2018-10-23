@@ -217,7 +217,7 @@ We distribute pre-trained models for 11 languages trained on Universal Dependenc
 Configuration files for reproducible training are also available in
 ``deeppavlov/configs/morpho_tagger/UD2.0``, for
 example
-``deeppavlov/configs/morpho_tagger/UD2.0/hu/morpho_hu_train.json``.
+``deeppavlov/configs/morpho_tagger/UD2.0/morpho_en.json``.
 The configuration file consists of several parts:
 
 Dataset Reader
@@ -231,22 +231,22 @@ The dataset reader describes the instance of
     "dataset_reader": {
         "name": "morphotagger_dataset_reader",
         "data_path": "UD2.0_source",
-        "language": "hu", "data_types": ["train", "dev", "test"]
+        "language": "en", "data_types": ["train", "dev", "test"]
       }
 
 ``name`` field refers to the class MorphotaggerDatasetReader,
-``data\_path`` contains the path to data directory, the ``language``
+``data_path`` contains the path to data directory, the ``language``
 field is used to derive the name of training and development file.
-Alternatively, you can specify these files separately by full paths
+Alternatively, you can specify these files separately by full (or absolute) paths
 like
 
 ::
 
     "dataset_reader": {
         "name": "morphotagger_dataset_reader",
-        "data_path": ["UD2.0_source/hu-ud-train.conllu",
-                      "UD2.0_source/hu-ud-dev.conllu",
-                      "UD2.0_source/hu-ud-test.conllu"]
+        "data_path": ["UD2.0_source/en-ud-train.conllu",
+                      "UD2.0_source/en-ud-dev.conllu",
+                      "UD2.0_source/en-ud-test.conllu"]
         "data_types": ["train", "dev", "test"]
       }
 
@@ -257,6 +257,12 @@ after training. Since you need some validation data anyway, without
 the dev part
 you need to resplit your data as described in `Dataset
 Iterator <#dataset-iterator>`__ section.
+
+Your data should be in CONLL-U format. It refers to `predict` mode also, but in this case only word
+column is taken into account. If your data is in single word per line format and you do not want to
+reformat it, add `"from_words": True` to ``dataset_reader`` section. You can also specify
+which columns contain words, tags and detailed tags, for documentation see
+:func:`Documentation <deeppavlov.dataset_readers.morphotagging_dataset_reader.read_infile>`.
 
 Dataset iterator
 ^^^^^^^^^^^^^^^^
@@ -315,8 +321,8 @@ model should predict to tag indexes.
         "fit_on": ["y"],
         "level": "token",
         "special_tokens": ["PAD", "BEGIN", "END"],
-        "save_path": "morpho_tagger/UD2.0/tag_hu.dict",
-        "load_path": "morpho_tagger/UD2.0/tag_hu.dict"
+        "save_path": "morpho_tagger/UD2.0/tag_en.dict",
+        "load_path": "morpho_tagger/UD2.0/tag_en.dict"
       },
 
  The third part is the character vocabulary used to represent words as sequences of indexes. Only the
@@ -331,8 +337,8 @@ model should predict to tag indexes.
         "fit_on": ["x_processed"],
         "special_tokens": ["PAD", "BEGIN", "END"],
         "level": "char",
-        "save_path": "morpho_tagger/UD2.0/char_hu.dict",
-        "load_path": "morpho_tagger/UD2.0/char_hu.dict"
+        "save_path": "morpho_tagger/UD2.0/char_en.dict",
+        "load_path": "morpho_tagger/UD2.0/char_en.dict"
       },
 
 
@@ -360,7 +366,7 @@ is `Pymorphy2 <http://pymorphy2.readthedocs.io>`_. In this case the vectorizer l
 for a given word and transforms them to UD2.0 format using
 `russian-tagsets <https://github.com/kmike/russian-tagsets>`_ library. Possible UD2.0 tags
 are listed in a separate distributed with the library. This part of the config look as
-(see :config:`~deeppavlov/configs/morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_train_pymorphy.json`))
+(see :config:`~deeppavlov/configs/morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json`))
 
 ::
 
@@ -385,8 +391,8 @@ the input parameters of :class:`~deeppavlov.models.morpho_tagger.network.Charact
         "out": ["y_predicted"],
         "name": "morpho_tagger",
         "main": true,
-        "save_path": "morpho_tagger/UD2.0/ud_hu.hdf5",
-        "load_path": "morpho_tagger/UD2.0/ud_hu.hdf5",
+        "save_path": "morpho_tagger/UD2.0/ud_en.hdf5",
+        "load_path": "morpho_tagger/UD2.0/ud_en.hdf5",
         "tags": "#tag_vocab",
         "symbols": "#char_vocab",
         "verbose": 1,
