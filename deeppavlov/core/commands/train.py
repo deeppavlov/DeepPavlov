@@ -20,7 +20,7 @@ from collections import OrderedDict, namedtuple
 from pathlib import Path
 from typing import List, Tuple, Dict, Union
 
-from deeppavlov.core.commands.infer import build_model_from_config
+from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root, import_packages
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.errors import ConfigError
@@ -217,7 +217,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
         #     model_config['load_path'] = model_config['save_path']
         # except KeyError:
         #     log.warning('No "save_path" parameter for the model, so "load_path" will not be renewed')
-        model = build_model_from_config(config, load_trained=True)
+        model = build_model(config, load_trained=True)
         log.info('Testing the best saved model')
 
         if train_config['validate_best']:

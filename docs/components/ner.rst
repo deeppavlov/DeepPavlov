@@ -382,14 +382,14 @@ prediction:
 .. code:: python
 
     import json
-    from deeppavlov.core.commands.infer import build_model_from_config
+    from deeppavlov.core.commands.infer import build_model
     from deeppavlov.core.commands.train import train_evaluate_model_from_config
 
     PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_ontonotes.json'
     with open(PIPELINE_CONFIG_PATH) as f:
         config = json.load(f)
     train_evaluate_model_from_config(PIPELINE_CONFIG_PATH)
-    ner_model = build_model_from_config(config)
+    ner_model = build_model(config)
     ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates'])
 
 This example assumes that the working directory is deeppavlov.
@@ -402,14 +402,14 @@ A pre-trained model for solving OntoNotes task can be used as following:
 .. code:: python
 
     import json
-    from deeppavlov.core.commands.infer import build_model_from_config
+    from deeppavlov.core.commands.infer import build_model
     from deeppavlov.core.commands.train import train_evaluate_model_from_config
 
     PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_ontonotes.json'
     with open(PIPELINE_CONFIG_PATH) as f:
         config = json.load(f)
     train_evaluate_model_from_config(PIPELINE_CONFIG_PATH)
-    ner_model = build_model_from_config(config)
+    ner_model = build_model(config)
     ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates'])
 
 Or from command line:
@@ -522,14 +522,14 @@ To run Russian NER model use the following code:
 
 .. code:: python
 
-    from deeppavlov.core.commands.infer import build_model_from_config
+    from deeppavlov.core.commands.infer import build_model
     from deeppavlov.download import deep_download
     import json
     PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_rus.json'
     with open(PIPELINE_CONFIG_PATH) as f:
         config = json.load(f)
     deep_download(PIPELINE_CONFIG_PATH)
-    ner_model = build_model_from_config(config)
+    ner_model = build_model(config)
     ner_model(['Компания « Андэк » , специализирующаяся на решениях для обеспечения безопасности бизнеса , сообщила о том , что Вячеслав Максимов , заместитель генерального директора компании , возглавил направление по оптимизации процессов управления информационной безопасностью '])
 
 Since the model is built with cuDNN version of LSTM, the GPU along with

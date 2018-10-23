@@ -17,7 +17,7 @@ from pathlib import Path
 
 import telebot
 
-from deeppavlov.core.commands.infer import build_model_from_config
+from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.file import read_json
 
 TELEGRAM_UI_CONFIG_FILENAME = 'models_info.json'
@@ -88,5 +88,5 @@ def init_bot_for_model(token, model):
 
 def interact_model_by_telegram(config_path, token):
     config = read_json(config_path)
-    model = build_model_from_config(config)
+    model = build_model(config)
     init_bot_for_model(token, model)

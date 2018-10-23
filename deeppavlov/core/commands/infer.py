@@ -17,7 +17,7 @@ from typing import Optional, Union
 
 from deeppavlov.core.commands.utils import set_deeppavlov_root, import_packages
 from deeppavlov.core.common.chainer import Chainer
-from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.file import read_json, find_config
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.params import from_params
 from deeppavlov.download import deep_download
@@ -25,10 +25,11 @@ from deeppavlov.download import deep_download
 log = get_logger(__name__)
 
 
-def build_model_from_config(config: Union[str, Path, dict], mode: str='infer',
-                            load_trained: bool=False, download: bool=False) -> Chainer:
+def build_model(config: Union[str, Path, dict], mode: str= 'infer',
+                load_trained: bool=False, download: bool=False) -> Chainer:
     """Build and return the model described in corresponding configuration file."""
     if isinstance(config, (str, Path)):
+        config = find_config(config)
         config = read_json(config)
     set_deeppavlov_root(config)
 
@@ -63,7 +64,7 @@ def build_model_from_config(config: Union[str, Path, dict], mode: str='infer',
 def interact_model(config_path: Union[str, Path]) -> None:
     """Start interaction with the model described in corresponding configuration file."""
     config = read_json(config_path)
-    model = build_model_from_config(config)
+    model = build_model(config)
 
     while True:
         args = []
@@ -94,7 +95,7 @@ def predict_on_stream(config_path: Union[str, Path], batch_size: int=1, file_pat
         f = open(file_path, encoding='utf8')
 
     config = read_json(config_path)
-    model: Chainer = build_model_from_config(config)
+    model: Chainer = build_model(config)
 
     args_count = len(model.in_x)
     while True:

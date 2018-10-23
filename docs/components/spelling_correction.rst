@@ -35,14 +35,14 @@ lines to stdout:
     import json
     import sys
 
-    from deeppavlov.core.commands.infer import build_model_from_config
+    from deeppavlov.core.commands.infer import build_model
 
     CONFIG_PATH = 'deeppavlov/configs/spelling_correction/brillmoore_kartaslov_ru.json'
 
     with open(CONFIG_PATH) as config_file:
         config = json.load(config_file)
 
-    model = build_model_from_config(config)
+    model = build_model(config)
     for line in sys.stdin:
         print(model([line])[0], flush=True)
 
