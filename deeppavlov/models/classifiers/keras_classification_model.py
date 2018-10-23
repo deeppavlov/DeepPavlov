@@ -14,10 +14,11 @@
 
 from pathlib import Path
 from typing import List, Tuple, Optional
+from copy import deepcopy
 
+import numpy as np
 import keras.metrics
 import keras.optimizers
-import numpy as np
 from keras import backend as K
 from keras.layers import Dense, Input
 from keras.layers import concatenate, Activation, Concatenate, Reshape
@@ -90,29 +91,26 @@ class KerasClassificationModel(KerasModel):
                  last_layer_activation="sigmoid",
                  confident_threshold: float = 0.5,
                  restore_lr: bool = False,
-                 **kwargs):
+                 **kwargs) -> None:
         """
-        Initialize and train vocabularies, initializes embedder, tokenizer, and then initialize model using parameters
+        Initialize model using parameters
         from opt dictionary (from config), if model is being initialized from saved.
         """
-        self.opt = {"text_size": text_size,
-                    "embedding_size": embedding_size,
-                    "model_name": model_name,
-                    "optimizer": optimizer,
-                    "loss": loss,
-                    "learning_rate": learning_rate,
-                    "learning_rate_decay": learning_rate_decay,
-                    "last_layer_activation": last_layer_activation,
-                    "confident_threshold": confident_threshold,
-                    "restore_lr": restore_lr,
-                    **kwargs}
+        given_opt = {"text_size": text_size,
+                     "embedding_size": embedding_size,
+                     "model_name": model_name,
+                     "optimizer": optimizer,
+                     "loss": loss,
+                     "learning_rate": learning_rate,
+                     "learning_rate_decay": learning_rate_decay,
+                     "last_layer_activation": last_layer_activation,
+                     "confident_threshold": confident_threshold,
+                     "restore_lr": restore_lr,
+                     **kwargs}
+        self.opt = deepcopy(given_opt)
         self.model = None
 
-        super().__init__(text_size=text_size, embedding_size=embedding_size, model_name=model_name,
-                         optimizer=optimizer, loss=loss,
-                         learning_rate=learning_rate, learning_rate_decay=learning_rate_decay,
-                         last_layer_activation=last_layer_activation, confident_threshold=confident_threshold,
-                         restore_lr=restore_lr, **kwargs)
+        super().__init__(**given_opt)
 
         self.classes = list(np.sort(np.array(list(self.opt.get('classes')))))
         self.opt['classes'] = self.classes
@@ -120,7 +118,7 @@ class KerasClassificationModel(KerasModel):
         if self.n_classes == 0:
             raise ConfigError("Please, provide vocabulary with considered intents.")
 
-        self.model = self.load(model_name=model_name)
+        self.load(model_name=model_name)
         # in case of pre-trained after loading in self.opt we have stored parameters
         # now we can restore lear rate if needed
         if restore_lr:
@@ -129,14 +127,7 @@ class KerasClassificationModel(KerasModel):
         self.model = self.compile(self.model, optimizer_name=optimizer, loss_name=loss,
                                   learning_rate=learning_rate, learning_rate_decay=learning_rate_decay)
 
-        self._change_not_fixed_params(text_size=text_size, embedding_size=embedding_size,
-                                      model_name=model_name,
-                                      optimizer=optimizer, loss=loss,
-                                      learning_rate=learning_rate, learning_rate_decay=learning_rate_decay,
-                                      last_layer_activation=last_layer_activation,
-                                      confident_threshold=confident_threshold,
-                                      restore_lr=restore_lr,
-                                      **kwargs)
+        self._change_not_fixed_params(**given_opt)
 
         summary = ['Model was successfully initialized!', 'Model summary:']
         self.model.summary(print_fn=summary.append)
@@ -242,7 +233,7 @@ class KerasClassificationModel(KerasModel):
         labels = proba2labels(preds, confident_threshold=self.opt['confident_threshold'], classes=self.classes)
         return labels, [dict(zip(self.classes, preds[i])) for i in range(preds.shape[0])]
 
-    def init_model_from_scratch(self, model_name: str):
+    def init_model_from_scratch(self, model_name: str) -> Model:
         """
         Initialize uncompiled model from scratch with given params
 
@@ -262,7 +253,7 @@ class KerasClassificationModel(KerasModel):
         return model
 
     @overrides
-    def load(self, model_name: str) -> Model:
+    def load(self, model_name: str) -> None:
         """
         Initialize uncompiled model from saved params and weights
 
@@ -295,15 +286,19 @@ class KerasClassificationModel(KerasModel):
                 log.info("[loading weights from {}]".format(weights_path.name))
                 model.load_weights(str(weights_path))
 
-                return model
+                self.model = model
+
+                return None
             else:
-                return self.init_model_from_scratch(model_name)
+                self.model = self.init_model_from_scratch(model_name)
+                return None
         else:
             log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
-            return self.init_model_from_scratch(model_name)
+            self.model = self.init_model_from_scratch(model_name)
+            return None
 
     def compile(self, model: Model, optimizer_name: str, loss_name: str,
-                learning_rate: float = 0.01, learning_rate_decay: float = 0.):
+                learning_rate: float = 0.01, learning_rate_decay: float = 0.) -> Model:
         """
         Compile model with given optimizer and loss
 

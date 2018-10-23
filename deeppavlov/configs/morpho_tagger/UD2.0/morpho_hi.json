@@ -157,6 +157,7 @@
       "../dp_requirements/tf.txt"
     ],
     "download": [
+      "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/datasets/UD2.0_source/hi.tar.gz",
         "subdir": "UD2.0_source/hi"
