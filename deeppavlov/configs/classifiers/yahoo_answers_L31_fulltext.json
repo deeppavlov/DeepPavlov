@@ -1,17 +1,12 @@
 {
   "dataset_reader": {
     "name": "basic_classification_reader",
-    "x": [
-      "Title",
-      "Description",
-      "FullText",
-      "Category",
-      "Top"
-    ],
+    "x": "Title",
     "y": "Label",
     "data_path": "./YahooAnswers/yahoo_answers_data/",
     "train": "train.csv",
-    "valid": "valid.csv"
+    "valid": "valid.csv",
+    "test": "test.csv"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator",
@@ -19,11 +14,7 @@
   },
   "chainer": {
     "in": [
-      "x_title",
-      "x_description",
-      "x_fulltext",
-      "x_category",
-      "x_top"
+      "x"
     ],
     "in_y": [
       "y"
@@ -36,37 +27,18 @@
           "y"
         ],
         "level": "token",
-        "save_path": "YahooAnswers/models/model_v9/yahoo_answers_classes.dict",
-        "load_path": "YahooAnswers/models/model_v9/yahoo_answers_classes.dict"
-      },
-      {
-        "id": "categories_vocab",
-        "name": "simple_vocab",
-        "fit_on": [
-          "x_category"
-        ],
-        "level": "token",
-        "save_path": "YahooAnswers/models/model_v9/yahoo_answers_categories.dict",
-        "load_path": "YahooAnswers/models/model_v9/yahoo_answers_categories.dict"
-      },
-      {
-        "id": "tops_vocab",
-        "name": "simple_vocab",
-        "fit_on": [
-          "x_top"
-        ],
-        "level": "token",
-        "save_path": "YahooAnswers/models/model_v9/yahoo_answers_tops.dict",
-        "load_path": "YahooAnswers/models/model_v9/yahoo_answers_tops.dict"
+        "save_path": "YahooAnswers/models/model_v12/yahoo_answers_classes.dict",
+        "load_path": "YahooAnswers/models/model_v12/yahoo_answers_classes.dict"
       },
       {
         "in": [
-          "x_fulltext"
+          "x"
         ],
         "out": [
           "x_prep"
         ],
-        "name": "dirty_comments_preprocessor"
+        "name": "dirty_comments_preprocessor",
+        "remove_punctuation": true
       },
       {
         "in": "x_prep",
@@ -103,25 +75,23 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "YahooAnswers/models/model_v9/model",
-        "load_path": "YahooAnswers/models/model_v9/model",
+        "save_path": "YahooAnswers/models/model_v12/model",
+        "load_path": "YahooAnswers/models/model_v12/model",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
-        "units_lstm": 256,
-        "self_att_hid": 512,
-        "self_att_out": 512,
+        "units_gru": 256,
         "confident_threshold": 1,
         "optimizer": "Adam",
         "lear_rate": 0.001,
         "lear_rate_decay": 0.001,
         "loss": "categorical_crossentropy",
-        "text_size": 100,
-        "coef_reg_lstm": 1e-3,
-        "coef_reg_den": 1e-3,
-        "dropout_rate": 0.5,
-        "rec_dropout_rate": 0.5,
+        "text_size": 20,
+        "coef_reg_lstm": 1e-5,
+        "coef_reg_den": 1e-5,
+        "dropout_rate": 0.3,
+        "rec_dropout_rate": 0.3,
         "dense_size": 100,
-        "model_name": "bilstm_self_mult_attention_model",
+        "model_name": "gru_with_masking_model",
         "last_layer_activation": "softmax"
       }
     ],
@@ -155,8 +125,8 @@
     "log_every_n_epochs": 1,
     "show_examples": false,
     "validate_best": true,
-    "test_best": false,
-    "tensorboard_log_dir": "YahooAnswers/models/model_v9/"
+    "test_best": true,
+    "tensorboard_log_dir": "YahooAnswers/models/model_v12/"
   },
   "metadata": {
     "requirements": [

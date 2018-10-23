@@ -821,10 +821,10 @@ class KerasClassificationModel(KerasModel):
                      dropout=dropout_rate,
                      recurrent_dropout=rec_dropout_rate)(output)
 
-        # output = masking_sequences(output, inp_lengths)
-        output = GlobalMaxPooling1D()(output)
+        output = masking_sequences(output, inp_lengths)
+        # output = GlobalMaxPooling1D()(output)
 
-        output = Dropout(rate=dropout_rate)(output)
+        # output = Dropout(rate=dropout_rate)(output)
         output = Dense(dense_size, activation=None,
                        kernel_regularizer=l2(coef_reg_den))(output)
         output = Activation('relu')(output)
