@@ -14,6 +14,7 @@
 
 import numpy as np
 import tensorflow as tf
+import tensorflow_hub as hub
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
@@ -74,20 +75,24 @@ class DAMNetwork(TensorflowBaseMatchingModel):
         self.trainable = trainable_embeddings
         self.is_positional = is_positional
         self.stack_num = stack_num
-
         self.learning_rate = learning_rate
         self.emb_matrix = emb_matrix
 
-        self.sess_config = tf.ConfigProto(allow_soft_placement=True)
-        self.sess_config.gpu_options.allow_growth = True
-        self.sess = tf.Session(config=self.sess_config)
-        self._init_graph()
-        self.sess.run(tf.global_variables_initializer())
+        g_2 = tf.Graph()
+        with g_2.as_default():
+            self.sess_config = tf.ConfigProto(allow_soft_placement=True)
+            self.sess_config.gpu_options.allow_growth = True
+            self.sess = tf.Session(config=self.sess_config)
+            self._init_graph()
+            self.sess.run(tf.global_variables_initializer())
 
         super(DAMNetwork, self).__init__(*args, **kwargs)
 
         if self.load_path is not None:
             self.load()
+
+        np.random.seed(445)
+        tf.set_random_seed(442)
 
     def _init_placeholders(self):
         with tf.variable_scope('inputs'):
@@ -101,6 +106,10 @@ class DAMNetwork(TensorflowBaseMatchingModel):
 
             # Labels
             self.y_true = tf.placeholder(tf.int32, shape=(None,))
+
+            # Raw sentences for context and response
+            self.context_sent_emb_ph = tf.placeholder(tf.float32, shape=(None, self.num_context_turns, 1, 200))
+            self.response_sent_emb_ph = tf.placeholder(tf.float32, shape=(None, 1, 200))
 
     def _init_graph(self):
         self._init_placeholders()
@@ -117,6 +126,9 @@ class DAMNetwork(TensorflowBaseMatchingModel):
             with tf.variable_scope('positional'):
                 Hr = op.positional_encoding_vector(Hr, max_timescale=10)
 
+        with tf.variable_scope('expand_resp_embeddings'):
+            Hr = tf.concat([self.response_sent_emb_ph, Hr], axis=1)
+
         Hr_stack = [Hr]
 
         for index in range(self.stack_num):
@@ -131,14 +143,20 @@ class DAMNetwork(TensorflowBaseMatchingModel):
         list_turn_t = tf.unstack(self.utterance_ph, axis=1)
         list_turn_length = tf.unstack(self.all_utterance_len_ph, axis=1)
 
+        list_turn_t_sent = tf.unstack(self.context_sent_emb_ph, axis=1)
+
         sim_turns = []
         # for every turn_t calculate matching vector
-        for turn_t, t_turn_length in zip(list_turn_t, list_turn_length):
+        for turn_t, t_turn_length, turn_t_sent in zip(list_turn_t, list_turn_length, list_turn_t_sent):
             Hu = tf.nn.embedding_lookup(word_embeddings, turn_t)  # [batch, max_turn_len, emb_size]
 
             if self.is_positional and self.stack_num > 0:
                 with tf.variable_scope('positional', reuse=True):
                     Hu = op.positional_encoding_vector(Hu, max_timescale=10)
+
+            with tf.variable_scope('expand_cont_embeddings'):
+                Hu = tf.concat([turn_t_sent, Hu], axis=1)
+
             Hu_stack = [Hu]
 
             for index in range(self.stack_num):
@@ -204,7 +222,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
 
         # loss and train
         with tf.variable_scope('loss'):
-            self.loss, self.logits = layers.loss(final_info, self.y_true, clip_value=10.)
+            self.loss, self.logits = layers.loss(final_info, self.y_true, clip_value=1.)
             self.y_pred = tf.nn.softmax(self.logits, name="y_pred")
             tf.summary.scalar('loss', self.loss)
 
