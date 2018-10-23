@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 from pathlib import Path
 from datetime import datetime
+from typing import Any, Optional
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.paths import get_configs_path
 from deeppavlov.core.common.file import read_json
+from deeppavlov.core.agent.rich_content import RichMessage
 
 LOGGER_CONFIG_FILENAME = 'dialog_logger_config.json'
 LOG_TIMESTAMP_FORMAT = '%Y-%m-%d_%H-%M-%S_%f'
@@ -26,30 +29,57 @@ log = get_logger(__name__)
 
 
 class DialogLogger:
-    def __init__(self, agent_name: str = 'dp_agent'):
+    def __init__(self, enabled: bool=False, agent_name: Optional[str]=None):
         self.config: dict = read_json(get_configs_path() / LOGGER_CONFIG_FILENAME)
-        self.agent_name: str = agent_name
-        self.log_dir: Path = Path(self.config['log_path']).resolve() / agent_name
-        self.log_max_size: int = self.config['logfile_max_size_kb']
-        self.log_file = self._get_log_file(self.log_dir, self.agent_name)
+        self.enabled: bool = enabled or self.config['enabled']
+
+        if self.enabled:
+            self.agent_name: str = agent_name or self.config['agent_name']
+            self.log_max_size: int = self.config['logfile_max_size_kb']
+            self.log_file = self._get_log_file()
+            self.log_file.writelines('Agent initiated\n')
 
     @staticmethod
     def _get_timestamp_utc_str() -> str:
         utc_timestamp_str = datetime.strftime(datetime.utcnow(), LOG_TIMESTAMP_FORMAT)
         return utc_timestamp_str
 
-    def _get_log_file(self, log_dir: Path, agent_name: str):
-        log_file_path = Path(log_dir, f'{self._get_timestamp_utc_str()}_{agent_name}.log')
-        log_file = open(log_file_path, 'wa', buffering=1)
+    def _get_log_file(self):
+        log_dir: Path = Path(self.config['log_path']).expanduser().resolve() / self.agent_name
+        if not log_dir.is_dir():
+            log_dir.mkdir(parents=True, exist_ok=True)
+
+        log_file_path = Path(log_dir, f'{self._get_timestamp_utc_str()}_{self.agent_name}.log')
+        log_file = open(log_file_path, 'a', buffering=1)
         return log_file
 
-    def log(self, log_message: str, direction: str, dialog_id: str = 'no_id'):
+    def _log(self, log_message: Any, direction: str, dialog_id: str):
+        if isinstance(log_message, str):
+            pass
+        elif isinstance(log_message, RichMessage):
+            log_message = log_message.json()
+        else:
+            log_message = str(log_message)
+
         if self.log_file.tell() >= self.log_max_size:
             self.log_file.close()
-            self.log_file = self._get_log_file(self.log_dir, self.agent_name)
+            self.log_file = self._get_log_file()
         else:
             try:
-                log_str = f'{self._get_timestamp_utc_str()} {log_message}\n'
-                print(log_str, file=self.log_file, flush=True)
+                log_msg = {}
+                log_msg['timestamp'] = self._get_timestamp_utc_str()
+                log_msg['dialog_id'] = dialog_id
+                log_msg['direction'] = direction
+                log_msg['message'] = log_message
+                log_str = json.dumps(log_msg)
+                self.log_file.write(f'{log_str}\n')
             except IOError:
                 log.error('Failed to write dialog log.')
+
+    def log_in(self, log_message: Any, dialog_id: Any = 'no_id'):
+        if self.enabled:
+            self._log(log_message, 'in', str(dialog_id))
+
+    def log_out(self, log_message: Any, dialog_id: Any = 'no_id'):
+        if self.enabled:
+            self._log(log_message, 'out', str(dialog_id))
