@@ -77,7 +77,7 @@
         "load_path": "morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
         "max_pymorphy_variants": 5,
         "in": [
-          "x"
+          "x_tokens"
         ],
         "out": [
           "x_possible_tags"
