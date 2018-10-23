@@ -39,9 +39,7 @@
         "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
-        "save_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
-        "load_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
-        "dim": 300
+        "load_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin"
       },
       {
         "in": [
@@ -89,9 +87,15 @@
     "epochs": 100,
     "batch_size": 64,
     "metrics": [
-      "classification_roc_auc",
+      {
+        "name": "sets_accuracy",
+        "inputs": ["y", "y_labels"]
+      },
       "classification_f1",
-      "classification_accuracy"
+      {
+        "name": "classification_roc_auc",
+        "inputs": ["y", "y_probas_dict"]
+      }
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,

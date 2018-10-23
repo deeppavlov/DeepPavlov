@@ -13,26 +13,23 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import gzip
 import os
+import re
+import secrets
+import shutil
+import tarfile
+import zipfile
 from hashlib import md5
 from pathlib import Path
-from urllib.parse import urlparse
 from typing import List, Union
-import requests
-from tqdm import tqdm
-import tarfile
-import gzip
-import zipfile
-import re
-import shutil
-import secrets
+from urllib.parse import urlparse
 
+import numpy as np
 import requests
 from tqdm import tqdm
-import numpy as np
 
 from deeppavlov.core.common.log import get_logger
-
 
 log = get_logger(__name__)
 
@@ -271,6 +268,40 @@ def zero_pad(batch, dtype=np.float32):
                 padded_batch[n, k] = token_features
     return padded_batch
 
+def zero_pad_truncate(batch, max_len, pad='post', trunc='post', dtype=np.float32):
+    batch_size = len(batch)
+    if isinstance(batch[0][0], (int, np.int)):
+        padded_batch = np.zeros([batch_size, max_len], dtype=np.int32)
+        for n, utterance in enumerate(batch):
+            if len(utterance) > max_len:
+                if trunc == 'post':
+                    padded_batch[n, :] = utterance[:max_len]
+                elif trunc == 'pre':
+                    padded_batch[n, :] = utterance[-max_len:]
+            else:
+                if pad == 'post':
+                    padded_batch[n, :len(utterance)] = utterance
+                elif pad == 'pre':
+                    padded_batch[n, -len(utterance):] = utterance
+    else:
+        n_features = len(batch[0][0])
+        padded_batch = np.zeros([batch_size, max_len, n_features], dtype=dtype)
+        for n, utterance in enumerate(batch):
+            if len(utterance) > max_len:
+                if trunc == 'post':
+                    for k, token_features in enumerate(utterance[:max_len]):
+                        padded_batch[n, k] = token_features
+                elif trunc == 'pre':
+                    for k, token_features in enumerate(utterance[-max_len:]):
+                        padded_batch[n, k] = token_features
+            else:
+                if pad == 'post':
+                    for k, token_features in enumerate(utterance):
+                        padded_batch[n, k] = token_features
+                elif pad == 'pre':
+                    for k, token_features in enumerate(utterance):
+                        padded_batch[n, k + max_len - len(utterance)] = token_features
+    return padded_batch
 
 def zero_pad_char(batch, dtype=np.float32):
     if len(batch) == 1 and len(batch[0]) == 0:
@@ -322,9 +353,7 @@ def check_nested_dict_keys(check_dict: dict, keys: list):
 
 
 def jsonify_data(input):
-    if isinstance(input, list):
-        result = [jsonify_data(item) for item in input]
-    elif isinstance(input, tuple):
+    if isinstance(input, (list, tuple)):
         result = [jsonify_data(item) for item in input]
     elif isinstance(input, dict):
         result = {}

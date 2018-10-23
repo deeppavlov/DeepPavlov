@@ -12,15 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union
-
 import numpy as np
 from sklearn.decomposition import PCA
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.simple_vocab import SimpleVocabulary
-from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
-from deeppavlov.models.embedders.glove_embedder import GloVeEmbedder
+from deeppavlov.models.embedders.abstract_embedder import Embedder
 
 
 @register('emb_mat_assembler')
@@ -50,7 +47,7 @@ class EmbeddingsMatrixAssembler:
     """
 
     def __init__(self,
-                 embedder: Union[FasttextEmbedder, GloVeEmbedder],
+                 embedder: Embedder,
                  vocab: SimpleVocabulary,
                  character_level: bool = False,
                  emb_dim: int = None,
@@ -68,8 +65,8 @@ class EmbeddingsMatrixAssembler:
             pca = PCA(n_components=emb_dim)
             pca.fit(estimation_matrix)
         elif emb_dim > embedder.dim:
-            raise RuntimeError(f'Model dimension must be greater then requsted embeddings '
-                               'dimension! model_dim = {embedder.dim}, requested_dim = {emb_dim}')
+            raise RuntimeError(f'Model dimension must be greater than requested embeddings '
+                               f'dimension! model_dim = {embedder.dim}, requested_dim = {emb_dim}')
         else:
             pca = None
         for n, token in enumerate(vocab):
@@ -85,7 +82,7 @@ class EmbeddingsMatrixAssembler:
             else:
                 try:
                     if pca is not None:
-                        self.emb_mat[n] = pca(embedder([[token]])[0])[0]
+                        self.emb_mat[n] = pca.transform(embedder([[token]])[0])[0]
                     else:
                         self.emb_mat[n] = embedder([[token]])[0][0]
                 except KeyError:

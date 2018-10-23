@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import re
+import string
 from typing import List, Union
 
 from deeppavlov.core.common.registry import register
@@ -24,8 +25,8 @@ class DirtyCommentsPreprocessor(Component):
     """
     Class implements preprocessing of english texts with low level of literacy such as comments
     """
-    def __init__(self, *args, **kwargs):
-        pass
+    def __init__(self, remove_punctuation: bool = True, *args, **kwargs):
+        self.remove_punctuation = remove_punctuation
 
     def __call__(self, batch: List[str], **kwargs) -> List[str]:
         """
@@ -39,38 +40,48 @@ class DirtyCommentsPreprocessor(Component):
             list of preprocessed text samples
         """
         f = [x.lower() for x in batch]
+        f = [re.sub("<\S*>", " ", x) for x in f]
+        f = [re.sub('\s+', ' ', x) for x in f]
 
         f = [x.replace("won't", "will not") for x in f]
         f = [x.replace("can't", "cannot") for x in f]
         f = [x.replace("i'm", "i am") for x in f]
         f = [x.replace(" im ", " i am ") for x in f]
-        f = [x.replace("you're ", "you are ") for x in f]
         f = [x.replace("'re", " are") for x in f]
         f = [x.replace("ain't", "is not") for x in f]
         f = [x.replace("'ll", " will") for x in f]
-        f = [x.replace("'t", " not") for x in f]
+        f = [x.replace("n't", " not") for x in f]
         f = [x.replace("'ve", " have") for x in f]
         f = [x.replace("'s", " is") for x in f]
-        f = [x.replace("'re", " are") for x in f]
         f = [x.replace("'d", " would") for x in f]
 
         f = [re.sub("ies( |$)", "y ", x) for x in f]
         f = [re.sub("s( |$)", " ", x) for x in f]
         f = [re.sub("ing( |$)", " ", x) for x in f]
-        f = [x.replace("tard ", " ") for x in f]
+
+        f = [x.replace(" u ", " you ") for x in f]
+        f = [x.replace(" em ", " them ") for x in f]
+        f = [x.replace(" da ", " the ") for x in f]
+        f = [x.replace(" yo ", " you ") for x in f]
+        f = [x.replace(" ur ", " your ") for x in f]
+        f = [x.replace(" u r ", " you are ") for x in f]
+        f = [x.replace(" urs ", " yours ") for x in f]
+        f = [x.replace("y'all", "you all") for x in f]
+
+        f = [x.replace(" r u ", " are you ") for x in f]
+        f = [x.replace(" r you", " are you") for x in f]
+        f = [x.replace(" are u ", " are you ") for x in f]
 
         f = [x.replace("\\n", " ") for x in f]
         f = [x.replace("\\t", " ") for x in f]
         f = [x.replace("\\xa0", " ") for x in f]
         f = [x.replace("\\xc2", " ") for x in f]
+        f = [re.sub("[0-9]+", " 0 ", x) for x in f]
 
-        f = [re.sub('!!+', ' !! ', x) for x in f]
-        f = [re.sub('\?\?+', ' ?? ', x) for x in f]
-        f = [re.sub('\?!+', ' ?! ', x) for x in f]
-        f = [re.sub('\.\.+', '..', x) for x in f]
+        f = [re.sub(r'([' + string.printable + r'])\1{3,}', r'\1\1', x).strip() for x in f]
 
-        f = [re.sub("[*$%&#@()]", " ", x) for x in f]
-        f = [re.sub(" [0-9]+ ", " DD ", x) for x in f]
-        f = [re.sub("<\S*>", "", x) for x in f]
-        f = [re.sub('\s+', ' ', x) for x in f]
+        if self.remove_punctuation:
+            f = [re.sub(r'([' + string.punctuation + '])', ' ', x) for x in f]
+
+        f = [re.sub(' +', ' ', x) for x in f]
         return f

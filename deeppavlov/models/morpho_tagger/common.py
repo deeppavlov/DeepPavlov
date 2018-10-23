@@ -1,6 +1,5 @@
-import re
 from pathlib import Path
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Optional
 
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.commands.utils import set_deeppavlov_root, expand_path
@@ -11,7 +10,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.dataset_iterators.morphotagger_iterator import MorphoTaggerDatasetIterator
 from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag
-from deeppavlov.models.tokenizers.nltk_moses_tokenizer import NLTKMosesTokenizer
+
 
 def predict_with_model(config_path: [Path, str]) -> List[List[str]]:
     """Returns predictions of morphotagging model given in config :config_path:.
@@ -104,18 +103,18 @@ class TagOutputPrettifier(Component):
         """
         return [self.prettify(x, y) for x, y in zip(X, Y)]
 
-    def prettify(self, sent: Union[str, List[str]], tags: List[str]) -> Union[List[str], str]:
+    def prettify(self, tokens: List[str], tags: List[str]) -> Union[List[str], str]:
         """Prettifies output of morphological tagger.
 
         Args:
-            sent: source sentence (either tokenized or not)
+            tokens: tokenized source sentence
             tags: list of tags, the output of a tagger
 
         Returns:
             the prettified output of the tagger.
 
         Examples:
-            >>> sent = "John really likes pizza"
+            >>> sent = "John really likes pizza .".split()
             >>> tags = ["PROPN,Number=Sing", "ADV",
             >>>         "VERB,Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin",
             >>>         "NOUN,Number=Sing", "PUNCT"]
@@ -134,12 +133,8 @@ class TagOutputPrettifier(Component):
                 4	pizza	_	NOUN	_	Number=Sing	_	_	_	_
                 5	.	_	PUNCT	_	_	_	_	_	_
         """
-        # if isinstance(sent, str):
-        #     words = NLTKMosesTokenizer()([sent])[0]
-        # else:
-        #     words = sent
         answer = []
-        for i, (word, tag) in enumerate(zip(sent, tags)):
+        for i, (word, tag) in enumerate(zip(tokens, tags)):
             answer.append(self.format_string.format(i + 1, word, *make_pos_and_tag(tag)))
         if self.return_string:
             answer = self.begin + self.sep.join(answer) + self.end
