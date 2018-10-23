@@ -13,23 +13,27 @@
 # limitations under the License.
 
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 from deeppavlov.core.commands.utils import set_deeppavlov_root, import_packages
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.params import from_params
+from deeppavlov.download import deep_download
 
 log = get_logger(__name__)
 
 
-def build_model_from_config(config: [str, Path, dict], mode: str = 'infer',
-                            load_trained: bool = False, download=False) -> Chainer:
+def build_model_from_config(config: Union[str, Path, dict], mode: str='infer',
+                            load_trained: bool=False, download: bool=False) -> Chainer:
     """Build and return the model described in corresponding configuration file."""
     if isinstance(config, (str, Path)):
         config = read_json(config)
     set_deeppavlov_root(config)
+
+    if download:
+        deep_download(config)
 
     import_packages(config.get('metadata', {}).get('imports', []))
 
@@ -56,7 +60,7 @@ def build_model_from_config(config: [str, Path, dict], mode: str = 'infer',
     return model
 
 
-def interact_model(config_path: str) -> None:
+def interact_model(config_path: Union[str, Path]) -> None:
     """Start interaction with the model described in corresponding configuration file."""
     config = read_json(config_path)
     model = build_model_from_config(config)
@@ -76,7 +80,7 @@ def interact_model(config_path: str) -> None:
         print('>>', *pred)
 
 
-def predict_on_stream(config_path: str, batch_size: int = 1, file_path: Optional[str] = None) -> None:
+def predict_on_stream(config_path: Union[str, Path], batch_size: int=1, file_path: Optional[str]=None) -> None:
     """Make a prediction with the component described in corresponding configuration file."""
     import sys
     import json
