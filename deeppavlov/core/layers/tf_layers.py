@@ -52,7 +52,7 @@ def stacked_cnn(units: tf.Tensor,
     Returns:
         units: tensor at the output of the last convolutional layer
     """
-
+    l2_reg = tf.nn.l2_loss if add_l2_losses else None
     for n_layer, n_hidden in enumerate(n_hidden_list):
         if use_dilation:
             dilation_rate = 2 ** n_layer
@@ -64,7 +64,7 @@ def stacked_cnn(units: tf.Tensor,
                                  padding='same',
                                  dilation_rate=dilation_rate,
                                  kernel_initializer=INITIALIZER(),
-                                 kernel_regularizer=tf.nn.l2_loss)
+                                 kernel_regularizer=l2_reg)
         if use_batch_norm:
             assert training_ph is not None
             units = tf.layers.batch_normalization(units, training=training_ph)
