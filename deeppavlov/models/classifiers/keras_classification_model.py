@@ -816,11 +816,11 @@ class KerasClassificationModel(KerasModel):
         output = Dropout(rate=dropout_rate)(inp)
 
         output, output1 = Bidirectional(GRU(units_gru, activation='tanh',
-                              return_sequences=True,
-                              return_state=True,
-                              kernel_regularizer=l2(coef_reg_lstm),
-                              dropout=dropout_rate,
-                              recurrent_dropout=rec_dropout_rate)(output))
+                                            return_sequences=True,
+                                            return_state=True,
+                                            kernel_regularizer=l2(coef_reg_lstm),
+                                            dropout=dropout_rate,
+                                            recurrent_dropout=rec_dropout_rate))(output)
 
         # output = masking_sequences(output, inp_lengths)
         output2 = GlobalMaxPooling1D()(output)

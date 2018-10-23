@@ -27,8 +27,8 @@
           "y"
         ],
         "level": "token",
-        "save_path": "YahooAnswers/models/model_v13/yahoo_answers_classes.dict",
-        "load_path": "YahooAnswers/models/model_v13/yahoo_answers_classes.dict"
+        "save_path": "YahooAnswers/models/model_v14/yahoo_answers_classes.dict",
+        "load_path": "YahooAnswers/models/model_v14/yahoo_answers_classes.dict"
       },
       {
         "in": [
@@ -75,8 +75,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "YahooAnswers/models/model_v13/model",
-        "load_path": "YahooAnswers/models/model_v13/model",
+        "save_path": "YahooAnswers/models/model_v14/model",
+        "load_path": "YahooAnswers/models/model_v14/model",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "units_gru": 256,
@@ -126,7 +126,7 @@
     "show_examples": false,
     "validate_best": true,
     "test_best": true,
-    "tensorboard_log_dir": "YahooAnswers/models/model_v13/"
+    "tensorboard_log_dir": "YahooAnswers/models/model_v14/"
   },
   "metadata": {
     "requirements": [
