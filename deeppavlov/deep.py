@@ -15,11 +15,11 @@ limitations under the License.
 """
 
 import argparse
-from pathlib import Path
 import os
 
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.commands.infer import interact_model, predict_on_stream
+from deeppavlov.core.common.file import find_config
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.download import deep_download
 from deeppavlov.core.common.cross_validation import calc_cv_score
@@ -58,16 +58,6 @@ parser.add_argument("--cert", help="ssl certificate", type=str)
 
 parser.add_argument("--api-mode", help="rest api mode: 'basic' with batches or 'alice' for  Yandex.Dialogs format",
                     type=str, default='basic', choices={'basic', 'alice'})
-
-
-def find_config(pipeline_config_path: str):
-    if not Path(pipeline_config_path).is_file():
-        configs = [c for c in Path(__file__).parent.glob(f'configs/**/{pipeline_config_path}.json')
-                   if str(c.with_suffix('')).endswith(pipeline_config_path)]  # a simple way to not allow * and ?
-        if configs:
-            log.info(f"Interpreting '{pipeline_config_path}' as '{configs[0]}'")
-            pipeline_config_path = str(configs[0])
-    return pipeline_config_path
 
 
 def main():

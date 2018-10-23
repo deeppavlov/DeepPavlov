@@ -1,5 +1,6 @@
 from pathlib import Path
 from queue import Queue
+from typing import Union
 
 from flask import Flask, request, jsonify, redirect
 from flasgger import Swagger
@@ -28,7 +29,7 @@ Swagger(app)
 CORS(app)
 
 
-def run_ms_bf_default_agent(model_config_path: str, app_id: str, app_secret: str,
+def run_ms_bf_default_agent(model_config_path: Union[str, Path], app_id: str, app_secret: str,
                             multi_instance: bool = False, stateful: bool = False):
     def get_default_agent():
         model_config = read_json(model_config_path)

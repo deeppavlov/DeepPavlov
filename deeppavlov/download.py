@@ -39,7 +39,7 @@ parser.add_argument('-all', action='store_true',
 
 
 def get_config_downloads(config: Union[str, Path, dict]) -> Set[Tuple[str, Path]]:
-    if not isinstance(config, dict):
+    if isinstance(config, (str, Path)):
         config = read_json(config)
 
     dp_root_back = get_deeppavlov_root()

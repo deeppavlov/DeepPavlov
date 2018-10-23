@@ -20,9 +20,9 @@ from deeppavlov.agents.rich_content.default_rich_content import PlainText, Butto
 from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.core.commands.infer import build_model_from_config
+from deeppavlov.core.common.file import find_config
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.skill.skill import Skill
-from deeppavlov.deep import find_config
 from utils.ms_bot_framework_utils.server import run_ms_bot_framework_server
 
 parser = argparse.ArgumentParser()
@@ -51,7 +51,6 @@ class EcommerceAgent(Agent):
         super(EcommerceAgent, self).__init__(skills=skills)
         # self.history: dict = defaultdict(list)
         self.states: dict = defaultdict(lambda: [{"start": 0, "stop": 5} for _ in self.skills])
-
 
     def _call(self, utterances_batch: list, utterances_ids: list=None) -> list:
         """Processes batch of utterances and returns corresponding responses batch.
