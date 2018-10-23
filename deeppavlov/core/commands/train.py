@@ -253,7 +253,7 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
     if start_time is None:
         start_time = time.time()
 
-    expected_outputs = list(set().union(*[m.inputs for m in metrics_functions]))
+    expected_outputs = list(set().union(model.out_params, *[m.inputs for m in metrics_functions]))
 
     outputs = {out: [] for out in expected_outputs}
     examples = 0
@@ -279,7 +279,7 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
                 'x': x_item,
                 'y_predicted': y_predicted_item,
                 'y_true': y_true_item
-            } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
+            } for x_item, y_predicted_item, y_true_item in zip(x, {k: outputs[k] for k in model.out_params}, y_true)]
         except NameError:
             log.warning(f'Could not log examples for {data_type}, assuming it\'s empty')
 
@@ -313,7 +313,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
         train_metrics_functions = _parse_metrics(train_config['train_metrics'], model.in_y, model.out_params)
     else:
         train_metrics_functions = metrics_functions
-    expected_outputs = list(set().union(*[m.inputs for m in train_metrics_functions]))
+    expected_outputs = list(set().union(model.out_params, *[m.inputs for m in train_metrics_functions]))
 
     if train_config['metric_optimization'] == 'maximize':
         def improved(score, best):
@@ -405,7 +405,8 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
                                 'x': x_item,
                                 'y_predicted': y_predicted_item,
                                 'y_true': y_true_item
-                            } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
+                            } for x_item, y_predicted_item, y_true_item
+                                in zip(x, {k: outputs[k] for k in model.out_params}, y_true)]
                         except NameError:
                             log.warning('Could not log examples as y_predicted is not defined')
 
@@ -421,7 +422,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
 
                         if 'loss' in report:
                             loss_sum = tf.Summary(value=[tf.Summary.Value(tag='every_n_batches/' + 'loss',
-                                                                            simple_value=report['loss']), ])
+                                                                          simple_value=report['loss']), ])
                             tb_train_writer.add_summary(loss_sum, i)
 
                     report = {'train': report}
@@ -470,7 +471,8 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
                             'x': x_item,
                             'y_predicted': y_predicted_item,
                             'y_true': y_true_item
-                        } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
+                        } for x_item, y_predicted_item, y_true_item
+                            in zip(x, {k: outputs[k] for k in model.out_params}, y_true)]
                     except NameError:
                         log.warning('Could not log examples')
 

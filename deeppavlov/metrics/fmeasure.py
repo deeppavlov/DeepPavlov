@@ -15,12 +15,12 @@
 from itertools import chain
 import itertools
 from collections import OrderedDict
-from sklearn.metrics import f1_score
 
+import numpy as np
+from sklearn.metrics import f1_score
 
 from deeppavlov.core.common.metrics_registry import register_metric
 from deeppavlov.core.common.log import get_logger
-
 
 log = get_logger(__name__)
 
@@ -39,7 +39,7 @@ def ner_f1(y_true, y_predicted):
 @register_metric('f1')
 def round_f1(y_true, y_predicted):
     """
-    Calculates F1 measure.
+    Calculates F1 (binary) measure.
 
     Args:
         y_true: list of true values
@@ -48,8 +48,52 @@ def round_f1(y_true, y_predicted):
     Returns:
         F1 score
     """
-    predictions = [round(x) for x in y_predicted]
+    try:
+        predictions = [np.round(x) for x in y_predicted]
+    except TypeError:
+        predictions = y_predicted
+
     return f1_score(y_true, predictions)
+
+
+@register_metric('f1_macro')
+def round_f1_macro(y_true, y_predicted):
+    """
+    Calculates F1 macro measure.
+
+    Args:
+        y_true: list of true values
+        y_predicted: list of predicted values
+
+    Returns:
+        F1 score
+    """
+    try:
+        predictions = [np.round(x) for x in y_predicted]
+    except TypeError:
+        predictions = y_predicted
+
+    return f1_score(np.array(y_true), np.array(predictions), average="macro")
+
+
+@register_metric('f1_weighted')
+def round_f1_weighted(y_true, y_predicted):
+    """
+    Calculates F1 weighted measure.
+
+    Args:
+        y_true: list of true values
+        y_predicted: list of predicted values
+
+    Returns:
+        F1 score
+    """
+    try:
+        predictions = [np.round(x) for x in y_predicted]
+    except TypeError:
+        predictions = y_predicted
+
+    return f1_score(np.array(y_true), np.array(predictions), average="weighted")
 
 
 def chunk_finder(current_token, previous_token, tag):
