@@ -143,7 +143,7 @@
   "enumerate": {
     "date": null,
     "info": null,
-    "root": "./experiments/",
+    "root": "./download/experiments/",
     "do_test": false,
     "cross_val": false,
     "k_fold": 5,
