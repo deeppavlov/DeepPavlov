@@ -13,18 +13,29 @@
 # limitations under the License.
 
 from typing import List, Tuple, Optional, Generator, Union
+from pathlib import Path
+from typing import List, Tuple, Optional
+from copy import deepcopy
+
 import numpy as np
-from keras.layers import Dense, Input, concatenate, Activation, Concatenate, Reshape
-from keras.layers.wrappers import Bidirectional
-from keras.layers.recurrent import LSTM, GRU
+import keras.metrics
+import keras.optimizers
+from keras import backend as K
+from keras.layers import Dense, Input
+from keras.layers import concatenate, Activation, Concatenate, Reshape
 from keras.layers.convolutional import Conv1D
 from keras.layers.core import Dropout
 from keras.layers.normalization import BatchNormalization
 from keras.layers.pooling import GlobalMaxPooling1D, MaxPooling1D, GlobalAveragePooling1D
+from keras.layers.recurrent import LSTM, GRU
+from keras.layers.wrappers import Bidirectional
 from keras.models import Model
 from keras.regularizers import l2
+from overrides import overrides
 
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.file import save_json, read_json
+from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.keras_model import KerasModel
 from deeppavlov.core.common.log import get_logger
@@ -48,8 +59,8 @@ class KerasClassificationModel(KerasModel):
         model_name: particular method of this class to initialize model configuration
         optimizer: function name from keras.optimizers
         loss: function name from keras.losses.
-        lear_rate: learning rate for optimizer.
-        lear_rate_decay: learning rate decay for optimizer
+        learning_rate: learning rate for optimizer.
+        learning_rate_decay: learning rate decay for optimizer
         last_layer_activation: parameter that determines activation function after classification layer.
                 For multi-label classification use `sigmoid`,
                 otherwise, `softmax`.
@@ -71,7 +82,7 @@ class KerasClassificationModel(KerasModel):
 
     def __init__(self, text_size: int, embedding_size: int, n_classes: int,
                  model_name: str, optimizer: str = "Adam", loss: str = "binary_crossentropy",
-                 lear_rate: float = 0.01, lear_rate_decay: float = 0.,
+                 learning_rate: float = 0.01, learning_rate_decay: float = 0.,
                  last_layer_activation="sigmoid",
                  restore_lr: bool = False,
                  classes: Optional[Union[list, Generator]] = None,
@@ -83,18 +94,22 @@ class KerasClassificationModel(KerasModel):
         if classes is not None:
             classes = list(classes)
 
-        super().__init__(text_size=text_size,
-                         embedding_size=embedding_size,
-                         n_classes=n_classes,
-                         model_name=model_name,
-                         optimizer=optimizer,
-                         loss=loss,
-                         lear_rate=lear_rate,
-                         lear_rate_decay=lear_rate_decay,
-                         last_layer_activation=last_layer_activation,
-                         restore_lr=restore_lr,
-                         classes=classes,
-                         **kwargs)
+        given_opt = {"text_size": text_size,
+                     "embedding_size": embedding_size,
+                     "n_classes": n_classes,
+                     "model_name": model_name,
+                     "optimizer": optimizer,
+                     "loss": loss,
+                     "learning_rate": learning_rate,
+                     "learning_rate_decay": learning_rate_decay,
+                     "last_layer_activation": last_layer_activation,
+                     "restore_lr": restore_lr,
+                     "classes": classes,
+                     **kwargs}
+        self.opt = deepcopy(given_opt)
+        self.model = None
+
+        super().__init__(**given_opt)
 
         if classes is not None:
             self.classes = self.opt.get("classes")
@@ -103,30 +118,16 @@ class KerasClassificationModel(KerasModel):
         if self.n_classes == 0:
             raise ConfigError("Please, provide vocabulary with considered intents.")
 
-        self.model = self.load(model_name=model_name)
+        self.load(model_name=model_name)
         # in case of pre-trained after loading in self.opt we have stored parameters
         # now we can restore lear rate if needed
         if restore_lr:
-            lear_rate = self.opt.get("final_lear_rate", lear_rate)
+            learning_rate = self.opt.get("final_learning_rate", learning_rate)
 
-        self.model = self.compile(self.model,
-                                  optimizer_name=optimizer,
-                                  loss_name=loss,
-                                  lear_rate=lear_rate,
-                                  lear_rate_decay=lear_rate_decay)
+        self.model = self.compile(self.model, optimizer_name=optimizer, loss_name=loss,
+                                  learning_rate=learning_rate, learning_rate_decay=learning_rate_decay)
 
-        self._change_not_fixed_params(text_size=text_size,
-                                      embedding_size=embedding_size,
-                                      n_classes=n_classes,
-                                      model_name=model_name,
-                                      optimizer=optimizer,
-                                      loss=loss,
-                                      lear_rate=lear_rate,
-                                      lear_rate_decay=lear_rate_decay,
-                                      last_layer_activation=last_layer_activation,
-                                      restore_lr=restore_lr,
-                                      classes=classes,
-                                      **kwargs)
+        self._change_not_fixed_params(**given_opt)
 
         summary = ['Model was successfully initialized!', 'Model summary:']
         self.model.summary(print_fn=summary.append)
@@ -212,7 +213,7 @@ class KerasClassificationModel(KerasModel):
             predictions = self.model.predict(features)
             return predictions
 
-    def __call__(self, data: List[List[str]], *args) -> Tuple[List[list], List[dict]]:
+    def __call__(self, data: List[List[np.ndarray]], *args) -> List[List[float]]:
         """
         Infer on the given data
 
@@ -228,8 +229,143 @@ class KerasClassificationModel(KerasModel):
         preds = np.array(self.infer_on_batch(data), dtype="float64").tolist()
         return preds
 
-    def reset(self) -> None:
-        pass
+    def init_model_from_scratch(self, model_name: str) -> Model:
+        """
+        Initialize uncompiled model from scratch with given params
+
+        Args:
+            model_name: name of model function described as a method of this class
+
+        Returns:
+            compiled model with given network and learning parameters
+        """
+        log.info(f'[initializing `{self.__class__.__name__}` from scratch as {model_name}]')
+        model_func = getattr(self, model_name, None)
+        if callable(model_func):
+            model = model_func(**self.opt)
+        else:
+            raise AttributeError("Model {} is not defined".format(model_name))
+
+        return model
+
+    @overrides
+    def load(self, model_name: str) -> None:
+        """
+        Initialize uncompiled model from saved params and weights
+
+        Args:
+            model_name: name of model function described as a method of this class
+
+        Returns:
+            model with loaded weights and network parameters from files
+            but compiled with given learning parameters
+        """
+        if self.load_path:
+            if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
+                raise ConfigError("Provided load path is incorrect!")
+
+            opt_path = Path("{}_opt.json".format(str(self.load_path.resolve())))
+            weights_path = Path("{}.h5".format(str(self.load_path.resolve())))
+
+            if opt_path.exists() and weights_path.exists():
+
+                log.info("[initializing `{}` from saved]".format(self.__class__.__name__))
+
+                self.opt = read_json(opt_path)
+
+                model_func = getattr(self, model_name, None)
+                if callable(model_func):
+                    model = model_func(**self.opt)
+                else:
+                    raise AttributeError("Model {} is not defined".format(model_name))
+
+                log.info("[loading weights from {}]".format(weights_path.name))
+                model.load_weights(str(weights_path))
+
+                self.model = model
+
+                return None
+            else:
+                self.model = self.init_model_from_scratch(model_name)
+                return None
+        else:
+            log.warning("No `load_path` is provided for {}".format(self.__class__.__name__))
+            self.model = self.init_model_from_scratch(model_name)
+            return None
+
+    def compile(self, model: Model, optimizer_name: str, loss_name: str,
+                learning_rate: float = 0.01, learning_rate_decay: float = 0.) -> Model:
+        """
+        Compile model with given optimizer and loss
+
+        Args:
+            model: keras uncompiled model
+            optimizer_name: name of optimizer from keras.optimizers
+            loss_name: loss function name (from keras.losses)
+            learning_rate: learning rate.
+            learning_rate_decay: learning rate decay.
+
+        Returns:
+
+        """
+        optimizer_func = getattr(keras.optimizers, optimizer_name, None)
+        if callable(optimizer_func):
+            if not (learning_rate is None):
+                if not (learning_rate_decay is None):
+                    self.optimizer = optimizer_func(lr=learning_rate, decay=learning_rate_decay)
+                else:
+                    self.optimizer = optimizer_func(lr=learning_rate)
+            elif not (learning_rate_decay is None):
+                self.optimizer = optimizer_func(decay=learning_rate_decay)
+            else:
+                self.optimizer = optimizer_func()
+        else:
+            raise AttributeError("Optimizer {} is not defined in `keras.optimizers`".format(optimizer_name))
+
+        loss_func = getattr(keras.losses, loss_name, None)
+        if callable(loss_func):
+            loss = loss_func
+        else:
+            raise AttributeError("Loss {} is not defined".format(loss_name))
+
+        model.compile(optimizer=self.optimizer,
+                      loss=loss)
+        return model
+
+    @overrides
+    def save(self, fname: str = None) -> None:
+        """
+        Save the model parameters into <<fname>>_opt.json (or <<ser_file>>_opt.json)
+        and model weights into <<fname>>.h5 (or <<ser_file>>.h5)
+        Args:
+            fname: file_path to save model. If not explicitly given seld.opt["ser_file"] will be used
+
+        Returns:
+            None
+        """
+        if not fname:
+            fname = self.save_path
+        else:
+            fname = Path(fname).resolve()
+
+        if not fname.parent.is_dir():
+            raise ConfigError("Provided save path is incorrect!")
+        else:
+            opt_path = f"{fname}_opt.json"
+            weights_path = f"{fname}.h5"
+            log.info(f"[saving model to {opt_path}]")
+            self.model.save_weights(weights_path)
+
+        # if model was loaded from one path and saved to another one
+        # then change load_path to save_path for config
+        self.opt["epochs_done"] = self.epochs_done
+        self.opt["final_learning_rate"] = K.eval(self.optimizer.lr) / (1. +
+                                                                       K.eval(self.optimizer.decay) * self.batches_seen)
+
+        if self.opt.get("load_path") and self.opt.get("save_path"):
+            if self.opt.get("save_path") != self.opt.get("load_path"):
+                self.opt["load_path"] = str(self.opt["save_path"])
+        save_json(self.opt, opt_path)
 
     def cnn_model(self, kernel_sizes_cnn: List[int], filters_cnn: int, dense_size: int,
                   coef_reg_cnn: float = 0., coef_reg_den: float = 0., dropout_rate: float = 0.,

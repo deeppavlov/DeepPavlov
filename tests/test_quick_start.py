@@ -166,16 +166,11 @@ PARAMS = {
         ("odqa/ru_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "morpho_tagger":{
-        ("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger_hu", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_tagger/UD2.0/hu/morpho_hu_predict.json", "morpho_tagger_hu", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_train_pymorphy.json",
-         "morpho_tagger_pymorphy", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_train.json",
-         "morpho_tagger_pymorphy", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict.json",
-         "morpho_tagger_pymorphy", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict_pymorphy.json",
-         "morpho_tagger_pymorphy", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("morpho_tagger/UD2.0/morpho_en.json", "morpho_tagger_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json", "morpho_tagger_pymorphy", ALL_MODES):
+            [ONE_ARGUMENT_INFER_CHECK],
+        ("morpho_tagger/UD2.0/morpho_ru_syntagrus.json", "morpho_tagger_pymorphy", ALL_MODES):
+            [ONE_ARGUMENT_INFER_CHECK]
     }
 }
 

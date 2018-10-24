@@ -44,7 +44,6 @@ class TfModelMeta(with_metaclass(type, ABCMeta)):
     """Metaclass that helps all child classes to have their own graph and session."""
     def __call__(cls, *args, **kwargs):
         obj = cls.__new__(cls)
-
         from .keras_model import KerasModel
         if issubclass(cls, KerasModel):
             import keras.backend as K
