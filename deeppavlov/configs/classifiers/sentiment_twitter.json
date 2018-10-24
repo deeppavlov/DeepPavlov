@@ -23,8 +23,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "classifiers/sentiment_twitter_v3/classes.dict",
-        "load_path": "classifiers/sentiment_twitter_v3/classes.dict",
+        "save_path": "classifiers/sentiment_twitter_v5/classes.dict",
+        "load_path": "classifiers/sentiment_twitter_v5/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -60,8 +60,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/sentiment_twitter_v3/model",
-        "load_path": "classifiers/sentiment_twitter_v3/model",
+        "save_path": "classifiers/sentiment_twitter_v5/model",
+        "load_path": "classifiers/sentiment_twitter_v5/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -132,7 +132,7 @@
         "subdir": "embeddings"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/sentiment_twitter_v3.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/sentiment_twitter_v5.tar.gz",
         "subdir": "classifiers"
       }
     ]

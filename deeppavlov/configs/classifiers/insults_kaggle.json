@@ -23,8 +23,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "classifiers/insults_kaggle_v0/classes.dict",
-        "load_path": "classifiers/insults_kaggle_v0/classes.dict",
+        "save_path": "classifiers/insults_kaggle_v1/classes.dict",
+        "load_path": "classifiers/insults_kaggle_v1/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -69,8 +69,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/insults_kaggle_v0/model",
-        "load_path": "classifiers/insults_kaggle_v0/model",
+        "save_path": "classifiers/insults_kaggle_v1/model",
+        "load_path": "classifiers/insults_kaggle_v1/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -141,7 +141,7 @@
         "subdir": "embeddings"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/insults_kaggle_v0.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/insults_kaggle_v1.tar.gz",
         "subdir": "classifiers"
       }
     ]
