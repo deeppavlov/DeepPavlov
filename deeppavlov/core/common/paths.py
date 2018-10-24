@@ -20,7 +20,7 @@ from deeppavlov.core.common.file import read_json, save_json
 
 deeppavlov_root = ''
 root_path = Path(__file__).resolve().parent.parent.parent.parent
-default_configs_path = root_path / 'configs' / '.default'
+default_configs_path = root_path / 'utils' / 'configs' / '.default'
 
 
 def get_configs_path() -> Path:
@@ -66,7 +66,7 @@ def set_configs_default():
     """Sets ALL config files and config directory to DeepPavlov defaults."""
     old_configs_path = get_configs_path()
     paths = read_json(root_path / 'deeppavlov/paths.json')
-    paths['configs_path'] = 'configs'
+    paths['configs_path'] = 'utils/configs'
     save_json(paths, root_path / 'deeppavlov/paths.json')
     new_configs_path = get_configs_path()
 
