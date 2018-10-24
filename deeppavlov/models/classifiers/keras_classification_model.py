@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List, Tuple, Optional, Generator, Union
 from pathlib import Path
 from typing import List, Tuple, Optional
 from copy import deepcopy
@@ -36,9 +37,10 @@ from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import save_json, read_json
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.layers.keras_layers import additive_self_attention, multiplicative_self_attention
 from deeppavlov.core.models.keras_model import KerasModel
-from deeppavlov.models.classifiers.utils import labels2onehot, proba2labels
+from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.layers.keras_layers import additive_self_attention, multiplicative_self_attention
+
 
 log = get_logger(__name__)
 
@@ -53,6 +55,7 @@ class KerasClassificationModel(KerasModel):
                 longer texts are cutted,
                 shorter ones are padded by zeros (pre-padding)
         embedding_size: embedding_size from embedder in pipeline
+        n_classes: number of considered classes
         model_name: particular method of this class to initialize model configuration
         optimizer: function name from keras.optimizers
         loss: function name from keras.losses.
@@ -61,21 +64,12 @@ class KerasClassificationModel(KerasModel):
         last_layer_activation: parameter that determines activation function after classification layer.
                 For multi-label classification use `sigmoid`,
                 otherwise, `softmax`.
-        confident_threshold: boundary value of probability for converting probabilities to labels.
-                The value is from 0 to 1.
-                If all probabilities are lower than confident_threshold,
-                label with the highest probability is assigned.
-                If `last_layer_activation` is `softmax` (not multi-label classification), assign to 1.
-        classes: list of classes names presented in the dataset
-                (in config it is determined as keys of vocab over `y`)
         restore_lr: in case of loading pre-trained model \
                 whether to init learning rate with the final learning rate value from saved opt
+        classes: list or generator of considered classes
 
     Attributes:
         opt: dictionary with all model parameters
-        tokenizer: tokenizer class instance
-        fasttext_model: fasttext model instance
-        classes: list of considered classes
         n_classes: number of considered classes
         model: keras model itself
         epochs_done: number of epochs that were done
@@ -83,38 +77,44 @@ class KerasClassificationModel(KerasModel):
         train_examples_seen: number of training samples that were seen
         sess: tf session
         optimizer: keras.optimizers instance
+        classes: list of considered classes
     """
 
-    def __init__(self, text_size: int, embedding_size: int,
+    def __init__(self, text_size: int, embedding_size: int, n_classes: int,
                  model_name: str, optimizer: str = "Adam", loss: str = "binary_crossentropy",
                  learning_rate: float = 0.01, learning_rate_decay: float = 0.,
                  last_layer_activation="sigmoid",
-                 confident_threshold: float = 0.5,
                  restore_lr: bool = False,
-                 **kwargs) -> None:
+                 classes: Optional[Union[list, Generator]] = None,
+                 **kwargs):
         """
         Initialize model using parameters
         from opt dictionary (from config), if model is being initialized from saved.
         """
+        if classes is not None:
+            classes = list(classes)
+
         given_opt = {"text_size": text_size,
                      "embedding_size": embedding_size,
+                     "n_classes": n_classes,
                      "model_name": model_name,
                      "optimizer": optimizer,
                      "loss": loss,
                      "learning_rate": learning_rate,
                      "learning_rate_decay": learning_rate_decay,
                      "last_layer_activation": last_layer_activation,
-                     "confident_threshold": confident_threshold,
                      "restore_lr": restore_lr,
+                     "classes": classes,
                      **kwargs}
         self.opt = deepcopy(given_opt)
         self.model = None
 
         super().__init__(**given_opt)
 
-        self.classes = list(np.sort(np.array(list(self.opt.get('classes')))))
-        self.opt['classes'] = self.classes
-        self.n_classes = len(self.classes)
+        if classes is not None:
+            self.classes = self.opt.get("classes")
+
+        self.n_classes = self.opt.get('n_classes')
         if self.n_classes == 0:
             raise ConfigError("Please, provide vocabulary with considered intents.")
 
@@ -144,7 +144,7 @@ class KerasClassificationModel(KerasModel):
             None
         """
         fixed_params = [
-            "classes",
+            "n_classes",
             "model_name",
             "embedding_size",
             "fasttext_md5",
@@ -189,8 +189,7 @@ class KerasClassificationModel(KerasModel):
             metrics values on the given batch
         """
         features = self.pad_texts(texts)
-        onehot_labels = labels2onehot(labels, classes=self.classes)
-        metrics_values = self.model.train_on_batch(features, onehot_labels)
+        metrics_values = self.model.train_on_batch(features, np.squeeze(np.array(labels)))
         return metrics_values
 
     def infer_on_batch(self, texts: List[List[np.ndarray]], labels: list = None) -> [float, List[float], np.ndarray]:
@@ -207,15 +206,14 @@ class KerasClassificationModel(KerasModel):
         """
         if labels:
             features = self.pad_texts(texts)
-            onehot_labels = labels2onehot(labels, classes=self.classes)
-            metrics_values = self.model.test_on_batch(features, onehot_labels)
+            metrics_values = self.model.test_on_batch(features, np.squeeze(np.array(labels)))
             return metrics_values
         else:
             features = self.pad_texts(texts)
             predictions = self.model.predict(features)
             return predictions
 
-    def __call__(self, data: List[List[np.ndarray]], *args) -> Tuple[List[list], List[dict]]:
+    def __call__(self, data: List[List[np.ndarray]], *args) -> List[List[float]]:
         """
         Infer on the given data
 
@@ -228,10 +226,8 @@ class KerasClassificationModel(KerasModel):
                 vector of probabilities to belong with each class
                 or list of labels sentence belongs with
         """
-        preds = np.array(self.infer_on_batch(data), dtype="float64")
-
-        labels = proba2labels(preds, confident_threshold=self.opt['confident_threshold'], classes=self.classes)
-        return labels, [dict(zip(self.classes, preds[i])) for i in range(preds.shape[0])]
+        preds = np.array(self.infer_on_batch(data), dtype="float64").tolist()
+        return preds
 
     def init_model_from_scratch(self, model_name: str) -> Model:
         """

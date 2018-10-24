@@ -27,26 +27,30 @@ log = get_logger(__name__)
 class Proba2Labels(Component):
     """
     Class implements probability to labels processing using two different ways: \
-     choosing indices with maximal probability or choosing any number of indices \
+     choosing one or top_n indices with maximal probability or choosing any number of indices \
       which probabilities to belong with are higher than given confident threshold
 
     Args:
         max_proba: whether to choose label with maximal probability
         confident_threshold: boundary probability value for smaple to belong with the class (best use for multi-label)
+        top_n: how many top labels with the highest probabilities to return
 
     Attributes:
         max_proba: whether to choose label with maximal probability
         confident_threshold: boundary probability value for smaple to belong with the class (best use for multi-label)
+        top_n: how many top labels with the highest probabilities to return
     """
 
     def __init__(self,
                  max_proba: bool = None,
                  confident_threshold: float = None,
+                 top_n: int = None,
                  **kwargs) -> None:
         """ Initialize class with given parameters"""
 
         self.max_proba = max_proba
         self.confident_threshold = confident_threshold
+        self.top_n = top_n
 
     def __call__(self, data: Union[np.ndarray, List[List[float]], List[List[int]]],
                  *args, **kwargs) -> Union[List[List[str]], List[str]]:
@@ -62,13 +66,12 @@ class Proba2Labels(Component):
             list of labels (only label classification) or list of lists of labels (multi-label classification)
         """
         if self.confident_threshold:
-            # return [[key for key, val in d.items() if val > self.confident_threshold]
-            #         for d in data]
             return [list(np.where(np.array(d) > self.confident_threshold)[0])
                     for d in data]
         elif self.max_proba:
-            # return [max(d, key=d.get) for d in data]
             return [[np.argmax(d)] for d in data]
+        elif self.top_n:
+            return [np.argsort(d)[::-1][:self.top_n] for d in data]
         else:
             raise ConfigError("Proba2Labels requires one of two arguments: bool `max_proba` or "
                               "float `confident_threshold` for multi-label classification")
