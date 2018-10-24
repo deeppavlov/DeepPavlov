@@ -59,7 +59,6 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
         self.opt = copy(kwargs)
         save_path = self.opt.get('save_path', None)
         load_path = self.opt.get('load_path', None)
-        url = self.opt.get('url', None)
         self.model = None
         self.epochs_done = 0
         self.batches_seen = 0
@@ -67,7 +66,6 @@ class KerasModel(NNModel, metaclass=TfModelMeta):
 
         super().__init__(save_path=save_path,
                          load_path=load_path,
-                         url=url,
                          mode=kwargs['mode'])
 
     @staticmethod
