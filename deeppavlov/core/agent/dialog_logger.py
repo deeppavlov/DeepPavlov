@@ -29,6 +29,19 @@ log = get_logger(__name__)
 
 
 class DialogLogger:
+    """DeepPavlov dialog logging facility.
+
+    DialogLogger is an entity which provides tools for dialogs logging.
+
+    Args:
+        enabled: DialogLogger on/off flag.
+        agent_name: Agent name which is used for organising log files.
+
+    Attributes:
+        agent_name: Agent name which is used for organising log files.
+        log_max_size: Maximum size of log file, kb.
+        self.log_file: Current log file object.
+    """
     def __init__(self, enabled: bool=False, agent_name: Optional[str]=None):
         self.config: dict = read_json(get_configs_path() / LOGGER_CONFIG_FILENAME)
         self.enabled: bool = enabled or self.config['enabled']
@@ -41,10 +54,20 @@ class DialogLogger:
 
     @staticmethod
     def _get_timestamp_utc_str() -> str:
+        """Returns str converted current UTC timestamp.
+
+        Returns:
+            utc_timestamp_str: str converted current UTC timestamp.
+        """
         utc_timestamp_str = datetime.strftime(datetime.utcnow(), LOG_TIMESTAMP_FORMAT)
         return utc_timestamp_str
 
     def _get_log_file(self):
+        """Returns opened file object for writing dialog logs.
+
+        Returns:
+            log_file: opened Python file object.
+        """
         log_dir: Path = Path(self.config['log_path']).expanduser().resolve() / self.agent_name
         if not log_dir.is_dir():
             log_dir.mkdir(parents=True, exist_ok=True)
@@ -53,15 +76,24 @@ class DialogLogger:
         log_file = open(log_file_path, 'a', buffering=1)
         return log_file
 
-    def _log(self, log_message: Any, direction: str, dialog_id: str):
-        if isinstance(log_message, str):
-            pass
-        elif isinstance(log_message, RichMessage):
-            log_message = log_message.json()
-        else:
-            log_message = str(log_message)
+    def _log(self, utterance: Any, direction: str, dialog_id: str):
+        """Logs single dialog utterance to current dialog log file.
 
-        if self.log_file.tell() >= self.log_max_size:
+        Args:
+            utterance: Dialog utterance.
+            direction: 'in' or 'out' utterance direction.
+            dialog_id: Dialog ID.
+        """
+        if isinstance(utterance, str):
+            pass
+        elif isinstance(utterance, RichMessage):
+            utterance = utterance.json()
+        else:
+            utterance = str(utterance)
+
+        dialog_id = str(dialog_id) if not isinstance(dialog_id, str) else dialog_id
+
+        if self.log_file.tell() >= self.log_max_size * 1024:
             self.log_file.close()
             self.log_file = self._get_log_file()
         else:
@@ -70,16 +102,26 @@ class DialogLogger:
                 log_msg['timestamp'] = self._get_timestamp_utc_str()
                 log_msg['dialog_id'] = dialog_id
                 log_msg['direction'] = direction
-                log_msg['message'] = log_message
+                log_msg['message'] = utterance
                 log_str = json.dumps(log_msg)
                 self.log_file.write(f'{log_str}\n')
             except IOError:
                 log.error('Failed to write dialog log.')
 
-    def log_in(self, log_message: Any, dialog_id: Any = 'no_id'):
+    def log_in(self, utterance: Any, dialog_id: Any = 'no_id'):
+        """Wraps _log method for all input utterances.
+        Args:
+            utterance: Dialog utterance.
+            dialog_id: Dialog ID.
+        """
         if self.enabled:
-            self._log(log_message, 'in', str(dialog_id))
+            self._log(utterance, 'in', dialog_id)
 
-    def log_out(self, log_message: Any, dialog_id: Any = 'no_id'):
+    def log_out(self, utterance: Any, dialog_id: Any = 'no_id'):
+        """Wraps _log method for all output utterances.
+        Args:
+            utterance: Dialog utterance.
+            dialog_id: Dialog ID.
+        """
         if self.enabled:
-            self._log(log_message, 'out', str(dialog_id))
+            self._log(utterance, 'out', dialog_id)

@@ -48,6 +48,7 @@ class Agent(Component, metaclass=ABCMeta):
             handles automatic state management for skill. All skills are
             wrapped to SkillsWrapper automatically during agent initialisation.
             We highly recommend to use wrapped skills for skills inference.
+        dialog_logger: DeepPavlov dialog logging facility.
     """
     def __init__(self, skills: List[Skill]) -> None:
         self.skills: List[Skill] = skills
