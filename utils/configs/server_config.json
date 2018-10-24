@@ -4,11 +4,11 @@
     "port": 5000,
     "model_endpoint": "/model",
     "model_args_names": ["context"],
-    "https": 0,
+    "https": false,
     "https_cert_path": "",
     "https_key_path": "",
-    "stateful": 0,
-    "multi_instance": 0
+    "stateful": false,
+    "multi_instance": false
   },
   "telegram_defaults": {
     "token": ""

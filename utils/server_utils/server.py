@@ -109,7 +109,7 @@ def start_model_server(model_config_path, https=False, ssl_key=None, ssl_cert=No
     model_endpoint = server_params['model_endpoint']
     model_args_names = server_params['model_args_names']
 
-    https = https or bool(server_params['https'])
+    https = https or server_params['https']
 
     if https:
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
