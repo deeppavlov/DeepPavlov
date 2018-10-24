@@ -7,6 +7,7 @@
   },
   "dataset_iterator": {
     "name": "siamese_iterator",
+    "shuffle": true,
     "seed": 243
   },
   "chainer": {
@@ -69,6 +70,7 @@
         "emb_matrix": "#embeddings.emb_mat",
         "learning_rate": 1e-3,
         "batch_size": 500,
+        "seed": 65,
         "save_path": "ubuntu_v2_mt_word2vec/model_smn/model",
         "load_path": "ubuntu_v2_mt_word2vec/model_smn/model"
       }
