@@ -109,12 +109,24 @@ def start_model_server(model_config_path, https=False, ssl_key=None, ssl_cert=No
     model_endpoint = server_params['model_endpoint']
     model_args_names = server_params['model_args_names']
 
-    https = https or bool(server_params['https'])
+    https = https or server_params['https']
 
     if https:
-        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
         ssh_key_path = Path(ssl_key or server_params['https_key_path']).resolve()
+        if not ssh_key_path.is_file():
+            e = FileNotFoundError('Ssh key file not found: please provide correct path in --key param or '
+                                  'https_key_path param in server configuration file')
+            log.error(e)
+            raise e
+
         ssh_cert_path = Path(ssl_cert or server_params['https_cert_path']).resolve()
+        if not ssh_cert_path.is_file():
+            e = FileNotFoundError('Ssh certificate file not found: please provide correct path in --cert param or '
+                                  'https_cert_path param in server configuration file')
+            log.error(e)
+            raise e
+
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
         ssl_context.load_cert_chain(ssh_cert_path, ssh_key_path)
     else:
         ssl_context = None

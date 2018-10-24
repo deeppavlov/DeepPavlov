@@ -52,8 +52,8 @@ def run_ms_bot_framework_server(agent_generator: callable, app_id: str, app_secr
 
     ms_bf_server_params = server_params['ms_bot_framework_defaults']
 
-    ms_bf_server_params['multi_instance'] = multi_instance or bool(server_params['common_defaults']['multi_instance'])
-    ms_bf_server_params['stateful'] = stateful or bool(server_params['common_defaults']['stateful'])
+    ms_bf_server_params['multi_instance'] = multi_instance or server_params['common_defaults']['multi_instance']
+    ms_bf_server_params['stateful'] = stateful or server_params['common_defaults']['stateful']
 
     ms_bf_server_params['auth_url'] = AUTH_URL
     ms_bf_server_params['auth_host'] = AUTH_HOST
