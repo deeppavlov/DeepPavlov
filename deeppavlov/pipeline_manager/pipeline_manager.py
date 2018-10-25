@@ -58,9 +58,9 @@ class PipelineManager:
 
     Args:
         config_path: path to config file.
-        exp_name: name of the experiment.
 
     Attributes:
+        exp_name: name of the experiment.
         date: date of the experiment.
         info: some additional information that you want to add to the log, the content of the dictionary
               does not affect the algorithm
