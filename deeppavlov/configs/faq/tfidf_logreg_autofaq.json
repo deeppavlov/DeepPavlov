@@ -6,44 +6,81 @@
     "data_url": "http://files.deeppavlov.ai/faq/school/faq_school.csv"
   },
   "dataset_iterator": {
-    "name": "data_learning_iterator"
+    "name": "basic_classification_iterator",
+    "seed": 42,
+    "field_to_split": "train",
+    "split_fields": [
+      "train",
+      "valid"
+    ],
+    "split_proportions": [
+      0.9,
+      0.1
+    ]
   },
-
   "chainer": {
     "in": "q",
+    "in_y": "y",
     "pipe": [
       {
         "name": "ru_tokenizer",
+        "id": "my_tokenizer",
         "in": "q",
         "lemmas": true,
         "out": "q_token_lemmas"
       },
       {
-        "id": "vectorizer",
-        "name": "tfidf_vectorizer",
+        "ref": "my_tokenizer",
         "in": "q_token_lemmas",
-        "load_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
-        "out": "q_vect"
+        "out": "q_lem"
       },
       {
-        "name": "logreg_classifier",
+        "in": [
+          "q_lem"
+        ],
+        "out": [
+          "q_vect"
+        ],
+        "fit_on": [
+          "q_lem"
+        ],
+        "id": "tfidf_vec",
+        "name": "sklearn_component",
+        "save_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "load_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
+        "infer_method": "transform"
+      },
+      {
         "in": "q_vect",
-        "fit_on": ["q_vect", "y"],
-        "top_n": 1,
-        "c": 1000,
+        "fit_on": [
+          "q_vect",
+          "y"
+        ],
+        "out": [
+          "y_pred"
+        ],
+        "C": 1000,
         "penalty": "l2",
+        "name": "sklearn_component",
+        "main": true,
         "save_path": "faq/tfidf_logreg_classifier.pkl",
         "load_path": "faq/tfidf_logreg_classifier.pkl",
-        "out": ["answer", "score"]
+        "model_class": "sklearn.linear_model:LogisticRegression",
+        "infer_method": "predict"
       }
     ],
-    "out": ["answer", "score"]
+    "out": [
+      "y_pred"
+    ]
   },
-
   "train": {
-    "validate_best": false,
+    "metrics": [
+      "accuracy"
+    ],
+    "validate_best": true,
     "test_best": false
- },
+  },
   "metadata": {
     "download": [
       {
@@ -56,7 +93,6 @@
       }
     ]
   }
-
 }
 
 

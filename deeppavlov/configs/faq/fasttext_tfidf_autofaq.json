@@ -8,45 +8,82 @@
   "dataset_iterator": {
     "name": "data_learning_iterator"
   },
-
   "chainer": {
     "in": "question",
+    "in_y": "y",
     "pipe": [
       {
         "name": "ru_tokenizer",
+        "id": "my_tokenizer",
         "in": "question",
         "lemmas": true,
         "out": "q_token_lemmas"
       },
       {
+        "ref": "my_tokenizer",
+        "in": "q_token_lemmas",
+        "out": "q_lem"
+      },
+      {
+        "in": [
+          "q_lem"
+        ],
+        "out": [
+          "question_vector"
+        ],
+        "fit_on": [
+          "q_lem",
+          "y"
+        ],
+        "id": "tfidf_vec",
+        "name": "sklearn_component",
+        "save_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "load_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
+        "infer_method": "transform",
+        "analyzer": "word"
+      },
+      {
         "name": "fasttext",
+        "id": "my_embedder",
         "in": "q_token_lemmas",
         "load_path": "embeddings/lenta_lower_100.bin",
         "out": "tokens_fasttext_vectors"
       },
       {
-        "name": "sentence2vector_w2v_tfidf",
-        "in": ["q_token_lemmas", "tokens_fasttext_vectors"],
-        "load_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "name": "tfidf_weighted",
+        "in": "q_token_lemmas",
+        "vectorizer": "#tfidf_vec",
+        "embedder": "#my_embedder",
+        "tokenizer": "#my_tokenizer",
+        "mean": true,
         "out": "question_vector"
       },
       {
         "name": "cos_sim_classifier",
         "in": "question_vector",
-        "fit_on": ["question_vector", "y"],
+        "fit_on": [
+          "question_vector",
+          "y"
+        ],
         "top_n": 1,
         "save_path": "faq/fasttext_cos_classifier.pkl",
         "load_path": "faq/fasttext_cos_classifier.pkl",
-        "out": ["answer", "score"]
+        "out": [
+          "answer",
+          "score"
+        ]
       }
     ],
-    "out": ["answer", "score"]
+    "out": [
+      "answer",
+      "score"
+    ]
   },
-
   "train": {
     "validate_best": false,
     "test_best": false
- },
+  },
   "metadata": {
     "requirements": [
       "../dp_requirements/fasttext.txt"
@@ -66,7 +103,6 @@
       }
     ]
   }
-
 }
 
 

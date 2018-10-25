@@ -2,6 +2,7 @@
   "dataset_reader": {
     "name": "conll2003_reader",
     "data_path": "total_rus/",
+    "dataset_name": "collection_rus",
     "provide_pos": false
   },
   "dataset_iterator": {

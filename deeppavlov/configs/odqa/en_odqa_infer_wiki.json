@@ -8,7 +8,7 @@
     ],
     "pipe": [
       {
-        "config_path": "../deeppavlov/configs/ranking/en_ranker_tfidf_wiki.json",
+        "config_path": "../deeppavlov/configs/doc_retrieval/en_ranker_tfidf_wiki.json",
         "in": [
           "question_raw"
         ],
@@ -24,10 +24,9 @@
         "out": [
           "context_raw"
         ],
-        "data_dir": "odqa",
         "join_docs": false,
         "shuffle": false,
-        "data_url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.db"
+        "load_path": "odqa/enwiki.db"
       },
       {
         "name": "document_chunker",

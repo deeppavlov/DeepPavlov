@@ -23,6 +23,7 @@ from deeppavlov.core.commands.infer import interact_model, predict_on_stream
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.download import deep_download
 from deeppavlov.core.common.cross_validation import calc_cv_score
+from utils.alice import start_alice_server
 from utils.telegram_utils.telegram_ui import interact_model_by_telegram
 from utils.server_utils.server import start_model_server
 from utils.ms_bot_framework_utils.server import run_ms_bf_default_agent
@@ -112,7 +113,10 @@ def main():
         https = args.https
         ssl_key = args.key
         ssl_cert = args.cert
-        start_model_server(pipeline_config_path, alice, https, ssl_key, ssl_cert)
+        if alice:
+            start_alice_server(pipeline_config_path, https, ssl_key, ssl_cert)
+        else:
+            start_model_server(pipeline_config_path, https, ssl_key, ssl_cert)
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'install':
