@@ -16,10 +16,10 @@ import argparse
 from collections import defaultdict
 from typing import List, Dict, Any
 
+from deeppavlov import build_model
 from deeppavlov.agents.rich_content.default_rich_content import PlainText, ButtonsFrame, Button
 from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.agent.rich_content import RichMessage
-from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.file import find_config
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.skill.skill import Skill

@@ -219,14 +219,10 @@ prediction:
 
 .. code:: python
 
-    from deeppavlov.core.commands.infer import build_model
-    from deeppavlov.download import deep_download
-    import json
-    PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/slotfill_dstc2.json'
-    with open(PIPELINE_CONFIG_PATH) as f:
-        config = json.load(f)
-    deep_download(PIPELINE_CONFIG_PATH)
-    slotfill_model = build_model(config)
+    from deeppavlov import build_model, configs
+
+    PIPELINE_CONFIG_PATH = configs.ner.slotfill_dstc2
+    slotfill_model = build_model(PIPELINE_CONFIG_PATH, download=True)
     slotfill_model(['I would like some chinese food', 'The west part of the city would be nice'])
 
 This example assumes that the working directory is the root of the
@@ -249,12 +245,8 @@ Usage example:
 
 .. code:: python
 
-    from deeppavlov.core.commands.infer import build_model
-    from deeppavlov.download import deep_download
-    import json
-    PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/slotfill_dstc2_raw.json'
-    with open(PIPELINE_CONFIG_PATH) as f:
-        config = json.load(f)
-    deep_download(PIPELINE_CONFIG_PATH)
-    slotfill_model = build_model(config)
+    from deeppavlov import build_model, configs
+
+    PIPELINE_CONFIG_PATH = configs.ner.slotfill_dstc2_raw
+    slotfill_model = build_model(PIPELINE_CONFIG_PATH, download=True)
     slotfill_model(['I would like some chinese food', 'The west part of the city would be nice'])
