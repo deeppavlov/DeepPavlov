@@ -11,7 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import sys
+
 from .configs import configs
+from .core.commands.infer import build_model
 
 __version__ = '0.0.9'
 __author__ = 'Neural Networks and Deep Learning lab, MIPT'
@@ -20,7 +23,5 @@ __keywords__ = ['NLP', 'NER', 'SQUAD', 'Intents', 'Chatbot']
 __license__ = 'Apache License, Version 2.0'
 __email__ = 'info@ipavlov.ai'
 
-
 # check version
-import sys
 assert sys.hexversion >= 0x3060000, 'Does not work in python3.5 or lower'
