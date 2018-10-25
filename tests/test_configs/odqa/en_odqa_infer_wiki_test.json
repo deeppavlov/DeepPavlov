@@ -8,33 +8,13 @@
     ],
     "pipe": [
       {
-        "name": "tfidf_ranker",
+        "config_path": "../deeppavlov/configs/doc_retrieval/en_ranker_tfidf_wiki_test.json",
         "in": [
           "question_raw"
         ],
         "out": [
-          "doc_ids",
-          "doc_scores"
-        ],
-        "fit_on_batch": [
-          "questions_raw"
-        ],
-        "vectorizer": {
-          "name": "hashing_tfidf_vectorizer",
-          "fit_on_batch": [
-            "questions_raw"
-          ],
-          "save_path": "odqa/en_wiki_test_tfidf.npz",
-          "load_path": "odqa/en_wiki_test_tfidf.npz",
-          "tokenizer": {
-            "name": "stream_spacy_tokenizer",
-            "lemmas": true,
-            "ngram_range": [
-              1,
-              2
-            ]
-          }
-        }
+          "doc_ids"
+        ]
       },
       {
         "name": "wiki_sqlite_vocab",
@@ -44,10 +24,9 @@
         "out": [
           "context_raw"
         ],
-        "data_dir": "odqa",
         "join_docs": false,
         "shuffle": false,
-        "data_url": "http://files.deeppavlov.ai/datasets/wikipedia/wiki_test.db"
+        "load_path": "odqa/enwiki_test.db"
       },
       {
         "name": "document_chunker",
@@ -94,7 +73,6 @@
       "server_utils": "ODQA"
     },
     "download": [
-      "http://files.deeppavlov.ai/datasets/wikipedia/wiki_test.tar.gz",
       "http://files.deeppavlov.ai/deeppavlov_data/odqa_test.tar.gz"
     ]
   }

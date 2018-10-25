@@ -29,13 +29,14 @@
     "pipe": [
       {
         "id": "classes_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "fit_on": [
           "y"
         ],
-        "level": "token",
         "save_path": "vocabs/snips_classes.dict",
-        "load_path": "vocabs/snips_classes.dict"
+        "load_path": "vocabs/snips_classes.dict",
+        "in": "y",
+        "out": "y_ids"
       },
       {
         "in": "x",
@@ -54,29 +55,33 @@
         "dim": 100
       },
       {
+        "in": "y_ids",
+        "out": "y_onehot",
+        "name": "one_hotter",
+        "depth": "#classes_vocab.len"
+      },
+      {
         "in": [
           "x_emb"
         ],
         "in_y": [
-          "y"
+          "y_onehot"
         ],
         "out": [
-          "y_labels",
-          "y_probas_dict"
+          "y_pred_probas"
         ],
         "main": true,
         "name": "keras_classification_model",
         "save_path": "classifiers/intent_cnn_snips_bilstm_self_mult_attention",
         "load_path": "classifiers/intent_cnn_snips_bilstm_self_mult_attention",
         "embedding_size": "#my_embedder.dim",
-        "classes": "#classes_vocab.keys()",
+        "n_classes": "#classes_vocab.len",
         "units_lstm": 64,
         "self_att_hid": 64,
         "self_att_out": 64,
-        "confident_threshold": 0.5,
         "optimizer": "Adam",
-        "lear_rate": 0.01,
-        "lear_rate_decay": 0.1,
+        "learning_rate": 0.01,
+        "learning_rate_decay": 0.1,
         "loss": "binary_crossentropy",
         "text_size": 15,
         "coef_reg_lstm": 1e-4,
@@ -85,20 +90,33 @@
         "rec_dropout_rate": 0.5,
         "dense_size": 100,
         "model_name": "bilstm_self_mult_attention_model"
+      },
+      {
+        "in": "y_pred_probas",
+        "out": "y_pred_ids",
+        "name": "proba2labels",
+        "max_proba": true
+      },
+      {
+        "in": "y_pred_ids",
+        "out": "y_pred_labels",
+        "ref": "classes_vocab"
       }
     ],
     "out": [
-      "y_labels",
-      "y_probas_dict"
+      "y_pred_labels"
     ]
   },
   "train": {
     "epochs": 1,
     "batch_size": 64,
     "metrics": [
-      "classification_accuracy",
-      "classification_f1",
-      "classification_roc_auc"
+      "sets_accuracy",
+      "f1_macro",
+      {
+        "name": "roc_auc",
+        "inputs": ["y_onehot", "y_pred_probas"]
+      }
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
@@ -116,7 +134,6 @@
       "telegram_utils": "IntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/intents.tar.gz",
       "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",

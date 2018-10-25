@@ -19,17 +19,19 @@ import keras.optimizers as ko
 import keras.regularizers as kreg
 from keras import Model
 
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.models.keras_model import KerasWrapper
 from deeppavlov.core.data.vocab import DefaultVocabulary
 from .common_tagger import *
 from .cells import Highway
 
-
 log = get_logger(__name__)
+
 MAX_WORD_LENGTH = 30
 
-
 class CharacterTagger:
+
     """A class for character-based neural morphological tagger
 
     Parameters:
@@ -38,8 +40,15 @@ class CharacterTagger:
         word_rnn: the type of character-level network (only `cnn` implemented)
         char_embeddings_size: the size of character embeddings
         char_conv_layers: the number of convolutional layers on character level
-        char_window_size: the width of convolutional filter (filters)
-        char_filters: the number of convolutional filters for each window width
+        char_window_size: the width of convolutional filter (filters).
+            It can be a list if several parallel filters are applied, for example, [2, 3, 4, 5].
+        char_filters: the number of convolutional filters for each window width.
+            It can be a number, a list (when there are several windows of different width
+            on a single convolution layer), a list of lists, if there
+            are more than 1 convolution layers, or **None**.
+            If **None**, a layer with width **width** contains
+            min(**char_filter_multiple** * **width**, 200) filters.
+
         char_filter_multiple: the ratio between filters number and window width
         char_highway_layers: the number of highway layers on character level
         conv_dropout: the ratio of dropout between convolutional layers
@@ -222,7 +231,7 @@ class CharacterTagger:
         else:
             return X
 
-    def train_on_batch(self, data: List[Iterable], labels: Iterable[list]):
+    def train_on_batch(self, data: List[Iterable], labels: Iterable[list]) -> None:
         """Trains model on a single batch
 
         Args:
@@ -232,7 +241,7 @@ class CharacterTagger:
             the trained model
         """
         X, Y = self._transform_batch(data, labels)
-        return self.model_.train_on_batch(X, Y)
+        self.model_.train_on_batch(X, Y)
 
     def predict_on_batch(self, data: Union[list, tuple],
                          return_indexes: bool = False) -> List[List[str]]:
@@ -256,7 +265,7 @@ class CharacterTagger:
             answer[i] = elem if return_indexes else self.tags.idxs2toks(elem)
         return answer
 
-    def _make_sent_vector(self, sent: List, bucket_length: int =None) -> np.array:
+    def _make_sent_vector(self, sent: List, bucket_length: int =None) -> np.ndarray:
         """Transforms a sentence to Numpy array, which will be the network input.
 
         Args:
@@ -278,11 +287,11 @@ class CharacterTagger:
             answer[i, m+2:] = self.tags.tok2idx("PAD")
         return answer
 
-    def _make_tags_vector(self, tags, bucket_length=None):
+    def _make_tags_vector(self, tags, bucket_length=None) -> np.ndarray:
         """Transforms a sentence of tags to Numpy array, which will be the network target.
 
         Args:
-            sent: input sentence of tags
+            tags: input sentence of tags
             bucket_length: the width of the bucket
 
         Returns:
@@ -294,7 +303,7 @@ class CharacterTagger:
             answer[i] = self.tags.tok2idx(tag)
         return answer
 
-    def save(self, outfile):
+    def save(self, outfile) -> None:
         """Saves model weights to a file
 
         Args:
@@ -302,10 +311,21 @@ class CharacterTagger:
         """
         self.model_.save_weights(outfile)
 
-    def load(self, infile):
+    def load(self, infile) -> None:
         """Loads model weights from a file
 
         Args:
             infile: file to load model weights from
         """
         self.model_.load_weights(infile)
+
+
+@register("morpho_tagger")
+class MorphoTagger(KerasWrapper):
+    """
+    A wrapper over :class:`CharacterTagger`.
+    It is inherited from :class:`~deeppavlov.core.keras_model.KerasWrapper`.
+    It accepts initialization parameters of :class:`CharacterTagger`
+    """
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(CharacterTagger, *args, **kwargs)

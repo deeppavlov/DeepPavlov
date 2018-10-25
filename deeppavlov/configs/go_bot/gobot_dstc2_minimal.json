@@ -53,7 +53,9 @@
         "intent_classifier": null,
         "embedder": null,
         "bow_embedder": {
-          "name": "bow"
+          "name": "bow",
+          "depth": "#token_vocab.__len__()",
+          "with_counts": true
         },
         "tokenizer": {
           "name": "stream_spacy_tokenizer",
@@ -82,7 +84,9 @@
 
 	"log_every_n_batches": -1,
 	"log_every_n_epochs": 1,
-	"show_examples": false
+	"show_examples": false,
+    "validate_best": true,
+    "test_best": true
   },
   "metadata": {
     "labels": {

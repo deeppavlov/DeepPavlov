@@ -17,13 +17,14 @@
     "pipe": [
       {
         "id": "classes_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "fit_on": [
           "y"
         ],
-        "level": "token",
-        "save_path": "vocabs/dstc2_classes.dict",
-        "load_path": "vocabs/dstc2_classes.dict"
+        "save_path": "classifiers/intents_dstc2_v6/classes.dict",
+        "load_path": "classifiers/intents_dstc2_v6/classes.dict",
+        "in": "y",
+        "out": "y_ids"
       },
       {
         "in": "x",
@@ -37,37 +38,42 @@
         "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
-        "save_path": "embeddings/dstc2_fastText_model.bin",
-        "load_path": "embeddings/dstc2_fastText_model.bin",
-        "dim": 100
+        "load_path": "embeddings/dstc2_fastText_model.bin"
+      },
+      {
+        "in": "y_ids",
+        "out": "y_onehot",
+        "name": "one_hotter",
+        "id": "my_one_hotter",
+        "depth": "#classes_vocab.len",
+        "multi_label": true
       },
       {
         "in": [
           "x_emb"
         ],
         "in_y": [
-          "y"
+          "y_onehot"
         ],
         "out": [
-          "y_labels",
-          "y_probas_dict"
+          "y_pred_probas"
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/intents_dstc2_v4",
-        "load_path": "classifiers/intents_dstc2_v4",
+        "save_path": "classifiers/intents_dstc2_v6/model",
+        "load_path": "classifiers/intents_dstc2_v6/model",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
+        "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
           1,
           2,
           3
         ],
         "filters_cnn": 512,
-        "confident_threshold": 0.5,
         "optimizer": "Adam",
-        "lear_rate": 0.1,
-        "lear_rate_decay": 0.1,
+        "learning_rate": 0.1,
+        "learning_rate_decay": 0.1,
         "loss": "binary_crossentropy",
         "text_size": 15,
         "coef_reg_cnn": 1e-4,
@@ -75,25 +81,53 @@
         "dropout_rate": 0.5,
         "dense_size": 100,
         "model_name": "cnn_model"
+      },
+      {
+        "in": "y_pred_probas",
+        "out": "y_pred_ids",
+        "name": "proba2labels",
+        "confident_threshold": 0.5
+      },
+      {
+        "in": "y_pred_ids",
+        "out": "y_pred_labels",
+        "ref": "classes_vocab"
+      },
+      {
+        "ref": "my_one_hotter",
+        "in": "y_pred_ids",
+        "out": "y_pred_onehot"
       }
     ],
     "out": [
-      "y_labels",
-      "y_probas_dict"
+      "y_pred_probas"
     ]
   },
   "train": {
     "epochs": 1000,
     "batch_size": 64,
     "metrics": [
-      "classification_accuracy",
-      "classification_f1",
-      "classification_roc_auc"
+      {
+        "name": "sets_accuracy",
+        "inputs": [
+          "y",
+          "y_pred_labels"
+        ]
+      },
+      {
+        "name": "roc_auc",
+        "inputs": [
+          "y_onehot",
+          "y_pred_probas"
+        ]
+      }
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 5,
     "log_every_n_batches": 100,
-    "show_examples": false
+    "show_examples": false,
+    "validate_best": true,
+    "test_best": true
   },
   "metadata": {
     "requirements": [
@@ -105,11 +139,14 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
       "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/dstc2_fastText_model.bin",
         "subdir": "embeddings"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_dstc2_v6.tar.gz",
+        "subdir": "classifiers"
       }
     ]
   }
