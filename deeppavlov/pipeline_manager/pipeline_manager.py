@@ -141,7 +141,8 @@ class PipelineManager:
         if self.use_all_gpus:
             if self.max_num_workers_ is None:
                 self.available_gpu = get_available_gpus(gpu_fraction=self.memory_fraction)
-                self.available_gpu = list(set(self.available_gpu) & set(visible_gpu))
+                if len(visible_gpu) != 0:
+                    self.available_gpu = list(set(self.available_gpu) & set(visible_gpu))
 
                 if len(self.available_gpu) == 0:
                     raise ValueError("GPU with numbers: ({}) are busy.".format(set(visible_gpu)))
@@ -157,14 +158,16 @@ class PipelineManager:
                 if self.max_num_workers_ > gpu_num:
                     self.max_num_workers = gpu_num
                     self.available_gpu = get_available_gpus(gpu_fraction=self.memory_fraction)
-                    self.available_gpu = list(set(self.available_gpu) & set(visible_gpu))
+                    if len(visible_gpu) != 0:
+                        self.available_gpu = list(set(self.available_gpu) & set(visible_gpu))
 
                     if len(self.available_gpu) == 0:
                         raise ValueError("GPU with numbers: ({}) are busy.".format(set(visible_gpu)))
                 else:
                     self.available_gpu = get_available_gpus(num_gpus=self.max_num_workers_,
                                                             gpu_fraction=self.memory_fraction)
-                    self.available_gpu = list(set(self.available_gpu) & set(visible_gpu))
+                    if len(visible_gpu) != 0:
+                        self.available_gpu = list(set(self.available_gpu) & set(visible_gpu))
 
                     if len(self.available_gpu) == 0:
                         raise ValueError("GPU with numbers: ({}) are busy.".format(set(visible_gpu)))
@@ -172,7 +175,9 @@ class PipelineManager:
                     self.max_num_workers = len(self.available_gpu)
 
         elif self.use_multi_gpus:
-            self.use_multi_gpus = list(set(self.use_multi_gpus) & set(visible_gpu))
+            if len(visible_gpu) != 0:
+                self.use_multi_gpus = list(set(self.use_multi_gpus) & set(visible_gpu))
+
             if len(self.use_multi_gpus) == 0:
                 raise ValueError("GPU numbers in 'use_multi_gpus' and 'CUDA_VISIBLE_DEVICES' "
                                  "has not intersections".format(set(visible_gpu)))
