@@ -20,6 +20,7 @@ from typing import Any, Optional
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.paths import get_configs_path
 from deeppavlov.core.common.file import read_json
+from deeppavlov.core.data.utils import jsonify_data
 from deeppavlov.core.agent.rich_content import RichMessage
 
 LOGGER_CONFIG_FILENAME = 'dialog_logger_config.json'
@@ -69,6 +70,11 @@ class DialogLogger:
             log_file: opened Python file object.
         """
         log_dir: Path = Path(self.config['log_path']).expanduser().resolve() / self.agent_name
+
+        dot_dp_path = Path('~/.deeppavlov').expanduser().resolve()
+        if dot_dp_path in log_dir.parents and dot_dp_path.is_file():
+            dot_dp_path.unlink()
+
         if not log_dir.is_dir():
             log_dir.mkdir(parents=True, exist_ok=True)
 
@@ -88,6 +94,8 @@ class DialogLogger:
             pass
         elif isinstance(utterance, RichMessage):
             utterance = utterance.json()
+        elif isinstance(utterance, (list, dict)):
+            utterance = jsonify_data(utterance)
         else:
             utterance = str(utterance)
 
