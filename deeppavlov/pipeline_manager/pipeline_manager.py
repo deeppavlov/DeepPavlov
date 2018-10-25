@@ -75,7 +75,7 @@ class PipelineManager:
         plot: boolean trigger, which determines whether to draw a graph of results or not
         pipeline_generator: A special class that generates configs for training.
     """
-    def __init__(self, config_path: Union[str, Dict], exp_name: str):
+    def __init__(self, config_path: Union[str, Dict]):
         """
         Initialize logger, read input args, builds a directory tree, initialize date.
         """
@@ -84,7 +84,7 @@ class PipelineManager:
         else:
             self.exp_config = config_path
 
-        self.exp_name = exp_name
+        self.exp_name = self.exp_config['enumerate'].get('exp_name', 'experiment')
         self.date = self.exp_config['enumerate'].get('date', datetime.now().strftime('%Y-%m-%d'))
         self.info = self.exp_config['enumerate'].get('info')
         self.root = self.exp_config['enumerate'].get('root', 'download/experiments/')

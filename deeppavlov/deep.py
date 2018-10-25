@@ -39,7 +39,6 @@ parser.add_argument("mode", help="select a mode, train or interact", type=str,
                     choices={'train', 'evaluate', 'interact', 'predict', 'interactbot', 'riseapi', 'download',
                              'install', 'interactmsbot', 'enumerate', 'crossval'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
-parser.add_argument("-e", "--exp_name", help="name of experiment", type=str)
 parser.add_argument("-b", "--batch-size", dest="batch_size", default=1, help="inference batch size", type=int)
 parser.add_argument("-f", "--input-file", dest="file_path", default=None, help="Path to the input file", type=str)
 parser.add_argument("-d", "--download", action="store_true", help="download model components")
@@ -121,7 +120,7 @@ def main():
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'enumerate':
-        manager = PipelineManager(config_path=pipeline_config_path, exp_name=args.exp_name)
+        manager = PipelineManager(config_path=pipeline_config_path)
         manager.run()
     elif args.mode == 'install':
         install_from_config(pipeline_config_path)
@@ -130,7 +129,7 @@ def main():
             log.error('Minimum number of Folds is 2')
         else:
             n_folds = args.folds
-            calc_cv_score(pipeline_config_path=pipeline_config_path, n_folds=n_folds, is_loo=False)
+            calc_cv_score(config=pipeline_config_path, n_folds=n_folds, is_loo=False)
 
 
 if __name__ == "__main__":
