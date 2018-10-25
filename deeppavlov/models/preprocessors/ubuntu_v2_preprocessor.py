@@ -108,7 +108,6 @@ class UbuntuV2Preprocessor(Estimator):
             x_proc = zero_pad_truncate(x_proc, msl, pad=self.padding, trunc=self.truncating)
             x_proc = list(x_proc)
             x_proc += el   # add (self.num_context_turns+self.num_ranking_samples) raw sentences
-            # print(x_proc)
             yield x_proc
 
     def load(self) -> None:

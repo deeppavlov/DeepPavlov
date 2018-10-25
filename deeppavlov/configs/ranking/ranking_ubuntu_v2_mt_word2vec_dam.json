@@ -7,7 +7,6 @@
   },
   "dataset_iterator": {
     "name": "siamese_iterator",
-    "shuffle": true,
     "seed": 243
   },
   "chainer": {
