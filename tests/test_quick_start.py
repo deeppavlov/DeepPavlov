@@ -29,9 +29,6 @@ download_path = tests_dir / "download"
 
 TEST_MODES = ['IP',  # test_interacting_pretrained_model
               'TI',  # test_consecutive_training_and_interacting
-              'E',    # test_evolving
-              'CV',    # test_crossvalidation
-              'PS'    # test_paramsearch
               ]
 
 ALL_MODES = ('IP', 'TI')
@@ -92,16 +89,9 @@ PARAMS = {
         ("classifiers/intents_snips_bilstm_cnn.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_snips_bilstm_self_add_attention.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_snips_bilstm_self_mult_attention.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_snips_cnn_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
-    },
-    "evolution": {
-        ("evolution/evolve_intents_snips.json", "evolution", ('E',)): None
-    },
-    "cross-validation": {
-        ("cv/cv_tfidf_autofaq.json", "cross-validation-faq", ('CV',)): None
-    },
-    "paramsearch": {
-        ("paramsearch/tfidf_logreg_autofaq_psearch.json", "paramsearch", ('PS',)): None
+        ("classifiers/intents_snips_cnn_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_sklearn.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_tfidf_weighted.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "sample": {
         ("classifiers/intents_sample_csv.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -169,16 +159,11 @@ PARAMS = {
         ("odqa/ru_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "morpho_tagger":{
-        ("morpho_tagger/UD2.0/hu/morpho_hu_train.json", "morpho_tagger_hu", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_tagger/UD2.0/hu/morpho_hu_predict.json", "morpho_tagger_hu", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_train_pymorphy.json",
-         "morpho_tagger_pymorphy", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_train.json",
-         "morpho_tagger_pymorphy", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict.json",
-         "morpho_tagger_pymorphy", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict_pymorphy.json",
-         "morpho_tagger_pymorphy", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("morpho_tagger/UD2.0/morpho_en.json", "morpho_tagger_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy.json", "morpho_tagger_pymorphy", ALL_MODES):
+            [ONE_ARGUMENT_INFER_CHECK],
+        ("morpho_tagger/UD2.0/morpho_ru_syntagrus.json", "morpho_tagger_pymorphy", ALL_MODES):
+            [ONE_ARGUMENT_INFER_CHECK]
     }
 }
 
@@ -229,6 +214,16 @@ def download_config(conf_file):
             download_config(conf_file)
 
 
+def install_config(conf_file):
+    logfile = io.BytesIO(b'')
+    p = pexpect.popen_spawn.PopenSpawn(sys.executable + " -m deeppavlov install " + str(conf_file), timeout=None,
+                                       logfile=logfile)
+    p.readlines()
+    if p.wait() != 0:
+        raise RuntimeError('Installing process of {} returned non-zero exit code: \n{}'
+                           .format(conf_file, logfile.getvalue().decode()))
+
+
 def setup_module():
     shutil.rmtree(str(test_configs_path), ignore_errors=True)
     shutil.rmtree(str(download_path), ignore_errors=True)
@@ -277,16 +272,6 @@ def test_pipeline_manager():
 
 @pytest.mark.parametrize("model,conf_file,model_dir,mode", TEST_GRID, scope='class')
 class TestQuickStart(object):
-    @staticmethod
-    def install(conf_file):
-        logfile = io.BytesIO(b'')
-        p = pexpect.popen_spawn.PopenSpawn(sys.executable + " -m deeppavlov install " + str(conf_file), timeout=None,
-                                           logfile=logfile)
-        p.readlines()
-        if p.wait() != 0:
-            raise RuntimeError('Installing process of {} returned non-zero exit code: \n{}'
-                               .format(conf_file, logfile.getvalue().decode()))
-
     @staticmethod
     def interact(conf_file, model_dir, qr_list=None):
         qr_list = qr_list or []
@@ -351,7 +336,7 @@ class TestQuickStart(object):
     def test_interacting_pretrained_model(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
             config_file_path = str(test_configs_path.joinpath(conf_file))
-            self.install(config_file_path)
+            install_config(config_file_path)
             deep_download(['-c', config_file_path])
 
             self.interact(test_configs_path / conf_file, model_dir, PARAMS[model][(conf_file, model_dir, mode)])
@@ -374,7 +359,7 @@ class TestQuickStart(object):
 
             if 'IP' not in mode:
                 config_path = str(test_configs_path.joinpath(conf_file))
-                self.install(config_path)
+                install_config(config_path)
                 deep_download(['-c', config_path])
             shutil.rmtree(str(model_path),  ignore_errors=True)
 
@@ -391,69 +376,75 @@ class TestQuickStart(object):
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
 
-    def test_evolving(self, model, conf_file, model_dir, mode):
-        if 'E' in mode:
-            c = test_configs_path / conf_file
-            model_path = download_path / model_dir
 
-            if 'IP' not in mode and 'TI' not in mode:
-                config_path = str(test_configs_path.joinpath(conf_file))
-                deep_download(['-c', config_path])
-            shutil.rmtree(str(model_path),  ignore_errors=True)
+def test_crossvalidation():
+    model_dir = 'faq'
+    conf_file = 'cv/cv_tfidf_autofaq.json'
 
-            logfile = io.BytesIO(b'')
-            p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.evolve {c} --iterations 1 --p_size 1",
-                                               timeout=None, logfile=logfile)
-            p.readlines()
-            if p.wait() != 0:
-                raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
-                                   .format(model_dir, logfile.getvalue().decode()))
+    download_config(conf_file)
 
-            shutil.rmtree(str(download_path), ignore_errors=True)
-        else:
-            pytest.skip("Unsupported mode: {}".format(mode))
+    c = test_configs_path / conf_file
+    model_path = download_path / model_dir
 
-    def test_crossvalidation(self, model, conf_file, model_dir, mode):
-        if 'CV' in mode:
-            c = test_configs_path / conf_file
-            model_path = download_path / model_dir
+    install_config(c)
+    deep_download(c)
+    shutil.rmtree(str(model_path),  ignore_errors=True)
 
-            if 'IP' not in mode and 'TI' not in mode:
-                config_path = str(test_configs_path.joinpath(conf_file))
-                deep_download(['-c', config_path])
-            shutil.rmtree(str(model_path),  ignore_errors=True)
+    logfile = io.BytesIO(b'')
+    p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov crossval {c} --folds 2",
+                                       timeout=None, logfile=logfile)
+    p.readlines()
+    if p.wait() != 0:
+        raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
+                           .format(model_dir, logfile.getvalue().decode()))
 
-            logfile = io.BytesIO(b'')
-            p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov crossval {c} --folds 2",
-                                               timeout=None, logfile=logfile)
-            p.readlines()
-            if p.wait() != 0:
-                raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
-                                   .format(model_dir, logfile.getvalue().decode()))
+    shutil.rmtree(str(download_path), ignore_errors=True)
 
-            shutil.rmtree(str(download_path), ignore_errors=True)
-        else:
-            pytest.skip("Unsupported mode: {}".format(mode))
 
-    def test_param_search(self, model, conf_file, model_dir, mode):
-        if 'PS' in mode:
-            c = test_configs_path / conf_file
-            model_path = download_path / model_dir
+def test_param_search():
+    model_dir = 'faq'
+    conf_file = 'paramsearch/tfidf_logreg_autofaq_psearch.json'
 
-            if 'IP' not in mode and 'TI' not in mode:
-                config_path = str(test_configs_path.joinpath(conf_file))
-                deep_download(['-c', config_path])
-            shutil.rmtree(str(model_path),  ignore_errors=True)
+    download_config(conf_file)
 
-            logfile = io.BytesIO(b'')
-            p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.paramsearch {c} --folds 2",
-                                               timeout=None, logfile=logfile)
-            p.readlines()
-            if p.wait() != 0:
-                raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
-                                   .format(model_dir, logfile.getvalue().decode()))
+    c = test_configs_path / conf_file
+    model_path = download_path / model_dir
 
-            shutil.rmtree(str(download_path), ignore_errors=True)
-        else:
-            pytest.skip("Unsupported mode: {}".format(mode))
+    install_config(c)
+    deep_download(c)
 
+    shutil.rmtree(str(model_path),  ignore_errors=True)
+
+    logfile = io.BytesIO(b'')
+    p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.paramsearch {c} --folds 2",
+                                       timeout=None, logfile=logfile)
+    p.readlines()
+    if p.wait() != 0:
+        raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
+                           .format(model_dir, logfile.getvalue().decode()))
+
+    shutil.rmtree(str(download_path), ignore_errors=True)
+
+
+def test_evolving():
+    model_dir = 'evolution'
+    conf_file = 'evolution/evolve_intents_snips.json'
+    download_config(conf_file)
+
+    c = test_configs_path / conf_file
+    model_path = download_path / model_dir
+
+    install_config(c)
+    deep_download(c)
+
+    shutil.rmtree(str(model_path), ignore_errors=True)
+
+    logfile = io.BytesIO(b'')
+    p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.evolve {c} --iterations 1 --p_size 1",
+                                       timeout=None, logfile=logfile)
+    p.readlines()
+    if p.wait() != 0:
+        raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
+                           .format(model_dir, logfile.getvalue().decode()))
+
+    shutil.rmtree(str(download_path), ignore_errors=True)

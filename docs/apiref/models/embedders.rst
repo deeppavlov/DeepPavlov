@@ -12,3 +12,12 @@ deeppavlov.models.embedders
 
    .. automethod:: __call__
    .. automethod:: __iter__
+
+.. autoclass:: deeppavlov.models.embedders.glove_embedder.GloVeEmbedder
+
+   .. automethod:: __call__
+   .. automethod:: __iter__
+
+.. autoclass:: deeppavlov.models.embedders.tfidf_weighted_embedder.TfidfWeightedEmbedder
+
+   .. automethod:: __call__

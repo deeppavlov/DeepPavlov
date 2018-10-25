@@ -21,7 +21,7 @@ from deeppavlov.core.common.metrics_registry import register_metric
 
 
 @register_metric('accuracy')
-def accuracy(y_true, y_predicted):
+def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> float:
     """
     Calculate accuracy in terms of absolute coincidence
 
