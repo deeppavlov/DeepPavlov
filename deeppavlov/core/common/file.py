@@ -24,7 +24,7 @@ log = get_logger(__name__)
 
 def find_config(pipeline_config_path: Union[str, Path]) -> Path:
     if not Path(pipeline_config_path).is_file():
-        configs = [c for c in Path(__file__).parent.glob(f'configs/**/{pipeline_config_path}.json')
+        configs = [c for c in Path(__file__).parent.parent.parent.glob(f'configs/**/{pipeline_config_path}.json')
                    if str(c.with_suffix('')).endswith(pipeline_config_path)]  # a simple way to not allow * and ?
         if configs:
             log.info(f"Interpreting '{pipeline_config_path}' as '{configs[0]}'")
