@@ -21,7 +21,8 @@ from sklearn.model_selection import KFold
 
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.commands.train import train_evaluate_model_from_config, get_iterator_from_config, read_data_by_config
+from deeppavlov.core.commands.train import train_evaluate_model_from_config, get_iterator_from_config, \
+    read_data_by_config, get_metrics_names
 from deeppavlov.core.common.params_search import ParamsSearch
 from deeppavlov.core.commands.utils import expand_path
 
@@ -94,14 +95,15 @@ def calc_cv_score(config=None, pipeline_config_path=None, data=None, n_folds=5, 
 
     config, dirs_for_saved_models = change_savepath_for_model(config)
 
-    target_metrics = config['train']['metrics']
-    cv_score = OrderedDict((k, []) for k in target_metrics)
+    cv_score = OrderedDict()
     for data_i in generate_train_valid(data, n_folds=n_folds, is_loo=is_loo):
         iterator = get_iterator_from_config(config, data_i)
         create_dirs_to_save_models(dirs_for_saved_models)
         score = train_evaluate_model_from_config(config, iterator=iterator)
         delete_dir_for_saved_models(dirs_for_saved_models)
         for key, value in score['valid'].items():
+            if key not in cv_score:
+                cv_score[key] = []
             cv_score[key].append(value)
 
     for key, value in cv_score.items():

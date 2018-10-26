@@ -10,6 +10,7 @@
   },
   "chainer": {
     "in": "q",
+    "in_y": "y",
     "pipe": [
       {
         "name": "ru_tokenizer",
@@ -63,7 +64,7 @@
   "train": {
     "validate_best": true,
     "metrics": [
-      "accuracy"
+      {"name": "accuracy"}
     ],
     "test_best": false
   },
