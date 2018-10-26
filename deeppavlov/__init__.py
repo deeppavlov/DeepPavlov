@@ -13,10 +13,13 @@
 # limitations under the License.
 import sys
 
-from .configs import configs
-from .core.commands.infer import build_model
-from .core.commands.train import train_evaluate_model_from_config
-from .download import deep_download
+try:
+    from .configs import configs
+    from .core.commands.infer import build_model
+    from .core.commands.train import train_evaluate_model_from_config
+    from .download import deep_download
+except ImportError:
+    'Assuming that requirements are not yet installed'
 
 __version__ = '0.0.9'
 __author__ = 'Neural Networks and Deep Learning lab, MIPT'
