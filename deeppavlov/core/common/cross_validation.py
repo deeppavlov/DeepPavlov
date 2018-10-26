@@ -13,18 +13,18 @@
 # limitations under the License.
 
 import shutil
-from pathlib import Path
 from collections import OrderedDict
+from pathlib import Path
 
 import numpy as np
 from sklearn.model_selection import KFold
 
+from deeppavlov.core.commands.train import train_evaluate_model_from_config, get_iterator_from_config, \
+    read_data_by_config
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.commands.train import train_evaluate_model_from_config, get_iterator_from_config, \
-    read_data_by_config, get_metrics_names
 from deeppavlov.core.common.params_search import ParamsSearch
-from deeppavlov.core.commands.utils import expand_path
 
 SAVE_PATH_ELEMENT_NAME = 'save_path'
 TEMP_DIR_FOR_CV = 'cv_tmp'
