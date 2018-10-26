@@ -76,10 +76,10 @@
           "in_y": ["y_onehot"],
           "out": ["y_pred_probas"],
           "main": true,
-          "name": "keras_classification_model_prob",
+          "name": "keras_classification_model",
           "component_name": "CNN",
           "save_path": "new_neural/checkpoints/cnn",
-          "classes": "#classes_vocab.keys()",
+          "n_classes": "#classes_vocab.len",
           "embedding_size": "#embedder.dim",
           "loss": "categorical_crossentropy",
           "optimizer": "Adam",
@@ -100,10 +100,10 @@
           "in_y": ["y_onehot"],
           "out": ["y_pred_probas"],
           "main": true,
-          "name": "keras_classification_model_prob",
+          "name": "keras_classification_model",
           "component_name": "DCNN",
           "save_path": "new_neural/checkpoints/cnn",
-          "classes": "#classes_vocab.keys()",
+          "n_classes": "#classes_vocab.len",
           "embedding_size": "#embedder.dim",
           "loss": "categorical_crossentropy",
           "optimizer": "Adam",
@@ -124,10 +124,10 @@
           "in_y": ["y_onehot"],
           "out": ["y_pred_probas"],
           "main": true,
-          "name": "keras_classification_model_prob",
+          "name": "keras_classification_model",
           "component_name": "CNN_max_aver_pool",
           "save_path": "new_neural/checkpoints/cnn",
-          "classes": "#classes_vocab.keys()",
+          "n_classes": "#classes_vocab.len",
           "embedding_size": "#embedder.dim",
           "loss": "categorical_crossentropy",
           "optimizer": "Adam",
@@ -169,15 +169,15 @@
     "batch_size": 32,
     "metrics": [
       {
-        "name": "simple_f1_macro",
+        "name": "f1_macro",
         "inputs": ["y", "y_pred_labels"]
       },
       {
-        "name": "simple_accuracy",
+        "name": "sets_accuracy",
         "inputs": ["y", "y_pred_labels"]
       },
       {
-        "name": "simple_f1_weighted",
+        "name": "f1_weighted",
         "inputs": ["y", "y_pred_labels"]
       }
     ],
@@ -189,8 +189,7 @@
     "test_best": true
   },
   "enumerate": {
-    "date": null,
-    "info": null,
+    "exp_name": "neural_classification",
     "root": "./download/experiments/",
     "do_test": false,
     "cross_val": false,
@@ -202,7 +201,8 @@
     "multiprocessing": true,
     "max_num_workers": null,
     "use_all_gpus": true,
-    "use_multi_gpus": null
+    "use_multi_gpus": null,
+    "gpu_memory_fraction": 1.0
   },
   "metadata": {
     "requirements": [

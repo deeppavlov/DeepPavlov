@@ -38,7 +38,7 @@
           "id": "tfidf_vec",
           "save_path": "vocabs/tfidf_sber.pkl",
           "load_path": "vocabs/tfidf_sber.pkl",
-          "model_name": "sklearn.feature_extraction.text:TfidfVectorizer",
+          "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
           "infer_method": "transform",
           "lowercase": true,
           "analyzer": "char",
@@ -55,7 +55,7 @@
           "id": "count",
           "save_path": "vocabs/count.pkl",
           "load_path": "vocabs/count.pkl",
-          "model_name": "sklearn.feature_extraction.text:CountVectorizer",
+          "model_class": "sklearn.feature_extraction.text:CountVectorizer",
           "infer_method": "transform",
           "lowercase": true,
           "analyzer": "char",
@@ -74,7 +74,7 @@
           "main": true,
           "save_path": "linm/checkpoints/logreg.pkl",
           "load_path": "linm/checkpoints/logreg.pkl",
-          "model_name": "sklearn.linear_model:LogisticRegression",
+          "model_class": "sklearn.linear_model:LogisticRegression",
           "infer_method": "predict_proba",
           "warm_start": false,
           "penalty": "l1",
@@ -93,7 +93,7 @@
           "main": true,
           "save_path": "linm/checkpoints/logreg.pkl",
           "load_path": "linm/checkpoints/logreg.pkl",
-          "model_name": "sklearn.linear_model:LogisticRegression",
+          "model_class": "sklearn.linear_model:LogisticRegression",
           "infer_method": "predict_proba",
           "warm_start": false,
           "penalty": "l2",
@@ -127,15 +127,15 @@
   "train": {
     "metrics": [
       {
-        "name": "simple_f1_macro",
+        "name": "f1_macro",
         "inputs": ["y", "y_pred_labels"]
       },
       {
-        "name": "simple_accuracy",
+        "name": "sets_accuracy",
         "inputs": ["y", "y_pred_labels"]
       },
       {
-        "name": "simple_f1_weighted",
+        "name": "f1_weighted",
         "inputs": ["y", "y_pred_labels"]
       }
     ],
@@ -144,6 +144,8 @@
     "test_best": true
   },
   "enumerate": {
+    "exp_name": "lin_clf",
+    "root": "./download/experiments/",
     "do_test": false,
     "cross_val": false,
     "k_fold": 5,
