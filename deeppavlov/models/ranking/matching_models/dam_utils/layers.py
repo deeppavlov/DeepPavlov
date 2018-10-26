@@ -212,9 +212,9 @@ def FFN(x, out_dimension_0=None, out_dimension_1=None):
     Raises:
     '''
     with tf.variable_scope('FFN_1'):
-        y = op.dense(x, out_dimension_0)
+        y = op.dense(x, out_dimension_0, initializer=tf.keras.initializers.he_normal(seed=42))
         y = tf.nn.relu(y)
-    with tf.variable_scope('FFN_2'):
+    with tf.variable_scope('FFN_2', initializer=tf.keras.initializers.glorot_uniform(seed=42)):
         z = op.dense(y, out_dimension_1) #, add_bias=False)  #!!!!
     return z
 
@@ -321,7 +321,7 @@ def CNN_3d(x, out_channels_0, out_channels_1, add_relu=True):
         name='filter_0',
         shape=[3, 3, 3, in_channels, out_channels_0],
         dtype=tf.float32,
-        initializer=tf.random_uniform_initializer(-0.01, 0.01))
+        initializer=tf.random_uniform_initializer(-0.001, 0.001))
     bias_0 = tf.get_variable(
         name='bias_0',
         shape=[out_channels_0],
@@ -334,6 +334,7 @@ def CNN_3d(x, out_channels_0, out_channels_1, add_relu=True):
 
     if add_relu:
         conv_0 = tf.nn.elu(conv_0)
+        # conv_0 = tf.nn.relu(conv_0)
 
     pooling_0 = tf.nn.max_pool3d(
         conv_0, 
@@ -347,7 +348,7 @@ def CNN_3d(x, out_channels_0, out_channels_1, add_relu=True):
         name='filter_1',
         shape=[3, 3, 3, out_channels_0, out_channels_1],
         dtype=tf.float32,
-        initializer=tf.random_uniform_initializer(-0.01, 0.01))
+        initializer=tf.random_uniform_initializer(-0.001, 0.001))
     bias_1 = tf.get_variable(
         name='bias_1',
         shape=[out_channels_1],
@@ -360,6 +361,7 @@ def CNN_3d(x, out_channels_0, out_channels_1, add_relu=True):
 
     if add_relu:
         conv_1 = tf.nn.elu(conv_1)
+        # conv_1 = tf.nn.relu(conv_1)
 
     pooling_1 = tf.nn.max_pool3d(
         conv_1, 
