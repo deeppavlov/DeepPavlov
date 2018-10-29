@@ -126,11 +126,11 @@
     "test_best": false
   },
   "metadata": {
-    "variables": [
-      {"ROOT_PATH": "~/.deeppavlov"},
-      {"DOWNLOADS_PATH": "{ROOT_PATH}/downloads"},
-      {"MODELS_PATH": "{ROOT_PATH}/models"}
-    ],
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
       "{DEEPPAVLOV_ROOT}/requirements/tf.txt",
       "{DEEPPAVLOV_ROOT}/requirements/fasttext.txt"

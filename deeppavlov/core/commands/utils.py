@@ -38,9 +38,8 @@ def parse_config(config: Union[str, Path, dict]) -> dict:
     variables = {
         'DEEPPAVLOV_ROOT': Path(__file__).parent.parent.parent
     }
-    for var_dict in config.get('metadata', {}).get('variables', []):
-        for name, value in var_dict.items():
-            variables[name] = value.format(**variables)
+    for name, value in config.get('metadata', {}).get('variables', {}).items():
+        variables[name] = value.format(**variables)
 
     return _parse_item(config, variables)
 
