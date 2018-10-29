@@ -21,10 +21,11 @@ from collections import Counter
 from itertools import chain
 
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 
 @register('ner_few_shot_iterator')
-class NERFewShotIterator:
+class NERFewShotIterator(DataLearningIterator):
     """Dataset iterator for learning models, e. g. neural networks.
 
     Args:
@@ -39,9 +40,22 @@ class NERFewShotIterator:
     def split(self, *args, **kwargs):
         pass
 
-    def __init__(self, data: Dict[str, List[Tuple[Any, Any]]], seed: int = None, shuffle: bool = True,
+    def __init__(self, data: Dict[str, List[Tuple[Any, Any]]],
+                 seed: int = None, shuffle: bool = True,
+                 target_tag: str = None,
+                 filter_bi: bool = True,
+                 n_train_samples: int = 20,
+                 remove_not_targets = True,
                  *args, **kwargs) -> None:
         self.shuffle = shuffle
+        self.target_tag = target_tag
+        self.filter_bi = filter_bi
+        self.n_train_samples = n_train_samples
+        self.remove_not_targets = remove_not_targets
+
+
+        if self.target_tag is None:
+            raise RuntimeError('You must provide a target tag to NERFewShotIterator!')
 
         self.random = Random(seed)
 
@@ -51,28 +65,88 @@ class NERFewShotIterator:
         self.split(*args, **kwargs)
         self.data = {
             'train': self.train,
-            'valid': self.valid,
+            'valid': self.valid[:256],
             'test': self.test,
             'all': self.train + self.test + self.valid
         }
 
-    def gen_batches(self, batch_size: int, data_type: str = 'train',
-                    shuffle: bool = None) -> Iterator[Tuple[tuple, tuple]]:
-        """Generate batches of inputs and expected output to train neural networks
+        self.n_samples = len(self.train)
+
+        if self.remove_not_targets:
+            self._remove_not_target_tags()
+
+        if self.filter_bi:
+            for key in self.data:
+                for n, (x, y) in enumerate(self.data[key]):
+                    self.data[key][n] = [x, [re.sub('(B-|I-)', '', tag) for tag in y]]
+
+        self.tag_map = np.zeros(self.n_samples, dtype=bool)
+        for n, (toks, tags) in enumerate(self.data['train']):
+            if self.filter_bi:
+                self.tag_map[n] = any(self.target_tag == tag for tag in tags if len(tag) > 2)
+            else:
+                self.tag_map[n] = any(self.target_tag == tag[2:] for tag in tags if len(tag) > 2)
+
+        self.marked_nums = None
+        self.unmarked_nums = None
+        self._sample_marked()
+
+    def _sample_marked(self):
+        np.zeros(len(self.data['train']), dtype=bool)
+        n_marked = 0
+        self.marked_mask = np.zeros(self.n_samples, dtype=bool)
+        while n_marked < self.n_train_samples:
+            is_picked = True
+            while is_picked:
+                n = np.random.randint(self.n_samples)
+                if not self.marked_mask[n]:
+                    is_picked = False
+                    self.marked_mask[n] = True
+                    if self.tag_map[n]:
+                        n_marked += 1
+
+        self.marked_nums = np.arange(self.n_samples)[self.marked_mask]
+        self.unmarked_nums = np.arange(self.n_samples)[~self.marked_mask]
+
+    def _remove_not_target_tags(self):
+        if self.remove_not_targets:
+            for key in self.data:
+                for n, (x, y) in enumerate(self.data[key]):
+                    tags = []
+                    for tag in y:
+                        if tag.endswith('-' + self.target_tag):
+                            tags.append(tag)
+                        else:
+                            tags.append('O')
+                    self.data[key][n] = [x, tags]
+
+    def get_instances(self, data_type: str = 'train') -> Tuple[tuple, tuple]:
+        """Get all data for a selected data type
 
         Args:
-            batch_size: number of samples in batch
-            data_type: can be either 'train', 'test', or 'valid'
-            shuffle: whether to shuffle dataset before batching
+            data_type (str): can be either ``'train'``, ``'test'``, ``'valid'`` or ``'all'``
 
-        Yields:
-             a tuple of a batch of inputs and a batch of expected outputs
+        Returns:
+             a tuple of all inputs for a data type and all expected outputs for a data type
         """
-        if shuffle is None:
-            shuffle = self.shuffle
 
-        data = self.data[data_type]
-        data_len = len(data)
+        if data_type == 'train':
+            samples = [self.data[data_type][i] for i in self.marked_nums]
+        else:
+            samples = self.data[data_type][:]
+
+        x, y = list(zip(*samples))
+
+        return x, y
+
+    def gen_batches(self, batch_size: int, data_type: str = 'train',
+                    shuffle: bool = None):
+        if data_type == 'train':
+            x, y = self.get_instances('train')
+        else:
+            x, y = list(zip(*self.data[data_type]))
+
+        data_len = len(x)
 
         if data_len == 0:
             return
@@ -85,130 +159,4 @@ class NERFewShotIterator:
             batch_size = data_len
 
         for i in range((data_len - 1) // batch_size + 1):
-            yield tuple(zip(*[data[o] for o in order[i * batch_size:(i + 1) * batch_size]]))
-
-    def get_instances(self, data_type: str = 'train') -> Tuple[tuple, tuple]:
-        """Get all data for a selected data type
-
-        Args:
-            data_type (str): can be either ``'train'``, ``'test'``, ``'valid'`` or ``'all'``
-
-        Returns:
-             a tuple of all inputs for a data type and all expected outputs for a data type
-        """
-        data = self.data[data_type]
-        return tuple(zip(*data))
-
-
-class Corp:
-    def __init__(self, data, target_tag, n_samples=20, filter_bi=False):
-        self.filter_bi = filter_bi
-
-        self.dataset = data
-        if self.filter_bi:
-            for key in self.dataset:
-                for n, (x, y) in enumerate(self.dataset[key]):
-                    self.dataset[key][n] = [x, [re.sub('(B-|I-)', '', tag) for tag in y]]
-        self.n_samples = n_samples
-        n_train_samples = len(self.dataset['train'])
-        self.emb_dim = self.dataset['train'][0][0].shape[-1]
-        self.target_tag = target_tag
-        self.all_freqs = Counter(chain(*[tags for _, tags in self.dataset['train']]))
-        self.tag_freqs = {key[2:]: value for key, value in self.all_freqs.items() if key[0] == 'B'}
-        self.tag_map = np.zeros(n_train_samples, dtype=bool)
-        for n, (toks, tags) in enumerate(self.dataset['train']):
-            if self.filter_bi:
-                self.tag_map[n] = any(target_tag == tag for tag in tags if len(tag) > 2)
-            else:
-                self.tag_map[n] = any(target_tag == tag[2:] for tag in tags if len(tag) > 2)
-        if not any(self.tag_map):
-            raise RuntimeError(f'No tag{target_tag} found!')
-
-        self.marked_mask = None
-        self.marked_nums = None
-        self.unmarked_nums = None
-        self.resample_marked()
-
-        for k, (_, tags) in enumerate(self.dataset['train']):
-            for n, tag in enumerate(tags):
-                if not self.marked_mask[k] and self.target_tag in tag:
-                    self.dataset['train'][k][1][n] = 'O'
-        for _, tags in self.dataset['valid']:
-            for n, tag in enumerate(tags):
-                if self.marked_mask[k] and self.target_tag in tag:
-                    self.dataset['valid'][k][1][n] = 'O'
-        self.tag_vocab = SimpleVocabulary(unk_token='<UNK>',
-                                          pad_with_zeros=True,
-                                          save_path='model/tag.vocab',
-                                          load_path='model/tag.vocab')
-        self.tag_vocab.fit([tags for _, tags in dataset['train']])
-
-    def resample_marked(self):
-        np.zeros(len(self.dataset['train']), dtype=bool)
-        n_marked = 0
-        n_train_samples = len(n_train_samples)
-        while n_marked < self.n_samples:
-            is_picked = True
-            while is_picked:
-                n = np.random.randint(n_train_samples)
-                if not self.marked_mask[n]:
-                    is_picked = False
-                    self.marked_mask[n] = True
-                    if self.tag_map[n]:
-                        n_marked += 1
-
-        self.marked_nums = np.arange(n_train_samples)[self.marked_mask]
-        self.unmarked_nums = np.arange(n_train_samples)[~self.marked_mask]
-
-    def batch_gen(self, batch_size, marked_part=0.0, n_batches=-1, datatype='train'):
-        n_marked = int(np.sum(np.random.choice([0, 1], size=batch_size, p=[1 - marked_part, marked_part])))
-        n_unmarked = batch_size - n_marked
-        if n_batches == -1:
-            n_batches = int(len(self.dataset[datatype]) / batch_size)
-        order = list(np.random.permutation(self.unmarked_nums))
-        for n in range(n_batches):
-            marked_nums = list(np.random.choice(self.marked_nums, size=n_marked))
-            unmarked_nums = order[n * n_unmarked: (n + 1) * n_unmarked]
-            samples = [self.dataset[datatype][i] for i in marked_nums + unmarked_nums]
-
-            embs_batch, tags_batch = list(zip(*samples))
-            max_len = max(len(tags) for tags in tags_batch)
-            x = np.zeros([len(samples), max_len, self.emb_dim])
-            for n, emb in enumerate(embs_batch):
-                x[n, :len(emb)] = emb
-
-            mask = np.zeros([len(tags_batch), max_len])
-            for n, tags in enumerate(tags_batch):
-                mask[n, :len(tags)] = 1
-            y = self.tag_vocab(tags_batch)
-            yield (x, mask), y
-
-    def batch_gen_eval(self, batch_size, datatype='train'):
-        n_batches = int((len(self.dataset[datatype]) + 1) / batch_size)
-        for n in range(n_batches):
-            samples = self.dataset[datatype][n * batch_size: (n + 1) * batch_size]
-            embs_batch, tags_batch = list(zip(*samples))
-            max_len = max(len(tags) for tags in tags_batch)
-            x = np.zeros([len(samples), max_len, self.emb_dim])
-            for n, emb in enumerate(embs_batch):
-                x[n, :len(emb)] = emb
-
-            mask = np.zeros([len(tags_batch), max_len])
-            for n, tags in enumerate(tags_batch):
-                mask[n, :len(tags)] = 1
-            y = self.tag_vocab(tags_batch)
-            yield (x, mask), y
-
-    def get_marked_data(self, index_tags=False, datatype='train'):
-        if datatype == 'train':
-            samples = [self.dataset[datatype][i] for i in self.marked_nums]
-        else:
-            samples = self.dataset[datatype][:]
-
-        embs_batch, tags_batch = list(zip(*samples))
-
-        if index_tags:
-            y = self.tag_vocab(tags_batch)
-        else:
-            y = tags_batch
-        return list(zip(embs_batch, y))
+            yield tuple(zip(*[(x[o], y[o]) for o in order[i * batch_size:(i + 1) * batch_size]]))
