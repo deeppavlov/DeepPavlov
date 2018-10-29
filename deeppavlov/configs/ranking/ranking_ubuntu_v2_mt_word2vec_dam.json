@@ -70,6 +70,7 @@
         "emb_matrix": "#embeddings.emb_mat",
         "learning_rate": 1e-3,
         "batch_size": 100,
+        "decay_steps": 600,
         "seed": 65,
         "save_path": "ubuntu_v2_mt_word2vec/model_dam/model",
         "load_path": "ubuntu_v2_mt_word2vec/model_dam/model"

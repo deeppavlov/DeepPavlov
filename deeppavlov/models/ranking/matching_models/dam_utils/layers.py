@@ -241,7 +241,7 @@ def block(
     '''
     att = attention(Q, K, V, 
                     Q_lengths, K_lengths, 
-                    attention_type='dot', 
+                    attention_type=attention_type,
                     is_mask=is_mask, mask_value=mask_value,
                     drop_prob=drop_prob)
     if is_layer_norm:
