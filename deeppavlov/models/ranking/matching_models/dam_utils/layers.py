@@ -215,8 +215,8 @@ def FFN(x, out_dimension_0=None, out_dimension_1=None):
         y = op.dense(x, out_dimension_0, initializer=tf.keras.initializers.he_normal(seed=42))
         y = tf.nn.relu(y)
     with tf.variable_scope('FFN_2'):
-        z = op.dense(y, out_dimension_1, initializer=tf.keras.initializers.glorot_uniform(seed=42))
-        #, add_bias=False)  #!!!!
+        # z = op.dense(y, out_dimension_1, initializer=tf.keras.initializers.glorot_uniform(seed=42))  # TODO: check
+        z = op.dense(y, out_dimension_1) #, add_bias=False)  #!!!!
     return z
 
 def block(
