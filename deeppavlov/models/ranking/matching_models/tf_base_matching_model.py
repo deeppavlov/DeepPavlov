@@ -96,7 +96,7 @@ class TensorflowBaseMatchingModel(TFModel):
                     for i in range(len(batch_buffer_context) // self.batch_size):
 
                         # CPU Graph
-                        with self.g_cpu.as_default():
+                        with self.g_use.as_default():
                             sent_feed_dict = {
                                 self.context_sent_ph: np.array(
                                     raw_batch_buffer_context[i * self.batch_size: (i + 1) * self.batch_size]),
@@ -145,7 +145,7 @@ class TensorflowBaseMatchingModel(TFModel):
                     return ["Error! It is not intended to use the model in the interact mode."]
                 if len(batch_buffer_context) != 0:
                     # CPU Graph
-                    with self.g_cpu.as_default():
+                    with self.g_use.as_default():
                         sent_feed_dict = {
                             self.context_sent_ph: np.array(raw_batch_buffer_context),
                             self.response_sent_ph: np.array(raw_batch_buffer_response)
@@ -232,7 +232,7 @@ class TensorflowBaseMatchingModel(TFModel):
                 if len(batch_buffer_context) >= self.batch_size:
                     for i in range(len(batch_buffer_context) // self.batch_size):
                         # CPU Graph
-                        with self.g_cpu.as_default():
+                        with self.g_use.as_default():
                             sent_feed_dict = {
                                 self.context_sent_ph: np.array(
                                     raw_batch_buffer_context[i * self.batch_size: (i + 1) * self.batch_size]),
@@ -281,7 +281,7 @@ class TensorflowBaseMatchingModel(TFModel):
                     return ["Error! It is not intended to use the model in the interact mode."]
                 if len(batch_buffer_context) != 0:
                     # CPU Graph
-                    with self.g_cpu.as_default():
+                    with self.g_use.as_default():
                         sent_feed_dict = {
                             self.context_sent_ph: np.array(raw_batch_buffer_context),
                             self.response_sent_ph: np.array(raw_batch_buffer_response)

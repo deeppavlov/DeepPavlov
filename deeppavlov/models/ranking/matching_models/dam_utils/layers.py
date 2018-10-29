@@ -214,7 +214,8 @@ def FFN(x, out_dimension_0=None, out_dimension_1=None):
     with tf.variable_scope('FFN_1'):
         y = op.dense(x, out_dimension_0, initializer=tf.keras.initializers.he_normal(seed=42))
         y = tf.nn.relu(y)
-    with tf.variable_scope('FFN_2', initializer=tf.keras.initializers.glorot_uniform(seed=42)):
+    with tf.variable_scope('FFN_2'):
+        # z = op.dense(y, out_dimension_1, initializer=tf.keras.initializers.glorot_uniform(seed=42))  # TODO: check
         z = op.dense(y, out_dimension_1) #, add_bias=False)  #!!!!
     return z
 
@@ -334,7 +335,6 @@ def CNN_3d(x, out_channels_0, out_channels_1, add_relu=True):
 
     if add_relu:
         conv_0 = tf.nn.elu(conv_0)
-        # conv_0 = tf.nn.relu(conv_0)
 
     pooling_0 = tf.nn.max_pool3d(
         conv_0, 
@@ -361,7 +361,6 @@ def CNN_3d(x, out_channels_0, out_channels_1, add_relu=True):
 
     if add_relu:
         conv_1 = tf.nn.elu(conv_1)
-        # conv_1 = tf.nn.relu(conv_1)
 
     pooling_1 = tf.nn.max_pool3d(
         conv_1, 

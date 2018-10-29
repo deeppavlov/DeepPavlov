@@ -86,8 +86,8 @@ class DAMNetwork(TensorflowBaseMatchingModel):
         self.decay_steps = decay_steps
 
         ##############################################################################
-        self.g_cpu = tf.Graph()
-        with self.g_cpu.as_default():
+        self.g_use = tf.Graph()
+        with self.g_use.as_default():
             # sentence encoder
             self.embed = hub.Module("https://tfhub.dev/google/universal-sentence-encoder-large/3", trainable=False)
 
@@ -106,8 +106,8 @@ class DAMNetwork(TensorflowBaseMatchingModel):
                 self.sent_embedder_context = tf.expand_dims(embed_context_turns, axis=2)
                 self.sent_embedder_response = tf.expand_dims(embed_response, axis=1)
 
-        self.cpu_sess = tf.Session(config=tf.ConfigProto(), graph=self.g_cpu)
-        with self.g_cpu.as_default():
+        self.cpu_sess = tf.Session(config=tf.ConfigProto(), graph=self.g_use)
+        with self.g_use.as_default():
             self.cpu_sess.run([tf.global_variables_initializer(), tf.tables_initializer()])
         ##############################################################################
 
