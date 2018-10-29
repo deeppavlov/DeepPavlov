@@ -94,7 +94,7 @@ def bilinear_sim(x, y, is_nor=True):
         name="bilinear_matrix", 
         shape=[x.shape[-1], y.shape[-1]],
         dtype=tf.float32,
-        initializer=tf.orthogonal_initializer())
+        initializer=tf.keras.initializers.glorot_uniform(seed=42))
     sim = tf.einsum('bik,kl,bjl->bij', x, M, y)
 
     if is_nor:
@@ -192,7 +192,7 @@ def layer_norm_debug(x, axis = None, epsilon=1e-6):
     norm = (x-mean) * tf.rsqrt(variance + epsilon)
     return scale * norm + bias
 
-def dense(x, out_dimension=None, add_bias=True):
+def dense(x, out_dimension=None, add_bias=True, initializer=tf.orthogonal_initializer()):
     '''Add dense connected layer, Wx + b.
 
     Args:
@@ -211,7 +211,7 @@ def dense(x, out_dimension=None, add_bias=True):
         name='weights',
         shape=[x.shape[-1], out_dimension],
         dtype=tf.float32,
-        initializer=tf.orthogonal_initializer())
+        initializer=initializer)
     if add_bias:
         bias = tf.get_variable(
             name='bias',

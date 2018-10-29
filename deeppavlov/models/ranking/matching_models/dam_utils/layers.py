@@ -212,10 +212,11 @@ def FFN(x, out_dimension_0=None, out_dimension_1=None):
     Raises:
     '''
     with tf.variable_scope('FFN_1'):
-        y = op.dense(x, out_dimension_0)
+        y = op.dense(x, out_dimension_0, initializer=tf.keras.initializers.he_normal(seed=42))
         y = tf.nn.relu(y)
     with tf.variable_scope('FFN_2'):
-        z = op.dense(y, out_dimension_1) #, add_bias=False)  #!!!!
+        z = op.dense(y, out_dimension_1, initializer=tf.keras.initializers.glorot_uniform(seed=42))
+        #, add_bias=False)  #!!!!
     return z
 
 def block(
@@ -241,7 +242,7 @@ def block(
     '''
     att = attention(Q, K, V, 
                     Q_lengths, K_lengths, 
-                    attention_type='dot', 
+                    attention_type=attention_type,
                     is_mask=is_mask, mask_value=mask_value,
                     drop_prob=drop_prob)
     if is_layer_norm:
@@ -321,7 +322,7 @@ def CNN_3d(x, out_channels_0, out_channels_1, add_relu=True):
         name='filter_0',
         shape=[3, 3, 3, in_channels, out_channels_0],
         dtype=tf.float32,
-        initializer=tf.random_uniform_initializer(-0.01, 0.01))
+        initializer=tf.random_uniform_initializer(-0.001, 0.001))
     bias_0 = tf.get_variable(
         name='bias_0',
         shape=[out_channels_0],
@@ -347,7 +348,7 @@ def CNN_3d(x, out_channels_0, out_channels_1, add_relu=True):
         name='filter_1',
         shape=[3, 3, 3, out_channels_0, out_channels_1],
         dtype=tf.float32,
-        initializer=tf.random_uniform_initializer(-0.01, 0.01))
+        initializer=tf.random_uniform_initializer(-0.001, 0.001))
     bias_1 = tf.get_variable(
         name='bias_1',
         shape=[out_channels_1],

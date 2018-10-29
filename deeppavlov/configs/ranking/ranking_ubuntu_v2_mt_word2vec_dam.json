@@ -72,6 +72,7 @@
         "learning_rate": 1e-3,
         "batch_size": 100,
         "seed": 65,
+        "decay_steps": 600,
         "save_path": "ubuntu_v2_mt_word2vec/model_dam/model",
         "load_path": "ubuntu_v2_mt_word2vec/model_dam/model"
       }

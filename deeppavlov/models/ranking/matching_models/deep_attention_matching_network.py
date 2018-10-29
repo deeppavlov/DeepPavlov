@@ -54,6 +54,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
         is_positional (bool): Adds a bunch of sinusoids of different frequencies to an embeddings.
         stack_num (int): Number of stack layers, default is 5.
         seed (int): Random seed.
+        decay_steps (int): Number of steps after which is to decay the learning rate.
     """
 
     def __init__(self,
@@ -66,6 +67,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
                  is_positional: bool = True,
                  stack_num: int = 5,
                  seed: int = 65,
+                 decay_steps: int = 600,
                  *args,
                  **kwargs):
 
@@ -83,6 +85,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
 
         self.learning_rate = learning_rate
         self.emb_matrix = emb_matrix
+        self.decay_steps = decay_steps
 
         self.sess_config = tf.ConfigProto(allow_soft_placement=True)
         self.sess_config.gpu_options.allow_growth = True
@@ -129,7 +132,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
             with tf.variable_scope('self_stack_' + str(index)):
                 Hr = layers.block(
                     Hr, Hr, Hr,
-                    Q_lengths=self.response_len_ph, K_lengths=self.response_len_ph)
+                    Q_lengths=self.response_len_ph, K_lengths=self.response_len_ph, attention_type='dot')
                 Hr_stack.append(Hr)
 
         # context part
@@ -151,7 +154,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
                 with tf.variable_scope('self_stack_' + str(index), reuse=True):
                     Hu = layers.block(
                         Hu, Hu, Hu,
-                        Q_lengths=t_turn_length, K_lengths=t_turn_length)
+                        Q_lengths=t_turn_length, K_lengths=t_turn_length, attention_type='dot')
 
                     Hu_stack.append(Hu)
 
@@ -163,23 +166,23 @@ class DAMNetwork(TensorflowBaseMatchingModel):
                     try:
                         t_a_r = layers.block(
                             Hu_stack[index], Hr_stack[index], Hr_stack[index],
-                            Q_lengths=t_turn_length, K_lengths=self.response_len_ph)
+                            Q_lengths=t_turn_length, K_lengths=self.response_len_ph, attention_type='dot')
                     except ValueError:
                         tf.get_variable_scope().reuse_variables()
                         t_a_r = layers.block(
                             Hu_stack[index], Hr_stack[index], Hr_stack[index],
-                            Q_lengths=t_turn_length, K_lengths=self.response_len_ph)
+                            Q_lengths=t_turn_length, K_lengths=self.response_len_ph, attention_type='dot')
 
                 with tf.variable_scope('r_attend_t_' + str(index)):
                     try:
                         r_a_t = layers.block(
                             Hr_stack[index], Hu_stack[index], Hu_stack[index],
-                            Q_lengths=self.response_len_ph, K_lengths=t_turn_length)
+                            Q_lengths=self.response_len_ph, K_lengths=t_turn_length, attention_type='dot')
                     except ValueError:
                         tf.get_variable_scope().reuse_variables()
                         r_a_t = layers.block(
                             Hr_stack[index], Hu_stack[index], Hu_stack[index],
-                            Q_lengths=self.response_len_ph, K_lengths=t_turn_length)
+                            Q_lengths=self.response_len_ph, K_lengths=t_turn_length, attention_type='dot')
 
                 t_a_r_stack.append(t_a_r)
                 r_a_t_stack.append(r_a_t)
@@ -219,7 +222,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
             self.learning_rate = tf.train.exponential_decay(
                 initial_learning_rate,
                 global_step=self.global_step,
-                decay_steps=600,
+                decay_steps=self.decay_steps,
                 decay_rate=0.9,
                 staircase=True)
 
