@@ -31,17 +31,19 @@
     "pipe": [
       {
         "id": "classes_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "fit_on": [
           "y"
         ],
         "level": "token",
         "save_path": "YahooAnswers/models/yahoo_answers_classes.dict",
-        "load_path": "YahooAnswers/models/yahoo_answers_classes.dict"
+        "load_path": "YahooAnswers/models/yahoo_answers_classes.dict",
+        "in": "y",
+        "out": "y_ids"
       },
       {
         "id": "categories_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "fit_on": [
           "x_category"
         ],
@@ -51,7 +53,7 @@
       },
       {
         "id": "tops_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "fit_on": [
           "x_top"
         ],
@@ -82,24 +84,29 @@
         "spec": "https://tfhub.dev/google/elmo/2"
       },
       {
+        "in": "y_ids",
+        "out": "y_onehot",
+        "name": "one_hotter",
+        "id": "my_one_hotter",
+        "depth": "#classes_vocab.len"
+      },
+      {
         "in": [
           "x_title_descr_emb"
         ],
         "in_y": [
-          "y"
+          "y_onehot"
         ],
         "out": [
-          "y_labels",
-          "y_probas_dict"
+          "y_pred_probas"
         ],
         "main": true,
         "name": "keras_classification_model",
         "save_path": "YahooAnswers/models/model_v0",
         "load_path": "YahooAnswers/models/model_v0",
         "embedding_size": "#my_embedder.dim",
-        "classes": "#classes_vocab.keys()",
+        "n_classes": "#classes_vocab.len",
         "units_gru": 256,
-        "confident_threshold": 1,
         "optimizer": "Adam",
         "lear_rate": 0.001,
         "lear_rate_decay": 0.001,
@@ -112,20 +119,47 @@
         "dense_size": 100,
         "model_name": "gru_with_masking_model",
         "last_layer_activation": "softmax"
+      },
+      {
+        "in": "y_pred_probas",
+        "out": "y_pred_ids",
+        "name": "proba2labels",
+        "confident_threshold": 0.5
+      },
+      {
+        "in": "y_pred_ids",
+        "out": "y_pred_labels",
+        "ref": "classes_vocab"
+      },
+      {
+        "ref": "my_one_hotter",
+        "in": "y_pred_ids",
+        "out": "y_pred_onehot"
       }
     ],
     "out": [
-      "y_labels",
-      "y_probas_dict"
+      "y_pred_labels"
     ]
   },
   "train": {
     "epochs": 100,
     "batch_size": 64,
     "metrics": [
-      "classification_roc_auc",
-      "classification_accuracy",
-      "classification_f1"
+      {
+        "name": "sets_accuracy",
+        "inputs": [
+          "y",
+          "y_pred_labels"
+        ]
+      },
+      {
+        "name": "roc_auc",
+        "inputs": [
+          "y_onehot",
+          "y_pred_probas"
+        ]
+      },
+      "f1_macro"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,

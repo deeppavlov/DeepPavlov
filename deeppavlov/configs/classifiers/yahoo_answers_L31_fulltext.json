@@ -27,8 +27,10 @@
           "y"
         ],
         "level": "token",
-        "save_path": "YahooAnswers/models/model_v15/yahoo_answers_classes.dict",
-        "load_path": "YahooAnswers/models/model_v15/yahoo_answers_classes.dict"
+        "save_path": "YahooAnswers/models/model_v4/yahoo_answers_classes.dict",
+        "load_path": "YahooAnswers/models/model_v4/yahoo_answers_classes.dict",
+        "in": "y",
+        "out": "y_ids"
       },
       {
         "in": [
@@ -38,14 +40,13 @@
           "x_prep"
         ],
         "name": "dirty_comments_preprocessor",
-        "remove_punctuation": true
+        "remove_punctuation": false
       },
       {
         "in": "x_prep",
         "out": "x_tok",
         "id": "my_tokenizer",
-        "name": "nltk_tokenizer",
-        "tokenizer": "wordpunct_tokenize"
+        "name": "nltk_moses_tokenizer"
       },
       {
         "in": [
@@ -63,26 +64,31 @@
         "spec": "https://tfhub.dev/google/elmo/2"
       },
       {
+        "in": "y_ids",
+        "out": "y_onehot",
+        "name": "one_hotter",
+        "id": "my_one_hotter",
+        "depth": "#classes_vocab.len"
+      },
+      {
         "in": [
           "x_emb"
         ],
         "in_y": [
-          "y"
+          "y_onehot"
         ],
         "out": [
-          "y_labels",
-          "y_probas_dict"
+          "y_pred_probas"
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "YahooAnswers/models/model_v15/model",
-        "load_path": "YahooAnswers/models/model_v15/model",
+        "save_path": "YahooAnswers/models/model_v4/model",
+        "load_path": "YahooAnswers/models/model_v4/model",
         "embedding_size": "#my_embedder.dim",
-        "classes": "#classes_vocab.keys()",
-        "units_gru": 256,
-        "confident_threshold": 1,
+        "n_classes": "#classes_vocab.len",
+        "units_gru": 512,
         "optimizer": "Adam",
-        "lear_rate": 0.01,
+        "lear_rate": 0.001,
         "lear_rate_decay": 0.001,
         "loss": "categorical_crossentropy",
         "text_size": 100,
@@ -94,11 +100,26 @@
         "model_name": "gru_with_masking_model",
         "last_layer_activation": "softmax",
         "restore_lr": false
+      },
+      {
+        "in": "y_pred_probas",
+        "out": "y_pred_ids",
+        "name": "proba2labels",
+        "confident_threshold": 0.5
+      },
+      {
+        "in": "y_pred_ids",
+        "out": "y_pred_labels",
+        "ref": "classes_vocab"
+      },
+      {
+        "ref": "my_one_hotter",
+        "in": "y_pred_ids",
+        "out": "y_pred_onehot"
       }
     ],
     "out": [
-      "y_labels",
-      "y_probas_dict"
+      "y_pred_labels"
     ]
   },
   "train": {
@@ -106,20 +127,20 @@
     "batch_size": 128,
     "metrics": [
       {
-        "name": "classification_roc_auc",
-        "inputs": [
-          "y",
-          "y_probas_dict"
-        ]
-      },
-      {
         "name": "sets_accuracy",
         "inputs": [
           "y",
-          "y_labels"
+          "y_pred_labels"
         ]
       },
-      "classification_f1"
+      {
+        "name": "roc_auc",
+        "inputs": [
+          "y_onehot",
+          "y_pred_probas"
+        ]
+      },
+      "f1_macro"
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,
@@ -127,7 +148,7 @@
     "show_examples": false,
     "validate_best": true,
     "test_best": true,
-    "tensorboard_log_dir": "YahooAnswers/models/model_v15/"
+    "tensorboard_log_dir": "YahooAnswers/models/model_v4/"
   },
   "metadata": {
     "requirements": [
