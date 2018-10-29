@@ -21,8 +21,9 @@ import shutil
 import tarfile
 import zipfile
 from hashlib import md5
+from itertools import chain
 from pathlib import Path
-from typing import List, Union
+from typing import List, Union, Iterable
 from urllib.parse import urlparse
 
 import numpy as np
@@ -254,22 +255,54 @@ def tokenize_reg(s):
     return re.findall(re.compile(pattern), s)
 
 
-def zero_pad(batch, dtype=np.float32):
-    if len(batch) == 1 and len(batch[0]) == 0:
-        return np.array([], dtype=dtype)
-    batch_size = len(batch)
-    max_len = max(len(utterance) for utterance in batch)
-    if isinstance(batch[0][0], (int, np.int)):
-        padded_batch = np.zeros([batch_size, max_len], dtype=np.int32)
-        for n, utterance in enumerate(batch):
-            padded_batch[n, :len(utterance)] = utterance
+def get_dimensions(batch):
+    """"""
+    if len(batch) > 0 and isinstance(batch[0], Iterable) and not isinstance(batch, str):
+        max_list = [get_dimensions(sample) for sample in batch]
+        max_depth = max(len(m) for m in max_list)
+        max_lens = np.zeros(max_depth, dtype=np.int32)
+        for m in max_list:
+            lm = len(m)
+            max_lens[:lm]= np.maximum(max_lens[:lm], m)
+        return [len(batch)] + list(max_lens)
     else:
-        n_features = len(batch[0][0])
-        padded_batch = np.zeros([batch_size, max_len, n_features], dtype=dtype)
-        for n, utterance in enumerate(batch):
-            for k, token_features in enumerate(utterance):
-                padded_batch[n, k] = token_features
-    return padded_batch
+        return [len(batch)]
+
+
+def zero_pad(batch, zp_batch=None, dtype=np.float32, padding=0):
+    if zp_batch is None:
+        dims = get_dimensions(batch)
+        zp_batch = np.ones(dims, dtype=dtype) * padding
+    if zp_batch.ndim == 1:
+        zp_batch[:len(batch)] = batch
+    else:
+        for b, zp in zip(batch, zp_batch):
+            zero_pad(b, zp)
+    return zp_batch
+
+
+def is_str_batch(batch):
+    while True:
+        if isinstance(batch, Iterable):
+            if isinstance(batch, str):
+                return True
+            elif isinstance(batch, np.ndarray):
+                return batch.dtype.kind == 'U'
+            else:
+                if len(batch) > 0:
+                    batch = batch[0]
+                else:
+                    return True
+        else:
+            return False
+
+
+def flatten_str_batch(batch):
+    if isinstance(batch, str):
+        return [batch]
+    else:
+        return chain(*[flatten_str_batch(sample) for sample in batch])
+
 
 def zero_pad_truncate(batch, max_len, pad='post', trunc='post', dtype=np.float32):
     batch_size = len(batch)
