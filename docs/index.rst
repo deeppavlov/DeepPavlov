@@ -21,6 +21,7 @@ Welcome to DeepPavlov's documentation!
    :maxdepth: 1
    :caption: Components
 
+   Data Processors <components/data_processors>
    Context Question Answering <components/squad>
    Classification <components/classifiers>
    Morphological Tagger <components/morphotagger>

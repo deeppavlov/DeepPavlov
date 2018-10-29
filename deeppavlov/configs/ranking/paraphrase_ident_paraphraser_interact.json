@@ -41,9 +41,7 @@
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "paraphraser_embeddings/ft_native_300_ru_wiki_lenta_lower_case.bin",
-          "save_path": "paraphraser_embeddings/ft_native_300_ru_wiki_lenta_lower_case.bin",
-          "dim": 300
+          "load_path": "paraphraser_embeddings/ft_native_300_ru_wiki_lenta_lower_case.bin"
         }
       },
       {
