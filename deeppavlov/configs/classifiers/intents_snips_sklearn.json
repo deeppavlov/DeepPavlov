@@ -32,8 +32,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "classifiers/intents_snips_sklearn_v7/classes.dict",
-        "load_path": "classifiers/intents_snips_sklearn_v7/classes.dict",
+        "save_path": "classifiers/intents_snips_sklearn_v9/classes.dict",
+        "load_path": "classifiers/intents_snips_sklearn_v9/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -50,8 +50,8 @@
         ],
         "id": "tfidf_vec",
         "name": "sklearn_component",
-        "save_path": "classifiers/intents_snips_sklearn_v7/tfidf.pkl",
-        "load_path": "classifiers/intents_snips_sklearn_v7/tfidf.pkl",
+        "save_path": "classifiers/intents_snips_sklearn_v9/tfidf.pkl",
+        "load_path": "classifiers/intents_snips_sklearn_v9/tfidf.pkl",
         "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
         "infer_method": "transform",
         "lowercase": true,
@@ -76,8 +76,8 @@
         ],
         "id": "selector",
         "name": "sklearn_component",
-        "save_path": "classifiers/intents_snips_sklearn_v7/selectkbest.pkl",
-        "load_path": "classifiers/intents_snips_sklearn_v7/selectkbest.pkl",
+        "save_path": "classifiers/intents_snips_sklearn_v9/selectkbest.pkl",
+        "load_path": "classifiers/intents_snips_sklearn_v9/selectkbest.pkl",
         "model_class": "sklearn.feature_selection:SelectKBest",
         "infer_method": "transform",
         "score_func": "sklearn.feature_selection:chi2",
@@ -95,8 +95,8 @@
         ],
         "id": "pca",
         "name": "sklearn_component",
-        "save_path": "classifiers/intents_snips_sklearn_v7/pca.pkl",
-        "load_path": "classifiers/intents_snips_sklearn_v7/pca.pkl",
+        "save_path": "classifiers/intents_snips_sklearn_v9/pca.pkl",
+        "load_path": "classifiers/intents_snips_sklearn_v9/pca.pkl",
         "model_class": "sklearn.decomposition:PCA",
         "infer_method": "transform",
         "n_components": 300
@@ -140,8 +140,8 @@
         ],
         "name": "sklearn_component",
         "main": true,
-        "save_path": "classifiers/intents_snips_sklearn_v7/model.pkl",
-        "load_path": "classifiers/intents_snips_sklearn_v7/model.pkl",
+        "save_path": "classifiers/intents_snips_sklearn_v9/model.pkl",
+        "load_path": "classifiers/intents_snips_sklearn_v9/model.pkl",
         "model_class": "sklearn.neighbors:KNeighborsClassifier",
         "infer_method": "predict",
         "ensure_list_output": true
@@ -187,7 +187,7 @@
         "subdir": "snips"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_snips_sklearn_v7.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_snips_sklearn_v9.tar.gz",
         "subdir": "classifiers"
       },
       {

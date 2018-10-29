@@ -22,8 +22,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "classifiers/topic_ag_news_v1/classes.dict",
-        "load_path": "classifiers/topic_ag_news_v1/classes.dict",
+        "save_path": "classifiers/topic_ag_news_v2/classes.dict",
+        "load_path": "classifiers/topic_ag_news_v2/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -68,8 +68,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/topic_ag_news_v1/model",
-        "load_path": "classifiers/topic_ag_news_v1/model",
+        "save_path": "classifiers/topic_ag_news_v2/model",
+        "load_path": "classifiers/topic_ag_news_v2/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -79,8 +79,8 @@
         ],
         "filters_cnn": 256,
         "optimizer": "Adam",
-        "lear_rate": 0.01,
-        "lear_rate_decay": 0.1,
+        "learning_rate": 0.01,
+        "learning_rate_decay": 0.1,
         "loss": "binary_crossentropy",
         "text_size": 50,
         "coef_reg_cnn": 1e-4,
@@ -140,7 +140,7 @@
         "subdir": "embeddings"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/topic_ag_news_v1.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/topic_ag_news_v2.tar.gz",
         "subdir": "classifiers"
       }
     ]
