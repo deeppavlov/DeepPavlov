@@ -11,10 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from itertools import chain
 from typing import List
 from sklearn.svm import SVC
 import pickle
+from pathlib import Path
 
 
 from deeppavlov.core.common.log import get_logger
@@ -30,11 +32,13 @@ class SVMTagger(Estimator):
         ``SVM`` (Support Vector Machines) classifier for tagging sequences
     """
     def __init__(self, return_probabilities: bool = False, kernel: str = 'rbf', seed=42, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
         self.classifier = None
         self.return_probabilities = return_probabilities
         self._kernel = kernel
         self._seed = seed
-        super().__init__(*args, **kwargs)
+
+        self.load()
 
     def fit(self, tokens: List[List[str]], tags: List[List[int]], *args, **kwargs):
         tokens = list(chain(*tokens))
@@ -48,7 +52,7 @@ class SVMTagger(Estimator):
     def __call__(self, token_vectors_batch, *args, **kwargs):
         lens = [len(utt) for utt in token_vectors_batch]
         token_vectors_list = list(chain(*token_vectors_batch))
-        predictions = self.classifier(token_vectors_list)
+        predictions = self.classifier.predict(token_vectors_list)
         y = []
         cl = 0
         for l in lens:
@@ -63,5 +67,6 @@ class SVMTagger(Estimator):
 
     def load(self, *args, **kwargs):
         path = str(self.load_path.resolve())
-        with open(path, 'rb') as f:
-            self.classifier = pickle.load(f)
+        if Path(path).exists():
+            with open(path, 'rb') as f:
+                self.classifier = pickle.load(f)
