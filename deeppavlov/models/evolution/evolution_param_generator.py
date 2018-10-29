@@ -175,10 +175,10 @@ class ParamsEvolution(ParamsSearch):
                 # re-init learning rate with the final one (works for KerasModel)
                 next_population[i] = self.insert_value_or_dict_into_config(
                     next_population[i],
-                    self.main_model_path + ["lear_rate"],
+                    self.main_model_path + ["learning_rate"],
                     read_json(str(Path(self.get_value_from_config(next_population[i],
                                                                   self.main_model_path + ["save_path"])
-                                       ).parent.joinpath("model_opt.json")))["final_lear_rate"])
+                                       ).parent.joinpath("model_opt.json")))["final_learning_rate"])
             except:
                 pass
 
