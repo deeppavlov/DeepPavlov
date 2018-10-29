@@ -15,7 +15,7 @@
 import inspect
 from typing import Dict
 
-from deeppavlov.core.commands.utils import expand_path, get_deeppavlov_root, set_deeppavlov_root
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
@@ -72,12 +72,10 @@ def from_params(params: Dict, mode: str = 'infer', **kwargs) -> Component:
 
     elif 'config_path' in config_params:
         from deeppavlov.core.commands.infer import build_model
-        deeppavlov_root = get_deeppavlov_root()
         refs = _refs.copy()
         _refs.clear()
         config = read_json(expand_path(config_params['config_path']))
         model = build_model(config)
-        set_deeppavlov_root({'deeppavlov_root': deeppavlov_root})
         _refs.clear()
         _refs.update(refs)
         return model
