@@ -27,7 +27,7 @@ from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.models.evolution.evolution_param_generator import ParamsEvolution
 from deeppavlov.core.common.file import read_json, save_json, find_config
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.commands.utils import set_deeppavlov_root, expand_path
+from deeppavlov.core.commands.utils import expand_path
 
 log = get_logger(__name__)
 
@@ -107,7 +107,6 @@ def main():
     evolve_metric = considered_metrics[0]
 
     # Create table variable for gathering results
-    set_deeppavlov_root(evolution.basic_config)
 
     expand_path(Path(evolution.get_value_from_config(
         evolution.basic_config, evolution.main_model_path + ["save_path"]))).mkdir(parents=True, exist_ok=True)

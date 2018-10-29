@@ -15,7 +15,7 @@
 from pathlib import Path
 from typing import Optional, Union
 
-from deeppavlov.core.commands.utils import set_deeppavlov_root, import_packages
+from deeppavlov.core.commands.utils import import_packages
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json, find_config
 from deeppavlov.core.common.log import get_logger
@@ -31,7 +31,6 @@ def build_model(config: Union[str, Path, dict], mode: str= 'infer',
     if isinstance(config, (str, Path)):
         config = find_config(config)
         config = read_json(config)
-    set_deeppavlov_root(config)
 
     if download:
         deep_download(config)

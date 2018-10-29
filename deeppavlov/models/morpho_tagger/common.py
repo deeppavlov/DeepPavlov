@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import List, Dict, Union, Optional
 
 from deeppavlov.core.commands.infer import build_model
-from deeppavlov.core.commands.utils import set_deeppavlov_root, expand_path
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import get_model
@@ -24,7 +24,6 @@ def predict_with_model(config_path: [Path, str]) -> List[Optional[List[str]]]:
 
     """
     config = read_json(config_path)
-    set_deeppavlov_root(config)
 
     reader_config = config['dataset_reader']
     reader = get_model(reader_config['name'])()
