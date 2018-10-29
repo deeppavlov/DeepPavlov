@@ -65,7 +65,7 @@ class NERFewShotIterator(DataLearningIterator):
         self.split(*args, **kwargs)
         self.data = {
             'train': self.train,
-            'valid': self.valid[:256],
+            'valid': self.valid,
             'test': self.test,
             'all': self.train + self.test + self.valid
         }
