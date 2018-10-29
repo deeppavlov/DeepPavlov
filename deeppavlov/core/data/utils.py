@@ -39,8 +39,11 @@ tqdm.monitor_interval = 0
 
 
 def get_download_token():
-    token_file = Path.home() / '.deeppavlov'
+    token_file = Path.home() / '.deeppavlov' / 'token'
     if not token_file.exists():
+        if token_file.parent.is_file():
+            token_file.parent.unlink()
+        token_file.parent.mkdir(parents=True, exist_ok=True)
         token_file.write_text(secrets.token_urlsafe(32), encoding='utf8')
 
     return token_file.read_text(encoding='utf8').strip()
