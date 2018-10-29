@@ -26,6 +26,7 @@ from deeppavlov.agents.processors.default_rich_content_processor import DefaultR
 from deeppavlov.core.agent import Agent
 from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.common.paths import get_configs_path
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
 from utils.server_utils.server import get_server_params, init_model
 
@@ -84,8 +85,7 @@ def start_alice_server(model_config_path, https=False, ssl_key=None, ssl_cert=No
     if not https:
         ssl_key = ssl_cert = None
 
-    server_config_dir = Path(__file__).parent
-    server_config_path = server_config_dir.parent / SERVER_CONFIG_FILENAME
+    server_config_path = get_configs_path() / SERVER_CONFIG_FILENAME
 
     server_params = get_server_params(server_config_path, model_config_path)
     host = server_params['host']
