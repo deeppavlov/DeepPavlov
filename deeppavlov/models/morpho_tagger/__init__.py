@@ -1,1 +1,1 @@
-from .tagger import MorphoTaggerWrapper
+from deeppavlov.core.models.keras_model import KerasWrapper

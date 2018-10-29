@@ -21,7 +21,7 @@ from deeppavlov.core.common.paths import get_configs_path, set_configs_path, set
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument("mode", help="select DeepPavlov configuration option", type=str, choices={'configs'})
+parser.add_argument("mode", help="select DeepPavlov configuration option", type=str, choices={'settings'})
 
 parser.add_argument("-p", "--path", default=None, help="set path", type=str)
 parser.add_argument("-d", "--default", action="store_true", help="return to defaults")
@@ -32,12 +32,12 @@ def main():
     args = parser.parse_args()
     path = args.path
 
-    if args.mode == 'configs':
+    if args.mode == 'settings':
         if args.default:
             set_configs_default()
         else:
             if not path:
-                print(f'Current DeepPavlov configs path: {get_configs_path()}')
+                print(f'Current DeepPavlov settings path: {get_configs_path()}')
             else:
                 path = Path(os.getcwd(), path).resolve()
                 set_configs_path(path)
