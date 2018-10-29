@@ -82,7 +82,7 @@
         "units_gru": 256,
         "confident_threshold": 1,
         "optimizer": "Adam",
-        "lear_rate": 0.001,
+        "lear_rate": 0.01,
         "lear_rate_decay": 0.001,
         "loss": "categorical_crossentropy",
         "text_size": 100,
@@ -93,7 +93,7 @@
         "dense_size": 100,
         "model_name": "gru_with_masking_model",
         "last_layer_activation": "softmax",
-        "restore_lr": true
+        "restore_lr": false
       }
     ],
     "out": [
