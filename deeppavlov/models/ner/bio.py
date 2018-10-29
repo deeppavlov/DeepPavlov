@@ -23,6 +23,9 @@ class BIOMarkupRestorer(Component):
     """
         Restores BIO markup for tags batch
     """
+    def __init__(self, *args, **kwargs):
+        pass
+
     @staticmethod
     def _convert_to_bio(tags):
 
