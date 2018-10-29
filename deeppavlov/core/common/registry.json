@@ -55,6 +55,7 @@
   "mpm_nn": "deeppavlov.models.ranking.mpm_siamese_network:MPMSiameseNetwork",
   "multi_squad_iterator": "deeppavlov.dataset_iterators.squad_iterator:MultiSquadIterator",
   "ner": "deeppavlov.models.ner.network:NerNetwork",
+  "ner_few_shot_iterator": "deeppavlov.dataset_iterators.ner_few_shot_iterator:NERFewShotIterator",
   "ner_svm": "deeppavlov.models.ner.svm:SVMTagger",
   "nltk_moses_tokenizer": "deeppavlov.models.tokenizers.nltk_moses_tokenizer:NLTKMosesTokenizer",
   "nltk_tokenizer": "deeppavlov.models.tokenizers.nltk_tokenizer:NLTKTokenizer",
