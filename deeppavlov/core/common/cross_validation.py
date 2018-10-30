@@ -13,35 +13,35 @@
 # limitations under the License.
 
 import shutil
-import numpy as np
-
-from pathlib import Path
-from sklearn.model_selection import KFold
 from collections import OrderedDict
-from typing import Union, Dict
+from pathlib import Path
 
+import numpy as np
+from sklearn.model_selection import KFold
+
+from deeppavlov.core.commands.train import train_evaluate_model_from_config, get_iterator_from_config, \
+    read_data_by_config
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.commands.train import train_evaluate_model_from_config, get_iterator_from_config
-from deeppavlov.core.commands.train import read_data_by_config
-
 from deeppavlov.core.common.params_search import ParamsSearch
-from deeppavlov.core.commands.utils import expand_path
 
 SAVE_PATH_ELEMENT_NAME = 'save_path'
 TEMP_DIR_FOR_CV = 'cv_tmp'
-
 log = get_logger(__name__)
 
 
 def change_savepath_for_model(config):
     params_helper = ParamsSearch()
+
     dirs_for_saved_models = set()
     for p in params_helper.find_model_path(config, SAVE_PATH_ELEMENT_NAME):
         p.append(SAVE_PATH_ELEMENT_NAME)
         save_path = Path(params_helper.get_value_from_config(config, p))
         new_save_path = save_path.parent / TEMP_DIR_FOR_CV / save_path.name
+
         dirs_for_saved_models.add(expand_path(new_save_path.parent))
+
         config = params_helper.insert_value_or_dict_into_config(config, p, str(new_save_path))
 
     return config, dirs_for_saved_models
@@ -59,6 +59,7 @@ def create_dirs_to_save_models(dirs_for_saved_models):
 
 def generate_train_valid(data, n_folds=5, is_loo=False):
     all_data = data['train'] + data['valid']
+
     if is_loo:
         # for Leave One Out
         for i in range(len(all_data)):
@@ -67,6 +68,7 @@ def generate_train_valid(data, n_folds=5, is_loo=False):
                 'test': data['test']
             }
             data_i['valid'] = [data_i['train'].pop(i)]
+
             yield data_i
     else:
         # for Cross Validation
@@ -77,6 +79,7 @@ def generate_train_valid(data, n_folds=5, is_loo=False):
                 'valid': [all_data[i] for i in valid_index],
                 'test': data['test']
             }
+
             yield data_i
 
 
@@ -88,9 +91,7 @@ def calc_cv_score(config=Union[Dict, str], n_folds=5, is_loo=False) -> OrderedDi
 
     config, dirs_for_saved_models = change_savepath_for_model(config)
 
-    target_metrics = config['train']['metrics']
-    cv_score = OrderedDict((k, []) for k in target_metrics)
-
+    cv_score = OrderedDict()
     for data_i in generate_train_valid(data, n_folds=n_folds, is_loo=is_loo):
         iterator = get_iterator_from_config(config, data_i)
         create_dirs_to_save_models(dirs_for_saved_models)
@@ -98,6 +99,8 @@ def calc_cv_score(config=Union[Dict, str], n_folds=5, is_loo=False) -> OrderedDi
         delete_dir_for_saved_models(dirs_for_saved_models)
 
         for key, value in score['valid'].items():
+            if key not in cv_score:
+                cv_score[key] = []
             cv_score[key].append(value)
 
     for key, value in cv_score.items():

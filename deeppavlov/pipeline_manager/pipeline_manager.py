@@ -58,9 +58,9 @@ class PipelineManager:
 
     Args:
         config_path: path to config file.
-        exp_name: name of the experiment.
 
     Attributes:
+        exp_name: name of the experiment.
         date: date of the experiment.
         info: some additional information that you want to add to the log, the content of the dictionary
               does not affect the algorithm
@@ -75,7 +75,7 @@ class PipelineManager:
         plot: boolean trigger, which determines whether to draw a graph of results or not
         pipeline_generator: A special class that generates configs for training.
     """
-    def __init__(self, config_path: Union[str, Dict], exp_name: str):
+    def __init__(self, config_path: Union[str, Dict]):
         """
         Initialize logger, read input args, builds a directory tree, initialize date.
         """
@@ -84,7 +84,7 @@ class PipelineManager:
         else:
             self.exp_config = config_path
 
-        self.exp_name = exp_name
+        self.exp_name = self.exp_config['enumerate'].get('exp_name', 'experiment')
         self.date = self.exp_config['enumerate'].get('date', datetime.now().strftime('%Y-%m-%d'))
         self.info = self.exp_config['enumerate'].get('info')
         self.root = self.exp_config['enumerate'].get('root', 'download/experiments/')
@@ -141,7 +141,8 @@ class PipelineManager:
         if self.use_all_gpus:
             if self.max_num_workers_ is None:
                 self.available_gpu = get_available_gpus(gpu_fraction=self.memory_fraction)
-                self.available_gpu = list(set(self.available_gpu) & set(visible_gpu))
+                if len(visible_gpu) != 0:
+                    self.available_gpu = list(set(self.available_gpu) & set(visible_gpu))
 
                 if len(self.available_gpu) == 0:
                     raise ValueError("GPU with numbers: ({}) are busy.".format(set(visible_gpu)))
@@ -157,14 +158,16 @@ class PipelineManager:
                 if self.max_num_workers_ > gpu_num:
                     self.max_num_workers = gpu_num
                     self.available_gpu = get_available_gpus(gpu_fraction=self.memory_fraction)
-                    self.available_gpu = list(set(self.available_gpu) & set(visible_gpu))
+                    if len(visible_gpu) != 0:
+                        self.available_gpu = list(set(self.available_gpu) & set(visible_gpu))
 
                     if len(self.available_gpu) == 0:
                         raise ValueError("GPU with numbers: ({}) are busy.".format(set(visible_gpu)))
                 else:
                     self.available_gpu = get_available_gpus(num_gpus=self.max_num_workers_,
                                                             gpu_fraction=self.memory_fraction)
-                    self.available_gpu = list(set(self.available_gpu) & set(visible_gpu))
+                    if len(visible_gpu) != 0:
+                        self.available_gpu = list(set(self.available_gpu) & set(visible_gpu))
 
                     if len(self.available_gpu) == 0:
                         raise ValueError("GPU with numbers: ({}) are busy.".format(set(visible_gpu)))
@@ -172,7 +175,9 @@ class PipelineManager:
                     self.max_num_workers = len(self.available_gpu)
 
         elif self.use_multi_gpus:
-            self.use_multi_gpus = list(set(self.use_multi_gpus) & set(visible_gpu))
+            if len(visible_gpu) != 0:
+                self.use_multi_gpus = list(set(self.use_multi_gpus) & set(visible_gpu))
+
             if len(self.use_multi_gpus) == 0:
                 raise ValueError("GPU numbers in 'use_multi_gpus' and 'CUDA_VISIBLE_DEVICES' "
                                  "has not intersections".format(set(visible_gpu)))

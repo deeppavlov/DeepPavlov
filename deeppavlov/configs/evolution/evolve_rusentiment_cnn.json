@@ -98,13 +98,13 @@
           "discrete": true
         },
         "optimizer": "Adam",
-        "lear_rate": {
+        "learning_rate": {
           "evolve_range": [
             1e-4,
             1e-1
           ]
         },
-        "lear_rate_decay": {
+        "learning_rate_decay": {
           "evolve_range": [
             1e-6,
             1e-2

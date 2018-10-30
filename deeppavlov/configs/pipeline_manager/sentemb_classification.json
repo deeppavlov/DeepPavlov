@@ -46,32 +46,23 @@
           "out": ["x_vec"],
           "name": "elmo",
           "component_name": "ELMO_1024_7",
-          "elmo_output_names": ["elmo"],
+          "elmo_output_names": ["default"],
           "mini_batch_size": 32,
           "cache": true,
-          "spec": "/home/kuznetsov/models_env/ruwiki_pp_1.0_elmo/models/2018-06-09-16:38:34/hubs/sber-faq_epoches_n_7"
+          "spec": "embeddings/sber-faq_epoches_n_7"
         }
       ],
       [
         {
           "in": ["x_vec"],
-          "out": "avr_x",
-          "name": "avr_emb",
-          "id": "tf-idf_average",
-          "component_name": "Simple_avr"
-        }
-      ],
-      [
-        {
-          "in": ["avr_x"],
           "out": ["y_pred_probas"],
-          "fit_on": ["avr_x", "y_ids"],
+          "fit_on": ["x_vec", "y_ids"],
           "name": "sklearn_component",
           "component_name": "Log Reg",
           "main": true,
           "save_path": "linm/checkpoints/logreg.pkl",
           "load_path": "linm/checkpoints/logreg.pkl",
-          "model_name": "sklearn.linear_model:LogisticRegression",
+          "model_class": "sklearn.linear_model:LogisticRegression",
           "infer_method": "predict_proba",
           "warm_start": false,
           "penalty": "l1",
@@ -82,15 +73,15 @@
           "solver": {"search_choice": ["liblinear", "saga"]}
         },
         {
-          "in": ["avr_x"],
+          "in": ["x_vec"],
           "out": ["y_pred_probas"],
-          "fit_on": ["avr_x", "y_ids"],
+          "fit_on": ["x_vec", "y_ids"],
           "name": "sklearn_component",
           "component_name": "Log Reg",
           "main": true,
           "save_path": "linm/checkpoints/logreg.pkl",
           "load_path": "linm/checkpoints/logreg.pkl",
-          "model_name": "sklearn.linear_model:LogisticRegression",
+          "model_class": "sklearn.linear_model:LogisticRegression",
           "infer_method": "predict_proba",
           "warm_start": false,
           "penalty": "l2",
@@ -124,15 +115,15 @@
   "train": {
     "metrics": [
       {
-        "name": "simple_f1_macro",
+        "name": "f1_macro",
         "inputs": ["y", "y_pred_labels"]
       },
       {
-        "name": "simple_accuracy",
+        "name": "sets_accuracy",
         "inputs": ["y", "y_pred_labels"]
       },
       {
-        "name": "simple_f1_weighted",
+        "name": "f1_weighted",
         "inputs": ["y", "y_pred_labels"]
       }
     ],
@@ -141,9 +132,8 @@
     "test_best": true
   },
   "enumerate": {
-    "date": null,
-    "info": null,
-    "root": "./experiments/",
+    "exp_name": "lin_avr_clf",
+    "root": "./download/experiments/",
     "do_test": false,
     "cross_val": false,
     "k_fold": 5,
@@ -154,6 +144,7 @@
     "multiprocessing": true,
     "max_num_workers": null,
     "use_all_gpus": true,
-    "use_multi_gpus": null
+    "use_multi_gpus": null,
+    "gpu_memory_fraction": 1.0
   }
 }

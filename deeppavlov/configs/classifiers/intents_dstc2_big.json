@@ -21,8 +21,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "classifiers/intents_dstc2_v5/classes.dict",
-        "load_path": "classifiers/intents_dstc2_v5/classes.dict",
+        "save_path": "classifiers/intents_dstc2_v7/classes.dict",
+        "load_path": "classifiers/intents_dstc2_v7/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -60,8 +60,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/intents_dstc2_v5/model",
-        "load_path": "classifiers/intents_dstc2_v5/model",
+        "save_path": "classifiers/intents_dstc2_v7/model",
+        "load_path": "classifiers/intents_dstc2_v7/model",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "n_classes": "#classes_vocab.len",
@@ -72,8 +72,8 @@
         ],
         "filters_cnn": 512,
         "optimizer": "Adam",
-        "lear_rate": 0.1,
-        "lear_rate_decay": 0.1,
+        "learning_rate": 0.1,
+        "learning_rate_decay": 0.1,
         "loss": "binary_crossentropy",
         "text_size": 15,
         "coef_reg_cnn": 1e-4,
@@ -144,7 +144,7 @@
         "subdir": "embeddings"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_dstc2_v5.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_dstc2_v7.tar.gz",
         "subdir": "classifiers"
       }
     ]
