@@ -101,14 +101,10 @@ class TensorflowBaseMatchingModel(TFModel):
                     return ["Error! It is not intended to use the model in the interact mode."]
                 if len(batch_buffer_context) != 0:
                     feed_dict = {
-                        self.utterance_ph: np.array(
-                            batch_buffer_context[i * self.batch_size:(i + 1) * self.batch_size]),
-                        self.all_utterance_len_ph: np.array(
-                            batch_buffer_context_len[i * self.batch_size:(i + 1) * self.batch_size]),
-                        self.response_ph: np.array(
-                            batch_buffer_response[i * self.batch_size:(i + 1) * self.batch_size]),
-                        self.response_len_ph: np.array(
-                            batch_buffer_response_len[i * self.batch_size:(i + 1) * self.batch_size])
+                        self.utterance_ph: np.array(batch_buffer_context),
+                        self.all_utterance_len_ph: np.array(batch_buffer_context_len),
+                        self.response_ph: np.array(batch_buffer_response),
+                        self.response_len_ph: np.array(batch_buffer_response_len)
                     }
                     yp = self.sess.run(self.y_pred, feed_dict=feed_dict)
                     y_pred += list(yp[:, 1])
@@ -190,14 +186,10 @@ class TensorflowBaseMatchingModel(TFModel):
                     return ["Error! It is not intended to use the model in the interact mode."]
                 if len(batch_buffer_context) != 0:
                     feed_dict = {
-                        self.utterance_ph: np.array(
-                            batch_buffer_context[i * self.batch_size:(i + 1) * self.batch_size]),
-                        self.all_utterance_len_ph: np.array(
-                            batch_buffer_context_len[i * self.batch_size:(i + 1) * self.batch_size]),
-                        self.response_ph: np.array(
-                            batch_buffer_response[i * self.batch_size:(i + 1) * self.batch_size]),
-                        self.response_len_ph: np.array(
-                            batch_buffer_response_len[i * self.batch_size:(i + 1) * self.batch_size]),
+                        self.utterance_ph: np.array(batch_buffer_context),
+                        self.all_utterance_len_ph: np.array(batch_buffer_context_len),
+                        self.response_ph: np.array(batch_buffer_response),
+                        self.response_len_ph: np.array(batch_buffer_response_len),
                         self.y_true: np.array(y)
                     }
                     loss, _ = self.sess.run([self.loss, self.train_op], feed_dict=feed_dict)
