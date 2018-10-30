@@ -39,7 +39,7 @@ log = get_logger(__name__)
 Metric = namedtuple('Metric', ['name', 'fn', 'inputs'])
 
 
-def _parse_metrics(metrics: Union[str, dict], in_y: List[str], out_vars: List[str]) -> List[Metric]:
+def _parse_metrics(metrics: List[Union[str, dict]], in_y: List[str], out_vars: List[str]) -> List[Metric]:
     metrics_functions = []
     for metric in metrics:
         if isinstance(metric, str):
