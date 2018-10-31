@@ -14,7 +14,7 @@ from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
 ```
 
-Create skills as pre-defined responses for a user's input containing specific keywords. Every skill returns response and confidence.
+Create skills as pre-defined responses for a user's input containing specific keywords or matching regexps. Every skill returns response and confidence.
 ```python
 hello = PatternMatchingSkill(responses=['Hello world!'], patterns=["hi", "hello", "good day"])
 bye = PatternMatchingSkill(['Goodbye world!', 'See you around'], patterns=["bye", "chao", "see you"])
@@ -31,7 +31,7 @@ Give the floor to the HelloBot!
 print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 ```
 
-[Jupyther notebook with HelloBot example.](docs/intro/hello_bot.ipynb)
+[Jupyther notebook with HelloBot example.](https://colab.research.google.com/github/deepmipt/DeepPavlov/blob/master/docs/intro/hello_bot.ipynb)
 
 
 # Features
