@@ -66,7 +66,16 @@ def init_bot_for_model(agent: Agent, token: str, model_name: str):
     bot.polling()
 
 
-def interact_model_by_telegram(config_path, token):
+def interact_model_by_telegram(config_path, token=None):
+    server_config_path = Path(get_configs_path(), SERVER_CONFIG_FILENAME)
+    server_config = read_json(server_config_path)
+    token = token if token else server_config['telegram_defaults']['token']
+    if not token:
+        e = ValueError('Telegram token required: initiate -t param or telegram_defaults/token '
+                       'in server configuration file')
+        log.error(e)
+        raise e
+
     config = read_json(config_path)
     model = build_model_from_config(config)
     model_name = type(model.get_main_component()).__name__
