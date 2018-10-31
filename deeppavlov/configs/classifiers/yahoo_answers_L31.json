@@ -1,17 +1,12 @@
 {
   "dataset_reader": {
     "name": "basic_classification_reader",
-    "x": [
-      "Title",
-      "Description",
-      "FullText",
-      "Category",
-      "Top"
-    ],
+    "x": "FullText",
     "y": "Label",
     "data_path": "./YahooAnswers/yahoo_answers_data/",
     "train": "train.csv",
-    "valid": "valid.csv"
+    "valid": "valid.csv",
+    "test": "test.csv"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator",
@@ -19,11 +14,7 @@
   },
   "chainer": {
     "in": [
-      "x_title",
-      "x_description",
-      "x_fulltext",
-      "x_category",
-      "x_top"
+      "x"
     ],
     "in_y": [
       "y"
@@ -36,30 +27,10 @@
           "y"
         ],
         "level": "token",
-        "save_path": "YahooAnswers/models/yahoo_answers_classes.dict",
-        "load_path": "YahooAnswers/models/yahoo_answers_classes.dict",
+        "save_path": "YahooAnswers/models/model_v7/yahoo_answers_classes.dict",
+        "load_path": "YahooAnswers/models/model_v7/yahoo_answers_classes.dict",
         "in": "y",
         "out": "y_ids"
-      },
-      {
-        "id": "categories_vocab",
-        "name": "simple_vocab",
-        "fit_on": [
-          "x_category"
-        ],
-        "level": "token",
-        "save_path": "YahooAnswers/models/yahoo_answers_categories.dict",
-        "load_path": "YahooAnswers/models/yahoo_answers_categories.dict"
-      },
-      {
-        "id": "tops_vocab",
-        "name": "simple_vocab",
-        "fit_on": [
-          "x_top"
-        ],
-        "level": "token",
-        "save_path": "YahooAnswers/models/yahoo_answers_tops.dict",
-        "load_path": "YahooAnswers/models/yahoo_answers_tops.dict"
       },
       {
         "in": "x_fulltext",
@@ -102,8 +73,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "YahooAnswers/models/model_v0",
-        "load_path": "YahooAnswers/models/model_v0",
+        "save_path": "YahooAnswers/models/model_v7",
+        "load_path": "YahooAnswers/models/model_v7",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "units_gru": 256,
