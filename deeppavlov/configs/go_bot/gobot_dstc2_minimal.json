@@ -12,11 +12,15 @@
     "out": ["y_predicted"],
     "pipe": [
       {
+        "class": "deeppavlov.models.go_bot.wrapper:DialogComponentWrapper",
+        "component": { "name": "split_tokenizer" },
+        "in": ["x"],
+        "out": ["x_tokens"]
+      },
+      {
         "id": "token_vocab",
-        "fit_on": ["x"],
-        "name": "default_vocab",
-        "level": "token",
-        "tokenizer": { "name": "split_tokenizer" },
+        "name": "simple_vocab",
+        "fit_on": ["x_tokens"],
         "save_path": "vocabs/token.dict",
         "load_path": "vocabs/token.dict"
       },
@@ -44,7 +48,7 @@
         "use_action_mask": false,
         "network_parameters": {
           "learning_rate": 0.005,
-          "dropout_rate": 0.9,
+          "dropout_rate": 0.1,
           "l2_reg_coef": 1e-4,
           "hidden_size": 128,
           "dense_size": 64

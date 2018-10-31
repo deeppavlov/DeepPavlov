@@ -67,6 +67,8 @@ def main():
     config = config_init.copy()
     data = read_data_by_config(config)
     target_metric = config_init['train']['metrics'][0]
+    if isinstance(target_metric, dict):
+        target_metric = target_metric['name']
 
     # get all params for search
     param_paths = list(params_helper.find_model_path(config, 'search_choice'))
