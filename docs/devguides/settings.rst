@@ -8,7 +8,7 @@ DeepPavlov provides some tools to facilitate its usage (e.g. dialog logging, set
 
 Most of DeepPavlov settings are located in settings files, which in turn are located in settings folder. Default settings folder location is ``utils/settings`` .
 
-You can get full path to settings folder with ``python -m deeppavlov.settings settings``. Also you can move it with with ``python -m deeppavlov.settings settings -p <new/configs/dir/path>`` (all your configuration settings will be preserved) or move it to default location (``utils/settings``) with `python -m deeppavlov.settings settings -d` (all your configuration settings will be RESET to default ones).
+You can get full path to settings folder with ``python -m deeppavlov.settings settings``. Also you can move it with with ``python -m deeppavlov.settings settings -p <new/configs/dir/path>`` (all your configuration settings will be preserved) or move it to default location (``utils/settings``) with ``python -m deeppavlov.settings settings -d`` (all your configuration settings will be RESET to default ones).
 
 2. Dialog logging
 -----------------
