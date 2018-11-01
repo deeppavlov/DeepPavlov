@@ -20,13 +20,13 @@ from deeppavlov.core.common.file import read_json
 _T = TypeVar('_T', str, float, bool, list, dict)
 
 
-def _parse_item(item: _T, variables: Dict[str, _T]) -> _T:
+def _parse_config_property(item: _T, variables: Dict[str, Union[str, Path, float, bool, None]]) -> _T:
     if isinstance(item, str):
         return item.format(**variables)
     elif isinstance(item, list):
-        return [_parse_item(item, variables) for item in item]
+        return [_parse_config_property(item, variables) for item in item]
     elif isinstance(item, dict):
-        return {k: _parse_item(v, variables) for k, v in item.items()}
+        return {k: _parse_config_property(v, variables) for k, v in item.items()}
     else:
         return item
 
@@ -41,7 +41,7 @@ def parse_config(config: Union[str, Path, dict]) -> dict:
     for name, value in config.get('metadata', {}).get('variables', {}).items():
         variables[name] = value.format(**variables)
 
-    return _parse_item(config, variables)
+    return _parse_config_property(config, variables)
 
 
 def expand_path(path: Union[str, Path]) -> Path:
