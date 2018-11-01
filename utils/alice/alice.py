@@ -26,6 +26,7 @@ from deeppavlov.agents.processors.default_rich_content_processor import DefaultR
 from deeppavlov.core.agent import Agent
 from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.common.paths import get_configs_path
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
 from utils.server_utils.server import get_server_params, init_model
 
@@ -81,13 +82,28 @@ def interact_alice(agent: Agent):
 
 
 def start_alice_server(model_config_path, https=False, ssl_key=None, ssl_cert=None):
+    server_config_path = get_configs_path() / SERVER_CONFIG_FILENAME
+    server_params = get_server_params(server_config_path, model_config_path)
+
+    https = https or server_params['https']
+
     if not https:
         ssl_key = ssl_cert = None
+    else:
+        ssh_key = Path(ssl_key or server_params['https_key_path']).resolve()
+        if not ssh_key.is_file():
+            e = FileNotFoundError('Ssh key file not found: please provide correct path in --key param or '
+                                  'https_key_path param in server configuration file')
+            log.error(e)
+            raise e
 
-    server_config_dir = Path(__file__).parent
-    server_config_path = server_config_dir.parent / SERVER_CONFIG_FILENAME
+        ssh_cert = Path(ssl_cert or server_params['https_cert_path']).resolve()
+        if not ssh_cert.is_file():
+            e = FileNotFoundError('Ssh certificate file not found: please provide correct path in --cert param or '
+                                  'https_cert_path param in server configuration file')
+            log.error(e)
+            raise e
 
-    server_params = get_server_params(server_config_path, model_config_path)
     host = server_params['host']
     port = server_params['port']
     model_endpoint = server_params['model_endpoint']
@@ -100,8 +116,8 @@ def start_alice_server(model_config_path, https=False, ssl_key=None, ssl_cert=No
 
 
 def start_agent_server(agent: Agent, host: str, port: int, endpoint: str,
-                       ssl_key: Optional[Union[str, Path]]=None,
-                       ssl_cert: Optional[Union[str, Path]]=None):
+                       ssl_key: Optional[Path]=None,
+                       ssl_cert: Optional[Path]=None):
     if ssl_key and ssl_cert:
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
         ssh_key_path = Path(ssl_key).resolve()
