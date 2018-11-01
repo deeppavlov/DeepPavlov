@@ -14,23 +14,39 @@
 
 import json
 import pickle
+from pathlib import Path
+from typing import Union, Any
+
+from deeppavlov.core.common.log import get_logger
+
+log = get_logger(__name__)
 
 
-def read_json(fpath):
+def find_config(pipeline_config_path: Union[str, Path]) -> Path:
+    if not Path(pipeline_config_path).is_file():
+        configs = [c for c in Path(__file__).parent.parent.parent.glob(f'configs/**/{pipeline_config_path}.json')
+                   if str(c.with_suffix('')).endswith(pipeline_config_path)]  # a simple way to not allow * and ?
+        if configs:
+            log.info(f"Interpreting '{pipeline_config_path}' as '{configs[0]}'")
+            pipeline_config_path = configs[0]
+    return Path(pipeline_config_path)
+
+
+def read_json(fpath: Union[str, Path]) -> dict:
     with open(fpath, encoding='utf8') as fin:
         return json.load(fin)
 
 
-def save_json(data, fpath):
+def save_json(data: dict, fpath: Union[str, Path]) -> None:
     with open(fpath, 'w', encoding='utf8') as fout:
-        return json.dump(data, fout, ensure_ascii=False, indent=2)
+        json.dump(data, fout, ensure_ascii=False, indent=2)
 
 
-def save_pickle(data, fpath):
+def save_pickle(data: dict, fpath: Union[str, Path]) -> None:
     with open(fpath, 'wb') as fout:
         pickle.dump(data, fout)
 
 
-def load_pickle(fpath):
+def load_pickle(fpath: Union[str, Path]) -> Any:
     with open(fpath, 'rb') as fin:
         return pickle.load(fin)

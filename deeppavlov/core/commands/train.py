@@ -20,7 +20,7 @@ from collections import OrderedDict, namedtuple
 from pathlib import Path
 from typing import List, Tuple, Dict, Union
 
-from deeppavlov.core.commands.infer import build_model_from_config
+from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root, import_packages
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.errors import ConfigError
@@ -33,6 +33,7 @@ from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.nn_model import NNModel
+from deeppavlov.download import deep_download
 
 log = get_logger(__name__)
 
@@ -166,11 +167,15 @@ def get_iterator_from_config(config: dict, data: dict):
 
 
 def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
-                                     to_train=True, to_validate=True) -> Dict[str, Dict[str, float]]:
+                                     to_train=True, to_validate=True, download=False) -> Dict[str, Dict[str, float]]:
     """Make training and evaluation of the model described in corresponding configuration file."""
     if isinstance(config, (str, Path)):
         config = read_json(config)
     set_deeppavlov_root(config)
+
+    if download:
+        deep_download(config)
+
     import_packages(config.get('metadata', {}).get('imports', []))
 
     if iterator is None:
@@ -217,7 +222,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
         #     model_config['load_path'] = model_config['save_path']
         # except KeyError:
         #     log.warning('No "save_path" parameter for the model, so "load_path" will not be renewed')
-        model = build_model_from_config(config, load_trained=True)
+        model = build_model(config, load_trained=True)
         log.info('Testing the best saved model')
 
         if train_config['validate_best']:
