@@ -15,9 +15,16 @@ import sys
 
 try:
     from .configs import configs
+    # noinspection PyUnresolvedReferences
     from .core.commands.infer import build_model
-    from .core.commands.train import train_evaluate_model_from_config as train_model
+    # noinspection PyUnresolvedReferences
+    from .core.commands.train import train_evaluate_model_from_config
     from .download import deep_download
+
+    # TODO: make better and add typing
+    def train_model(config, download=False):
+        train_evaluate_model_from_config(config, download=download)
+        return build_model(config, load_trained=True)
 except ImportError:
     'Assuming that requirements are not yet installed'
 

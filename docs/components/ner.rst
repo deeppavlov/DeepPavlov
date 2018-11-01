@@ -381,12 +381,9 @@ prediction:
 
 .. code:: python
 
-    from deeppavlov import  build_model, configs, deep_download, train_model
+    from deeppavlov import configs, train_model
 
-    PIPELINE_CONFIG_PATH = configs.ner.ner_ontonotes
-    deep_download(PIPELINE_CONFIG_PATH)
-    train_model(PIPELINE_CONFIG_PATH)
-    ner_model = build_model(PIPELINE_CONFIG_PATH)
+    ner_model = train_model(configs.ner.ner_ontonotes, download=True)
     ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates'])
 
 This example assumes that the working directory is deeppavlov.
@@ -400,8 +397,7 @@ A pre-trained model for solving OntoNotes task can be used as following:
 
     from deeppavlov import build_model, configs
 
-    PIPELINE_CONFIG_PATH = configs.ner.ner_ontonotes
-    ner_model = build_model(PIPELINE_CONFIG_PATH , download=True)
+    ner_model = build_model(configs.ner.ner_ontonotes , download=True)
     ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates'])
 
 Or from command line:
