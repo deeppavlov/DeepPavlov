@@ -12,16 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pathlib import Path
 import json
 import logging.config
 import sys
-
-from deeppavlov.core.common.paths import get_configs_path
-
+from pathlib import Path
 
 LOG_CONFIG_FILENAME = 'log_config.json'
 TRACEBACK_LOGGER_ERRORS = True
+
+root_path = Path(__file__).resolve().parent.parent.parent.parent
+
+
+def get_configs_path() -> Path:
+    with open(root_path / 'deeppavlov/paths.json', encoding='utf8') as fin:
+        paths = json.load(fin)
+
+    configs_paths = Path(paths['configs_path']).resolve() if paths['configs_path'][0] == '/' \
+        else root_path / paths['configs_path']
+
+    return configs_paths
 
 
 def get_logger(logger_name):
