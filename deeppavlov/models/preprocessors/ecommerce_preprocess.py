@@ -8,14 +8,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import math
 import re
 from typing import List, Any, Dict, Iterable, Optional, Tuple
+
 import spacy
 from spacy.matcher import Matcher
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
+
 
 @register('ecommerce_preprocess')
 class EcommercePreprocess(Component):

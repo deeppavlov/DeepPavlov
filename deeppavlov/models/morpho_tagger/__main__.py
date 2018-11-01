@@ -1,7 +1,7 @@
 import argparse
 
+from deeppavlov.core.common.file import find_config
 from deeppavlov.models.morpho_tagger.common import predict_with_model
-from deeppavlov.deep import find_config
 from deeppavlov.download import deep_download
 
 parser = argparse.ArgumentParser()
@@ -12,5 +12,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     config_path = find_config(args.config_path)
     if args.download:
-        deep_download(['-c', config_path])
+        deep_download(config_path)
     predict_with_model(config_path)

@@ -17,14 +17,14 @@ from pathlib import Path
 
 import telebot
 
-from deeppavlov.core.commands.infer import build_model_from_config
-from deeppavlov.core.common.file import read_json
-from deeppavlov.core.common.paths import get_configs_path
-from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.agent import Agent
-from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.default_rich_content_processor import DefaultRichContentWrapper
+from deeppavlov.core.agent import Agent
+from deeppavlov.core.agent.rich_content import RichMessage
+from deeppavlov.core.commands.infer import build_model
+from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.common.paths import get_configs_path
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
 
 
@@ -77,7 +77,7 @@ def interact_model_by_telegram(config_path, token=None):
         raise e
 
     config = read_json(config_path)
-    model = build_model_from_config(config)
+    model = build_model(config)
     model_name = type(model.get_main_component()).__name__
     skill = DefaultStatelessSkill(model)
     agent = DefaultAgent([skill], skills_processor=DefaultRichContentWrapper())
