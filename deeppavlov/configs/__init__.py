@@ -19,23 +19,48 @@ class Struct(Mapping):
                     Struct(value) if isinstance(value, dict) else value)
         self._keys = frozenset(self._keys)
 
-    def _asdict(self) -> dict:
-        return {key: value._asdict() if isinstance(value, Struct) else value
-                for key, value in self.__dict__.items() if key in self._keys}
+    def _asdict(self, *, to_string=False) -> dict:
+        res = []
+        for key in self._keys:
+            value = getattr(self, key)
+            if isinstance(value, Struct):
+                value = value._asdict(to_string=to_string)
+            elif to_string:
+                value = str(value)
+            res.append((key, value))
 
-    def __getitem__(self, key: str):
+        return dict(res)
+
+    def __getitem__(self, key: str) -> Union[dict, Path]:
         if key not in self._keys:
             raise KeyError(key)
-        return self._asdict()[key]
 
-    def __str__(self):
-        return str(self._asdict())
+        item = getattr(self, key)
+        if isinstance(item, Struct):
+            item = item._asdict()
+        return item
 
-    def __repr__(self):
+    def __str__(self) -> str:
+        return str(self._asdict(to_string=True))
+
+    def __repr__(self) -> str:
         return f'Struct({repr(self._asdict())})'
 
+    def _repr_pretty_(self, p, cycle):
+        """method that defines ``Struct``'s pretty printing rules for iPython
 
-def _build_configs_tree():
+        Args:
+            p (IPython.lib.pretty.RepresentationPrinter): pretty printer object
+            cycle (bool): is ``True`` if pretty detected a cycle
+        """
+        if cycle:
+            p.text('Struct(...)')
+        else:
+            with p.group(7, 'Struct(', ')'):
+                p.pretty(self._asdict())
+
+
+def _build_configs_tree() -> Struct:
     root = Path(__file__).resolve().parent
 
     tree = {}
