@@ -16,7 +16,7 @@ import sys
 try:
     from .configs import configs
     from .core.commands.infer import build_model
-    from .core.commands.train import train_evaluate_model_from_config
+    from .core.commands.train import train_evaluate_model_from_config as train_model
     from .download import deep_download
 except ImportError:
     'Assuming that requirements are not yet installed'

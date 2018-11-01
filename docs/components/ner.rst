@@ -381,11 +381,11 @@ prediction:
 
 .. code:: python
 
-    from deeppavlov import  build_model, configs, deep_download, train_evaluate_model_from_config
+    from deeppavlov import  build_model, configs, deep_download, train_model
 
     PIPELINE_CONFIG_PATH = configs.ner.ner_ontonotes
     deep_download(PIPELINE_CONFIG_PATH)
-    train_evaluate_model_from_config(PIPELINE_CONFIG_PATH)
+    train_model(PIPELINE_CONFIG_PATH)
     ner_model = build_model(PIPELINE_CONFIG_PATH)
     ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates'])
 
