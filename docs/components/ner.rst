@@ -381,15 +381,12 @@ prediction:
 
 .. code:: python
 
-    import json
-    from deeppavlov.core.commands.infer import build_model_from_config
-    from deeppavlov.core.commands.train import train_evaluate_model_from_config
+    from deeppavlov import  build_model, configs, deep_download, train_model
 
-    PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_ontonotes.json'
-    with open(PIPELINE_CONFIG_PATH) as f:
-        config = json.load(f)
-    train_evaluate_model_from_config(PIPELINE_CONFIG_PATH)
-    ner_model = build_model_from_config(config)
+    PIPELINE_CONFIG_PATH = configs.ner.ner_ontonotes
+    deep_download(PIPELINE_CONFIG_PATH)
+    train_model(PIPELINE_CONFIG_PATH)
+    ner_model = build_model(PIPELINE_CONFIG_PATH)
     ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates'])
 
 This example assumes that the working directory is deeppavlov.
@@ -401,26 +398,19 @@ A pre-trained model for solving OntoNotes task can be used as following:
 
 .. code:: python
 
-    import json
-    from deeppavlov.core.commands.infer import build_model_from_config
-    from deeppavlov.core.commands.train import train_evaluate_model_from_config
+    from deeppavlov import build_model, configs
 
-    PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_ontonotes.json'
-    with open(PIPELINE_CONFIG_PATH) as f:
-        config = json.load(f)
-    train_evaluate_model_from_config(PIPELINE_CONFIG_PATH)
-    ner_model = build_model_from_config(config)
+    PIPELINE_CONFIG_PATH = configs.ner.ner_ontonotes
+    ner_model = build_model(PIPELINE_CONFIG_PATH , download=True)
     ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates'])
 
 Or from command line:
 
 .. code:: bash
 
-    python deeppavlov/deep.py interact deeppavlov/configs/ner/ner_ontonotes.json
+    python deeppavlov/deep.py interact deeppavlov/configs/ner/ner_ontonotes.json [-d]
 
-Since the model is built with cuDNN version of LSTM, the GPU along with
-installed cuDNN library needed to run this model. The F1 scores of this
-model on test part of OntoNotes is presented in table below.
+The F1 scores of this model on test part of OntoNotes is presented in table below.
 
 +--------------------------------+--------------------+
 | Model                          | F1 score           |
@@ -522,18 +512,37 @@ To run Russian NER model use the following code:
 
 .. code:: python
 
-    from deeppavlov.core.commands.infer import build_model_from_config
-    from deeppavlov.download import deep_download
-    import json
-    PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_rus.json'
-    with open(PIPELINE_CONFIG_PATH) as f:
-        config = json.load(f)
-    deep_download(['-c', PIPELINE_CONFIG_PATH])
-    ner_model = build_model_from_config(config)
+    from deeppavlov import build_model, configs
+
+    PIPELINE_CONFIG_PATH = configs.ner.ner_rus
+    ner_model = build_model(PIPELINE_CONFIG_PATH , download=True)
     ner_model(['Компания « Андэк » , специализирующаяся на решениях для обеспечения безопасности бизнеса , сообщила о том , что Вячеслав Максимов , заместитель генерального директора компании , возглавил направление по оптимизации процессов управления информационной безопасностью '])
 
-Since the model is built with cuDNN version of LSTM, the GPU along with
-installed cuDNN library needed to run this model.
+
+Few-shot Language-Model based
+-----------------------------
+
+It is possible to get a clod-start baseline from just a few samples of marked data in a couple of seconds. The solution
+is based on a Language Model trained on open domain corpus. On top of the LM a SVM classification layer is placed. It is
+possible to start from as few as 10 sentences containing entities of interest.
+
+The data for training this model should be collected the following way. Given a collection of `N` sentences without
+markup, sequentially markup sentences until the total number of sentences with entity of interest become become equal
+`K`. During the training both sentences with and without markup are used.
+
+
+Mean F1 scores for Russian language on 10 sentences with entities :
+
++---------+-------+
+|PER      | 84.85 |
++---------+-------+
+|LOC      | 68.41 |
++---------+-------+
+|ORG      | 32.63 |
++---------+-------+
+
+(the total number of training sentences is bigger and defined
+by the distribution of sentences with / without entities)
 
 Literature
 ----------
