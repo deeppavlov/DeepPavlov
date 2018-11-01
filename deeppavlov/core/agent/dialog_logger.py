@@ -15,7 +15,7 @@
 import json
 from pathlib import Path
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Optional, Hashable
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.paths import get_configs_path
@@ -82,7 +82,7 @@ class DialogLogger:
         log_file = open(log_file_path, 'a', buffering=1)
         return log_file
 
-    def _log(self, utterance: Any, direction: str, dialog_id: str):
+    def _log(self, utterance: Any, direction: str, dialog_id: Optional[Hashable]=None):
         """Logs single dialog utterance to current dialog log file.
 
         Args:
@@ -116,7 +116,7 @@ class DialogLogger:
             except IOError:
                 log.error('Failed to write dialog log.')
 
-    def log_in(self, utterance: Any, dialog_id: Any = 'no_id'):
+    def log_in(self, utterance: Any, dialog_id: Optional[Hashable]=None):
         """Wraps _log method for all input utterances.
         Args:
             utterance: Dialog utterance.
@@ -125,7 +125,7 @@ class DialogLogger:
         if self.enabled:
             self._log(utterance, 'in', dialog_id)
 
-    def log_out(self, utterance: Any, dialog_id: Any = 'no_id'):
+    def log_out(self, utterance: Any, dialog_id: Optional[Hashable]=None):
         """Wraps _log method for all output utterances.
         Args:
             utterance: Dialog utterance.
