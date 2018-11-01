@@ -33,6 +33,7 @@ from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.models.nn_model import NNModel
+from deeppavlov.download import deep_download
 
 log = get_logger(__name__)
 
@@ -166,11 +167,15 @@ def get_iterator_from_config(config: dict, data: dict):
 
 
 def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
-                                     to_train=True, to_validate=True) -> Dict[str, Dict[str, float]]:
+                                     to_train=True, to_validate=True, download=False) -> Dict[str, Dict[str, float]]:
     """Make training and evaluation of the model described in corresponding configuration file."""
     if isinstance(config, (str, Path)):
         config = read_json(config)
     set_deeppavlov_root(config)
+
+    if download:
+        deep_download(config)
+
     import_packages(config.get('metadata', {}).get('imports', []))
 
     if iterator is None:
