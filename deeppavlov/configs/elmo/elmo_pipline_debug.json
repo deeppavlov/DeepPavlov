@@ -1,0 +1,121 @@
+{
+  "dataset_reader": {
+    "name": "file_paths_reader",
+    "data_path": "elmo/oil-gas_elmo/data",
+    "train": "train/*",
+    "test": "held-out/*"
+  },
+  "dataset_iterator": {
+    "name": "elmo_file_paths_iterator",
+    "seed": 31415,
+    "shuffle": false
+  },
+  "chainer": {
+    "in": [
+      "sentences"
+    ],
+    "in_y": [
+      "_"
+    ],
+    "pipe": [
+      {
+        "in": ["sentences"],
+        "name": "str_token_reverser",
+        "tokenized": false,
+        "out": ["reversed_sentences"]
+      },
+      {
+        "in": ["sentences"],
+        "name": "str_utf8_encoder",
+        "max_word_length": 50,
+        "split": true,
+        "pad_special_char_use": false,
+        "word_boundary_special_char_use": false,
+        "sentence_boundary_special_char_use": true,
+        "reversed_sentense_tokens": false,
+        "load_path":"elmo/oil-gas_elmo/data/tokens_set.txt",
+        "save_path":"elmo/oil-gas_elmo/data/tokens_set1.txt",
+        "out": ["x_char_ids"]
+      },
+      {
+        "in": ["reversed_sentences"],
+        "name": "str_utf8_encoder",
+        "max_word_length": 50,
+        "split": true,
+        "pad_special_char_use": false,
+        "word_boundary_special_char_use": false,
+        "sentence_boundary_special_char_use": true,
+        "reversed_sentense_tokens": true,
+        "load_path":"elmo/oil-gas_elmo/data/tokens_set.txt",
+        "save_path":"elmo/oil-gas_elmo/data/tokens_set1.txt",
+        "out": ["reversed_x_char_ids"]
+      },
+      {
+        "in": ["sentences"],
+        "name": "split_tokenizer",
+        "out": ["tokens"]
+      },
+      {
+        "in": ["tokens"],
+        "name": "freq_drop_load_vocab",
+        "min_freq": 2,
+        "save_path": "elmo/oil-gas_elmo/data/tokens_set1.txt",
+        "load_path": "elmo/oil-gas_elmo/data/tokens_set.txt",
+        "out": ["y_token_ids"]
+      },
+      {
+        "in": ["reversed_sentences"],
+        "name": "split_tokenizer",
+        "out": ["reversed_tokens"]
+      },
+      {
+        "in": ["reversed_tokens"],
+        "name": "freq_drop_load_vocab",
+        "min_freq": 2,
+        "save_path": "elmo/oil-gas_elmo/data/tokens_set1.txt",
+        "load_path": "elmo/oil-gas_elmo/data/tokens_set.txt",
+        "out": ["reversed_y_token_ids"]
+      }
+    ],
+    "out": [
+      "sentences",
+      "reversed_sentences",
+      "x_char_ids",
+      "reversed_x_char_ids",
+      "tokens",
+      "reversed_tokens",
+      "y_token_ids",
+      "reversed_y_token_ids"
+    ]
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 32
+  },
+  "metadata": {
+    "requirements": [
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/fasttext.txt"
+    ],
+    "labels": {
+      "telegram_utils": "IntentModel",
+      "server_utils": "KerasIntentModel"
+    },
+    "download": [
+      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
+      {
+        "url": "https://github.com/text-machine-lab/rusentiment/raw/master/Dataset/rusentiment_random_posts.csv",
+        "subdir": "rusentiment"
+      },
+      {
+        "url": "https://github.com/text-machine-lab/rusentiment/raw/master/Dataset/rusentiment_test.csv",
+        "subdir": "rusentiment"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "subdir": "embeddings"
+      }
+    ]
+  }
+}

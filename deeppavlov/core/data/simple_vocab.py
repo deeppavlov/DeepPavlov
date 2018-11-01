@@ -15,6 +15,7 @@
 from collections import Counter, defaultdict
 from itertools import chain
 from pathlib import Path
+from overrides import overrides
 
 import numpy as np
 
@@ -212,3 +213,28 @@ class DialogVocab(SimpleVocabulary):
         if self._pad_with_zeros:
             indices_batch = zero_pad_char(indices_batch)
         return indices_batch
+
+@register('freq_drop_load_vocab')
+class FrequencyDropLoadVocabulary(SimpleVocabulary):
+    """Implements simple vocabulary loading from a file without frequency values.
+    The default frequency is used a value of `min_freq`.
+    
+    """
+    @overrides
+    def load(self):
+        self.reset()
+        if self.load_path:
+            if self.load_path.is_file():
+                log.info("[loading vocabulary from {}]".format(self.load_path))
+                tokens, counts = [], []
+                for ln in self.load_path.open('r', encoding='utf8'):
+                    token = ln.strip().split()[0]
+                    tokens.append(token)
+                    counts.append(self._min_freq)
+                self._add_tokens_with_freqs(tokens, counts)
+            elif isinstance(self.load_path, Path):
+                if not self.load_path.parent.is_dir():
+                    raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
+                        self.__class__.__name__))
+        else:
+            raise ConfigError("`load_path` for {} is not provided!".format(self))

@@ -19,9 +19,6 @@ import numpy as np
 import json
 
 
-from typing import Tuple
-import numpy as np
-import tensorflow as tf
 from functools import partial
 
 from deeppavlov.core.layers.tf_layers import embedding_layer, character_embedding_network, variational_dropout
@@ -37,9 +34,9 @@ from deeppavlov.models.elmo.train_utils import print_variable_summary, average_g
 log = get_logger(__name__)
 
 
+# class ELMo(TFModel): # TODO: Add TFModel inheritance
 @register('elmo')
 class ELMo(NNModel):
-# class ELMo(TFModel): # TODO: Add TFModel inheritance
     """
     The :class:`~deeppavlov.models.ner.network.NerNetwork` is for Neural Named Entity Recognition and Slot Filling.
 
@@ -122,7 +119,8 @@ class ELMo(NNModel):
 
         # ================== Building the network ==================
 
-        self.models, self.train_op, self.summary_op, self.hist_summary_op = self._build_graph()
+        self.models, self.train_op, _, _ = self._build_graph()
+        # self.models, self.train_op, self.summary_op, self.hist_summary_op = self._build_graph()
 
         self.saver = tf.train.Saver(tf.global_variables(), max_to_keep=2)
 
@@ -130,7 +128,6 @@ class ELMo(NNModel):
         self.summary_writer, self.init_state_values, self.init_state_tensors, self.final_state_tensors =\
             self._init_session()
         # data_gen = data.iter_batches(batch_size * self._options['n_gpus'], self._options['unroll_steps'])
-
 
     def _load_options(self, options_json_path):
         if options_json_path:
@@ -175,9 +172,9 @@ class ELMo(NNModel):
             # calculate the gradients on each GPU
             tower_grads = []
             models = []
-            train_perplexity = tf.get_variable(
-                'train_perplexity', [],
-                initializer=tf.constant_initializer(0.0), trainable=False)
+            # train_perplexity = tf.get_variable(
+            #     'train_perplexity', [],
+            #     initializer=tf.constant_initializer(0.0), trainable=False)
             for k in range(self._options['n_gpus']):
                 with tf.device('/gpu:%d' % k):
                     with tf.variable_scope('lm', reuse=k > 0):
@@ -192,56 +189,58 @@ class ELMo(NNModel):
                             aggregation_method=tf.AggregationMethod.EXPERIMENTAL_TREE,
                         )
                         tower_grads.append(grads)
-                        # keep track of loss across all GPUs
-                        train_perplexity += loss
+                        # # keep track of loss across all GPUs
+                        # train_perplexity += loss
                 print_variable_summary()
 
             # calculate the mean of each gradient across all GPUs
             grads = average_gradients(tower_grads, self._options['batch_size'], self._options)
-            grads, norm_summary_ops = clip_grads(grads, self._options, True, global_step)
-            norm_summaries = []
-            norm_summaries.extend(norm_summary_ops)
+            grads, _ = clip_grads(grads, self._options, True, global_step)
+            # grads, norm_summary_ops = clip_grads(grads, self._options, True, global_step)
+            # norm_summaries = []
+            # norm_summaries.extend(norm_summary_ops)
 
             # log the training perplexity
-            train_perplexity = tf.exp(train_perplexity / self._options['n_gpus'])
-            perplexity_summmary = tf.summary.scalar(
-                'train_perplexity', train_perplexity)
+            # train_perplexity = tf.exp(train_perplexity / self._options['n_gpus'])
+            # perplexity_summmary = tf.summary.scalar(
+            #     'train_perplexity', train_perplexity)
 
-            # some histogram summaries.  all models use the same parameters
-            # so only need to summarize one
-            histogram_summaries = [
-                tf.summary.histogram('token_embedding', models[0].embedding)
-            ]
-            # tensors of the output from the LSTM layer
-            lstm_out = tf.get_collection('lstm_output_embeddings')
-            histogram_summaries.append(
-                    tf.summary.histogram('lstm_embedding_0', lstm_out[0]))
-            if self._options.get('bidirectional', False):
-                # also have the backward embedding
-                histogram_summaries.append(
-                    tf.summary.histogram('lstm_embedding_1', lstm_out[1]))
+            # # some histogram summaries.  all models use the same parameters
+            # # so only need to summarize one
+            # histogram_summaries = [
+            #     tf.summary.histogram('token_embedding', models[0].embedding)
+            # ]
+            # # tensors of the output from the LSTM layer
+            # lstm_out = tf.get_collection('lstm_output_embeddings')
+            # histogram_summaries.append(
+            #         tf.summary.histogram('lstm_embedding_0', lstm_out[0]))
+            # if self._options.get('bidirectional', False):
+            #     # also have the backward embedding
+            #     histogram_summaries.append(
+            #         tf.summary.histogram('lstm_embedding_1', lstm_out[1]))
 
             # apply the gradients to create the training operation
             train_op = opt.apply_gradients(grads, global_step=global_step)
 
-            # histograms of variables
-            for v in tf.global_variables():
-                histogram_summaries.append(tf.summary.histogram(v.name.replace(":", "_"), v))
+            # # histograms of variables
+            # for v in tf.global_variables():
+            #     histogram_summaries.append(tf.summary.histogram(v.name.replace(":", "_"), v))
 
-            # get the gradient updates -- these aren't histograms, but we'll
-            # only update them when histograms are computed
-            histogram_summaries.extend(
-                summary_gradient_updates(grads, opt, self._options['learning_rate']))
+            # # get the gradient updates -- these aren't histograms, but we'll
+            # # only update them when histograms are computed
+            # histogram_summaries.extend(
+            #     summary_gradient_updates(grads, opt, self._options['learning_rate']))
 
-            summary_op = tf.summary.merge(
-                [perplexity_summmary] + norm_summaries
-            )
-            hist_summary_op = tf.summary.merge(histogram_summaries)
+            # summary_op = tf.summary.merge(
+            #     [perplexity_summmary] + norm_summaries
+            # )
+            # hist_summary_op = tf.summary.merge(histogram_summaries)
+            hist_summary_op = None
+            summary_op = None
 
         return models, train_op, summary_op, hist_summary_op
 
     def _init_session(self):
-        tf_log_dir = "func_get vocab" # TODO: Add resolution of init_step
         restart_ckpt_file = None # TODO: It is one too
         sess_config = tf.ConfigProto(allow_soft_placement=True)
         sess_config.gpu_options.allow_growth = True
@@ -255,7 +254,8 @@ class ELMo(NNModel):
             loader = tf.train.Saver()
             loader.restore(self.sess, restart_ckpt_file)
 
-        summary_writer = tf.summary.FileWriter(tf_log_dir, self.sess.graph)
+        # summary_writer = tf.summary.FileWriter(tf_log_dir, self.sess.graph)
+        summary_writer = None
 
         # For each batch:
         # Get a batch of data from the generator. The generator will
@@ -313,28 +313,54 @@ class ELMo(NNModel):
         return summary_writer, init_state_values, init_state_tensors, final_state_tensors
 
     def _fill_feed_dict(self, xs, y=None, learning_rate=None, train=False):
-        assert len(xs) == len(self._xs_ph_list)
-        xs = list(xs)
-        xs[0] = np.array(xs[0])
-        feed_dict = {ph: x for ph, x in zip(self._xs_ph_list, xs)}
-        if y is not None:
-            feed_dict[self._y_ph] = y
-        if learning_rate is not None:
-            feed_dict[self.learning_rate_ph] = learning_rate
-        feed_dict[self.training_ph] = train
-        if not train:
-            feed_dict[self._dropout_ph] = 1.0
+        # init state tensors
+        feed_dict = {t: v for t, v in zip(
+                                    self.init_state_tensors, self.init_state_values)}
+        char_inputs = 'char_cnn' in self._options
+        for k, model in enumerate(self.models):
+            start = k * self._options['batch_size']
+            end = (k + 1) * self._options['batch_size']
+
+            if not char_inputs:
+                token_ids = xs[0][start:end] # get token_ids
+                feed_dict[model.token_ids] = token_ids
+            else:
+                # character inputs
+                char_ids = xs[0][start:end] # get char_ids
+                feed_dict[model.tokens_characters] = char_ids
+
+            if self._options['bidirectional']:
+                if not char_inputs:
+                    feed_dict[model.token_ids_reverse] = \
+                         xs[1][start:end] # get token_ids_reverse
+                else:
+                    feed_dict[model.tokens_characters_reverse] = \
+                        xs[1][start:end] # get tokens_characters_reverse
+
+            if y is not None:
+                # now the targets with weights
+                feed_dict[model.next_token_id] = y[0][start:end] # get next_token_id
+                if self._options['bidirectional']:
+                    feed_dict[model.next_token_id_reverse] = y[1][start:end] # get next_token_id_reverse
+
+            # if learning_rate is not None:
+            #     feed_dict[self.learning_rate_ph] = learning_rate
+            # feed_dict[self.training_ph] = train
+            #     if not train:
+            #         feed_dict[self._dropout_ph] = 1.0
         return feed_dict
 
-    def __call__(self, *args, **kwargs):
-        if len(args[0]) == 0 or (len(args[0]) == 1 and len(args[0][0]) == 0):
-            return []
-        return self.predict(args)
 
-    def train_on_batch(self, *args):
-        *xs, y = args
-        feed_dict = self._fill_feed_dict(xs, y, train=True, learning_rate=self._learning_rate)
-        self.sess.run(self.train_op, feed_dict)
+    def __call__(self, *args, **kwargs):
+        # if len(args[0]) == 0 or (len(args[0]) == 1 and len(args[0][0]) == 0):
+        #     return []
+        # return self.predict(args)
+        return None
+
+    def train_on_batch(self, x: list, y: list):
+        feed_dict = self._fill_feed_dict(x, y, train=True)
+        ret = self.sess.run([self.train_op, self.final_state_tensors], feed_dict)
+        self.init_state_values = ret[1:]
 
     # def process_event(self, event_name, data):
     #     if event_name == 'after_validation':
