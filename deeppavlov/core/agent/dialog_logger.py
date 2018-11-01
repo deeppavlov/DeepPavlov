@@ -75,8 +75,7 @@ class DialogLogger:
         if dot_dp_path in log_dir.parents and dot_dp_path.is_file():
             dot_dp_path.unlink()
 
-        if not log_dir.is_dir():
-            log_dir.mkdir(parents=True, exist_ok=True)
+        log_dir.mkdir(parents=True, exist_ok=True)
 
         log_file_path = Path(log_dir, f'{self._get_timestamp_utc_str()}_{self.agent_name}.log')
         log_file = open(log_file_path, 'a', buffering=1)
