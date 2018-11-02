@@ -218,7 +218,7 @@ class DAMNetwork(TensorflowBaseMatchingModel):
             tf.summary.scalar('loss', self.loss)
 
             self.global_step = tf.Variable(0, trainable=False)
-            initial_learning_rate = 0.001
+            initial_learning_rate = self.learning_rate
             self.learning_rate = tf.train.exponential_decay(
                 initial_learning_rate,
                 global_step=self.global_step,

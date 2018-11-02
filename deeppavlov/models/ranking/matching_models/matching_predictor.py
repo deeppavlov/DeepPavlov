@@ -19,6 +19,7 @@ from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.component import Component
 from deeppavlov.models.ranking.matching_models.tf_base_matching_model import TensorflowBaseMatchingModel
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.data.utils import zero_pad_truncate
 
 log = get_logger(__name__)
 
@@ -73,18 +74,20 @@ class MatchingPredictor(Component):
         for s in sample:
             preproc_sample.append(s.tolist())
 
-        # add context
+        # first, need to append expanded context
         sent_list = preproc_sample[-(self.num_context_turns + 1):-1]
         if len(sent_list) <= self.num_context_turns:
             tmp = sent_list[:]
             sent_list = [[0]*self.max_sequence_length] * (self.num_context_turns - len(sent_list))
             sent_list.extend(tmp)
 
-        # add response
-        sent_list.append(preproc_sample[-1])
+        # second, adding response sentence
+        sent_list.append(preproc_sample[-1])  # sent_list has shape (num_context_turns+1, max_sequence_length)
 
-        context_sentences = np.asarray(sent_list[:self.num_context_turns])
-        response_sentences = np.asarray(sent_list[self.num_context_turns:])
+        sent_list = zero_pad_truncate(sent_list, self.max_sequence_length, pad='post', trunc='post')
+
+        context_sentences = np.array(sent_list[:self.num_context_turns])
+        response_sentences = np.array(sent_list[self.num_context_turns:])
 
         # format model inputs
         # word indices
@@ -113,7 +116,8 @@ class MatchingPredictor(Component):
         yp = self.model.sess.run(self.model.y_pred, feed_dict=feed_dict)
         y_pred = yp[:, 1]
 
-        return ["The probability that the response is proper continuation of the dialog is {:.3f}".format(y_pred[0])]
+        # return ["The probability that the response is proper continuation of the dialog is {:.3f}".format(y_pred[0])]
+        return ["{:.5f}".format(y_pred[0])]
 
     def reset(self) -> None:
         pass
