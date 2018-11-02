@@ -71,12 +71,12 @@ def from_params(params: Dict, mode: str = 'infer', **kwargs) -> Component:
             raise e
 
     elif 'config_path' in config_params:
-        from deeppavlov.core.commands.infer import build_model_from_config
+        from deeppavlov.core.commands.infer import build_model
         deeppavlov_root = get_deeppavlov_root()
         refs = _refs.copy()
         _refs.clear()
         config = read_json(expand_path(config_params['config_path']))
-        model = build_model_from_config(config)
+        model = build_model(config)
         set_deeppavlov_root({'deeppavlov_root': deeppavlov_root})
         _refs.clear()
         _refs.update(refs)

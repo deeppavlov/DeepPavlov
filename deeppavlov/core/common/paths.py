@@ -11,11 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import json
 import shutil
 from pathlib import Path
-
-from deeppavlov.core.common.file import read_json, save_json
 
 
 deeppavlov_root = ''
@@ -25,7 +23,8 @@ default_settings_path = root_path / 'utils' / 'settings' / '.default'
 
 def get_settings_path() -> Path:
     """Returns DeepPavlov settings folder absolute path."""
-    paths = read_json(root_path / 'deeppavlov/paths.json')
+    with open(root_path / 'deeppavlov/paths.json', encoding='utf8') as f:
+        paths = json.load(f)
     settings_paths = Path(paths['settings_path']).resolve() if paths['settings_path'][0] == '/' \
         else root_path / paths['settings_path']
     return settings_paths
@@ -37,7 +36,8 @@ def set_settings_path(settings_path: Path):
     Args:
         settings_path: New settings path.
     """
-    paths = read_json(root_path / 'deeppavlov/paths.json')
+    with open(root_path / 'deeppavlov/paths.json', encoding='utf8') as f:
+        paths = json.load(f)
     old_settings_path = Path(paths['settings_path']).resolve()
 
     if settings_path == old_settings_path:
@@ -58,16 +58,20 @@ def set_settings_path(settings_path: Path):
                 old_file.unlink()
 
             paths['settings_path'] = str(settings_path)
-            save_json(paths, root_path / 'deeppavlov/paths.json')
+            with open(root_path / 'deeppavlov/paths.json', 'w', encoding='utf8') as f:
+                json.dump(paths, f, ensure_ascii=False, indent=2)
+
             print(f'New settings path was set and all settings files were moved to: {str(settings_path)}')
 
 
 def set_settings_default():
     """Sets ALL settings files and settings directory to DeepPavlov defaults."""
     old_settings_path = get_settings_path()
-    paths = read_json(root_path / 'deeppavlov/paths.json')
+    with open(root_path / 'deeppavlov/paths.json', encoding='utf8') as f:
+        paths = json.load(f)
     paths['settings_path'] = 'utils/settings'
-    save_json(paths, root_path / 'deeppavlov/paths.json')
+    with open(root_path / 'deeppavlov/paths.json', 'w', encoding='utf8') as f:
+        json.dump(paths, f, ensure_ascii=False, indent=2)
     new_settings_path = get_settings_path()
 
     for settings_file in default_settings_path.iterdir():

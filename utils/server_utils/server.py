@@ -20,7 +20,7 @@ from flasgger import Swagger, swag_from
 from flask import Flask, request, jsonify, redirect, Response
 from flask_cors import CORS
 
-from deeppavlov.core.commands.infer import build_model_from_config
+from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
@@ -41,7 +41,7 @@ dialog_logger = DialogLogger(agent_name='dp_api')
 
 def init_model(model_config_path):
     model_config = read_json(model_config_path)
-    model = build_model_from_config(model_config)
+    model = build_model(model_config)
     return model
 
 
