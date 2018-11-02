@@ -70,13 +70,7 @@ class DialogLogger:
             log_file: opened Python file object.
         """
         log_dir: Path = Path(self.config['log_path']).expanduser().resolve() / self.agent_name
-
-        dot_dp_path = Path('~/.deeppavlov').expanduser().resolve()
-        if dot_dp_path in log_dir.parents and dot_dp_path.is_file():
-            dot_dp_path.unlink()
-
         log_dir.mkdir(parents=True, exist_ok=True)
-
         log_file_path = Path(log_dir, f'{self._get_timestamp_utc_str()}_{self.agent_name}.log')
         log_file = open(log_file_path, 'a', buffering=1)
         return log_file

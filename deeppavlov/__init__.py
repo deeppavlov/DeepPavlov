@@ -20,6 +20,13 @@ __license__ = 'Apache License, Version 2.0'
 __email__ = 'info@ipavlov.ai'
 
 
-# check version
 import sys
+from pathlib import Path
+
+# check version
 assert sys.hexversion >= 0x3060000, 'Does not work in python3.5 or lower'
+
+# resolve conflicts with previous DeepPavlov installations versioned up to 0.0.9
+dot_dp_path = Path('~/.deeppavlov').expanduser().resolve()
+if dot_dp_path.is_file():
+    dot_dp_path.unlink()
