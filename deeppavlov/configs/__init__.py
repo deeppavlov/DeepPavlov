@@ -1,9 +1,8 @@
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Iterator, Dict, Union
 
 
-class Struct(Mapping):
+class Struct:
     def __iter__(self) -> Iterator[str]:
         return iter(self._keys)
 
@@ -18,6 +17,8 @@ class Struct(Mapping):
             setattr(self, key,
                     Struct(value) if isinstance(value, dict) else value)
         self._keys = frozenset(self._keys)
+
+        self.keys = lambda: self._keys
 
     def _asdict(self, *, to_string=False) -> dict:
         res = []
@@ -39,6 +40,12 @@ class Struct(Mapping):
         if isinstance(item, Struct):
             item = item._asdict()
         return item
+
+    def __dir__(self):
+        return self._keys
+
+    def _ipython_key_completions_(self):
+        return self._keys
 
     def __str__(self) -> str:
         return str(self._asdict(to_string=True))
