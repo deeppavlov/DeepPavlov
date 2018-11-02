@@ -17,9 +17,7 @@ DeepPavlov supports logging of dialogs carried by Agent or ``riseapi`` instances
 
 Following dialog logging settings are available:
 
-1. **enabled**: turns on/off dialog logging for DeepPavlov instance;
-2. **log_path**: sets directory where dialog logs are stored;
-3. **agent_name**: sets subdirectory name for storing dialog logs;
-4. **logfile_max_size_kb**: sets logfile maximum size. If exceeded, new log file is created.
-
-Default dialog logs storage path is ``~/.deeppavlov/dialog_logs`` .
+1. **enabled** (default: ``false``): turns on/off dialog logging for DeepPavlov instance;
+2. **log_path** (default: ``~/.deeppavlov/dialog_logs``): sets directory where dialog logs are stored;
+3. **agent_name** (default: ``dp_agent``): sets subdirectory name for storing dialog logs;
+4. **logfile_max_size_kb** (default: ``10240``): sets logfile maximum size in kilobytes. If exceeded, new log file is created.
