@@ -45,7 +45,7 @@ def parse_config(config: Union[str, Path, dict]) -> dict:
 
 
 def expand_path(path: Union[str, Path]) -> Path:
-    """Make path expansion."""
+    """Convert relative paths to absolute with resolving user directory."""
     return Path(path).expanduser().resolve()
 
 
