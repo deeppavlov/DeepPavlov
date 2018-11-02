@@ -21,7 +21,7 @@ import numpy as np
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import save_pickle, load_pickle
-from deeppavlov.core.commands.utils import expand_path, make_all_dirs
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.models.estimator import Component
 
 log = get_logger(__name__)
@@ -46,7 +46,6 @@ class EcommerceTfidfBot(Component):
     def __init__(self,
                  save_path: str,
                  load_path: str,
-                 preprocess: Component,
                  entropy_fields: list,
                  min_similarity: float = 0.5,
                  min_entropy: float = 0.5,
@@ -55,7 +54,6 @@ class EcommerceTfidfBot(Component):
         self.save_path = expand_path(save_path)
         self.load_path = expand_path(load_path)
 
-        self.preprocess = preprocess
         self.min_similarity = min_similarity
         self.min_entropy = min_entropy
         self.entropy_fields = entropy_fields
