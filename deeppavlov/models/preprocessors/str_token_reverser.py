@@ -26,18 +26,18 @@ class StrTokenReverser(Component):
     Args:
         tokenized: The parameter is only needed to reverse tokenized strings.
     """
-    def __init__(self, tokenized = False, *args, **kwargs):
+    def __init__(self, tokenized:bool = False, *args, **kwargs):
         self.tokenized = tokenized
     
     @staticmethod
-    def reverse_str(raw_string):
+    def _reverse_str(raw_string):
         splitted = raw_string.split()
         splitted.reverse()
         string = ' '.join(splitted)
         return string
     
     @staticmethod
-    def reverse_tokens(raw_tokens):
+    def _reverse_tokens(raw_tokens):
         raw_tokens.reverse()
         return raw_tokens
 
@@ -56,7 +56,7 @@ class StrTokenReverser(Component):
         if self.tokenized:
             if isinstance(batch, (list, tuple)):
                 if isinstance(batch[-1], str):
-                    return self.reverse_tokens(batch)
+                    return self._reverse_tokens(batch)
                 else:
                     return [self(line) for line in batch]
             raise RuntimeError(f'The objects passed to the reverser are not list or tuple! '
@@ -66,5 +66,5 @@ class StrTokenReverser(Component):
             if isinstance(batch, (list, tuple)):
                 return [self(line) for line in batch]
             else:
-                return self.reverse_str(batch)
+                return self._reverse_str(batch)
 

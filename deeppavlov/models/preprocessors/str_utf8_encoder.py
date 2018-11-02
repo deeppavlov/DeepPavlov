@@ -34,6 +34,8 @@ log = get_logger(__name__)
 class StrUTF8Encoder(Estimator):
     """Component for converting strings to lowercase at any level of lists nesting
 
+# TODO : add description
+
     Vocabulary containing character-level and word level information.
 
     Has a word vocabulary that is used to lookup word ids and
@@ -59,7 +61,7 @@ class StrUTF8Encoder(Estimator):
                  sentence_boundary_special_char_use:bool = False,
                  reversed_sentense_tokens:bool = False,
                  bos:str = '<S>',
-                 eos:str = '<\S>',
+                 eos:str = '</S>',
                  **kwargs):
         super().__init__(**kwargs)
 

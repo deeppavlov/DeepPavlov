@@ -29,8 +29,8 @@
         "name": "str_utf8_encoder",
         "max_word_length": 50,
         "split": true,
-        "pad_special_char_use": false,
-        "word_boundary_special_char_use": false,
+        "pad_special_char_use": true,
+        "word_boundary_special_char_use": true,
         "sentence_boundary_special_char_use": true,
         "reversed_sentense_tokens": false,
         "load_path":"elmo/oil-gas_elmo/data/tokens_set.txt",
@@ -42,13 +42,31 @@
         "name": "str_utf8_encoder",
         "max_word_length": 50,
         "split": true,
-        "pad_special_char_use": false,
-        "word_boundary_special_char_use": false,
+        "pad_special_char_use": true,
+        "word_boundary_special_char_use": true,
         "sentence_boundary_special_char_use": true,
         "reversed_sentense_tokens": true,
         "load_path":"elmo/oil-gas_elmo/data/tokens_set.txt",
         "save_path":"elmo/oil-gas_elmo/data/tokens_set1.txt",
         "out": ["reversed_x_char_ids"]
+      },
+      {
+        "in": ["sentences"],
+        "name": "elmo_str_spec_tokens_wrapper",
+        "bos":"<S>",
+        "eos":"</S>",
+        "reverse":false,
+        "tokenized":false,
+        "out": ["sentences"]
+      },
+      {
+        "in": ["reversed_sentences"],
+        "name": "elmo_str_spec_tokens_wrapper",
+        "bos":"<S>",
+        "eos":"</S>",
+        "reverse":true,
+        "tokenized":false,
+        "out": ["reversed_sentences"]
       },
       {
         "in": ["sentences"],
@@ -59,6 +77,8 @@
         "in": ["tokens"],
         "name": "freq_drop_load_vocab",
         "min_freq": 2,
+        "special_tokens": ["</S>", "<S>", "<UNK>"],
+        "unk_token": "<UNK>",
         "save_path": "elmo/oil-gas_elmo/data/tokens_set1.txt",
         "load_path": "elmo/oil-gas_elmo/data/tokens_set.txt",
         "out": ["y_token_ids"]
@@ -72,25 +92,52 @@
         "in": ["reversed_tokens"],
         "name": "freq_drop_load_vocab",
         "min_freq": 2,
+        "special_tokens": ["</S>", "<S>", "<UNK>"],
+        "unk_token": "<UNK>",
         "save_path": "elmo/oil-gas_elmo/data/tokens_set1.txt",
         "load_path": "elmo/oil-gas_elmo/data/tokens_set.txt",
         "out": ["reversed_y_token_ids"]
+      },
+      {
+        "in": ["x_char_ids", "reversed_x_char_ids", "y_token_ids", "reversed_y_token_ids"],
+        "name": "elmo_preprocessor",
+        "batch_size": 128, 
+        "unroll_steps": 20, 
+        "n_gpus": 1, 
+
+        "out": ["pack_x_char_ids", "pack_reversed_x_char_ids", "pack_y_token_ids", "pack_reversed_y_token_ids"]
+      },
+      {
+        "name": "elmo_model",
+        "id": "elmo",
+        "options_json_path": "elmo/options.json",
+        "unroll_steps": 20,
+        "batch_size": 128,
+        "in": ["pack_x_char_ids", "pack_reversed_x_char_ids"],
+        "in_y": ["pack_y_token_ids", "pack_reversed_y_token_ids"],
+        "out": ["loss"]
       }
     ],
-    "out": [
+    "out1": [
       "sentences",
       "reversed_sentences",
       "x_char_ids",
       "reversed_x_char_ids",
       "tokens",
       "reversed_tokens",
-      "y_token_ids",
-      "reversed_y_token_ids"
-    ]
+      "y_token_ids"
+    ],
+    "out": [
+      "pack_x_char_ids",
+      "pack_reversed_x_char_ids",
+      "pack_y_token_ids",
+      "pack_reversed_y_token_ids"
+
+   ]
   },
   "train": {
     "epochs": 100,
-    "batch_size": 32
+    "batch_size": 128
   },
   "metadata": {
     "requirements": [

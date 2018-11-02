@@ -17,7 +17,7 @@ from typing import List, Tuple, Optional
 import tensorflow as tf
 import numpy as np
 import json
-
+import time
 
 from functools import partial
 
@@ -27,6 +27,7 @@ from deeppavlov.core.layers.tf_layers import cudnn_bi_lstm, cudnn_bi_gru, bi_rnn
 from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.commands.utils import expand_path
 
 from deeppavlov.models.elmo.bilm_model import LanguageModel
 from deeppavlov.models.elmo.train_utils import print_variable_summary, average_gradients, clip_grads, summary_gradient_updates
@@ -35,9 +36,9 @@ log = get_logger(__name__)
 
 
 # class ELMo(TFModel): # TODO: Add TFModel inheritance
-@register('elmo')
+@register('elmo_model')
 class ELMo(NNModel):
-    """
+    """>>
     The :class:`~deeppavlov.models.ner.network.NerNetwork` is for Neural Named Entity Recognition and Slot Filling.
 
     Parameters:
@@ -94,7 +95,7 @@ class ELMo(NNModel):
                  learning_rate: float = 2e-1, # For AdagradOptimizer
                  initial_accumulator_value: float = 1.0,
                  seed: int = None, # Other
-                 n_gpus: int = None, # TODO: Add cpu supporting
+                 n_gpus: int = 1, # TODO: Add cpu supporting
                  batch_size: int = 128, # Data params
                  **kwargs) -> None:
         
@@ -121,8 +122,10 @@ class ELMo(NNModel):
 
         self.models, self.train_op, _, _ = self._build_graph()
         # self.models, self.train_op, self.summary_op, self.hist_summary_op = self._build_graph()
-
         self.saver = tf.train.Saver(tf.global_variables(), max_to_keep=2)
+        
+        self.batch_no = 0
+        self.batch_time = time.time()
 
         # ================= Initialize the session =================
         self.summary_writer, self.init_state_values, self.init_state_tensors, self.final_state_tensors =\
@@ -131,6 +134,7 @@ class ELMo(NNModel):
 
     def _load_options(self, options_json_path):
         if options_json_path:
+            options_json_path = expand_path(options_json_path)
             with open(options_json_path, 'r') as fin:
                 options = json.load(fin)
         else:
@@ -240,12 +244,17 @@ class ELMo(NNModel):
 
         return models, train_op, summary_op, hist_summary_op
 
+    def load(self):
+        pass
+    def save(self):
+        pass
+
     def _init_session(self):
         restart_ckpt_file = None # TODO: It is one too
         sess_config = tf.ConfigProto(allow_soft_placement=True)
         sess_config.gpu_options.allow_growth = True
-        if self._options['n_gpus'] is not None:
-            sess_config.gpu_options.visible_device_list = str(self._options['n_gpus'])
+        # if self._options['n_gpus'] is not None:
+        #     sess_config.gpu_options.visible_device_list = str(self._options['n_gpus']-1)
         self.sess = tf.Session(config=sess_config)
         self.sess.run(tf.initialize_all_variables())
 
@@ -312,36 +321,37 @@ class ELMo(NNModel):
         init_state_values = self.sess.run(init_state_tensors, feed_dict=feed_dict)
         return summary_writer, init_state_values, init_state_tensors, final_state_tensors
 
-    def _fill_feed_dict(self, xs, y=None, learning_rate=None, train=False):
+    def _fill_feed_dict(self,char_ids_batches, reversed_char_ids_batches, token_ids_batches = None, reversed_token_ids_batches = None, learning_rate=None, train=False):
         # init state tensors
         feed_dict = {t: v for t, v in zip(
                                     self.init_state_tensors, self.init_state_values)}
-        char_inputs = 'char_cnn' in self._options
+        # # pprint.pprint(f"char_ids_batches {char_ids_batches.shape}")
+        # # pprint.pprint(f"reversed_char_ids_batches {reversed_char_ids_batches.shape}")
+        # # pprint.pprint(f"token_ids_batches {token_ids_batches.shape}")
+        # # pprint.pprint(f"reversed_token_ids_batches {reversed_token_ids_batches.shape}")
         for k, model in enumerate(self.models):
             start = k * self._options['batch_size']
             end = (k + 1) * self._options['batch_size']
 
-            if not char_inputs:
-                token_ids = xs[0][start:end] # get token_ids
-                feed_dict[model.token_ids] = token_ids
-            else:
-                # character inputs
-                char_ids = xs[0][start:end] # get char_ids
-                feed_dict[model.tokens_characters] = char_ids
+
+            # character inputs
+            char_ids = char_ids_batches[start:end] # get char_ids
+            # # pprint.pprint(f"char_ids_batches[start:end] {char_ids_batches[start:end].shape}")
+            feed_dict[model.tokens_characters] = char_ids
 
             if self._options['bidirectional']:
-                if not char_inputs:
-                    feed_dict[model.token_ids_reverse] = \
-                         xs[1][start:end] # get token_ids_reverse
-                else:
-                    feed_dict[model.tokens_characters_reverse] = \
-                        xs[1][start:end] # get tokens_characters_reverse
+                feed_dict[model.tokens_characters_reverse] = \
+                    reversed_char_ids_batches[start:end] # get tokens_characters_reverse
+                
+                # # pprint.pprint(f"reversed_char_ids_batches[start:end] {reversed_char_ids_batches[start:end].shape}")
 
-            if y is not None:
+            if token_ids_batches is not None:
+                # # pprint.pprint(f"token_ids_batches[start:end] {token_ids_batches[start:end].shape}")
+                # pprint.pprint(f"reversed_token_ids_batches[start:end] {reversed_token_ids_batches[start:end].shape}")
                 # now the targets with weights
-                feed_dict[model.next_token_id] = y[0][start:end] # get next_token_id
+                feed_dict[model.next_token_id] = token_ids_batches[start:end] # get next_token_id
                 if self._options['bidirectional']:
-                    feed_dict[model.next_token_id_reverse] = y[1][start:end] # get next_token_id_reverse
+                    feed_dict[model.next_token_id_reverse] = reversed_token_ids_batches[start:end] # get next_token_id_reverse
 
             # if learning_rate is not None:
             #     feed_dict[self.learning_rate_ph] = learning_rate
@@ -357,10 +367,33 @@ class ELMo(NNModel):
         # return self.predict(args)
         return None
 
-    def train_on_batch(self, x: list, y: list):
-        feed_dict = self._fill_feed_dict(x, y, train=True)
-        ret = self.sess.run([self.train_op, self.final_state_tensors], feed_dict)
-        self.init_state_values = ret[1:]
+    def train_on_batch(self, char_ids_batches:list, reversed_char_ids_batches:list, token_ids_batches:list, reversed_token_ids_batches:list):
+        """
+        This method is called by trainer to make one training step on one batch.
+
+        Args:
+            char_ids_batches: batches of char_ids
+            reversed_char_ids_batches: batches of reversed_char_ids
+            token_ids_batches: batches of token_ids
+            reversed_token_ids_batches: batches of reversed_token_ids
+
+        Returns:
+            value of loss function on batch
+        """
+        self.batch_no +=1
+        if char_ids_batches:
+            print(f'batch_no {self.batch_no}')
+            print(f'share time {time.time() - self.batch_time }')
+            self.batch_time = time.time()
+
+            print(f'len(char_ids_batches) {len(char_ids_batches)}')
+        for c_ids, rc_ids, t_ids, rt_ids in zip(char_ids_batches, reversed_char_ids_batches, token_ids_batches, reversed_token_ids_batches):
+            feed_dict = self._fill_feed_dict(c_ids, rc_ids, t_ids, rt_ids, train=True)
+            # import pdb; pdb.set_trace()
+            ret = self.sess.run([self.train_op] + self.final_state_tensors, feed_dict)
+
+            self.init_state_values = ret[1:]
+
 
     # def process_event(self, event_name, data):
     #     if event_name == 'after_validation':
