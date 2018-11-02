@@ -9,25 +9,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-import copy
-import json
-
 from collections import Counter
-from typing import List, Tuple, Dict, Any, Union
+from typing import List, Tuple, Dict, Union
 from operator import itemgetter
 from scipy.stats import entropy
-import numpy as np
-from scipy.sparse import csr_matrix, vstack, hstack
+from scipy.sparse import csr_matrix, vstack
 from scipy.sparse.linalg import norm as sparse_norm
-from scipy.spatial.distance import cosine, euclidean
 
 import numpy as np
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import save_pickle, load_pickle
-from deeppavlov.core.commands.utils import expand_path, make_all_dirs, is_file_exist
+from deeppavlov.core.commands.utils import expand_path, make_all_dirs
 from deeppavlov.core.models.estimator import Component
 
 log = get_logger(__name__)
@@ -52,6 +46,7 @@ class EcommerceTfidfBot(Component):
     def __init__(self,
                  save_path: str,
                  load_path: str,
+                 preprocess: Component,
                  entropy_fields: list,
                  min_similarity: float = 0.5,
                  min_entropy: float = 0.5,
@@ -60,10 +55,12 @@ class EcommerceTfidfBot(Component):
         self.save_path = expand_path(save_path)
         self.load_path = expand_path(load_path)
 
+        self.preprocess = preprocess
         self.min_similarity = min_similarity
         self.min_entropy = min_entropy
         self.entropy_fields = entropy_fields
         self.ec_data: List = []
+        self.x_train_features = None
         if kwargs.get('mode') != 'train':
             self.load()
 
@@ -84,7 +81,6 @@ class EcommerceTfidfBot(Component):
         """Save classifier parameters"""
         log.info("Saving to {}".format(self.save_path))
         path = expand_path(self.save_path)
-        make_all_dirs(path)
         save_pickle((self.ec_data, self.x_train_features), path)
 
     def load(self) -> None:
@@ -144,7 +140,7 @@ class EcommerceTfidfBot(Component):
 
             log.info(f"Current state {state}")
 
-            if len(state['history']) > 0:
+            if state['history'] > 0:
                 if not np.array_equal(state['history'][-1].todense(), q_vect.todense()):
                     q_comp = q_vect.maximum(state['history'][-1])
                     complex_bool = self._take_complex_query(q_comp, q_vect)
@@ -239,16 +235,7 @@ class EcommerceTfidfBot(Component):
         for key, value in state.items():
             log.debug(f"Filtering for {key}:{value}")
 
-            if key == 'Price':
-                price = value
-                log.debug(f"Items before price filtering {len(ids)} with price {price}")
-                ids = [idx for idx in ids
-                       if self.preprocess.price(self.ec_data[idx]) >= price[0] and
-                       self.preprocess.price(self.ec_data[idx]) <= price[1] and
-                       self.preprocess.price(self.ec_data[idx]) != 0]
-                log.debug(f"Items after price filtering {len(ids)}")
-
-            elif key in ['query', 'start', 'stop', 'history']:
+            if key in ['query', 'start', 'stop', 'history']:
                 continue
 
             else:
