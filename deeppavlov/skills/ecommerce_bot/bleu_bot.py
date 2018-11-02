@@ -11,6 +11,7 @@
 
 import copy
 import json
+from pathlib import Path
 
 from collections import Counter
 from typing import List, Tuple, Dict, Any
@@ -22,7 +23,7 @@ import numpy as np
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import save_pickle, load_pickle
-from deeppavlov.core.commands.utils import expand_path, make_all_dirs, is_file_exist
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.models.estimator import Component
 from deeppavlov.core.skill.skill import Skill
 from deeppavlov.metrics.bleu import bleu_advanced
@@ -46,9 +47,15 @@ class EcommerceBleuBot(Skill):
         min_entropy: min entropy threshold for specifying
     """
 
-    def __init__(self, preprocess: Component, save_path: str, load_path: str,
-                 entropy_fields: list, min_similarity: float = 0.5,
-                 min_entropy: float = 0.5, **kwargs) -> None:
+    def __init__(self,
+                 preprocess: Component,
+                 save_path: str,
+                 load_path: str,
+                 entropy_fields: list,
+                 min_similarity: float = 0.5,
+                 min_entropy: float = 0.5,
+                 **kwargs) -> None:
+
         self.preprocess = preprocess
         self.save_path = expand_path(save_path)
 
@@ -84,14 +91,13 @@ class EcommerceBleuBot(Skill):
     def save(self, **kwargs) -> None:
         """Save classifier parameters"""
         log.info(f"Saving model to {self.save_path}")
-        make_all_dirs(self.save_path)
         save_pickle(self.ec_data, self.save_path)
 
     def load(self, **kwargs) -> None:
         """Load classifier parameters"""
         log.info(f"Loading model from {self.load_path}")
         for path in self.load_path:
-            if is_file_exist(path):
+            if Path.is_file(path):
                 self.ec_data += load_pickle(path)
             else:
                 log.info(f"File {path} does not exist")
