@@ -15,9 +15,8 @@
 import inspect
 from typing import Dict
 
-from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.commands.utils import expand_path, parse_config
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import get_model, cls_from_str
 from deeppavlov.core.models.component import Component
@@ -74,7 +73,7 @@ def from_params(params: Dict, mode: str = 'infer', **kwargs) -> Component:
         from deeppavlov.core.commands.infer import build_model
         refs = _refs.copy()
         _refs.clear()
-        config = read_json(expand_path(config_params['config_path']))
+        config = parse_config(expand_path(config_params['config_path']))
         model = build_model(config)
         _refs.clear()
         _refs.update(refs)
