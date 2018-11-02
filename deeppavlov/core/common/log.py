@@ -27,10 +27,10 @@ def get_settings_path() -> Path:
     with open(root_path / 'deeppavlov/paths.json', encoding='utf8') as fin:
         paths = json.load(fin)
 
-    configs_paths = Path(paths['configs_path']).resolve() if paths['configs_path'][0] == '/' \
-        else root_path / paths['configs_path']
+    settings_path = Path(paths['settings_path']).resolve() if paths['settings_path'][0] == '/' \
+        else root_path / paths['settings_path']
 
-    return configs_paths
+    return settings_path
 
 
 def get_logger(logger_name):
