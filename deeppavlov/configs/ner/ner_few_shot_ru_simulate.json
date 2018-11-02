@@ -1,11 +1,12 @@
 {
-  "deeppavlov_root": ".",
   "dataset_reader": {
     "name": "conll2003_reader",
+    "dataset_name": "collection_rus",
     "data_path": "ner_few_shot_data/"
   },
   "dataset_iterator": {
-    "name": "data_learning_iterator"
+    "name": "ner_few_shot_iterator",
+    "target_tag": "PER"
   },
   "chainer": {
     "in": ["x"],
@@ -32,9 +33,7 @@
         "mini_batch_size": 32,
         "in": ["x_tokens"],
         "spec": "embeddings/elmo_ru",
-        "out": [
-          "tokens_emb"
-        ]
+        "out": ["tokens_emb"]
       },
       {
         "name": "ner_svm",
