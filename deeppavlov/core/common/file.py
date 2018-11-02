@@ -22,6 +22,7 @@ from deeppavlov.core.common.log import get_logger
 
 log = get_logger(__name__)
 
+
 def find_config(pipeline_config_path: Union[str, Path]) -> Path:
     if not Path(pipeline_config_path).is_file():
         configs = [c for c in Path(__file__).parent.parent.parent.glob(f'configs/**/{pipeline_config_path}.json')
