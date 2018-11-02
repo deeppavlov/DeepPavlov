@@ -3,7 +3,7 @@
     "name": "basic_classification_reader",
     "x": "text",
     "y": "intents",
-    "data_path": "snips"
+    "data_path": "{DOWNLOADS_PATH}/snips"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator",
@@ -38,8 +38,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "classifiers/intents_snips_evolution/classes.dict",
-        "load_path": "classifiers/intents_snips_evolution/classes.dict",
+        "save_path": "{MODELS_PATH}/classifiers/intents_snips_evolution/classes.dict",
+        "load_path": "{MODELS_PATH}/classifiers/intents_snips_evolution/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -60,7 +60,7 @@
         "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
-        "load_path": "embeddings/wiki.en.bin"
+        "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin"
       },
       {
         "in": "y_ids",
@@ -81,8 +81,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/intents_snips_evolution/intents_snips",
-        "load_path": "classifiers/intents_snips_evolution/intents_snips",
+        "save_path": "{MODELS_PATH}/classifiers/intents_snips_evolution/intents_snips",
+        "load_path": "{MODELS_PATH}/classifiers/intents_snips_evolution/intents_snips",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -193,6 +193,11 @@
     "test_best": false
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "labels": {
       "telegram_utils": "IntentModel",
       "server_utils": "KerasIntentModel"
@@ -200,11 +205,11 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
-        "subdir": "snips"
+        "subdir": "{MODELS_PATH}/snips"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }

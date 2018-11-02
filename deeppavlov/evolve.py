@@ -27,7 +27,7 @@ from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.models.evolution.evolution_param_generator import ParamsEvolution
 from deeppavlov.core.common.file import read_json, save_json, find_config
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.commands.utils import expand_path, parse_config
 
 log = get_logger(__name__)
 
@@ -142,35 +142,22 @@ def main():
 
         population = []
         for i in range(population_size):
-            population.append(read_json(expand_path(Path(path_to_population).joinpath(
-                "model_" + str(i)).joinpath("config.json"))))
-            population[i] = evolution.insert_value_or_dict_into_config(
-                population[i], evolution.main_model_path + ["save_path"],
-                str(Path(
-                    evolution.get_value_from_config(evolution.basic_config, evolution.main_model_path + ["save_path"])
-                    ).joinpath(
-                    "population_" + str(start_from_population)).joinpath(
-                    "model_" + str(i)).joinpath(
-                    "model")))
+            config = read_json(expand_path(path_to_population) / f"model_{i}" / "config.json")
 
-            population[i] = evolution.insert_value_or_dict_into_config(
-                population[i], evolution.main_model_path + ["load_path"],
-                str(Path(
-                    evolution.get_value_from_config(population[i], evolution.main_model_path + ["load_path"]))))
+            save_path = Path(evolution.get_value_from_config(evolution.basic_config,
+                                                             evolution.main_model_path + ["save_path"]))
+            evolution.insert_value_or_dict_into_config(
+                config, evolution.main_model_path + ["save_path"],
+                str(save_path / f"population_{start_from_population}" / f"model_{i}" / "model"))
 
             for path_id, path_ in enumerate(evolution.paths_to_fiton_dicts):
-                population[i] = evolution.insert_value_or_dict_into_config(
-                    population[i], path_ + ["save_path"],
-                    str(Path(evolution.get_value_from_config(evolution.basic_config,
-                                                             evolution.main_model_path + ["save_path"])
-                             ).joinpath("population_" + str(iters)).joinpath("model_" + str(i)).joinpath(
-                        "fitted_model_" + str(path_id))))
+                save_path = Path(evolution.get_value_from_config(evolution.basic_config,
+                                                                 evolution.main_model_path + ["save_path"]))
+                evolution.insert_value_or_dict_into_config(
+                    config, path_ + ["save_path"],
+                    str(save_path / f"population_{iters}" / f"model_{i}" / f"fitted_model_{path_id}"))
 
-            for path_id, path_ in enumerate(evolution.paths_to_fiton_dicts):
-                population[i] = evolution.insert_value_or_dict_into_config(
-                    population[i], path_ + ["load_path"],
-                    str(Path(evolution.get_value_from_config(
-                        population[i], path_ + ["load_path"]))))
+            population.append(config)
 
     run_population(population, evolution, gpus)
     population_scores = results_to_table(population, evolution, considered_metrics,
@@ -212,11 +199,12 @@ def run_population(population, evolution, gpus):
         for j in range(len(gpus)):
             i = k * len(gpus) + j
             if i < population_size:
-                save_path = expand_path(Path(evolution.get_value_from_config(
-                    population[i], evolution.main_model_path + ["save_path"])).parent)
+                parsed = parse_config(population[i])
+                save_path = expand_path(
+                    evolution.get_value_from_config(parsed, evolution.main_model_path + ["save_path"])).parent
 
                 save_path.mkdir(parents=True, exist_ok=True)
-                f_name = save_path.joinpath("config.json")
+                f_name = save_path / "config.json"
                 save_json(population[i], f_name)
 
                 with save_path.joinpath('out.txt').open('w', encoding='utf8') as outlog,\
@@ -231,8 +219,9 @@ def run_population(population, evolution, gpus):
             i = k * len(gpus) + j
             log.info(f'Waiting on {i}th proc')
             if proc.wait() != 0:
-                save_path = expand_path(Path(evolution.get_value_from_config(
-                    population[i], evolution.main_model_path + ["save_path"])).parent)
+                parsed = parse_config(population[i])
+                save_path = expand_path(
+                    evolution.get_value_from_config(parsed, evolution.main_model_path + ["save_path"])).parent
 
                 with save_path.joinpath('err.txt').open(encoding='utf8') as errlog:
                     log.warning(f'Population {i} returned an error code {proc.returncode} and an error log:\n' +
@@ -259,10 +248,10 @@ def results_to_table(population, evolution, considered_metrics, result_file, res
     for m in considered_metrics:
         population_metrics[m] = []
     for i in range(population_size):
-        with open(str(expand_path(Path(evolution.get_value_from_config(
-                population[i],
-                evolution.main_model_path + ["save_path"])).parent.joinpath("out.txt"))), "r", encoding='utf8') as fout:
-            reports_data = fout.read().splitlines()[-2:]
+        parsed = parse_config(population[i])
+        logpath = expand_path(evolution.get_value_from_config(parsed, evolution.main_model_path + ["save_path"])
+                              ).parent / "out.txt"
+        reports_data = logpath.read_text(encoding='utf8').splitlines()[-2:]
         reports = []
         for j in range(2):
             try:

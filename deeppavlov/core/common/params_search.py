@@ -91,14 +91,14 @@ class ParamsSearch:
             path in config -- list of keys (strings and integers)
         """
         config_pointer = config
-        if type(config_pointer) is dict and key_model in config_pointer.keys():
+        if isinstance(config_pointer, dict) and key_model in config_pointer.keys():
             yield path
         else:
-            if type(config_pointer) is dict:
+            if isinstance(config_pointer, dict):
                 for key in list(config_pointer.keys()):
                     for path_ in self.find_model_path(config_pointer[key], key_model, path + [key]):
                         yield path_
-            elif type(config_pointer) is list:
+            elif isinstance(config_pointer, list):
                 for i in range(len(config_pointer)):
                     for path_ in self.find_model_path(config_pointer[i], key_model, path + [i]):
                         yield path_
@@ -142,9 +142,9 @@ class ParamsSearch:
         config_copy = deepcopy(config)
         config_pointer = config_copy
         for el in path[:-1]:
-            if type(config_pointer) is dict:
+            if isinstance(config_pointer, dict):
                 config_pointer = config_pointer.setdefault(el, {})
-            elif type(config_pointer) is list:
+            elif isinstance(config_pointer, list):
                 config_pointer = config_pointer[el]
             else:
                 pass
@@ -166,7 +166,7 @@ class ParamsSearch:
         for path_ in paths:
             param_name = path_[-1]
             value = self.get_value_from_config(basic_config, path_)
-            if type(value) is dict:
+            if isinstance(value, dict):
                 if (value.get(self.prefix + "_choice") or
                         value.get(self.prefix + "_range") or
                         value.get(self.prefix + "_bool")):
