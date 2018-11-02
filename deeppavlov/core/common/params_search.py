@@ -15,7 +15,7 @@
 import numpy as np
 from copy import deepcopy
 import random
-from typing import List, Generator, Tuple, Any
+from typing import List, Generator, Any
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
@@ -105,7 +105,7 @@ class ParamsSearch:
 
     @staticmethod
     def insert_value_or_dict_into_config(config: dict, path: list,
-                                         value: [int, float, str, bool, list, dict, np.ndarray]) -> dict:
+                                         value: [int, float, str, bool, list, dict, np.ndarray]) -> None:
         """
         Insert value to dictionary determined by path[:-1] in field with key path[-1]
 
@@ -117,17 +117,15 @@ class ParamsSearch:
         Returns:
             config with inserted value
         """
-        config_copy = deepcopy(config)
-        config_pointer = config_copy
+        config_pointer = config
         for el in path[:-1]:
-            if type(config_pointer) is dict:
+            if isinstance(config_pointer, dict):
                 config_pointer = config_pointer.setdefault(el, {})
-            elif type(config_pointer) is list:
+            elif isinstance(config_pointer, list):
                 config_pointer = config_pointer[el]
             else:
                 pass
         config_pointer[path[-1]] = value
-        return config_copy
 
     @staticmethod
     def get_value_from_config(config: dict, path: list) -> Any:
@@ -172,7 +170,7 @@ class ParamsSearch:
                 if (value.get(self.prefix + "_choice") or
                         value.get(self.prefix + "_range") or
                         value.get(self.prefix + "_bool")):
-                    config = self.insert_value_or_dict_into_config(
+                    self.insert_value_or_dict_into_config(
                         config, path_,
                         self.sample_params(**{param_name: deepcopy(value)})[param_name])
 
