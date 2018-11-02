@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import List, Tuple, Dict, Union
 
 from deeppavlov.core.commands.infer import build_model
-from deeppavlov.core.commands.utils import expand_path, import_packages
+from deeppavlov.core.commands.utils import expand_path, import_packages, parse_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.file import read_json
@@ -169,8 +169,7 @@ def get_iterator_from_config(config: dict, data: dict):
 def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
                                      to_train=True, to_validate=True, download=False) -> Dict[str, Dict[str, float]]:
     """Make training and evaluation of the model described in corresponding configuration file."""
-    if isinstance(config, (str, Path)):
-        config = read_json(config)
+    config = parse_config(config)
 
     if download:
         deep_download(config)
