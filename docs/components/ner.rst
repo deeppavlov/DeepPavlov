@@ -371,7 +371,8 @@ illustrate omidirectionality of the vocabulary. When strings are passed
 to the vocab, it convert them into indices. When the indices are passed
 to the vocab, they are converted to the tag strings.
 
-You can see all parts together in ``deeeppavlov/configs/ner/ner_conll2003.json``.
+You can see all parts together in
+:config:`ner/ner_conll2003.json <ner/ner_conll2003.json>` .
 
 Train and use the model
 -----------------------
@@ -527,7 +528,7 @@ markup, sequentially markup sentences until the total number of sentences with e
 `K`. During the training both sentences with and without markup are used.
 
 
-Mean F1 scores for Russian language on 10 sentences with entities :
+Mean chunk-wise F1 scores for Russian language on 10 sentences with entities :
 
 +---------+-------+
 |PER      | 84.85 |
@@ -537,8 +538,54 @@ Mean F1 scores for Russian language on 10 sentences with entities :
 |ORG      | 32.63 |
 +---------+-------+
 
-(the total number of training sentences is bigger and defined
-by the distribution of sentences with / without entities)
+(the total number of training sentences is bigger and defined by the distribution of sentences with / without entities).
+
+The model can be trained using CLI:
+
+.. code:: bash
+
+    python -m deeppavlov train ner_few_shot_ru
+
+you have to provide the `train.txt`, `valid.txt`, and `test.txt` files in the format described in the `Training data`_
+section. The files must be in the `ner_few_shot_data` folder as described in the `dataset_reader` part of the config
+:config:`ner/ner_few_shot_ru_train.json <ner/ner_few_shot_ru.json>` .
+
+To train and use the model from python code the following snippet can be used:
+
+.. code:: python
+
+    from deeppavlov import configs, train_model
+
+    ner_model = train_model(configs.ner.ner_few_shot_ru, download=True)
+    ner_model(['Example sentence'])
+
+Warning! This model can take a lot of time and memory if the number of sentences is greater than 1000!
+
+If a lot of data is available the few-shot setting can be simulated with special `dataset_iterator`. For this purpose
+the config
+:config:`ner/ner_few_shot_ru_train.json <ner/ner_few_shot_ru_simulate.json>` . The following code can be used for this
+simulation:
+
+.. code:: python
+
+    from deeppavlov import configs, train_model
+
+    ner_model = train_model(configs.ner.ner_few_shot_ru_simulate, download=True)
+
+In this config the `Collection dataset <http://labinform.ru/pub/named_entities/descr_ne.htm>`__ is used. However, if
+there are files `train.txt`, `valid.txt`, and `test.txt` in the `ner_few_shot_data` folder they will be used instead.
+
+
+To use existing few-shot model use the following python interface can be used:
+
+.. code:: python
+
+    from deeppavlov import configs, build_model
+    ner_model = build_model(configs.ner.ner_few_shot_ru)
+    ner_model([['Example', 'sentence']])
+    ner_model(['Example sentence'])
+
+
 
 Literature
 ----------
