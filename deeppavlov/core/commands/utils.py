@@ -21,6 +21,7 @@ _T = TypeVar('_T', str, float, bool, list, dict)
 
 
 def _parse_config_property(item: _T, variables: Dict[str, Union[str, Path, float, bool, None]]) -> _T:
+    """Recursively apply config's variables values to its property"""
     if isinstance(item, str):
         return item.format(**variables)
     elif isinstance(item, list):
@@ -32,6 +33,7 @@ def _parse_config_property(item: _T, variables: Dict[str, Union[str, Path, float
 
 
 def parse_config(config: Union[str, Path, dict]) -> dict:
+    """Read config's variables and apply their values to all its properties"""
     if isinstance(config, (str, Path)):
         config = read_json(config)
 
