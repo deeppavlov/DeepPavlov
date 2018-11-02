@@ -14,7 +14,7 @@
 from pathlib import Path
 from typing import Union, Dict, TypeVar
 
-from deeppavlov.core.common.file import read_json
+from deeppavlov.core.common.file import read_json, find_config
 
 # noinspection PyShadowingBuiltins
 _T = TypeVar('_T', str, float, bool, list, dict)
@@ -35,6 +35,7 @@ def _parse_config_property(item: _T, variables: Dict[str, Union[str, Path, float
 def parse_config(config: Union[str, Path, dict]) -> dict:
     """Read config's variables and apply their values to all its properties"""
     if isinstance(config, (str, Path)):
+        find_config(config)
         config = read_json(config)
 
     variables = {

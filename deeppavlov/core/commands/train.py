@@ -24,7 +24,6 @@ from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path, import_packages, parse_config
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.metrics_registry import get_metric_by_name
 from deeppavlov.core.common.params import from_params

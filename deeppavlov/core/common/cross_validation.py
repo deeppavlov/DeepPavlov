@@ -21,8 +21,7 @@ from sklearn.model_selection import KFold
 
 from deeppavlov.core.commands.train import train_evaluate_model_from_config, get_iterator_from_config, \
     read_data_by_config
-from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.file import read_json
+from deeppavlov.core.commands.utils import expand_path, parse_config
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.params_search import ParamsSearch
 
@@ -83,12 +82,8 @@ def generate_train_valid(data, n_folds=5, is_loo=False):
             yield data_i
 
 
-def calc_cv_score(config=None, pipeline_config_path=None, data=None, n_folds=5, is_loo=False):
-    if config is None:
-        if pipeline_config_path is not None:
-            config = read_json(pipeline_config_path)
-        else:
-            raise ValueError('Both \"config\" and \"pipeline_config_path\" are None')
+def calc_cv_score(config, data=None, n_folds=5, is_loo=False):
+    config = parse_config(config)
 
     if data is None:
         data = read_data_by_config(config)

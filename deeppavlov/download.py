@@ -21,8 +21,7 @@ from pathlib import Path
 from typing import Union, Optional, Dict, Iterable, Set, Tuple, List
 
 import deeppavlov
-from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.file import read_json
+from deeppavlov.core.commands.utils import expand_path, parse_config
 from deeppavlov.core.data.utils import download, download_decompress, get_all_elems_from_json
 from deeppavlov.core.common.log import get_logger
 
@@ -39,8 +38,7 @@ parser.add_argument('-all', action='store_true',
 
 
 def get_config_downloads(config: Union[str, Path, dict]) -> Set[Tuple[str, Path]]:
-    if isinstance(config, (str, Path)):
-        config = read_json(config)
+    config = parse_config(config)
 
     downloads = set()
     if 'metadata' in config and 'download' in config['metadata']:

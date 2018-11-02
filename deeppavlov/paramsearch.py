@@ -20,7 +20,8 @@ from itertools import product
 
 from sklearn.model_selection import train_test_split
 
-from deeppavlov.core.common.file import read_json, save_json, find_config
+from deeppavlov.core.commands.utils import parse_config
+from deeppavlov.core.common.file import save_json, find_config
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.core.commands.train import train_evaluate_model_from_config, get_iterator_from_config, read_data_by_config
@@ -62,7 +63,7 @@ def main():
 
     # read config
     pipeline_config_path = find_config(args.config_path)
-    config_init = read_json(pipeline_config_path)
+    config_init = parse_config(pipeline_config_path)
     config = config_init.copy()
     data = read_data_by_config(config)
     target_metric = config_init['train']['metrics'][0]
@@ -94,7 +95,7 @@ def main():
 
             if (n_folds is not None) | is_loo:
                 # CV for model evaluation
-                score_dict = calc_cv_score(config=config, data=data, n_folds=n_folds, is_loo=is_loo)
+                score_dict = calc_cv_score(config, data=data, n_folds=n_folds, is_loo=is_loo)
                 score = score_dict[next(iter(score_dict))]
             else:
                 # train/valid for model evaluation
@@ -120,7 +121,7 @@ def main():
             best_config = params_helper.insert_value_or_dict_into_config(best_config, param_paths[i],
                                                                          best_params_dict[param_name])
 
-    best_model_filename = pipeline_config_path.with_name(pipeline_config_path.name.replace('.json', '_cvbest.json'))
+    best_model_filename = pipeline_config_path.with_suffix('_cvbest.json')
     save_json(best_config, best_model_filename)
     log.info('Best model saved in json-file: {}'.format(best_model_filename))
 

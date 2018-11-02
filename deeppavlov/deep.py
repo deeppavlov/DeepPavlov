@@ -106,7 +106,7 @@ def main():
             log.error('Minimum number of Folds is 2')
         else:
             n_folds = args.folds
-            calc_cv_score(pipeline_config_path=pipeline_config_path, n_folds=n_folds, is_loo=False)
+            calc_cv_score(pipeline_config_path, n_folds=n_folds, is_loo=False)
 
 
 if __name__ == "__main__":
