@@ -18,7 +18,7 @@ from datetime import datetime
 from typing import Any, Optional, Hashable
 
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.common.paths import get_configs_path
+from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.data.utils import jsonify_data
 from deeppavlov.core.agent.rich_content import RichMessage
@@ -44,7 +44,7 @@ class DialogLogger:
         self.log_file: Current log file object.
     """
     def __init__(self, enabled: bool=False, agent_name: Optional[str]=None):
-        self.config: dict = read_json(get_configs_path() / LOGGER_CONFIG_FILENAME)
+        self.config: dict = read_json(get_settings_path() / LOGGER_CONFIG_FILENAME)
         self.enabled: bool = enabled or self.config['enabled']
 
         if self.enabled:

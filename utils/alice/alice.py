@@ -26,7 +26,7 @@ from deeppavlov.agents.processors.default_rich_content_processor import DefaultR
 from deeppavlov.core.agent import Agent
 from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.core.common.log import get_logger
-from deeppavlov.core.common.paths import get_configs_path
+from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.skills.default_skill.default_skill import DefaultStatelessSkill
 from utils.server_utils.server import get_server_params, init_model
 
@@ -82,7 +82,7 @@ def interact_alice(agent: Agent):
 
 
 def start_alice_server(model_config_path, https=False, ssl_key=None, ssl_cert=None):
-    server_config_path = get_configs_path() / SERVER_CONFIG_FILENAME
+    server_config_path = get_settings_path() / SERVER_CONFIG_FILENAME
     server_params = get_server_params(server_config_path, model_config_path)
 
     https = https or server_params['https']
