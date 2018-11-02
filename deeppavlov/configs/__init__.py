@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterator, Dict, Union
+from typing import Iterator, Dict, Union, Iterable
 
 
 class Struct:
@@ -20,7 +20,7 @@ class Struct:
 
         self.keys = lambda: self._keys
 
-    def _asdict(self, *, to_string=False) -> dict:
+    def _asdict(self, *, to_string: bool=False) -> dict:
         res = []
         for key in self._keys:
             value = getattr(self, key)
@@ -41,10 +41,10 @@ class Struct:
             item = item._asdict()
         return item
 
-    def __dir__(self):
+    def __dir__(self) -> Iterable:
         return self._keys
 
-    def _ipython_key_completions_(self):
+    def _ipython_key_completions_(self) -> Iterable:
         return self._keys
 
     def __str__(self) -> str:
