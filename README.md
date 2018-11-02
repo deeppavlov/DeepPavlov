@@ -1,9 +1,6 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/deepmipt/DeepPavlov/blob/master/LICENSE)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-green.svg)
 
-__In version 0.0.6 everything from package `deeppavlov.skills` except `deeppavlov.skills.pattern_matching_skill` was moved to `deeppavlov.models` so your imports might break__  
-
-
 DeepPavlov is an open-source conversational AI library built on [TensorFlow](https://www.tensorflow.org/) and [Keras](https://keras.io/). It is designed for
  * development of production ready chat-bots and complex conversational systems,
  * NLP and dialog systems research.
@@ -17,7 +14,7 @@ from deeppavlov.agents.default_agent.default_agent import DefaultAgent
 from deeppavlov.agents.processors.highest_confidence_selector import HighestConfidenceSelector
 ```
 
-Create skills as pre-defined responses for a user's input containing specific keywords. Every skill returns response and confidence.
+Create skills as pre-defined responses for a user's input containing specific keywords or matching regexps. Every skill returns response and confidence.
 ```python
 hello = PatternMatchingSkill(responses=['Hello world!'], patterns=["hi", "hello", "good day"])
 bye = PatternMatchingSkill(['Goodbye world!', 'See you around'], patterns=["bye", "chao", "see you"])
@@ -34,7 +31,7 @@ Give the floor to the HelloBot!
 print(HelloBot(['Hello!', 'Boo...', 'Bye.']))
 ```
 
-[Jupyther notebook with HelloBot example.](docs/intro/hello_bot.ipynb)
+[Jupyther notebook with HelloBot example.](https://colab.research.google.com/github/deepmipt/DeepPavlov/blob/master/docs/intro/hello_bot.ipynb)
 
 
 # Features
