@@ -47,7 +47,7 @@
         "name": "sklearn_component",
         "save_path": "ecommerce_bot/tfidf_vectorizer_ecommerce.pkl",
         "load_path": "ecommerce_bot/tfidf_vectorizer_ecommerce.pkl",
-        "model_name": "sklearn.feature_extraction.text:TfidfVectorizer",
+        "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
         "infer_method": "transform",
         "analyzer": "word",
         "use_idf": true
