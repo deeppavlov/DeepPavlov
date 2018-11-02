@@ -19,7 +19,7 @@ import argparse
 from deeppavlov.core.agent.agent import Agent
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.skill.skill import Skill
-from deeppavlov.core.commands.infer import build_model_from_config
+from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.agent.rich_content import RichMessage
 from deeppavlov.agents.rich_content.default_rich_content import PlainText, ButtonsFrame, Button
 from deeppavlov.deep import find_config
@@ -189,7 +189,7 @@ def make_agent() -> EcommerceAgent:
 
     config_path = find_config('ecommerce_tfidf')
     # config_path = find_config('ecommerce_bleu')
-    skill = build_model_from_config(config_path, as_component=True)
+    skill = build_model(config_path)
     agent = EcommerceAgent(skills=[skill])
     return agent
 
