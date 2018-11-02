@@ -138,7 +138,7 @@ class EcommerceTfidfBot(Component):
 
             log.info(f"Current state {state}")
 
-            if state['history'] > 0:
+            if state['history']:
                 if not np.array_equal(state['history'][-1].todense(), q_vect.todense()):
                     q_comp = q_vect.maximum(state['history'][-1])
                     complex_bool = self._take_complex_query(q_comp, q_vect)
