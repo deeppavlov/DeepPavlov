@@ -1,0 +1,104 @@
+{
+  "dataset_reader": {
+    "name": "amazon_ecommerce_reader",
+    "data_path": "./amazon_ecommerce",
+    "catalog": ["Phones", "Home", "Automotive", "Electronics", "Movies", "Books"]
+  },
+  "dataset_iterator": {
+    "name": "data_learning_iterator"
+  },
+ "chainer": {
+    "in": [
+      "query", 
+      "history", 
+      "state",
+      "data"
+    ],
+    "out": [
+      "response", 
+      "confidence", 
+      "state"
+    ],
+    "pipe": [
+      {
+        "name": "stream_spacy_tokenizer",
+        "in": "query",
+        "id": "my_tokenizer",
+        "lemmas": true,
+        "alphas_only": false,
+        "out": "q_token_lemmas"
+      },
+      {
+        "ref": "my_tokenizer",
+        "in": "q_token_lemmas",
+        "out": "q_lem"
+      },
+      {
+        "in": [
+          "q_lem"
+        ],
+        "out": [
+          "q_vect"
+        ],
+        "fit_on": [
+          "q_lem"
+        ],
+        "id": "tfidf_vec",
+        "name": "sklearn_component",
+        "save_path": "ecommerce_bot/tfidf_vectorizer_ecommerce.pkl",
+        "load_path": "ecommerce_bot/tfidf_vectorizer_ecommerce.pkl",
+        "model_name": "sklearn.feature_extraction.text:TfidfVectorizer",
+        "infer_method": "transform",
+        "analyzer": "word",
+        "use_idf": true
+      },
+      {
+        "name": "ecommerce_tfidf_bot",
+        "in": [
+          "q_vect",
+          "history",
+          "state"
+        ],
+        "fit_on": [
+          "data", 
+          "q_vect"
+        ],
+        "min_similarity": 0.5,
+        "min_entropy": 0.5,
+        "entropy_fields": ["Size", "Brand", "Author", "Color", "Genre"],
+        "save_path": "ecommerce_bot/ecommerce_tfidf_model.pkl",
+        "load_path": "ecommerce_bot/ecommerce_tfidf_model.pkl",
+        "out": [
+          "response", 
+          "confidence", 
+          "state"
+        ]
+
+      }
+    ]
+   },
+   "train":{
+    "validate_best": false,
+    "test_best": false
+   },
+   "metadata": {
+    "labels": {
+      "telegram_utils": "EcommerceBot",
+      "server_utils": "EcommerceBot"
+    },
+    "requirements": [
+        "../dp_requirements/spacy.txt",
+        "../dp_requirements/en_core_web_sm.txt"
+      ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_tfidf_model.pkl",
+        "subdir": "ecommerce_bot"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/ecommerce_bot/tfidf_vectorizer_ecommerce.pkl",
+        "subdir": "ecommerce_bot"
+      }
+    ]
+  }
+}
