@@ -11,17 +11,18 @@
 
 import copy
 import json
+
 from collections import Counter
-from operator import itemgetter
 from typing import List, Tuple, Dict, Any
+from operator import itemgetter
+from scipy.stats import entropy
 
 import numpy as np
-from scipy.stats import entropy
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import save_pickle, load_pickle
-from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.commands.utils import expand_path, make_all_dirs, is_file_exist
 from deeppavlov.core.models.estimator import Component
 from deeppavlov.core.skill.skill import Skill
 from deeppavlov.metrics.bleu import bleu_advanced
@@ -29,8 +30,8 @@ from deeppavlov.metrics.bleu import bleu_advanced
 log = get_logger(__name__)
 
 
-@register("ecommerce_bot")
-class EcommerceBot(Skill):
+@register("ecommerce_bleu_bot")
+class EcommerceBleuBot(Skill):
     """Class to retrieve product items from `load_path` catalogs
     in sorted order according to the similarity measure
     Retrieve the specification attributes with corresponding values
@@ -51,9 +52,10 @@ class EcommerceBot(Skill):
         self.preprocess = preprocess
         self.save_path = expand_path(save_path)
 
-        if not isinstance(load_path, list):
-            load_path = [load_path]
-        self.load_path = [expand_path(path) for path in load_path]
+        if isinstance(load_path, list):
+            self.load_path = [expand_path(path) for path in load_path]
+        else:
+            self.load_path = [expand_path(load_path)]
 
         self.min_similarity = min_similarity
         self.min_entropy = min_entropy
@@ -74,22 +76,22 @@ class EcommerceBot(Skill):
 
         log.info(f"Items to nlp: {len(data)}")
         self.ec_data = [dict(item, **{
-                                    'title_nlped': self.preprocess.spacy2dict(self.preprocess.analyze(item['Title'])),
-                                    'feat_nlped': self.preprocess.spacy2dict(self.preprocess.analyze(item['Title']+'. '+item['Feature']))
-                                      }) for item in data]
+            'title_nlped': self.preprocess.spacy2dict(self.preprocess.analyze(item['Title'])),
+            'feat_nlped': self.preprocess.spacy2dict(self.preprocess.analyze(item['Title']+'. '+item['Feature']))
+        }) for item in data]
         log.info('Data are nlped')
 
     def save(self, **kwargs) -> None:
         """Save classifier parameters"""
         log.info(f"Saving model to {self.save_path}")
-        self.save_path.parent.mkdir(parents=True, exist_ok=True)
+        make_all_dirs(self.save_path)
         save_pickle(self.ec_data, self.save_path)
 
     def load(self, **kwargs) -> None:
         """Load classifier parameters"""
         log.info(f"Loading model from {self.load_path}")
         for path in self.load_path:
-            if path.exists():
+            if is_file_exist(path):
                 self.ec_data += load_pickle(path)
             else:
                 log.info(f"File {path} does not exist")
@@ -102,11 +104,11 @@ class EcommerceBot(Skill):
 
         Parameters:
             queries: list of queries
+            history: list of previous queries
             states: list of dialog state
 
         Returns:
-            response:   items:      list of retrieved items 
-                        total:      total number of relevant items
+            response:   items:      list of retrieved items
                         entropies:  list of entropy attributes with corresponding values
 
             confidence: list of similarity scores
@@ -116,6 +118,8 @@ class EcommerceBot(Skill):
         response: List = []
         confidence: List = []
         results_args: List = []
+        entropies: List = []
+        back_states: List = []
         results_args_sim: List = []
 
         log.debug(f"queries: {queries} states: {states}")
@@ -148,12 +152,14 @@ class EcommerceBot(Skill):
                 state['Price'] = money_range
 
             score_title = [bleu_advanced(self.preprocess.lemmas(item['title_nlped']),
-                           self.preprocess.lemmas(self.preprocess.filter_nlp_title(query)),
-                           weights=(1,), penalty=False) for item in self.ec_data]
+                                         self.preprocess.lemmas(
+                                             self.preprocess.filter_nlp_title(query)),
+                                         weights=(1,), penalty=False) for item in self.ec_data]
 
             score_feat = [bleu_advanced(self.preprocess.lemmas(item['feat_nlped']),
-                          self.preprocess.lemmas(self.preprocess.filter_nlp(query)),
-                          weights=(0.3, 0.7), penalty=False) for idx, item in enumerate(self.ec_data)]
+                                        self.preprocess.lemmas(
+                                            self.preprocess.filter_nlp(query)),
+                                        weights=(0.3, 0.7), penalty=False) for idx, item in enumerate(self.ec_data)]
 
             scores = np.mean(
                 [score_feat, score_title], axis=0).tolist()
@@ -170,7 +176,7 @@ class EcommerceBot(Skill):
             results_args_sim = [
                 idx for idx in results_args if scores[idx] >= self.min_similarity]
 
-            log.debug(f"Items before similarity filtering {len(results_args)} and after {len(results_args_sim)} with th={self.min_similarity} "+
+            log.debug(f"Items before similarity filtering {len(results_args)} and after {len(results_args_sim)} with th={self.min_similarity} " +
                       f"the best one has score {scores[results_args[0]]} with title {self.ec_data[results_args[0]]['Title']}")
 
             for key, value in state.items():
@@ -180,11 +186,12 @@ class EcommerceBot(Skill):
                     price = value
                     log.debug(f"Items before price filtering {len(results_args_sim)} with price {price}")
                     results_args_sim = [idx for idx in results_args_sim
-                                        if price[0] <= self.preprocess.price(self.ec_data[idx]) <= price[1] and
+                                        if self.preprocess.price(self.ec_data[idx]) >= price[0] and
+                                        self.preprocess.price(self.ec_data[idx]) <= price[1] and
                                         self.preprocess.price(self.ec_data[idx]) != 0]
                     log.debug(f"Items after price filtering {len(results_args_sim)}")
 
-                elif key in ['query', 'start', 'stop']:
+                elif key in ['query', 'start', 'stop', 'history']:
                     continue
 
                 else:
@@ -192,19 +199,23 @@ class EcommerceBot(Skill):
                                         if key in self.ec_data[idx]
                                         if self.ec_data[idx][key].lower() == value.lower()]
 
-            response = []
+            local_response = []
             for idx in results_args_sim[start:stop]:
                 temp = copy.copy(self.ec_data[idx])
                 del temp['title_nlped']
                 del temp['feat_nlped']
-                response.append(temp)
+                local_response.append(temp)
 
-            confidence = [(score_title[idx], score_feat[idx])
-                          for idx in results_args_sim[start:stop]]
-            entropies = self._entropy_subquery(results_args_sim)
+            response.append(local_response)
+
+            confidence.append([(score_title[idx], score_feat[idx])
+                               for idx in results_args_sim[start:stop]])
+
+            entropies.append(self._entropy_subquery(results_args_sim))
             log.debug(f"Total number of relevant answers {len(results_args_sim)}")
+            back_states.append(state)
 
-        return (response, entropies, len(results_args_sim)), confidence, state
+        return (response, entropies), confidence, back_states
 
     def _entropy_subquery(self, results_args: List[int]) -> List[Tuple[float, str, List[Tuple[str, int]]]]:
         """Calculate entropy of selected attributes for items from the catalog.
