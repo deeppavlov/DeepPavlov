@@ -34,8 +34,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "classifiers/rusentiment_evolution/classes.dict",
-        "load_path": "classifiers/rusentiment_evolution/classes.dict",
+        "save_path": "{MODELS_PATH}/classifiers/rusentiment_evolution/classes.dict",
+        "load_path": "{MODELS_PATH}/classifiers/rusentiment_evolution/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -60,7 +60,7 @@
         "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
-        "load_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "load_path": "{DOWNLOADS_PATH}/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
         "dim": 300
       },
       {
@@ -81,8 +81,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/rusentiment_evolution/rusentiment_v0",
-        "load_path": "classifiers/rusentiment_evolution/rusentiment_v0",
+        "save_path": "{MODELS_PATH}/classifiers/rusentiment_evolution/rusentiment_v0",
+        "load_path": "{MODELS_PATH}/classifiers/rusentiment_evolution/rusentiment_v0",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -184,9 +184,14 @@
     "test_best": true
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/fasttext.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/dp_requirements/fasttext.txt"
     ],
     "labels": {
       "telegram_utils": "IntentModel",
@@ -195,15 +200,15 @@
     "download": [
       {
         "url": "https://github.com/text-machine-lab/rusentiment/raw/master/Dataset/rusentiment_random_posts.csv",
-        "subdir": "rusentiment"
+        "subdir": "{DOWNLOADS_PATH}/rusentiment"
       },
       {
         "url": "https://github.com/text-machine-lab/rusentiment/raw/master/Dataset/rusentiment_test.csv",
-        "subdir": "rusentiment"
+        "subdir": "{DOWNLOADS_PATH}/rusentiment"
       },
       {
         "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }
