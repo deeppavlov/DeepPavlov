@@ -39,7 +39,7 @@ def parse_config(config: Union[str, Path, dict]) -> dict:
         config = read_json(config)
 
     variables = {
-        'DEEPPAVLOV_ROOT': Path(__file__).parent.parent.parent
+        'DEEPPAVLOV_PATH': Path(__file__).parent.parent.parent
     }
     for name, value in config.get('metadata', {}).get('variables', {}).items():
         variables[name] = value.format(**variables)
