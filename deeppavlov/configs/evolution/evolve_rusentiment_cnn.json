@@ -3,7 +3,7 @@
     "name": "basic_classification_reader",
     "x": "text",
     "y": "label",
-    "data_path": "/home/dilyara/evolution_data/rusentiment_data/",
+    "data_path": "{DOWNLOADS_PATH}/rusentiment/",
     "train": "rusentiment_random_posts.csv",
     "test": "rusentiment_test.csv"
   },
@@ -34,8 +34,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "{MODELS_PATH}/classifiers/rusentiment_evolution/classes.dict",
-        "load_path": "{MODELS_PATH}/classifiers/rusentiment_evolution/classes.dict",
+        "save_path": "{MODELS_PATH}/classes.dict",
+        "load_path": "{MODELS_PATH}/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -81,8 +81,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "{MODELS_PATH}/classifiers/rusentiment_evolution/rusentiment_v0",
-        "load_path": "{MODELS_PATH}/classifiers/rusentiment_evolution/rusentiment_v0",
+        "save_path": "{MODELS_PATH}/model",
+        "load_path": "{MODELS_PATH}/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -187,7 +187,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/rusentiment_evolution"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -205,10 +205,6 @@
       {
         "url": "https://github.com/text-machine-lab/rusentiment/raw/master/Dataset/rusentiment_test.csv",
         "subdir": "{DOWNLOADS_PATH}/rusentiment"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
-        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }

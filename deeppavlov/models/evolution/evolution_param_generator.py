@@ -67,11 +67,13 @@ class ParamsEvolution(ParamsSearch):
                 with relative paths to evolving parameters
         n_params: number of evolving parameters
         evolution_model_id: identity number of model (the same for loaded pre-trained models)
+        models_path: path to models given in config variable `MODELS_PATH`. This variable \
+            should be used as prefix to all fitted and trained model in config~
         eps: EPS value
-        paths_to_fiton_dicts: list of lists of keys and/or integers (for list)
+        paths_to_fiton_dicts: list of lists of keys and/or integers (for list)\
                 with relative paths to dictionaries that can be "fitted on"
         n_fiton_dicts: number of dictionaries that can be "fitted on"
-        evolve_metric_optimization: whether to maximize or minimize considered metric
+        evolve_metric_optimization: whether to maximize or minimize considered metric \
                 Set of Values: ``"maximize", "minimize"``
     """
 
@@ -104,6 +106,12 @@ class ParamsEvolution(ParamsSearch):
         self.train_partition = train_partition
         self.evolution_model_id = 0
 
+        self.basic_config, self.models_path = self.remove_key_from_config(
+            self.basic_config, ["metadata", "variables", "MODELS_PATH"])
+        self.models_path = Path(self.models_path)
+        self.path_to_models_save_path = ["metadata", "variables", "MODELS_SAVE_PATH"]
+        self.path_to_models_load_path = ["metadata", "variables", "MODELS_LOAD_PATH"]
+
         try:
             self.evolve_metric_optimization = self.get_value_from_config(
                 self.basic_config, list(self.find_model_path(
@@ -124,24 +132,16 @@ class ParamsEvolution(ParamsSearch):
         population = []
         for i in range(self.population_size):
             config = self.initialize_params_in_config(self.basic_config, self.paths_to_params)
-            for which_path in ["save_path", "load_path"]:
-                p = Path(self.get_value_from_config(self.basic_config,
-                                                    self.main_model_path + [which_path]))
-                self.insert_value_or_dict_into_config(config, self.main_model_path + [which_path],
-                                                      str(p / f"population_{iteration}" / f"model_{i}" / "model"))
-            for path_id, path_ in enumerate(self.paths_to_fiton_dicts):
-                suffix = Path(self.get_value_from_config(self.basic_config,
-                                                         path_ + ["save_path"])).suffix
-                for which_path in ["save_path", "load_path"]:
-                    p = Path(self.get_value_from_config(self.basic_config,
-                                                        self.main_model_path + [which_path]))
-                    self.insert_value_or_dict_into_config(
-                        config, path_ + [which_path],
-                        str(p.joinpath(f"population_{iteration}", f"model_{i}", f"fitted_model_{path_id}")
-                            .with_suffix(suffix)))
-                    config["evolution_model_id"] = self.evolution_model_id
-            population.append(config)
+
+            self.insert_value_or_dict_into_config(config, self.path_to_models_save_path,
+                                                  str(self.models_path / f"population_{iteration}" / f"model_{i}"))
+            self.insert_value_or_dict_into_config(config, self.path_to_models_load_path,
+                                                  str(self.models_path / f"population_{iteration}" / f"model_{i}"))
+            # set model_id
+            config["evolution_model_id"] = self.evolution_model_id
+            # next id available
             self.evolution_model_id += 1
+            population.append(config)
 
         return population
 
@@ -173,58 +173,21 @@ class ParamsEvolution(ParamsSearch):
                 next_population[i]["dataset_reader"]["train"] = "_".join(
                     Path(next_population[i]["dataset_reader"]["train"]).stem.split("_")[:-1]
                 ) + "_" + str(iteration % self.train_partition) + file_ext
-            try:
-                # re-init learning rate with the final one (works for KerasModel)
-                self.insert_value_or_dict_into_config(
-                    next_population[i],
-                    self.main_model_path + ["learning_rate"],
-                    read_json(str(Path(self.get_value_from_config(next_population[i],
-                                                                  self.main_model_path + ["save_path"])
-                                       ).parent.joinpath("model_opt.json")))["final_learning_rate"])
-            except:
-                pass
-
             # load_paths
             if self.elitism_with_weights:
                 # if elite models are saved with weights
                 self.insert_value_or_dict_into_config(
-                    next_population[i],
-                    self.main_model_path + ["load_path"],
-                    self.get_value_from_config(next_population[i],
-                                               self.main_model_path + ["save_path"]))
-                for path_id, path_ in enumerate(self.paths_to_fiton_dicts):
-                    self.insert_value_or_dict_into_config(
-                        next_population[i], path_ + ["load_path"],
-                        self.get_value_from_config(next_population[i],
-                                                   path_ + ["save_path"]))
+                    next_population[i], self.path_to_models_load_path,
+                    self.get_value_from_config(next_population[i], self.path_to_models_save_path))
             else:
                 # if elite models are saved only as configurations and trained again
-                p = Path(self.get_value_from_config(self.basic_config, self.main_model_path + ["load_path"]))
-                self.insert_value_or_dict_into_config(next_population[i], self.main_model_path + ["load_path"],
-                                                      str(p / f"population_{iteration}" / f"model_{i}" / "model"))
-                for path_id, path_ in enumerate(self.paths_to_fiton_dicts):
-                    suffix = Path(self.get_value_from_config(self.basic_config,
-                                                             path_ + ["load_path"])).suffix
-                    self.insert_value_or_dict_into_config(
-                        next_population[i], path_ + ["load_path"],
-                        str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + ["load_path"])
-                                 ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath(
-                            "fitted_model_" + str(path_id)).with_suffix(suffix)))
-
-            # save_paths
-            self.insert_value_or_dict_into_config(
-                next_population[i],
-                self.main_model_path + ["save_path"],
-                str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + ["save_path"])
-                         ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath("model")))
-            for path_id, path_ in enumerate(self.paths_to_fiton_dicts):
-                suffix = Path(self.get_value_from_config(self.basic_config,
-                                                         path_ + ["save_path"])).suffix
                 self.insert_value_or_dict_into_config(
-                    next_population[i], path_ + ["save_path"],
-                    str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + ["save_path"])
-                             ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath(
-                        "fitted_model_" + str(path_id)).with_suffix(suffix)))
+                    next_population[i], self.path_to_models_load_path,
+                    str(self.models_path / f"population_{iteration}" / f"model_{i}"))
+
+            self.insert_value_or_dict_into_config(
+                next_population[i], self.path_to_models_save_path,
+                str(self.models_path / f"population_{iteration}" / f"model_{i}"))
 
         for i in range(self.n_saved_best_pretrained, self.population_size):
             # if several train files
@@ -233,21 +196,12 @@ class ParamsEvolution(ParamsSearch):
                 next_population[i]["dataset_reader"]["train"] = "_".join(
                     [str(p) for p in Path(next_population[i]["dataset_reader"]["train"]).stem.split("_")[:-1]]) \
                                                                 + "_" + str(iteration % self.train_partition) + file_ext
-            for which_path in ["save_path", "load_path"]:
-                self.insert_value_or_dict_into_config(
-                    next_population[i],
-                    self.main_model_path + [which_path],
-                    str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + [which_path])
-                             ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath("model")))
-            for path_id, path_ in enumerate(self.paths_to_fiton_dicts):
-                suffix = Path(self.get_value_from_config(self.basic_config,
-                                                         path_ + ["save_path"])).suffix
-                for which_path in ["save_path", "load_path"]:
-                    self.insert_value_or_dict_into_config(
-                        next_population[i], path_ + [which_path],
-                        str(Path(self.get_value_from_config(self.basic_config, self.main_model_path + [which_path])
-                                 ).joinpath("population_" + str(iteration)).joinpath("model_" + str(i)).joinpath(
-                            "fitted_model_" + str(path_id)).with_suffix(suffix)))
+            self.insert_value_or_dict_into_config(
+                next_population[i], self.path_to_models_save_path,
+                str(self.models_path / f"population_{iteration}" / f"model_{i}"))
+            self.insert_value_or_dict_into_config(
+                next_population[i], self.path_to_models_load_path,
+                str(self.models_path / f"population_{iteration}" / f"model_{i}"))
 
             next_population[i]["evolution_model_id"] = self.evolution_model_id
             self.evolution_model_id += 1

@@ -38,8 +38,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "{MODELS_PATH}/classifiers/intents_snips_evolution/classes.dict",
-        "load_path": "{MODELS_PATH}/classifiers/intents_snips_evolution/classes.dict",
+        "save_path": "{MODELS_PATH}/classes.dict",
+        "load_path": "{MODELS_PATH}/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -81,8 +81,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "{MODELS_PATH}/classifiers/intents_snips_evolution/intents_snips",
-        "load_path": "{MODELS_PATH}/classifiers/intents_snips_evolution/intents_snips",
+        "save_path": "{MODELS_PATH}/model",
+        "load_path": "{MODELS_PATH}/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -196,7 +196,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "MODELS_PATH": "{ROOT_PATH}/models/classifiers/intents_snips_evolution"
     },
     "labels": {
       "telegram_utils": "IntentModel",
