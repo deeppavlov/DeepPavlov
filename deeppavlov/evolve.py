@@ -112,7 +112,7 @@ def main():
                                                                           evolution.models_path))
     abs_path_to_main_models.mkdir(parents=True, exist_ok=True)
 
-    result_file = abs_path_to_main_models / "result_table.csv"
+    result_file = abs_path_to_main_models / "result_table.tsv"
 
     result_table_columns = []
     result_table_dict = {}
