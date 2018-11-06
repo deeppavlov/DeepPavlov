@@ -108,11 +108,11 @@ def main():
 
     # Create table variable for gathering results
 
-    abs_path_to_main_models = expand_path(Path(evolution.get_value_from_config(
-        parse_config(evolution.basic_config), evolution.models_path)))
+    abs_path_to_main_models = expand_path(evolution.get_value_from_config(parse_config(evolution.basic_config),
+                                                                          evolution.models_path))
     abs_path_to_main_models.mkdir(parents=True, exist_ok=True)
 
-    result_file = abs_path_to_main_models.joinpath("result_table.csv")
+    result_file = abs_path_to_main_models / "result_table.csv"
 
     result_table_columns = []
     result_table_dict = {}
