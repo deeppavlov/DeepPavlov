@@ -108,12 +108,11 @@ def main():
 
     # Create table variable for gathering results
 
-    expand_path(Path(evolution.get_value_from_config(
-        evolution.basic_config, evolution.main_model_path + ["save_path"]))).mkdir(parents=True, exist_ok=True)
+    abs_path_to_main_models = expand_path(Path(evolution.get_value_from_config(
+        parse_config(evolution.basic_config), evolution.models_path)))
+    abs_path_to_main_models.mkdir(parents=True, exist_ok=True)
 
-    result_file = expand_path(Path(evolution.get_value_from_config(evolution.basic_config,
-                                                                   evolution.main_model_path + ["save_path"])
-                                   ).joinpath("result_table.csv"))
+    result_file = abs_path_to_main_models.joinpath("result_table.csv")
 
     result_table_columns = []
     result_table_dict = {}
@@ -144,18 +143,9 @@ def main():
         for i in range(population_size):
             config = read_json(expand_path(path_to_population) / f"model_{i}" / "config.json")
 
-            save_path = Path(evolution.get_value_from_config(evolution.basic_config,
-                                                             evolution.main_model_path + ["save_path"]))
             evolution.insert_value_or_dict_into_config(
-                config, evolution.main_model_path + ["save_path"],
-                str(save_path / f"population_{start_from_population}" / f"model_{i}" / "model"))
-
-            for path_id, path_ in enumerate(evolution.paths_to_fiton_dicts):
-                save_path = Path(evolution.get_value_from_config(evolution.basic_config,
-                                                                 evolution.main_model_path + ["save_path"]))
-                evolution.insert_value_or_dict_into_config(
-                    config, path_ + ["save_path"],
-                    str(save_path / f"population_{iters}" / f"model_{i}" / f"fitted_model_{path_id}"))
+                config, evolution.path_to_models_save_path,
+                str(evolution.main_model_path / f"population_{start_from_population}" / f"model_{i}"))
 
             population.append(config)
 
@@ -199,9 +189,9 @@ def run_population(population, evolution, gpus):
         for j in range(len(gpus)):
             i = k * len(gpus) + j
             if i < population_size:
-                parsed = parse_config(population[i])
                 save_path = expand_path(
-                    evolution.get_value_from_config(parsed, evolution.main_model_path + ["save_path"])).parent
+                    evolution.get_value_from_config(parse_config(population[i]),
+                                                    evolution.path_to_models_save_path))
 
                 save_path.mkdir(parents=True, exist_ok=True)
                 f_name = save_path / "config.json"
@@ -219,10 +209,9 @@ def run_population(population, evolution, gpus):
             i = k * len(gpus) + j
             log.info(f'Waiting on {i}th proc')
             if proc.wait() != 0:
-                parsed = parse_config(population[i])
                 save_path = expand_path(
-                    evolution.get_value_from_config(parsed, evolution.main_model_path + ["save_path"])).parent
-
+                    evolution.get_value_from_config(parse_config(population[i]),
+                                                    evolution.path_to_models_save_path))
                 with save_path.joinpath('err.txt').open(encoding='utf8') as errlog:
                     log.warning(f'Population {i} returned an error code {proc.returncode} and an error log:\n' +
                                 errlog.read())
@@ -248,8 +237,8 @@ def results_to_table(population, evolution, considered_metrics, result_file, res
     for m in considered_metrics:
         population_metrics[m] = []
     for i in range(population_size):
-        parsed = parse_config(population[i])
-        logpath = expand_path(evolution.get_value_from_config(parsed, evolution.main_model_path + ["save_path"])
+        logpath = expand_path(evolution.get_value_from_config(parse_config(population[i]),
+                                                              evolution.path_to_models_save_path)
                               ).parent / "out.txt"
         reports_data = logpath.read_text(encoding='utf8').splitlines()[-2:]
         reports = []
