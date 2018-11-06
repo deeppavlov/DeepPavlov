@@ -56,7 +56,7 @@
   },
   "metadata": {
     "requirements": [
-      "../dp_requirements/tf.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "labels": {
       "server_utils": "ODQA"

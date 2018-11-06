@@ -10,7 +10,7 @@
     ],
     "class_sep": ",",
     "train": "sample.csv",
-    "data_path": "sample",
+    "data_path": "{DOWNLOADS_PATH}/sample",
     "x": "text",
     "y": "classes",
     "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
@@ -39,8 +39,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "classifiers/intents_snips_v7/classes.dict",
-        "load_path": "classifiers/intents_snips_v7/classes.dict",
+        "save_path": "{MODELS_PATH}/classifiers/intents_snips_v7/classes.dict",
+        "load_path": "{MODELS_PATH}/classifiers/intents_snips_v7/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -56,7 +56,7 @@
         "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
-        "load_path": "embeddings/dstc2_fastText_model.bin"
+        "load_path": "{DOWNLOADS_PATH}/embeddings/dstc2_fastText_model.bin"
       },
       {
         "in": "y_ids",
@@ -76,8 +76,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/intents_snips_v7/model",
-        "load_path": "classifiers/intents_snips_v7/model",
+        "save_path": "{MODELS_PATH}/classifiers/intents_snips_v7/model",
+        "load_path": "{MODELS_PATH}/classifiers/intents_snips_v7/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -132,9 +132,14 @@
     "test_best": false
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/fasttext.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
     "labels": {
       "telegram_utils": "IntentModel",
@@ -143,15 +148,15 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
-        "subdir": "sample"
+        "subdir": "{DOWNLOADS_PATH}/sample"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/dstc2_fastText_model.bin",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_snips_v7.tar.gz",
-        "subdir": "classifiers"
+        "subdir": "{MODELS_PATH}/classifiers"
       }
     ]
   }

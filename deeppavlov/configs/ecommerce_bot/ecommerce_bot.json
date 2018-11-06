@@ -37,8 +37,8 @@
       "server_utils": "EcommerceBot"
     },
     "requirements": [
-        "../dp_requirements/spacy.txt",
-        "../dp_requirements/en_core_web_sm.txt"
+        "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+        "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
       ],
     "download": [
       {

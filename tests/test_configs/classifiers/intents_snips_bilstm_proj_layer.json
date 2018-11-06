@@ -3,7 +3,7 @@
     "name": "basic_classification_reader",
     "x": "text",
     "y": "intents",
-    "data_path": "snips",
+    "data_path": "{DOWNLOADS_PATH}/snips",
     "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv"
   },
   "dataset_iterator": {
@@ -33,8 +33,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "vocabs/snips_classes.dict",
-        "load_path": "vocabs/snips_classes.dict",
+        "save_path": "{MODELS_PATH}/vocabs/snips_classes.dict",
+        "load_path": "{MODELS_PATH}/vocabs/snips_classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -50,8 +50,8 @@
         "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
-        "save_path": "embeddings/dstc2_fastText_model.bin",
-        "load_path": "embeddings/dstc2_fastText_model.bin",
+        "save_path": "{DOWNLOADS_PATH}/embeddings/dstc2_fastText_model.bin",
+        "load_path": "{DOWNLOADS_PATH}/embeddings/dstc2_fastText_model.bin",
         "dim": 100
       },
       {
@@ -72,8 +72,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/intent_cnn_snips_bistlm",
-        "load_path": "classifiers/intent_cnn_snips_bilstm",
+        "save_path": "{MODELS_PATH}/classifiers/intent_cnn_snips_bistlm",
+        "load_path": "{MODELS_PATH}/classifiers/intent_cnn_snips_bilstm",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "units_lstm": 64,
@@ -125,22 +125,30 @@
     "test_best": false
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/fasttext.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
     "labels": {
       "telegram_utils": "IntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
       {
         "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv",
-        "subdir": "snips"
+        "subdir": "{DOWNLOADS_PATH}/snips"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/dstc2_fastText_model.bin",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }

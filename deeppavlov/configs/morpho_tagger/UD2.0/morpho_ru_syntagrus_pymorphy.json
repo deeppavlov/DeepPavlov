@@ -174,8 +174,8 @@
   },
   "metadata": {
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/morpho_tagger.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
     ],
     "download": [
       {

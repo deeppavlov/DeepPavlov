@@ -97,8 +97,8 @@
   },
   "metadata": {
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/gensim.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
     ],
     "labels": {
       "telegram_utils": "SiameseModel",

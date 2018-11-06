@@ -3,7 +3,7 @@
     "name": "basic_classification_reader",
     "x": "Comment",
     "y": "Class",
-    "data_path": "insults_data"
+    "data_path": "{DOWNLOADS_PATH}/insults_data"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator",
@@ -23,8 +23,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "classifiers/insults_kaggle_v1/classes.dict",
-        "load_path": "classifiers/insults_kaggle_v1/classes.dict",
+        "save_path": "{MODELS_PATH}/classifiers/insults_kaggle_v1/classes.dict",
+        "load_path": "{MODELS_PATH}/classifiers/insults_kaggle_v1/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -49,7 +49,7 @@
         "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
-        "load_path": "embeddings/wordpunct_tok_reddit_comments_2017_11_300.bin"
+        "load_path": "{DOWNLOADS_PATH}/embeddings/wordpunct_tok_reddit_comments_2017_11_300.bin"
       },
       {
         "in": "y_ids",
@@ -69,8 +69,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/insults_kaggle_v1/model",
-        "load_path": "classifiers/insults_kaggle_v1/model",
+        "save_path": "{MODELS_PATH}/classifiers/insults_kaggle_v1/model",
+        "load_path": "{MODELS_PATH}/classifiers/insults_kaggle_v1/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -126,23 +126,31 @@
     "test_best": true
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/fasttext.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
     "labels": {
       "telegram_utils": "IntentModel",
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/datasets/insults_data.tar.gz",
+      {
+        "url": "http://files.deeppavlov.ai/datasets/insults_data.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      },
       {
         "url": "http://files.deeppavlov.ai/embeddings/reddit_fastText/wordpunct_tok_reddit_comments_2017_11_300.bin",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/insults_kaggle_v1.tar.gz",
-        "subdir": "classifiers"
+        "subdir": "{MODELS_PATH}/classifiers"
       }
     ]
   }

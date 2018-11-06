@@ -51,7 +51,7 @@
   },
   "metadata": {
     "requirements": [
-      "../dp_requirements/fasttext.txt"
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
     "download": [
       {

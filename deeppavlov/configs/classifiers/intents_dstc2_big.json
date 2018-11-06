@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "dstc2_reader",
-    "data_path": "dstc2"
+    "data_path": "{DOWNLOADS_PATH}/dstc2"
   },
   "dataset_iterator": {
     "name": "dstc2_intents_iterator",
@@ -21,8 +21,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "classifiers/intents_dstc2_v7/classes.dict",
-        "load_path": "classifiers/intents_dstc2_v7/classes.dict",
+        "save_path": "{MODELS_PATH}/classifiers/intents_dstc2_v7/classes.dict",
+        "load_path": "{MODELS_PATH}/classifiers/intents_dstc2_v7/classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -38,7 +38,7 @@
         "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
-        "load_path": "embeddings/wiki.en.bin"
+        "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin"
       },
       {
         "in": "y_ids",
@@ -60,8 +60,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "classifiers/intents_dstc2_v7/model",
-        "load_path": "classifiers/intents_dstc2_v7/model",
+        "save_path": "{MODELS_PATH}/classifiers/intents_dstc2_v7/model",
+        "load_path": "{MODELS_PATH}/classifiers/intents_dstc2_v7/model",
         "embedding_size": "#my_embedder.dim",
         "classes": "#classes_vocab.keys()",
         "n_classes": "#classes_vocab.len",
@@ -130,22 +130,30 @@
     "test_best": true
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/fasttext.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
     ],
     "labels": {
       "telegram_utils": "IntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/intents_dstc2_v7.tar.gz",
-        "subdir": "classifiers"
+        "subdir": "{MODELS_PATH}/classifiers"
       }
     ]
   }

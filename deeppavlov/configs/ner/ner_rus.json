@@ -149,8 +149,8 @@
   },
   "metadata": {
     "requirements": [
-      "../dp_requirements/fasttext.txt",
-      "../dp_requirements/tf.txt"
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",

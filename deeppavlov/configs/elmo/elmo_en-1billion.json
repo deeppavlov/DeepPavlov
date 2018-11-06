@@ -28,8 +28,8 @@
   },
   "metadata": {
     "requirements": [
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/elmo.txt"
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/elmo.txt"
     ]
   }
 }
