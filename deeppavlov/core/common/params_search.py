@@ -16,6 +16,7 @@ import numpy as np
 from copy import deepcopy
 import random
 from typing import List, Generator, Any, Tuple
+from collections import OrderedDict
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
@@ -111,7 +112,7 @@ class ParamsSearch:
         """
         config_pointer = config
         for el in path[:-1]:
-            if isinstance(config_pointer, dict):
+            if isinstance(config_pointer, dict) or type(config_pointer) is OrderedDict:
                 config_pointer = config_pointer.setdefault(el, {})
             elif isinstance(config_pointer, list):
                 config_pointer = config_pointer[el]
@@ -134,7 +135,7 @@ class ParamsSearch:
         config_copy = deepcopy(config)
         config_pointer = config_copy
         for el in path[:-1]:
-            if isinstance(config_pointer, dict):
+            if isinstance(config_pointer, dict) or type(config_pointer) is OrderedDict:
                 config_pointer = config_pointer.setdefault(el, {})
             elif isinstance(config_pointer, list):
                 config_pointer = config_pointer[el]
@@ -157,7 +158,7 @@ class ParamsSearch:
         config_copy = deepcopy(config)
         config_pointer = config_copy
         for el in path[:-1]:
-            if type(config_pointer) is dict:
+            if type(config_pointer) is dict or type(config_pointer) is OrderedDict:
                 config_pointer = config_pointer.setdefault(el, {})
             elif type(config_pointer) is list:
                 config_pointer = config_pointer[el]

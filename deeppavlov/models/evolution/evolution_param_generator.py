@@ -86,6 +86,7 @@ class ParamsEvolution(ParamsSearch):
                  train_partition: int = 1,
                  elitism_with_weights: bool = False,
                  prefix="evolve",
+                 models_path_variable="MODELS_PATH",
                  **kwargs):
         """
         Initialize evolution with random population
@@ -105,12 +106,21 @@ class ParamsEvolution(ParamsSearch):
         self.n_saved_best_pretrained = 0
         self.train_partition = train_partition
         self.evolution_model_id = 0
-
         self.basic_config, self.models_path = self.remove_key_from_config(
-            self.basic_config, ["metadata", "variables", "MODELS_PATH"])
+            self.basic_config, ["metadata", "variables", models_path_variable])
         self.models_path = Path(self.models_path)
+        for path_name in ["save_path", "load_path"]:
+            occured_mpaths = list(self.find_model_path(self.basic_config, path_name))
+            for ppath in occured_mpaths:
+                new_path = self.get_value_from_config(
+                    self.basic_config,
+                    ppath + [path_name]).replace(models_path_variable, "MODELS_" + path_name.upper())
+                self.insert_value_or_dict_into_config(self.basic_config, ppath + [path_name], new_path)
+
         self.path_to_models_save_path = ["metadata", "variables", "MODELS_SAVE_PATH"]
         self.path_to_models_load_path = ["metadata", "variables", "MODELS_LOAD_PATH"]
+        self.insert_value_or_dict_into_config(self.basic_config, self.path_to_models_save_path, self.models_path)
+        self.insert_value_or_dict_into_config(self.basic_config, self.path_to_models_load_path, self.models_path)
 
         try:
             self.evolve_metric_optimization = self.get_value_from_config(
