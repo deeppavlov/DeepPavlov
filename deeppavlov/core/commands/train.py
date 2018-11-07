@@ -166,7 +166,7 @@ def get_iterator_from_config(config: dict, data: dict):
 
 
 def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
-                                     to_train=True, to_validate=True) -> Dict[str, Dict[str, float]]:
+                                     to_train=True, to_validate=True, start_epoch_num=0) -> Dict[str, Dict[str, float]]:
     """Make training and evaluation of the model described in corresponding configuration file."""
     if isinstance(config, (str, Path)):
         config = read_json(config)
@@ -200,7 +200,7 @@ def train_evaluate_model_from_config(config: [str, Path, dict], iterator=None,
         model = fit_chainer(config, iterator)
 
         if callable(getattr(model, 'train_on_batch', None)):
-            _train_batches(model, iterator, train_config, metrics_functions)
+            _train_batches(model, iterator, train_config, metrics_functions, start_epoch_num=start_epoch_num)
         elif callable(getattr(model, 'fit_batches', None)):
             _fit_batches(model, iterator, train_config)
         elif callable(getattr(model, 'fit', None)):

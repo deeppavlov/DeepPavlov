@@ -27,7 +27,7 @@ log = get_logger(__name__)
 
 @register('file_paths_iterator')
 class FilePathsIterator(DataLearningIterator):
-    """Dataset iterator for tokenized datasetes like 1 Billion Word Benchmark
+    """Dataset iterator for datasetes like 1 Billion Word Benchmark
 
     Args:
         data: dict with keys ``'train'``, ``'valid'`` and ``'test'`` and values
@@ -79,4 +79,4 @@ class FilePathsIterator(DataLearningIterator):
                 bs = len(shard)
             lines_generator = self._chunk_generator(shard, bs)
             for lines in lines_generator:
-                yield (lines, None)
+                yield (lines, [])
