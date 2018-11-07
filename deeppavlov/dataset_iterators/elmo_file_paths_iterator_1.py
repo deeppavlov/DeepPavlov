@@ -23,8 +23,8 @@ from deeppavlov.core.common.log import get_logger
 
 log = get_logger(__name__)
 
-@register('elmo_file_paths_iterator')
-class ELMoFilePathsIterator(DataLearningIterator):
+@register('elmo_file_paths_iterator_1')
+class ELMoFilePathsIterator_1(DataLearningIterator):
     """Dataset iterator for datasetes like 1 Billion Word Benchmark
 
     Args:

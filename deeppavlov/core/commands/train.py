@@ -18,7 +18,7 @@ import json
 import time
 from collections import OrderedDict, namedtuple
 from pathlib import Path
-from typing import List, Tuple, Dict, Union
+from typing import List, Tuple, Dict, Union, Optional
 
 from deeppavlov.core.commands.infer import build_model_from_config
 from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root, import_packages
@@ -287,10 +287,11 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
 
 
 def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config: dict,
-                   metrics_functions: List[Metric]) -> NNModel:
+                   metrics_functions: List[Metric], *, start_epoch_num: Optional[int] = None) -> NNModel:
 
     default_train_config = {
         'epochs': 0,
+        'start_epoch_num': 0,
         'max_batches': 0,
         'batch_size': 1,
 
@@ -327,7 +328,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
         raise ConfigError('metric_optimization has to be one of {}'.format(['maximize', 'minimize']))
 
     i = 0
-    epochs = 0
+    epochs = start_epoch_num if not (start_epoch_num is None) else train_config['start_epoch_num']
     examples = 0
     saved = False
     patience = 0

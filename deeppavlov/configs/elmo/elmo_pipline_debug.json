@@ -1,9 +1,11 @@
 {
   "dataset_reader": {
     "name": "file_paths_reader",
-    "data_path": "elmo/oil-gas_elmo/data",
+    "data_path": "elmo/test/data",
+    "data_path": "elmo/super_tiny_test/data",
     "train": "train/*",
-    "test": "held-out/*"
+    "test": "held-out/*",
+    "valid": "held-out/*"
   },
   "dataset_iterator": {
     "name": "elmo_file_paths_iterator",
@@ -33,8 +35,10 @@
         "word_boundary_special_char_use": true,
         "sentence_boundary_special_char_use": true,
         "reversed_sentense_tokens": false,
-        "load_path":"elmo/oil-gas_elmo/data/tokens_set.txt",
-        "save_path":"elmo/oil-gas_elmo/data/tokens_set1.txt",
+        "load_path":"elmo/test/data/tokens_set.txt",
+        "save_path":"elmo/test/data/tokens_set1.txt",
+        "load_path":"elmo/super_tiny_test/data/tokens_set.txt",
+        "save_path":"elmo/super_tiny_test/data/tokens_set1.txt",
         "out": ["x_char_ids"]
       },
       {
@@ -46,8 +50,10 @@
         "word_boundary_special_char_use": true,
         "sentence_boundary_special_char_use": true,
         "reversed_sentense_tokens": true,
-        "load_path":"elmo/oil-gas_elmo/data/tokens_set.txt",
-        "save_path":"elmo/oil-gas_elmo/data/tokens_set1.txt",
+        "load_path":"elmo/test/data/tokens_set.txt",
+        "save_path":"elmo/test/data/tokens_set1.txt",
+        "load_path":"elmo/super_tiny_test/data/tokens_set.txt",
+        "save_path":"elmo/super_tiny_test/data/tokens_set1.txt",
         "out": ["reversed_x_char_ids"]
       },
       {
@@ -79,8 +85,10 @@
         "min_freq": 2,
         "special_tokens": ["</S>", "<S>", "<UNK>"],
         "unk_token": "<UNK>",
-        "save_path": "elmo/oil-gas_elmo/data/tokens_set1.txt",
-        "load_path": "elmo/oil-gas_elmo/data/tokens_set.txt",
+        "save_path": "elmo/test/data/tokens_set1.txt",
+        "load_path": "elmo/test/data/tokens_set.txt",
+        "save_path": "elmo/super_tiny_test/data/tokens_set1.txt",
+        "load_path": "elmo/super_tiny_test/data/tokens_set.txt",
         "out": ["y_token_ids"]
       },
       {
@@ -94,8 +102,10 @@
         "min_freq": 2,
         "special_tokens": ["</S>", "<S>", "<UNK>"],
         "unk_token": "<UNK>",
-        "save_path": "elmo/oil-gas_elmo/data/tokens_set1.txt",
-        "load_path": "elmo/oil-gas_elmo/data/tokens_set.txt",
+        "save_path": "elmo/test/data/tokens_set1.txt",
+        "load_path": "elmo/test/data/tokens_set.txt",
+        "save_path": "elmo/super_tiny_test/data/tokens_set1.txt",
+        "load_path": "elmo/super_tiny_test/data/tokens_set.txt",
         "out": ["reversed_y_token_ids"]
       },
       {
@@ -103,6 +113,7 @@
         "name": "elmo_preprocessor",
         "batch_size": 128, 
         "unroll_steps": 20, 
+        "max_word_length": 50,
         "n_gpus": 1, 
 
         "out": ["pack_x_char_ids", "pack_reversed_x_char_ids", "pack_y_token_ids", "pack_reversed_y_token_ids"]
@@ -113,12 +124,14 @@
         "options_json_path": "elmo/options.json",
         "unroll_steps": 20,
         "batch_size": 128,
-        "in": ["pack_x_char_ids", "pack_reversed_x_char_ids"],
-        "in_y": ["pack_y_token_ids", "pack_reversed_y_token_ids"],
+        "save_path": "elmo/ckpts/model",
+        "load_path": "elmo/ckpts/model",
+        "in": ["pack_x_char_ids", "pack_reversed_x_char_ids", "pack_y_token_ids", "pack_reversed_y_token_ids"],
+        "in_y": [],
         "out": ["loss"]
       }
     ],
-    "out1": [
+    "out": [
       "sentences",
       "reversed_sentences",
       "x_char_ids",
@@ -133,21 +146,31 @@
       "pack_y_token_ids",
       "pack_reversed_y_token_ids"
 
-   ]
+   ],
+   "out": [
+    "loss"
+  ]
   },
   "train": {
     "epochs": 100,
-    "batch_size": 128
+    "batch_size": 128,
+    "log_every_n_batches": 5,
+    "val_every_n_epochs": 1,
+    "validation_patience": 4,
+    "metric_optimization": "minimize",
+    "metrics": [
+      {
+        "name": "elmo_loss2ppl",
+        "inputs": ["loss"]
+      }
+    ],
+    "tensorboard_log_dir": "elmo/logs"
   },
   "metadata": {
     "requirements": [
       "../dp_requirements/tf.txt",
       "../dp_requirements/fasttext.txt"
     ],
-    "labels": {
-      "telegram_utils": "IntentModel",
-      "server_utils": "KerasIntentModel"
-    },
     "download": [
       "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
       "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",

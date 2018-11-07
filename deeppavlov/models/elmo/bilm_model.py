@@ -483,7 +483,9 @@ class LanguageModel(object):
 
         # now calculate losses
         # loss for each direction of the LSTM
-        self.individual_losses = []
+        self.individual_train_losses = []
+        self.individual_valid_losses = []
+        self.individual_output_softmaxes = []
 
         if self.bidirectional:
             next_ids = [self.next_token_id, self.next_token_id_reverse]
@@ -497,33 +499,37 @@ class LanguageModel(object):
             next_token_id_flat = tf.reshape(id_placeholder, [-1, 1])
 
             with tf.control_dependencies([lstm_output_flat]):
-                if self.is_training and self.sample_softmax:
-                    losses = tf.nn.sampled_softmax_loss(
-                                   self.softmax_W, self.softmax_b,
-                                   next_token_id_flat, lstm_output_flat,
-                                   self.options['n_negative_samples_batch'],
-                                   self.options['n_tokens_vocab'],
-                                   num_true=1)
+                sampled_losses = tf.nn.sampled_softmax_loss(
+                                self.softmax_W, self.softmax_b,
+                                next_token_id_flat, lstm_output_flat,
+                                self.options['n_negative_samples_batch'],
+                                self.options['n_tokens_vocab'],
+                                num_true=1)
 
-                else:
-                    # get the full softmax loss
-                    output_scores = tf.matmul(
-                        lstm_output_flat,
-                        tf.transpose(self.softmax_W)
-                    ) + self.softmax_b
-                    # NOTE: tf.nn.sparse_softmax_cross_entropy_with_logits
-                    #   expects unnormalized output since it performs the
-                    #   softmax internally
-                    losses = tf.nn.sparse_softmax_cross_entropy_with_logits(
-                        logits=output_scores,
-                        labels=tf.squeeze(next_token_id_flat, squeeze_dims=[1])
-                    )
+                # get the full softmax loss
+                output_scores = tf.matmul(
+                    lstm_output_flat,
+                    tf.transpose(self.softmax_W)
+                ) + self.softmax_b
+                # NOTE: tf.nn.sparse_softmax_cross_entropy_with_logits
+                #   expects unnormalized output since it performs the
+                #   softmax internally
+                losses = tf.nn.sparse_softmax_cross_entropy_with_logits(
+                    logits=output_scores,
+                    labels=tf.squeeze(next_token_id_flat, squeeze_dims=[1])
+                )
 
-            self.individual_losses.append(tf.reduce_mean(losses))
+            self.individual_train_losses.append(tf.reduce_mean(sampled_losses))
+            self.individual_valid_losses.append(tf.reduce_mean(losses))
+            self.individual_output_softmaxes.append(tf.nn.softmax(output_scores))
+            
 
-        # now make the total loss -- it's the mean of the individual losses
+        # now make the total loss -- it's the train of the individual losses
         if self.bidirectional:
-            self.total_loss = 0.5 * (self.individual_losses[0]
-                                    + self.individual_losses[1])
+            self.total_train_loss = 0.5 * (self.individual_train_losses[0]
+                                    + self.individual_train_losses[1])
+            self.total_valid_loss = 0.5 * (self.individual_valid_losses[0]
+                                    + self.individual_valid_losses[1])
         else:
-            self.total_loss = self.individual_losses[0]
+            self.total_train_loss = self.individual_train_losses[0]
+            self.total_valid_loss = self.individual_valid_losses[0]

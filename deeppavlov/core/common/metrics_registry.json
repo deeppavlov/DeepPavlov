@@ -7,6 +7,7 @@
   "classification_f1_weighted": "deeppavlov.metrics.fmeasure_classification:classification_fmeasure_weighted",
   "classification_log_loss": "deeppavlov.metrics.log_loss:classification_log_loss",
   "classification_roc_auc": "deeppavlov.metrics.roc_auc_score:classification_roc_auc_score",
+  "elmo_loss2ppl": "deeppavlov.metrics.elmo_metrics:elmo_loss2ppl",
   "exact_match": "deeppavlov.metrics.squad_metrics:exact_match",
   "f1": "deeppavlov.metrics.fmeasure:round_f1",
   "google_bleu": "deeppavlov.metrics.bleu:google_bleu",
