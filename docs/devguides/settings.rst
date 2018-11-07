@@ -1,7 +1,7 @@
 DeepPavlov settings
 ===================
 
-DeepPavlov provides some tools to facilitate its usage (e.g. dialog logging, settings management). This document is aimed guide you through them.
+DeepPavlov provides some tools to facilitate its usage (e.g. dialog logging, settings management). This document is aimed to guide you through them.
 
 1. Settings files access and management
 ---------------------------------------
