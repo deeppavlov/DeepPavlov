@@ -23,19 +23,19 @@ TRACEBACK_LOGGER_ERRORS = True
 root_path = Path(__file__).resolve().parent.parent.parent.parent
 
 
-def get_configs_path() -> Path:
+def get_settings_path() -> Path:
     with open(root_path / 'deeppavlov/paths.json', encoding='utf8') as fin:
         paths = json.load(fin)
 
-    configs_paths = Path(paths['configs_path']).resolve() if paths['configs_path'][0] == '/' \
-        else root_path / paths['configs_path']
+    settings_path = Path(paths['settings_path']).resolve() if paths['settings_path'][0] == '/' \
+        else root_path / paths['settings_path']
 
-    return configs_paths
+    return settings_path
 
 
 def get_logger(logger_name):
     try:
-        log_config_path = Path(get_configs_path(), LOG_CONFIG_FILENAME).resolve()
+        log_config_path = Path(get_settings_path(), LOG_CONFIG_FILENAME).resolve()
 
         with open(log_config_path, encoding='utf8') as log_config_json:
             log_config = json.load(log_config_json)

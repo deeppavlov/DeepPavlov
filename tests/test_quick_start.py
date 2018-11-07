@@ -16,7 +16,7 @@ from urllib.parse import urljoin
 import deeppavlov
 from deeppavlov.download import deep_download
 from deeppavlov.core.data.utils import get_all_elems_from_json
-from deeppavlov.core.common.paths import get_configs_path
+from deeppavlov.core.common.paths import get_settings_path
 import utils
 from utils.server_utils.server import get_server_params, SERVER_CONFIG_FILENAME
 
@@ -278,7 +278,7 @@ class TestQuickStart(object):
 
     @staticmethod
     def interact_api(conf_file):
-        server_conf_file = get_configs_path() / SERVER_CONFIG_FILENAME
+        server_conf_file = get_settings_path() / SERVER_CONFIG_FILENAME
 
         server_params = get_server_params(server_conf_file, conf_file)
         model_args_names = server_params['model_args_names']

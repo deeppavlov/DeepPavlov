@@ -16,7 +16,7 @@ import argparse
 import os
 from pathlib import Path
 
-from deeppavlov.core.common.paths import get_configs_path, set_configs_path, set_configs_default
+from deeppavlov.core.common.paths import get_settings_path, set_settings_path, set_settings_default
 
 
 parser = argparse.ArgumentParser()
@@ -34,13 +34,13 @@ def main():
 
     if args.mode == 'settings':
         if args.default:
-            set_configs_default()
+            set_settings_default()
         else:
             if not path:
-                print(f'Current DeepPavlov settings path: {get_configs_path()}')
+                print(f'Current DeepPavlov settings path: {get_settings_path()}')
             else:
                 path = Path(os.getcwd(), path).resolve()
-                set_configs_path(path)
+                set_settings_path(path)
 
 
 if __name__ == "__main__":
