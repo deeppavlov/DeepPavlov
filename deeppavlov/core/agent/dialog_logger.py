@@ -118,7 +118,7 @@ class DialogLogger:
         if self.enabled:
             self._log(utterance, 'in', dialog_id)
 
-    def log_out(self, utterance: Any, dialog_id: Optional[Hashable]=None):
+    def log_out(self, utterance: Any, dialog_id: Optional[Hashable] = None) -> None:
         """Wraps _log method for all output utterances.
         Args:
             utterance: Dialog utterance.
