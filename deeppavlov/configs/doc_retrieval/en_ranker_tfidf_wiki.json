@@ -1,9 +1,14 @@
 {
+  "dataset_reader": {
+    "name": "odqa_reader",
+    "data_path": "odqa/enwiki",
+    "save_path": "odqa/enwiki.db",
+    "dataset_format": "wiki"
+  },
   "dataset_iterator": {
     "name": "sqlite_iterator",
-    "data_dir": "odqa",
     "shuffle": false,
-    "data_url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.db"
+    "load_path": "odqa/enwiki.db"
   },
   "chainer": {
     "in": [

@@ -1,0 +1,75 @@
+{
+  "chainer": {
+    "in": [
+      "question_raw"
+    ],
+    "out": [
+      "best_answer"
+    ],
+    "pipe": [
+      {
+        "config_path": "../deeppavlov/configs/doc_retrieval/ru_ranker_tfidf_wiki_test.json",
+        "in": [
+          "question_raw"
+        ],
+        "out": [
+          "doc_ids"
+        ]
+      },
+      {
+        "name": "wiki_sqlite_vocab",
+        "in": [
+          "doc_ids"
+        ],
+        "out": [
+          "context_raw"
+        ],
+        "join_docs": false,
+        "shuffle": false,
+        "load_path": "odqa/ruwiki_test.db"
+      },
+      {
+        "name": "document_chunker",
+        "in": [
+          "context_raw"
+        ],
+        "out": [
+          "chunks"
+        ],
+        "flatten_result": true
+      },
+      {
+        "name": "string_multiplier",
+        "in": [
+          "question_raw",
+          "chunks"
+        ],
+        "out": [
+          "questions"
+        ]
+      },
+      {
+        "name": "logit_ranker",
+        "squad_model": {
+          "config_path": "../deeppavlov/configs/squad/squad_ru.json"
+        },
+        "in": [
+          "chunks",
+          "questions"
+        ],
+        "out": [
+          "best_answer"
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "requirements": [],
+    "labels": {
+      "server_utils": "ODQA"
+    },
+    "download": [
+      "http://files.deeppavlov.ai/deeppavlov_data/odqa_test.tar.gz"
+    ]
+  }
+}

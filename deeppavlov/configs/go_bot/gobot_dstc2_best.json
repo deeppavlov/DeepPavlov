@@ -12,11 +12,15 @@
     "out": ["y_predicted"],
     "pipe": [
       {
+        "class": "deeppavlov.models.go_bot.wrapper:DialogComponentWrapper",
+        "component": { "name": "split_tokenizer" },
+        "in": ["x"],
+        "out": ["x_tokens"]
+      },
+      {
         "id": "token_vocab",
-        "fit_on": ["x"],
-        "name": "default_vocab",
-        "level": "token",
-        "tokenizer": { "name": "split_tokenizer" },
+        "fit_on": ["x_tokens"],
+        "name": "simple_vocab",
         "save_path": "vocabs/token.dict",
         "load_path": "vocabs/token.dict"
       },
@@ -66,9 +70,7 @@
         "intent_classifier": null,
         "embedder": {
           "name": "fasttext",
-          "load_path": "embeddings/wiki.en.bin",
-          "save_path": "embeddings/wiki.en.bin",
-          "dim": 300
+          "load_path": "embeddings/wiki.en.bin"
         },
         "bow_embedder": null,
         "tokenizer": {
@@ -94,7 +96,9 @@
 
     "log_every_n_batches": -1,
     "log_every_n_epochs": 1,
-    "show_examples": false
+    "show_examples": false,
+    "validate_best": true,
+    "test_best": true
   },
   "metadata": {
     "requirements": [

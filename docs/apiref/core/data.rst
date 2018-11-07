@@ -12,8 +12,4 @@ DatasetReader, Vocab, DataLearningIterator and DataFittingIterator classes.
 
 .. autoclass:: deeppavlov.core.data.vocab.DefaultVocabulary
 
-.. autoclass:: deeppavlov.core.data.simple_vocab.CharacterVocab
-
-.. autoclass:: deeppavlov.core.data.simple_vocab.DialogVocab
-
 .. autoclass:: deeppavlov.core.data.simple_vocab.SimpleVocabulary
