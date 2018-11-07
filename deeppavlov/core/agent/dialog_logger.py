@@ -43,7 +43,7 @@ class DialogLogger:
         log_max_size: Maximum size of log file, kb.
         self.log_file: Current log file object.
     """
-    def __init__(self, enabled: bool=False, agent_name: Optional[str]=None):
+    def __init__(self, enabled: bool = False, agent_name: Optional[str] = None) -> None:
         self.config: dict = read_json(get_settings_path() / LOGGER_CONFIG_FILENAME)
         self.enabled: bool = enabled or self.config['enabled']
 
