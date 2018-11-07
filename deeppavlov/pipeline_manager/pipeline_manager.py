@@ -27,7 +27,7 @@ from multiprocessing import Pool
 from typing import Union, Dict, List
 
 from deeppavlov.core.common.file import read_json
-from deeppavlov.pipeline_manager.logger import Logger
+from deeppavlov.pipeline_manager.observer import Observer
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.pipeline_manager.pipegen import PipeGen
 from deeppavlov.pipeline_manager.utils import normal_time
@@ -70,14 +70,14 @@ class PipelineManager:
                        is generated. The default value is None, in this case the target metric is taken the
                        first name from those names that are specified in the config file. If the specified metric
                        is not contained in DeepPavlov will be called error.
-        logger: A special class that collects auxiliary statistics and results during training, and stores all
+        observer: A special class that collects auxiliary statistics and results during training, and stores all
                 the collected data in a separate log.
         plot: boolean trigger, which determines whether to draw a graph of results or not
         pipeline_generator: A special class that generates configs for training.
     """
     def __init__(self, config_path: Union[str, Dict]):
         """
-        Initialize logger, read input args, builds a directory tree, initialize date.
+        Initialize observer, read input args, builds a directory tree, initialize date.
         """
         if isinstance(config_path, str):
             self.exp_config = read_json(config_path)
@@ -104,9 +104,9 @@ class PipelineManager:
         self.pipeline_generator = None
         self.gen_len = 0
 
-        # Logger initialization
+        # observer initialization
         self.save_path = join(self.root, self.date, self.exp_name, 'checkpoints')
-        self.logger = Logger(self.exp_name, self.root, self.info, self.date, self.plot)
+        self.observer = Observer(self.exp_name, self.root, self.info, self.date, self.plot)
 
         # multiprocessing
         if self.use_multi_gpus and self.use_all_gpus:
@@ -235,7 +235,7 @@ class PipelineManager:
         res['pipe_time'] = time() - pipe_start
         return res
 
-    def update_logger(self, res_list: List[dict]):
+    def update_observer(self, res_list: List[dict]):
         dataset_res = {}
         for i, res in enumerate(res_list):
             pipe = res['pipe_conf']
@@ -243,22 +243,22 @@ class PipelineManager:
             dataset_name = copy(pipe['dataset_reader']['data_path'])
 
             if i == 0:
-                self.logger.log['experiment_info']['metrics'] = copy(pipe['train']['metrics'])
+                self.observer.log['experiment_info']['metrics'] = copy(pipe['train']['metrics'])
                 if self.target_metric is None:
                     self.target_metric = pipe['train']['metrics'][0]['name']
-                self.logger.log['experiment_info']['target_metric'] = self.target_metric
+                self.observer.log['experiment_info']['target_metric'] = self.target_metric
 
-            self.logger.pipe_ind = i + 1
-            self.logger.pipe_conf = copy(pipe['chainer']['pipe'])
-            self.logger.dataset = dataset_name
-            self.logger.batch_size = pipe['train'].get('batch_size', "None")
+            self.observer.pipe_ind = i + 1
+            self.observer.pipe_conf = copy(pipe['chainer']['pipe'])
+            self.observer.dataset = dataset_name
+            self.observer.batch_size = pipe['train'].get('batch_size', "None")
 
             # add results and pipe time to log
-            self.logger.pipe_time = normal_time(res['pipe_time'])
-            self.logger.pipe_res = results
-            # update logger
-            self.logger.get_pipe_log()
-            self.logger.write()
+            self.observer.pipe_time = normal_time(res['pipe_time'])
+            self.observer.pipe_res = results
+            # update observer
+            self.observer.get_pipe_log()
+            self.observer.write()
             # save config in checkpoint folder
             if not self.cross_validation:
                 self.save_config(pipe, dataset_name, i)
@@ -302,7 +302,7 @@ class PipelineManager:
         if self.cross_validation:
             print("[ WARNING: Cross validation is active! Every pipeline will be run {0} times! ]".format(self.k_fold))
 
-        self.logger.log['experiment_info']['number_of_pipes'] = self.gen_len
+        self.observer.log['experiment_info']['number_of_pipes'] = self.gen_len
 
         if self.multiprocessing:
             # start multiprocessing
@@ -334,11 +334,11 @@ class PipelineManager:
 
                 pipes_results.append(res)
 
-        dataset_res = self.update_logger(pipes_results)
+        dataset_res = self.update_observer(pipes_results)
 
         # save log
-        self.logger.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)
-        self.logger.save()
+        self.observer.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)
+        self.observer.save()
 
         # delete all checkpoints and save only best pipe
         if self.save_best:

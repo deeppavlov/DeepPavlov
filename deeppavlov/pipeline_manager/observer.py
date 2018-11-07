@@ -21,7 +21,7 @@ from os.path import join, isdir, isfile
 from deeppavlov.pipeline_manager.utils import merge_logs
 
 
-class Logger(object):
+class Observer(object):
     """
     The class implements data collection on how the experiment is going. Pipeline configuration information,
     pipeline results, and time information is collected.
