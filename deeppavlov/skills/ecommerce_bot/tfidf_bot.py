@@ -128,6 +128,9 @@ class EcommerceTfidfBot(Component):
             else:
                 state = {'start': 0, 'stop': 5}
 
+            if not isinstance(state, dict):
+                state = {'start': 0, 'stop': 5}
+
             if 'start' not in state:
                 state['start'] = 0
             if 'stop' not in state:
@@ -139,7 +142,8 @@ class EcommerceTfidfBot(Component):
             log.info(f"Current state {state}")
 
             if state['history']:
-                if not np.array_equal(state['history'][-1].todense(), q_vect.todense()):
+                his_vect = self._list_to_csr(state['history'][-1])
+                if not np.array_equal(his_vect.todense(), q_vect.todense()):
                     q_comp = q_vect.maximum(state['history'][-1])
                     complex_bool = self._take_complex_query(q_comp, q_vect)
                     log.info(f"Complex query:{complex_bool}")
@@ -160,7 +164,7 @@ class EcommerceTfidfBot(Component):
             else:
                 log.info("history is empty")
 
-            state['history'].append(q_vect)
+            state['history'].append(self._csr_to_list(q_vect))
             log.info(f"Final query {q_vect}")
 
             scores = self._similarity(q_vect)
@@ -178,6 +182,15 @@ class EcommerceTfidfBot(Component):
 
             entropies.append(self._entropy_subquery(answer_ids))
         return (items, entropies), confidences, back_states
+
+    def _csr_to_list(self, csr):
+        return [csr.data.tolist(), csr.indices.tolist()]
+
+    def _list_to_csr(self, _list):
+        row_ind = [0] * len(_list[0])
+        col_ind = _list[1]
+        return csr_matrix((_list[0], (row_ind, col_ind)))
+
 
     def _take_complex_query(self, q_prev: csr_matrix, q_cur: csr_matrix) -> bool:
         """Decides whether to use the long compound query or the current short query
