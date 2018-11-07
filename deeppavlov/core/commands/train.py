@@ -280,11 +280,16 @@ def _test_model(model: Chainer, metrics_functions: List[Metric],
 
     if show_examples:
         try:
+            y_predicted = zip(*[y_predicted_group
+                                for out_name, y_predicted_group in zip(expected_outputs, y_predicted)
+                                if out_name in model.out_params])
+            if len(model.out_params) == 1:
+                y_predicted = [y_predicted_item[0] for y_predicted_item in y_predicted]
             report['examples'] = [{
                 'x': x_item,
                 'y_predicted': y_predicted_item,
                 'y_true': y_true_item
-            } for x_item, y_predicted_item, y_true_item in zip(x, {k: outputs[k] for k in model.out_params}, y_true)]
+            } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
         except NameError:
             log.warning(f'Could not log examples for {data_type}, assuming it\'s empty')
 
@@ -406,12 +411,17 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
 
                     if train_config['show_examples']:
                         try:
+                            y_predicted = zip(*[y_predicted_group
+                                                for out_name, y_predicted_group in zip(expected_outputs, y_predicted)
+                                                if out_name in model.out_params])
+                            if len(model.out_params) == 1:
+                                y_predicted = [y_predicted_item[0] for y_predicted_item in y_predicted]
                             report['examples'] = [{
                                 'x': x_item,
                                 'y_predicted': y_predicted_item,
                                 'y_true': y_true_item
                             } for x_item, y_predicted_item, y_true_item
-                                in zip(x, {k: outputs[k] for k in model.out_params}, y_true)]
+                                in zip(x, y_predicted, y_true)]
                         except NameError:
                             log.warning('Could not log examples as y_predicted is not defined')
 
@@ -472,12 +482,17 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
 
                 if train_config['show_examples']:
                     try:
+                        y_predicted = zip(*[y_predicted_group
+                                            for out_name, y_predicted_group in zip(expected_outputs, y_predicted)
+                                            if out_name in model.out_params])
+                        if len(model.out_params) == 1:
+                            y_predicted = [y_predicted_item[0] for y_predicted_item in y_predicted]
                         report['examples'] = [{
                             'x': x_item,
                             'y_predicted': y_predicted_item,
                             'y_true': y_true_item
                         } for x_item, y_predicted_item, y_true_item
-                            in zip(x, {k: outputs[k] for k in model.out_params}, y_true)]
+                            in zip(x, y_predicted, y_true)]
                     except NameError:
                         log.warning('Could not log examples')
 
