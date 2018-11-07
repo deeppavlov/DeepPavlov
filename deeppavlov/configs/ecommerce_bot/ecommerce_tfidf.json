@@ -82,7 +82,7 @@
     "test_best": false
    },
    "metadata": {
-    "labels": {
+   "labels": {
       "telegram_utils": "EcommerceBot",
       "server_utils": "EcommerceBot"
     },
