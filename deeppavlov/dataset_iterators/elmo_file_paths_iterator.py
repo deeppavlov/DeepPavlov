@@ -114,5 +114,5 @@ class ELMoFilePathsIterator(DataLearningIterator):
         batch_generator = self._batch_generator(line_generator, batch_size * self.n_gpus, unroll_steps)
 
         for batch in batch_generator:
-            batch = [batch, batch]
+            batch = [batch, []]
             yield batch

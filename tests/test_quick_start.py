@@ -122,6 +122,9 @@ PARAMS = {
     "elmo_embedder": {
         ("elmo_embedder/elmo_ru-news.json", "elmo_embedder_ru-news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
     },
+    "elmo_model": {
+        ("elmo/elmo-1b-benchmark_test.json", "elmo-1b-benchmark", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+    },
 
     "ranking": {("ranking/ranking_insurance_test.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
                 ("ranking/ranking_insurance_interact_test.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],

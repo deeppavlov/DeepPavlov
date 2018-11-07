@@ -3,11 +3,7 @@
     "name": "file_paths_reader",
     "data_path": "elmo-1b-benchmark/data/1-billion-word-language-modeling-benchmark-r13output/",
     "train": "training-monolingual.tokenized.shuffled/*",
-    "test": "heldout-monolingual.tokenized.shuffled/*",
-    "valid": "heldout-monolingual.tokenized.shuffled/*",
-    "train": "heldout-monolingual.tokenized.shuffled/news.en.heldout-00001-of-00050",
-    "test": "heldout-monolingual.tokenized.shuffled/news.en.heldout-00000-of-00050",
-    "valid": "heldout-monolingual.tokenized.shuffled/news.en.heldout-00000-of-00050"
+    "valid": "heldout-monolingual.tokenized.shuffled/*"
   },
   "dataset_iterator": {
     "name": "elmo_file_paths_iterator",
@@ -40,6 +36,7 @@
         "reversed_sentense_tokens": false,
         "bos":"<S>",
         "eos":"</S>",
+        "save_path": "elmo-1b-benchmark/data/vocab-2016-09-10.txt",
         "load_path":"elmo-1b-benchmark/data/vocab-2016-09-10.txt",
         "out": ["x_char_ids"]
       },
@@ -53,6 +50,7 @@
         "reversed_sentense_tokens": true,
         "bos":"<S>",
         "eos":"</S>",
+        "save_path": "elmo-1b-benchmark/data/vocab-2016-09-10.txt",
         "load_path":"elmo-1b-benchmark/data/vocab-2016-09-10.txt",
         "out": ["reversed_x_char_ids"]
       },
@@ -62,6 +60,7 @@
         "min_freq": 2,
         "special_tokens": ["</S>", "<S>", "<UNK>"],
         "unk_token": "<UNK>",
+        "save_path": "elmo-1b-benchmark/data/vocab-2016-09-10.txt",
         "load_path": "elmo-1b-benchmark/data/vocab-2016-09-10.txt",
         "out": ["y_token_ids"]
       },
@@ -71,19 +70,20 @@
         "min_freq": 2,
         "special_tokens": ["</S>", "<S>", "<UNK>"],
         "unk_token": "<UNK>",
+        "save_path": "elmo-1b-benchmark/data/vocab-2016-09-10.txt",
         "load_path": "elmo-1b-benchmark/data/vocab-2016-09-10.txt",
         "out": ["reversed_y_token_ids"]
       },
       {
         "name": "elmo_model",
-        "id": "elmo",
         "options_json_path": "elmo-1b-benchmark/options.json",
         "unroll_steps": 20,
         "batch_size": 128,
-        "save_path": "elmo-1b-benchmark/ckpts/model",
-        "load_path": "elmo-1b-benchmark/ckpts/model",
+        "save_path": "elmo-1b-benchmark/ckpts/current_skpt/model",
+        "load_path": "elmo-1b-benchmark/ckpts/current_skpt/model",
         "in": ["x_char_ids", "reversed_x_char_ids", "y_token_ids", "reversed_y_token_ids"],
         "in_y": [],
+        "n_gpus": 1,
         "out": ["loss"]
       }
     ],
@@ -93,7 +93,7 @@
   ]
   },
   "train": {
-    "epochs": 100,
+    "epochs": 20,
     "batch_size": 128,
     "log_every_n_batches": 5,
     "val_every_n_epochs": 1,
@@ -113,7 +113,7 @@
     ],
     "download": [
       {
-        "url": "http://www.statmt.org/lm-benchmark/1-billion-word-language-modeling-benchmark-r13output.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/1-billion-word-language-modeling-benchmark-r13output.tar.gz",
         "subdir": "elmo-1b-benchmark/data"
       },
       {
