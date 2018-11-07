@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Union
+from typing import Union, List, Tuple
 
 from pathlib import Path
 import numpy as np
@@ -32,30 +32,20 @@ log = get_logger(__name__)
 
 @register('str_utf8_encoder')
 class StrUTF8Encoder(Estimator):
-    """Component for converting strings to lowercase at any level of lists nesting
+    """Component for encoding all strings to utf8 codes
 
-# TODO : add description
 
-    Vocabulary containing character-level and word level information.
-
-    Has a word vocabulary that is used to lookup word ids and
-    a character id that is used to map words to arrays of character ids.
-
-    The character ids are defined by ord(c) for c in word.encode('utf-8')
-    This limits the total number of possible char ids to 256.
-    To this we add 5 additional special ids: begin sentence, end sentence,
-        begin word, end word and padding.
-
-    WARNING: for prediction, we add +1 to the output ids from this
-    class to create a special padding id (=0).  As a result, we suggest
-    you use the `Batcher`, `TokenBatcher`, and `LMDataset` classes instead
-    of this lower level class.  If you are using this lower level class,
-    then be sure to add the +1 appropriately, otherwise embeddings computed
-    from the pre-trained model will be useless.
+    Args:
+        max_word_length: Max length of words of input and output batches.
+        pad_special_char_use: Whether to use special char for padding  or not.
+        word_boundary_special_char_use: Whether to add word boundaries by special chars or not.
+        sentence_boundary_special_char_use: Whether to add word boundaries by special chars or not.
+        reversed_sentense_tokens: Whether to use reversed sequences of tokens or not.
+        bos: Name of a special token of the begin of a sentence.
+        eos: Name of a special token of the end of a sentence.
     """
     def __init__(self, 
                  max_word_length:int = 50,
-                 split:bool = True,
                  pad_special_char_use:bool = False,
                  word_boundary_special_char_use:bool = False,
                  sentence_boundary_special_char_use:bool = False,
@@ -72,7 +62,6 @@ class StrUTF8Encoder(Estimator):
 
         self._max_word_length = max_word_length
         self._reverse = reversed_sentense_tokens
-        self._split = split
 
 
         self._pad_special_char_use = pad_special_char_use
@@ -123,7 +112,7 @@ class StrUTF8Encoder(Estimator):
         self._word_char_ids[bos] = self.bos_chars
         self._word_char_ids[eos] = self.eos_chars
 
-    def __call__(self, batch: Union[str, list, tuple]):
+    def __call__(self, batch: Union[List[str], Tuple[str]]):
         """Recursively search for strings in a list and utf8 encode
 
         Args:
@@ -133,9 +122,12 @@ class StrUTF8Encoder(Estimator):
             the same structure where all strings are utf8 encoded
         """
         if isinstance(batch, (list, tuple)):
-            return [self(line) for line in batch]
-        else:
-            return self._encode_chars(batch)
+            if isinstance(batch[-1], str):
+                return self._encode_chars(batch)
+            else:
+                return [self(line) for line in batch]
+        raise RuntimeError(f'The objects passed to the reverser are not list or tuple of str! '
+                            f' But they are {type(batch)}.')
 
     @overrides
     def load(self):
@@ -206,12 +198,8 @@ class StrUTF8Encoder(Estimator):
         '''
         Encode the sentence as a white space delimited string of tokens.
         '''
-        if self._split:
-            chars_ids = [self._word_to_char_ids(cur_word)
-                     for cur_word in sentence.split()]
-        else:
-            chars_ids = [self._word_to_char_ids(cur_word)
-                     for cur_word in sentence]
+        chars_ids = [self._word_to_char_ids(cur_word)
+                    for cur_word in sentence]
         return self._wrap_in_s_char(chars_ids)
 
 

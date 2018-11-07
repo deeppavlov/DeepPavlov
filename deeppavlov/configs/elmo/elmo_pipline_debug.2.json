@@ -1,0 +1,135 @@
+{
+  "dataset_reader": {
+    "name": "file_paths_reader",
+    "data_path": "elmo/super_tiny_test/data",
+    "train": "train/*",
+    "test": "held-out/*",
+    "valid": "held-out/*"
+  },
+  "dataset_iterator": {
+    "name": "elmo_file_paths_iterator_1",
+    "seed": 31415,
+    "unroll_steps": 20,
+    "n_gpus": 1,
+    "shuffle": false
+  },
+  "chainer": {
+    "in": [
+      "tokens"
+    ],
+    "in_y": [
+      "_"
+    ],
+    "pipe": [
+      {
+        "in": ["tokens"],
+        "name": "str_token_reverser",
+        "tokenized": true,
+        "out": ["reversed_tokens"]
+      },
+      {
+        "in": ["tokens"],
+        "name": "str_utf8_encoder",
+        "max_word_length": 50,
+        "split": false,
+        "pad_special_char_use": true,
+        "word_boundary_special_char_use": true,
+        "sentence_boundary_special_char_use": false,
+        "reversed_sentense_tokens": false,
+        "bos":"<S>",
+        "eos":"</S>",
+        "load_path":"elmo/super_tiny_test/data/tokens_set.txt",
+        "save_path":"elmo/super_tiny_test/data/tokens_set1.txt",
+        "out": ["x_char_ids"]
+      },
+      {
+        "in": ["reversed_tokens"],
+        "name": "str_utf8_encoder",
+        "max_word_length": 50,
+        "split": false,
+        "pad_special_char_use": true,
+        "word_boundary_special_char_use": true,
+        "sentence_boundary_special_char_use": false,
+        "reversed_sentense_tokens": true,
+        "bos":"<S>",
+        "eos":"</S>",
+        "load_path":"elmo/super_tiny_test/data/tokens_set.txt",
+        "save_path":"elmo/super_tiny_test/data/tokens_set1.txt",
+        "out": ["reversed_x_char_ids"]
+      },
+      {
+        "in": ["tokens"],
+        "name": "freq_drop_load_vocab",
+        "min_freq": 2,
+        "special_tokens": ["</S>", "<S>", "<UNK>"],
+        "unk_token": "<UNK>",
+        "save_path": "elmo/super_tiny_test/data/tokens_set1.txt",
+        "load_path": "elmo/super_tiny_test/data/tokens_set.txt",
+        "out": ["y_token_ids"]
+      },
+      {
+        "in": ["reversed_tokens"],
+        "name": "freq_drop_load_vocab",
+        "min_freq": 2,
+        "special_tokens": ["</S>", "<S>", "<UNK>"],
+        "unk_token": "<UNK>",
+        "save_path": "elmo/super_tiny_test/data/tokens_set1.txt",
+        "load_path": "elmo/super_tiny_test/data/tokens_set.txt",
+        "out": ["reversed_y_token_ids"]
+      }
+    ],
+    "out": [
+      "tokens",
+      "reversed_tokens",
+      "x_char_ids",
+      "reversed_x_char_ids",
+      "tokens",
+      "reversed_tokens",
+      "y_token_ids"
+    ],
+    "out": [
+      "pack_x_char_ids",
+      "pack_reversed_x_char_ids",
+      "pack_y_token_ids",
+      "pack_reversed_y_token_ids"
+
+   ]
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 128,
+    "log_every_n_batches": 5,
+    "val_every_n_epochs": 1,
+    "validation_patience": 4,
+    "metric_optimization": "minimize",
+    "metrics": [
+      {
+        "name": "elmo_loss2ppl",
+        "inputs": ["reversed_y_token_ids"]
+      }
+    ],
+    "tensorboard_log_dir": "elmo/logs"
+  },
+  "metadata": {
+    "requirements": [
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/fasttext.txt"
+    ],
+    "download": [
+      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
+      {
+        "url": "https://github.com/text-machine-lab/rusentiment/raw/master/Dataset/rusentiment_random_posts.csv",
+        "subdir": "rusentiment"
+      },
+      {
+        "url": "https://github.com/text-machine-lab/rusentiment/raw/master/Dataset/rusentiment_test.csv",
+        "subdir": "rusentiment"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "subdir": "embeddings"
+      }
+    ]
+  }
+}

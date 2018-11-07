@@ -14,6 +14,7 @@
 
 
 from typing import List, Tuple, Iterator, Optional
+from  collections import deque
 
 import numpy as np
 
@@ -21,11 +22,12 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.common.log import get_logger
 
+
 log = get_logger(__name__)
 
-@register('elmo_file_paths_iterator_1')
-class ELMoFilePathsIterator_1(DataLearningIterator):
-    """Dataset iterator for datasetes like 1 Billion Word Benchmark
+@register('file_paths_iterator')
+class FilePathsIterator(DataLearningIterator):
+    """Dataset iterator for tokenized datasetes like 1 Billion Word Benchmark
 
     Args:
         data: dict with keys ``'train'``, ``'valid'`` and ``'test'`` and values
@@ -37,7 +39,10 @@ class ELMoFilePathsIterator_1(DataLearningIterator):
         random: instance of ``Random`` initialized with a seed
     # """
 
-    def __init__(self, data, seed: Optional[int] = None, shuffle: bool = True,
+    def __init__(self, 
+                 data: dict, 
+                 seed: Optional[int] = None, 
+                 shuffle: bool = True,
                  *args, **kwargs) -> None:
         self.seed = seed
         self.np_random = np.random.RandomState(seed)
@@ -47,6 +52,7 @@ class ELMoFilePathsIterator_1(DataLearningIterator):
     def _chunk_generator(items_list, chunk_size):
         for i in range(0, len(items_list), chunk_size):
             yield items_list[i:i + chunk_size]
+
 
     @staticmethod
     def _shard_generator(shards, shuffle = False, random = None):
@@ -59,27 +65,18 @@ class ELMoFilePathsIterator_1(DataLearningIterator):
             if shuffle:
                 random.shuffle(lines)
             yield lines
-
+            
     def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: bool = None)\
             -> Iterator[Tuple[str,str]]:
         if shuffle is None:
             shuffle = self.shuffle
 
         tgt_data = self.data[data_type]
-        log.info(data_type)
-        shard_gen = self._shard_generator(tgt_data, shuffle = False, random = self.np_random)
+        shard_generator = self._shard_generator(tgt_data, shuffle = False, random = self.np_random)
 
-        data = []
-        bs = batch_size
-        for shard in shard_gen:
-            if not batch_size:
+        for shard in shard_generator:
+            if not (batch_size):
                 bs = len(shard)
-            data.extend(shard)
-            chunk_gen = self._chunk_generator(data, bs)
-
-            for lines in chunk_gen:
-                if len(lines) < bs:
-                    data = lines
-                    break
-                batch = [lines, lines]
-                yield batch
+            lines_generator = self._chunk_generator(shard, bs)
+            for lines in lines_generator:
+                yield (lines, None)

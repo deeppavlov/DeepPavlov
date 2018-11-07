@@ -14,6 +14,7 @@
 
 
 from typing import List, Tuple, Iterator, Optional
+from  collections import deque
 
 import numpy as np
 
@@ -21,11 +22,12 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.common.log import get_logger
 
+
 log = get_logger(__name__)
 
 @register('elmo_file_paths_iterator')
 class ELMoFilePathsIterator(DataLearningIterator):
-    """Dataset iterator for datasetes like 1 Billion Word Benchmark
+    """Dataset iterator for tokenized datasetes like 1 Billion Word Benchmark
 
     Args:
         data: dict with keys ``'train'``, ``'valid'`` and ``'test'`` and values
@@ -37,16 +39,24 @@ class ELMoFilePathsIterator(DataLearningIterator):
         random: instance of ``Random`` initialized with a seed
     # """
 
-    def __init__(self, data, seed: Optional[int] = None, shuffle: bool = True,
+    def __init__(self, 
+                 data: dict, 
+                 seed: Optional[int] = None, 
+                 shuffle: bool = True,
+                 unroll_steps: Optional[int] = None, 
+                 n_gpus: Optional[int] = None, 
                  *args, **kwargs) -> None:
         self.seed = seed
         self.np_random = np.random.RandomState(seed)
+        self.unroll_steps = unroll_steps
+        self.n_gpus = n_gpus
         super().__init__(data, seed, shuffle, *args, **kwargs)
 
     @staticmethod
     def _chunk_generator(items_list, chunk_size):
         for i in range(0, len(items_list), chunk_size):
             yield items_list[i:i + chunk_size]
+
 
     @staticmethod
     def _shard_generator(shards, shuffle = False, random = None):
@@ -59,6 +69,36 @@ class ELMoFilePathsIterator(DataLearningIterator):
             if shuffle:
                 random.shuffle(lines)
             yield lines
+            
+    def _line_generator(self, shard_generator):
+        for shard in shard_generator:
+            line_generator = self._chunk_generator(shard, 1)
+            for line in line_generator:
+                yield line[0]
+
+    @staticmethod
+    def _batch_generator(line_generator, batch_size, unroll_steps):
+        batch = [[] for i in range(batch_size)]
+        stream = [[] for i in range(batch_size)]
+
+        try:
+            while True:
+                for batch_item, stream_item in zip(batch, stream):
+                    while len(stream_item) < unroll_steps: 
+                        line = next(line_generator)
+                        line = ['<S>'] + line.split() + ['</S>']
+                        stream_item.extend(line)
+                    _b = stream_item[:unroll_steps]
+                    _s = stream_item[unroll_steps:]
+                    batch_item.clear()
+                    _b = _b
+                    batch_item.extend(_b)
+
+                    stream_item.clear()
+                    stream_item.extend(_s)
+                yield batch
+        except StopIteration:
+            pass
 
     def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: bool = None)\
             -> Iterator[Tuple[str,str]]:
@@ -66,20 +106,13 @@ class ELMoFilePathsIterator(DataLearningIterator):
             shuffle = self.shuffle
 
         tgt_data = self.data[data_type]
-        log.info(data_type)
-        shard_gen = self._shard_generator(tgt_data, shuffle = False, random = self.np_random)
+        shard_generator = self._shard_generator(tgt_data, shuffle = False, random = self.np_random)
+        line_generator = self._line_generator(shard_generator)
 
-        data = []
-        bs = batch_size
-        for shard in shard_gen:
-            if not batch_size:
-                bs = len(shard)
-            data.extend(shard)
-            chunk_gen = self._chunk_generator(data, bs)
+        unroll_steps = self.unroll_steps if data_type == 'train' else 20
 
-            for lines in chunk_gen:
-                if len(lines) < bs:
-                    data = lines
-                    break
-                batch = [lines, lines]
-                yield batch
+        batch_generator = self._batch_generator(line_generator, batch_size * self.n_gpus, unroll_steps)
+
+        for batch in batch_generator:
+            batch = [batch, batch]
+            yield batch

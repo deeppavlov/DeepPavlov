@@ -247,4 +247,22 @@ class ELMoPreprocessor(Component):
             raw_ids['char_ids'] = [] 
             raw_ids['token_ids'] = []
 
- 
+@register('elmo_simple_preprocessor')
+class ELMoSimplePreprocessor(Component):
+    """Component for joining a list of strings.
+
+    """
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __call__(self, batch: List[List[str]]):
+        """Join a list of strings.
+
+        Args:
+            batch: a list of lists containing strings
+
+        Returns:
+            a list of strings
+
+        """
+        return [" ".join(line) for line in batch]

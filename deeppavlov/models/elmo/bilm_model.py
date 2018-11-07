@@ -17,9 +17,6 @@
 import tensorflow as tf
 import numpy as np
 
-from deeppavlov.models.elmo.data import InvalidNumberOfCharacters
-from deeppavlov.models.elmo.data import Batcher
-
 
 DTYPE = 'float32'
 DTYPE_INT = 'int64'
@@ -141,7 +138,7 @@ class LanguageModel(object):
         char_embed_dim = cnn_options['embedding']['dim']
         n_chars = cnn_options['n_characters']
         if n_chars != 261:
-            raise InvalidNumberOfCharacters(
+            raise Exception(
                     "Set n_characters=261 for training see the README.md"
             )
         if cnn_options['activation'] == 'tanh':

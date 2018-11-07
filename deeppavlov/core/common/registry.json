@@ -37,6 +37,7 @@
   "faq_reader": "deeppavlov.dataset_readers.faq_reader:FaqDatasetReader",
   "fasttext": "deeppavlov.models.embedders.fasttext_embedder:FasttextEmbedder",
   "featurized_tracker": "deeppavlov.models.go_bot.tracker:FeaturizedTracker",
+  "file_paths_iterator": "deeppavlov.dataset_iterators.file_paths_iterator:FilePathsIterator",
   "file_paths_reader": "deeppavlov.dataset_readers.file_paths_reader:FilePathsReader",
   "freq_drop_load_vocab": "deeppavlov.core.data.simple_vocab:FrequencyDropLoadVocabulary",
   "glove": "deeppavlov.models.embedders.glove_embedder:GloVeEmbedder",

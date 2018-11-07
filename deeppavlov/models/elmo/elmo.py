@@ -136,7 +136,6 @@ class ELMo(TFModel):
         if all_clip_norm_val is not None:
             self._options['all_clip_norm_val'] = all_clip_norm_val
 
-
     def _build_graph(self):
         init_step = 0 # TODO: Add resolution of init_step
         with tf.device('/cpu:0'):
@@ -248,7 +247,11 @@ class ELMo(TFModel):
         init_state_values = self.sess.run(init_state_tensors, feed_dict=feed_dict)
         return init_state_values, init_state_tensors, final_state_tensors
 
-    def _fill_feed_dict(self, char_ids_batches, reversed_char_ids_batches, token_ids_batches = None, reversed_token_ids_batches = None, learning_rate=None, train=False):
+    def _fill_feed_dict(self, 
+                        char_ids_batches, 
+                        reversed_char_ids_batches, 
+                        token_ids_batches = None, 
+                        reversed_token_ids_batches = None):
         # init state tensors
         feed_dict = {t: v for t, v in zip(
                                     self.init_state_tensors, self.init_state_values)}
@@ -282,19 +285,21 @@ class ELMo(TFModel):
         char_ids_batches, reversed_char_ids_batches, token_ids_batches, reversed_token_ids_batches =\
             args
 
-        valid_losses = []
-        for c_ids, rc_ids, t_ids, rt_ids in zip(char_ids_batches, reversed_char_ids_batches, token_ids_batches, reversed_token_ids_batches):
-            feed_dict = self._fill_feed_dict(c_ids, rc_ids, t_ids, rt_ids, train=False)
-            # TODO: Do right ppl
-            ret = self.sess.run([self.train_loss] + self.final_state_tensors, feed_dict)
+        feed_dict = self._fill_feed_dict(char_ids_batches, reversed_char_ids_batches, token_ids_batches, reversed_token_ids_batches)
+        # TODO: Do right ppl
+        ret = self.sess.run([self.train_loss] + self.final_state_tensors, feed_dict)
 
-            self.init_state_values = ret[1:]
-            valid_losses.append(ret[0])
+        self.init_state_values = ret[1:]
+        valid_loss = ret[0]
 
 
-        return valid_losses
+        return [valid_loss]
 
-    def train_on_batch(self, char_ids_batches:list, reversed_char_ids_batches:list, token_ids_batches:list, reversed_token_ids_batches:list):
+    def train_on_batch(self, 
+                       char_ids_batches:list, 
+                       reversed_char_ids_batches:list, 
+                       token_ids_batches:list, 
+                       reversed_token_ids_batches:list):
         """
         This method is called by trainer to make one training step on one batch.
 
@@ -308,15 +313,11 @@ class ELMo(TFModel):
             value of loss function on batch
         """
         
-        losses = []
-        for c_ids, rc_ids, t_ids, rt_ids in zip(char_ids_batches, reversed_char_ids_batches, token_ids_batches, reversed_token_ids_batches):
-            feed_dict = self._fill_feed_dict(c_ids, rc_ids, t_ids, rt_ids, train=True)
-            ret = self.sess.run([self.train_loss, self.train_op] + self.final_state_tensors, feed_dict)
+        feed_dict = self._fill_feed_dict(char_ids_batches, reversed_char_ids_batches, token_ids_batches, reversed_token_ids_batches)
+        ret = self.sess.run([self.train_loss, self.train_op] + self.final_state_tensors, feed_dict)
 
-            self.init_state_values = ret[2:]
-            losses.append(ret[0])
-        if losses:
-            self._train_last_loss = np.mean(losses)
+        self.init_state_values = ret[2:]
+        train_loss = ret[0]
 
-        return self._train_last_loss
+        return train_loss
 
