@@ -26,10 +26,8 @@ from deeppavlov.deep import find_config
 from utils.ms_bot_framework_utils.server import run_ms_bot_framework_server
 
 parser = argparse.ArgumentParser()
-parser.add_argument(
-    "-i", "--ms-id", help="microsoft bot framework app id", type=str)
-parser.add_argument("-s", "--ms-secret",
-                    help="microsoft bot framework app secret", type=str)
+parser.add_argument("-i", "--ms-id", help="microsoft bot framework app id", type=str)
+parser.add_argument("-s", "--ms-secret", help="microsoft bot framework app secret", type=str)
 
 log = get_logger(__name__)
 
@@ -51,7 +49,6 @@ class EcommerceAgent(Agent):
     def __init__(self, skills: List[Skill], *args, **kwargs) -> None:
 
         super(EcommerceAgent, self).__init__(skills=skills)
-        # self.history: dict = defaultdict(list)
         self.states: dict = defaultdict(lambda: [{"start": 0, "stop": 5} for _ in self.skills])
 
     def _call(self, utterances_batch: list, utterances_ids: list = None) -> list:
@@ -108,9 +105,6 @@ class EcommerceAgent(Agent):
 
                 self.states[id_]["start"] = 0
                 self.states[id_]["stop"] = 5
-
-            print("before state")
-            print(self.states[id_])
 
             responses_batch, confidences_batch, state_batch = self.skills[0](
                 [utt], self.history[id_], [self.states[id_]], [])
