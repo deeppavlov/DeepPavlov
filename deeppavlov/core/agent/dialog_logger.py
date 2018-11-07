@@ -109,7 +109,7 @@ class DialogLogger:
             except IOError:
                 log.error('Failed to write dialog log.')
 
-    def log_in(self, utterance: Any, dialog_id: Optional[Hashable]=None):
+    def log_in(self, utterance: Any, dialog_id: Optional[Hashable] = None) -> None:
         """Wraps _log method for all input utterances.
         Args:
             utterance: Dialog utterance.
