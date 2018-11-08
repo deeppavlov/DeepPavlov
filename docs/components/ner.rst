@@ -524,7 +524,7 @@ is based on a Language Model trained on open domain corpus. On top of the LM a S
 possible to start from as few as 10 sentences containing entities of interest.
 
 The data for training this model should be collected the following way. Given a collection of `N` sentences without
-markup, sequentially markup sentences until the total number of sentences with entity of interest become become equal
+markup, sequentially markup sentences until the total number of sentences with entity of interest become equal
 `K`. During the training both sentences with and without markup are used.
 
 
