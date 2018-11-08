@@ -1,11 +1,11 @@
 {
   "dataset_reader": {
     "name": "dstc2_reader",
-    "data_path": "dstc2"
+    "data_path": "{DOWNLOADS_PATH}/dstc2"
   },
   "dataset_iterator": {
     "name": "dstc2_ner_iterator",
-    "dataset_path": "dstc2"
+    "dataset_path": "{DOWNLOADS_PATH}/dstc2"
   },
   "chainer": {
     "in": ["x"],
@@ -27,8 +27,8 @@
         "name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["x_lower"],
-        "save_path": "slotfill_dstc2/word.dict",
-        "load_path": "slotfill_dstc2/word.dict",
+        "save_path": "{MODELS_PATH}/slotfill_dstc2/word.dict",
+        "load_path": "{MODELS_PATH}/slotfill_dstc2/word.dict",
         "out": ["x_tok_ind"]
       },
       {
@@ -43,8 +43,8 @@
         "name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["y"],
-        "save_path": "slotfill_dstc2/tag.dict",
-        "load_path": "slotfill_dstc2/tag.dict",
+        "save_path": "{MODELS_PATH}/slotfill_dstc2/tag.dict",
+        "load_path": "{MODELS_PATH}/slotfill_dstc2/tag.dict",
         "out": ["y_ind"]
       },
       {
@@ -62,8 +62,8 @@
         "n_hidden_list": [64, 64],
         "net_type": "cnn",
         "n_tags": "#tag_vocab.len",
-        "save_path": "slotfill_dstc2/model",
-        "load_path": "slotfill_dstc2/model",
+        "save_path": "{MODELS_PATH}/slotfill_dstc2/model",
+        "load_path": "{MODELS_PATH}/slotfill_dstc2/model",
         "embeddings_dropout": true,
         "top_dropout": true,
         "intra_layer_dropout": false,
@@ -100,6 +100,11 @@
     "show_examples": false
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
@@ -108,7 +113,10 @@
       "server_utils": "NER"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/slotfill_dstc2.tar.gz"
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/slotfill_dstc2.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      }
     ]
   }
 }

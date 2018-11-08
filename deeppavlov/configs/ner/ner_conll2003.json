@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "conll2003_reader",
-    "data_path": "conll2003/",
+    "data_path": "{DOWNLOADS_PATH}/conll2003/",
     "dataset_name": "conll2003",
     "provide_pos": false
   },
@@ -35,8 +35,8 @@
         "pad_with_zeros": true,
         "special_tokens": ["<UNK>"],
         "fit_on": ["x_san"],
-        "save_path": "ner_conll2003/word.dict",
-        "load_path": "ner_conll2003/word.dict",
+        "save_path": "{MODELS_PATH}/ner_conll2003/word.dict",
+        "load_path": "{MODELS_PATH}/ner_conll2003/word.dict",
         "out": ["x_tok_ind"]
       },
       {
@@ -45,8 +45,8 @@
         "name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["y"],
-        "save_path": "ner_conll2003/tag.dict",
-        "load_path": "ner_conll2003/tag.dict",
+        "save_path": "{MODELS_PATH}/ner_conll2003/tag.dict",
+        "load_path": "{MODELS_PATH}/ner_conll2003/tag.dict",
         "out": ["y_ind"]
       },
       {
@@ -60,8 +60,8 @@
         "name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["x_char"],
-        "save_path": "ner_conll2003/char.dict",
-        "load_path": "ner_conll2003/char.dict",
+        "save_path": "{MODELS_PATH}/ner_conll2003/char.dict",
+        "load_path": "{MODELS_PATH}/ner_conll2003/char.dict",
         "out": ["x_char_ind"]
       },
       {
@@ -74,7 +74,7 @@
         "id": "glove_emb",
         "name": "glove",
         "pad_zero": true,
-        "load_path": "embeddings/glove.6B.100d.txt",
+        "load_path": "{DOWNLOADS_PATH}/embeddings/glove.6B.100d.txt",
         "out": ["x_emb"]
       },
       {
@@ -111,8 +111,8 @@
         "n_tags": "#tag_vocab.len",
         "capitalization_dim": "#capitalization.dim",
         "char_emb_dim": "#embeddings_char.dim",
-        "save_path": "ner_conll2003/model_no_pos",
-        "load_path": "ner_conll2003/model_no_pos",
+        "save_path": "{MODELS_PATH}/ner_conll2003/model_no_pos",
+        "load_path": "{MODELS_PATH}/ner_conll2003/model_no_pos",
         "char_emb_mat": "#embeddings_char.emb_mat",
         "two_dense_on_top": true,
         "use_crf": true,
@@ -149,6 +149,11 @@
     "show_examples": false
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/gensim.txt",
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
@@ -158,10 +163,13 @@
       "server_utils": "NER"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/ner_conll2003_v4_cpu_compatible.tar.gz",
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_conll2003_v4_cpu_compatible.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
       {
         "url": "http://files.deeppavlov.ai/embeddings/glove.6B.100d.txt",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }
