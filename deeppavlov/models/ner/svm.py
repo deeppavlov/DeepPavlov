@@ -45,7 +45,7 @@ class SVMTagger(Estimator):
 
         self.load()
 
-    def fit(self, tokens: List[List[str]], tags: List[List[int]], *args, **kwargs):
+    def fit(self, tokens: List[List[str]], tags: List[List[int]], *args, **kwargs) -> None:
         tokens = list(chain(*tokens))
         tags = list(chain(*tags))
         self.classifier = SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0,
