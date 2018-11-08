@@ -172,6 +172,8 @@
         "subdir": "{DOWNLOADS_PATH}/UD2.0_source/tr"
       }
     ],
-    "telegram_utils": "MorphoTaggerModel"
+    "labels": {
+      "telegram_utils": "MorphoTaggerModel"
+    }
   }
 }

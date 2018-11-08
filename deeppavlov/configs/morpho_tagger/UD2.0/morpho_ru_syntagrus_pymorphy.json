@@ -192,6 +192,8 @@
         "subdir": "{DOWNLOADS_PATH}/UD2.0_source/ru_syntagrus"
       }
     ],
-    "telegram_utils": "MorphoTaggerPymorphyModel"
+    "labels": {
+      "telegram_utils": "MorphoTaggerPymorphyModel"
+    }
   }
 }
