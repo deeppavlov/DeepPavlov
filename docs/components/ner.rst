@@ -381,15 +381,9 @@ prediction:
 
 .. code:: python
 
-    import json
-    from deeppavlov.core.commands.infer import build_model_from_config
-    from deeppavlov.core.commands.train import train_evaluate_model_from_config
+    from deeppavlov import configs, train_model
 
-    PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_ontonotes.json'
-    with open(PIPELINE_CONFIG_PATH) as f:
-        config = json.load(f)
-    train_evaluate_model_from_config(PIPELINE_CONFIG_PATH)
-    ner_model = build_model_from_config(config)
+    ner_model = train_model(configs.ner.ner_ontonotes, download=True)
     ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates'])
 
 This example assumes that the working directory is deeppavlov.
@@ -401,26 +395,18 @@ A pre-trained model for solving OntoNotes task can be used as following:
 
 .. code:: python
 
-    import json
-    from deeppavlov.core.commands.infer import build_model_from_config
-    from deeppavlov.core.commands.train import train_evaluate_model_from_config
+    from deeppavlov import build_model, configs
 
-    PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_ontonotes.json'
-    with open(PIPELINE_CONFIG_PATH) as f:
-        config = json.load(f)
-    train_evaluate_model_from_config(PIPELINE_CONFIG_PATH)
-    ner_model = build_model_from_config(config)
+    ner_model = build_model(configs.ner.ner_ontonotes , download=True)
     ner_model(['Computer Sciences Corp. is close to making final an agreement to buy Cleveland Consulting Associates'])
 
 Or from command line:
 
 .. code:: bash
 
-    python deeppavlov/deep.py interact deeppavlov/configs/ner/ner_ontonotes.json
+    python deeppavlov/deep.py interact deeppavlov/configs/ner/ner_ontonotes.json [-d]
 
-Since the model is built with cuDNN version of LSTM, the GPU along with
-installed cuDNN library needed to run this model. The F1 scores of this
-model on test part of OntoNotes is presented in table below.
+The F1 scores of this model on test part of OntoNotes is presented in table below.
 
 +--------------------------------+--------------------+
 | Model                          | F1 score           |
@@ -522,18 +508,11 @@ To run Russian NER model use the following code:
 
 .. code:: python
 
-    from deeppavlov.core.commands.infer import build_model_from_config
-    from deeppavlov.download import deep_download
-    import json
-    PIPELINE_CONFIG_PATH = 'deeppavlov/configs/ner/ner_rus.json'
-    with open(PIPELINE_CONFIG_PATH) as f:
-        config = json.load(f)
-    deep_download(['-c', PIPELINE_CONFIG_PATH])
-    ner_model = build_model_from_config(config)
-    ner_model(['Компания « Андэк » , специализирующаяся на решениях для обеспечения безопасности бизнеса , сообщила о том , что Вячеслав Максимов , заместитель генерального директора компании , возглавил направление по оптимизации процессов управления информационной безопасностью '])
+    from deeppavlov import build_model, configs
 
-Since the model is built with cuDNN version of LSTM, the GPU along with
-installed cuDNN library needed to run this model.
+    PIPELINE_CONFIG_PATH = configs.ner.ner_rus
+    ner_model = build_model(PIPELINE_CONFIG_PATH , download=True)
+    ner_model(['Компания « Андэк » , специализирующаяся на решениях для обеспечения безопасности бизнеса , сообщила о том , что Вячеслав Максимов , заместитель генерального директора компании , возглавил направление по оптимизации процессов управления информационной безопасностью '])
 
 Literature
 ----------

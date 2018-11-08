@@ -20,6 +20,7 @@ import os
 
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.commands.infer import interact_model, predict_on_stream
+from deeppavlov.core.common.file import find_config
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.download import deep_download
 from deeppavlov.core.common.cross_validation import calc_cv_score
@@ -45,29 +46,19 @@ parser.add_argument("-d", "--download", action="store_true", help="download mode
 
 parser.add_argument("--folds", help="number of folds", type=int, default=5)
 
-parser.add_argument("-t", "--token", help="telegram bot token", type=str)
-parser.add_argument("-i", "--ms-id", help="microsoft bot framework app id", type=str)
-parser.add_argument("-s", "--ms-secret", help="microsoft bot framework app secret", type=str)
+parser.add_argument("-t", "--token", default=None,  help="telegram bot token", type=str)
+parser.add_argument("-i", "--ms-id", default=None, help="microsoft bot framework app id", type=str)
+parser.add_argument("-s", "--ms-secret", default=None, help="microsoft bot framework app secret", type=str)
 
 parser.add_argument("--multi-instance", action="store_true", help="allow rising of several instances of the model")
 parser.add_argument("--stateful", action="store_true", help="interact with a stateful model")
 
 parser.add_argument("--https", action="store_true", help="run model in https mode")
-parser.add_argument("--key", help="ssl key", type=str)
-parser.add_argument("--cert", help="ssl certificate", type=str)
+parser.add_argument("--key", default=None, help="ssl key", type=str)
+parser.add_argument("--cert", default=None, help="ssl certificate", type=str)
 
 parser.add_argument("--api-mode", help="rest api mode: 'basic' with batches or 'alice' for  Yandex.Dialogs format",
                     type=str, default='basic', choices={'basic', 'alice'})
-
-
-def find_config(pipeline_config_path: str):
-    if not Path(pipeline_config_path).is_file():
-        configs = [c for c in Path(__file__).parent.glob(f'configs/**/{pipeline_config_path}.json')
-                   if str(c.with_suffix('')).endswith(pipeline_config_path)]  # a simple way to not allow * and ?
-        if configs:
-            log.info(f"Interpreting '{pipeline_config_path}' as '{configs[0]}'")
-            pipeline_config_path = str(configs[0])
-    return pipeline_config_path
 
 
 def main():
@@ -75,11 +66,7 @@ def main():
     pipeline_config_path = find_config(args.config_path)
 
     if args.download or args.mode == 'download':
-        deep_download(['-c', pipeline_config_path])
-    token = args.token or os.getenv('TELEGRAM_TOKEN')
-
-    ms_id = args.ms_id or os.getenv('MS_APP_ID')
-    ms_secret = args.ms_secret or os.getenv('MS_APP_SECRET')
+        deep_download(pipeline_config_path)
 
     multi_instance = args.multi_instance
     stateful = args.stateful
@@ -91,23 +78,16 @@ def main():
     elif args.mode == 'interact':
         interact_model(pipeline_config_path)
     elif args.mode == 'interactbot':
-        if not token:
-            log.error('Token required: initiate -t param or TELEGRAM_BOT env var with Telegram bot token')
-        else:
-            interact_model_by_telegram(pipeline_config_path, token)
+        token = args.token
+        interact_model_by_telegram(pipeline_config_path, token)
     elif args.mode == 'interactmsbot':
-        if not ms_id:
-            log.error('Microsoft Bot Framework app id required: initiate -i param '
-                      'or MS_APP_ID env var with Microsoft app id')
-        elif not ms_secret:
-            log.error('Microsoft Bot Framework app secret required: initiate -s param '
-                      'or MS_APP_SECRET env var with Microsoft app secret')
-        else:
-            run_ms_bf_default_agent(model_config_path=pipeline_config_path,
-                                    app_id=ms_id,
-                                    app_secret=ms_secret,
-                                    multi_instance=multi_instance,
-                                    stateful=stateful)
+        ms_id = args.ms_id
+        ms_secret = args.ms_secret
+        run_ms_bf_default_agent(model_config_path=pipeline_config_path,
+                                app_id=ms_id,
+                                app_secret=ms_secret,
+                                multi_instance=multi_instance,
+                                stateful=stateful)
     elif args.mode == 'riseapi':
         alice = args.api_mode == 'alice'
         https = args.https

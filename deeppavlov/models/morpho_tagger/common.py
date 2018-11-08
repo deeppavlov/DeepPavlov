@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import List, Dict, Union, Optional
 
-from deeppavlov.core.commands.infer import build_model_from_config
+from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import set_deeppavlov_root, expand_path
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.params import from_params
@@ -35,7 +35,7 @@ def predict_with_model(config_path: [Path, str]) -> List[Optional[List[str]]]:
     iterator_config = config['dataset_iterator']
     iterator: MorphoTaggerDatasetIterator = from_params(iterator_config, data=data)
 
-    model = build_model_from_config(config, load_trained=True)
+    model = build_model(config, load_trained=True)
     answers = [None] * len(iterator.test)
     batch_size = config['predict'].get("batch_size", -1)
     for indexes, (x, _) in iterator.gen_batches(
