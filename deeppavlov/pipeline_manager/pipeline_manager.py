@@ -19,6 +19,7 @@ import shutil
 from time import time
 from tqdm import tqdm
 from os.path import join
+from pathlib import Path
 from shutil import rmtree
 from psutil import cpu_count
 from datetime import datetime
@@ -27,17 +28,17 @@ from multiprocessing import Pool
 from typing import Union, Dict, List
 
 from deeppavlov.core.common.file import read_json
-from deeppavlov.pipeline_manager.observer import Observer
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.pipeline_manager.pipegen import PipeGen
+from deeppavlov.pipeline_manager.observer import Observer
 from deeppavlov.pipeline_manager.utils import normal_time
 from deeppavlov.pipeline_manager.utils import get_num_gpu
 from deeppavlov.core.common.prints import RedirectedPrints
 from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
-from deeppavlov.core.commands.train import read_data_by_config, get_iterator_from_config
 from deeppavlov.pipeline_manager.utils import results_visualization, get_available_gpus
+from deeppavlov.core.commands.train import read_data_by_config, get_iterator_from_config
 
 
 def unpack_args(func):
@@ -75,7 +76,7 @@ class PipelineManager:
         plot: boolean trigger, which determines whether to draw a graph of results or not
         pipeline_generator: A special class that generates configs for training.
     """
-    def __init__(self, config_path: Union[str, Dict]):
+    def __init__(self, config_path: Union[str, Dict, Path]):
         """
         Initialize observer, read input args, builds a directory tree, initialize date.
         """
@@ -224,7 +225,7 @@ class PipelineManager:
         save_path = join(out_path, dataset_name, "pipe_{}".format(pipe_ind + 1))
         os.makedirs(save_path)
         #
-        with RedirectedPrints(out=open(join(save_path, "out.txt"), "w")):
+        with RedirectedPrints(new_target=open(join(save_path, "out.txt"), "w")):
             if cross_validation:
                 cv_score = calc_cv_score(pipe_config, n_folds=k_fold)
                 results = {"test": cv_score}
