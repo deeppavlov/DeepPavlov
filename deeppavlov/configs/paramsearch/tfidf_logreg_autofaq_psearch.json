@@ -85,6 +85,11 @@
     "test_best": false
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/faq/school/tfidf_logreg_classifier.pkl",
@@ -94,9 +99,6 @@
         "url": "http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki.pkl",
         "subdir": "{MODELS_PATH}/vectorizer"
       }
-    ],
-    "variables": {
-      "MODELS_PATH": "~/.deeppavlov/models"
-    }
+    ]
   }
 }
