@@ -12,11 +12,11 @@
 from collections import Counter
 from typing import List, Tuple, Dict, Union, Any
 from operator import itemgetter
+
+import numpy as np
 from scipy.stats import entropy
 from scipy.sparse import csr_matrix, vstack
 from scipy.sparse.linalg import norm as sparse_norm
-
-import numpy as np
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
@@ -42,6 +42,7 @@ class EcommerceTfidfBot(Component):
         min_entropy: min entropy threshold for specifying
     """
 
+
     def __init__(self,
                  save_path: str,
                  load_path: str,
@@ -52,7 +53,6 @@ class EcommerceTfidfBot(Component):
 
         self.save_path = expand_path(save_path)
         self.load_path = expand_path(load_path)
-
         self.min_similarity = min_similarity
         self.min_entropy = min_entropy
         self.entropy_fields = entropy_fields
@@ -60,6 +60,7 @@ class EcommerceTfidfBot(Component):
         self.x_train_features = None
         if kwargs.get('mode') != 'train':
             self.load()
+
 
     def fit(self, data, query) -> None:
         """Preprocess items `title` and `description` from the `data`
@@ -74,17 +75,20 @@ class EcommerceTfidfBot(Component):
         self.x_train_features = vstack(list(query))
         self.ec_data = data
 
+
     def save(self) -> None:
         """Save classifier parameters"""
         log.info("Saving to {}".format(self.save_path))
         path = expand_path(self.save_path)
         save_pickle((self.ec_data, self.x_train_features), path)
 
+
     def load(self) -> None:
         """Load classifier parameters"""
         log.info("Loading from {}".format(self.load_path))
         self.ec_data, self.x_train_features = load_pickle(
             expand_path(self.load_path))
+
 
     def __call__(self, q_vects: List[csr_matrix], histories: List[Any], states: List[Dict[Any, Any]]) -> Tuple[Tuple[List[Dict[Any, Any]], List[Any]], List[float], Dict[Any, Any]]:
         """Retrieve catalog items according to the TFIDF measure
@@ -164,8 +168,7 @@ class EcommerceTfidfBot(Component):
 
             scores = self._similarity(q_vect)
             answer_ids = np.argsort(scores)[::-1]
-            answer_ids = [idx for idx in answer_ids if scores[idx]
-                          >= self.min_similarity]
+            answer_ids = [idx for idx in answer_ids if scores[idx] >= self.min_similarity]
 
             answer_ids = self._state_based_filter(answer_ids, state)
 
@@ -178,10 +181,12 @@ class EcommerceTfidfBot(Component):
             entropies.append(self._entropy_subquery(answer_ids))
         return (items, entropies), confidences, back_states
 
-    def _csr_to_list(self, csr):
+
+    def _csr_to_list(self, csr: csr_matrix) -> List[Any]:
         return [csr.data.tolist(), csr.indices.tolist()]
 
-    def _list_to_csr(self, _list):
+
+    def _list_to_csr(self, _list: List) -> csr_matrix:
         row_ind = [0] * len(_list[0])
         col_ind = _list[1]
         return csr_matrix((_list[0], (row_ind, col_ind)))
@@ -209,6 +214,7 @@ class EcommerceTfidfBot(Component):
 
         return False
 
+
     def _similarity(self, q_vect: Union[csr_matrix, List]) -> List[float]:
         """Calculates cosine similarity between the user's query and product items.
 
@@ -220,14 +226,14 @@ class EcommerceTfidfBot(Component):
         """
 
         norm = sparse_norm(q_vect) * sparse_norm(self.x_train_features, axis=1)
-        cos_similarities = np.array(q_vect.dot(
-            self.x_train_features.T).todense())/norm
+        cos_similarities = np.array(q_vect.dot(self.x_train_features.T).todense())/norm
 
         cos_similarities = cos_similarities[0]
         cos_similarities = np.nan_to_num(cos_similarities)
         return cos_similarities
 
-    def _state_based_filter(self, ids, state):
+
+    def _state_based_filter(self, ids: List[int], state: Dict[Any, Any]):
         """Filters the candidates based on the key-values from the state
 
         Parameters:
@@ -249,6 +255,7 @@ class EcommerceTfidfBot(Component):
                        if key in self.ec_data[idx]
                        if self.ec_data[idx][key].lower() == value.lower()]
         return ids
+
 
     def _entropy_subquery(self, results_args: List[int]) -> List[Tuple[float, str, List[Tuple[str, int]]]]:
         """Calculate entropy of selected attributes for items from the catalog.
@@ -273,11 +280,9 @@ class EcommerceTfidfBot(Component):
         entropies = []
         for key, value in ent_fields.items():
             count = Counter(value)
-            entropies.append(
-                (entropy(list(count.values()), base=2), key, count.most_common()))
+            entropies.append((entropy(list(count.values()), base=2), key, count.most_common()))
 
         entropies = sorted(entropies, key=itemgetter(0), reverse=True)
-        entropies = [ent_item for ent_item in entropies if ent_item[0]
-                     >= self.min_entropy]
+        entropies = [ent_item for ent_item in entropies if ent_item[0] >= self.min_entropy]
 
         return entropies
