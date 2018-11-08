@@ -47,10 +47,8 @@ class EcommerceAgent(Agent):
     """
 
     def __init__(self, skills: List[Skill], *args, **kwargs) -> None:
-
         super(EcommerceAgent, self).__init__(skills=skills)
         self.states: dict = defaultdict(lambda: [{"start": 0, "stop": 5} for _ in self.skills])
-
 
     def _call(self, utterances_batch: List[str], utterances_ids: List[int] = None) -> List[RichMessage]:
         """Processes batch of utterances and returns corresponding responses batch.
@@ -132,7 +130,6 @@ class EcommerceAgent(Agent):
 
         return [rich_message]
 
-
 def _draw_tail(entropy, history):
     buttons_frame = ButtonsFrame(text="")
     buttons_frame.add_button(Button('More', "@next:"+str(len(history)-1)))
@@ -141,8 +138,7 @@ def _draw_tail(entropy, history):
     if entropy:
         caption += "specify a " + entropy[0][1]
         for ent_value in entropy[0][2][:4]:
-            button_a = Button(ent_value[0],
-                f'@entropy:{len(history)-1}:{entropy[0][1]}:{ent_value[0]}')
+            button_a = Button(ent_value[0], f'@entropy:{len(history)-1}:{entropy[0][1]}:{ent_value[0]}')
             buttons_frame.add_button(button_a)
 
     buttons_frame.text = caption
@@ -152,12 +148,10 @@ def _draw_tail(entropy, history):
 def _draw_item(item, idx, history):
     title = item['Title']
     if 'ListPrice' in item:
-        title += " - **$" + \
-            item['ListPrice'].split('$')[1]+"**"
+        title += " - **$" + item['ListPrice'].split('$')[1]+"**"
 
     buttons_frame = ButtonsFrame(text=title)
-    buttons_frame.add_button(
-        Button('Show details', "@details:"+str(len(history)-2)+":"+str(idx)))
+    buttons_frame.add_button(Button('Show details', "@details:"+str(len(history)-2)+":"+str(idx)))
     return buttons_frame
 
 
