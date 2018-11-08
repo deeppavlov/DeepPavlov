@@ -183,7 +183,7 @@ class EcommerceBleuBot(Skill):
             log.debug(f"Items before similarity filtering {len(results_args)} and after {len(results_args_sim)} with th={self.min_similarity} " +
                       f"the best one has score {scores[results_args[0]]} with title {self.ec_data[results_args[0]]['Title']}")
 
-            results_args_sim = self._filter_state(self, results_args_sim)
+            results_args_sim = self._filter_state(state, results_args_sim)
 
             results_args_sim_fil = [idx for idx in results_args_sim[start:stop]]
 
