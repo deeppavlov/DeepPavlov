@@ -117,27 +117,26 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
 
 def read_data_by_config(config: dict):
     """Read data by dataset_reader from specified config."""
-    config_copy = deepcopy(config)
-    dataset_config = config_copy.get('dataset', None)
+    dataset_config = config.get('dataset', None)
 
     if dataset_config:
-        config_copy.pop('dataset')
+        config.pop('dataset')
         ds_type = dataset_config['type']
         if ds_type == 'classification':
             reader = {'name': 'basic_classification_reader'}
             iterator = {'name': 'basic_classification_iterator'}
-            config_copy['dataset_reader'] = {**dataset_config, **reader}
-            config_copy['dataset_iterator'] = {**dataset_config, **iterator}
+            config['dataset_reader'] = {**dataset_config, **reader}
+            config['dataset_iterator'] = {**dataset_config, **iterator}
         else:
             raise Exception("Unsupported dataset type: {}".format(ds_type))
 
     data = []
-    reader_config = config_copy.get('dataset_reader', None)
+    reader_config = config.get('dataset_reader', None)
 
     if reader_config:
-        reader_config = config_copy['dataset_reader']
+        reader_config = config['dataset_reader']
         if 'class' in reader_config:
-            c = reader_config.pop('class')
+            c = reader_config.get('class')
             try:
                 module_name, cls_name = c.split(':')
                 reader = getattr(importlib.import_module(module_name), cls_name)()
@@ -147,8 +146,8 @@ def read_data_by_config(config: dict):
                 log.exception(e)
                 raise e
         else:
-            reader = get_model(reader_config.pop('name'))()
-        data_path = reader_config.pop('data_path', '')
+            reader = get_model(reader_config.get('name'))()
+        data_path = reader_config.get('data_path', '')
         if isinstance(data_path, list):
             data_path = [expand_path(x) for x in data_path]
         else:
