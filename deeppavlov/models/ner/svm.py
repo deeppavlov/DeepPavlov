@@ -65,7 +65,7 @@ class SVMTagger(Estimator):
             cl += l
         return y
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         path = str(self.save_path.resolve())
         with open(path, 'wb') as f:
             pickle.dump(self.classifier, f)
