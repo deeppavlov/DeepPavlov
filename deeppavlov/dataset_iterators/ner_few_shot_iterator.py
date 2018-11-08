@@ -127,7 +127,7 @@ class NERFewShotIterator(DataLearningIterator):
 
     def gen_batches(self, batch_size: int,
                     data_type: str = 'train',
-                    shuffle: bool = None):
+                    shuffle: bool = None) -> Iterator[Tuple[List[List[str]], List[List[str]]]]:
         if data_type == 'train':
             x, y = self.get_instances('train')
         else:
