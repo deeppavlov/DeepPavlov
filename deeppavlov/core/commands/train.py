@@ -19,7 +19,6 @@ import time
 from collections import OrderedDict, namedtuple
 from pathlib import Path
 from typing import List, Tuple, Dict, Union
-from copy import deepcopy
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root, import_packages
