@@ -1,5 +1,5 @@
 oWelcome to DeepPavlov's documentation!
-======================================
+=======================================
 
 .. toctree::
    :glob:
