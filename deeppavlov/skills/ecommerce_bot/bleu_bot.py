@@ -12,13 +12,12 @@
 import copy
 import json
 from pathlib import Path
-
 from collections import Counter
 from typing import List, Tuple, Dict, Any
 from operator import itemgetter
-from scipy.stats import entropy
 
 import numpy as np
+from scipy.stats import entropy
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
@@ -47,6 +46,7 @@ class EcommerceBleuBot(Skill):
         min_entropy: min entropy threshold for specifying
     """
 
+
     def __init__(self,
                  preprocess: Component,
                  save_path: str,
@@ -60,9 +60,9 @@ class EcommerceBleuBot(Skill):
         self.save_path = expand_path(save_path)
 
         if isinstance(load_path, list):
-            self.load_path = [expand_path(path) for path in load_path]
+            self.load_path: List = [expand_path(path) for path in load_path]
         else:
-            self.load_path = [expand_path(load_path)]
+            self.load_path: List = [expand_path(load_path)]
 
         self.min_similarity = min_similarity
         self.min_entropy = min_entropy
@@ -70,6 +70,7 @@ class EcommerceBleuBot(Skill):
         self.ec_data: List = []
         if kwargs.get('mode') != 'train':
             self.load()
+
 
     def fit(self, data: List[Dict[Any, Any]]) -> None:
         """Preprocess items `title` and `description` from the `data`
@@ -88,10 +89,12 @@ class EcommerceBleuBot(Skill):
         }) for item in data]
         log.info('Data are nlped')
 
+
     def save(self, **kwargs) -> None:
         """Save classifier parameters"""
         log.info(f"Saving model to {self.save_path}")
         save_pickle(self.ec_data, self.save_path)
+
 
     def load(self, **kwargs) -> None:
         """Load classifier parameters"""
@@ -104,8 +107,9 @@ class EcommerceBleuBot(Skill):
 
         log.info(f"Loaded items {len(self.ec_data)}")
 
-    def __call__(self, queries: List[str], history: List[list], states: List[Dict[Any, Any]], **kwargs) -> \
-            Tuple[Tuple[List[Dict[Any, Any]], List[Any], int], List[float], Dict[Any, Any]]:
+
+    def __call__(self, queries: List[str], history: List[Any], states: List[Dict[Any, Any]]) -> \
+            Tuple[Tuple[List[Any], List[Any]], List[float], List[Any]]:
         """Retrieve catalog items according to the BLEU measure
 
         Parameters:
@@ -158,59 +162,32 @@ class EcommerceBleuBot(Skill):
                 state['Price'] = money_range
 
             score_title = [bleu_advanced(self.preprocess.lemmas(item['title_nlped']),
-                                         self.preprocess.lemmas(
-                                             self.preprocess.filter_nlp_title(query)),
-                                         weights=(1,), penalty=False) for item in self.ec_data]
+                                        self.preprocess.lemmas(self.preprocess.filter_nlp_title(query)),
+                                        weights = (1,), penalty = False) for item in self.ec_data]
 
             score_feat = [bleu_advanced(self.preprocess.lemmas(item['feat_nlped']),
-                                        self.preprocess.lemmas(
-                                            self.preprocess.filter_nlp(query)),
-                                        weights=(0.3, 0.7), penalty=False) for idx, item in enumerate(self.ec_data)]
+                                        self.preprocess.lemmas(self.preprocess.filter_nlp(query)),
+                                        weights = (0.3, 0.7), penalty = False) for idx, item in enumerate(self.ec_data)]
 
-            scores = np.mean(
-                [score_feat, score_title], axis=0).tolist()
+            scores = np.mean([score_feat, score_title], axis=0).tolist()
 
             scores_title = [(score, -len(self.ec_data[idx]['Title']))
                             for idx, score in enumerate(scores)]
 
-            raw_scores_ar = np.array(scores_title, dtype=[
-                ('x', 'float_'), ('y', 'int_')])
+            raw_scores_ar = np.array(scores_title, dtype=[('x', 'float_'), ('y', 'int_')])
 
-            results_args = np.argsort(raw_scores_ar, order=('x', 'y'))[
-                ::-1].tolist()
+            results_args = np.argsort(raw_scores_ar, order=('x', 'y'))[::-1].tolist()
 
-            results_args_sim = [
-                idx for idx in results_args if scores[idx] >= self.min_similarity]
+            results_args_sim = [idx for idx in results_args if scores[idx] >= self.min_similarity]
 
             log.debug(f"Items before similarity filtering {len(results_args)} and after {len(results_args_sim)} with th={self.min_similarity} " +
                       f"the best one has score {scores[results_args[0]]} with title {self.ec_data[results_args[0]]['Title']}")
 
-            for key, value in state.items():
-                log.debug(f"Filtering for {key}:{value}")
+            results_args_sim = self._filter_state(self, results_args_sim)
 
-                if key == 'Price':
-                    price = value
-                    log.debug(f"Items before price filtering {len(results_args_sim)} with price {price}")
-                    results_args_sim = [idx for idx in results_args_sim
-                                        if self.preprocess.price(self.ec_data[idx]) >= price[0] and
-                                        self.preprocess.price(self.ec_data[idx]) <= price[1] and
-                                        self.preprocess.price(self.ec_data[idx]) != 0]
-                    log.debug(f"Items after price filtering {len(results_args_sim)}")
+            results_args_sim_fil = [idx for idx in results_args_sim[start:stop]]
 
-                elif key in ['query', 'start', 'stop', 'history']:
-                    continue
-
-                else:
-                    results_args_sim = [idx for idx in results_args_sim
-                                        if key in self.ec_data[idx]
-                                        if self.ec_data[idx][key].lower() == value.lower()]
-
-            local_response = []
-            for idx in results_args_sim[start:stop]:
-                temp = copy.copy(self.ec_data[idx])
-                del temp['title_nlped']
-                del temp['feat_nlped']
-                local_response.append(temp)
+            local_response = self._clean_items(results_args_sim_fil)
 
             response.append(local_response)
 
@@ -222,6 +199,41 @@ class EcommerceBleuBot(Skill):
             back_states.append(state)
 
         return (response, entropies), confidence, back_states
+
+
+    def _clean_items(self, results: List[int]) -> List[Any]:
+        local_response: List = []
+        for idx in results:
+            temp = copy.copy(self.ec_data[idx])
+            del temp['title_nlped']
+            del temp['feat_nlped']
+            local_response.append(temp)
+        return local_response
+
+
+    def _filter_state(self, state: Dict[Any, Any], results_args_sim: List[int]) -> List[Any]:
+        for key, value in state.items():
+            log.debug(f"Filtering for {key}:{value}")
+
+            if key == 'Price':
+                price = value
+                log.debug(f"Items before price filtering {len(results_args_sim)} with price {price}")
+                results_args_sim = [idx for idx in results_args_sim
+                                    if self.preprocess.price(self.ec_data[idx]) >= price[0] and
+                                    self.preprocess.price(self.ec_data[idx]) <= price[1] and
+                                    self.preprocess.price(self.ec_data[idx]) != 0]
+                log.debug(f"Items after price filtering {len(results_args_sim)}")
+
+            elif key in ['query', 'start', 'stop', 'history']:
+                continue
+
+            else:
+                results_args_sim = [idx for idx in results_args_sim
+                                    if key in self.ec_data[idx]
+                                    if self.ec_data[idx][key].lower() == value.lower()]
+
+        return results_args_sim
+
 
     def _entropy_subquery(self, results_args: List[int]) -> List[Tuple[float, str, List[Tuple[str, int]]]]:
         """Calculate entropy of selected attributes for items from the catalog.
@@ -250,7 +262,7 @@ class EcommerceBleuBot(Skill):
                 (entropy(list(count.values()), base=2), key, count.most_common()))
 
         entropies = sorted(entropies, key=itemgetter(0), reverse=True)
-        entropies = [ent_item for ent_item in entropies if ent_item[0]
-                     >= self.min_entropy]
+        entropies = [
+            ent_item for ent_item in entropies if ent_item[0] >= self.min_entropy]
 
         return entropies
