@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "morphotagger_dataset_reader",
-    "data_path": "UD2.0_source",
+    "data_path": "{DOWNLOADS_PATH}/UD2.0_source",
     "language": "hi",
     "data_types": [
       "train",
@@ -51,8 +51,8 @@
           "BEGIN",
           "END"
         ],
-        "save_path": "morpho_tagger/UD2.0/hi/tag.dict",
-        "load_path": "morpho_tagger/UD2.0/hi/tag.dict"
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/hi/tag.dict",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/hi/tag.dict"
       },
       {
         "id": "char_vocab",
@@ -67,8 +67,8 @@
           "END"
         ],
         "level": "char",
-        "save_path": "morpho_tagger/UD2.0/hi/char.dict",
-        "load_path": "morpho_tagger/UD2.0/hi/char.dict"
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/hi/char.dict",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/hi/char.dict"
       },
       {
         "in": [
@@ -82,8 +82,8 @@
         ],
         "name": "morpho_tagger",
         "main": true,
-        "save_path": "morpho_tagger/UD2.0/hi/model.hdf5",
-        "load_path": "morpho_tagger/UD2.0/hi/model.hdf5",
+        "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/hi/model.hdf5",
+        "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/hi/model.hdf5",
         "tags": "#tag_vocab",
         "symbols": "#char_vocab",
         "verbose": 1,
@@ -153,17 +153,22 @@
     "outfile": "results/ud_hi_test.res"
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger/UD2.0/hi.tar.gz",
-        "subdir": "morpho_tagger/UD2.0/hi"
+        "subdir": "{MODELS_PATH}/morpho_tagger/UD2.0/hi"
       },
       {
         "url": "http://files.deeppavlov.ai/datasets/UD2.0_source/hi.tar.gz",
-        "subdir": "UD2.0_source/hi"
+        "subdir": "{DOWNLOADS_PATH}/UD2.0_source/hi"
       }
     ],
     "telegram_utils": "MorphoTaggerModel"
