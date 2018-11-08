@@ -36,8 +36,8 @@
         ],
         "id": "tfidf_vec",
         "name": "sklearn_component",
-        "save_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
-        "load_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "save_path": "{MODELS_PATH}/vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "load_path": "{MODELS_PATH}/vectorizer/tfidf_vectorizer_ruwiki.pkl",
         "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
         "infer_method": "transform"
       },
@@ -51,8 +51,8 @@
           "y"
         ],
         "top_n": 1,
-        "save_path": "faq/tfidf_cos_sim_classifier.pkl",
-        "load_path": "faq/tfidf_cos_sim_classifier.pkl",
+        "save_path": "{MODELS_PATH}/faq/tfidf_cos_sim_classifier.pkl",
+        "load_path": "{MODELS_PATH}/faq/tfidf_cos_sim_classifier.pkl",
         "out": [
           "answer",
           "score"
@@ -69,14 +69,19 @@
     "test_best": false
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/faq/school/tfidf_cos_sim_classifier.pkl",
-        "subdir": "faq"
+        "subdir": "{MODELS_PATH}/faq"
       },
       {
         "url": "http://files.deeppavlov.ai/vectorizer/tfidf_vectorizer_ruwiki.pkl",
-        "subdir": "vectorizer"
+        "subdir": "{MODELS_PATH}/vectorizer"
       }
     ]
   }
