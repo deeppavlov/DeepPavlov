@@ -15,8 +15,6 @@ limitations under the License.
 """
 
 import argparse
-from pathlib import Path
-import os
 
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.commands.infer import interact_model, predict_on_stream
@@ -83,7 +81,7 @@ def main():
     elif args.mode == 'interactmsbot':
         ms_id = args.ms_id
         ms_secret = args.ms_secret
-        run_ms_bf_default_agent(model_config_path=pipeline_config_path,
+        run_ms_bf_default_agent(model_config=pipeline_config_path,
                                 app_id=ms_id,
                                 app_secret=ms_secret,
                                 multi_instance=multi_instance,
