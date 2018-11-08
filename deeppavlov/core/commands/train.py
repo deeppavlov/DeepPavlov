@@ -338,7 +338,7 @@ def _train_batches(model: Chainer, iterator: DataLearningIterator, train_config:
         raise ConfigError('metric_optimization has to be one of {}'.format(['maximize', 'minimize']))
 
     i = 0
-    epochs = start_epoch_num if not (start_epoch_num is None) else train_config['start_epoch_num']
+    epochs = start_epoch_num if start_epoch_num is not None else train_config['start_epoch_num']
     examples = 0
     saved = False
     patience = 0
