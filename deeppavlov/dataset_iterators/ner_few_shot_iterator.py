@@ -106,7 +106,7 @@ class NERFewShotIterator(DataLearningIterator):
                             tags.append('O')
                     self.data[key][n] = [x, tags]
 
-    def get_instances(self, data_type: str = 'train') -> Tuple[tuple, tuple]:
+    def get_instances(self, data_type: str = 'train') -> Tuple[List[List[str]], List[List[str]]]:
         """Get all data for a selected data type
 
         Args:
@@ -125,7 +125,8 @@ class NERFewShotIterator(DataLearningIterator):
 
         return x, y
 
-    def gen_batches(self, batch_size: int, data_type: str = 'train',
+    def gen_batches(self, batch_size: int,
+                    data_type: str = 'train',
                     shuffle: bool = None):
         if data_type == 'train':
             x, y = self.get_instances('train')
