@@ -54,7 +54,7 @@ class SVMTagger(Estimator):
                               random_state=self._seed, shrinking=True, tol=0.001, verbose=False)
         self.classifier.fit(tokens, tags)
 
-    def __call__(self, token_vectors_batch, *args, **kwargs):
+    def __call__(self, token_vectors_batch: List[List[str]], *args, **kwargs):
         lens = [len(utt) for utt in token_vectors_batch]
         token_vectors_list = list(chain(*token_vectors_batch))
         predictions = self.classifier.predict(token_vectors_list)
