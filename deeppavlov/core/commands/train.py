@@ -134,9 +134,9 @@ def read_data_by_config(config: dict):
     reader_config = config.get('dataset_reader', None)
 
     if reader_config:
-        reader_config = config['dataset_reader']
+        reader_config = dict(config['dataset_reader'])
         if 'class' in reader_config:
-            c = reader_config.get('class')
+            c = reader_config.pop('class')
             try:
                 module_name, cls_name = c.split(':')
                 reader = getattr(importlib.import_module(module_name), cls_name)()
@@ -146,8 +146,8 @@ def read_data_by_config(config: dict):
                 log.exception(e)
                 raise e
         else:
-            reader = get_model(reader_config.get('name'))()
-        data_path = reader_config.get('data_path', '')
+            reader = get_model(reader_config.pop('name'))()
+        data_path = reader_config.pop('data_path', '')
         if isinstance(data_path, list):
             data_path = [expand_path(x) for x in data_path]
         else:
