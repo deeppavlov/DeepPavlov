@@ -38,9 +38,6 @@ class NERFewShotIterator(DataLearningIterator):
             the same
         remove_not_targets: whether to replace all non target tags with `O` tag or not.
     """
-    def split(self, *args, **kwargs):
-        pass
-
     def __init__(self,
                  data: Dict[str, List[Tuple[Any, Any]]],
                  seed: int = None,
@@ -50,7 +47,7 @@ class NERFewShotIterator(DataLearningIterator):
                  n_train_samples: int = 20,
                  remove_not_targets: bool = True,
                  *args, **kwargs) -> None:
-        self.shuffle = shuffle
+        super(NERFewShotIterator, self).__init__(data=data, seed=seed, shuffle=shuffle)
         self.target_tag = target_tag
         self.filter_bi = filter_bi
         self.n_train_samples = n_train_samples
@@ -58,19 +55,6 @@ class NERFewShotIterator(DataLearningIterator):
 
         if self.target_tag is None:
             raise RuntimeError('You must provide a target tag to NERFewShotIterator!')
-
-        self.random = Random(seed)
-
-        self.train = data.get('train', [])
-        self.valid = data.get('valid', [])
-        self.test = data.get('test', [])
-        self.split(*args, **kwargs)
-        self.data = {
-            'train': self.train,
-            'valid': self.valid,
-            'test': self.test,
-            'all': self.train + self.test + self.valid
-        }
 
         self.n_samples = len(self.train)
 
