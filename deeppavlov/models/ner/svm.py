@@ -14,10 +14,10 @@
 
 from itertools import chain
 from typing import List
-from sklearn.svm import SVC
 import pickle
 from pathlib import Path
 
+from sklearn.svm import SVC
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
