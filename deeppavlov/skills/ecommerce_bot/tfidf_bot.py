@@ -10,7 +10,7 @@
 # limitations under the License.
 
 from collections import Counter
-from typing import List, Tuple, Dict, Union
+from typing import List, Tuple, Dict, Union, Any
 from operator import itemgetter
 from scipy.stats import entropy
 from scipy.sparse import csr_matrix, vstack
@@ -35,7 +35,6 @@ class EcommerceTfidfBot(Component):
     in sorted order according to entropy.
 
     Parameters:
-        preprocess: text preprocessing component
         save_path: path to save a model
         load_path: path to load a model
         entropy_fields: the specification attributes of the catalog items
@@ -87,7 +86,7 @@ class EcommerceTfidfBot(Component):
         self.ec_data, self.x_train_features = load_pickle(
             expand_path(self.load_path))
 
-    def __call__(self, q_vects, histories, states):
+    def __call__(self, q_vects: List[csr_matrix], histories: List[Any], states: List[Dict[Any, Any]]) -> Tuple[Tuple[List[Dict[Any, Any]], List[Any]], List[float], Dict[Any, Any]]:
         """Retrieve catalog items according to the TFIDF measure
 
         Parameters:
