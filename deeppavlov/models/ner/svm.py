@@ -70,7 +70,7 @@ class SVMTagger(Estimator):
         with open(path, 'wb') as f:
             pickle.dump(self.classifier, f)
 
-    def load(self, *args, **kwargs):
+    def load(self, *args, **kwargs) -> None:
         path = str(self.load_path.resolve())
         if Path(path).exists():
             with open(path, 'rb') as f:
