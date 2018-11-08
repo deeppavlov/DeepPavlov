@@ -37,10 +37,10 @@ Config file
 ^^^^^^^^^^^
 
 BLEU-based `[1] <#references>`__ eCommerce bot 
-:config:`ecommerce_bot/ecommerce_bleu.json`
+:config:`ecommerce_skill/bleu_retrieve.json`
 
 TfIdf-based eCommerce bot 
-:config:`ecommerce_bot/ecommerce_tfidf.json`
+:config:`ecommerce_skill/tfidf_retrieve.json`
 
 
 Usage example
@@ -79,7 +79,7 @@ eCommerce bot with BLEU-based ranker
    -  ``in`` - pipeline input data: an user ``query``, a dialog ``state`` and dialog history ``history``.
    -  ``out`` - pipeline output data: ``response`` the structure with retrieved product items.
 
--  **ecommerce_bleu_bot** - ranker 
+-  **ecommerce_skill_bleu** - ranker 
 
    -  ``min_similarity``: lower boundary for textual similarity ranker (by default 0.5).
    -  ``min_entropy``: lower boundary for entropy (by default 0.5). If the entropy is less than ``min_entropy``, it's omitted from the specification list.
@@ -109,7 +109,7 @@ eCommerce bot with TfIdf-based ranker
    -  ``in`` - pipeline input data: an user ``query``, a dialog ``state`` and dialog history ``history``.
    -  ``out`` - pipeline output data: ``response`` the structure with retrieved product items.
 
--  **ecommerce_tfidf_bot** - ranker 
+-  **ecommerce_skill_tfidf** - ranker 
 
    -  ``min_similarity``: lower boundary for textual similarity ranker (by default 0.5).
    -  ``min_entropy``: lower boundary for entropy (by default 0.5). If the entropy is less than ``min_entropy``, it's omitted from the specification list.

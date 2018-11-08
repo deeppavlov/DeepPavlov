@@ -1,7 +1,7 @@
 {
   "common_defaults": {
     "host": "0.0.0.0",
-    "port": 5000,
+    "port": 7054,
     "model_endpoint": "/model",
     "model_args_names": ["context"],
     "https": false,
@@ -26,11 +26,11 @@
       "model_endpoint": "/slot-fill",
       "model_args_names": ""
     },
-    "EcommerceBot": {
+    "EcommerceSkill": {
       "host": "",
       "port": "",
-      "model_endpoint": "/ecommerce_bot",
-      "model_args_names": ["query", "history", "state"]
+      "model_endpoint": "/ecommerce_skill",
+      "model_args_names": ["query", "history", "state", "data"]
     },
     "ErrorModel": {
       "host": "",

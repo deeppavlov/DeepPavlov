@@ -27,8 +27,8 @@ from deeppavlov.core.models.estimator import Component
 log = get_logger(__name__)
 
 
-@register("ecommerce_tfidf_bot")
-class EcommerceTfidfBot(Component):
+@register("ecommerce_skill_tfidf")
+class EcommerceSkillTfidf(Component):
     """Class to retrieve product items from `load_path` catalogs
     in sorted order according to the similarity measure
     Retrieve the specification attributes with corresponding values

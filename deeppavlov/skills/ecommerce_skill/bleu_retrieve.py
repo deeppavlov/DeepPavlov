@@ -30,8 +30,8 @@ from deeppavlov.metrics.bleu import bleu_advanced
 log = get_logger(__name__)
 
 
-@register("ecommerce_bleu_bot")
-class EcommerceBleuBot(Skill):
+@register("ecommerce_skill_bleu")
+class EcommerceSkillBleu(Skill):
     """Class to retrieve product items from `load_path` catalogs
     in sorted order according to the similarity measure
     Retrieve the specification attributes with corresponding values
@@ -103,7 +103,7 @@ class EcommerceBleuBot(Skill):
             if Path.is_file(path):
                 self.ec_data += load_pickle(path)
             else:
-                log.info(f"File {path} does not exist")
+                raise FileNotFoundError
 
         log.info(f"Loaded items {len(self.ec_data)}")
 
@@ -171,8 +171,7 @@ class EcommerceBleuBot(Skill):
 
             scores = np.mean([score_feat, score_title], axis=0).tolist()
 
-            scores_title = [(score, -len(self.ec_data[idx]['Title']))
-                            for idx, score in enumerate(scores)]
+            scores_title = [(score, -len(self.ec_data[idx]['Title'])) for idx, score in enumerate(scores)]
 
             raw_scores_ar = np.array(scores_title, dtype=[('x', 'float_'), ('y', 'int_')])
 

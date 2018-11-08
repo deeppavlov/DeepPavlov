@@ -21,7 +21,7 @@
     ],
     "pipe": [
       {
-        "name": "ecommerce_bleu_bot",
+        "name": "ecommerce_skill_bleu",
         "in": [
 		      "query", 
 		      "history", 
@@ -37,10 +37,10 @@
           "Color", 
           "Genre"
         ],
-        "save_path": "ecommerce_bot/ecommerce_Phones_model.pkl",
+        "save_path": "ecommerce_skill/ecommerce_Phones_model.pkl",
         "load_path": [
-		      "ecommerce_bot/ecommerce_Phones_model.pkl",
-		      "ecommerce_bot/ecommerce_Electronics_model.pkl"
+		      "ecommerce_skill/ecommerce_Phones_model.pkl",
+		      "ecommerce_skill/ecommerce_Electronics_model.pkl"
         ],
         "preprocess": {
           "name": "ecommerce_preprocess",
@@ -61,8 +61,8 @@
    },
    "metadata": {
     "labels": {
-      "telegram_utils": "EcommerceBot",
-      "server_utils": "EcommerceBot"
+      "telegram_utils": "EcommerceSkill",
+      "server_utils": "EcommerceSkill"
     },
     "requirements": [
         "../dp_requirements/spacy.txt",
@@ -70,28 +70,28 @@
       ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Phones_model.pkl",
-        "subdir": "ecommerce_bot"
+        "url": "http://files.deeppavlov.ai/ecommerce_skill/ecommerce_Phones_model.pkl",
+        "subdir": "ecommerce_skill"
       },
       {
-        "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Books_model.pkl",
-        "subdir": "ecommerce_bot"
+        "url": "http://files.deeppavlov.ai/ecommerce_skill/ecommerce_Books_model.pkl",
+        "subdir": "ecommerce_skill"
       },
       {
-        "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Movies_model.pkl",
-        "subdir": "ecommerce_bot"
+        "url": "http://files.deeppavlov.ai/ecommerce_skill/ecommerce_Movies_model.pkl",
+        "subdir": "ecommerce_skill"
       },
       {
-        "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Electronics_model.pkl",
-        "subdir": "ecommerce_bot"
+        "url": "http://files.deeppavlov.ai/ecommerce_skill/ecommerce_Electronics_model.pkl",
+        "subdir": "ecommerce_skill"
       },
       {
-        "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Home_model.pkl",
-        "subdir": "ecommerce_bot"
+        "url": "http://files.deeppavlov.ai/ecommerce_skill/ecommerce_Home_model.pkl",
+        "subdir": "ecommerce_skill"
       },
       {
-        "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Automotive_model.pkl",
-        "subdir": "ecommerce_bot"
+        "url": "http://files.deeppavlov.ai/ecommerce_skill/ecommerce_Automotive_model.pkl",
+        "subdir": "ecommerce_skill"
       }
     ]
   }
