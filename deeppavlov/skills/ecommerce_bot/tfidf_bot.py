@@ -144,7 +144,7 @@ class EcommerceTfidfBot(Component):
             if state['history']:
                 his_vect = self._list_to_csr(state['history'][-1])
                 if not np.array_equal(his_vect.todense(), q_vect.todense()):
-                    q_comp = q_vect.maximum(state['history'][-1])
+                    q_comp = q_vect.maximum(his_vect)
                     complex_bool = self._take_complex_query(q_comp, q_vect)
                     log.info(f"Complex query:{complex_bool}")
 
@@ -154,11 +154,7 @@ class EcommerceTfidfBot(Component):
                         state['stop'] = 5
                     else:
                         # current short query wins that means that the state should be zeroed
-                        state = {
-                            'history': [],
-                            'start': 0,
-                            'stop': 5,
-                        }
+                        state['history'] = []
                 else:
                     log.info("the save query came")
             else:
