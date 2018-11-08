@@ -19,6 +19,7 @@ import time
 from collections import OrderedDict, namedtuple
 from pathlib import Path
 from typing import List, Tuple, Dict, Union
+from copy import deepcopy
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path, set_deeppavlov_root, import_packages
@@ -116,24 +117,25 @@ def fit_chainer(config: dict, iterator: Union[DataLearningIterator, DataFittingI
 
 def read_data_by_config(config: dict):
     """Read data by dataset_reader from specified config."""
-    dataset_config = config.get('dataset', None)
+    config_copy = deepcopy(config)
+    dataset_config = config_copy.get('dataset', None)
 
     if dataset_config:
-        config.pop('dataset')
+        config_copy.pop('dataset')
         ds_type = dataset_config['type']
         if ds_type == 'classification':
             reader = {'name': 'basic_classification_reader'}
             iterator = {'name': 'basic_classification_iterator'}
-            config['dataset_reader'] = {**dataset_config, **reader}
-            config['dataset_iterator'] = {**dataset_config, **iterator}
+            config_copy['dataset_reader'] = {**dataset_config, **reader}
+            config_copy['dataset_iterator'] = {**dataset_config, **iterator}
         else:
             raise Exception("Unsupported dataset type: {}".format(ds_type))
 
     data = []
-    reader_config = config.get('dataset_reader', None)
+    reader_config = config_copy.get('dataset_reader', None)
 
     if reader_config:
-        reader_config = config['dataset_reader']
+        reader_config = config_copy['dataset_reader']
         if 'class' in reader_config:
             c = reader_config.pop('class')
             try:
