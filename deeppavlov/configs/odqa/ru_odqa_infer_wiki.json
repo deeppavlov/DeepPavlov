@@ -26,7 +26,7 @@
         ],
         "join_docs": false,
         "shuffle": false,
-        "load_path": "odqa/ruwiki.db"
+        "load_path": "{DOWNLOADS_PATH}/odqa/ruwiki.db"
       },
       {
         "name": "document_chunker",
@@ -55,6 +55,11 @@
     ]
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt"
     ],
@@ -62,8 +67,10 @@
       "server_utils": "ODQA"
     },
     "download": [
-      "http://files.deeppavlov.ai/datasets/wikipedia/ruwiki.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/ru_odqa.tar.gz"
+      {
+        "url": "http://files.deeppavlov.ai/datasets/wikipedia/ruwiki.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      }
     ]
   }
 }
