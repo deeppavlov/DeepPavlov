@@ -45,7 +45,7 @@ class SVMTagger(Estimator):
 
         self.load()
 
-    def fit(self, tokens: List[List[str]], tags: List[List[int]], *args, **kwargs):
+    def fit(self, tokens: List[List[str]], tags: List[List[int]], *args, **kwargs) -> None:
         tokens = list(chain(*tokens))
         tags = list(chain(*tags))
         self.classifier = SVC(C=1.0, cache_size=200, class_weight=None, coef0=0.0,
@@ -65,12 +65,12 @@ class SVMTagger(Estimator):
             cl += l
         return y
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         path = str(self.save_path.resolve())
         with open(path, 'wb') as f:
             pickle.dump(self.classifier, f)
 
-    def load(self, *args, **kwargs):
+    def load(self, *args, **kwargs) -> None:
         path = str(self.load_path.resolve())
         if Path(path).exists():
             with open(path, 'rb') as f:
