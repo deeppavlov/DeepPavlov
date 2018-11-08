@@ -26,33 +26,35 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 @register('ner_few_shot_iterator')
 class NERFewShotIterator(DataLearningIterator):
-    """Dataset iterator for learning models, e. g. neural networks.
+    """Dataset iterator for simulating few-shot Named Entity Recognition setting.
 
     Args:
         data: list of (x, y) pairs for every data type in ``'train'``, ``'valid'`` and ``'test'``
         seed: random seed for data shuffling
         shuffle: whether to shuffle data during batching
-
-    Attributes:
-        shuffle: whether to shuffle data during batching
-        random: instance of ``Random`` initialized with a seed
+        target_tag: the tag of interest. For this tag the few-shot setting will be simulated
+        filter_bi: whether to filter BIO markup or not
+        n_train_samples: number of training samples in the few shot setting. The validation and the test sets will be
+            the same
+        remove_not_targets: whether to replace all non target tags with `O` tag or not.
     """
     def split(self, *args, **kwargs):
         pass
 
-    def __init__(self, data: Dict[str, List[Tuple[Any, Any]]],
-                 seed: int = None, shuffle: bool = True,
+    def __init__(self,
+                 data: Dict[str, List[Tuple[Any, Any]]],
+                 seed: int = None,
+                 shuffle: bool = True,
                  target_tag: str = None,
                  filter_bi: bool = True,
                  n_train_samples: int = 20,
-                 remove_not_targets = True,
+                 remove_not_targets: bool = True,
                  *args, **kwargs) -> None:
         self.shuffle = shuffle
         self.target_tag = target_tag
         self.filter_bi = filter_bi
         self.n_train_samples = n_train_samples
         self.remove_not_targets = remove_not_targets
-
 
         if self.target_tag is None:
             raise RuntimeError('You must provide a target tag to NERFewShotIterator!')
