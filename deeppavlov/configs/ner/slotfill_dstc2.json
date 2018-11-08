@@ -18,7 +18,7 @@
       },
       {
         "in": ["x_tokens"],
-        "config_path": "../deeppavlov/configs/ner/ner_dstc2.json",
+        "config_path": "{DEEPPAVLOV_PATH}/configs/ner/ner_dstc2.json",
         "out": ["x_tokens", "tags"]
       },
 
