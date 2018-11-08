@@ -1,14 +1,14 @@
 {
   "dataset_reader": {
     "name": "odqa_reader",
-    "data_path": "odqa/enwiki_test",
-    "save_path": "odqa/enwiki_test.db",
+    "data_path": "{DOWNLOADS_PATH}/odqa/enwiki_test",
+    "save_path": "{DOWNLOADS_PATH}/odqa/enwiki_test.db",
     "dataset_format": "txt"
   },
   "dataset_iterator": {
     "name": "sqlite_iterator",
     "shuffle": false,
-    "load_path": "odqa/enwiki_test.db"
+    "load_path": "{DOWNLOADS_PATH}/odqa/enwiki_test.db"
   },
   "chainer": {
     "in": [
@@ -24,8 +24,8 @@
         "fit_on_batch": [
           "x"
         ],
-        "save_path": "odqa/enwiki_test_tfidf.npz",
-        "load_path": "odqa/enwiki_test_tfidf.npz",
+        "save_path": "{DOWNLOADS_PATH}/odqa/enwiki_test_tfidf.npz",
+        "load_path": "{DOWNLOADS_PATH}/odqa/enwiki_test_tfidf.npz",
         "tokenizer": {
           "name": "stream_spacy_tokenizer",
           "lemmas": true,
@@ -55,6 +55,11 @@
     "batch_size": 2
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
       "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
@@ -65,7 +70,7 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki_test.tar.gz",
-        "subdir": "odqa"
+        "subdir": "{DOWNLOADS_PATH}/odqa"
       }
     ]
   }
