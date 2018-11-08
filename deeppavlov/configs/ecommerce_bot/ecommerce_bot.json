@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "amazon_ecommerce_reader",
-    "data_path": "./amazon_ecommerce",
+    "data_path": "{DOWNLOADS_PATH}/amazon_ecommerce",
     "catalog": "Phones"
   },
   "dataset_iterator": {
@@ -18,8 +18,11 @@
         "min_similarity": 0.5,
         "min_entropy": 0.5,
         "entropy_fields": ["Size", "Brand", "Author", "Color", "Genre"],
-        "save_path": "ecommerce_bot/ecommerce_Phones_model.pkl",
-        "load_path": ["ecommerce_bot/ecommerce_Phones_model.pkl","ecommerce_bot/ecommerce_Electronics_model.pkl"],
+        "save_path": "{MODELS_PATH}/ecommerce_bot/ecommerce_Phones_model.pkl",
+        "load_path": [
+          "{MODELS_PATH}/ecommerce_bot/ecommerce_Phones_model.pkl",
+          "{MODELS_PATH}/ecommerce_bot/ecommerce_Electronics_model.pkl"
+        ],
         "preprocess": {
           "name": "ecommerce_preprocess",
           "spacy_model": "en_core_web_sm",
@@ -32,6 +35,11 @@
    "train":{
    },
    "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "labels": {
       "telegram_utils": "EcommerceBot",
       "server_utils": "EcommerceBot"
@@ -43,27 +51,27 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Phones_model.pkl",
-        "subdir": "ecommerce_bot"
+        "subdir": "{MODELS_PATH}/ecommerce_bot"
       },
       {
         "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Books_model.pkl",
-        "subdir": "ecommerce_bot"
+        "subdir": "{MODELS_PATH}/ecommerce_bot"
       },
       {
         "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Movies_model.pkl",
-        "subdir": "ecommerce_bot"
+        "subdir": "{MODELS_PATH}/ecommerce_bot"
       },
       {
         "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Electronics_model.pkl",
-        "subdir": "ecommerce_bot"
+        "subdir": "{MODELS_PATH}/ecommerce_bot"
       },
       {
         "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Home_model.pkl",
-        "subdir": "ecommerce_bot"
+        "subdir": "{MODELS_PATH}/ecommerce_bot"
       },
       {
         "url": "http://files.deeppavlov.ai/ecommerce_bot/ecommerce_Automotive_model.pkl",
-        "subdir": "ecommerce_bot"
+        "subdir": "{MODELS_PATH}/ecommerce_bot"
       }
     ]
   }
