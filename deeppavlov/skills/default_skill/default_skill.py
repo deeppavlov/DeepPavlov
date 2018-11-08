@@ -84,7 +84,7 @@ class DefaultStatelessSkill(Skill):
             infer_results = self.model(*infer_utterances)
 
             if len(self.model.out_params) > 1:
-                infer_results = infer_results[0]
+                infer_results = ['; '.join([str(out_y) for out_y in result]) for result in zip(*infer_results)]
 
             for infer_i, infer_result in zip(infer_indexes, infer_results):
                 response_batch[infer_i] = infer_result

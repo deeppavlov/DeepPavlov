@@ -25,7 +25,7 @@ import pandas as pd
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.models.evolution.evolution_param_generator import ParamsEvolution
-from deeppavlov.core.common.file import read_json, save_json
+from deeppavlov.core.common.file import read_json, save_json, find_config
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.commands.utils import set_deeppavlov_root, expand_path
 
@@ -51,16 +51,6 @@ parser.add_argument('--path_to_population',
 parser.add_argument('--elitism_with_weights',
                     help='whether to save elite models with weights or without', action='store_true')
 parser.add_argument('--iterations', help='Number of iterations', type=int, default=-1)
-
-
-def find_config(pipeline_config_path: str):
-    if not Path(pipeline_config_path).is_file():
-        configs = [c for c in Path(__file__).parent.glob(f'configs/**/{pipeline_config_path}.json')
-                   if str(c.with_suffix('')).endswith(pipeline_config_path)]  # a simple way to not allow * and ?
-        if configs:
-            log.info(f"Interpreting '{pipeline_config_path}' as '{configs[0]}'")
-            pipeline_config_path = str(configs[0])
-    return pipeline_config_path
 
 
 def main():
