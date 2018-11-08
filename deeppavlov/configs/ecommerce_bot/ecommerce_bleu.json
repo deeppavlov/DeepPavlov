@@ -55,7 +55,9 @@
       }
     ]
    },
-   "train":{
+   "train": {
+     "validate_best": false,
+     "test_best": false
    },
    "metadata": {
     "labels": {
