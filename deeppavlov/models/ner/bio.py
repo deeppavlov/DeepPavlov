@@ -20,9 +20,7 @@ log = get_logger(__name__)
 
 @register('ner_bio_converter')
 class BIOMarkupRestorer(Component):
-    """
-        Restores BIO markup for tags batch
-    """
+    """Restores BIO markup for tags batch"""
     def __init__(self, *args, **kwargs):
         pass
 
@@ -30,21 +28,14 @@ class BIOMarkupRestorer(Component):
     def _convert_to_bio(tags):
 
         tags_bio = []
-
         for n, tag in enumerate(tags):
-            if n > 0:
-                if tag != 'O':
-                    if tags[n-1] == tag:
-                        tags_bio.append('I-' + tag)
-                    else:
-                        tags_bio.append('B-' + tag)
+            if tag != 'O':
+                if n > 0 and tags[n - 1] == tag:
+                    tag = 'I-' + tag
                 else:
-                    tags_bio.append(tag)
-            else:
-                if tag != 'O':
-                    tags_bio.append('B-' + tag)
-                else:
-                    tags_bio.append(tag)
+                    tag = 'B-' + tag
+            tags_bio.append(tag)
+
         return tags_bio
 
     def __call__(self, tag_batch, *args, **kwargs):
