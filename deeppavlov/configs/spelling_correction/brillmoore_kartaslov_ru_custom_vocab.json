@@ -1,6 +1,7 @@
 {
   "dataset_reader": {
-    "name": "typos_kartaslov_reader"
+    "name": "typos_kartaslov_reader",
+    "data_path": "{DOWNLOADS_PATH}"
   },
   "dataset_iterator": {
     "name": "typos_iterator",
@@ -37,16 +38,17 @@
         "dictionary": {
           "name": "static_dictionary",
           "dictionary_name": "compreno_words",
-          "raw_dictionary_path": "compreno_wordforms.txt"
+          "data_dir": "{DOWNLOADS_PATH}/vocabs",
+          "raw_dictionary_path": "./compreno_wordforms.txt"
         },
-        "save_path": "error_model/error_model_ru.tsv",
-        "load_path": "error_model/error_model_ru.tsv"
+        "save_path": "{MODELS_PATH}/error_model/error_model_ru.tsv",
+        "load_path": "{MODELS_PATH}/error_model/error_model_ru.tsv"
       },
       {
         "class": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
         "in": ["tokens_candidates"],
         "out": ["y_predicted_tokens"],
-        "load_path": "language_models/ru_wiyalen_no_punkt.arpa.binary"
+        "load_path": "{DOWNLOADS_PATH}/language_models/ru_wiyalen_no_punkt.arpa.binary"
       },
       {
         "ref": "tokenizer",
@@ -61,6 +63,11 @@
     "test_best": true
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
     ],
@@ -69,10 +76,13 @@
       "server_utils": "ErrorModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/error_model.tar.gz",
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/error_model.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
       {
         "url": "http://files.deeppavlov.ai/lang_models/ru_wiyalen_no_punkt.arpa.binary.gz",
-        "subdir": "language_models"
+        "subdir": "{DOWNLOADS_PATH}/language_models"
       }
     ]
   }

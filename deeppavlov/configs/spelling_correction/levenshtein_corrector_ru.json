@@ -17,8 +17,8 @@
       {
         "id": "vocab",
         "name": "simple_vocab",
-        "save_path": "vocabs/russian_words_vocab.dict",
-        "load_path": "vocabs/russian_words_vocab.dict"
+        "save_path": "{DOWNLOADS_PATH}/vocabs/russian_words_vocab.dict",
+        "load_path": "{DOWNLOADS_PATH}/vocabs/russian_words_vocab.dict"
       },
       {
         "in": ["x_tokens"],
@@ -30,7 +30,7 @@
         "class": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
         "in": ["tokens_candidates"],
         "out": ["y_predicted_tokens"],
-        "load_path": "language_models/ru_wiyalen_no_punkt.arpa.binary"
+        "load_path": "{DOWNLOADS_PATH}/language_models/ru_wiyalen_no_punkt.arpa.binary"
       },
       {
         "ref": "tokenizer",
@@ -41,6 +41,11 @@
     "out": ["y_predicted"]
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
     ],
@@ -51,11 +56,11 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/vocabs/russian_words_vocab.dict.gz",
-        "subdir": "vocabs"
+        "subdir": "{DOWNLOADS_PATH}/vocabs"
       },
       {
         "url": "http://files.deeppavlov.ai/lang_models/ru_wiyalen_no_punkt.arpa.binary.gz",
-        "subdir": "language_models"
+        "subdir": "{DOWNLOADS_PATH}/language_models"
       }
     ]
   }

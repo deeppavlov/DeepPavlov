@@ -1,6 +1,7 @@
 {
   "dataset_reader": {
-    "class": "deeppavlov.dataset_readers.typos_reader:TyposWikipedia"
+    "class": "deeppavlov.dataset_readers.typos_reader:TyposWikipedia",
+    "data_path": "{DOWNLOADS_PATH}"
   },
   "dataset_iterator": {
     "class": "deeppavlov.dataset_iterators.typos_iterator:TyposDatasetIterator",
@@ -35,15 +36,16 @@
         "window": 1,
         "candidates_count": 4,
         "dictionary": {
-          "class": "deeppavlov.vocabs.typos:Wiki100KDictionary"
+          "class": "deeppavlov.vocabs.typos:Wiki100KDictionary",
+          "data_dir": "{DOWNLOADS_PATH}/vocabs"
         },
-        "save_path": "error_model/error_model.tsv"
+        "save_path": "{MODELS_PATH}/error_model/error_model.tsv"
       },
       {
         "class": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
         "in": ["tokens_candidates"],
         "out": ["y_predicted_tokens"],
-        "load_path": "language_models/en_wiki_no_punkt.arpa.binary"
+        "load_path": "{DOWNLOADS_PATH}/language_models/en_wiki_no_punkt.arpa.binary"
       },
       {
         "ref": "tokenizer",
@@ -58,6 +60,11 @@
     "test_best": true
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
     ],
@@ -66,10 +73,13 @@
       "server_utils": "ErrorModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/error_model.tar.gz",
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/error_model.tar.gz",
+        "subdir": "{MODELS_PATH}/"
+      },
       {
         "url": "http://files.deeppavlov.ai/lang_models/en_wiki_no_punkt.arpa.binary.gz",
-        "subdir": "language_models"
+        "subdir": "{DOWNLOADS_PATH}/language_models"
       }
     ]
   }

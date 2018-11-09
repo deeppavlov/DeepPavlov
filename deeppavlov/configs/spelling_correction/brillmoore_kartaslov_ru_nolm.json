@@ -1,6 +1,7 @@
 {
   "dataset_reader": {
-    "name": "typos_kartaslov_reader"
+    "name": "typos_kartaslov_reader",
+    "data_path": "{DOWNLOADS_PATH}"
   },
   "dataset_iterator": {
     "name": "typos_iterator",
@@ -35,10 +36,11 @@
         "window": 1,
         "candidates_count": 1,
         "dictionary": {
-          "name": "russian_words_vocab"
+          "name": "russian_words_vocab",
+          "data_dir": "{DOWNLOADS_PATH}/vocabs"
         },
-        "save_path": "error_model/error_model_ru.tsv",
-        "load_path": "error_model/error_model_ru.tsv"
+        "save_path": "{MODELS_PATH}/error_model/error_model_ru.tsv",
+        "load_path": "{MODELS_PATH}/error_model/error_model_ru.tsv"
       },
       {
         "class": "deeppavlov.models.spelling_correction.electors.top1_elector:TopOneElector",
@@ -58,6 +60,11 @@
     "test_best": true
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
     ],
@@ -66,10 +73,9 @@
       "server_utils": "ErrorModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/error_model.tar.gz",
       {
-        "url": "http://files.deeppavlov.ai/lang_models/ru_wiyalen_no_punkt.arpa.binary.gz",
-        "subdir": "language_models"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/error_model.tar.gz",
+        "subdir": "{MODELS_PATH}"
       }
     ]
   }
