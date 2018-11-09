@@ -76,7 +76,7 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/error_model.tar.gz",
-        "subdir": "{MODELS_PATH}/"
+        "subdir": "{MODELS_PATH}"
       },
       {
         "url": "http://files.deeppavlov.ai/lang_models/ru_wiyalen_no_punkt.arpa.binary.gz",

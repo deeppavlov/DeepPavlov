@@ -140,7 +140,7 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/multi_squad_model_noans_1.1.tar.gz",
-        "subdir": "{MODELS_PATH}/"
+        "subdir": "{MODELS_PATH}"
       },
       {
         "url": "http://files.deeppavlov.ai/embeddings/wiki-news-300d-1M.vec",

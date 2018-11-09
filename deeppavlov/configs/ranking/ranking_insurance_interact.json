@@ -116,7 +116,7 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/insurance_ranking.tar.gz",
-        "subdir": "{MODELS_PATH}/"
+        "subdir": "{MODELS_PATH}"
       },
       {
         "url": "http://files.deeppavlov.ai/datasets/insuranceQA-master.zip",

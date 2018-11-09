@@ -115,7 +115,7 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_mt_ranking.tar.gz",
-        "subdir": "{MODELS_PATH}/"
+        "subdir": "{MODELS_PATH}"
       },
       {
         "url": "http://files.deeppavlov.ai/datasets/ubuntu_v2_data.tar.gz",

@@ -111,7 +111,7 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/paraphrase_ident_qqp_bilstm.tar.gz",
-        "subdir": "{MODELS_PATH}/"
+        "subdir": "{MODELS_PATH}"
       },
       {
         "url": "http://files.deeppavlov.ai/datasets/quora_question_pairs.zip",

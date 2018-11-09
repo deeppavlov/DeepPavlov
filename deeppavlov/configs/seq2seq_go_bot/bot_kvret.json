@@ -127,11 +127,11 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
-        "subdir": "{MODELS_PATH}/"
+        "subdir": "{MODELS_PATH}"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/seq2seq_go_bot_v2.tar.gz",
-        "subdir": "{MODELS_PATH}/"
+        "subdir": "{MODELS_PATH}"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
