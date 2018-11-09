@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "kvret_reader",
-    "data_path": "kvret"
+    "data_path": "{DOWNLOADS_PATH}/kvret"
   },
   "dataset_iterator": {
     "name": "kvret_dialog_iterator",
@@ -32,37 +32,37 @@
         "tokenizer": "#stream_spacy",
         "in": ["dialog_id"],
         "out": ["kb_entries"],
-        "save_path": "seq2seq_go_bot/kvret_kb.json",
-        "load_path": "seq2seq_go_bot/kvret_kb.json"
+        "save_path": "{MODELS_PATH}/seq2seq_go_bot/kvret_kb.json",
+        "load_path": "{MODELS_PATH}/seq2seq_go_bot/kvret_kb.json"
       },
       {
         "id": "src_token_vocab",
         "name": "simple_vocab",
         "default_token": "<UNK>",
         "special_tokens": ["<UNK>", "<SOS>"],
-        "save_path": "vocabs/kvret_src_tokens.dict",
-        "load_path": "vocabs/kvret_src_tokens.dict"
+        "save_path": "{MODELS_PATH}/vocabs/kvret_src_tokens.dict",
+        "load_path": "{MODELS_PATH}/vocabs/kvret_src_tokens.dict"
       },
       {
         "id": "tgt_token_vocab",
         "name": "simple_vocab",
         "default_token": "<UNK>",
         "special_tokens": ["<UNK>", "<SOS>", "<EOS>"],
-        "save_path": "vocabs/kvret_tgt_tokens.dict",
-        "load_path": "vocabs/kvret_tgt_tokens.dict"
+        "save_path": "{MODELS_PATH}/vocabs/kvret_tgt_tokens.dict",
+        "load_path": "{MODELS_PATH}/vocabs/kvret_tgt_tokens.dict"
       },
       {
         "id": "token_embedder",
         "name": "fasttext",
-        "load_path": "embeddings/wiki.en.bin"
+        "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin"
       },
       {
         "in": ["x_tokens", "history_tokens", "kb_entries"],
         "out": ["prediction_norm_tokens"],
         "main": true,
         "name": "seq2seq_go_bot",
-        "load_path": "seq2seq_go_bot/model",
-        "save_path": "seq2seq_go_bot/model",
+        "load_path": "{MODELS_PATH}/seq2seq_go_bot/model",
+        "save_path": "{MODELS_PATH}/seq2seq_go_bot/model",
         "start_of_sequence_token": "<SOS>",
         "end_of_sequence_token": "<EOS>",
         "embedder": "#token_embedder",
@@ -109,6 +109,11 @@
   },
   "train": {},
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
@@ -120,11 +125,17 @@
       "server_utils": "GoalOrientedBot"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/seq2seq_go_bot_v2.tar.gz",
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
+        "subdir": "{MODELS_PATH}/"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/seq2seq_go_bot_v2.tar.gz",
+        "subdir": "{MODELS_PATH}/"
+      },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }
