@@ -120,7 +120,7 @@
   },
   "train": {
     "epochs": 20,
-    "batch_size": 1024,
+    "batch_size": 64,
     "metrics": [
       {
         "name": "roc_auc",
