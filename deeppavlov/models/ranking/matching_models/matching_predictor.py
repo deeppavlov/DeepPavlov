@@ -74,20 +74,25 @@ class MatchingPredictor(Component):
         for s in sample:
             preproc_sample.append(s.tolist())
 
-        # first, need to append expanded context
-        sent_list = preproc_sample[-(self.num_context_turns + 1):-1]
-        if len(sent_list) <= self.num_context_turns:
-            tmp = sent_list[:]
-            sent_list = [[0]*self.max_sequence_length] * (self.num_context_turns - len(sent_list))
-            sent_list.extend(tmp)
+        # # first, need to append expanded context
+        # sent_list = preproc_sample[-(self.num_context_turns + 1):-1]
+        # if len(sent_list) <= self.num_context_turns:
+        #     tmp = sent_list[:]
+        #     sent_list = [[0]*self.max_sequence_length] * (self.num_context_turns - len(sent_list))
+        #     sent_list.extend(tmp)
+        #
+        # # second, adding response sentence
+        # sent_list.append(preproc_sample[-1])  # sent_list has shape (num_context_turns+1, max_sequence_length)
 
-        # second, adding response sentence
-        sent_list.append(preproc_sample[-1])  # sent_list has shape (num_context_turns+1, max_sequence_length)
-
-        sent_list = zero_pad_truncate(sent_list, self.max_sequence_length, pad='post', trunc='post')
+        # context is already padded/truncated. It needs only to pad at the token-level
+        sent_list = zero_pad_truncate(preproc_sample, self.max_sequence_length, pad='post', trunc='post')
 
         context_sentences = np.array(sent_list[:self.num_context_turns])
         response_sentences = np.array(sent_list[self.num_context_turns:])
+
+        if len(context_sentences) != self.num_context_turns:
+            log.error("Number of context sentences should be equal to %s" % self.num_context_turns)
+            return ["Number of context sentences should be equal to %s" % self.num_context_turns]
 
         # format model inputs
         # word indices
@@ -107,17 +112,33 @@ class MatchingPredictor(Component):
             lens.append(len(context[context != 0]))
         batch_buffer_response_len += lens
 
-        feed_dict = {
-            self.model.utterance_ph: np.array(batch_buffer_context),
-            self.model.all_utterance_len_ph: np.array(batch_buffer_context_len),
-            self.model.response_ph: np.array(batch_buffer_response),
-            self.model.response_len_ph: np.array(batch_buffer_response_len)
-        }
-        yp = self.model.sess.run(self.model.y_pred, feed_dict=feed_dict)
-        y_pred = yp[:, 1]
+        y_pred = []
+        if len(batch_buffer_context) >= self.model.batch_size:
+            for i in range(len(batch_buffer_context) // self.model.batch_size):
+                feed_dict = {
+                    self.model.utterance_ph: np.array(batch_buffer_context[i * self.model.batch_size:(i + 1) * self.model.batch_size]),
+                    self.model.all_utterance_len_ph: np.array(batch_buffer_context_len[i * self.model.batch_size:(i + 1) * self.model.batch_size]),
+                    self.model.response_ph: np.array(batch_buffer_response[i * self.model.batch_size:(i + 1) * self.model.batch_size]),
+                    self.model.response_len_ph: np.array(batch_buffer_response_len[i * self.model.batch_size:(i + 1) * self.model.batch_size])
+                }
+                yp = self.model.sess.run(self.model.y_pred, feed_dict=feed_dict)
+                y_pred += list(yp[:, 1])
+        lenb = len(batch_buffer_context) % self.model.batch_size
+        if lenb != 0:
+            feed_dict = {
+                self.model.utterance_ph: np.array(batch_buffer_context[-lenb:]),
+                self.model.all_utterance_len_ph: np.array(batch_buffer_context_len[-lenb:]),
+                self.model.response_ph: np.array(batch_buffer_response[-lenb:]),
+                self.model.response_len_ph: np.array(batch_buffer_response_len[-lenb:])
+            }
+            yp = self.model.sess.run(self.model.y_pred, feed_dict=feed_dict)
+            y_pred += list(yp[:, 1])
+        y_pred = np.asarray(y_pred)
+        y_pred = np.reshape(y_pred, (1, len(response_sentences)))  # reshape to [batch_size, 10]
 
         # return ["The probability that the response is proper continuation of the dialog is {:.3f}".format(y_pred[0])]
-        return ["{:.5f}".format(y_pred[0])]
+        # return ["{:.5f}".format(y_pred[0])]
+        return ["{:.5f}".format(v) for v in y_pred[0]]
 
     def reset(self) -> None:
         pass
