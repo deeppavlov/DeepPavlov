@@ -17,7 +17,6 @@ import deeppavlov
 from deeppavlov.download import deep_download
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.core.common.paths import get_settings_path
-import utils
 from utils.server_utils.server import get_server_params, SERVER_CONFIG_FILENAME
 
 
@@ -190,14 +189,16 @@ def download_config(conf_file):
         raise RuntimeError('No config file {}'.format(conf_file))
 
     with src_file.open(encoding='utf8') as fin:
-        config = json.load(fin)
+        config: dict = json.load(fin)
 
     if config.get("train"):
         config["train"]["epochs"] = 1
         for pytest_key in [k for k in config["train"] if k.startswith('pytest_')]:
             config["train"][pytest_key[len('pytest_'):]] = config["train"].pop(pytest_key)
 
-    config["deeppavlov_root"] = str(download_path)
+    config_vars = config.setdefault('metadata', {}).setdefault('variables', {})
+    config_vars['ROOT_PATH'] = str(download_path)
+    config_vars['CONFIGS_PATH'] = str(test_configs_path)
 
     conf_file = test_configs_path / conf_file
     conf_file.parent.mkdir(exist_ok=True, parents=True)
