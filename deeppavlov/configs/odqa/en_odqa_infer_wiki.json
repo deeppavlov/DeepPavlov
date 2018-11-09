@@ -8,7 +8,7 @@
     ],
     "pipe": [
       {
-        "config_path": "{DEEPPAVLOV_PATH}/configs/doc_retrieval/en_ranker_tfidf_wiki.json",
+        "config_path": "{CONFIGS_PATH}/doc_retrieval/en_ranker_tfidf_wiki.json",
         "in": [
           "question_raw"
         ],
@@ -41,7 +41,7 @@
       },
       {
         "name": "logit_ranker",
-        "squad_model": {"config_path": "{DEEPPAVLOV_PATH}/configs/squad/squad.json"},
+        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/squad.json"},
         "in": [
           "chunks",
           "questions"
@@ -56,7 +56,8 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",

@@ -65,7 +65,7 @@
           }
         },
         "slot_filler": {
-          "config_path": "{DEEPPAVLOV_PATH}/configs/ner/slotfill_dstc2.json"
+          "config_path": "{CONFIGS_PATH}/ner/slotfill_dstc2.json"
         },
         "intent_classifier": null,
         "embedder": {
@@ -104,7 +104,8 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
