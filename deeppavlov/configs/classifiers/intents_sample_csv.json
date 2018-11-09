@@ -35,7 +35,7 @@
     "pipe": [
       {
         "id": "classes_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "fit_on": [
           "y"
         ],
@@ -48,20 +48,20 @@
         "in": "x",
         "out": "x_tok",
         "id": "my_tokenizer",
-        "name": "nltk_tokenizer",
+        "class_name": "nltk_tokenizer",
         "tokenizer": "wordpunct_tokenize"
       },
       {
         "in": "x_tok",
         "out": "x_emb",
         "id": "my_embedder",
-        "name": "fasttext",
+        "class_name": "fasttext",
         "load_path": "{DOWNLOADS_PATH}/embeddings/dstc2_fastText_model.bin"
       },
       {
         "in": "y_ids",
         "out": "y_onehot",
-        "name": "one_hotter",
+        "class_name": "one_hotter",
         "depth": "#classes_vocab.len"
       },
       {
@@ -75,7 +75,7 @@
           "y_pred_probas"
         ],
         "main": true,
-        "name": "keras_classification_model",
+        "class_name": "keras_classification_model",
         "save_path": "{MODELS_PATH}/classifiers/intents_snips_v7/model",
         "load_path": "{MODELS_PATH}/classifiers/intents_snips_v7/model",
         "embedding_size": "#my_embedder.dim",
@@ -100,7 +100,7 @@
       {
         "in": "y_pred_probas",
         "out": "y_pred_ids",
-        "name": "proba2labels",
+        "class_name": "proba2labels",
         "max_proba": true
       },
       {

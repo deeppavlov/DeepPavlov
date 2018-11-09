@@ -47,7 +47,7 @@ def _init_param(param, mode):
     elif isinstance(param, (list, tuple)):
         param = [_init_param(p, mode) for p in param]
     elif isinstance(param, dict):
-        if {'ref', 'name', 'class', 'config_path'}.intersection(param.keys()):
+        if {'ref', 'class_name', 'config_path'}.intersection(param.keys()):
             param = from_params(param, mode=mode)
         else:
             param = {k: _init_param(v, mode) for k, v in param.items()}
@@ -79,15 +79,12 @@ def from_params(params: Dict, mode: str = 'infer', **kwargs) -> Component:
         _refs.update(refs)
         return model
 
-    elif 'class' in config_params:
-        cls = cls_from_str(config_params.pop('class'))
-    else:
-        cls_name = config_params.pop('name', None)
-        if not cls_name:
-            e = ConfigError('Component config has no `name` nor `ref` or `class` fields')
-            log.exception(e)
-            raise e
-        cls = get_model(cls_name)
+    cls_name = config_params.pop('class_name', None)
+    if not cls_name:
+        e = ConfigError('Component config has no `class_name` nor `ref` fields')
+        log.exception(e)
+        raise e
+    cls = get_model(cls_name)
 
     # find the submodels params recursively
     config_params = {k: _init_param(v, mode) for k, v in config_params.items()}

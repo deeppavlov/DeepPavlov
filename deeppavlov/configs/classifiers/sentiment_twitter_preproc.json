@@ -1,12 +1,12 @@
 {
   "dataset_reader": {
-    "name": "basic_classification_reader",
+    "class_name": "basic_classification_reader",
     "x": "Twit",
     "y": "Class",
     "data_path": "{DOWNLOADS_PATH}/sentiment_twitter_data"
   },
   "dataset_iterator": {
-    "name": "basic_classification_iterator",
+    "class_name": "basic_classification_iterator",
     "seed": 42
   },
   "chainer": {
@@ -19,7 +19,7 @@
     "pipe": [
       {
         "id": "classes_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "fit_on": [
           "y"
         ],
@@ -35,27 +35,27 @@
         "out": [
           "x_prep"
         ],
-        "name": "dirty_comments_preprocessor",
+        "class_name": "dirty_comments_preprocessor",
         "delete_smile_brackets": true
       },
       {
         "in": "x_prep",
         "out": "x_tok",
         "id": "my_tokenizer",
-        "name": "nltk_tokenizer",
+        "class_name": "nltk_tokenizer",
         "tokenizer": "wordpunct_tokenize"
       },
       {
         "in": "x_tok",
         "out": "x_emb",
         "id": "my_embedder",
-        "name": "fasttext",
+        "class_name": "fasttext",
         "load_path": "{DOWNLOADS_PATH}/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin"
       },
       {
         "in": "y_ids",
         "out": "y_onehot",
-        "name": "one_hotter",
+        "class_name": "one_hotter",
         "depth": "#classes_vocab.len"
       },
       {
@@ -69,7 +69,7 @@
           "y_pred_probas"
         ],
         "main": true,
-        "name": "keras_classification_model",
+        "class_name": "keras_classification_model",
         "save_path": "{MODELS_PATH}/classifiers/sentiment_twitter_v4/model",
         "load_path": "{MODELS_PATH}/classifiers/sentiment_twitter_v4/model",
         "embedding_size": "#my_embedder.dim",
@@ -95,7 +95,7 @@
       {
         "in": "y_pred_probas",
         "out": "y_pred_ids",
-        "name": "proba2labels",
+        "class_name": "proba2labels",
         "max_proba": true
       },
       {

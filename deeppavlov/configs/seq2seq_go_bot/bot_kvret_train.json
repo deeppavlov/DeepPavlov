@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "name": "kvret_reader",
+    "class_name": "kvret_reader",
     "data_path": "{DOWNLOADS_PATH}/kvret"
   },
   "dataset_iterator": {
-    "name": "kvret_dialog_iterator",
+    "class_name": "kvret_dialog_iterator",
     "shuffle": false
   },
   "chainer": {
@@ -14,7 +14,7 @@
     "pipe": [
       {
         "id": "stream_spacy",
-        "name": "stream_spacy_tokenizer",
+        "class_name": "stream_spacy_tokenizer",
         "lowercase": true,
         "alphas_only": false,
         "in": ["x_text"],
@@ -32,7 +32,7 @@
       },
       {
         "id": "kb",
-        "name": "knowledge_base",
+        "class_name": "knowledge_base",
         "fit_on": ["dialog_id", "kb_columns", "kb_items"],
         "tokenizer": "#stream_spacy",
         "in": ["dialog_id", "kb_columns", "kb_items"],
@@ -41,12 +41,12 @@
         "load_path": "{MODELS_PATH}/seq2seq_go_bot/kvret_kb.json"
       },
       {
-        "name": "knowledge_base_entity_normalizer",
+        "class_name": "knowledge_base_entity_normalizer",
         "in": ["y_tokens", "kb_entries"],
         "out": ["y_norm_tokens"]
       },
       {
-        "name": "knowledge_base_entity_normalizer",
+        "class_name": "knowledge_base_entity_normalizer",
         "remove": true,
         "in": ["y_tokens", "kb_entries"],
         "out": ["y_without_entities_tokens"]
@@ -54,7 +54,7 @@
       {
         "id": "src_token_vocab",
         "fit_on": ["x_tokens", "y_tokens"],
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "min_freq": 2,
         "default_token": "<UNK>",
         "special_tokens": ["<UNK>", "<SOS>"],
@@ -64,7 +64,7 @@
       {
         "id": "tgt_token_vocab",
         "fit_on": ["y_without_entities_tokens"],
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "default_token": "<UNK>",
         "special_tokens": ["<UNK>", "<SOS>", "<EOS>"],
         "save_path": "{MODELS_PATH}/vocabs/kvret_tgt_tokens.dict",
@@ -72,7 +72,7 @@
       },
       {
         "id": "token_embedder",
-        "name": "fasttext",
+        "class_name": "fasttext",
         "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin"
       },
       {
@@ -80,7 +80,7 @@
         "in_y": ["y_norm_tokens"],
         "out": ["prediction_norm_tokens"],
         "main": true,
-        "name": "seq2seq_go_bot",
+        "class_name": "seq2seq_go_bot",
         "load_path": "{MODELS_PATH}/seq2seq_go_bot/model",
         "save_path": "{MODELS_PATH}/seq2seq_go_bot/model",
         "start_of_sequence_token": "<SOS>",
@@ -105,7 +105,7 @@
         "knowledge_base_keys": "#kb.primary_keys"
       },
       {
-        "name": "knowledge_base_entity_normalizer",
+        "class_name": "knowledge_base_entity_normalizer",
         "denormalize": true,
         "in": ["prediction_norm_tokens", "kb_entries"],
         "out": ["prediction_tokens"]

@@ -1,11 +1,11 @@
 {
   "dataset_reader": {
-    "name": "ubuntu_v2_mt_reader",
+    "class_name": "ubuntu_v2_mt_reader",
     "data_path": "{DOWNLOADS_PATH}/ubuntu_v2_data",
     "num_context_turns": 10
   },
   "dataset_iterator": {
-    "name": "siamese_iterator",
+    "class_name": "siamese_iterator",
     "seed": 243
   },
   "chainer": {
@@ -14,7 +14,7 @@
     "pipe": [
       {
         "id": "preproc",
-        "name": "siamese_preprocessor",
+        "class_name": "siamese_preprocessor",
         "use_matrix": true,
         "num_ranking_samples": 10,
         "num_context_turns": 10,
@@ -25,37 +25,37 @@
         "sent_vocab":
         {
           "id": "siam_sent_vocab",
-          "name":"simple_vocab",
+          "class_name": "simple_vocab",
           "save_path": "{MODELS_PATH}/ubuntu_v2_vocabs/sent.dict",
           "load_path": "{MODELS_PATH}/ubuntu_v2_vocabs/sent.dict"
         },
         "tokenizer":
         {
-          "name": "nltk_tokenizer"
+          "class_name": "nltk_tokenizer"
         },
         "vocab":
         {
           "id": "siam_vocab",
-          "name":"simple_vocab",
+          "class_name": "simple_vocab",
           "save_path": "{MODELS_PATH}/ubuntu_v2_mt_vocabs/tok.dict",
           "load_path": "{MODELS_PATH}/ubuntu_v2_mt_vocabs/tok.dict"
         },
         "embedder":
         {
           "id": "siam_embedder",
-          "name": "fasttext",
+          "class_name": "fasttext",
           "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin"
         }
       },
       {
         "id": "embeddings",
-        "name": "emb_mat_assembler",
+        "class_name": "emb_mat_assembler",
         "embedder": "#siam_embedder",
         "vocab": "#siam_vocab"
       },
       {
         "id": "model",
-        "name": "bilstm_gru_nn",
+        "class_name": "bilstm_gru_nn",
         "use_matrix": "#preproc.use_matrix",
         "num_context_turns": "#preproc.num_context_turns",
         "len_vocab": "#siam_vocab.len",
@@ -74,7 +74,7 @@
         "in": ["x_proc"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "name": "siamese_predictor",
+        "class_name": "siamese_predictor",
         "model": "#model",
         "num_context_turns": "#model.num_context_turns",
         "batch_size": "#model.batch_size",

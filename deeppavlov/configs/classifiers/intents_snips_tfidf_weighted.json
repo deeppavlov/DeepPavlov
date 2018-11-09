@@ -1,12 +1,12 @@
 {
   "dataset_reader": {
-    "name": "basic_classification_reader",
+    "class_name": "basic_classification_reader",
     "x": "text",
     "y": "intents",
     "data_path": "{DOWNLOADS_PATH}/snips"
   },
   "dataset_iterator": {
-    "name": "basic_classification_iterator",
+    "class_name": "basic_classification_iterator",
     "seed": 42,
     "field_to_split": "train",
     "split_fields": [
@@ -28,7 +28,7 @@
     "pipe": [
       {
         "id": "classes_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "fit_on": [
           "y"
         ],
@@ -49,7 +49,7 @@
           "y_ids"
         ],
         "id": "my_tfidf_vectorizer",
-        "name": "sklearn_component",
+        "class_name": "sklearn_component",
         "save_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v10/tfidf.pkl",
         "load_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v10/tfidf.pkl",
         "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
@@ -69,7 +69,7 @@
           "y_ids"
         ],
         "id": "my_selector",
-        "name": "sklearn_component",
+        "class_name": "sklearn_component",
         "save_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v10/selectkbest.pkl",
         "load_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v10/selectkbest.pkl",
         "model_class": "sklearn.feature_selection:SelectKBest",
@@ -88,7 +88,7 @@
           "x_sel"
         ],
         "id": "my_pca",
-        "name": "sklearn_component",
+        "class_name": "sklearn_component",
         "save_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v10/pca.pkl",
         "load_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v10/pca.pkl",
         "model_class": "sklearn.decomposition:PCA",
@@ -99,18 +99,18 @@
         "in": "x",
         "out": "x_tok",
         "id": "my_tokenizer",
-        "name": "nltk_moses_tokenizer"
+        "class_name": "nltk_moses_tokenizer"
       },
       {
         "in": "x_tok",
         "out": "x_emb",
         "id": "my_embedder",
-        "name": "fasttext",
+        "class_name": "fasttext",
         "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin",
         "dim": 300
       },
       {
-        "name": "one_hotter",
+        "class_name": "one_hotter",
         "id": "my_onehotter",
         "depth": "#classes_vocab.len",
         "in": "y_ids",
@@ -119,7 +119,7 @@
       {
         "in": "x_tok",
         "out": "x_weighted_emb",
-        "name": "tfidf_weighted",
+        "class_name": "tfidf_weighted",
         "id": "my_weighted_embedder",
         "embedder": "#my_embedder",
         "tokenizer": "#my_tokenizer",
@@ -139,7 +139,7 @@
           "x_weighted_emb",
           "y_ids"
         ],
-        "name": "sklearn_component",
+        "class_name": "sklearn_component",
         "main": true,
         "save_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v10/model.pkl",
         "load_path": "{MODELS_PATH}/classifiers/intents_snips_sklearn_v10/model.pkl",

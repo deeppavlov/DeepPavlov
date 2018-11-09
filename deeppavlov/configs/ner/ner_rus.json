@@ -1,12 +1,12 @@
 {
   "dataset_reader": {
-    "name": "conll2003_reader",
+    "class_name": "conll2003_reader",
     "data_path": "{DOWNLOADS_PATH}/total_rus/",
     "dataset_name": "collection_rus",
     "provide_pos": false
   },
   "dataset_iterator": {
-    "name": "data_learning_iterator"
+    "class_name": "data_learning_iterator"
   },
   "chainer": {
     "in": ["x"],
@@ -14,24 +14,24 @@
     "pipe": [
       {
         "in": ["x"],
-        "name": "lazy_tokenizer",
+        "class_name": "lazy_tokenizer",
         "out": ["x_tokens"]
       },
       {
         "in": ["x_tokens"],
-        "name": "str_lower",
+        "class_name": "str_lower",
         "out": ["x_lower"]
       },
       {
         "in": ["x_lower"],
-        "name": "sanitizer",
+        "class_name": "sanitizer",
         "nums": true,
         "out": ["x_san"]
       },
       {
         "in": ["x_san"],
         "id": "word_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "special_tokens": ["<UNK>"],
         "fit_on": ["x_san"],
@@ -42,7 +42,7 @@
       {
         "in": ["y"],
         "id": "tag_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["y"],
         "save_path": "{MODELS_PATH}/ner_rus/tag.dict",
@@ -51,13 +51,13 @@
       },
       {
         "in": ["x_tokens"],
-        "name": "char_splitter",
+        "class_name": "char_splitter",
         "out": ["x_char"]
       },
       {
         "in": ["x_char"],
         "id": "char_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["x_char"],
         "save_path": "{MODELS_PATH}/ner_rus/char.dict",
@@ -67,31 +67,31 @@
       {
         "in": ["x_san"],
         "id": "embedder",
-        "name": "fasttext",
+        "class_name": "fasttext",
         "pad_zero": true,
         "load_path": "{DOWNLOADS_PATH}/embeddings/lenta_lower_100.bin",
         "out": ["x_emb"]
       },
       {
         "in": ["x_tokens"],
-        "name": "mask",
+        "class_name": "mask",
         "out": ["mask"]
       },
       {
-        "name": "random_emb_mat",
+        "class_name": "random_emb_mat",
         "id": "embeddings",
         "vocab_len": "#word_vocab.len",
         "emb_dim": 100
       },
       {
-        "name": "random_emb_mat",
+        "class_name": "random_emb_mat",
         "id": "embeddings_char",
         "vocab_len": "#char_vocab.len",
         "emb_dim": 100
       },
       {
         "id": "capitalization",
-        "name": "capitalization_featurizer",
+        "class_name": "capitalization_featurizer",
         "in": ["x_tokens"],
         "out": ["cap"]
       },
@@ -99,7 +99,7 @@
         "in": ["x_emb", "mask", "x_char_ind", "cap"],
         "in_y": ["y_ind"],
         "out": ["y_predicted"],
-        "name": "ner",
+        "class_name": "ner",
         "main": true,
         "n_hidden_list": [128],
         "net_type": "rnn",

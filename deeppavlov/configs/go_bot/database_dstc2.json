@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "name": "dstc2_reader",
+    "class_name": "dstc2_reader",
     "data_path": "{DOWNLOADS_PATH}/dstc2"
   },
   "dataset_iterator": {
-    "name": "dialog_db_result_iterator"
+    "class_name": "dialog_db_result_iterator"
   },
   "chainer": {
     "in": ["db_result"],
@@ -13,7 +13,7 @@
     "pipe": [
       {
         "id": "restaurant_database",
-        "name": "sqlite_database",
+        "class_name": "sqlite_database",
         "fit_on": ["db_result"],
         "table_name": "mytable",
         "primary_keys": ["name"],

@@ -1,18 +1,18 @@
 {
   "dataset_reader": {
-    "name": "amazon_ecommerce_reader",
+    "class_name": "amazon_ecommerce_reader",
     "data_path": "{DOWNLOADS_PATH}/amazon_ecommerce",
     "catalog": "Phones"
   },
   "dataset_iterator": {
-    "name": "data_learning_iterator"
+    "class_name": "data_learning_iterator"
   },
  "chainer": {
     "in": ["query", "history", "state"],
     "out": ["response"],
     "pipe": [
       {
-        "name": "ecommerce_bot",
+        "class_name": "ecommerce_bot",
         "in": ["query", "history", "state"],
         "fit_on": ["query"],
         "min_similarity": 0.5,
@@ -24,7 +24,7 @@
           "{MODELS_PATH}/ecommerce_bot/ecommerce_Electronics_model.pkl"
         ],
         "preprocess": {
-          "name": "ecommerce_preprocess",
+          "class_name": "ecommerce_preprocess",
           "spacy_model": "en_core_web_sm",
           "disable": ["parser"]
         },

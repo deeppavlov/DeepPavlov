@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "name": "dstc2_reader",
+    "class_name": "dstc2_reader",
     "data_path": "{DOWNLOADS_PATH}/dstc2"
   },
   "dataset_iterator": {
-    "name": "dstc2_ner_iterator",
+    "class_name": "dstc2_ner_iterator",
     "dataset_path": "{DOWNLOADS_PATH}/dstc2"
   },
   "chainer": {
@@ -13,7 +13,7 @@
     "pipe": [
       {
         "in": ["x"],
-        "name": "lazy_tokenizer",
+        "class_name": "lazy_tokenizer",
         "out": ["x_tokens"]
       },
       {
@@ -24,7 +24,7 @@
 
       {
         "in": ["x_tokens", "tags"],
-        "name": "dstc_slotfilling",
+        "class_name": "dstc_slotfilling",
         "threshold": 0.8,
         "save_path": "{MODELS_PATH}/slotfill_dstc2/dstc_slot_vals.json",
         "load_path": "{MODELS_PATH}/slotfill_dstc2/dstc_slot_vals.json",

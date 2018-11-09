@@ -1,6 +1,6 @@
 {
   "dataset_reader": {
-    "name": "morphotagger_dataset_reader",
+    "class_name": "morphotagger_dataset_reader",
     "data_path": "{DOWNLOADS_PATH}/UD2.0_source",
     "language": "en",
     "data_types": [
@@ -10,7 +10,7 @@
     ]
   },
   "dataset_iterator": {
-    "name": "morphotagger_dataset"
+    "class_name": "morphotagger_dataset"
   },
   "chainer": {
     "in": [
@@ -24,14 +24,14 @@
         "in": [
           "x"
         ],
-        "name": "lazy_tokenizer",
+        "class_name": "lazy_tokenizer",
         "out": [
           "x_tokens"
         ]
       },
       {
         "id": "lowercase_preprocessor",
-        "name": "lowercase_preprocessor",
+        "class_name": "lowercase_preprocessor",
         "in": [
           "x_tokens"
         ],
@@ -41,7 +41,7 @@
       },
       {
         "id": "tag_vocab",
-        "name": "default_vocab",
+        "class_name": "default_vocab",
         "fit_on": [
           "y"
         ],
@@ -56,7 +56,7 @@
       },
       {
         "id": "char_vocab",
-        "name": "default_vocab",
+        "class_name": "default_vocab",
         "min_freq": 3,
         "fit_on": [
           "x_processed"
@@ -80,7 +80,7 @@
         "out": [
           "y_predicted"
         ],
-        "name": "morpho_tagger",
+        "class_name": "morpho_tagger",
         "main": true,
         "save_path": "{MODELS_PATH}/morpho_tagger/UD2.0/en/model.hdf5",
         "load_path": "{MODELS_PATH}/morpho_tagger/UD2.0/en/model.hdf5",
@@ -117,7 +117,7 @@
         "out": [
           "y_prettified"
         ],
-        "name": "tag_output_prettifier",
+        "class_name": "tag_output_prettifier",
         "end": "\n"
       }
     ],

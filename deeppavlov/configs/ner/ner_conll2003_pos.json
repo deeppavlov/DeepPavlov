@@ -1,12 +1,12 @@
 {
   "dataset_reader": {
-    "name": "conll2003_reader",
+    "class_name": "conll2003_reader",
     "data_path": "{DOWNLOADS_PATH}/conll2003/",
     "dataset_name": "conll2003",
     "provide_pos": true
   },
   "dataset_iterator": {
-    "name": "data_learning_iterator"
+    "class_name": "data_learning_iterator"
   },
   "chainer": {
     "in": ["x", "pos"],
@@ -14,24 +14,24 @@
     "pipe": [
       {
         "in": ["x"],
-        "name": "lazy_tokenizer",
+        "class_name": "lazy_tokenizer",
         "out": ["x_tokens"]
       },
       {
         "in": ["x_tokens"],
-        "name": "str_lower",
+        "class_name": "str_lower",
         "out": ["x_lower"]
       },
       {
         "in": ["x_lower"],
-        "name": "sanitizer",
+        "class_name": "sanitizer",
         "nums": true,
         "out": ["x_san"]
       },
       {
         "in": ["x_san"],
         "id": "word_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "special_tokens": ["<UNK>"],
         "fit_on": ["x_san"],
@@ -42,7 +42,7 @@
       {
         "in": ["pos"],
         "id": "pos_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["pos"],
         "save_path": "{MODELS_PATH}/ner_conll2003/pos.dict",
@@ -51,7 +51,7 @@
       },
       {
         "in": ["pos_ind"],
-        "name": "one_hotter",
+        "class_name": "one_hotter",
         "depth": "#pos_vocab.len",
         "pad_zeros": true,
         "out": ["pos_one_hot"]
@@ -59,7 +59,7 @@
       {
         "in": ["y"],
         "id": "tag_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["y"],
         "save_path": "{MODELS_PATH}/ner_conll2003/tag.dict",
@@ -68,13 +68,13 @@
       },
       {
         "in": ["x_tokens"],
-        "name": "char_splitter",
+        "class_name": "char_splitter",
         "out": ["x_char"]
       },
       {
         "in": ["x_char"],
         "id": "char_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["x_char"],
         "save_path": "{MODELS_PATH}/ner_conll2003/char.dict",
@@ -83,13 +83,13 @@
       },
       {
         "in": ["x_tokens"],
-        "name": "mask",
+        "class_name": "mask",
         "out": ["mask"]
       },
       {
         "in": ["x_san"],
         "id": "glove_emb",
-        "name": "glove",
+        "class_name": "glove",
         "pad_zero": true,
         "load_path": "{DOWNLOADS_PATH}/embeddings/glove.6B.100d.txt",
 
@@ -97,13 +97,13 @@
       },
       {
         "id": "embeddings",
-        "name": "emb_mat_assembler",
+        "class_name": "emb_mat_assembler",
         "embedder": "#glove_emb",
         "vocab": "#word_vocab"
       },
       {
         "id": "embeddings_char",
-        "name": "emb_mat_assembler",
+        "class_name": "emb_mat_assembler",
         "character_level": true,
         "emb_dim": 32,
         "embedder": "#glove_emb",
@@ -111,7 +111,7 @@
       },
       {
         "id": "capitalization",
-        "name": "capitalization_featurizer",
+        "class_name": "capitalization_featurizer",
         "in": ["x_tokens"],
         "out": ["cap"]
       },
@@ -119,7 +119,7 @@
         "in": ["x_emb", "mask", "x_char_ind", "cap", "pos_one_hot"],
         "in_y": ["y_ind"],
         "out": ["y_predicted"],
-        "name": "ner",
+        "class_name": "ner",
         "main": true,
         "token_emb_dim": "#glove_emb.dim",
         "n_hidden_list": [128],

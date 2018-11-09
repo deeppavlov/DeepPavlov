@@ -1,11 +1,11 @@
 {
   "dataset_reader": {
-    "name": "squad_dataset_reader",
+    "class_name": "squad_dataset_reader",
     "dataset": "MultiSQuAD",
     "data_path": "{DOWNLOADS_PATH}/multi_squad/"
   },
   "dataset_iterator": {
-    "name": "multi_squad_iterator",
+    "class_name": "multi_squad_iterator",
     "seed": 1337,
     "shuffle": true,
     "with_answer_rate": 0.666
@@ -15,7 +15,7 @@
     "in_y": ["ans_raw", "ans_raw_start"],
     "pipe": [
       {
-        "name": "squad_preprocessor",
+        "class_name": "squad_preprocessor",
         "id": "squad_prepr",
         "context_limit": 400,
         "question_limit": 150,
@@ -26,13 +26,13 @@
                 "question_tokens", "question_chars", "spans"]
       },
       {
-        "name": "squad_ans_preprocessor",
+        "class_name": "squad_ans_preprocessor",
         "id": "squad_ans_prepr",
         "in": ["ans_raw", "ans_raw_start", "c_r2p", "spans"],
         "out": ["ans", "ans_start", "ans_end"]
       },
       {
-        "name": "squad_vocab_embedder",
+        "class_name": "squad_vocab_embedder",
         "id": "vocab_embedder",
         "level": "token",
         "emb_folder": "{DOWNLOADS_PATH}/embeddings/",
@@ -47,7 +47,7 @@
         "out": ["context_tokens_idxs", "question_tokens_idxs"]
       },
       {
-        "name": "squad_vocab_embedder",
+        "class_name": "squad_vocab_embedder",
         "id": "char_vocab_embedder",
         "level": "char",
         "emb_folder": "{DOWNLOADS_PATH}/embeddings/",
@@ -62,7 +62,7 @@
         "out": ["context_chars_idxs", "question_chars_idxs"]
       },
       {
-        "name": "squad_model",
+        "class_name": "squad_model",
         "id": "squad",
         "word_emb": "#vocab_embedder.emb_mat",
         "char_emb": "#char_vocab_embedder.emb_mat",
@@ -95,7 +95,7 @@
         "out": ["ans_start_predicted", "ans_end_predicted", "prob", "score"]
       },
       {
-        "name": "squad_ans_postprocessor",
+        "class_name": "squad_ans_postprocessor",
         "id": "squad_ans_postprepr",
         "in": ["ans_start_predicted", "ans_end_predicted", "context_raw", "c_p2r", "spans"],
         "out": ["ans_predicted", "ans_start_predicted", "ans_end_predicted"]

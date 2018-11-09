@@ -121,8 +121,8 @@ def read_data_by_config(config: dict):
         config.pop('dataset')
         ds_type = dataset_config['type']
         if ds_type == 'classification':
-            reader = {'name': 'basic_classification_reader'}
-            iterator = {'name': 'basic_classification_iterator'}
+            reader = {'class_name': 'basic_classification_reader'}
+            iterator = {'class_name': 'basic_classification_iterator'}
             config['dataset_reader'] = {**dataset_config, **reader}
             config['dataset_iterator'] = {**dataset_config, **iterator}
         else:
@@ -133,18 +133,7 @@ def read_data_by_config(config: dict):
 
     if reader_config:
         reader_config = config['dataset_reader']
-        if 'class' in reader_config:
-            c = reader_config.pop('class')
-            try:
-                module_name, cls_name = c.split(':')
-                reader = getattr(importlib.import_module(module_name), cls_name)()
-            except ValueError:
-                e = ConfigError('Expected class description in a `module.submodules:ClassName` form, but got `{}`'
-                                .format(c))
-                log.exception(e)
-                raise e
-        else:
-            reader = get_model(reader_config.pop('name'))()
+        reader = get_model(reader_config.pop('class_name'))()
         data_path = reader_config.pop('data_path', '')
         if isinstance(data_path, list):
             data_path = [expand_path(x) for x in data_path]

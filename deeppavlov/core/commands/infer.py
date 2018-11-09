@@ -46,7 +46,7 @@ def build_model(config: Union[str, Path, dict], mode: str= 'infer',
                 component_config['load_path'] = component_config['save_path']
             except KeyError:
                 log.warning('No "save_path" parameter for the {} component, so "load_path" will not be renewed'
-                            .format(component_config.get('name', component_config.get('ref', 'UNKNOWN'))))
+                            .format(component_config.get('class_name', component_config.get('ref', 'UNKNOWN'))))
         component = from_params(component_config, mode=mode)
 
         if 'in' in component_config:

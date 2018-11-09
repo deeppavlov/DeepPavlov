@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "name": "dstc2_reader",
+    "class_name": "dstc2_reader",
     "data_path": "{DOWNLOADS_PATH}/dstc2"
   },
   "dataset_iterator": {
-    "name": "dialog_iterator"
+    "class_name": "dialog_iterator"
   },
   "chainer": {
     "in": ["x"],
@@ -12,21 +12,21 @@
     "out": ["y_predicted"],
     "pipe": [
       {
-        "class": "deeppavlov.models.go_bot.wrapper:DialogComponentWrapper",
-        "component": { "name": "split_tokenizer" },
+        "class_name": "deeppavlov.models.go_bot.wrapper:DialogComponentWrapper",
+        "component": { "class_name": "split_tokenizer" },
         "in": ["x"],
         "out": ["x_tokens"]
       },
       {
         "id": "token_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "fit_on": ["x_tokens"],
         "save_path": "{MODELS_PATH}/vocabs/token.dict",
         "load_path": "{MODELS_PATH}/vocabs/token.dict"
       },
       {
         "id": "restaurant_database",
-        "name": "sqlite_database",
+        "class_name": "sqlite_database",
         "table_name": "mytable",
         "primary_keys": ["name"],
         "save_path": "{DOWNLOADS_PATH}/dstc2/resto.sqlite"
@@ -36,7 +36,7 @@
         "in_y": ["y"],
         "out": ["y_predicted"],
         "main": true,
-        "name": "go_bot",
+        "class_name": "go_bot",
         "load_path": "{MODELS_PATH}/gobot_dstc2_minimal/model",
         "save_path": "{MODELS_PATH}/gobot_dstc2_minimal/model",
         "debug": false,
@@ -57,16 +57,16 @@
         "intent_classifier": null,
         "embedder": null,
         "bow_embedder": {
-          "name": "bow",
+          "class_name": "bow",
           "depth": "#token_vocab.__len__()",
           "with_counts": true
         },
         "tokenizer": {
-          "name": "stream_spacy_tokenizer",
+          "class_name": "stream_spacy_tokenizer",
           "lowercase": false
         },
         "tracker": {
-          "name": "featurized_tracker",
+          "class_name": "featurized_tracker",
           "slot_names": ["pricerange", "this", "area", "food", "name"]
         }
       }
