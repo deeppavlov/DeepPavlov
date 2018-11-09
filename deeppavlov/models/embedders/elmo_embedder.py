@@ -43,8 +43,13 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
             ``tenserflow_hub.load_module_spec`` by using `TensorFlow Hub <https://www.tensorflow.org/hub/overview>`__.
         elmo_output_names: A list of output ELMo. You can use combination of
             ``["word_emb", "lstm_outputs1", "lstm_outputs2","elmo"]`` and you can use separately ``["default"]``.
+            where:
+                ``word_emb`` - CNN embedding (default dim 512)
+                ``lstm_outputs*`` - ouputs of lstm (default dim 1024)
+                ``elmo`` - weighted sum of cnn and lstm outputs (default dim 1024)
+                ``default`` - mean ``elmo`` vector for sentence (default dim 1024)
             See `TensorFlow Hub <https://www.tensorflow.org/hub/modules/google/elmo/2>`__ for more information about it.
-        dim: Dimensionality of output token embeddings of ELMo model.
+        dim: Can be used for output embeddings dimensionaliry reduction if elmo_output_names != ['default']
         pad_zero: Whether to use pad samples or not.
         concat_last_axis: A boolean that enables/disables last axis concatenation. It is not used for
             ``elmo_output_names = ["default"]``.
@@ -52,15 +57,36 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
         mini_batch_size: It is used to reduce the memory requirements of the device.
 
     Examples:
+        >>> from deeppavlov.models.embedders.elmo_embedder import ELMoEmbedder
+        >>> elmo = ELMoEmbedder("http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz")
+        >>> elmo([['вопрос', 'жизни', 'Вселенной', 'и', 'вообще', 'всего'], ['42']])
+        array([[ 0.00719104,  0.08544601, -0.07179783, ...,  0.10879009,
+                -0.18630421, -0.2189409 ],
+               [ 0.16325025, -0.04736076,  0.12354863, ..., -0.1889013 ,
+                 0.04972512,  0.83029324]], dtype=float32)
+
         You can use ELMo models from DeepPavlov as usual `TensorFlow Hub Module
         <https://www.tensorflow.org/hub/modules/google/elmo/2>`_.
 
+        >>> import tensorflow as tf
         >>> import tensorflow_hub as hub
         >>> elmo = hub.Module("http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz",
         trainable=True)
+        >>> sess = tf.Session()
+        >>> sess.run(tf.global_variables_initializer())
         >>> embeddings = elmo(["это предложение", "word"], signature="default", as_dict=True)["elmo"]
+        >>> sess.run(embeddings)
+        array([[[ 0.05817392,  0.22493343, -0.19202903, ..., -0.14448944,
+                 -0.12425567,  1.0148407 ],
+                [ 0.53596294,  0.2868537 ,  0.28028542, ..., -0.08028372,
+                  0.49089077,  0.75939953]],
 
-        You can also embed tokenized sentences.
+               [[ 0.3433637 ,  1.0031182 , -0.1597258 , ...,  1.2442509 ,
+                  0.61029315,  0.43388373],
+                [ 0.05370751,  0.02260921,  0.01074906, ...,  0.08748816,
+                 -0.0066415 , -0.01344293]]], dtype=float32)
+
+        TensorFlow Hub module also supports tokenized sentences in the following format.
 
         >>> tokens_input = [["мама", "мыла", "раму"], ["рама", "", ""]]
         >>> tokens_length = [3, 1]
@@ -71,6 +97,20 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
                         },
                 signature="tokens",
                 as_dict=True)["elmo"]
+        >>> sess.run(embeddings)
+        array([[[ 0.6040001 , -0.16130011,  0.56478846, ..., -0.00376141,
+                 -0.03820051,  0.26321286],
+                [ 0.01834148,  0.17055789,  0.5311495 , ..., -0.5675535 ,
+                  0.62669843, -0.05939034],
+                [ 0.3242596 ,  0.17909613,  0.01657108, ...,  0.1866098 ,
+                  0.7392496 ,  0.08285746]],
+
+               [[ 1.1322289 ,  0.19077688, -0.17811403, ...,  0.42973226,
+                  0.23391506, -0.01294377],
+                [ 0.05370751,  0.02260921,  0.01074906, ...,  0.08748816,
+                 -0.0066415 , -0.01344293],
+                [ 0.05370751,  0.02260921,  0.01074906, ...,  0.08748816,
+                 -0.0066415 , -0.01344293]]], dtype=float32)
 
         You can also get ``hub.text_embedding_column`` like described `here
         <https://www.tensorflow.org/hub/tutorials/text_classification_with_tf_hub#feature_columns>`_.
@@ -87,8 +127,8 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
                                  'lstm_outputs2': 1024,
                                  'elmo': 1024,
                                  'default': 1024}
-        elmo_output_names = elmo_output_names if elmo_output_names else ['default']
-        self.elmo_output_names = elmo_output_names if elmo_output_names else ['default']
+        elmo_output_names = elmo_output_names or ['default']
+        self.elmo_output_names = elmo_output_names
         elmo_output_names_set = set(self.elmo_output_names)
         if elmo_output_names_set - set(self.elmo_output_dims.keys()):
             log.error(f'Incorrect elmo_output_names = {elmo_output_names} . You can use either  ["default"] or some of'\
@@ -109,7 +149,7 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
         self.dim = self._get_dims(self.elmo_output_names, dim, concat_last_axis)
 
     def _get_dims(self, elmo_output_names, in_dim, concat_last_axis):
-        dims = [ self.elmo_output_dims[elmo_output_name] for elmo_output_name in elmo_output_names]
+        dims = [self.elmo_output_dims[elmo_output_name] for elmo_output_name in elmo_output_names]
         if concat_last_axis:
             dims = in_dim if in_dim else sum(dims)
         else:
@@ -155,7 +195,7 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
 
         if not batch:
             empty_vec = np.zeros(self.dim, dtype=np.float32)
-            return [empty_vec] if self.mean else [[empty_vec]]
+            return [empty_vec] if 'default' in self.elmo_output_names else [[empty_vec]]
 
         filled_batch = []
         for batch_line in batch:
