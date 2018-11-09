@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "insurance_reader",
-    "data_path": "./insurance_data"
+    "data_path": "{DOWNLOADS_PATH}/insurance_data"
   },
   "dataset_iterator": {
     "name": "siamese_iterator",
@@ -26,8 +26,8 @@
         {
           "id": "siam_sent_vocab",
           "name":"simple_vocab",
-          "save_path": "insurance_vocabs/sent.dict",
-          "load_path": "insurance_vocabs/sent.dict"
+          "save_path": "{MODELS_PATH}/insurance_vocabs/sent.dict",
+          "load_path": "{MODELS_PATH}/insurance_vocabs/sent.dict"
         },
         "tokenizer":
         {
@@ -37,14 +37,14 @@
         {
           "id": "siam_vocab",
           "name":"simple_vocab",
-          "save_path": "insurance_vocabs/tok.dict",
-          "load_path": "insurance_vocabs/tok.dict"
+          "save_path": "{MODELS_PATH}/insurance_vocabs/tok.dict",
+          "load_path": "{MODELS_PATH}/insurance_vocabs/tok.dict"
         },
         "embedder":
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "embeddings/wiki.en.bin"
+          "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin"
         }
       },
       {
@@ -73,8 +73,8 @@
         "hard_triplets": false,
         "margin": 0.1,
         "batch_size": 256,
-        "save_path": "insurance_model/model_weights.h5",
-        "load_path": "insurance_model/model_weights.h5",
+        "save_path": "{MODELS_PATH}/insurance_model/model_weights.h5",
+        "load_path": "{MODELS_PATH}/insurance_model/model_weights.h5",
         "preprocess": "#preproc.__call__",
         "interact_pred_num": 3
       }
@@ -92,6 +92,11 @@
     "log_every_n_batches": 24
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
@@ -103,11 +108,11 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/insuranceQA-master.zip",
-        "subdir": "insurance_data"
+        "subdir": "{DOWNLOADS_PATH}/insurance_data"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }

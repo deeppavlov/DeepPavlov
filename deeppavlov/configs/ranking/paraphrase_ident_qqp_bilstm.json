@@ -25,8 +25,8 @@
         {
           "id": "siam_sent_vocab",
           "name":"simple_vocab",
-          "save_path": "{DOWNLOADS_PATH}/qqp_vocabs_bilstm/sent.dict",
-          "load_path": "{DOWNLOADS_PATH}/qqp_vocabs_bilstm/sent.dict"
+          "save_path": "{MODELS_PATH}/qqp_vocabs_bilstm/sent.dict",
+          "load_path": "{MODELS_PATH}/qqp_vocabs_bilstm/sent.dict"
         },
         "tokenizer":
         {
@@ -36,8 +36,8 @@
         {
           "id": "siam_vocab",
           "name":"simple_vocab",
-          "save_path": "{DOWNLOADS_PATH}/qqp_vocabs_bilstm/tok.dict",
-          "load_path": "{DOWNLOADS_PATH}/qqp_vocabs_bilstm/tok.dict"
+          "save_path": "{MODELS_PATH}/qqp_vocabs_bilstm/tok.dict",
+          "load_path": "{MODELS_PATH}/qqp_vocabs_bilstm/tok.dict"
         },
         "embedder":
         {
@@ -68,8 +68,8 @@
         "learning_rate": 1e-3,
         "triplet_loss": false,
         "batch_size": 256,
-        "save_path": "qqp_model_bilstm/model_weights.h5",
-        "load_path": "qqp_model_bilstm/model_weights.h5",
+        "save_path": "{MODELS_PATH}/qqp_model_bilstm/model_weights.h5",
+        "load_path": "{MODELS_PATH}/qqp_model_bilstm/model_weights.h5",
         "preprocess": "#preproc.__call__"
       }
     ],
