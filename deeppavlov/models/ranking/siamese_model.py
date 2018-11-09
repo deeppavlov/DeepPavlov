@@ -32,9 +32,7 @@ class SiameseModel(NNModel):
     def __init__(self,
                  batch_size: int,
                  num_context_turns: int = 1,
-                 *args,
-                 **kwargs):
-
+                 *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
         self.batch_size = batch_size
@@ -47,7 +45,7 @@ class SiameseModel(NNModel):
         pass
 
     def train_on_batch(self, batch: List[List[np.ndarray]], y: List[int]) -> float:
-        b = self._make_batch(batch)
+        b = self._make_batch(list(batch))
         loss = self._train_on_batch(b, y)
         return loss
 

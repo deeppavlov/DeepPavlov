@@ -71,7 +71,7 @@ class BiLSTMSiameseNetwork(KerasSiameseModel):
                  margin: float = 0.1,
                  hard_triplets: bool = False,
                  *args,
-                 **kwargs):
+                 **kwargs) -> None:
 
         self.toks_num = len_vocab
         self.seed = seed

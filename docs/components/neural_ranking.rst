@@ -1,48 +1,30 @@
-Neural Model for Information Retrieval and Ranking
-==================================================
+Ranking and paraphrase identification
+=====================================
 
-This library component solves the task of Information Retrieval (IR)
-and is intended to retrieve the response closest semantically
-to a given context from some database.
-The code in this repository uses a deep learning
-approach to address the IR task.
+This library component solves the tasks of ranking and paraphrase identification based on semantic similarity
+which is trained with siamese neural networks. The trained network can retrieve the response
+closest semantically to a given context from some database or answer whether two sentences are paraphrases or not.
+It is possible to build automatic semantic FAQ systems with such neural architectures.
 
-The model can be trained with crossentropy or with triplet loss [1,
-2]. To train with triplet loss
-it is required to provide positive and negative response candidates
-for each context.
-Sampling of negative candidates can be performed globally from the
-whole response set
-or from pools of responses predefined separately for each context.
-The same is true for validation and test, i.e. validation and test
-can be carried out for the entire set of answers or
-for the answers pools selected separately for each context.
-There is a possibility to encode contexts and responses in the model
-with biLSTM layers having shared or separate weights.
+Ranking
+-------
 
-Infer from pre-trained model
-----------------------------
-
-To use the model pre-trained on the InsuranceQA V1 dataset for
+To use the model pre-trained on the `InsuranceQA V1`_ dataset for
 inference, one should run
 the following command:
 
 ::
 
-    python -m deeppavlov interact deeppavlov/configs/ranking/ranking_insurance.json
+    python -m deeppavlov interact deeppavlov/configs/ranking/ranking_insurance_interact.json
 
-Now a user can enter a text of context and get relevant contexts and
-responses:
+Now a user can enter a text of context and get and responses:
 
 ::
 
     :: how much to pay for auto insurance?
-    >> {'contexts': ['how much can I expect pay for auto insurance', 'how much will insurance pay for my total car', 'how much can I expect pay in car insurance'], 'responses': ['the cost of auto insurance be based on several factor include your driving record , claim history , type of vehicle , credit score where you live and how far you travel to and from work I will recommend work with an independent agent who can shop several company find the good policy for you', 'there be not any absolute answer to this question rate for auto insurance coverage can vary greatly from carrier to carrier and from area to area contact local agent in your area find out about coverage availablity and pricing within your area look for an agent that you be comfortable working with as they will be the first last point of contact in most instance', 'the cost of auto insurance coverage for any vehicle or driver can vary greatly thing that effect your auto insurance rate be geographical location , vehicle , age (s) of driver (s) , type of coverage desire , motor vehicle record of all driver , credit rating of all driver and more contact a local agent get a quote a quote cost nothing but will let you know where your rate will']}
+    >> ['the cost of auto insurance be based on several factor include your driving record , claim history , type of vehicle , credit score where you live and how far you travel to and from work I will recommend work with an independent agent who can shop several company find the good policy for you', 'there be not any absolute answer to this question rate for auto insurance coverage can vary greatly from carrier to carrier and from area to area contact local agent in your area find out about coverage availablity and pricing within your area look for an agent that you be comfortable working with as they will be the first last point of contact in most instance', 'the cost of auto insurance coverage for any vehicle or driver can vary greatly thing that effect your auto insurance rate be geographical location , vehicle , age (s) of driver (s) , type of coverage desire , motor vehicle record of all driver , credit rating of all driver and more contact a local agent get a quote a quote cost nothing but will let you know where your rate will']
 
-Train model
------------
-
-To train the model on the InsuranceQA dataset one should run the
+To train the model on the `InsuranceQA V1`_ dataset one should run the
 command:
 
 ::
@@ -52,12 +34,37 @@ command:
 As an example of configuration file see
 :config:`ranking_insurance.json <ranking/ranking_insurance.json>`.
 
-Literature
+Paraphrase identification
+-------------------------
+
+To use the model pre-trained on the `Quora Question Pairs`_ dataset for
+inference, one should run
+the following command:
+
+::
+
+    python -m deeppavlov interact deeppavlov/configs/ranking/paraphrase_ident_qqp_interact.json
+
+Now a user can enter two sentences and the model will make a prediction whether these sentences are paraphrases or not.
+
+::
+
+    :: How can I be a good geologist?&What should I do to be a great geologist?
+    >> This is a paraphrase.
+
+To train the model on the `Quora Question Pairs`_ dataset one should run the command:
+
+::
+
+    python -m deeppavlov interact deeppavlov/configs/ranking/paraphrase_ident_qqp.json
+
+As an example of configuration file see
+:config:`paraphrase_ident_qqp.json <ranking/paraphrase_ident_qqp.json>`.
+
+References
 ----------
 
-[1] Feng, Minwei, et al. "Applying deep learning to answer selection: A
-study and an open task." Automatic Speech Recognition and Understanding
-(ASRU), 2015 IEEE Workshop on. IEEE, 2015.
+.. target-notes::
 
-[2] Tan, Ming, et al. "LSTM-based deep learning models for non-factoid
-answer selection." arXiv preprint arXiv:1511.04108 (2015).
+.. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
+.. _`Quora Question Pairs`: https://www.kaggle.com/c/quora-question-pairs/data

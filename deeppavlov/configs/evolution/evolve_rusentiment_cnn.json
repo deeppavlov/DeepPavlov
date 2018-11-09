@@ -30,13 +30,14 @@
     "pipe": [
       {
         "id": "classes_vocab",
-        "name": "default_vocab",
+        "name": "simple_vocab",
         "fit_on": [
           "y"
         ],
-        "level": "token",
-        "save_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_classes.dict",
-        "load_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_classes.dict"
+        "save_path": "classifiers/rusentiment_evolution/classes.dict",
+        "load_path": "classifiers/rusentiment_evolution/classes.dict",
+        "in": "y",
+        "out": "y_ids"
       },
       {
         "in": [
@@ -59,27 +60,31 @@
         "out": "x_emb",
         "id": "my_embedder",
         "name": "fasttext",
-        "save_path": "/home/dilyara/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
-        "load_path": "/home/dilyara/embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
+        "load_path": "embeddings/ft_native_300_ru_wiki_lenta_nltk_wordpunct_tokenize.bin",
         "dim": 300
+      },
+      {
+        "in": "y_ids",
+        "out": "y_onehot",
+        "name": "one_hotter",
+        "depth": "#classes_vocab.len"
       },
       {
         "in": [
           "x_emb"
         ],
         "in_y": [
-          "y"
+          "y_onehot"
         ],
         "out": [
-          "y_labels",
-          "y_probas_dict"
+          "y_pred_probas"
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_v0",
-        "load_path": "/home/dilyara/evolution_data/rusentiment_classification/rusentiment_v0",
+        "save_path": "classifiers/rusentiment_evolution/rusentiment_v0",
+        "load_path": "classifiers/rusentiment_evolution/rusentiment_v0",
         "embedding_size": "#my_embedder.dim",
-        "classes": "#classes_vocab.keys()",
+        "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
           1,
           2,
@@ -92,15 +97,14 @@
           ],
           "discrete": true
         },
-        "confident_threshold": 1,
         "optimizer": "Adam",
-        "lear_rate": {
+        "learning_rate": {
           "evolve_range": [
             1e-4,
             1e-1
           ]
         },
-        "lear_rate_decay": {
+        "learning_rate_decay": {
           "evolve_range": [
             1e-6,
             1e-2
@@ -135,11 +139,21 @@
           "discrete": true
         },
         "model_name": "cnn_model"
+      },
+      {
+        "in": "y_pred_probas",
+        "out": "y_pred_ids",
+        "name": "proba2labels",
+        "max_proba": true
+      },
+      {
+        "in": "y_pred_ids",
+        "out": "y_pred_labels",
+        "ref": "classes_vocab"
       }
     ],
     "out": [
-      "y_labels",
-      "y_probas_dict"
+      "y_pred_labels"
     ]
   },
   "train": {
@@ -152,9 +166,15 @@
       "discrete": true
     },
     "metrics": [
-      "classification_f1",
-      "classification_roc_auc",
-      "classification_accuracy"
+      "sets_accuracy",
+      "f1_macro",
+      {
+        "name": "roc_auc",
+        "inputs": [
+          "y_onehot",
+          "y_pred_probas"
+        ]
+      }
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,
@@ -173,8 +193,6 @@
       "server_utils": "KerasIntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
-      "http://files.deeppavlov.ai/deeppavlov_data/classifiers.tar.gz",
       {
         "url": "https://github.com/text-machine-lab/rusentiment/raw/master/Dataset/rusentiment_random_posts.csv",
         "subdir": "rusentiment"

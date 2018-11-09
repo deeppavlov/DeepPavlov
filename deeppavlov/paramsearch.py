@@ -20,12 +20,11 @@ from itertools import product
 
 from sklearn.model_selection import train_test_split
 
-from deeppavlov.core.common.file import read_json, save_json
+from deeppavlov.core.common.file import read_json, save_json, find_config
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.core.commands.train import train_evaluate_model_from_config, get_iterator_from_config, read_data_by_config
 from deeppavlov.core.common.params_search import ParamsSearch
-from deeppavlov.deep import find_config
 
 p = (Path(__file__) / ".." / "..").resolve()
 sys.path.append(str(p))
@@ -67,6 +66,8 @@ def main():
     config = config_init.copy()
     data = read_data_by_config(config)
     target_metric = config_init['train']['metrics'][0]
+    if isinstance(target_metric, dict):
+        target_metric = target_metric['name']
 
     # get all params for search
     param_paths = list(params_helper.find_model_path(config, 'search_choice'))
@@ -99,7 +100,8 @@ def main():
                 # train/valid for model evaluation
                 data_to_evaluate = data.copy()
                 if len(data_to_evaluate['valid']) == 0:
-                    data_to_evaluate['train'], data_to_evaluate['valid'] = train_test_split(data_to_evaluate['train'], test_size=0.2)
+                    data_to_evaluate['train'], data_to_evaluate['valid'] = train_test_split(data_to_evaluate['train'],
+                                                                                            test_size=0.2)
                 iterator = get_iterator_from_config(config, data_to_evaluate)
                 score = train_evaluate_model_from_config(config, iterator=iterator)['valid'][target_metric]
 
@@ -115,9 +117,10 @@ def main():
     best_config = config_init.copy()
     for i, param_name in enumerate(best_params_dict.keys()):
         if param_name != target_metric:
-            best_config = params_helper.insert_value_or_dict_into_config(best_config, param_paths[i], best_params_dict[param_name])
+            best_config = params_helper.insert_value_or_dict_into_config(best_config, param_paths[i],
+                                                                         best_params_dict[param_name])
 
-    best_model_filename = pipeline_config_path.replace('.json', '_cvbest.json')
+    best_model_filename = pipeline_config_path.with_name(pipeline_config_path.name.replace('.json', '_cvbest.json'))
     save_json(best_config, best_model_filename)
     log.info('Best model saved in json-file: {}'.format(best_model_filename))
 

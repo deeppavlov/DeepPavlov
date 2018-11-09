@@ -158,8 +158,7 @@ class GoalOrientedBotNetwork(EnhancedTFModel):
 
         self.intents = []
         if callable(self.intent_classifier):
-            # intent_classifier returns (y_labels, y_probs)
-            self.intents = list(self.intent_classifier(["hi"])[1][0].keys())
+            self.intents = self.intent_classifier.get_main_component().classes
 
         self._init_network(hidden_size=hidden_size,
                            action_size=action_size,
@@ -235,7 +234,8 @@ class GoalOrientedBotNetwork(EnhancedTFModel):
         # Bag of words features
         bow_features = []
         if callable(self.bow_embedder):
-            bow_features = self.bow_embedder([tokens], self.word_vocab)[0]
+            tokens_idx = self.word_vocab(tokens)
+            bow_features = self.bow_embedder([tokens_idx])[0]
             bow_features = bow_features.astype(np.float32)
 
         # Embeddings
@@ -265,11 +265,11 @@ class GoalOrientedBotNetwork(EnhancedTFModel):
         # Intent features
         intent_features = []
         if callable(self.intent_classifier):
-            intent, intent_probs = self.intent_classifier([context])
-            intent_features = np.array([intent_probs[0][i] for i in self.intents],
-                                       dtype=np.float32)
+            intent_features = self.intent_classifier([context])[0]
+
             if self.debug:
-                log.debug("Predicted intent = `{}`".format(intent[0]))
+                intent = self.intents[np.argmax(intent_features[0])]
+                log.debug("Predicted intent = `{}`".format(intent))
 
         attn_key = np.array([], dtype=np.float32)
         if self.attn:

@@ -190,7 +190,7 @@ class DecayScheduler():
 
     def __str__(self):
         return f"DecayScheduler(start_val={self.start_val}, end_val={self.end_val}"\
-            f", dec_type={self.dec_type}, num_it={self.num_it}, extra={self.extra})"
+            f", dec_type={self.dec_type}, num_it={self.nb}, extra={self.extra})"
 
     def next_val(self):
         self.iters = min(self.iters + 1, self.nb)

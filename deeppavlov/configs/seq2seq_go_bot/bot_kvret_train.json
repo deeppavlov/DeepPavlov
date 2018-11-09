@@ -73,8 +73,6 @@
       {
         "id": "token_embedder",
         "name": "fasttext",
-        "dim": 300,
-        "save_path": "embeddings/wiki.en.bin",
         "load_path": "embeddings/wiki.en.bin"
       },
       {
@@ -123,7 +121,20 @@
     "epochs": 200,
     "batch_size": 16,
 
-    "metrics": ["google_bleu", "bleu", "accuracy"],
+    "metrics": [
+      {
+        "name": "google_bleu",
+        "inputs": ["y_text", "prediction_text"]
+      },
+      {
+        "name": "bleu",
+        "inputs": ["y_text", "prediction_text"]
+      },
+      {
+        "name": "accuracy",
+        "inputs": ["y_text", "prediction_text"]
+      }
+    ],
     "validation_patience": 30,
     "val_every_n_epochs": 1,
 
@@ -135,7 +146,8 @@
     "requirements": [
       "../dp_requirements/tf.txt",
       "../dp_requirements/spacy.txt",
-      "../dp_requirements/en_core_web_sm.txt"
+      "../dp_requirements/en_core_web_sm.txt",
+      "../dp_requirements/fasttext.txt"
     ],
     "labels": {
       "telegram_utils": "Seq2SeqGoalOrientedBot",

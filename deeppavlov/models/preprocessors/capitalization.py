@@ -14,14 +14,14 @@
 
 
 import re
-from typing import Union, Tuple, List
+from typing import Union, Tuple, List, Optional
 
 import numpy as np
 
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.data.utils import zero_pad
 from deeppavlov.core.common.registry import register
-
+from deeppavlov.models.tokenizers.nltk_moses_tokenizer import NLTKMosesTokenizer
 
 @register('capitalization_featurizer')
 class CapitalizationPreprocessor(Component):
@@ -74,7 +74,7 @@ class CapitalizationPreprocessor(Component):
 
 
 def process_word(word: str, to_lower: bool = False,
-                 append_case: str = None) -> Tuple[str]:
+                 append_case: Optional[str] = None) -> Tuple[str]:
     """Converts word to a tuple of symbols, optionally converts it to lowercase
     and adds capitalization label.
 
@@ -112,17 +112,19 @@ def process_word(word: str, to_lower: bool = False,
 @register('lowercase_preprocessor')
 class LowercasePreprocessor(Component):
     """A callable wrapper over :func:`process_word`.
-    Takes as input a batch of sentences and returns a batch of preprocessed sentences.
+    Takes as input a batch of tokenized sentences
+    and returns a batch of preprocessed sentences.
     """
 
     def __init__(self, to_lower: bool = True, append_case: str = "first", *args, **kwargs):
         self.to_lower = to_lower
         self.append_case = append_case
 
-    def __call__(self, tokens_batch: List[Union[List[str], str]], **kwargs) -> List[List[Tuple[str]]]:
+    def __call__(self, tokens_batch: List[List[str]], **kwargs) -> List[List[Tuple[str]]]:
         answer = []
         for elem in tokens_batch:
-            if isinstance(elem, str):
-                elem = [x for x in re.split("(\w+|[,.])", elem) if x.strip() != ""]
+            # if isinstance(elem, str):
+            #     elem = NLTKMosesTokenizer()([elem])[0]
+            #     # elem = [x for x in re.split("(\w+|[,.])", elem) if x.strip() != ""]
             answer.append([process_word(x, self.to_lower, self.append_case) for x in elem])
         return answer

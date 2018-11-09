@@ -13,26 +13,24 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-import os
-from hashlib import md5
-from pathlib import Path
-from urllib.parse import urlparse
-from typing import List, Union
-import requests
-from tqdm import tqdm
-import tarfile
 import gzip
-import zipfile
+import os
 import re
-import shutil
 import secrets
+import shutil
+import tarfile
+import zipfile
+from hashlib import md5
+from itertools import chain
+from pathlib import Path
+from typing import List, Union, Iterable
+from urllib.parse import urlparse
 
+import numpy as np
 import requests
 from tqdm import tqdm
-import numpy as np
 
 from deeppavlov.core.common.log import get_logger
-
 
 log = get_logger(__name__)
 
@@ -42,8 +40,11 @@ tqdm.monitor_interval = 0
 
 
 def get_download_token():
-    token_file = Path.home() / '.deeppavlov'
+    token_file = Path.home() / '.deeppavlov' / 'token'
     if not token_file.exists():
+        if token_file.parent.is_file():
+            token_file.parent.unlink()
+        token_file.parent.mkdir(parents=True, exist_ok=True)
         token_file.write_text(secrets.token_urlsafe(32), encoding='utf8')
 
     return token_file.read_text(encoding='utf8').strip()
@@ -254,22 +255,54 @@ def tokenize_reg(s):
     return re.findall(re.compile(pattern), s)
 
 
-def zero_pad(batch, dtype=np.float32):
-    if len(batch) == 1 and len(batch[0]) == 0:
-        return np.array([], dtype=dtype)
-    batch_size = len(batch)
-    max_len = max(len(utterance) for utterance in batch)
-    if isinstance(batch[0][0], (int, np.int)):
-        padded_batch = np.zeros([batch_size, max_len], dtype=np.int32)
-        for n, utterance in enumerate(batch):
-            padded_batch[n, :len(utterance)] = utterance
+def get_dimensions(batch):
+    """"""
+    if len(batch) > 0 and isinstance(batch[0], Iterable) and not isinstance(batch, str):
+        max_list = [get_dimensions(sample) for sample in batch]
+        max_depth = max(len(m) for m in max_list)
+        max_lens = np.zeros(max_depth, dtype=np.int32)
+        for m in max_list:
+            lm = len(m)
+            max_lens[:lm]= np.maximum(max_lens[:lm], m)
+        return [len(batch)] + list(max_lens)
     else:
-        n_features = len(batch[0][0])
-        padded_batch = np.zeros([batch_size, max_len, n_features], dtype=dtype)
-        for n, utterance in enumerate(batch):
-            for k, token_features in enumerate(utterance):
-                padded_batch[n, k] = token_features
-    return padded_batch
+        return [len(batch)]
+
+
+def zero_pad(batch, zp_batch=None, dtype=np.float32, padding=0):
+    if zp_batch is None:
+        dims = get_dimensions(batch)
+        zp_batch = np.ones(dims, dtype=dtype) * padding
+    if zp_batch.ndim == 1:
+        zp_batch[:len(batch)] = batch
+    else:
+        for b, zp in zip(batch, zp_batch):
+            zero_pad(b, zp)
+    return zp_batch
+
+
+def is_str_batch(batch):
+    while True:
+        if isinstance(batch, Iterable):
+            if isinstance(batch, str):
+                return True
+            elif isinstance(batch, np.ndarray):
+                return batch.dtype.kind == 'U'
+            else:
+                if len(batch) > 0:
+                    batch = batch[0]
+                else:
+                    return True
+        else:
+            return False
+
+
+def flatten_str_batch(batch):
+    if isinstance(batch, str):
+        return [batch]
+    else:
+        return chain(*[flatten_str_batch(sample) for sample in batch])
+
 
 def zero_pad_truncate(batch, max_len, pad='post', trunc='post', dtype=np.float32):
     batch_size = len(batch)
@@ -356,9 +389,7 @@ def check_nested_dict_keys(check_dict: dict, keys: list):
 
 
 def jsonify_data(input):
-    if isinstance(input, list):
-        result = [jsonify_data(item) for item in input]
-    elif isinstance(input, tuple):
+    if isinstance(input, (list, tuple)):
         result = [jsonify_data(item) for item in input]
     elif isinstance(input, dict):
         result = {}

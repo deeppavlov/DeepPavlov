@@ -14,10 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import argparse
+import sys
+from argparse import ArgumentParser, Namespace
 from collections import defaultdict
 from pathlib import Path
-import sys
+from typing import Union, Optional, Dict, Iterable, Set, Tuple, List
 
 import deeppavlov
 from deeppavlov.core.commands.utils import get_deeppavlov_root, set_deeppavlov_root, expand_path
@@ -28,7 +29,7 @@ from deeppavlov.core.common.log import get_logger
 
 log = get_logger(__name__)
 
-parser = argparse.ArgumentParser()
+parser = ArgumentParser()
 
 parser.add_argument('--config', '-c', help="path to a pipeline json config", type=str,
                     default=None)
@@ -37,9 +38,11 @@ parser.add_argument('-all', action='store_true',
                          " available on disk.")
 
 
-def get_config_downloads(config_path):
+def get_config_downloads(config: Union[str, Path, dict]) -> Set[Tuple[str, Path]]:
+    if isinstance(config, (str, Path)):
+        config = read_json(config)
+
     dp_root_back = get_deeppavlov_root()
-    config = read_json(config_path)
     set_deeppavlov_root(config)
 
     downloads = set()
@@ -64,22 +67,22 @@ def get_config_downloads(config_path):
     return downloads
 
 
-def get_configs_downloads(config_path=None):
+def get_configs_downloads(config: Optional[Union[str, Path, dict]]=None) -> Dict[str, Set[Path]]:
     all_downloads = defaultdict(set)
 
-    if config_path:
-        configs = [config_path]
+    if config:
+        configs = [config]
     else:
         configs = list(Path(deeppavlov.__path__[0], 'configs').glob('**/*.json'))
 
-    for config_path in configs:
-        for url, dest in get_config_downloads(config_path):
+    for config in configs:
+        for url, dest in get_config_downloads(config):
             all_downloads[url].add(dest)
 
     return all_downloads
 
 
-def download_resource(url, dest_paths):
+def download_resource(url: str, dest_paths: Iterable[Path]) -> None:
     dest_paths = list(dest_paths)
 
     if url.endswith(('.tar.gz', '.gz', '.zip')):
@@ -91,7 +94,7 @@ def download_resource(url, dest_paths):
         download(dest_files, url)
 
 
-def download_resources(args):
+def download_resources(args: Namespace) -> None:
     if not args.all and not args.config:
         log.error('You should provide either skill config path or -all flag')
         sys.exit(1)
@@ -99,15 +102,20 @@ def download_resources(args):
         downloads = get_configs_downloads()
     else:
         config_path = Path(args.config).resolve()
-        downloads = get_configs_downloads(config_path=config_path)
+        downloads = get_configs_downloads(config=config_path)
 
     for url, dest_paths in downloads.items():
         download_resource(url, dest_paths)
 
 
-def deep_download(args: [str, Path, list]=None):
-    if isinstance(args, (str, Path)):
-        args = ['-c', str(args)]  # if args is a path to config
+def deep_download(config: Union[str, Path, dict]) -> None:
+    downloads = get_configs_downloads(config)
+
+    for url, dest_paths in downloads.items():
+        download_resource(url, dest_paths)
+
+
+def main(args: Optional[List[str]]=None) -> None:
     args = parser.parse_args(args)
     log.info("Downloading...")
     download_resources(args)
@@ -115,4 +123,4 @@ def deep_download(args: [str, Path, list]=None):
 
 
 if __name__ == "__main__":
-    deep_download()
+    main()

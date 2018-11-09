@@ -1,0 +1,171 @@
+{
+  "dataset_reader": {
+    "name": "morphotagger_dataset_reader",
+    "data_path": "UD2.0_source",
+    "language": "fr",
+    "data_types": [
+      "train",
+      "dev",
+      "test"
+    ]
+  },
+  "dataset_iterator": {
+    "name": "morphotagger_dataset"
+  },
+  "chainer": {
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
+    "pipe": [
+      {
+        "in": [
+          "x"
+        ],
+        "name": "lazy_tokenizer",
+        "out": [
+          "x_tokens"
+        ]
+      },
+      {
+        "id": "lowercase_preprocessor",
+        "name": "lowercase_preprocessor",
+        "in": [
+          "x_tokens"
+        ],
+        "out": [
+          "x_processed"
+        ]
+      },
+      {
+        "id": "tag_vocab",
+        "name": "default_vocab",
+        "fit_on": [
+          "y"
+        ],
+        "level": "token",
+        "special_tokens": [
+          "PAD",
+          "BEGIN",
+          "END"
+        ],
+        "save_path": "morpho_tagger/UD2.0/fr/tag.dict",
+        "load_path": "morpho_tagger/UD2.0/fr/tag.dict"
+      },
+      {
+        "id": "char_vocab",
+        "name": "default_vocab",
+        "min_freq": 3,
+        "fit_on": [
+          "x_processed"
+        ],
+        "special_tokens": [
+          "PAD",
+          "BEGIN",
+          "END"
+        ],
+        "level": "char",
+        "save_path": "morpho_tagger/UD2.0/fr/char.dict",
+        "load_path": "morpho_tagger/UD2.0/fr/char.dict"
+      },
+      {
+        "in": [
+          "x_processed"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_predicted"
+        ],
+        "name": "morpho_tagger",
+        "main": true,
+        "save_path": "morpho_tagger/UD2.0/fr/model.hdf5",
+        "load_path": "morpho_tagger/UD2.0/fr/model.hdf5",
+        "tags": "#tag_vocab",
+        "symbols": "#char_vocab",
+        "verbose": 1,
+        "char_embeddings_size": 32,
+        "char_window_size": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "word_lstm_units": 128,
+        "conv_dropout": 0.0,
+        "char_conv_layers": 1,
+        "char_highway_layers": 1,
+        "highway_dropout": 0.0,
+        "word_lstm_layers": 1,
+        "char_filter_multiple": 50,
+        "intermediate_dropout": 0.0,
+        "word_dropout": 0.2,
+        "lstm_dropout": 0.2,
+        "regularizer": 0.01
+      },
+      {
+        "in": [
+          "x_tokens",
+          "y_predicted"
+        ],
+        "out": [
+          "y_prettified"
+        ],
+        "name": "tag_output_prettifier",
+        "end": "\n"
+      }
+    ],
+    "out": [
+      "y_prettified"
+    ]
+  },
+  "train": {
+    "epochs": 50,
+    "batch_size": 32,
+    "metrics": [
+      {
+        "name": "per_token_accuracy",
+        "inputs": [
+          "y",
+          "y_predicted"
+        ]
+      },
+      {
+        "name": "accuracy",
+        "inputs": [
+          "y",
+          "y_predicted"
+        ]
+      }
+    ],
+    "validation_patience": 10,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1
+  },
+  "predict": {
+    "batch_size": 32,
+    "outfile": "results/ud_fr_test.res"
+  },
+  "metadata": {
+    "requirements": [
+      "../dp_requirements/tf.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger/UD2.0/fr.tar.gz",
+        "subdir": "morpho_tagger/UD2.0/fr"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/UD2.0_source/fr.tar.gz",
+        "subdir": "UD2.0_source/fr"
+      }
+    ],
+    "telegram_utils": "MorphoTaggerModel"
+  }
+}

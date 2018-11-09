@@ -1,7 +1,6 @@
 {
   "dataset_reader": {
     "name": "ubuntu_v2_reader",
-    "num_samples": null,
     "data_path": "./ubuntu_v2_data"
   },
   "dataset_iterator": {
@@ -30,7 +29,7 @@
         },
         "tokenizer":
         {
-          "name": "split_tokenizer"
+          "name": "nltk_tokenizer"
         },
         "vocab":
         {
@@ -43,9 +42,7 @@
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "embeddings/wiki.en.bin",
-          "save_path": "embeddings/wiki.en.bin",
-          "dim": 300
+          "load_path": "embeddings/wiki.en.bin"
         }
       },
       {

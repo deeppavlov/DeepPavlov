@@ -12,11 +12,15 @@
     "out": ["y_predicted"],
     "pipe": [
       {
+        "class": "deeppavlov.models.go_bot.wrapper:DialogComponentWrapper",
+        "component": { "name": "split_tokenizer" },
+        "in": ["x"],
+        "out": ["x_tokens"]
+      },
+      {
         "id": "token_vocab",
-        "fit_on": ["x"],
-        "name": "default_vocab",
-        "level": "token",
-        "tokenizer": { "name": "split_tokenizer" },
+        "name": "simple_vocab",
+        "fit_on": ["x_tokens"],
         "save_path": "vocabs/token.dict",
         "load_path": "vocabs/token.dict"
       },
@@ -59,7 +63,9 @@
         "intent_classifier": null,
         "embedder": null,
         "bow_embedder": {
-          "name": "bow"
+          "name": "bow",
+          "depth": "#token_vocab.__len__()",
+          "with_counts": true
         },
         "tokenizer": {
           "name": "stream_spacy_tokenizer",
@@ -99,6 +105,8 @@
 	"log_every_n_batches": -1,
 	"log_every_n_epochs": 1,
 	"show_examples": false,
+    "validate_best": true,
+    "test_best": true,
     "tensorboard_log_dir": "dp_logs_gobot_minimal"
   },
   "metadata": {

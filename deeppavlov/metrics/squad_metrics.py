@@ -12,20 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple
-
 import re
 import string
 from collections import Counter
+from typing import List
 
 from deeppavlov.core.common.metrics_registry import register_metric
 
 
 @register_metric('exact_match')
-def exact_match(y_true: List[Tuple[List[str], List[int]]], y_predicted: List[Tuple[str, int, float]]):
+def exact_match(y_true: List[List[str]], y_predicted: List[str]) -> float:
     """ Calculates Exact Match score between y_true and y_predicted
         EM score uses the best matching y_true answer:
             if y_pred equal at least to one answer in y_true then EM = 1, else EM = 0
+
+    The same as in SQuAD-v2.0
 
     Args:
         y_true: list of tuples (y_true_text, y_true_start), y_true_text and y_true_start are lists of len num_answers
@@ -34,17 +35,17 @@ def exact_match(y_true: List[Tuple[List[str], List[int]]], y_predicted: List[Tup
     Returns:
         exact match score : float
     """
-    EM_total = 0
-    for (ground_truth, _), (prediction, *_) in zip(y_true, y_predicted):
-        EMs = [int(normalize_answer(gt) == normalize_answer(prediction)) for gt in ground_truth]
-        EM_total += max(EMs)
+    EM_total = sum(normalize_answer(prediction) in map(normalize_answer, ground_truth)
+                   for ground_truth, prediction in zip(y_true, y_predicted))
     return 100 * EM_total / len(y_true) if len(y_true) > 0 else 0
 
 
 @register_metric('squad_f1')
-def squad_f1(y_true: List[Tuple[List[str], List[int]]], y_predicted: List[Tuple[str, int, float]]):
+def squad_f1(y_true: List[List[str]], y_predicted: List[str]) -> float:
     """ Calculates F-1 score between y_true and y_predicted
         F-1 score uses the best matching y_true answer
+
+    The same as in SQuAD-v2.0
 
     Args:
         y_true: list of tuples (y_true_text, y_true_start), y_true_text and y_true_start are lists of len num_answers
@@ -54,11 +55,14 @@ def squad_f1(y_true: List[Tuple[List[str], List[int]]], y_predicted: List[Tuple[
         F-1 score : float
     """
     f1_total = 0.0
-    for (ground_truth, _), (prediction, *_) in zip(y_true, y_predicted):
+    for ground_truth, prediction in zip(y_true, y_predicted):
         prediction_tokens = normalize_answer(prediction).split()
         f1s = []
         for gt in ground_truth:
             gt_tokens = normalize_answer(gt).split()
+            if len(gt_tokens) == 0 or len(prediction_tokens) == 0:
+                f1s.append(float(gt_tokens == prediction_tokens))
+                continue
             common = Counter(prediction_tokens) & Counter(gt_tokens)
             num_same = sum(common.values())
             if num_same == 0:
@@ -72,7 +76,7 @@ def squad_f1(y_true: List[Tuple[List[str], List[int]]], y_predicted: List[Tuple[
     return 100 * f1_total / len(y_true) if len(y_true) > 0 else 0
 
 
-def normalize_answer(s):
+def normalize_answer(s: str) -> str:
     def remove_articles(text):
         return re.sub(r'\b(a|an|the)\b', ' ', text)
 

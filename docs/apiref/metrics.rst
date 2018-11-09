@@ -7,12 +7,12 @@ Different Metric functions.
 
 .. autofunction:: deeppavlov.metrics.accuracy.sets_accuracy
 
-.. autofunction:: deeppavlov.metrics.accuracy.classification_accuracy
+.. autofunction:: deeppavlov.metrics.fmeasure.round_f1
 
-.. autofunction:: deeppavlov.metrics.fmeasure_classification.classification_fmeasure
+.. autofunction:: deeppavlov.metrics.fmeasure.round_f1_macro
 
-.. autofunction:: deeppavlov.metrics.fmeasure_classification.classification_fmeasure_weighted
+.. autofunction:: deeppavlov.metrics.fmeasure.round_f1_weighted
 
-.. autofunction:: deeppavlov.metrics.log_loss.classification_log_loss
+.. autofunction:: deeppavlov.metrics.log_loss.sk_log_loss
 
-.. autofunction:: deeppavlov.metrics.roc_auc_score.classification_roc_auc_score
+.. autofunction:: deeppavlov.metrics.roc_auc_score.roc_auc_score

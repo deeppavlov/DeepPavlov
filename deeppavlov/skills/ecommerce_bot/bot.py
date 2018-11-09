@@ -11,25 +11,26 @@
 
 import copy
 import json
-
 from collections import Counter
-from typing import List, Tuple, Dict, Any
 from operator import itemgetter
-from scipy.stats import entropy
+from typing import List, Tuple, Dict, Any
 
 import numpy as np
+from scipy.stats import entropy
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.file import save_pickle, load_pickle
-from deeppavlov.core.commands.utils import expand_path, make_all_dirs, is_file_exist
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.models.estimator import Component
+from deeppavlov.core.skill.skill import Skill
 from deeppavlov.metrics.bleu import bleu_advanced
 
 log = get_logger(__name__)
 
+
 @register("ecommerce_bot")
-class EcommerceBot(Component):
+class EcommerceBot(Skill):
     """Class to retrieve product items from `load_path` catalogs
     in sorted order according to the similarity measure
     Retrieve the specification attributes with corresponding values
@@ -44,16 +45,15 @@ class EcommerceBot(Component):
         min_entropy: min entropy threshold for specifying
     """
 
-    def __init__(self, preprocess: Component, save_path: str, load_path: str, 
+    def __init__(self, preprocess: Component, save_path: str, load_path: str,
                  entropy_fields: list, min_similarity: float = 0.5,
                  min_entropy: float = 0.5, **kwargs) -> None:
         self.preprocess = preprocess
         self.save_path = expand_path(save_path)
 
-        if isinstance(load_path, list):
-            self.load_path = [expand_path(path) for path in load_path]
-        else:
-            self.load_path = [expand_path(load_path)]
+        if not isinstance(load_path, list):
+            load_path = [load_path]
+        self.load_path = [expand_path(path) for path in load_path]
 
         self.min_similarity = min_similarity
         self.min_entropy = min_entropy
@@ -82,21 +82,22 @@ class EcommerceBot(Component):
     def save(self, **kwargs) -> None:
         """Save classifier parameters"""
         log.info(f"Saving model to {self.save_path}")
-        make_all_dirs(self.save_path)
+        self.save_path.parent.mkdir(parents=True, exist_ok=True)
         save_pickle(self.ec_data, self.save_path)
 
     def load(self, **kwargs) -> None:
         """Load classifier parameters"""
         log.info(f"Loading model from {self.load_path}")
         for path in self.load_path:
-            if is_file_exist(path):
+            if path.exists():
                 self.ec_data += load_pickle(path)
             else:
                 log.info(f"File {path} does not exist")
 
         log.info(f"Loaded items {len(self.ec_data)}")
 
-    def __call__(self, queries: List[str], states: List[Dict[Any, Any]], **kwargs) -> Tuple[Tuple[List[Dict[Any, Any]], List[Any], int], List[float], Dict[Any, Any]]:
+    def __call__(self, queries: List[str], history: List[list], states: List[Dict[Any, Any]], **kwargs) -> \
+            Tuple[Tuple[List[Dict[Any, Any]], List[Any], int], List[float], Dict[Any, Any]]:
         """Retrieve catalog items according to the BLEU measure
 
         Parameters:
@@ -128,6 +129,9 @@ class EcommerceBot(Component):
                     state = json.loads(state)
                 except:
                     state = self.preprocess.parse_input(state)
+
+            if not state:
+                state = {}
 
             start = state['start'] if 'start' in state else 0
             stop = state['stop'] if 'stop' in state else 5
@@ -176,8 +180,7 @@ class EcommerceBot(Component):
                     price = value
                     log.debug(f"Items before price filtering {len(results_args_sim)} with price {price}")
                     results_args_sim = [idx for idx in results_args_sim
-                                        if self.preprocess.price(self.ec_data[idx]) >= price[0] and
-                                        self.preprocess.price(self.ec_data[idx]) <= price[1] and
+                                        if price[0] <= self.preprocess.price(self.ec_data[idx]) <= price[1] and
                                         self.preprocess.price(self.ec_data[idx]) != 0]
                     log.debug(f"Items after price filtering {len(results_args_sim)}")
 
