@@ -133,7 +133,7 @@ def read_data_by_config(config: dict):
     reader_config = config.get('dataset_reader', None)
 
     if reader_config:
-        reader_config = config['dataset_reader']
+        reader_config = dict(config['dataset_reader'])
         if 'class' in reader_config:
             c = reader_config.pop('class')
             try:
