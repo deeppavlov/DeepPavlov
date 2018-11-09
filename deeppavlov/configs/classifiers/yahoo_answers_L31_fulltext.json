@@ -98,7 +98,7 @@
         "dense_size": 100,
         "model_name": "gru_with_masking_model",
         "last_layer_activation": "softmax",
-        "restore_lr": false
+        "restore_lr": true
       },
       {
         "in": "y_pred_probas",
