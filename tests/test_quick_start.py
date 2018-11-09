@@ -14,6 +14,7 @@ import requests
 from urllib.parse import urljoin
 
 import deeppavlov
+from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.download import deep_download
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.core.common.paths import get_settings_path
@@ -191,6 +192,17 @@ def download_config(conf_file):
     with src_file.open(encoding='utf8') as fin:
         config: dict = json.load(fin)
 
+    # Download referenced config files
+    config_references = get_all_elems_from_json(parse_config(config), 'config_path')
+    for config_ref in config_references:
+        m_name = config_ref.split('/')[-2]
+        config_ref = '/'.join(config_ref.split('/')[-2:])
+
+        test_configs_path.joinpath(m_name).mkdir(exist_ok=True)
+        if not test_configs_path.joinpath(config_ref).exists():
+            download_config(config_ref)
+
+    # Update config for testing
     if config.get("train"):
         config["train"]["epochs"] = 1
         for pytest_key in [k for k in config["train"] if k.startswith('pytest_')]:
@@ -204,16 +216,6 @@ def download_config(conf_file):
     conf_file.parent.mkdir(exist_ok=True, parents=True)
     with conf_file.open("w", encoding='utf8') as fout:
         json.dump(config, fout)
-
-    # Download referenced config files
-    config_references = get_all_elems_from_json(config, 'config_path')
-    for config_ref in config_references:
-        m_name = config_ref.split('/')[-2]
-        conf_file = '/'.join(config_ref.split('/')[-2:])
-
-        test_configs_path.joinpath(m_name).mkdir(exist_ok=True)
-        if not test_configs_path.joinpath(conf_file).exists():
-            download_config(conf_file)
 
 
 def install_config(conf_file):

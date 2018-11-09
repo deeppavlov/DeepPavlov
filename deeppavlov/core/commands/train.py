@@ -132,7 +132,7 @@ def read_data_by_config(config: dict):
     reader_config = config.get('dataset_reader', None)
 
     if reader_config:
-        reader_config = config['dataset_reader']
+        reader_config = dict(config['dataset_reader'])
         reader = get_model(reader_config.pop('class_name'))()
         data_path = reader_config.pop('data_path', '')
         if isinstance(data_path, list):
