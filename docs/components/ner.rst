@@ -519,7 +519,7 @@ To run Russian NER model use the following code:
 Few-shot Language-Model based
 -----------------------------
 
-It is possible to get a clod-start baseline from just a few samples of marked data in a couple of seconds. The solution
+It is possible to get a clod-start baseline from just a few samples of labeled data in a couple of seconds. The solution
 is based on a Language Model trained on open domain corpus. On top of the LM a SVM classification layer is placed. It is
 possible to start from as few as 10 sentences containing entities of interest.
 
