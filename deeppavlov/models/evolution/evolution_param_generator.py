@@ -119,8 +119,8 @@ class ParamsEvolution(ParamsSearch):
 
         self.path_to_models_save_path = ["metadata", "variables", "MODELS_SAVE_PATH"]
         self.path_to_models_load_path = ["metadata", "variables", "MODELS_LOAD_PATH"]
-        self.insert_value_or_dict_into_config(self.basic_config, self.path_to_models_save_path, self.models_path)
-        self.insert_value_or_dict_into_config(self.basic_config, self.path_to_models_load_path, self.models_path)
+        self.insert_value_or_dict_into_config(self.basic_config, self.path_to_models_save_path, str(self.models_path))
+        self.insert_value_or_dict_into_config(self.basic_config, self.path_to_models_load_path, str(self.models_path))
 
         try:
             self.evolve_metric_optimization = self.get_value_from_config(

@@ -15,7 +15,6 @@ limitations under the License.
 """
 
 import argparse
-from pathlib import Path
 import sys
 import os
 import json
@@ -107,12 +106,12 @@ def main():
     evolve_metric = considered_metrics[0]
 
     # Create table variable for gathering results
-
-    abs_path_to_main_models = expand_path(evolution.get_value_from_config(parse_config(evolution.basic_config),
-                                                                          evolution.models_path))
+    abs_path_to_main_models = expand_path(str(evolution.models_path).format(
+        **evolution.basic_config['metadata']['variables']))
     abs_path_to_main_models.mkdir(parents=True, exist_ok=True)
 
     result_file = abs_path_to_main_models / "result_table.tsv"
+    print(result_file)
 
     result_table_columns = []
     result_table_dict = {}
@@ -239,7 +238,7 @@ def results_to_table(population, evolution, considered_metrics, result_file, res
     for i in range(population_size):
         logpath = expand_path(evolution.get_value_from_config(parse_config(population[i]),
                                                               evolution.path_to_models_save_path)
-                              ).parent / "out.txt"
+                              ) / "out.txt"
         reports_data = logpath.read_text(encoding='utf8').splitlines()[-2:]
         reports = []
         for j in range(2):
@@ -285,7 +284,7 @@ def results_to_table(population, evolution, considered_metrics, result_file, res
             elif test_best:
                 population_metrics[m].append(test_results[m])
 
-        result_table_dict[result_table_columns[-1]] = [population[i]]
+        result_table_dict[result_table_columns[-1]] = [json.dumps(population[i])]
         result_table = pd.DataFrame(result_table_dict)
         result_table.loc[:, result_table_columns].to_csv(result_file, index=False, sep='\t', mode='a', header=None)
 
