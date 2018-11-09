@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "name": "qqp_reader",
-    "data_path": "./qqp_data"
+    "data_path": "{DOWNLOADS_PATH}/qqp_data"
   },
   "dataset_iterator": {
     "name": "siamese_iterator",
@@ -25,8 +25,8 @@
         {
           "id": "siam_sent_vocab",
           "name":"simple_vocab",
-          "save_path": "qqp_vocabs_bilstm/sent.dict",
-          "load_path": "qqp_vocabs_bilstm/sent.dict"
+          "save_path": "{DOWNLOADS_PATH}/qqp_vocabs_bilstm/sent.dict",
+          "load_path": "{DOWNLOADS_PATH}/qqp_vocabs_bilstm/sent.dict"
         },
         "tokenizer":
         {
@@ -36,14 +36,14 @@
         {
           "id": "siam_vocab",
           "name":"simple_vocab",
-          "save_path": "qqp_vocabs_bilstm/tok.dict",
-          "load_path": "qqp_vocabs_bilstm/tok.dict"
+          "save_path": "{DOWNLOADS_PATH}/qqp_vocabs_bilstm/tok.dict",
+          "load_path": "{DOWNLOADS_PATH}/qqp_vocabs_bilstm/tok.dict"
         },
         "embedder":
         {
           "id": "siam_embedder",
           "name": "fasttext",
-          "load_path": "embeddings/wiki.en.bin"
+          "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin"
         }
       },
       {
@@ -87,6 +87,11 @@
     "log_every_n_batches": 525
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
       "{DEEPPAVLOV_PATH}/requirements/tf.txt",
       "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
@@ -98,11 +103,11 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/quora_question_pairs.zip",
-        "subdir": "qqp_data"
+        "subdir": "{DOWNLOADS_PATH}/qqp_data"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
-        "subdir": "embeddings"
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
   }
