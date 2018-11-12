@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import List
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
@@ -26,8 +27,7 @@ class BIOMarkupRestorer(Component):
         pass
 
     @staticmethod
-    def _convert_to_bio(tags):
-
+    def _convert_to_bio(tags: List[str]):
         tags_bio = []
         for n, tag in enumerate(tags):
             if tag != 'O':
@@ -39,6 +39,6 @@ class BIOMarkupRestorer(Component):
 
         return tags_bio
 
-    def __call__(self, tag_batch, *args, **kwargs):
+    def __call__(self, tag_batch: List[List[str]], *args, **kwargs):
         y = [self._convert_to_bio(sent) for sent in tag_batch]
         return y
