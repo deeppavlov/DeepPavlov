@@ -15,7 +15,6 @@
 from itertools import chain
 from typing import List, Union
 import pickle
-from pathlib import Path
 
 from sklearn.svm import SVC
 import numpy as np
