@@ -45,7 +45,7 @@ Let's see example for logistic regression model:
 .. code:: python
 
       {
-        "name": "faq_logreg_model",
+        "class_name": "faq_logreg_model",
         "in": "q_vect",
         "fit_on": ["q_vect", "y"],
         "c": {"search_choice": [1, 10, 100, 1000]},
