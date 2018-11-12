@@ -16,16 +16,14 @@
 from typing import List, Tuple, Union
 
 import numpy as np
+from scipy.sparse import vstack, csr_matrix
 from scipy.sparse.linalg import norm as sparse_norm
-from scipy.sparse import vstack
-from scipy.sparse import csr_matrix
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.common.file import save_pickle
 from deeppavlov.core.common.file import load_pickle
-from deeppavlov.core.commands.utils import expand_path, make_all_dirs
 from deeppavlov.core.models.serializable import Serializable
 
 logger = get_logger(__name__)
@@ -39,15 +37,14 @@ class CosineSimilarityClassifier(Estimator, Serializable):
     Parameters:
         save_path: path to save the model
         load_path: path to load the model
-
-    Returns:
-        None
     """
 
     def __init__(self, top_n: int = 1, save_path: str = None, load_path: str = None, **kwargs) -> None:
-        self.save_path = save_path
-        self.load_path = load_path
+        super().__init__(save_path=save_path, load_path=load_path, **kwargs)
         self.top_n = top_n
+
+        self.x_train_features = self.y_train = None
+
         if kwargs['mode'] != 'train':
             self.load()
 
@@ -77,7 +74,8 @@ class CosineSimilarityClassifier(Estimator, Serializable):
         y_labels = np.unique(self.y_train)
         labels_scores = np.zeros((len(cos_similarities), len(y_labels)))
         for i, label in enumerate(y_labels):
-            labels_scores[:, i] = np.max([cos_similarities[:, i] for i, value in enumerate(self.y_train) if value == label], axis=0)
+            labels_scores[:, i] = np.max([cos_similarities[:, i]
+                                          for i, value in enumerate(self.y_train) if value == label], axis=0)
 
         # normalize for each class
         labels_scores = labels_scores/labels_scores.sum(axis=1, keepdims=True)
@@ -120,11 +118,9 @@ class CosineSimilarityClassifier(Estimator, Serializable):
     def save(self) -> None:
         """Save classifier parameters"""
         logger.info("Saving faq_model to {}".format(self.save_path))
-        path = expand_path(self.save_path)
-        make_all_dirs(path)
-        save_pickle((self.x_train_features, self.y_train), path)
+        save_pickle((self.x_train_features, self.y_train), self.save_path)
 
     def load(self) -> None:
         """Load classifier parameters"""
         logger.info("Loading faq_model from {}".format(self.load_path))
-        self.x_train_features, self.y_train = load_pickle(expand_path(self.load_path))
+        self.x_train_features, self.y_train = load_pickle(self.load_path)

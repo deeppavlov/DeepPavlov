@@ -13,10 +13,12 @@
 # limitations under the License.
 
 import shutil
-from collections import OrderedDict
-from pathlib import Path
-
 import numpy as np
+
+from pathlib import Path
+from typing import Union, Dict
+from collections import OrderedDict
+
 from sklearn.model_selection import KFold
 
 from deeppavlov.core.commands.train import train_evaluate_model_from_config, get_iterator_from_config, \

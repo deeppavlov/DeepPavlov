@@ -18,15 +18,15 @@ import xlsxwriter
 import numpy as np
 import matplotlib.pyplot as plt
 
-from typing import List, Union
-from collections import OrderedDict
-from os.path import join, isdir
 from os import mkdir
 from copy import copy
+from typing import List, Union
+from os.path import join, isdir
+from collections import OrderedDict
 
 from py3nvml import py3nvml
-from deeppavlov.core.common.errors import GpuError
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.common.errors import GpuError
 
 logger = get_logger(__name__)
 
@@ -609,7 +609,7 @@ def plot_res(info, name, savepath='./', save=True, width=0.2, fheight=8, fwidth=
     return None
 
 
-# _________________________________________________Built report_______________________________________________________
+# _________________________________________________Build report_______________________________________________________
 
 
 def results_visualization(root: str, plot: bool, merge: bool = False,
