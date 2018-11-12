@@ -49,7 +49,7 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
                 ``elmo`` - weighted sum of cnn and lstm outputs (default dim 1024)
                 ``default`` - mean ``elmo`` vector for sentence (default dim 1024)
             See `TensorFlow Hub <https://www.tensorflow.org/hub/modules/google/elmo/2>`__ for more information about it.
-        dim: Can be used for output embeddings dimensionaliry reduction if elmo_output_names != ['default']
+        dim: Can be used for output embeddings dimensionality reduction if elmo_output_names != ['default']
         pad_zero: Whether to use pad samples or not.
         concat_last_axis: A boolean that enables/disables last axis concatenation. It is not used for
             ``elmo_output_names = ["default"]``.
