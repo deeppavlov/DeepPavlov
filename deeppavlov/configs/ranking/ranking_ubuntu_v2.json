@@ -1,0 +1,106 @@
+{
+  "dataset_reader": {
+    "name": "ubuntu_v2_reader",
+    "data_path": "./ubuntu_v2_data"
+  },
+  "dataset_iterator": {
+    "name": "siamese_iterator",
+    "seed": 243
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "id": "preproc",
+        "name": "siamese_preprocessor",
+        "use_matrix": true,
+        "num_ranking_samples": 10,
+        "max_sequence_length": 50,
+        "fit_on": ["x"],
+        "in": ["x"],
+        "out": ["x_proc"],
+        "sent_vocab":
+        {
+          "id": "siam_sent_vocab",
+          "name":"simple_vocab",
+          "save_path": "ubuntu_v2_vocabs/sent.dict",
+          "load_path": "ubuntu_v2_vocabs/sent.dict"
+        },
+        "tokenizer":
+        {
+          "name": "nltk_tokenizer"
+        },
+        "vocab":
+        {
+          "id": "siam_vocab",
+          "name":"simple_vocab",
+          "save_path": "ubuntu_v2_vocabs/tok.dict",
+          "load_path": "ubuntu_v2_vocabs/tok.dict"
+        },
+        "embedder":
+        {
+          "id": "siam_embedder",
+          "name": "fasttext",
+          "load_path": "embeddings/wiki.en.bin"
+        }
+      },
+      {
+        "id": "embeddings",
+        "name": "emb_mat_assembler",
+        "embedder": "#siam_embedder",
+        "vocab": "#siam_vocab"
+      },
+      {
+        "in": ["x_proc"],
+        "in_y": ["y"],
+        "out": ["y_predicted"],
+        "name": "bilstm_nn",
+        "len_vocab": "#siam_vocab.len",
+        "use_matrix": "#preproc.use_matrix",
+        "max_sequence_length": "#preproc.max_sequence_length",
+        "embedding_dim": "#siam_embedder.dim",
+        "seed": 243,
+        "hidden_dim": 300,
+        "emb_matrix": "#embeddings.emb_mat",
+        "learning_rate": 1e-3,
+        "triplet_loss": false,
+        "batch_size": 256,
+        "interact_pred_num": 3,
+        "save_path": "ubuntu_v2_model/model_weights.h5",
+        "load_path": "ubuntu_v2_model/model_weights.h5"
+      }
+    ],
+    "out": ["y_predicted"]
+  },
+  "train": {
+    "epochs": 200,
+    "batch_size": 256,
+    "pytest_max_batches": 2,
+    "train_metrics": [],
+    "metrics": ["r@1", "rank_response"],
+    "validation_patience": 10,
+    "val_every_n_epochs": 1,
+    "log_every_n_batches": 1000
+  },
+  "metadata": {
+    "requirements": [
+      "../dp_requirements/tf.txt",
+      "../dp_requirements/gensim.txt"
+    ],
+    "labels": {
+      "telegram_utils": "SiameseModel",
+      "server_utils": "Ranker"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/datasets/ubuntu_v2_data.tar.gz",
+        "subdir": "ubuntu_v2_data"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
+        "subdir": "embeddings"
+      }
+    ]
+  }
+}

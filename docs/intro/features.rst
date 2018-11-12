@@ -42,23 +42,23 @@ Several pre-trained models are available and presented in Table below.
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
 | Dataset           | Model                                                                                                        | Task             | Lang | Metric   | Valid  | Test   |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-| `DSTC 2`_         | :config:`DSTC 2 on DSTC 2 embeddings <classifiers/intents_dstc2.json>`                                       | 28 intents       | En   | Accuracy | 0.8554 | 0.8658 |
+| `DSTC 2`_         | :config:`DSTC 2 on DSTC 2 embeddings <classifiers/intents_dstc2.json>`                                       | 28 intents       | En   | Accuracy | 0.7732 | 0.7868 |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-| `DSTC 2`_         | :config:`DSTC 2 on Wiki embeddings <classifiers/intents_dstc2_big.json>`                                     | 28 intents       | En   | Accuracy | 0.9659 | 0.9659 |
+| `DSTC 2`_         | :config:`DSTC 2 on Wiki embeddings <classifiers/intents_dstc2_big.json>`                                     | 28 intents       | En   | Accuracy | 0.9602 | 0.9593 |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-| `SNIPS-2017`_     | :config:`SNIPS on DSTC 2 embeddings <classifiers/intents_snips.json>`                                        | 7 intents        | En   | F1       | 0.8821 |    --  |
+| `SNIPS-2017`_     | :config:`SNIPS on DSTC 2 embeddings <classifiers/intents_snips.json>`                                        | 7 intents        | En   | F1       | 0.8664 |    --  |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-| `SNIPS-2017`_     | :config:`SNIPS on Wiki embeddings <classifiers/intents_snips_big.json>`                                      | 7 intents        | En   | F1       | 0.9852 |    --  |
+| `SNIPS-2017`_     | :config:`SNIPS on Wiki embeddings <classifiers/intents_snips_big.json>`                                      | 7 intents        | En   | F1       | 0.9808 |    --  |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-| `Insults`_        | :config:`InsultsKaggle on Reddit embeddings <classifiers/insults_kaggle.json>`                               | Insult detection | En   | ROC-AUC  | 0.9287 | 0.8602 |
+| `Insults`_        | :config:`InsultsKaggle on Reddit embeddings <classifiers/insults_kaggle.json>`                               | Insult detection | En   | ROC-AUC  | 0.9271 | 0.8618 |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-| `AG News`_        | :config:`AG News on Wiki embeddings <classifiers/topic_ag_news.json>`                                        | 5 topics         | En   | Accuracy | 0.8735 | 0.8859 |
+| `AG News`_        | :config:`AG News on Wiki embeddings <classifiers/topic_ag_news.json>`                                        | 5 topics         | En   | Accuracy | 0.8876 | 0.9011 |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-|`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings without any preprocessing <classifiers/sentiment_twitter.json>`  | Sentiment        | Ru   | Accuracy | 0.9968 | 0.9971 |
+|`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings without any preprocessing <classifiers/sentiment_twitter.json>`  | Sentiment        | Ru   | Accuracy | 0.9972 | 0.9971 |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-|`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings with preprocessing <classifiers/sentiment_twitter_preproc.json>` | Sentiment        | Ru   | Accuracy | 0.7944 | 0.7879 |
+|`Twitter mokoron`_ | :config:`Twitter on RuWiki+Lenta embeddings with preprocessing <classifiers/sentiment_twitter_preproc.json>` | Sentiment        | Ru   | Accuracy | 0.7811 | 0.7749 |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
-|`RuSentiment`_     | :config:`RuSentiment on RuWiki+Lenta embeddings <classifiers/rusentiment_cnn.json>`                          | Sentiment        | Ru   | F1       | 0.7843 | 0.6556 |
+|`RuSentiment`_     | :config:`RuSentiment on RuWiki+Lenta embeddings <classifiers/rusentiment_cnn.json>`                          | Sentiment        | Ru   | F1       | 0.6393 | 0.6539 |
 +-------------------+--------------------------------------------------------------------------------------------------------------+------------------+------+----------+--------+--------+
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
@@ -111,7 +111,7 @@ Available pre-trained models:
 +------------------------------------------------------------------------------------------------+---------------------+--------------------+
 | Dataset & Model                                                                                | Valid turn accuracy | Test turn accuracy |
 +================================================================================================+=====================+====================+
-| :config:`DSTC2, bot with slot filler & intents <go_bot/gobot_dstc2.json>`                      | 0.5179              | 0.5125             |
+| :config:`DSTC2, bot with slot filler & intents <go_bot/gobot_dstc2.json>`                      | 0.5288              | 0.5248             |
 +------------------------------------------------------------------------------------------------+---------------------+--------------------+
 | :config:`DSTC2, bot with slot filler & embeddings & attention <go_bot/gobot_dstc2_best.json>`  |  0.5538             | 0.5551             |
 +------------------------------------------------------------------------------------------------+---------------------+--------------------+
@@ -158,7 +158,7 @@ Comparison of deeppavlov pretrained model with others:
 
 Pipelines that use candidates search in a static dictionary and an ARPA language model to correct spelling errors.
 
-Compariosn on the `test set <http://www.dialog-21.ru/media/3838/test_sample_testset.txt>`__ for the `SpellRuEval
+Comparison on the `test set <http://www.dialog-21.ru/media/3838/test_sample_testset.txt>`__ for the `SpellRuEval
 competition <http://www.dialog-21.ru/en/evaluation/2016/spelling_correction/>`__
 on Automatic Spelling Correction for Russian:
 
@@ -187,27 +187,53 @@ on Automatic Spelling Correction for Russian:
 Based on `LSTM-based deep learning models for non-factoid answer selection <https://arxiv.org/abs/1511.04108>`__. The
 model performs ranking of responses or contexts from some database by their relevance for the given context.
 
-Available pre-trained model(s):
+Available pre-trained models for ranking:
 
-+-------------------+-------------------------------------------------------------+-----------------------+------------------+
-|    Dataset        | Model config                                                | Validation (Recall@1) | Test1 (Recall@1) |
-+-------------------+-------------------------------------------------------------+-----------------------+------------------+
-| `InsuranceQA V1`_ | :config:`ranking_insurance <ranking/ranking_insurance.json>`|   67.6                |   67.6           |
-+-------------------+-------------------------------------------------------------+-----------------------+------------------+
+.. table::
+   :widths: auto
+
+   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+
+   |    Dataset        | Model config                                                                        | Validation (Recall@1) | Test1 (Recall@1) |
+   +===================+=====================================================================================+=======================+==================+
+   | `InsuranceQA V1`_ | :config:`ranking_insurance_interact <ranking/ranking_insurance_interact.json>`      |   72.0                |   72.2           |
+   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+
+   | `Ubuntu V2`_      |:config:`ranking_ubuntu_v2_interact <ranking/ranking_ubuntu_v2_interact.json>`       |   52.9                |   52.4           |
+   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+
+   | `Ubuntu V2`_      |:config:`ranking_ubuntu_v2_mt_interact <ranking/ranking_ubuntu_v2_mt_interact.json>` |   59.2                |   58.7           |
+   +-------------------+-------------------------------------------------------------------------------------+-----------------------+------------------+
 
 .. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
+.. _`Ubuntu V2`: https://github.com/rkadlec/ubuntu-ranking-dataset-creator
+
+Available pre-trained models for paraphrase identification:
+
+.. table::
+   :widths: auto
+
+   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+
+   |    Dataset             |Model config                                                                                 | Val (accuracy)| Test (accuracy)| Val (F1)| Test (F1)| Val (log_loss)| Test (log_loss)|
+   +========================+=============================================================================================+===============+================+=========+==========+===============+================+
+   |`paraphraser.ru`_       |:config:`paraphrase_ident_paraphraser <ranking/paraphrase_ident_paraphraser_interact.json>`  |   83.8        |   75.4         |   87.9  |  80.9    |   0.468       |   0.616        |
+   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+
+   |`Quora Question Pairs`_ |:config:`paraphrase_ident_qqp <ranking/paraphrase_ident_qqp_bilstm_interact.json>`           |   87.1        |   87.0         |   83.0  |  82.6    |   0.300       |   0.305        |
+   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+
+   |`Quora Question Pairs`_ |:config:`paraphrase_ident_qqp <ranking/paraphrase_ident_qqp_interact.json>`                  |   87.7        |   87.5         |   84.0  |  83.8    |   0.287       |   0.298        |
+   +------------------------+---------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+
+
+.. _`paraphraser.ru`: https://paraphraser.ru/
+.. _`Quora Question Pairs`: https://www.kaggle.com/c/quora-question-pairs/data
 
 Comparison with other models on the `InsuranceQA V1 <https://github.com/shuzi/insuranceQA>`__:
 
-+---------------------------------------------------------------+-------------------------+--------------------+
-| Model                                                         | Validation (Recall@1)   | Test1 (Recall@1)   |
-+===============================================================+=========================+====================+
-| `Architecture II (HLQA(200) CNNQA(4000) 1-MaxPooling Tanh)`_  | 61.8                    | 62.8               |
-+---------------------------------------------------------------+-------------------------+--------------------+
-| `QA-LSTM basic-model(max pooling)`_                           | 64.3                    | 63.1               |
-+---------------------------------------------------------------+-------------------------+--------------------+
-| :config:`ranking_insurance <ranking/ranking_insurance.json>`  | **67.6**                | **67.6**           |
-+---------------------------------------------------------------+-------------------------+--------------------+
++------------------------------------------------------------------------+-------------------------+--------------------+
+| Model                                                                  | Validation (Recall@1)   | Test1 (Recall@1)   |
++========================================================================+=========================+====================+
+| `Architecture II (HLQA(200) CNNQA(4000) 1-MaxPooling Tanh)`_           | 61.8                    | 62.8               |
++------------------------------------------------------------------------+-------------------------+--------------------+
+| `QA-LSTM basic-model(max pooling)`_                                    | 64.3                    | 63.1               |
++------------------------------------------------------------------------+-------------------------+--------------------+
+| :config:`ranking_insurance <ranking/ranking_insurance_interact.json>`  | **72.0**                | **72.2**           |
++------------------------------------------------------------------------+-------------------------+--------------------+
 
 .. _`Architecture II (HLQA(200) CNNQA(4000) 1-MaxPooling Tanh)`: https://arxiv.org/pdf/1508.01585.pdf
 .. _`QA-LSTM basic-model(max pooling)`: https://arxiv.org/pdf/1511.04108.pdf
@@ -222,10 +248,13 @@ question in a given context (`SQuAD <https://rajpurkar.github.io/SQuAD-explorer/
 +---------------+-----------------------------------------------------+----------------+-----------------+
 |    Dataset    | Model config                                        |    EM (dev)    |    F-1 (dev)    |
 +---------------+-----------------------------------------------------+----------------+-----------------+
-| `SQuAD-v1.1`_ | :config:`squad <squad/squad.json>`                  |     71.41      |     80.26       |
+| `SQuAD-v1.1`_ | :config:`squad <squad/squad.json>`                  |     71.49      |     80.34       |
 +---------------+-----------------------------------------------------+----------------+-----------------+
-|  SDSJ Task B  | :config:`squad_ru <squad/squad_ru.json>`            |     60.58      |     80.22       |
+|  SDSJ Task B  | :config:`squad_ru <squad/squad_ru.json>`            |     60.62      |     80.04       |
 +---------------+-----------------------------------------------------+----------------+-----------------+
+
+In the case when answer is not necessary present in given context we have :config:`squad_noans <squad/multi_squad_noans.json>`
+model. This model outputs empty string in case if there is no answer in context.
 
 .. _`SQuAD-v1.1`: https://arxiv.org/abs/1606.05250
 
@@ -235,22 +264,39 @@ Based on character-based approach to morphological tagging `Heigold et al., 2017
 character-based morphological tagging for 14 languages <http://www.aclweb.org/anthology/E17-1048>`__. A state-of-the-art
 model for Russian and several other languages. Model takes as input tokenized sentences and outputs the corresponding
 sequence of morphological labels in `UD format <http://universaldependencies.org/format.html>`__. The table below
-contains word and sentence accuracy on UD2.0 datasets.
+contains word and sentence accuracy on UD2.0 datasets. For more scores see :doc:`full table </components/morphotagger>`.
 
-+-----------------+------------------------------------+---------------+----------------+
-|    Dataset      | Model                              | Word accuracy | Sent. accuracy |
-+-----------------+------------------------------------+---------------+----------------+
-| `UD2.0 Russian`_|`UD Pipe 1.2`_ (Straka et al., 2017)|     93.57     |     43.04      |
-+                 +------------------------------------+---------------+----------------+
-|                 |`Basic model`_                      |     95.17     |     50.58      |
-+                 +------------------------------------+---------------+----------------+
-|                 |`Pymorphy-enhanced model`_          |     96.23     |     58.00      |
-+-----------------+------------------------------------+---------------+----------------+
+.. table::
+    :widths: auto
 
-.. _`UD2.0 Russian`: https://lindat.mff.cuni.cz/repository/xmlui/handle/11234/1-1983
+    +----------------------+--------------------------------------------------------------------------------------------------------------+---------------+----------------+
+    |    Dataset           | Model                                                                                                        | Word accuracy | Sent. accuracy |
+    +----------------------+--------------------------------------------------------------------------------------------------------------+---------------+----------------+
+    |                      |`Pymorphy`_ + `russian_tagsets`_ (first tag)                                                                  |     60.93     |      0.00      |
+    +                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+
+    |`UD2.0`_ (Russian)    |`UD Pipe 1.2`_ (Straka et al., 2017)                                                                          |     93.57     |     43.04      |
+    +                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+
+    |                      |:config:`Basic model <morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus.json>`                             |     95.17     |     50.58      |
+    +                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+
+    |                      |:config:`Pymorphy-enhanced model <morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_pymorphy.json>`        |   **96.23**   |     58.00      |
+    +----------------------+--------------------------------------------------------------------------------------------------------------+---------------+----------------+
+    | `UD2.0`_ (Czech)     |`UD Pipe 1.2`_ (Straka et al., 2017)                                                                          |     91.86     |     42.28      |
+    |                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+
+    |                      |:config:`Basic model <morpho_tagger/UD2.0/morpho_cs.json>`                                                    |   **94.35**   |     51.56      |
+    +----------------------+--------------------------------------------------------------------------------------------------------------+---------------+----------------+
+    |`UD2.0`_ (English)    |`UD Pipe 1.2`_ (Straka et al., 2017)                                                                          |     92.89     |     55.75      |
+    |                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+
+    |                      |:config:`Basic model <morpho_tagger/UD2.0/morpho_en.json>`                                                    |   **93.00**   |     55.18      |
+    +----------------------+--------------------------------------------------------------------------------------------------------------+---------------+----------------+
+    |`UD2.0`_ (German)     |`UD Pipe 1.2`_ (Straka et al., 2017)                                                                          |     76.65     |     10.24      |
+    |                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+
+    |                      |:config:`Basic model <morpho_tagger/UD2.0/morpho_de.json>`                                                    |   **83.83**   |     15.25      |
+    +----------------------+--------------------------------------------------------------------------------------------------------------+---------------+----------------+
+
+.. _`Pymorphy`: https://pymorphy2.readthedocs.io/en/latest/
+.. _`russian_tagsets`: https://github.com/kmike/russian-tagsets
+.. _`UD2.0`: https://lindat.mff.cuni.cz/repository/xmlui/handle/11234/1-1983
 .. _`UD Pipe 1.2`: http://ufal.mff.cuni.cz/udpipe
-.. _`Basic model`: :config:<morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict.json>
-.. _`Pymorphy-enhanced model`: :config:<morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_predict_pymorphy.json>
 
 - :doc:`Frequently Asked Questions (FAQ) component </skills/faq>`
 

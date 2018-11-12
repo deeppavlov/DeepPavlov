@@ -126,11 +126,10 @@ To infer from a pretrained model with config path equal to ``<path_to_config>``:
 
 .. code:: python
 
-    from deeppavlov.core.commands.infer import build_model_from_config
-    from deeppavlov.core.common.file import read_json
+    from deeppavlov import build_model
 
     CONFIG_PATH = '<path_to_config>'
-    model = build_model_from_config(read_json(CONFIG_PATH))
+    model = build_model(CONFIG_PATH)
 
     utterance = ""
     while utterance != 'exit':
@@ -297,7 +296,7 @@ Scores for different modifications of our bot model:
 +-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
 | bot with slot filler & fasttext embeddings    |                                                                      | 0.5317                     |
 +-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
-| bot with slot filler & intents                | :config:`gobot_dstc2.json <go_bot/gobot_dstc2.json>`                 | 0.5125                     |
+| bot with slot filler & intents                | :config:`gobot_dstc2.json <go_bot/gobot_dstc2.json>`                 | 0.5248                     |
 +-----------------------------------------------+----------------------------------------------------------------------+----------------------------+
 | bot with slot filler & intents & embeddings   |                                                                      | 0.5145                     |
 +-----------------------------------------------+----------------------------------------------------------------------+----------------------------+

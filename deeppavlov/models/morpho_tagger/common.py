@@ -1,20 +1,18 @@
-import re
 from pathlib import Path
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Optional
 
-from deeppavlov.core.commands.infer import build_model_from_config
+from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import set_deeppavlov_root, expand_path
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-
 from deeppavlov.dataset_iterators.morphotagger_iterator import MorphoTaggerDatasetIterator
 from deeppavlov.models.morpho_tagger.common_tagger import make_pos_and_tag
 
 
-def predict_with_model(config_path: [Path, str]) -> List[List[str]]:
+def predict_with_model(config_path: [Path, str]) -> List[Optional[List[str]]]:
     """Returns predictions of morphotagging model given in config :config_path:.
 
     Args:
@@ -37,7 +35,7 @@ def predict_with_model(config_path: [Path, str]) -> List[List[str]]:
     iterator_config = config['dataset_iterator']
     iterator: MorphoTaggerDatasetIterator = from_params(iterator_config, data=data)
 
-    model = build_model_from_config(config, load_trained=True)
+    model = build_model(config, load_trained=True)
     answers = [None] * len(iterator.test)
     batch_size = config['predict'].get("batch_size", -1)
     for indexes, (x, _) in iterator.gen_batches(
@@ -56,66 +54,44 @@ def predict_with_model(config_path: [Path, str]) -> List[List[str]]:
     return answers
 
 
-def prettify(sent: Union[str, List[str]], tags: List[str], return_string: bool =True,
-             begin: str = "",  end: str = "", sep: str = "\n") -> Union[List[str], str]:
-    """Prettifies output of morphological tagger.
-
-    Args:
-        sent: source sentence (either tokenized or not)
-        tags: list of tags, the output of a tagger
-        return_string: whether to return a list of strings or a single string
-        begin: a string to append in the beginning
-        end: a string to append in the end
-        sep: separator between word analyses
-
-    Returns:
-        the prettified output of the tagger.
-
-    Examples:
-        >>> sent = "John likes, really likes pizza"
-        >>> tags = ["NNP", "VBZ", "PUNCT", "RB", "VBZ", "NN"]
-        >>> prettify(sent, tags)
-        1  John    NNP
-        2  likes   VBZ
-        3  ,   PUNCT
-        4  really  RB
-        5  likes   VBZ
-        6  pizza   NN
-        7  .    SENT
-    """
-    if isinstance(sent, str):
-        words = [x for x in re.split("(\w+|[,.])", sent) if x.strip() != ""]
-    else:
-        words = sent
-    answer = []
-    for i, (word, tag) in enumerate(zip(words, tags)):
-        answer.append("{}\t{}\t{}\t{}".format(i+1, word, *make_pos_and_tag(tag)))
-    if return_string:
-        answer = begin + sep.join(answer) + end
-    return answer
-
-
 @register('tag_output_prettifier')
 class TagOutputPrettifier(Component):
-    """Wrapper to :func:`~deeppavlov.models.morpho_tagger.common.` function.
+    """Class which prettifies morphological tagger output to 4-column
+    or 10-column (Universal Dependencies) format.
 
     Args:
+        format_mode: output format,
+            in `basic` mode output data contains 4 columns (id, word, pos, features),
+            in `conllu` or `ud` mode it contains 10 columns:
+            id, word, lemma, pos, xpos, feats, head, deprel, deps, misc
+            (see http://universaldependencies.org/format.html for details)
+            Only id, word, tag and pos values are present in current version,
+            other columns are filled by `_` value.
         return_string: whether to return a list of strings or a single string
         begin: a string to append in the beginning
         end: a string to append in the end
         sep: separator between word analyses
     """
 
-    def __init__(self, return_string: bool=True, begin: str="",
-                 end: str ="", sep: str ="\n", **kwargs):
-
+    def __init__(self, format_mode: str = "basic", return_string: bool = True,
+                 begin: str = "", end: str = "", sep: str = "\n", **kwargs) -> None:
+        self.format_mode = format_mode
         self.return_string = return_string
+        self._make_format_string()
         self.begin = begin
         self.end = end
         self.sep = sep
 
-    def __call__(self, X: List[Union[str, List[str]]],
-                 Y: List[Union[List[str], str]]) -> List[Union[List[str], str]]:
+    def _make_format_string(self) -> None:
+        if self.format_mode == "basic":
+            self.format_string =  "{}\t{}\t{}\t{}"
+        elif self.format_mode in ["conllu", "ud"]:
+            self.format_string = "{}\t{}\t_\t{}\t_\t{}\t_\t_\t_\t_"
+        else:
+            raise ValueError("Wrong mode for TagOutputPrettifier: {}, "
+                             "it must be 'basic', 'conllu' or 'ud'.".format(self.mode))
+
+    def __call__(self, X: List[List[str]], Y: List[List[str]]) -> List[Union[List[str], str]]:
         """Calls the ``prettify`` function for each input sentence.
 
         Args:
@@ -125,6 +101,41 @@ class TagOutputPrettifier(Component):
         Returns:
             a list of prettified morphological analyses
         """
-        return [prettify(x, y, return_string=self.return_string,
-                         begin=self.begin, end=self.end, sep=self.sep)
-                for x, y in zip(X, Y)]
+        return [self.prettify(x, y) for x, y in zip(X, Y)]
+
+    def prettify(self, tokens: List[str], tags: List[str]) -> Union[List[str], str]:
+        """Prettifies output of morphological tagger.
+
+        Args:
+            tokens: tokenized source sentence
+            tags: list of tags, the output of a tagger
+
+        Returns:
+            the prettified output of the tagger.
+
+        Examples:
+            >>> sent = "John really likes pizza .".split()
+            >>> tags = ["PROPN,Number=Sing", "ADV",
+            >>>         "VERB,Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin",
+            >>>         "NOUN,Number=Sing", "PUNCT"]
+            >>> prettifier = TagOutputPrettifier(mode='basic')
+            >>> self.prettify(sent, tags)
+                1	John	PROPN	Number=Sing
+                2	really	ADV	_
+                3	likes	VERB	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin
+                4	pizza	NOUN	Number=Sing
+                5	.	PUNCT	_
+            >>> prettifier = TagOutputPrettifier(mode='ud')
+            >>> self.prettify(sent, tags)
+                1	John	_	PROPN	_	Number=Sing	_	_	_	_
+                2	really	_	ADV	_	_	_	_	_	_
+                3	likes	_	VERB	_	Mood=Ind|Number=Sing|Person=3|Tense=Pres|VerbForm=Fin	_	_	_	_
+                4	pizza	_	NOUN	_	Number=Sing	_	_	_	_
+                5	.	_	PUNCT	_	_	_	_	_	_
+        """
+        answer = []
+        for i, (word, tag) in enumerate(zip(tokens, tags)):
+            answer.append(self.format_string.format(i + 1, word, *make_pos_and_tag(tag)))
+        if self.return_string:
+            answer = self.begin + self.sep.join(answer) + self.end
+        return answer

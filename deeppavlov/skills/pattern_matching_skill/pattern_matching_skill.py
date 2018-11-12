@@ -1,29 +1,35 @@
 import random
 import re
+from typing import List, Tuple, Optional
 
-from deeppavlov.core.models.component import Component
+from deeppavlov.core.skill.skill import Skill
 
 
-class PatternMatchingSkill(Component):
+class PatternMatchingSkill(Skill):
+    """Skill, matches utterances to patterns, returns predefined answers.
+
+    Allows to create skills as pre-defined responses for a user's input
+    containing specific keywords or regular expressions. Every skill returns
+    response and confidence.
+
+    Args:
+        responses: List of str responses from which response will be randomly
+            selected.
+        patterns: List of str patterns for utterance matching. Patterns may
+            be all plain texts or all regexps.
+        regex: Turns on regular expressions matching mode.
+        ignore_case: Turns on utterances case ignoring.
+
+    Attributes:
+        responses: List of str responses from which response will be randomly
+            selected.
+        patterns: List of str patterns for utterance matching. Patterns may
+            be all plain texts or all regexps.
+        regex: Turns on regular expressions matching mode.
+        ignore_case: Turns on utterances case ignoring.
     """
-    Create skills as pre-defined responses for a user's input containing specific keywords or regular expressions.
-    Every skill returns response and confidence.
-
-    Examples:
-
-        >>> # Import key components to build HelloBot.
-        >>> from deeppavlov.skills.pattern_matching_skill import PatternMatchingSkill
-        >>> from deeppavlov.core.agent import Agent, HighestConfidenceSelector
-        >>> hello = PatternMatchingSkill(responses=['Hello world!'], patterns=["hi", "hello", "good day"])
-        >>> bye = PatternMatchingSkill(['Goodbye world!', 'See you around'], patterns=["bye", "chao", "see you"])
-        >>> fallback = PatternMatchingSkill(["I don't understand, sorry", 'I can say "Hello world!"'])
-        >>> # Agent executes skills and then takes response from the skill with the highest confidence.
-        >>> agent = Agent([hello, bye, fallback], skills_selector=HighestConfidenceSelector())
-        >>> agent(['Hello', 'Bye', 'Or not'])
-        ['Hello world!', 'Goodbye world!', 'I can say "Hello world!"']
-
-    """
-    def __init__(self, responses, patterns=None, regex=False, ignore_case=True):
+    def __init__(self, responses: List[str], patterns: Optional[List[str]]=None,
+                 regex: bool=False, ignore_case: bool=True) -> None:
         if isinstance(responses, str):
             responses = [responses]
         self.responses = responses
@@ -40,7 +46,25 @@ class PatternMatchingSkill(Component):
                 patterns = [pattern.lower() for pattern in patterns]
         self.patterns = patterns
 
-    def __call__(self, utterances_batch, history_batch, states_batch):
+    def __call__(self, utterances_batch: list, history_batch: list,
+                 states_batch: Optional[list]=None) -> Tuple[list, list]:
+        """Returns skill inference result.
+
+        Returns batches of skill inference results, estimated confidence
+        levels and up to date states corresponding to incoming utterance
+        batch.
+
+        Args:
+            utterances_batch: A batch of utterances of any type.
+            history_batch: A batch of list typed histories for each utterance.
+            states_batch: Optional. A batch of arbitrary typed states for
+                each utterance.
+
+        Returns:
+            response: A batch of arbitrary typed skill inference results.
+            confidence: A batch of float typed confidence levels for each of
+                skill inference result.
+        """
         response = [random.choice(self.responses) for _ in utterances_batch]
         if self.patterns is None:
             confidence = [0.5] * len(utterances_batch)

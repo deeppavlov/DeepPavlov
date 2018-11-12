@@ -4,45 +4,78 @@
     "data_path": "./insurance_data"
   },
   "dataset_iterator": {
-    "name": "ranking_iterator",
-    "seed": 243,
-    "len_vocab": 24981,
-    "sample_candidates_pool": false,
-    "sample_candidates_pool_valid": true,
-    "sample_candidates_pool_test": true,
-    "num_negative_samples": 5,
-    "num_ranking_samples_valid": 5,
-    "num_ranking_samples_test": 5
+    "name": "siamese_iterator",
+    "random_batches": true,
+    "batches_per_epoch": 72,
+    "seed": 243
   },
   "chainer": {
     "in": ["x"],
     "in_y": ["y"],
     "pipe": [
       {
+        "id": "preproc",
+        "name": "siamese_preprocessor",
+        "use_matrix": false,
+        "num_ranking_samples": 500,
+        "max_sequence_length": 200,
+        "fit_on": ["x"],
         "in": ["x"],
+        "out": ["x_proc"],
+        "sent_vocab":
+        {
+          "id": "siam_sent_vocab",
+          "name":"simple_vocab",
+          "save_path": "insurance_vocabs/sent.dict",
+          "load_path": "insurance_vocabs/sent.dict"
+        },
+        "tokenizer":
+        {
+          "name": "split_tokenizer"
+        },
+        "vocab":
+        {
+          "id": "siam_vocab",
+          "name":"simple_vocab",
+          "save_path": "insurance_vocabs/tok.dict",
+          "load_path": "insurance_vocabs/tok.dict"
+        },
+        "embedder":
+        {
+          "id": "siam_embedder",
+          "name": "fasttext",
+          "load_path": "embeddings/wiki.en.bin"
+        }
+      },
+      {
+        "id": "embeddings",
+        "name": "emb_mat_assembler",
+        "embedder": "#siam_embedder",
+        "vocab": "#siam_vocab"
+      },
+      {
+        "in": ["x_proc"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "name": "ranking_model",
-        "device_num": 0,
-        "train_now": true,
-        "vocab_name": "insurance",
-        "vocabs_path": "insurance_data/insuranceQA-master/V1",
-        "embeddings": "random",
-        "embeddings_path": "insurance_embeddings/wiki.en.bin",
-        "embedding_dim": 300,
-        "use_matrix": false,
+        "name": "bilstm_nn",
+        "len_vocab": "#siam_vocab.len",
+        "use_matrix": "#preproc.use_matrix",
+        "max_sequence_length": "#preproc.max_sequence_length",
+        "emb_matrix": "#embeddings.emb_mat",
+        "embedding_dim": "#siam_embedder.dim",
         "seed": 243,
-        "max_sequence_length": 200,
         "reccurent": "bilstm",
         "max_pooling": true,
         "shared_weights": true,
         "hidden_dim": 300,
         "learning_rate": 1e-3,
-        "distance": "cos_similarity",
+        "triplet_loss": true,
+        "hard_triplets": false,
         "margin": 0.1,
-        "save_path": "insurance_ranking/model_weights.h5",
-        "load_path": "insurance_ranking/model_weights.h5",
-        "update_embeddings": true,
+        "batch_size": 256,
+        "save_path": "insurance_model/model_weights.h5",
+        "load_path": "insurance_model/model_weights.h5",
+        "preprocess": "#preproc.__call__",
         "interact_pred_num": 3
       }
     ],
@@ -52,10 +85,11 @@
     "epochs": 200,
     "batch_size": 256,
     "pytest_max_batches": 2,
-    "metrics": ["r@1", "rank_response", "loss"],
+    "train_metrics": [],
+    "metrics": ["r@1_insQA", "rank_response"],
     "validation_patience": 5,
-    "val_every_n_epochs": 10,
-    "log_every_n_batches": 10
+    "val_every_n_epochs": 5,
+    "log_every_n_batches": 24
   },
   "metadata": {
     "requirements": [
@@ -63,18 +97,17 @@
       "../dp_requirements/gensim.txt"
     ],
     "labels": {
-      "telegram_utils": "RankingModel",
+      "telegram_utils": "SiameseModel",
       "server_utils": "Ranker"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/insurance_ranking_ds.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/datasets/insuranceQA-master.zip",
         "subdir": "insurance_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/embeddings/wiki.en.bin",
-        "subdir": "insurance_embeddings"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
+        "subdir": "embeddings"
       }
     ]
   }

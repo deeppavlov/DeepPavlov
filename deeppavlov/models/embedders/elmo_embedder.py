@@ -31,7 +31,7 @@ from deeppavlov.core.models.tf_backend import TfModelMeta
 log = get_logger(__name__)
 
 
-@register('elmo')
+@register('elmo_embedder')
 class ELMoEmbedder(Component, metaclass=TfModelMeta):
     """
     ``ELMo`` (Embeddings from Language Models) representations are pre-trained contextual representations from

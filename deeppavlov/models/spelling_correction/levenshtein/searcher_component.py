@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import string
 from math import log10
 from typing import Iterable, List, Tuple
 
@@ -41,6 +41,8 @@ class LevenshteinSearcherComponent(Component):
          changes
     """
 
+    _punctuation = frozenset(string.punctuation)
+
     def __init__(self, words: Iterable[str], max_distance: int=1, error_probability: float=1e-4, *args, **kwargs):
         words = list({word.strip().lower().replace('ё', 'е') for word in words})
         alphabet = sorted({letter for word in words for letter in word})
@@ -52,10 +54,13 @@ class LevenshteinSearcherComponent(Component):
     def _infer_instance(self, tokens: Iterable[str]) -> List[List[Tuple[float, str]]]:
         candidates = []
         for word in tokens:
-            c = {candidate: self.error_probability * distance
-                 for candidate, distance in self.searcher.search(word, d=self.max_distance)}
-            c[word] = c.get(word, self.vocab_penalty)
-            candidates.append([(score, candidate) for candidate, score in c.items()])
+            if word in self._punctuation:
+                candidates.append([(0, word)])
+            else:
+                c = {candidate: self.error_probability * distance
+                     for candidate, distance in self.searcher.search(word, d=self.max_distance)}
+                c[word] = c.get(word, self.vocab_penalty)
+                candidates.append([(score, candidate) for candidate, score in c.items()])
         return candidates
 
     def __call__(self, batch: Iterable[Iterable[str]], *args, **kwargs) -> List[List[List[Tuple[float, str]]]]:

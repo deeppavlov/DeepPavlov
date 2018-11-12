@@ -8,43 +8,82 @@
   "dataset_iterator": {
     "name": "data_learning_iterator"
   },
-
   "chainer": {
     "in": "q",
     "pipe": [
       {
         "name": "ru_tokenizer",
+        "id": "my_tokenizer",
         "in": "q",
         "lemmas": true,
         "out": "q_token_lemmas"
       },
       {
-        "id": "vectorizer",
-        "name": "tfidf_vectorizer",
+        "ref": "my_tokenizer",
         "in": "q_token_lemmas",
-        "load_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
-        "out": "q_vect"
+        "out": "q_lem"
       },
       {
-        "name": "logreg_classifier",
-        "in": "q_vect",
-        "fit_on": ["q_vect", "y"],
-        "top_n": 1,
-        "c": {"search_choice": [1, 10, 100, 1000]},
-        "penalty": {"search_choice": ["l1", "l2"]},
+        "in": [
+          "q_lem"
+        ],
+        "out": [
+          "q_vect"
+        ],
+        "fit_on": [
+          "q_lem"
+        ],
+        "id": "tfidf_vec",
+        "name": "sklearn_component",
+        "save_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "load_path": "vectorizer/tfidf_vectorizer_ruwiki.pkl",
+        "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
+        "infer_method": "transform"
+      },
+      {
+        "in": [
+          "q_vect"
+        ],
+        "out": [
+          "y_pred"
+        ],
+        "fit_on": [
+          "q_vect",
+          "y"
+        ],
+        "name": "sklearn_component",
+        "main": true,
         "save_path": "faq/tfidf_logreg_classifier.pkl",
         "load_path": "faq/tfidf_logreg_classifier.pkl",
-        "out": ["answer", "score"]
+        "model_class": "sklearn.linear_model:LogisticRegression",
+        "infer_method": "predict",
+        "C": {
+          "search_choice": [
+            1,
+            10,
+            100,
+            1000
+          ]
+        },
+        "penalty": {
+          "search_choice": [
+            "l1",
+            "l2"
+          ]
+        }
       }
     ],
-    "out": "answer"
+    "out": [
+      "y_pred"
+    ]
   },
-
   "train": {
     "validate_best": true,
-    "metrics": ["accuracy"],
+    "metrics": [
+      "accuracy"
+    ],
     "test_best": false
- },
+  },
   "metadata": {
     "download": [
       {
@@ -57,7 +96,6 @@
       }
     ]
   }
-
 }
 
 

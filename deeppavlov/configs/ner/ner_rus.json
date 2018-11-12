@@ -2,6 +2,7 @@
   "dataset_reader": {
     "name": "conll2003_reader",
     "data_path": "total_rus/",
+    "dataset_name": "collection_rus",
     "provide_pos": false
   },
   "dataset_iterator": {
@@ -56,7 +57,7 @@
       {
         "in": ["x_char"],
         "id": "char_vocab",
-        "name": "char_vocab",
+        "name": "simple_vocab",
         "pad_with_zeros": true,
         "fit_on": ["x_char"],
         "save_path": "ner_rus/char.dict",
@@ -133,7 +134,12 @@
     "epochs": 100,
     "batch_size": 64,
 
-    "metrics": ["ner_f1"],
+    "metrics": [
+      {
+        "name": "ner_f1",
+        "inputs": ["y", "tags"]
+      }
+    ],
     "validation_patience": 7,
     "val_every_n_epochs": 1,
 

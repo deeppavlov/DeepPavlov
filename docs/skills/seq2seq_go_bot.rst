@@ -112,9 +112,9 @@ Dialog with ``dialog_id="0b144470-faa8-4e71-98c7-a9b645fffab0"`` had entry:
 Configs
 -------
 
-Config :config:`configs/seq2seq_go_bot/bot_kvret_infer.json <seq2seq_go_bot/bot_kvret_infer.json>` is recommended to be used for inference (interaction) of a pretrained model.
+Config :config:`configs/seq2seq_go_bot/bot_kvret.json <seq2seq_go_bot/bot_kvret.json>` is recommended to be used for inference (interaction) of a pretrained model.
 
-Config :config:`configs/seq2seq_go_bot/bot_kvret.json <seq2seq_go_bot/bot_kvret.json>` is recommended to be used for training a new model.
+Config :config:`configs/seq2seq_go_bot/bot_kvret_train.json <seq2seq_go_bot/bot_kvret_train.json>` is recommended to be used for training a new model.
 
 Usage
 -----
@@ -135,7 +135,7 @@ You can also train your own model by running:
 
 The ``-d`` parameter downloads:
     - data required to train your model (embeddings, etc.);
-    - a pretrained model when you use :config:`configs/seq2seq_go_bot/bot_kvret_infer.json <seq2seq_go_bot/bot_kvret_infer.json>` or :config:`configs/seq2seq_go_bot/bot_kvret.json <seq2seq_go_bot/bot_kvret.json>`.
+    - a pretrained model when you use :config:`configs/seq2seq_go_bot/bot_kvret.json <seq2seq_go_bot/bot_kvret.json>` or :config:`configs/seq2seq_go_bot/bot_kvret_train.json <seq2seq_go_bot/bot_kvret_train.json>`.
 
 After downloading required files you can use the configs in your python code.
 
@@ -143,11 +143,10 @@ To infer from a pretrained model with config path equal to ``<path_to_config>``:
 
 .. code:: python
 
-    from deeppavlov.core.commands.infer import build_model_from_config
-    from deeppavlov.core.common.file import read_json
+    from deeppavlov import build_model
 
     CONFIG_PATH = '<path_to_config>'
-    model = build_model_from_config(read_json(CONFIG_PATH))
+    model = build_model(CONFIG_PATH)
 
     utterance = ""
     while utterance != 'exit':
