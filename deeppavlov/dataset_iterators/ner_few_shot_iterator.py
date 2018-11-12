@@ -12,13 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from random import Random
 from typing import List, Dict, Tuple, Any, Iterator
 import numpy as np
 import re
-from copy import deepcopy
-from collections import Counter
-from itertools import chain
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
@@ -52,7 +48,6 @@ class NERFewShotIterator(DataLearningIterator):
         self.filter_bi = filter_bi
         self.n_train_samples = n_train_samples
         self.remove_not_targets = remove_not_targets
-
         if self.target_tag is None:
             raise RuntimeError('You must provide a target tag to NERFewShotIterator!')
 
@@ -126,20 +121,15 @@ class NERFewShotIterator(DataLearningIterator):
         return x, y
 
     def gen_batches(self, batch_size: int,
-                    data_type: str = 'train',
-                    shuffle: bool = None) -> Iterator[Tuple[List[List[str]], List[List[str]]]]:
-        if data_type == 'train':
-            x, y = self.get_instances('train')
-        else:
-            x, y = list(zip(*self.data[data_type]))
-
+                    data_type: str = 'train') -> Iterator[Tuple[List[List[str]], List[List[str]]]]:
+        x, y = self.get_instances(data_type)
         data_len = len(x)
 
         if data_len == 0:
             return
 
         order = list(range(data_len))
-        if shuffle:
+        if self.shuffle:
             self.random.shuffle(order)
 
         if batch_size < 0:
