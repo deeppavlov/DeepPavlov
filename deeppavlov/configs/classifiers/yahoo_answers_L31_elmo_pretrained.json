@@ -1,12 +1,11 @@
 {
   "dataset_reader": {
     "name": "basic_classification_reader",
-    "x": "FullText",
+    "x": "Title",
     "y": "Label",
     "data_path": "./YahooAnswers/yahoo_answers_data/",
-    "train": "train.csv",
-    "valid": "valid.csv",
-    "test": "test.csv"
+    "train": "train_sber.csv",
+    "valid": "valid_sber.csv"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator",
@@ -26,8 +25,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "YahooAnswers/models/model_v10/yahoo_answers_classes.dict",
-        "load_path": "YahooAnswers/models/model_v10/yahoo_answers_classes.dict",
+        "save_path": "YahooAnswers/models/model_v12/yahoo_answers_classes.dict",
+        "load_path": "YahooAnswers/models/model_v12/yahoo_answers_classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -60,7 +59,7 @@
           "elmo"
         ],
         "mini_batch_size": 8,
-        "spec": "/home/kuznetsov/models_env/yahoo-sber-questions_elmo_tmp/models/mod_from_git/hubs/yahooo-sber-questions_epoches_n_9"
+        "spec": "/home/kuznetsov/models_env/yahoo-sber-questions_elmo_tmp/models/mod_from_git/hubs/yahooo-sber-questions_epoches_n_10"
       },
       {
         "in": "y_ids",
@@ -81,8 +80,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "YahooAnswers/models/model_v10/model",
-        "load_path": "YahooAnswers/models/model_v10/model",
+        "save_path": "YahooAnswers/models/model_v12/model",
+        "load_path": "YahooAnswers/models/model_v12/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "units_gru": 256,
@@ -123,7 +122,7 @@
   },
   "train": {
     "epochs": 20,
-    "batch_size": 1024,
+    "batch_size": 256,
     "metrics": [
       {
         "name": "roc_auc",
@@ -153,7 +152,7 @@
     "show_examples": false,
     "validate_best": true,
     "test_best": true,
-    "tensorboard_log_dir": "YahooAnswers/models/model_v10/"
+    "tensorboard_log_dir": "YahooAnswers/models/model_v12/"
   },
   "metadata": {
     "requirements": [
