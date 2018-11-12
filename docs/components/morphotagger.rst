@@ -229,12 +229,12 @@ The dataset reader describes the instance of
 ::
 
     "dataset_reader": {
-        "name": "morphotagger_dataset_reader",
+        "class_name": "morphotagger_dataset_reader",
         "data_path": "UD2.0_source",
         "language": "en", "data_types": ["train", "dev", "test"]
       }
 
-``name`` field refers to the class MorphotaggerDatasetReader,
+``class_name`` field refers to the class MorphotaggerDatasetReader,
 ``data_path`` contains the path to data directory, the ``language``
 field is used to derive the name of training and development file.
 Alternatively, you can specify these files separately by full (or absolute) paths
@@ -243,7 +243,7 @@ like
 ::
 
     "dataset_reader": {
-        "name": "morphotagger_dataset_reader",
+        "class_name": "morphotagger_dataset_reader",
         "data_path": ["UD2.0_source/en-ud-train.conllu",
                       "UD2.0_source/en-ud-dev.conllu",
                       "UD2.0_source/en-ud-test.conllu"]
@@ -273,7 +273,7 @@ performs simple batching and shuffling.
 ::
 
     "dataset_iterator": {
-        "name": "morphotagger_dataset"
+        "class_name": "morphotagger_dataset"
     }
 
 By default it has no parameters, but if your training and validation
@@ -283,7 +283,7 @@ are in the same file, you may specify validation split here:
 ::
 
     "dataset_iterator": {
-        "name": "morphotagger_dataset",
+        "class_name": "morphotagger_dataset",
         "validation_split": 0.2
     }
 
@@ -305,7 +305,7 @@ and normalizes it (see :class:`~deeppavlov.models.preprocessors.capitalization.C
     "pipe": [
           {
             "id": "lowercase_preprocessor",
-            "name": "lowercase_preprocessor",
+            "class_name": "lowercase_preprocessor",
             "in": ["x"],
             "out": ["x_processed"]
           },
@@ -317,7 +317,7 @@ model should predict to tag indexes.
 
     {
         "id": "tag_vocab",
-        "name": "default_vocab",
+        "class_name": "default_vocab",
         "fit_on": ["y"],
         "level": "token",
         "special_tokens": ["PAD", "BEGIN", "END"],
@@ -332,7 +332,7 @@ model should predict to tag indexes.
 
      {
         "id": "char_vocab",
-        "name": "default_vocab",
+        "class_name": "default_vocab",
         "min_freq": 3,
         "fit_on": ["x_processed"],
         "special_tokens": ["PAD", "BEGIN", "END"],
@@ -353,7 +353,7 @@ a word and a space-separated list of its possible tags. Tags can be in any possi
 
     {
         "id": "dictionary_vectorizer",
-        "name": "dictionary_vectorizer",
+        "class_name": "dictionary_vectorizer",
         "load_path": PATH_TO_YOUR_DICTIONARY_FILE,
         "save_path": PATH_TO_YOUR_DICTIONARY_FILE,
         "in": ["x"],
@@ -372,7 +372,7 @@ are listed in a separate distributed with the library. This part of the config l
 
       {
         "id": "pymorphy_vectorizer",
-        "name": "pymorphy_vectorizer",
+        "class_name": "pymorphy_vectorizer",
         "save_path": "morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
         "load_path": "morpho_tagger/UD2.0/ru_syntagrus/tags_russian.txt",
         "max_pymorphy_variants": 5,
@@ -389,7 +389,7 @@ the input parameters of :class:`~deeppavlov.models.morpho_tagger.network.Charact
         "in": ["x_processed"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "name": "morpho_tagger",
+        "class_name": "morpho_tagger",
         "main": true,
         "save_path": "morpho_tagger/UD2.0/ud_en.hdf5",
         "load_path": "morpho_tagger/UD2.0/ud_en.hdf5",
@@ -447,7 +447,7 @@ which transforms the predictions of the tagger to a readable form.
     {
     "in": ["x", "y\_predicted"],
     "out": ["y\_prettified"],
-    "name": "tag\_output\_prettifier",
+    "class_name": "tag\_output\_prettifier",
     "end": "\\n"
     }
 

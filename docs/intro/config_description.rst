@@ -36,8 +36,8 @@ components:
     },
 
 Each :class:`~deeppavlov.core.models.component.Component` in the pipeline must implement method :meth:`__call__` and has
-``class_name`` parameter, which is its registered codename, or parameter in the form of
-``module_name:ClassName``. It can also have any other parameters which repeat its :meth:`__init__` method arguments.
+``class_name`` parameter, which is its registered codename, or full name of any python class in the form of
+``"module_name:ClassName"``. It can also have any other parameters which repeat its :meth:`__init__` method arguments.
 Default values of :meth:`__init__` arguments will be overridden with the config values during the initialization of a
 class instance.
 
