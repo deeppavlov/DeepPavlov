@@ -30,12 +30,12 @@ log = get_logger(__name__)
 @register('tfidf_weighted')
 class TfidfWeightedEmbedder(Component):
     """
-    The class implements the functional of embedding the sentence \
-        as a weighted by special coefficients average of tokens embeddings. \
+    The class implements the functionality of embedding the sentence \
+        as a weighted average by special coefficients of tokens embeddings. \
         Coefficients can be taken from the given TFIDF-vectorizer in ``vectorizer`` or \
         calculated as TFIDF from counter vocabulary given in ``counter_vocab_path``.
-        Also one can give in ``tags_vocab_path`` path to the vocabulary with weights of tags, \
-        in this case batch with tags should be given as a second input in ``__call__`` method.
+        Also one can give ``tags_vocab_path`` to the vocabulary with weights of tags. \
+        In this case, batch with tags should be given as a second input in ``__call__`` method.
 
     Args:
         embedder: embedder instance
