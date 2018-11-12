@@ -41,7 +41,7 @@ def change_savepath_for_model(config):
 
         dirs_for_saved_models.add(expand_path(new_save_path.parent))
 
-        config = params_helper.insert_value_or_dict_into_config(config, p, str(new_save_path))
+        params_helper.insert_value_or_dict_into_config(config, p, str(new_save_path))
 
     return config, dirs_for_saved_models
 
