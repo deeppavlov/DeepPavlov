@@ -85,8 +85,8 @@ class ParamsEvolution(ParamsSearch):
                  seed: int = None,
                  train_partition: int = 1,
                  elitism_with_weights: bool = False,
-                 prefix="evolve",
-                 models_path_variable="MODELS_PATH",
+                 prefix: str = "evolve",
+                 models_path_variable: str = "MODELS_PATH",
                  **kwargs):
         """
         Initialize evolution with random population
