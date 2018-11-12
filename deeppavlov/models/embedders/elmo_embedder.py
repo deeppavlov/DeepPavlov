@@ -43,11 +43,14 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
             ``tenserflow_hub.load_module_spec`` by using `TensorFlow Hub <https://www.tensorflow.org/hub/overview>`__.
         elmo_output_names: A list of output ELMo. You can use combination of
             ``["word_emb", "lstm_outputs1", "lstm_outputs2","elmo"]`` and you can use separately ``["default"]``.
-            where:
-                ``word_emb`` - CNN embedding (default dim 512)
-                ``lstm_outputs*`` - ouputs of lstm (default dim 1024)
-                ``elmo`` - weighted sum of cnn and lstm outputs (default dim 1024)
-                ``default`` - mean ``elmo`` vector for sentence (default dim 1024)
+
+            Where,
+
+            * ``word_emb`` - CNN embedding (default dim 512)
+            * ``lstm_outputs*`` - ouputs of lstm (default dim 1024)
+            * ``elmo`` - weighted sum of cnn and lstm outputs (default dim 1024)
+            * ``default`` - mean ``elmo`` vector for sentence (default dim 1024)
+
             See `TensorFlow Hub <https://www.tensorflow.org/hub/modules/google/elmo/2>`__ for more information about it.
         dim: Can be used for output embeddings dimensionaliry reduction if elmo_output_names != ['default']
         pad_zero: Whether to use pad samples or not.
@@ -80,7 +83,6 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
                  -0.12425567,  1.0148407 ],
                 [ 0.53596294,  0.2868537 ,  0.28028542, ..., -0.08028372,
                   0.49089077,  0.75939953]],
-
                [[ 0.3433637 ,  1.0031182 , -0.1597258 , ...,  1.2442509 ,
                   0.61029315,  0.43388373],
                 [ 0.05370751,  0.02260921,  0.01074906, ...,  0.08748816,
@@ -104,7 +106,6 @@ class ELMoEmbedder(Component, metaclass=TfModelMeta):
                   0.62669843, -0.05939034],
                 [ 0.3242596 ,  0.17909613,  0.01657108, ...,  0.1866098 ,
                   0.7392496 ,  0.08285746]],
-
                [[ 1.1322289 ,  0.19077688, -0.17811403, ...,  0.42973226,
                   0.23391506, -0.01294377],
                 [ 0.05370751,  0.02260921,  0.01074906, ...,  0.08748816,
