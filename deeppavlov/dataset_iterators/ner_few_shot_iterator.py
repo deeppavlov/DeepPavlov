@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Dict, Tuple, Any, Iterator
+from typing import List, Dict, Tuple, Any, Iterator, Optional
 import numpy as np
 import re
 
@@ -122,7 +122,7 @@ class NERFewShotIterator(DataLearningIterator):
 
     def gen_batches(self, batch_size: int,
                     data_type: str = 'train',
-                    shuffle=True) -> Iterator[Tuple[List[List[str]], List[List[str]]]]:
+                    shuffle: Optional[bool] = None) -> Iterator[Tuple[List[List[str]], List[List[str]]]]:
         x, y = self.get_instances(data_type)
         data_len = len(x)
 
@@ -130,7 +130,9 @@ class NERFewShotIterator(DataLearningIterator):
             return
 
         order = list(range(data_len))
-        if shuffle and self.shuffle:
+        if shuffle is None and self.shuffle:
+            self.random.shuffle(order)
+        elif shuffle:
             self.random.shuffle(order)
 
         if batch_size < 0:
