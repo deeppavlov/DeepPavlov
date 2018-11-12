@@ -59,7 +59,7 @@
           "elmo"
         ],
         "mini_batch_size": 8,
-        "spec": "/home/kuznetsov/models_env/yahoo-sber-questions_elmo_tmp/models/mod_from_git/hubs/yahooo-sber-questions_epoches_n_10"
+        "spec": "/home/kuznetsov/models_env/yahoo-sber-questions_elmo_tmp/models/mod_from_git/hubs/yahooo-sber-questions_epoches_n_9"
       },
       {
         "in": "y_ids",
