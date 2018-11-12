@@ -17,7 +17,7 @@
         ]
       },
       {
-        "name": "wiki_sqlite_vocab",
+        "class_name": "wiki_sqlite_vocab",
         "in": [
           "doc_ids"
         ],
@@ -29,7 +29,7 @@
         "load_path": "{DOWNLOADS_PATH}/odqa/ruwiki_test.db"
       },
       {
-        "name": "document_chunker",
+        "class_name": "document_chunker",
         "in": [
           "context_raw"
         ],
@@ -39,7 +39,7 @@
         "flatten_result": true
       },
       {
-        "name": "string_multiplier",
+        "class_name": "string_multiplier",
         "in": [
           "question_raw",
           "chunks"
@@ -49,7 +49,7 @@
         ]
       },
       {
-        "name": "logit_ranker",
+        "class_name": "logit_ranker",
         "squad_model": {
           "config_path": "{CONFIGS_PATH}/squad/squad_ru.json"
         },
