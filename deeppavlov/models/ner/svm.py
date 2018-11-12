@@ -13,11 +13,12 @@
 # limitations under the License.
 
 from itertools import chain
-from typing import List
+from typing import List, Union
 import pickle
 from pathlib import Path
 
 from sklearn.svm import SVC
+import numpy as np
 
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.common.registry import register
@@ -54,7 +55,8 @@ class SVMTagger(Estimator):
                               random_state=self._seed, shrinking=True, tol=0.001, verbose=False)
         self.classifier.fit(tokens, tags)
 
-    def __call__(self, token_vectors_batch: List[List[str]], *args, **kwargs):
+    def __call__(self, token_vectors_batch: List[List[str]], *args, **kwargs) -> \
+            Union[List[List[int]], List[List[np.ndarray]]]:
         lens = [len(utt) for utt in token_vectors_batch]
         token_vectors_list = list(chain(*token_vectors_batch))
         predictions = self.classifier.predict(token_vectors_list)
