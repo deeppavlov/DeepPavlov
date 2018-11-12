@@ -149,7 +149,7 @@
     "do_test": false,
     "cross_val": false,
     "k_fold": 5,
-    "sample_num": 10,
+    "sample_num": 1,
     "plot": false,
     "save_best": true,
     "multiprocessing": true,

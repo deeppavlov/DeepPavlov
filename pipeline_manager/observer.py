@@ -17,8 +17,7 @@ import os
 
 from collections import OrderedDict
 from os.path import join, isdir, isfile
-
-from deeppavlov.pipeline_manager.utils import merge_logs
+from pipeline_manager.utils import merge_logs
 
 
 class Observer(object):

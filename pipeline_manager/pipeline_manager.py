@@ -27,17 +27,18 @@ from copy import copy, deepcopy
 from multiprocessing import Pool
 from typing import Union, Dict, List
 
+from pipeline_manager.pipegen import PipeGen
+from pipeline_manager.observer import Observer
+from pipeline_manager.utils import normal_time
+from pipeline_manager.utils import get_num_gpu
+from pipeline_manager.utils import results_visualization, get_available_gpus
+
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.pipeline_manager.pipegen import PipeGen
-from deeppavlov.pipeline_manager.observer import Observer
-from deeppavlov.pipeline_manager.utils import normal_time
-from deeppavlov.pipeline_manager.utils import get_num_gpu
 from deeppavlov.core.common.prints import RedirectedPrints
 from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
-from deeppavlov.pipeline_manager.utils import results_visualization, get_available_gpus
 from deeppavlov.core.commands.train import read_data_by_config, get_iterator_from_config
 
 
@@ -81,6 +82,8 @@ class PipelineManager:
         Initialize observer, read input args, builds a directory tree, initialize date.
         """
         if isinstance(config_path, str):
+            self.exp_config = read_json(config_path)
+        elif isinstance(config_path, Path):
             self.exp_config = read_json(config_path)
         else:
             self.exp_config = config_path

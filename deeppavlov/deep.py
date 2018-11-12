@@ -15,11 +15,9 @@ limitations under the License.
 """
 
 import argparse
-from pathlib import Path
-import os
 
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
-from deeppavlov.pipeline_manager.pipeline_manager import PipelineManager
+from pipeline_manager.pipeline_manager import PipelineManager
 from deeppavlov.core.commands.infer import interact_model, predict_on_stream
 from deeppavlov.core.common.file import find_config
 from deeppavlov.core.common.log import get_logger
