@@ -25,8 +25,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "YahooAnswers/models/model_v14/yahoo_answers_classes.dict",
-        "load_path": "YahooAnswers/models/model_v14/yahoo_answers_classes.dict",
+        "save_path": "YahooAnswers/models/model_v15/yahoo_answers_classes.dict",
+        "load_path": "YahooAnswers/models/model_v15/yahoo_answers_classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -80,8 +80,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "YahooAnswers/models/model_v14/model",
-        "load_path": "YahooAnswers/models/model_v14/model",
+        "save_path": "YahooAnswers/models/model_v15/model",
+        "load_path": "YahooAnswers/models/model_v15/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -95,10 +95,9 @@
         "lear_rate_decay": 0.001,
         "loss": "categorical_crossentropy",
         "text_size": 20,
-        "coef_reg_cnn": 1e-5,
-        "coef_reg_den": 1e-5,
+        "coef_reg_cnn": 1e-4,
+        "coef_reg_den": 1e-4,
         "dropout_rate": 0.5,
-        "rec_dropout_rate": 0.5,
         "dense_size": 100,
         "model_name": "cnn_model",
         "last_layer_activation": "softmax",
@@ -157,7 +156,7 @@
     "show_examples": false,
     "validate_best": true,
     "test_best": true,
-    "tensorboard_log_dir": "YahooAnswers/models/model_v14/"
+    "tensorboard_log_dir": "YahooAnswers/models/model_v15/"
   },
   "metadata": {
     "requirements": [
