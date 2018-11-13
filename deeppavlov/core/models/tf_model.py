@@ -231,6 +231,8 @@ class EnhancedTFModel(TFModel, Estimator):
                  learning_rate_decay: Union[str, DecayType, List[Any]] = DecayType.NO,
                  learning_rate_decay_epochs: int = 0,
                  learning_rate_decay_batches: int = 0,
+                 learning_rate_drop_div: float = 2.0,
+                 learning_rate_drop_patience: int = None,
                  momentum: Union[float, Tuple[float, float]] = None,
                  momentum_decay: Union[str, DecayType, List[Any]] = DecayType.NO,
                  momentum_decay_epochs: int = 0,
@@ -290,6 +292,11 @@ class EnhancedTFModel(TFModel, Estimator):
         if not issubclass(self._optimizer, tf.train.Optimizer):
             raise ConfigError("`optimizer` should be tensorflow.train.Optimizer subclass")
 
+        self._learning_rate_drop_patience = learning_rate_drop_patience
+        self._learning_rate_drop_div = learning_rate_drop_div
+        self._learning_rate_cur_impatience = 0.
+        self._learning_rate_last_impatience = 0.
+        self._learning_rate_cur_div = 1.
         self._fit_batch_size = fit_batch_size
         self._fit_beta = fit_beta
         self._fit_lr_div = fit_learning_rate_div
@@ -357,7 +364,7 @@ class EnhancedTFModel(TFModel, Estimator):
         self.load()
 
     @staticmethod
-    def _get_best(values, losses, max_loss_div=0.8, min_val_div=10.0):
+    def _get_best(values, losses, max_loss_div=0.9, min_val_div=10.0):
         assert len(values) == len(losses), "lengths of values and losses should be equal"
         min_ind = np.argmin(losses)
         for i in range(min_ind - 1, 0, -1):
@@ -381,15 +388,28 @@ class EnhancedTFModel(TFModel, Estimator):
         return super().get_train_op(*args, **kwargs)
 
     def process_event(self, event_name, data):
+        if event_name == "after_validation":
+            if data['impatience'] > self._learning_rate_last_impatience:
+                self._learning_rate_cur_impatience += 1
+            else:
+                self._learning_rate_cur_impatience = 0
+
+            self._learning_rate_last_impatience = data['impatience']
+
+            if self._learning_rate_cur_impatience >= self._learning_rate_drop_patience:
+                self._learning_rate_cur_impatience = 0
+                self._learning_rate_cur_div *= self._learning_rate_drop_div
+                log.info(f"Now dropping learning rate"
+                         f" {self._learning_rate_cur_div} times")
         if event_name == 'after_batch':
             if self._lr_update_on_batch:
-                self._lr = self._lr_schedule.next_val()
+                self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
                 # print(f"new learning rate = {self._lr}")
             if self._mom_update_on_batch and (self.get_momentum() is not None):
                 self._mom = min(1., max(0., self._mom_schedule.next_val()))
         if event_name == 'after_epoch':
             if not self._lr_update_on_batch:
-                self._lr = self._lr_schedule.next_val()
+                self._lr = self._lr_schedule.next_val() / self._learning_rate_cur_div
             if not self._mom_update_on_batch and (self.get_momentum() is not None):
                 self._mom = min(1., max(0., self._mom_schedule.next_val()))
 
