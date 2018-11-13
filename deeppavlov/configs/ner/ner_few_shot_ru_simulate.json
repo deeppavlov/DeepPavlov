@@ -61,7 +61,7 @@
 
     ],
 
-    "out": ["x_tokens", "tags_bio"]
+    "out": ["x_tokens", "tags_bio_hat"]
   },
   "train": {
     "epochs": 100,
