@@ -13,8 +13,9 @@
 # limitations under the License.
 
 from typing import List, Dict, Tuple, Any, Iterator, Optional
-import numpy as np
 import re
+
+import numpy as np
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
