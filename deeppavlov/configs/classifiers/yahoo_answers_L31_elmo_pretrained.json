@@ -25,8 +25,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "YahooAnswers/models/model_v12/yahoo_answers_classes.dict",
-        "load_path": "YahooAnswers/models/model_v12/yahoo_answers_classes.dict",
+        "save_path": "YahooAnswers/models/model_v13/yahoo_answers_classes.dict",
+        "load_path": "YahooAnswers/models/model_v13/yahoo_answers_classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -80,22 +80,27 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "YahooAnswers/models/model_v12/model",
-        "load_path": "YahooAnswers/models/model_v12/model",
+        "save_path": "YahooAnswers/models/model_v13/model",
+        "load_path": "YahooAnswers/models/model_v13/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
-        "units_gru": 256,
+        "kernel_sizes_cnn": [
+          3,
+          5,
+          7
+        ],
+        "filters_cnn": 256,
         "optimizer": "Adam",
-        "lear_rate": 0.001,
+        "lear_rate": 0.01,
         "lear_rate_decay": 0.001,
         "loss": "categorical_crossentropy",
-        "text_size": 100,
-        "coef_reg_lstm": 1e-5,
+        "text_size": 20,
+        "coef_reg_cnn": 1e-5,
         "coef_reg_den": 1e-5,
         "dropout_rate": 0.5,
         "rec_dropout_rate": 0.5,
         "dense_size": 100,
-        "model_name": "gru_with_masking_model",
+        "model_name": "cnn_model",
         "last_layer_activation": "softmax",
         "restore_lr": false
       },
@@ -121,7 +126,7 @@
     ]
   },
   "train": {
-    "epochs": 20,
+    "epochs": 100,
     "batch_size": 256,
     "metrics": [
       {
@@ -152,7 +157,7 @@
     "show_examples": false,
     "validate_best": true,
     "test_best": true,
-    "tensorboard_log_dir": "YahooAnswers/models/model_v12/"
+    "tensorboard_log_dir": "YahooAnswers/models/model_v13/"
   },
   "metadata": {
     "requirements": [
