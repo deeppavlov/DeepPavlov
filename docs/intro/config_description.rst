@@ -75,15 +75,21 @@ from ``metadata.variables`` element:
           {
             "class_name": "my_component",
             "in": ["x"],
-            "out": ["y_predicted"],
+            "out": ["x"],
             "load_path": "{MY_PATH}/file.obj"
+          },
+          {
+            "in": ["x"],
+            "out": ["y_predicted"],
+            "config_path": "{CONFIGS_PATH}/classifiers/intents_snips.json"
           }
         ],
         "out": ["y_predicted"]
       },
       "metadata": {
         "variables": {
-          "MY_PATH": "/some/path"
+          "MY_PATH": "/some/path",
+          "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
         }
       }
     }
