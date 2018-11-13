@@ -59,6 +59,38 @@ parameters:
     },
 
 
+Variables
+---------
+
+As of *version 0.1.0* every string value in a configuration file is interpreted
+as a `format string <https://docs.python.org/3.6/library/string.html#formatstrings>`__ where fields are evaluated
+from ``metadata.variables`` element:
+
+.. code:: python
+
+    {
+      "chainer": {
+        "in": ["x"],
+        "pipe": [
+          {
+            "class_name": "my_component",
+            "in": ["x"],
+            "out": ["y_predicted"],
+            "load_path": "{MY_PATH}/file.obj"
+          }
+        ],
+        "out": ["y_predicted"]
+      },
+      "metadata": {
+        "variables": {
+          "MY_PATH": "/some/path"
+        }
+      }
+    }
+
+Variable ``DEEPPAVLOV_PATH`` is always preset to be a path to the ``deeppavlov`` python module.
+
+
 Training
 --------
 
