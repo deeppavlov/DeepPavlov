@@ -144,12 +144,12 @@
     "test_best": true
   },
   "enumerate": {
-    "exp_name": "lin_clf",
+    "exp_name": "test_new",
     "root": "./download/experiments/",
     "do_test": false,
     "cross_val": false,
     "k_fold": 5,
-    "sample_num": 1,
+    "sample_num": 2,
     "plot": false,
     "save_best": true,
     "multiprocessing": true,
