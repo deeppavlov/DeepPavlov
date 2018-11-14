@@ -23,9 +23,9 @@ systems.
 +----------------+--------------+-----------------+------------------+
 | German         | de           | 76.65           | 83.83            |
 +----------------+--------------+-----------------+------------------+
-| Hindi          | ar           | 87.74           | 90.01            |
+| Hindi          | hi           | 87.74           | 90.01            |
 +----------------+--------------+-----------------+------------------+
-| Hungarian      | ar           | 69.52           | 75.34            |
+| Hungarian      | hu           | 69.52           | 75.34            |
 +----------------+--------------+-----------------+------------------+
 | Italian        | it           | 96.33           | 96.47            |
 +----------------+--------------+-----------------+------------------+
@@ -430,9 +430,9 @@ in the ``''train''`` subsection of **chainer**. Now it looks like
 ::
 
     "train": {
-    "test\_best": true,
-    "batch\_size": 16,
-    "metrics": ["per\_token\_accuracy"]
+    "test_best": true,
+    "batch_size": 16,
+    "metrics": ["per_token_accuracy"]
     }
 
 
@@ -445,9 +445,9 @@ which transforms the predictions of the tagger to a readable form.
 ::
 
     {
-    "in": ["x", "y\_predicted"],
-    "out": ["y\_prettified"],
-    "class_name": "tag\_output\_prettifier",
+    "in": ["x", "y_predicted"],
+    "out": ["y_prettified"],
+    "class_name": "tag_output_prettifier",
     "end": "\\n"
     }
 
@@ -457,22 +457,22 @@ and produces the output of the format
 
 ::
 
-    1 Это PRON Animacy=Inan\|Case=Acc\|Gender=Neut\|Number=Sing
+    1 Это PRON Animacy=Inan|Case=Acc|Gender=Neut|Number=Sing
     2 чутко ADV Degree=Pos
     3 фиксируют VERB
-    Aspect=Imp\|Mood=Ind\|Number=Plur\|Person=3\|Tense=Pres\|VerbForm=Fin\|Voice=Act
-    4 энциклопедические ADJ Case=Nom\|Degree=Pos\|Number=Plur
-    5 издания NOUN Animacy=Inan\|Case=Nom\|Gender=Neut\|Number=Plur
-    6 . PUNCT \_
+    Aspect=Imp|Mood=Ind|Number=Plur|Person=3|Tense=Pres|VerbForm=Fin|Voice=Act
+    4 энциклопедические ADJ Case=Nom|Degree=Pos|Number=Plur
+    5 издания NOUN Animacy=Inan|Case=Nom|Gender=Neut|Number=Plur
+    6 . PUNCT _
 
     1 Four NUM NumType=Card
     2 months NOUN Number=Plur
     3 later ADV *
     4 , PUNCT *
-    5 we PRON Case=Nom\|Number=Plur\|Person=1\|PronType=Prs
-    6 were AUX Mood=Ind\|Tense=Past\|VerbForm=Fin
-    7 married VERB Tense=Past\|VerbForm=Part\|Voice=Pass
-    8 . PUNCT \_
+    5 we PRON Case=Nom|Number=Plur|Person=1|PronType=Prs
+    6 were AUX Mood=Ind|Tense=Past|VerbForm=Fin
+    7 married VERB Tense=Past|VerbForm=Part|Voice=Pass
+    8 . PUNCT _
 
 You can also generate output in 10 column CONLL-U format.
 For this purpose add ``format_mode`` = ``ud`` to the **prettifier** section.
@@ -483,6 +483,6 @@ The **train** section of the config is replaced by the **predict** section:
 
     "predict":
     {
-    "batch\_size": 32,
-    "outfile": "results/ud\_ru\_syntagrus\_test.res"
+    "batch_size": 32,
+    "outfile": "results/ud_ru_syntagrus_test.res"
     }
