@@ -427,3 +427,21 @@ def test_evolving():
                            .format(model_dir, logfile.getvalue().decode()))
 
     shutil.rmtree(str(download_path), ignore_errors=True)
+
+
+def test_hashes_existence():
+    all_configs = list(src_dir.glob('**/*.json')) + list(test_src_dir.glob('**/*.json'))
+    url_root = 'http://files.deeppavlov.ai/'
+    downloads_urls = set()
+    for config in all_configs:
+        config = json.loads(config.read_text(encoding='utf-8'))
+        downloads_urls |= {d if isinstance(d, str) else d['url'] for d in
+                           config.get('metadata', {}).get('download', [])}
+    downloads_urls = [url + '.md5' for url in downloads_urls if url.startswith(url_root)]
+    messages = []
+    for url in downloads_urls:
+        status = requests.get(url).status_code
+        if status != 200:
+            messages.append(f'got status_code {status} for {url}')
+    if messages:
+        raise RuntimeError('\n'.join(messages))
