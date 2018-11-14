@@ -19,7 +19,6 @@ import shutil
 from shutil import rmtree
 from collections import OrderedDict
 from os.path import join, isdir, isfile
-from pipeline_manager.utils import merge_logs
 
 
 class Observer(object):
@@ -59,17 +58,11 @@ class Observer(object):
         self.log_path = join(self.root, date, self.exp_name)
         self.log_file = join(self.log_path, self.exp_name + '.json')
 
-        if not isdir(self.log_path):
-            os.makedirs(self.log_path)
+        if not isdir(self.save_path):
+            os.makedirs(self.save_path)
         if self.plot:
             if not isdir(join(self.log_path, 'images')):
                 os.makedirs(join(self.log_path, 'images'))
-
-        self.old_log = None
-        if isfile(self.log_file):
-            with open(self.log_file, 'r') as log_file:
-                self.old_log = json.load(log_file)
-                log_file.close()
 
         self.log = OrderedDict(experiment_info=OrderedDict(date=date,
                                                            exp_name=self.exp_name,
@@ -78,40 +71,29 @@ class Observer(object):
                                                            number_of_pipes=None,
                                                            metrics=None,
                                                            target_metric=None),
-                               dataset={},
                                experiments=OrderedDict())
 
     def tmp_reset(self):
         # tmp parameters
         self.pipe_ind = 0
-        self.batch_size = None
-        self.dataset = None
         self.pipe_conf = None
         self.model = None
         self.pipe_res = None
         self.pipe_time = None
+        self.batch_size = None
+        self.dataset = None
 
     def write(self):
         if isfile(self.log_file):
-            with open(self.log_file, 'r') as log_file:
-                self.old_log = json.load(log_file)
-                log_file.close()
+            with open(self.log_file, 'r') as old_log:
+                old_log = json.load(old_log)
 
-            self.log = self.merge_logs(self.old_log, self.log)
+            self.log = self.merge_logs(old_log, self.log)
             with open(self.log_file, 'w') as log_file:
                 json.dump(self.log, log_file)
-                log_file.close()
         else:
             with open(self.log_file, 'w') as log_file:
                 json.dump(self.log, log_file)
-                log_file.close()
-
-    def save(self):
-        # if self.old_log is not None:
-        #     self.log = merge_logs(self.old_log, self.log)
-        with open(self.log_file, 'w') as log_file:
-            json.dump(self.log, log_file)
-            log_file.close()
 
     def update_log(self):
         """ Updates the log with information about the new pipeline """
@@ -134,20 +116,15 @@ class Observer(object):
                                                                 'results': self.pipe_res}
 
         self.tmp_reset()
+        self.write()
         return self
 
-    def create_save_folder(self, dataset_name: str) -> str:
-        save_path = join(self.save_path, dataset_name, "pipe_{}".format(self.pipe_ind))
-        os.makedirs(save_path)
-        return save_path
-
-    def save_config(self, conf, dataset_name) -> None:
+    def save_config(self, conf, dataset_name, ind) -> None:
         """
         Save train config in checkpoint folder.
         """
-        with open(join(self.save_path, dataset_name, "pipe_{}".format(self.pipe_ind), 'config.json'), 'w') as cf:
+        with open(join(self.save_path, dataset_name, "pipe_{}".format(ind), 'config.json'), 'w') as cf:
             json.dump(conf, cf)
-            cf.close()
 
     def save_best_pipe(self):
         if self.save_best:
@@ -201,7 +178,6 @@ class Observer(object):
             if dataset_name not in old_log['experiments'].keys():
                 old_log['experiments'][dataset_name] = dataset_val
             else:
-                n_old = len(old_log['experiments'][dataset_name])
                 for ind, item in new_log['experiments'][dataset_name].items():
                     if ind not in old_log['experiments'][dataset_name].keys():
                         old_log['experiments'][dataset_name][ind] = item

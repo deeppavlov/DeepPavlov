@@ -54,6 +54,7 @@ class PipeGen:
         self.dataset_reader = self.main_config.pop("dataset_reader")
         if not isinstance(self.main_config["dataset_iterator"], dict):
             raise ConfigError("Dataset iterator must be one for hole experiment.")
+
         self.train_config = self.main_config.pop("train")
         self.chainer = self.main_config.pop('chainer')
         self.structure = self.chainer['pipe']

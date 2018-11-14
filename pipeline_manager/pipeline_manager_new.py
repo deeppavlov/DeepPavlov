@@ -16,7 +16,7 @@ import os
 
 from time import time
 from tqdm import tqdm
-from os.path import join
+from os.path import join, isdir
 from pathlib import Path
 from shutil import rmtree
 from psutil import cpu_count
@@ -92,8 +92,10 @@ class PipelineManager:
         self.plot = self.exp_config['enumerate'].get('plot', False)
         self.save_best = self.exp_config['enumerate'].get('save_best', False)
         self.do_test = self.exp_config['enumerate'].get('do_test', False)
-        self.cross_validation = self.exp_config['enumerate'].get('cross_val', False)
-        self.k_fold = self.exp_config['enumerate'].get('k_fold', 5)
+
+        # self.cross_validation = self.exp_config['enumerate'].get('cross_val', False)
+        # self.k_fold = self.exp_config['enumerate'].get('k_fold', 5)
+
         self.sample_num = self.exp_config['enumerate'].get('sample_num', 10)
         self.target_metric = self.exp_config['enumerate'].get('target_metric')
         self.multiprocessing = self.exp_config['enumerate'].get('multiprocessing', True)
@@ -102,12 +104,23 @@ class PipelineManager:
         self.use_multi_gpus = self.exp_config['enumerate'].get('use_multi_gpus')
         self.memory_fraction = self.exp_config['enumerate'].get('gpu_memory_fraction', 1.0)
 
-        self.pipeline_generator = None
-        self.gen_len = 0
-
-        # observer initialization
+        # create the observer
         self.save_path = join(self.root, self.date, self.exp_name, 'checkpoints')
         self.observer = Observer(self.exp_name, self.root, self.info, self.date, self.plot, self.save_best)
+        # create the pipeline generator
+        self.pipeline_generator = PipeGen(self.exp_config, self.save_path, sample_num=self.sample_num, test_mode=False)
+        self.gen_len = self.pipeline_generator.length
+        # write train data in observer
+        self.observer.log['experiment_info']['number_of_pipes'] = self.gen_len
+        if self.target_metric:
+            self.observer.log['experiment_info']['target_metric'] = self.target_metric
+        else:
+            self.observer.log['experiment_info']['metrics'] = copy(self.exp_config['train']['metrics'])
+            if isinstance(self.exp_config['train']['metrics'][0], dict):
+                self.observer.log['experiment_info']['target_metric'] = \
+                    copy(self.exp_config['train']['metrics'][0]['name'])
+            else:
+                self.observer.log['experiment_info']['target_metric'] = copy(self.exp_config['train']['metrics'][0])
 
         # multiprocessing
         if self.use_multi_gpus and self.use_all_gpus:
@@ -209,36 +222,24 @@ class PipelineManager:
 
     @staticmethod
     @unpack_args
-    def train_pipe(pipe, i, observer, target_metric, gpu, gpu_ind=0):
+    def train_pipe(pipe, i, observer, gpu_ind=None):
         # modify project environment
-        if gpu:
+        if gpu_ind:
             os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_ind)
         else:
             os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
-        if target_metric is None:
-            if observer.log['experiment_info']['metrics'] is None:
-                observer.log['experiment_info']['metrics'] = copy(pipe['train']['metrics'])
-            if observer.log['experiment_info']['target_metric'] is None:
-                if isinstance(pipe['train']['metrics'][0], str):
-                    observer.log['experiment_info']['target_metric'] = copy(pipe['train']['metrics'][0])
-                else:
-                    observer.log['experiment_info']['target_metric'] = copy(pipe['train']['metrics'][0]['name'])
-
         observer.pipe_ind = i + 1
         observer.pipe_conf = copy(pipe['chainer']['pipe'])
         dataset_name = copy(pipe['dataset_reader']['data_path'])
-        observer.dataset = dataset_name
-        observer.batch_size = pipe['train'].get('batch_size', "None")
+        observer.dataset = copy(pipe['dataset_reader']['data_path'])
+        observer.batch_size = copy(pipe['train'].get('batch_size', "None"))
 
         # start pipeline time
         pipe_start = time()
-        # create save path and save folder
-        # TODO check logic, where folder already creates
-        try:
-            save_path = observer.create_save_folder(dataset_name)
-        except FileExistsError:
-            save_path = join(observer.save_path, dataset_name, "pipe_{}".format(i))
+        save_path = join(observer.save_path, dataset_name, "pipe_{}".format(i + 1))
+        if not isdir(save_path):
+            os.makedirs(save_path)
 
         # run pipeline train with redirected output flow
         with RedirectedPrints(new_target=open(join(save_path, "out.txt"), "w")):
@@ -248,48 +249,39 @@ class PipelineManager:
         observer.pipe_time = normal_time(time() - pipe_start)
         observer.pipe_res = results
 
-        # save config in checkpoint folder
-        observer.save_config(pipe, dataset_name)
-
         # update logger
         observer.update_log()
-        observer.write()
 
+        # save config in checkpoint folder
+        observer.save_config(pipe, dataset_name, i + 1)
         return None
 
     def gpu_gen(self, gpu=False):
         if gpu:
             for i, pipe_conf in enumerate(self.pipeline_generator()):
                 gpu_ind = i - (i // len(self.available_gpu)) * len(self.available_gpu)
-                yield (pipe_conf, i, self.observer, self.target_metric, True, gpu_ind)
+                yield (pipe_conf, i, self.observer, gpu_ind)
         else:
             for i, pipe_conf in enumerate(self.pipeline_generator()):
-                yield (pipe_conf, i, self.observer, self.target_metric, False)
+                yield (pipe_conf, i, self.observer)
 
     def run(self):
         """
         Initializes the pipeline generator and runs the experiment. Creates a report after the experiments.
         """
-        # create the pipeline generator
-        self.pipeline_generator = PipeGen(self.exp_config, self.save_path, sample_num=self.sample_num, test_mode=False)
-        self.gen_len = self.pipeline_generator.length
-
         # Start generating pipelines configs
         print('[ Experiment start - {0} pipes, will be run]'.format(self.gen_len))
-        self.observer.log['experiment_info']['number_of_pipes'] = self.gen_len
 
         if self.multiprocessing:
             # start multiprocessing
             workers = Pool(self.max_num_workers)
 
             if self.available_gpu is None:
-                results = list(tqdm(workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(gpu=False)]),
-                                    total=self.gen_len))
+                x = list(tqdm(workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(gpu=False)]), total=self.gen_len))
                 workers.close()
                 workers.join()
             else:
-                results = list(tqdm(workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(gpu=True)]),
-                                    total=self.gen_len))
+                x = list(tqdm(workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(gpu=True)]), total=self.gen_len))
                 workers.close()
                 workers.join()
         else:
@@ -310,8 +302,7 @@ class PipelineManager:
         print("[ End of experiment ]")
         # visualization of results
         print("[ Create an experiment report ... ]")
-        path = join(self.root, self.date, self.exp_name)
-        results_visualization(path, self.plot)
+        results_visualization(join(self.root, self.date, self.exp_name), self.plot)
         print("[ Report created ]")
         return None
 
