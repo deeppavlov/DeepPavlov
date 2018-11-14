@@ -26,8 +26,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "YahooAnswers/models/model_v26/yahoo_answers_classes.dict",
-        "load_path": "YahooAnswers/models/model_v26/yahoo_answers_classes.dict",
+        "save_path": "YahooAnswers/models/model_v37/yahoo_answers_classes.dict",
+        "load_path": "YahooAnswers/models/model_v37/yahoo_answers_classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -55,9 +55,12 @@
           "x_emb"
         ],
         "id": "my_embedder",
-        "name": "fasttext",
-        "load_path": "./embeddings/wiki.en.bin",
-        "dim": 300
+        "name": "elmo",
+        "elmo_output_names": [
+          "elmo"
+        ],
+        "mini_batch_size": 8,
+        "spec": "https://tfhub.dev/google/elmo/2"
       },
       {
         "in": "y_ids",
@@ -78,14 +81,14 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "YahooAnswers/models/model_v26/model",
-        "load_path": "YahooAnswers/models/model_v26/model",
+        "save_path": "YahooAnswers/models/model_v37/model",
+        "load_path": "YahooAnswers/models/model_v37/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
-        "units_gru": 128,
+        "units_gru": 256,
         "optimizer": "Adam",
         "lear_rate": 0.001,
-        "lear_rate_decay": 0.0001,
+        "lear_rate_decay": 0.001,
         "loss": "categorical_crossentropy",
         "text_size": 20,
         "coef_reg_lstm": 1e-5,
@@ -150,7 +153,7 @@
     "show_examples": false,
     "validate_best": true,
     "test_best": true,
-    "tensorboard_log_dir": "YahooAnswers/models/model_v26/"
+    "tensorboard_log_dir": "YahooAnswers/models/model_v37/"
   },
   "metadata": {
     "requirements": [
