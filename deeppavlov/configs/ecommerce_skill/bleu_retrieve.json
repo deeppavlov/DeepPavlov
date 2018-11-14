@@ -11,8 +11,7 @@
     "in": [
 	    "query", 
 	    "history", 
-	    "state",
-	    "data"
+	    "state"
     ],
     "out": [
           "response",
@@ -27,7 +26,7 @@
 		      "history", 
 		      "state"
         ],
-        "fit_on": ["data"],
+        "fit_on": ["y"],
         "min_similarity": 0.5,
         "min_entropy": 0.5,
         "entropy_fields": [
@@ -38,10 +37,7 @@
           "Genre"
         ],
         "save_path": "ecommerce_skill/ecommerce_Phones_model.pkl",
-        "load_path": [
-		      "ecommerce_skill/ecommerce_Phones_model.pkl",
-		      "ecommerce_skill/ecommerce_Electronics_model.pkl"
-        ],
+        "load_path": ["ecommerce_skill/ecommerce_Phones_model.pkl"],
         "preprocess": {
           "name": "ecommerce_preprocess",
           "spacy_model": "en_core_web_sm",

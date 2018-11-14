@@ -11,8 +11,7 @@
     "in": [
       "query", 
       "history", 
-      "state",
-      "data"
+      "state"
     ],
     "out": [
       "response", 
@@ -60,7 +59,7 @@
           "state"
         ],
         "fit_on": [
-          "data", 
+          "y", 
           "q_vect"
         ],
         "min_similarity": 0.5,
