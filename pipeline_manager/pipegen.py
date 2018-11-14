@@ -118,6 +118,7 @@ class PipeGen:
 
         return product(*self.pipes)
 
+    # TODO make generator splits again
     def pipeline_gen(self):
         """
         Generate DeepPavlov standard configs (dicts).
