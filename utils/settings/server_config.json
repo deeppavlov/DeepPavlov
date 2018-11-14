@@ -30,7 +30,7 @@
       "host": "",
       "port": "",
       "model_endpoint": "/ecommerce_skill",
-      "model_args_names": ["query", "history", "state", "data"]
+      "model_args_names": ["query", "history", "state"]
     },
     "ErrorModel": {
       "host": "",
