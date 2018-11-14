@@ -26,7 +26,7 @@ def tar_md5(fpath: Union[str, Path]) -> Dict[str, str]:
     return res
 
 
-def gzip_md5(fpath: Union[str, Path], chunk_size: int = 2**16):
+def gzip_md5(fpath: Union[str, Path], chunk_size: int = 2**16) -> str:
     file_hash = md5()
     with gzip.open(fpath, 'rb') as f:
         for chunk in iter(lambda: f.read(chunk_size), b""):
@@ -34,11 +34,25 @@ def gzip_md5(fpath: Union[str, Path], chunk_size: int = 2**16):
     return file_hash.hexdigest()
 
 
-def main(args: List[str] = None) -> None:
-    args = parser.parse_args(args)
-    p = Path(args.fname).expanduser()
+def compute_hashes(fpath: Union[str, Path]) -> Dict[str, str]:
+    p = Path(fpath).expanduser()
     if not p.is_file():
         raise RuntimeError(f'{p} is not a file')
+
+    if '.tar' in {s.lower() for s in p.suffixes}:
+        hashes = tar_md5(p)
+    elif p.suffix.lower() == '.gz':
+        hashes = {p.with_suffix('').name: gzip_md5(p)}
+    else:
+        hashes = {p.name: file_md5(p)}
+    return hashes
+
+
+def main(args: List[str] = None) -> None:
+    args = parser.parse_args(args)
+
+    p = Path(args.fname).expanduser()
+    hashes = compute_hashes(p)
 
     outfile = args.outfile
     if outfile is None:
@@ -48,15 +62,11 @@ def main(args: List[str] = None) -> None:
     else:
         outfile = Path(outfile).expanduser().open('w', encoding='utf-8')
 
-    if '.tar' in {s.lower() for s in p.suffixes}:
-        hashes = tar_md5(p)
-    elif p.suffix.lower() == '.gz':
-        hashes = {p.with_suffix('').name: gzip_md5(p)}
-    else:
-        hashes = {p.name: file_md5(p)}
-
     for fname, fhash in hashes.items():
         print(f'{fhash} *{fname}', file=outfile, flush=True)
+
+    if outfile is not sys.stdout:
+        outfile.close()
 
 
 if __name__ == '__main__':

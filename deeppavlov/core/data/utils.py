@@ -23,7 +23,7 @@ import zipfile
 from hashlib import md5
 from itertools import chain
 from pathlib import Path
-from typing import List, Union, Iterable
+from typing import List, Union, Iterable, Optional
 from urllib.parse import urlparse
 
 import numpy as np
@@ -234,10 +234,10 @@ def copytree(src: Path, dest: Path):
             shutil.copy(str(f), str(f_dest))
 
 
-def file_md5(fpath, chunk_size=2**16):
+def file_md5(fpath: Union[str, Path], chunk_size: int = 2**16) -> Optional[str]:
     fpath = Path(fpath)
     if not fpath.is_file():
-        return False
+        return None
     file_hash = md5()
     with fpath.open('rb') as f:
         for chunk in iter(lambda: f.read(chunk_size), b""):
