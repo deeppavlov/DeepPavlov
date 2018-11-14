@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import shutil
-
-import requests
 import sys
 from argparse import ArgumentParser, Namespace
 from collections import defaultdict
 from pathlib import Path
 from typing import Union, Optional, Dict, Iterable, Set, Tuple, List
+
+import requests
 
 import deeppavlov
 from deeppavlov.core.commands.utils import get_deeppavlov_root, set_deeppavlov_root, expand_path
