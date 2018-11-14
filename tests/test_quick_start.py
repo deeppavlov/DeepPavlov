@@ -1,5 +1,6 @@
 import io
 import json
+import logging
 import os
 import signal
 from pathlib import Path
@@ -439,6 +440,9 @@ def test_hashes_existence():
                            config.get('metadata', {}).get('download', [])}
     downloads_urls = [url + '.md5' for url in downloads_urls if url.startswith(url_root)]
     messages = []
+
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+
     for url in downloads_urls:
         status = requests.get(url).status_code
         if status != 200:
