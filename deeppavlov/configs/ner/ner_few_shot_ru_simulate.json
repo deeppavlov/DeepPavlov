@@ -1,11 +1,11 @@
 {
   "dataset_reader": {
-    "name": "conll2003_reader",
+    "class_name": "conll2003_reader",
     "dataset_name": "collection_rus",
-    "data_path": "ner_few_shot_data/"
+    "data_path": "{DOWNLOADS_PATH}/ner_few_shot_data/"
   },
   "dataset_iterator": {
-    "name": "ner_few_shot_iterator",
+    "class_name": "ner_few_shot_iterator",
     "target_tag": "PER"
   },
   "chainer": {
@@ -14,34 +14,34 @@
     "pipe": [
       {
         "in": ["x"],
-        "name": "lazy_tokenizer",
+        "class_name": "lazy_tokenizer",
         "out": ["x_tokens"]
       },
       {
         "in": ["tags"],
         "id": "tag_vocab",
-        "name": "simple_vocab",
+        "class_name": "simple_vocab",
         "pad_with_zeros": false,
         "fit_on": ["tags"],
-        "save_path": "ner_fs/tag.dict",
-        "load_path": "ner_fs/tag.dict",
+        "save_path": "{MODELS_PATH}/ner_fs/tag.dict",
+        "load_path": "{MODELS_PATH}/ner_fs/tag.dict",
         "out": ["tag_indices"]
       },
       {
-        "name": "elmo",
+        "class_name": "elmo",
         "elmo_output_names": ["lstm_outputs1", "lstm_outputs2", "word_emb"],
         "mini_batch_size": 32,
         "in": ["x_tokens"],
-        "spec": "embeddings/elmo_ru",
+        "spec": "{DOWNLOADS_PATH}/embeddings/elmo_ru",
         "out": ["tokens_emb"]
       },
       {
-        "name": "ner_svm",
+        "class_name": "ner_svm",
         "in": "tokens_emb",
         "out": "tag_indices",
         "fit_on": ["tokens_emb", "tag_indices"],
-        "save_path": "ner_fs/model",
-        "load_path": "ner_fs/model"
+        "save_path": "{MODELS_PATH}/ner_fs/model",
+        "load_path": "{MODELS_PATH}/ner_fs/model"
       },
       {
         "ref": "tag_vocab",
@@ -49,12 +49,12 @@
         "out": ["tags_hat"]
       },
       {
-        "name": "ner_bio_converter",
+        "class_name": "ner_bio_converter",
         "in": ["tags_hat"],
         "out": ["tags_bio_hat"]
       },
       {
-        "name": "ner_bio_converter",
+        "class_name": "ner_bio_converter",
         "in": ["tags"],
         "out": ["tags_bio"]
       }
@@ -82,10 +82,15 @@
     "tensorboard_log_dir": "ner_fs/logs"
   },
   "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+    },
     "requirements": [
-      "../dp_requirements/fasttext.txt",
-      "../dp_requirements/tf.txt",
-      "../dp_requirements/elmo.txt"
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/elmo.txt"
     ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",
@@ -94,7 +99,7 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz",
-        "subdir": "embeddings/elmo_ru"
+        "subdir": "{DOWNLOADS_PATH}/embeddings/elmo_ru"
       }
     ]
   }
