@@ -5,7 +5,8 @@
     "y": "Label",
     "data_path": "./YahooAnswers/yahoo_answers_data/",
     "train": "train.csv",
-    "valid": "valid.csv"
+    "valid": "valid.csv",
+    "test": "test.csv"
   },
   "dataset_iterator": {
     "name": "basic_classification_iterator",
@@ -25,8 +26,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "YahooAnswers/models/model_v21/yahoo_answers_classes.dict",
-        "load_path": "YahooAnswers/models/model_v21/yahoo_answers_classes.dict",
+        "save_path": "YahooAnswers/models/model_v25/yahoo_answers_classes.dict",
+        "load_path": "YahooAnswers/models/model_v25/yahoo_answers_classes.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -54,12 +55,9 @@
           "x_emb"
         ],
         "id": "my_embedder",
-        "name": "elmo",
-        "elmo_output_names": [
-          "elmo"
-        ],
-        "mini_batch_size": 8,
-        "spec": "/home/kuznetsov/models_env/yahoo-sber-questions_elmo/models/mod_from_git/hubs/yahooo-sber-questions_epoches_n_3"
+        "name": "fasttext",
+        "load_path": "./embeddings/wiki.en.bin",
+        "dim": 300
       },
       {
         "in": "y_ids",
@@ -80,8 +78,8 @@
         ],
         "main": true,
         "name": "keras_classification_model",
-        "save_path": "YahooAnswers/models/model_v21/model",
-        "load_path": "YahooAnswers/models/model_v21/model",
+        "save_path": "YahooAnswers/models/model_v25/model",
+        "load_path": "YahooAnswers/models/model_v25/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -156,7 +154,7 @@
     "show_examples": false,
     "validate_best": true,
     "test_best": true,
-    "tensorboard_log_dir": "YahooAnswers/models/model_v21/"
+    "tensorboard_log_dir": "YahooAnswers/models/model_v25/"
   },
   "metadata": {
     "requirements": [
