@@ -21,7 +21,7 @@ from pathlib import Path
 from shutil import rmtree
 from psutil import cpu_count
 from datetime import datetime
-from copy import copy
+from copy import copy, deepcopy
 from multiprocessing import Pool
 from typing import Union, Dict
 
@@ -106,7 +106,7 @@ class PipelineManager:
 
         # create the observer
         self.save_path = join(self.root, self.date, self.exp_name, 'checkpoints')
-        self.observer = Observer(self.exp_name, self.root, self.info, self.date, self.plot, self.save_best)
+        self.observer = Observer(self.exp_name, self.root, self.info, self.date, self.plot)
         # create the pipeline generator
         self.pipeline_generator = PipeGen(self.exp_config, self.save_path, sample_num=self.sample_num, test_mode=False)
         self.gen_len = self.pipeline_generator.length
@@ -260,10 +260,10 @@ class PipelineManager:
         if gpu:
             for i, pipe_conf in enumerate(self.pipeline_generator()):
                 gpu_ind = i - (i // len(self.available_gpu)) * len(self.available_gpu)
-                yield (pipe_conf, i, self.observer, gpu_ind)
+                yield (deepcopy(pipe_conf), i, self.observer, gpu_ind)
         else:
             for i, pipe_conf in enumerate(self.pipeline_generator()):
-                yield (pipe_conf, i, self.observer)
+                yield (deepcopy(pipe_conf), i, self.observer)
 
     def run(self):
         """
@@ -277,24 +277,25 @@ class PipelineManager:
             workers = Pool(self.max_num_workers)
 
             if self.available_gpu is None:
-                x = list(tqdm(workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(gpu=False)]), total=self.gen_len))
+                x = list(tqdm(workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(gpu=False)]),
+                              total=self.gen_len))
                 workers.close()
                 workers.join()
             else:
-                x = list(tqdm(workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(gpu=True)]), total=self.gen_len))
+                x = list(tqdm(workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(gpu=True)]),
+                              total=self.gen_len))
                 workers.close()
                 workers.join()
         else:
             for i, pipe in enumerate(tqdm(self.pipeline_generator(), total=self.gen_len)):
                 if self.available_gpu is None:
-                    self.train_pipe(pipe, i, self.observer, self.target_metric, False)
+                    self.train_pipe((pipe, i, self.observer))
                 else:
                     gpu_ind = i - (i // len(self.available_gpu)) * len(self.available_gpu)
-                    self.train_pipe(pipe, i, self.observer, self.target_metric, True, gpu_ind)
+                    self.train_pipe((pipe, i, self.observer, gpu_ind))
 
         # save log
         self.observer.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)
-
         # delete all checkpoints and save only best pipe
         if self.save_best:
             self.observer.save_best_pipe()

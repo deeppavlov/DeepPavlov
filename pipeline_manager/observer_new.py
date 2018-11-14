@@ -26,7 +26,7 @@ class Observer(object):
     The class implements data collection on how the experiment is going. Pipeline configuration information,
     pipeline results, and time information is collected.
     """
-    def __init__(self, name, root, info, date, plot, save_best_pipe):
+    def __init__(self, name, root, info, date, plot):
         """
         Init log, and creates folders for logs, report and checkpoints.
 
@@ -42,7 +42,6 @@ class Observer(object):
         self.root = root
         self.date = date
         self.plot = plot
-        self.save_best = save_best_pipe
 
         # tmp parameters
         self.pipe_ind = 0
@@ -88,9 +87,9 @@ class Observer(object):
             with open(self.log_file, 'r') as old_log:
                 old_log = json.load(old_log)
 
-            self.log = self.merge_logs(old_log, self.log)
+            new_log = self.merge_logs(old_log, self.log)
             with open(self.log_file, 'w') as log_file:
-                json.dump(self.log, log_file)
+                json.dump(new_log, log_file)
         else:
             with open(self.log_file, 'w') as log_file:
                 json.dump(self.log, log_file)
@@ -127,46 +126,49 @@ class Observer(object):
             json.dump(conf, cf)
 
     def save_best_pipe(self):
-        if self.save_best:
-            dataset_res = {}
-            target_metric = self.log['experiment_info']['target_metric']
+        dataset_res = {}
 
-            for dataset_name in self.log['experiments'].keys():
-                for key, item in self.log['experiments'][dataset_name].items():
-                    results = item['results']
+        with open(self.log_file, 'r') as log_file:
+            log = json.load(log_file)
 
-                    if dataset_name not in dataset_res.keys():
-                        dataset_res[dataset_name] = dict(best_score=-1, best_ind=None)
+        target_metric = log['experiment_info']['target_metric']
 
-                    if 'test' in results.keys():
-                        if results['test'][target_metric] > dataset_res[dataset_name]["best_score"]:
-                            dataset_res[dataset_name]["best_score"] = results['test'][target_metric]
-                            dataset_res[dataset_name]["best_ind"] = key
+        for dataset_name in log['experiments'].keys():
+            for key, item in log['experiments'][dataset_name].items():
+                results = item['results']
 
-                    else:
-                        if results['valid'][target_metric] > dataset_res[dataset_name]["best_score"]:
-                            dataset_res[dataset_name]["best_score"] = results['valid'][target_metric]
-                            dataset_res[dataset_name]["best_ind"] = key
+                if dataset_name not in dataset_res.keys():
+                    dataset_res[dataset_name] = dict(best_score=-1, best_ind=None)
 
-            for name in dataset_res.keys():
-                source = join(self.save_path, name)
-                dest1 = join(self.save_path, name + '_best_pipe')
-                if not os.path.isdir(dest1):
-                    os.makedirs(dest1)
+                if 'test' in results.keys():
+                    if results['test'][target_metric] > dataset_res[dataset_name]["best_score"]:
+                        dataset_res[dataset_name]["best_score"] = results['test'][target_metric]
+                        dataset_res[dataset_name]["best_ind"] = key
 
-                files = os.listdir(source)
-                for f in files:
-                    if not f.startswith('pipe') and not os.path.isfile(join(dest1, f)):
+                else:
+                    if results['valid'][target_metric] > dataset_res[dataset_name]["best_score"]:
+                        dataset_res[dataset_name]["best_score"] = results['valid'][target_metric]
+                        dataset_res[dataset_name]["best_ind"] = key
+
+        for name in dataset_res.keys():
+            source = join(self.save_path, name)
+            dest1 = join(self.save_path, name + '_best_pipe')
+            if not os.path.isdir(dest1):
+                os.makedirs(dest1)
+
+            files = os.listdir(source)
+            for f in files:
+                if not f.startswith('pipe') and not os.path.isfile(join(dest1, f)):
+                    shutil.move(join(source, f), dest1)
+                elif f == 'pipe_{}'.format(dataset_res[name]["best_ind"]):
+                    if os.path.isdir(join(dest1, f)):
+                        rmtree(join(dest1, f))
                         shutil.move(join(source, f), dest1)
-                    elif f == 'pipe_{}'.format(dataset_res[name]["best_ind"]):
-                        if os.path.isdir(join(dest1, f)):
-                            rmtree(join(dest1, f))
-                            shutil.move(join(source, f), dest1)
-                        else:
-                            shutil.move(join(source, f), dest1)
+                    else:
+                        shutil.move(join(source, f), dest1)
 
-                # del all tmp files in save path
-                rmtree(join(self.save_path, name))
+            # del all tmp files in save path
+            rmtree(join(self.save_path, name))
 
     @staticmethod
     def merge_logs(old_log, new_log):

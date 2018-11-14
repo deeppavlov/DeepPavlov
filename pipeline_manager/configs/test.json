@@ -80,28 +80,8 @@
           "penalty": "l1",
           "dual": false,
           "C": {"search_range": [0.01, 2.0]},
-          "fit_intercept": {"search_bool": true},
-          "class_weight": {"search_choice": [null, "balanced"]},
-          "solver": {"search_choice": ["liblinear", "saga"]}
-        },
-        {
-          "in": ["x_vec"],
-          "out": ["y_pred_probas"],
-          "fit_on": ["x_vec", "y_ids"],
-          "name": "sklearn_component",
-          "component_name": "Log Reg",
-          "main": true,
-          "save_path": "linm/checkpoints/logreg.pkl",
-          "load_path": "linm/checkpoints/logreg.pkl",
-          "model_class": "sklearn.linear_model:LogisticRegression",
-          "infer_method": "predict_proba",
-          "warm_start": false,
-          "penalty": "l2",
-          "dual": false,
-          "C": {"search_range": [0.01, 2.0]},
-          "fit_intercept": {"search_bool": true},
-          "class_weight": {"search_choice": [null, "balanced"]},
-          "solver": {"search_choice": ["lbfgs", "newton-cg"]}
+          "class_weight": null,
+          "solver": "liblinear"
         }
       ],
       [
@@ -144,13 +124,11 @@
     "test_best": true
   },
   "enumerate": {
-    "exp_name": "lin_clf",
+    "exp_name": "test_new",
     "root": "./download/experiments/",
-    "do_test": false,
-    "cross_val": false,
-    "k_fold": 5,
-    "sample_num": 1,
-    "plot": false,
+    "do_test": true,
+    "sample_num": 2,
+    "plot": true,
     "save_best": true,
     "multiprocessing": true,
     "max_num_workers": 4,
