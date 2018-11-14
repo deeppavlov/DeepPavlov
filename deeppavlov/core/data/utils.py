@@ -234,6 +234,17 @@ def copytree(src: Path, dest: Path):
             shutil.copy(str(f), str(f_dest))
 
 
+def file_md5(fpath, chunk_size=2**16):
+    fpath = Path(fpath)
+    if not fpath.is_file():
+        return False
+    file_hash = md5()
+    with fpath.open('rb') as f:
+        for chunk in iter(lambda: f.read(chunk_size), b""):
+            file_hash.update(chunk)
+    return file_hash.hexdigest()
+
+
 def load_vocab(vocab_path):
     vocab_path = Path(vocab_path)
     with vocab_path.open(encoding='utf8') as f:
