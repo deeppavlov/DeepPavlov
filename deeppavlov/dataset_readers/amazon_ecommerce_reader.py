@@ -54,7 +54,7 @@ class AmazonEcommerceReader(DatasetReader):
                     ec_data_global += self._load_amazon_ecommerce_file(fname)
 
         dataset = {
-            'train': [((item['Title'], [], {}, item), ) for item in ec_data_global],
+            'train': [((item['Title'], [], {}), item) for item in ec_data_global],
             'valid': [],
             'test':  []
             }
