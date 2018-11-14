@@ -234,7 +234,11 @@ class PipelineManager:
         # start pipeline time
         pipe_start = time()
         # create save path and save folder
-        save_path = observer.create_save_folder(dataset_name)
+        # TODO check logic, where folder already creates
+        try:
+            save_path = observer.create_save_folder(dataset_name)
+        except FileExistsError:
+            save_path = join(observer.save_path, dataset_name, "pipe_{}".format(i))
 
         # run pipeline train with redirected output flow
         with RedirectedPrints(new_target=open(join(save_path, "out.txt"), "w")):
@@ -298,7 +302,6 @@ class PipelineManager:
 
         # save log
         self.observer.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)
-        # self.observer.save()
 
         # delete all checkpoints and save only best pipe
         if self.save_best:

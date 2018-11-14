@@ -107,8 +107,8 @@ class Observer(object):
                 log_file.close()
 
     def save(self):
-        if self.old_log is not None:
-            self.log = merge_logs(self.old_log, self.log)
+        # if self.old_log is not None:
+        #     self.log = merge_logs(self.old_log, self.log)
         with open(self.log_file, 'w') as log_file:
             json.dump(self.log, log_file)
             log_file.close()

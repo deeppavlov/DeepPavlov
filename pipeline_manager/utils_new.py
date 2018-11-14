@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 
 from os import mkdir
 from copy import copy
-from typing import List
+from typing import Dict
 from os.path import join, isdir
 
 from py3nvml import py3nvml
@@ -485,14 +485,28 @@ def build_pipeline_table(log_data, save_path='./'):
 
 def get_met_info(log_):
 
-    def analize(log, metrics_: List[str]):
+    def analize(log: Dict):
         main = dict()
 
-        for name in list(log.keys()):
+        log_keys = list(log.keys())
+        if log[log_keys[0]]['results'].get('test'):
+            metrics_ = list(log[log_keys[0]]['results']['test'].keys())
+        else:
+            metrics_ = list(log[log_keys[0]]['results']['valid'].keys())
+
+        group_data = dict()
+        for ind, val in log.items():
+            if val['model'] not in group_data:
+                group_data[val['model']] = dict()
+                group_data[val['model']][ind] = val
+            else:
+                group_data[val['model']][ind] = val
+
+        for name in group_data.keys():
             main[name] = dict()
             for met in metrics_:
                 met_max = -1
-                for key, val in log[name].items():
+                for key, val in group_data[name].items():
                     if val['results'].get('test') is not None:
                         if val['results']['test'][met] > met_max:
                             met_max = val['results']['test'][met]
@@ -508,9 +522,8 @@ def get_met_info(log_):
         return main
 
     data = {}
-    metrics = log_['experiment_info']['metrics']
-    for dataset_name, models_val in log_['experiments'].items():
-        data[dataset_name] = analize(models_val, metrics)
+    for dataset_name, log_val in log_['experiments'].items():
+        data[dataset_name] = analize(log_val)
     return data
 
 
@@ -598,8 +611,6 @@ def results_visualization(root: str, plot: bool, merge: bool = False) -> None:
         build_pipeline_table(log, save_path=root)
 
         if plot:
-            if not isdir(join(root, 'images')):
-                os.makedirs(join(root, 'images'))
             # scrub data from log for image creating
             info = get_met_info(log)
             # plot histograms
