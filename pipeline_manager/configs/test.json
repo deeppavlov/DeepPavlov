@@ -124,7 +124,7 @@
     "test_best": true
   },
   "enumerate": {
-    "exp_name": "test_new",
+    "exp_name": "test_of_test",
     "root": "./download/experiments/",
     "do_test": true,
     "sample_num": 2,

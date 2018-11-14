@@ -135,7 +135,7 @@ class PipelineManager:
         self.start_exp = time()
         # start test
         if self.do_test:
-            self.dataset_composition = dict(train=False, valid=False, test=False)
+            # self.dataset_composition = dict(train=False, valid=False, test=False)
             self.test()
 
     def prepare_multiprocess(self):
@@ -286,6 +286,7 @@ class PipelineManager:
                               total=self.gen_len))
                 workers.close()
                 workers.join()
+            del x
         else:
             for i, pipe in enumerate(tqdm(self.pipeline_generator(), total=self.gen_len)):
                 if self.available_gpu is None:
@@ -311,78 +312,132 @@ class PipelineManager:
         """
         Initializes the pipeline generator with tiny data and runs the test of experiment.
         """
+
+        def gpu_gen(pipe_gen, available_gpu, gpu=False):
+            if gpu:
+                for j, pipe_conf in enumerate(pipe_gen()):
+                    gpu_ind_ = j - (j // len(available_gpu)) * len(available_gpu)
+                    yield (j, deepcopy(pipe_conf), gpu_ind_)
+            else:
+                for j, pipe_conf in enumerate(pipe_gen()):
+                    yield (j, deepcopy(pipe_conf))
+
         # create the pipeline generator
         pipeline_generator = PipeGen(self.exp_config, self.save_path, sample_num=self.sample_num, test_mode=True)
         len_gen = pipeline_generator.length
 
         # Start generating pipelines configs
         print('[ Test start - {0} pipes, will be run]'.format(len_gen))
-        for i, pipe in enumerate(tqdm(pipeline_generator(), total=len_gen)):
-            data_iterator_i = self.test_dataset_reader_and_iterator(pipe, i)
-            results = train_evaluate_model_from_config(pipe, iterator=data_iterator_i, to_train=True, to_validate=False)
-            del results
+        if self.multiprocessing:
+            # start multiprocessing
+            workers = Pool(self.max_num_workers)
+
+            if self.available_gpu:
+                x = list(tqdm(workers.imap_unordered(self.test_pipe,
+                                                     [x for x in gpu_gen(pipeline_generator,
+                                                                         self.available_gpu,
+                                                                         gpu=True)]),
+                              total=len_gen))
+                workers.close()
+                workers.join()
+            else:
+                x = list(tqdm(workers.imap_unordered(self.test_pipe,
+                                                     [x for x in gpu_gen(pipeline_generator,
+                                                                         self.available_gpu,
+                                                                         gpu=False)]),
+                              total=len_gen))
+                workers.close()
+                workers.join()
+            del x
+        else:
+            for i, pipe in enumerate(tqdm(pipeline_generator(), total=len_gen)):
+                if self.available_gpu:
+                    gpu_ind = i - (i // len(self.available_gpu)) * len(self.available_gpu)
+                    self.test_pipe((i, pipe, gpu_ind))
+                else:
+                    self.test_pipe((i, pipe))
 
         # del all tmp files in save path
         rmtree(join(self.save_path, "tmp"))
         print('[ The test was successful ]')
         return None
 
-    def test_dataset_reader_and_iterator(self, config, i):
-        # create and test data generator and data iterator
-        data = read_data_by_config(config)
-        if i == 0:
-            for dtype in self.dataset_composition.keys():
-                if len(data.get(dtype, [])) != 0:
-                    self.dataset_composition[dtype] = True
-        else:
-            for dtype in self.dataset_composition.keys():
-                if len(data.get(dtype, [])) == 0 and self.dataset_composition[dtype]:
-                    raise ConfigError("The file structure in the {0} dataset differs "
-                                      "from the rest datasets.".format(config['dataset_reader']['data_path']))
-
-        iterator = get_iterator_from_config(config, data)
-        if isinstance(iterator, DataFittingIterator):
-            raise ConfigError("Instance of a class 'DataFittingIterator' is not supported.")
-        else:
-            if config.get('train', None):
-                if config['train']['test_best'] and len(iterator.data['test']) == 0:
-                    raise ConfigError("The 'test' part of dataset is empty, but 'test_best' in train config is 'True'."
-                                      " Please check the dataset_iterator config.")
-
-                if (config['train']['validate_best'] or config['train'].get('val_every_n_epochs', False) > 0) and \
-                        len(iterator.data['valid']) == 0:
-                    raise ConfigError("The 'valid' part of dataset is empty, but 'valid_best' in train config is 'True'"
-                                      " or 'val_every_n_epochs' > 0. Please check the dataset_iterator config.")
+    @staticmethod
+    @unpack_args
+    def test_pipe(ind, pipe_conf, gpu_ind=None):
+        def test_dataset_reader_and_iterator(config, i):
+            # create and test data generator and data iterator
+            dataset_composition_ = dict(train=False, valid=False, test=False)
+            data = read_data_by_config(config)
+            if i == 0:
+                for dtype in dataset_composition_.keys():
+                    if len(data.get(dtype, [])) != 0:
+                        dataset_composition_[dtype] = True
             else:
-                if len(iterator.data['test']) == 0:
-                    raise ConfigError("The 'test' part of dataset is empty as a 'train' part of config file, "
-                                      "but default value of 'test_best' is 'True'. "
-                                      "Please check the dataset_iterator config.")
+                for dtype in dataset_composition_.keys():
+                    if len(data.get(dtype, [])) == 0 and dataset_composition_[dtype]:
+                        raise ConfigError("The file structure in the {0} dataset differs "
+                                          "from the rest datasets.".format(config['dataset_reader']['data_path']))
 
-        # get a tiny data from dataset
-        if len(iterator.data['train']) <= 100:
-            print("!!!!!!!!!!!!! WARNING !!!!!!!!!!!!! Length of 'train' part dataset <= 100. "
-                  "Please check the dataset_iterator config")
-            tiny_train = copy(iterator.data['train'])
+            iterator = get_iterator_from_config(config, data)
+            if isinstance(iterator, DataFittingIterator):
+                raise ConfigError("Instance of a class 'DataFittingIterator' is not supported.")
+            else:
+                if config.get('train', None):
+                    if config['train']['test_best'] and len(iterator.data['test']) == 0:
+                        raise ConfigError(
+                            "The 'test' part of dataset is empty, but 'test_best' in train config is 'True'."
+                            " Please check the dataset_iterator config.")
+
+                    if (config['train']['validate_best'] or config['train'].get('val_every_n_epochs', False) > 0) and \
+                            len(iterator.data['valid']) == 0:
+                        raise ConfigError(
+                            "The 'valid' part of dataset is empty, but 'valid_best' in train config is 'True'"
+                            " or 'val_every_n_epochs' > 0. Please check the dataset_iterator config.")
+                else:
+                    if len(iterator.data['test']) == 0:
+                        raise ConfigError("The 'test' part of dataset is empty as a 'train' part of config file, "
+                                          "but default value of 'test_best' is 'True'. "
+                                          "Please check the dataset_iterator config.")
+
+            # get a tiny data from dataset
+            if len(iterator.data['train']) <= 100:
+                print("!!!!!!!!!!!!! WARNING !!!!!!!!!!!!! Length of 'train' part dataset <= 100. "
+                      "Please check the dataset_iterator config")
+                tiny_train = copy(iterator.data['train'])
+            else:
+                tiny_train = copy(iterator.data['train'][:10])
+            iterator.train = tiny_train
+
+            if len(iterator.data['valid']) <= 20:
+                tiny_valid = copy(iterator.data['valid'])
+            else:
+                tiny_valid = copy(iterator.data['valid'][:5])
+            iterator.valid = tiny_valid
+
+            if len(iterator.data['test']) <= 20:
+                tiny_test = copy(iterator.data['test'])
+            else:
+                tiny_test = copy(iterator.data['test'][:5])
+            iterator.test = tiny_test
+
+            iterator.data = {'train': tiny_train,
+                             'valid': tiny_valid,
+                             'test': tiny_test,
+                             'all': tiny_train + tiny_valid + tiny_test}
+
+            return iterator
+
+        # modify project environment
+        if gpu_ind:
+            os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_ind)
         else:
-            tiny_train = copy(iterator.data['train'][:10])
-        iterator.train = tiny_train
+            os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
-        if len(iterator.data['valid']) <= 20:
-            tiny_valid = copy(iterator.data['valid'])
-        else:
-            tiny_valid = copy(iterator.data['valid'][:5])
-        iterator.valid = tiny_valid
-
-        if len(iterator.data['test']) <= 20:
-            tiny_test = copy(iterator.data['test'])
-        else:
-            tiny_test = copy(iterator.data['test'][:5])
-        iterator.test = tiny_test
-
-        iterator.data = {'train': tiny_train,
-                         'valid': tiny_valid,
-                         'test': tiny_test,
-                         'all': tiny_train + tiny_valid + tiny_test}
-
-        return iterator
+        data_iterator_i = test_dataset_reader_and_iterator(pipe_conf, ind)
+        results = train_evaluate_model_from_config(pipe_conf,
+                                                   iterator=data_iterator_i,
+                                                   to_train=True,
+                                                   to_validate=False)
+        del results
+        return None
