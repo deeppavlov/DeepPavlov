@@ -89,7 +89,7 @@
         "lear_rate": 0.001,
         "lear_rate_decay": 0.001,
         "loss": "categorical_crossentropy",
-        "text_size": 100,
+        "text_size": 20,
         "coef_reg_lstm": 1e-5,
         "coef_reg_den": 1e-5,
         "dropout_rate": 0.5,
