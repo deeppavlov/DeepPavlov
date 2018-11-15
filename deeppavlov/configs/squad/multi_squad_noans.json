@@ -122,7 +122,7 @@
         "inputs": ["ans_raw", "ans_predicted"]
       }
     ],
-    "tensorboard_log_dir": "./multi_squad_model_noans/logs"
+    "tensorboard_log_dir": "{MODELS_PATH}/multi_squad_model_noans/logs"
   },
   "metadata": {
     "variables": {

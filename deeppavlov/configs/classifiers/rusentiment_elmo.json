@@ -143,7 +143,7 @@
     "show_examples": false,
     "validate_best": true,
     "test_best": true,
-    "tensorboard_log_dir": "./classifiers/rusentiment_v2/"
+    "tensorboard_log_dir": "{MODELS_PATH}/classifiers/rusentiment_v2/"
   },
   "metadata": {
     "variables": {
