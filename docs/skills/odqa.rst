@@ -37,8 +37,6 @@ Running ODQA
 
 .. note::
 
-    TensorFlow 1.8 with GPU support is required to run this skill.
-
     About 16 GB of RAM required.
 
 Training
