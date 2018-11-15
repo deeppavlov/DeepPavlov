@@ -184,13 +184,12 @@ class DecayScheduler():
         if self.end_val is None and not (self.dec_type in [1, 4]):
             self.end_val = 0
         if self.dec_type == DecayType.ONECYCLE:
-            self.extra = extra or 0.
-            self.cycle_nb = math.ceil(self.nb * (1 - self.extra) / 2)
+            self.cycle_nb = math.ceil(self.nb / 2)
             self.div = self.end_val / self.start_val
 
     def __str__(self):
         return f"DecayScheduler(start_val={self.start_val}, end_val={self.end_val}"\
-            f", dec_type={self.dec_type}, num_it={self.nb}, extra={self.extra})"
+            f", dec_type={self.dec_type.name}, num_it={self.nb}, extra={self.extra})"
 
     def next_val(self):
         self.iters = min(self.iters + 1, self.nb)
@@ -210,11 +209,7 @@ class DecayScheduler():
             delta_val = self.start_val - self.end_val
             return self.end_val + delta_val * (1 - self.iters / self.nb) ** self.extra
         elif self.dec_type == DecayType.ONECYCLE:
-            if self.iters > self.cycle_nb * 2:
-                # decaying from start_val to start_val/(100*div) for extra*num_it steps
-                pct = (self.iters - 2 * self.cycle_nb) / (self.nb - 2 * self.cycle_nb)
-                return self.start_val * (1 + pct * (1 / 100 - self.div) / self.div)
-            elif self.iters > self.cycle_nb:
+            if self.iters > self.cycle_nb:
                 # decaying from end_val to start_val for cycle_nb steps
                 pct = 1 - (self.iters - self.cycle_nb) / self.cycle_nb
                 return self.start_val * (1 + pct * (self.div - 1))
@@ -396,10 +391,12 @@ class EnhancedTFModel(TFModel, Estimator):
 
             self._learning_rate_last_impatience = data['impatience']
 
-            if self._learning_rate_cur_impatience >= self._learning_rate_drop_patience:
+            if (self._learning_rate_drop_patience is not None) and\
+                    (self._learning_rate_cur_impatience >=
+                     self._learning_rate_drop_patience):
                 self._learning_rate_cur_impatience = 0
                 self._learning_rate_cur_div *= self._learning_rate_drop_div
-                log.info(f"Now dropping learning rate"
+                log.info(f"New dropping learning rate"
                          f" {self._learning_rate_cur_div} times")
         if event_name == 'after_batch':
             if self._lr_update_on_batch:
