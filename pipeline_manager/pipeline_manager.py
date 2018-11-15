@@ -13,30 +13,27 @@
 # limitations under the License.
 
 import os
-import json
-import shutil
 
 from time import time
 from tqdm import tqdm
-from os.path import join
+from os.path import join, isdir
 from pathlib import Path
 from shutil import rmtree
 from psutil import cpu_count
 from datetime import datetime
 from copy import copy, deepcopy
 from multiprocessing import Pool
-from typing import Union, Dict, List
+from typing import Union, Dict
 
 from pipeline_manager.pipegen import PipeGen
-from pipeline_manager.observer import Observer
-from pipeline_manager.utils import normal_time
-from pipeline_manager.utils import get_num_gpu
-from pipeline_manager.utils import results_visualization, get_available_gpus
+from pipeline_manager.observer_new import Observer
+from pipeline_manager.utils_new import normal_time
+from pipeline_manager.utils_new import get_num_gpu
+from pipeline_manager.utils_new import results_visualization, get_available_gpus
 
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.prints import RedirectedPrints
-from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.commands.train import read_data_by_config, get_iterator_from_config
@@ -95,8 +92,11 @@ class PipelineManager:
         self.plot = self.exp_config['enumerate'].get('plot', False)
         self.save_best = self.exp_config['enumerate'].get('save_best', False)
         self.do_test = self.exp_config['enumerate'].get('do_test', False)
-        self.cross_validation = self.exp_config['enumerate'].get('cross_val', False)
-        self.k_fold = self.exp_config['enumerate'].get('k_fold', 5)
+
+        # self.cross_validation = self.exp_config['enumerate'].get('cross_val', False)
+        # self.k_fold = self.exp_config['enumerate'].get('k_fold', 5)
+
+        self.search_type = self.exp_config['enumerate'].get('search_type', 'random')
         self.sample_num = self.exp_config['enumerate'].get('sample_num', 10)
         self.target_metric = self.exp_config['enumerate'].get('target_metric')
         self.multiprocessing = self.exp_config['enumerate'].get('multiprocessing', True)
@@ -105,12 +105,23 @@ class PipelineManager:
         self.use_multi_gpus = self.exp_config['enumerate'].get('use_multi_gpus')
         self.memory_fraction = self.exp_config['enumerate'].get('gpu_memory_fraction', 1.0)
 
-        self.pipeline_generator = None
-        self.gen_len = 0
-
-        # observer initialization
+        # create the observer
         self.save_path = join(self.root, self.date, self.exp_name, 'checkpoints')
         self.observer = Observer(self.exp_name, self.root, self.info, self.date, self.plot)
+        # create the pipeline generator
+        self.pipeline_generator = PipeGen(self.exp_config, self.save_path, self.search_type, self.sample_num, False)
+        self.gen_len = self.pipeline_generator.length
+        # write train data in observer
+        self.observer.log['experiment_info']['number_of_pipes'] = self.gen_len
+        if self.target_metric:
+            self.observer.log['experiment_info']['target_metric'] = self.target_metric
+        else:
+            self.observer.log['experiment_info']['metrics'] = copy(self.exp_config['train']['metrics'])
+            if isinstance(self.exp_config['train']['metrics'][0], dict):
+                self.observer.log['experiment_info']['target_metric'] = \
+                    copy(self.exp_config['train']['metrics'][0]['name'])
+            else:
+                self.observer.log['experiment_info']['target_metric'] = copy(self.exp_config['train']['metrics'][0])
 
         # multiprocessing
         if self.use_multi_gpus and self.use_all_gpus:
@@ -125,7 +136,6 @@ class PipelineManager:
         self.start_exp = time()
         # start test
         if self.do_test:
-            self.dataset_composition = dict(train=False, valid=False, test=False)
             self.test()
 
     def prepare_multiprocess(self):
@@ -212,165 +222,89 @@ class PipelineManager:
 
     @staticmethod
     @unpack_args
-    def train_pipe(pipe_config, cross_validation, k_fold, gpu, gpu_ind, pipe_ind, out_path):
+    def train_pipe(pipe, i, observer, gpu_ind=None):
         # modify project environment
-        if gpu:
+        if gpu_ind:
             os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_ind)
         else:
             os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
-        # start pipeline
+        observer.pipe_ind = i + 1
+        observer.pipe_conf = copy(pipe['chainer']['pipe'])
+        dataset_name = copy(pipe['dataset_reader']['data_path'])
+        observer.dataset = copy(pipe['dataset_reader']['data_path'])
+        observer.batch_size = copy(pipe['train'].get('batch_size', "None"))
+
+        # start pipeline time
         pipe_start = time()
-        res = dict(pipe_conf=deepcopy(pipe_config))
+        save_path = join(observer.save_path, dataset_name, "pipe_{}".format(i + 1))
+        if not isdir(save_path):
+            os.makedirs(save_path)
 
-        #
-        dataset_name = copy(res['pipe_conf']['dataset_reader']['data_path'])
-        save_path = join(out_path, dataset_name, "pipe_{}".format(pipe_ind + 1))
-        os.makedirs(save_path)
-        #
+        # run pipeline train with redirected output flow
         with RedirectedPrints(new_target=open(join(save_path, "out.txt"), "w")):
-            if cross_validation:
-                cv_score = calc_cv_score(pipe_config, n_folds=k_fold)
-                results = {"test": cv_score}
-            else:
-                results = train_evaluate_model_from_config(pipe_config, to_train=True, to_validate=True)
+            results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
 
-        res['results'] = results
-        res['pipe_time'] = time() - pipe_start
-        return res
+        # add results and pipe time to log
+        observer.pipe_time = normal_time(time() - pipe_start)
+        observer.pipe_res = results
 
-    def update_observer(self, res_list: List[dict]):
-        dataset_res = {}
-        for i, res in enumerate(res_list):
-            pipe = res['pipe_conf']
-            results = res['results']
-            dataset_name = copy(pipe['dataset_reader']['data_path'])
+        # update logger
+        observer.update_log()
 
-            if i == 0:
-                self.observer.log['experiment_info']['metrics'] = copy(pipe['train']['metrics'])
-                if self.target_metric is None:
-                    self.target_metric = pipe['train']['metrics'][0]['name']
-                self.observer.log['experiment_info']['target_metric'] = self.target_metric
-
-            self.observer.pipe_ind = i + 1
-            self.observer.pipe_conf = copy(pipe['chainer']['pipe'])
-            self.observer.dataset = dataset_name
-            self.observer.batch_size = pipe['train'].get('batch_size', "None")
-
-            # add results and pipe time to log
-            self.observer.pipe_time = normal_time(res['pipe_time'])
-            self.observer.pipe_res = results
-            # update observer
-            self.observer.get_pipe_log()
-            self.observer.write()
-            # save config in checkpoint folder
-            if not self.cross_validation:
-                self.save_config(pipe, dataset_name, i)
-
-            if self.save_best:
-                if dataset_name not in dataset_res.keys():
-                    dataset_res[dataset_name] = dict(best_score=-1, best_ind=None)
-
-                if 'test' in results.keys():
-                    if results['test'][self.target_metric] > dataset_res[dataset_name]["best_score"]:
-                        dataset_res[dataset_name]["best_score"] = results['test'][self.target_metric]
-                        dataset_res[dataset_name]["best_ind"] = i + 1
-
-                else:
-                    if results['valid'][self.target_metric] > dataset_res[dataset_name]["best_score"]:
-                        dataset_res[dataset_name]["best_score"] = results['valid'][self.target_metric]
-                        dataset_res[dataset_name]["best_ind"] = i + 1
-
-        return dataset_res
+        # save config in checkpoint folder
+        observer.save_config(pipe, dataset_name, i + 1)
+        return None
 
     def gpu_gen(self, gpu=False):
         if gpu:
             for i, pipe_conf in enumerate(self.pipeline_generator()):
-                j = i - (i // len(self.available_gpu)) * len(self.available_gpu)
-                yield (deepcopy(pipe_conf), self.cross_validation, self.k_fold, True, j, i, self.save_path)
+                gpu_ind = i - (i // len(self.available_gpu)) * len(self.available_gpu)
+                yield (deepcopy(pipe_conf), i, self.observer, gpu_ind)
         else:
             for i, pipe_conf in enumerate(self.pipeline_generator()):
-                yield (deepcopy(pipe_conf), self.cross_validation, self.k_fold, False, None, i, self.save_path)
+                yield (deepcopy(pipe_conf), i, self.observer)
 
     def run(self):
         """
         Initializes the pipeline generator and runs the experiment. Creates a report after the experiments.
         """
-        # create the pipeline generator
-        self.pipeline_generator = PipeGen(self.exp_config, self.save_path, sample_num=self.sample_num, test_mode=False,
-                                          cross_val=self.cross_validation)
-        self.gen_len = self.pipeline_generator.length
-
         # Start generating pipelines configs
         print('[ Experiment start - {0} pipes, will be run]'.format(self.gen_len))
-        if self.cross_validation:
-            print("[ WARNING: Cross validation is active! Every pipeline will be run {0} times! ]".format(self.k_fold))
-
-        self.observer.log['experiment_info']['number_of_pipes'] = self.gen_len
 
         if self.multiprocessing:
             # start multiprocessing
             workers = Pool(self.max_num_workers)
 
             if self.available_gpu is None:
-                pipes_results = list(tqdm(workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(gpu=False)]),
-                                          total=self.gen_len))
+                x = list(tqdm(workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(gpu=False)]),
+                              total=self.gen_len))
                 workers.close()
                 workers.join()
             else:
-                pipes_results = list(tqdm(workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(gpu=True)]),
-                                          total=self.gen_len))
+                x = list(tqdm(workers.imap_unordered(self.train_pipe, [x for x in self.gpu_gen(gpu=True)]),
+                              total=self.gen_len))
                 workers.close()
                 workers.join()
+            del x
         else:
-            pipes_results = []
             for i, pipe in enumerate(tqdm(self.pipeline_generator(), total=self.gen_len)):
-                res = dict(pipe_conf=deepcopy(pipe))
-                # start pipeline time
-                pipe_start = time()
-                if self.cross_validation:
-                    cv_score = calc_cv_score(pipe, n_folds=self.k_fold)
-                    results = {"test": cv_score}
+                if self.available_gpu is None:
+                    self.train_pipe((pipe, i, self.observer))
                 else:
-                    results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
-                res['pipe_time'] = time() - pipe_start
-                res['results'] = results
-
-                pipes_results.append(res)
-
-        dataset_res = self.update_observer(pipes_results)
+                    gpu_ind = i - (i // len(self.available_gpu)) * len(self.available_gpu)
+                    self.train_pipe((pipe, i, self.observer, gpu_ind))
 
         # save log
         self.observer.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)
-        self.observer.save()
-
         # delete all checkpoints and save only best pipe
         if self.save_best:
-            for name in dataset_res.keys():
-                source = join(self.save_path, name)  # , 'pipe_{}'.format(dataset_res[name]["best_ind"])
-                dest1 = join(self.save_path, name + '_best_pipe')
-                if not os.path.isdir(dest1):
-                    os.makedirs(dest1)
-
-                files = os.listdir(source)
-                for f in files:
-                    if not f.startswith('pipe') and not os.path.isfile(join(dest1, f)):
-                        shutil.move(join(source, f), dest1)
-                    elif f == 'pipe_{}'.format(dataset_res[name]["best_ind"]):
-                        if os.path.isdir(join(dest1, f)):
-                            rmtree(join(dest1, f))
-                            shutil.move(join(source, f), dest1)
-                        else:
-                            shutil.move(join(source, f), dest1)
-
-                # del all tmp files in save path
-                rmtree(join(self.save_path, name))
+            self.observer.save_best_pipe()
 
         print("[ End of experiment ]")
         # visualization of results
         print("[ Create an experiment report ... ]")
-        path = join(self.root, self.date, self.exp_name)
-        results_visualization(path, self.plot, target_metric=self.target_metric)
+        results_visualization(join(self.root, self.date, self.exp_name), self.plot)
         print("[ Report created ]")
         return None
 
@@ -378,86 +312,133 @@ class PipelineManager:
         """
         Initializes the pipeline generator with tiny data and runs the test of experiment.
         """
+
+        def gpu_gen(pipe_gen, available_gpu, gpu=False):
+            if gpu:
+                for j, pipe_conf in enumerate(pipe_gen()):
+                    gpu_ind_ = j - (j // len(available_gpu)) * len(available_gpu)
+                    yield (j, deepcopy(pipe_conf), gpu_ind_)
+            else:
+                for j, pipe_conf in enumerate(pipe_gen()):
+                    yield (j, deepcopy(pipe_conf))
+
         # create the pipeline generator
-        pipeline_generator = PipeGen(self.exp_config, self.save_path, sample_num=self.sample_num, test_mode=True)
+        pipeline_generator = PipeGen(self.exp_config, self.save_path, self.search_type, self.sample_num, True)
         len_gen = pipeline_generator.length
 
         # Start generating pipelines configs
         print('[ Test start - {0} pipes, will be run]'.format(len_gen))
-        for i, pipe in enumerate(tqdm(pipeline_generator(), total=len_gen)):
-            data_iterator_i = self.test_dataset_reader_and_iterator(pipe, i)
-            results = train_evaluate_model_from_config(pipe, iterator=data_iterator_i, to_train=True, to_validate=False)
-            del results
+        if self.multiprocessing:
+            # start multiprocessing
+            workers = Pool(self.max_num_workers)
+
+            if self.available_gpu:
+                x = list(tqdm(workers.imap_unordered(self.test_pipe,
+                                                     [x for x in gpu_gen(pipeline_generator,
+                                                                         self.available_gpu,
+                                                                         gpu=True)]),
+                              total=len_gen))
+                workers.close()
+                workers.join()
+            else:
+                x = list(tqdm(workers.imap_unordered(self.test_pipe,
+                                                     [x for x in gpu_gen(pipeline_generator,
+                                                                         self.available_gpu,
+                                                                         gpu=False)]),
+                              total=len_gen))
+                workers.close()
+                workers.join()
+            del x
+        else:
+            for i, pipe in enumerate(tqdm(pipeline_generator(), total=len_gen)):
+                if self.available_gpu:
+                    gpu_ind = i - (i // len(self.available_gpu)) * len(self.available_gpu)
+                    self.test_pipe((i, pipe, gpu_ind))
+                else:
+                    self.test_pipe((i, pipe))
 
         # del all tmp files in save path
         rmtree(join(self.save_path, "tmp"))
         print('[ The test was successful ]')
         return None
 
-    def test_dataset_reader_and_iterator(self, config, i):
-        # create and test data generator and data iterator
-        data = read_data_by_config(config)
-        if i == 0:
-            for dtype in self.dataset_composition.keys():
-                if len(data.get(dtype, [])) != 0:
-                    self.dataset_composition[dtype] = True
-        else:
-            for dtype in self.dataset_composition.keys():
-                if len(data.get(dtype, [])) == 0 and self.dataset_composition[dtype]:
-                    raise ConfigError("The file structure in the {0} dataset differs "
-                                      "from the rest datasets.".format(config['dataset_reader']['data_path']))
-
-        iterator = get_iterator_from_config(config, data)
-        if isinstance(iterator, DataFittingIterator):
-            raise ConfigError("Instance of a class 'DataFittingIterator' is not supported.")
-        else:
-            if config.get('train', None):
-                if config['train']['test_best'] and len(iterator.data['test']) == 0:
-                    raise ConfigError("The 'test' part of dataset is empty, but 'test_best' in train config is 'True'."
-                                      " Please check the dataset_iterator config.")
-
-                if (config['train']['validate_best'] or config['train'].get('val_every_n_epochs', False) > 0) and \
-                        len(iterator.data['valid']) == 0:
-                    raise ConfigError("The 'valid' part of dataset is empty, but 'valid_best' in train config is 'True'"
-                                      " or 'val_every_n_epochs' > 0. Please check the dataset_iterator config.")
+    @staticmethod
+    @unpack_args
+    def test_pipe(ind, pipe_conf, gpu_ind=None):
+        def test_dataset_reader_and_iterator(config, i):
+            # create and test data generator and data iterator
+            dataset_composition_ = dict(train=False, valid=False, test=False)
+            data = read_data_by_config(config)
+            if i == 0:
+                for dtype in dataset_composition_.keys():
+                    if len(data.get(dtype, [])) != 0:
+                        dataset_composition_[dtype] = True
             else:
-                if len(iterator.data['test']) == 0:
-                    raise ConfigError("The 'test' part of dataset is empty as a 'train' part of config file, "
-                                      "but default value of 'test_best' is 'True'. "
-                                      "Please check the dataset_iterator config.")
+                for dtype in dataset_composition_.keys():
+                    if len(data.get(dtype, [])) == 0 and dataset_composition_[dtype]:
+                        raise ConfigError("The file structure in the {0} dataset differs "
+                                          "from the rest datasets.".format(config['dataset_reader']['data_path']))
 
-        # get a tiny data from dataset
-        if len(iterator.data['train']) <= 100:
-            print("!!!!!!!!!!!!! WARNING !!!!!!!!!!!!! Length of 'train' part dataset <= 100. "
-                  "Please check the dataset_iterator config")
-            tiny_train = copy(iterator.data['train'])
+            iterator = get_iterator_from_config(config, data)
+
+            if isinstance(iterator, DataFittingIterator):
+                raise ConfigError("Instance of a class 'DataFittingIterator' is not supported.")
+            else:
+                if config.get('train', None):
+                    if config['train']['test_best'] and len(iterator.data['test']) == 0:
+                        raise ConfigError(
+                            "The 'test' part of dataset is empty, but 'test_best' in train config is 'True'."
+                            " Please check the dataset_iterator config.")
+
+                    if (config['train']['validate_best'] or config['train'].get('val_every_n_epochs', False) > 0) and \
+                            len(iterator.data['valid']) == 0:
+                        raise ConfigError(
+                            "The 'valid' part of dataset is empty, but 'valid_best' in train config is 'True'"
+                            " or 'val_every_n_epochs' > 0. Please check the dataset_iterator config.")
+                else:
+                    if len(iterator.data['test']) == 0:
+                        raise ConfigError("The 'test' part of dataset is empty as a 'train' part of config file, "
+                                          "but default value of 'test_best' is 'True'. "
+                                          "Please check the dataset_iterator config.")
+
+            # get a tiny data from dataset
+            if len(iterator.data['train']) <= 100:
+                print("!!!!!!!!!!!!! WARNING !!!!!!!!!!!!! Length of 'train' part dataset <= 100. "
+                      "Please check the dataset_iterator config")
+                tiny_train = copy(iterator.data['train'])
+            else:
+                tiny_train = copy(iterator.data['train'][:10])
+            iterator.train = tiny_train
+
+            if len(iterator.data['valid']) <= 20:
+                tiny_valid = copy(iterator.data['valid'])
+            else:
+                tiny_valid = copy(iterator.data['valid'][:5])
+            iterator.valid = tiny_valid
+
+            if len(iterator.data['test']) <= 20:
+                tiny_test = copy(iterator.data['test'])
+            else:
+                tiny_test = copy(iterator.data['test'][:5])
+            iterator.test = tiny_test
+
+            iterator.data = {'train': tiny_train,
+                             'valid': tiny_valid,
+                             'test': tiny_test,
+                             'all': tiny_train + tiny_valid + tiny_test}
+
+            return iterator
+
+        # modify project environment
+        if gpu_ind:
+            os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu_ind)
         else:
-            tiny_train = copy(iterator.data['train'][:10])
-        iterator.train = tiny_train
+            os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
-        if len(iterator.data['valid']) <= 20:
-            tiny_valid = copy(iterator.data['valid'])
-        else:
-            tiny_valid = copy(iterator.data['valid'][:5])
-        iterator.valid = tiny_valid
-
-        if len(iterator.data['test']) <= 20:
-            tiny_test = copy(iterator.data['test'])
-        else:
-            tiny_test = copy(iterator.data['test'][:5])
-        iterator.test = tiny_test
-
-        iterator.data = {'train': tiny_train,
-                         'valid': tiny_valid,
-                         'test': tiny_test,
-                         'all': tiny_train + tiny_valid + tiny_test}
-
-        return iterator
-
-    def save_config(self, conf, dataset_name, i) -> None:
-        """
-        Save train config in checkpoint folder.
-        """
-        with open(join(self.save_path, dataset_name, "pipe_{}".format(i+1), 'config.json'), 'w') as cf:
-            json.dump(conf, cf)
-            cf.close()
+        data_iterator_i = test_dataset_reader_and_iterator(pipe_conf, ind)
+        results = train_evaluate_model_from_config(pipe_conf,
+                                                   iterator=data_iterator_i,
+                                                   to_train=True,
+                                                   to_validate=False)
+        del results
+        return None

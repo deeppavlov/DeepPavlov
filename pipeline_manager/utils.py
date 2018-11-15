@@ -20,9 +20,8 @@ import matplotlib.pyplot as plt
 
 from os import mkdir
 from copy import copy
-from typing import List, Union
+from typing import Dict
 from os.path import join, isdir
-from collections import OrderedDict
 
 from py3nvml import py3nvml
 from deeppavlov.core.common.log import get_logger
@@ -49,7 +48,7 @@ def normal_time(z):
 
 
 def merge_logs(old_log, new_log):
-    """ Combines two logs into one """
+    """ Merge two logs """
     # update time
     t_old = old_log['experiment_info']['full_time'].split(':')
     t_new = new_log['experiment_info']['full_time'].split(':')
@@ -61,43 +60,22 @@ def merge_logs(old_log, new_log):
     n_new = int(new_log['experiment_info']['number_of_pipes'])
     old_log['experiment_info']['number_of_pipes'] = n_old + n_new
 
-    new_datasets = []
-    new_models = {}
     for dataset_name, dataset_val in new_log['experiments'].items():
         if dataset_name not in old_log['experiments'].keys():
-            new_datasets.append(dataset_name)
+            old_log['experiments'][dataset_name] = dataset_val
         else:
-            new_models[dataset_name] = []
-            for name, val in dataset_val.items():
-                if name not in old_log['experiments'][dataset_name].keys():
-                    new_models[dataset_name].append(name)
-
-    for dataset_name, dataset_val in new_log['experiments'].items():
-        if dataset_name not in new_datasets:
-            for name, val in dataset_val.items():
-                if name not in new_models[dataset_name]:
-                    for nkey, nval in new_log['experiments'][dataset_name][name].items():
+            for ind, item in new_log['experiments'][dataset_name].items():
+                if ind not in old_log['experiments'][dataset_name].keys():
+                    old_log['experiments'][dataset_name][ind] = item
+                else:
+                    for nkey, nval in item.items():
                         match = False
-                        for okey, oval in old_log['experiments'][dataset_name][name].items():
+                        for okey, oval in old_log['experiments'][dataset_name][ind].items():
                             if nval['config'] == oval['config']:
                                 match = True
                         if not match:
                             n_old += 1
-                            old_log['experiments'][dataset_name][name][str(n_old)] = nval
-
-    for dataset_name in new_models.keys():
-        if len(new_models[dataset_name]) != 0:
-            for model_name in new_models[dataset_name]:
-                old_log['experiments'][dataset_name][model_name] = OrderedDict()
-                for nkey, nval in new_log['experiments'][dataset_name][model_name].items():
-                    n_old += 1
-                    old_log['experiments'][dataset_name][model_name][str(n_old)] = nval
-
-    for dataset_name in new_datasets:
-        for model_name, model_val in new_log['experiments'][dataset_name].items():
-            for nkey, nval in new_log['experiments'][dataset_name][model_name].items():
-                n_old += 1
-                old_log['experiments'][dataset_name][model_name][str(n_old)] = nval
+                            old_log['experiments'][dataset_name][str(n_old)] = nval
 
     return old_log
 
@@ -254,32 +232,31 @@ def get_data(log):
 
     stop_words = ['save_path', 'load_path', 'scratch_init', 'name', 'id', 'in', 'in_y', 'out', 'fit_on']
 
-    for dataset_name, models_val in log['experiments'].items():
+    for dataset_name, dataset_val in log['experiments'].items():
         dataset_names[dataset_name] = []
         pipelines = []
-        for model_name, val in models_val.items():
-            for num, conf in val.items():
-                pipe = dict(index=int(num), components=[], res={}, time=conf['time'])
-                # max amount of components
-                if max_com < len(conf['config']):
-                    max_com = len(conf['config'])
+        for ind, conf in dataset_val.items():
+            pipe = dict(index=int(ind), components=[], res={}, time=conf['time'])
+            # max amount of components
+            if max_com < len(conf['config']):
+                max_com = len(conf['config'])
 
-                for component in conf['config']:
-                    for key in copy(list(component.keys())):
-                        if key in stop_words:
-                            del component[key]  # dell = component.pop(key)
+            for component in conf['config']:
+                for key in copy(list(component.keys())):
+                    if key in stop_words:
+                        del component[key]  # dell = component.pop(key)
 
-                    comp_data = dict()
-                    comp_data['name'] = component.pop('component_name')
-                    comp_data['conf'] = component
-                    pipe['components'].append(comp_data)
+                comp_data = dict()
+                comp_data['name'] = component.pop('component_name')
+                comp_data['conf'] = component
+                pipe['components'].append(comp_data)
 
-                    if 'main' in component.keys():
-                        break
+                if 'main' in component.keys():
+                    break
 
-                for name, val_ in conf['results'].items():
-                    pipe['res'][name] = val_
-                pipelines.append(pipe)
+            for name, val_ in conf['results'].items():
+                pipe['res'][name] = val_
+            pipelines.append(pipe)
         dataset_names[dataset_name].append(pipelines)
 
     return max_com, dataset_names
@@ -470,13 +447,12 @@ def sort_pipes(pipes, target_metric):
     return sort_pipes_
 
 
-def build_pipeline_table(log_data, target_metric=None, save_path='./'):
+def build_pipeline_table(log_data, save_path='./'):
     exp_name = log_data['experiment_info']['exp_name']
     date = log_data['experiment_info']['date']
     metrics = log_data['experiment_info']['metrics']
     num_p = log_data['experiment_info']['number_of_pipes']
-    if target_metric is None:
-        target_metric = metrics[0]
+    target_metric = log_data['experiment_info']['target_metric']
 
     # read data from log
     max_l, pipe_data = get_data(log_data)
@@ -509,14 +485,28 @@ def build_pipeline_table(log_data, target_metric=None, save_path='./'):
 
 def get_met_info(log_):
 
-    def analize(log, metrics_: List[str]):
+    def analize(log: Dict):
         main = dict()
 
-        for name in list(log.keys()):
+        log_keys = list(log.keys())
+        if log[log_keys[0]]['results'].get('test'):
+            metrics_ = list(log[log_keys[0]]['results']['test'].keys())
+        else:
+            metrics_ = list(log[log_keys[0]]['results']['valid'].keys())
+
+        group_data = dict()
+        for ind, val in log.items():
+            if val['model'] not in group_data:
+                group_data[val['model']] = dict()
+                group_data[val['model']][ind] = val
+            else:
+                group_data[val['model']][ind] = val
+
+        for name in group_data.keys():
             main[name] = dict()
             for met in metrics_:
                 met_max = -1
-                for key, val in log[name].items():
+                for key, val in group_data[name].items():
                     if val['results'].get('test') is not None:
                         if val['results']['test'][met] > met_max:
                             met_max = val['results']['test'][met]
@@ -532,9 +522,8 @@ def get_met_info(log_):
         return main
 
     data = {}
-    metrics = log_['experiment_info']['metrics']
-    for dataset_name, models_val in log_['experiments'].items():
-        data[dataset_name] = analize(models_val, metrics)
+    for dataset_name, log_val in log_['experiments'].items():
+        data[dataset_name] = analize(log_val)
     return data
 
 
@@ -612,19 +601,16 @@ def plot_res(info, name, savepath='./', save=True, width=0.2, fheight=8, fwidth=
 # _________________________________________________Build report_______________________________________________________
 
 
-def results_visualization(root: str, plot: bool, merge: bool = False,
-                          target_metric: Union[str, None] = None) -> None:
+def results_visualization(root: str, plot: bool, merge: bool = False) -> None:
 
     if not merge:
         with open(join(root, root.split('/')[-1] + '.json'), 'r') as log_file:
             log = json.load(log_file)
             log_file.close()
         # create the xlsx file with results of experiments
-        build_pipeline_table(log, target_metric=target_metric, save_path=root)
+        build_pipeline_table(log, save_path=root)
 
         if plot:
-            if not isdir(join(root, 'images')):
-                os.makedirs(join(root, 'images'))
             # scrub data from log for image creating
             info = get_met_info(log)
             # plot histograms
@@ -648,12 +634,12 @@ def results_visualization(root: str, plot: bool, merge: bool = False,
             old_log = merge_logs(old_log, log)
 
         # chose new metric
-        if target_metric:
-            for key, metrics in GOLD_METRICS.items():
-                if target_metric in metrics:
-                    target_metric = key
+        target_metric = old_log['experiment_info']['target_metric']
+        for key, metrics in GOLD_METRICS.items():
+            if target_metric in metrics:
+                target_metric = key
 
-        build_pipeline_table(old_log, target_metric, root)
+        build_pipeline_table(old_log, save_path=root)
         if plot:
             if not isdir(join(root, 'images')):
                 os.makedirs(join(root, 'images'))
