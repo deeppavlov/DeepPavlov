@@ -27,7 +27,8 @@ log = get_logger(__name__)
 
 @register('file_paths_iterator')
 class FilePathsIterator(DataLearningIterator):
-    """Dataset iterator for datasetes like 1 Billion Word Benchmark
+    """Dataset iterator for datasetes like 1 Billion Word Benchmark.
+    It gets lists of file paths from the data dictionary and return lines from each files.
 
     Args:
         data: dict with keys ``'train'``, ``'valid'`` and ``'test'`` and values
