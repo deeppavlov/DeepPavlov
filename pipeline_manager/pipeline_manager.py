@@ -16,11 +16,11 @@ import os
 
 from time import time
 from tqdm import tqdm
-from os.path import join, isdir
 from pathlib import Path
 from shutil import rmtree
 from psutil import cpu_count
 from datetime import datetime
+from os.path import join, isdir
 from copy import copy, deepcopy
 from multiprocessing import Pool
 from typing import Union, Dict
@@ -296,7 +296,7 @@ class PipelineManager:
                     self.train_pipe((pipe, i, self.observer, gpu_ind))
 
         # save log
-        self.observer.log['experiment_info']['full_time'] = normal_time(time() - self.start_exp)
+        self.observer.exp_time(normal_time(time() - self.start_exp))
         # delete all checkpoints and save only best pipe
         if self.save_best:
             self.observer.save_best_pipe()
