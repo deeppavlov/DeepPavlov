@@ -13,8 +13,7 @@
 # limitations under the License.
 
 
-from typing import List, Tuple, Iterator, Optional
-from  collections import deque
+from typing import Tuple, Iterator, Optional
 
 import numpy as np
 
@@ -53,7 +52,6 @@ class FilePathsIterator(DataLearningIterator):
         for i in range(0, len(items_list), chunk_size):
             yield items_list[i:i + chunk_size]
 
-
     def _shard_generator(self, shards, shuffle = False, random = None):
         shards_to_choose = list(shards)
         if shuffle:
@@ -66,12 +64,12 @@ class FilePathsIterator(DataLearningIterator):
             yield lines
             
     def gen_batches(self, batch_size: int, data_type: str = 'train', shuffle: bool = None)\
-            -> Iterator[Tuple[str,str]]:
+            -> Iterator[Tuple[str, str]]:
         if shuffle is None:
             shuffle = self.shuffle
 
         tgt_data = self.data[data_type]
-        shard_generator = self._shard_generator(tgt_data, shuffle = False, random = self.np_random)
+        shard_generator = self._shard_generator(tgt_data, shuffle = shuffle, random = self.np_random)
 
         for shard in shard_generator:
             if not (batch_size):

@@ -75,9 +75,10 @@ def main():
     stateful = args.stateful
 
     if args.mode == 'train':
-        train_evaluate_model_from_config(pipeline_config_path, start_epoch_num = start_epoch_num)
+        train_evaluate_model_from_config(pipeline_config_path, start_epoch_num=start_epoch_num)
     elif args.mode == 'evaluate':
-        train_evaluate_model_from_config(pipeline_config_path, to_train=False, to_validate=False, start_epoch_num = start_epoch_num)
+        train_evaluate_model_from_config(pipeline_config_path, to_train=False, to_validate=False,
+                                         start_epoch_num=start_epoch_num)
     elif args.mode == 'interact':
         interact_model(pipeline_config_path)
     elif args.mode == 'interactbot':

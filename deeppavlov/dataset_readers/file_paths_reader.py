@@ -26,30 +26,31 @@ log = get_logger(__name__)
 
 @register('file_paths_reader')
 class FilePathsReader(DatasetReader):
-    """Find all file paths by a data path regex"""
+    """Find all file paths by a data path glob"""
 
     @overrides
     def read(self, data_path: str, train: Optional[str] = None,
              valid: Optional[str] = None, test: Optional[str] = None,
              *args, **kwargs) -> Dict:
         """
-        Find all file paths by a data path regex
+        Find all file paths by a data path glob
 
         Args:
             data_path: directory with data
-            train: data path regex
-            valid: data path regex
-            test: data path regex
+            train: data path glob relative to data_path
+            valid: data path glob relative to data_path
+            test: data path glob relative to data_path
 
         Returns:
             dictionary with types from data_types.
-            A dictionary containing training, validation and test parts of the dataset obtainable via ``train``, ``valid`` and ``test`` keys.
+            A dictionary containing training, validation and test parts of the dataset obtainable via ``train``,
+                ``valid`` and ``test`` keys.
         """
 
         dataset = dict()
-        dataset["train"] = self._get_files(data_path,train)
-        dataset["valid"] = self._get_files(data_path,valid)
-        dataset["test"] = self._get_files(data_path,test)
+        dataset["train"] = self._get_files(data_path, train)
+        dataset["valid"] = self._get_files(data_path, valid)
+        dataset["test"] = self._get_files(data_path, test)
         return dataset
 
     def _get_files(self, data_path, tgt):
