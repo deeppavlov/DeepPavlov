@@ -20,6 +20,7 @@ import numpy as np
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.data.utils import chunk_generator
 
 
 log = get_logger(__name__)
@@ -47,11 +48,6 @@ class FilePathsIterator(DataLearningIterator):
         self.np_random = np.random.RandomState(seed)
         super().__init__(data, seed, shuffle, *args, **kwargs)
 
-    @staticmethod
-    def _chunk_generator(items_list, chunk_size):
-        for i in range(0, len(items_list), chunk_size):
-            yield items_list[i:i + chunk_size]
-
     def _shard_generator(self, shards, shuffle = False, random = None):
         shards_to_choose = list(shards)
         if shuffle:
@@ -74,6 +70,6 @@ class FilePathsIterator(DataLearningIterator):
         for shard in shard_generator:
             if not (batch_size):
                 bs = len(shard)
-            lines_generator = self._chunk_generator(shard, bs)
+            lines_generator = chunk_generator(shard, bs)
             for lines in lines_generator:
                 yield (lines, [])

@@ -405,3 +405,8 @@ def jsonify_data(input):
     else:
         result = input
     return result
+
+
+def chunk_generator(items_list, chunk_size):
+    for i in range(0, len(items_list), chunk_size):
+        yield items_list[i:i + chunk_size]

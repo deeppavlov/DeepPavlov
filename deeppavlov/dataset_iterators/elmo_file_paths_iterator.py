@@ -20,6 +20,7 @@ import numpy as np
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.common.log import get_logger
+from deeppavlov.core.data.utils import chunk_generator
 
 
 log = get_logger(__name__)
@@ -51,11 +52,6 @@ class ELMoFilePathsIterator(DataLearningIterator):
         self.n_gpus = n_gpus
         super().__init__(data, seed, shuffle, *args, **kwargs)
 
-    @staticmethod
-    def _chunk_generator(items_list, chunk_size):
-        for i in range(0, len(items_list), chunk_size):
-            yield items_list[i:i + chunk_size]
-
     def _shard_generator(self, shards, shuffle = False, random = None):
         shards_to_choose = list(shards)
         if shuffle:
@@ -69,7 +65,7 @@ class ELMoFilePathsIterator(DataLearningIterator):
             
     def _line_generator(self, shard_generator):
         for shard in shard_generator:
-            line_generator = self._chunk_generator(shard, 1)
+            line_generator = chunk_generator(shard, 1)
             for line in line_generator:
                 yield line[0]
 
