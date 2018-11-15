@@ -54,8 +54,7 @@ class FilePathsIterator(DataLearningIterator):
             yield items_list[i:i + chunk_size]
 
 
-    @staticmethod
-    def _shard_generator(shards, shuffle = False, random = None):
+    def _shard_generator(self, shards, shuffle = False, random = None):
         shards_to_choose = list(shards)
         if shuffle:
             random.shuffle(shards_to_choose)
