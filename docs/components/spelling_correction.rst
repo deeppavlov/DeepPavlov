@@ -11,6 +11,10 @@ with the help of a `kenlm language model <#language-model>`__.
 You can find `the comparison <#comparison>`__ of these and other
 approaches near the end of this readme.
 
+.. note::
+
+    About 4.4 GB on disc required for Russian model and about 7 GB for English one.
+
 Quick start
 -----------
 
