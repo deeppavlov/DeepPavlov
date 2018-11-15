@@ -67,10 +67,10 @@
           "warm_start": false,
           "penalty": "l1",
           "dual": false,
-          "C": {"search_range": [0.01, 2.0]},
-          "fit_intercept": {"search_bool": true},
-          "class_weight": {"search_choice": [null, "balanced"]},
-          "solver": {"search_choice": ["liblinear", "saga"]}
+          "C": {"random_range": [0.01, 2.0]},
+          "fit_intercept": {"random_bool": true},
+          "class_weight": {"random_choice": [null, "balanced"]},
+          "solver": {"random_choice": ["liblinear", "saga"]}
         },
         {
           "in": ["x_vec"],
@@ -86,10 +86,10 @@
           "warm_start": false,
           "penalty": "l2",
           "dual": false,
-          "C": {"search_range": [0.01, 2.0]},
-          "fit_intercept": {"search_bool": true},
-          "class_weight": {"search_choice": [null, "balanced"]},
-          "solver": {"search_choice": ["lbfgs", "newton-cg"]}
+          "C": {"random_range": [0.01, 2.0]},
+          "fit_intercept": {"random_bool": true},
+          "class_weight": {"random_choice": [null, "balanced"]},
+          "solver": {"random_choice": ["lbfgs", "newton-cg"]}
         }
       ],
       [
@@ -135,8 +135,7 @@
     "exp_name": "lin_avr_clf",
     "root": "./download/experiments/",
     "do_test": false,
-    "cross_val": false,
-    "k_fold": 5,
+    "search_type": "random",
     "sample_num": 10,
     "target_metric": null,
     "plot": false,

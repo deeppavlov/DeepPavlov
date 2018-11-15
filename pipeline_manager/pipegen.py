@@ -31,8 +31,7 @@ class PipeGen:
     The class implements the generator of standard DeepPavlov configs.
     """
 
-    def __init__(self, config: Union[Dict, str], save_path: str, sample_num=10, test_mode=False,
-                 cross_val: bool = False):
+    def __init__(self, config: Union[Dict, str], save_path: str, mode: str='random', sample_num=10, test_mode=False):
         """
         Initialize generator with input params.
 
@@ -59,9 +58,13 @@ class PipeGen:
         self.chainer = self.main_config.pop('chainer')
         self.structure = self.chainer['pipe']
 
+        if mode in ['random', 'grid']:
+            self.mode = mode
+        else:
+            raise ConfigError(f"'{mode} search' not implemented. Only 'grid' and 'random' search are available.")
+
         self.test_mode = test_mode
         self.save_path = save_path
-        self.cross_val = cross_val
         self.length = None
         self.pipes = []
         self.N = sample_num
@@ -118,7 +121,6 @@ class PipeGen:
 
         return product(*self.pipes)
 
-    # TODO make generator splits again
     def pipeline_gen(self):
         """
         Generate DeepPavlov standard configs (dicts).
@@ -132,27 +134,36 @@ class PipeGen:
             train_config = variant[1]
             pipe_var = variant[2:]
 
-            for grid_pipe in self.grid_conf_gen(pipe_var):
-                grid_pipe = list(grid_pipe)
-                for pipe in self.random_conf_gen(grid_pipe):
-
+            if self.mode == 'random':
+                for random_pipe in self.random_conf_gen(pipe_var):
                     new_config = dict(dataset_reader=deepcopy(dr_config),
                                       dataset_iterator=self.main_config['dataset_iterator'],
                                       chainer=self.chainer, train=train_config)
                     if 'metadata' in self.main_config.keys():
                         new_config['metadata'] = self.main_config['metadata']
 
-                    chainer_components = list(pipe)
-                    if not self.cross_val:
-                        dataset_name = dr_config['data_path']
-                        chainer_components = self.change_load_path(chainer_components, p, self.save_path, dataset_name,
-                                                                   self.test_mode)
-                        new_config['chainer']['pipe'] = chainer_components
-                        p += 1
-                        yield new_config
-                    else:
-                        new_config['chainer']['pipe'] = chainer_components
-                        yield new_config
+                    chainer_components = list(random_pipe)
+                    dataset_name = dr_config['data_path']
+                    chainer_components = self.change_load_path(chainer_components, p, self.save_path, dataset_name,
+                                                               self.test_mode)
+                    new_config['chainer']['pipe'] = chainer_components
+                    p += 1
+                    yield new_config
+            else:
+                for grid_pipe in self.grid_conf_gen(pipe_var):
+                    new_config = dict(dataset_reader=deepcopy(dr_config),
+                                      dataset_iterator=self.main_config['dataset_iterator'],
+                                      chainer=self.chainer, train=train_config)
+                    if 'metadata' in self.main_config.keys():
+                        new_config['metadata'] = self.main_config['metadata']
+
+                    chainer_components = list(grid_pipe)
+                    dataset_name = dr_config['data_path']
+                    chainer_components = self.change_load_path(chainer_components, p, self.save_path, dataset_name,
+                                                               self.test_mode)
+                    new_config['chainer']['pipe'] = chainer_components
+                    p += 1
+                    yield new_config
 
     # random generation
     def random_conf_gen(self, pipe_components: list) -> Generator:
@@ -161,7 +172,7 @@ class PipeGen:
         Returns:
             python generator
         """
-        sample_gen = ParamsSearch()
+        sample_gen = ParamsSearch(prefix="random")
         new_pipes = []
         for component in pipe_components:
             new_components = []
@@ -170,7 +181,7 @@ class PipeGen:
                 for key, item in component.items():
                     if isinstance(item, dict):
                         for item_key in item.keys():
-                            if item_key.startswith('search_'):
+                            if item_key.startswith('random_'):
                                 search = True
                                 break
 
@@ -204,9 +215,9 @@ class PipeGen:
             if component is not None:
                 for key, item in component.items():
                     if isinstance(item, dict):
-                        if 'search_grid' in item.keys():
+                        if 'grid_search' in item.keys():
                             var_list = list()
-                            for var in item['search_grid']:
+                            for var in item['grid_search']:
                                 var_dict = dict()
                                 var_dict[var] = [i, key]
                                 var_list.append(var_dict)

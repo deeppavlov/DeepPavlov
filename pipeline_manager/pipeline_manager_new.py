@@ -96,6 +96,7 @@ class PipelineManager:
         # self.cross_validation = self.exp_config['enumerate'].get('cross_val', False)
         # self.k_fold = self.exp_config['enumerate'].get('k_fold', 5)
 
+        self.search_type = self.exp_config['enumerate'].get('search_type', 'random')
         self.sample_num = self.exp_config['enumerate'].get('sample_num', 10)
         self.target_metric = self.exp_config['enumerate'].get('target_metric')
         self.multiprocessing = self.exp_config['enumerate'].get('multiprocessing', True)
@@ -108,7 +109,7 @@ class PipelineManager:
         self.save_path = join(self.root, self.date, self.exp_name, 'checkpoints')
         self.observer = Observer(self.exp_name, self.root, self.info, self.date, self.plot)
         # create the pipeline generator
-        self.pipeline_generator = PipeGen(self.exp_config, self.save_path, sample_num=self.sample_num, test_mode=False)
+        self.pipeline_generator = PipeGen(self.exp_config, self.save_path, self.search_type, self.sample_num, False)
         self.gen_len = self.pipeline_generator.length
         # write train data in observer
         self.observer.log['experiment_info']['number_of_pipes'] = self.gen_len
@@ -135,7 +136,6 @@ class PipelineManager:
         self.start_exp = time()
         # start test
         if self.do_test:
-            # self.dataset_composition = dict(train=False, valid=False, test=False)
             self.test()
 
     def prepare_multiprocess(self):
@@ -323,7 +323,7 @@ class PipelineManager:
                     yield (j, deepcopy(pipe_conf))
 
         # create the pipeline generator
-        pipeline_generator = PipeGen(self.exp_config, self.save_path, sample_num=self.sample_num, test_mode=True)
+        pipeline_generator = PipeGen(self.exp_config, self.save_path, self.search_type, self.sample_num, True)
         len_gen = pipeline_generator.length
 
         # Start generating pipelines configs
@@ -380,6 +380,7 @@ class PipelineManager:
                                           "from the rest datasets.".format(config['dataset_reader']['data_path']))
 
             iterator = get_iterator_from_config(config, data)
+
             if isinstance(iterator, DataFittingIterator):
                 raise ConfigError("Instance of a class 'DataFittingIterator' is not supported.")
             else:
