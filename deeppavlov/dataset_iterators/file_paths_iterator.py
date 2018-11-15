@@ -38,7 +38,7 @@ class FilePathsIterator(DataLearningIterator):
     Attributes:
         shuffle: whether to shuffle data during batching
         random: instance of ``Random`` initialized with a seed
-    # """
+    """
 
     def __init__(self, 
                  data: dict, 

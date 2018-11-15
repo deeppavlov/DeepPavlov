@@ -15,10 +15,8 @@
 
 from typing import Tuple, Iterator, Optional
 
-import numpy as np
-
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
+from deeppavlov.core.data.file_paths_iterator import FilePathsIterator
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.data.utils import chunk_generator
 
@@ -26,18 +24,20 @@ from deeppavlov.core.data.utils import chunk_generator
 log = get_logger(__name__)
 
 @register('elmo_file_paths_iterator')
-class ELMoFilePathsIterator(DataLearningIterator):
+class ELMoFilePathsIterator(FilePathsIterator):
     """Dataset iterator for tokenized datasetes like 1 Billion Word Benchmark
 
     Args:
         data: dict with keys ``'train'``, ``'valid'`` and ``'test'`` and values
         seed: random seed for data shuffling
         shuffle: whether to shuffle data during batching
+        unroll_steps: number of unrolling steps.
+        n_gpus: number of gpu to use.
 
     Attributes:
         shuffle: whether to shuffle data during batching
         random: instance of ``Random`` initialized with a seed
-    # """
+    """
 
     def __init__(self, 
                  data: dict, 
@@ -46,22 +46,9 @@ class ELMoFilePathsIterator(DataLearningIterator):
                  unroll_steps: Optional[int] = None, 
                  n_gpus: Optional[int] = None, 
                  *args, **kwargs) -> None:
-        self.seed = seed
-        self.np_random = np.random.RandomState(seed)
         self.unroll_steps = unroll_steps
         self.n_gpus = n_gpus
         super().__init__(data, seed, shuffle, *args, **kwargs)
-
-    def _shard_generator(self, shards, shuffle = False, random = None):
-        shards_to_choose = list(shards)
-        if shuffle:
-            random.shuffle(shards_to_choose)
-        for shard in shards_to_choose:
-            log.info(f'Loaded shard from {shard}')
-            lines = open(shard).readlines()
-            if shuffle:
-                random.shuffle(lines)
-            yield lines
             
     def _line_generator(self, shard_generator):
         for shard in shard_generator:
