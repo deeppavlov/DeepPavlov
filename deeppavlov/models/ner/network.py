@@ -342,8 +342,3 @@ class NerNetwork(EnhancedTFModel):
             else:
                 self._impatience += 1
 
-            if self._impatience >= self._lr_drop_patience:
-                self._impatience = 0
-                log.info('Dropping learning rate from {:.1e} to {:.1e}'.format(self.get_learning_rate(),
-                                                                               self.get_learning_rate() * self._lr_drop_value))
-                self.load()
