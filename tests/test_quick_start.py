@@ -1,5 +1,6 @@
 import io
 import json
+import logging
 import os
 import signal
 from pathlib import Path
@@ -17,7 +18,6 @@ import deeppavlov
 from deeppavlov.download import deep_download
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.core.common.paths import get_settings_path
-import utils
 from utils.server_utils.server import get_server_params, SERVER_CONFIG_FILENAME
 
 
@@ -79,7 +79,8 @@ PARAMS = {
         ("classifiers/sentiment_twitter.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_twitter_preproc.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/topic_ag_news.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/rusentiment_cnn.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+        ("classifiers/rusentiment_cnn.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/rusentiment_elmo.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
     },
     "snips": {
         ("classifiers/intents_snips.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -102,6 +103,7 @@ PARAMS = {
         ("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_ontonotes.json", "ner_ontonotes", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_few_shot_ru_simulate.json", "ner_fs", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_rus.json", "ner_rus", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/slotfill_dstc2.json", "slotfill_dstc2", ('IP',)):
             [
@@ -449,3 +451,24 @@ def test_evolving():
                            .format(model_dir, logfile.getvalue().decode()))
 
     shutil.rmtree(str(download_path), ignore_errors=True)
+
+
+def test_hashes_existence():
+    all_configs = list(src_dir.glob('**/*.json')) + list(test_src_dir.glob('**/*.json'))
+    url_root = 'http://files.deeppavlov.ai/'
+    downloads_urls = set()
+    for config in all_configs:
+        config = json.loads(config.read_text(encoding='utf-8'))
+        downloads_urls |= {d if isinstance(d, str) else d['url'] for d in
+                           config.get('metadata', {}).get('download', [])}
+    downloads_urls = [url + '.md5' for url in downloads_urls if url.startswith(url_root)]
+    messages = []
+
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
+
+    for url in downloads_urls:
+        status = requests.get(url).status_code
+        if status != 200:
+            messages.append(f'got status_code {status} for {url}')
+    if messages:
+        raise RuntimeError('\n'.join(messages))

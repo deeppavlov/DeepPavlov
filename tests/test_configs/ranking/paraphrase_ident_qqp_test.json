@@ -90,7 +90,7 @@
   "metadata": {
     "requirements": [
       "../dp_requirements/tf.txt",
-      "../dp_requirements/gensim.txt"
+      "../dp_requirements/fasttext.txt"
     ],
     "labels": {
       "telegram_utils": "SiameseModel",

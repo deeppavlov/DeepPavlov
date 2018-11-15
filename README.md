@@ -139,6 +139,14 @@ You can also specify batch size with `-b` or `--batch-size` parameter.
 
 [docs.deeppavlov.ai](http://docs.deeppavlov.ai/)
 
+# Docker images
+
+We have built several DeepPavlov based Docker images, which include:
+* DeepPavlov based Jupyter notebook Docker image;
+* Docker images which serve some of our models and allow to access them via REST API (`riseapi` mode).
+
+Here is our [DockerHub repository](https://hub.docker.com/u/deeppavlov/) with images and deployment instructions.   
+
 # Tutorials
 
 Jupyter notebooks and videos explaining how to use DeepPalov for different tasks can be found in [/examples/tutorials/](examples/tutorials/)
