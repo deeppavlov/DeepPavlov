@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import  Optional
+from typing import Optional
 
 import tensorflow as tf
 import numpy as np
@@ -40,11 +40,14 @@ class ELMo(TFModel):
 
     Parameters:
         options_json_path: Path to the json configure.
-        char_cnn: Options of char_cnn. For example {"activation":"relu","embedding":{"dim":16},"filters":[[1,32],[2,32],[3,64],[4,128],[5,256],[6,512],[7,1024]],"max_characters_per_token":50,"n_characters":261,"n_highway":2}
+        char_cnn: Options of char_cnn. For example {"activation":"relu","embedding":{"dim":16},
+            "filters":[[1,32],[2,32],[3,64],[4,128],[5,256],[6,512],[7,1024]],"max_characters_per_token":50,
+            "n_characters":261,"n_highway":2}
         bidirectional: Whether to use bidirectional or not.
         unroll_steps: Number of unrolling steps.
         n_tokens_vocab: A size of a vocabulary.
-        lstm: Options of lstm. It is a dict of "cell_clip":int ,"dim":int ,"n_layers":int ,"proj_clip":int ,"projection_dim":int ,"use_skip_connections":bool
+        lstm: Options of lstm. It is a dict of "cell_clip":int, "dim":int, "n_layers":int, "proj_clip":int, 
+            "projection_dim":int, "use_skip_connections":bool
         dropout: Probability of keeping the network state, values from 0 to 1. 
         n_negative_samples_batch: Whether to use negative samples batch or not. Number of batch samples.
         all_clip_norm_val: Clip the gradients.
@@ -56,26 +59,26 @@ class ELMo(TFModel):
     """
 
     def __init__(self,
-                 options_json_path: Optional[str] = None, # Configure by json file
-                 char_cnn: Optional[dict] = None, # Net architecture by direct params, it may be used for overwrite a json file architecture
+                 options_json_path: Optional[str] = None,  # Configure by json file
+                 char_cnn: Optional[dict] = None,  # Net architecture by direct params, use for overwrite a json arch.
                  bidirectional: Optional[bool] = None,
                  unroll_steps: Optional[int] = None,
                  n_tokens_vocab: Optional[int] = None,
                  lstm: Optional[dict] = None,
-                 dropout: Optional[float] = None,  # Regularization
-                 n_negative_samples_batch: Optional[int] = None, # Train options
+                 dropout: Optional[float] = None,   # Regularization
+                 n_negative_samples_batch: Optional[int] = None,  # Train options
                  all_clip_norm_val: Optional[float] = None,
                  initial_accumulator_value: float = 1.0,
-                 learning_rate: float = 2e-1, # For AdagradOptimizer
-                 n_gpus: int = 1, # TODO: Add cpu supporting
-                 seed: int = None, # Other
-                 batch_size: int = 128, # Data params
+                 learning_rate: float = 2e-1,  # For AdagradOptimizer
+                 n_gpus: int = 1,  # TODO: Add cpu supporting
+                 seed: int = None,  # Other
+                 batch_size: int = 128,  # Data params
                  **kwargs) -> None:
         
         # ================ Checking input args =================
-        if not(options_json_path or (char_cnn and bidirectional and unroll_steps\
-                                     and n_tokens_vocab and lstm and dropout and\
-                                     n_negative_samples_batch and all_clip_norm_val\
+        if not(options_json_path or (char_cnn and bidirectional and unroll_steps
+                                     and n_tokens_vocab and lstm and dropout and
+                                     n_negative_samples_batch and all_clip_norm_val
                                      )):
             raise Warning('Use options_json_path or/and direct params to set net architecture.')
         self._options = self._load_options(options_json_path)
@@ -102,7 +105,6 @@ class ELMo(TFModel):
         # ================= Initialize the session =================
         self.init_state_values, self.init_state_tensors, self.final_state_tensors =\
             self._init_session()
-
 
         super().__init__(**kwargs)
         self.load()
@@ -137,7 +139,7 @@ class ELMo(TFModel):
             self._options['all_clip_norm_val'] = all_clip_norm_val
 
     def _build_graph(self):
-        init_step = 0 # TODO: Add resolution of init_step
+        init_step = 0  # TODO: Add resolution of init_step
         with tf.device('/cpu:0'):
             global_step = tf.get_variable(
                 'global_step', [],
@@ -189,7 +191,7 @@ class ELMo(TFModel):
         return models, train_op, summary_op, hist_summary_op, train_loss, valid_loss
 
     def _init_session(self):
-        restart_ckpt_file = None # TODO: It is one too
+        restart_ckpt_file = None  # TODO: It is one too
         sess_config = tf.ConfigProto(allow_soft_placement=True)
         sess_config.gpu_options.allow_growth = True
         
@@ -225,7 +227,7 @@ class ELMo(TFModel):
             feed_dict = {
                 model.tokens_characters:
                     np.zeros([batch_size, unroll_steps, max_chars],
-                            dtype=np.int32)
+                             dtype=np.int32)
                 for model in self.models
             }
 
@@ -240,7 +242,7 @@ class ELMo(TFModel):
                 feed_dict.update({
                     model.tokens_characters_reverse:
                         np.zeros([batch_size, unroll_steps, max_chars],
-                                dtype=np.int32)
+                                 dtype=np.int32)
                     for model in self.models
                 })
 
@@ -253,31 +255,28 @@ class ELMo(TFModel):
                         token_ids_batches = None, 
                         reversed_token_ids_batches = None):
         # init state tensors
-        feed_dict = {t: v for t, v in zip(
-                                    self.init_state_tensors, self.init_state_values)}
-
+        feed_dict = {t: v for t, v in zip(self.init_state_tensors, self.init_state_values)}
 
         for k, model in enumerate(self.models):
             start = k * self._options['batch_size']
             end = (k + 1) * self._options['batch_size']
 
-
             # character inputs
-            char_ids = char_ids_batches[start:end] # get char_ids
+            char_ids = char_ids_batches[start:end]  # get char_ids
             
             feed_dict[model.tokens_characters] = char_ids
 
             if self._options['bidirectional']:
                 feed_dict[model.tokens_characters_reverse] = \
-                    reversed_char_ids_batches[start:end] # get tokens_characters_reverse
+                    reversed_char_ids_batches[start:end]  # get tokens_characters_reverse
                 
             if token_ids_batches is not None:
-                feed_dict[model.next_token_id] = token_ids_batches[start:end] # get next_token_id
+                feed_dict[model.next_token_id] = token_ids_batches[start:end]  # get next_token_id
                 if self._options['bidirectional']:
-                    feed_dict[model.next_token_id_reverse] = reversed_token_ids_batches[start:end] # get next_token_id_reverse
+                    feed_dict[model.next_token_id_reverse] = \
+                        reversed_token_ids_batches[start:end]  # get next_token_id_reverse
 
         return feed_dict
-
 
     def __call__(self, *args, **kwargs):
         if len(args) != 4:
@@ -285,21 +284,20 @@ class ELMo(TFModel):
         char_ids_batches, reversed_char_ids_batches, token_ids_batches, reversed_token_ids_batches =\
             args
 
-        feed_dict = self._fill_feed_dict(char_ids_batches, reversed_char_ids_batches, token_ids_batches, reversed_token_ids_batches)
+        feed_dict = self._fill_feed_dict(char_ids_batches, reversed_char_ids_batches, token_ids_batches, 
+                                         reversed_token_ids_batches)
         # TODO: Do right ppl
         ret = self.sess.run([self.train_loss] + self.final_state_tensors, feed_dict)
 
         self.init_state_values = ret[1:]
         valid_loss = ret[0]
-
-
         return [valid_loss]
 
     def train_on_batch(self, 
-                       char_ids_batches:list, 
-                       reversed_char_ids_batches:list, 
-                       token_ids_batches:list, 
-                       reversed_token_ids_batches:list):
+                       char_ids_batches: list, 
+                       reversed_char_ids_batches: list, 
+                       token_ids_batches: list, 
+                       reversed_token_ids_batches: list):
         """
         This method is called by trainer to make one training step on one batch.
 
@@ -312,12 +310,11 @@ class ELMo(TFModel):
         Returns:
             value of loss function on batch
         """
-        
-        feed_dict = self._fill_feed_dict(char_ids_batches, reversed_char_ids_batches, token_ids_batches, reversed_token_ids_batches)
+        feed_dict = self._fill_feed_dict(char_ids_batches, reversed_char_ids_batches,
+                                         token_ids_batches, reversed_token_ids_batches)
         ret = self.sess.run([self.train_loss, self.train_op] + self.final_state_tensors, feed_dict)
 
         self.init_state_values = ret[2:]
         train_loss = ret[0]
 
         return train_loss
-
