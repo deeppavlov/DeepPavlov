@@ -264,7 +264,7 @@ class PipelineManager:
             for i, pipe_conf in enumerate(self.pipeline_generator()):
                 yield (deepcopy(pipe_conf), i, self.observer)
 
-    def run(self):
+    def _run(self):
         """
         Initializes the pipeline generator and runs the experiment. Creates a report after the experiments.
         """
@@ -307,7 +307,22 @@ class PipelineManager:
         print("[ Report created ]")
         return None
 
-    def test(self):
+    def run(self):
+        try:
+            self._run()
+        except KeyboardInterrupt:
+            # save log
+            self.observer.exp_time(time.strftime('%H:%M:%S', time.gmtime(time.time() - self.start_exp)))
+
+            print("[ The experiment was interrupt]")
+            # visualization of results
+            print("[ Create an intermediate report ... ]")
+            results_visualization(join(self.root, self.date, self.exp_name), False)
+            print("[ The intermediate report was created ]")
+
+        return None
+
+    def _test(self):
         """
         Initializes the pipeline generator with tiny data and runs the test of experiment.
         """
@@ -360,6 +375,15 @@ class PipelineManager:
         rmtree(join(self.save_path, "tmp"))
         print('[ The test was successful ]')
         return None
+
+    def test(self):
+        try:
+            self._test()
+        except KeyboardInterrupt:
+            # del all tmp files in save path
+            rmtree(join(self.save_path, "tmp"))
+            print('[ The test was interrupt ]')
+            return None
 
     @staticmethod
     @unpack_args
