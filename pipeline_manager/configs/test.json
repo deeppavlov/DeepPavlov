@@ -79,7 +79,7 @@
           "warm_start": false,
           "penalty": "l1",
           "dual": false,
-          "C": {"grid_search": [1.0, 1.1, 1.2]},
+          "C": {"random_choice": [1.0, 1.1, 1.2]},
           "class_weight": null,
           "solver": "liblinear"
         }
@@ -126,13 +126,13 @@
   "enumerate": {
     "exp_name": "test_of_gen",
     "root": "./download/experiments/",
-    "search_type": "grid",
+    "search_type": "random",
     "do_test": true,
     "sample_num": 1,
     "plot": true,
-    "save_best": false,
+    "save_best": true,
     "multiprocessing": true,
-    "max_num_workers": 3,
+    "max_num_workers": 4,
     "use_all_gpus": false,
     "use_multi_gpus": null,
     "gpu_memory_fraction": 1.0

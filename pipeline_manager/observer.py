@@ -94,6 +94,14 @@ class Observer(object):
             with open(self.log_file, 'w') as log_file:
                 json.dump(self.log, log_file)
 
+    def exp_time(self, time):
+        with open(self.log_file, 'r') as old_log:
+            old_log = json.load(old_log)
+
+        old_log['experiment_info']['full_time'] = time
+        with open(self.log_file, 'w') as log_file:
+            json.dump(old_log, log_file)
+
     def update_log(self):
         """ Updates the log with information about the new pipeline """
 

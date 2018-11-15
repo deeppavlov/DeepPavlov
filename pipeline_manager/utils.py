@@ -14,6 +14,7 @@
 
 import os
 import json
+import time
 import xlsxwriter
 import numpy as np
 import matplotlib.pyplot as plt
@@ -36,17 +37,6 @@ GOLD_METRICS = {'Accuracy': ["classification_accuracy", "simple_accuracy"],
                 'F1 weighted': ["classification_f1_weighted", "simple_f1_weighted"]}
 
 
-def normal_time(z):
-    if z > 1:
-        h = z/3600
-        m = z % 3600/60
-        s = z % 3600 % 60
-        t = '%i:%i:%i' % (h, m, s)
-    else:
-        t = '{0:.2}'.format(z)
-    return t
-
-
 def merge_logs(old_log, new_log):
     """ Merge two logs """
     # update time
@@ -54,7 +44,7 @@ def merge_logs(old_log, new_log):
     t_new = new_log['experiment_info']['full_time'].split(':')
     sec = int(t_old[2]) + int(t_new[2]) + (int(t_old[1]) + int(t_new[1])) * 60 + (
             int(t_old[0]) + int(t_new[0])) * 3600
-    old_log['experiment_info']['full_time'] = normal_time(sec)
+    old_log['experiment_info']['full_time'] = time.strftime('%H:%M:%S', time.gmtime(sec))
     # update num of pipes
     n_old = int(old_log['experiment_info']['number_of_pipes'])
     n_new = int(new_log['experiment_info']['number_of_pipes'])
@@ -262,13 +252,16 @@ def get_data(log):
     return max_com, dataset_names
 
 
-def write_info(sheet, num, target_metric, cell_format):
+def write_info(sheet, num, target_metric, cell_format, full_time):
     # Start from the first cell. Rows and columns are zero indexed.
     # write info
     sheet.write(0, 0, "Number of pipelines:", cell_format)
     sheet.write(0, 1, num, cell_format)
     sheet.write(0, 2, "Target metric:", cell_format)
     sheet.write(0, 3, target_metric, cell_format)
+    sheet.write(0, 4, "Experiment Time:", cell_format)
+    sheet.write(0, 5, full_time, cell_format)
+    sheet.write(0, 6, "(h:m:s)", cell_format)
     return 2, 0
 
 
@@ -453,6 +446,7 @@ def build_pipeline_table(log_data, save_path='./'):
     metrics = log_data['experiment_info']['metrics']
     num_p = log_data['experiment_info']['number_of_pipes']
     target_metric = log_data['experiment_info']['target_metric']
+    exp_time = log_data['experiment_info']['full_time']
 
     # read data from log
     max_l, pipe_data = get_data(log_data)
@@ -467,7 +461,7 @@ def build_pipeline_table(log_data, save_path='./'):
                                        'valign': 'vcenter'})
     # write legend to tables
     for wsheet in [worksheet_1, worksheet_2]:
-        row, col = write_info(wsheet, num_p, target_metric, cell_format)
+        row, col = write_info(wsheet, num_p, target_metric, cell_format, exp_time)
 
     row1 = row
     row2 = row
