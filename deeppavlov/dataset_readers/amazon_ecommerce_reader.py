@@ -29,8 +29,8 @@ class AmazonEcommerceReader(DatasetReader):
         """Load data from specific catalog
 
         Parameters:
-            data_path: path where to store the dataset
-            catalog: name of the specific part of the catalog
+            data_path: where the dataset is located
+            catalog: names of the specific subcategories
 
         Returns:
             dataset: loaded dataset
