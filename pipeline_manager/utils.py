@@ -252,13 +252,16 @@ def get_data(log):
     return max_com, dataset_names
 
 
-def write_info(sheet, num, target_metric, cell_format):
+def write_info(sheet, num, target_metric, cell_format, full_time):
     # Start from the first cell. Rows and columns are zero indexed.
     # write info
     sheet.write(0, 0, "Number of pipelines:", cell_format)
     sheet.write(0, 1, num, cell_format)
     sheet.write(0, 2, "Target metric:", cell_format)
     sheet.write(0, 3, target_metric, cell_format)
+    sheet.write(0, 4, "Experiment Time:", cell_format)
+    sheet.write(0, 5, full_time, cell_format)
+    sheet.write(0, 6, "(h:m:s)", cell_format)
     return 2, 0
 
 
@@ -443,6 +446,7 @@ def build_pipeline_table(log_data, save_path='./'):
     metrics = log_data['experiment_info']['metrics']
     num_p = log_data['experiment_info']['number_of_pipes']
     target_metric = log_data['experiment_info']['target_metric']
+    exp_time = log_data['experiment_info']['full_time']
 
     # read data from log
     max_l, pipe_data = get_data(log_data)
@@ -457,7 +461,7 @@ def build_pipeline_table(log_data, save_path='./'):
                                        'valign': 'vcenter'})
     # write legend to tables
     for wsheet in [worksheet_1, worksheet_2]:
-        row, col = write_info(wsheet, num_p, target_metric, cell_format)
+        row, col = write_info(wsheet, num_p, target_metric, cell_format, exp_time)
 
     row1 = row
     row2 = row
