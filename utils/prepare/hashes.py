@@ -1,3 +1,17 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import argparse
 import gzip
 import sys
@@ -7,10 +21,6 @@ from pathlib import Path
 from typing import List, Dict, Union
 
 from deeppavlov.core.data.utils import file_md5
-
-parser = argparse.ArgumentParser()
-parser.add_argument("fname", help="path to a file to compute hash for", type=str)
-parser.add_argument('-o', '--outfile', help='where to write the hashes', default=None, type=str)
 
 
 def tar_md5(fpath: Union[str, Path]) -> Dict[str, str]:
@@ -49,6 +59,10 @@ def compute_hashes(fpath: Union[str, Path]) -> Dict[str, str]:
 
 
 def main(args: List[str] = None) -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("fname", help="path to a file to compute hash for", type=str)
+    parser.add_argument('-o', '--outfile', help='where to write the hashes', default=None, type=str)
+
     args = parser.parse_args(args)
 
     p = Path(args.fname).expanduser()
