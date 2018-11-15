@@ -56,20 +56,22 @@
       },
       {
         "in": ["tokens"],
-        "name": "freq_drop_load_vocab",
+        "name": "simple_vocab",
         "min_freq": 2,
         "special_tokens": ["</S>", "<S>", "<UNK>"],
         "unk_token": "<UNK>",
+        "freq_drop_load": true,
         "save_path": "elmo-1b-benchmark/data/vocab-2016-09-10.txt",
         "load_path": "elmo-1b-benchmark/data/vocab-2016-09-10.txt",
         "out": ["y_token_ids"]
       },
       {
         "in": ["reversed_tokens"],
-        "name": "freq_drop_load_vocab",
+        "name": "simple_vocab",
         "min_freq": 2,
         "special_tokens": ["</S>", "<S>", "<UNK>"],
         "unk_token": "<UNK>",
+        "freq_drop_load": true,
         "save_path": "elmo-1b-benchmark/data/vocab-2016-09-10.txt",
         "load_path": "elmo-1b-benchmark/data/vocab-2016-09-10.txt",
         "out": ["reversed_y_token_ids"]

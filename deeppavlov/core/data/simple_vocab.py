@@ -38,6 +38,7 @@ class SimpleVocabulary(Estimator):
                  min_freq=0,
                  pad_with_zeros=False,
                  unk_token=None,
+                 freq_drop_load=None,
                  *args,
                  **kwargs):
         super().__init__(**kwargs)
@@ -47,6 +48,7 @@ class SimpleVocabulary(Estimator):
         self._min_freq = min_freq
         self._pad_with_zeros = pad_with_zeros
         self.unk_token = unk_token
+        self.freq_drop_load = freq_drop_load
         self.reset()
         if self.load_path:
             self.load()
@@ -101,17 +103,24 @@ class SimpleVocabulary(Estimator):
                 log.info("[loading vocabulary from {}]".format(self.load_path))
                 tokens, counts = [], []
                 for ln in self.load_path.open('r', encoding='utf8'):
-                    token, cnt = ln.split('\t', 1)
+                    token, cnt = self.load_line(ln)
                     tokens.append(token)
                     counts.append(int(cnt))
                 self._add_tokens_with_freqs(tokens, counts)
-            elif isinstance(self.load_path, Path):
-                if not self.load_path.parent.is_dir():
-                    raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
-                        self.__class__.__name__))
+            else:
+                raise ConfigError("Provided `load_path` for {} is not file!".format(
+                    self.__class__.__name__))
         else:
             raise ConfigError("`load_path` for {} is not provided!".format(self))
 
+    def load_line(self, ln):
+        if self.freq_drop_load:
+            token = ln.strip().split()[0]
+            cnt = self._min_freq
+        else:
+            token, cnt = ln.split('\t', 1)
+        return token, cnt
+        
     @property
     def len(self):
         return len(self)
@@ -152,28 +161,3 @@ class SimpleVocabulary(Estimator):
         self._t2i = defaultdict(lambda: unk_index)
         self._i2t = []
         self.count = 0
-
-@register('freq_drop_load_vocab')
-class FrequencyDropLoadVocabulary(SimpleVocabulary):
-    """Implements simple vocabulary loading from a file without frequency values.
-    The default frequency is used a value of `min_freq`.
-    
-    """
-    @overrides
-    def load(self):
-        self.reset()
-        if self.load_path:
-            if self.load_path.is_file():
-                log.info("[loading vocabulary from {}]".format(self.load_path))
-                tokens, counts = [], []
-                for ln in self.load_path.open('r', encoding='utf8'):
-                    token = ln.strip().split()[0]
-                    tokens.append(token)
-                    counts.append(self._min_freq)
-                self._add_tokens_with_freqs(tokens, counts)
-            elif isinstance(self.load_path, Path):
-                if not self.load_path.parent.is_dir():
-                    raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
-                        self.__class__.__name__))
-        else:
-            raise ConfigError("`load_path` for {} is not provided!".format(self))
