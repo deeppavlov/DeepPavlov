@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import os
+import time
 
-from time import time
 from tqdm import tqdm
 from pathlib import Path
 from shutil import rmtree
@@ -27,7 +27,6 @@ from typing import Union, Dict
 
 from pipeline_manager.pipegen import PipeGen
 from pipeline_manager.observer import Observer
-from pipeline_manager.utils import normal_time
 from pipeline_manager.utils import get_num_gpu
 from pipeline_manager.utils import results_visualization, get_available_gpus
 
@@ -133,7 +132,7 @@ class PipelineManager:
             self.prepare_multiprocess()
 
         # write time of experiment start
-        self.start_exp = time()
+        self.start_exp = time.time()
         # start test
         if self.do_test:
             self.test()
@@ -236,7 +235,7 @@ class PipelineManager:
         observer.batch_size = copy(pipe['train'].get('batch_size', "None"))
 
         # start pipeline time
-        pipe_start = time()
+        pipe_start = time.time()
         save_path = join(observer.save_path, dataset_name, "pipe_{}".format(i + 1))
         if not isdir(save_path):
             os.makedirs(save_path)
@@ -246,7 +245,7 @@ class PipelineManager:
             results = train_evaluate_model_from_config(pipe, to_train=True, to_validate=True)
 
         # add results and pipe time to log
-        observer.pipe_time = normal_time(time() - pipe_start)
+        observer.pipe_time = time.strftime('%H:%M:%S', time.gmtime(time.time() - pipe_start))
         observer.pipe_res = results
 
         # update logger
@@ -296,7 +295,7 @@ class PipelineManager:
                     self.train_pipe((pipe, i, self.observer, gpu_ind))
 
         # save log
-        self.observer.exp_time(normal_time(time() - self.start_exp))
+        self.observer.exp_time(time.strftime('%H:%M:%S', time.gmtime(time.time() - self.start_exp)))
         # delete all checkpoints and save only best pipe
         if self.save_best:
             self.observer.save_best_pipe()

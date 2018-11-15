@@ -14,6 +14,7 @@
 
 import os
 import json
+import time
 import xlsxwriter
 import numpy as np
 import matplotlib.pyplot as plt
@@ -36,17 +37,6 @@ GOLD_METRICS = {'Accuracy': ["classification_accuracy", "simple_accuracy"],
                 'F1 weighted': ["classification_f1_weighted", "simple_f1_weighted"]}
 
 
-def normal_time(z):
-    if z > 1:
-        h = z/3600
-        m = z % 3600/60
-        s = z % 3600 % 60
-        t = '%i:%i:%i' % (h, m, s)
-    else:
-        t = '{0:.2}'.format(z)
-    return t
-
-
 def merge_logs(old_log, new_log):
     """ Merge two logs """
     # update time
@@ -54,7 +44,7 @@ def merge_logs(old_log, new_log):
     t_new = new_log['experiment_info']['full_time'].split(':')
     sec = int(t_old[2]) + int(t_new[2]) + (int(t_old[1]) + int(t_new[1])) * 60 + (
             int(t_old[0]) + int(t_new[0])) * 3600
-    old_log['experiment_info']['full_time'] = normal_time(sec)
+    old_log['experiment_info']['full_time'] = time.strftime('%H:%M:%S', time.gmtime(sec))
     # update num of pipes
     n_old = int(old_log['experiment_info']['number_of_pipes'])
     n_new = int(new_log['experiment_info']['number_of_pipes'])
