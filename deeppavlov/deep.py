@@ -63,14 +63,14 @@ parser.add_argument("--api-mode", help="rest api mode: 'basic' with batches or '
 def main():
     args = parser.parse_args()
     pipeline_config_path = find_config(args.config_path)
-    
-    start_epoch_num = args.start_epoch_num
 
     if args.download or args.mode == 'download':
         deep_download(pipeline_config_path)
 
     multi_instance = args.multi_instance
     stateful = args.stateful
+
+    start_epoch_num = args.start_epoch_num
 
     if args.mode == 'train':
         train_evaluate_model_from_config(pipeline_config_path, start_epoch_num=start_epoch_num)
