@@ -92,7 +92,7 @@ class TfidfWeightedEmbedder(Component):
         self.mean = mean
         self.pad_zero = pad_zero
         self.tokenizer = tokenizer or self.space_detokenizer
-        self.vectorizer = None
+        self.vectorizer = vectorizer
 
         if vectorizer and counter_vocab_path:
             raise ConfigError("TfidfWeightedEmbedder got vectorizer and counter_vocab_path simultaneously."
