@@ -21,7 +21,6 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.data.utils import chunk_generator
 
-
 log = get_logger(__name__)
 
 @register('file_paths_iterator')
