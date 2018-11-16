@@ -25,6 +25,7 @@ from deeppavlov.core.data.utils import chunk_generator
 
 log = get_logger(__name__)
 
+
 @register('file_paths_iterator')
 class FilePathsIterator(DataLearningIterator):
     """Dataset iterator for datasetes like 1 Billion Word Benchmark.
