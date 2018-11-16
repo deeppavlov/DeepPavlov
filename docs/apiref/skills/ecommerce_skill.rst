@@ -1,5 +1,5 @@
-deeppavlov.skills.ecommerce_skill.bot
-========================================
+deeppavlov.skills.ecommerce_skill
+=================================
 
-.. automodule:: deeppavlov.skills.ecommerce_skill.bleu_retrieve
+.. automodule:: deeppavlov.skills.ecommerce_skill.tfidf_retrieve
    :members:
