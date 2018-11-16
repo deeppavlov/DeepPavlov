@@ -13,6 +13,10 @@ developer.
 Here is a simple example of interaction with a trained dialogue bot
 (available for download):
 
+.. note::
+￼
+   Models that rely on fasttext word embeddings will require 8.5 GB of disk space, those that use only one-hot encoding of words will require less than 300Mb of disk space.
+
 .. code:: bash
 
     >> Hello, welcome to the Cambridge restaurant system. You can ask for restaurants by area, price range or food type. How may I help you?
