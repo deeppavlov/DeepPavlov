@@ -65,7 +65,7 @@ class TfidfWeightedEmbedder(Component):
 
     Examples:
         >>> from deeppavlov.models.embedders.tfidf_weighted_embedder import TfidfWeightedEmbedder
-        >>> fastTextTfidf([['большой', 'и', 'розовый', 'бегемот']])
+        >>> from deeppavlov.models.embedders.fasttext_embedder import FasttextEmbedder
         >>> fasttext_embedder = FasttextEmbedder('/data/embeddings/wiki.ru.bin')
         >>> fastTextTfidf = TfidfWeightedEmbedder(embedder=fasttext_embedder,
                 counter_vocab_path='/data/vocabs/counts_wiki_lenta.txt')
