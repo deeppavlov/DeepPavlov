@@ -15,7 +15,7 @@
 from typing import Tuple, Iterator, Optional
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.file_paths_iterator import FilePathsIterator
+from deeppavlov.core.data.dataset_iterators import FilePathsIterator
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.data.utils import chunk_generator
 

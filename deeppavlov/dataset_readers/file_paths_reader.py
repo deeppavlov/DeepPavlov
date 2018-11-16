@@ -14,8 +14,9 @@
 
 from pathlib import Path
 from typing import Dict, Optional
-from overrides import overrides
 import glob
+
+from overrides import overrides
 
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.common.registry import register
