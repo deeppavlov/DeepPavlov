@@ -70,7 +70,7 @@ class FilePathsIterator(DataLearningIterator):
 
         for shard in shard_generator:
             if not (batch_size):
-                batch_size = len(shard)
-            lines_generator = chunk_generator(shard, batch_size)
+                bs = len(shard)
+            lines_generator = chunk_generator(shard, bs)
             for lines in lines_generator:
                 yield (lines, [])
