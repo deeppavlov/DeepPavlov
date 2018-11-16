@@ -31,13 +31,10 @@ and its `implementation`_ by Wenxuan Zhou.
 Running ODQA
 ============
 
-**Tensorflow-1.8.0 with GPU support is required** to run this model.
-
-**About 16 GB of RAM required**
-
 .. note::
 
-    About 16 GB of RAM required.
+    About **24 GB of RAM** required.
+    It is possible to run on a 16 GB machine, but than swap size should be at least 8 GB.
 
 Training
 --------

@@ -27,7 +27,7 @@ Running the Ranker
 
 .. note::
 
-    Training and inferring the ranker requires ~16 GB RAM.
+    About **16 GB of RAM** required.
 
 .. _ranker_training:
 
@@ -79,7 +79,7 @@ Wikipedia DB and pretrained tfidf matrices are downloaded in
 enwiki.db
 ---------
 
-**enwiki.db** SQLite database consists of **5159530** Wikipedia articles
+**enwiki.db** SQLite database consists of **5180368** Wikipedia articles
 and is built by the following steps:
 
 #. Download a Wikipedia dump file. We took the latest
