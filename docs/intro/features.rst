@@ -307,7 +307,7 @@ You can build different pipelines based on: tf-idf, weighted fasttext, cosine si
 Skills
 ------
 
-- :doc:`eCommerce bot </skills/ecommerce_skill>`
+- :doc:`eCommerce bot </skills/ecommerce>`
 
 The eCommerce bot intends to retrieve product items from catalog in sorted order. In addition, it asks an user to provide additional information to specify the search.
 
