@@ -15,11 +15,14 @@
 from typing import Tuple, Iterator, Optional
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.dataset_iterators import FilePathsIterator
+from deeppavlov.dataset_iterators.file_paths_iterator import FilePathsIterator
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.data.utils import chunk_generator
+from deeppavlov.models.preprocessors.str_utf8_encoder import StrUTF8Encoder
+from deeppavlov.core.data.simple_vocab import SimpleVocabulary
 
 log = get_logger(__name__)
+
 
 @register('elmo_file_paths_iterator')
 class ELMoFilePathsIterator(FilePathsIterator):
@@ -37,44 +40,91 @@ class ELMoFilePathsIterator(FilePathsIterator):
         random: instance of ``Random`` initialized with a seed
     """
 
-    def __init__(self, 
-                 data: dict, 
-                 seed: Optional[int] = None, 
+    def __init__(self,
+                 data: dict,
+                 save_path: str,
+                 load_path: str,
+                 seed: Optional[int] = None,
                  shuffle: bool = True,
-                 unroll_steps: Optional[int] = None, 
-                 n_gpus: Optional[int] = None, 
+                 unroll_steps: Optional[int] = None,
+                 n_gpus: Optional[int] = None,
+                 max_word_length: int = None,
+                 bos: str = "<S>",
+                 eos: str = "</S>",
                  *args, **kwargs) -> None:
         self.unroll_steps = unroll_steps
         self.n_gpus = n_gpus
+        self.bos = bos
+        self.eos = eos
+        self.str_utf8_encoder = StrUTF8Encoder(
+            max_word_length = max_word_length,
+            pad_special_char_use = True,
+            word_boundary_special_char_use = True,
+            sentence_boundary_special_char_use = False,
+            reversed_sentense_tokens = False,
+            bos = self.bos,
+            eos = self.eos,
+            save_path = save_path,
+            load_path = load_path,
+        )
+        self.simple_vocab = SimpleVocabulary(
+            min_freq = 2,
+            special_tokens = [self.eos, self.bos, "<UNK>"],
+            unk_token = "<UNK>",
+            freq_drop_load = True,
+            save_path = save_path,
+            load_path = load_path,
+        )
         super().__init__(data, seed, shuffle, *args, **kwargs)
+
+    def _line2ids(self, line):
+        line = [self.bos] + line.split() + [self.eos]
+
+        char_ids = self.str_utf8_encoder(line)
+        reversed_char_ids = list(reversed(char_ids))
+        char_ids = char_ids[:-1]
+        reversed_char_ids = reversed_char_ids[:-1]
+
+        token_ids = self.simple_vocab(line)
+        reversed_token_ids = list(reversed(token_ids))
+        token_ids = token_ids[1:]
+        reversed_token_ids = reversed_token_ids[1:]
+        
+        return char_ids, reversed_char_ids, token_ids, reversed_token_ids
             
     def _line_generator(self, shard_generator):
         for shard in shard_generator:
             line_generator = chunk_generator(shard, 1)
             for line in line_generator:
-                yield line[0]
+                line = line[0]
+                char_ids, reversed_char_ids, token_ids, reversed_token_ids =\
+                    self._line2ids(line)
+                yield char_ids, reversed_char_ids, token_ids, reversed_token_ids
 
     @staticmethod
     def _batch_generator(line_generator, batch_size, unroll_steps):
-        batch = [[] for i in range(batch_size)]
-        stream = [[] for i in range(batch_size)]
+        batch = [[[] for i in range(4)] for i in range(batch_size)]
+        stream = [[[] for i in range(4)] for i in range(batch_size)]
 
         try:
             while True:
                 for batch_item, stream_item in zip(batch, stream):
-                    while len(stream_item) < unroll_steps: 
+                    while len(stream_item[0]) < unroll_steps:
                         line = next(line_generator)
-                        line = ['<S>'] + line.split() + ['</S>']
-                        stream_item.extend(line)
-                    _b = stream_item[:unroll_steps]
-                    _s = stream_item[unroll_steps:]
-                    batch_item.clear()
-                    _b = _b
-                    batch_item.extend(_b)
+                        for sti, lni in zip(stream_item, line):
+                            sti.extend(lni)
+                    for sti, bchi in zip(stream_item, batch_item):
+                        _b = sti[:unroll_steps]
+                        _s = sti[unroll_steps:]
+                        bchi.clear()
+                        _b = _b
+                        bchi.extend(_b)
 
-                    stream_item.clear()
-                    stream_item.extend(_s)
-                yield batch
+                        sti.clear()
+                        sti.extend(_s)
+                char_ids, reversed_char_ids, token_ids, reversed_token_ids =\
+                    zip(*batch)
+                yield char_ids, reversed_char_ids, token_ids, reversed_token_ids
         except StopIteration:
             pass
 
@@ -91,6 +141,6 @@ class ELMoFilePathsIterator(FilePathsIterator):
 
         batch_generator = self._batch_generator(line_generator, batch_size * self.n_gpus, unroll_steps)
 
-        for batch in batch_generator:
-            batch = [batch, []]
+        for char_ids, reversed_char_ids, token_ids, reversed_token_ids in batch_generator:
+            batch = [(char_ids, reversed_char_ids), (token_ids, reversed_token_ids)]
             yield batch

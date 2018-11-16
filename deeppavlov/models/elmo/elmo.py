@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional
+from typing import Optional, List
 
 import tensorflow as tf
 import numpy as np
@@ -277,10 +277,10 @@ class ELMo(TFModel):
         return feed_dict
 
     def __call__(self, *args, **kwargs) -> List[float]:
-        if len(args) != 4:
+        if len(args) != 2:
             return []
-        char_ids_batches, reversed_char_ids_batches, token_ids_batches, reversed_token_ids_batches =\
-            args
+        char_ids_batches, reversed_char_ids_batches = args[0]
+        token_ids_batches, reversed_token_ids_batches = args[1]
 
         feed_dict = self._fill_feed_dict(char_ids_batches, reversed_char_ids_batches, token_ids_batches, 
                                          reversed_token_ids_batches)
@@ -291,23 +291,23 @@ class ELMo(TFModel):
         valid_loss = ret[0]
         return [valid_loss]
 
-    def train_on_batch(self, 
-                       char_ids_batches: list, 
-                       reversed_char_ids_batches: list, 
-                       token_ids_batches: list, 
-                       reversed_token_ids_batches: list):
+    def train_on_batch(self,
+                       x_char_ids: list,
+                       y_token_ids: list):
         """
         This method is called by trainer to make one training step on one batch.
 
         Args:
-            char_ids_batches: batches of char_ids
-            reversed_char_ids_batches: batches of reversed_char_ids
-            token_ids_batches: batches of token_ids
-            reversed_token_ids_batches: batches of reversed_token_ids
+            x_char_ids:  a batch of char_ids
+            y_token_ids: a batch of token_ids
 
         Returns:
             value of loss function on batch
         """
+
+        char_ids_batches, reversed_char_ids_batches = x_char_ids
+        token_ids_batches, reversed_token_ids_batches = y_token_ids
+
         feed_dict = self._fill_feed_dict(char_ids_batches, reversed_char_ids_batches,
                                          token_ids_batches, reversed_token_ids_batches)
         ret = self.sess.run([self.train_loss, self.train_op] + self.final_state_tensors, feed_dict)
