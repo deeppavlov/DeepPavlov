@@ -26,7 +26,7 @@ class StrTokenReverser(Component):
     Args:
         tokenized: The parameter is only needed to reverse tokenized strings.
     """
-    def __init__(self, tokenized:bool = False, *args, **kwargs):
+    def __init__(self, tokenized: bool = False, *args, **kwargs) -> None:
         self.tokenized = tokenized
     
     @staticmethod
