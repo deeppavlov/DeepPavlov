@@ -101,6 +101,12 @@ eCommerce bot with BLEU-based ranker
    -  ``confidence``: similarity confidence.
    -  ``state``: dialog state.
 
+
+   .. note::
+
+      About 500 Mb on disc required for eCommerce bot with BLEU-based ranker.
+
+
 eCommerce bot with TfIdf-based ranker
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -129,6 +135,11 @@ eCommerce bot with TfIdf-based ranker
    -  ``entropies``: specification attributes with corresponding values in sorted order.
    -  ``confidence``: similarity confidence.
    -  ``state``: dialog state.
+
+
+   .. note::
+
+      About 130 Mb on disc required for eCommerce bot with TfIdf-based ranker
 
 
 References
