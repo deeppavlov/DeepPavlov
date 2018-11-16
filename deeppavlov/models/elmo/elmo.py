@@ -21,7 +21,6 @@ import numpy as np
 import json
 
 from deeppavlov.core.models.tf_model import TFModel
-# from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.commands.utils import expand_path
