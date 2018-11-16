@@ -244,6 +244,16 @@ Comparison with other models on the `InsuranceQA V1 <https://github.com/shuzi/in
 .. _`Architecture II (HLQA(200) CNNQA(4000) 1-MaxPooling Tanh)`: https://arxiv.org/pdf/1508.01585.pdf
 .. _`QA-LSTM basic-model(max pooling)`: https://arxiv.org/pdf/1511.04108.pdf
 
+- :doc:`TF-IDF Ranker component </components/tfidf_ranking>`
+
+Based on `Reading Wikipedia to Answer Open-Domain Questions <https://github.com/facebookresearch/DrQA/>`__. The model solves the task of document retrieval for a given query.
+
++---------------+-------------------------------------------------------------------+----------------------+-----------------+-----------+
+| Dataset       | Model                                                             |  Wiki dump           |  Recall@5       | Downloads |
++---------------+--------------------------------------------------------+----------+----------------------+-----------------+-----------+
+| `SQuAD-v1.1`_ | :config:`doc_retrieval <doc_retrieval/en_ranker_tfidf_wiki.json>` |  enwiki (2018-02-11) |   75.6          | 33 GB     |
++---------------+-------------------------------------------------+-----------------+----------------------+-----------------+-----------+
+
 
 - :doc:`Question Answering component </components/squad>`
 
@@ -262,7 +272,6 @@ question in a given context (`SQuAD <https://rajpurkar.github.io/SQuAD-explorer/
 In the case when answer is not necessary present in given context we have :config:`squad_noans <squad/multi_squad_noans.json>`
 model. This model outputs empty string in case if there is no answer in context.
 
-.. _`SQuAD-v1.1`: https://arxiv.org/abs/1606.05250
 
 - :doc:`Morphological tagging component </components/morphotagger>`
 
@@ -323,11 +332,11 @@ An open domain question answering skill. The skill accepts free-form questions a
 based on its Wikipedia knowledge.
 
 
-+------------------------------------------------------+-----------------------+--------+
-| Dataset                                              |  Wiki dump            |   F1   |
-+------------------------------------------------------+-----------------------+--------+
-| :config:`SQuAD (dev) <odqa/en_odqa_infer_wiki.json>` | enwiki (2018-02-11)   |  28.0  |
-+------------------------------------------------------+-----------------------+--------+
++----------------+----------------------------------------------+-----------------------+--------+-----------+
+| Dataset        | Model config                                 |  Wiki dump            |   F1   | Downloads |
++----------------+----------------------------------------------+-----------------------+--------+-----------+
+| `SQuAD-v1.1`_  |:config:`ODQA <odqa/en_odqa_infer_wiki.json>` | enwiki (2018-02-11)   |  28.0  | 42 GB     |
++----------------+----------------------------------------------+-----------------------+--------+-----------+
 
 
 AutoML
@@ -376,3 +385,7 @@ Examples of some components
 
 View `video demo <https://youtu.be/yzoiCa_sMuY>`__ of deployment of a
 goal-oriented bot and a slot-filling model with Telegram UI.
+
+
+.. _`SQuAD-v1.1`: https://arxiv.org/abs/1606.05250
+
