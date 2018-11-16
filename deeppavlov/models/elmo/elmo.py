@@ -31,7 +31,6 @@ from deeppavlov.models.elmo.train_utils import print_variable_summary, average_g
 log = get_logger(__name__)
 
 
-# class ELMo(TFModel): # TODO: Add TFModel inheritance
 @register('elmo_model')
 class ELMo(TFModel):
     """>>
