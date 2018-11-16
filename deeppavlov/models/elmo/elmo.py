@@ -276,7 +276,7 @@ class ELMo(TFModel):
 
         return feed_dict
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs) -> List[float]:
         if len(args) != 4:
             return []
         char_ids_batches, reversed_char_ids_batches, token_ids_batches, reversed_token_ids_batches =\
