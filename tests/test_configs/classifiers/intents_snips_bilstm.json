@@ -3,8 +3,7 @@
     "class_name": "basic_classification_reader",
     "x": "text",
     "y": "intents",
-    "data_path": "{DOWNLOADS_PATH}/snips",
-    "url": "http://files.deeppavlov.ai/datasets/snips_intents/train.csv"
+    "data_path": "{DOWNLOADS_PATH}/snips"
   },
   "dataset_iterator": {
     "class_name": "basic_classification_iterator",
@@ -136,7 +135,6 @@
       "telegram_utils": "IntentModel"
     },
     "download": [
-      "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/vocabs.tar.gz",
         "subdir": "{MODELS_PATH}"
