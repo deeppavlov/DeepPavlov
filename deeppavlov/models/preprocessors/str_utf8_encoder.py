@@ -52,7 +52,7 @@ class StrUTF8Encoder(Estimator):
                  reversed_sentense_tokens:bool = False,
                  bos:str = '<S>',
                  eos:str = '</S>',
-                 **kwargs):
+                 **kwargs) -> None:
         super().__init__(**kwargs)
 
         if word_boundary_special_char_use and max_word_length < 3:
