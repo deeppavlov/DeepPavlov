@@ -19,7 +19,6 @@ from deeppavlov.core.data.file_paths_iterator import FilePathsIterator
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.data.utils import chunk_generator
 
-
 log = get_logger(__name__)
 
 @register('elmo_file_paths_iterator')
