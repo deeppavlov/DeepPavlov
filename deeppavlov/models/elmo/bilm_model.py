@@ -25,7 +25,7 @@ tf.logging.set_verbosity(tf.logging.INFO)
 
 
 class LanguageModel(object):
-    '''
+    """
     A class to build the tensorflow computational graph for NLMs
 
     All hyperparameters and model configuration is specified in a dictionary
