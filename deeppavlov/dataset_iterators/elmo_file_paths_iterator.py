@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 from typing import Tuple, Iterator, Optional
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.file_paths_iterator import FilePathsIterator
 from deeppavlov.core.common.log import get_logger
 from deeppavlov.core.data.utils import chunk_generator
-
 
 log = get_logger(__name__)
 

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from pathlib import Path
-
 from typing import Dict, Optional
 from overrides import overrides
 import glob
